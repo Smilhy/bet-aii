@@ -62,3 +62,10 @@ Dodano portfel użytkownika:
 
 ## Wersja 18 FULL
 Dodano profil tipstera (UI przygotowane pod statystyki i sprzedaż).
+
+## Wersja 19 FULL
+Dodano ranking tipsterów:
+- zakładka Ranking w sidebarze,
+- leaderboard z ROI, winrate, profit, typami i premium,
+- statystyki top marketplace,
+- CTA “Zostań tipsterem PRO”.

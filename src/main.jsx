@@ -71,6 +71,7 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp }) {
         <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
         <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
+        <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -419,6 +420,88 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   )
 }
 
+
+function LeaderboardView({ tips }) {
+  const baseTipsters = [
+    { name: 'FitMateusz', avatar: 'FM', roi: 24.5, winrate: 71, profit: 3250, tips: 128, badge: 'PRO' },
+    { name: 'Kamil_98', avatar: 'K', roi: 18.7, winrate: 66, profit: 2150, tips: 96, badge: 'VIP' },
+    { name: 'Zuzanna07', avatar: 'Z', roi: 16.3, winrate: 64, profit: 1870, tips: 83, badge: 'VIP' },
+    { name: 'AdrianNowak', avatar: 'AN', roi: 15.1, winrate: 62, profit: 1650, tips: 42, badge: 'TY' },
+    { name: 'AI Tip', avatar: 'AI', roi: 21.2, winrate: 69, profit: 2890, tips: 156, badge: 'AI' }
+  ]
+
+  const dynamic = tips.reduce((acc, tip) => {
+    const name = tip.author_name || 'AdrianNowak'
+    if (!acc[name]) acc[name] = { name, count: 0, premium: 0 }
+    acc[name].count += 1
+    if (tip.access_type === 'premium') acc[name].premium += 1
+    return acc
+  }, {})
+
+  const rows = baseTipsters.map(t => ({
+    ...t,
+    liveTips: dynamic[t.name]?.count || 0,
+    premiumTips: dynamic[t.name]?.premium || 0
+  })).sort((a,b) => b.roi - a.roi)
+
+  return (
+    <section className="leaderboard-page">
+      <div className="leaderboard-hero">
+        <div>
+          <h1>Ranking tipsterów</h1>
+          <p>Leaderboard marketplace: ROI, skuteczność, profit i aktywność sprzedawców typów.</p>
+        </div>
+        <div className="leaderboard-badge">LIVE</div>
+      </div>
+
+      <div className="leaderboard-stats">
+        <div><span>Najlepszy ROI</span><b>{rows[0].roi}%</b></div>
+        <div><span>Top profit</span><b>+{rows[0].profit.toLocaleString('pl-PL')} zł</b></div>
+        <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
+        <div><span>Typy w bazie</span><b>{tips.length}</b></div>
+      </div>
+
+      <div className="leaderboard-table">
+        <div className="leaderboard-row header">
+          <span>#</span>
+          <span>Tipster</span>
+          <span>ROI</span>
+          <span>Winrate</span>
+          <span>Profit</span>
+          <span>Typy</span>
+          <span>Premium</span>
+        </div>
+
+        {rows.map((row, index) => (
+          <div className="leaderboard-row" key={row.name}>
+            <span className={`place place-${index+1}`}>{index + 1}</span>
+            <span className="leader-user">
+              <div className={row.name === 'AI Tip' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
+              <div>
+                <b>{row.name}</b>
+                <em>{row.badge}</em>
+              </div>
+            </span>
+            <span className="roi">+{row.roi}%</span>
+            <span>{row.winrate}%</span>
+            <span className="profit">+{row.profit.toLocaleString('pl-PL')} zł</span>
+            <span>{row.tips + row.liveTips}</span>
+            <span>{row.premiumTips}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="tipster-cta">
+        <div>
+          <strong>Zostań tipsterem PRO</strong>
+          <span>Sprzedawaj typy premium, buduj ROI i awansuj w rankingu.</span>
+        </div>
+        <button>Aktywuj profil sprzedawcy</button>
+      </div>
+    </section>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -546,6 +629,10 @@ function App() {
 
         {view === 'wallet' && (
           <WalletPanel wallet={wallet} unlockedTips={unlockedTips} tips={tips} onTopUp={topUpWallet} />
+        )}
+
+        {view === 'leaderboard' && (
+          <LeaderboardView tips={tips} />
         )}
 
         {view === 'dashboard' && (
