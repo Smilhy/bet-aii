@@ -90,3 +90,7 @@ Poprawiony krok 21:
 - symulacja Stripe Checkout,
 - po zapłacie typ zostaje odblokowany,
 - layout z wersji 20 zostaje zachowany.
+
+
+## Wersja 22 FULL
+Przygotowanie pod Stripe Checkout: struktura pod realne płatności bez psucia aktualnej aplikacji.
