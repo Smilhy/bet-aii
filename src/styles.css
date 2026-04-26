@@ -738,40 +738,104 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   white-space:nowrap;
 }
 
-.modal-backdrop{
+
+/* Wersja 21 FULL FIXED — Stripe-ready modal */
+.payment-backdrop{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.4);
+  z-index:1200;
   display:grid;
   place-items:center;
-  z-index:1000;
+  background:rgba(15,23,42,.48);
+  backdrop-filter:blur(6px);
+  padding:20px;
 }
-.modal{
+.payment-modal{
+  width:100%;
+  max-width:420px;
   background:#fff;
-  padding:30px;
-  border-radius:18px;
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:26px;
   text-align:center;
-  width:320px;
+  box-shadow:0 28px 80px rgba(15,23,42,.22);
+  animation:paymentIn .18s ease-out;
 }
-.modal .price{
+.payment-icon{
+  width:58px;
+  height:58px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  background:var(--primary-soft);
+  margin:0 auto 14px;
   font-size:28px;
-  margin:12px 0;
-  font-weight:900;
 }
-.pay-btn{
-  width:100%;
-  padding:12px;
-  background:linear-gradient(135deg,#0f9488,#05746f);
-  color:#fff;
-  border:0;
-  border-radius:10px;
-  font-weight:900;
+.payment-modal h2{
+  margin:0 0 8px;
+  font-size:26px;
+}
+.payment-modal p{
+  margin:0 0 18px;
+  color:#667085;
+  line-height:1.45;
+}
+.payment-summary{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 14px;
   margin-bottom:10px;
+  text-align:left;
 }
-.close-btn{
+.payment-summary span{
+  color:#667085;
+  font-weight:800;
+}
+.payment-summary strong{
+  color:#101828;
+  text-align:right;
+}
+.payment-price{
+  margin:16px 0;
+  background:linear-gradient(135deg,#062f2d,#0f9488);
+  color:#fff;
+  border-radius:18px;
+  padding:16px;
+}
+.payment-price span{
+  display:block;
+  color:rgba(255,255,255,.78);
+  font-weight:800;
+  margin-bottom:4px;
+}
+.payment-price b{
+  font-size:34px;
+}
+.payment-primary,.payment-secondary{
   width:100%;
-  padding:10px;
-  background:#eee;
   border:0;
-  border-radius:10px;
+  border-radius:14px;
+  padding:14px 16px;
+  font-weight:900;
+  cursor:pointer;
+  font-family:inherit;
+}
+.payment-primary{
+  background:linear-gradient(135deg,var(--primary),#05746f);
+  color:#fff;
+  box-shadow:0 14px 28px rgba(15,148,136,.22);
+}
+.payment-secondary{
+  margin-top:10px;
+  background:#f8fafc;
+  color:#475467;
+  border:1px solid var(--border);
+}
+@keyframes paymentIn{
+  from{opacity:0;transform:translateY(10px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
 }

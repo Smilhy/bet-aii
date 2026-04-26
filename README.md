@@ -83,6 +83,10 @@ Dodano Supabase Auth:
 WAŻNE: w Supabase → Authentication możesz wyłączyć email confirmation na czas testów,
 żeby rejestracja działała natychmiast.
 
-
-## Wersja 21 FULL
-Dodano system płatności (symulacja Stripe modal).
+## Wersja 21 FULL FIXED
+Poprawiony krok 21:
+- build przechodzi bez błędu JSX,
+- modal płatności premium,
+- symulacja Stripe Checkout,
+- po zapłacie typ zostaje odblokowany,
+- layout z wersji 20 zostaje zachowany.
