@@ -21,3 +21,11 @@ dist
 - poprawione karty typów PRO
 - statystyki feedu
 - hover i badge UI
+
+## Wersja 14 FULL FIXED
+Pełna wersja projektu, bez utraty layoutu:
+- Dashboard jako osobny widok,
+- Dodaj typ jako osobny widok,
+- przycisk + Dodaj typ przełącza na formularz,
+- po zapisie typu wraca do Dashboardu,
+- feed, formularz, Supabase, filtry, sidebar i prawa kolumna zostają.

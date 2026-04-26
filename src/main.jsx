@@ -51,7 +51,7 @@ const staticTips = [
   }
 ]
 
-function Sidebar() {
+function Sidebar({ view, setView }) {
   return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
@@ -68,17 +68,18 @@ function Sidebar() {
       </div>
 
       <nav className="menu">
-        <a className="active">⌂ Dashboard</a>
-        <a>✦ AI Typy</a>
-        <a>♙ Typy ludzi</a>
-        <a>♕ Top typerzy</a>
-        <a>▣ Moje subskrypcje</a>
-        <a>☷ Ranking</a>
-        <a>▥ Statystyki</a>
-        <a>◷ Kalendarz</a>
-        <a>☰ Blog</a>
-        <a>♧ Społeczność</a>
-        <a>⚙ Ustawienia</a>
+        <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
+        <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
+        <button>✦ AI Typy</button>
+        <button>♙ Typy ludzi</button>
+        <button>♕ Top typerzy</button>
+        <button>▣ Moje subskrypcje</button>
+        <button>☷ Ranking</button>
+        <button>▥ Statystyki</button>
+        <button>◷ Kalendarz</button>
+        <button>☰ Blog</button>
+        <button>♧ Społeczność</button>
+        <button>⚙ Ustawienia</button>
       </nav>
 
       <div className="premium-box">
@@ -315,6 +316,7 @@ function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
+  const [view, setView] = useState('dashboard')
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -340,7 +342,7 @@ function App() {
     fetchTips()
   }, [])
 
-  const filteredTips = tips.filter((tip) => {
+  const filteredTips = tips.filter(tip => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
     if (activeFilter === 'premium') return tip.access_type === 'premium'
@@ -359,7 +361,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar view={view} setView={setView} />
 
       <main className="main">
         <header className="topbar">
@@ -367,44 +369,57 @@ function App() {
           <div className="top-actions">
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
-            <button className="add-btn">+ Dodaj typ</button>
+            <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
         </header>
 
-        <AddTipForm onTipSaved={fetchTips} />
+        {view === 'add' && (
+          <AddTipForm
+            onTipSaved={() => {
+              fetchTips()
+              setView('dashboard')
+            }}
+          />
+        )}
 
-        <section className="feed-section">
-          <div className="feed-title">
-            <div>
-              <h2>Ostatnie typy</h2>
-              <p>Feed pobierany z Supabase. Nowy typ pojawi się tutaj po zapisie.</p>
+        {view === 'dashboard' && (
+          <section className="feed-section">
+            <div className="feed-title">
+              <div>
+                <h2>Ostatnie typy</h2>
+                <p>Feed pobierany z Supabase. Nowy typ pojawi się tutaj po zapisie.</p>
+              </div>
+              <div className="feed-actions">
+                <button onClick={() => setView('add')}>+ Dodaj typ</button>
+                <button onClick={fetchTips}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+              </div>
             </div>
-            <button onClick={fetchTips}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
-          </div>
-          <div className="feed-filters">
-            {filterItems.map(([key, label]) => (
-              <button
-                key={key}
-                className={activeFilter === key ? 'active' : ''}
-                onClick={() => setActiveFilter(key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
 
-          <div className="feed-stats">
-            <span>Wszystkie: <b>{tips.length}</b></span>
-            <span>Premium: <b>{tips.filter(t => t.access_type === 'premium').length}</b></span>
-            <span>Darmowe: <b>{tips.filter(t => t.access_type === 'free').length}</b></span>
-          </div>
+            <div className="feed-filters">
+              {filterItems.map(([key, label]) => (
+                <button
+                  key={key}
+                  className={activeFilter === key ? 'active' : ''}
+                  onClick={() => setActiveFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-          <div className="feed">
-            {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} />) : (
-              <div className="empty-state">Brak typów w tym filtrze.</div>
-            )}
-          </div>
-        </section>
+            <div className="feed-stats">
+              <span>Wszystkie: <b>{tips.length}</b></span>
+              <span>Premium: <b>{tips.filter(t => t.access_type === 'premium').length}</b></span>
+              <span>Darmowe: <b>{tips.filter(t => t.access_type === 'free').length}</b></span>
+            </div>
+
+            <div className="feed">
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} />) : (
+                <div className="empty-state">Brak typów w tym filtrze.</div>
+              )}
+            </div>
+          </section>
+        )}
       </main>
 
       <Rightbar />

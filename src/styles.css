@@ -107,3 +107,41 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .feed-stats{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 14px}.feed-stats span{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:#667085;font-size:14px}.feed-stats b{color:var(--primary)}
 .pro-tip-card{transition:.18s ease}.pro-tip-card:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.075)}
 .card-badges{display:flex;align-items:center;gap:8px}.free-tag{background:#f8fafc;color:#475467;border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-weight:900}.ai-badge{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-weight:900}.empty-state{background:#fff;border:1px dashed var(--border);border-radius:16px;padding:28px;text-align:center;color:#667085;font-weight:800}
+
+
+/* Wersja 14 FULL FIXED — nawigacja bez utraty layoutu */
+.menu button{
+  width:100%;
+  text-align:left;
+  padding:13px 14px;
+  border-radius:10px;
+  color:#24324a;
+  text-decoration:none;
+  font-weight:600;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:15px;
+}
+.menu button.active{
+  background:#eefcfb;
+  color:var(--primary);
+  box-shadow:inset 3px 0 0 var(--primary);
+}
+.menu button:hover{
+  background:#f8fafc;
+}
+.menu button.active:hover{
+  background:#eefcfb;
+}
+.feed-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.feed-actions button:first-child{
+  background:linear-gradient(135deg,var(--primary),#05746f);
+  color:#fff;
+  border-color:transparent;
+}
