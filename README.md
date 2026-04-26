@@ -94,3 +94,21 @@ Poprawiony krok 21:
 
 ## Wersja 22 FULL
 Przygotowanie pod Stripe Checkout: struktura pod realne płatności bez psucia aktualnej aplikacji.
+
+## Wersja 23 FULL — Stripe Checkout
+
+Dodano prawdziwy fundament Stripe:
+- Netlify Function: `netlify/functions/create-checkout-session.js`
+- przycisk “Zapłać przez Stripe”
+- fallback “Odblokuj testowo”
+- obsługa powrotu `payment=success`
+- ENV: `STRIPE_SECRET_KEY`
+
+### Co trzeba dodać w Netlify
+Environment variables:
+- `STRIPE_SECRET_KEY` = Twój Stripe secret key, np. `sk_test_...`
+
+Po dodaniu ENV:
+Deploys → Trigger deploy → Deploy without cache
+
+Jeśli nie dodasz STRIPE_SECRET_KEY, aplikacja nadal działa dzięki przyciskowi “Odblokuj testowo”.

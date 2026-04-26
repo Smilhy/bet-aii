@@ -581,16 +581,51 @@ function AuthView({ onAuth }) {
 
 
 function PaymentModal({ tip, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
+
   if (!tip) return null
 
   const price = Number(tip.price || 29)
+
+  async function startCheckout() {
+    setPaymentError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/.netlify/functions/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipId: tip.id,
+          matchName: `${tip.team_home} vs ${tip.team_away}`,
+          price
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Nie udało się utworzyć płatności Stripe.')
+      }
+
+      window.location.href = data.url
+    } catch (error) {
+      setPaymentError(error.message)
+      setLoading(false)
+    }
+  }
+
+  function demoUnlock() {
+    onSuccess(tip)
+  }
 
   return (
     <div className="payment-backdrop">
       <div className="payment-modal">
         <div className="payment-icon">💳</div>
         <h2>Odblokuj typ premium</h2>
-        <p>To jest bezpieczna symulacja Stripe Checkout pod przyszłe prawdziwe płatności.</p>
+        <p>Stripe Checkout jest gotowy. Dodaj STRIPE_SECRET_KEY w Netlify, aby uruchomić realne płatności.</p>
 
         <div className="payment-summary">
           <span>Mecz</span>
@@ -607,9 +642,16 @@ function PaymentModal({ tip, onClose, onSuccess }) {
           <b>{price.toFixed(2)} zł</b>
         </div>
 
-        <button className="payment-primary" onClick={() => onSuccess(tip)}>
-          Zapłać i odblokuj
+        {paymentError && <div className="payment-error">{paymentError}</div>}
+
+        <button className="payment-primary" onClick={startCheckout} disabled={loading}>
+          {loading ? 'Łączenie ze Stripe...' : 'Zapłać przez Stripe'}
         </button>
+
+        <button className="payment-demo" onClick={demoUnlock}>
+          Odblokuj testowo
+        </button>
+
         <button className="payment-secondary" onClick={onClose}>
           Anuluj
         </button>
@@ -673,6 +715,25 @@ function App() {
     }
 
     loadSession()
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const payment = params.get('payment')
+    const tipId = params.get('tip')
+
+    if (payment === 'success' && tipId) {
+      setUnlockedTips(prev => {
+        const next = new Set(prev)
+        next.add(tipId)
+        return next
+      })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
+    if (payment === 'cancel') {
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
   }, [])
 
   function showToast(nextToast) {

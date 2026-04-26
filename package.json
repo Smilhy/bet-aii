@@ -10,7 +10,8 @@
     "react": "latest",
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "stripe": "latest"
   },
   "devDependencies": {}
 }
