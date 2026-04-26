@@ -29,3 +29,22 @@ Pełna wersja projektu, bez utraty layoutu:
 - przycisk + Dodaj typ przełącza na formularz,
 - po zapisie typu wraca do Dashboardu,
 - feed, formularz, Supabase, filtry, sidebar i prawa kolumna zostają.
+
+## Wersja 15 FULL
+Dodano PRO UX:
+- toast po dodaniu typu i przy błędach,
+- skeleton loader podczas pobierania feedu,
+- lepszy empty state,
+- blokada przycisku podczas zapisu została zachowana,
+- pełny layout i wszystkie funkcje z v14 zostają.
+
+## Wersja 16 FULL
+Dodano system monetyzacji premium:
+- premium typy są zablokowane,
+- ukryty typ, kurs, AI% i analiza,
+- przycisk “Odblokuj za X zł”,
+- po kliknięciu karta pokazuje pełną treść,
+- toast potwierdzający odblokowanie,
+- panel Marketplace premium nad feedem.
+
+To jest symulacja zakupu pod przyszłe podpięcie Stripe.

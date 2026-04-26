@@ -126,46 +126,61 @@ function Rightbar() {
   )
 }
 
-function TipCard({ tip }) {
+function TipCard({ tip, unlocked, onUnlock }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
-  const statusClass = tip.status === 'won' ? 'won' : 'pending'
+  const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
   const probability = Number(tip.ai_probability || 0)
+  const isPremium = tip.access_type === 'premium'
+  const isLocked = isPremium && !unlocked
+  const author = tip.author_name || 'AdrianNowak'
 
   return (
-    <article className="tip-card pro-tip-card">
+    <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
       <div className="tip-header">
         <div className="tipster">
-          <div className={`photo ${tip.author_name === 'AI Tip' ? 'bot' : ''}`}>{tip.author_name?.slice(0,2).toUpperCase() || 'AN'}</div>
-          <div><strong>{tip.author_name || 'AdrianNowak'}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
-          <em>{tip.author_name === 'AI Tip' ? 'AI' : 'VIP'}</em>
+          <div className={`photo ${author === 'AI Tip' ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
+          <div><strong>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
+          <em>{author === 'AI Tip' ? 'AI' : 'TIPSTER'}</em>
         </div>
         <div className="card-badges">
-          <span className={tip.access_type === 'premium' ? 'premium-tag' : 'free-tag'}>{tip.access_type === 'premium' ? '▣ PREMIUM' : '○ FREE'}</span>
-          <span className="ai-badge">AI {probability}%</span>
+          <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
+          <span className="ai-badge">{isLocked ? 'AI 🔒' : `AI ${probability}%`}</span>
         </div>
       </div>
+
       <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
+
       <div className="tip-grid">
         <div className="match-box">
           <div className="teams"><b>{tip.team_home}</b><span>vs</span><b>{tip.team_away}</b></div>
-          <div className="bet-row"><div><span>Typ</span><b>{tip.bet_type}</b></div><div><span>Kurs</span><b>{tip.odds}</b></div></div>
+          <div className="bet-row">
+            <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
+            <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
+          </div>
         </div>
-        <div className="ai-box">
-          <div className="ai-title">✦ AI Analiza <strong>{probability}%</strong></div>
-          <p>{tip.analysis || 'Analiza zostanie uzupełniona przez autora typu.'}</p>
-          <div className="progress"><i style={{width:`${probability}%`}}></i></div>
+
+        <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
+          <div className="ai-title">✦ AI Analiza <strong>{isLocked ? '🔒' : `${probability}%`}</strong></div>
+          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : (tip.analysis || 'Analiza zostanie uzupełniona przez autora typu.')}</p>
+          <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
+          {isLocked && <div className="lock-overlay">🔒 Premium</div>}
         </div>
       </div>
+
       <div className="tip-footer">
         <span className={statusClass}>{statusLabel}</span>
         <span>♡ 128</span><span>▢ 45</span><span>↗</span>
-        <button>{tip.access_type === 'premium' ? `Kup dostęp ${tip.price || 29} zł` : 'Zobacz typ'}</button>
+        {isLocked ? (
+          <button className="unlock-btn" onClick={() => onUnlock(tip)}>Odblokuj za {tip.price || 29} zł</button>
+        ) : (
+          <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
+        )}
       </div>
     </article>
   )
 }
 
-function AddTipForm({ onTipSaved }) {
+function AddTipForm({ onTipSaved, onToast }) {
   const [form, setForm] = useState({
     team_home: 'Real Madryt',
     team_away: 'Bayern Monachium',
@@ -207,10 +222,12 @@ function AddTipForm({ onTipSaved }) {
     setMessage('')
     if (!payload.team_home || !payload.team_away || !payload.league || !payload.bet_type || !payload.odds) {
       setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
+      onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
     if (!isSupabaseConfigured || !supabase) {
       setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
+      onToast?.({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji ENV w Netlify.' })
       return
     }
     setSaving(true)
@@ -218,9 +235,11 @@ function AddTipForm({ onTipSaved }) {
     setSaving(false)
     if (error) {
       setMessage('Błąd zapisu: ' + error.message)
+      onToast?.({ type: 'error', title: 'Błąd zapisu', message: error.message })
       return
     }
     setMessage('✅ Typ zapisany w Supabase i dodany do feedu.')
+    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w feedzie.' })
     onTipSaved()
   }
 
@@ -312,11 +331,44 @@ function AddTipForm({ onTipSaved }) {
   )
 }
 
+
+function Toast({ toast, onClose }) {
+  if (!toast) return null
+  return (
+    <div className={`toast ${toast.type || 'success'}`}>
+      <div>
+        <strong>{toast.title}</strong>
+        <span>{toast.message}</span>
+      </div>
+      <button onClick={onClose}>×</button>
+    </div>
+  )
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="skeleton-list">
+      {[1,2,3].map(i => (
+        <div className="skeleton-card" key={i}>
+          <div className="skeleton-line short"></div>
+          <div className="skeleton-line"></div>
+          <div className="skeleton-grid">
+            <div className="skeleton-box"></div>
+            <div className="skeleton-box"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView] = useState('dashboard')
+  const [toast, setToast] = useState(null)
+  const [unlockedTips, setUnlockedTips] = useState(() => new Set())
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -342,6 +394,25 @@ function App() {
     fetchTips()
   }, [])
 
+  function showToast(nextToast) {
+    setToast(nextToast)
+    window.clearTimeout(window.__betaiToastTimer)
+    window.__betaiToastTimer = window.setTimeout(() => setToast(null), 3500)
+  }
+
+  function unlockTip(tip) {
+    setUnlockedTips(prev => {
+      const next = new Set(prev)
+      next.add(tip.id)
+      return next
+    })
+    showToast({
+      type: 'success',
+      title: 'Typ odblokowany',
+      message: `Odblokowano ${tip.team_home} vs ${tip.team_away}.`
+    })
+  }
+
   const filteredTips = tips.filter(tip => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
@@ -361,6 +432,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <Toast toast={toast} onClose={() => setToast(null)} />
       <Sidebar view={view} setView={setView} />
 
       <main className="main">
@@ -375,6 +447,7 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
+            onToast={showToast}
             onTipSaved={() => {
               fetchTips()
               setView('dashboard')
@@ -392,6 +465,17 @@ function App() {
               <div className="feed-actions">
                 <button onClick={() => setView('add')}>+ Dodaj typ</button>
                 <button onClick={fetchTips}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+              </div>
+            </div>
+
+            <div className="monetization-panel">
+              <div>
+                <strong>💰 Marketplace premium</strong>
+                <span>Typy premium są zablokowane do momentu zakupu. W tej wersji odblokowanie działa jako symulacja pod przyszłe płatności Stripe.</span>
+              </div>
+              <div className="monetization-stats">
+                <b>{tips.filter(t => t.access_type === 'premium').length}</b>
+                <small>typów premium</small>
               </div>
             </div>
 
@@ -414,7 +498,7 @@ function App() {
             </div>
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} onUnlock={unlockTip} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
