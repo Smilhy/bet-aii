@@ -1,16 +1,16 @@
 {
+  "name": "betai",
+  "version": "1.0.0",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "dev": "vite"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "@supabase/supabase-js": "latest",
-    "lucide-react": "latest"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@supabase/supabase-js": "^2.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
 }
