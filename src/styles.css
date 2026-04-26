@@ -737,3 +737,41 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  display:grid;
+  place-items:center;
+  z-index:1000;
+}
+.modal{
+  background:#fff;
+  padding:30px;
+  border-radius:18px;
+  text-align:center;
+  width:320px;
+}
+.modal .price{
+  font-size:28px;
+  margin:12px 0;
+  font-weight:900;
+}
+.pay-btn{
+  width:100%;
+  padding:12px;
+  background:linear-gradient(135deg,#0f9488,#05746f);
+  color:#fff;
+  border:0;
+  border-radius:10px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+.close-btn{
+  width:100%;
+  padding:10px;
+  background:#eee;
+  border:0;
+  border-radius:10px;
+}

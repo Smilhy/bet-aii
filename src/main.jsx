@@ -579,6 +579,35 @@ function AuthView({ onAuth }) {
   )
 }
 
+
+function PaymentModal({ tip, onClose, onSuccess }) {
+  if (!tip) return null
+
+  function handleFakePayment() {
+    setTimeout(() => {
+      onSuccess(tip)
+      onClose()
+    }, 800)
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h2>💳 Płatność</h2>
+        <p>Odblokowanie typu:</p>
+        <strong>{tip.team_home} vs {tip.team_away}</strong>
+        <div className="price">{tip.price || 29} zł</div>
+
+        <button className="pay-btn" onClick={handleFakePayment}>
+          Zapłać teraz (symulacja Stripe)
+        </button>
+
+        <button className="close-btn" onClick={onClose}>Anuluj</button>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -589,6 +618,7 @@ function App() {
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
+  const [selectedPayment, setSelectedPayment] = useState(null)
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -642,14 +672,8 @@ function App() {
   }
 
   function unlockTip(tip) {
-    const price = Number(tip.price || 29)
-
-    if (unlockedTips.has(tip.id)) {
-      showToast({
-        type: 'success',
-        title: 'Już odblokowane',
-        message: 'Ten typ jest już dostępny na Twoim koncie.'
-      })
+  setSelectedPayment(tip)
+})
       return
     }
 
@@ -675,7 +699,20 @@ function App() {
     })
   }
 
-  function topUpWallet() {
+  function handlePaymentSuccess(tip) {
+  setUnlockedTips(prev => {
+    const next = new Set(prev)
+    next.add(tip.id)
+    return next
+  })
+  showToast({
+    type: 'success',
+    title: 'Płatność zakończona',
+    message: 'Typ został odblokowany.'
+  })
+}
+
+function topUpWallet() {
     setWallet(prev => Number((prev + 100).toFixed(2)))
     showToast({
       type: 'success',
@@ -722,6 +759,7 @@ function App() {
   return (
     <div className="app-shell">
       <Toast toast={toast} onClose={() => setToast(null)} />
+      <PaymentModal tip={selectedPayment} onClose={()=>setSelectedPayment(null)} onSuccess={handlePaymentSuccess} />
       <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={topUpWallet} user={sessionUser} onLogout={logout} />
 
       <main className="main">
