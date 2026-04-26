@@ -48,3 +48,13 @@ Dodano system monetyzacji premium:
 - panel Marketplace premium nad feedem.
 
 To jest symulacja zakupu pod przyszłe podpięcie Stripe.
+
+## Wersja 17 FULL
+Dodano portfel użytkownika:
+- saldo konta w sidebarze i topbarze,
+- widok Portfel,
+- lista odblokowanych typów,
+- licznik zakupów,
+- symulacja doładowania +100 zł,
+- odblokowanie premium odejmuje środki,
+- brak środków pokazuje toast.

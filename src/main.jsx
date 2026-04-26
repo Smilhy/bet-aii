@@ -51,7 +51,7 @@ const staticTips = [
   }
 ]
 
-function Sidebar({ view, setView }) {
+function Sidebar({ view, setView, wallet, unlockedCount, onTopUp }) {
   return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
@@ -62,14 +62,15 @@ function Sidebar({ view, setView }) {
           <strong>AdrianNowak</strong>
           <span className="pill">VIP</span>
         </div>
-        <div className="wallet-row"><span>Saldo</span><b>1,250.50 zł</b></div>
-        <div className="wallet-row"><span>Punkty</span><b>2,450</b></div>
-        <button className="outline-btn">Doładuj konto</button>
+        <div className="wallet-row"><span>Saldo</span><b>{wallet.toFixed(2)} zł</b></div>
+        <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount}</b></div>
+        <button className="outline-btn" onClick={onTopUp}>Doładuj konto</button>
       </div>
 
       <nav className="menu">
         <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
         <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
+        <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -362,12 +363,69 @@ function FeedSkeleton() {
   )
 }
 
+
+function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
+  const unlockedList = tips.filter(tip => unlockedTips.has(tip.id))
+  const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
+
+  return (
+    <section className="wallet-panel">
+      <div className="wallet-main-card">
+        <div>
+          <span>Saldo konta</span>
+          <strong>{wallet.toFixed(2)} zł</strong>
+          <p>Saldo używane do odblokowania typów premium.</p>
+        </div>
+        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
+      </div>
+
+      <div className="wallet-grid">
+        <div className="wallet-stat">
+          <span>Odblokowane typy</span>
+          <b>{unlockedList.length}</b>
+        </div>
+        <div className="wallet-stat">
+          <span>Wydano</span>
+          <b>{spent.toFixed(2)} zł</b>
+        </div>
+        <div className="wallet-stat">
+          <span>Status</span>
+          <b>VIP</b>
+        </div>
+      </div>
+
+      <div className="unlocked-list">
+        <div className="unlocked-head">
+          <h3>Odblokowane typy</h3>
+          <span>{unlockedList.length} zakupów</span>
+        </div>
+
+        {unlockedList.length ? unlockedList.map(tip => (
+          <div className="unlocked-item" key={tip.id}>
+            <div>
+              <strong>{tip.team_home} vs {tip.team_away}</strong>
+              <span>{tip.bet_type} • kurs {tip.odds}</span>
+            </div>
+            <b>{Number(tip.price || 0).toFixed(2)} zł</b>
+          </div>
+        )) : (
+          <div className="empty-wallet">
+            <strong>Nie masz jeszcze odblokowanych typów</strong>
+            <span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView] = useState('dashboard')
   const [toast, setToast] = useState(null)
+  const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
 
   async function fetchTips() {
@@ -401,6 +459,27 @@ function App() {
   }
 
   function unlockTip(tip) {
+    const price = Number(tip.price || 29)
+
+    if (unlockedTips.has(tip.id)) {
+      showToast({
+        type: 'success',
+        title: 'Już odblokowane',
+        message: 'Ten typ jest już dostępny na Twoim koncie.'
+      })
+      return
+    }
+
+    if (wallet < price) {
+      showToast({
+        type: 'error',
+        title: 'Brak środków',
+        message: `Doładuj konto, aby odblokować typ za ${price.toFixed(2)} zł.`
+      })
+      return
+    }
+
+    setWallet(prev => Number((prev - price).toFixed(2)))
     setUnlockedTips(prev => {
       const next = new Set(prev)
       next.add(tip.id)
@@ -409,7 +488,16 @@ function App() {
     showToast({
       type: 'success',
       title: 'Typ odblokowany',
-      message: `Odblokowano ${tip.team_home} vs ${tip.team_away}.`
+      message: `Pobrano ${price.toFixed(2)} zł z portfela.`
+    })
+  }
+
+  function topUpWallet() {
+    setWallet(prev => Number((prev + 100).toFixed(2)))
+    showToast({
+      type: 'success',
+      title: 'Konto doładowane',
+      message: 'Dodano 100 zł do salda testowego.'
     })
   }
 
@@ -433,7 +521,7 @@ function App() {
   return (
     <div className="app-shell">
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <Sidebar view={view} setView={setView} />
+      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={topUpWallet} />
 
       <main className="main">
         <header className="topbar">
@@ -441,6 +529,7 @@ function App() {
           <div className="top-actions">
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
+            <button className="wallet-top-btn" onClick={() => setView('wallet')}>{wallet.toFixed(2)} zł</button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
         </header>
@@ -453,6 +542,10 @@ function App() {
               setView('dashboard')
             }}
           />
+        )}
+
+        {view === 'wallet' && (
+          <WalletPanel wallet={wallet} unlockedTips={unlockedTips} tips={tips} onTopUp={topUpWallet} />
         )}
 
         {view === 'dashboard' && (
