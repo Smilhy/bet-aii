@@ -69,3 +69,16 @@ Dodano ranking tipsterów:
 - leaderboard z ROI, winrate, profit, typami i premium,
 - statystyki top marketplace,
 - CTA “Zostań tipsterem PRO”.
+
+## Wersja 20 FULL
+Dodano Supabase Auth:
+- ekran logowania i rejestracji,
+- sesja użytkownika,
+- wylogowanie,
+- email użytkownika w topbarze i sidebarze,
+- admin badge dla smilhytv@gmail.com,
+- tips dostają author_id i author_name z zalogowanego konta,
+- nowy schema.sql z profiles i unlocked_tips.
+
+WAŻNE: w Supabase → Authentication możesz wyłączyć email confirmation na czas testów,
+żeby rejestracja działała natychmiast.

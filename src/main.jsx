@@ -51,7 +51,7 @@ const staticTips = [
   }
 ]
 
-function Sidebar({ view, setView, wallet, unlockedCount, onTopUp }) {
+function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout }) {
   return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
@@ -59,12 +59,13 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp }) {
       <div className="user-card">
         <div className="avatar">AN</div>
         <div>
-          <strong>AdrianNowak</strong>
-          <span className="pill">VIP</span>
+          <strong>{user?.email?.split('@')[0] || 'AdrianNowak'}</strong>
+          <span className="pill">{user?.email === 'smilhytv@gmail.com' ? 'ADMIN' : 'VIP'}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{wallet.toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount}</b></div>
         <button className="outline-btn" onClick={onTopUp}>Doładuj konto</button>
+        <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
       </div>
 
       <nav className="menu">
@@ -182,7 +183,7 @@ function TipCard({ tip, unlocked, onUnlock }) {
   )
 }
 
-function AddTipForm({ onTipSaved, onToast }) {
+function AddTipForm({ onTipSaved, onToast, user }) {
   const [form, setForm] = useState({
     team_home: 'Real Madryt',
     team_away: 'Bayern Monachium',
@@ -203,7 +204,8 @@ function AddTipForm({ onTipSaved, onToast }) {
   const isPremium = form.access_type === 'premium'
 
   const payload = useMemo(() => ({
-    author_name: 'AdrianNowak',
+    author_name: user?.email?.split('@')[0] || 'AdrianNowak',
+    author_id: user?.id || null,
     league: form.league,
     team_home: form.team_home,
     team_away: form.team_away,
@@ -502,11 +504,88 @@ function LeaderboardView({ tips }) {
   )
 }
 
+
+function AuthView({ onAuth }) {
+  const [mode, setMode] = useState('login')
+  const [email, setEmail] = useState('smilhytv@gmail.com')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [authMessage, setAuthMessage] = useState('')
+
+  async function submitAuth(e) {
+    e.preventDefault()
+    setAuthMessage('')
+
+    if (!isSupabaseConfigured || !supabase) {
+      setAuthMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
+      return
+    }
+
+    if (!email || !password) {
+      setAuthMessage('Wpisz email i hasło.')
+      return
+    }
+
+    setLoading(true)
+
+    const result = mode === 'login'
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password })
+
+    setLoading(false)
+
+    if (result.error) {
+      setAuthMessage(result.error.message)
+      return
+    }
+
+    if (mode === 'register') {
+      setAuthMessage('Konto utworzone. Jeśli Supabase wymaga potwierdzenia email, sprawdź skrzynkę.')
+    }
+
+    onAuth?.(result.data?.user || null)
+  }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-brand">Bet<span>+AI</span></div>
+        <h1>{mode === 'login' ? 'Zaloguj się' : 'Utwórz konto'}</h1>
+        <p>Wejdź do panelu marketplace, portfela i typów premium.</p>
+
+        <form onSubmit={submitAuth}>
+          <label>Email</label>
+          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="email@example.com" />
+
+          <label>Hasło</label>
+          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Minimum 6 znaków" />
+
+          {authMessage && <div className="auth-message">{authMessage}</div>}
+
+          <button className="auth-submit" disabled={loading}>
+            {loading ? 'Proszę czekać...' : mode === 'login' ? 'Zaloguj' : 'Zarejestruj'}
+          </button>
+        </form>
+
+        <button className="auth-switch" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+          {mode === 'login' ? 'Nie masz konta? Zarejestruj się' : 'Masz konto? Zaloguj się'}
+        </button>
+
+        <div className="auth-hint">
+          Admin projektu: <b>smilhytv@gmail.com</b>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView] = useState('dashboard')
+  const [sessionUser, setSessionUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
@@ -533,6 +612,27 @@ function App() {
 
   useEffect(() => {
     fetchTips()
+  }, [])
+
+  useEffect(() => {
+    async function loadSession() {
+      if (!isSupabaseConfigured || !supabase) {
+        setAuthLoading(false)
+        return
+      }
+
+      const { data } = await supabase.auth.getSession()
+      setSessionUser(data?.session?.user || null)
+      setAuthLoading(false)
+
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSessionUser(session?.user || null)
+      })
+
+      return () => listener?.subscription?.unsubscribe?.()
+    }
+
+    loadSession()
   }, [])
 
   function showToast(nextToast) {
@@ -584,6 +684,16 @@ function App() {
     })
   }
 
+  async function logout() {
+    if (supabase) await supabase.auth.signOut()
+    setSessionUser(null)
+    showToast({
+      type: 'success',
+      title: 'Wylogowano',
+      message: 'Do zobaczenia ponownie.'
+    })
+  }
+
   const filteredTips = tips.filter(tip => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
@@ -601,10 +711,18 @@ function App() {
     ['mine', 'Moje']
   ]
 
+  if (authLoading) {
+    return <div className="auth-screen"><div className="auth-card"><div className="auth-brand">Bet<span>+AI</span></div><p>Ładowanie sesji...</p></div></div>
+  }
+
+  if (!sessionUser) {
+    return <AuthView onAuth={(user) => setSessionUser(user)} />
+  }
+
   return (
     <div className="app-shell">
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={topUpWallet} />
+      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={topUpWallet} user={sessionUser} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -612,6 +730,7 @@ function App() {
           <div className="top-actions">
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
+            <span className="user-top-email">{sessionUser?.email}</span>
             <button className="wallet-top-btn" onClick={() => setView('wallet')}>{wallet.toFixed(2)} zł</button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
@@ -619,6 +738,7 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
+            user={sessionUser}
             onToast={showToast}
             onTipSaved={() => {
               fetchTips()
