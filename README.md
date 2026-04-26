@@ -58,3 +58,7 @@ Dodano portfel użytkownika:
 - symulacja doładowania +100 zł,
 - odblokowanie premium odejmuje środki,
 - brak środków pokazuje toast.
+
+
+## Wersja 18 FULL
+Dodano profil tipstera (UI przygotowane pod statystyki i sprzedaż).
