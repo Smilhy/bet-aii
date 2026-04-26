@@ -99,3 +99,11 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .result{display:grid;grid-template-columns:1fr 46px 1fr 72px;gap:8px;align-items:center;padding:9px 0}.result b{text-align:center}.result em{font-style:normal;background:#e6fffb;color:var(--primary);border-radius:8px;padding:7px;text-align:center;font-size:13px}.result em.neutral{background:#f4f5f7;color:#667085}
 @media(max-width:1200px){.app-shell{grid-template-columns:230px 1fr}.rightbar{display:none}}
 @media(max-width:760px){.app-shell{display:block}.sidebar{position:relative;height:auto}.main{padding:16px}.two-cols,.access-grid,.match-inputs,.tip-grid{grid-template-columns:1fr}.match-inputs span{display:none}.topbar{height:auto;flex-direction:column}.top-actions{margin-left:0}.brand{font-size:34px}}
+
+/* Wersja 13 — PRO feed filters */
+.feed-filters{display:flex;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px}
+.feed-filters button{border:1px solid var(--border);background:#fff;color:#344054;border-radius:12px;padding:10px 16px;font-weight:900;cursor:pointer}
+.feed-filters button.active{background:linear-gradient(135deg,var(--primary),#05746f);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(15,148,136,.18)}
+.feed-stats{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 14px}.feed-stats span{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 12px;color:#667085;font-size:14px}.feed-stats b{color:var(--primary)}
+.pro-tip-card{transition:.18s ease}.pro-tip-card:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.075)}
+.card-badges{display:flex;align-items:center;gap:8px}.free-tag{background:#f8fafc;color:#475467;border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-weight:900}.ai-badge{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-weight:900}.empty-state{background:#fff;border:1px dashed var(--border);border-radius:16px;padding:28px;text-align:center;color:#667085;font-weight:800}

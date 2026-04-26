@@ -131,14 +131,17 @@ function TipCard({ tip }) {
   const probability = Number(tip.ai_probability || 0)
 
   return (
-    <article className="tip-card">
+    <article className="tip-card pro-tip-card">
       <div className="tip-header">
         <div className="tipster">
           <div className={`photo ${tip.author_name === 'AI Tip' ? 'bot' : ''}`}>{tip.author_name?.slice(0,2).toUpperCase() || 'AN'}</div>
           <div><strong>{tip.author_name || 'AdrianNowak'}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{tip.author_name === 'AI Tip' ? 'AI' : 'VIP'}</em>
         </div>
-        {tip.access_type === 'premium' && <span className="premium-tag">▣ PREMIUM</span>}
+        <div className="card-badges">
+          <span className={tip.access_type === 'premium' ? 'premium-tag' : 'free-tag'}>{tip.access_type === 'premium' ? '▣ PREMIUM' : '○ FREE'}</span>
+          <span className="ai-badge">AI {probability}%</span>
+        </div>
       </div>
       <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
       <div className="tip-grid">
@@ -311,6 +314,7 @@ function AddTipForm({ onTipSaved }) {
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('all')
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -322,7 +326,7 @@ function App() {
       .from('tips')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(25)
     setLoading(false)
     if (error) {
       console.error(error)
@@ -335,6 +339,23 @@ function App() {
   useEffect(() => {
     fetchTips()
   }, [])
+
+  const filteredTips = tips.filter((tip) => {
+    if (activeFilter === 'all') return true
+    if (activeFilter === 'free') return tip.access_type === 'free'
+    if (activeFilter === 'premium') return tip.access_type === 'premium'
+    if (activeFilter === 'ai') return tip.author_name === 'AI Tip'
+    if (activeFilter === 'mine') return (tip.author_name || 'AdrianNowak') === 'AdrianNowak'
+    return true
+  })
+
+  const filterItems = [
+    ['all', 'Wszystkie'],
+    ['free', 'Darmowe'],
+    ['premium', 'Premium'],
+    ['ai', 'AI Typy'],
+    ['mine', 'Moje']
+  ]
 
   return (
     <div className="app-shell">
@@ -360,8 +381,28 @@ function App() {
             </div>
             <button onClick={fetchTips}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
           </div>
+          <div className="feed-filters">
+            {filterItems.map(([key, label]) => (
+              <button
+                key={key}
+                className={activeFilter === key ? 'active' : ''}
+                onClick={() => setActiveFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="feed-stats">
+            <span>Wszystkie: <b>{tips.length}</b></span>
+            <span>Premium: <b>{tips.filter(t => t.access_type === 'premium').length}</b></span>
+            <span>Darmowe: <b>{tips.filter(t => t.access_type === 'free').length}</b></span>
+          </div>
+
           <div className="feed">
-            {tips.map(tip => <TipCard key={tip.id} tip={tip} />)}
+            {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} />) : (
+              <div className="empty-state">Brak typów w tym filtrze.</div>
+            )}
           </div>
         </section>
       </main>

@@ -15,3 +15,9 @@ npm run build
 
 Publish directory:
 dist
+
+## Wersja 13
+- filtry feedu: Wszystkie / Darmowe / Premium / AI Typy / Moje
+- poprawione karty typów PRO
+- statystyki feedu
+- hover i badge UI
