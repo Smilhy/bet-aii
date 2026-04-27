@@ -281,3 +281,9 @@ Naprawiono crash:
 - `sidebarProfile is not defined`
 - wszystkie referencje `sidebarProfile` zostały zastąpione przez `profile`,
 - build sprawdzony lokalnie.
+
+## Wersja 42 — final profile crash fix
+Naprawiono crash:
+- `profile is not defined`
+- usunięto pozostałe użycie `profile` poza Sidebarem,
+- build sprawdzony lokalnie.
