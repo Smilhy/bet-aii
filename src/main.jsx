@@ -375,7 +375,7 @@ function AddTipForm({ onTipSaved, onToast, user }) {
             <span>Twój typ będzie widoczny dla wszystkich</span>
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
-            <strong>🔒 Premium</strong><small className="free-premium-hint" data-key="FREE_INFO_PREMIUM_LOCK">Dostępne po zakupie Premium.</small>
+            <strong>🔒 Premium</strong><small className="free-premium-hint" data-key="FREE_INFO_PREMIUM_LOCK">Dostępne po zakupie Premium. Konto FREE nie może publikować płatnych typów.</small>
             <span>Tylko użytkownicy, którzy wykupią dostęp</span>
           </button>
         </div>

@@ -406,3 +406,9 @@ Zmieniono surowy błąd `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` na czytelny komunika
 - Saldo w sidebarze jest brane z `get_wallet_balance()` i tabeli `wallet_transactions`.
 - Usunięte fake saldo 1250/2550 dla zwykłych kont i admina.
 - Przycisk `Doładuj konto` nie dodaje pieniędzy bez Stripe.
+
+## Wersja 62 — inline error + premium UX fix
+Naprawiono dolny czerwony komunikat:
+- zamiast `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` pokazuje:
+  `Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
+- dodatkowo formatowanie błędów działa dla toastów i boxów formularza.

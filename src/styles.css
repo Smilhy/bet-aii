@@ -1467,3 +1467,13 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   color:#64748b;
   font-weight:700;
 }
+
+/* Wersja 62 — friendly inline premium error */
+.premium-form-error-friendly{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  color:#be123c;
+  border-radius:14px;
+  padding:12px 14px;
+  font-weight:800;
+}
