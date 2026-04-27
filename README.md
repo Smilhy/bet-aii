@@ -557,3 +557,6 @@ Admin rozpoznawany po emailu `smilhytv@gmail.com`.
 
 ## Wersja 84 — Admin finance render fix
 Naprawiono pustą zakładkę `Admin finanse`: dodano brakujący render `<AdminFinanceView />` w głównym widoku.
+
+## Wersja 85 — Admin finanse visible fix
+Naprawiono pustą stronę po kliknięciu `Admin finanse`: render bloku został dodany bezpośrednio do `<main>`.

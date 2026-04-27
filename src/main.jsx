@@ -2015,6 +2015,14 @@ function App() {
           <PayoutsView user={sessionUser} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestPayout} userPlan={accountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
+
+        {view === 'adminFinance' && (
+          <AdminFinanceView
+            report={adminFinanceReport}
+            onRefresh={fetchAdminFinanceReport}
+          />
+        )}
+
         {view === 'dashboard' && (
           <section className="feed-section">
             <div className="feed-title">
