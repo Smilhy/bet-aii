@@ -121,3 +121,27 @@ Dodano Stripe Webhook (backend ready pod realne odblokowanie po płatności)
 Poprawka błędu: `payment method type: blik is invalid`.
 Stripe Checkout używa teraz tylko `card`, więc działa bez aktywowania BLIK/P24 w Stripe Dashboard.
 Webhook poprawiony: `received: true`.
+
+## Wersja 25 FULL — płatności zapis do bazy
+
+Dodano:
+- historia płatności w aplikacji,
+- zakładka “Płatności”,
+- tabela `payments` w Supabase,
+- webhook zapisuje `unlocked_tips` i `payments`,
+- checkout przekazuje `user_id`, `tip_id`, kwotę,
+- Stripe nadal używa tylko `card`, bez BLIK/P24.
+
+### Ważne ENV w Netlify
+Wymagane:
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Dla zapisu webhooka do Supabase dodaj też:
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Klucz service role znajdziesz w Supabase:
+Project Settings → API → service_role key.
+Nie wklejaj go publicznie.

@@ -869,3 +869,97 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   font-size:14px;
   line-height:1.35;
 }
+
+
+/* Wersja 25 — płatności / historia */
+.payments-page{
+  max-width:980px;
+}
+.payments-hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  background:linear-gradient(135deg,#062f2d,#0f9488);
+  color:#fff;
+  border-radius:22px;
+  padding:26px;
+  margin-bottom:16px;
+  box-shadow:0 18px 42px rgba(15,148,136,.20);
+}
+.payments-hero h1{
+  margin:0 0 8px;
+  font-size:34px;
+  letter-spacing:-.6px;
+}
+.payments-hero p{
+  margin:0;
+  color:rgba(255,255,255,.78);
+}
+.payments-total{
+  min-width:150px;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+}
+.payments-total span{
+  display:block;
+  color:rgba(255,255,255,.78);
+  font-weight:800;
+  margin-bottom:4px;
+}
+.payments-total b{
+  font-size:30px;
+}
+.payments-table{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 8px 24px rgba(15,23,42,.035);
+}
+.payments-row{
+  display:grid;
+  grid-template-columns:1.1fr 1.3fr .7fr .7fr;
+  gap:14px;
+  align-items:center;
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+}
+.payments-row.header{
+  background:#f8fafc;
+  color:#667085;
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.paid-status{
+  display:inline-flex;
+  width:max-content;
+  background:#ecfdf3;
+  color:#039855;
+  border-radius:999px;
+  padding:6px 10px;
+  font-weight:900;
+}
+.paid-amount{
+  color:var(--green);
+  font-weight:900;
+}
+.payments-empty{
+  padding:30px;
+  text-align:center;
+  color:#667085;
+}
+.payments-empty strong{
+  display:block;
+  color:#101828;
+  margin-bottom:6px;
+}
+@media(max-width:760px){
+  .payments-hero{flex-direction:column;align-items:flex-start}
+  .payments-row{grid-template-columns:1fr;gap:6px}
+  .payments-row.header{display:none}
+}

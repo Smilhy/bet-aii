@@ -73,6 +73,7 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout
         <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
+        <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -580,7 +581,7 @@ function AuthView({ onAuth }) {
 }
 
 
-function PaymentModal({ tip, onClose, onSuccess }) {
+function PaymentModal({ tip, user, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [paymentError, setPaymentError] = useState('')
 
@@ -598,6 +599,8 @@ function PaymentModal({ tip, onClose, onSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tipId: tip.id,
+          userId: user?.id || null,
+          userEmail: user?.email || '',
           matchName: `${tip.team_home} vs ${tip.team_away}`,
           price
         })
@@ -660,6 +663,50 @@ function PaymentModal({ tip, onClose, onSuccess }) {
   )
 }
 
+
+function PaymentsView({ payments }) {
+  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+
+  return (
+    <section className="payments-page">
+      <div className="payments-hero">
+        <div>
+          <h1>Historia płatności</h1>
+          <p>Panel zakupów premium i przychodów marketplace.</p>
+        </div>
+        <div className="payments-total">
+          <span>Razem</span>
+          <b>{total.toFixed(2)} zł</b>
+        </div>
+      </div>
+
+      <div className="payments-table">
+        <div className="payments-row header">
+          <span>Data</span>
+          <span>Tip ID</span>
+          <span>Status</span>
+          <span>Kwota</span>
+        </div>
+
+        {payments.length ? payments.map(payment => (
+          <div className="payments-row" key={payment.id}>
+            <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+            <span>{payment.tip_id || '—'}</span>
+            <span className="paid-status">{payment.status || 'paid'}</span>
+            <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
+          </div>
+        )) : (
+          <div className="payments-empty">
+            <strong>Brak płatności</strong>
+            <span>Po pierwszym zakupie premium transakcja pojawi się tutaj.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -668,6 +715,7 @@ function App() {
   const [sessionUser, setSessionUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
+  const [paymentHistory, setPaymentHistory] = useState([])
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
@@ -696,6 +744,19 @@ function App() {
     fetchTips()
   }, [])
 
+  async function fetchPaymentHistory(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) return
+
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (!error) setPaymentHistory(data || [])
+  }
+
   useEffect(() => {
     async function loadSession() {
       if (!isSupabaseConfigured || !supabase) {
@@ -705,10 +766,12 @@ function App() {
 
       const { data } = await supabase.auth.getSession()
       setSessionUser(data?.session?.user || null)
+      if (data?.session?.user?.id) fetchPaymentHistory(data.session.user.id)
       setAuthLoading(false)
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
+        if (session?.user?.id) fetchPaymentHistory(session.user.id)
       })
 
       return () => listener?.subscription?.unsubscribe?.()
@@ -765,6 +828,17 @@ function App() {
       return next
     })
     setSelectedPayment(null)
+    setPaymentHistory(prev => [{
+      id: `local-${Date.now()}`,
+      tip_id: tip.id,
+      amount: price,
+      currency: 'pln',
+      status: 'paid',
+      created_at: new Date().toISOString()
+    }, ...prev])
+
+    fetchPaymentHistory()
+
     showToast({
       type: 'success',
       title: 'Płatność zakończona',
@@ -821,6 +895,7 @@ function App() {
       <Toast toast={toast} onClose={() => setToast(null)} />
       <PaymentModal
         tip={selectedPayment}
+        user={sessionUser}
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
@@ -855,6 +930,10 @@ function App() {
 
         {view === 'leaderboard' && (
           <LeaderboardView tips={tips} />
+        )}
+
+        {view === 'payments' && (
+          <PaymentsView payments={paymentHistory} />
         )}
 
         {view === 'dashboard' && (

@@ -25,6 +25,8 @@ exports.handler = async function(event) {
     const body = JSON.parse(event.body || "{}");
 
     const tipId = body.tipId || "unknown";
+    const userId = body.userId || "";
+    const userEmail = body.userEmail || "";
     const matchName = body.matchName || "Typ premium";
     const price = Math.max(1, Number(body.price || 29));
     const amount = Math.round(price * 100);
@@ -32,6 +34,7 @@ exports.handler = async function(event) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
+      customer_email: userEmail || undefined,
       line_items: [
         {
           price_data: {
@@ -46,7 +49,9 @@ exports.handler = async function(event) {
         }
       ],
       metadata: {
-        tip_id: tipId
+        tip_id: tipId,
+        user_id: userId,
+        amount_pln: String(price)
       },
       success_url: `${siteUrl}/?payment=success&tip=${encodeURIComponent(tipId)}`,
       cancel_url: `${siteUrl}/?payment=cancel`
