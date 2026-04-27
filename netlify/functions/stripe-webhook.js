@@ -30,14 +30,19 @@ exports.handler = async function(event) {
 
   if (stripeEvent.type === "checkout.session.completed") {
     const session = stripeEvent.data.object;
+
     const tipId = session.metadata?.tip_id;
     const userId = session.metadata?.user_id;
-    const amount = Number(session.metadata?.amount_pln || 0);
+    const amount = Number(session.metadata?.amount_pln || (session.amount_total || 0) / 100);
 
-    if (supabaseUrl && serviceRoleKey && tipId && userId) {
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.log("Supabase service role missing, payment not saved to DB");
+    } else if (!tipId || !userId) {
+      console.log("Missing metadata, payment not saved to DB", { tipId, userId });
+    } else {
       const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-      await supabase
+      const { error: unlockError } = await supabase
         .from("unlocked_tips")
         .upsert({
           user_id: userId,
@@ -45,7 +50,11 @@ exports.handler = async function(event) {
           price: amount
         }, { onConflict: "user_id,tip_id" });
 
-      await supabase
+      if (unlockError) {
+        console.error("unlocked_tips error:", unlockError.message);
+      }
+
+      const { error: paymentError } = await supabase
         .from("payments")
         .insert({
           user_id: userId,
@@ -55,14 +64,13 @@ exports.handler = async function(event) {
           currency: session.currency || "pln",
           status: "paid"
         });
-    }
 
-    console.log("Stripe payment completed", {
-      session: session.id,
-      tipId,
-      userId,
-      amount
-    });
+      if (paymentError) {
+        console.error("payments error:", paymentError.message);
+      }
+
+      console.log("Payment saved", { session: session.id, tipId, userId, amount });
+    }
   }
 
   return {

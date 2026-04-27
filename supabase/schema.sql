@@ -143,3 +143,50 @@ create policy "Users insert own payout requests"
 on public.payout_requests for insert
 to authenticated
 with check (auth.uid() = user_id);
+
+
+-- Wersja 27 — zapis płatności Stripe do Supabase
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  tip_id uuid references public.tips(id) on delete set null,
+  stripe_session_id text,
+  amount numeric(10,2) not null default 0,
+  currency text not null default 'pln',
+  status text not null default 'paid',
+  created_at timestamptz not null default now()
+);
+
+alter table public.payments enable row level security;
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments for select
+to authenticated
+using (auth.uid() = user_id);
+
+create index if not exists payments_user_id_created_at_idx
+on public.payments(user_id, created_at desc);
+
+create table if not exists public.unlocked_tips (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  tip_id uuid references public.tips(id) on delete cascade,
+  price numeric(8,2) default 0,
+  created_at timestamptz not null default now(),
+  unique(user_id, tip_id)
+);
+
+alter table public.unlocked_tips enable row level security;
+
+drop policy if exists "Users read own unlocked tips" on public.unlocked_tips;
+create policy "Users read own unlocked tips"
+on public.unlocked_tips for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own unlocked tips" on public.unlocked_tips;
+create policy "Users insert own unlocked tips"
+on public.unlocked_tips for insert
+to authenticated
+with check (auth.uid() = user_id);

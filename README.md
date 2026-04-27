@@ -157,3 +157,20 @@ Dodano:
 - schema pod `payout_requests`.
 
 Po wrzuceniu tej wersji możesz opcjonalnie odpalić `supabase/schema.sql`, aby dodać tabelę payoutów.
+
+## Wersja 27 FULL — webhook zapisuje sprzedaż do bazy
+
+Zrobione:
+- `netlify/functions/stripe-webhook.js` zapisuje płatność do `payments`,
+- webhook odblokowuje typ w `unlocked_tips`,
+- `create-checkout-session.js` przekazuje metadata: `user_id`, `tip_id`, `amount_pln`,
+- Stripe używa tylko karty (`card`), bez BLIK/P24.
+
+Wymagane ENV w Netlify:
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+W Supabase odpal `supabase/schema.sql`, jeśli tabela `payments` jeszcze nie istnieje.
