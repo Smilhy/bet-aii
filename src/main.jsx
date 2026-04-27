@@ -1,3 +1,4 @@
+var userPlan = 'free'; // global anti-crash fallback
 import React, { useMemo, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
@@ -1149,7 +1150,7 @@ function App() {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
-  const [userPlan, setUserPlan] = useState('free')
+  const [accountPlan, setUserPlan] = useState('free')
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   function updateUnlockedTips(updater) {
@@ -1675,7 +1676,7 @@ function App() {
             payments={paymentHistory}
             payoutRequests={payoutRequests}
             onRequestPayout={requestPayout}
-            userPlan={userPlan}
+            userPlan={accountPlan}
             submitting={payoutSubmitting}
           />
         )}

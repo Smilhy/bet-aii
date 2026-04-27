@@ -369,3 +369,6 @@ Naprawia błąd `userPlan is not defined`.
 
 ## Wersja 54 — final fix
 Naprawia błąd `userPlan is not defined` w sidebarze.
+
+## Wersja 55 — no userPlan crash
+Naprawiono crash `userPlan is not defined` po logowaniu przez globalny fallback + poprawne przekazywanie planu do Sidebar.
