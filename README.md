@@ -321,3 +321,16 @@ Naprawiono pusty ekran w zakładce Wypłaty:
 - PayoutsView ma fallback gdy user/dane jeszcze się ładują,
 - render zakładki Wypłaty jest poprawiony,
 - brak tabeli payout_requests nie powinien wywalać UI.
+
+## Wersja 47 — payout force render
+Naprawiono pusty ekran Wypłaty:
+- PayoutsView zawsze renderuje panel,
+- usunięto wadliwy blok renderowania,
+- dodano fallbacki dla pustych danych,
+- schema `payout_requests` do uruchomienia w Supabase.
+
+## Wersja 48 — profile + payout force render
+Naprawiono:
+- zakładka `Mój profil` zawsze renderuje pełny panel,
+- profil ma fallbacki dla pustych danych,
+- zakładka `Wypłaty` zostaje z wersji force render.

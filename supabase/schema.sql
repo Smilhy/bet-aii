@@ -472,3 +472,30 @@ for all
 to service_role
 using (true)
 with check (true);
+
+
+-- Wersja 47 — payout_requests safe table
+create table if not exists public.payout_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  amount numeric(10,2) not null default 0,
+  status text not null default 'pending',
+  note text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.payout_requests enable row level security;
+
+drop policy if exists "Users read own payout requests" on public.payout_requests;
+create policy "Users read own payout requests"
+on public.payout_requests
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own payout requests" on public.payout_requests;
+create policy "Users insert own payout requests"
+on public.payout_requests
+for insert
+to authenticated
+with check (auth.uid() = user_id);

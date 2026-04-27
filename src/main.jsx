@@ -1479,6 +1479,25 @@ function App() {
           <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} />
         )}
 
+        {view === 'profile' && (
+          <ProfileView
+            user={sessionUser}
+            tips={tips}
+            payments={paymentHistory}
+            unlockedTips={unlockedTips}
+          />
+        )}
+
+        {view === 'payouts' && (
+          <PayoutsView
+            user={sessionUser}
+            tips={tips}
+            payments={paymentHistory}
+            payoutRequests={payoutRequests}
+            onRequestPayout={requestPayout}
+          />
+        )}
+
         {view === 'dashboard' && (
           <section className="feed-section">
             <div className="feed-title">
