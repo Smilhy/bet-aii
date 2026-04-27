@@ -531,3 +531,9 @@ Wymagane ENV:
 - STRIPE_WEBHOOK_SECRET
 - SUPABASE_SERVICE_ROLE_KEY
 - VITE_SUPABASE_URL albo SUPABASE_URL
+
+## Wersja 80 — Stripe Connect loading fix
+Naprawiono zawieszanie aplikacji na `Ładowanie sesji...`:
+- dodano brakujące funkcje `fetchStripeConnectStatus` i `connectStripeAccount`,
+- init sesji jest zabezpieczony try/finally, więc loader zawsze znika,
+- błędy fetchów nie blokują aplikacji.

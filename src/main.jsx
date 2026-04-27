@@ -1208,9 +1208,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('wallet_topup') === 'success') {
       showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
-      if (sessionUser?.id) fetchWalletBalance(sessionUser.id)
+      if (sessionUser?.id) {
+        fetchWalletBalance(sessionUser.id)
         fetchTipsterEarnings(sessionUser.id)
         fetchStripeConnectStatus(sessionUser.id)
+      }
       window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('wallet_topup') === 'cancel') {
@@ -1280,6 +1282,59 @@ function App() {
 
 
 
+
+
+  async function fetchStripeConnectStatus(userId = sessionUser?.id) {
+    try {
+      if (!isSupabaseConfigured || !supabase || !userId) {
+        setStripeConnectStatus(null)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('user_stripe_accounts')
+        .select('stripe_account_id,charges_enabled,payouts_enabled,created_at,updated_at')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (error || !data) {
+        setStripeConnectStatus(null)
+        return
+      }
+
+      setStripeConnectStatus(data)
+    } catch (error) {
+      console.error('fetchStripeConnectStatus error', error)
+      setStripeConnectStatus(null)
+    }
+  }
+
+  async function connectStripeAccount() {
+    try {
+      if (!sessionUser?.id) {
+        showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby połączyć Stripe.' })
+        return
+      }
+
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Tworzenie linku onboarding...' })
+
+      const response = await fetch('/.netlify/functions/create-stripe-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: sessionUser.id, email: sessionUser.email })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Nie udało się utworzyć konta Stripe Connect.')
+      }
+
+      window.location.href = data.url
+    } catch (error) {
+      showToast({ type: 'error', title: 'Stripe Connect', message: formatAppErrorMessage(error.message) })
+    }
+  }
 
   async function savePaymentToSupabase(tipId, price = 29, userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !tipId) return false
@@ -1573,56 +1628,67 @@ function App() {
   }
 
   useEffect(() => {
+    let unsubscribe = null
+
+    async function safeInitialLoad(userId) {
+      try { await fetchPaymentHistory(userId) } catch (e) { console.error(e) }
+      try { await fetchPayoutRequests(userId) } catch (e) { console.error(e) }
+      try { await fetchUserPlan(userId) } catch (e) { console.error(e) }
+      try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
+      try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
+      try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
+      try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
+    }
+
     async function loadSession() {
-      if (!isSupabaseConfigured || !supabase) {
-        setAuthLoading(false)
-        return
-      }
-
-      const { data } = await supabase.auth.getSession()
-      setSessionUser(data?.session?.user || null)
-      setWalletBalance(0)
-      if (data?.session?.user?.id) {
-        fetchPaymentHistory(data.session.user.id)
-        fetchPayoutRequests(data.session.user.id)
-        fetchUserPlan(data.session.user.id)
-        fetchWalletBalance(data.session.user.id)
-        fetchTipsterEarnings(data.session.user.id)
-        fetchStripeConnectStatus(data.session.user.id)
-        fetchUserPlan(data.session.user.id)
-        fetchUnlockedTips(data.session.user.id)
-      }
-      setAuthLoading(false)
-
-      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSessionUser(session?.user || null)
-        setWalletBalance(0)
-        setTipsterEarnings({ total: 0, sales: 0, history: [] })
-        setStripeConnectStatus(null)
-        if (!session?.user?.id) {
-          setUnlockedTips(new Set())
-          try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
-        } else {
-          setUnlockedTips(new Set())
-          fetchUnlockedTips(session.user.id)
-          fetchPaymentHistory(session.user.id)
-          fetchPayoutRequests(session.user.id)
-          fetchUserPlan(session.user.id)
-        fetchWalletBalance(session.user.id)
-        fetchTipsterEarnings(session.user.id)
-        fetchStripeConnectStatus(session.user.id)
-          fetchUserPlan(session.user.id)
-          }
-        if (session?.user?.id) {
-          fetchPaymentHistory(session.user.id)
-          fetchUnlockedTips(session.user.id)
+      try {
+        if (!isSupabaseConfigured || !supabase) {
+          setAuthLoading(false)
+          return
         }
-      })
 
-      return () => listener?.subscription?.unsubscribe?.()
+        const { data } = await supabase.auth.getSession()
+        const user = data?.session?.user || null
+        setSessionUser(user)
+        setWalletBalance(0)
+
+        if (user?.id) {
+          safeInitialLoad(user.id)
+        }
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+          const nextUser = session?.user || null
+          setSessionUser(nextUser)
+          setWalletBalance(0)
+          setTipsterEarnings({ total: 0, sales: 0, history: [] })
+          setStripeConnectStatus(null)
+
+          if (!nextUser?.id) {
+            setUnlockedTips(new Set())
+            try {
+              localStorage.removeItem('betai_unlocked_tips_v1')
+              localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+            } catch {}
+            return
+          }
+
+          setUnlockedTips(new Set())
+          safeInitialLoad(nextUser.id)
+        })
+
+        unsubscribe = listener?.subscription?.unsubscribe
+      } catch (error) {
+        console.error('loadSession error', error)
+      } finally {
+        setAuthLoading(false)
+      }
     }
 
     loadSession()
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
