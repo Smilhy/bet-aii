@@ -256,3 +256,9 @@ Poprawiono:
 - panel boczny pokazuje dane aktualnie zalogowanego użytkownika,
 - badge ADMIN tylko dla `smilhytv@gmail.com`,
 - SQL wzmacnia RLS dla `unlocked_tips` i `payments`.
+
+## Wersja 38 — fix logowania nowego usera
+Naprawiono biały ekran po zalogowaniu nowym kontem:
+- `sidebarProfile` jest teraz poprawnie zdefiniowany w Sidebar,
+- sidebar pokazuje aktualnego użytkownika, nie hardcoded admina,
+- build sprawdzony lokalnie.
