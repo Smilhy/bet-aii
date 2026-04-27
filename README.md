@@ -432,3 +432,17 @@ Wymagane ENV w Netlify:
 - STRIPE_WEBHOOK_SECRET
 - SUPABASE_SERVICE_ROLE_KEY
 - VITE_SUPABASE_URL albo SUPABASE_URL
+
+## Wersja 67 — realne saldo, Premium Stripe, admin payout flow
+Dodano:
+- reset fake salda w SQL (`wallet_transactions` bez Stripe session są usuwane),
+- realne saldo liczone z webhooków Stripe,
+- `create-premium-checkout.js` — zakup Premium,
+- webhook aktywuje `user_subscriptions.plan = premium`,
+- zakup Premium zapisuje się jako `premium_purchase`,
+- admin panel wypłat zostaje w projekcie: zatwierdź / wypłacone / odrzuć.
+Wymagane ENV:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- VITE_SUPABASE_URL albo SUPABASE_URL

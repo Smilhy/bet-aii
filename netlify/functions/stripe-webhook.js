@@ -23,19 +23,21 @@ exports.handler = async (event) => {
   try {
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
+      const supabase = createClient(
+        process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
 
-      if (session.metadata?.kind === 'wallet_topup') {
-        const supabase = createClient(
-          process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
+      const kind = session.metadata?.kind;
+      const userId = session.metadata?.user_id;
 
-        const userId = session.metadata.user_id;
+      if (!userId) {
+        throw new Error('Missing user_id metadata');
+      }
+
+      if (kind === 'wallet_topup') {
         const amount = Number(session.metadata.amount || 0);
-
-        if (!userId || !amount) {
-          throw new Error('Missing wallet metadata');
-        }
+        if (!amount) throw new Error('Missing wallet amount metadata');
 
         const { error } = await supabase.from('wallet_transactions').insert({
           user_id: userId,
@@ -46,12 +48,27 @@ exports.handler = async (event) => {
           status: 'completed'
         });
 
-        if (error) {
-          // unique duplicate means webhook retried, OK
-          if (!String(error.message || '').includes('duplicate')) {
-            throw error;
-          }
-        }
+        if (error && !String(error.message || '').includes('duplicate')) throw error;
+      }
+
+      if (kind === 'premium_access') {
+        const { error: subError } = await supabase
+          .from('user_subscriptions')
+          .upsert({ user_id: userId, plan: 'premium', updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+        if (subError) throw subError;
+
+        const amount = Number(session.metadata.amount || 29);
+        const { error: txError } = await supabase.from('wallet_transactions').insert({
+          user_id: userId,
+          amount,
+          type: 'premium_purchase',
+          provider: 'stripe',
+          provider_session_id: session.id,
+          status: 'completed'
+        });
+
+        if (txError && !String(txError.message || '').includes('duplicate')) throw txError;
       }
     }
 

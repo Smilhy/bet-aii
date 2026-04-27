@@ -978,3 +978,87 @@ as $$
 $$;
 
 grant execute on function public.get_wallet_balance(uuid) to authenticated;
+
+
+-- Wersja 67 — realne saldo + Premium po płatności Stripe + reset fake salda
+
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  plan text not null default 'free',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_subscriptions add column if not exists updated_at timestamptz default now();
+
+delete from public.user_subscriptions a
+using public.user_subscriptions b
+where a.user_id = b.user_id
+  and a.created_at < b.created_at;
+
+create unique index if not exists user_subscriptions_user_id_uidx
+on public.user_subscriptions(user_id);
+
+alter table public.user_subscriptions enable row level security;
+
+drop policy if exists "Users read own subscription" on public.user_subscriptions;
+create policy "Users read own subscription"
+on public.user_subscriptions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+insert into public.user_subscriptions (user_id, plan)
+select id, 'free'
+from auth.users
+on conflict (user_id) do nothing;
+
+
+create table if not exists public.wallet_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric not null,
+  type text not null default 'topup',
+  provider text default 'stripe',
+  provider_session_id text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+-- Reset fake salda: usuwa stare transakcje bez Stripe session oraz stare testowe rekordy.
+delete from public.wallet_transactions
+where provider_session_id is null
+   or provider <> 'stripe';
+
+create unique index if not exists wallet_transactions_provider_session_uidx
+on public.wallet_transactions(provider_session_id)
+where provider_session_id is not null;
+
+alter table public.wallet_transactions enable row level security;
+
+drop policy if exists "Users read own wallet transactions" on public.wallet_transactions;
+create policy "Users read own wallet transactions"
+on public.wallet_transactions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create or replace function public.get_wallet_balance(p_user_id uuid)
+returns numeric
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(sum(
+    case
+      when status <> 'completed' then 0
+      when type in ('spend','purchase','premium_purchase') then -amount
+      else amount
+    end
+  ), 0)
+  from public.wallet_transactions
+  where user_id = p_user_id;
+$$;
+
+grant execute on function public.get_wallet_balance(uuid) to authenticated;

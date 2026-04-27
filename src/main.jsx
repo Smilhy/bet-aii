@@ -169,7 +169,7 @@ return (
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        <button>Przejdź na Premium</button>
+        <button onClick={startPremiumCheckout}>Przejdź na Premium</button>
       </div>
     </aside>
   )
@@ -1255,6 +1255,23 @@ function App() {
     }
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('premium') === 'success') {
+      showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
+      if (sessionUser?.id) {
+        fetchUserPlan(sessionUser.id)
+        fetchWalletBalance(sessionUser.id)
+      }
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    if (params.get('premium') === 'cancel') {
+      showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
+
   useEffect(() => {
     fetchTips(sessionUser?.id)
   }, [sessionUser?.id])
@@ -1377,6 +1394,34 @@ function App() {
 
 
 
+
+
+  async function startPremiumCheckout() {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić Premium.' })
+      return
+    }
+
+    try {
+      showToast({ type: 'info', title: 'Premium', message: 'Przekierowanie do płatności Stripe...' })
+
+      const response = await fetch('/.netlify/functions/create-premium-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: sessionUser.id, email: sessionUser.email })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Nie udało się utworzyć płatności Premium.')
+      }
+
+      window.location.href = data.url
+    } catch (error) {
+      showToast({ type: 'error', title: 'Błąd Premium', message: formatAppErrorMessage(error.message) })
+    }
+  }
 
   async function startStripeTopup(amount = 100) {
     if (!sessionUser?.id) {
@@ -1791,7 +1836,7 @@ function App() {
               <div>
                 <strong>💰 Marketplace premium</strong>
                 <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
-                <button type="button" className="premium-banner-cta" onClick={() => showToast({ type: 'info', title: 'Premium', message: 'Kolejny etap: podpinamy Stripe Checkout dla kont Premium.' })}>Kup Premium</button>
+                <button type="button" className="premium-banner-cta" )}  onClick={startPremiumCheckout}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
                 <b>{tips.filter(t => t.access_type === 'premium').length}</b>
