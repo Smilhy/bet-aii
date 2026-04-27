@@ -297,3 +297,91 @@ on public.payments(user_id, created_at desc);
 
 create index if not exists payments_tip_id_idx
 on public.payments(tip_id);
+
+
+-- Wersja 34 — payment return fallback policies
+alter table public.unlocked_tips enable row level security;
+alter table public.payments enable row level security;
+
+drop policy if exists "Users insert own payments" on public.payments;
+create policy "Users insert own payments"
+on public.payments
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own unlocked tips" on public.unlocked_tips;
+create policy "Users insert own unlocked tips"
+on public.unlocked_tips
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own unlocked tips" on public.unlocked_tips;
+create policy "Users update own unlocked tips"
+on public.unlocked_tips
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+
+-- Wersja 37 — izolacja użytkowników
+-- Każdy użytkownik widzi tylko swoje odblokowania i swoje płatności.
+-- Tipy premium mogą być publicznie widoczne jako lista, ale treść premium odblokowuje tylko tabela unlocked_tips.
+
+alter table if exists public.unlocked_tips enable row level security;
+alter table if exists public.payments enable row level security;
+
+drop policy if exists "Users read own unlocked tips" on public.unlocked_tips;
+create policy "Users read own unlocked tips"
+on public.unlocked_tips
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own unlocked tips" on public.unlocked_tips;
+create policy "Users insert own unlocked tips"
+on public.unlocked_tips
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own unlocked tips" on public.unlocked_tips;
+create policy "Users update own unlocked tips"
+on public.unlocked_tips
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own payments" on public.payments;
+create policy "Users insert own payments"
+on public.payments
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Service role can manage payments" on public.payments;
+create policy "Service role can manage payments"
+on public.payments
+for all
+to service_role
+using (true)
+with check (true);
+
+-- Ważne: jeśli wcześniej były szerokie polityki, usuń je ręcznie w Supabase, jeśli mają inne nazwy.

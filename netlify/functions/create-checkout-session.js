@@ -48,6 +48,7 @@ exports.handler = async function(event) {
           quantity: 1
         }
       ],
+      client_reference_id: userId || undefined,
       metadata: {
         tip_id: tipId,
         user_id: userId,

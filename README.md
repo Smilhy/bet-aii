@@ -224,3 +224,35 @@ Poprawiono problem:
 - localStorage jest teraz per-user,
 - po logout aplikacja czyści widok odblokowań,
 - bez logowania nie można kupić premium, żeby zakup nie zapisał się jako guest.
+
+## Wersja 34 — payment return/session fix
+Poprawka sytuacji:
+- po przejściu do Stripe i powrocie aplikacja traciła kontekst zakupu,
+- teraz przed przekierowaniem zapisuje `pending purchase`,
+- po powrocie ze Stripe odblokowuje konkretny typ nawet jeśli URL nie przyniesie kompletu danych,
+- zapisuje też `payments` jako fallback z frontendu,
+- dodane polityki RLS dla fallbacku.
+
+## Wersja 35 — fix: dodanie typu nie zwiększa odblokowanych
+Poprawiono:
+- premium dodane przez tipstera nie zwiększa licznika `Odblokowane`,
+- odblokowania są liczone tylko z tabeli `unlocked_tips` dla zalogowanego usera,
+- po wylogowaniu licznik odblokowanych wraca do 0 i nie miesza danych,
+- usunięto stary globalny cache `betai_unlocked_tips_v1`,
+- zakup po Stripe zapisuje dopiero po rozpoznaniu konkretnego user_id.
+
+## Wersja 36 — DB-only unlock counter
+Naprawa licznika `Odblokowane`:
+- licznik nie używa już starego localStorage/cache,
+- licznik jest brany tylko z tabeli `unlocked_tips`,
+- dodanie typu premium nie zwiększa licznika,
+- testowe odblokowanie lokalne jest wyłączone,
+- po zapisie typu licznik odświeża się z Supabase.
+
+## Wersja 37 — izolacja użytkowników
+Poprawiono:
+- nowy użytkownik nie dziedziczy zakupów/admina,
+- licznik `Odblokowane` jest czyszczony przy zmianie konta i pobierany z Supabase tylko dla aktualnego `user_id`,
+- panel boczny pokazuje dane aktualnie zalogowanego użytkownika,
+- badge ADMIN tylko dla `smilhytv@gmail.com`,
+- SQL wzmacnia RLS dla `unlocked_tips` i `payments`.

@@ -57,7 +57,7 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout
       <div className="brand">Bet<span>+AI</span></div>
 
       <div className="user-card">
-        <div className="avatar">AN</div>
+        <div className="avatar">{sidebarProfile.initials}</div>
         <div>
           <strong>{user?.email?.split('@')[0] || 'AdrianNowak'}</strong>
           <span className="pill">{user?.email === 'smilhytv@gmail.com' ? 'ADMIN' : 'VIP'}</span>
@@ -108,7 +108,7 @@ function Rightbar() {
         <div className="rank first"><span>1</span><div className="mini-avatar">FM</div><div><b>FitMateusz</b><small>ROI: 24.5%</small></div><strong>+3,250 zł</strong></div>
         <div className="rank second"><span>2</span><div className="mini-avatar">K</div><div><b>Kamil_98</b><small>ROI: 18.7%</small></div><strong>+2,150 zł</strong></div>
         <div className="rank third"><span>3</span><div className="mini-avatar female">Z</div><div><b>Zuzanna07</b><small>ROI: 16.3%</small></div><strong>+1,870 zł</strong></div>
-        <div className="rank"><span>4</span><div className="mini-avatar">AN</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
+        <div className="rank"><span>4</span><div className="mini-avatar">{sidebarProfile.initials}</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
         <div className="rank"><span>5</span><div className="mini-avatar female">M</div><div><b>Maksymilian</b><small>ROI: 14.8%</small></div><strong>+1,420 zł</strong></div>
       </section>
 
@@ -824,8 +824,24 @@ function saveLocalUnlockedTips(setValue, userId) {
 function clearGuestUnlockedTips() {
   try {
     localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+    localStorage.removeItem('betai_unlocked_tips_v1')
   } catch {
     // ignore
+  }
+}
+
+function getUserProfileView(user) {
+  const email = user?.email || ''
+  const nameFromMeta = user?.user_metadata?.username || user?.user_metadata?.name
+  const username = nameFromMeta || (email ? email.split('@')[0] : 'Gość')
+  const isAdmin = email.toLowerCase() === 'smilhytv@gmail.com'
+
+  return {
+    id: user?.id || null,
+    email,
+    username,
+    initials: username.slice(0, 2).toUpperCase(),
+    isAdmin
   }
 }
 
@@ -835,19 +851,19 @@ function App() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
+  const userProfile = getUserProfileView(sessionUser)
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
-  function updateUnlockedTips(updater, userId = sessionUser?.id || 'guest') {
+  function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      saveLocalUnlockedTips(next, userId)
       return next
     })
   }
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
-  const [unlockedTips, setUnlockedTips] = useState(() => readLocalUnlockedTips('guest'))
+  const [unlockedTips, setUnlockedTips] = useState(() => new Set())
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -868,6 +884,26 @@ function App() {
     }
     setTips(data?.length ? data : staticTips)
   }
+
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem('betai_unlocked_tips_v1')
+      localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    if (sessionUser?.id) {
+      setUnlockedTips(new Set())
+      fetchUnlockedTips(sessionUser.id)
+      fetchPaymentHistory(sessionUser.id)
+    } else {
+      setUnlockedTips(new Set())
+    }
+  }, [sessionUser?.id])
 
   useEffect(() => {
     fetchTips()
@@ -924,7 +960,10 @@ function App() {
   }
 
   async function fetchUnlockedTips(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) return
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setUnlockedTips(new Set())
+      return
+    }
 
     const { data, error } = await supabase
       .from('unlocked_tips')
@@ -932,7 +971,9 @@ function App() {
       .eq('user_id', userId)
 
     if (!error && Array.isArray(data)) {
-      updateUnlockedTips(new Set(data.map(row => row.tip_id)), userId)
+      setUnlockedTips(new Set(data.map(row => row.tip_id)))
+    } else {
+      setUnlockedTips(new Set())
     }
   }
 
@@ -966,7 +1007,14 @@ function App() {
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
-        setUnlockedTips(session?.user?.id ? readLocalUnlockedTips(session.user.id) : new Set())
+        if (!session?.user?.id) {
+          setUnlockedTips(new Set())
+          try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
+        } else {
+          setUnlockedTips(new Set())
+          fetchUnlockedTips(session.user.id)
+          fetchPaymentHistory(session.user.id)
+        }
         if (session?.user?.id) {
           fetchPaymentHistory(session.user.id)
           fetchUnlockedTips(session.user.id)
@@ -986,11 +1034,8 @@ function App() {
     const stripeReturn = params.get('stripe') === '1'
 
     if (payment === 'success' && stripeReturn && tipId) {
-      updateUnlockedTips(prev => {
-        const next = new Set(prev)
-        next.add(tipId)
-        return next
-      }, sessionUser?.id || 'guest')
+      // Nie ustawiamy odblokowania zanim znamy zalogowanego usera.
+      // Odblokowanie zapisuje się dopiero pod konkretnym user_id po powrocie ze Stripe.
 
       async function persistUnlockFromReturn() {
         await saveUnlockToSupabase(tipId, 29)
@@ -1001,11 +1046,6 @@ function App() {
 
         const userId = data?.session?.user?.id
         if (userId) {
-          updateUnlockedTips(prev => {
-            const next = new Set(prev)
-            next.add(tipId)
-            return next
-          }, userId)
           clearGuestUnlockedTips()
           await fetchUnlockedTips(userId)
           await fetchPaymentHistory(userId)
@@ -1053,29 +1093,12 @@ function App() {
   }
 
   async function handlePaymentSuccess(tip) {
-    const price = Number(tip.price || 29)
-
-    setWallet(prev => Math.max(0, Number((prev - price).toFixed(2))))
-    updateUnlockedTips(prev => {
-      const next = new Set(prev)
-      next.add(tip.id)
-      return next
-    }, sessionUser?.id || 'guest')
-
-    if (sessionUser?.id) {
-      await saveUnlockToSupabase(tip.id, price, sessionUser.id)
-      await fetchUnlockedTips(sessionUser.id)
-    }
-
-    setSelectedPayment(null)
-
-    fetchPaymentHistory()
-
     showToast({
-      type: 'success',
-      title: 'Płatność zakończona',
-      message: `Odblokowano typ za ${price.toFixed(2)} zł.`
+      type: 'error',
+      title: 'Użyj płatności Stripe',
+      message: 'Odblokowanie zapisuje się tylko po płatności Stripe.'
     })
+    setSelectedPayment(null)
   }
 
   function topUpWallet() {
@@ -1092,6 +1115,7 @@ function App() {
     setSessionUser(null)
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
+    try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
     showToast({
       type: 'success',
       title: 'Wylogowano',
@@ -1141,7 +1165,7 @@ function App() {
           <div className="top-actions">
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
-            <span className="user-top-email">{sessionUser?.email}</span>
+            <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn" onClick={() => setView('wallet')}>{wallet.toFixed(2)} zł</button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
@@ -1153,6 +1177,7 @@ function App() {
             onToast={showToast}
             onTipSaved={() => {
               fetchTips()
+              if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
             }}
           />
