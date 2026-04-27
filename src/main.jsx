@@ -909,12 +909,10 @@ function clearGuestUnlockedTips() {
 
 
 
-function getDisplayBalance(user, plan = 'free') {
+function getDisplayBalance(user, plan = 'free', walletBalance = 0) {
   const profile = getUserProfileView(user)
-  // Wersja 56: zwykły user nie dostaje już fake salda z przycisku.
-  // Realne saldo będzie liczone później tylko z tabeli wallet_transactions/Stripe webhook.
   if (profile.isAdmin) return '1250.50'
-  return '0.00'
+  return Number(walletBalance || 0).toFixed(2)
 }
 
 function getDisplayRole(user, plan = 'free') {
@@ -1161,6 +1159,7 @@ function App() {
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
   const [accountPlan, setUserPlan] = useState('free')
+  const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   function updateUnlockedTips(updater) {
@@ -1350,6 +1349,33 @@ function App() {
   }
 
 
+
+  async function fetchWalletBalance(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setWalletBalance(0)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('wallet_transactions')
+      .select('amount,type,status')
+      .eq('user_id', userId)
+
+    if (error || !Array.isArray(data)) {
+      setWalletBalance(0)
+      return
+    }
+
+    const balance = data.reduce((sum, tx) => {
+      const amount = Number(tx.amount || 0)
+      if (tx.status !== 'completed') return sum
+      if (tx.type === 'spend' || tx.type === 'purchase') return sum - amount
+      return sum + amount
+    }, 0)
+
+    setWalletBalance(Math.max(0, balance))
+  }
+
   async function fetchUserPlan(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) {
       setUserPlan('free')
@@ -1422,6 +1448,7 @@ function App() {
       showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
       await fetchPayoutRequests(sessionUser.id)
       await fetchUserPlan(sessionUser.id)
+        fetchWalletBalance(sessionUser.id)
     } finally {
       setTimeout(() => setPayoutSubmitting(false), 1200)
     }
@@ -1458,6 +1485,7 @@ function App() {
         fetchPaymentHistory(data.session.user.id)
         fetchPayoutRequests(data.session.user.id)
         fetchUserPlan(data.session.user.id)
+        fetchWalletBalance(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
@@ -1475,6 +1503,7 @@ function App() {
           fetchPaymentHistory(session.user.id)
           fetchPayoutRequests(session.user.id)
           fetchUserPlan(session.user.id)
+        fetchWalletBalance(session.user.id)
           fetchUserPlan(session.user.id)
           fetchUserPlan(session.user.id)
         }

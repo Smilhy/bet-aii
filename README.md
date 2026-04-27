@@ -379,3 +379,10 @@ Naprawiono:
 - przycisk "Doładuj konto" nie dodaje już +100 zł,
 - przygotowano tabelę wallet_transactions pod prawdziwy Stripe top-up,
 - saldo zwykłego konta wraca do 0.00 zł do czasu realnej płatności.
+
+## Wersja 57 — realne saldo + blokada premium typów dla FREE
+- saldo zwykłego konta jest liczone z `wallet_transactions` (completed),
+- fake saldo nie rośnie od kliknięć,
+- FREE może dodać tylko darmowy typ,
+- Premium/Admin mogą dodawać typy premium,
+- backend trigger blokuje próby obejścia frontendu.
