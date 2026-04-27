@@ -148,6 +148,7 @@ return (
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
+        <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -967,6 +968,77 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
 }
 
 
+
+function PayoutsView({ user, tips, payments, payoutRequests, onRequestPayout }) {
+  const profile = getUserProfileView(user)
+  const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
+  const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
+  const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+  const platformFee = grossRevenue * 0.15
+  const paidOut = payoutRequests
+    .filter(request => request.status === 'paid' || request.status === 'approved')
+    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const available = Math.max(0, grossRevenue - platformFee - paidOut)
+
+  return (
+    <section className="payout-page">
+      <div className="payout-hero">
+        <div>
+          <h1>Wypłaty tipstera</h1>
+          <p>{profile.username} — zgłaszaj wypłaty z zarobków premium.</p>
+        </div>
+        <div className="payout-available">
+          <span>Dostępne do wypłaty</span>
+          <b>{available.toFixed(2)} zł</b>
+        </div>
+      </div>
+
+      <div className="payout-grid">
+        <div className="payout-stat"><span>Przychód brutto</span><b>{grossRevenue.toFixed(2)} zł</b></div>
+        <div className="payout-stat"><span>Prowizja 15%</span><b>{platformFee.toFixed(2)} zł</b></div>
+        <div className="payout-stat"><span>Wypłacone / zatwierdzone</span><b>{paidOut.toFixed(2)} zł</b></div>
+      </div>
+
+      <div className="payout-request-card">
+        <div>
+          <strong>Poproś o wypłatę</strong>
+          <span>Wypłata zostanie oznaczona jako pending i czeka na akceptację admina.</span>
+        </div>
+        <button onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
+          Poproś o wypłatę
+        </button>
+      </div>
+
+      <div className="payout-table">
+        <div className="payout-row header">
+          <span>Data</span>
+          <span>Kwota</span>
+          <span>Status</span>
+        </div>
+
+        {payoutRequests.length ? payoutRequests.map(request => (
+          <div className="payout-row" key={request.id}>
+            <span>{new Date(request.created_at).toLocaleString('pl-PL')}</span>
+            <span>{Number(request.amount || 0).toFixed(2)} zł</span>
+            <span className={`payout-status ${request.status}`}>{request.status}</span>
+          </div>
+        )) : (
+          <div className="payout-empty">
+            <strong>Brak wypłat</strong>
+            <span>Twoje zgłoszenia wypłat pojawią się tutaj.</span>
+          </div>
+        )}
+      </div>
+
+      <div className="stripe-connect-note">
+        <strong>Następny etap: Stripe Connect</strong>
+        <span>Ten panel jest przygotowany pod automatyczne wypłaty na konta tipsterów.</span>
+      </div>
+    </section>
+  )
+}
+
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -977,6 +1049,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
+  const [payoutRequests, setPayoutRequests] = useState([])
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -1120,6 +1193,52 @@ function App() {
     }
   }
 
+
+  async function fetchPayoutRequests(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) return
+
+    const { data, error } = await supabase
+      .from('payout_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (!error) setPayoutRequests(data || [])
+  }
+
+  async function requestPayout(amount) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby poprosić o wypłatę.' })
+      return
+    }
+
+    if (!amount || amount <= 0) {
+      showToast({ type: 'error', title: 'Brak środków', message: 'Nie masz jeszcze środków do wypłaty.' })
+      return
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      showToast({ type: 'error', title: 'Supabase', message: 'Brak połączenia z bazą.' })
+      return
+    }
+
+    const { error } = await supabase
+      .from('payout_requests')
+      .insert({
+        user_id: sessionUser.id,
+        amount,
+        status: 'pending'
+      })
+
+    if (error) {
+      showToast({ type: 'error', title: 'Błąd wypłaty', message: error.message })
+      return
+    }
+
+    showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
+    fetchPayoutRequests(sessionUser.id)
+  }
+
   async function fetchPaymentHistory(userId = sessionUser?.id) {
     try {
     if (!isSupabaseConfigured || !supabase || !userId) return
@@ -1149,6 +1268,7 @@ function App() {
       setSessionUser(data?.session?.user || null)
       if (data?.session?.user?.id) {
         fetchPaymentHistory(data.session.user.id)
+        fetchPayoutRequests(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
       }
       setAuthLoading(false)
@@ -1162,6 +1282,7 @@ function App() {
           setUnlockedTips(new Set())
           fetchUnlockedTips(session.user.id)
           fetchPaymentHistory(session.user.id)
+          fetchPayoutRequests(session.user.id)
         }
         if (session?.user?.id) {
           fetchPaymentHistory(session.user.id)

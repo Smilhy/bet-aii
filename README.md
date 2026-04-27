@@ -305,3 +305,13 @@ Dodano:
 - lista moich typów,
 - licznik odblokowanych,
 - schema pod `tipster_profiles`.
+
+## Wersja 45 — wypłaty tipstera
+Dodano:
+- zakładka `Wypłaty`,
+- wyliczenie kwoty dostępnej do wypłaty,
+- tabela historii wypłat,
+- statusy `pending`, `approved`, `paid`, `rejected`,
+- tworzenie requestu wypłaty w Supabase,
+- schema `payout_requests`,
+- przygotowanie pod Stripe Connect.
