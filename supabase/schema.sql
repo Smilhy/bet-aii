@@ -385,3 +385,28 @@ using (true)
 with check (true);
 
 -- Ważne: jeśli wcześniej były szerokie polityki, usuń je ręcznie w Supabase, jeśli mają inne nazwy.
+
+
+-- Wersja 43 — widoczność typów per user
+-- Tipy mają autora. Aplikacja pokazuje: moje + darmowe + kupione.
+alter table if exists public.tips add column if not exists author_id uuid;
+alter table if exists public.tips add column if not exists user_id uuid;
+alter table if exists public.tips add column if not exists author_email text;
+
+-- Dane zakupów zostają odizolowane per użytkownik.
+alter table if exists public.unlocked_tips enable row level security;
+alter table if exists public.payments enable row level security;
+
+drop policy if exists "Users read own unlocked tips" on public.unlocked_tips;
+create policy "Users read own unlocked tips"
+on public.unlocked_tips
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments
+for select
+to authenticated
+using (auth.uid() = user_id);

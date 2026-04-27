@@ -41,6 +41,25 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+
+function getTipAuthorId(tip) {
+  return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
+}
+
+function isTipPremium(tip) {
+  return Boolean(tip?.is_premium || tip?.premium || tip?.type === 'premium' || tip?.access === 'premium')
+}
+
+function isVisibleTipForUser(tip, userId, unlockedSet) {
+  const authorId = getTipAuthorId(tip)
+
+  if (!isTipPremium(tip)) return true
+  if (userId && authorId && authorId === userId) return true
+  if (userId && unlockedSet?.has?.(tip.id)) return true
+
+  return false
+}
+
 function getUserProfileView(user) {
   const email = user?.email || ''
   const username = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
@@ -762,8 +781,8 @@ function PaymentsView({ payments }) {
 
 
 
-function EarningsView({ tips, payments }) {
-  const premiumTips = tips.filter(t => t.access_type === 'premium')
+function EarningsView({ tips, payments, user }) {
+  const premiumTips = tips.filter(tip => isTipPremium(tip) && getTipAuthorId(tip) === user?.id)
   const paidTotal = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
   const platformFee = paidTotal * 0.15
   const creatorNet = paidTotal - platformFee
@@ -905,24 +924,40 @@ function App() {
   const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
 
-  async function fetchTips() {
+  async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
-      setTips(staticTips)
+      const fallback = staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips))
+      setTips(fallback)
       return
     }
+
     setLoading(true)
-    const { data, error } = await supabase
-      .from('tips')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(25)
+
+    const [{ data: tipsData, error: tipsError }, { data: unlockedData, error: unlockedError }] = await Promise.all([
+      supabase
+        .from('tips')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50),
+      userId
+        ? supabase.from('unlocked_tips').select('tip_id').eq('user_id', userId)
+        : Promise.resolve({ data: [], error: null })
+    ])
+
     setLoading(false)
-    if (error) {
-      console.error(error)
-      setTips(staticTips)
+
+    if (tipsError) {
+      console.error(tipsError)
+      setTips(staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips)))
       return
     }
-    setTips(data?.length ? data : staticTips)
+
+    const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
+    setUnlockedTips(unlockedSet)
+
+    const sourceTips = tipsData?.length ? tipsData : staticTips
+    const visibleTips = sourceTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedSet))
+    setTips(visibleTips)
   }
 
 
@@ -946,8 +981,8 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
-    fetchTips()
-  }, [])
+    fetchTips(sessionUser?.id)
+  }, [sessionUser?.id])
 
 
 
@@ -1226,7 +1261,7 @@ function App() {
             user={sessionUser}
             onToast={showToast}
             onTipSaved={() => {
-              fetchTips()
+              fetchTips(sessionUser?.id)
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
             }}
@@ -1246,7 +1281,7 @@ function App() {
         )}
 
         {view === 'earnings' && (
-          <EarningsView tips={tips} payments={paymentHistory} />
+          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} />
         )}
 
         {view === 'dashboard' && (
@@ -1258,7 +1293,7 @@ function App() {
               </div>
               <div className="feed-actions">
                 <button onClick={() => setView('add')}>+ Dodaj typ</button>
-                <button onClick={fetchTips}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+                <button onClick={() => fetchTips(sessionUser?.id)}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
               </div>
             </div>
 

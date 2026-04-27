@@ -287,3 +287,10 @@ Naprawiono crash:
 - `profile is not defined`
 - usunięto pozostałe użycie `profile` poza Sidebarem,
 - build sprawdzony lokalnie.
+
+## Wersja 43 — widoczność typów per user
+Poprawka:
+- użytkownik widzi tylko swoje typy, darmowe typy i premium, które kupił,
+- cudze premium nie pokazuje się innym kontom bez zakupu,
+- nowe typy zapisują `author_id`, `user_id`, `author_email`,
+- zakładka Zarobki liczy tylko typy autora, nie kupującego.
