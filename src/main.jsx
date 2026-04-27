@@ -1836,7 +1836,7 @@ function App() {
               <div>
                 <strong>💰 Marketplace premium</strong>
                 <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
-                <button type="button" className="premium-banner-cta" )}  onClick={startPremiumCheckout}>Kup Premium</button>
+                <button type="button" className="premium-banner-cta" onClick={startPremiumCheckout}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
                 <b>{tips.filter(t => t.access_type === 'premium').length}</b>

@@ -446,3 +446,7 @@ Wymagane ENV:
 - STRIPE_WEBHOOK_SECRET
 - SUPABASE_SERVICE_ROLE_KEY
 - VITE_SUPABASE_URL albo SUPABASE_URL
+
+## Wersja 69 — build fix
+Naprawiono błąd JSX:
+`Expected ">" but found ")"` przy przycisku `premium-banner-cta`.
