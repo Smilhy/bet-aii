@@ -51,7 +51,23 @@ const staticTips = [
   }
 ]
 
+function getUserProfileView(user) {
+  const email = user?.email || ''
+  const nameFromMeta = user?.user_metadata?.username || user?.user_metadata?.name
+  const username = nameFromMeta || (email ? email.split('@')[0] : 'Gość')
+  const isAdmin = email.toLowerCase() === 'smilhytv@gmail.com'
+
+  return {
+    id: user?.id || null,
+    email,
+    username,
+    initials: username.slice(0, 2).toUpperCase(),
+    isAdmin
+  }
+}
+
 function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout }) {
+  const sidebarProfile = getUserProfileView(user)
   return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
@@ -59,8 +75,8 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout
       <div className="user-card">
         <div className="avatar">{sidebarProfile.initials}</div>
         <div>
-          <strong>{user?.email?.split('@')[0] || 'AdrianNowak'}</strong>
-          <span className="pill">{user?.email === 'smilhytv@gmail.com' ? 'ADMIN' : 'VIP'}</span>
+          <strong>{sidebarProfile.username}</strong>
+          <span className="pill">{sidebarProfile.isAdmin ? 'ADMIN' : 'VIP'}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{wallet.toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount}</b></div>
@@ -830,20 +846,7 @@ function clearGuestUnlockedTips() {
   }
 }
 
-function getUserProfileView(user) {
-  const email = user?.email || ''
-  const nameFromMeta = user?.user_metadata?.username || user?.user_metadata?.name
-  const username = nameFromMeta || (email ? email.split('@')[0] : 'Gość')
-  const isAdmin = email.toLowerCase() === 'smilhytv@gmail.com'
 
-  return {
-    id: user?.id || null,
-    email,
-    username,
-    initials: username.slice(0, 2).toUpperCase(),
-    isAdmin
-  }
-}
 
 function App() {
   const [tips, setTips] = useState([])

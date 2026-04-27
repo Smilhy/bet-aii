@@ -262,3 +262,9 @@ Naprawiono biały ekran po zalogowaniu nowym kontem:
 - `sidebarProfile` jest teraz poprawnie zdefiniowany w Sidebar,
 - sidebar pokazuje aktualnego użytkownika, nie hardcoded admina,
 - build sprawdzony lokalnie.
+
+## Wersja 39 — sidebar crash fix
+Naprawiono biały ekran po loginie:
+- `sidebarProfile` jest zdefiniowany w komponencie Sidebar,
+- funkcja profilu jest przeniesiona przed Sidebar,
+- sidebar pokazuje aktualne konto.
