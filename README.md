@@ -112,3 +112,12 @@ Po dodaniu ENV:
 Deploys → Trigger deploy → Deploy without cache
 
 Jeśli nie dodasz STRIPE_SECRET_KEY, aplikacja nadal działa dzięki przyciskowi “Odblokuj testowo”.
+
+
+## Wersja 24
+Dodano Stripe Webhook (backend ready pod realne odblokowanie po płatności)
+
+## STRIPE FIX
+Poprawka błędu: `payment method type: blik is invalid`.
+Stripe Checkout używa teraz tylko `card`, więc działa bez aktywowania BLIK/P24 w Stripe Dashboard.
+Webhook poprawiony: `received: true`.
