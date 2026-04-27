@@ -554,3 +554,6 @@ Dodano render widoku `AdminFinanceView` oraz automatyczne odświeżanie raportu 
 ## Wersja 83 — isAdminUser fix
 Naprawiono błąd po zalogowaniu: `isAdminUser is not defined`.
 Admin rozpoznawany po emailu `smilhytv@gmail.com`.
+
+## Wersja 84 — Admin finance render fix
+Naprawiono pustą zakładkę `Admin finanse`: dodano brakujący render `<AdminFinanceView />` w głównym widoku.
