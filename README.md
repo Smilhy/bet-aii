@@ -537,3 +537,16 @@ Naprawiono zawieszanie aplikacji na `Ładowanie sesji...`:
 - dodano brakujące funkcje `fetchStripeConnectStatus` i `connectStripeAccount`,
 - init sesji jest zabezpieczony try/finally, więc loader zawsze znika,
 - błędy fetchów nie blokują aplikacji.
+
+## Wersja 81 — Admin finance dashboard
+Dodano:
+- panel admina `Admin finanse`,
+- raport prowizji platformy 20%,
+- sprzedaż premium, obrót brutto, zarobki tipsterów,
+- wypłacone i pending wypłaty,
+- historia transakcji marketplace,
+- SQL `get_admin_finance_report()`.
+
+## Wersja 82 — Admin finanse menu fix
+Naprawiono brak zakładki `📊 Admin finanse` w lewym menu.
+Dodano render widoku `AdminFinanceView` oraz automatyczne odświeżanie raportu po wejściu w zakładkę.

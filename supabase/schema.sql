@@ -1633,3 +1633,55 @@ on public.user_stripe_accounts
 for select
 to authenticated
 using (auth.uid() = user_id);
+
+
+-- Wersja 81 — admin finance dashboard / prowizja 20%
+
+create or replace function public.get_admin_finance_report()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  with earnings as (
+    select coalesce(sum(amount), 0)::numeric as tipster_earnings,
+           count(*)::numeric as total_sales
+    from public.wallet_transactions
+    where type = 'earning'
+      and status = 'completed'
+  ),
+  payouts as (
+    select coalesce(sum(amount), 0)::numeric as total_payouts
+    from public.wallet_transactions
+    where type = 'payout'
+      and status = 'completed'
+  ),
+  pending as (
+    select coalesce(sum(amount), 0)::numeric as pending_payouts
+    from public.payout_requests
+    where status = 'pending'
+  ),
+  recent_tx as (
+    select coalesce(jsonb_agg(to_jsonb(t) order by t.created_at desc), '[]'::jsonb) as transactions
+    from (
+      select id, user_id, amount, type, status, created_at
+      from public.wallet_transactions
+      where type in ('earning','purchase','payout','premium_purchase','topup')
+      order by created_at desc
+      limit 25
+    ) t
+  )
+  select jsonb_build_object(
+    'tipster_earnings', earnings.tipster_earnings,
+    'platform_commission', round(earnings.tipster_earnings * 0.25, 2),
+    'gross_sales', round(earnings.tipster_earnings * 1.25, 2),
+    'total_sales', earnings.total_sales,
+    'total_payouts', payouts.total_payouts,
+    'pending_payouts', pending.pending_payouts,
+    'available_to_payout', greatest(0, earnings.tipster_earnings - payouts.total_payouts - pending.pending_payouts),
+    'transactions', recent_tx.transactions
+  )
+  from earnings, payouts, pending, recent_tx;
+$$;
+
+grant execute on function public.get_admin_finance_report() to authenticated;

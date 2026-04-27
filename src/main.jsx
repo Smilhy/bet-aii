@@ -160,6 +160,7 @@ return (
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
         <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
+        {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -1038,6 +1039,93 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
 
 
+
+function AdminFinanceView({ report, onRefresh }) {
+  const tx = Array.isArray(report?.transactions) ? report.transactions : []
+
+  return (
+    <section className="admin-finance-page">
+      <div className="page-title admin-finance-title">
+        <div>
+          <h1>Admin — raport platformy</h1>
+          <p>Kontrola finansów marketplace: sprzedaż, prowizja 20%, zarobki tipsterów i wypłaty.</p>
+        </div>
+        <button type="button" onClick={onRefresh}>Odśwież raport</button>
+      </div>
+
+      <div className="admin-finance-grid">
+        <div className="finance-card primary">
+          <span>💰 Prowizja platformy 20%</span>
+          <strong>{Number(report?.platform_commission || 0).toFixed(2)} zł</strong>
+          <p>Twoje przychody z premium sprzedaży.</p>
+        </div>
+        <div className="finance-card">
+          <span>📊 Sprzedaż premium</span>
+          <strong>{Number(report?.total_sales || 0)}</strong>
+          <p>Liczba kupionych premium typów.</p>
+        </div>
+        <div className="finance-card">
+          <span>🧾 Obrót brutto</span>
+          <strong>{Number(report?.gross_sales || 0).toFixed(2)} zł</strong>
+          <p>100% ceny premium typów.</p>
+        </div>
+        <div className="finance-card">
+          <span>👥 Zarobki tipsterów</span>
+          <strong>{Number(report?.tipster_earnings || 0).toFixed(2)} zł</strong>
+          <p>80% sprzedaży dla autorów.</p>
+        </div>
+        <div className="finance-card">
+          <span>✅ Wypłacono</span>
+          <strong>{Number(report?.total_payouts || 0).toFixed(2)} zł</strong>
+          <p>Zatwierdzone wypłaty tipsterów.</p>
+        </div>
+        <div className="finance-card warning">
+          <span>⏳ Pending wypłaty</span>
+          <strong>{Number(report?.pending_payouts || 0).toFixed(2)} zł</strong>
+          <p>Zgłoszone, ale jeszcze niewypłacone.</p>
+        </div>
+      </div>
+
+      <div className="earnings-table-card">
+        <div className="earnings-table-head">
+          <h2>Ostatnie transakcje marketplace</h2>
+          <span>{tx.length} pozycji</span>
+        </div>
+
+        {tx.length ? (
+          <table className="earnings-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>User ID</th>
+                <th>Typ</th>
+                <th>Kwota</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tx.map((row, idx) => (
+                <tr key={row.id || idx}>
+                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
+                  <td><code>{row.user_id}</code></td>
+                  <td><span className="status-pill">{row.type}</span></td>
+                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
+                  <td><span className={`status-pill ${row.status === 'completed' ? 'success' : ''}`}>{row.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-wallet">
+            <strong>Brak transakcji</strong>
+            <span>Po pierwszej sprzedaży premium pojawi się tutaj historia.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
   const profile = getUserProfileView(user)
   const totalPending = requests
@@ -1137,6 +1225,7 @@ function App() {
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
   const [stripeConnectStatus, setStripeConnectStatus] = useState(null)
+  const [adminFinanceReport, setAdminFinanceReport] = useState({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -1609,6 +1698,37 @@ function App() {
     }
   }
 
+
+  async function fetchAdminFinanceReport() {
+    if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
+      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+      return
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_admin_finance_report')
+
+      if (error || !data) {
+        setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+        return
+      }
+
+      setAdminFinanceReport({
+        platform_commission: Number(data.platform_commission || 0),
+        total_sales: Number(data.total_sales || 0),
+        gross_sales: Number(data.gross_sales || 0),
+        tipster_earnings: Number(data.tipster_earnings || 0),
+        total_payouts: Number(data.total_payouts || 0),
+        pending_payouts: Number(data.pending_payouts || 0),
+        available_to_payout: Number(data.available_to_payout || 0),
+        transactions: Array.isArray(data.transactions) ? data.transactions : []
+      })
+    } catch (error) {
+      console.error('fetchAdminFinanceReport error', error)
+      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+    }
+  }
+
   async function fetchPaymentHistory(userId = sessionUser?.id) {
     try {
     if (!isSupabaseConfigured || !supabase || !userId) return
@@ -1784,6 +1904,13 @@ function App() {
       message: 'Do zobaczenia ponownie.'
     })
   }
+
+
+  useEffect(() => {
+    if (view === 'adminFinance' && isAdminUser(sessionUser)) {
+      fetchAdminFinanceReport()
+    }
+  }, [view, sessionUser?.id])
 
   const filteredTips = tips.filter(tip => {
     if (activeFilter === 'all') return true
