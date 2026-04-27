@@ -454,3 +454,7 @@ Naprawiono błąd JSX:
 ## Wersja 70 — runtime fix
 Naprawiono błąd po logowaniu: `startPremiumCheckout is not defined`.
 Banner Premium korzysta z bezpiecznego globalnego handlera i nie wywala aplikacji.
+
+## Wersja 71 — premium handler scope fix
+Naprawiono błąd po logowaniu: `startPremiumCheckout is not defined`.
+Wszystkie przyciski Premium wysyłają event, a prawdziwy Stripe Checkout uruchamia się wewnątrz App.

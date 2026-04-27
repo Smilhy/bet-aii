@@ -169,7 +169,7 @@ return (
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        <button onClick={runPremiumCheckout}>Przejdź na Premium</button>
+        <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>
       </div>
     </aside>
   )
@@ -1843,7 +1843,7 @@ function App() {
               <div>
                 <strong>💰 Marketplace premium</strong>
                 <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
-                <button type="button" className="premium-banner-cta" onClick={startPremiumCheckout}>Kup Premium</button>
+                <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
                 <b>{tips.filter(t => t.access_type === 'premium').length}</b>
