@@ -48,13 +48,12 @@ exports.handler = async function(event) {
           quantity: 1
         }
       ],
-      client_reference_id: userId || undefined,
       metadata: {
         tip_id: tipId,
         user_id: userId,
         amount_pln: String(price)
       },
-      success_url: `${siteUrl}/?payment=success&stripe=1&tip=${encodeURIComponent(tipId)}`,
+      success_url: `${siteUrl}/?payment=success&tip=${encodeURIComponent(tipId)}`,
       cancel_url: `${siteUrl}/?payment=cancel`
     });
 

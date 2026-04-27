@@ -51,32 +51,16 @@ const staticTips = [
   }
 ]
 
-function getUserProfileView(user) {
-  const email = user?.email || ''
-  const nameFromMeta = user?.user_metadata?.username || user?.user_metadata?.name
-  const username = nameFromMeta || (email ? email.split('@')[0] : 'Gość')
-  const isAdmin = email.toLowerCase() === 'smilhytv@gmail.com'
-
-  return {
-    id: user?.id || null,
-    email,
-    username,
-    initials: username.slice(0, 2).toUpperCase(),
-    isAdmin
-  }
-}
-
 function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout }) {
-  const sidebarProfile = getUserProfileView(user)
   return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
 
       <div className="user-card">
-        <div className="avatar">{sidebarProfile.initials}</div>
+        <div className="avatar">AN</div>
         <div>
-          <strong>{sidebarProfile.username}</strong>
-          <span className="pill">{sidebarProfile.isAdmin ? 'ADMIN' : 'VIP'}</span>
+          <strong>{user?.email?.split('@')[0] || 'AdrianNowak'}</strong>
+          <span className="pill">{user?.email === 'smilhytv@gmail.com' ? 'ADMIN' : 'VIP'}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{wallet.toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount}</b></div>
@@ -124,7 +108,7 @@ function Rightbar() {
         <div className="rank first"><span>1</span><div className="mini-avatar">FM</div><div><b>FitMateusz</b><small>ROI: 24.5%</small></div><strong>+3,250 zł</strong></div>
         <div className="rank second"><span>2</span><div className="mini-avatar">K</div><div><b>Kamil_98</b><small>ROI: 18.7%</small></div><strong>+2,150 zł</strong></div>
         <div className="rank third"><span>3</span><div className="mini-avatar female">Z</div><div><b>Zuzanna07</b><small>ROI: 16.3%</small></div><strong>+1,870 zł</strong></div>
-        <div className="rank"><span>4</span><div className="mini-avatar">{sidebarProfile.initials}</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
+        <div className="rank"><span>4</span><div className="mini-avatar">AN</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
         <div className="rank"><span>5</span><div className="mini-avatar female">M</div><div><b>Maksymilian</b><small>ROI: 14.8%</small></div><strong>+1,420 zł</strong></div>
       </section>
 
@@ -815,55 +799,15 @@ function EarningsView({ tips, payments }) {
 }
 
 
-const UNLOCKED_TIPS_STORAGE_PREFIX = 'betai_unlocked_tips_v2_'
-
-function getUnlockedTipsStorageKey(userId) {
-  return `${UNLOCKED_TIPS_STORAGE_PREFIX}${userId || 'guest'}`
-}
-
-function readLocalUnlockedTips(userId) {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(getUnlockedTipsStorageKey(userId)) || '[]'))
-  } catch {
-    return new Set()
-  }
-}
-
-function saveLocalUnlockedTips(setValue, userId) {
-  try {
-    localStorage.setItem(getUnlockedTipsStorageKey(userId), JSON.stringify([...setValue]))
-  } catch {
-    // localStorage can be unavailable in some browsers
-  }
-}
-
-function clearGuestUnlockedTips() {
-  try {
-    localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
-    localStorage.removeItem('betai_unlocked_tips_v1')
-  } catch {
-    // ignore
-  }
-}
-
-
-
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
-  const userProfile = getUserProfileView(sessionUser)
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
-  function updateUnlockedTips(updater) {
-    setUnlockedTips(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      return next
-    })
-  }
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
@@ -888,97 +832,9 @@ function App() {
     setTips(data?.length ? data : staticTips)
   }
 
-
-  useEffect(() => {
-    try {
-      localStorage.removeItem('betai_unlocked_tips_v1')
-      localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  useEffect(() => {
-    if (sessionUser?.id) {
-      setUnlockedTips(new Set())
-      fetchUnlockedTips(sessionUser.id)
-      fetchPaymentHistory(sessionUser.id)
-    } else {
-      setUnlockedTips(new Set())
-    }
-  }, [sessionUser?.id])
-
   useEffect(() => {
     fetchTips()
   }, [])
-
-
-
-
-  async function savePaymentToSupabase(tipId, price = 29, userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !tipId) return false
-
-    let finalUserId = userId
-    if (!finalUserId) {
-      const { data } = await supabase.auth.getSession()
-      finalUserId = data?.session?.user?.id
-    }
-
-    if (!finalUserId) return false
-
-    const { error } = await supabase
-      .from('payments')
-      .insert({
-        user_id: finalUserId,
-        tip_id: tipId,
-        amount: price,
-        currency: 'pln',
-        status: 'paid'
-      })
-
-    return !error
-  }
-
-  async function saveUnlockToSupabase(tipId, price = 29, userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !tipId) return false
-
-    let finalUserId = userId
-
-    if (!finalUserId) {
-      const { data } = await supabase.auth.getSession()
-      finalUserId = data?.session?.user?.id
-    }
-
-    if (!finalUserId) return false
-
-    const { error } = await supabase
-      .from('unlocked_tips')
-      .upsert({
-        user_id: finalUserId,
-        tip_id: tipId,
-        price
-      }, { onConflict: 'user_id,tip_id' })
-
-    return !error
-  }
-
-  async function fetchUnlockedTips(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setUnlockedTips(new Set())
-      return
-    }
-
-    const { data, error } = await supabase
-      .from('unlocked_tips')
-      .select('tip_id')
-      .eq('user_id', userId)
-
-    if (!error && Array.isArray(data)) {
-      setUnlockedTips(new Set(data.map(row => row.tip_id)))
-    } else {
-      setUnlockedTips(new Set())
-    }
-  }
 
   async function fetchPaymentHistory(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) return
@@ -1002,26 +858,12 @@ function App() {
 
       const { data } = await supabase.auth.getSession()
       setSessionUser(data?.session?.user || null)
-      if (data?.session?.user?.id) {
-        fetchPaymentHistory(data.session.user.id)
-        fetchUnlockedTips(data.session.user.id)
-      }
+      if (data?.session?.user?.id) fetchPaymentHistory(data.session.user.id)
       setAuthLoading(false)
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
-        if (!session?.user?.id) {
-          setUnlockedTips(new Set())
-          try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
-        } else {
-          setUnlockedTips(new Set())
-          fetchUnlockedTips(session.user.id)
-          fetchPaymentHistory(session.user.id)
-        }
-        if (session?.user?.id) {
-          fetchPaymentHistory(session.user.id)
-          fetchUnlockedTips(session.user.id)
-        }
+        if (session?.user?.id) fetchPaymentHistory(session.user.id)
       })
 
       return () => listener?.subscription?.unsubscribe?.()
@@ -1034,32 +876,14 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const payment = params.get('payment')
     const tipId = params.get('tip')
-    const stripeReturn = params.get('stripe') === '1'
 
-    if (payment === 'success' && stripeReturn && tipId) {
-      // Nie ustawiamy odblokowania zanim znamy zalogowanego usera.
-      // Odblokowanie zapisuje się dopiero pod konkretnym user_id po powrocie ze Stripe.
-
-      async function persistUnlockFromReturn() {
-        await saveUnlockToSupabase(tipId, 29)
-        await savePaymentToSupabase(tipId, 29)
-        const { data } = isSupabaseConfigured && supabase
-          ? await supabase.auth.getSession()
-          : { data: null }
-
-        const userId = data?.session?.user?.id
-        if (userId) {
-          clearGuestUnlockedTips()
-          await fetchUnlockedTips(userId)
-          await fetchPaymentHistory(userId)
-        }
-
-        window.history.replaceState({}, document.title, window.location.pathname)
-      }
-
-      persistUnlockFromReturn().catch(() => {
-        window.history.replaceState({}, document.title, window.location.pathname)
+    if (payment === 'success' && tipId) {
+      setUnlockedTips(prev => {
+        const next = new Set(prev)
+        next.add(tipId)
+        return next
       })
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
 
     if (payment === 'cancel') {
@@ -1074,15 +898,6 @@ function App() {
   }
 
   function unlockTip(tip) {
-    if (!sessionUser?.id) {
-      showToast({
-        type: 'error',
-        title: 'Zaloguj się, aby odblokować',
-        message: 'Zakup premium musi być przypisany do Twojego konta.'
-      })
-      return
-    }
-
     if (unlockedTips.has(tip.id)) {
       showToast({
         type: 'success',
@@ -1095,13 +910,32 @@ function App() {
     setSelectedPayment(tip)
   }
 
-  async function handlePaymentSuccess(tip) {
-    showToast({
-      type: 'error',
-      title: 'Użyj płatności Stripe',
-      message: 'Odblokowanie zapisuje się tylko po płatności Stripe.'
+  function handlePaymentSuccess(tip) {
+    const price = Number(tip.price || 29)
+
+    setWallet(prev => Math.max(0, Number((prev - price).toFixed(2))))
+    setUnlockedTips(prev => {
+      const next = new Set(prev)
+      next.add(tip.id)
+      return next
     })
     setSelectedPayment(null)
+    setPaymentHistory(prev => [{
+      id: `local-${Date.now()}`,
+      tip_id: tip.id,
+      amount: price,
+      currency: 'pln',
+      status: 'paid',
+      created_at: new Date().toISOString()
+    }, ...prev])
+
+    fetchPaymentHistory()
+
+    showToast({
+      type: 'success',
+      title: 'Płatność zakończona',
+      message: `Odblokowano typ za ${price.toFixed(2)} zł.`
+    })
   }
 
   function topUpWallet() {
@@ -1116,9 +950,6 @@ function App() {
   async function logout() {
     if (supabase) await supabase.auth.signOut()
     setSessionUser(null)
-    setUnlockedTips(new Set())
-    clearGuestUnlockedTips()
-    try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
     showToast({
       type: 'success',
       title: 'Wylogowano',
@@ -1168,7 +999,7 @@ function App() {
           <div className="top-actions">
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
-            <span className="user-top-email">{userProfile.email}</span>
+            <span className="user-top-email">{sessionUser?.email}</span>
             <button className="wallet-top-btn" onClick={() => setView('wallet')}>{wallet.toFixed(2)} zł</button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
@@ -1180,7 +1011,6 @@ function App() {
             onToast={showToast}
             onTipSaved={() => {
               fetchTips()
-              if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
             }}
           />
