@@ -412,3 +412,7 @@ Naprawiono dolny czerwony komunikat:
 - zamiast `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` pokazuje:
   `Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
 - dodatkowo formatowanie błędów działa dla toastów i boxów formularza.
+
+## Wersja 63 — final inline message fix
+Naprawiono konkretnie `setMessage('Błąd zapisu: ' + error.message)`, które nadal pokazywało surowy błąd z Supabase. Teraz dolny czerwony box pokazuje:
+`Błąd zapisu: Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`

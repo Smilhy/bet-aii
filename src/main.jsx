@@ -315,7 +315,7 @@ function AddTipForm({ onTipSaved, onToast, user }) {
     const { error } = await supabase.from('tips').insert(payload)
     setSaving(false)
     if (error) {
-      setMessage('Błąd zapisu: ' + error.message)
+      setMessage('Błąd zapisu: ' + formatAppErrorMessage(error.message))
       onToast?.({ type: 'error', title: 'Błąd zapisu', message: formatAppErrorMessage(error.message) })
       return
     }
