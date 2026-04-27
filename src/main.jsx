@@ -863,6 +863,31 @@ function App() {
 
 
 
+
+  async function savePaymentToSupabase(tipId, price = 29, userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !tipId) return false
+
+    let finalUserId = userId
+    if (!finalUserId) {
+      const { data } = await supabase.auth.getSession()
+      finalUserId = data?.session?.user?.id
+    }
+
+    if (!finalUserId) return false
+
+    const { error } = await supabase
+      .from('payments')
+      .insert({
+        user_id: finalUserId,
+        tip_id: tipId,
+        amount: price,
+        currency: 'pln',
+        status: 'paid'
+      })
+
+    return !error
+  }
+
   async function saveUnlockToSupabase(tipId, price = 29, userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !tipId) return false
 
@@ -949,8 +974,9 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const payment = params.get('payment')
     const tipId = params.get('tip')
+    const stripeReturn = params.get('stripe') === '1'
 
-    if (payment === 'success' && tipId) {
+    if (payment === 'success' && stripeReturn && tipId) {
       updateUnlockedTips(prev => {
         const next = new Set(prev)
         next.add(tipId)
@@ -959,6 +985,7 @@ function App() {
 
       async function persistUnlockFromReturn() {
         await saveUnlockToSupabase(tipId, 29)
+        await savePaymentToSupabase(tipId, 29)
         const { data } = isSupabaseConfigured && supabase
           ? await supabase.auth.getSession()
           : { data: null }
@@ -1017,14 +1044,6 @@ function App() {
     }
 
     setSelectedPayment(null)
-    setPaymentHistory(prev => [{
-      id: `local-${Date.now()}`,
-      tip_id: tip.id,
-      amount: price,
-      currency: 'pln',
-      status: 'paid',
-      created_at: new Date().toISOString()
-    }, ...prev])
 
     fetchPaymentHistory()
 

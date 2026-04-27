@@ -254,3 +254,46 @@ on public.unlocked_tips for update
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+
+-- Wersja 32 — payments final policies
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  tip_id uuid,
+  stripe_session_id text,
+  amount numeric(10,2) not null default 0,
+  currency text not null default 'pln',
+  status text not null default 'paid',
+  created_at timestamptz not null default now()
+);
+
+alter table public.payments enable row level security;
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own payments" on public.payments;
+create policy "Users insert own payments"
+on public.payments
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Service role can manage payments" on public.payments;
+create policy "Service role can manage payments"
+on public.payments
+for all
+to service_role
+using (true)
+with check (true);
+
+create index if not exists payments_user_id_created_at_idx
+on public.payments(user_id, created_at desc);
+
+create index if not exists payments_tip_id_idx
+on public.payments(tip_id);

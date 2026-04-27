@@ -209,3 +209,10 @@ Poprawka sytuacji, gdy Netlify stoi na `Installing npm packages`:
 - przypięto stabilne wersje paczek,
 - netlify.toml wykonuje szybki install bez audit/fund,
 - paczka ma tylko niezbędne pliki do GitHub upload.
+
+## Wersja 32 — payments final fix
+- Dodanie typu nie powinno oznaczać zakupu.
+- Zakup uznawany jest tylko po powrocie ze Stripe z `stripe=1`.
+- Webhook zapisuje `unlocked_tips` oraz `payments`.
+- Dodany fallback zapisu `payments` z frontendu po powrocie ze Stripe.
+- Odpal `supabase/schema.sql`, potem deploy bez cache.
