@@ -459,7 +459,7 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
       <div className="wallet-main-card">
         <div>
           <span>Saldo konta</span>
-          <strong>{wallet.toFixed(2)} zł</strong>
+          <strong>{Number(wallet || 0).toFixed(2)} zł</strong>
           <p>Saldo używane do odblokowania typów premium.</p>
         </div>
         <button onClick={onTopUp}>+ Doładuj 100 zł</button>
@@ -1182,7 +1182,7 @@ function App() {
     })
   }
   const [toast, setToast] = useState(null)
-  const [wallet, setWallet] = useState(1250.50)
+  const [wallet, setWallet] = useState(0)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
 
   async function fetchTips(userId = sessionUser?.id) {
@@ -1467,24 +1467,14 @@ function App() {
       return
     }
 
-    const { data, error } = await supabase
-      .from('wallet_transactions')
-      .select('amount,type,status')
-      .eq('user_id', userId)
+    const { data, error } = await supabase.rpc('get_wallet_balance', { p_user_id: userId })
 
-    if (error || !Array.isArray(data)) {
+    if (error || data === null || data === undefined) {
       setWalletBalance(0)
       return
     }
 
-    const balance = data.reduce((sum, tx) => {
-      const amount = Number(tx.amount || 0)
-      if (tx.status !== 'completed') return sum
-      if (tx.type === 'spend' || tx.type === 'purchase') return sum - amount
-      return sum + amount
-    }, 0)
-
-    setWalletBalance(Math.max(0, balance))
+    setWalletBalance(Math.max(0, Number(data || 0)))
   }
 
   async function fetchUserPlan(userId = sessionUser?.id) {
@@ -1592,12 +1582,12 @@ function App() {
 
       const { data } = await supabase.auth.getSession()
       setSessionUser(data?.session?.user || null)
+      setWalletBalance(0)
       if (data?.session?.user?.id) {
         fetchPaymentHistory(data.session.user.id)
         fetchPayoutRequests(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchWalletBalance(data.session.user.id)
-        fetchUserPlan(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
       }
@@ -1605,6 +1595,7 @@ function App() {
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
+        setWalletBalance(0)
         if (!session?.user?.id) {
           setUnlockedTips(new Set())
           try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
@@ -1616,8 +1607,7 @@ function App() {
           fetchUserPlan(session.user.id)
         fetchWalletBalance(session.user.id)
           fetchUserPlan(session.user.id)
-          fetchUserPlan(session.user.id)
-        }
+          }
         if (session?.user?.id) {
           fetchPaymentHistory(session.user.id)
           fetchUnlockedTips(session.user.id)
@@ -1711,6 +1701,7 @@ function App() {
   async function logout() {
     if (supabase) await supabase.auth.signOut()
     setSessionUser(null)
+    setWalletBalance(0)
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -1755,7 +1746,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -1764,7 +1755,7 @@ function App() {
             <span className="notice">🔔<b>3</b></span>
             <span>✉</span>
             <span className="user-top-email">{userProfile.email}</span>
-            <button className="wallet-top-btn" onClick={() => setView('wallet')}>{wallet.toFixed(2)} zł</button>
+            <button className="wallet-top-btn" onClick={() => setView('wallet')}>{Number(walletBalance || 0).toFixed(2)} zł</button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
         </header>
@@ -1782,7 +1773,7 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={wallet} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
+          <WalletPanel wallet={walletBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
         )}
 
         {view === 'leaderboard' && (

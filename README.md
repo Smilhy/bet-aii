@@ -458,3 +458,18 @@ Banner Premium korzysta z bezpiecznego globalnego handlera i nie wywala aplikacj
 ## Wersja 71 — premium handler scope fix
 Naprawiono błąd po logowaniu: `startPremiumCheckout is not defined`.
 Wszystkie przyciski Premium wysyłają event, a prawdziwy Stripe Checkout uruchamia się wewnątrz App.
+
+## Wersja 72 — real wallet zero fix
+Naprawiono:
+- usunięto fake stan `useState(1250.50)`,
+- Sidebar i Portfel pokazują `walletBalance` z Supabase RPC,
+- SQL czyści wszystkie stare/testowe transakcje portfela przez `truncate wallet_transactions`,
+- nowe konto ma 0.00 zł,
+- saldo rośnie tylko po Stripe webhook.
+
+## Wersja 73 — wallet per-user fix
+Naprawiono portfel:
+- Sidebar i Portfel używają prawdziwego props `wallet`, nie wspólnej/starej zmiennej.
+- Saldo resetuje się do 0 przy zmianie konta / logout / login.
+- Saldo pobierane jest przez RPC `get_wallet_balance(user_id)`.
+- SQL czyści całą tabelę `wallet_transactions`, żeby każde konto startowało od 0.
