@@ -74,6 +74,12 @@ function getUserProfileView(user) {
 }
 
 
+
+function isAdminUser(user) {
+  const email = String(user?.email || '').toLowerCase()
+  return email === 'smilhytv@gmail.com'
+}
+
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile?.isAdmin) return 'ADMIN'

@@ -550,3 +550,7 @@ Dodano:
 ## Wersja 82 — Admin finanse menu fix
 Naprawiono brak zakładki `📊 Admin finanse` w lewym menu.
 Dodano render widoku `AdminFinanceView` oraz automatyczne odświeżanie raportu po wejściu w zakładkę.
+
+## Wersja 83 — isAdminUser fix
+Naprawiono błąd po zalogowaniu: `isAdminUser is not defined`.
+Admin rozpoznawany po emailu `smilhytv@gmail.com`.
