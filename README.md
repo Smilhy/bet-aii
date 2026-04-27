@@ -201,3 +201,11 @@ Naprawiono biały ekran po zakupie:
 - poprawiono `updateUnlockedTips`, który w wersji 29 wywoływał sam siebie,
 - nadal zachowuje odblokowanie lokalnie po refreshu,
 - po powrocie ze Stripe URL jest czyszczony bez zapętlenia.
+
+## Wersja 31 — NETLIFY BUILD FIX
+Poprawka sytuacji, gdy Netlify stoi na `Installing npm packages`:
+- usunięto `package-lock.json`,
+- uproszczono `package.json`,
+- przypięto stabilne wersje paczek,
+- netlify.toml wykonuje szybki install bez audit/fund,
+- paczka ma tylko niezbędne pliki do GitHub upload.
