@@ -315,3 +315,9 @@ Dodano:
 - tworzenie requestu wypłaty w Supabase,
 - schema `payout_requests`,
 - przygotowanie pod Stripe Connect.
+
+## Wersja 46 — payout UI fix
+Naprawiono pusty ekran w zakładce Wypłaty:
+- PayoutsView ma fallback gdy user/dane jeszcze się ładują,
+- render zakładki Wypłaty jest poprawiony,
+- brak tabeli payout_requests nie powinien wywalać UI.

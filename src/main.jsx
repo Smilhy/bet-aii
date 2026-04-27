@@ -969,7 +969,17 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
 
 
 
-function PayoutsView({ user, tips, payments, payoutRequests, onRequestPayout }) {
+function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout }) {
+  if (!user) {
+    return (
+      <section className="payout-page">
+        <div className="payout-loading">
+          <strong>Ładowanie wypłat...</strong>
+          <span>Trwa pobieranie danych konta.</span>
+        </div>
+      </section>
+    )
+  }
   const profile = getUserProfileView(user)
   const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
   const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
@@ -1204,6 +1214,7 @@ function App() {
       .order('created_at', { ascending: false })
 
     if (!error) setPayoutRequests(data || [])
+    else setPayoutRequests([])
   }
 
   async function requestPayout(amount) {
