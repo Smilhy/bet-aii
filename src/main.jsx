@@ -169,7 +169,7 @@ return (
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        <button onClick={startPremiumCheckout}>Przejdź na Premium</button>
+        <button onClick={runPremiumCheckout}>Przejdź na Premium</button>
       </div>
     </aside>
   )
@@ -1272,6 +1272,13 @@ function App() {
     }
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const handler = () => runPremiumCheckout()
+    window.addEventListener('betai:start-premium-checkout', handler)
+    return () => window.removeEventListener('betai:start-premium-checkout', handler)
+  }, [sessionUser?.id])
+
   useEffect(() => {
     fetchTips(sessionUser?.id)
   }, [sessionUser?.id])
@@ -1396,7 +1403,7 @@ function App() {
 
 
 
-  async function startPremiumCheckout() {
+  async function runPremiumCheckout() {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić Premium.' })
       return

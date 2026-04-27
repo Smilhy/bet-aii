@@ -450,3 +450,7 @@ Wymagane ENV:
 ## Wersja 69 — build fix
 Naprawiono błąd JSX:
 `Expected ">" but found ")"` przy przycisku `premium-banner-cta`.
+
+## Wersja 70 — runtime fix
+Naprawiono błąd po logowaniu: `startPremiumCheckout is not defined`.
+Banner Premium korzysta z bezpiecznego globalnego handlera i nie wywala aplikacji.
