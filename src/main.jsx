@@ -132,7 +132,7 @@ return (
         <div className="avatar">{profile.initials}</div>
         <div>
           <strong>{profile.username}</strong>
-          <span className="pill">{profile.isAdmin ? 'ADMIN' : 'VIP'}</span>
+          <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
@@ -907,6 +907,20 @@ function clearGuestUnlockedTips() {
 
 
 
+
+function getDisplayBalance(user, userPlan) {
+  if (!user) return '0.00'
+  if (getUserProfileView(user).isAdmin) return '1250.50'
+  return '0.00'
+}
+
+function getDisplayRole(user, userPlan) {
+  const profile = getUserProfileView(user)
+  if (profile.isAdmin) return 'ADMIN'
+  if (userPlan === 'premium') return 'VIP'
+  return 'FREE'
+}
+
 function ProfileView({ user, tips, payments, unlockedTips }) {
   const profile = getUserProfileView(user)
   const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
@@ -969,7 +983,7 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
 
 
 
-function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout }) {
+function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free' }) {
   if (!user) {
     return (
       <section className="payout-page">
@@ -1049,6 +1063,81 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 }
 
 
+
+function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
+  const profile = getUserProfileView(user)
+  const totalPending = requests
+    .filter(request => request.status === 'pending')
+    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const totalPaid = requests
+    .filter(request => request.status === 'paid')
+    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+
+  if (!profile.isAdmin) {
+    return (
+      <section className="admin-payout-page">
+        <div className="admin-denied">
+          <strong>Brak dostępu</strong>
+          <span>Ten panel jest dostępny tylko dla administratora.</span>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section className="admin-payout-page">
+      <div className="admin-payout-hero">
+        <div>
+          <h1>Admin wypłaty</h1>
+          <p>Zatwierdzaj i oznaczaj wypłaty tipsterów.</p>
+        </div>
+        <div className="admin-payout-badge">ADMIN</div>
+      </div>
+
+      <div className="admin-payout-stats">
+        <div><span>Zgłoszenia</span><b>{requests.length}</b></div>
+        <div><span>Pending</span><b>{totalPending.toFixed(2)} zł</b></div>
+        <div><span>Wypłacone</span><b>{totalPaid.toFixed(2)} zł</b></div>
+      </div>
+
+      <div className="admin-payout-table">
+        <div className="admin-payout-row header">
+          <span>User ID</span>
+          <span>Data</span>
+          <span>Kwota</span>
+          <span>Status</span>
+          <span>Akcje</span>
+        </div>
+
+        {requests.length ? requests.map(request => (
+          <div className="admin-payout-row" key={request.id}>
+            <span className="mono">{request.user_id ? request.user_id.slice(0, 8) + '...' : '—'}</span>
+            <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
+            <span><b>{Number(request.amount || 0).toFixed(2)} zł</b></span>
+            <span className={`payout-status ${request.status || 'pending'}`}>{request.status || 'pending'}</span>
+            <span className="admin-actions">
+              <button type="button" onClick={() => onUpdateStatus(request.id, 'approved')}>Zatwierdź</button>
+              <button type="button" onClick={() => onUpdateStatus(request.id, 'paid')}>Wypłacone</button>
+              <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
+            </span>
+          </div>
+        )) : (
+          <div className="admin-empty">
+            <strong>Brak zgłoszeń wypłat</strong>
+            <span>Gdy tipster poprosi o wypłatę, pojawi się tutaj.</span>
+          </div>
+        )}
+      </div>
+
+      <div className="stripe-connect-note">
+        <strong>Stripe Connect — kolejny etap</strong>
+        <span>Po podpięciu Connect status paid będzie można powiązać z realną wypłatą.</span>
+      </div>
+    </section>
+  )
+}
+
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -1060,6 +1149,9 @@ function App() {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
+  const [userPlan, setUserPlan] = useState('free')
+  const [payoutSubmitting, setPayoutSubmitting] = useState(false)
+  const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -1204,6 +1296,71 @@ function App() {
   }
 
 
+
+  async function fetchAdminPayoutRequests() {
+    if (!userProfile?.isAdmin || !isSupabaseConfigured || !supabase) {
+      setAdminPayoutRequests([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('payout_requests')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('fetchAdminPayoutRequests error', error)
+      setAdminPayoutRequests([])
+      return
+    }
+
+    setAdminPayoutRequests(data || [])
+  }
+
+  async function updatePayoutStatus(requestId, status) {
+    if (!userProfile?.isAdmin || !requestId) {
+      showToast({ type: 'error', title: 'Brak dostępu', message: 'Tylko admin może zmieniać status wypłat.' })
+      return
+    }
+
+    const { error } = await supabase
+      .from('payout_requests')
+      .update({ status })
+      .eq('id', requestId)
+
+    if (error) {
+      showToast({ type: 'error', title: 'Błąd aktualizacji', message: error.message })
+      return
+    }
+
+    showToast({ type: 'success', title: 'Status zmieniony', message: `Wypłata: ${status}` })
+    fetchAdminPayoutRequests()
+    if (sessionUser?.id) fetchPayoutRequests(sessionUser.id)
+  }
+
+
+  async function fetchUserPlan(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setUserPlan('free')
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('plan')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !data?.plan) {
+      setUserPlan('free')
+      return
+    }
+
+    setUserPlan(data.plan)
+  }
+
   async function fetchPayoutRequests(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) return
 
@@ -1218,6 +1375,8 @@ function App() {
   }
 
   async function requestPayout(amount) {
+    if (payoutSubmitting) return
+
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby poprosić o wypłatę.' })
       return
@@ -1233,21 +1392,28 @@ function App() {
       return
     }
 
-    const { error } = await supabase
-      .from('payout_requests')
-      .insert({
-        user_id: sessionUser.id,
-        amount,
-        status: 'pending'
+    setPayoutSubmitting(true)
+
+    try {
+      const { error } = await supabase.rpc('request_payout', {
+        p_user_id: sessionUser.id,
+        p_amount: amount
       })
 
-    if (error) {
-      showToast({ type: 'error', title: 'Błąd wypłaty', message: error.message })
-      return
-    }
+      if (error) {
+        const message = error.message?.includes('Limit wypłat')
+          ? 'Limit wypłat w tym miesiącu został osiągnięty.'
+          : error.message
+        showToast({ type: 'error', title: 'Błąd wypłaty', message })
+        return
+      }
 
-    showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
-    fetchPayoutRequests(sessionUser.id)
+      showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
+      await fetchPayoutRequests(sessionUser.id)
+      await fetchUserPlan(sessionUser.id)
+    } finally {
+      setTimeout(() => setPayoutSubmitting(false), 1200)
+    }
   }
 
   async function fetchPaymentHistory(userId = sessionUser?.id) {
@@ -1280,6 +1446,9 @@ function App() {
       if (data?.session?.user?.id) {
         fetchPaymentHistory(data.session.user.id)
         fetchPayoutRequests(data.session.user.id)
+        fetchUserPlan(data.session.user.id)
+        fetchUserPlan(data.session.user.id)
+        fetchUserPlan(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
       }
       setAuthLoading(false)
@@ -1294,6 +1463,9 @@ function App() {
           fetchUnlockedTips(session.user.id)
           fetchPaymentHistory(session.user.id)
           fetchPayoutRequests(session.user.id)
+          fetchUserPlan(session.user.id)
+          fetchUserPlan(session.user.id)
+          fetchUserPlan(session.user.id)
         }
         if (session?.user?.id) {
           fetchPaymentHistory(session.user.id)
@@ -1488,6 +1660,14 @@ function App() {
           />
         )}
 
+        {view === 'adminPayouts' && (
+          <AdminPayoutsView
+            user={sessionUser}
+            requests={adminPayoutRequests}
+            onUpdateStatus={updatePayoutStatus}
+          />
+        )}
+
         {view === 'payouts' && (
           <PayoutsView
             user={sessionUser}
@@ -1495,6 +1675,8 @@ function App() {
             payments={paymentHistory}
             payoutRequests={payoutRequests}
             onRequestPayout={requestPayout}
+            userPlan={userPlan}
+            submitting={payoutSubmitting}
           />
         )}
 

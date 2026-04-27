@@ -499,3 +499,205 @@ on public.payout_requests
 for insert
 to authenticated
 with check (auth.uid() = user_id);
+
+
+-- Wersja 49 — admin payouts policies
+alter table public.payout_requests enable row level security;
+
+drop policy if exists "Admin read all payout requests" on public.payout_requests;
+create policy "Admin read all payout requests"
+on public.payout_requests
+for select
+to authenticated
+using ((auth.jwt() ->> 'email') = 'smilhytv@gmail.com');
+
+drop policy if exists "Admin update payout requests" on public.payout_requests;
+create policy "Admin update payout requests"
+on public.payout_requests
+for update
+to authenticated
+using ((auth.jwt() ->> 'email') = 'smilhytv@gmail.com')
+with check ((auth.jwt() ->> 'email') = 'smilhytv@gmail.com');
+
+-- Wersja 50 — limity wypłat Free/Premium
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  plan text not null default 'free' check (plan in ('free','premium')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(user_id)
+);
+
+alter table public.user_subscriptions enable row level security;
+
+drop policy if exists "Users read own subscription" on public.user_subscriptions;
+create policy "Users read own subscription"
+on public.user_subscriptions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Admin manage subscriptions" on public.user_subscriptions;
+create policy "Admin manage subscriptions"
+on public.user_subscriptions
+for all
+to authenticated
+using ((auth.jwt() ->> 'email') = 'smilhytv@gmail.com')
+with check ((auth.jwt() ->> 'email') = 'smilhytv@gmail.com');
+
+create or replace function public.can_request_payout(p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  payout_count int;
+  user_plan text;
+  limit_count int;
+begin
+  select plan into user_plan
+  from public.user_subscriptions
+  where user_id = p_user_id
+  limit 1;
+
+  if user_plan is null then
+    user_plan := 'free';
+  end if;
+
+  if user_plan = 'premium' then
+    limit_count := 3;
+  else
+    limit_count := 1;
+  end if;
+
+  select count(*) into payout_count
+  from public.payout_requests
+  where user_id = p_user_id
+    and date_trunc('month', created_at) = date_trunc('month', now());
+
+  return payout_count < limit_count;
+end;
+$$;
+
+create or replace function public.request_payout(p_user_id uuid, p_amount numeric)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() <> p_user_id then
+    raise exception 'Brak dostępu';
+  end if;
+
+  if p_amount <= 0 then
+    raise exception 'Kwota wypłaty musi być większa od 0';
+  end if;
+
+  if not public.can_request_payout(p_user_id) then
+    raise exception 'Limit wypłat osiągnięty';
+  end if;
+
+  insert into public.payout_requests (user_id, amount, status)
+  values (p_user_id, p_amount, 'pending');
+end;
+$$;
+
+grant execute on function public.can_request_payout(uuid) to authenticated;
+grant execute on function public.request_payout(uuid, numeric) to authenticated;
+
+
+-- Wersja 51 — antyspam wypłat + limity
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  plan text not null default 'free',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_subscriptions enable row level security;
+
+drop policy if exists "Users read own subscription" on public.user_subscriptions;
+create policy "Users read own subscription"
+on public.user_subscriptions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create or replace function public.can_request_payout(p_user_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  payout_count int;
+  user_plan text;
+  limit_count int;
+begin
+  select plan into user_plan
+  from public.user_subscriptions
+  where user_id = p_user_id
+  order by created_at desc
+  limit 1;
+
+  if user_plan is null then user_plan := 'free'; end if;
+  if user_plan = 'premium' then limit_count := 3; else limit_count := 1; end if;
+
+  select count(*) into payout_count
+  from public.payout_requests
+  where user_id = p_user_id
+    and date_trunc('month', created_at) = date_trunc('month', now());
+
+  return payout_count < limit_count;
+end;
+$$;
+
+create or replace function public.request_payout(p_user_id uuid, p_amount numeric)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() <> p_user_id then
+    raise exception 'Brak dostępu';
+  end if;
+
+  if p_amount <= 0 then
+    raise exception 'Kwota wypłaty musi być większa od 0';
+  end if;
+
+  -- Antyspam: blokuj drugi request w 10 sekundach
+  if exists (
+    select 1 from public.payout_requests
+    where user_id = p_user_id
+      and created_at > now() - interval '10 seconds'
+  ) then
+    raise exception 'Poczekaj chwilę przed kolejną wypłatą';
+  end if;
+
+  if not public.can_request_payout(p_user_id) then
+    raise exception 'Limit wypłat osiągnięty';
+  end if;
+
+  insert into public.payout_requests (user_id, amount, status)
+  values (p_user_id, p_amount, 'pending');
+end;
+$$;
+
+grant execute on function public.can_request_payout(uuid) to authenticated;
+grant execute on function public.request_payout(uuid, numeric) to authenticated;
+
+-- Wersja 52 — poprawka FREE/VIP i saldo per user
+-- Usuń duplikaty planów, zostaw najnowszy wpis na user_id.
+delete from public.user_subscriptions a
+using public.user_subscriptions b
+where a.user_id = b.user_id
+  and a.created_at < b.created_at;
+
+create unique index if not exists user_subscriptions_user_id_uidx
+on public.user_subscriptions(user_id);

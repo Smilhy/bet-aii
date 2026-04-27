@@ -334,3 +334,32 @@ Naprawiono:
 - zakładka `Mój profil` zawsze renderuje pełny panel,
 - profil ma fallbacki dla pustych danych,
 - zakładka `Wypłaty` zostaje z wersji force render.
+
+## Wersja 49 — admin wypłaty
+Dodano:
+- zakładka `Admin wypłaty` tylko dla smilhytv@gmail.com,
+- lista wszystkich zgłoszeń wypłat,
+- przyciski: Zatwierdź / Wypłacone / Odrzuć,
+- statusy pending/approved/paid/rejected,
+- SQL policy dla admina.
+
+## Wersja 50 — limity wypłat Free/Premium
+- Free: 1 wypłata/miesiąc
+- Premium: 3 wypłaty/miesiąc
+- backend blokuje limit przez Supabase RPC
+- UI pokazuje plan, licznik i blokuje przycisk po limicie
+
+## Wersja 51 — payout anti-spam
+Naprawiono spam wypłat:
+- przycisk blokuje się natychmiast po kliknięciu,
+- UI pokazuje plan Free/Premium i licznik miesięczny,
+- backend RPC blokuje drugi request w ciągu 10 sekund,
+- backend pilnuje limitu: Free 1/miesiąc, Premium 3/miesiąc.
+
+## Wersja 52 — FREE/VIP + saldo per user fix
+Naprawiono:
+- zwykłe konto pokazuje badge `FREE`, nie `VIP`,
+- tylko `user_subscriptions.plan = premium` pokazuje `VIP`,
+- admin dalej pokazuje `ADMIN`,
+- saldo zwykłego usera domyślnie 0.00 zł, admin pokazuje testowe 1250.50 zł,
+- SQL czyści duplikaty subskrypcji i dodaje unique index na `user_id`.
