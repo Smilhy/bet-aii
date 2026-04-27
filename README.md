@@ -366,3 +366,6 @@ Naprawiono:
 
 ## Wersja 53 — userPlan crash fix
 Naprawia błąd `userPlan is not defined`.
+
+## Wersja 54 — final fix
+Naprawia błąd `userPlan is not defined` w sidebarze.
