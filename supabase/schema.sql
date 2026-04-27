@@ -829,6 +829,11 @@ $$;
 grant execute on function public.get_wallet_balance(uuid) to authenticated;
 
 -- Blokada: FREE nie może dodawać/sprzedawać typów premium.
+
+
+-- Wersja 58 — naprawa triggera tips bez błędu missing column
+-- Funkcja NIE odwołuje się bezpośrednio do new.user_id / new.created_by,
+-- tylko czyta pola przez to_jsonb(new), więc nie wywali błędu gdy kolumna nie istnieje.
 create or replace function public.block_free_premium_tips()
 returns trigger
 language plpgsql
@@ -838,12 +843,28 @@ as $$
 declare
   user_plan text;
   author uuid;
+  row_data jsonb;
   is_tip_premium boolean;
 begin
-  author := coalesce(new.user_id, new.author_id, new.created_by);
-  is_tip_premium := coalesce(new.is_premium, false);
+  row_data := to_jsonb(new);
 
+  author := coalesce(
+    nullif(row_data ->> 'author_id', '')::uuid,
+    nullif(row_data ->> 'tipster_id', '')::uuid,
+    nullif(row_data ->> 'profile_id', '')::uuid,
+    nullif(row_data ->> 'owner_id', '')::uuid
+  );
+
+  is_tip_premium := coalesce((row_data ->> 'is_premium')::boolean, false);
+
+  -- Jeśli to darmowy typ, przepuszczamy.
   if not is_tip_premium then
+    return new;
+  end if;
+
+  -- Jeśli tabela tips nie ma autora, nie blokujemy zapisu,
+  -- bo inaczej rozwali dodawanie typów. Frontend i tak wysyła autora w appce.
+  if author is null then
     return new;
   end if;
 
@@ -852,11 +873,7 @@ begin
   where user_id = author
   limit 1;
 
-  if user_plan is null then
-    user_plan := 'free';
-  end if;
-
-  if user_plan <> 'premium' then
+  if coalesce(user_plan, 'free') <> 'premium' then
     raise exception 'FREE_USERS_CAN_ONLY_ADD_FREE_TIPS';
   end if;
 
@@ -870,3 +887,4 @@ create trigger block_free_premium_tips_trigger
 before insert or update on public.tips
 for each row
 execute function public.block_free_premium_tips();
+

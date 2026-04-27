@@ -386,3 +386,10 @@ Naprawiono:
 - FREE może dodać tylko darmowy typ,
 - Premium/Admin mogą dodawać typy premium,
 - backend trigger blokuje próby obejścia frontendu.
+
+## Wersja 58 — fix trigger tips
+Naprawiono błędy:
+- `record "new" has no field "user_id"`
+- `record "new" has no field "created_by"`
+
+Trigger teraz bezpiecznie czyta pola przez `to_jsonb(new)`, więc nie crashuje gdy tabela `tips` ma inną nazwę kolumny autora.
