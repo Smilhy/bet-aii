@@ -1,84 +1,63 @@
-const Stripe = require("stripe");
-const { createClient } = require("@supabase/supabase-js");
+const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
 
-exports.handler = async function(event) {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method not allowed" };
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method not allowed' };
   }
 
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const signature = event.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!stripeSecretKey || !webhookSecret) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET" })
-    };
-  }
-
-  const stripe = new Stripe(stripeSecretKey);
   let stripeEvent;
 
   try {
-    stripeEvent = stripe.webhooks.constructEvent(
-      event.body,
-      event.headers["stripe-signature"],
-      webhookSecret
-    );
+    stripeEvent = stripe.webhooks.constructEvent(event.body, signature, webhookSecret);
   } catch (error) {
-    console.error("Stripe signature error:", error.message);
+    console.error('Webhook signature error:', error.message);
     return { statusCode: 400, body: `Webhook Error: ${error.message}` };
   }
 
-  if (stripeEvent.type === "checkout.session.completed") {
-    const session = stripeEvent.data.object;
-    const userId = session.metadata?.user_id || null;
-    const tipId = session.metadata?.tip_id || null;
-    const amount = Number(session.metadata?.amount_pln || ((session.amount_total || 0) / 100));
-    const currency = session.currency || "pln";
+  try {
+    if (stripeEvent.type === 'checkout.session.completed') {
+      const session = stripeEvent.data.object;
 
-    if (supabaseUrl && serviceKey && userId && tipId) {
-      const supabase = createClient(supabaseUrl, serviceKey, {
-        auth: { persistSession: false }
-      });
+      if (session.metadata?.kind === 'wallet_topup') {
+        const supabase = createClient(
+          process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
 
-      const { error: unlockError } = await supabase
-        .from("unlocked_tips")
-        .upsert({
+        const userId = session.metadata.user_id;
+        const amount = Number(session.metadata.amount || 0);
+
+        if (!userId || !amount) {
+          throw new Error('Missing wallet metadata');
+        }
+
+        const { error } = await supabase.from('wallet_transactions').insert({
           user_id: userId,
-          tip_id: tipId,
-          price: amount
-        }, { onConflict: "user_id,tip_id" });
-
-      if (unlockError) console.error("unlocked_tips error:", unlockError.message);
-
-      const { error: paymentError } = await supabase
-        .from("payments")
-        .insert({
-          user_id: userId,
-          tip_id: tipId,
-          stripe_session_id: session.id,
           amount,
-          currency,
-          status: "paid"
+          type: 'topup',
+          provider: 'stripe',
+          provider_session_id: session.id,
+          status: 'completed'
         });
 
-      if (paymentError) console.error("payments error:", paymentError.message);
-      else console.log("Payment saved:", { userId, tipId, amount, session: session.id });
-    } else {
-      console.error("Missing Supabase env or metadata", {
-        hasUrl: !!supabaseUrl,
-        hasServiceKey: !!serviceKey,
-        userId,
-        tipId
-      });
+        if (error) {
+          // unique duplicate means webhook retried, OK
+          if (!String(error.message || '').includes('duplicate')) {
+            throw error;
+          }
+        }
+      }
     }
-  }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ received: true })
-  };
+    return { statusCode: 200, body: 'ok' };
+  } catch (error) {
+    console.error('stripe-webhook error:', error);
+    return { statusCode: 500, body: error.message || 'Webhook handler error' };
+  }
 };

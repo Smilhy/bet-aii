@@ -137,7 +137,7 @@ return (
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
-        <button className="outline-btn" onClick={() => disabledTopUp(showToast)}>Doładuj konto</button>
+        <button className="outline-btn" onClick={onTopUp || (() => {})}>Doładuj konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
       </div>
 
@@ -1241,6 +1241,20 @@ function App() {
     }
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('wallet_topup') === 'success') {
+      showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
+      if (sessionUser?.id) fetchWalletBalance(sessionUser.id)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    if (params.get('wallet_topup') === 'cancel') {
+      showToast({ type: 'info', title: 'Płatność anulowana', message: 'Doładowanie nie zostało opłacone.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
+
   useEffect(() => {
     fetchTips(sessionUser?.id)
   }, [sessionUser?.id])
@@ -1362,6 +1376,38 @@ function App() {
   }
 
 
+
+
+  async function startStripeTopup(amount = 100) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby doładować konto.' })
+      return
+    }
+
+    try {
+      showToast({ type: 'info', title: 'Stripe', message: 'Przekierowanie do płatności...' })
+
+      const response = await fetch('/.netlify/functions/create-wallet-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: sessionUser.id,
+          email: sessionUser.email,
+          amount
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Nie udało się utworzyć płatności Stripe.')
+      }
+
+      window.location.href = data.url
+    } catch (error) {
+      showToast({ type: 'error', title: 'Błąd płatności', message: formatAppErrorMessage(error.message) })
+    }
+  }
 
   async function fetchWalletBalance(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) {
@@ -1657,7 +1703,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={topUpWallet} user={sessionUser} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={wallet} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -1684,7 +1730,7 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={wallet} unlockedTips={unlockedTips} tips={tips} onTopUp={topUpWallet} />
+          <WalletPanel wallet={wallet} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
         )}
 
         {view === 'leaderboard' && (

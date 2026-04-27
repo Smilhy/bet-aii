@@ -933,3 +933,48 @@ as $$
 $$;
 
 grant execute on function public.get_wallet_balance(uuid) to authenticated;
+
+
+-- Wersja 66 — realne doładowania Stripe / wallet
+create table if not exists public.wallet_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric not null,
+  type text not null default 'topup',
+  provider text default 'stripe',
+  provider_session_id text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists wallet_transactions_provider_session_uidx
+on public.wallet_transactions(provider_session_id)
+where provider_session_id is not null;
+
+alter table public.wallet_transactions enable row level security;
+
+drop policy if exists "Users read own wallet transactions" on public.wallet_transactions;
+create policy "Users read own wallet transactions"
+on public.wallet_transactions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create or replace function public.get_wallet_balance(p_user_id uuid)
+returns numeric
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(sum(
+    case
+      when status <> 'completed' then 0
+      when type in ('spend','purchase') then -amount
+      else amount
+    end
+  ), 0)
+  from public.wallet_transactions
+  where user_id = p_user_id;
+$$;
+
+grant execute on function public.get_wallet_balance(uuid) to authenticated;

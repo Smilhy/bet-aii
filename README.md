@@ -420,3 +420,15 @@ Naprawiono konkretnie `setMessage('Błąd zapisu: ' + error.message)`, które na
 ## Wersja 65 — exact premium text fix
 Dodano dokładny tekst przy opcji Premium i w czerwonym komunikacie:
 `Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
+
+## Wersja 66 — realne saldo Stripe
+Dodano:
+- `netlify/functions/create-wallet-checkout.js` — tworzy Stripe Checkout do doładowania konta,
+- `netlify/functions/stripe-webhook.js` — po płatności zapisuje `wallet_transactions`,
+- saldo jest liczone z `get_wallet_balance`,
+- `Doładuj konto` nie dodaje fake kasy, tylko prowadzi do Stripe.
+Wymagane ENV w Netlify:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- VITE_SUPABASE_URL albo SUPABASE_URL
