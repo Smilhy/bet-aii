@@ -144,6 +144,7 @@ return (
         <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
         <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
+        <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
@@ -902,6 +903,68 @@ function clearGuestUnlockedTips() {
   }
 }
 
+
+
+
+function ProfileView({ user, tips, payments, unlockedTips }) {
+  const profile = getUserProfileView(user)
+  const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
+  const premiumTips = myTips.filter(tip => isTipPremium(tip))
+  const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
+  const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+  const platformFee = grossRevenue * 0.15
+  const payout = grossRevenue - platformFee
+  const winrate = myTips.length ? Math.round((myTips.filter(t => t.status === 'won').length / myTips.length) * 100) : 0
+  const role = profile.isAdmin ? 'ADMIN' : premiumTips.length ? 'TIPSTER' : 'USER'
+
+  return (
+    <section className="profile-page">
+      <div className="profile-hero">
+        <div className="profile-avatar-big">{profile.initials}</div>
+        <div>
+          <h1>{profile.username}</h1>
+          <p>{profile.email}</p>
+          <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
+        </div>
+      </div>
+
+      <div className="profile-stats-grid">
+        <div className="profile-stat"><span>Dodane typy</span><b>{myTips.length}</b><small>Wszystkie Twoje typy</small></div>
+        <div className="profile-stat"><span>Premium</span><b>{premiumTips.length}</b><small>Typy na sprzedaż</small></div>
+        <div className="profile-stat"><span>Sprzedaże</span><b>{soldPayments.length}</b><small>Zakupy Twoich typów</small></div>
+        <div className="profile-stat"><span>Winrate</span><b>{winrate}%</b><small>Na podstawie statusów</small></div>
+      </div>
+
+      <div className="profile-money-card">
+        <div><span>Przychód brutto</span><strong>{grossRevenue.toFixed(2)} zł</strong></div>
+        <div><span>Prowizja platformy</span><strong>{platformFee.toFixed(2)} zł</strong></div>
+        <div><span>Do wypłaty</span><strong>{payout.toFixed(2)} zł</strong></div>
+      </div>
+
+      <div className="profile-split">
+        <div className="profile-panel">
+          <div className="profile-panel-head"><h3>Moje typy</h3><span>{myTips.length}</span></div>
+          {myTips.length ? myTips.map(tip => (
+            <div className="profile-tip-row" key={tip.id}>
+              <div><b>{tip.team_home} vs {tip.team_away}</b><span>{tip.league} • {tip.bet_type}</span></div>
+              <em>{isTipPremium(tip) ? 'Premium' : 'Free'}</em>
+            </div>
+          )) : <div className="profile-empty">Nie dodałeś jeszcze żadnych typów.</div>}
+        </div>
+
+        <div className="profile-panel">
+          <div className="profile-panel-head"><h3>Odblokowane</h3><span>{unlockedTips.size}</span></div>
+          <div className="profile-empty">Masz {unlockedTips.size} odblokowanych typów premium na tym koncie.</div>
+        </div>
+      </div>
+
+      <div className="tipster-pro-card">
+        <div><strong>Zostań tipsterem PRO</strong><span>Dodawaj premium typy, buduj sprzedaż i wypłacaj środki w kolejnym etapie.</span></div>
+        <button>Aktywuj PRO</button>
+      </div>
+    </section>
+  )
+}
 
 
 function App() {

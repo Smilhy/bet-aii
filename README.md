@@ -294,3 +294,14 @@ Poprawka:
 - cudze premium nie pokazuje się innym kontom bez zakupu,
 - nowe typy zapisują `author_id`, `user_id`, `author_email`,
 - zakładka Zarobki liczy tylko typy autora, nie kupującego.
+
+## Wersja 44 — profil i panel tipstera PRO
+Dodano:
+- zakładka `Mój profil`,
+- statystyki użytkownika/tipstera,
+- liczba dodanych typów,
+- liczba typów premium,
+- sprzedaże, przychód, prowizja i do wypłaty,
+- lista moich typów,
+- licznik odblokowanych,
+- schema pod `tipster_profiles`.

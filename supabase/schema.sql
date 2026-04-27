@@ -410,3 +410,30 @@ on public.payments
 for select
 to authenticated
 using (auth.uid() = user_id);
+
+
+-- Wersja 44 — profile tipstera
+create table if not exists public.tipster_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  display_name text,
+  bio text,
+  role text not null default 'user',
+  is_tipster boolean default false,
+  created_at timestamptz not null default now(),
+  unique(user_id)
+);
+
+alter table public.tipster_profiles enable row level security;
+
+drop policy if exists "Users read own tipster profile" on public.tipster_profiles;
+create policy "Users read own tipster profile"
+on public.tipster_profiles for select to authenticated using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own tipster profile" on public.tipster_profiles;
+create policy "Users insert own tipster profile"
+on public.tipster_profiles for insert to authenticated with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own tipster profile" on public.tipster_profiles;
+create policy "Users update own tipster profile"
+on public.tipster_profiles for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
