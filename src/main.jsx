@@ -73,6 +73,16 @@ function getUserProfileView(user) {
   }
 }
 
+
+function getDisplayRole(user, plan = 'free') {
+  const profile = getUserProfileView(user)
+  if (profile?.isAdmin) return 'ADMIN'
+  if (plan === 'premium') return 'VIP'
+  return 'FREE'
+}
+
+
+
 const staticTips = [
   {
     id: 'demo-1',
@@ -133,7 +143,7 @@ return (
         <div className="avatar">{profile.initials}</div>
         <div>
           <strong>{profile.username}</strong>
-          <span className="pill">{getDisplayRole(user, userPlan)}</span>
+          <span className="pill">{typeof getDisplayRole === "function" ? getDisplayRole(user, userPlan) : (userPlan === "premium" ? "VIP" : "FREE")}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>

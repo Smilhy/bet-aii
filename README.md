@@ -490,3 +490,6 @@ Dodano:
 - zarobek w tym miesiącu,
 - historia transakcji `earning`,
 - SQL: 20% prowizji platformy i 80% dla tipstera.
+
+## Wersja 76 — getDisplayRole fix
+Naprawiono błąd aplikacji po logowaniu: `getDisplayRole is not defined`.
