@@ -1459,3 +1459,11 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   box-shadow:0 10px 24px rgba(2,44,34,.18);
 }
 .premium-banner-cta:hover{transform:translateY(-1px)}
+
+.free-premium-hint{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  color:#64748b;
+  font-weight:700;
+}

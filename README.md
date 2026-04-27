@@ -396,3 +396,7 @@ Trigger teraz bezpiecznie czyta pola przez `to_jsonb(new)`, więc nie crashuje g
 
 ## Wersja 59 — Premium Marketplace banner
 Zmieniono komunikat marketplace premium na bardziej sprzedażowy i dodano CTA `Kup Premium`.
+
+## Wersja 60 — friendly premium error
+Zmieniono surowy błąd `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` na czytelny komunikat dla użytkownika:
+`Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`

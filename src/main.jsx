@@ -316,7 +316,7 @@ function AddTipForm({ onTipSaved, onToast, user }) {
     setSaving(false)
     if (error) {
       setMessage('Błąd zapisu: ' + error.message)
-      onToast?.({ type: 'error', title: 'Błąd zapisu', message: error.message })
+      onToast?.({ type: 'error', title: 'Błąd zapisu', message: formatAppErrorMessage(error.message) })
       return
     }
     setMessage('✅ Typ zapisany w Supabase i dodany do feedu.')
@@ -375,7 +375,7 @@ function AddTipForm({ onTipSaved, onToast, user }) {
             <span>Twój typ będzie widoczny dla wszystkich</span>
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
-            <strong>🔒 Premium</strong>
+            <strong>🔒 Premium</strong><small className="free-premium-hint" data-key="FREE_INFO_PREMIUM_LOCK">Dostępne po zakupie Premium.</small>
             <span>Tylko użytkownicy, którzy wykupią dostęp</span>
           </button>
         </div>
@@ -915,6 +915,15 @@ function getDisplayBalance(user, plan = 'free', walletBalance = 0) {
   return Number(walletBalance || 0).toFixed(2)
 }
 
+
+function formatAppErrorMessage(message) {
+  const text = String(message || '')
+  if (text.includes('FREE_USERS_CAN_ONLY_ADD_FREE_TIPS')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
+  if (text.includes('LIMIT_EXCEEDED') || text.includes('Limit wypłat')) return 'Limit wypłat w tym miesiącu został osiągnięty.'
+  if (text.includes('TOO_FAST') || text.includes('Spam')) return 'Poczekaj chwilę przed kolejną próbą.'
+  return text
+}
+
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile.isAdmin) return 'ADMIN'
@@ -1339,7 +1348,7 @@ function App() {
       .eq('id', requestId)
 
     if (error) {
-      showToast({ type: 'error', title: 'Błąd aktualizacji', message: error.message })
+      showToast({ type: 'error', title: 'Błąd aktualizacji', message: formatAppErrorMessage(error.message) })
       return
     }
 
