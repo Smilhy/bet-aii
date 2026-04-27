@@ -1477,3 +1477,25 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   padding:12px 14px;
   font-weight:800;
 }
+
+.premium-lock-info{
+  margin-top:12px;
+  background:#fff7ed;
+  border:1px solid #fdba74;
+  color:#9a3412;
+  padding:12px 14px;
+  border-radius:12px;
+  font-weight:800;
+  line-height:1.4;
+}
+
+.premium-lock-info{
+  margin-top:12px;
+  background:#fff7ed;
+  border:1px solid #fdba74;
+  color:#9a3412;
+  padding:12px 14px;
+  border-radius:12px;
+  font-weight:800;
+  line-height:1.4;
+}

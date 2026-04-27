@@ -375,10 +375,16 @@ function AddTipForm({ onTipSaved, onToast, user }) {
             <span>Twój typ będzie widoczny dla wszystkich</span>
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
-            <strong>🔒 Premium</strong><small className="free-premium-hint" data-key="FREE_INFO_PREMIUM_LOCK">Dostępne po zakupie Premium. Konto FREE nie może publikować płatnych typów.</small>
-            <span>Tylko użytkownicy, którzy wykupią dostęp</span>
+            <strong>🔒 Premium</strong>
+            <span>Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.</span>
           </button>
         </div>
+
+        {isPremium && (
+          <div className="premium-lock-info">
+            Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.
+          </div>
+        )}
 
         {isPremium && (
           <>
@@ -916,7 +922,7 @@ function getDisplayBalance(user, plan = 'free', walletBalance = 0) {
 
 function formatAppErrorMessage(message) {
   const text = String(message || '')
-  if (text.includes('Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
+  if (text.includes('FREE_USERS_CAN_ONLY_ADD_FREE_TIPS') || text.includes('Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
   if (text.includes('LIMIT_EXCEEDED') || text.includes('Limit wypłat')) return 'Limit wypłat w tym miesiącu został osiągnięty.'
   if (text.includes('TOO_FAST') || text.includes('Spam')) return 'Poczekaj chwilę przed kolejną próbą.'
   return text

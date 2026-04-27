@@ -416,3 +416,7 @@ Naprawiono dolny czerwony komunikat:
 ## Wersja 63 — final inline message fix
 Naprawiono konkretnie `setMessage('Błąd zapisu: ' + error.message)`, które nadal pokazywało surowy błąd z Supabase. Teraz dolny czerwony box pokazuje:
 `Błąd zapisu: Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
+
+## Wersja 65 — exact premium text fix
+Dodano dokładny tekst przy opcji Premium i w czerwonym komunikacie:
+`Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
