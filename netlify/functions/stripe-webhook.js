@@ -21,6 +21,28 @@ exports.handler = async (event) => {
   }
 
   try {
+    if (stripeEvent.type === 'account.updated') {
+      const account = stripeEvent.data.object;
+      const userId = account.metadata?.user_id;
+
+      if (userId) {
+        const supabase = createClient(
+          process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
+        const { error } = await supabase.from('user_stripe_accounts').upsert({
+          user_id: userId,
+          stripe_account_id: account.id,
+          charges_enabled: Boolean(account.charges_enabled),
+          payouts_enabled: Boolean(account.payouts_enabled),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+        if (error) throw error;
+      }
+    }
+
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
 

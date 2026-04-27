@@ -1499,3 +1499,28 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   font-weight:800;
   line-height:1.4;
 }
+
+.stripe-connect-card{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+  background:linear-gradient(135deg,#eef2ff,#ecfeff);
+  border:1px solid #c7d2fe;
+  border-radius:18px;
+  padding:16px 18px;
+  box-shadow:0 12px 28px rgba(15,23,42,.06);
+}
+.stripe-connect-card strong{display:block;font-size:18px;color:#0f172a}
+.stripe-connect-card span{display:block;margin-top:4px;color:#475569;font-weight:700}
+.stripe-connect-card button{
+  border:none;
+  border-radius:14px;
+  padding:11px 16px;
+  background:#4f46e5;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+@media(max-width:720px){.stripe-connect-card{flex-direction:column;align-items:flex-start}.stripe-connect-card button{width:100%}}

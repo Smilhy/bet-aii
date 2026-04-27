@@ -1420,3 +1420,216 @@ insert into public.user_subscriptions (user_id, plan)
 select id, 'free'
 from auth.users
 on conflict (user_id) do nothing;
+
+
+-- Wersja 78 — wypłaty tipsterów + admin zatwierdza
+
+create table if not exists public.payout_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric not null,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.payout_requests add column if not exists updated_at timestamptz default now();
+
+alter table public.payout_requests enable row level security;
+
+drop policy if exists "Users read own payouts" on public.payout_requests;
+create policy "Users read own payouts"
+on public.payout_requests
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own payouts" on public.payout_requests;
+create policy "Users insert own payouts"
+on public.payout_requests
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create or replace function public.get_tipster_available_payout(p_user_id uuid)
+returns numeric
+language sql
+security definer
+set search_path = public
+as $$
+  select greatest(
+    0,
+    coalesce((
+      select sum(amount)
+      from public.wallet_transactions
+      where user_id = p_user_id
+        and type = 'earning'
+        and status = 'completed'
+    ), 0)
+    -
+    coalesce((
+      select sum(amount)
+      from public.payout_requests
+      where user_id = p_user_id
+        and status in ('pending','approved','paid')
+    ), 0)
+  );
+$$;
+
+grant execute on function public.get_tipster_available_payout(uuid) to authenticated;
+
+create or replace function public.request_tipster_payout()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid;
+  available numeric := 0;
+  current_plan text := 'free';
+  monthly_count int := 0;
+  monthly_limit int := 1;
+begin
+  uid := auth.uid();
+
+  if uid is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  available := public.get_tipster_available_payout(uid);
+
+  if available < 10 then
+    raise exception 'MIN_PAYOUT_NOT_REACHED';
+  end if;
+
+  select coalesce(plan, 'free') into current_plan
+  from public.user_subscriptions
+  where user_id = uid
+  limit 1;
+
+  monthly_limit := case when current_plan = 'premium' then 3 else 1 end;
+
+  select count(*) into monthly_count
+  from public.payout_requests
+  where user_id = uid
+    and created_at >= date_trunc('month', now())
+    and status in ('pending','approved','paid');
+
+  if monthly_count >= monthly_limit then
+    raise exception 'LIMIT_EXCEEDED';
+  end if;
+
+  insert into public.payout_requests (user_id, amount, status)
+  values (uid, available, 'pending');
+end;
+$$;
+
+grant execute on function public.request_tipster_payout() to authenticated;
+
+create or replace function public.approve_tipster_payout(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req record;
+  available numeric := 0;
+begin
+  if auth.uid() is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  -- Admin check jest robiony też w frontendzie. Tutaj zostawiamy security definer pod Twój obecny admin account.
+  select * into req
+  from public.payout_requests
+  where id = p_request_id
+  for update;
+
+  if not found then
+    raise exception 'PAYOUT_NOT_FOUND';
+  end if;
+
+  if req.status <> 'pending' then
+    raise exception 'PAYOUT_ALREADY_PROCESSED';
+  end if;
+
+  available := public.get_tipster_available_payout(req.user_id);
+
+  if available < req.amount then
+    raise exception 'INSUFFICIENT_EARNINGS';
+  end if;
+
+  insert into public.wallet_transactions (
+    user_id, amount, type, provider, provider_session_id, status
+  )
+  values (
+    req.user_id,
+    req.amount,
+    'payout',
+    'manual_admin',
+    'payout_' || p_request_id::text,
+    'completed'
+  );
+
+  update public.payout_requests
+  set status = 'paid',
+      updated_at = now()
+  where id = p_request_id;
+end;
+$$;
+
+grant execute on function public.approve_tipster_payout(uuid) to authenticated;
+
+create or replace function public.reject_tipster_payout(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  update public.payout_requests
+  set status = 'rejected',
+      updated_at = now()
+  where id = p_request_id
+    and status = 'pending';
+
+  if not found then
+    raise exception 'PAYOUT_NOT_FOUND';
+  end if;
+end;
+$$;
+
+grant execute on function public.reject_tipster_payout(uuid) to authenticated;
+
+
+-- Wersja 79 — Stripe Connect konta tipsterów
+
+create table if not exists public.user_stripe_accounts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  stripe_account_id text not null,
+  charges_enabled boolean default false,
+  payouts_enabled boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.user_stripe_accounts add column if not exists updated_at timestamptz default now();
+
+create unique index if not exists user_stripe_accounts_user_id_uidx
+on public.user_stripe_accounts(user_id);
+
+alter table public.user_stripe_accounts enable row level security;
+
+drop policy if exists "Users read own stripe account" on public.user_stripe_accounts;
+create policy "Users read own stripe account"
+on public.user_stripe_accounts
+for select
+to authenticated
+using (auth.uid() = user_id);

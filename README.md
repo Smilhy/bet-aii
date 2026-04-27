@@ -507,3 +507,27 @@ Wymagane ENV:
 - VITE_SUPABASE_URL albo SUPABASE_URL
 Opcjonalnie:
 - PREMIUM_PRICE_GROSZE, np. 2900 = 29 zł
+
+## Wersja 78 — wypłaty tipsterów + admin zatwierdza
+Dodano:
+- tipster może kliknąć `Poproś o wypłatę`,
+- minimalna wypłata 10 zł,
+- limity: FREE 1/miesiąc, Premium 3/miesiąc,
+- admin panel zatwierdza jako `paid` lub odrzuca,
+- po zatwierdzeniu dodaje się transakcja `wallet_transactions.type = payout`.
+
+## Wersja 79 — Stripe Connect wypłaty
+Dodano:
+- `create-stripe-account.js` — tworzy konto Stripe Express i link onboarding,
+- `send-tipster-payout.js` — admin wysyła realną wypłatę Stripe transferem,
+- tabela `user_stripe_accounts`,
+- karta Stripe Connect w panelu Zarobki,
+- webhook obsługuje `account.updated` do aktualizacji statusu konta Stripe.
+Stripe webhook events:
+- checkout.session.completed
+- account.updated
+Wymagane ENV:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- VITE_SUPABASE_URL albo SUPABASE_URL

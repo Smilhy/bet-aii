@@ -801,7 +801,7 @@ function PaymentsView({ payments }) {
 
 
 
-function EarningsView({ tips, payments, user, earnings }) {
+function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onConnectStripe }) {
   const total = Number(earnings?.total || 0)
   const sales = Number(earnings?.sales || 0)
   const history = Array.isArray(earnings?.history) ? earnings.history : []
@@ -817,6 +817,22 @@ function EarningsView({ tips, payments, user, earnings }) {
       <div className="page-title">
         <h1>Zarobki tipstera</h1>
         <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
+      </div>
+
+      <div className="stripe-connect-card">
+        <div>
+          <strong>🏦 Stripe Connect</strong>
+          <span>
+            {stripeConnectStatus?.payouts_enabled
+              ? 'Konto Stripe jest połączone i gotowe do wypłat.'
+              : stripeConnectStatus?.stripe_account_id
+                ? 'Konto Stripe jest utworzone. Dokończ onboarding, aby odbierać wypłaty.'
+                : 'Połącz konto Stripe, aby admin mógł wypłacać Ci realne zarobki.'}
+          </span>
+        </div>
+        <button type="button" onClick={onConnectStripe}>
+          {stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}
+        </button>
       </div>
 
       <div className="earnings-hero">
@@ -1120,6 +1136,7 @@ function App() {
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
+  const [stripeConnectStatus, setStripeConnectStatus] = useState(null)
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -1193,6 +1210,7 @@ function App() {
       showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
       if (sessionUser?.id) fetchWalletBalance(sessionUser.id)
         fetchTipsterEarnings(sessionUser.id)
+        fetchStripeConnectStatus(sessionUser.id)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('wallet_topup') === 'cancel') {
@@ -1239,6 +1257,20 @@ function App() {
     if (params.get('premium') === 'cancel') {
       showToast({ type: 'info', title: 'Premium anulowane', message: 'Płatność Premium została anulowana.' })
       window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('stripe_connect') === 'success') {
+      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Status wypłat odświeży się automatycznie.' })
+      if (sessionUser?.id) fetchStripeConnectStatus(sessionUser.id)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    if (params.get('stripe_connect') === 'refresh') {
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
+      if (sessionUser?.id) connectStripeAccount()
     }
   }, [sessionUser?.id])
 
@@ -1341,25 +1373,47 @@ function App() {
     setAdminPayoutRequests(data || [])
   }
 
+  
   async function updatePayoutStatus(requestId, status) {
-    if (!userProfile?.isAdmin || !requestId) {
-      showToast({ type: 'error', title: 'Brak dostępu', message: 'Tylko admin może zmieniać status wypłat.' })
+    if (!sessionUser?.id || !isAdminUser(sessionUser)) {
+      showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może zmieniać status wypłat.' })
       return
     }
 
-    const { error } = await supabase
-      .from('payout_requests')
-      .update({ status })
-      .eq('id', requestId)
+    try {
+      if (status !== 'rejected') {
+        const payout = (adminPayoutRequests || []).find(item => item.id === requestId)
+        if (payout) {
+          const response = await fetch('/.netlify/functions/send-tipster-payout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request_id: requestId })
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            throw new Error(data.error || 'Nie udało się wysłać wypłaty Stripe Connect.')
+          }
+        }
+      }
 
-    if (error) {
+      const rpcName = status === 'rejected' ? 'reject_tipster_payout' : 'approve_tipster_payout'
+      const { error } = await supabase.rpc(rpcName, { p_request_id: requestId })
+
+      if (error) {
+        showToast({ type: 'error', title: 'Błąd aktualizacji', message: formatAppErrorMessage(error.message) })
+        return
+      }
+
+      showToast({ type: 'success', title: 'Status zmieniony', message: status === 'rejected' ? 'Wypłata odrzucona.' : 'Wypłata zatwierdzona i oznaczona jako wypłacona.' })
+      await fetchAdminPayoutRequests()
+      if (sessionUser?.id) {
+        await fetchPayoutRequests(sessionUser.id)
+        await fetchTipsterEarnings(sessionUser.id)
+        await fetchWalletBalance(sessionUser.id)
+      }
+    } catch (error) {
       showToast({ type: 'error', title: 'Błąd aktualizacji', message: formatAppErrorMessage(error.message) })
-      return
     }
-
-    showToast({ type: 'success', title: 'Status zmieniony', message: `Wypłata: ${status}` })
-    fetchAdminPayoutRequests()
-    if (sessionUser?.id) fetchPayoutRequests(sessionUser.id)
   }
 
 
@@ -1475,75 +1529,29 @@ function App() {
     else setPayoutRequests([])
   }
 
-  async function requestPayout(amount) {
-    if (payoutSubmitting) return
-
-    if (!sessionUser?.id) {
-      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby poprosić o wypłatę.' })
-      return
-    }
-
-    if (!amount || amount <= 0) {
-      showToast({ type: 'error', title: 'Brak środków', message: 'Nie masz jeszcze środków do wypłaty.' })
-      return
-    }
-
-    if (!isSupabaseConfigured || !supabase) {
-      showToast({ type: 'error', title: 'Supabase', message: 'Brak połączenia z bazą.' })
-      return
-    }
+  
+  async function requestPayout() {
+    if (!sessionUser?.id || payoutSubmitting) return
 
     setPayoutSubmitting(true)
 
     try {
-      const { error } = await supabase.rpc('request_payout', {
-        p_user_id: sessionUser.id,
-        p_amount: amount
-      })
+      const { error } = await supabase.rpc('request_tipster_payout')
 
       if (error) {
-        const message = error.message?.includes('Limit wypłat')
-          ? 'Limit wypłat w tym miesiącu został osiągnięty.'
-          : error.message
-        showToast({ type: 'error', title: 'Błąd wypłaty', message })
+        showToast({ type: 'error', title: 'Błąd wypłaty', message: formatAppErrorMessage(error.message) })
         return
       }
 
       showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
       await fetchPayoutRequests(sessionUser.id)
-      await fetchUserPlan(sessionUser.id)
-        fetchWalletBalance(sessionUser.id)
+      await fetchTipsterEarnings(sessionUser.id)
+      await fetchWalletBalance(sessionUser.id)
+    } catch (error) {
+      showToast({ type: 'error', title: 'Błąd wypłaty', message: formatAppErrorMessage(error.message) })
     } finally {
       setTimeout(() => setPayoutSubmitting(false), 1200)
     }
-  }
-
-
-  async function fetchTipsterEarnings(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setTipsterEarnings({ total: 0, sales: 0, history: [] })
-      return
-    }
-
-    const { data, error } = await supabase
-      .from('wallet_transactions')
-      .select('amount,type,status,created_at')
-      .eq('user_id', userId)
-      .eq('type', 'earning')
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-
-    if (error || !Array.isArray(data)) {
-      setTipsterEarnings({ total: 0, sales: 0, history: [] })
-      return
-    }
-
-    const total = data.reduce((sum, row) => sum + Number(row.amount || 0), 0)
-    setTipsterEarnings({
-      total,
-      sales: data.length,
-      history: data
-    })
   }
 
   async function fetchPaymentHistory(userId = sessionUser?.id) {
@@ -1580,6 +1588,7 @@ function App() {
         fetchUserPlan(data.session.user.id)
         fetchWalletBalance(data.session.user.id)
         fetchTipsterEarnings(data.session.user.id)
+        fetchStripeConnectStatus(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
       }
@@ -1589,6 +1598,7 @@ function App() {
         setSessionUser(session?.user || null)
         setWalletBalance(0)
         setTipsterEarnings({ total: 0, sales: 0, history: [] })
+        setStripeConnectStatus(null)
         if (!session?.user?.id) {
           setUnlockedTips(new Set())
           try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
@@ -1600,6 +1610,7 @@ function App() {
           fetchUserPlan(session.user.id)
         fetchWalletBalance(session.user.id)
         fetchTipsterEarnings(session.user.id)
+        fetchStripeConnectStatus(session.user.id)
           fetchUserPlan(session.user.id)
           }
         if (session?.user?.id) {
@@ -1697,6 +1708,7 @@ function App() {
     setSessionUser(null)
     setWalletBalance(0)
     setTipsterEarnings({ total: 0, sales: 0, history: [] })
+    setStripeConnectStatus(null)
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -1780,7 +1792,7 @@ function App() {
         )}
 
         {view === 'earnings' && (
-          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} earnings={tipsterEarnings} />
+          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} earnings={tipsterEarnings} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} />
         )}
 
         {view === 'profile' && (
@@ -1801,15 +1813,7 @@ function App() {
         )}
 
         {view === 'payouts' && (
-          <PayoutsView
-            user={sessionUser}
-            tips={tips}
-            payments={paymentHistory}
-            payoutRequests={payoutRequests}
-            onRequestPayout={requestPayout}
-            userPlan={accountPlan}
-            submitting={payoutSubmitting}
-          />
+          <PayoutsView user={sessionUser} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestPayout} userPlan={accountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
         {view === 'dashboard' && (
