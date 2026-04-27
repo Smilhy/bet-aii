@@ -145,3 +145,15 @@ Dla zapisu webhooka do Supabase dodaj też:
 Klucz service role znajdziesz w Supabase:
 Project Settings → API → service_role key.
 Nie wklejaj go publicznie.
+
+## Wersja 26 FULL — panel zarobków tipstera
+Dodano:
+- zakładka `Zarobki`,
+- przychód brutto,
+- prowizja platformy 15%,
+- kwota do wypłaty,
+- sprzedaże i konwersja,
+- tabela najpopularniejszych typów premium,
+- schema pod `payout_requests`.
+
+Po wrzuceniu tej wersji możesz opcjonalnie odpalić `supabase/schema.sql`, aby dodać tabelę payoutów.

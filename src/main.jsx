@@ -74,6 +74,7 @@ function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
+        <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -707,6 +708,97 @@ function PaymentsView({ payments }) {
 }
 
 
+
+function EarningsView({ tips, payments }) {
+  const premiumTips = tips.filter(t => t.access_type === 'premium')
+  const paidTotal = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const platformFee = paidTotal * 0.15
+  const creatorNet = paidTotal - platformFee
+  const conversion = premiumTips.length ? Math.min(100, Math.round((payments.length / premiumTips.length) * 100)) : 0
+
+  const topProducts = premiumTips.slice(0, 6).map(tip => {
+    const sold = payments.filter(p => p.tip_id === tip.id).length
+    return {
+      ...tip,
+      sold,
+      revenue: sold * Number(tip.price || 29)
+    }
+  }).sort((a,b) => b.revenue - a.revenue)
+
+  return (
+    <section className="earnings-page">
+      <div className="earnings-hero">
+        <div>
+          <h1>Panel zarobków</h1>
+          <p>Podsumowanie sprzedaży typów premium, prowizji i przychodów tipstera.</p>
+        </div>
+        <div className="earnings-main-number">
+          <span>Do wypłaty</span>
+          <b>{creatorNet.toFixed(2)} zł</b>
+        </div>
+      </div>
+
+      <div className="earnings-grid">
+        <div className="earning-card">
+          <span>Przychód brutto</span>
+          <b>{paidTotal.toFixed(2)} zł</b>
+          <small>Wszystkie płatności premium</small>
+        </div>
+        <div className="earning-card">
+          <span>Prowizja platformy</span>
+          <b>{platformFee.toFixed(2)} zł</b>
+          <small>15% marketplace fee</small>
+        </div>
+        <div className="earning-card">
+          <span>Sprzedaże</span>
+          <b>{payments.length}</b>
+          <small>Liczba zakupów</small>
+        </div>
+        <div className="earning-card">
+          <span>Konwersja</span>
+          <b>{conversion}%</b>
+          <small>Zakupy / typy premium</small>
+        </div>
+      </div>
+
+      <div className="payout-card">
+        <div>
+          <h3>Wypłata środków</h3>
+          <p>Moduł gotowy pod Stripe Connect / payouty dla tipsterów.</p>
+        </div>
+        <button>Poproś o wypłatę</button>
+      </div>
+
+      <div className="earnings-table">
+        <div className="earnings-row header">
+          <span>Typ premium</span>
+          <span>Cena</span>
+          <span>Sprzedaże</span>
+          <span>Przychód</span>
+        </div>
+
+        {topProducts.length ? topProducts.map(tip => (
+          <div className="earnings-row" key={tip.id}>
+            <span>
+              <b>{tip.team_home} vs {tip.team_away}</b>
+              <em>{tip.bet_type}</em>
+            </span>
+            <span>{Number(tip.price || 29).toFixed(2)} zł</span>
+            <span>{tip.sold}</span>
+            <span className="earnings-profit">{tip.revenue.toFixed(2)} zł</span>
+          </div>
+        )) : (
+          <div className="earnings-empty">
+            <strong>Brak produktów premium</strong>
+            <span>Dodaj typ premium, aby zacząć budować sprzedaż.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -934,6 +1026,10 @@ function App() {
 
         {view === 'payments' && (
           <PaymentsView payments={paymentHistory} />
+        )}
+
+        {view === 'earnings' && (
+          <EarningsView tips={tips} payments={paymentHistory} />
         )}
 
         {view === 'dashboard' && (
