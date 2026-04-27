@@ -910,15 +910,13 @@ function clearGuestUnlockedTips() {
 
 
 function getDisplayBalance(user, plan = 'free', walletBalance = 0) {
-  const profile = getUserProfileView(user)
-  if (profile.isAdmin) return '1250.50'
   return Number(walletBalance || 0).toFixed(2)
 }
 
 
 function formatAppErrorMessage(message) {
   const text = String(message || '')
-  if (text.includes('FREE_USERS_CAN_ONLY_ADD_FREE_TIPS')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
+  if (text.includes('Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
   if (text.includes('LIMIT_EXCEEDED') || text.includes('Limit wypłat')) return 'Limit wypłat w tym miesiącu został osiągnięty.'
   if (text.includes('TOO_FAST') || text.includes('Spam')) return 'Poczekaj chwilę przed kolejną próbą.'
   return text

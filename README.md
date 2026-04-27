@@ -400,3 +400,9 @@ Zmieniono komunikat marketplace premium na bardziej sprzedażowy i dodano CTA `K
 ## Wersja 60 — friendly premium error
 Zmieniono surowy błąd `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` na czytelny komunikat dla użytkownika:
 `Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
+
+## Wersja 61 — realne saldo + przyjazny inline error
+- Zamiast `FREE_USERS_CAN_ONLY_ADD_FREE_TIPS` pokazuje: `Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.`
+- Saldo w sidebarze jest brane z `get_wallet_balance()` i tabeli `wallet_transactions`.
+- Usunięte fake saldo 1250/2550 dla zwykłych kont i admina.
+- Przycisk `Doładuj konto` nie dodaje pieniędzy bez Stripe.
