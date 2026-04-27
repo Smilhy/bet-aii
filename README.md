@@ -195,3 +195,9 @@ Teraz:
 - aplikacja od razu odczytuje lokalny zapis po refreshu,
 - dodatkowo próbuje zapisać `unlocked_tips` w Supabase,
 - pobieranie z Supabase nie kasuje lokalnych odblokowań.
+
+## Wersja 30 — blank screen fix
+Naprawiono biały ekran po zakupie:
+- poprawiono `updateUnlockedTips`, który w wersji 29 wywoływał sam siebie,
+- nadal zachowuje odblokowanie lokalnie po refreshu,
+- po powrocie ze Stripe URL jest czyszczony bez zapętlenia.

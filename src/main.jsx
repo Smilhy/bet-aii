@@ -827,7 +827,7 @@ function App() {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
   function updateUnlockedTips(updater) {
-    updateUnlockedTips(prev => {
+    setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
       saveLocalUnlockedTips(next)
       return next
@@ -972,7 +972,9 @@ function App() {
         window.history.replaceState({}, document.title, window.location.pathname)
       }
 
-      persistUnlockFromReturn()
+      persistUnlockFromReturn().catch(() => {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      })
     }
 
     if (payment === 'cancel') {
