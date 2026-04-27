@@ -473,3 +473,20 @@ Naprawiono portfel:
 - Saldo resetuje się do 0 przy zmianie konta / logout / login.
 - Saldo pobierane jest przez RPC `get_wallet_balance(user_id)`.
 - SQL czyści całą tabelę `wallet_transactions`, żeby każde konto startowało od 0.
+
+## Wersja 74 — realny zakup premium typów z portfela
+Dodano:
+- RPC `purchase_premium_tip(tip_id)`,
+- zakup premium typu pobiera środki z `wallet_transactions`,
+- odblokowanie typu zapisuje się w `unlocked_tips`,
+- sprzedaż zapisuje się w `payments`,
+- błędy: brak środków, już kupione, własny typ.
+
+## Wersja 75 — panel zarobków UI
+Dodano:
+- panel zarobków tipstera,
+- łączny zarobek,
+- liczba sprzedaży,
+- zarobek w tym miesiącu,
+- historia transakcji `earning`,
+- SQL: 20% prowizji platformy i 80% dla tipstera.

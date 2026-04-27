@@ -790,88 +790,77 @@ function PaymentsView({ payments }) {
 
 
 
-function EarningsView({ tips, payments, user }) {
-  const premiumTips = tips.filter(tip => isTipPremium(tip) && getTipAuthorId(tip) === user?.id)
-  const paidTotal = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-  const platformFee = paidTotal * 0.15
-  const creatorNet = paidTotal - platformFee
-  const conversion = premiumTips.length ? Math.min(100, Math.round((payments.length / premiumTips.length) * 100)) : 0
 
-  const topProducts = premiumTips.slice(0, 6).map(tip => {
-    const sold = payments.filter(p => p.tip_id === tip.id).length
-    return {
-      ...tip,
-      sold,
-      revenue: sold * Number(tip.price || 29)
-    }
-  }).sort((a,b) => b.revenue - a.revenue)
+function EarningsView({ tips, payments, user, earnings }) {
+  const total = Number(earnings?.total || 0)
+  const sales = Number(earnings?.sales || 0)
+  const history = Array.isArray(earnings?.history) ? earnings.history : []
+  const average = sales ? total / sales : 0
+  const thisMonth = history.filter(row => {
+    const d = new Date(row.created_at)
+    const now = new Date()
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  }).reduce((sum, row) => sum + Number(row.amount || 0), 0)
 
   return (
     <section className="earnings-page">
+      <div className="page-title">
+        <h1>Zarobki tipstera</h1>
+        <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
+      </div>
+
       <div className="earnings-hero">
         <div>
-          <h1>Panel zarobków</h1>
-          <p>Podsumowanie sprzedaży typów premium, prowizji i przychodów tipstera.</p>
+          <span>💰 Zarobiłeś łącznie</span>
+          <strong>{total.toFixed(2)} zł</strong>
+          <p>Kwota po prowizji platformy.</p>
         </div>
-        <div className="earnings-main-number">
-          <span>Do wypłaty</span>
-          <b>{creatorNet.toFixed(2)} zł</b>
-        </div>
-      </div>
-
-      <div className="earnings-grid">
-        <div className="earning-card">
-          <span>Przychód brutto</span>
-          <b>{paidTotal.toFixed(2)} zł</b>
-          <small>Wszystkie płatności premium</small>
-        </div>
-        <div className="earning-card">
-          <span>Prowizja platformy</span>
-          <b>{platformFee.toFixed(2)} zł</b>
-          <small>15% marketplace fee</small>
-        </div>
-        <div className="earning-card">
-          <span>Sprzedaże</span>
-          <b>{payments.length}</b>
-          <small>Liczba zakupów</small>
-        </div>
-        <div className="earning-card">
-          <span>Konwersja</span>
-          <b>{conversion}%</b>
-          <small>Zakupy / typy premium</small>
-        </div>
-      </div>
-
-      <div className="payout-card">
         <div>
-          <h3>Wypłata środków</h3>
-          <p>Moduł gotowy pod Stripe Connect / payouty dla tipsterów.</p>
+          <span>📊 Liczba sprzedaży</span>
+          <strong>{sales}</strong>
+          <p>Kupione premium typy.</p>
         </div>
-        <button>Poproś o wypłatę</button>
+        <div>
+          <span>📅 Ten miesiąc</span>
+          <strong>{thisMonth.toFixed(2)} zł</strong>
+          <p>Historia bieżącego miesiąca.</p>
+        </div>
+        <div>
+          <span>Średnio / sprzedaż</span>
+          <strong>{average.toFixed(2)} zł</strong>
+          <p>Po prowizji 20%.</p>
+        </div>
       </div>
 
-      <div className="earnings-table">
-        <div className="earnings-row header">
-          <span>Typ premium</span>
-          <span>Cena</span>
-          <span>Sprzedaże</span>
-          <span>Przychód</span>
+      <div className="earnings-table-card">
+        <div className="earnings-table-head">
+          <h2>Historia zarobków</h2>
+          <span>{history.length} transakcji</span>
         </div>
 
-        {topProducts.length ? topProducts.map(tip => (
-          <div className="earnings-row" key={tip.id}>
-            <span>
-              <b>{tip.team_home} vs {tip.team_away}</b>
-              <em>{tip.bet_type}</em>
-            </span>
-            <span>{Number(tip.price || 29).toFixed(2)} zł</span>
-            <span>{tip.sold}</span>
-            <span className="earnings-profit">{tip.revenue.toFixed(2)} zł</span>
-          </div>
-        )) : (
-          <div className="earnings-empty">
-            <strong>Brak produktów premium</strong>
-            <span>Dodaj typ premium, aby zacząć budować sprzedaż.</span>
+        {history.length ? (
+          <table className="earnings-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Kwota dla Ciebie</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((row, idx) => (
+                <tr key={row.id || idx}>
+                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
+                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
+                  <td><span className="status-pill success">completed</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-wallet">
+            <strong>Brak sprzedaży premium</strong>
+            <span>Gdy ktoś kupi Twój premium typ, tutaj pojawi się zarobek 80% ceny.</span>
           </div>
         )}
       </div>
@@ -879,61 +868,6 @@ function EarningsView({ tips, payments, user }) {
   )
 }
 
-
-const UNLOCKED_TIPS_STORAGE_PREFIX = 'betai_unlocked_tips_v2_'
-
-function getUnlockedTipsStorageKey(userId) {
-  return `${UNLOCKED_TIPS_STORAGE_PREFIX}${userId || 'guest'}`
-}
-
-function readLocalUnlockedTips(userId) {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(getUnlockedTipsStorageKey(userId)) || '[]'))
-  } catch {
-    return new Set()
-  }
-}
-
-function saveLocalUnlockedTips(setValue, userId) {
-  try {
-    localStorage.setItem(getUnlockedTipsStorageKey(userId), JSON.stringify([...setValue]))
-  } catch {
-    // localStorage can be unavailable in some browsers
-  }
-}
-
-function clearGuestUnlockedTips() {
-  try {
-    localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
-    localStorage.removeItem('betai_unlocked_tips_v1')
-  } catch {
-    // ignore
-  }
-}
-
-
-
-
-
-function getDisplayBalance(user, plan = 'free', walletBalance = 0) {
-  return Number(walletBalance || 0).toFixed(2)
-}
-
-
-function formatAppErrorMessage(message) {
-  const text = String(message || '')
-  if (text.includes('FREE_USERS_CAN_ONLY_ADD_FREE_TIPS') || text.includes('Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.')) return 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'
-  if (text.includes('LIMIT_EXCEEDED') || text.includes('Limit wypłat')) return 'Limit wypłat w tym miesiącu został osiągnięty.'
-  if (text.includes('TOO_FAST') || text.includes('Spam')) return 'Poczekaj chwilę przed kolejną próbą.'
-  return text
-}
-
-function getDisplayRole(user, plan = 'free') {
-  const profile = getUserProfileView(user)
-  if (profile.isAdmin) return 'ADMIN'
-  if (plan === 'premium') return 'VIP'
-  return 'FREE'
-}
 
 function ProfileView({ user, tips, payments, unlockedTips }) {
   const profile = getUserProfileView(user)
@@ -1175,6 +1109,7 @@ function App() {
   const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
+  const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -1247,6 +1182,7 @@ function App() {
     if (params.get('wallet_topup') === 'success') {
       showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
       if (sessionUser?.id) fetchWalletBalance(sessionUser.id)
+        fetchTipsterEarnings(sessionUser.id)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('wallet_topup') === 'cancel') {
@@ -1555,6 +1491,34 @@ function App() {
     }
   }
 
+
+  async function fetchTipsterEarnings(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setTipsterEarnings({ total: 0, sales: 0, history: [] })
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('wallet_transactions')
+      .select('amount,type,status,created_at')
+      .eq('user_id', userId)
+      .eq('type', 'earning')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+
+    if (error || !Array.isArray(data)) {
+      setTipsterEarnings({ total: 0, sales: 0, history: [] })
+      return
+    }
+
+    const total = data.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+    setTipsterEarnings({
+      total,
+      sales: data.length,
+      history: data
+    })
+  }
+
   async function fetchPaymentHistory(userId = sessionUser?.id) {
     try {
     if (!isSupabaseConfigured || !supabase || !userId) return
@@ -1588,6 +1552,7 @@ function App() {
         fetchPayoutRequests(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchWalletBalance(data.session.user.id)
+        fetchTipsterEarnings(data.session.user.id)
         fetchUserPlan(data.session.user.id)
         fetchUnlockedTips(data.session.user.id)
       }
@@ -1596,6 +1561,7 @@ function App() {
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
         setWalletBalance(0)
+        setTipsterEarnings({ total: 0, sales: 0, history: [] })
         if (!session?.user?.id) {
           setUnlockedTips(new Set())
           try { localStorage.removeItem('betai_unlocked_tips_v1'); localStorage.removeItem(getUnlockedTipsStorageKey('guest')) } catch {}
@@ -1606,6 +1572,7 @@ function App() {
           fetchPayoutRequests(session.user.id)
           fetchUserPlan(session.user.id)
         fetchWalletBalance(session.user.id)
+        fetchTipsterEarnings(session.user.id)
           fetchUserPlan(session.user.id)
           }
         if (session?.user?.id) {
@@ -1702,6 +1669,7 @@ function App() {
     if (supabase) await supabase.auth.signOut()
     setSessionUser(null)
     setWalletBalance(0)
+    setTipsterEarnings({ total: 0, sales: 0, history: [] })
     setUnlockedTips(new Set())
     clearGuestUnlockedTips()
     try { localStorage.removeItem('betai_unlocked_tips_v1') } catch {}
@@ -1785,7 +1753,7 @@ function App() {
         )}
 
         {view === 'earnings' && (
-          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} />
+          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} earnings={tipsterEarnings} />
         )}
 
         {view === 'profile' && (

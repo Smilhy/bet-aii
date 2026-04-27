@@ -1157,3 +1157,231 @@ as $$
 $$;
 
 grant execute on function public.get_wallet_balance(uuid) to authenticated;
+
+
+-- Wersja 74 — zakup premium typu z realnego portfela
+
+create table if not exists public.unlocked_tips (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  tip_id uuid not null,
+  created_at timestamptz not null default now(),
+  unique(user_id, tip_id)
+);
+
+alter table public.unlocked_tips enable row level security;
+
+drop policy if exists "Users read own unlocked tips" on public.unlocked_tips;
+create policy "Users read own unlocked tips"
+on public.unlocked_tips
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  tip_id uuid not null,
+  amount numeric not null default 0,
+  status text not null default 'completed',
+  provider text default 'wallet',
+  created_at timestamptz not null default now()
+);
+
+alter table public.payments enable row level security;
+
+drop policy if exists "Users read own payments" on public.payments;
+create policy "Users read own payments"
+on public.payments
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create or replace function public.purchase_premium_tip(p_tip_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  buyer uuid;
+  row_data jsonb;
+  tip_row record;
+  tip_price numeric := 0;
+  author uuid;
+  current_balance numeric := 0;
+begin
+  buyer := auth.uid();
+
+  if buyer is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  select * into tip_row
+  from public.tips
+  where id = p_tip_id
+  limit 1;
+
+  if not found then
+    raise exception 'TIP_NOT_FOUND';
+  end if;
+
+  row_data := to_jsonb(tip_row);
+
+  author := coalesce(
+    nullif(row_data ->> 'user_id','')::uuid,
+    nullif(row_data ->> 'author_id','')::uuid,
+    nullif(row_data ->> 'tipster_id','')::uuid,
+    nullif(row_data ->> 'owner_id','')::uuid,
+    nullif(row_data ->> 'profile_id','')::uuid
+  );
+
+  if author is not null and author = buyer then
+    raise exception 'CANNOT_BUY_OWN_TIP';
+  end if;
+
+  if exists (
+    select 1 from public.unlocked_tips
+    where user_id = buyer and tip_id = p_tip_id
+  ) then
+    raise exception 'TIP_ALREADY_UNLOCKED';
+  end if;
+
+  if coalesce(row_data ->> 'price', '') ~ '^[0-9]+([.,][0-9]+)?$' then
+    tip_price := replace(row_data ->> 'price', ',', '.')::numeric;
+  else
+    tip_price := 0;
+  end if;
+
+  if tip_price <= 0 then
+    tip_price := 0;
+  end if;
+
+  current_balance := public.get_wallet_balance(buyer);
+
+  if current_balance < tip_price then
+    raise exception 'INSUFFICIENT_FUNDS';
+  end if;
+
+  insert into public.wallet_transactions (
+    user_id, amount, type, provider, provider_session_id, status
+  )
+  values (
+    buyer,
+    tip_price,
+    'purchase',
+    'wallet',
+    'tip_purchase_' || p_tip_id::text || '_' || buyer::text,
+    'completed'
+  );
+
+  insert into public.unlocked_tips (user_id, tip_id)
+  values (buyer, p_tip_id)
+  on conflict (user_id, tip_id) do nothing;
+
+  insert into public.payments (user_id, tip_id, amount, status, provider)
+  values (buyer, p_tip_id, tip_price, 'completed', 'wallet');
+end;
+$$;
+
+grant execute on function public.purchase_premium_tip(uuid) to authenticated;
+
+
+-- Wersja 75 — panel zarobków tipstera + 20% prowizji
+
+create or replace function public.get_tipster_earnings(p_user_id uuid)
+returns numeric
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(sum(amount), 0)
+  from public.wallet_transactions
+  where user_id = p_user_id
+    and type = 'earning'
+    and status = 'completed';
+$$;
+
+grant execute on function public.get_tipster_earnings(uuid) to authenticated;
+
+-- Nadpisanie zakupu: 20% prowizji platformy / 80% dla tipstera
+create or replace function public.purchase_premium_tip(p_tip_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  buyer uuid;
+  row_data jsonb;
+  tip_row record;
+  tip_price numeric := 0;
+  author uuid;
+  current_balance numeric := 0;
+  author_earnings numeric := 0;
+begin
+  buyer := auth.uid();
+
+  if buyer is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  select * into tip_row
+  from public.tips
+  where id = p_tip_id
+  limit 1;
+
+  if not found then
+    raise exception 'TIP_NOT_FOUND';
+  end if;
+
+  row_data := to_jsonb(tip_row);
+
+  author := coalesce(
+    nullif(row_data ->> 'user_id','')::uuid,
+    nullif(row_data ->> 'author_id','')::uuid,
+    nullif(row_data ->> 'tipster_id','')::uuid,
+    nullif(row_data ->> 'owner_id','')::uuid,
+    nullif(row_data ->> 'profile_id','')::uuid
+  );
+
+  if author is not null and author = buyer then
+    raise exception 'CANNOT_BUY_OWN_TIP';
+  end if;
+
+  if exists (select 1 from public.unlocked_tips where user_id = buyer and tip_id = p_tip_id) then
+    raise exception 'TIP_ALREADY_UNLOCKED';
+  end if;
+
+  if coalesce(row_data ->> 'price', '') ~ '^[0-9]+([.,][0-9]+)?$' then
+    tip_price := replace(row_data ->> 'price', ',', '.')::numeric;
+  else
+    tip_price := 0;
+  end if;
+
+  current_balance := public.get_wallet_balance(buyer);
+
+  if current_balance < tip_price then
+    raise exception 'INSUFFICIENT_FUNDS';
+  end if;
+
+  author_earnings := round(tip_price * 0.80, 2);
+
+  insert into public.wallet_transactions (user_id, amount, type, provider, provider_session_id, status)
+  values (buyer, tip_price, 'purchase', 'wallet', 'tip_purchase_' || p_tip_id::text || '_' || buyer::text, 'completed');
+
+  if author is not null and author_earnings > 0 then
+    insert into public.wallet_transactions (user_id, amount, type, provider, provider_session_id, status)
+    values (author, author_earnings, 'earning', 'wallet', 'tip_earning_' || p_tip_id::text || '_' || buyer::text, 'completed');
+  end if;
+
+  insert into public.unlocked_tips (user_id, tip_id)
+  values (buyer, p_tip_id)
+  on conflict (user_id, tip_id) do nothing;
+
+  insert into public.payments (user_id, tip_id, amount, status, provider)
+  values (buyer, p_tip_id, tip_price, 'completed', 'wallet');
+end;
+$$;
+
+grant execute on function public.purchase_premium_tip(uuid) to authenticated;
