@@ -799,6 +799,24 @@ function EarningsView({ tips, payments }) {
 }
 
 
+const UNLOCKED_TIPS_STORAGE_KEY = 'betai_unlocked_tips_v1'
+
+function readLocalUnlockedTips() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(UNLOCKED_TIPS_STORAGE_KEY) || '[]'))
+  } catch {
+    return new Set()
+  }
+}
+
+function saveLocalUnlockedTips(setValue) {
+  try {
+    localStorage.setItem(UNLOCKED_TIPS_STORAGE_KEY, JSON.stringify([...setValue]))
+  } catch {
+    // localStorage can be unavailable in some browsers
+  }
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [loading, setLoading] = useState(false)
@@ -808,9 +826,16 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
+  function updateUnlockedTips(updater) {
+    updateUnlockedTips(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      saveLocalUnlockedTips(next)
+      return next
+    })
+  }
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
-  const [unlockedTips, setUnlockedTips] = useState(() => new Set())
+  const [unlockedTips, setUnlockedTips] = useState(() => readLocalUnlockedTips())
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -837,6 +862,30 @@ function App() {
   }, [])
 
 
+
+  async function saveUnlockToSupabase(tipId, price = 29, userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !tipId) return false
+
+    let finalUserId = userId
+
+    if (!finalUserId) {
+      const { data } = await supabase.auth.getSession()
+      finalUserId = data?.session?.user?.id
+    }
+
+    if (!finalUserId) return false
+
+    const { error } = await supabase
+      .from('unlocked_tips')
+      .upsert({
+        user_id: finalUserId,
+        tip_id: tipId,
+        price
+      }, { onConflict: 'user_id,tip_id' })
+
+    return !error
+  }
+
   async function fetchUnlockedTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) return
 
@@ -846,7 +895,11 @@ function App() {
       .eq('user_id', userId)
 
     if (!error && Array.isArray(data)) {
-      setUnlockedTips(new Set(data.map(row => row.tip_id)))
+      updateUnlockedTips(prev => {
+        const next = new Set(prev)
+        data.forEach(row => next.add(row.tip_id))
+        return next
+      })
     }
   }
 
@@ -898,29 +951,22 @@ function App() {
     const tipId = params.get('tip')
 
     if (payment === 'success' && tipId) {
-      setUnlockedTips(prev => {
+      updateUnlockedTips(prev => {
         const next = new Set(prev)
         next.add(tipId)
         return next
       })
 
       async function persistUnlockFromReturn() {
-        if (isSupabaseConfigured && supabase) {
-          const { data } = await supabase.auth.getSession()
-          const userId = data?.session?.user?.id
+        await saveUnlockToSupabase(tipId, 29)
+        const { data } = isSupabaseConfigured && supabase
+          ? await supabase.auth.getSession()
+          : { data: null }
 
-          if (userId) {
-            await supabase
-              .from('unlocked_tips')
-              .upsert({
-                user_id: userId,
-                tip_id: tipId,
-                price: 29
-              }, { onConflict: 'user_id,tip_id' })
-
-            await fetchUnlockedTips(userId)
-            await fetchPaymentHistory(userId)
-          }
+        const userId = data?.session?.user?.id
+        if (userId) {
+          await fetchUnlockedTips(userId)
+          await fetchPaymentHistory(userId)
         }
 
         window.history.replaceState({}, document.title, window.location.pathname)
@@ -957,22 +1003,15 @@ function App() {
     const price = Number(tip.price || 29)
 
     setWallet(prev => Math.max(0, Number((prev - price).toFixed(2))))
-    setUnlockedTips(prev => {
+    updateUnlockedTips(prev => {
       const next = new Set(prev)
       next.add(tip.id)
       return next
     })
 
-    if (isSupabaseConfigured && supabase && sessionUser?.id) {
-      await supabase
-        .from('unlocked_tips')
-        .upsert({
-          user_id: sessionUser.id,
-          tip_id: tip.id,
-          price
-        }, { onConflict: 'user_id,tip_id' })
-
-      fetchUnlockedTips(sessionUser.id)
+    if (sessionUser?.id) {
+      await saveUnlockToSupabase(tip.id, price, sessionUser.id)
+      await fetchUnlockedTips(sessionUser.id)
     }
 
     setSelectedPayment(null)

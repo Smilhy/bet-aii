@@ -187,3 +187,11 @@ Po wrzuceniu paczki:
 1. GitHub → wrzuć wszystkie pliki.
 2. Netlify → Deploy WITHOUT cache.
 3. Supabase SQL → odpal `supabase/schema.sql`, jeśli tabela `unlocked_tips` nie istnieje lub zapis nadal nie działa.
+
+## Wersja 29 — FIX odblokowania po odświeżeniu
+Poprawiono problem: po zakupie typ był odblokowany tylko do odświeżenia.
+Teraz:
+- odblokowane typy zapisują się lokalnie w przeglądarce,
+- aplikacja od razu odczytuje lokalny zapis po refreshu,
+- dodatkowo próbuje zapisać `unlocked_tips` w Supabase,
+- pobieranie z Supabase nie kasuje lokalnych odblokowań.
