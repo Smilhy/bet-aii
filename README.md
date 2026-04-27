@@ -393,3 +393,6 @@ Naprawiono błędy:
 - `record "new" has no field "created_by"`
 
 Trigger teraz bezpiecznie czyta pola przez `to_jsonb(new)`, więc nie crashuje gdy tabela `tips` ma inną nazwę kolumny autora.
+
+## Wersja 59 — Premium Marketplace banner
+Zmieniono komunikat marketplace premium na bardziej sprzedażowy i dodano CTA `Kup Premium`.

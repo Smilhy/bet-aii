@@ -1731,7 +1731,8 @@ function App() {
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>
-                <span>Typy premium są zablokowane do momentu zakupu. W tej wersji odblokowanie działa jako symulacja pod przyszłe płatności Stripe.</span>
+                <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
+                <button type="button" className="premium-banner-cta" onClick={() => showToast({ type: 'info', title: 'Premium', message: 'Kolejny etap: podpinamy Stripe Checkout dla kont Premium.' })}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
                 <b>{tips.filter(t => t.access_type === 'premium').length}</b>

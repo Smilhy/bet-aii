@@ -1445,3 +1445,17 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
   border-radius:12px;
   font-weight:700;
 }
+
+/* Wersja 59 — Premium marketplace banner */
+.premium-banner-cta{
+  margin-top:14px;
+  padding:11px 18px;
+  border:none;
+  border-radius:14px;
+  background:#ffffff;
+  color:#04776f;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(2,44,34,.18);
+}
+.premium-banner-cta:hover{transform:translateY(-1px)}
