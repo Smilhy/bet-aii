@@ -363,3 +363,6 @@ Naprawiono:
 - admin dalej pokazuje `ADMIN`,
 - saldo zwykłego usera domyślnie 0.00 zł, admin pokazuje testowe 1250.50 zł,
 - SQL czyści duplikaty subskrypcji i dodaje unique index na `user_id`.
+
+## Wersja 53 — userPlan crash fix
+Naprawia błąd `userPlan is not defined`.

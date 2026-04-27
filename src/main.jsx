@@ -908,16 +908,16 @@ function clearGuestUnlockedTips() {
 
 
 
-function getDisplayBalance(user, userPlan) {
+function getDisplayBalance(user, plan = 'free') {
   if (!user) return '0.00'
   if (getUserProfileView(user).isAdmin) return '1250.50'
   return '0.00'
 }
 
-function getDisplayRole(user, userPlan) {
+function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile.isAdmin) return 'ADMIN'
-  if (userPlan === 'premium') return 'VIP'
+  if (plan === 'premium') return 'VIP'
   return 'FREE'
 }
 
