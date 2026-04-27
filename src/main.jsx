@@ -836,6 +836,20 @@ function App() {
     fetchTips()
   }, [])
 
+
+  async function fetchUnlockedTips(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) return
+
+    const { data, error } = await supabase
+      .from('unlocked_tips')
+      .select('tip_id')
+      .eq('user_id', userId)
+
+    if (!error && Array.isArray(data)) {
+      setUnlockedTips(new Set(data.map(row => row.tip_id)))
+    }
+  }
+
   async function fetchPaymentHistory(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) return
 
@@ -858,12 +872,18 @@ function App() {
 
       const { data } = await supabase.auth.getSession()
       setSessionUser(data?.session?.user || null)
-      if (data?.session?.user?.id) fetchPaymentHistory(data.session.user.id)
+      if (data?.session?.user?.id) {
+        fetchPaymentHistory(data.session.user.id)
+        fetchUnlockedTips(data.session.user.id)
+      }
       setAuthLoading(false)
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
-        if (session?.user?.id) fetchPaymentHistory(session.user.id)
+        if (session?.user?.id) {
+          fetchPaymentHistory(session.user.id)
+          fetchUnlockedTips(session.user.id)
+        }
       })
 
       return () => listener?.subscription?.unsubscribe?.()
@@ -883,7 +903,30 @@ function App() {
         next.add(tipId)
         return next
       })
-      window.history.replaceState({}, document.title, window.location.pathname)
+
+      async function persistUnlockFromReturn() {
+        if (isSupabaseConfigured && supabase) {
+          const { data } = await supabase.auth.getSession()
+          const userId = data?.session?.user?.id
+
+          if (userId) {
+            await supabase
+              .from('unlocked_tips')
+              .upsert({
+                user_id: userId,
+                tip_id: tipId,
+                price: 29
+              }, { onConflict: 'user_id,tip_id' })
+
+            await fetchUnlockedTips(userId)
+            await fetchPaymentHistory(userId)
+          }
+        }
+
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+
+      persistUnlockFromReturn()
     }
 
     if (payment === 'cancel') {
@@ -910,7 +953,7 @@ function App() {
     setSelectedPayment(tip)
   }
 
-  function handlePaymentSuccess(tip) {
+  async function handlePaymentSuccess(tip) {
     const price = Number(tip.price || 29)
 
     setWallet(prev => Math.max(0, Number((prev - price).toFixed(2))))
@@ -919,6 +962,19 @@ function App() {
       next.add(tip.id)
       return next
     })
+
+    if (isSupabaseConfigured && supabase && sessionUser?.id) {
+      await supabase
+        .from('unlocked_tips')
+        .upsert({
+          user_id: sessionUser.id,
+          tip_id: tip.id,
+          price
+        }, { onConflict: 'user_id,tip_id' })
+
+      fetchUnlockedTips(sessionUser.id)
+    }
+
     setSelectedPayment(null)
     setPaymentHistory(prev => [{
       id: `local-${Date.now()}`,

@@ -190,3 +190,35 @@ create policy "Users insert own unlocked tips"
 on public.unlocked_tips for insert
 to authenticated
 with check (auth.uid() = user_id);
+
+
+-- Wersja 28 — trwałe odblokowania premium po powrocie ze Stripe
+create table if not exists public.unlocked_tips (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  tip_id uuid references public.tips(id) on delete cascade,
+  price numeric(8,2) default 0,
+  created_at timestamptz not null default now(),
+  unique(user_id, tip_id)
+);
+
+alter table public.unlocked_tips enable row level security;
+
+drop policy if exists "Users read own unlocked tips" on public.unlocked_tips;
+create policy "Users read own unlocked tips"
+on public.unlocked_tips for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own unlocked tips" on public.unlocked_tips;
+create policy "Users insert own unlocked tips"
+on public.unlocked_tips for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own unlocked tips" on public.unlocked_tips;
+create policy "Users update own unlocked tips"
+on public.unlocked_tips for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);

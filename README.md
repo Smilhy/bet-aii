@@ -174,3 +174,16 @@ Wymagane ENV w Netlify:
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 W Supabase odpal `supabase/schema.sql`, jeśli tabela `payments` jeszcze nie istnieje.
+
+## Wersja 28 — FIX trwałego odblokowania
+Poprawka problemu: po odświeżeniu odblokowany typ znikał.
+Zrobione:
+- aplikacja pobiera `unlocked_tips` z Supabase po zalogowaniu,
+- po powrocie ze Stripe `payment=success` zapisuje odblokowanie do Supabase,
+- demo unlock też zapisuje odblokowanie,
+- dodane polityki RLS dla `unlocked_tips`.
+
+Po wrzuceniu paczki:
+1. GitHub → wrzuć wszystkie pliki.
+2. Netlify → Deploy WITHOUT cache.
+3. Supabase SQL → odpal `supabase/schema.sql`, jeśli tabela `unlocked_tips` nie istnieje lub zapis nadal nie działa.
