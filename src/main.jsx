@@ -799,21 +799,33 @@ function EarningsView({ tips, payments }) {
 }
 
 
-const UNLOCKED_TIPS_STORAGE_KEY = 'betai_unlocked_tips_v1'
+const UNLOCKED_TIPS_STORAGE_PREFIX = 'betai_unlocked_tips_v2_'
 
-function readLocalUnlockedTips() {
+function getUnlockedTipsStorageKey(userId) {
+  return `${UNLOCKED_TIPS_STORAGE_PREFIX}${userId || 'guest'}`
+}
+
+function readLocalUnlockedTips(userId) {
   try {
-    return new Set(JSON.parse(localStorage.getItem(UNLOCKED_TIPS_STORAGE_KEY) || '[]'))
+    return new Set(JSON.parse(localStorage.getItem(getUnlockedTipsStorageKey(userId)) || '[]'))
   } catch {
     return new Set()
   }
 }
 
-function saveLocalUnlockedTips(setValue) {
+function saveLocalUnlockedTips(setValue, userId) {
   try {
-    localStorage.setItem(UNLOCKED_TIPS_STORAGE_KEY, JSON.stringify([...setValue]))
+    localStorage.setItem(getUnlockedTipsStorageKey(userId), JSON.stringify([...setValue]))
   } catch {
     // localStorage can be unavailable in some browsers
+  }
+}
+
+function clearGuestUnlockedTips() {
+  try {
+    localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+  } catch {
+    // ignore
   }
 }
 
@@ -826,16 +838,16 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [paymentHistory, setPaymentHistory] = useState([])
-  function updateUnlockedTips(updater) {
+  function updateUnlockedTips(updater, userId = sessionUser?.id || 'guest') {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      saveLocalUnlockedTips(next)
+      saveLocalUnlockedTips(next, userId)
       return next
     })
   }
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(1250.50)
-  const [unlockedTips, setUnlockedTips] = useState(() => readLocalUnlockedTips())
+  const [unlockedTips, setUnlockedTips] = useState(() => readLocalUnlockedTips('guest'))
 
   async function fetchTips() {
     if (!isSupabaseConfigured || !supabase) {
@@ -920,11 +932,7 @@ function App() {
       .eq('user_id', userId)
 
     if (!error && Array.isArray(data)) {
-      updateUnlockedTips(prev => {
-        const next = new Set(prev)
-        data.forEach(row => next.add(row.tip_id))
-        return next
-      })
+      updateUnlockedTips(new Set(data.map(row => row.tip_id)), userId)
     }
   }
 
@@ -958,6 +966,7 @@ function App() {
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         setSessionUser(session?.user || null)
+        setUnlockedTips(session?.user?.id ? readLocalUnlockedTips(session.user.id) : new Set())
         if (session?.user?.id) {
           fetchPaymentHistory(session.user.id)
           fetchUnlockedTips(session.user.id)
@@ -981,7 +990,7 @@ function App() {
         const next = new Set(prev)
         next.add(tipId)
         return next
-      })
+      }, sessionUser?.id || 'guest')
 
       async function persistUnlockFromReturn() {
         await saveUnlockToSupabase(tipId, 29)
@@ -992,6 +1001,12 @@ function App() {
 
         const userId = data?.session?.user?.id
         if (userId) {
+          updateUnlockedTips(prev => {
+            const next = new Set(prev)
+            next.add(tipId)
+            return next
+          }, userId)
+          clearGuestUnlockedTips()
           await fetchUnlockedTips(userId)
           await fetchPaymentHistory(userId)
         }
@@ -1016,6 +1031,15 @@ function App() {
   }
 
   function unlockTip(tip) {
+    if (!sessionUser?.id) {
+      showToast({
+        type: 'error',
+        title: 'Zaloguj się, aby odblokować',
+        message: 'Zakup premium musi być przypisany do Twojego konta.'
+      })
+      return
+    }
+
     if (unlockedTips.has(tip.id)) {
       showToast({
         type: 'success',
@@ -1036,7 +1060,7 @@ function App() {
       const next = new Set(prev)
       next.add(tip.id)
       return next
-    })
+    }, sessionUser?.id || 'guest')
 
     if (sessionUser?.id) {
       await saveUnlockToSupabase(tip.id, price, sessionUser.id)
@@ -1066,6 +1090,8 @@ function App() {
   async function logout() {
     if (supabase) await supabase.auth.signOut()
     setSessionUser(null)
+    setUnlockedTips(new Set())
+    clearGuestUnlockedTips()
     showToast({
       type: 'success',
       title: 'Wylogowano',

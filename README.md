@@ -216,3 +216,11 @@ Poprawka sytuacji, gdy Netlify stoi na `Installing npm packages`:
 - Webhook zapisuje `unlocked_tips` oraz `payments`.
 - Dodany fallback zapisu `payments` z frontendu po powrocie ze Stripe.
 - Odpal `supabase/schema.sql`, potem deploy bez cache.
+
+## Wersja 33 — fix unlock per user
+Poprawiono problem:
+- po wylogowaniu odblokowania nie mieszają się między kontami,
+- zakup odblokowuje tylko jeden konkretny typ,
+- localStorage jest teraz per-user,
+- po logout aplikacja czyści widok odblokowań,
+- bez logowania nie można kupić premium, żeby zakup nie zapisał się jako guest.
