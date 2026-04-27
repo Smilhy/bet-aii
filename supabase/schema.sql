@@ -1385,3 +1385,38 @@ end;
 $$;
 
 grant execute on function public.purchase_premium_tip(uuid) to authenticated;
+
+
+-- Wersja 77 — Stripe Premium automatycznie aktywuje konto premium
+
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  plan text not null default 'free',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_subscriptions add column if not exists updated_at timestamptz default now();
+
+delete from public.user_subscriptions a
+using public.user_subscriptions b
+where a.user_id = b.user_id
+  and a.created_at < b.created_at;
+
+create unique index if not exists user_subscriptions_user_id_uidx
+on public.user_subscriptions(user_id);
+
+alter table public.user_subscriptions enable row level security;
+
+drop policy if exists "Users read own subscription" on public.user_subscriptions;
+create policy "Users read own subscription"
+on public.user_subscriptions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+insert into public.user_subscriptions (user_id, plan)
+select id, 'free'
+from auth.users
+on conflict (user_id) do nothing;

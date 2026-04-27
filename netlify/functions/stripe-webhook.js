@@ -23,6 +23,7 @@ exports.handler = async (event) => {
   try {
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
+
       const supabase = createClient(
         process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
         process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -54,11 +55,15 @@ exports.handler = async (event) => {
       if (kind === 'premium_access') {
         const { error: subError } = await supabase
           .from('user_subscriptions')
-          .upsert({ user_id: userId, plan: 'premium', updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+          .upsert(
+            { user_id: userId, plan: 'premium', updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+          );
 
         if (subError) throw subError;
 
         const amount = Number(session.metadata.amount || 29);
+
         const { error: txError } = await supabase.from('wallet_transactions').insert({
           user_id: userId,
           amount,

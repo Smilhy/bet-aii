@@ -26,9 +26,9 @@ exports.handler = async (event) => {
             currency: 'pln',
             product_data: {
               name: 'BetAI Premium',
-              description: 'Aktywacja konta Premium — sprzedaż typów premium i większe limity'
+              description: 'Konto Premium: publikowanie typów premium, większe limity i monetyzacja analiz'
             },
-            unit_amount: 2900
+            unit_amount: Number(process.env.PREMIUM_PRICE_GROSZE || 2900)
           },
           quantity: 1
         }
@@ -38,13 +38,19 @@ exports.handler = async (event) => {
       metadata: {
         kind: 'premium_access',
         user_id,
-        amount: '29'
+        amount: String(Number(process.env.PREMIUM_PRICE_GROSZE || 2900) / 100)
       }
     });
 
-    return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ url: session.url })
+    };
   } catch (error) {
     console.error('create-premium-checkout error:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Stripe premium checkout error' }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message || 'Stripe Premium checkout error' })
+    };
   }
 };

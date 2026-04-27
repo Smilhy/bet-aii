@@ -1225,6 +1225,23 @@ function App() {
     return () => window.removeEventListener('betai:start-premium-checkout', handler)
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('premium') === 'success') {
+      showToast({ type: 'success', title: 'Premium aktywowany', message: 'Po potwierdzeniu Stripe konto zostanie ustawione jako Premium.' })
+      if (sessionUser?.id) {
+        fetchUserPlan(sessionUser.id)
+        fetchWalletBalance(sessionUser.id)
+      }
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    if (params.get('premium') === 'cancel') {
+      showToast({ type: 'info', title: 'Premium anulowane', message: 'Płatność Premium została anulowana.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
+
   useEffect(() => {
     fetchTips(sessionUser?.id)
   }, [sessionUser?.id])

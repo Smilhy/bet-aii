@@ -493,3 +493,17 @@ Dodano:
 
 ## Wersja 76 — getDisplayRole fix
 Naprawiono błąd aplikacji po logowaniu: `getDisplayRole is not defined`.
+
+## Wersja 77 — Stripe Premium auto
+Dodano:
+- `create-premium-checkout.js` do zakupu Premium przez Stripe,
+- webhook `stripe-webhook.js` automatycznie ustawia `user_subscriptions.plan = premium`,
+- zakup Premium zapisuje transakcję `premium_purchase`,
+- przyciski Premium prowadzą do Stripe Checkout.
+Wymagane ENV:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- VITE_SUPABASE_URL albo SUPABASE_URL
+Opcjonalnie:
+- PREMIUM_PRICE_GROSZE, np. 2900 = 29 zł
