@@ -275,3 +275,9 @@ Naprawa białego ekranu po zalogowaniu nowym kontem:
 - ErrorBoundary pokazuje błąd zamiast białej strony,
 - fetch unlocked/payments nie crashuje aplikacji,
 - build sprawdzony.
+
+## Wersja 41 — final sidebarProfile fix
+Naprawiono crash:
+- `sidebarProfile is not defined`
+- wszystkie referencje `sidebarProfile` zostały zastąpione przez `profile`,
+- build sprawdzony lokalnie.

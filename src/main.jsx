@@ -105,8 +105,7 @@ const staticTips = [
 
 function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout }) {
   const profile = getUserProfileView(user)
-
-  return (
+return (
     <aside className="sidebar">
       <div className="brand">Bet<span>+AI</span></div>
 
@@ -162,7 +161,7 @@ function Rightbar() {
         <div className="rank first"><span>1</span><div className="mini-avatar">FM</div><div><b>FitMateusz</b><small>ROI: 24.5%</small></div><strong>+3,250 zł</strong></div>
         <div className="rank second"><span>2</span><div className="mini-avatar">K</div><div><b>Kamil_98</b><small>ROI: 18.7%</small></div><strong>+2,150 zł</strong></div>
         <div className="rank third"><span>3</span><div className="mini-avatar female">Z</div><div><b>Zuzanna07</b><small>ROI: 16.3%</small></div><strong>+1,870 zł</strong></div>
-        <div className="rank"><span>4</span><div className="mini-avatar">{sidebarProfile.initials}</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
+        <div className="rank"><span>4</span><div className="mini-avatar">{profile.initials}</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
         <div className="rank"><span>5</span><div className="mini-avatar female">M</div><div><b>Maksymilian</b><small>ROI: 14.8%</small></div><strong>+1,420 zł</strong></div>
       </section>
 
