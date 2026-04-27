@@ -137,7 +137,7 @@ return (
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
-        <button className="outline-btn" onClick={onTopUp}>Doładuj konto</button>
+        <button className="outline-btn" onClick={() => disabledTopUp(showToast)}>Doładuj konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
       </div>
 
@@ -910,8 +910,10 @@ function clearGuestUnlockedTips() {
 
 
 function getDisplayBalance(user, plan = 'free') {
-  if (!user) return '0.00'
-  if (getUserProfileView(user).isAdmin) return '1250.50'
+  const profile = getUserProfileView(user)
+  // Wersja 56: zwykły user nie dostaje już fake salda z przycisku.
+  // Realne saldo będzie liczone później tylko z tabeli wallet_transactions/Stripe webhook.
+  if (profile.isAdmin) return '1250.50'
   return '0.00'
 }
 
@@ -1138,6 +1140,14 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
   )
 }
 
+
+function disabledTopUp(showToast) {
+  showToast?.({
+    type: 'info',
+    title: 'Doładowanie przez Stripe',
+    message: 'Fake doładowanie zostało wyłączone. Saldo zwiększy się dopiero po prawdziwej płatności Stripe.'
+  })
+}
 
 function App() {
   const [tips, setTips] = useState([])
@@ -1555,12 +1565,7 @@ function App() {
   }
 
   function topUpWallet() {
-    setWallet(prev => Number((prev + 100).toFixed(2)))
-    showToast({
-      type: 'success',
-      title: 'Konto doładowane',
-      message: 'Dodano 100 zł do salda testowego.'
-    })
+    showToast({ type: 'info', title: 'Doładowanie przez Stripe', message: 'Fake doładowanie zostało wyłączone. Kolejny etap: realny Stripe Checkout.' })
   }
 
   async function logout() {

@@ -372,3 +372,10 @@ Naprawia błąd `userPlan is not defined` w sidebarze.
 
 ## Wersja 55 — no userPlan crash
 Naprawiono crash `userPlan is not defined` po logowaniu przez globalny fallback + poprawne przekazywanie planu do Sidebar.
+
+## Wersja 56 — blokada fake doładowania
+Naprawiono:
+- zwykłe konto nie pokazuje już sztucznego salda z kliknięć,
+- przycisk "Doładuj konto" nie dodaje już +100 zł,
+- przygotowano tabelę wallet_transactions pod prawdziwy Stripe top-up,
+- saldo zwykłego konta wraca do 0.00 zł do czasu realnej płatności.

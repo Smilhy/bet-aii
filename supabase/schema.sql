@@ -755,3 +755,29 @@ on public.user_subscriptions
 for select
 to authenticated
 using (auth.uid() = user_id);
+
+
+-- Wersja 56 — wallet bezpieczeństwo / bez fake top-up
+create table if not exists public.wallet_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount numeric not null,
+  type text not null default 'topup',
+  provider text default 'stripe',
+  provider_session_id text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists wallet_transactions_provider_session_uidx
+on public.wallet_transactions(provider_session_id)
+where provider_session_id is not null;
+
+alter table public.wallet_transactions enable row level security;
+
+drop policy if exists "Users read own wallet transactions" on public.wallet_transactions;
+create policy "Users read own wallet transactions"
+on public.wallet_transactions
+for select
+to authenticated
+using (auth.uid() = user_id);
