@@ -321,8 +321,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <span className={statusClass}>{statusLabel}</span>
         <span>♡ 128</span><span>▢ 45</span><span>↗</span>
         {isLocked ? (
-          <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
+          <>
+            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
             <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup dostęp do profilu</button>
+          </>
         ) : (
           <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
         )}
