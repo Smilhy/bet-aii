@@ -1423,18 +1423,42 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('premium') === 'success') {
-      showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
-      if (sessionUser?.id) {
-        fetchUserPlan(sessionUser.id)
-        fetchWalletBalance(sessionUser.id)
+    const premiumStatus = params.get('premium')
+    const sessionId = params.get('session_id')
+
+    async function syncPremiumAfterStripe() {
+      if (premiumStatus === 'success' && sessionId) {
+        try {
+          showToast({ type: 'info', title: 'Premium', message: 'Synchronizuję subskrypcję ze Stripe...' })
+          const response = await fetch('/.netlify/functions/sync-premium-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować Premium.')
+          showToast({ type: 'success', title: 'Premium aktywowany', message: 'Konto Premium zostało zapisane w bazie.' })
+          setUserPlan('premium')
+          if (sessionUser?.id) {
+            await fetchUserPlan(sessionUser.id)
+            await fetchWalletBalance(sessionUser.id)
+          }
+        } catch (error) {
+          showToast({ type: 'error', title: 'Premium', message: formatAppErrorMessage(error.message) })
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
+      } else if (premiumStatus === 'success') {
+        showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
+        if (sessionUser?.id) fetchUserPlan(sessionUser.id)
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } else if (premiumStatus === 'cancel') {
+        showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
+        window.history.replaceState({}, document.title, window.location.pathname)
       }
-      window.history.replaceState({}, document.title, window.location.pathname)
     }
-    if (params.get('premium') === 'cancel') {
-      showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
+
+    syncPremiumAfterStripe()
   }, [sessionUser?.id])
 
 
@@ -1442,23 +1466,6 @@ function App() {
     const handler = () => runPremiumCheckout()
     window.addEventListener('betai:start-premium-checkout', handler)
     return () => window.removeEventListener('betai:start-premium-checkout', handler)
-  }, [sessionUser?.id])
-
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('premium') === 'success') {
-      showToast({ type: 'success', title: 'Premium aktywowany', message: 'Po potwierdzeniu Stripe konto zostanie ustawione jako Premium.' })
-      if (sessionUser?.id) {
-        fetchUserPlan(sessionUser.id)
-        fetchWalletBalance(sessionUser.id)
-      }
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-    if (params.get('premium') === 'cancel') {
-      showToast({ type: 'info', title: 'Premium anulowane', message: 'Płatność Premium została anulowana.' })
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
   }, [sessionUser?.id])
 
 
@@ -1823,12 +1830,23 @@ function App() {
       .limit(1)
       .maybeSingle()
 
-    if (error || !data?.plan) {
-      setUserPlan('free')
+    if (!error && data?.plan) {
+      setUserPlan(['active','trialing'].includes(data.status) || data.plan === 'premium' ? 'premium' : 'free')
       return
     }
 
-    setUserPlan(['active','trialing'].includes(data.status) || data.plan === 'premium' ? 'premium' : 'free')
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (!profileError && profileData?.plan) {
+      setUserPlan(['active','trialing'].includes(profileData.subscription_status) || profileData.plan === 'premium' ? 'premium' : 'free')
+      return
+    }
+
+    setUserPlan('free')
   }
 
   async function fetchPayoutRequests(userId = sessionUser?.id) {
