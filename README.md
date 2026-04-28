@@ -621,3 +621,4 @@ Naprawiono:
 - brak komunikatu po kliknięciu `Poproś o wypłatę`, gdy saldo do wypłaty wynosi 0 zł,
 - stary tekst `Następny etap: Stripe Connect` w zakładce Wypłaty,
 - przycisk wypłaty nie jest już blokowany bez komunikatu.
+\n## Wersja 91 — real payout approve\nDodano realny endpoint `/.netlify/functions/approve-payout`, który robi Stripe transfer do connected account, ustawia payout jako `paid`, zapisuje `stripe_transfer_id`, ledger payout i admin log.\n

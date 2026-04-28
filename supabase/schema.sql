@@ -1893,3 +1893,69 @@ create table if not exists public.admin_logs (
 );
 
 alter table public.admin_logs enable row level security;
+
+
+-- Wersja 91 — real Stripe payout approve
+
+alter table public.payout_requests add column if not exists stripe_transfer_id text;
+alter table public.payout_requests add column if not exists stripe_status text;
+alter table public.payout_requests add column if not exists processed_at timestamptz;
+alter table public.payout_requests add column if not exists updated_at timestamptz default now();
+alter table public.payout_requests add column if not exists currency text default 'pln';
+
+create table if not exists public.admin_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_user_id uuid references auth.users(id) on delete set null,
+  action text not null,
+  target_table text,
+  target_id uuid,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_logs enable row level security;
+
+create or replace function public.create_payout_request(p_amount numeric)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_available numeric := 0;
+  v_request_id uuid;
+begin
+  if v_user_id is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'INVALID_PAYOUT_AMOUNT';
+  end if;
+
+  select coalesce(sum(amount), 0)
+  into v_available
+  from public.wallet_transactions
+  where user_id = v_user_id
+    and status = 'completed'
+    and type in ('earning', 'payout');
+
+  if v_available < p_amount then
+    raise exception 'INSUFFICIENT_EARNINGS';
+  end if;
+
+  if exists (
+    select 1 from public.payout_requests
+    where user_id = v_user_id and status = 'pending'
+  ) then
+    raise exception 'PAYOUT_ALREADY_PENDING';
+  end if;
+
+  insert into public.payout_requests (user_id, amount, status, currency, created_at, updated_at)
+  values (v_user_id, p_amount, 'pending', 'pln', now(), now())
+  returning id into v_request_id;
+
+  return v_request_id;
+end;
+$$;
