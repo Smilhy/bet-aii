@@ -1618,3 +1618,38 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .pricing-settings-grid input { width:100%; }
 .pricing-settings-grid small, .small-muted { opacity:.72; font-size:12px; }
 @media (max-width: 780px) { .profile-sub-grid, .pricing-settings-grid { grid-template-columns: 1fr; } }
+
+
+/* v111 follow + notifications */
+.follow-btn {
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-left: 10px;
+}
+.follow-btn.active {
+  background: linear-gradient(135deg, #34d399, #22c55e);
+  color: #06130c;
+  border-color: transparent;
+}
+.notice-button {
+  border: 0;
+  cursor: pointer;
+}
+.notifications-actions {
+  margin: 18px 0;
+  justify-content: flex-start;
+}
+.notification-item.read {
+  opacity: .65;
+}
+.notification-item small {
+  display: block;
+  opacity: .6;
+  margin-top: 4px;
+}

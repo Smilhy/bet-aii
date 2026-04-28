@@ -190,7 +190,7 @@ const staticTips = [
 
 
 
-function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, userPlan = 'free', onLogout }) {
+function Sidebar({ view, setView, wallet, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
@@ -214,6 +214,7 @@ return (
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
+        <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? `(${notificationsCount})` : ''}</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>🔐 Subskrypcja</button>
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
@@ -276,13 +277,16 @@ function Rightbar() {
   )
 }
 
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive }) {
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
   const probability = Number(tip.ai_probability || 0)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || 'AdrianNowak'
+  const authorId = getTipAuthorId(tip)
+  const isOwnTip = currentUser?.id && authorId && String(currentUser.id) === String(authorId)
+  const isFollowing = Boolean(authorId && followingTipsters?.has?.(String(authorId)))
 
   return (
     <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
@@ -291,6 +295,15 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <div className={`photo ${author === 'AI Tip' ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
           <div><strong>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{author === 'AI Tip' ? 'AI' : 'TIPSTER'}</em>
+          {!isOwnTip && authorId && author !== 'AI Tip' && (
+            <button
+              type="button"
+              className={isFollowing ? 'follow-btn active' : 'follow-btn'}
+              onClick={() => onToggleFollow?.(authorId)}
+            >
+              {isFollowing ? '✓ Obserwujesz' : '+ Follow'}
+            </button>
+          )}
         </div>
         <div className="card-badges">
           <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
@@ -586,6 +599,46 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
           <div className="empty-wallet">
             <strong>Nie masz jeszcze odblokowanych typów</strong>
             <span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+
+function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
+  const unread = notifications.filter(item => !item.is_read).length
+
+  return (
+    <section className="leaderboard-page notifications-page">
+      <div className="leaderboard-hero">
+        <div>
+          <h1>Powiadomienia</h1>
+          <p>Nowe typy od obserwowanych tipsterów oraz ważne komunikaty systemowe.</p>
+        </div>
+        <div className="leaderboard-badge">{unread} NOWE</div>
+      </div>
+
+      <div className="feed-actions notifications-actions">
+        <button type="button" onClick={onRefresh}>Odśwież</button>
+        <button type="button" onClick={onMarkAllRead}>Oznacz jako przeczytane</button>
+      </div>
+
+      <div className="unlocked-list notifications-list">
+        {notifications.length ? notifications.map(item => (
+          <div className={item.is_read ? 'unlocked-item notification-item read' : 'unlocked-item notification-item'} key={item.id}>
+            <div>
+              <strong>{item.title || 'Powiadomienie'}</strong>
+              <span>{item.message || 'Masz nowe powiadomienie.'}</span>
+              <small>{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL') : ''}</small>
+            </div>
+            <b>{item.is_read ? 'OK' : 'NEW'}</b>
+          </div>
+        )) : (
+          <div className="empty-wallet">
+            <strong>Brak powiadomień</strong>
+            <span>Zaobserwuj tipstera, a po dodaniu przez niego nowego typu zobaczysz tutaj alert.</span>
           </div>
         )}
       </div>
@@ -1569,6 +1622,8 @@ function App() {
   const [toast, setToast] = useState(null)
   const [wallet, setWallet] = useState(0)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
+  const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
+  const [notifications, setNotifications] = useState([])
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
@@ -1611,6 +1666,116 @@ function App() {
     setTips(sourceTips)
   }
 
+  async function fetchFollowingTipsters(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setFollowingTipsters(new Set())
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('tipster_follows')
+      .select('tipster_id')
+      .eq('follower_id', userId)
+
+    if (error) {
+      console.error('fetchFollowingTipsters error', error)
+      setFollowingTipsters(new Set())
+      return
+    }
+
+    setFollowingTipsters(new Set((data || []).map(row => String(row.tipster_id))))
+  }
+
+  async function fetchNotifications(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setNotifications([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      console.error('fetchNotifications error', error)
+      setNotifications([])
+      return
+    }
+
+    setNotifications(data || [])
+  }
+
+  async function toggleFollowTipster(tipsterId) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować tipstera.' })
+      return
+    }
+
+    const id = String(tipsterId)
+    if (!id || id === String(sessionUser.id)) return
+
+    if (!isSupabaseConfigured || !supabase) {
+      showToast({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji bazy.' })
+      return
+    }
+
+    const alreadyFollowing = followingTipsters.has(id)
+
+    if (alreadyFollowing) {
+      const { error } = await supabase
+        .from('tipster_follows')
+        .delete()
+        .eq('follower_id', sessionUser.id)
+        .eq('tipster_id', id)
+
+      if (error) {
+        showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
+        return
+      }
+
+      setFollowingTipsters(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować tipstera.' })
+      return
+    }
+
+    const { error } = await supabase
+      .from('tipster_follows')
+      .upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
+
+    if (error) {
+      showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
+      return
+    }
+
+    setFollowingTipsters(prev => new Set(prev).add(id))
+    showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz tipstera. Powiadomienia pojawią się po nowych typach.' })
+  }
+
+  async function markAllNotificationsRead() {
+    if (!sessionUser?.id || !isSupabaseConfigured || !supabase) return
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', sessionUser.id)
+      .eq('is_read', false)
+
+    if (error) {
+      showToast({ type: 'error', title: 'Powiadomienia', message: formatAppErrorMessage(error.message) })
+      return
+    }
+
+    await fetchNotifications(sessionUser.id)
+    showToast({ type: 'success', title: 'Powiadomienia', message: 'Oznaczono jako przeczytane.' })
+  }
+
 
   useEffect(() => {
     try {
@@ -1626,8 +1791,12 @@ function App() {
       setUnlockedTips(new Set())
       fetchUnlockedTips(sessionUser.id)
       fetchPaymentHistory(sessionUser.id)
+      fetchFollowingTipsters(sessionUser.id)
+      fetchNotifications(sessionUser.id)
     } else {
       setUnlockedTips(new Set())
+      setFollowingTipsters(new Set())
+      setNotifications([])
     }
   }, [sessionUser?.id])
 
@@ -2441,6 +2610,9 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
+    if (view === 'notifications' && sessionUser?.id) {
+      fetchNotifications(sessionUser.id)
+    }
     if (view === 'adminPayouts' && isAdminUser(sessionUser)) {
       fetchAdminPayoutRequests()
     }
@@ -2485,13 +2657,13 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} userPlan={accountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={sessionUser} userPlan={accountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
           <div className="search">⌕ Szukaj meczów, lig, użytkowników...</div>
           <div className="top-actions">
-            <span className="notice">🔔<b>3</b></span>
+            <button type="button" className="notice notice-button" onClick={() => setView('notifications')}>🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <span>✉</span>
             <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn" onClick={() => setView('wallet')}>{Number(walletBalance || 0).toFixed(2)} zł</button>
@@ -2518,6 +2690,10 @@ function App() {
 
         {view === 'leaderboard' && (
           <LeaderboardView tips={tips} />
+        )}
+
+        {view === 'notifications' && (
+          <NotificationsView notifications={notifications} onRefresh={() => fetchNotifications(sessionUser?.id)} onMarkAllRead={markAllNotificationsRead} />
         )}
 
         {view === 'payments' && (
@@ -2607,7 +2783,7 @@ function App() {
             </div>
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={sessionUser} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
