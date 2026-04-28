@@ -86,9 +86,8 @@ function getAiConfidence(tip) {
 }
 
 function isAiGeneratedTip(tip) {
-  const source = String(tip?.ai_source || tip?.source || '').toLowerCase()
-  const author = String(tip?.author_name || '').toLowerCase()
-  return source === 'real_ai_engine' || source === 'ai_engine' || author === 'ai tip'
+  const source = String(tip?.ai_source || '').toLowerCase()
+  return source === 'real_ai_engine'
 }
 
 function isUserTip(tip) {
@@ -1204,14 +1203,157 @@ function StatsView({ tips = [] }) {
   )
 }
 
-function AiPicksView({ tips = [], loading = false, generating = false, onGenerate, onRefresh }) {
-  const aiTips = tips.filter(isAiGeneratedTip).slice().sort((a,b) => getAiScore(b) - getAiScore(a))
-  const top = aiTips.slice(0, 3)
+function AiStatBox({ label, value, hint, tone = '' }) {
+  return <div className={`ai-stat-box ${tone}`}><span>{label}</span><b>{value}</b><small>{hint}</small></div>
+}
+
+function AiEventCard({ tip }) {
+  const confidence = getAiConfidence(tip)
+  const score = getAiScore(tip)
+  const value = Number(tip?.value_score || 0)
+  const risk = String(tip?.risk_level || 'medium').toLowerCase()
+  const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
+  const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
+  const pick = tip.pick || tip.bet_type || home
+  const result = normalizeResult(tip.result || tip.status)
+  const when = tip.kickoff_time || tip.match_time || tip.event_time || tip.created_at
+  const statusClass = result === 'win' ? 'win' : result === 'loss' ? 'loss' : 'pending'
+
   return (
-    <section className="ai-pro-page">
-      <div className="ai-pro-hero"><div><span>REAL AI PICKS ENGINE</span><h1>Najlepsze AI typy dnia</h1><p>Backend pobiera mecze i kursy, liczy value, confidence i generuje analizę AI. Klucze są tylko w Netlify ENV.</p></div><div className="ai-actions"><button onClick={onGenerate} disabled={generating}>{generating ? 'Generuję...' : 'Wygeneruj AI typy'}</button><button onClick={onRefresh} disabled={loading}>Odśwież</button></div></div>
-      <div className="ai-top-grid">{top.map((tip, i) => <div className="ai-top-card" key={tip.id || i}><em>#{i+1} AI PICK</em><h3>{tip.team_home || tip.home_team || 'Home'} vs {tip.team_away || tip.away_team || 'Away'}</h3><b>AI {getAiConfidence(tip)}%</b><span>Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</span><p>{getAiAnalysis(tip)}</p></div>)}</div>
-      <div className="ai-list">{aiTips.length ? aiTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={true} currentUser={null} followingTipsters={new Set()} onUnlock={() => {}} onToggleFollow={() => {}} onOpenTipster={() => {}} />) : <div className="empty-state">Brak AI typów. Kliknij „Wygeneruj AI typy” po dodaniu kluczy API w Netlify.</div>}</div>
+    <article className="ai-event-card">
+      <div className="ai-event-top">
+        <div>
+          <span className="ai-league">{tip.league_name || tip.league || 'Football'}</span>
+          <h3>{home}</h3>
+          <h3>{away}</h3>
+        </div>
+        <div className="ai-scoreline">
+          <small>{when ? new Date(when).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Dziś'}</small>
+          <b>{confidence}%</b>
+          <span>AI confidence</span>
+        </div>
+      </div>
+      <div className="ai-event-tags">
+        <span className={statusClass}>{result === 'win' ? 'WIN' : result === 'loss' ? 'LOSS' : 'LIVE/PENDING'}</span>
+        <span>Typ: {pick}</span>
+        <span>Kurs: {Number(tip.odds || 0).toFixed(2)}</span>
+        <span>Value: {value > 0 ? '+' : ''}{value.toFixed(1)}%</span>
+        <span className={`risk ${risk}`}>{risk.toUpperCase()}</span>
+      </div>
+      <p>{getAiAnalysis(tip)}</p>
+      <div className="ai-card-meter"><i style={{ width: `${score}%` }} /></div>
+    </article>
+  )
+}
+
+function AiPicksView({ tips = [], loading = false, generating = false, onGenerate, onRefresh }) {
+  const [tab, setTab] = useState('all')
+  const [sport, setSport] = useState('all')
+  const [risk, setRisk] = useState('all')
+
+  const aiTips = tips.filter(isAiGeneratedTip).slice().sort((a,b) => getAiScore(b) - getAiScore(a) || Number(b.value_score || 0) - Number(a.value_score || 0))
+  const filtered = aiTips.filter(tip => {
+    const result = normalizeResult(tip.result || tip.status)
+    const tipRisk = String(tip.risk_level || 'medium').toLowerCase()
+    const tipSport = String(tip.sport || 'football').toLowerCase()
+    if (tab === 'live' && !['pending', ''].includes(result)) return false
+    if (tab === 'finished' && !['win','loss','void'].includes(result)) return false
+    if (sport !== 'all' && tipSport !== sport) return false
+    if (risk !== 'all' && tipRisk !== risk) return false
+    return true
+  })
+
+  const settled = aiTips.filter(t => ['win','loss','void'].includes(normalizeResult(t.result || t.status)))
+  const wins = settled.filter(t => normalizeResult(t.result || t.status) === 'win').length
+  const losses = settled.filter(t => normalizeResult(t.result || t.status) === 'loss').length
+  const pending = aiTips.length - settled.length
+  const winrate = settled.length ? Math.round((wins / Math.max(wins + losses, 1)) * 100) : 0
+  const profit = settled.reduce((sum, tip) => sum + (normalizeResult(tip.result || tip.status) === 'win' ? (Number(tip.odds || 0) - 1) * 100 : normalizeResult(tip.result || tip.status) === 'loss' ? -100 : 0), 0)
+  const roi = settled.length ? Math.round(profit / (settled.length * 100) * 100) : 0
+  const avgConfidence = aiTips.length ? Math.round(aiTips.reduce((sum, tip) => sum + getAiConfidence(tip), 0) / aiTips.length) : 0
+
+  const leagueMap = aiTips.reduce((acc, tip) => {
+    const league = tip.league_name || tip.league || 'Unknown'
+    if (!acc[league]) acc[league] = { league, picks: 0, wins: 0, losses: 0, profit: 0 }
+    const res = normalizeResult(tip.result || tip.status)
+    acc[league].picks += 1
+    if (res === 'win') { acc[league].wins += 1; acc[league].profit += (Number(tip.odds || 0) - 1) * 100 }
+    if (res === 'loss') { acc[league].losses += 1; acc[league].profit -= 100 }
+    return acc
+  }, {})
+  const leagues = Object.values(leagueMap).sort((a,b)=>b.picks-a.picks).slice(0,9)
+  const sports = Array.from(new Set(aiTips.map(t => String(t.sport || 'football').toLowerCase()))).filter(Boolean)
+
+  return (
+    <section className="ai-deep-page">
+      <div className="ai-deep-topbar">
+        <div>
+          <span className="eyebrow">BETAI AI EVENTS</span>
+          <h1>Aktualne i zakończone wydarzenia AI</h1>
+          <p>Zakładka pokazuje wyłącznie typy stworzone przez backend AI: API-Football + Odds API + OpenAI. Typy użytkowników zostają na Dashboardzie.</p>
+        </div>
+        <div className="ai-deep-actions">
+          <button onClick={onGenerate} disabled={generating}>{generating ? 'Generuję realne mecze...' : 'Wygeneruj realne AI typy'}</button>
+          <button onClick={onRefresh} disabled={loading}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+        </div>
+      </div>
+
+      <div className="ai-deep-filter-row">
+        <div className="ai-filter-box wide">
+          <label>Wydarzenia AI</label>
+          <div className="ai-filter-buttons">
+            <button className={tab === 'all' ? 'active' : ''} onClick={() => setTab('all')}>Wszystkie</button>
+            <button className={tab === 'live' ? 'active' : ''} onClick={() => setTab('live')}>LIVE / Nadchodzące</button>
+            <button className={tab === 'finished' ? 'active' : ''} onClick={() => setTab('finished')}>Zakończone</button>
+          </div>
+        </div>
+        <div className="ai-filter-box">
+          <label>Sport</label>
+          <select value={sport} onChange={e => setSport(e.target.value)}>
+            <option value="all">Wszystkie sporty</option>
+            {sports.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="ai-filter-box">
+          <label>Ryzyko</label>
+          <select value={risk} onChange={e => setRisk(e.target.value)}>
+            <option value="all">Wszystkie poziomy</option>
+            <option value="low">Low risk</option>
+            <option value="medium">Medium risk</option>
+            <option value="high">High risk</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="ai-stats-row">
+        <AiStatBox label="LIVE TERAZ" value={0} hint="mecze na żywo" />
+        <AiStatBox label="NADCHODZĄCE" value={pending} hint="oczekujące typy AI" />
+        <AiStatBox label="ZAKOŃCZONE" value={settled.length} hint="rozliczone wydarzenia" />
+        <AiStatBox label="AI CONFIDENCE" value={`${avgConfidence}%`} hint="średnia pewność modelu" />
+        <AiStatBox label="ROI" value={`${roi}%`} hint="zwrot modelu" tone={roi < 0 ? 'danger' : 'success'} />
+      </div>
+
+      <div className="ai-deep-grid">
+        <div className="ai-events-panel">
+          <h2>Najświeższe wydarzenia AI</h2>
+          {filtered.length ? filtered.map(tip => <AiEventCard key={tip.id} tip={tip} />) : (
+            <div className="ai-empty-state">
+              <strong>Brak typów AI</strong>
+              <span>Po dodaniu ENV w Netlify kliknij „Wygeneruj realne AI typy”. Ta zakładka nie pokazuje typów użytkowników.</span>
+            </div>
+          )}
+        </div>
+
+        <aside className="ai-leagues-panel">
+          <h2>Podsumowanie lig</h2>
+          <div className="ai-league-head"><span>Liga</span><span>Typy</span><span>Win rate</span><span>Profit</span></div>
+          {leagues.length ? leagues.map(row => {
+            const settledCount = row.wins + row.losses
+            const wr = settledCount ? Math.round((row.wins / settledCount) * 100) : 0
+            return <div className="ai-league-row" key={row.league}><b>{row.league}</b><span>{row.picks}</span><span>{wr}%</span><em className={row.profit < 0 ? 'danger-text' : 'success-text'}>{Math.round(row.profit)} PLN</em></div>
+          }) : <div className="ai-empty-mini">Brak lig — wygeneruj pierwsze realne AI typy.</div>}
+        </aside>
+      </div>
     </section>
   )
 }

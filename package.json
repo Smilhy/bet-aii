@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-134-ai-user-separation-deep-stats",
-  "version": "134.0.0",
+  "name": "betai-wersja-135-ai-tab-real-events-layout",
+  "version": "135.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -100,10 +100,14 @@ exports.handler = async function () {
       rows.push({
         author_name: 'AI Tip',
         league,
+        league_name: league,
+        sport: 'football',
         country: fixture?.league?.country || null,
         team_home: home,
         team_away: away,
         bet_type: home,
+        pick: home,
+        match_name: `${home} vs ${away}`,
         odds,
         analysis,
         ai_analysis: analysis,
@@ -118,13 +122,15 @@ exports.handler = async function () {
         source: 'real_ai_engine',
         ai_source: 'real_ai_engine',
         event_time: fixture?.fixture?.date || null,
+        kickoff_time: fixture?.fixture?.date || null,
+        bookmaker: oddsRows.length ? 'Odds API' : 'Model odds',
         created_at: new Date().toISOString()
       })
     }
 
     const { data, error } = await supabase.from('tips').insert(rows).select('id')
     if (error) throw error
-    await supabase.from('ai_pick_runs').insert({ source: 'api-football+odds+openai', inserted_count: data?.length || 0, status: 'success' }).catch(() => {})
+    await supabase.from('ai_pick_runs').insert({ source: 'api-football+odds+openai', picks_created: data?.length || 0, status: 'success', finished_at: new Date().toISOString() }).catch(() => {})
     return json(200, { inserted: data?.length || 0 })
   } catch (error) {
     console.error(error)
