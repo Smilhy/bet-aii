@@ -282,6 +282,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   ]
   const [panel, setPanel] = useState('main')
   const [lineIndex, setLineIndex] = useState(0)
+  const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     const panelTimer = setInterval(() => setPanel(prev => prev === 'main' ? 'alt' : 'main'), 8000)
@@ -296,9 +297,22 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : -7
   const today = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
   const line = heroLines[lineIndex]
+  const handleHeroMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+    setHeroTilt({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) })
+  }
+  const resetHeroMove = () => setHeroTilt({ x: 0, y: 0 })
 
   return (
-    <section className="betai-animated-hero" aria-label="BetAI predictions hero">
+    <section
+      className="betai-animated-hero betai-parallax-hero"
+      aria-label="BetAI predictions hero"
+      onMouseMove={handleHeroMove}
+      onMouseLeave={resetHeroMove}
+      style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
+    >
       <div className="betai-hero-bg betai-hero-bg-one" />
       <div className="betai-hero-bg betai-hero-bg-two" />
       <div className="betai-hero-orb betai-hero-orb-pill" />

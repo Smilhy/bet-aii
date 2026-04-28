@@ -867,3 +867,10 @@ Dodano animowany, zapętlony banner na górze dashboardu na podstawie przesłane
 - bez zmian w loaderze i loginie.
 
 SQL nie jest wymagany dla tej wersji.
+
+
+## Wersja 125 — DASHBOARD FRAME SYSTEM
+- wycentrowany layout całej aplikacji
+- 3-kolumnowy frame: sidebar / main / rightbar
+- spójne ramki, odstępy i zaokrąglenia
+- bez zmian SQL

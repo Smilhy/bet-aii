@@ -1769,3 +1769,211 @@ button,.add-btn,.submit-btn,.top-actions button,.feed-actions button:first-child
 .won,.result-pill.win{background:rgba(50,245,140,.14)!important;color:#86efac!important;border:1px solid rgba(50,245,140,.24)}.pending,.result-pill.pending{background:rgba(91,200,255,.12)!important;color:#bfdbfe!important;border:1px solid rgba(91,200,255,.22)}.result-pill.loss,.status-pill.danger,.toast.error{background:rgba(255,82,107,.12)!important;color:#fca5a5!important;border-color:rgba(255,82,107,.24)!important}.result-pill.void,.plan-limit-note.free{background:rgba(255,201,74,.12)!important;color:#fde68a!important;border-color:rgba(255,201,74,.24)!important}
 .rank span{background:rgba(255,255,255,.08)!important;color:var(--text)!important}.rank.first span{background:rgba(255,201,74,.18)!important;color:#fde68a!important}.rank.second span{background:rgba(148,163,184,.16)!important}.rank.third span{background:rgba(251,146,60,.16)!important;color:#fed7aa!important}.finance-bar{background:rgba(255,255,255,.08)!important}.finance-bar .platform{background:#00a98f!important}.finance-bar .tipster{background:#5bc8ff!important;color:#02121a!important}.admin-actions button.danger{background:linear-gradient(135deg,#ff526b,#b91c1c)!important;color:#fff!important;border-color:rgba(255,82,107,.30)!important}.pro-tip-card:hover,.tip-card:hover,.panel:hover{border-color:rgba(24,242,198,.20)!important;box-shadow:0 20px 54px rgba(0,0,0,.38),0 0 24px rgba(24,242,198,.07)!important}
 *{scrollbar-width:thin;scrollbar-color:rgba(24,242,198,.35) rgba(255,255,255,.05)}*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:rgba(255,255,255,.04)}*::-webkit-scrollbar-thumb{background:rgba(24,242,198,.30);border-radius:999px;border:2px solid rgba(2,7,13,.8)}@media(max-width:760px){.sidebar{background:linear-gradient(180deg,rgba(8,18,30,.94),rgba(3,9,16,.98))!important}.main{background:transparent}.topbar{background:transparent}.search{max-width:100%}}
+
+/* VERSION 124 — PARALLAX + MICRO INTERACTIONS */
+.betai-parallax-hero{transform:perspective(1200px) rotateX(calc(var(--my,0) * -1.25deg)) rotateY(calc(var(--mx,0) * 1.45deg));transition:transform .18s ease-out,box-shadow .22s ease,border-color .22s ease;will-change:transform}.betai-parallax-hero:hover{border-color:rgba(24,242,198,.28);box-shadow:0 38px 90px rgba(0,0,0,.42),0 0 42px rgba(24,242,198,.11),inset 0 1px 0 rgba(255,255,255,.06)!important}.betai-parallax-hero .betai-hero-copy{transform:translate3d(calc(var(--mx,0) * -8px),calc(var(--my,0) * -5px),0);transition:transform .18s ease-out}.betai-parallax-hero .betai-hero-stats{transform:translate3d(calc(var(--mx,0) * 10px),calc(var(--my,0) * 7px),0);transition:transform .18s ease-out}.betai-parallax-hero .betai-hero-bg-one{margin-right:calc(var(--mx,0) * 18px);margin-top:calc(var(--my,0) * 14px)}.betai-parallax-hero .betai-hero-bg-two{margin-right:calc(var(--mx,0) * -14px);margin-bottom:calc(var(--my,0) * -10px)}.betai-parallax-hero .betai-hero-orb-pill{margin-right:calc(var(--mx,0) * 9px);margin-top:calc(var(--my,0) * 8px)}.betai-parallax-hero .betai-hero-orb-ring{margin-right:calc(var(--mx,0) * 16px);margin-bottom:calc(var(--my,0) * 10px)}.betai-parallax-hero .betai-hero-orb-glow{margin-right:calc(var(--mx,0) * 22px);margin-bottom:calc(var(--my,0) * 14px)}.betai-hero-stats div{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease}.betai-hero-stats div:hover{transform:translateY(-4px) scale(1.018);border-color:rgba(24,242,198,.28)!important;background:linear-gradient(180deg,rgba(24,242,198,.09),rgba(255,255,255,.026))!important;box-shadow:0 18px 42px rgba(0,0,0,.28),0 0 22px rgba(24,242,198,.12)!important}.tip-card,.panel,.profile-card,.leaderboard-card,.marketplace-card,.wallet-card,.earnings-card,.payout-card,.pricing-card,.featured-card,.user-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,background .2s ease}.tip-card:hover,.panel:hover,.profile-card:hover,.leaderboard-card:hover,.marketplace-card:hover,.wallet-card:hover,.earnings-card:hover,.payout-card:hover,.pricing-card:hover,.featured-card:hover,.user-card:hover{transform:translateY(-3px)}.menu button,.menu a{transition:transform .16s ease,background .16s ease,border-color .16s ease,color .16s ease}.menu button:hover,.menu a:hover{transform:translateX(3px)}.add-btn,.submit-btn,.premium-banner-cta,.betai-hero-cta,.mini-buy-btn,.follow-footer-btn,.pricing-card button{position:relative;overflow:hidden}.add-btn:after,.submit-btn:after,.premium-banner-cta:after,.betai-hero-cta:after,.mini-buy-btn:after,.follow-footer-btn:after,.pricing-card button:after{content:"";position:absolute;top:-40%;bottom:-40%;left:-120%;width:42%;transform:skewX(-22deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);transition:left .55s ease;pointer-events:none}.add-btn:hover:after,.submit-btn:hover:after,.premium-banner-cta:hover:after,.betai-hero-cta:hover:after,.mini-buy-btn:hover:after,.follow-footer-btn:hover:after,.pricing-card button:hover:after{left:130%}.feed-filters button,.outline-btn,.follow-btn,.unlock-btn.secondary{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.feed-filters button:hover,.outline-btn:hover,.follow-btn:hover,.unlock-btn.secondary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(24,242,198,.10)!important}.rank,.featured-tip-row,.last-result-row,.bet-row,.access,.profile-sub-option{transition:transform .18s ease,background .18s ease,border-color .18s ease}.rank:hover,.featured-tip-row:hover,.last-result-row:hover,.bet-row:hover,.access:hover,.profile-sub-option:hover{transform:translateY(-2px);border-color:rgba(24,242,198,.20)!important;background:rgba(24,242,198,.055)!important}.avatar,.photo,.mini-avatar,.club{transition:transform .2s ease,box-shadow .2s ease}.avatar:hover,.photo:hover,.mini-avatar:hover,.club:hover{transform:scale(1.04);box-shadow:0 0 30px rgba(24,242,198,.22)!important}@media (prefers-reduced-motion: reduce){.betai-parallax-hero,.betai-parallax-hero *,.tip-card,.panel,.menu button,.menu a,.rank,.featured-tip-row,.last-result-row,.bet-row,.access,.profile-sub-option{transition:none!important;animation:none!important;transform:none!important}}
+
+
+/* =====================================================
+   VERSION 125 — DASHBOARD FRAME SYSTEM
+   Wycentrowany SaaS frame layout: sidebar / main / right panel.
+   ===================================================== */
+html, body, #root{
+  width:100%;
+  overflow-x:hidden;
+}
+body{
+  min-width:320px;
+}
+.app-shell{
+  width:min(100%, 1640px)!important;
+  margin:0 auto!important;
+  min-height:100vh!important;
+  display:grid!important;
+  grid-template-columns:260px minmax(0, 1fr) 320px!important;
+  gap:18px!important;
+  padding:24px!important;
+  align-items:start!important;
+  background:transparent!important;
+}
+.sidebar{
+  position:sticky!important;
+  top:24px!important;
+  height:calc(100vh - 48px)!important;
+  border:1px solid rgba(140,220,255,.12)!important;
+  border-radius:24px!important;
+  padding:16px!important;
+  overflow:auto!important;
+  background:linear-gradient(180deg,rgba(13,28,44,.92),rgba(3,10,17,.96))!important;
+  box-shadow:0 22px 60px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+.main{
+  min-width:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+}
+.topbar{
+  height:auto!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:8px!important;
+  gap:12px!important;
+  border:1px solid rgba(140,220,255,.12)!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,rgba(10,24,34,.82),rgba(3,10,17,.92))!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.search{
+  max-width:none!important;
+  height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  border-radius:14px!important;
+  padding:0 16px!important;
+  background:rgba(255,255,255,.045)!important;
+}
+.top-actions{
+  gap:8px!important;
+  margin-left:auto!important;
+  flex-shrink:0!important;
+}
+.top-actions button,
+.wallet-top-btn,
+.notice-button,
+.add-btn{
+  min-height:40px!important;
+  border-radius:14px!important;
+  padding:0 13px!important;
+}
+.betai-animated-hero{
+  margin:0!important;
+  border-radius:24px!important;
+  min-height:310px!important;
+  padding:26px 236px 26px 28px!important;
+}
+.betai-hero-copy{
+  min-height:258px!important;
+}
+.betai-hero-rotator{
+  min-height:150px!important;
+}
+.betai-hero-panel h1{
+  font-size:52px!important;
+  line-height:.98!important;
+}
+.betai-hero-panel p{
+  margin-top:12px!important;
+  font-size:13px!important;
+}
+.betai-hero-cta{
+  width:min(520px,100%)!important;
+  height:42px!important;
+  border-radius:13px!important;
+  font-size:14px!important;
+}
+.betai-hero-stats{
+  right:14px!important;
+  top:14px!important;
+  bottom:14px!important;
+  width:190px!important;
+  gap:10px!important;
+}
+.betai-hero-stats div{
+  border-radius:14px!important;
+  padding:10px 13px!important;
+}
+.betai-hero-stats strong{
+  font-size:22px!important;
+}
+.betai-hero-orb-pill{right:31%!important;top:-24px!important;width:350px!important;height:172px!important}
+.betai-hero-orb-ring{right:25%!important;bottom:38px!important;width:205px!important;height:205px!important}
+.betai-hero-orb-glow{right:25%!important;bottom:24px!important;width:238px!important;height:238px!important}
+.betai-hero-player{right:13%!important;bottom:14px!important;width:178px!important;height:138px!important}
+.feed-section,
+.add-page,
+.wallet-view,
+.profile-view,
+.leaderboard-view,
+.subscription-view,
+.earnings-view,
+.payouts-view,
+.admin-finance-view,
+.admin-payouts-view{
+  max-width:none!important;
+  width:100%!important;
+}
+.feed-filters{
+  margin:0!important;
+  border-radius:18px!important;
+  padding:9px!important;
+}
+.feed{
+  gap:10px!important;
+}
+.tip-card{
+  border-radius:18px!important;
+  padding:14px 16px!important;
+}
+.rightbar{
+  position:sticky!important;
+  top:24px!important;
+  height:calc(100vh - 48px)!important;
+  overflow:auto!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:14px!important;
+}
+.rightbar > *,
+.panel{
+  border-radius:22px!important;
+}
+.panel{
+  padding:16px!important;
+  background:linear-gradient(180deg,rgba(10,24,34,.84),rgba(4,12,20,.94))!important;
+  border:1px solid rgba(140,220,255,.12)!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.user-card{
+  border-radius:20px!important;
+}
+.menu{
+  gap:8px!important;
+}
+.menu button,
+.menu a{
+  border-radius:14px!important;
+  padding:12px 14px!important;
+}
+.menu button.active,
+.menu a.active{
+  box-shadow:inset 0 0 0 1px rgba(24,242,198,.20), 0 0 28px rgba(24,242,198,.07)!important;
+}
+.tip-form,
+.profile-card,
+.wallet-card,
+.earnings-card,
+.payout-card,
+.pricing-card,
+.marketplace-card,
+.leaderboard-card,
+.public-profile-shell{
+  border-radius:22px!important;
+}
+@media(max-width:1360px){
+  .app-shell{grid-template-columns:240px minmax(0,1fr)!important;max-width:1180px!important}
+  .rightbar{display:none!important}
+  .betai-animated-hero{padding-right:220px!important}
+}
+@media(max-width:900px){
+  .app-shell{display:block!important;padding:14px!important;width:100%!important}
+  .sidebar{position:relative!important;top:auto!important;height:auto!important;margin-bottom:14px!important}
+  .main{display:block!important}
+  .topbar{margin-bottom:12px!important;flex-wrap:wrap!important}
+  .betai-animated-hero{padding:22px 18px!important;min-height:auto!important}
+  .betai-hero-copy{min-height:270px!important}
+  .betai-hero-stats{position:relative!important;right:auto!important;top:auto!important;bottom:auto!important;width:auto!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none!important;margin-top:18px!important}
+  .betai-hero-panel h1{font-size:42px!important}
+}
