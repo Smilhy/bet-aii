@@ -20,6 +20,10 @@ function clamp(value, min, max) {
 
 function nowIso() { return new Date().toISOString() }
 
+const LIVE_ONLY_COLUMNS = new Set(['live_minute','live_score_home','live_score_away','live_status'])
+function stripLiveColumns(rows) { return rows.map(row => Object.fromEntries(Object.entries(row).filter(([key]) => !LIVE_ONLY_COLUMNS.has(key)))) }
+function isSchemaCacheColumnError(error) { const msg = String(error?.message || error || '').toLowerCase(); return msg.includes('schema cache') || msg.includes('could not find') || msg.includes('pgrst204') }
+
 async function fetchLiveFixtures() {
   if (!API_FOOTBALL_KEY) return []
   const res = await fetch('https://v3.football.api-sports.io/fixtures?live=all', {
@@ -178,7 +182,18 @@ exports.handler = async function () {
       .eq('source', 'live_ai_engine')
       .eq('result', 'pending')
 
-    const { data, error } = await supabase.from('tips').insert(rows).select('id')
+    let { data, error } = await supabase.from('tips').insert(rows).select('id')
+    let schema_cache_fallback = false
+    if (error && isSchemaCacheColumnError(error)) {
+      schema_cache_fallback = true
+      const retryRows = stripLiveColumns(rows).map(row => ({
+        ...row,
+        analysis: ((row.analysis || "") + " LIVE: " + (row.live_minute || "-") + " min, wynik " + (row.live_score_home ?? 0) + ":" + (row.live_score_away ?? 0) + ", status " + (row.live_status || "LIVE") + ".").trim(),
+        ai_analysis: ((row.ai_analysis || row.analysis || "") + " LIVE: " + (row.live_minute || "-") + " min, wynik " + (row.live_score_home ?? 0) + ":" + (row.live_score_away ?? 0) + ", status " + (row.live_status || "LIVE") + ".").trim(),
+        status: 'live'
+      }))
+      ;({ data, error } = await supabase.from('tips').insert(retryRows).select('id'))
+    }
     if (error) throw error
     const { error: runLogError } = await supabase.from('ai_pick_runs').insert({
       source: 'live_ai_engine+api_football+openai_analysis',
@@ -188,7 +203,7 @@ exports.handler = async function () {
     })
     if (runLogError) console.warn('Live AI run log skipped:', runLogError.message)
 
-    return json(200, { inserted: data?.length || 0, live_matches_checked: fixtures.length, source: 'live_ai_engine' })
+    return json(200, { inserted: data?.length || 0, live_matches_checked: fixtures.length, source: 'live_ai_engine', schema_cache_fallback })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Live AI Engine error' })
