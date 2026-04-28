@@ -1246,7 +1246,7 @@ function AiEventCard({ tip }) {
   )
 }
 
-function AiPicksView({ tips = [], loading = false, generating = false, onGenerate, onRefresh }) {
+function AiPicksView({ tips = [], loading = false, generating = false, liveGenerating = false, onGenerate, onGenerateLive, onRefresh }) {
   const [sport, setSport] = useState('all')
   const [league, setLeague] = useState('all')
   const [betType, setBetType] = useState('all')
@@ -1367,6 +1367,7 @@ function AiPicksView({ tips = [], loading = false, generating = false, onGenerat
           <span className="ai-live-dot">● Last updated: now</span>
           <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
           <button className="ai-primary-action" onClick={onGenerate} disabled={generating}>{generating ? 'Generating...' : 'Generate AI Picks'}</button>
+          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'LIVE scanning...' : 'Generate LIVE AI'}</button>
         </div>
       </header>
 
@@ -2503,6 +2504,7 @@ function App() {
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
   const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiLiveGenerating, setAiLiveGenerating] = useState(false)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
@@ -2619,6 +2621,24 @@ function App() {
       showToast({ type: 'error', title: 'AI Engine', message: error.message || 'Sprawdź klucze API w Netlify ENV.' })
     } finally {
       setAiGenerating(false)
+    }
+  }
+
+
+  async function runLiveAiEngine() {
+    setAiLiveGenerating(true)
+    try {
+      const response = await fetch("/.netlify/functions/generate-live-ai-picks", { method: "POST" })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Nie udało się wygenerować LIVE AI typów")
+      const msg = data.inserted ? `Dodano ${data.inserted} LIVE AI typów z ${data.live_matches_checked || 0} meczów live.` : (data.message || "Brak meczów live albo brak value picków.")
+      showToast({ type: data.inserted ? "success" : "info", title: "LIVE AI", message: msg })
+      await fetchTips(sessionUser?.id)
+    } catch (error) {
+      console.error("runLiveAiEngine error", error)
+      showToast({ type: "error", title: "LIVE AI Engine", message: error.message || "Sprawdź API_FOOTBALL_KEY w Netlify ENV." })
+    } finally {
+      setAiLiveGenerating(false)
     }
   }
 
@@ -3741,7 +3761,7 @@ function App() {
         )}
 
         {view === 'aiPicks' && (
-          <AiPicksView tips={tips} loading={loading} generating={aiGenerating} onGenerate={runRealAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
+          <AiPicksView tips={tips} loading={loading} generating={aiGenerating} liveGenerating={aiLiveGenerating} onGenerate={runRealAiEngine} onGenerateLive={runLiveAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
         )}
 
         {view === 'stats' && (
