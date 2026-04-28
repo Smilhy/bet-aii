@@ -3,7 +3,7 @@
 - Dashboard pokazuje tylko typy ludzi/typerów.
 - Zakładka Typy AI pokazuje tylko rekordy z ai_source = real_ai_engine.
 - Nowy układ Typy AI: statystyki, filtry, lista realnych meczów, podsumowanie lig.
-- Realne mecze generuje Netlify Function generate-ai-picks.js z API_FOOTBALL_KEY, ODDS_API_KEY, OPENAI_API_KEY.
+- Realne mecze generuje Netlify Function generate-live-ai-picks.js z API_FOOTBALL_KEY i opcjonalnie OPENAI_API_KEY.
 - SQL: supabase/version_135_ai_tab_real_events_layout.sql
 
 # Bet+AI — wersja 119 AUTO TIPSTER STATS

@@ -94,6 +94,17 @@ function isUserTip(tip) {
   return !isAiGeneratedTip(tip)
 }
 
+function isLiveAiTip(tip) {
+  const aiSource = String(tip?.ai_source || '').toLowerCase()
+  const source = String(tip?.source || '').toLowerCase()
+  const liveStatus = String(tip?.live_status || '').trim()
+  return aiSource === 'real_ai_engine' && (source.startsWith('live_ai_engine') || liveStatus || Number(tip?.live_minute || 0) > 0)
+}
+
+function isPreMatchAiTip(tip) {
+  return isAiGeneratedTip(tip) && !isLiveAiTip(tip)
+}
+
 function getAiScore(tip) {
   const confidence = getAiConfidence(tip)
   const odds = Number(tip?.odds || 0)
@@ -1246,14 +1257,15 @@ function AiEventCard({ tip }) {
   )
 }
 
-function AiPicksView({ tips = [], loading = false, generating = false, liveGenerating = false, onGenerate, onGenerateLive, onRefresh }) {
+function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGenerateLive, onRefresh }) {
   const [sport, setSport] = useState('all')
   const [league, setLeague] = useState('all')
   const [betType, setBetType] = useState('all')
   const [timeRange, setTimeRange] = useState('all')
+  const [mode, setMode] = useState('live')
 
   const aiTips = (tips || [])
-    .filter(isAiGeneratedTip)
+    .filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
     .slice()
     .sort((a, b) => new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at))
 
@@ -1284,7 +1296,12 @@ function AiPicksView({ tips = [], loading = false, generating = false, liveGener
     return true
   }
 
+  const liveTips = aiTips.filter(t => String(t.live_status || '').toUpperCase() !== 'NS' && (String(t.status || '').toLowerCase() === 'live' || Number(t.live_minute || 0) > 0))
+  const upcomingTips = aiTips.filter(t => String(t.live_status || '').toUpperCase() === 'NS' || String(t.status || '').toLowerCase() === 'pending')
+
   const filtered = aiTips.filter((tip) => {
+    if (mode === 'live' && !(String(tip.live_status || '').toUpperCase() !== 'NS' && (String(tip.status || '').toLowerCase() === 'live' || Number(tip.live_minute || 0) > 0))) return false
+    if (mode === 'upcoming' && !(String(tip.live_status || '').toUpperCase() === 'NS' || String(tip.status || '').toLowerCase() === 'pending')) return false
     if (sport !== 'all' && normalizeSport(tip.sport) !== sport) return false
     if (league !== 'all' && normalizeLeague(tip) !== league) return false
     if (betType !== 'all' && normalizePick(tip) !== betType) return false
@@ -1366,10 +1383,14 @@ function AiPicksView({ tips = [], loading = false, generating = false, liveGener
         <div className="ai-header-actions">
           <span className="ai-live-dot">● Last updated: now</span>
           <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
-          <button className="ai-primary-action" onClick={onGenerate} disabled={generating}>{generating ? 'Generating...' : 'Generate AI Picks'}</button>
-          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'LIVE scanning...' : 'Generate LIVE AI'}</button>
+          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję realne mecze...' : 'Skanuj realne mecze'}</button>
         </div>
       </header>
+
+      <div className="ai-control-row ai-mode-row">
+        <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>🔴 LIVE teraz ({liveTips.length})</button>
+        <button className={mode === 'upcoming' ? 'active' : ''} onClick={() => setMode('upcoming')}>⏱ Zaraz startują ({upcomingTips.length})</button>
+      </div>
 
       <div className="ai-sports-filter-bar">
         {sportCards.map(card => (
@@ -1392,7 +1413,7 @@ function AiPicksView({ tips = [], loading = false, generating = false, liveGener
         <div className="ai-kpi-card profit"><span>Total Profit</span><b>{totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL')} PLN</b><small>{settled.length ? `${roi}% from total stake` : 'No settled AI picks yet'}</small><i /></div>
         <div className="ai-kpi-card"><span>Win Rate</span><b>{winrate}%</b><small>{wins} wins / {settled.length || 0} total</small><i className="blue" /></div>
         <div className="ai-kpi-card roi"><span>ROI</span><b>{roi >= 0 ? '+' : ''}{roi}%</b><small>Return on Investment</small><i className="purple" /></div>
-        <div className="ai-kpi-card picks"><span>Total Picks</span><b>{filtered.length}</b><small>AI generated picks</small><i className="orange" /></div>
+        <div className="ai-kpi-card picks"><span>Total Picks</span><b>{filtered.length}</b><small>Tylko realne mecze z API-Football</small><i className="orange" /></div>
       </div>
 
       <div className="ai-analytics-grid">
@@ -1444,21 +1465,21 @@ function AiPicksView({ tips = [], loading = false, generating = false, liveGener
       </div>
 
       <div className="ai-panel ai-recent-picks-panel">
-        <h3>Recent AI Picks</h3>
+        <h3>{mode === 'live' ? 'Realne mecze LIVE teraz' : 'Realne mecze, które zaraz startują'}</h3>
         {filtered.length ? filtered.slice(0, 12).map(tip => {
           const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
           const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
           const res = resultOf(tip)
           const p = profitOf(tip)
           return <div className="ai-recent-pick-row" key={tip.id}>
-            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}</small></div>
-            <div><b>{normalizePick(tip)}</b><small>Bet type</small></div>
+            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{isLiveAiTip(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + (tip.live_score_home ?? 0) + ':' + (tip.live_score_away ?? 0) : ''}</small></div>
+            <div><b>{normalizePick(tip)}</b><small>Realny typ z API-Football</small></div>
             <div><b>{Number(tip.odds || 0).toFixed(2)}</b><small>Odds</small></div>
             <div><b className="success-text">{getAiConfidence(tip)}%</b><small>Confidence</small></div>
             <div><b className={p < 0 ? 'danger-text' : 'success-text'}>{p >= 0 ? '+' : ''}{Math.round(p)} PLN</b><small>Profit</small></div>
-            <div><span className={`ai-result-pill ${res}`}>{res === 'win' ? 'Won' : res === 'loss' ? 'Lost' : 'Pending'}</span></div>
+            <div><span className={`ai-result-pill ${res}`}>{res === 'win' ? 'Won' : res === 'loss' ? 'Lost' : String(tip.live_status || '').toUpperCase() === 'NS' ? 'SOON' : 'LIVE'}</span></div>
           </div>
-        }) : <div className="ai-empty-state"><strong>Brak typów AI</strong><span>Dashboard użytkowników zostaje osobno. Ta zakładka pokaże tylko typy z ai_source = real_ai_engine po wygenerowaniu realnych meczów.</span></div>}
+        }) : <div className="ai-empty-state"><strong>Brak typów AI</strong><span>Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj realne mecze i sprawdź API_FOOTBALL_KEY w Netlify ENV.</span></div>}
       </div>
     </section>
   )
@@ -2503,7 +2524,6 @@ function App() {
   const [realRanking, setRealRanking] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
-  const [aiGenerating, setAiGenerating] = useState(false)
   const [aiLiveGenerating, setAiLiveGenerating] = useState(false)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
@@ -2608,30 +2628,13 @@ function App() {
     }
   }
 
-  async function runRealAiEngine() {
-    setAiGenerating(true)
-    try {
-      const response = await fetch('/.netlify/functions/generate-ai-picks', { method: 'POST' })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Nie udało się wygenerować AI typów')
-      showToast({ type: 'success', title: 'AI Typy', message: `Wygenerowano ${data.inserted || 0} typów AI.` })
-      await fetchTips(sessionUser?.id)
-    } catch (error) {
-      console.error('runRealAiEngine error', error)
-      showToast({ type: 'error', title: 'AI Engine', message: error.message || 'Sprawdź klucze API w Netlify ENV.' })
-    } finally {
-      setAiGenerating(false)
-    }
-  }
-
-
   async function runLiveAiEngine() {
     setAiLiveGenerating(true)
     try {
       const response = await fetch("/.netlify/functions/generate-live-ai-picks", { method: "POST" })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || "Nie udało się wygenerować LIVE AI typów")
-      const msg = data.inserted ? `Dodano ${data.inserted} LIVE AI typów z ${data.live_matches_checked || 0} meczów live.` : (data.message || "Brak meczów live albo brak value picków.")
+      const msg = data.inserted ? `Dodano ${data.inserted} realnych typów z ${data.matches_checked || data.live_matches_checked || 0} meczów.` : (data.message || "Brak meczów live albo brak value picków.")
       showToast({ type: data.inserted ? "success" : "info", title: "LIVE AI", message: msg })
       await fetchTips(sessionUser?.id)
     } catch (error) {
@@ -3686,7 +3689,7 @@ function App() {
   }, [view, sessionUser?.id])
 
   const userOnlyTips = tips.filter(isUserTip)
-  const aiOnlyTips = tips.filter(isAiGeneratedTip)
+  const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const filteredTips = userOnlyTips.filter(tip => {
     if (activeFilter === 'all') return true
@@ -3761,7 +3764,7 @@ function App() {
         )}
 
         {view === 'aiPicks' && (
-          <AiPicksView tips={tips} loading={loading} generating={aiGenerating} liveGenerating={aiLiveGenerating} onGenerate={runRealAiEngine} onGenerateLive={runLiveAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
+          <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} onGenerateLive={runLiveAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
         )}
 
         {view === 'stats' && (
