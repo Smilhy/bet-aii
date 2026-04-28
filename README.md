@@ -786,28 +786,3 @@ Po deployu test:
 2. kup typ kartą testową Stripe,
 3. sprawdź `unlocked_tips`, `tip_purchases`, `earnings`,
 4. kup dostęp do profilu tipstera i sprawdź `tipster_subscriptions`.
-
-## Wersja 108 — PRO marketplace layer
-
-Dodane:
-- ranking tipsterów PRO na podstawie ROI, winrate, zarobków i liczby typów,
-- follow tipstera,
-- powiadomienia o nowych typach od obserwowanych tipsterów,
-- widok powiadomień w sidebarze,
-- SQL pod `tipster_follows`, `notifications`, widok `tipster_rankings`, helper auto payouts.
-
-### SQL do Supabase
-Wklej w Supabase SQL Editor:
-
-`supabase/pro_features_ranking_follow_notifications.sql`
-
-### Auto payouts Stripe
-Endpoint dalej działa jako Netlify Scheduled Function:
-
-`/.netlify/functions/process-payouts`
-
-W ENV możesz ustawić:
-- `CRON_SECRET`
-- `MIN_PAYOUT_AMOUNT=50`
-- `PAYOUT_CRON_BATCH_SIZE=10`
-- `PAYOUT_CRON_SCHEDULE=0 * * * *`

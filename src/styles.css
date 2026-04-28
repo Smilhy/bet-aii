@@ -1618,14 +1618,3 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .pricing-settings-grid input { width:100%; }
 .pricing-settings-grid small, .small-muted { opacity:.72; font-size:12px; }
 @media (max-width: 780px) { .profile-sub-grid, .pricing-settings-grid { grid-template-columns: 1fr; } }
-
-/* v108 PRO ranking/follow/notifications */
-.follow-mini,.follow-btn{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer;white-space:nowrap}
-.follow-mini.active,.follow-btn.active{background:linear-gradient(135deg,#10b981,#34d399);color:#06120d}
-.leaderboard-row.pro{grid-template-columns:50px 1.8fr .8fr .8fr 1fr .7fr .7fr .9fr;gap:10px}
-.notifications-page{padding:24px}
-.notification-list{display:grid;gap:12px;margin-top:18px}
-.notification-item{display:flex;justify-content:space-between;gap:16px;padding:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:18px}
-.notification-item.unread{border-color:rgba(99,102,241,.55);background:rgba(99,102,241,.12)}
-.notification-item div{display:flex;flex-direction:column;gap:4px}
-.notification-item strong{color:#fff}.notification-item span,.notification-item em{color:rgba(255,255,255,.66);font-style:normal}.submit-btn.small{width:auto;padding:10px 16px}.notice{cursor:pointer}
