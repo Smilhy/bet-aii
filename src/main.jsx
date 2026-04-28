@@ -285,8 +285,13 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || 'AdrianNowak'
   const authorId = getTipAuthorId(tip)
-  const isOwnTip = currentUser?.id && authorId && String(currentUser.id) === String(authorId)
-  const isFollowing = Boolean(authorId && followingTipsters?.has?.(String(authorId)))
+  const currentUsername = (currentUser?.email || '').split('@')[0]
+  const isOwnTip = Boolean(
+    (currentUser?.id && authorId && String(currentUser.id) === String(authorId)) ||
+    (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
+  )
+  const followKey = authorId ? String(authorId) : String(author).toLowerCase()
+  const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
 
   return (
     <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
@@ -295,13 +300,14 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <div className={`photo ${author === 'AI Tip' ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
           <div><strong>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{author === 'AI Tip' ? 'AI' : 'TIPSTER'}</em>
-          {!isOwnTip && authorId && author !== 'AI Tip' && (
+          {!isOwnTip && author !== 'AI Tip' && (
             <button
               type="button"
               className={isFollowing ? 'follow-btn active' : 'follow-btn'}
-              onClick={() => onToggleFollow?.(authorId)}
+              onClick={() => onToggleFollow?.(authorId, author)}
+              title="Obserwuj tego tipstera i dostawaj powiadomienia o nowych typach"
             >
-              {isFollowing ? '✓ Obserwujesz' : '+ Follow'}
+              {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
             </button>
           )}
         </div>
@@ -333,6 +339,15 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className="tip-footer">
         <span className={statusClass}>{statusLabel}</span>
         <span>♡ 128</span><span>▢ 45</span><span>↗</span>
+        {!isOwnTip && author !== 'AI Tip' && (
+          <button
+            type="button"
+            className={isFollowing ? 'follow-footer-btn active' : 'follow-footer-btn'}
+            onClick={() => onToggleFollow?.(authorId, author)}
+          >
+            {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}
+          </button>
+        )}
         {isLocked ? (
           <>
             <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
@@ -1708,21 +1723,49 @@ function App() {
     setNotifications(data || [])
   }
 
-  async function toggleFollowTipster(tipsterId) {
+  async function resolveTipsterId(tipsterId, authorName) {
+    if (tipsterId) return String(tipsterId)
+    if (!authorName || !isSupabaseConfigured || !supabase) return null
+
+    const username = String(authorName).toLowerCase().trim()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id,email')
+      .limit(100)
+
+    if (error) {
+      console.error('resolveTipsterId error', error)
+      return null
+    }
+
+    const match = (data || []).find(profile => {
+      const email = String(profile.email || '').toLowerCase()
+      return email === username || email.split('@')[0] === username
+    })
+
+    return match?.id ? String(match.id) : null
+  }
+
+  async function toggleFollowTipster(tipsterId, authorName) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować tipstera.' })
       return
     }
-
-    const id = String(tipsterId)
-    if (!id || id === String(sessionUser.id)) return
 
     if (!isSupabaseConfigured || !supabase) {
       showToast({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji bazy.' })
       return
     }
 
-    const alreadyFollowing = followingTipsters.has(id)
+    const resolvedId = await resolveTipsterId(tipsterId, authorName)
+    const id = resolvedId ? String(resolvedId) : null
+    if (!id || id === String(sessionUser.id)) {
+      showToast({ type: 'info', title: 'Follow', message: 'Nie można obserwować własnego konta albo nie znaleziono tipstera w profiles.' })
+      return
+    }
+
+    const fallbackKey = String(authorName || '').toLowerCase()
+    const alreadyFollowing = followingTipsters.has(id) || (fallbackKey && followingTipsters.has(fallbackKey))
 
     if (alreadyFollowing) {
       const { error } = await supabase
@@ -1754,7 +1797,12 @@ function App() {
       return
     }
 
-    setFollowingTipsters(prev => new Set(prev).add(id))
+    setFollowingTipsters(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      if (authorName) next.add(String(authorName).toLowerCase())
+      return next
+    })
     showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz tipstera. Powiadomienia pojawią się po nowych typach.' })
   }
 
