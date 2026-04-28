@@ -1941,6 +1941,30 @@ function App() {
     }
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    if (params.get('stripe_connect') === 'success') {
+      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Odświeżam status wypłat.' })
+
+      if (sessionUser?.id) {
+        fetch('/.netlify/functions/refresh-stripe-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: sessionUser.id })
+        }).finally(() => fetchStripeConnectStatus(sessionUser.id))
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
+    if (params.get('stripe_connect') === 'refresh') {
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
+
   useEffect(() => {
     if (view === 'adminPayouts' && isAdminUser(sessionUser)) {
       fetchAdminPayoutRequests()

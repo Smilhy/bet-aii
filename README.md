@@ -590,3 +590,28 @@ Wymagane ENV:
 - STRIPE_WEBHOOK_SECRET
 - SUPABASE_SERVICE_ROLE_KEY
 - VITE_SUPABASE_URL albo SUPABASE_URL
+
+## Wersja 89 — Stripe Connect backend ready
+Gotowy backend Stripe Connect:
+- netlify/functions/create-stripe-account.js
+- netlify/functions/refresh-stripe-account.js
+- netlify/functions/send-real-stripe-payout.js
+- netlify/functions/stripe-webhook.js
+
+Netlify ENV:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- SUPABASE_URL lub VITE_SUPABASE_URL
+- SITE_URL opcjonalnie
+
+Stripe webhook events:
+- checkout.session.completed
+- account.updated
+
+Flow:
+1. Tipster -> Zarobki -> Połącz Stripe.
+2. Stripe onboarding zapisuje account ID w user_stripe_accounts.
+3. Webhook account.updated ustawia payouts_enabled.
+4. Admin -> Admin wypłaty -> Zatwierdź i wypłacone.
+5. send-real-stripe-payout robi Stripe transfer.

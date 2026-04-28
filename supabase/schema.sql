@@ -1850,3 +1850,46 @@ create table if not exists public.admin_logs (
 );
 
 alter table public.admin_logs enable row level security;
+
+
+-- Wersja 89 — Stripe Connect backend ready
+
+create table if not exists public.user_stripe_accounts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  stripe_account_id text not null,
+  charges_enabled boolean default false,
+  payouts_enabled boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.user_stripe_accounts add column if not exists updated_at timestamptz default now();
+
+create unique index if not exists user_stripe_accounts_user_id_uidx
+on public.user_stripe_accounts(user_id);
+
+alter table public.user_stripe_accounts enable row level security;
+
+drop policy if exists "Users read own stripe account" on public.user_stripe_accounts;
+create policy "Users read own stripe account"
+on public.user_stripe_accounts
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+alter table public.payout_requests add column if not exists stripe_transfer_id text;
+alter table public.payout_requests add column if not exists stripe_status text;
+alter table public.payout_requests add column if not exists updated_at timestamptz default now();
+
+create table if not exists public.admin_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_user_id uuid references auth.users(id) on delete set null,
+  action text not null,
+  target_table text,
+  target_id uuid,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_logs enable row level security;
