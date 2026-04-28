@@ -567,3 +567,9 @@ Dodano:
 - przyciski `✅ Zatwierdź i wypłacone` oraz `❌ Odrzuć`,
 - fallback: jeśli Stripe Connect transfer nie przejdzie, admin nadal może ręcznie oznaczyć wypłatę jako paid,
 - `admin_logs` zapisuje kto i kiedy zatwierdził/odrzucił payout.
+
+## Wersja 87 — Admin wypłaty menu/render fix
+Naprawiono brak widocznej zakładki `🏦 Admin wypłaty`.
+Dodano render widoku i przyciski:
+- ✅ Zatwierdź i wypłacone
+- ❌ Odrzuć

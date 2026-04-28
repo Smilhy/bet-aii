@@ -167,6 +167,7 @@ return (
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
         <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
+        {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
         <button>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
@@ -1184,9 +1185,8 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
             <span><b>{Number(request.amount || 0).toFixed(2)} zł</b></span>
             <span className={`payout-status ${request.status || 'pending'}`}>{request.status || 'pending'}</span>
             <span className="admin-actions">
-              <button type="button" onClick={() => onUpdateStatus(request.id, 'approved')}>Zatwierdź</button>
-              <button type="button" onClick={() => onUpdateStatus(request.id, 'paid')}>Wypłacone</button>
-              <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
+              <button type="button" disabled={request.status !== 'pending'} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Zatwierdź i wypłacone</button>
+              <button type="button" disabled={request.status !== 'pending'} className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>❌ Odrzuć</button>
             </span>
           </div>
         )) : (
