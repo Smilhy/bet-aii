@@ -2,6 +2,7 @@ const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
 
 function supabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -56,7 +57,7 @@ exports.handler = async (event) => {
 
     const amount = Number(payout.amount || 0);
     const amountMinor = Math.round(amount * 100);
-    if (!amountMinor || amountMinor < 100) throw new Error('INVALID_PAYOUT_AMOUNT');
+    if (!amountMinor || amount < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
 
     let transfer;
     try {
@@ -88,7 +89,8 @@ exports.handler = async (event) => {
         processed_at: now,
         updated_at: now
       })
-      .eq('id', payout.id);
+      .eq('id', payout.id)
+      .eq('status', 'pending');
 
     if (updateError) throw updateError;
 

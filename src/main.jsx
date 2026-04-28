@@ -966,6 +966,7 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
 
 
 function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
+  const MIN_PAYOUT_AMOUNT = 50
   if (!user) {
     return (
       <section className="payout-page">
@@ -985,6 +986,9 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
     .filter(request => request.status === 'paid' || request.status === 'approved')
     .reduce((sum, request) => sum + Number(request.amount || 0), 0)
   const available = Math.max(0, grossRevenue - platformFee - paidOut)
+  const hasPending = payoutRequests.some(request => request.status === 'pending')
+  const stripeReady = !!stripeConnectStatus?.payouts_enabled
+  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady
 
   return (
     <section className="payout-page">
@@ -1008,10 +1012,10 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
       <div className="payout-request-card">
         <div>
           <strong>Poproś o wypłatę</strong>
-          <span>Wypłata zostanie oznaczona jako pending i czeka na akceptację admina.</span>
+          <span>Minimum wypłaty to 50 zł. Po zgłoszeniu status będzie pending i trafi do panelu admina.</span>
         </div>
-        <button onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
-          Poproś o wypłatę
+        <button disabled={!canRequestPayout} onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
+          {hasPending ? 'Masz pending' : !stripeReady ? 'Połącz Stripe' : available < MIN_PAYOUT_AMOUNT ? 'Minimum 50 zł' : 'Poproś o wypłatę'}
         </button>
       </div>
 
@@ -1038,7 +1042,7 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
       <div className="stripe-connect-note">
         <strong>Następny etap: Stripe Connect</strong>
-        <span>Ten panel jest przygotowany pod automatyczne wypłaty na konta tipsterów.</span>
+        <span>Stripe Connect jest aktywny: wypłata zostanie przekazana przez realny Stripe transfer po zatwierdzeniu admina albo przez cron automatycznych wypłat.</span>
       </div>
     </section>
   )
@@ -1135,12 +1139,12 @@ function AdminFinanceView({ report, onRefresh }) {
 
 function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
   const profile = getUserProfileView(user)
-  const totalPending = requests
-    .filter(request => request.status === 'pending')
-    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
-  const totalPaid = requests
-    .filter(request => request.status === 'paid')
-    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const pendingRequests = requests.filter(request => request.status === 'pending')
+  const paidRequests = requests.filter(request => request.status === 'paid')
+  const rejectedRequests = requests.filter(request => request.status === 'rejected')
+  const totalPending = pendingRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const totalPaid = paidRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const automationReady = pendingRequests.length > 0
 
   if (!profile.isAdmin) {
     return (
@@ -1158,15 +1162,24 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
       <div className="admin-payout-hero">
         <div>
           <h1>Admin wypłaty</h1>
-          <p>Zatwierdzaj i oznaczaj wypłaty tipsterów.</p>
+          <p>PRO panel do realnych wypłat Stripe Connect: approve, reject, transfer ID i gotowość pod cron.</p>
         </div>
-        <div className="admin-payout-badge">ADMIN</div>
+        <div className="admin-payout-badge">ADMIN PRO</div>
       </div>
 
-      <div className="admin-payout-stats">
+      <div className="admin-payout-stats admin-payout-stats-pro">
         <div><span>Zgłoszenia</span><b>{requests.length}</b></div>
         <div><span>Pending</span><b>{totalPending.toFixed(2)} zł</b></div>
         <div><span>Wypłacone</span><b>{totalPaid.toFixed(2)} zł</b></div>
+        <div><span>Odrzucone</span><b>{rejectedRequests.length}</b></div>
+      </div>
+
+      <div className="admin-cron-card">
+        <div>
+          <strong>Automatyczne wypłaty — cron ready</strong>
+          <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje pending wypłaty od 50 zł i wykonuje Stripe transfer z idempotency key.</span>
+        </div>
+        <b>{automationReady ? 'Gotowe do przetworzenia' : 'Brak pending'}</b>
       </div>
 
       <div className="admin-payout-table">
@@ -1175,6 +1188,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
           <span>Data</span>
           <span>Kwota</span>
           <span>Status</span>
+          <span>Stripe</span>
           <span>Akcje</span>
         </div>
 
@@ -1184,8 +1198,12 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
             <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
             <span><b>{Number(request.amount || 0).toFixed(2)} zł</b></span>
             <span className={`payout-status ${request.status || 'pending'}`}>{request.status || 'pending'}</span>
+            <span className="admin-stripe-cell">
+              <b>{request.stripe_status || '—'}</b>
+              {request.stripe_transfer_id ? <small>{request.stripe_transfer_id}</small> : <small>{request.processed_at ? new Date(request.processed_at).toLocaleString('pl-PL') : 'czeka'}</small>}
+            </span>
             <span className="admin-actions">
-              <button type="button" disabled={request.status !== 'pending'} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Zatwierdź i wypłacone</button>
+              <button type="button" disabled={request.status !== 'pending'} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Stripe transfer</button>
               <button type="button" disabled={request.status !== 'pending'} className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>❌ Odrzuć</button>
             </span>
           </div>
@@ -1198,8 +1216,8 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
       </div>
 
       <div className="stripe-connect-note">
-        <strong>Stripe Connect — kolejny etap</strong>
-        <span>Po podpięciu Connect status paid będzie można powiązać z realną wypłatą.</span>
+        <strong>System finalizacji wypłat</strong>
+        <span>Manual approve wykonuje realny Stripe transfer. Cron może przetwarzać pending automatycznie, jeżeli ustawisz CRON_SECRET i harmonogram Netlify.</span>
       </div>
     </section>
   )
@@ -1536,7 +1554,7 @@ function App() {
         const response = await fetch('/.netlify/functions/approve-payout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ request_id: requestId })
+          body: JSON.stringify({ request_id: requestId, admin_user_id: sessionUser.id })
         })
 
         const data = await response.json().catch(() => ({}))
@@ -1544,14 +1562,13 @@ function App() {
         if (!response.ok) {
           throw new Error(data.error || 'Nie udało się wykonać realnej wypłaty Stripe Connect.')
         }
-      }
+      } else {
+        const { error } = await supabase.rpc('reject_tipster_payout', { p_request_id: requestId })
 
-      const rpcName = status === 'rejected' ? 'reject_tipster_payout' : 'approve_tipster_payout'
-      const { error } = await supabase.rpc(rpcName, { p_request_id: requestId })
-
-      if (error) {
-        showToast({ type: 'error', title: 'Błąd aktualizacji', message: formatAppErrorMessage(error.message) })
-        return
+        if (error) {
+          showToast({ type: 'error', title: 'Błąd aktualizacji', message: formatAppErrorMessage(error.message) })
+          return
+        }
       }
 
       showToast({
@@ -1696,11 +1713,16 @@ function App() {
 
       const available = Number(tipsterEarnings?.available_to_payout || 0)
 
-      if (!available || available <= 0) {
+      if (!stripeConnectStatus?.payouts_enabled) {
+        showToast({ type: 'error', title: 'Stripe niegotowy', message: 'Najpierw połącz i dokończ Stripe Connect, aby wypłaty mogły być realizowane.' })
+        return
+      }
+
+      if (!available || available < 50) {
         showToast({
           type: 'error',
-          title: 'Brak środków do wypłaty',
-          message: 'Nie masz jeszcze zarobków z premium typów. Najpierw ktoś musi kupić Twój płatny typ.'
+          title: 'Minimum wypłaty 50 zł',
+          message: 'Zgłoszenie wypłaty będzie dostępne po przekroczeniu minimum 50 zł dostępnych zarobków.'
         })
         return
       }

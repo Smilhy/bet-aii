@@ -622,3 +622,22 @@ Naprawiono:
 - stary tekst `Następny etap: Stripe Connect` w zakładce Wypłaty,
 - przycisk wypłaty nie jest już blokowany bez komunikatu.
 \n## Wersja 91 — real payout approve\nDodano realny endpoint `/.netlify/functions/approve-payout`, który robi Stripe transfer do connected account, ustawia payout jako `paid`, zapisuje `stripe_transfer_id`, ledger payout i admin log.\n
+
+## Wersja 92 — finalizacja wypłat Stripe Connect
+
+Dodane:
+- minimum payout: 50 zł po stronie frontendu i Supabase RPC `create_payout_request`,
+- manualny admin approve wykonuje realny Stripe transfer przez `/.netlify/functions/approve-payout`,
+- po transferze payout dostaje status `paid`, `stripe_status=transferred`, `stripe_transfer_id` i `processed_at`,
+- panel Admin wypłaty PRO pokazuje status Stripe, transfer ID i sekcję cron,
+- automatyczne wypłaty cron: `/.netlify/functions/process-payouts`,
+- cron obsługuje pending wypłaty >= 50 zł, Stripe Connect `payouts_enabled`, idempotency key oraz logi w `admin_logs`.
+
+Wymagane env na Netlify:
+- `STRIPE_SECRET_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_URL` albo `VITE_SUPABASE_URL`
+- opcjonalnie `MIN_PAYOUT_AMOUNT=50`
+- opcjonalnie `PAYOUT_CRON_BATCH_SIZE=10`
+- opcjonalnie `CRON_SECRET` dla ręcznego wywołania endpointu
+

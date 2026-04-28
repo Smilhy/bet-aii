@@ -1959,3 +1959,70 @@ begin
   return v_request_id;
 end;
 $$;
+
+-- Wersja 92 — finalizacja wypłat: minimum 50 zł + cron/Stripe transfer ready
+
+alter table public.payout_requests add column if not exists stripe_transfer_id text;
+alter table public.payout_requests add column if not exists stripe_status text;
+alter table public.payout_requests add column if not exists processed_at timestamptz;
+alter table public.payout_requests add column if not exists updated_at timestamptz default now();
+alter table public.payout_requests add column if not exists currency text default 'pln';
+
+create index if not exists payout_requests_status_created_idx
+on public.payout_requests(status, created_at desc);
+
+create or replace function public.create_payout_request(p_amount numeric)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_available numeric := 0;
+  v_request_id uuid;
+  v_min_payout numeric := 50;
+begin
+  if v_user_id is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'INVALID_PAYOUT_AMOUNT';
+  end if;
+
+  if p_amount < v_min_payout then
+    raise exception 'MIN_PAYOUT_50_PLN';
+  end if;
+
+  select coalesce(sum(amount), 0)
+  into v_available
+  from public.wallet_transactions
+  where user_id = v_user_id
+    and status = 'completed'
+    and type in ('earning', 'payout');
+
+  if v_available < v_min_payout then
+    raise exception 'MIN_PAYOUT_50_PLN';
+  end if;
+
+  if v_available < p_amount then
+    raise exception 'INSUFFICIENT_EARNINGS';
+  end if;
+
+  if exists (
+    select 1 from public.payout_requests
+    where user_id = v_user_id and status = 'pending'
+  ) then
+    raise exception 'PAYOUT_ALREADY_PENDING';
+  end if;
+
+  insert into public.payout_requests (user_id, amount, status, currency, created_at, updated_at)
+  values (v_user_id, round(p_amount::numeric, 2), 'pending', 'pln', now(), now())
+  returning id into v_request_id;
+
+  return v_request_id;
+end;
+$$;
+
+grant execute on function public.create_payout_request(numeric) to authenticated;
