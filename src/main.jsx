@@ -53,6 +53,23 @@ class ErrorBoundary extends React.Component {
 }
 
 
+
+function normalizePublicSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+}
+
+function getTipsterPublicUrl(profile, fallbackId) {
+  const rawSlug = profile?.public_slug || profile?.username || (profile?.email ? profile.email.split('@')[0] : '') || fallbackId || ''
+  const slug = normalizePublicSlug(rawSlug) || fallbackId
+  if (typeof window === 'undefined') return `/tipster/${slug}`
+  return `${window.location.origin}/tipster/${slug}`
+}
+
 function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
@@ -406,7 +423,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
       setLoading(true)
       try {
         const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
-          supabase.from('profiles').select('id,email,plan,subscription_status').eq('id', tipsterId).maybeSingle(),
+          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status').eq('id', tipsterId).maybeSingle(),
           supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
           supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
           supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
@@ -434,7 +451,16 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     return () => { cancelled = true }
   }, [tipsterId])
 
-  const username = (profile?.email || tipsterTips?.[0]?.author_name || 'Tipster').split('@')[0]
+  const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || 'Tipster').split('@')[0]
+  const publicProfileUrl = getTipsterPublicUrl(profile, tipsterId)
+  const copyPublicProfileLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicProfileUrl)
+      alert('Link profilu skopiowany: ' + publicProfileUrl)
+    } catch {
+      window.prompt('Skopiuj link profilu:', publicProfileUrl)
+    }
+  }
   const initials = username.slice(0, 2).toUpperCase()
   const totalTips = Number(stats?.total_tips || tipsterTips.length || 0)
   const wins = Number(stats?.wins || tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'win').length || 0)
@@ -476,7 +502,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
                 </button>
               )}
               {!isOwn && <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do profilu</button>}
+              <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>🔗 Udostępnij</button>
             </div>
+            <div className="public-profile-link" onClick={copyPublicProfileLink}>{publicProfileUrl.replace(/^https?:\/\//, '')}</div>
           </div>
         </div>
         <div className="tipster-profile-summary">
@@ -498,6 +526,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
               <div className="sales-actions">
                 <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
                 <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}</button>
+                <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>Kopiuj link</button>
               </div>
             )}
           </div>
@@ -1905,6 +1934,37 @@ function App() {
   const [notifications, setNotifications] = useState([])
   const [realRanking, setRealRanking] = useState([])
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
+  const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const match = window.location.pathname.match(/^\/tipster\/([^/?#]+)/)
+    return match ? decodeURIComponent(match[1]) : null
+  })
+
+  async function resolvePublicTipsterBySlug(slug) {
+    const cleanSlug = normalizePublicSlug(slug)
+    if (!cleanSlug || !isSupabaseConfigured || !supabase) return
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id,email,username,public_slug')
+        .or(`public_slug.eq.${cleanSlug},username.eq.${cleanSlug}`)
+        .limit(1)
+        .maybeSingle()
+
+      if (error) {
+        console.error('resolvePublicTipsterBySlug error', error)
+        return
+      }
+
+      if (data?.id) {
+        setSelectedTipsterId(data.id)
+        setView('dashboard')
+      }
+    } catch (error) {
+      console.error('resolvePublicTipsterBySlug exception', error)
+    }
+  }
 
   async function fetchRealRanking() {
     if (!isSupabaseConfigured || !supabase) {
@@ -2117,6 +2177,13 @@ function App() {
     showToast({ type: 'success', title: 'Powiadomienia', message: 'Oznaczono jako przeczytane.' })
   }
 
+
+  useEffect(() => {
+    if (pendingPublicSlug) {
+      resolvePublicTipsterBySlug(pendingPublicSlug)
+      setPendingPublicSlug(null)
+    }
+  }, [pendingPublicSlug])
 
   useEffect(() => {
     try {

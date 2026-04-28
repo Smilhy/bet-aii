@@ -838,3 +838,19 @@ Po wrzuceniu paczki uruchom w Supabase:
 `supabase/version_120_live_stats_top_tipsters.sql`
 
 Potem Netlify: **Clear cache and deploy site**.
+
+## Wersja 121 — Public Profile Link + Share
+
+Dodano publiczne profile tipsterów jako landing sprzedażowy:
+
+- link profilu `/tipster/username`,
+- przycisk `Udostępnij` / `Kopiuj link`,
+- obsługa bezpośredniego wejścia z linku dzięki Netlify redirects,
+- kolumny `username` i `public_slug` w `profiles`,
+- unikalne slugi i automatyczne generowanie z emaila.
+
+Po deployu uruchom w Supabase SQL Editor:
+
+`supabase/version_121_public_profile_share.sql`
+
+Potem Netlify: `Clear cache and deploy site`.

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-120-live-stats-top-tipsters",
-  "version": "120.0.0",
+  "name": "betai-wersja-121-public-profile-share",
+  "version": "121.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
