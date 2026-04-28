@@ -573,3 +573,20 @@ Naprawiono brak widocznej zakładki `🏦 Admin wypłaty`.
 Dodano render widoku i przyciski:
 - ✅ Zatwierdź i wypłacone
 - ❌ Odrzuć
+
+## Wersja 88 — realne Stripe Connect payouts
+Dodano:
+- `create-stripe-account.js` — tipster tworzy konto Stripe Express i onboarding link,
+- `send-real-stripe-payout.js` — admin zatwierdza payout i wykonywany jest realny Stripe transfer,
+- `stripe-webhook.js` obsługuje `account.updated`,
+- tabela `user_stripe_accounts`,
+- kolumny `stripe_transfer_id`, `stripe_status` w `payout_requests`,
+- karta Stripe Connect w panelu Zarobki.
+W Stripe webhook dodaj eventy:
+- `checkout.session.completed`
+- `account.updated`
+Wymagane ENV:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
+- VITE_SUPABASE_URL albo SUPABASE_URL

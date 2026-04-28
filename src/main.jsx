@@ -1533,19 +1533,16 @@ function App() {
 
     try {
       if (status !== 'rejected') {
-        try {
-          const response = await fetch('/.netlify/functions/send-tipster-payout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ request_id: requestId })
-          })
+        const response = await fetch('/.netlify/functions/send-real-stripe-payout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request_id: requestId })
+        })
 
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}))
-            console.warn('Stripe Connect payout skipped/fallback:', data.error || response.status)
-          }
-        } catch (stripeError) {
-          console.warn('Stripe Connect payout fallback:', stripeError)
+        const data = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Nie udało się wykonać realnej wypłaty Stripe Connect.')
         }
       }
 
@@ -1927,6 +1924,22 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    if (params.get('stripe_connect') === 'success') {
+      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Możesz odbierać wypłaty.' })
+      if (sessionUser?.id) fetchStripeConnectStatus(sessionUser.id)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
+    if (params.get('stripe_connect') === 'refresh') {
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [sessionUser?.id])
 
   useEffect(() => {
     if (view === 'adminPayouts' && isAdminUser(sessionUser)) {

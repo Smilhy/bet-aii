@@ -20,17 +20,15 @@ exports.handler = async (event) => {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    let accountId;
-
     const { data: existing } = await supabase
       .from('user_stripe_accounts')
-      .select('stripe_account_id')
+      .select('*')
       .eq('user_id', user_id)
       .maybeSingle();
 
-    if (existing?.stripe_account_id) {
-      accountId = existing.stripe_account_id;
-    } else {
+    let accountId = existing?.stripe_account_id;
+
+    if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
         email: email || undefined,
@@ -46,7 +44,8 @@ exports.handler = async (event) => {
         user_id,
         stripe_account_id: accountId,
         charges_enabled: Boolean(account.charges_enabled),
-        payouts_enabled: Boolean(account.payouts_enabled)
+        payouts_enabled: Boolean(account.payouts_enabled),
+        updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
 
       if (error) throw error;
