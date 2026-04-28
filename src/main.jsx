@@ -96,9 +96,9 @@ function isUserTip(tip) {
 
 function isLiveAiTip(tip) {
   const aiSource = String(tip?.ai_source || '').toLowerCase()
-  const source = String(tip?.source || '').toLowerCase()
-  const liveStatus = String(tip?.live_status || '').trim()
-  return aiSource === 'real_ai_engine' && (source.startsWith('live_ai_engine') || liveStatus || Number(tip?.live_minute || 0) > 0)
+  const liveStatus = String(tip?.live_status || '').trim().toUpperCase()
+  const status = String(tip?.status || '').toLowerCase()
+  return aiSource === 'real_ai_engine' && liveStatus !== 'NS' && (status === 'live' || Number(tip?.live_minute || 0) > 0)
 }
 
 function isPreMatchAiTip(tip) {
@@ -1472,7 +1472,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
           const res = resultOf(tip)
           const p = profitOf(tip)
           return <div className="ai-recent-pick-row" key={tip.id}>
-            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{isLiveAiTip(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + (tip.live_score_home ?? 0) + ':' + (tip.live_score_away ?? 0) : ''}</small></div>
+            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{isLiveAiTip(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + (tip.live_score_home ?? 0) + ':' + (tip.live_score_away ?? 0) : ' • PRE • start wkrótce'}</small></div>
             <div><b>{normalizePick(tip)}</b><small>Realny typ z API-Football</small></div>
             <div><b>{Number(tip.odds || 0).toFixed(2)}</b><small>Odds</small></div>
             <div><b className="success-text">{getAiConfidence(tip)}%</b><small>Confidence</small></div>

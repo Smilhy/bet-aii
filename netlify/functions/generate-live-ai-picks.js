@@ -38,6 +38,58 @@ async function fetchRealFixtures() {
   })
 }
 
+function stableHash(input) {
+  const s = String(input || '')
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return Math.abs(h >>> 0)
+}
+
+function leagueProfile(fixture) {
+  const league = String(fixture?.league?.name || '').toLowerCase()
+  const country = String(fixture?.league?.country || '').toLowerCase()
+  const highGoal = /(women|u21|u20|u19|u18|cup|liga|j2|j3|reserve|youth|premier|brasileiro|libertadores)/i.test(`${league} ${country}`)
+  const cautious = /(japan|korea|finland|iceland|norway|sweden|uruguay|paraguay)/i.test(`${league} ${country}`)
+  return { highGoal, cautious }
+}
+
+function choosePrematchPick(fixture) {
+  const home = fixture?.teams?.home?.name || 'Home'
+  const away = fixture?.teams?.away?.name || 'Away'
+  const league = fixture?.league?.name || 'Football'
+  const country = fixture?.league?.country || ''
+  const h = stableHash(`${fixture?.fixture?.id || ''}|${home}|${away}|${league}|${country}`)
+  const { highGoal, cautious } = leagueProfile(fixture)
+  const bucket = h % 10
+
+  let pick, market, odds, probability, risk
+  if (highGoal && bucket <= 2) {
+    pick = 'Over 2.5 Goals'; market = 'Goals'; odds = 1.82; probability = 66; risk = 'medium'
+  } else if (highGoal && bucket <= 4) {
+    pick = 'BTTS - Yes'; market = 'Both Teams To Score'; odds = 1.78; probability = 65; risk = 'medium'
+  } else if (cautious && bucket <= 4) {
+    pick = 'Under 3.5 Goals'; market = 'Goals'; odds = 1.48; probability = 74; risk = 'low'
+  } else if (bucket === 5) {
+    pick = `${home} Draw No Bet`; market = 'Draw No Bet'; odds = 1.72; probability = 67; risk = 'medium'
+  } else if (bucket === 6) {
+    pick = `${away} +1.5 Handicap`; market = 'Asian Handicap'; odds = 1.50; probability = 72; risk = 'low'
+  } else if (bucket === 7) {
+    pick = 'Under 2.5 Goals'; market = 'Goals'; odds = 1.92; probability = 61; risk = 'medium'
+  } else if (bucket === 8) {
+    pick = `${home} or Draw`; market = 'Double Chance'; odds = 1.42; probability = 76; risk = 'low'
+  } else {
+    pick = 'Over 1.5 Goals'; market = 'Goals'; odds = 1.45; probability = 73; risk = 'low'
+  }
+
+  const jitter = ((h % 7) - 3) / 100
+  odds = round(clamp(odds + jitter, 1.30, 2.35), 2)
+  probability = clamp(probability + ((Math.floor(h / 10) % 7) - 3), 55, 82)
+  return { pick, market, odds, probability, risk }
+}
+
 function choosePick(fixture) {
   const minute = Number(fixture?.fixture?.status?.elapsed || 0)
   const statusShort = String(fixture?.fixture?.status?.short || 'NS').toUpperCase()
@@ -48,9 +100,9 @@ function choosePick(fixture) {
   const home = fixture?.teams?.home?.name || 'Home'
   const away = fixture?.teams?.away?.name || 'Away'
 
-  let pick = 'Over 1.5 Goals', market = 'Goals', odds = 1.58, probability = 67, risk = 'low'
+  let pick, market, odds, probability, risk
   if (statusShort === 'NS') {
-    pick = 'Over 1.5 Goals'; market = 'Goals'; odds = 1.55; probability = 68; risk = 'low'
+    ;({ pick, market, odds, probability, risk } = choosePrematchPick(fixture))
   } else if (minute <= 30 && total === 0) {
     pick = 'Under 3.5 Goals'; market = 'Goals'; odds = 1.62; probability = 69; risk = 'low'
   } else if (minute <= 55 && total >= 2) {
@@ -61,13 +113,14 @@ function choosePick(fixture) {
     pick = 'Under 2.5 Goals'; market = 'Goals'; odds = 1.58; probability = 71; risk = 'low'
   } else if (total >= 3) {
     pick = 'Over 3.5 Goals'; market = 'Goals'; odds = 2.05; probability = 58; risk = 'high'
+  } else {
+    pick = 'Over 1.5 Goals'; market = 'Goals'; odds = 1.58; probability = 67; risk = 'low'
   }
   const implied = round((1 / odds) * 100, 2)
   const value = round(probability - implied, 2)
   const confidence = clamp(round(probability + Math.max(0, value / 2), 2), 50, 90)
   return { pick, market, odds, probability, implied, value, confidence, risk }
 }
-
 function buildRow(fixture) {
   const home = fixture?.teams?.home?.name || 'Home'
   const away = fixture?.teams?.away?.name || 'Away'
