@@ -85,6 +85,16 @@ function getAiConfidence(tip) {
   return Math.max(0, Math.min(100, Math.round(Number(tip?.ai_confidence ?? tip?.ai_probability ?? tip?.confidence ?? 0) || 0)))
 }
 
+function isAiGeneratedTip(tip) {
+  const source = String(tip?.ai_source || tip?.source || '').toLowerCase()
+  const author = String(tip?.author_name || '').toLowerCase()
+  return source === 'real_ai_engine' || source === 'ai_engine' || author === 'ai tip'
+}
+
+function isUserTip(tip) {
+  return !isAiGeneratedTip(tip)
+}
+
 function getAiScore(tip) {
   const confidence = getAiConfidence(tip)
   const odds = Number(tip?.odds || 0)
@@ -296,7 +306,7 @@ return (
         <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
         {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
-        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>✦ AI Typy</button>
+        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
         <button>▣ Moje subskrypcje</button>
@@ -1195,7 +1205,7 @@ function StatsView({ tips = [] }) {
 }
 
 function AiPicksView({ tips = [], loading = false, generating = false, onGenerate, onRefresh }) {
-  const aiTips = tips.filter(t => getAiConfidence(t) > 0 || t.author_name === 'AI Tip').slice().sort((a,b) => getAiScore(b) - getAiScore(a))
+  const aiTips = tips.filter(isAiGeneratedTip).slice().sort((a,b) => getAiScore(b) - getAiScore(a))
   const top = aiTips.slice(0, 3)
   return (
     <section className="ai-pro-page">
@@ -3408,12 +3418,14 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
-  const filteredTips = tips.filter(tip => {
+  const userOnlyTips = tips.filter(isUserTip)
+  const aiOnlyTips = tips.filter(isAiGeneratedTip)
+
+  const filteredTips = userOnlyTips.filter(tip => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
     if (activeFilter === 'premium') return tip.access_type === 'premium'
-    if (activeFilter === 'ai') return tip.author_name === 'AI Tip' || getAiConfidence(tip) > 0
-    if (activeFilter === 'mine') return (tip.author_name || 'AdrianNowak') === 'AdrianNowak'
+    if (activeFilter === 'mine') return (tip.author_id && sessionUser?.id ? tip.author_id === sessionUser.id : (tip.author_name || 'AdrianNowak') === 'AdrianNowak')
     return true
   })
 
@@ -3421,7 +3433,6 @@ function App() {
     ['all', 'Wszystkie'],
     ['free', 'Darmowe'],
     ['premium', 'Premium'],
-    ['ai', 'AI Typy'],
     ['mine', 'Moje']
   ]
 
@@ -3572,7 +3583,7 @@ function App() {
                 <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
-                <b>{tips.filter(t => t.access_type === 'premium').length}</b>
+                <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b>
                 <small>typów premium</small>
               </div>
             </div>
@@ -3590,9 +3601,9 @@ function App() {
             </div>
 
             <div className="feed-stats">
-              <span>Wszystkie: <b>{tips.length}</b></span>
-              <span>Premium: <b>{tips.filter(t => t.access_type === 'premium').length}</b></span>
-              <span>Darmowe: <b>{tips.filter(t => t.access_type === 'free').length}</b></span>
+              <span>Wszystkie: <b>{userOnlyTips.length}</b></span>
+              <span>Premium: <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b></span>
+              <span>Darmowe: <b>{userOnlyTips.filter(t => t.access_type === 'free').length}</b></span>
             </div>
 
             <div className="feed">

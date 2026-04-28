@@ -116,6 +116,7 @@ exports.handler = async function () {
         status: 'pending',
         result: 'pending',
         source: 'real_ai_engine',
+        ai_source: 'real_ai_engine',
         event_time: fixture?.fixture?.date || null,
         created_at: new Date().toISOString()
       })

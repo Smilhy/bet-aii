@@ -890,3 +890,12 @@ Po deployu przetestuj:
 3. Zarejestruj nowe konto.
 4. Zrób zakup przez Stripe.
 5. Sprawdź, czy w Polecenia rośnie liczba poleconych i prowizja.
+
+## Wersja 134 — AI/User Feed Separation + Deep Stats
+
+- Dashboard pokazuje tylko typy użytkowników/typerów.
+- Zakładka **Typy AI** pokazuje tylko typy wygenerowane przez backend `real_ai_engine`.
+- Dodano widoki Supabase: `user_only_tips`, `ai_only_picks`, `real_ai_top_picks`, `ai_stats_overview`, `ai_stats_by_league`, `ai_stats_by_market`, `ai_stats_by_risk`.
+- Styl i układ zostają spójne z wersją 128/133.
+
+SQL do odpalenia: `supabase/version_134_ai_user_separation_deep_stats.sql`.
