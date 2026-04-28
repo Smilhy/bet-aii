@@ -925,3 +925,35 @@ Dashboard użytkowników pozostaje osobno. Typy AI pokazują tylko rekordy z `ai
 SQL do odpalenia: `supabase/version_136_ai_dashboard_premium.sql`
 
 ENV w Netlify: `OPENAI_API_KEY`, `API_FOOTBALL_KEY`, `ODDS_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+
+## Wersja 138 — REAL AI (prawdziwe mecze)
+
+Ta wersja usuwa generator testowy i podmienia go na generator oparty o realne dane:
+
+- The Odds API: realne nadchodzące mecze i kursy
+- API-Football: dodatkowe metadane meczu/liga/kraj, jeśli dostępne
+- OpenAI: krótki opis analizy value bet
+
+Wymagane ENV w Netlify:
+
+```env
+ODDS_API_KEY=...
+API_FOOTBALL_KEY=...
+OPENAI_API_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_URL=... albo VITE_SUPABASE_URL=...
+```
+
+Opcjonalne ENV:
+
+```env
+ODDS_SPORT_KEYS=soccer_epl,soccer_spain_la_liga,soccer_italy_serie_a
+ODDS_REGIONS=eu,uk
+ODDS_MARKETS=h2h,totals
+MIN_VALUE_SCORE=2.5
+AI_PICK_LIMIT=20
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Po deployu kliknij w zakładce Typy AI: Generate AI Picks.
+Generator zapisuje tylko realne picki z `ai_source = real_ai_engine`.

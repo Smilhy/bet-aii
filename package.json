@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-136-ai-picks-dashboard-premium",
-  "version": "136.0.0",
+  "name": "betai-wersja-138-real-matches-ai-engine",
+  "version": "138.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
