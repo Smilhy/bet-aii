@@ -1524,6 +1524,7 @@ function App() {
   }
 
   
+
   async function updatePayoutStatus(requestId, status) {
     if (!sessionUser?.id || !isAdminUser(sessionUser)) {
       showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może zmieniać status wypłat.' })
@@ -1532,17 +1533,19 @@ function App() {
 
     try {
       if (status !== 'rejected') {
-        const payout = (adminPayoutRequests || []).find(item => item.id === requestId)
-        if (payout) {
+        try {
           const response = await fetch('/.netlify/functions/send-tipster-payout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ request_id: requestId })
           })
-          const data = await response.json().catch(() => ({}))
+
           if (!response.ok) {
-            throw new Error(data.error || 'Nie udało się wysłać wypłaty Stripe Connect.')
+            const data = await response.json().catch(() => ({}))
+            console.warn('Stripe Connect payout skipped/fallback:', data.error || response.status)
           }
+        } catch (stripeError) {
+          console.warn('Stripe Connect payout fallback:', stripeError)
         }
       }
 
@@ -1554,8 +1557,14 @@ function App() {
         return
       }
 
-      showToast({ type: 'success', title: 'Status zmieniony', message: status === 'rejected' ? 'Wypłata odrzucona.' : 'Wypłata zatwierdzona i oznaczona jako wypłacona.' })
+      showToast({
+        type: 'success',
+        title: 'Status zmieniony',
+        message: status === 'rejected' ? 'Wypłata odrzucona.' : 'Wypłata zatwierdzona i oznaczona jako wypłacona.'
+      })
+
       await fetchAdminPayoutRequests()
+      await fetchAdminFinanceReport()
       if (sessionUser?.id) {
         await fetchPayoutRequests(sessionUser.id)
         await fetchTipsterEarnings(sessionUser.id)
@@ -1915,6 +1924,17 @@ function App() {
   useEffect(() => {
     if (view === 'adminFinance' && isAdminUser(sessionUser)) {
       fetchAdminFinanceReport()
+    }
+  }, [view, sessionUser?.id])
+
+
+  useEffect(() => {
+    if (view === 'adminPayouts' && isAdminUser(sessionUser)) {
+      fetchAdminPayoutRequests()
+    }
+    if (view === 'adminFinance' && isAdminUser(sessionUser)) {
+      fetchAdminFinanceReport()
+      fetchAdminPayoutRequests()
     }
   }, [view, sessionUser?.id])
 

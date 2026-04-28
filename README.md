@@ -560,3 +560,10 @@ Naprawiono pustą zakładkę `Admin finanse`: dodano brakujący render `<AdminFi
 
 ## Wersja 85 — Admin finanse visible fix
 Naprawiono pustą stronę po kliknięciu `Admin finanse`: render bloku został dodany bezpośrednio do `<main>`.
+
+## Wersja 86 — final admin approve UI
+Dodano:
+- osobna zakładka `🏦 Admin wypłaty`,
+- przyciski `✅ Zatwierdź i wypłacone` oraz `❌ Odrzuć`,
+- fallback: jeśli Stripe Connect transfer nie przejdzie, admin nadal może ręcznie oznaczyć wypłatę jako paid,
+- `admin_logs` zapisuje kto i kiedy zatwierdził/odrzucił payout.

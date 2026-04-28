@@ -1685,3 +1685,125 @@ as $$
 $$;
 
 grant execute on function public.get_admin_finance_report() to authenticated;
+
+
+-- Wersja 86 — final admin approve UI backend safety
+
+create table if not exists public.admin_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_user_id uuid references auth.users(id) on delete set null,
+  action text not null,
+  target_table text,
+  target_id uuid,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_logs enable row level security;
+
+create or replace function public.approve_tipster_payout(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req record;
+  available numeric := 0;
+begin
+  if auth.uid() is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  select * into req
+  from public.payout_requests
+  where id = p_request_id
+  for update;
+
+  if not found then
+    raise exception 'PAYOUT_NOT_FOUND';
+  end if;
+
+  if req.status <> 'pending' then
+    raise exception 'PAYOUT_ALREADY_PROCESSED';
+  end if;
+
+  available := public.get_tipster_available_payout(req.user_id);
+
+  if available < req.amount then
+    raise exception 'INSUFFICIENT_EARNINGS';
+  end if;
+
+  insert into public.wallet_transactions (
+    user_id, amount, type, provider, provider_session_id, status
+  )
+  values (
+    req.user_id,
+    req.amount,
+    'payout',
+    'manual_admin',
+    'payout_' || p_request_id::text,
+    'completed'
+  );
+
+  update public.payout_requests
+  set status = 'paid',
+      updated_at = now()
+  where id = p_request_id;
+
+  insert into public.admin_logs (admin_user_id, action, target_table, target_id, metadata)
+  values (
+    auth.uid(),
+    'approve_payout',
+    'payout_requests',
+    p_request_id,
+    jsonb_build_object('user_id', req.user_id, 'amount', req.amount)
+  );
+end;
+$$;
+
+grant execute on function public.approve_tipster_payout(uuid) to authenticated;
+
+create or replace function public.reject_tipster_payout(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req record;
+begin
+  if auth.uid() is null then
+    raise exception 'NOT_AUTHENTICATED';
+  end if;
+
+  select * into req
+  from public.payout_requests
+  where id = p_request_id
+  for update;
+
+  if not found then
+    raise exception 'PAYOUT_NOT_FOUND';
+  end if;
+
+  if req.status <> 'pending' then
+    raise exception 'PAYOUT_ALREADY_PROCESSED';
+  end if;
+
+  update public.payout_requests
+  set status = 'rejected',
+      updated_at = now()
+  where id = p_request_id;
+
+  insert into public.admin_logs (admin_user_id, action, target_table, target_id, metadata)
+  values (
+    auth.uid(),
+    'reject_payout',
+    'payout_requests',
+    p_request_id,
+    jsonb_build_object('user_id', req.user_id, 'amount', req.amount)
+  );
+end;
+$$;
+
+grant execute on function public.reject_tipster_payout(uuid) to authenticated;

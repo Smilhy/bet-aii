@@ -1544,3 +1544,15 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .finance-bar .tipster{background:#2563eb;display:flex;align-items:center;justify-content:center}
 @media(max-width:1000px){.admin-finance-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.admin-finance-grid{grid-template-columns:1fr}.admin-finance-title{flex-direction:column;align-items:flex-start}.admin-finance-title button{width:100%}}
+
+.admin-payout-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.admin-payout-summary>div{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+.admin-payout-summary span{display:block;color:#64748b;font-weight:900}
+.admin-payout-summary strong{display:block;font-size:28px;margin-top:8px;color:#0f172a}
+.admin-payout-summary p{margin:6px 0 0;color:#64748b}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+.admin-actions button{border:none;border-radius:10px;background:#0f766e;color:#fff;font-weight:900;padding:8px 10px;cursor:pointer}
+.admin-actions button.danger{background:#dc2626}
+.admin-actions button:disabled{opacity:.45;cursor:not-allowed}
+.status-pill.danger{background:#fee2e2;color:#991b1b}
+@media(max-width:720px){.admin-payout-summary{grid-template-columns:1fr}}
