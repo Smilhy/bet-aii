@@ -1257,12 +1257,15 @@ function AiEventCard({ tip }) {
   )
 }
 
-function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGenerateLive, onRefresh }) {
+function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const [sport, setSport] = useState('all')
   const [league, setLeague] = useState('all')
   const [betType, setBetType] = useState('all')
   const [timeRange, setTimeRange] = useState('all')
-  const [mode, setMode] = useState('live')
+  const [mode, setMode] = useState('topvalue')
+  const [minValue, setMinValue] = useState(5)
+  const [minOdds, setMinOdds] = useState(1.35)
+  const [minProbability, setMinProbability] = useState(60)
 
   const aiTips = (tips || [])
     .filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
@@ -1271,7 +1274,20 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
 
   const normalizeSport = (value) => String(value || 'football').toLowerCase()
   const normalizeLeague = (tip) => String(tip.league_name || tip.league || 'Unknown')
-  const normalizePick = (tip) => String(tip.pick || tip.bet_type || tip.prediction || tip.type || 'AI Pick')
+  const normalizePick = (tip) => String(tip.pick || tip.selection || tip.bet_type || tip.prediction || tip.type || 'AI Pick')
+  const normalizeMarket = (tip) => String(tip.market || tip.bet_type || tip.type || 'AI')
+  const valueOf = (tip) => Number(tip.value_score ?? tip.value ?? 0) || 0
+  const probabilityOf = (tip) => Number(tip.model_probability ?? tip.probability ?? tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0) || 0
+  const qualityBadge = (tip) => {
+    const v = valueOf(tip)
+    const p = probabilityOf(tip)
+    const odds = Number(tip.odds || 0)
+    if (v >= 12 && p >= 68 && odds >= 1.55) return { icon: '💎', text: 'DIAMOND', cls: 'diamond' }
+    if (v >= 8 && p >= 64) return { icon: '🔥', text: 'HOT VALUE', cls: 'hot' }
+    if (v >= 5 && p >= 60) return { icon: '⭐', text: 'VALUE', cls: 'star' }
+    return { icon: '⚪', text: 'LOW', cls: 'low' }
+  }
+  const isStrongValue = (tip) => valueOf(tip) >= Number(minValue) && probabilityOf(tip) >= Number(minProbability) && Number(tip.odds || 0) >= Number(minOdds)
   const stake = 100
   const resultOf = (tip) => normalizeResult(tip.result || tip.status)
   const profitOf = (tip) => {
@@ -1284,6 +1300,36 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
     return 0
   }
   const isSettled = (tip) => ['win', 'loss', 'void'].includes(resultOf(tip))
+  const isLiveMatch = (tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    const liveStatus = String(tip.live_status || '').toUpperCase()
+    return !isSettled(tip) && liveStatus !== 'NS' && liveStatus !== 'FT' && (status === 'live' || Number(tip.live_minute || 0) > 0)
+  }
+  const isUpcomingMatch = (tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    const liveStatus = String(tip.live_status || '').toUpperCase()
+    return !isSettled(tip) && (status === 'pending' || liveStatus === 'NS')
+  }
+  const scoreText = (tip) => {
+    const h = tip.live_score_home ?? tip.final_score_home ?? tip.home_score ?? null
+    const a = tip.live_score_away ?? tip.final_score_away ?? tip.away_score ?? null
+    if (h === null || a === null || h === undefined || a === undefined) return '-:-'
+    return h + ':' + a
+  }
+  const kickoffLabel = (tip) => {
+    const raw = tip.kickoff_time || tip.match_time || tip.event_time || tip.created_at
+    const d = new Date(raw)
+    if (Number.isNaN(d.getTime())) return 'czas nieznany'
+    return d.toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+  }
+  const resultLabel = (tip) => {
+    const res = resultOf(tip)
+    if (res === 'win') return { text: 'WYGRANA', icon: '✅', cls: 'win' }
+    if (res === 'loss') return { text: 'PRZEGRANA', icon: '❌', cls: 'loss' }
+    if (res === 'void') return { text: 'ZWROT', icon: '↩️', cls: 'void' }
+    if (isLiveMatch(tip)) return { text: 'LIVE', icon: '🔴', cls: 'live' }
+    return { text: 'SOON', icon: '⏱', cls: 'pending' }
+  }
   const inTimeRange = (tip) => {
     if (timeRange === 'all') return true
     const d = new Date(tip.kickoff_time || tip.match_time || tip.created_at)
@@ -1296,20 +1342,24 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
     return true
   }
 
-  const liveTips = aiTips.filter(t => String(t.live_status || '').toUpperCase() !== 'NS' && (String(t.status || '').toLowerCase() === 'live' || Number(t.live_minute || 0) > 0))
-  const upcomingTips = aiTips.filter(t => String(t.live_status || '').toUpperCase() === 'NS' || String(t.status || '').toLowerCase() === 'pending')
+  const liveTips = aiTips.filter(isLiveMatch)
+  const upcomingTips = aiTips.filter(isUpcomingMatch).sort((a, b) => new Date(a.kickoff_time || a.match_time || a.created_at) - new Date(b.kickoff_time || b.match_time || b.created_at))
+  const settledTips = aiTips.filter(isSettled)
+  const topValueTips = aiTips.filter(t => !isSettled(t) && isStrongValue(t)).sort((a, b) => valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))
 
   const filtered = aiTips.filter((tip) => {
-    if (mode === 'live' && !(String(tip.live_status || '').toUpperCase() !== 'NS' && (String(tip.status || '').toLowerCase() === 'live' || Number(tip.live_minute || 0) > 0))) return false
-    if (mode === 'upcoming' && !(String(tip.live_status || '').toUpperCase() === 'NS' || String(tip.status || '').toLowerCase() === 'pending')) return false
+    if (mode === 'topvalue' && (!isStrongValue(tip) || isSettled(tip))) return false
+    if (mode === 'live' && (!isLiveMatch(tip) || !isStrongValue(tip))) return false
+    if (mode === 'upcoming' && (!isUpcomingMatch(tip) || !isStrongValue(tip))) return false
+    if (mode === 'settled' && !isSettled(tip)) return false
     if (sport !== 'all' && normalizeSport(tip.sport) !== sport) return false
     if (league !== 'all' && normalizeLeague(tip) !== league) return false
     if (betType !== 'all' && normalizePick(tip) !== betType) return false
     if (!inTimeRange(tip)) return false
     return true
-  })
+  }).sort((a, b) => (mode === 'settled' ? new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at) : valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))).slice(0, mode === 'topvalue' ? 20 : 30)
 
-  const settled = filtered.filter(isSettled)
+  const settled = settledTips
   const wins = settled.filter(t => resultOf(t) === 'win').length
   const losses = settled.filter(t => resultOf(t) === 'loss').length
   const pushes = settled.filter(t => resultOf(t) === 'void').length
@@ -1331,7 +1381,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
     { key: 'volleyball', icon: '🏐', title: 'Volleyball', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'volleyball').length} picks` },
   ]
 
-  const leagueMap = filtered.reduce((acc, tip) => {
+  const leagueMap = settledTips.reduce((acc, tip) => {
     const name = normalizeLeague(tip)
     if (!acc[name]) acc[name] = { name, picks: 0, wins: 0, losses: 0, profit: 0 }
     acc[name].picks += 1
@@ -1350,14 +1400,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
     { label: '2.51 - 3.00', test: o => o >= 2.5 && o < 3 },
     { label: '3.01+', test: o => o >= 3 },
   ].map((range) => {
-    const rows = filtered.filter(t => range.test(Number(t.odds || 0)))
+    const rows = settledTips.filter(t => range.test(Number(t.odds || 0)))
     const rWins = rows.filter(t => resultOf(t) === 'win').length
     const rLosses = rows.filter(t => resultOf(t) === 'loss').length
     const max = Math.max(1, rWins, rLosses)
     return { ...range, wins: rWins, losses: rLosses, winH: Math.max(10, Math.round((rWins / max) * 100)), lossH: Math.max(10, Math.round((rLosses / max) * 100)) }
   })
 
-  const recent = filtered.filter(t => ['win','loss','void','pending'].includes(resultOf(t))).slice(0, 20)
+  const recent = settledTips.slice(0, 20)
   const recentResults = recent.map(resultOf)
   const current = recentResults[0] || 'pending'
   let currentCount = 0
@@ -1377,19 +1427,29 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
           <span className="ai-logo-mark">▟</span>
           <div>
             <h1>AI Picks Dashboard</h1>
-            <p>Real-time AI-powered betting insights</p>
+            <p>TOP VALUE, LIVE, Zaraz startują oraz Zakończone/Rozliczone — słabe typy są ukryte</p>
           </div>
         </div>
         <div className="ai-header-actions">
           <span className="ai-live-dot">● Last updated: now</span>
           <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
-          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję realne mecze...' : 'Skanuj realne mecze'}</button>
+          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button>
+          <button className="ai-live-action settle" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button>
         </div>
       </header>
 
       <div className="ai-control-row ai-mode-row">
-        <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>🔴 LIVE teraz ({liveTips.length})</button>
-        <button className={mode === 'upcoming' ? 'active' : ''} onClick={() => setMode('upcoming')}>⏱ Zaraz startują ({upcomingTips.length})</button>
+        <button className={mode === 'topvalue' ? 'active' : ''} onClick={() => setMode('topvalue')}>💎 TOP VALUE ({topValueTips.length})</button>
+        <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>🔴 LIVE teraz ({liveTips.filter(isStrongValue).length})</button>
+        <button className={mode === 'upcoming' ? 'active' : ''} onClick={() => setMode('upcoming')}>⏱ Zaraz startują ({upcomingTips.filter(isStrongValue).length})</button>
+        <button className={mode === 'settled' ? 'active' : ''} onClick={() => setMode('settled')}>✅ Zakończone / rozliczone ({settledTips.length})</button>
+      </div>
+
+      <div className="ai-value-filter-panel">
+        <label>Minimalny value <b>{minValue}+ pp</b><input type="range" min="0" max="20" value={minValue} onChange={e => setMinValue(Number(e.target.value))} /></label>
+        <label>Minimalny kurs <b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.00" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
+        <label>Minimalne prawdopodobieństwo <b>{minProbability}%</b><input type="range" min="45" max="85" value={minProbability} onChange={e => setMinProbability(Number(e.target.value))} /></label>
+        <div><strong>{filtered.length}</strong><span>mocnych typów po filtrze. Reszta jest ukryta.</span></div>
       </div>
 
       <div className="ai-sports-filter-bar">
@@ -1412,15 +1472,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
       <div className="ai-kpi-grid">
         <div className="ai-kpi-card profit"><span>Total Profit</span><b>{totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL')} PLN</b><small>{settled.length ? `${roi}% from total stake` : 'No settled AI picks yet'}</small><i /></div>
         <div className="ai-kpi-card"><span>Win Rate</span><b>{winrate}%</b><small>{wins} wins / {settled.length || 0} total</small><i className="blue" /></div>
-        <div className="ai-kpi-card roi"><span>ROI</span><b>{roi >= 0 ? '+' : ''}{roi}%</b><small>Return on Investment</small><i className="purple" /></div>
-        <div className="ai-kpi-card picks"><span>Total Picks</span><b>{filtered.length}</b><small>Tylko realne mecze z API-Football</small><i className="orange" /></div>
+        <div className="ai-kpi-card roi"><span>Rozliczone</span><b>{settledTips.length}</b><small>{pushes} zwrotów, {losses} przegranych</small><i className="purple" /></div>
+        <div className="ai-kpi-card picks"><span>Aktywne mecze</span><b>{liveTips.length + upcomingTips.length}</b><small>{liveTips.length} LIVE / {upcomingTips.length} zaraz startuje</small><i className="orange" /></div>
       </div>
 
       <div className="ai-analytics-grid">
         <div className="ai-panel ai-donut-panel">
           <h3>Win / Loss Distribution</h3>
           <div className="ai-donut-wrap">
-            <div className="ai-donut" style={{ '--win': `${donutWin}%`, '--loss': `${donutLoss}%` }}><strong>{filtered.length}</strong><span>Total</span></div>
+            <div className="ai-donut" style={{ '--win': `${donutWin}%`, '--loss': `${donutLoss}%` }}><strong>{settled.length}</strong><span>Total</span></div>
             <div className="ai-donut-legend">
               <p><i className="green"/> Wins <b>{wins} ({winrate}%)</b></p>
               <p><i className="red"/> Losses <b>{losses}</b></p>
@@ -1465,21 +1525,24 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, onGen
       </div>
 
       <div className="ai-panel ai-recent-picks-panel">
-        <h3>{mode === 'live' ? 'Realne mecze LIVE teraz' : 'Realne mecze, które zaraz startują'}</h3>
+        <h3>{mode === 'topvalue' ? 'TOP VALUE — tylko najmocniejsze typy AI' : mode === 'live' ? 'Realne mecze LIVE teraz — tylko mocne value' : mode === 'upcoming' ? 'Realne mecze, które zaraz startują — tylko mocne value' : 'Zakończone / rozliczone mecze'}</h3>
         {filtered.length ? filtered.slice(0, 12).map(tip => {
           const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
           const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
           const res = resultOf(tip)
           const p = profitOf(tip)
-          return <div className="ai-recent-pick-row" key={tip.id}>
-            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{isLiveAiTip(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + (tip.live_score_home ?? 0) + ':' + (tip.live_score_away ?? 0) : ' • PRE • start wkrótce'}</small></div>
-            <div><b>{normalizePick(tip)}</b><small>Realny typ z API-Football</small></div>
+          const q = qualityBadge(tip)
+          return <div className="ai-recent-pick-row ai-value-row" key={tip.id}>
+            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{mode === 'settled' ? ' • FT • wynik ' + scoreText(tip) + ' • ' + kickoffLabel(tip) : isLiveMatch(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + scoreText(tip) : ' • PRE • start ' + kickoffLabel(tip)}</small></div>
+            <div><b>{normalizePick(tip)}</b><small>{normalizeMarket(tip)} • REAL AI PRO</small></div>
             <div><b>{Number(tip.odds || 0).toFixed(2)}</b><small>Odds</small></div>
-            <div><b className="success-text">{getAiConfidence(tip)}%</b><small>Confidence</small></div>
+            <div><b className="success-text">{probabilityOf(tip).toFixed(0)}%</b><small>Probability</small></div>
+            <div><b className={valueOf(tip) >= 5 ? 'success-text' : 'danger-text'}>{valueOf(tip).toFixed(1)} pp</b><small>Value</small></div>
+            <div><span className={`ai-quality-badge ${q.cls}`}>{q.icon} {q.text}</span></div>
             <div><b className={p < 0 ? 'danger-text' : 'success-text'}>{p >= 0 ? '+' : ''}{Math.round(p)} PLN</b><small>Profit</small></div>
-            <div><span className={`ai-result-pill ${res}`}>{res === 'win' ? 'Won' : res === 'loss' ? 'Lost' : String(tip.live_status || '').toUpperCase() === 'NS' ? 'SOON' : 'LIVE'}</span></div>
+            <div><span className={`ai-result-pill ${res} ${resultLabel(tip).cls}`}>{resultLabel(tip).icon} {resultLabel(tip).text}</span></div>
           </div>
-        }) : <div className="ai-empty-state"><strong>Brak typów AI</strong><span>Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj realne mecze i sprawdź API_FOOTBALL_KEY w Netlify ENV.</span></div>}
+        }) : <div className="ai-empty-state"><strong>{mode === 'settled' ? 'Brak zakończonych/rozliczonych meczów' : 'Brak typów AI'}</strong><span>{mode === 'settled' ? 'Kliknij Rozlicz zakończone po meczach FT. Tutaj pojawi się wynik, profit i ikonka wygrana/przegrana/zwrot.' : 'Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj REAL AI PRO i sprawdź API_FOOTBALL_KEY w Netlify ENV.'}</span></div>}
       </div>
     </section>
   )
@@ -2525,6 +2588,7 @@ function App() {
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
   const [aiLiveGenerating, setAiLiveGenerating] = useState(false)
+  const [aiSettleGenerating, setAiSettleGenerating] = useState(false)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
@@ -2642,6 +2706,23 @@ function App() {
       showToast({ type: "error", title: "LIVE AI Engine", message: error.message || "Sprawdź API_FOOTBALL_KEY w Netlify ENV." })
     } finally {
       setAiLiveGenerating(false)
+    }
+  }
+
+  async function runAiSettlement() {
+    setAiSettleGenerating(true)
+    try {
+      const response = await fetch("/.netlify/functions/settle-live-ai-picks", { method: "POST" })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Nie udało się rozliczyć zakończonych meczów")
+      const extra = data.errors?.length ? ` Błędy: ${data.errors.length}` : ""
+      showToast({ type: data.settled ? "success" : "info", title: "AI Settlement", message: `Sprawdzono ${data.checked || 0}, rozliczono ${data.settled || 0}, pominięto ${data.skipped || 0}.${extra}` })
+      await fetchTips(sessionUser?.id)
+    } catch (error) {
+      console.error("runAiSettlement error", error)
+      showToast({ type: "error", title: "AI Settlement", message: error.message || "Sprawdź API_FOOTBALL_KEY / Supabase ENV." })
+    } finally {
+      setAiSettleGenerating(false)
     }
   }
 
@@ -3764,7 +3845,7 @@ function App() {
         )}
 
         {view === 'aiPicks' && (
-          <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} onGenerateLive={runLiveAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
+          <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} settleGenerating={aiSettleGenerating} onGenerateLive={runLiveAiEngine} onSettle={runAiSettlement} onRefresh={() => fetchTips(sessionUser?.id)} />
         )}
 
         {view === 'stats' && (
