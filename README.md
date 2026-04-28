@@ -907,3 +907,21 @@ Po deployu przetestuj:
 - Styl i układ zostają spójne z wersją 128/133.
 
 SQL do odpalenia: `supabase/version_134_ai_user_separation_deep_stats.sql`.
+
+
+## Wersja 136 — AI Picks Dashboard Premium
+
+Dodano pełną zakładkę Typy AI w stylu mockupu:
+- KPI: Total Profit, Win Rate, ROI, Total Picks
+- Win/Loss Distribution
+- Performance by Odds Range
+- Streak Analysis
+- Recent Form
+- Performance by League
+- Recent AI Picks
+
+Dashboard użytkowników pozostaje osobno. Typy AI pokazują tylko rekordy z `ai_source = 'real_ai_engine'`.
+
+SQL do odpalenia: `supabase/version_136_ai_dashboard_premium.sql`
+
+ENV w Netlify: `OPENAI_API_KEY`, `API_FOOTBALL_KEY`, `ODDS_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
