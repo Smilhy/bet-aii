@@ -4,6 +4,16 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
+const PLATFORM_COMMISSION_RATE = 0.20
+
+function getMonthlyCount(rows = []) {
+  const now = new Date()
+  return rows.filter(row => {
+    const date = new Date(row.created_at)
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  }).length
+}
+
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -89,6 +99,19 @@ function isAdminUser(user) {
 function isPremiumAccount(plan) {
   const value = String(plan || '').toLowerCase()
   return ['premium', 'vip', 'active', 'trialing'].includes(value)
+}
+
+function getPlanLimits(plan) {
+  const premium = isPremiumAccount(plan)
+  return {
+    isPremium: premium,
+    dailyTipLimit: premium ? Infinity : 5,
+    monthlyPayoutLimit: premium ? 3 : 1,
+    canSellPremiumTips: premium,
+    canEditAvatar: premium,
+    canUseBonuses: premium,
+    commissionRate: PLATFORM_COMMISSION_RATE
+  }
 }
 
 function getDisplayRole(user, plan = 'free') {
@@ -366,6 +389,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       <div className="page-title">
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
+        <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
+          {premiumAllowed ? 'VIP: możesz dodawać typy bez limitu i sprzedawać typy premium.' : 'FREE: możesz dodać maksymalnie 5 darmowych typów dziennie. Sprzedaż premium jest zablokowana.'}
+        </div>
       </div>
 
       <form className="tip-form" onSubmit={(e) => e.preventDefault()}>
@@ -430,7 +456,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         {isPremium && (
           <>
-            <label>Cena premium</label>
+            <label>Cena premium <span>20% prowizji platformy, 80% dla Ciebie</span></label>
             <input type="number" step="0.01" value={form.price} onChange={e => update('price', e.target.value)} placeholder="np. 29" />
           </>
         )}
@@ -807,9 +833,10 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
           <strong>0 zł</strong>
           <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
           <ul>
-            <li>✓ Darmowe typy</li>
-            <li>✓ Portfel i historia</li>
-            <li>✕ Publikowanie premium</li>
+            <li>✓ 5 darmowych typów dziennie</li>
+            <li>✓ 1 wypłata miesięcznie</li>
+            <li>✕ Sprzedaż typów premium</li>
+            <li>✕ Avatar, bonusy i dropy</li>
           </ul>
         </div>
 
@@ -818,9 +845,10 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
           <strong>29 zł / miesiąc</strong>
           <p>Pełny SaaS plan z paywallem i marketplace premium.</p>
           <ul>
-            <li>✓ Publikowanie typów premium</li>
-            <li>✓ Dostęp do analiz PRO</li>
-            <li>✓ Monetyzacja i wypłaty tipstera</li>
+            <li>✓ Sprzedaż typów premium</li>
+            <li>✓ Brak limitu dodawania typów</li>
+            <li>✓ 3 wypłaty miesięcznie</li>
+            <li>✓ Avatar, AI, statystyki, bonusy i dropy</li>
             <li>✓ Stripe Billing Portal</li>
           </ul>
           {isPremium ? (
@@ -833,7 +861,7 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
 
       <div className="paywall-rules-card">
         <strong>Paywall aktywny</strong>
-        <span>Konto FREE widzi tylko darmowe typy i nie może publikować płatnych typów premium. Premium uruchamia się po webhooku Stripe i może być anulowane przez Billing Portal.</span>
+        <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
       </div>
     </section>
   )
@@ -977,25 +1005,38 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
 }
 
 
-function ProfileView({ user, tips, payments, unlockedTips }) {
+function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) {
   const profile = getUserProfileView(user)
   const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
   const premiumTips = myTips.filter(tip => isTipPremium(tip))
   const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
   const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  const platformFee = grossRevenue * 0.15
+  const platformFee = grossRevenue * PLATFORM_COMMISSION_RATE
   const payout = grossRevenue - platformFee
   const winrate = myTips.length ? Math.round((myTips.filter(t => t.status === 'won').length / myTips.length) * 100) : 0
-  const role = profile.isAdmin ? 'ADMIN' : premiumTips.length ? 'TIPSTER' : 'USER'
+  const planLimits = getPlanLimits(userPlan)
+  const role = profile.isAdmin ? 'ADMIN' : planLimits.isPremium ? 'VIP TIPSTER' : premiumTips.length ? 'TIPSTER' : 'FREE USER'
 
   return (
     <section className="profile-page">
       <div className="profile-hero">
-        <div className="profile-avatar-big">{profile.initials}</div>
+        <div className="profile-avatar-wrap">
+          <div className="profile-avatar-big">{profile.initials}</div>
+          <button className={`avatar-edit-btn ${planLimits.canEditAvatar ? '' : 'locked'}`} type="button" onClick={() => {
+            if (!planLimits.canEditAvatar) {
+              alert('Zmiana avatara jest dostępna tylko dla kont PREMIUM.')
+              return
+            }
+            alert('Avatar PRO: w następnym etapie podłączymy upload zdjęcia do Supabase Storage.')
+          }}>{planLimits.canEditAvatar ? 'Zmień avatar' : 'Avatar PREMIUM'}</button>
+        </div>
         <div>
           <h1>{profile.username}</h1>
           <p>{profile.email}</p>
-          <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
+          <span className={`role-badge ${role.toLowerCase().replaceAll(' ', '-')}`}>{role}</span>
+          <div className="plan-benefits-line">
+            {planLimits.isPremium ? 'PREMIUM: sprzedaż typów, brak limitu dodawania, 3 wypłaty/miesiąc, bonusy i promocje.' : 'FREE: 5 typów dziennie, brak sprzedaży premium, 1 wypłata/miesiąc, avatar i bonusy zablokowane.'}
+          </div>
         </div>
       </div>
 
@@ -1030,8 +1071,8 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
       </div>
 
       <div className="tipster-pro-card">
-        <div><strong>Zostań tipsterem PRO</strong><span>Dodawaj premium typy, buduj sprzedaż i wypłacaj środki w kolejnym etapie.</span></div>
-        <button>Aktywuj PRO</button>
+        <div><strong>{planLimits.isPremium ? "Konto PREMIUM aktywne" : "Zostań tipsterem PRO"}</strong><span>{planLimits.isPremium ? "Możesz sprzedawać typy premium, korzystać z bonusów i wypłacać do 3 razy w miesiącu." : "Premium odblokowuje sprzedaż typów, avatar, bonusy, AI/statystyki i znosi limit 5 typów dziennie."}</span></div>
+        <button>{planLimits.isPremium ? "Premium aktywne" : "Aktywuj PRO"}</button>
       </div>
     </section>
   )
@@ -1055,14 +1096,17 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
   const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
   const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
   const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  const platformFee = grossRevenue * 0.15
+  const platformFee = grossRevenue * PLATFORM_COMMISSION_RATE
+  const planLimits = getPlanLimits(userPlan)
+  const monthlyPayoutCount = getMonthlyCount(payoutRequests)
+  const payoutLimitReached = monthlyPayoutCount >= planLimits.monthlyPayoutLimit
   const paidOut = payoutRequests
     .filter(request => request.status === 'paid' || request.status === 'approved')
     .reduce((sum, request) => sum + Number(request.amount || 0), 0)
   const available = Math.max(0, grossRevenue - platformFee - paidOut)
   const hasPending = payoutRequests.some(request => request.status === 'pending')
   const stripeReady = !!stripeConnectStatus?.payouts_enabled
-  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady
+  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached
 
   return (
     <section className="payout-page">
@@ -1079,17 +1123,18 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
       <div className="payout-grid">
         <div className="payout-stat"><span>Przychód brutto</span><b>{grossRevenue.toFixed(2)} zł</b></div>
-        <div className="payout-stat"><span>Prowizja 15%</span><b>{platformFee.toFixed(2)} zł</b></div>
+        <div className="payout-stat"><span>Prowizja 20%</span><b>{platformFee.toFixed(2)} zł</b></div>
+        <div className="payout-stat"><span>Limit wypłat</span><b>{monthlyPayoutCount}/{planLimits.monthlyPayoutLimit}</b></div>
         <div className="payout-stat"><span>Wypłacone / zatwierdzone</span><b>{paidOut.toFixed(2)} zł</b></div>
       </div>
 
       <div className="payout-request-card">
         <div>
           <strong>Poproś o wypłatę</strong>
-          <span>Minimum wypłaty to 50 zł. Po zgłoszeniu status będzie pending i trafi do panelu admina.</span>
+          <span>Minimum wypłaty to 50 zł. FREE ma 1 wypłatę/miesiąc, PREMIUM ma 3 wypłaty/miesiąc.</span>
         </div>
         <button disabled={!canRequestPayout} onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
-          {hasPending ? 'Masz pending' : !stripeReady ? 'Połącz Stripe' : available < MIN_PAYOUT_AMOUNT ? 'Minimum 50 zł' : 'Poproś o wypłatę'}
+          {hasPending ? 'Masz pending' : payoutLimitReached ? 'Limit wypłat' : !stripeReady ? 'Połącz Stripe' : available < MIN_PAYOUT_AMOUNT ? 'Minimum 50 zł' : 'Poproś o wypłatę'}
         </button>
       </div>
 
@@ -1921,6 +1966,13 @@ function App() {
       }
 
       const available = Number(tipsterEarnings?.available_to_payout || 0)
+      const limits = getPlanLimits(accountPlan)
+      const monthlyPayoutCount = getMonthlyCount(payoutRequests)
+
+      if (monthlyPayoutCount >= limits.monthlyPayoutLimit) {
+        showToast({ type: 'error', title: 'Limit wypłat', message: `Twój plan pozwala na ${limits.monthlyPayoutLimit} wypłat miesięcznie.` })
+        return
+      }
 
       if (!stripeConnectStatus?.payouts_enabled) {
         showToast({ type: 'error', title: 'Stripe niegotowy', message: 'Najpierw połącz i dokończ Stripe Connect, aby wypłaty mogły być realizowane.' })
@@ -2307,6 +2359,7 @@ function App() {
             tips={tips}
             payments={paymentHistory}
             unlockedTips={unlockedTips}
+            userPlan={accountPlan}
           />
         )}
 
