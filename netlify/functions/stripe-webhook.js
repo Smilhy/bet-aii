@@ -155,6 +155,7 @@ async function handleTipsterProfileSubscription(supabase, session) {
     'tipster_subscriptions',
     {
       user_id: userId,
+      buyer_id: userId,
       tipster_id: tipsterId,
       duration_days: durationDays,
       price: amount,
@@ -165,7 +166,7 @@ async function handleTipsterProfileSubscription(supabase, session) {
       expires_at: expiresAt
     },
     { onConflict: 'user_id,tipster_id' },
-    { user_id: userId, tipster_id: tipsterId, expires_at: expiresAt }
+    { user_id: userId, buyer_id: userId, tipster_id: tipsterId, expires_at: expiresAt }
   );
 
   // Compatibility table name from earlier SQL discussions.
@@ -181,7 +182,7 @@ async function handleTipsterProfileSubscription(supabase, session) {
       status: 'active'
     },
     { onConflict: 'user_id,tipster_id' },
-    { user_id: userId, tipster_id: tipsterId, expires_at: expiresAt }
+    { user_id: userId, buyer_id: userId, tipster_id: tipsterId, expires_at: expiresAt }
   );
 
   if (amount > 0) {
