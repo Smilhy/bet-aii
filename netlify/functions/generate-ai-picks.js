@@ -130,7 +130,10 @@ exports.handler = async function () {
 
     const { data, error } = await supabase.from('tips').insert(rows).select('id')
     if (error) throw error
-    await supabase.from('ai_pick_runs').insert({ source: 'api-football+odds+openai', picks_created: data?.length || 0, status: 'success', finished_at: new Date().toISOString() }).catch(() => {})
+    const { error: runLogError } = await supabase
+      .from('ai_pick_runs')
+      .insert({ source: 'api-football+odds+openai', picks_created: data?.length || 0, status: 'success', finished_at: new Date().toISOString() })
+    if (runLogError) console.warn('AI run log insert skipped:', runLogError.message)
     return json(200, { inserted: data?.length || 0 })
   } catch (error) {
     console.error(error)
