@@ -786,3 +786,19 @@ Po deployu test:
 2. kup typ kartą testową Stripe,
 3. sprawdź `unlocked_tips`, `tip_purchases`, `earnings`,
 4. kup dostęp do profilu tipstera i sprawdź `tipster_subscriptions`.
+
+## Wersja 118 — Tipster Profile PRO (sales upgrade)
+
+Dodano:
+- profil tipstera jako mocniejszy widok sprzedażowy,
+- CTA: Kup dostęp do wszystkich typów,
+- ROI 7 dni / ROI 30 dni,
+- kupujący i sprzedaże jako social proof,
+- wyróżnione typy z badge PREMIUM / AI / WIN,
+- ostatnie 10 typów z wynikami WIN / LOSS / VOID / PENDING,
+- bezpieczny SQL: `supabase/version_118_tipster_profile_pro.sql`.
+
+Kolejność wdrożenia:
+1. Wrzuć całą paczkę na GitHub.
+2. W Supabase odpal: `supabase/version_118_tipster_profile_pro.sql`.
+3. Netlify: Trigger deploy → Clear cache and deploy site.

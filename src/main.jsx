@@ -444,6 +444,16 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const winrate = Number(stats?.winrate || (settled ? (wins / Math.max(wins + losses, 1)) * 100 : 0))
   const earnings = Number(stats?.earnings || stats?.total_earnings || 0)
   const roi = Number(stats?.roi || 0)
+  const salesCount = Number(stats?.sales_count || stats?.sales || 0)
+  const buyersCount = Number(stats?.buyers_count || stats?.buyers || 0)
+  const roi7 = Number(stats?.roi_7d || stats?.roi7 || roi || 0)
+  const roi30 = Number(stats?.roi_30d || stats?.roi30 || roi || 0)
+  const featuredTips = [...tipsterTips]
+    .filter(t => isTipPremium(t) || Number(t.ai_confidence || t.ai_score || t.confidence || 0) >= 85 || normalizeResult(t.result || t.status) === 'win')
+    .sort((a, b) => Number(b.ai_confidence || b.ai_score || b.confidence || b.odds || 0) - Number(a.ai_confidence || a.ai_score || a.confidence || a.odds || 0))
+    .slice(0, 3)
+  const lastTenTips = tipsterTips.slice(0, 10)
+  const isTopSeller = salesCount >= 10 || buyersCount >= 10 || earnings >= 500
   const isOwn = currentUser?.id && String(currentUser.id) === String(tipsterId)
   const isFollowing = followingTipsters?.has?.(String(tipsterId))
   const donutWin = Math.max(0, Math.min(100, winrate))
@@ -478,13 +488,59 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
       {loading ? <div className="empty-state">Ładowanie profilu tipstera...</div> : (
         <>
-          <div className="pro-metric-grid">
-            <div className={earnings >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>Łączny profit</span><b>{formatMoney(earnings)}</b><small>Suma zarobków marketplace</small></div>
-            <div className="pro-metric"><span>Win rate</span><b>{winrate.toFixed(0)}%</b><small>Skuteczność rozliczonych typów</small></div>
-            <div className={roi >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI</span><b>{roi ? `${roi.toFixed(2)} zł` : '0.00 zł'}</b><small>Średni zwrot / typ</small></div>
-            <div className="pro-metric"><span>Rozliczone typy</span><b>{settled}</b><small>Win/Loss/Void</small></div>
+          <div className="tipster-sales-strip">
+            <div className="sales-copy">
+              <span className="sales-eyebrow">TIPSTER PROFILE PRO</span>
+              <h2>{isTopSeller ? '🔥 TOP SELLER — sprawdzony profil premium' : 'Profil premium gotowy do sprzedaży'}</h2>
+              <p>Ostatnie wyniki, statystyki i social proof w jednym miejscu. Kup dostęp do profilu albo odblokuj pojedynczy typ.</p>
+            </div>
+            {!isOwn && (
+              <div className="sales-actions">
+                <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
+                <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}</button>
+              </div>
+            )}
           </div>
 
+          <div className="pro-metric-grid sales-upgrade">
+            <div className={roi7 >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI 7 dni</span><b>{roi7 ? roi7.toFixed(2) + ' zł' : '0.00 zł'}</b><small>Szybki sygnał formy</small></div>
+            <div className={roi30 >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI 30 dni</span><b>{roi30 ? roi30.toFixed(2) + ' zł' : '0.00 zł'}</b><small>Stabilność profilu</small></div>
+            <div className="pro-metric"><span>Win rate</span><b>{winrate.toFixed(0)}%</b><small>Skuteczność rozliczonych typów</small></div>
+            <div className="pro-metric"><span>Kupujący</span><b>{buyersCount}</b><small>Social proof profilu</small></div>
+            <div className="pro-metric"><span>Sprzedaże</span><b>{salesCount}</b><small>Zakupy typów i dostępów</small></div>
+            <div className={earnings >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>Łączny profit</span><b>{formatMoney(earnings)}</b><small>Suma zarobków marketplace</small></div>
+          </div>
+
+          <div className="featured-tipster-grid">
+            <div className="featured-card">
+              <div className="feed-title compact"><div><h2>Wyróżnione typy</h2><p>Najmocniejsze sygnały premium z profilu.</p></div></div>
+              <div className="featured-list">
+                {featuredTips.length ? featuredTips.map(tip => {
+                  const ai = Number(tip.ai_confidence || tip.ai_score || tip.confidence || 0)
+                  return (
+                    <div className="featured-tip-row" key={tip.id}>
+                      <div><strong>{tip.team_home || tip.home_team || 'Gospodarz'} vs {tip.team_away || tip.away_team || 'Gość'}</strong><span>{tip.market || tip.bet_type || 'Typ premium'} · kurs {tip.odds || '-'}</span></div>
+                      <div className="featured-badges">
+                        {isTipPremium(tip) && <em>💎 PREMIUM</em>}
+                        {ai >= 85 && <em>🧠 AI {ai}%</em>}
+                        {normalizeResult(tip.result || tip.status) === 'win' && <em>🏆 WIN</em>}
+                      </div>
+                      {!isOwn && <button className="mini-buy-btn" onClick={() => onUnlock?.(tip)}>Odblokuj</button>}
+                    </div>
+                  )
+                }) : <div className="empty-mini">Brak wyróżnionych typów — pojawią się po dodaniu wyników albo AI%.</div>}
+              </div>
+            </div>
+            <div className="featured-card">
+              <div className="feed-title compact"><div><h2>Ostatnie 10 typów</h2><p>Transparentna forma tipstera.</p></div></div>
+              <div className="last-results-list">
+                {lastTenTips.length ? lastTenTips.map(tip => {
+                  const res = normalizeResult(tip.result || tip.status)
+                  return <div className="last-result-row" key={tip.id}><span className={'result-pill ' + res}>{res === 'win' ? '✅ WIN' : res === 'loss' ? '❌ LOSS' : res === 'void' ? '↩ VOID' : '⏳ PENDING'}</span><strong>{tip.team_home || tip.home_team || 'Typ'} vs {tip.team_away || tip.away_team || ''}</strong><small>{new Date(tip.created_at).toLocaleDateString('pl-PL')}</small></div>
+                }) : <div className="empty-mini">Brak ostatnich typów.</div>}
+              </div>
+            </div>
+          </div>
           <div className="pro-stats-layout">
             <div className="pro-chart-card">
               <h3>Win/Loss distribution</h3>
