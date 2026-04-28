@@ -2292,3 +2292,14 @@ input::placeholder,textarea::placeholder,.search::placeholder{color:#7f95a8!impo
     align-items: flex-start;
   }
 }
+
+/* VERSION 132 — AI SYSTEM */
+.ai-score-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:linear-gradient(135deg,rgba(0,255,198,.16),rgba(122,166,255,.14));border:1px solid rgba(0,255,198,.28);color:#dffef7;font-size:11px;font-weight:900;box-shadow:0 0 22px rgba(0,255,198,.08)}
+.ai-mini-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ai-mini-badges span{font-size:10px;font-weight:900;letter-spacing:.04em;color:#eafffb;background:rgba(0,255,198,.08);border:1px solid rgba(0,255,198,.22);border-radius:999px;padding:5px 8px}
+.ai-ranking-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0 18px}
+.ai-ranking-card{padding:16px;border-radius:18px;background:linear-gradient(145deg,rgba(0,255,198,.08),rgba(122,166,255,.06));border:1px solid rgba(0,255,198,.18);box-shadow:0 14px 40px rgba(0,0,0,.22)}
+.ai-ranking-card span{display:block;color:#00ffc6;font-size:11px;font-weight:950;letter-spacing:.14em;margin-bottom:8px}
+.ai-ranking-card b{display:block;color:#f8fafc;font-size:15px;margin-bottom:6px}
+.ai-ranking-card em{font-style:normal;color:#a8c7d7;font-size:12px}
+@media(max-width:900px){.ai-ranking-strip{grid-template-columns:1fr}}

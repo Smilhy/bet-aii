@@ -81,6 +81,38 @@ function setStoredReferralCode(code) {
   if (clean) localStorage.setItem('betai_referral_code', clean)
 }
 
+function getAiConfidence(tip) {
+  return Math.max(0, Math.min(100, Math.round(Number(tip?.ai_confidence ?? tip?.ai_probability ?? tip?.confidence ?? 0) || 0)))
+}
+
+function getAiScore(tip) {
+  const confidence = getAiConfidence(tip)
+  const odds = Number(tip?.odds || 0)
+  const computed = odds > 1 ? Math.round((confidence / 100) * odds * 100) : confidence
+  return Math.max(0, Math.min(100, Math.round(Number(tip?.ai_score ?? computed) || 0)))
+}
+
+function getAiAnalysis(tip) {
+  const confidence = getAiConfidence(tip)
+  const score = getAiScore(tip)
+  if (tip?.ai_analysis) return tip.ai_analysis
+  if (tip?.analysis) return tip.analysis
+  if (confidence >= 85 || score >= 85) return 'AI wykrywa mocny value pick: wysoka pewność, korzystny kurs i dobry stosunek ryzyka do potencjalnego zysku.'
+  if (confidence >= 70 || score >= 70) return 'AI ocenia ten typ jako solidny wybór z dodatnią wartością przy aktualnym kursie.'
+  return 'AI zaleca ostrożność i dodatkowe sprawdzenie danych przed zakupem lub grą.'
+}
+
+function getAiBadges(tip) {
+  const confidence = getAiConfidence(tip)
+  const score = getAiScore(tip)
+  const odds = Number(tip?.odds || 0)
+  const badges = []
+  if (confidence >= 80) badges.push('🧠 AI PICK')
+  if (score >= 85) badges.push('🔥 HOT')
+  if (odds >= 1.8 && confidence >= 65) badges.push('💎 VALUE')
+  return badges
+}
+
 function getReferralUrl(code) {
   const clean = String(code || '').trim()
   if (!clean) return ''
@@ -414,7 +446,10 @@ function Rightbar({ ranking = [] }) {
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
-  const probability = Number(tip.ai_probability || 0)
+  const probability = getAiConfidence(tip)
+  const aiScore = getAiScore(tip)
+  const aiAnalysis = getAiAnalysis(tip)
+  const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || 'AdrianNowak'
@@ -448,6 +483,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <div className="card-badges">
           <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
           <span className="ai-badge">{isLocked ? 'AI 🔒' : `AI ${probability}%`}</span>
+          {!isLocked && aiScore >= 75 && <span className="ai-score-badge">Score {aiScore}</span>}
         </div>
       </div>
 
@@ -464,8 +500,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
         <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
           <div className="ai-title">✦ AI Analiza <strong>{isLocked ? '🔒' : `${probability}%`}</strong></div>
-          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : (tip.analysis || 'Analiza zostanie uzupełniona przez autora typu.')}</p>
+          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
           <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
+          {!isLocked && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
           {isLocked && <div className="lock-overlay">🔒 Premium</div>}
         </div>
       </div>
@@ -753,6 +790,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     odds: Number(form.odds),
     analysis: form.analysis,
     ai_probability: Number(form.ai_probability),
+    ai_confidence: Number(form.ai_probability),
+    ai_score: Math.min(100, Math.round((Number(form.ai_probability) / 100) * Number(form.odds || 0) * 100)),
+    ai_analysis: form.analysis,
     access_type: form.access_type,
     is_premium: isPremium,
     price: isPremium ? Number(form.price || 0) : 0,
@@ -1160,6 +1200,16 @@ function LeaderboardView({ tips = [], ranking = [] }) {
         <div><span>Top sprzedaż</span><b>{rows.length ? `${Number(rows[0].earnings || 0).toFixed(2)} zł` : '0.00 zł'}</b></div>
         <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
         <div><span>Typy w bazie</span><b>{tips.length}</b></div>
+      </div>
+
+      <div className="ai-ranking-strip">
+        {(tips || []).slice().sort((a,b) => getAiScore(b) - getAiScore(a)).slice(0,3).map((tip, i) => (
+          <div className="ai-ranking-card" key={tip.id || i}>
+            <span>#{i + 1} AI PICK</span>
+            <b>{tip.team_home || 'Team'} vs {tip.team_away || 'Team'}</b>
+            <em>AI {getAiConfidence(tip)}% · Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</em>
+          </div>
+        ))}
       </div>
 
       <div className="leaderboard-table">
