@@ -615,3 +615,9 @@ Flow:
 3. Webhook account.updated ustawia payouts_enabled.
 4. Admin -> Admin wypłaty -> Zatwierdź i wypłacone.
 5. send-real-stripe-payout robi Stripe transfer.
+
+## Wersja 90 — payout toast + Stripe status fix
+Naprawiono:
+- brak komunikatu po kliknięciu `Poproś o wypłatę`, gdy saldo do wypłaty wynosi 0 zł,
+- stary tekst `Następny etap: Stripe Connect` w zakładce Wypłaty,
+- przycisk wypłaty nie jest już blokowany bez komunikatu.

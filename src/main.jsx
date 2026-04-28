@@ -965,7 +965,7 @@ function ProfileView({ user, tips, payments, unlockedTips }) {
 
 
 
-function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free' }) {
+function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
   if (!user) {
     return (
       <section className="payout-page">
@@ -1686,27 +1686,41 @@ function App() {
   }
 
   
-  async function requestPayout() {
-    if (!sessionUser?.id || payoutSubmitting) return
 
-    setPayoutSubmitting(true)
-
+  async function requestTipsterPayout() {
     try {
-      const { error } = await supabase.rpc('request_tipster_payout')
+      if (!sessionUser?.id) {
+        showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby poprosić o wypłatę.' })
+        return
+      }
+
+      const available = Number(tipsterEarnings?.available_to_payout || 0)
+
+      if (!available || available <= 0) {
+        showToast({
+          type: 'error',
+          title: 'Brak środków do wypłaty',
+          message: 'Nie masz jeszcze zarobków z premium typów. Najpierw ktoś musi kupić Twój płatny typ.'
+        })
+        return
+      }
+
+      const { error } = await supabase.rpc('create_payout_request', {
+        p_amount: available
+      })
 
       if (error) {
-        showToast({ type: 'error', title: 'Błąd wypłaty', message: formatAppErrorMessage(error.message) })
+        showToast({ type: 'error', title: 'Nie udało się zgłosić wypłaty', message: formatAppErrorMessage(error.message) })
         return
       }
 
       showToast({ type: 'success', title: 'Wypłata zgłoszona', message: 'Zgłoszenie trafiło do panelu admina.' })
-      await fetchPayoutRequests(sessionUser.id)
+
       await fetchTipsterEarnings(sessionUser.id)
-      await fetchWalletBalance(sessionUser.id)
+      await fetchPayoutRequests(sessionUser.id)
+      await fetchAdminFinanceReport()
     } catch (error) {
       showToast({ type: 'error', title: 'Błąd wypłaty', message: formatAppErrorMessage(error.message) })
-    } finally {
-      setTimeout(() => setPayoutSubmitting(false), 1200)
     }
   }
 
@@ -2069,7 +2083,7 @@ function App() {
         )}
 
         {view === 'payouts' && (
-          <PayoutsView user={sessionUser} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestPayout} userPlan={accountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
+          <PayoutsView user={sessionUser} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} userPlan={accountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
 

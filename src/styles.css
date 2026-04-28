@@ -1556,3 +1556,5 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .admin-actions button:disabled{opacity:.45;cursor:not-allowed}
 .status-pill.danger{background:#fee2e2;color:#991b1b}
 @media(max-width:720px){.admin-payout-summary{grid-template-columns:1fr}}
+
+.payout-connect-note button{margin-top:10px;border:none;border-radius:12px;background:#0f766e;color:#fff;font-weight:900;padding:9px 12px;cursor:pointer}
