@@ -687,3 +687,38 @@ Po deployu przetestuj:
 3. Po powrocie i webhooku konto ma status Premium.
 4. Konto Premium może dodać typ premium.
 5. Billing Portal otwiera zarządzanie/anulowanie subskrypcji.
+
+## Wersja 95 — realny Stripe SaaS webhook bez ręcznego wklejania kodu
+
+Ta wersja ma już gotowe pliki Netlify Functions:
+- `netlify/functions/create-premium-checkout.js` — tworzy lub odzyskuje Stripe Customer i zapisuje `stripe_customer_id`.
+- `netlify/functions/stripe-webhook.js` — obsługuje `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` i synchronizuje Premium do `profiles` oraz `user_subscriptions`.
+- `netlify/functions/create-customer-portal.js` — działa z `profiles` albo `user_subscriptions`.
+
+Webhook w Stripe ustaw na:
+`https://TWOJA-STRONA.netlify.app/.netlify/functions/stripe-webhook`
+
+Eventy:
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+Jeśli w Supabase masz już `profiles`, wystarczy deploy paczki. Jeśli nie masz jeszcze pełnych kolumn subskrypcji, użyj pliku:
+`supabase/subscriptions_profiles_patch.sql`.
+
+## v96 fix — Stripe Premium customer linking
+
+Ta wersja poprawia webhook Premium tak, żeby po płatności nie szukał użytkownika tylko po `stripe_customer_id`, ale także po:
+- `client_reference_id`
+- `metadata.user_id`
+- emailu z Checkout Session
+- emailu Stripe Customer
+
+Dzięki temu testowa płatność Premium powinna ustawić w Supabase:
+- `profiles.plan = premium`
+- `profiles.subscription_status = active`
+- `profiles.stripe_customer_id = cus_...`
+
+Po deployu sprawdź w Supabase:
+`select * from profiles;`
