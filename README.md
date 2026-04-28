@@ -722,3 +722,16 @@ Dzięki temu testowa płatność Premium powinna ustawić w Supabase:
 
 Po deployu sprawdź w Supabase:
 `select * from profiles;`
+
+## Wersja 98 — Stripe Premium final sync fix
+
+Ta wersja naprawia finalny problem Premium: Stripe przyjmował subskrypcję, ale aplikacja dalej widziała konto jako FREE.
+
+Naprawione:
+- Checkout przekazuje i utrzymuje `client_reference_id = user_id` oraz `metadata.user_id`.
+- Webhook wymusza update `profiles.plan = premium` i `subscription_status = active` po udanej subskrypcji.
+- `sync-premium-session` po powrocie ze Stripe twardo sprawdza sesję/subskrypcję i aktualizuje Supabase.
+- Frontend nie blokuje Premium przez stary rekord `user_subscriptions = inactive`, jeśli `profiles` mówi Premium.
+- Dodana ochrona przed tworzeniem kolejnych aktywnych subskrypcji dla tego samego Stripe customer.
+
+SQL nie jest wymagany, jeśli tabela `profiles` i kolumny subskrypcji już istnieją.

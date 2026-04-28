@@ -1433,11 +1433,19 @@ function App() {
           const response = await fetch('/.netlify/functions/sync-premium-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({
+              session_id: sessionId,
+              expected_user_id: sessionStorage.getItem('betai_premium_checkout_user_id') || sessionUser?.id || null,
+              expected_email: sessionStorage.getItem('betai_premium_checkout_email') || sessionUser?.email || null
+            })
           })
           const data = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować Premium.')
           showToast({ type: 'success', title: 'Premium aktywowany', message: 'Konto Premium zostało zapisane w bazie.' })
+          try {
+            sessionStorage.removeItem('betai_premium_checkout_user_id')
+            sessionStorage.removeItem('betai_premium_checkout_email')
+          } catch {}
           setUserPlan('premium')
           if (sessionUser?.id) {
             await fetchUserPlan(sessionUser.id)
@@ -1740,6 +1748,19 @@ function App() {
         throw new Error(data.error || 'Nie udało się utworzyć płatności Premium.')
       }
 
+      try {
+        sessionStorage.setItem('betai_premium_checkout_user_id', sessionUser.id)
+        sessionStorage.setItem('betai_premium_checkout_email', sessionUser.email || '')
+      } catch {}
+
+      if (data.alreadyActive) {
+        setUserPlan('premium')
+        await fetchUserPlan(sessionUser.id)
+        showToast({ type: 'success', title: 'Premium aktywne', message: 'To konto ma już aktywną subskrypcję Premium.' })
+        window.history.replaceState({}, document.title, window.location.pathname)
+        return
+      }
+
       window.location.href = data.url
     } catch (error) {
       showToast({ type: 'error', title: 'Błąd Premium', message: formatAppErrorMessage(error.message) })
@@ -1822,27 +1843,37 @@ function App() {
       return
     }
 
-    const { data, error } = await supabase
+    let subscriptionData = null
+    let profileData = null
+
+    const { data: subData, error: subError } = await supabase
       .from('user_subscriptions')
       .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
-    if (!error && data?.plan) {
-      setUserPlan(['active','trialing'].includes(data.status) || data.plan === 'premium' ? 'premium' : 'free')
-      return
-    }
+    if (!subError) subscriptionData = subData
 
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profData, error: profileError } = await supabase
       .from('profiles')
       .select('plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
       .eq('id', userId)
       .maybeSingle()
 
-    if (!profileError && profileData?.plan) {
-      setUserPlan(['active','trialing'].includes(profileData.subscription_status) || profileData.plan === 'premium' ? 'premium' : 'free')
+    if (!profileError) profileData = profData
+
+    const subPremium = subscriptionData && (
+      subscriptionData.plan === 'premium' || ['active','trialing'].includes(subscriptionData.status)
+    )
+    const profilePremium = profileData && (
+      profileData.plan === 'premium' || ['active','trialing'].includes(profileData.subscription_status)
+    )
+
+    // Important: profile can be newer than stale user_subscriptions. Do not return FREE only because old row says inactive.
+    if (subPremium || profilePremium) {
+      setUserPlan('premium')
       return
     }
 

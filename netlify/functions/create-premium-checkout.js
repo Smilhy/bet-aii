@@ -74,6 +74,54 @@ exports.handler = async (event) => {
         }, { onConflict: 'user_id' });
     }
 
+    // If this customer already has an active test/live subscription, do not create duplicates.
+    // The frontend can call sync-premium-session on the existing customer after return, but here we keep checkout clean.
+    if (customerId) {
+      try {
+        await stripe.customers.update(customerId, {
+          email: email || existingProfile?.email || undefined,
+          metadata: { user_id, app: 'betai' }
+        });
+
+        const activeSubscriptions = await stripe.subscriptions.list({
+          customer: customerId,
+          status: 'active',
+          limit: 1
+        });
+
+        if (activeSubscriptions.data?.length) {
+          await supabase.from('profiles').update({
+            plan: 'premium',
+            subscription_status: 'active',
+            stripe_customer_id: customerId,
+            stripe_subscription_id: activeSubscriptions.data[0].id,
+            current_period_end: activeSubscriptions.data[0].current_period_end
+              ? new Date(activeSubscriptions.data[0].current_period_end * 1000).toISOString()
+              : null
+          }).eq('id', user_id);
+
+          await supabase.from('user_subscriptions').upsert({
+            user_id,
+            plan: 'premium',
+            status: 'active',
+            stripe_customer_id: customerId,
+            stripe_subscription_id: activeSubscriptions.data[0].id,
+            current_period_end: activeSubscriptions.data[0].current_period_end
+              ? new Date(activeSubscriptions.data[0].current_period_end * 1000).toISOString()
+              : null,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+
+          return {
+            statusCode: 200,
+            body: JSON.stringify({ alreadyActive: true, url: `${siteUrl}/?premium=success&already_active=1` })
+          };
+        }
+      } catch (subCheckError) {
+        console.warn('Active subscription check warning:', subCheckError.message);
+      }
+    }
+
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
       : {

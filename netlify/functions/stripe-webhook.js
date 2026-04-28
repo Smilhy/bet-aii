@@ -1,100 +1,49 @@
 const Stripe = require('stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { getSupabase, forcePremiumUpdate, normalizeEmail } = require('./stripe-premium-utils');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
-  return createClient(url, key);
+async function getCustomerEmail(customerId) {
+  if (!customerId) return null;
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    return normalizeEmail(customer?.email || null);
+  } catch (error) {
+    console.warn('Could not retrieve Stripe customer:', error.message);
+    return null;
+  }
 }
 
-async function resolveUserId(supabase, { userId, customerId, email }) {
-  if (userId) return userId;
-
-  if (customerId) {
-    const { data: profileByCustomer } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('stripe_customer_id', customerId)
-      .maybeSingle();
-    if (profileByCustomer?.id) return profileByCustomer.id;
-
-    const { data: subscriptionByCustomer } = await supabase
-      .from('user_subscriptions')
-      .select('user_id')
-      .eq('stripe_customer_id', customerId)
-      .maybeSingle();
-    if (subscriptionByCustomer?.user_id) return subscriptionByCustomer.user_id;
+async function getSubscription(subscriptionId) {
+  if (!subscriptionId) return null;
+  try {
+    return await stripe.subscriptions.retrieve(subscriptionId);
+  } catch (error) {
+    console.warn('Could not retrieve Stripe subscription:', error.message);
+    return null;
   }
-
-  if (email) {
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const { data: profileByEmail } = await supabase
-      .from('profiles')
-      .select('id')
-      .ilike('email', normalizedEmail)
-      .maybeSingle();
-    if (profileByEmail?.id) return profileByEmail.id;
-  }
-
-  return null;
 }
 
-async function updatePremiumStatus(supabase, payload) {
-  const {
-    userId,
-    customerId,
-    subscriptionId,
-    status,
-    currentPeriodEnd,
-    cancelAtPeriodEnd,
-    email
-  } = payload;
+async function syncPremiumFromSession(supabase, session) {
+  const subscription = session.subscription ? await getSubscription(session.subscription) : null;
+  const customerEmail = normalizeEmail(
+    session.customer_details?.email ||
+    session.customer_email ||
+    session.metadata?.email ||
+    (await getCustomerEmail(session.customer)) ||
+    null
+  );
 
-  const resolvedUserId = await resolveUserId(supabase, { userId, customerId, email });
-  if (!resolvedUserId) {
-    console.warn('Premium webhook: user not resolved', { userId, customerId, email, subscriptionId, status });
-    return { resolved: false };
-  }
-
-  const isActive = ['active', 'trialing'].includes(status);
-  const plan = isActive ? 'premium' : 'free';
-  const periodEndIso = currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null;
-
-  const updatePayload = {
-    plan,
-    subscription_status: status || 'inactive',
-    stripe_customer_id: customerId || null,
-    stripe_subscription_id: subscriptionId || null,
-    current_period_end: periodEndIso
-  };
-
-  if (email) updatePayload.email = String(email).trim().toLowerCase();
-
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update(updatePayload)
-    .eq('id', resolvedUserId);
-
-  if (profileError) throw profileError;
-
-  const { error: subscriptionError } = await supabase
-    .from('user_subscriptions')
-    .upsert({
-      user_id: resolvedUserId,
-      plan,
-      status: status || 'inactive',
-      stripe_customer_id: customerId || null,
-      stripe_subscription_id: subscriptionId || null,
-      current_period_end: periodEndIso,
-      cancel_at_period_end: Boolean(cancelAtPeriodEnd),
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-
-  if (subscriptionError) throw subscriptionError;
-  return { resolved: true, userId: resolvedUserId, plan, status };
+  return forcePremiumUpdate(supabase, {
+    userId: session.client_reference_id || session.metadata?.user_id || subscription?.metadata?.user_id || null,
+    email: customerEmail,
+    customerId: session.customer || null,
+    subscriptionId: subscription?.id || session.subscription || null,
+    status: subscription?.status || 'active',
+    currentPeriodEnd: subscription?.current_period_end || null,
+    cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
+    forcePremium: true
+  });
 }
 
 exports.handler = async (event) => {
@@ -106,7 +55,6 @@ exports.handler = async (event) => {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let stripeEvent;
-
   try {
     stripeEvent = stripe.webhooks.constructEvent(event.body, signature, secret);
   } catch (error) {
@@ -137,7 +85,7 @@ exports.handler = async (event) => {
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
       const kind = session.metadata?.kind;
-      const userId = session.metadata?.user_id || session.client_reference_id;
+      const userId = session.client_reference_id || session.metadata?.user_id;
 
       if (userId && kind === 'wallet_topup') {
         const amount = Number(session.metadata.amount || 0);
@@ -161,38 +109,19 @@ exports.handler = async (event) => {
         Boolean(session.subscription);
 
       if (isPremiumCheckout) {
-        let subscription = null;
-        if (session.subscription) {
-          subscription = await stripe.subscriptions.retrieve(session.subscription);
-        }
+        const result = await syncPremiumFromSession(supabase, session);
 
-        const customerEmail =
-          session.customer_details?.email ||
-          session.customer_email ||
-          session.metadata?.email ||
-          null;
-
-        const result = await updatePremiumStatus(supabase, {
-          userId,
-          customerId: session.customer,
-          subscriptionId: session.subscription || null,
-          status: subscription?.status || 'active',
-          currentPeriodEnd: subscription?.current_period_end || null,
-          cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
-          email: customerEmail
+        const amount = Number(session.metadata?.amount || 29);
+        const { error: txError } = await supabase.from('wallet_transactions').insert({
+          user_id: result.userId,
+          amount,
+          type: 'premium_purchase',
+          provider: 'stripe',
+          provider_session_id: session.id,
+          status: 'completed'
         });
-
-        if (result?.resolved) {
-          const amount = Number(session.metadata?.amount || 29);
-          const { error: txError } = await supabase.from('wallet_transactions').insert({
-            user_id: result.userId,
-            amount,
-            type: 'premium_purchase',
-            provider: 'stripe',
-            provider_session_id: session.id,
-            status: 'completed'
-          });
-          if (txError && !String(txError.message || '').toLowerCase().includes('duplicate')) throw txError;
+        if (txError && !String(txError.message || '').toLowerCase().includes('duplicate')) {
+          console.warn('premium wallet transaction warning:', txError.message);
         }
       }
     }
@@ -203,24 +132,19 @@ exports.handler = async (event) => {
       stripeEvent.type === 'customer.subscription.deleted'
     ) {
       const subscription = stripeEvent.data.object;
-      let customerEmail = null;
-      if (subscription.customer) {
-        try {
-          const customer = await stripe.customers.retrieve(subscription.customer);
-          customerEmail = customer?.email || null;
-        } catch (customerError) {
-          console.warn('Could not retrieve Stripe customer email:', customerError.message);
-        }
-      }
+      const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+      const customerEmail = await getCustomerEmail(customerId);
+      const isDeleted = stripeEvent.type === 'customer.subscription.deleted' || subscription.status === 'canceled';
 
-      await updatePremiumStatus(supabase, {
+      await forcePremiumUpdate(supabase, {
         userId: subscription.metadata?.user_id || null,
-        customerId: subscription.customer,
+        email: customerEmail,
+        customerId,
         subscriptionId: subscription.id,
-        status: subscription.status === 'canceled' ? 'canceled' : subscription.status,
-        currentPeriodEnd: subscription.current_period_end,
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        email: customerEmail
+        status: isDeleted ? 'canceled' : (subscription.status || 'active'),
+        currentPeriodEnd: subscription.current_period_end || null,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+        forcePremium: !isDeleted && ['active', 'trialing'].includes(subscription.status)
       });
     }
 
