@@ -11,6 +11,16 @@ function supabaseAdmin() {
   return createClient(url, key);
 }
 
+async function markFailed(supabase, payout, message) {
+  const now = new Date().toISOString();
+  if (!supabase || !payout?.id) return;
+  await supabase
+    .from('payout_requests')
+    .update({ status: 'failed', stripe_status: 'failed', stripe_error: String(message || '').slice(0, 500), processed_at: now, updated_at: now })
+    .eq('id', payout.id)
+    .eq('status', 'processing');
+}
+
 function response(code, body) {
   return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
 }
@@ -18,21 +28,37 @@ function response(code, body) {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
 
+  let supabase = null;
+  let payout = null;
+
   try {
     const { request_id, admin_user_id } = JSON.parse(event.body || '{}');
     if (!request_id) return response(400, { error: 'Missing request_id' });
 
-    const supabase = supabaseAdmin();
+    supabase = supabaseAdmin();
 
-    const { data: payout, error: payoutError } = await supabase
+    const { data: payoutRow, error: payoutError } = await supabase
       .from('payout_requests')
       .select('*')
       .eq('id', request_id)
       .maybeSingle();
 
     if (payoutError) throw payoutError;
+    payout = payoutRow;
     if (!payout) throw new Error('PAYOUT_NOT_FOUND');
     if (payout.status !== 'pending') throw new Error('PAYOUT_ALREADY_PROCESSED');
+    if (Number(payout.amount || 0) < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
+
+    const processingTime = new Date().toISOString();
+    const { data: lockedRows, error: lockError } = await supabase
+      .from('payout_requests')
+      .update({ status: 'processing', stripe_status: 'processing', updated_at: processingTime })
+      .eq('id', payout.id)
+      .eq('status', 'pending')
+      .select('id');
+
+    if (lockError) throw lockError;
+    if (!lockedRows?.length) throw new Error('PAYOUT_ALREADY_LOCKED_OR_PROCESSED');
 
     const { data: accountRow, error: accountError } = await supabase
       .from('user_stripe_accounts')
@@ -57,7 +83,7 @@ exports.handler = async (event) => {
 
     const amount = Number(payout.amount || 0);
     const amountMinor = Math.round(amount * 100);
-    if (!amountMinor || amount < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
+    if (!amountMinor) throw new Error('INVALID_PAYOUT_AMOUNT');
 
     let transfer;
     try {
@@ -90,7 +116,7 @@ exports.handler = async (event) => {
         updated_at: now
       })
       .eq('id', payout.id)
-      .eq('status', 'pending');
+      .eq('status', 'processing');
 
     if (updateError) throw updateError;
 
@@ -118,6 +144,7 @@ exports.handler = async (event) => {
 
     return response(200, { ok: true, status: 'paid', transfer_id: transfer.id });
   } catch (error) {
+    await markFailed(supabase, payout, error.message || 'APPROVE_PAYOUT_FAILED');
     console.error('approve-payout error:', error);
     return response(500, { error: error.message || 'APPROVE_PAYOUT_FAILED' });
   }

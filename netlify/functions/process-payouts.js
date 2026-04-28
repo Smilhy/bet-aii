@@ -32,7 +32,7 @@ async function markFailed(supabase, payout, message) {
   const now = new Date().toISOString();
   await supabase
     .from('payout_requests')
-    .update({ stripe_status: 'failed', updated_at: now })
+    .update({ status: 'failed', stripe_status: 'failed', stripe_error: String(message || '').slice(0, 500), processed_at: now, updated_at: now })
     .eq('id', payout.id);
 
   await supabase.from('admin_logs').insert({
@@ -47,6 +47,17 @@ async function markFailed(supabase, payout, message) {
 async function processSinglePayout(supabase, payout) {
   const amount = Number(payout.amount || 0);
   if (amount < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
+
+  const processingTime = new Date().toISOString();
+  const { data: lockedRows, error: lockError } = await supabase
+    .from('payout_requests')
+    .update({ status: 'processing', stripe_status: 'processing', updated_at: processingTime })
+    .eq('id', payout.id)
+    .eq('status', 'pending')
+    .select('id');
+
+  if (lockError) throw lockError;
+  if (!lockedRows?.length) throw new Error('PAYOUT_ALREADY_LOCKED_OR_PROCESSED');
 
   const { data: accountRow, error: accountError } = await supabase
     .from('user_stripe_accounts')
@@ -93,7 +104,7 @@ async function processSinglePayout(supabase, payout) {
       updated_at: now
     })
     .eq('id', payout.id)
-    .eq('status', 'pending');
+    .eq('status', 'processing');
 
   if (updateError) throw updateError;
 

@@ -1573,3 +1573,14 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 .admin-stripe-cell small{font-size:11px;color:#64748b;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 @media(max-width:900px){.admin-payout-stats.admin-payout-stats-pro{grid-template-columns:1fr 1fr}.admin-cron-card{flex-direction:column;align-items:flex-start}.admin-cron-card b{white-space:normal}.admin-payout-row{grid-template-columns:1fr;gap:7px}.admin-payout-row.header{display:none}}
 @media(max-width:640px){.admin-payout-stats.admin-payout-stats-pro{grid-template-columns:1fr}}
+
+/* Wersja 93 — payout production polish */
+.payout-status.processing{background:#eef4ff;color:#3538cd}
+.payout-status.failed{background:#fff1f3;color:#b42318}
+.admin-payout-summary.admin-payout-summary-pro{grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0 18px}
+.admin-cron-card .cron-run-button{border:none;border-radius:999px;background:#087f73;color:#fff;font-weight:1000;padding:12px 18px;box-shadow:0 12px 26px rgba(8,127,115,.18);cursor:pointer;white-space:nowrap}
+.admin-cron-card .cron-run-button:disabled{background:#e5e7eb;color:#667085;box-shadow:none;cursor:not-allowed}
+.admin-action-locked{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#f2f4f7;color:#667085;font-weight:900;padding:8px 12px;min-width:96px}
+.admin-actions button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.25)}
+.admin-stripe-cell small{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+@media(max-width:720px){.admin-payout-summary.admin-payout-summary-pro{grid-template-columns:1fr}.admin-cron-card .cron-run-button{width:100%}}

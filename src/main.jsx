@@ -1137,14 +1137,25 @@ function AdminFinanceView({ report, onRefresh }) {
   )
 }
 
-function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
+function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   const profile = getUserProfileView(user)
-  const pendingRequests = requests.filter(request => request.status === 'pending')
+  const pendingRequests = requests.filter(request => (request.status || 'pending') === 'pending')
+  const processingRequests = requests.filter(request => request.status === 'processing')
   const paidRequests = requests.filter(request => request.status === 'paid')
+  const failedRequests = requests.filter(request => request.status === 'failed' || request.stripe_status === 'failed')
   const rejectedRequests = requests.filter(request => request.status === 'rejected')
+  const payableRequests = pendingRequests.filter(request => Number(request.amount || 0) >= 50)
   const totalPending = pendingRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
   const totalPaid = paidRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
-  const automationReady = pendingRequests.length > 0
+  const automationReady = payableRequests.length > 0
+  const getStripeLabel = (request) => {
+    if (request.stripe_transfer_id) return request.stripe_transfer_id
+    if (request.status === 'rejected') return 'nie dotyczy'
+    if (Number(request.amount || 0) < 50 && (request.status || 'pending') === 'pending') return 'poniżej minimum'
+    if (request.stripe_status === 'failed' || request.status === 'failed') return 'błąd Stripe'
+    if (request.status === 'processing') return 'przetwarzanie'
+    return 'czeka'
+  }
 
   if (!profile.isAdmin) {
     return (
@@ -1174,12 +1185,25 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
         <div><span>Odrzucone</span><b>{rejectedRequests.length}</b></div>
       </div>
 
+      <div className="admin-payout-summary admin-payout-summary-pro">
+        <div>
+          <span>Do automatu cron</span>
+          <strong>{payableRequests.length}</strong>
+          <p>Pending wypłaty od 50 zł gotowe do realnego transferu Stripe.</p>
+        </div>
+        <div>
+          <span>Wymaga uwagi</span>
+          <strong>{failedRequests.length + processingRequests.length}</strong>
+          <p>Pozycje processing/failed do sprawdzenia w logach Stripe i admin_logs.</p>
+        </div>
+      </div>
+
       <div className="admin-cron-card">
         <div>
           <strong>Automatyczne wypłaty — cron ready</strong>
-          <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje pending wypłaty od 50 zł i wykonuje Stripe transfer z idempotency key.</span>
+          <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje tylko pending wypłaty od 50 zł, blokuje duplikaty statusem processing i używa idempotency key.</span>
         </div>
-        <b>{automationReady ? 'Gotowe do przetworzenia' : 'Brak pending'}</b>
+        <button type="button" className="cron-run-button" onClick={onRunCron} disabled={!automationReady}>{automationReady ? 'Uruchom test cron' : 'Brak pending ≥ 50 zł'}</button>
       </div>
 
       <div className="admin-payout-table">
@@ -1199,12 +1223,18 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus }) {
             <span><b>{Number(request.amount || 0).toFixed(2)} zł</b></span>
             <span className={`payout-status ${request.status || 'pending'}`}>{request.status || 'pending'}</span>
             <span className="admin-stripe-cell">
-              <b>{request.stripe_status || '—'}</b>
-              {request.stripe_transfer_id ? <small>{request.stripe_transfer_id}</small> : <small>{request.processed_at ? new Date(request.processed_at).toLocaleString('pl-PL') : 'czeka'}</small>}
+              <b>{request.stripe_status || (request.status === 'rejected' ? 'rejected' : '—')}</b>
+              <small>{getStripeLabel(request)}</small>
             </span>
             <span className="admin-actions">
-              <button type="button" disabled={request.status !== 'pending'} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Stripe transfer</button>
-              <button type="button" disabled={request.status !== 'pending'} className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>❌ Odrzuć</button>
+              {(request.status || 'pending') === 'pending' ? (
+                <>
+                  <button type="button" disabled={Number(request.amount || 0) < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Stripe transfer</button>
+                  <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>❌ Odrzuć</button>
+                </>
+              ) : (
+                <span className="admin-action-locked">Zamknięte</span>
+              )}
             </span>
           </div>
         )) : (
@@ -1542,6 +1572,39 @@ function App() {
   }
 
   
+
+  async function runPayoutCron() {
+    if (!sessionUser?.id || !isAdminUser(sessionUser)) {
+      showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może uruchomić cron wypłat.' })
+      return
+    }
+
+    try {
+      showToast({ type: 'info', title: 'Cron wypłat', message: 'Uruchamiam testowe przetwarzanie pending wypłat...' })
+      const response = await fetch('/.netlify/functions/process-payouts', { method: 'POST' })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Nie udało się uruchomić cron wypłat.')
+      }
+
+      showToast({
+        type: 'success',
+        title: 'Cron zakończony',
+        message: `Przetworzono: ${data.processed || 0}. Sprawdź statusy i transfer ID.`
+      })
+
+      await fetchAdminPayoutRequests()
+      await fetchAdminFinanceReport()
+      if (sessionUser?.id) {
+        await fetchPayoutRequests(sessionUser.id)
+        await fetchTipsterEarnings(sessionUser.id)
+        await fetchWalletBalance(sessionUser.id)
+      }
+    } catch (error) {
+      showToast({ type: 'error', title: 'Błąd cron wypłat', message: formatAppErrorMessage(error.message) })
+    }
+  }
 
   async function updatePayoutStatus(requestId, status) {
     if (!sessionUser?.id || !isAdminUser(sessionUser)) {
@@ -2101,6 +2164,7 @@ function App() {
             user={sessionUser}
             requests={adminPayoutRequests}
             onUpdateStatus={updatePayoutStatus}
+            onRunCron={runPayoutCron}
           />
         )}
 

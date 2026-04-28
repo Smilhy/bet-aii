@@ -641,3 +641,16 @@ Wymagane env na Netlify:
 - opcjonalnie `PAYOUT_CRON_BATCH_SIZE=10`
 - opcjonalnie `CRON_SECRET` dla ręcznego wywołania endpointu
 
+
+## Wersja 93 — production polish payout flow
+
+Dodane w tej paczce:
+- statusy wypłat: `pending`, `processing`, `paid`, `failed`, `rejected`, `blocked_minimum`,
+- manualny `Stripe transfer` blokuje request przez `processing`, żeby nie zrobić duplikatu,
+- cron `process-payouts` też blokuje request przed transferem i finalizuje jako `paid`,
+- failed payout zapisuje `stripe_status = failed` oraz `stripe_error`,
+- admin panel nie pokazuje już aktywnego transferu dla `rejected/paid/failed`, tylko stan zamknięty,
+- przycisk testowego uruchomienia crona z panelu admina,
+- wypłaty poniżej 50 zł nie są przetwarzane i przycisk transferu jest zablokowany.
+
+Przed testem na Netlify/Supabase uruchom końcówkę `supabase/schema.sql`, żeby dodać nowe statusy i kolumnę `stripe_error`.

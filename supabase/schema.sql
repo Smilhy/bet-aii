@@ -2026,3 +2026,13 @@ end;
 $$;
 
 grant execute on function public.create_payout_request(numeric) to authenticated;
+
+-- Wersja 93 — payout production statuses
+alter table public.payout_requests drop constraint if exists payout_requests_status_check;
+alter table public.payout_requests
+  add constraint payout_requests_status_check
+  check (status in ('pending','approved','processing','paid','failed','rejected','blocked_minimum'));
+
+alter table public.payout_requests add column if not exists stripe_error text;
+create index if not exists payout_requests_status_amount_idx
+on public.payout_requests(status, amount, created_at desc);
