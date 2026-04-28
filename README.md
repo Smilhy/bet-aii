@@ -1,3 +1,23 @@
+# Bet+AI — wersja 119 AUTO TIPSTER STATS
+
+Ta paczka bazuje na wersji 118 i dodaje automatyczne liczenie statystyk profilu tipstera z Supabase.
+
+Co dodano:
+- automatyczny winrate z tabeli `tips`,
+- licznik wszystkich typów,
+- licznik premium typów,
+- ROI/profit 7 dni i 30 dni z `earnings`,
+- licznik sprzedaży z `tip_purchases` i `tipster_subscriptions`,
+- licznik kupujących,
+- cache statystyk w `tipster_profiles`,
+- bezpieczny plik SQL: `supabase/version_119_auto_tipster_stats.sql`.
+
+Po wrzuceniu plików:
+1. Supabase SQL Editor → uruchom `supabase/version_119_auto_tipster_stats.sql`.
+2. Netlify → Trigger deploy → Clear cache and deploy site.
+
+---
+
 # Bet+AI — wersja 12 FULL FIXED
 
 Poprawiona wersja 12 bazuje na pełnym wyglądzie z wersji 11 i dodaje feed z Supabase.
