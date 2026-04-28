@@ -746,3 +746,43 @@ SQL nie jest wymagany, jeśli tabela `profiles` i kolumny subskrypcji już istni
 - Naprawiono rozpoznawanie premium tipów po `access_type = premium`.
 - Dodawanie typu premium zapisuje teraz także `is_premium = true`.
 - Profil liczy premium typy poprawnie i nie pokazuje ich jako Free.
+
+## Wersja 103 — Tipster pricing + profile subscriptions
+
+Dodano pełny model marketplace:
+
+- tipster sam ustala cenę pojedynczego typu w formularzu dodawania typu,
+- tipster PREMIUM ustawia ceny dostępu do swojego profilu: 1 tydzień, 1 miesiąc, 6 miesięcy, 1 rok,
+- użytkownik może kupić pojedynczy typ albo dostęp do całego profilu tipstera,
+- platforma pobiera zawsze 20%, tipster dostaje 80%,
+- Stripe Checkout obsługuje zakup pojedynczego typu i dostęp do profilu,
+- webhook zapisuje `tip_purchases`, `tipster_subscriptions`, `earnings` i `unlocked_tips`.
+
+### SQL wymagany dla tej wersji
+
+W Supabase SQL Editor uruchom plik:
+
+`supabase/marketplace_tipster_subscriptions.sql`
+
+Jeśli tabele już istnieją, skrypt używa `if not exists` i `add column if not exists`.
+
+## Wersja 104 — Stripe marketplace step 1
+
+Ta wersja spina realny Stripe checkout z marketplace:
+
+- zakup pojedynczego typu premium,
+- zakup dostępu do profilu tipstera,
+- zapis `unlocked_tips`, `tip_purchases`, `tipster_subscriptions`, `earnings`,
+- prowizja platformy 20%, tipster 80%,
+- endpointy walidują ceny z Supabase, a nie z frontendu.
+
+### SQL wymagany
+Wklej w Supabase SQL Editor:
+
+`supabase/marketplace_stripe_step1.sql`
+
+Po deployu test:
+1. ustaw cenę typu premium,
+2. kup typ kartą testową Stripe,
+3. sprawdź `unlocked_tips`, `tip_purchases`, `earnings`,
+4. kup dostęp do profilu tipstera i sprawdź `tipster_subscriptions`.

@@ -114,6 +114,23 @@ function getPlanLimits(plan) {
   }
 }
 
+const TIPSTER_PLAN_OPTIONS = [
+  { key: 'week', label: '1 tydzień', durationDays: 7, defaultPrice: 10 },
+  { key: 'month', label: '1 miesiąc', durationDays: 30, defaultPrice: 40 },
+  { key: 'half_year', label: '6 miesięcy', durationDays: 180, defaultPrice: 200 },
+  { key: 'year', label: '1 rok', durationDays: 365, defaultPrice: 350 }
+]
+
+function hasActiveTipsterSubscription(tip, subscriptions = []) {
+  const authorId = getTipAuthorId(tip)
+  if (!authorId) return false
+  return subscriptions.some(sub => {
+    if (sub.tipster_id !== authorId || sub.status !== 'active') return false
+    if (!sub.expires_at) return true
+    return new Date(sub.expires_at).getTime() > Date.now()
+  })
+}
+
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile?.isAdmin) return 'ADMIN'
@@ -259,12 +276,12 @@ function Rightbar() {
   )
 }
 
-function TipCard({ tip, unlocked, onUnlock }) {
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
   const probability = Number(tip.ai_probability || 0)
   const isPremium = tip.access_type === 'premium'
-  const isLocked = isPremium && !unlocked
+  const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || 'AdrianNowak'
 
   return (
@@ -304,7 +321,8 @@ function TipCard({ tip, unlocked, onUnlock }) {
         <span className={statusClass}>{statusLabel}</span>
         <span>♡ 128</span><span>▢ 45</span><span>↗</span>
         {isLocked ? (
-          <button className="unlock-btn" onClick={() => onUnlock(tip)}>Odblokuj za {tip.price || 29} zł</button>
+          <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
+            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup dostęp do profilu</button>
         ) : (
           <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
         )}
@@ -456,7 +474,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         {isPremium && (
           <>
-            <label>Cena premium <span>20% prowizji platformy, 80% dla Ciebie</span></label>
+            <label>Cena pojedynczego typu <span>Ty ustalasz cenę. Platforma pobiera zawsze 20%, Ty dostajesz 80%.</span></label>
             <input type="number" step="0.01" value={form.price} onChange={e => update('price', e.target.value)} placeholder="np. 29" />
           </>
         )}
@@ -815,6 +833,80 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
 
 
+function ProfileSubscriptionModal({ tip, user, onClose }) {
+  const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
+  const [loadingKey, setLoadingKey] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadPlans() {
+      const tipsterId = getTipAuthorId(tip)
+      if (!tipsterId || !isSupabaseConfigured || !supabase) return
+      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', tipsterId).eq('active', true)
+      if (Array.isArray(data) && data.length) {
+        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
+          const row = data.find(item => item.plan_key === option.key)
+          return row ? { ...option, label: row.label || option.label, durationDays: Number(row.duration_days || option.durationDays), price: Number(row.price || option.defaultPrice) } : { ...option, price: option.defaultPrice }
+        }))
+      }
+    }
+    loadPlans()
+  }, [tip?.id])
+
+  if (!tip) return null
+  const tipsterId = getTipAuthorId(tip)
+  const tipsterName = tip.author_name || 'Tipster'
+
+  async function buy(plan) {
+    setError('')
+    setLoadingKey(plan.key)
+    try {
+      const response = await fetch('/.netlify/functions/create-tipster-subscription-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          userEmail: user?.email || '',
+          tipsterId,
+          tipsterName,
+          durationDays: plan.durationDays,
+          label: plan.label,
+          price: plan.price
+        })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.url) throw new Error(data.error || 'Nie udało się utworzyć płatności za dostęp do profilu.')
+      window.location.href = data.url
+    } catch (e) {
+      setError(e.message)
+      setLoadingKey('')
+    }
+  }
+
+  return (
+    <div className="payment-backdrop">
+      <div className="payment-modal profile-sub-modal">
+        <div className="payment-icon">👤</div>
+        <h2>Dostęp do profilu tipstera</h2>
+        <p>Kup dostęp do wszystkich typów premium użytkownika <b>{tipsterName}</b>. Platforma zawsze pobiera 20% marży.</p>
+        <div className="profile-sub-grid">
+          {plans.map(plan => (
+            <button key={plan.key} className="profile-sub-option" type="button" onClick={() => buy(plan)} disabled={Boolean(loadingKey)}>
+              <strong>{plan.label}</strong>
+              <b>{Number(plan.price || 0).toFixed(2)} zł</b>
+              <span>Tipster: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
+              <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup dostęp'}</em>
+            </button>
+          ))}
+        </div>
+        {error && <div className="payment-error">{error}</div>}
+        <button className="payment-secondary" onClick={onClose}>Anuluj</button>
+      </div>
+    </div>
+  )
+}
+
+
 function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
@@ -1005,6 +1097,67 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
 }
 
 
+
+function TipsterPricingSettings({ user, onToast }) {
+  const [prices, setPrices] = useState(() => Object.fromEntries(TIPSTER_PLAN_OPTIONS.map(p => [p.key, p.defaultPrice])))
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    async function load() {
+      if (!isSupabaseConfigured || !supabase || !user?.id) return
+      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', user.id)
+      if (Array.isArray(data) && data.length) {
+        setPrices(prev => {
+          const next = { ...prev }
+          data.forEach(row => { if (row.plan_key) next[row.plan_key] = Number(row.price || 0) })
+          return next
+        })
+      }
+    }
+    load()
+  }, [user?.id])
+
+  async function save() {
+    if (!user?.id || !supabase) return
+    setSaving(true)
+    setMessage('')
+    const rows = TIPSTER_PLAN_OPTIONS.map(plan => ({
+      tipster_id: user.id,
+      plan_key: plan.key,
+      label: plan.label,
+      duration_days: plan.durationDays,
+      price: Math.max(1, Number(prices[plan.key] || plan.defaultPrice)),
+      active: true
+    }))
+    const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
+    setSaving(false)
+    if (error) {
+      setMessage('Błąd zapisu cen: ' + formatAppErrorMessage(error.message))
+      return
+    }
+    setMessage('✅ Ceny subskrypcji profilu zapisane.')
+  }
+
+  return (
+    <div className="profile-panel tipster-pricing-panel">
+      <div className="profile-panel-head"><h3>Ceny dostępu do profilu</h3><span>20% marży</span></div>
+      <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
+      <div className="pricing-settings-grid">
+        {TIPSTER_PLAN_OPTIONS.map(plan => (
+          <label key={plan.key}>
+            <span>{plan.label}</span>
+            <input type="number" step="0.01" min="1" value={prices[plan.key]} onChange={e => setPrices(prev => ({ ...prev, [plan.key]: e.target.value }))} />
+            <small>Ty: {(Number(prices[plan.key] || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(prices[plan.key] || 0) * 0.2).toFixed(2)} zł</small>
+          </label>
+        ))}
+      </div>
+      {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
+      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny dostępu'}</button>
+    </div>
+  )
+}
+
 function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) {
   const profile = getUserProfileView(user)
   const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
@@ -1069,6 +1222,10 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
           <div className="profile-empty">Masz {unlockedTips.size} odblokowanych typów premium na tym koncie.</div>
         </div>
       </div>
+
+      {planLimits.isPremium && (
+        <TipsterPricingSettings user={user} onToast={() => {}} />
+      )}
 
       <div className="tipster-pro-card">
         <div><strong>{planLimits.isPremium ? "Konto PREMIUM aktywne" : "Zostań tipsterem PRO"}</strong><span>{planLimits.isPremium ? "Możesz sprzedawać typy premium, korzystać z bonusów i wypłacać do 3 razy w miesiącu." : "Premium odblokowuje sprzedaż typów, avatar, bonusy, AI/statystyki i znosi limit 5 typów dziennie."}</span></div>
@@ -1390,6 +1547,8 @@ function App() {
   const userProfile = getUserProfileView(sessionUser)
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
+  const [selectedProfileSub, setSelectedProfileSub] = useState(null)
+  const [tipsterSubscriptions, setTipsterSubscriptions] = useState([])
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
   const [accountPlan, setUserPlan] = useState('free')
@@ -1441,8 +1600,13 @@ function App() {
     setUnlockedTips(unlockedSet)
 
     const sourceTips = tipsData?.length ? tipsData : staticTips
-    const visibleTips = sourceTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedSet))
-    setTips(visibleTips)
+    let activeSubs = []
+    if (userId) {
+      const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
+      activeSubs = Array.isArray(subRows) ? subRows.filter(row => !row.expires_at || new Date(row.expires_at).getTime() > Date.now()) : []
+      setTipsterSubscriptions(activeSubs)
+    }
+    setTips(sourceTips)
   }
 
 
@@ -1468,6 +1632,18 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    if (params.get('profile_sub') === 'success') {
+      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów tipstera zostanie odświeżony.' })
+      if (sessionUser?.id) {
+        fetchTips(sessionUser.id)
+        fetchPaymentHistory(sessionUser.id)
+      }
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+    if (params.get('profile_sub') === 'cancel') {
+      showToast({ type: 'info', title: 'Dostęp do profilu', message: 'Zakup dostępu został anulowany.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
     if (params.get('wallet_topup') === 'success') {
       showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
       if (sessionUser?.id) {
@@ -2300,6 +2476,7 @@ function App() {
   return (
     <div className="app-shell">
       <Toast toast={toast} onClose={() => setToast(null)} />
+      <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
         tip={selectedPayment}
         user={sessionUser}
@@ -2428,7 +2605,7 @@ function App() {
             </div>
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} onUnlock={unlockTip} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
