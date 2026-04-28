@@ -896,42 +896,70 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 }
 
 
-function LeaderboardView({ tips }) {
-  const baseTipsters = [
-    { name: 'FitMateusz', avatar: 'FM', roi: 24.5, winrate: 71, profit: 3250, tips: 128, badge: 'PRO' },
-    { name: 'Kamil_98', avatar: 'K', roi: 18.7, winrate: 66, profit: 2150, tips: 96, badge: 'VIP' },
-    { name: 'Zuzanna07', avatar: 'Z', roi: 16.3, winrate: 64, profit: 1870, tips: 83, badge: 'VIP' },
-    { name: 'AdrianNowak', avatar: 'AN', roi: 15.1, winrate: 62, profit: 1650, tips: 42, badge: 'TY' },
-    { name: 'AI Tip', avatar: 'AI', roi: 21.2, winrate: 69, profit: 2890, tips: 156, badge: 'AI' }
-  ]
+function LeaderboardView({ tips = [], ranking = [] }) {
+  const realRows = Array.isArray(ranking) ? ranking : []
 
-  const dynamic = tips.reduce((acc, tip) => {
-    const name = tip.author_name || 'AdrianNowak'
-    if (!acc[name]) acc[name] = { name, count: 0, premium: 0 }
-    acc[name].count += 1
-    if (tip.access_type === 'premium') acc[name].premium += 1
+  const fallbackDynamic = tips.reduce((acc, tip) => {
+    const key = tip.author_id || tip.author_email || tip.author_name || 'unknown'
+    const name = tip.author_name || tip.author_email || 'Tipster'
+    if (!acc[key]) {
+      acc[key] = {
+        tipster_id: key,
+        display_name: name,
+        email: tip.author_email || '',
+        roi: 0,
+        winrate: 0,
+        earnings: 0,
+        total_sales: 0,
+        buyers_count: 0,
+        total_tips: 0,
+        premium_tips: 0
+      }
+    }
+    acc[key].total_tips += 1
+    if (tip.access_type === 'premium' || tip.is_premium) acc[key].premium_tips += 1
     return acc
   }, {})
 
-  const rows = baseTipsters.map(t => ({
-    ...t,
-    liveTips: dynamic[t.name]?.count || 0,
-    premiumTips: dynamic[t.name]?.premium || 0
-  })).sort((a,b) => b.roi - a.roi)
+  const rows = (realRows.length ? realRows : Object.values(fallbackDynamic))
+    .map((row) => {
+      const name = row.display_name || row.author_name || row.username || row.email || 'Tipster'
+      const totalTips = Number(row.total_tips || row.tips_count || 0)
+      const premiumTips = Number(row.premium_tips || 0)
+      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || 0)
+      const sales = Number(row.total_sales || row.sales_count || 0)
+      const buyers = Number(row.buyers_count || row.unique_buyers || 0)
+      const roi = Number(row.roi || row.roi_30d || 0)
+      const winrate = Number(row.winrate || 0)
+      return {
+        ...row,
+        name,
+        avatar: name.slice(0, 2).toUpperCase(),
+        roi,
+        winrate,
+        earnings,
+        totalSales: sales,
+        buyers,
+        totalTips,
+        premiumTips,
+        badge: sales >= 10 ? 'TOP SELLER' : roi > 0 ? 'ROI PRO' : 'LIVE'
+      }
+    })
+    .sort((a, b) => (b.roi - a.roi) || (b.earnings - a.earnings) || (b.winrate - a.winrate) || (b.totalTips - a.totalTips))
 
   return (
     <section className="leaderboard-page">
       <div className="leaderboard-hero">
         <div>
           <h1>Ranking tipsterów</h1>
-          <p>Leaderboard marketplace: ROI, skuteczność, profit i aktywność sprzedawców typów.</p>
+          <p>Realny leaderboard z Supabase: ROI, sprzedaż, winrate i aktywność tipsterów.</p>
         </div>
-        <div className="leaderboard-badge">LIVE</div>
+        <div className="leaderboard-badge">REAL STATS</div>
       </div>
 
       <div className="leaderboard-stats">
-        <div><span>Najlepszy ROI</span><b>{rows[0].roi}%</b></div>
-        <div><span>Top profit</span><b>+{rows[0].profit.toLocaleString('pl-PL')} zł</b></div>
+        <div><span>Najlepszy ROI</span><b>{rows.length ? `${Number(rows[0].roi || 0).toFixed(2)}%` : '0.00%'}</b></div>
+        <div><span>Top sprzedaż</span><b>{rows.length ? `${Number(rows[0].earnings || 0).toFixed(2)} zł` : '0.00 zł'}</b></div>
         <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
         <div><span>Typy w bazie</span><b>{tips.length}</b></div>
       </div>
@@ -942,28 +970,30 @@ function LeaderboardView({ tips }) {
           <span>Tipster</span>
           <span>ROI</span>
           <span>Winrate</span>
-          <span>Profit</span>
+          <span>Sprzedaż</span>
           <span>Typy</span>
           <span>Premium</span>
         </div>
 
-        {rows.map((row, index) => (
-          <div className="leaderboard-row" key={row.name}>
+        {rows.length ? rows.map((row, index) => (
+          <div className="leaderboard-row" key={row.tipster_id || row.name}>
             <span className={`place place-${index+1}`}>{index + 1}</span>
             <span className="leader-user">
-              <div className={row.name === 'AI Tip' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
+              <div className={row.badge === 'TOP SELLER' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
               <div>
                 <b>{row.name}</b>
-                <em>{row.badge}</em>
+                <em>{row.badge} · {row.totalSales} sprzedaży · {row.buyers} kupujących</em>
               </div>
             </span>
-            <span className="roi">+{row.roi}%</span>
-            <span>{row.winrate}%</span>
-            <span className="profit">+{row.profit.toLocaleString('pl-PL')} zł</span>
-            <span>{row.tips + row.liveTips}</span>
+            <span className="roi">{Number(row.roi || 0).toFixed(2)}%</span>
+            <span>{Number(row.winrate || 0).toFixed(2)}%</span>
+            <span className="profit">{Number(row.earnings || 0).toFixed(2)} zł</span>
+            <span>{row.totalTips}</span>
             <span>{row.premiumTips}</span>
           </div>
-        ))}
+        )) : (
+          <div className="leaderboard-empty">Dodaj zakończone typy i pierwsze sprzedaże, aby ranking realny pojawił się tutaj.</div>
+        )}
       </div>
 
       <div className="tipster-cta">
@@ -3001,7 +3031,7 @@ function App() {
         )}
 
         {view === 'leaderboard' && (
-          <LeaderboardView tips={tips} />
+          <LeaderboardView tips={tips} ranking={realRanking} />
         )}
 
         {view === 'notifications' && (

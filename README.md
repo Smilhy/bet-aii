@@ -822,3 +822,19 @@ Kolejność wdrożenia:
 1. Wrzuć całą paczkę na GitHub.
 2. W Supabase odpal: `supabase/version_118_tipster_profile_pro.sql`.
 3. Netlify: Trigger deploy → Clear cache and deploy site.
+
+## Wersja 120 — LIVE STATS + TOP TIPSTERS
+
+Dodano realny ranking tipsterów z Supabase:
+
+- ranking oparty o prawdziwe ROI,
+- top sprzedaż z zakupów typów i subskrypcji profilu,
+- top winrate z zakończonych typów,
+- liczba sprzedaży, kupujących, typów i premium typów,
+- prawy panel Top tipsterzy oraz zakładka Ranking korzystają z widoku `tipster_ranking`.
+
+Po wrzuceniu paczki uruchom w Supabase:
+
+`supabase/version_120_live_stats_top_tipsters.sql`
+
+Potem Netlify: **Clear cache and deploy site**.
