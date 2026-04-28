@@ -246,16 +246,36 @@ return (
   )
 }
 
-function Rightbar() {
+function formatRankingName(row) {
+  const email = row?.email || row?.username || 'Tipster'
+  return String(email).includes('@') ? String(email).split('@')[0] : String(email)
+}
+
+function formatMoney(value) {
+  return `${Number(value || 0).toFixed(2)} zł`
+}
+
+function Rightbar({ ranking = [] }) {
+  const realRanking = Array.isArray(ranking) ? ranking : []
+
   return (
     <aside className="rightbar">
-      <section className="panel">
-        <div className="panel-head"><h2>Top typerzy</h2><a>Zobacz wszystkich</a></div>
-        <div className="rank first"><span>1</span><div className="mini-avatar">FM</div><div><b>FitMateusz</b><small>ROI: 24.5%</small></div><strong>+3,250 zł</strong></div>
-        <div className="rank second"><span>2</span><div className="mini-avatar">K</div><div><b>Kamil_98</b><small>ROI: 18.7%</small></div><strong>+2,150 zł</strong></div>
-        <div className="rank third"><span>3</span><div className="mini-avatar female">Z</div><div><b>Zuzanna07</b><small>ROI: 16.3%</small></div><strong>+1,870 zł</strong></div>
-        <div className="rank"><span>4</span><div className="mini-avatar">AN</div><div><b>AdrianNowak</b><small>ROI: 15.1%</small></div><strong>+1,650 zł</strong></div>
-        <div className="rank"><span>5</span><div className="mini-avatar female">M</div><div><b>Maksymilian</b><small>ROI: 14.8%</small></div><strong>+1,420 zł</strong></div>
+      <section className="panel real-ranking-panel">
+        <div className="panel-head"><h2>🏆 Top tipsterzy</h2><a>Ranking real</a></div>
+        {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
+          <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
+            <span>{index + 1}</span>
+            <div className="mini-avatar">{formatRankingName(row).slice(0, 2).toUpperCase()}</div>
+            <div>
+              <b>{formatRankingName(row)}</b>
+              <small>ROI: {Number(row.roi || 0).toFixed(2)} zł • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
+              <small>Typy: {Number(row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)}</small>
+            </div>
+            <strong>+{formatMoney(row.earnings || row.total_earnings || 0)}</strong>
+          </div>
+        )) : (
+          <div className="empty-mini">Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.</div>
+        )}
       </section>
 
       <section className="panel">
@@ -1639,6 +1659,33 @@ function App() {
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
   const [notifications, setNotifications] = useState([])
+  const [realRanking, setRealRanking] = useState([])
+
+  async function fetchRealRanking() {
+    if (!isSupabaseConfigured || !supabase) {
+      setRealRanking([])
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tipster_ranking')
+        .select('*')
+        .order('earnings', { ascending: false })
+        .limit(5)
+
+      if (error) {
+        console.error('fetchRealRanking error', error)
+        setRealRanking([])
+        return
+      }
+
+      setRealRanking(data || [])
+    } catch (error) {
+      console.error('fetchRealRanking exception', error)
+      setRealRanking([])
+    }
+  }
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
@@ -1679,6 +1726,7 @@ function App() {
       setTipsterSubscriptions(activeSubs)
     }
     setTips(sourceTips)
+    fetchRealRanking()
   }
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
@@ -2460,6 +2508,7 @@ function App() {
       try { await fetchUserPlan(userId) } catch (e) { console.error(e) }
       try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
       try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
+      try { await fetchRealRanking() } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
     }
@@ -2839,7 +2888,7 @@ function App() {
         )}
       </main>
 
-      <Rightbar />
+      <Rightbar ranking={realRanking} />
     </div>
   )
 }
