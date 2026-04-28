@@ -296,12 +296,12 @@ return (
         <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
         {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
-        <button>✦ AI Typy</button>
+        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>✦ AI Typy</button>
         <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
         <button>▣ Moje subskrypcje</button>
-        <button>☷ Ranking</button>
-        <button>▥ Statystyki</button>
+        <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>☷ Ranking</button>
+        <button className={view === 'stats' ? 'active' : ''} onClick={() => setView('stats')}>▥ Statystyki</button>
         <button>◷ Kalendarz</button>
         <button>☰ Blog</button>
         <button>♧ Społeczność</button>
@@ -1133,6 +1133,78 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   )
 }
 
+
+
+function StatPill({ label, value, tone = '' }) {
+  return <div className={`stat-pro-card ${tone}`}><span>{label}</span><b>{value}</b></div>
+}
+
+function StatsView({ tips = [] }) {
+  const settled = tips.filter(t => ['win','won','lose','lost','loss','push'].includes(String(t.result || t.status || '').toLowerCase()))
+  const wins = settled.filter(t => ['win','won'].includes(String(t.result || t.status || '').toLowerCase())).length
+  const losses = settled.filter(t => ['lose','lost','loss'].includes(String(t.result || t.status || '').toLowerCase())).length
+  const push = settled.filter(t => String(t.result || t.status || '').toLowerCase() === 'push').length
+  const totalStake = Math.max(1, settled.length * 100)
+  const profit = settled.reduce((sum, tip) => {
+    const r = String(tip.result || tip.status || '').toLowerCase()
+    const odds = Number(tip.odds || 1)
+    if (['win','won'].includes(r)) return sum + ((odds - 1) * 100)
+    if (['lose','lost','loss'].includes(r)) return sum - 100
+    return sum
+  }, 0)
+  const winrate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0
+  const roi = Math.round((profit / totalStake) * 100)
+  const recent = tips.slice(0, 20).map(t => String(t.result || t.status || 'pending').toLowerCase())
+  const byLeague = tips.reduce((acc, t) => {
+    const key = t.league || t.country || 'Inne'
+    if (!acc[key]) acc[key] = { league: key, bets: 0, wins: 0, profit: 0 }
+    acc[key].bets += 1
+    const r = String(t.result || t.status || '').toLowerCase()
+    const odds = Number(t.odds || 1)
+    if (['win','won'].includes(r)) { acc[key].wins += 1; acc[key].profit += (odds - 1) * 100 }
+    if (['lose','lost','loss'].includes(r)) acc[key].profit -= 100
+    return acc
+  }, {})
+  const leagueRows = Object.values(byLeague).sort((a,b) => b.bets - a.bets).slice(0, 8)
+  const aiTips = tips.filter(t => getAiConfidence(t) > 0)
+  const avgAi = aiTips.length ? Math.round(aiTips.reduce((a,t)=>a+getAiConfidence(t),0)/aiTips.length) : 0
+
+  return (
+    <section className="stats-pro-page">
+      <div className="stats-pro-hero">
+        <div><span>BETAI ANALYTICS</span><h1>Statystyki modelu i wyników</h1><p>Profit, winrate, ROI, forma, dystrybucja i performance lig w stylu Twojej poprzedniej strony.</p></div>
+        <div className="stats-pro-filters"><button className="active">All Time</button><button>This Month</button><button>This Week</button></div>
+      </div>
+      <div className="stats-pro-grid four">
+        <StatPill label="Łączny profit" value={`${Math.round(profit)} PLN`} tone={profit < 0 ? 'danger' : 'success'} />
+        <StatPill label="Win rate" value={`${winrate}%`} />
+        <StatPill label="ROI" value={`${roi}%`} tone={roi < 0 ? 'danger' : 'success'} />
+        <StatPill label="Rozliczone typy" value={settled.length || tips.length} />
+      </div>
+      <div className="stats-pro-grid two">
+        <div className="stats-panel distribution"><h3>Win/Loss Distribution</h3><div className="donut" style={{'--win': `${Math.max(5, winrate)}%`}}><span>{winrate}%</span></div><div className="legend"><p><b className="green"/> Won <strong>{wins}</strong></p><p><b className="red"/> Lost <strong>{losses}</strong></p><p><b className="yellow"/> Push <strong>{push}</strong></p></div></div>
+        <div className="stats-panel bars"><h3>Performance by AI Confidence</h3><div className="bar-chart"><i style={{height: `${Math.max(12, avgAi)}%`}}/><i className="red" style={{height: `${Math.max(12, 100-avgAi)}%`}}/></div><div className="bar-labels"><span>AI avg {avgAi}%</span><span>Risk {Math.max(0,100-avgAi)}%</span></div></div>
+      </div>
+      <div className="stats-pro-grid two small">
+        <div className="stats-panel streak"><h3>Streak Analysis</h3><p>Current <b>{recent[0]?.includes('win') ? '1 Win' : recent[0]?.includes('lose') ? '1 Loss' : 'Pending'}</b></p><p>Best Win <b>{wins}</b></p><p>Worst Loss <b>{losses}</b></p></div>
+        <div className="stats-panel recent-form"><h3>Recent Form (Last 20)</h3><div>{recent.map((r,i) => <span key={i} className={r.includes('win') ? 'w' : r.includes('lose') ? 'l' : 'p'}>{r.includes('win') ? 'W' : r.includes('lose') ? 'L' : 'P'}</span>)}</div><small>W = wygrana, L = przegrana, P = pending/live</small></div>
+      </div>
+      <div className="stats-panel table-panel"><h3>Performance by Division</h3><div className="stats-table"><div><b>Division</b><b>Bets</b><b>Hit Rate</b><b>Profit</b><b>ROI</b></div>{leagueRows.map(row => { const hit = row.bets ? Math.round((row.wins / row.bets) * 100) : 0; const rowRoi = row.bets ? Math.round(row.profit / (row.bets * 100) * 100) : 0; return <div key={row.league}><span>{row.league}</span><span>{row.bets}</span><span>{hit}%</span><span className={row.profit < 0 ? 'danger-text' : 'success-text'}>{Math.round(row.profit)} PLN</span><span>{rowRoi}%</span></div> })}</div></div>
+    </section>
+  )
+}
+
+function AiPicksView({ tips = [], loading = false, generating = false, onGenerate, onRefresh }) {
+  const aiTips = tips.filter(t => getAiConfidence(t) > 0 || t.author_name === 'AI Tip').slice().sort((a,b) => getAiScore(b) - getAiScore(a))
+  const top = aiTips.slice(0, 3)
+  return (
+    <section className="ai-pro-page">
+      <div className="ai-pro-hero"><div><span>REAL AI PICKS ENGINE</span><h1>Najlepsze AI typy dnia</h1><p>Backend pobiera mecze i kursy, liczy value, confidence i generuje analizę AI. Klucze są tylko w Netlify ENV.</p></div><div className="ai-actions"><button onClick={onGenerate} disabled={generating}>{generating ? 'Generuję...' : 'Wygeneruj AI typy'}</button><button onClick={onRefresh} disabled={loading}>Odśwież</button></div></div>
+      <div className="ai-top-grid">{top.map((tip, i) => <div className="ai-top-card" key={tip.id || i}><em>#{i+1} AI PICK</em><h3>{tip.team_home || tip.home_team || 'Home'} vs {tip.team_away || tip.away_team || 'Away'}</h3><b>AI {getAiConfidence(tip)}%</b><span>Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</span><p>{getAiAnalysis(tip)}</p></div>)}</div>
+      <div className="ai-list">{aiTips.length ? aiTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={true} currentUser={null} followingTipsters={new Set()} onUnlock={() => {}} onToggleFollow={() => {}} onOpenTipster={() => {}} />) : <div className="empty-state">Brak AI typów. Kliknij „Wygeneruj AI typy” po dodaniu kluczy API w Netlify.</div>}</div>
+    </section>
+  )
+}
 
 function LeaderboardView({ tips = [], ranking = [] }) {
   const realRows = Array.isArray(ranking) ? ranking : []
@@ -2173,6 +2245,7 @@ function App() {
   const [realRanking, setRealRanking] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
+  const [aiGenerating, setAiGenerating] = useState(false)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
@@ -2273,6 +2346,22 @@ function App() {
       console.error('fetchReferralData error', error)
     } finally {
       setReferralLoading(false)
+    }
+  }
+
+  async function runRealAiEngine() {
+    setAiGenerating(true)
+    try {
+      const response = await fetch('/.netlify/functions/generate-ai-picks', { method: 'POST' })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się wygenerować AI typów')
+      showToast({ type: 'success', title: 'AI Typy', message: `Wygenerowano ${data.inserted || 0} typów AI.` })
+      await fetchTips(sessionUser?.id)
+    } catch (error) {
+      console.error('runRealAiEngine error', error)
+      showToast({ type: 'error', title: 'AI Engine', message: error.message || 'Sprawdź klucze API w Netlify ENV.' })
+    } finally {
+      setAiGenerating(false)
     }
   }
 
@@ -3323,7 +3412,7 @@ function App() {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
     if (activeFilter === 'premium') return tip.access_type === 'premium'
-    if (activeFilter === 'ai') return tip.author_name === 'AI Tip'
+    if (activeFilter === 'ai') return tip.author_name === 'AI Tip' || getAiConfidence(tip) > 0
     if (activeFilter === 'mine') return (tip.author_name || 'AdrianNowak') === 'AdrianNowak'
     return true
   })
@@ -3391,6 +3480,14 @@ function App() {
 
         {view === 'referrals' && (
           <ReferralsView user={sessionUser} data={referralData} loading={referralLoading} onRefresh={() => fetchReferralData(sessionUser?.id)} />
+        )}
+
+        {view === 'aiPicks' && (
+          <AiPicksView tips={tips} loading={loading} generating={aiGenerating} onGenerate={runRealAiEngine} onRefresh={() => fetchTips(sessionUser?.id)} />
+        )}
+
+        {view === 'stats' && (
+          <StatsView tips={tips} />
         )}
 
         {view === 'notifications' && (

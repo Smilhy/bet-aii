@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-132-ai-system",
-  "version": "132.0.0",
+  "name": "betai-wersja-133-real-ai-picks-engine-pro",
+  "version": "133.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
