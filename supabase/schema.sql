@@ -2036,3 +2036,32 @@ alter table public.payout_requests
 alter table public.payout_requests add column if not exists stripe_error text;
 create index if not exists payout_requests_status_amount_idx
 on public.payout_requests(status, amount, created_at desc);
+
+-- Wersja 94 — Stripe SaaS subscriptions + paywall
+alter table if exists public.user_subscriptions
+  add column if not exists status text default 'active',
+  add column if not exists stripe_customer_id text,
+  add column if not exists stripe_subscription_id text,
+  add column if not exists current_period_end timestamptz,
+  add column if not exists cancel_at_period_end boolean default false;
+
+create index if not exists user_subscriptions_stripe_customer_idx
+on public.user_subscriptions(stripe_customer_id);
+
+create index if not exists user_subscriptions_stripe_subscription_idx
+on public.user_subscriptions(stripe_subscription_id);
+
+create or replace function public.is_premium_user(p_user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.user_subscriptions us
+    where us.user_id = p_user_id
+      and us.plan = 'premium'
+      and coalesce(us.status, 'active') in ('active','trialing')
+  );
+$$;

@@ -654,3 +654,36 @@ Dodane w tej paczce:
 - wypłaty poniżej 50 zł nie są przetwarzane i przycisk transferu jest zablokowany.
 
 Przed testem na Netlify/Supabase uruchom końcówkę `supabase/schema.sql`, żeby dodać nowe statusy i kolumnę `stripe_error`.
+
+## Wersja 94 — Stripe SaaS subscriptions + paywall
+
+Dodane w tej paczce:
+- Stripe Checkout w trybie `subscription` dla Premium SaaS.
+- Obsługa `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_succeeded`, `invoice.payment_failed` w webhooku.
+- Stripe Billing Portal przez `/.netlify/functions/create-customer-portal`.
+- Nowy ekran `Subskrypcja` w sidebarze.
+- Paywall: konto FREE nie zapisze płatnego typu premium; Premium/admin może publikować premium.
+- Rozszerzenie tabeli `user_subscriptions` o status Stripe, customer ID, subscription ID, okres rozliczeniowy i cancel flag.
+
+ENV do ustawienia w Netlify:
+- `STRIPE_PREMIUM_PRICE_ID` — rekomendowane, miesięczny Price z Stripe Dashboard.
+- `PREMIUM_MONTHLY_PRICE_GROSZE=2900` — fallback, gdy nie podasz Price ID.
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `SUPABASE_URL` / `VITE_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Webhook Stripe powinien nasłuchiwać minimum:
+- `checkout.session.completed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+- `account.updated` dla Stripe Connect wypłat
+
+Po deployu przetestuj:
+1. Konto FREE → próba dodania premium typu powinna pokazać blokadę paywall.
+2. Kliknij Subskrypcja → Aktywuj Premium przez Stripe.
+3. Po powrocie i webhooku konto ma status Premium.
+4. Konto Premium może dodać typ premium.
+5. Billing Portal otwiera zarządzanie/anulowanie subskrypcji.

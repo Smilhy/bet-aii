@@ -139,7 +139,7 @@ const staticTips = [
 
 
 
-function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, onLogout }) {
+function Sidebar({ view, setView, wallet, unlockedCount, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
@@ -149,7 +149,7 @@ return (
         <div className="avatar">{profile.initials}</div>
         <div>
           <strong>{profile.username}</strong>
-          <span className="pill">{typeof getDisplayRole === "function" ? getDisplayRole(user, userPlan) : (userPlan === "premium" ? "VIP" : "FREE")}</span>
+          <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
@@ -164,6 +164,7 @@ return (
         <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
+        <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>🔐 Subskrypcja</button>
         <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
         <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
@@ -187,7 +188,7 @@ return (
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>
+        {userPlan === 'premium' ? <button onClick={() => setView('subscriptions')}>Zarządzaj Premium</button> : <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>}
       </div>
     </aside>
   )
@@ -278,7 +279,7 @@ function TipCard({ tip, unlocked, onUnlock }) {
   )
 }
 
-function AddTipForm({ onTipSaved, onToast, user }) {
+function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [form, setForm] = useState({
     team_home: 'Real Madryt',
     team_away: 'Bayern Monachium',
@@ -322,6 +323,11 @@ function AddTipForm({ onTipSaved, onToast, user }) {
     if (!payload.team_home || !payload.team_away || !payload.league || !payload.bet_type || !payload.odds) {
       setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
+      return
+    }
+    if (payload.access_type === 'premium' && userPlan !== 'premium' && !isAdminUser(user)) {
+      setMessage('Premium wymagane do publikowania płatnych typów.')
+      onToast?.({ type: 'error', title: 'Paywall', message: 'Aktywuj subskrypcję Premium, aby publikować płatne typy.' })
       return
     }
     if (!isSupabaseConfigured || !supabase) {
@@ -764,6 +770,56 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 }
 
 
+
+function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
+  const isPremium = userPlan === 'premium'
+  return (
+    <section className="subscription-page">
+      <div className="subscription-hero">
+        <div>
+          <h1>Subskrypcja BetAI</h1>
+          <p>Stripe SaaS: miesięczny Premium, paywall i dostęp PRO dla tipsterów.</p>
+        </div>
+        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</div>
+      </div>
+
+      <div className="pricing-grid">
+        <div className="pricing-card">
+          <span>FREE</span>
+          <strong>0 zł</strong>
+          <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
+          <ul>
+            <li>✓ Darmowe typy</li>
+            <li>✓ Portfel i historia</li>
+            <li>✕ Publikowanie premium</li>
+          </ul>
+        </div>
+
+        <div className="pricing-card featured">
+          <span>PREMIUM</span>
+          <strong>29 zł / miesiąc</strong>
+          <p>Pełny SaaS plan z paywallem i marketplace premium.</p>
+          <ul>
+            <li>✓ Publikowanie typów premium</li>
+            <li>✓ Dostęp do analiz PRO</li>
+            <li>✓ Monetyzacja i wypłaty tipstera</li>
+            <li>✓ Stripe Billing Portal</li>
+          </ul>
+          {isPremium ? (
+            <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
+          ) : (
+            <button type="button" onClick={onUpgrade}>Aktywuj Premium przez Stripe</button>
+          )}
+        </div>
+      </div>
+
+      <div className="paywall-rules-card">
+        <strong>Paywall aktywny</strong>
+        <span>Konto FREE widzi tylko darmowe typy i nie może publikować płatnych typów premium. Premium uruchamia się po webhooku Stripe i może być anulowane przez Billing Portal.</span>
+      </div>
+    </section>
+  )
+}
 function PaymentsView({ payments }) {
   const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
 
@@ -1683,6 +1739,29 @@ function App() {
     }
   }
 
+  async function openCustomerPortal() {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby zarządzać subskrypcją.' })
+      return
+    }
+
+    try {
+      showToast({ type: 'info', title: 'Stripe Billing', message: 'Otwieram panel zarządzania subskrypcją...' })
+      const response = await fetch('/.netlify/functions/create-customer-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: sessionUser.id })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Nie udało się otworzyć Stripe Billing Portal.')
+      }
+      window.location.href = data.url
+    } catch (error) {
+      showToast({ type: 'error', title: 'Billing Portal', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
   async function startStripeTopup(amount = 100) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby doładować konto.' })
@@ -1738,7 +1817,7 @@ function App() {
 
     const { data, error } = await supabase
       .from('user_subscriptions')
-      .select('plan')
+      .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -1749,7 +1828,7 @@ function App() {
       return
     }
 
-    setUserPlan(data.plan)
+    setUserPlan(['active','trialing'].includes(data.status) || data.plan === 'premium' ? 'premium' : 'free')
   }
 
   async function fetchPayoutRequests(userId = sessionUser?.id) {
@@ -2108,7 +2187,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} onTopUp={() => startStripeTopup(100)} user={sessionUser} userPlan={accountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -2125,6 +2204,7 @@ function App() {
         {view === 'add' && (
           <AddTipForm
             user={sessionUser}
+            userPlan={accountPlan}
             onToast={showToast}
             onTipSaved={() => {
               fetchTips(sessionUser?.id)
@@ -2144,6 +2224,10 @@ function App() {
 
         {view === 'payments' && (
           <PaymentsView payments={paymentHistory} />
+        )}
+
+        {view === 'subscriptions' && (
+          <SubscriptionView userPlan={accountPlan} onUpgrade={runPremiumCheckout} onManage={openCustomerPortal} />
         )}
 
         {view === 'earnings' && (

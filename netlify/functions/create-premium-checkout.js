@@ -15,30 +15,43 @@ exports.handler = async (event) => {
     }
 
     const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://unique-queijadas-333bcd.netlify.app';
+    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+    const amount = Number(process.env.PREMIUM_MONTHLY_PRICE_GROSZE || process.env.PREMIUM_PRICE_GROSZE || 2900);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      customer_email: email || undefined,
-      line_items: [
-        {
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : {
           price_data: {
             currency: 'pln',
+            recurring: { interval: 'month' },
             product_data: {
-              name: 'BetAI Premium',
-              description: 'Konto Premium: publikowanie typów premium, większe limity i monetyzacja analiz'
+              name: 'BetAI Premium Monthly',
+              description: 'Subskrypcja Premium: paywall, typy premium, większe limity i monetyzacja analiz'
             },
-            unit_amount: Number(process.env.PREMIUM_PRICE_GROSZE || 2900)
+            unit_amount: amount
           },
           quantity: 1
-        }
-      ],
+        };
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      customer_email: email || undefined,
+      client_reference_id: user_id,
+      line_items: [lineItem],
+      allow_promotion_codes: true,
       success_url: `${siteUrl}/?premium=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/?premium=cancel`,
       metadata: {
-        kind: 'premium_access',
+        kind: 'premium_subscription',
         user_id,
-        amount: String(Number(process.env.PREMIUM_PRICE_GROSZE || 2900) / 100)
+        amount: String(amount / 100)
+      },
+      subscription_data: {
+        metadata: {
+          kind: 'premium_subscription',
+          user_id
+        }
       }
     });
 
@@ -50,7 +63,7 @@ exports.handler = async (event) => {
     console.error('create-premium-checkout error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message || 'Stripe Premium checkout error' })
+      body: JSON.stringify({ error: error.message || 'Stripe Premium subscription checkout error' })
     };
   }
 };
