@@ -1977,3 +1977,64 @@ body{
   .betai-hero-stats{position:relative!important;right:auto!important;top:auto!important;bottom:auto!important;width:auto!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none!important;margin-top:18px!important}
   .betai-hero-panel h1{font-size:42px!important}
 }
+
+/* =====================================================
+   VERSION 126 — EXPANDED LAYOUT + SOURCE TYPOGRAPHY COLORS
+   Global font/color system copied from reference site and applied across tabs.
+   ===================================================== */
+:root{
+  --bg:#030812!important;
+  --bg-2:#020812!important;
+  --panel:#08131d!important;
+  --panel-2:#0b1724!important;
+  --card:rgba(8,19,29,.97)!important;
+  --card-2:rgba(5,10,16,.98)!important;
+  --border:rgba(255,255,255,.08)!important;
+  --border-strong:rgba(31,226,174,.18)!important;
+  --text:#f5fbff!important;
+  --text-soft:#dce7ee!important;
+  --muted:#9fb0be!important;
+  --muted-2:#7f95a8!important;
+  --primary:#1fe2ae!important;
+  --primary-2:#19c98f!important;
+  --primary-soft:rgba(31,226,174,.14)!important;
+  --green:#1fe2ae!important;
+  --danger:#ef5350!important;
+  --warning:#f59e0b!important;
+  --blue:#57a6ff!important;
+  --shadow:0 24px 70px rgba(0,0,0,.42)!important;
+  --shadow-soft:0 12px 30px rgba(0,0,0,.22)!important;
+  --radius:28px!important;
+}
+html,body,#root{background:#020812!important;color:var(--text)!important;font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+body{background:
+  radial-gradient(circle at 18% 12%,rgba(31,226,174,.12),transparent 24%),
+  radial-gradient(circle at 88% 2%,rgba(87,166,255,.10),transparent 28%),
+  linear-gradient(135deg,#01050a 0%,#020812 46%,#030a14 100%)!important;
+}
+body,button,input,textarea,select{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important}
+.app-shell{width:min(100%, 1920px)!important;grid-template-columns:270px minmax(0,1.45fr) 330px!important;gap:22px!important;padding:22px 28px!important}
+.sidebar{background:linear-gradient(180deg,rgba(8,19,29,.97),rgba(5,10,16,.98))!important;border-color:rgba(255,255,255,.08)!important;box-shadow:var(--shadow)!important}
+.main{gap:14px!important}.rightbar{width:100%!important}
+.topbar,.panel,.user-card,.tip-form,.tip-card,.feed-filters,.skeleton-card,.wallet-card,.profile-card,.earnings-card,.payout-card,.admin-finance-card,.admin-cron-card,.subscription-hero,.paywall-rules-card,.marketplace-card,.leaderboard-card,.profile-sales-panel,.tipster-pricing-panel,.pricing-card,.public-profile-shell{background:linear-gradient(180deg,rgba(8,19,29,.96),rgba(4,10,16,.98))!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(255,255,255,.035)!important;color:var(--text)!important}
+.brand,.page-title h1,.feed-title h2,.panel-head h2,.subscription-hero h1,.pricing-card strong,.tip-header strong,.tipster b,.teams b,.bet-row b,.ai-title,.rank b,.ai-pick b,.profile-card h1,.profile-card h2,.profile-card h3,.wallet-card h1,.wallet-card h2,.earnings-card h1,.earnings-card h2,.payout-card h1,.payout-card h2,.admin-finance-card h1,.admin-finance-card h2,.admin-payouts-view h1,.admin-payouts-view h2{color:#f5fbff!important;letter-spacing:-.02em}
+.brand span,.ai-title strong,.rank strong,.wallet-row b,.feed-stats b,.panel-head h2 span,.highlight,.gradient-text{color:#1fe2ae!important}
+p,.page-title p,.feed-title p,label span,.league,.wallet-row,.tipster span,.tip-footer,.ai-box p,.rank small,.counter,.small-muted,.pricing-card p,.paywall-rules-card,.access span,.bet-row span,.teams span,.ai-pick small,.ai-pick strong,.result em.neutral{color:#9fb0be!important}
+label,.panel-head a,.menu button,.menu a{color:#dce7ee!important}
+input,textarea,select,.search{background:rgba(2,8,14,.82)!important;border:1px solid rgba(255,255,255,.08)!important;color:#f5fbff!important;caret-color:#1fe2ae!important}
+input::placeholder,textarea::placeholder,.search::placeholder{color:#7f95a8!important}
+.menu button.active,.menu a.active{background:linear-gradient(90deg,rgba(31,226,174,.18),rgba(31,226,174,.06))!important;color:#f5fbff!important;border-color:rgba(31,226,174,.22)!important;box-shadow:inset 3px 0 0 #1fe2ae,0 0 28px rgba(31,226,174,.10)!important}
+.menu button:hover,.menu a:hover{background:rgba(31,226,174,.08)!important;color:#f5fbff!important;border-color:rgba(31,226,174,.14)!important}
+.add-btn,.submit-btn,.top-actions button,.feed-actions button:first-child,.tip-footer button,.premium-box button,.follow-footer-btn,.admin-actions button,.payout-connect-note button,.admin-cron-card .cron-run-button,.pricing-card button,.mini-buy-btn,.betai-hero-cta{background:linear-gradient(135deg,#1fe2ae 0%,#19c98f 58%,#0b7a5f 100%)!important;color:#01050a!important;border:1px solid rgba(31,226,174,.34)!important;box-shadow:0 14px 32px rgba(31,226,174,.16)!important}
+.outline-btn,.feed-title button,.feed-filters button,.avatar-edit-btn,.follow-btn,.unlock-btn.secondary{background:rgba(31,226,174,.06)!important;border:1px solid rgba(31,226,174,.18)!important;color:#98f6d8!important}
+.pill,.premium-tag,.free-tag,.ai-badge,.status-pill,.result em,.card-badges em,.featured-badges em{background:rgba(31,226,174,.14)!important;color:#98f6d8!important;border:1px solid rgba(31,226,174,.18)!important}
+.free-tag{background:rgba(255,255,255,.045)!important;color:#dce7ee!important;border-color:rgba(255,255,255,.08)!important}.ai-badge{background:rgba(87,166,255,.12)!important;color:#b7dcff!important;border-color:rgba(87,166,255,.22)!important}
+.premium-box,.subscription-hero,.betai-animated-hero{background:radial-gradient(circle at 12% 18%,rgba(31,226,174,.18),transparent 26%),radial-gradient(circle at 82% 6%,rgba(87,166,255,.10),transparent 30%),linear-gradient(135deg,#08131d 0%,#07111b 55%,#0b1724 100%)!important;border-color:rgba(31,226,174,.18)!important}
+.betai-hero-panel h1,.betai-hero-title{color:#f7fbff!important}.betai-hero-accent,.betai-hero-panel h1 span{background:linear-gradient(90deg,#1fe2ae,#57a6ff)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important}.betai-hero-panel p{color:#d2dfe8!important}.betai-hero-stats div{background:rgba(8,19,29,.88)!important;border-color:rgba(255,255,255,.08)!important}.betai-hero-stats span{color:#9fb0be!important}.betai-hero-stats strong{color:#f5fbff!important}.betai-hero-stats strong:nth-child(2){color:#1fe2ae!important}
+.success-message{background:rgba(31,226,174,.12)!important;color:#98f6d8!important;border-color:rgba(31,226,174,.22)!important}.error-message{background:rgba(239,83,80,.12)!important;color:#ffbdbb!important;border-color:rgba(239,83,80,.18)!important}.toast{background:linear-gradient(180deg,rgba(8,19,29,.96),rgba(5,10,16,.98))!important;color:#f5fbff!important}.toast span{color:#9fb0be!important}
+.won,.result-pill.win{background:rgba(31,226,174,.16)!important;color:#98f6d8!important;border:1px solid rgba(31,226,174,.24)!important}.pending,.result-pill.pending{background:rgba(245,158,11,.12)!important;color:#ffe28a!important;border:1px solid rgba(245,158,11,.18)!important}.result-pill.loss,.status-pill.danger,.admin-actions button.danger{background:rgba(239,83,80,.14)!important;color:#ffbdbb!important;border-color:rgba(239,83,80,.22)!important}
+.tip-card:hover,.panel:hover,.profile-card:hover,.leaderboard-card:hover,.marketplace-card:hover,.wallet-card:hover,.earnings-card:hover,.payout-card:hover,.pricing-card:hover,.featured-card:hover,.user-card:hover{border-color:rgba(31,226,174,.18)!important;box-shadow:0 24px 70px rgba(0,0,0,.42),0 0 28px rgba(31,226,174,.08)!important}
+.table,.admin-table,table{color:#dce7ee!important}th{color:#9fb0be!important}td{color:#dce7ee!important}hr,.tip-header,.bet-row div+div{border-color:rgba(255,255,255,.08)!important}
+@media(max-width:1500px){.app-shell{width:min(100%, 1760px)!important;grid-template-columns:250px minmax(0,1fr) 310px!important;padding:20px!important}}
+@media(max-width:1360px){.app-shell{grid-template-columns:240px minmax(0,1fr)!important;max-width:1280px!important}.rightbar{display:none!important}}
+@media(max-width:900px){.app-shell{display:block!important;padding:14px!important;width:100%!important}.sidebar{position:relative!important;top:auto!important;height:auto!important;margin-bottom:14px!important}}
