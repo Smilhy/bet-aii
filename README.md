@@ -854,3 +854,16 @@ Po deployu uruchom w Supabase SQL Editor:
 `supabase/version_121_public_profile_share.sql`
 
 Potem Netlify: `Clear cache and deploy site`.
+
+
+## Wersja 122 — Animated Dashboard Hero
+
+Dodano animowany, zapętlony banner na górze dashboardu na podstawie przesłanej wcześniejszej wersji strony:
+- rotacja tekstów: AI / Data / Stats / +EV,
+- płynne przejścia paneli,
+- animowane neonowe orbity i ring,
+- pulsujący glow,
+- prawa kolumna statystyk,
+- bez zmian w loaderze i loginie.
+
+SQL nie jest wymagany dla tej wersji.

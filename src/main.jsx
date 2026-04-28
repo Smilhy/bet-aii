@@ -272,6 +272,63 @@ function formatMoney(value) {
   return `${Number(value || 0).toFixed(2)} zł`
 }
 
+
+function AnimatedDashboardHero({ tips = [], onStatsClick }) {
+  const heroLines = [
+    { prefix: 'Win more bets with ', accent: 'AI' },
+    { prefix: 'Win more bets with ', accent: 'Data' },
+    { prefix: 'Win more bets with ', accent: 'Stats' },
+    { prefix: 'Win more bets with ', accent: '+EV' }
+  ]
+  const [panel, setPanel] = useState('main')
+  const [lineIndex, setLineIndex] = useState(0)
+
+  useEffect(() => {
+    const panelTimer = setInterval(() => setPanel(prev => prev === 'main' ? 'alt' : 'main'), 8000)
+    const lineTimer = setInterval(() => setLineIndex(prev => (prev + 1) % heroLines.length), 3500)
+    return () => { clearInterval(panelTimer); clearInterval(lineTimer) }
+  }, [])
+
+  const premiumTips = tips.filter(t => isTipPremium(t))
+  const avgConfidence = tips.length ? Math.round(tips.reduce((sum, tip) => sum + Number(tip.ai_probability || 0), 0) / tips.length) : 45
+  const settled = tips.filter(t => ['won', 'win', 'lost', 'loss'].includes(String(t.status || '').toLowerCase()))
+  const wins = settled.filter(t => ['won', 'win'].includes(String(t.status || '').toLowerCase())).length
+  const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : -7
+  const today = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  const line = heroLines[lineIndex]
+
+  return (
+    <section className="betai-animated-hero" aria-label="BetAI predictions hero">
+      <div className="betai-hero-bg betai-hero-bg-one" />
+      <div className="betai-hero-bg betai-hero-bg-two" />
+      <div className="betai-hero-orb betai-hero-orb-pill" />
+      <div className="betai-hero-orb betai-hero-orb-ring" />
+      <div className="betai-hero-orb betai-hero-orb-glow" />
+      <div className="betai-hero-player" />
+      <div className="betai-hero-copy">
+        <div className="betai-hero-kicker"><span />BETAI PREDICTIONS</div>
+        <div className="betai-hero-rotator">
+          <div className={`betai-hero-panel ${panel === 'main' ? 'active' : ''}`}>
+            <h1><span>AI</span>, która<br />wyprzedza<br />rynek.</h1>
+            <p>Analizujemy tysiące danych w czasie rzeczywistym.</p>
+          </div>
+          <div className={`betai-hero-panel betai-hero-panel-alt ${panel === 'alt' ? 'active' : ''}`}>
+            <h1>{line.prefix}<strong>{line.accent}</strong></h1>
+          </div>
+        </div>
+        <button type="button" className="betai-hero-cta" onClick={onStatsClick}>Zobacz statystyki <span>→</span></button>
+      </div>
+      <div className="betai-hero-stats">
+        <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
+        <div><span>ŚR. PEWNOŚĆ</span><strong className="green">{avgConfidence}%</strong></div>
+        <div><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
+        <div><span>PREMIUM</span><strong>{premiumTips.length}</strong></div>
+        <div><span>DZIEŃ</span><strong>{today}</strong></div>
+      </div>
+    </section>
+  )
+}
+
 function Rightbar({ ranking = [] }) {
   const realRanking = Array.isArray(ranking) ? ranking : []
 
@@ -3164,6 +3221,7 @@ function App() {
 
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
+            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
             <div className="feed-title">
               <div>
                 <h2>Ostatnie typy</h2>

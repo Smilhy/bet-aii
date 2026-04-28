@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-121-public-profile-share",
-  "version": "121.0.0",
+  "name": "betai-wersja-122-animated-dashboard-hero",
+  "version": "122.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
