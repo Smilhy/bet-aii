@@ -65,6 +65,22 @@ async function safeInsert(supabase, table, payload, fallbackPayload = null) {
   return { ok: false, error };
 }
 
+async function recordReferralReward(supabase, { userId, amount, source, sourceId, sessionId }) {
+  if (!userId || !amount || amount <= 0) return;
+  try {
+    const { error } = await supabase.rpc('record_referral_reward', {
+      p_referred_user_id: userId,
+      p_gross_amount: amount,
+      p_source: source || 'purchase',
+      p_source_id: sourceId || null,
+      p_stripe_session_id: sessionId || null
+    });
+    if (error) console.warn('referral reward warning:', error.message);
+  } catch (error) {
+    console.warn('referral reward exception:', error.message);
+  }
+}
+
 async function safeUpsert(supabase, table, payload, options, fallbackPayload = null) {
   const { error } = await supabase.from(table).upsert(payload, options || {});
   if (!error) return { ok: true };
@@ -137,6 +153,14 @@ async function handleTipPurchase(supabase, session) {
       { tipster_id: tipsterId, amount: tipsterAmount, commission: platformFee, source: 'tip_purchase' }
     );
   }
+
+  await recordReferralReward(supabase, {
+    userId,
+    amount,
+    source: 'tip_purchase',
+    sourceId: tipId,
+    sessionId: session.id
+  });
 }
 
 async function handleTipsterProfileSubscription(supabase, session) {
@@ -202,6 +226,14 @@ async function handleTipsterProfileSubscription(supabase, session) {
       { tipster_id: tipsterId, amount: tipsterAmount, commission: platformFee, source: 'profile_subscription' }
     );
   }
+
+  await recordReferralReward(supabase, {
+    userId,
+    amount,
+    source: 'profile_subscription',
+    sourceId: tipsterId,
+    sessionId: session.id
+  });
 }
 
 exports.handler = async (event) => {
@@ -279,6 +311,13 @@ exports.handler = async (event) => {
         if (txError && !String(txError.message || '').toLowerCase().includes('duplicate')) {
           console.warn('premium wallet transaction warning:', txError.message);
         }
+        await recordReferralReward(supabase, {
+          userId: result.userId,
+          amount,
+          source: 'premium_subscription',
+          sourceId: result.subscriptionId || session.subscription || null,
+          sessionId: session.id
+        });
       }
     }
 

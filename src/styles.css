@@ -2106,3 +2106,189 @@ input::placeholder,textarea::placeholder,.search::placeholder{color:#7f95a8!impo
     padding:14px!important;
   }
 }
+
+/* =========================
+   VERSION 129 — REFERRAL SYSTEM UI
+   ========================= */
+.referrals-view {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.section-hero.referral-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 26px;
+  border: 1px solid rgba(0, 255, 198, 0.18);
+  background:
+    radial-gradient(circle at 82% 15%, rgba(0, 255, 198, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(3, 17, 27, 0.95), rgba(7, 34, 45, 0.82));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.section-hero .eyebrow {
+  display: inline-flex;
+  margin-bottom: 10px;
+  font-size: 11px;
+  letter-spacing: .34em;
+  font-weight: 900;
+  color: var(--neon, #00ffc6);
+}
+
+.section-hero h1 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.section-hero p {
+  max-width: 760px;
+  margin: 10px 0 0;
+  color: rgba(226, 242, 246, 0.72);
+}
+
+.refresh-btn,
+.referral-actions button {
+  border: 1px solid rgba(0, 255, 198, 0.35);
+  color: #00ffc6;
+  background: rgba(0, 255, 198, 0.06);
+  border-radius: 14px;
+  padding: 11px 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.refresh-btn:hover,
+.referral-actions button:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 255, 198, 0.11);
+  box-shadow: 0 0 30px rgba(0, 255, 198, 0.13);
+}
+
+.referral-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.45fr) repeat(3, minmax(160px, .55fr));
+  gap: 16px;
+}
+
+.referral-link-card,
+.referral-stat-card,
+.panel-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.026));
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 18px 55px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.referral-link-card.neon-card {
+  border-color: rgba(0, 255, 198, 0.22);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0,255,198,.14), transparent 32%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
+}
+
+.referral-link-card span,
+.referral-stat-card span {
+  display: block;
+  color: rgba(226, 242, 246, .62);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.referral-link-card strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 34px;
+  letter-spacing: .02em;
+  color: #00ffc6;
+}
+
+.referral-url {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: rgba(241, 245, 249, .86);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.07);
+  word-break: break-all;
+}
+
+.referral-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.copy-state {
+  display: block;
+  margin-top: 10px;
+  color: #00ffc6;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.referral-stat-card b {
+  display: block;
+  margin-top: 12px;
+  font-size: 34px;
+  line-height: 1;
+  color: #f8fafc;
+}
+
+.referral-stat-card small {
+  display: block;
+  margin-top: 8px;
+  color: rgba(148, 163, 184, 0.82);
+}
+
+.referral-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.referral-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.referral-row:first-of-type {
+  border-top: 0;
+}
+
+.referral-row b,
+.referral-row strong {
+  color: #f8fafc;
+}
+
+.referral-row span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(148, 163, 184, 0.85);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .referral-grid,
+  .referral-columns {
+    grid-template-columns: 1fr;
+  }
+  .section-hero.referral-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

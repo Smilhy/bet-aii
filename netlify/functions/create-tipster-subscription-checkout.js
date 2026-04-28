@@ -31,6 +31,7 @@ exports.handler = async function(event) {
 
     const buyerId = body.userId || body.buyerId || '';
     const buyerEmail = body.userEmail || '';
+    const referralCode = body.referralCode || '';
     const tipsterId = body.tipsterId || '';
     const planKey = body.planKey || body.key || '';
     const durationDaysFromBody = Number(body.durationDays || 0);
@@ -100,7 +101,8 @@ exports.handler = async function(event) {
         amount_pln: String(price),
         platform_fee: String(platformFee),
         tipster_amount: String(tipsterAmount),
-        label
+        label,
+        referral_code: referralCode
       },
       success_url: `${siteUrl}/?profile_sub=success&stripe=1&tipster=${encodeURIComponent(tipsterId)}`,
       cancel_url: `${siteUrl}/?profile_sub=cancel`

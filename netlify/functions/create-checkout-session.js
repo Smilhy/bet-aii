@@ -32,6 +32,7 @@ exports.handler = async function(event) {
     const tipId = body.tipId;
     const buyerId = body.userId;
     const buyerEmail = body.userEmail || '';
+    const referralCode = body.referralCode || '';
 
     if (!tipId || !buyerId) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Brak tipId albo userId.' }) };
@@ -88,7 +89,8 @@ exports.handler = async function(event) {
         tipster_id: tip.author_id,
         amount_pln: String(price),
         platform_fee: String(platformFee),
-        tipster_amount: String(tipsterAmount)
+        tipster_amount: String(tipsterAmount),
+        referral_code: referralCode
       },
       success_url: `${siteUrl}/?payment=success&stripe=1&tip=${encodeURIComponent(tip.id)}`,
       cancel_url: `${siteUrl}/?payment=cancel`

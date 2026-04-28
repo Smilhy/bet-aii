@@ -874,3 +874,19 @@ SQL nie jest wymagany dla tej wersji.
 - 3-kolumnowy frame: sidebar / main / rightbar
 - spójne ramki, odstępy i zaokrąglenia
 - bez zmian SQL
+
+
+## Wersja 129 — Referral System
+
+Dodano panel Polecenia, link /ref/{kod}, tracking rejestracji z polecenia oraz naliczanie 10% prowizji referral po zakupach Stripe: premium typ, dostęp do profilu tipstera i Premium SaaS.
+
+SQL do odpalenia w Supabase:
+
+- supabase/version_129_referral_system.sql
+
+Po deployu przetestuj:
+1. Wejdź w Polecenia i skopiuj link.
+2. Otwórz link w innej przeglądarce/incognito.
+3. Zarejestruj nowe konto.
+4. Zrób zakup przez Stripe.
+5. Sprawdź, czy w Polecenia rośnie liczba poleconych i prowizja.

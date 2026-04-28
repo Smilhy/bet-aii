@@ -70,6 +70,31 @@ function getTipsterPublicUrl(profile, fallbackId) {
   return `${window.location.origin}/tipster/${slug}`
 }
 
+function getStoredReferralCode() {
+  if (typeof window === 'undefined') return ''
+  return localStorage.getItem('betai_referral_code') || ''
+}
+
+function setStoredReferralCode(code) {
+  if (typeof window === 'undefined') return
+  const clean = normalizePublicSlug(code).replace(/-/g, '').slice(0, 32)
+  if (clean) localStorage.setItem('betai_referral_code', clean)
+}
+
+function getReferralUrl(code) {
+  const clean = String(code || '').trim()
+  if (!clean) return ''
+  if (typeof window === 'undefined') return '/ref/' + clean
+  return window.location.origin + '/ref/' + clean
+}
+
+function getReferralProfileUrl(code) {
+  const clean = String(code || '').trim()
+  if (!clean) return ''
+  if (typeof window === 'undefined') return '/?ref=' + clean
+  return window.location.origin + '/?ref=' + clean
+}
+
 function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
@@ -231,6 +256,7 @@ return (
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
+        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>🤝 Polecenia</button>
         <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? `(${notificationsCount})` : ''}</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
         <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>🔐 Subskrypcja</button>
@@ -900,6 +926,78 @@ function FeedSkeleton() {
 }
 
 
+function ReferralsView({ user, data, loading, onRefresh }) {
+  const [copied, setCopied] = useState('')
+  const referralCode = data?.referral_code || ''
+  const referralUrl = getReferralUrl(referralCode)
+  const shareUrl = getReferralProfileUrl(referralCode)
+  const rewards = Array.isArray(data?.rewards) ? data.rewards : []
+  const referrals = Array.isArray(data?.referrals) ? data.referrals : []
+
+  async function copy(text, label) {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(label)
+      setTimeout(() => setCopied(''), 1800)
+    } catch (e) {
+      setCopied('Nie udało się skopiować')
+    }
+  }
+
+  return (
+    <section className="referrals-view pro-section">
+      <div className="section-hero referral-hero">
+        <div>
+          <span className="eyebrow">GROWTH SYSTEM</span>
+          <h1>🤝 Program poleceń Bet+AI</h1>
+          <p>Udostępniaj swój link. Gdy polecony użytkownik kupi premium typ, dostęp do profilu lub Premium, system naliczy prowizję referral.</p>
+        </div>
+        <button className="refresh-btn" onClick={onRefresh} disabled={loading}>{loading ? 'Odświeżanie...' : 'Odśwież'}</button>
+      </div>
+
+      <div className="referral-grid">
+        <div className="referral-link-card neon-card">
+          <span>Twój kod</span>
+          <strong>{referralCode || 'Generowanie...'}</strong>
+          <div className="referral-url">{referralUrl || 'Kod pojawi się po odświeżeniu.'}</div>
+          <div className="referral-actions">
+            <button onClick={() => copy(referralUrl, 'Link skopiowany')}>Kopiuj link /ref</button>
+            <button onClick={() => copy(shareUrl, 'Link share skopiowany')}>Kopiuj ?ref</button>
+          </div>
+          {copied && <em className="copy-state">{copied}</em>}
+        </div>
+
+        <div className="referral-stat-card"><span>Poleceni</span><b>{Number(data?.referrals_count || 0)}</b><small>zarejestrowani z Twojego linku</small></div>
+        <div className="referral-stat-card"><span>Aktywni kupujący</span><b>{Number(data?.buyers_count || 0)}</b><small>poleceni z zakupem</small></div>
+        <div className="referral-stat-card"><span>Prowizja</span><b>{Number(data?.reward_total || 0).toFixed(2)} zł</b><small>10% od kwalifikowanych zakupów</small></div>
+      </div>
+
+      <div className="referral-columns">
+        <div className="panel-card">
+          <div className="panel-head"><h2>Ostatnie nagrody</h2><span>{rewards.length}</span></div>
+          {rewards.length ? rewards.slice(0, 8).map((reward) => (
+            <div className="referral-row" key={reward.id || reward.stripe_session_id || reward.created_at}>
+              <div><b>{reward.source || 'purchase'}</b><span>{new Date(reward.created_at || Date.now()).toLocaleDateString('pl-PL')}</span></div>
+              <strong>{Number(reward.reward_amount || 0).toFixed(2)} zł</strong>
+            </div>
+          )) : <div className="empty-state">Brak naliczonych prowizji. Skopiuj link i zacznij polecać.</div>}
+        </div>
+
+        <div className="panel-card">
+          <div className="panel-head"><h2>Poleceni użytkownicy</h2><span>{referrals.length}</span></div>
+          {referrals.length ? referrals.slice(0, 8).map((ref) => (
+            <div className="referral-row" key={ref.id || ref.referred_user_id}>
+              <div><b>{ref.status || 'registered'}</b><span>{new Date(ref.created_at || Date.now()).toLocaleDateString('pl-PL')}</span></div>
+              <strong>{ref.first_purchase_at ? 'Kupujący' : 'Nowy'}</strong>
+            </div>
+          )) : <div className="empty-state">Jeszcze nie masz poleconych użytkowników.</div>}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   const unlockedList = tips.filter(tip => unlockedTips.has(tip.id))
   const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
@@ -1142,11 +1240,28 @@ function AuthView({ onAuth }) {
       return
     }
 
+    const authedUser = result.data?.user || null
+
+    if (authedUser?.id && isSupabaseConfigured && supabase) {
+      try {
+        await supabase.rpc('ensure_referral_code', { p_user_id: authedUser.id })
+        const storedReferralCode = getStoredReferralCode()
+        if (mode === 'register' && storedReferralCode) {
+          await supabase.rpc('register_referral', {
+            p_referred_user_id: authedUser.id,
+            p_referral_code: storedReferralCode
+          })
+        }
+      } catch (refError) {
+        console.warn('referral init warning', refError)
+      }
+    }
+
     if (mode === 'register') {
       setAuthMessage('Konto utworzone. Jeśli Supabase wymaga potwierdzenia email, sprawdź skrzynkę.')
     }
 
-    onAuth?.(result.data?.user || null)
+    onAuth?.(authedUser)
   }
 
   return (
@@ -1204,7 +1319,8 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
           userId: user?.id || null,
           userEmail: user?.email || '',
           matchName: `${tip.team_home} vs ${tip.team_away}`,
-          price
+          price,
+          referralCode: getStoredReferralCode()
         })
       })
 
@@ -1305,7 +1421,8 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
           tipsterName,
           durationDays: plan.durationDays,
           label: plan.label,
-          price: plan.price
+          price: plan.price,
+          referralCode: getStoredReferralCode()
         })
       })
       const data = await response.json().catch(() => ({}))
@@ -2004,12 +2121,26 @@ function App() {
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
   const [notifications, setNotifications] = useState([])
   const [realRanking, setRealRanking] = useState([])
+  const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+  const [referralLoading, setReferralLoading] = useState(false)
   const [selectedTipsterId, setSelectedTipsterId] = useState(null)
   const [pendingPublicSlug, setPendingPublicSlug] = useState(() => {
     if (typeof window === 'undefined') return null
     const match = window.location.pathname.match(/^\/tipster\/([^/?#]+)/)
     return match ? decodeURIComponent(match[1]) : null
   })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const refParam = params.get('ref') || params.get('r')
+    const pathMatch = window.location.pathname.match(/^\/ref\/([^/?#]+)/)
+    const code = refParam || (pathMatch ? decodeURIComponent(pathMatch[1]) : '')
+    if (code) {
+      setStoredReferralCode(code)
+      if (pathMatch) window.history.replaceState({}, document.title, '/')
+    }
+  }, [])
 
   async function resolvePublicTipsterBySlug(slug) {
     const cleanSlug = normalizePublicSlug(slug)
@@ -2060,6 +2191,38 @@ function App() {
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking([])
+    }
+  }
+
+  async function fetchReferralData(userId = sessionUser?.id) {
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
+      return
+    }
+
+    setReferralLoading(true)
+    try {
+      const { data: codeData } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
+      const referralCode = typeof codeData === 'string' ? codeData : ''
+      const { data: dashboardData, error } = await supabase.rpc('get_referral_dashboard', { p_user_id: userId })
+      if (error) throw error
+      const row = Array.isArray(dashboardData) ? dashboardData[0] : dashboardData
+
+      const { data: referralsRows } = await supabase.from('referrals').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(20)
+      const { data: rewardsRows } = await supabase.from('referral_rewards').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(20)
+
+      setReferralData({
+        referral_code: row?.referral_code || referralCode,
+        referrals_count: Number(row?.referrals_count || 0),
+        buyers_count: Number(row?.buyers_count || 0),
+        reward_total: Number(row?.reward_total || 0),
+        referrals: referralsRows || [],
+        rewards: rewardsRows || []
+      })
+    } catch (error) {
+      console.error('fetchReferralData error', error)
+    } finally {
+      setReferralLoading(false)
     }
   }
 
@@ -2892,6 +3055,7 @@ function App() {
       try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
       try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
       try { await fetchRealRanking() } catch (e) { console.error(e) }
+      try { await fetchReferralData(userId) } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
     }
@@ -3100,6 +3264,9 @@ function App() {
       fetchAdminFinanceReport()
       fetchAdminPayoutRequests()
     }
+    if (view === 'referrals' && sessionUser?.id) {
+      fetchReferralData(sessionUser.id)
+    }
   }, [view, sessionUser?.id])
 
   const filteredTips = tips.filter(tip => {
@@ -3170,6 +3337,10 @@ function App() {
 
         {view === 'leaderboard' && (
           <LeaderboardView tips={tips} ranking={realRanking} />
+        )}
+
+        {view === 'referrals' && (
+          <ReferralsView user={sessionUser} data={referralData} loading={referralLoading} onRefresh={() => fetchReferralData(sessionUser?.id)} />
         )}
 
         {view === 'notifications' && (
