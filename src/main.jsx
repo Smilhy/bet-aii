@@ -80,10 +80,15 @@ function isAdminUser(user) {
   return email === 'smilhytv@gmail.com'
 }
 
+function isPremiumAccount(plan) {
+  const value = String(plan || '').toLowerCase()
+  return ['premium', 'vip', 'active', 'trialing'].includes(value)
+}
+
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile?.isAdmin) return 'ADMIN'
-  if (plan === 'premium') return 'VIP'
+  if (isPremiumAccount(plan)) return 'VIP'
   return 'FREE'
 }
 
@@ -188,7 +193,7 @@ return (
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        {userPlan === 'premium' ? <button onClick={() => setView('subscriptions')}>Zarządzaj Premium</button> : <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>}
+        {isPremiumAccount(userPlan) ? <button onClick={() => setView('subscriptions')}>Zarządzaj Premium</button> : <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>}
       </div>
     </aside>
   )
@@ -298,6 +303,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [message, setMessage] = useState('')
 
   const isPremium = form.access_type === 'premium'
+  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
 
   const payload = useMemo(() => ({
     author_name: user?.email?.split('@')[0] || 'AdrianNowak',
@@ -325,7 +331,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
-    if (payload.access_type === 'premium' && userPlan !== 'premium' && !isAdminUser(user)) {
+    if (payload.access_type === 'premium' && !premiumAllowed) {
       setMessage('Premium wymagane do publikowania płatnych typów.')
       onToast?.({ type: 'error', title: 'Paywall', message: 'Aktywuj subskrypcję Premium, aby publikować płatne typy.' })
       return
@@ -400,13 +406,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
             <strong>🔒 Premium</strong>
-            <span>Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.</span>
+            <span>{premiumAllowed ? 'Możesz publikować i sprzedawać płatne typy premium.' : 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'}</span>
           </button>
         </div>
 
-        {isPremium && (
+        {isPremium && !premiumAllowed && (
           <div className="premium-lock-info">
             Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.
+          </div>
+        )}
+        {isPremium && premiumAllowed && (
+          <div className="premium-lock-info success">
+            VIP aktywny — możesz publikować płatne typy premium.
           </div>
         )}
 
@@ -772,7 +783,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
 
 function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
-  const isPremium = userPlan === 'premium'
+  const isPremium = isPremiumAccount(userPlan)
   return (
     <section className="subscription-page">
       <div className="subscription-hero">

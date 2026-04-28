@@ -735,3 +735,8 @@ Naprawione:
 - Dodana ochrona przed tworzeniem kolejnych aktywnych subskrypcji dla tego samego Stripe customer.
 
 SQL nie jest wymagany, jeśli tabela `profiles` i kolumny subskrypcji już istnieją.
+
+## Wersja 99 — premium tips access fix
+- Formularz dodawania typu rozpoznaje konto VIP/Premium przy publikowaniu typów premium.
+- Blokada FREE nie pokazuje się już użytkownikowi Premium.
+- Nie wymaga dodatkowego SQL.
