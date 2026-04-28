@@ -48,7 +48,13 @@ function getTipAuthorId(tip) {
 }
 
 function isTipPremium(tip) {
-  return Boolean(tip?.is_premium || tip?.premium || tip?.type === 'premium' || tip?.access === 'premium')
+  const accessType = String(tip?.access_type || tip?.access || tip?.type || '').toLowerCase()
+  return Boolean(
+    tip?.is_premium === true ||
+    tip?.premium === true ||
+    accessType === 'premium' ||
+    Number(tip?.price || 0) > 0
+  )
 }
 
 function isVisibleTipForUser(tip, userId, unlockedSet) {
@@ -317,6 +323,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     analysis: form.analysis,
     ai_probability: Number(form.ai_probability),
     access_type: form.access_type,
+    is_premium: isPremium,
     price: isPremium ? Number(form.price || 0) : 0,
     tags: form.tagsText.split(',').map(t => t.trim()).filter(Boolean),
     notify_followers: form.notify_followers

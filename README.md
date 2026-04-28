@@ -740,3 +740,9 @@ SQL nie jest wymagany, jeśli tabela `profiles` i kolumny subskrypcji już istni
 - Formularz dodawania typu rozpoznaje konto VIP/Premium przy publikowaniu typów premium.
 - Blokada FREE nie pokazuje się już użytkownikowi Premium.
 - Nie wymaga dodatkowego SQL.
+
+
+## Wersja 100 — premium tip flag/profile fix
+- Naprawiono rozpoznawanie premium tipów po `access_type = premium`.
+- Dodawanie typu premium zapisuje teraz także `is_premium = true`.
+- Profil liczy premium typy poprawnie i nie pokazuje ich jako Free.
