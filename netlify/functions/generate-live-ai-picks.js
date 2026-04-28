@@ -115,7 +115,7 @@ function buildLivePick(fixture) {
     live_score_home: homeGoals,
     live_score_away: awayGoals,
     live_status: statusShort,
-    status: 'live',
+    status: 'pending',
     result: 'pending',
     profit: 0,
     source: 'live_ai_engine',
@@ -190,7 +190,7 @@ exports.handler = async function () {
         ...row,
         analysis: ((row.analysis || "") + " LIVE: " + (row.live_minute || "-") + " min, wynik " + (row.live_score_home ?? 0) + ":" + (row.live_score_away ?? 0) + ", status " + (row.live_status || "LIVE") + ".").trim(),
         ai_analysis: ((row.ai_analysis || row.analysis || "") + " LIVE: " + (row.live_minute || "-") + " min, wynik " + (row.live_score_home ?? 0) + ":" + (row.live_score_away ?? 0) + ", status " + (row.live_status || "LIVE") + ".").trim(),
-        status: 'live'
+        status: 'pending'
       }))
       ;({ data, error } = await supabase.from('tips').insert(retryRows).select('id'))
     }
