@@ -297,7 +297,7 @@ function Rightbar({ ranking = [] }) {
   )
 }
 
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow }) {
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
   const probability = Number(tip.ai_probability || 0)
@@ -318,7 +318,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className="tip-header">
         <div className="tipster">
           <div className={`photo ${author === 'AI Tip' ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
-          <div><strong>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
+          <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{author === 'AI Tip' ? 'AI' : 'TIPSTER'}</em>
           {!isOwnTip && author !== 'AI Tip' && (
             <button
@@ -380,6 +380,164 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     </article>
   )
 }
+
+
+function normalizeResult(value) {
+  const v = String(value || '').toLowerCase()
+  if (['win','won','wygrany'].includes(v)) return 'win'
+  if (['loss','lose','lost','przegrany'].includes(v)) return 'loss'
+  if (['void','push','zwrot'].includes(v)) return 'void'
+  return 'pending'
+}
+
+function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
+  const [profile, setProfile] = useState(null)
+  const [tipsterTips, setTipsterTips] = useState([])
+  const [stats, setStats] = useState(null)
+  const [byLeague, setByLeague] = useState([])
+  const [byType, setByType] = useState([])
+  const [recentForm, setRecentForm] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadTipsterProfile() {
+      if (!tipsterId || !isSupabaseConfigured || !supabase) return
+      setLoading(true)
+      try {
+        const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
+          supabase.from('profiles').select('id,email,plan,subscription_status').eq('id', tipsterId).maybeSingle(),
+          supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
+          supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
+          supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
+          supabase.from('stats_by_type').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
+          supabase.from('stats_recent_form').select('*').eq('tipster_id', tipsterId).limit(20)
+        ])
+        if (cancelled) return
+        if (profileRes.error) console.error('profileRes error', profileRes.error)
+        if (tipsRes.error) console.error('tipsRes error', tipsRes.error)
+        if (rankingRes.error) console.error('rankingRes error', rankingRes.error)
+        if (leagueRes.error) console.error('leagueRes error', leagueRes.error)
+        if (typeRes.error) console.error('typeRes error', typeRes.error)
+        if (formRes.error) console.error('formRes error', formRes.error)
+        setProfile(profileRes.data || null)
+        setTipsterTips(tipsRes.data || [])
+        setStats(rankingRes.data || null)
+        setByLeague(leagueRes.data || [])
+        setByType(typeRes.data || [])
+        setRecentForm(formRes.data || [])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadTipsterProfile()
+    return () => { cancelled = true }
+  }, [tipsterId])
+
+  const username = (profile?.email || tipsterTips?.[0]?.author_name || 'Tipster').split('@')[0]
+  const initials = username.slice(0, 2).toUpperCase()
+  const totalTips = Number(stats?.total_tips || tipsterTips.length || 0)
+  const wins = Number(stats?.wins || tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'win').length || 0)
+  const losses = Number(stats?.losses || tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'loss').length || 0)
+  const voids = tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'void').length
+  const settled = wins + losses + voids
+  const winrate = Number(stats?.winrate || (settled ? (wins / Math.max(wins + losses, 1)) * 100 : 0))
+  const earnings = Number(stats?.earnings || stats?.total_earnings || 0)
+  const roi = Number(stats?.roi || 0)
+  const isOwn = currentUser?.id && String(currentUser.id) === String(tipsterId)
+  const isFollowing = followingTipsters?.has?.(String(tipsterId))
+  const donutWin = Math.max(0, Math.min(100, winrate))
+  const donutLoss = Math.max(0, 100 - donutWin)
+
+  return (
+    <section className="tipster-profile-page pro-stats-page">
+      <button className="back-btn" onClick={onBack}>← Powrót do feedu</button>
+      <div className="tipster-profile-hero">
+        <div className="tipster-profile-main">
+          <div className="profile-big-avatar">{initials}</div>
+          <div>
+            <p className="eyebrow">PROFIL TIPSTERA</p>
+            <h1>{username}</h1>
+            <span>{profile?.email || 'Profil publiczny'}</span>
+            <div className="tipster-profile-actions">
+              {!isOwn && (
+                <button className={isFollowing ? 'follow-profile-btn active' : 'follow-profile-btn'} onClick={() => onToggleFollow?.(tipsterId, username)}>
+                  {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
+                </button>
+              )}
+              {!isOwn && <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do profilu</button>}
+            </div>
+          </div>
+        </div>
+        <div className="tipster-profile-summary">
+          <b>{totalTips}</b><span>typów</span>
+          <b>{winrate.toFixed(0)}%</b><span>winrate</span>
+          <b>{formatMoney(earnings)}</b><span>zarobki</span>
+        </div>
+      </div>
+
+      {loading ? <div className="empty-state">Ładowanie profilu tipstera...</div> : (
+        <>
+          <div className="pro-metric-grid">
+            <div className={earnings >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>Łączny profit</span><b>{formatMoney(earnings)}</b><small>Suma zarobków marketplace</small></div>
+            <div className="pro-metric"><span>Win rate</span><b>{winrate.toFixed(0)}%</b><small>Skuteczność rozliczonych typów</small></div>
+            <div className={roi >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI</span><b>{roi ? `${roi.toFixed(2)} zł` : '0.00 zł'}</b><small>Średni zwrot / typ</small></div>
+            <div className="pro-metric"><span>Rozliczone typy</span><b>{settled}</b><small>Win/Loss/Void</small></div>
+          </div>
+
+          <div className="pro-stats-layout">
+            <div className="pro-chart-card">
+              <h3>Win/Loss distribution</h3>
+              <div className="donut-wrap">
+                <div className="donut" style={{ background: `conic-gradient(#20d982 0 ${donutWin}%, #ff5165 ${donutWin}% ${donutWin + donutLoss}%, #ffd21f ${donutWin + donutLoss}% 100%)` }} />
+                <div className="legend">
+                  <span><b><i className="green"></i>Won</b><strong>{wins}</strong></span>
+                  <span><b><i className="red"></i>Lost</b><strong>{losses}</strong></span>
+                  <span><b><i className="yellow"></i>Void</b><strong>{voids}</strong></span>
+                </div>
+              </div>
+            </div>
+            <div className="pro-chart-card recent-card">
+              <h3>Recent form (last 20)</h3>
+              <div className="form-dots">
+                {(recentForm.length ? recentForm : tipsterTips.slice(0, 20)).map((row, index) => {
+                  const res = normalizeResult(row.result || row.status)
+                  return <span key={`${row.id || row.created_at || index}`} className={res}>{res === 'win' ? 'W' : res === 'loss' ? 'L' : res === 'void' ? 'P' : '—'}</span>
+                })}
+              </div>
+              <small>W = wygrana, L = przegrana, P = zwrot, — = oczekuje</small>
+            </div>
+          </div>
+
+          <div className="pro-tables-grid">
+            <div className="pro-table-card">
+              <h3>Performance by league</h3>
+              <div className="pro-table-head"><span>Liga</span><span>Typy</span><span>Hit rate</span><span>Wins</span><span>ROI</span></div>
+              {byLeague.length ? byLeague.map(row => (
+                <div className="pro-table-row" key={row.league || 'liga'}><span>{row.league || 'Inne'}</span><span>{row.bets || 0}</span><span>{Number(row.hit_rate || 0).toFixed(0)}%</span><span>{row.wins || 0}</span><span>{Number(row.roi || 0).toFixed(0)}</span></div>
+              )) : <div className="empty-mini">Brak danych lig.</div>}
+            </div>
+            <div className="pro-table-card">
+              <h3>Performance by bet type</h3>
+              <div className="pro-table-head"><span>Typ</span><span>Typy</span><span>Hit rate</span><span>Wins</span><span>ROI</span></div>
+              {byType.length ? byType.map(row => (
+                <div className="pro-table-row" key={row.bet_type || 'typ'}><span>{row.bet_type || 'Inne'}</span><span>{row.bets || 0}</span><span>{Number(row.hit_rate || 0).toFixed(0)}%</span><span>{row.wins || 0}</span><span>{Number(row.roi || 0).toFixed(0)}</span></div>
+              )) : <div className="empty-mini">Brak danych typów.</div>}
+            </div>
+          </div>
+
+          <div className="tipster-profile-tips">
+            <div className="feed-title"><div><h2>Typy tipstera</h2><p>Publiczny feed tego użytkownika.</p></div></div>
+            <div className="feed">
+              {tipsterTips.length ? tipsterTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={onUnlock} onSubscribeToTipster={onSubscribeToTipster} currentUser={currentUser} followingTipsters={followingTipsters} onToggleFollow={onToggleFollow} onOpenTipster={() => {}} />) : <div className="empty-state">Ten tipster nie dodał jeszcze typów.</div>}
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [form, setForm] = useState({
@@ -1660,6 +1818,7 @@ function App() {
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
   const [notifications, setNotifications] = useState([])
   const [realRanking, setRealRanking] = useState([])
+  const [selectedTipsterId, setSelectedTipsterId] = useState(null)
 
   async function fetchRealRanking() {
     if (!isSupabaseConfigured || !supabase) {
@@ -2836,7 +2995,21 @@ function App() {
           />
         )}
 
-        {view === 'dashboard' && (
+        {view === 'dashboard' && selectedTipsterId && (
+          <TipsterProfileView
+            tipsterId={selectedTipsterId}
+            onBack={() => setSelectedTipsterId(null)}
+            currentUser={sessionUser}
+            followingTipsters={followingTipsters}
+            onToggleFollow={toggleFollowTipster}
+            onUnlock={unlockTip}
+            onSubscribeToTipster={setSelectedProfileSub}
+            unlockedTips={unlockedTips}
+            tipsterSubscriptions={tipsterSubscriptions}
+          />
+        )}
+
+        {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
             <div className="feed-title">
               <div>
@@ -2880,7 +3053,7 @@ function App() {
             </div>
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={sessionUser} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={sessionUser} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
