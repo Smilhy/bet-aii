@@ -421,11 +421,143 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   )
 }
 
-function Rightbar({ ranking = [] }) {
+function LiveChatPanel({ user }) {
+  const [messages, setMessages] = useState([])
+  const [text, setText] = useState('')
+  const [status, setStatus] = useState('Live chat gotowy')
+  const [sending, setSending] = useState(false)
+
+  const email = String(user?.email || '').toLowerCase()
+  const userName = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+
+  const loadMessages = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      setStatus('Supabase nie jest skonfigurowany')
+      return
+    }
+    try {
+      const { data, error } = await supabase
+        .from('live_chat_messages')
+        .select('id,user_email,user_name,avatar_url,message,tipped_amount,created_at')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (error) throw error
+      setMessages((data || []).reverse())
+      setStatus('Połączono live')
+    } catch (error) {
+      console.error('live chat load error', error)
+      setStatus('Live chat: sprawdź SQL/Supabase')
+    }
+  }
+
+  useEffect(() => {
+    loadMessages()
+    if (!isSupabaseConfigured || !supabase) return undefined
+    const channel = supabase
+      .channel('betai-live-chat-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'live_chat_messages' }, loadMessages)
+      .subscribe()
+    const timer = setInterval(loadMessages, 10000)
+    return () => {
+      clearInterval(timer)
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
+    const host = document.querySelector('.live-chat-panel .live-chat-messages')
+    if (host) host.scrollTop = host.scrollHeight
+  }, [messages.length])
+
+  const todayCount = useMemo(() => {
+    const start = new Date(); start.setHours(0,0,0,0)
+    return messages.filter(m => new Date(m.created_at).getTime() >= start.getTime()).length
+  }, [messages])
+
+  const leader = useMemo(() => {
+    const start = new Date(); start.setHours(0,0,0,0)
+    const map = new Map()
+    messages.forEach(m => {
+      const ts = new Date(m.created_at).getTime()
+      const key = String(m.user_email || '').toLowerCase()
+      if (key && ts >= start.getTime()) map.set(key, { count: (map.get(key)?.count || 0) + 1, name: m.user_name || key.split('@')[0] })
+    })
+    return [...map.values()].sort((a,b) => b.count - a.count)[0]
+  }, [messages])
+
+  const sendMessage = async () => {
+    const clean = text.trim().slice(0, 240)
+    if (!clean || sending) return
+    if (!email) {
+      setStatus('Musisz być zalogowany')
+      return
+    }
+    setSending(true)
+    try {
+      const { error } = await supabase.from('live_chat_messages').insert({
+        user_email: email,
+        user_name: userName,
+        avatar_url: user?.user_metadata?.avatar_url || '',
+        message: clean,
+        tipped_amount: 0
+      })
+      if (error) throw error
+      setText('')
+      setStatus('Wiadomość wysłana')
+      await loadMessages()
+    } catch (error) {
+      console.error('live chat send error', error)
+      setStatus('Nie udało się wysłać wiadomości')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <section className="panel live-chat-panel">
+      <div className="live-chat-head">
+        <div>
+          <span className="live-chat-kicker">BETAI LIVE CHAT</span>
+          <h2>💬 Czat społeczności</h2>
+        </div>
+        <span className="live-chat-online">{Math.max(1, new Set(messages.map(m => m.user_email)).size)} online</span>
+      </div>
+      <div className="live-chat-stats">
+        <div><b>{todayCount}</b><span>wiadomości dziś</span></div>
+        <div><b>{leader?.name || '—'}</b><span>{leader ? `${leader.count} top` : 'lider dnia'}</span></div>
+      </div>
+      <div className="live-chat-messages">
+        {messages.length ? messages.map(msg => {
+          const mine = String(msg.user_email || '').toLowerCase() === email
+          const name = msg.user_name || String(msg.user_email || '').split('@')[0] || 'User'
+          return (
+            <div className={`live-chat-msg ${mine ? 'mine' : ''}`} key={msg.id || msg.created_at}>
+              <div className="live-chat-avatar">{name.slice(0,2).toUpperCase()}</div>
+              <div className="live-chat-bubble">
+                <div className="live-chat-meta"><strong>{name}</strong><span>{new Date(msg.created_at).toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'})}</span></div>
+                <p>{msg.message}</p>
+                <small>Tips: {Number(msg.tipped_amount || 0)}</small>
+              </div>
+            </div>
+          )
+        }) : <div className="live-chat-empty">Brak wiadomości. Napisz pierwszą wiadomość.</div>}
+      </div>
+      <div className="live-chat-input-row">
+        <input value={text} maxLength={240} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Napisz wiadomość..." />
+        <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
+      </div>
+      <div className="live-chat-status">{status}</div>
+    </section>
+  )
+}
+
+
+function Rightbar({ ranking = [], user = null }) {
   const realRanking = Array.isArray(ranking) ? ranking : []
 
   return (
     <aside className="rightbar">
+      <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top tipsterzy</h2><a>Ranking real</a></div>
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
@@ -4189,7 +4321,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} user={sessionUser} />}
     </div>
   )
 }
