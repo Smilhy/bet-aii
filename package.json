@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-209",
-  "version": "209.0.0",
+  "name": "betai-wersja-215",
+  "version": "215.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -971,16 +971,49 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
     setSaving(true)
-    const { error } = await supabase.from('tips').insert(payload)
+    let savedTip = null
+    let saveError = null
+
+    const { data: directData, error: directError } = await supabase
+      .from('tips')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (directError) {
+      saveError = directError
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const token = sessionData?.session?.access_token
+        const response = await fetch('/.netlify/functions/add-user-tip', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({ tip: payload })
+        })
+        const result = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(result.error || directError.message || 'Nie udało się zapisać typu')
+        savedTip = result.tip || null
+        saveError = null
+      } catch (fallbackError) {
+        saveError = fallbackError
+      }
+    } else {
+      savedTip = directData
+    }
+
     setSaving(false)
-    if (error) {
-      setMessage('Błąd zapisu: ' + formatAppErrorMessage(error.message))
-      onToast?.({ type: 'error', title: 'Błąd zapisu', message: formatAppErrorMessage(error.message) })
+    if (saveError) {
+      const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
+      setMessage('Błąd zapisu: ' + cleanMessage)
+      onToast?.({ type: 'error', title: 'Błąd zapisu', message: cleanMessage })
       return
     }
-    setMessage('✅ Typ zapisany w Supabase i dodany do feedu.')
-    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w feedzie.' })
-    onTipSaved()
+    setMessage('✅ Typ zapisany i dodany do feedu.')
+    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
+    onTipSaved(savedTip)
   }
 
   return (
@@ -4178,7 +4211,10 @@ function App() {
             user={sessionUser}
             userPlan={accountPlan}
             onToast={showToast}
-            onTipSaved={() => {
+            onTipSaved={(savedTip) => {
+              if (savedTip?.id) {
+                setTips(prev => [savedTip, ...prev.filter(tip => tip.id !== savedTip.id)])
+              }
               fetchTips(sessionUser?.id)
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
