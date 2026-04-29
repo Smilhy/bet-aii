@@ -4175,3 +4175,65 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
   .ai-header-actions button{width:100%!important;}
   .ai-donut-wrap{grid-template-columns:1fr!important;}
 }
+
+/* =========================================================
+   VERSION 167 — HEADER ACTION BUTTON POSITION FIX
+   Fix: move/align the action button block only. No logic changes.
+   ========================================================= */
+.ai-premium-header .ai-header-actions{
+  display:grid!important;
+  grid-template-columns:auto auto auto!important;
+  grid-template-areas:
+    "status refresh scan"
+    "settle settle settle"!important;
+  align-items:center!important;
+  justify-content:end!important;
+  justify-items:start!important;
+  gap:10px!important;
+  width:max-content!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+.ai-premium-header .ai-live-dot{
+  grid-area:status!important;
+  align-self:center!important;
+  margin:0!important;
+}
+.ai-premium-header .ai-header-actions button:nth-of-type(1){
+  grid-area:refresh!important;
+  align-self:center!important;
+  margin:0!important;
+}
+.ai-premium-header .ai-header-actions button:nth-of-type(2){
+  grid-area:scan!important;
+  align-self:center!important;
+  margin:0!important;
+}
+.ai-premium-header .ai-header-actions button:nth-of-type(3),
+.ai-premium-header .ai-header-actions .ai-live-action.settle{
+  grid-area:settle!important;
+  justify-self:start!important;
+  align-self:center!important;
+  margin:0!important;
+  min-width:168px!important;
+  width:auto!important;
+}
+.ai-premium-header .ai-header-actions input,
+.ai-premium-header .ai-header-actions textarea{
+  display:none!important;
+}
+.ai-premium-header .ai-header-actions button{
+  box-sizing:border-box!important;
+}
+@media(max-width:900px){
+  .ai-premium-header .ai-header-actions{
+    grid-template-columns:1fr!important;
+    grid-template-areas:"status" "refresh" "scan" "settle"!important;
+    justify-content:stretch!important;
+    width:100%!important;
+  }
+  .ai-premium-header .ai-header-actions button,
+  .ai-premium-header .ai-header-actions .ai-live-action.settle{
+    width:100%!important;
+  }
+}
