@@ -6170,3 +6170,35 @@ html,body,#root{
     max-width:390px!important;
   }
 }
+
+
+/* HERO SIZE BOOST */
+.betai-animated-hero {
+    min-height: 520px !important;
+    padding: 60px 60px !important;
+    border-radius: 28px !important;
+}
+
+.betai-hero-copy h1 {
+    font-size: 3.2rem !important;
+    line-height: 1.1 !important;
+}
+
+.betai-hero-copy p {
+    font-size: 1.2rem !important;
+}
+
+.betai-hero-stats {
+    margin-top: 30px !important;
+    gap: 30px !important;
+}
+
+@media (min-width: 1200px) {
+    .betai-animated-hero {
+        min-height: 620px !important;
+        padding: 80px !important;
+    }
+    .betai-hero-copy h1 {
+        font-size: 4rem !important;
+    }
+}
