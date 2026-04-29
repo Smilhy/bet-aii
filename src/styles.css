@@ -5460,3 +5460,121 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
 .app-shell.no-rightbar-page .profile-ultra-split{display:grid!important;grid-template-columns:1.35fr .75fr!important;gap:18px!important;margin-bottom:18px!important}.app-shell.no-rightbar-page .profile-panel,.app-shell.no-rightbar-page .tipster-pro-card{border-radius:30px!important;border:1px solid rgba(255,255,255,.09)!important;background:linear-gradient(180deg,rgba(8,19,29,.94),rgba(4,10,16,.98))!important;box-shadow:0 24px 76px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.04)!important;color:#f6fbff!important;padding:24px 26px!important}.app-shell.no-rightbar-page .profile-panel-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;margin-bottom:16px!important}.app-shell.no-rightbar-page .profile-panel-head h3{margin:0!important;color:#f6fbff!important;font-size:22px!important;letter-spacing:-.04em!important;font-weight:950!important}.app-shell.no-rightbar-page .profile-panel-head span{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:38px!important;height:32px!important;border-radius:999px!important;background:rgba(31,226,174,.12)!important;border:1px solid rgba(31,226,174,.18)!important;color:#98f6d8!important;font-weight:950!important}.app-shell.no-rightbar-page .profile-tip-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:16px!important;align-items:center!important;padding:16px 0!important;border-top:1px solid rgba(255,255,255,.075)!important}.app-shell.no-rightbar-page .profile-tip-row b{display:block!important;color:#f6fbff!important;font-size:15px!important;font-weight:950!important;letter-spacing:-.025em!important}.app-shell.no-rightbar-page .profile-tip-row span{display:block!important;margin-top:5px!important;color:#8fa2b5!important;font-weight:750!important}.app-shell.no-rightbar-page .profile-tip-row em{font-style:normal!important;border-radius:999px!important;padding:7px 11px!important;background:rgba(31,226,174,.10)!important;border:1px solid rgba(31,226,174,.16)!important;color:#98f6d8!important;font-size:11px!important;font-weight:950!important}.app-shell.no-rightbar-page .profile-empty{border:1px dashed rgba(31,226,174,.22)!important;border-radius:22px!important;background:rgba(31,226,174,.045)!important;color:#aebfcb!important;padding:30px!important;text-align:center!important;font-weight:750!important}.app-shell.no-rightbar-page .tipster-pro-card{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important}.app-shell.no-rightbar-page .tipster-pro-card strong{display:block!important;color:#f6fbff!important;font-size:24px!important;letter-spacing:-.04em!important;margin-bottom:8px!important}.app-shell.no-rightbar-page .tipster-pro-card span{color:#aebfcb!important;line-height:1.6!important;font-weight:700!important}.app-shell.no-rightbar-page .tipster-pro-card button{min-width:190px!important;min-height:54px!important;border:0!important;border-radius:18px!important;background:linear-gradient(135deg,#1fe2ae,#9dffdc)!important;color:#06130f!important;font-weight:950!important;box-shadow:0 20px 48px rgba(31,226,174,.23)!important;cursor:pointer!important}
 @media(max-width:1100px){.app-shell.no-rightbar-page .profile-ultra-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.app-shell.no-rightbar-page .profile-ultra-split,.app-shell.no-rightbar-page .profile-ultra-money{grid-template-columns:1fr!important}.app-shell.no-rightbar-page .profile-ultra-hero{grid-template-columns:1fr!important;align-items:flex-start!important}}
 @media(max-width:760px){.app-shell.no-rightbar-page .profile-ultra-page{padding-bottom:30px!important}.app-shell.no-rightbar-page .profile-ultra-hero{padding:26px 22px!important;min-height:auto!important;border-radius:28px!important}.app-shell.no-rightbar-page .profile-avatar-wrap{align-items:flex-start!important}.app-shell.no-rightbar-page .profile-ultra-stats{grid-template-columns:1fr!important}.app-shell.no-rightbar-page .tipster-pro-card{flex-direction:column!important;align-items:stretch!important}.app-shell.no-rightbar-page .tipster-pro-card button{width:100%!important;min-width:0!important}.app-shell.no-rightbar-page .profile-ultra-hero h1{font-size:38px!important}}
+
+/* =========================================================
+   Wersja 184 — Dashboard Ultra Pro: szersze ramki, większy banner,
+   pełne wyrównanie tekstów i kolorystyka dashboard premium
+   ========================================================= */
+.app-shell .ai-premium-dashboard{
+  width:100%!important;
+  max-width:1280px!important;
+  margin:0 auto!important;
+  padding:0 0 44px!important;
+  gap:20px!important;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  color:#f6fbff!important;
+}
+.app-shell .ai-premium-header{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:244px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+  gap:28px!important;
+  padding:38px 40px!important;
+  border:1px solid rgba(255,255,255,.105)!important;
+  border-radius:36px!important;
+  background:
+    radial-gradient(circle at 13% 0%,rgba(31,226,174,.24),transparent 36%),
+    radial-gradient(circle at 94% 8%,rgba(76,141,255,.22),transparent 38%),
+    linear-gradient(135deg,rgba(8,22,33,.98),rgba(3,8,14,.99))!important;
+  box-shadow:0 30px 96px rgba(0,0,0,.40),inset 0 1px 0 rgba(255,255,255,.055)!important;
+}
+.app-shell .ai-premium-header:before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(255,255,255,.055),transparent 34%,rgba(31,226,174,.045));
+  pointer-events:none;
+}
+.app-shell .ai-premium-header>*{position:relative;z-index:1;min-width:0!important}
+.app-shell .ai-brand-title{align-items:flex-start!important;gap:18px!important;min-width:0!important}
+.app-shell .ai-logo-mark{
+  flex:0 0 58px!important;width:58px!important;height:58px!important;border-radius:20px!important;
+  background:linear-gradient(135deg,rgba(31,226,174,.24),rgba(76,141,255,.18))!important;
+  border:1px solid rgba(31,226,174,.22)!important;color:#b9ffe9!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 46px rgba(31,226,174,.12)!important;
+}
+.app-shell .ai-brand-title h1{
+  max-width:760px!important;margin:0!important;font-size:clamp(38px,4.1vw,62px)!important;
+  line-height:.96!important;letter-spacing:-.075em!important;font-weight:950!important;color:#f6fbff!important;
+  overflow-wrap:anywhere!important;
+}
+.app-shell .ai-brand-title p{
+  max-width:820px!important;margin:14px 0 0!important;color:#aebfcb!important;
+  font-size:16px!important;line-height:1.65!important;font-weight:700!important;
+}
+.app-shell .ai-header-actions{
+  justify-content:flex-end!important;align-items:stretch!important;gap:10px!important;max-width:430px!important;
+}
+.app-shell .ai-live-dot{
+  width:100%!important;min-height:38px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:0 14px!important;border-radius:999px!important;border:1px solid rgba(31,226,174,.18)!important;
+  background:rgba(31,226,174,.08)!important;color:#98f6d8!important;font-size:12px!important;font-weight:950!important;letter-spacing:.04em!important;
+}
+.app-shell .ai-header-actions button{
+  min-height:46px!important;height:auto!important;border-radius:16px!important;padding:12px 18px!important;
+  border:1px solid rgba(255,255,255,.11)!important;background:rgba(255,255,255,.055)!important;
+  color:#eef7fb!important;font-size:14px!important;font-weight:950!important;letter-spacing:-.01em!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.18)!important;white-space:normal!important;line-height:1.2!important;
+}
+.app-shell .ai-header-actions .ai-live-action,
+.app-shell .ai-header-actions button:nth-of-type(2){
+  background:linear-gradient(135deg,#1fe2ae,#9dffdc)!important;color:#06130f!important;border-color:rgba(31,226,174,.26)!important;
+  box-shadow:0 20px 48px rgba(31,226,174,.20)!important;
+}
+.app-shell .ai-header-actions .ai-live-action.settle{
+  background:linear-gradient(135deg,#4c8dff,#20ffd0)!important;color:#04111b!important;
+}
+.app-shell .ai-control-row.ai-mode-row{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;align-self:stretch!important;
+}
+.app-shell .ai-control-row.ai-mode-row button,
+.app-shell .ai-control-row select,
+.app-shell .ai-sports-filter-bar button,
+.app-shell .ai-value-filter-panel,
+.app-shell .ai-kpi-card,
+.app-shell .ai-panel{
+  border-color:rgba(255,255,255,.09)!important;
+  background:linear-gradient(180deg,rgba(8,19,29,.94),rgba(4,10,16,.98))!important;
+  box-shadow:0 20px 62px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.app-shell .ai-control-row.ai-mode-row button{
+  min-height:64px!important;border-radius:20px!important;padding:12px 16px!important;color:#dce8f1!important;font-size:14px!important;font-weight:950!important;line-height:1.25!important;white-space:normal!important;
+}
+.app-shell .ai-control-row.ai-mode-row button.active{
+  background:linear-gradient(135deg,rgba(31,226,174,.22),rgba(76,141,255,.12))!important;
+  border-color:rgba(31,226,174,.28)!important;color:#f6fbff!important;
+}
+.app-shell .ai-value-filter-panel{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important;
+  padding:18px!important;border-radius:28px!important;
+}
+.app-shell .ai-value-filter-panel label,
+.app-shell .ai-value-filter-panel div{
+  min-height:92px!important;border-radius:20px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.075)!important;
+  padding:15px!important;color:#dce8f1!important;font-weight:850!important;line-height:1.35!important;
+}
+.app-shell .ai-value-filter-panel b{color:#98f6d8!important}.app-shell .ai-value-filter-panel strong{font-size:34px!important;color:#20ffd0!important;line-height:1!important}.app-shell .ai-value-filter-panel span{display:block;margin-top:6px;color:#aebfcb!important;line-height:1.45!important}
+.app-shell .ai-sports-filter-bar{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:14px!important}.app-shell .ai-sports-filter-bar button{min-height:94px!important;border-radius:22px!important;padding:16px!important}.app-shell .ai-sports-filter-bar b{font-size:15px!important;color:#f6fbff!important}.app-shell .ai-sports-filter-bar small{font-size:12px!important;line-height:1.35!important;color:#9fb1be!important}
+.app-shell .ai-control-row:not(.ai-mode-row){grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important}.app-shell .ai-control-row select{height:56px!important;border-radius:18px!important;font-size:14px!important;color:#eef7fb!important}
+.app-shell .ai-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important}.app-shell .ai-kpi-card{min-height:154px!important;padding:24px!important;border-radius:28px!important}.app-shell .ai-kpi-card b{font-size:clamp(26px,2.2vw,38px)!important;line-height:1!important;overflow-wrap:anywhere!important}.app-shell .ai-kpi-card span{font-size:12px!important;color:#aebfcb!important}.app-shell .ai-kpi-card small{line-height:1.45!important;color:#8fa2b5!important}
+.app-shell .ai-analytics-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr)!important;gap:18px!important}.app-shell .ai-lower-grid{grid-template-columns:minmax(0,.78fr) minmax(0,.9fr) minmax(0,1.75fr)!important;gap:18px!important}.app-shell .ai-panel{border-radius:28px!important;padding:22px!important}.app-shell .ai-panel h3{font-size:18px!important;line-height:1.25!important;letter-spacing:-.035em!important;color:#f6fbff!important}.app-shell .ai-odds-panel h3{align-items:flex-start!important;flex-wrap:wrap!important}.app-shell .ai-donut-wrap{grid-template-columns:minmax(170px,230px) minmax(0,1fr)!important}
+.app-shell .ai-league-table{overflow-x:auto!important}.app-shell .ai-league-table>div{min-width:620px!important;grid-template-columns:1.65fr .55fr .82fr .98fr .62fr!important}.app-shell .ai-league-table span{line-height:1.35!important;overflow-wrap:anywhere!important}
+.app-shell .ai-recent-picks-panel{padding:24px!important;border-radius:30px!important}.app-shell .ai-recent-pick-row{
+  grid-template-columns:minmax(220px,1.9fr) minmax(150px,1.05fr) minmax(70px,.55fr) minmax(95px,.72fr) minmax(90px,.72fr) minmax(105px,.78fr) minmax(100px,.74fr) minmax(115px,.82fr) minmax(92px,.6fr)!important;
+  gap:12px!important;align-items:center!important;padding:16px 18px!important;border-radius:20px!important;background:linear-gradient(135deg,rgba(255,255,255,.060),rgba(255,255,255,.026))!important;
+  overflow:hidden!important;
+}
+.app-shell .ai-recent-pick-row b{font-size:14px!important;line-height:1.25!important;overflow-wrap:anywhere!important}.app-shell .ai-recent-pick-row small{font-size:12px!important;line-height:1.4!important;color:#91a6b8!important}.app-shell .ai-quality-badge,.app-shell .ai-result-pill{white-space:normal!important;text-align:center!important;justify-content:center!important;line-height:1.15!important}.app-shell .ai-analysis-button{min-height:38px!important;border-radius:14px!important;font-weight:950!important;white-space:nowrap!important}
+@media(max-width:1280px){.app-shell .ai-premium-dashboard{max-width:1180px!important}.app-shell .ai-premium-header{grid-template-columns:1fr!important}.app-shell .ai-header-actions{max-width:none!important;justify-content:flex-start!important}.app-shell .ai-control-row.ai-mode-row,.app-shell .ai-value-filter-panel,.app-shell .ai-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.app-shell .ai-sports-filter-bar{grid-template-columns:repeat(4,minmax(0,1fr))!important}.app-shell .ai-analytics-grid,.app-shell .ai-lower-grid{grid-template-columns:1fr!important}.app-shell .ai-recent-pick-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:760px){.app-shell .ai-premium-header{min-height:auto!important;padding:28px 22px!important;border-radius:28px!important}.app-shell .ai-brand-title{flex-direction:column!important}.app-shell .ai-brand-title h1{font-size:38px!important}.app-shell .ai-header-actions{display:grid!important;grid-template-columns:1fr!important}.app-shell .ai-control-row.ai-mode-row,.app-shell .ai-value-filter-panel,.app-shell .ai-sports-filter-bar,.app-shell .ai-control-row:not(.ai-mode-row),.app-shell .ai-kpi-grid{grid-template-columns:1fr!important}.app-shell .ai-donut-wrap{grid-template-columns:1fr!important}.app-shell .ai-recent-pick-row{grid-template-columns:1fr!important}.app-shell .ai-panel,.app-shell .ai-recent-picks-panel{padding:18px!important;border-radius:24px!important}}
