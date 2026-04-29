@@ -2312,8 +2312,8 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
   const role = profile.isAdmin ? 'ADMIN' : planLimits.isPremium ? 'VIP TIPSTER' : premiumTips.length ? 'TIPSTER' : 'FREE USER'
 
   return (
-    <section className="profile-page">
-      <div className="profile-hero">
+    <section className="profile-page profile-ultra-page">
+      <div className="profile-hero profile-ultra-hero">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar-big">{profile.initials}</div>
           <button className={`avatar-edit-btn ${planLimits.canEditAvatar ? '' : 'locked'}`} type="button" onClick={() => {
@@ -2334,20 +2334,20 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
         </div>
       </div>
 
-      <div className="profile-stats-grid">
+      <div className="profile-stats-grid profile-ultra-stats">
         <div className="profile-stat"><span>Dodane typy</span><b>{myTips.length}</b><small>Wszystkie Twoje typy</small></div>
         <div className="profile-stat"><span>Premium</span><b>{premiumTips.length}</b><small>Typy na sprzedaż</small></div>
         <div className="profile-stat"><span>Sprzedaże</span><b>{soldPayments.length}</b><small>Zakupy Twoich typów</small></div>
         <div className="profile-stat"><span>Winrate</span><b>{winrate}%</b><small>Na podstawie statusów</small></div>
       </div>
 
-      <div className="profile-money-card">
+      <div className="profile-money-card profile-ultra-money">
         <div><span>Przychód brutto</span><strong>{grossRevenue.toFixed(2)} zł</strong></div>
         <div><span>Prowizja platformy</span><strong>{platformFee.toFixed(2)} zł</strong></div>
         <div><span>Do wypłaty</span><strong>{payout.toFixed(2)} zł</strong></div>
       </div>
 
-      <div className="profile-split">
+      <div className="profile-split profile-ultra-split">
         <div className="profile-panel">
           <div className="profile-panel-head"><h3>Moje typy</h3><span>{myTips.length}</span></div>
           {myTips.length ? myTips.map(tip => (
@@ -4006,7 +4006,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
