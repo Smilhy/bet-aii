@@ -1711,10 +1711,11 @@ function LeaderboardView({ tips = [], ranking = [] }) {
     <section className="leaderboard-page">
       <div className="leaderboard-hero">
         <div>
+          <span className="ranking-kicker">ULTRA PRO RANKING</span>
           <h1>Ranking tipsterów</h1>
-          <p>Realny leaderboard z Supabase: ROI, sprzedaż, winrate i aktywność tipsterów.</p>
+          <p>Ranking dopasowany wizualnie do dashboardu: ROI, sprzedaż, winrate i aktywność tipsterów w jednej premium tabeli.</p>
         </div>
-        <div className="leaderboard-badge">REAL STATS</div>
+        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
       </div>
 
       <div className="leaderboard-stats">
@@ -4005,7 +4006,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4175,7 +4176,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions'].includes(view) && <Rightbar ranking={realRanking} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} />}
     </div>
   )
 }
