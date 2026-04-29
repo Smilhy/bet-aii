@@ -1713,7 +1713,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
         <div className="ranking-hero-copy">
           <span className="ranking-kicker">ULTRA PRO RANKING</span>
           <h1>Ranking tipsterów</h1>
-          <p>Rywalizacja najlepszych typerów na żywo. Zielony, fioletowy i złoty baner premium płynnie zmienia kolory w zapętlonej animacji.</p>
+          <p>Rywalizuj z najlepszymi i wspinaj się na szczyt. Analizuj wyniki, poprawiaj strategię i dominuj w obstawianiu.</p>
           <div className="ranking-hero-metrics">
             <span>↗ ROI</span>
             <span>🏆 Sprzedaż</span>
