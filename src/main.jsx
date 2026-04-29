@@ -151,6 +151,36 @@ function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
 
+function isSchemaError(error) {
+  const msg = String(error?.message || error || '').toLowerCase()
+  return msg.includes('column') || msg.includes('schema cache') || msg.includes('could not find') || msg.includes('pgrst204') || msg.includes('42703')
+}
+
+function normalizeTipRow(row = {}) {
+  const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
+  const premium = isTipPremium(row)
+  return {
+    ...row,
+    author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
+    user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
+    author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
+    author_email: row.author_email || row.email || null,
+    league: row.league || 'Liga',
+    team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
+    team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
+    bet_type: row.bet_type || row.prediction || row.type || 'Typ',
+    odds: Number(row.odds || row.course || 0),
+    analysis: row.analysis || row.description || '',
+    ai_analysis: row.ai_analysis || row.analysis || row.description || '',
+    ai_probability: Number(row.ai_probability ?? row.ai_confidence ?? row.confidence ?? 0),
+    ai_confidence: Number(row.ai_confidence ?? row.ai_probability ?? row.confidence ?? 0),
+    access_type: premium ? 'premium' : 'free',
+    is_premium: premium,
+    status: row.status || 'pending',
+    created_at: row.created_at || new Date().toISOString()
+  }
+}
+
 function isTipPremium(tip) {
   const accessType = String(tip?.access_type || tip?.access || tip?.type || '').toLowerCase()
   return Boolean(
@@ -939,11 +969,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         user_id: uid,
         author_email: user?.email || null,
         author_name: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
+        username: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
         league: payload.league,
         team_home: payload.team_home,
         team_away: payload.team_away,
-        match_time: payload.match_time,
+        match: `${payload.team_home} vs ${payload.team_away}`,
+        match_time: payload.match_time || null,
         bet_type: payload.bet_type,
+        prediction: payload.bet_type,
         odds: Number(payload.odds),
         analysis: payload.analysis || '',
         ai_probability: Number(payload.ai_probability || 0),
@@ -958,11 +991,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         notify_followers: payload.notify_followers !== false
       }
 
-      return await supabase
-        .from('tips')
-        .insert(cleanPayload)
-        .select('*')
-        .single()
+      const firstAttempt = await supabase.from('tips').insert(cleanPayload).select('*').single()
+      if (!firstAttempt.error || !isSchemaError(firstAttempt.error)) return firstAttempt
+
+      console.warn('tips insert schema fallback:', firstAttempt.error)
+      const legacyPayload = {
+        user_id: uid,
+        username: cleanPayload.author_name,
+        match: cleanPayload.match,
+        prediction: cleanPayload.bet_type,
+        odds: cleanPayload.odds,
+        is_premium: cleanPayload.is_premium,
+        league: cleanPayload.league,
+        status: 'pending'
+      }
+
+      return await supabase.from('tips').insert(legacyPayload).select('*').single()
     }
 
     try {
@@ -972,7 +1016,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
       const { data: directData, error: directError } = await insertDirectTip(currentUserId)
       if (!directError) {
-        savedTip = directData
+        savedTip = normalizeTipRow(directData)
         saveError = null
       } else {
         saveError = directError
@@ -987,7 +1031,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           })
           const result = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error((result.error || 'Nie udało się zapisać typu') + ' | Supabase: ' + (directError.message || directError))
-          savedTip = result.tip || null
+          savedTip = normalizeTipRow(result.tip || {})
           saveError = null
         }
       }
@@ -998,11 +1042,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setSaving(false)
     if (saveError) {
       const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
-      setMessage('Błąd zapisu: ' + cleanMessage)
-      onToast?.({ type: 'error', title: 'Błąd zapisu', message: cleanMessage })
+      console.error('ADD TIP SAVE ERROR:', saveError)
+      setMessage('❌ Nie dodano typu: ' + cleanMessage)
+      onToast?.({ type: 'error', title: 'Nie dodano typu', message: cleanMessage })
       return
     }
-    setMessage('✅ Typ zapisany i dodany do feedu.')
+    setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
     onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
     onTipSaved(savedTip)
   }
@@ -3121,7 +3166,8 @@ function App() {
     setLoading(false)
 
     if (tipsError) {
-      console.error(tipsError)
+      console.error('FETCH TIPS ERROR:', tipsError)
+      showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
       setTips([])
       return
     }
@@ -3129,7 +3175,7 @@ function App() {
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = tipsData || []
+    const sourceTips = (tipsData || []).map(normalizeTipRow)
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
@@ -4145,12 +4191,13 @@ function App() {
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const filteredTips = userOnlyTips.filter(tip => {
+    const normalizedTip = normalizeTipRow(tip)
     if (activeFilter === 'all') return true
-    if (activeFilter === 'free') return tip.access_type === 'free'
-    if (activeFilter === 'premium') return tip.access_type === 'premium'
-    if (activeFilter === 'mine') return Boolean(sessionUser?.id && (tip.author_id === sessionUser.id || tip.user_id === sessionUser.id))
+    if (activeFilter === 'free') return !isTipPremium(normalizedTip)
+    if (activeFilter === 'premium') return isTipPremium(normalizedTip)
+    if (activeFilter === 'mine') return Boolean(sessionUser?.id && (getTipAuthorId(normalizedTip) === sessionUser.id || normalizedTip.user_id === sessionUser.id))
     return true
-  })
+  }).map(normalizeTipRow)
 
   const filterItems = [
     ['all', 'Wszystkie'],
