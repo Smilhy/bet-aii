@@ -1709,22 +1709,26 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
   return (
     <section className="leaderboard-page">
-      <div className="leaderboard-hero">
-        <div>
+      <div className="leaderboard-hero ranking-colorloop-hero">
+        <div className="ranking-hero-copy">
           <span className="ranking-kicker">ULTRA PRO RANKING</span>
           <h1>Ranking tipsterów</h1>
-          <p>Ranking dopasowany wizualnie do dashboardu: ROI, sprzedaż, winrate i aktywność tipsterów w jednej premium tabeli.</p>
-        </div>
-        <div className="leaderboard-badge ranking-animated-banner" aria-label="Animowany baner rankingu">
-          <div className="ranking-orbit ranking-orbit-one"></div>
-          <div className="ranking-orbit ranking-orbit-two"></div>
-          <div className="ranking-trophy-wrap">
-            <span className="ranking-trophy">🏆</span>
-            <div className="ranking-podium"><i></i><i></i><i></i></div>
+          <p>Rywalizacja najlepszych typerów na żywo. Zielony, fioletowy i złoty baner premium płynnie zmienia kolory w zapętlonej animacji.</p>
+          <div className="ranking-hero-metrics">
+            <span>↗ ROI</span>
+            <span>🏆 Sprzedaż</span>
+            <span>🎯 Skuteczność</span>
+            <span>👥 Aktywność</span>
           </div>
-          <strong>LIVE</strong>
-          <span>TOP TYPER</span>
         </div>
+        <div className="ranking-hero-stage" aria-hidden="true">
+          <div className="ranking-podium">
+            <div className="ranking-step ranking-step-2">2</div>
+            <div className="ranking-step ranking-step-1"><span className="ranking-trophy">🏆</span><b>1</b></div>
+            <div className="ranking-step ranking-step-3">3</div>
+          </div>
+        </div>
+        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
       </div>
 
       <div className="leaderboard-stats">
