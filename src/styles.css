@@ -6433,116 +6433,32 @@ html,body,#root{
   }
 }
 
-/* WERSJA 211 — LAYOUT ONLY: środek wyżej + kolumny szerzej + nadal czarne tło po bokach */
-@media (min-width:1001px){
-  html,
-  body,
-  #root{
-    width:100%!important;
-    max-width:100%!important;
-    overflow-x:hidden!important;
-    background:#020914!important;
-  }
-
-  .app-shell{
-    width:96.5%!important;
-    max-width:1960px!important;
-    margin-left:auto!important;
-    margin-right:auto!important;
-    padding-left:0!important;
-    padding-right:0!important;
-    gap:16px!important;
-    background:radial-gradient(circle at 82% 3%,rgba(31,226,174,.12),transparent 27%),#020914!important;
-  }
-
+/* Wersja 212 — Search bar/header opuszczony do styku z hero bannerem
+   Zakres: tylko layout dashboardu. Funkcje, login i loader bez zmian. */
+@media (min-width: 1001px){
   .main{
-    width:100%!important;
-    max-width:none!important;
-    min-width:0!important;
-    padding-top:6px!important;
-    padding-bottom:34px!important;
+    gap:0!important;
   }
-
   .topbar{
-    height:48px!important;
-    margin-bottom:12px!important;
+    margin:0 0 0 0!important;
+    border-bottom-left-radius:18px!important;
+    border-bottom-right-radius:18px!important;
   }
-
-  .feed-section{
-    margin-top:12px!important;
-  }
-
   .dashboard-hero,
-  .betai-animated-hero,
-  .feed-section,
-  .feed-title,
-  .feed,
-  .topbar{
-    width:100%!important;
-    max-width:none!important;
-  }
-
   .betai-animated-hero{
     margin-top:0!important;
-    margin-bottom:16px!important;
   }
-
-  .rightbar{
-    padding-top:58px!important;
+  .topbar + .dashboard-hero,
+  .topbar + .betai-animated-hero{
+    margin-top:0!important;
   }
 }
 
 @media (min-width:1201px){
-  .app-shell{
-    grid-template-columns:260px minmax(0,1fr) clamp(450px,25.5vw,535px)!important;
-    gap:16px!important;
+  .main{
+    padding-top:18px!important;
   }
-  .sidebar{
-    width:260px!important;
-    min-width:260px!important;
-  }
-  .rightbar{
-    min-width:450px!important;
-    max-width:535px!important;
-  }
-  .live-chat-bubble{
-    max-width:min(395px,calc(100% - 44px))!important;
-  }
-}
-
-@media (min-width:1500px){
-  .app-shell{
-    grid-template-columns:265px minmax(0,1fr) 535px!important;
-    gap:18px!important;
-  }
-  .sidebar{
-    width:265px!important;
-    min-width:265px!important;
-  }
-  .rightbar{
-    min-width:535px!important;
-    max-width:535px!important;
-  }
-  .live-chat-bubble{
-    max-width:445px!important;
-  }
-}
-
-@media (min-width:1001px) and (max-width:1200px){
-  .app-shell{
-    width:96.5%!important;
-    max-width:1165px!important;
-    grid-template-columns:238px minmax(0,1fr) 408px!important;
-    gap:12px!important;
-  }
-  .sidebar{
-    width:238px!important;
-    min-width:238px!important;
-  }
-  .rightbar{
-    width:408px!important;
-    min-width:408px!important;
-    max-width:408px!important;
-    padding-top:56px!important;
+  .topbar{
+    margin-bottom:0!important;
   }
 }
