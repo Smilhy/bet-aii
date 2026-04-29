@@ -6081,3 +6081,99 @@ html,body,#root{
     margin:0!important;
   }
 }
+
+/* Wersja 203 — 75% centered dashboard layout: czarne boki + mniej rozciągnięcia niż full width */
+@media (min-width:1201px){
+  body{
+    background:#020914!important;
+  }
+  .app-shell{
+    width:75%!important;
+    max-width:1600px!important;
+    min-width:1180px!important;
+    margin:0 auto!important;
+    padding:0 12px!important;
+    gap:16px!important;
+    grid-template-columns:240px minmax(0,1fr) 380px!important;
+    background:radial-gradient(circle at 82% 3%,rgba(31,226,174,.12),transparent 27%),#020914!important;
+  }
+  .sidebar{
+    width:240px!important;
+    min-width:240px!important;
+  }
+  .main{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    padding:18px 0 34px!important;
+  }
+  .rightbar{
+    width:380px!important;
+    min-width:380px!important;
+    max-width:380px!important;
+    padding:78px 0 30px 0!important;
+    gap:14px!important;
+  }
+  .feed-section,
+  .dashboard-hero,
+  .betai-animated-hero,
+  .feed-title,
+  .feed,
+  .topbar{
+    width:100%!important;
+    max-width:none!important;
+  }
+  .search{
+    max-width:none!important;
+  }
+  .live-chat-panel{
+    min-height:520px!important;
+  }
+  .live-chat-messages{
+    height:300px!important;
+  }
+  .live-chat-bubble{
+    max-width:min(310px,calc(100% - 44px))!important;
+  }
+}
+@media (min-width:1500px){
+  .app-shell{
+    width:75%!important;
+    max-width:1600px!important;
+    grid-template-columns:240px minmax(0,1fr) 400px!important;
+    gap:18px!important;
+  }
+  .rightbar{
+    width:400px!important;
+    min-width:400px!important;
+    max-width:400px!important;
+  }
+  .live-chat-messages{
+    height:315px!important;
+  }
+  .live-chat-bubble{
+    max-width:330px!important;
+  }
+}
+@media (min-width:1001px) and (max-width:1200px){
+  .app-shell{
+    width:86%!important;
+    max-width:1050px!important;
+    margin:0 auto!important;
+    padding:0 8px!important;
+    gap:12px!important;
+    grid-template-columns:220px minmax(0,1fr) 340px!important;
+  }
+  .rightbar{
+    width:340px!important;
+    min-width:340px!important;
+    max-width:340px!important;
+    padding-right:0!important;
+  }
+  .live-chat-messages{
+    height:280px!important;
+  }
+  .live-chat-bubble{
+    max-width:min(275px,calc(100% - 42px))!important;
+  }
+}
