@@ -4237,3 +4237,24 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
     width:100%!important;
   }
 }
+
+/* VERSION 168 — remove right sidebar ONLY on Admin wypłaty, keep full project logic */
+.app-shell.no-rightbar-page{
+  grid-template-columns:270px minmax(0,1fr)!important;
+  max-width:1540px!important;
+}
+.app-shell.no-rightbar-page .main{
+  max-width:none!important;
+  width:100%!important;
+}
+.app-shell.no-rightbar-page .admin-payout-page,
+.app-shell.no-rightbar-page .admin-payout-page-pro{
+  width:100%!important;
+  max-width:none!important;
+}
+@media(max-width:1360px){
+  .app-shell.no-rightbar-page{grid-template-columns:240px minmax(0,1fr)!important;}
+}
+@media(max-width:900px){
+  .app-shell.no-rightbar-page{display:block!important;}
+}
