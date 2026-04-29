@@ -1,12 +1,7 @@
-# Wersja 156 — UI PIXEL PERFECT
+# Wersja 164 — Admin Finanse Pixel Align
 
-Zmiany:
-- modal Analiza PRO: szerszy, bardziej przejrzysty, premium look,
-- zero pionowego tekstu,
-- lepsze spacingi, animacje, hover, glow,
-- progress bary H/D/A,
-- czytelne statystyki xG, strzały, H2H, value,
-- naprawa banera/statystyk — bez zielonych kratek,
-- SQL tylko upewnia się, że pola pod analizę istnieją.
-
-SQL: `supabase/version_156_ui_pixel_perfect.sql`
+- dopasowany panel Admin finanse do dark SaaS dashboardu,
+- poprawione białe karty,
+- wyrównany grid 3x2,
+- tabela pełna szerokość, ciemny styl, poprawne odstępy,
+- mocniejsze nadpisanie CSS, żeby nie przebijały stare style.

@@ -1,1 +1,1 @@
-VERSION 170 — Wypłaty tab: removed right sidebar only for Wypłaty and applied Ultra Pro aligned dark SaaS UI. Logic unchanged.
+VERSION 174 — Płatności no rightbar + Ultra Pro dashboard matched UI. Changed only Payments tab layout/styling and rightbar condition.

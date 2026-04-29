@@ -1,17 +1,11 @@
-# wersja 142 — LIVE AI real-only visibility
+# Wersja 145 — PRE matches external_fixture_id fix
 
-Poprawki:
-- Typy AI domyślnie otwierają zakładkę LIVE realne mecze.
-- LIVE lista filtruje tylko rekordy z `ai_source = real_ai_engine` oraz `source` zaczynającym się od `live_ai_engine` albo z polami `live_status/live_minute`.
-- Pre-match AI i wszystkie AI są osobno, żeby nie mieszać sztucznych/starych typów z realnymi LIVE.
-- SQL usuwa ewentualne demo/mock/sample rekordy AI z Supabase.
-- SQL automatycznie dopisuje brakujące ligi do tabeli `leagues` przy każdym nowym typie.
+Naprawia skaner PRE/LIVE:
+- dodaje `external_fixture_id` do `tips`,
+- dodaje brakujące kolumny realnych meczów,
+- widoki rozdzielają LIVE i PRE,
+- automatycznie dopisuje brakujące ligi,
+- wymusza tylko realne mecze z `ai_source='real_ai_engine'` i `source='live_ai_engine'`.
 
-Po wdrożeniu uruchom w Supabase:
-`supabase/version_142_live_real_only_visibility.sql`
-
-W Netlify ENV muszą być:
-- `API_FOOTBALL_KEY`
-- `SUPABASE_URL` albo `VITE_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- opcjonalnie `OPENAI_API_KEY`
+W Supabase uruchom:
+`supabase/version_145_pre_matches_external_fixture_fix.sql`
