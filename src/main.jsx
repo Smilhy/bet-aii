@@ -1715,7 +1715,16 @@ function LeaderboardView({ tips = [], ranking = [] }) {
           <h1>Ranking tipsterów</h1>
           <p>Ranking dopasowany wizualnie do dashboardu: ROI, sprzedaż, winrate i aktywność tipsterów w jednej premium tabeli.</p>
         </div>
-        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
+        <div className="leaderboard-badge ranking-animated-banner" aria-label="Animowany baner rankingu">
+          <div className="ranking-orbit ranking-orbit-one"></div>
+          <div className="ranking-orbit ranking-orbit-two"></div>
+          <div className="ranking-trophy-wrap">
+            <span className="ranking-trophy">🏆</span>
+            <div className="ranking-podium"><i></i><i></i><i></i></div>
+          </div>
+          <strong>LIVE</strong>
+          <span>TOP TYPER</span>
+        </div>
       </div>
 
       <div className="leaderboard-stats">
