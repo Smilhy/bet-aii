@@ -1063,57 +1063,45 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
 
   return (
-    <section className="wallet-panel">
+    <section className="wallet-panel wallet-ultra-page">
+      <div className="wallet-ultra-hero">
+        <div>
+          <span className="wallet-kicker">Portfel BetAI</span>
+          <h1>Portfel</h1>
+          <p>Zarządzaj saldem, doładowaniami i odblokowanymi typami premium w jednym, dopracowanym panelu.</p>
+        </div>
+        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
+      </div>
+
       <div className="wallet-main-card">
         <div>
           <span>Saldo konta</span>
           <strong>{Number(wallet || 0).toFixed(2)} zł</strong>
           <p>Saldo używane do odblokowania typów premium.</p>
         </div>
-        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
+        <div className="wallet-balance-pill">Aktywne saldo</div>
       </div>
 
       <div className="wallet-grid">
-        <div className="wallet-stat">
-          <span>Odblokowane typy</span>
-          <b>{unlockedList.length}</b>
-        </div>
-        <div className="wallet-stat">
-          <span>Wydano</span>
-          <b>{spent.toFixed(2)} zł</b>
-        </div>
-        <div className="wallet-stat">
-          <span>Status</span>
-          <b>VIP</b>
-        </div>
+        <div className="wallet-stat"><span>Odblokowane typy</span><b>{unlockedList.length}</b></div>
+        <div className="wallet-stat"><span>Wydano</span><b>{spent.toFixed(2)} zł</b></div>
+        <div className="wallet-stat"><span>Status</span><b>VIP</b></div>
       </div>
 
-      <div className="unlocked-list">
-        <div className="unlocked-head">
-          <h3>Odblokowane typy</h3>
-          <span>{unlockedList.length} zakupów</span>
-        </div>
-
+      <div className="unlocked-list wallet-ultra-list">
+        <div className="unlocked-head"><h3>Odblokowane typy</h3><span>{unlockedList.length} zakupów</span></div>
         {unlockedList.length ? unlockedList.map(tip => (
           <div className="unlocked-item" key={tip.id}>
-            <div>
-              <strong>{tip.team_home} vs {tip.team_away}</strong>
-              <span>{tip.bet_type} • kurs {tip.odds}</span>
-            </div>
+            <div><strong>{tip.team_home} vs {tip.team_away}</strong><span>{tip.bet_type} • kurs {tip.odds}</span></div>
             <b>{Number(tip.price || 0).toFixed(2)} zł</b>
           </div>
         )) : (
-          <div className="empty-wallet">
-            <strong>Nie masz jeszcze odblokowanych typów</strong>
-            <span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span>
-          </div>
+          <div className="empty-wallet"><strong>Nie masz jeszcze odblokowanych typów</strong><span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span></div>
         )}
       </div>
     </section>
   )
 }
-
-
 function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   const unread = notifications.filter(item => !item.is_read).length
 
