@@ -928,7 +928,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [message, setMessage] = useState('')
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
+  const premiumAllowed = true
 
   const payload = useMemo(() => ({
     author_name: user?.email?.split('@')[0] || 'AdrianNowak',
@@ -960,9 +960,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
-    if (payload.access_type === 'premium' && !premiumAllowed) {
-      setMessage('Premium wymagane do publikowania płatnych typów.')
-      onToast?.({ type: 'error', title: 'Paywall', message: 'Aktywuj subskrypcję Premium, aby publikować płatne typy.' })
+    if (payload.access_type === 'premium' && Number(payload.price || 0) < 0) {
+      setMessage('Cena premium nie może być ujemna.')
+      onToast?.({ type: 'error', title: 'Cena premium', message: 'Podaj poprawną cenę typu premium.' })
       return
     }
     if (!isSupabaseConfigured || !supabase) {
@@ -974,34 +974,34 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     let savedTip = null
     let saveError = null
 
-    const { data: directData, error: directError } = await supabase
-      .from('tips')
-      .insert(payload)
-      .select('*')
-      .single()
-
-    if (directError) {
-      saveError = directError
-      try {
-        const { data: sessionData } = await supabase.auth.getSession()
-        const token = sessionData?.session?.access_token
-        const response = await fetch('/.netlify/functions/add-user-tip', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: 'Bearer ' + token } : {})
-          },
-          body: JSON.stringify({ tip: payload })
-        })
-        const result = await response.json().catch(() => ({}))
-        if (!response.ok) throw new Error(result.error || directError.message || 'Nie udało się zapisać typu')
-        savedTip = result.tip || null
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      const response = await fetch('/.netlify/functions/add-user-tip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {})
+        },
+        body: JSON.stringify({ tip: payload })
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Nie udało się zapisać typu')
+      savedTip = result.tip || null
+      saveError = null
+    } catch (serverError) {
+      saveError = serverError
+      const { data: directData, error: directError } = await supabase
+        .from('tips')
+        .insert(payload)
+        .select('*')
+        .single()
+      if (directError) {
+        saveError = new Error(`${serverError.message || serverError} | Direct: ${directError.message || directError}`)
+      } else {
+        savedTip = directData
         saveError = null
-      } catch (fallbackError) {
-        saveError = fallbackError
       }
-    } else {
-      savedTip = directData
     }
 
     setSaving(false)
@@ -1022,7 +1022,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
         <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
-          {premiumAllowed ? 'VIP: możesz dodawać typy bez limitu i sprzedawać typy premium.' : 'FREE: możesz dodać maksymalnie 5 darmowych typów dziennie. Sprzedaż premium jest zablokowana.'}
+          Możesz dodawać kupony darmowe i premium. Premium może mieć cenę, darmowy jest widoczny dla wszystkich.
         </div>
       </div>
 
@@ -1071,18 +1071,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
             <strong>🔒 Premium</strong>
-            <span>{premiumAllowed ? 'Możesz publikować i sprzedawać płatne typy premium.' : 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'}</span>
+            <span>Możesz publikować płatne typy premium.</span>
           </button>
         </div>
 
-        {isPremium && !premiumAllowed && (
-          <div className="premium-lock-info">
-            Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.
-          </div>
-        )}
         {isPremium && premiumAllowed && (
           <div className="premium-lock-info success">
-            VIP aktywny — możesz publikować płatne typy premium.
+            Tryb premium — możesz publikować płatny typ.
           </div>
         )}
 
