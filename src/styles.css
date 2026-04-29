@@ -5746,3 +5746,50 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
   .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:before,
   .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:after{animation:none!important}
 }
+
+/* Wersja 193 — REAL FIX: baner jako czysty obraz, bez filtrów, bez tekstów HTML, bez animacji */
+.app-shell.no-rightbar-page .leaderboard-page{
+  max-width: 1380px !important;
+  width: 100% !important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{
+  width: 100% !important;
+  max-width: none !important;
+  aspect-ratio: 1459 / 278 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 0 22px !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  display: block !important;
+  position: relative !important;
+  background-image: url('/ranking-gold-banner-selected.png') !important;
+  background-size: 100% 100% !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  border: 1px solid rgba(255, 181, 54, .28) !important;
+  box-shadow: 0 26px 70px rgba(0,0,0,.38), 0 0 34px rgba(255, 171, 51, .12) !important;
+  animation: none !important;
+  filter: none !important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::before,
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::after{
+  display: none !important;
+  content: none !important;
+  animation: none !important;
+  background: none !important;
+  opacity: 0 !important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero > *{
+  display: none !important;
+}
+@media(max-width:760px){
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{
+    aspect-ratio: 1459 / 278 !important;
+    min-height: 120px !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    border-radius: 18px !important;
+  }
+}
