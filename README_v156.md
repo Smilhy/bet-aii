@@ -1,12 +1,10 @@
-# Wersja 156 — UI PIXEL PERFECT
+# Wersja 153 — Tabs Logic + Analiza + Auto Refresh
 
 Zmiany:
-- modal Analiza PRO: szerszy, bardziej przejrzysty, premium look,
-- zero pionowego tekstu,
-- lepsze spacingi, animacje, hover, glow,
-- progress bary H/D/A,
-- czytelne statystyki xG, strzały, H2H, value,
-- naprawa banera/statystyk — bez zielonych kratek,
-- SQL tylko upewnia się, że pola pod analizę istnieją.
-
-SQL: `supabase/version_156_ui_pixel_perfect.sql`
+- TOP VALUE pokazuje razem mocne LIVE + PRE.
+- LIVE teraz pokazuje tylko mecze trwające.
+- Zaraz startują pokazuje tylko mecze PRE.
+- Dodany przycisk **Analiza** przy każdym meczu.
+- Modal analizy pokazuje typ, kurs, value, rozkład H/D/A, xG, strzały, posiadanie, rożne, H2H i pełną analizę AI.
+- Automatyczne skanowanie/odświeżanie typów co 10 minut.
+- SQL: `supabase/version_153_tabs_analysis_autorefresh.sql`.

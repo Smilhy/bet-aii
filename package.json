@@ -1,18 +1,12 @@
-{
-  "name": "betai-wersja-155-ui-pro-analysis",
-  "version": "155.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "2.45.4",
-    "@vitejs/plugin-react": "4.3.1",
-    "vite": "5.4.8",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "stripe": "17.2.1"
-  },
-  "devDependencies": {}
-}
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bet+AI — Dashboard</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

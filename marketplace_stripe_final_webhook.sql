@@ -1,89 +1,84 @@
--- BetAI subscriptions + paywall patch (wersja 95)
--- Uruchom w Supabase SQL Editor tylko jeśli kolumny/subskrypcje nie istnieją.
+-- BetAI Marketplace v103
+-- Tipster sam ustala ceny: pojedynczy typ + dostęp do profilu.
+-- Platforma pobiera zawsze 20%, tipster dostaje 80%.
 
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text,
-  created_at timestamptz not null default now()
+create table if not exists public.tipster_plans (
+  id uuid default gen_random_uuid() primary key,
+  tipster_id uuid references public.profiles(id) on delete cascade,
+  plan_key text not null,
+  label text not null,
+  duration_days int not null,
+  price numeric not null default 0,
+  active boolean default true,
+  created_at timestamp default now(),
+  updated_at timestamp default now(),
+  unique(tipster_id, plan_key)
 );
 
-alter table public.profiles
-  add column if not exists plan text default 'free',
-  add column if not exists subscription_status text default 'inactive',
-  add column if not exists stripe_customer_id text,
-  add column if not exists stripe_subscription_id text,
-  add column if not exists current_period_end timestamptz;
-
-insert into public.profiles (id, email)
-select id, email
-from auth.users
-where id not in (select id from public.profiles);
-
-create table if not exists public.user_subscriptions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  plan text not null default 'free',
-  status text not null default 'inactive',
-  stripe_customer_id text,
-  stripe_subscription_id text,
-  current_period_end timestamptz,
-  cancel_at_period_end boolean not null default false,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+create table if not exists public.tipster_subscriptions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  tipster_id uuid references public.profiles(id) on delete cascade,
+  duration_days int not null,
+  price numeric not null default 0,
+  platform_fee numeric not null default 0,
+  tipster_amount numeric not null default 0,
+  stripe_session_id text unique,
+  status text default 'active',
+  expires_at timestamp,
+  created_at timestamp default now(),
+  updated_at timestamp default now(),
+  unique(user_id, tipster_id)
 );
 
-alter table public.user_subscriptions
-  add column if not exists status text default 'inactive',
-  add column if not exists stripe_customer_id text,
-  add column if not exists stripe_subscription_id text,
-  add column if not exists current_period_end timestamptz,
-  add column if not exists cancel_at_period_end boolean not null default false,
-  add column if not exists updated_at timestamptz not null default now();
+create table if not exists public.tip_purchases (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  tip_id uuid,
+  tipster_id uuid references public.profiles(id) on delete set null,
+  price numeric not null default 0,
+  platform_fee numeric not null default 0,
+  tipster_amount numeric not null default 0,
+  stripe_session_id text unique,
+  status text default 'paid',
+  created_at timestamp default now()
+);
 
-delete from public.user_subscriptions a
-using public.user_subscriptions b
-where a.user_id = b.user_id
-and a.created_at < b.created_at;
+create table if not exists public.earnings (
+  id uuid default gen_random_uuid() primary key,
+  tipster_id uuid references public.profiles(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete set null,
+  tip_id uuid,
+  gross_amount numeric not null default 0,
+  amount numeric not null default 0,
+  commission numeric not null default 0,
+  source text default 'tip_purchase',
+  stripe_session_id text,
+  status text default 'available',
+  created_at timestamp default now()
+);
 
-create unique index if not exists user_subscriptions_user_id_uidx
-on public.user_subscriptions(user_id);
+-- Uzupełnienie istniejących tabel, jeśli były tworzone wcześniej w prostszej wersji.
+alter table public.tip_purchases add column if not exists tipster_id uuid;
+alter table public.tip_purchases add column if not exists platform_fee numeric not null default 0;
+alter table public.tip_purchases add column if not exists tipster_amount numeric not null default 0;
+alter table public.tip_purchases add column if not exists stripe_session_id text;
+alter table public.tip_purchases add column if not exists status text default 'paid';
 
-insert into public.user_subscriptions (user_id, plan, status, stripe_customer_id, stripe_subscription_id, current_period_end)
-select id, plan, subscription_status, stripe_customer_id, stripe_subscription_id, current_period_end
-from public.profiles
-where id not in (select user_id from public.user_subscriptions);
+alter table public.earnings add column if not exists user_id uuid;
+alter table public.earnings add column if not exists tip_id uuid;
+alter table public.earnings add column if not exists gross_amount numeric not null default 0;
+alter table public.earnings add column if not exists amount numeric not null default 0;
+alter table public.earnings add column if not exists commission numeric not null default 0;
+alter table public.earnings add column if not exists source text default 'tip_purchase';
+alter table public.earnings add column if not exists stripe_session_id text;
+alter table public.earnings add column if not exists status text default 'available';
 
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-as $$
-begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
-  on conflict (id) do nothing;
+create index if not exists idx_tipster_plans_tipster on public.tipster_plans(tipster_id);
+create index if not exists idx_tipster_subscriptions_user on public.tipster_subscriptions(user_id);
+create index if not exists idx_tipster_subscriptions_tipster on public.tipster_subscriptions(tipster_id);
+create index if not exists idx_tip_purchases_user on public.tip_purchases(user_id);
+create index if not exists idx_tip_purchases_tip on public.tip_purchases(tip_id);
+create index if not exists idx_earnings_tipster on public.earnings(tipster_id);
 
-  insert into public.user_subscriptions (user_id, plan, status)
-  values (new.id, 'free', 'inactive')
-  on conflict (user_id) do nothing;
-
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-after insert on auth.users
-for each row execute procedure public.handle_new_user();
-
-create or replace function public.is_premium(uid uuid)
-returns boolean
-language sql
-stable
-as $$
-  select coalesce((
-    select plan = 'premium' and subscription_status in ('active','trialing')
-    from public.profiles
-    where id = uid
-  ), false)
-$$;
+-- Domyślne plany dla istniejących kont premium/tipsterów można tworzyć w UI.

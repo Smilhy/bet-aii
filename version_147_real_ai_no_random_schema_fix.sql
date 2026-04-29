@@ -1,105 +1,114 @@
--- VERSION 142 — LIVE AI REAL MATCHES ONLY + AUTO LEAGUES
--- Pokazuje i liczy LIVE tylko z realnego API-Football; usuwa stare sztuczne/demo wpisy AI, jeśli trafiły do bazy.
+-- VERSION 145 — PRE MATCHES FIX: external_fixture_id + real LIVE/soon only
+-- Naprawia błąd: Could not find the 'external_fixture_id' column of 'tips' in the schema cache
 
-alter table public.tips add column if not exists live_minute integer;
-alter table public.tips add column if not exists live_score_home integer;
-alter table public.tips add column if not exists live_score_away integer;
+-- 1. Kolumny wymagane przez skaner realnych meczów LIVE + PRE
+alter table public.tips add column if not exists external_fixture_id text;
+alter table public.tips add column if not exists league_id integer;
+alter table public.tips add column if not exists league_name text;
+alter table public.tips add column if not exists country text;
+alter table public.tips add column if not exists sport text default 'football';
+alter table public.tips add column if not exists team_home text;
+alter table public.tips add column if not exists team_away text;
+alter table public.tips add column if not exists match_name text;
+alter table public.tips add column if not exists event_time timestamptz;
+alter table public.tips add column if not exists kickoff_time timestamptz;
+alter table public.tips add column if not exists match_time timestamptz;
+alter table public.tips add column if not exists live_minute integer default 0;
+alter table public.tips add column if not exists live_score_home integer default 0;
+alter table public.tips add column if not exists live_score_away integer default 0;
 alter table public.tips add column if not exists live_status text;
-alter table public.tips add column if not exists ai_source text default 'user';
 alter table public.tips add column if not exists source text default 'manual';
+alter table public.tips add column if not exists ai_source text default 'user';
 alter table public.tips add column if not exists ai_analysis text;
+alter table public.tips add column if not exists analysis text;
+alter table public.tips add column if not exists implied_probability numeric;
+alter table public.tips add column if not exists model_probability numeric;
+alter table public.tips add column if not exists value_score numeric;
+alter table public.tips add column if not exists ai_confidence numeric;
+alter table public.tips add column if not exists ai_score numeric;
+alter table public.tips add column if not exists risk_level text;
+alter table public.tips add column if not exists bookmaker text;
+alter table public.tips add column if not exists access_type text default 'free';
+alter table public.tips add column if not exists is_premium boolean default false;
+alter table public.tips add column if not exists price numeric default 0;
 alter table public.tips add column if not exists result text default 'pending';
-alter table public.tips add column if not exists status text default 'pending';
+alter table public.tips add column if not exists profit numeric default 0;
 
--- status służy do rozliczania typu; status meczu live zostaje w live_status.
-update public.tips set status = 'pending'
-where lower(coalesce(status, 'pending')) not in ('pending','won','lost','void');
-
+-- 2. Statusy potrzebne dla PRE/LIVE/rozliczenia
 alter table public.tips drop constraint if exists tips_status_check;
-alter table public.tips add constraint tips_status_check check (status in ('pending','won','lost','void'));
+alter table public.tips
+add constraint tips_status_check
+check (status in ('pending','live','won','lost','void'));
 
--- Usunięcie typowych testowych/demo rekordów AI, jeśli zostały kiedyś zapisane do Supabase.
-delete from public.tips
-where ai_source = 'real_ai_engine'
-  and (
-    id::text like 'demo-%'
-    or lower(coalesce(source,'')) in ('demo','mock','sample','fake','static')
-    or lower(coalesce(author_name,'')) in ('ai tip','demo','test')
-  );
+alter table public.tips alter column status set default 'pending';
 
-create index if not exists idx_tips_live_real_v142 on public.tips(ai_source, source, live_status, created_at desc);
-create index if not exists idx_tips_league_auto_v142 on public.tips(league_name, league, sport);
-
+-- 3. Tabela lig + auto dopisywanie brakujących lig
 create table if not exists public.leagues (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
+  id bigserial primary key,
+  league_id integer unique,
+  name text,
   country text,
-  sport text default 'football',
-  source text default 'auto',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique(name, sport)
+  created_at timestamptz default now()
 );
 
-create or replace function public.sync_league_from_tip()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
+create or replace function public.auto_insert_league()
+returns trigger as $$
 begin
-  if coalesce(new.league_name, new.league, '') <> '' then
-    insert into public.leagues(name, country, sport, source, updated_at)
-    values (
-      coalesce(nullif(new.league_name, ''), new.league),
-      nullif(new.country, ''),
-      coalesce(nullif(new.sport, ''), 'football'),
-      'auto_tip_insert',
-      now()
-    )
-    on conflict (name, sport) do update set
-      country = coalesce(excluded.country, public.leagues.country),
-      updated_at = now();
+  if new.league_id is not null then
+    insert into public.leagues (league_id, name, country)
+    values (new.league_id, coalesce(new.league_name, new.league), new.country)
+    on conflict (league_id) do update set
+      name = coalesce(excluded.name, public.leagues.name),
+      country = coalesce(excluded.country, public.leagues.country);
   end if;
   return new;
 end;
-$$;
+$$ language plpgsql;
 
-drop trigger if exists trg_sync_league_from_tip on public.tips;
-create trigger trg_sync_league_from_tip
-after insert or update of league, league_name, country, sport on public.tips
-for each row execute function public.sync_league_from_tip();
+drop trigger if exists trg_auto_league on public.tips;
+create trigger trg_auto_league
+after insert or update of league_id, league_name, league, country on public.tips
+for each row execute function public.auto_insert_league();
 
--- Dopisz ligi z już istniejących typów.
-insert into public.leagues(name, country, sport, source, updated_at)
-select distinct coalesce(nullif(league_name,''), league), nullif(country,''), coalesce(nullif(sport,''),'football'), 'backfill_tips', now()
-from public.tips
-where coalesce(league_name, league, '') <> ''
-on conflict (name, sport) do update set
-  country = coalesce(excluded.country, public.leagues.country),
-  updated_at = now();
-
--- Widoki: LIVE tylko realne API-Football/live_ai_engine, pre-match osobno.
-drop view if exists public.ai_live_events_feed cascade;
-create view public.ai_live_events_feed as
-select * from public.tips
+-- 4. Nie duplikuj tego samego meczu z API-Football
+create unique index if not exists idx_tips_real_fixture_unique_v145
+on public.tips (external_fixture_id)
 where ai_source = 'real_ai_engine'
-  and (
-    lower(coalesce(source,'')) like 'live_ai_engine%'
-    or live_status is not null
-    or coalesce(live_minute,0) > 0
-  )
+  and source = 'live_ai_engine'
+  and external_fixture_id is not null
+  and external_fixture_id <> '';
+
+-- 5. Widoki: tylko realne mecze, osobno LIVE i PRE
+create or replace view public.ai_real_matches as
+select *
+from public.tips
+where ai_source = 'real_ai_engine'
+  and source = 'live_ai_engine'
+  and status in ('live','pending')
+order by
+  case when status = 'live' then 0 else 1 end,
+  coalesce(kickoff_time, event_time, match_time, created_at) asc;
+
+create or replace view public.ai_live_only as
+select *
+from public.tips
+where ai_source = 'real_ai_engine'
+  and source = 'live_ai_engine'
+  and status = 'live'
 order by created_at desc;
 
-drop view if exists public.ai_prematch_events_feed cascade;
-create view public.ai_prematch_events_feed as
-select * from public.tips
+create or replace view public.ai_upcoming_only as
+select *
+from public.tips
 where ai_source = 'real_ai_engine'
-  and not (
-    lower(coalesce(source,'')) like 'live_ai_engine%'
-    or live_status is not null
-    or coalesce(live_minute,0) > 0
-  )
-order by coalesce(event_time, kickoff_time, match_time, created_at) desc;
+  and source = 'live_ai_engine'
+  and status = 'pending'
+order by coalesce(kickoff_time, event_time, match_time, created_at) asc;
 
+-- 6. Indexy pod szybkie filtrowanie
+create index if not exists idx_real_matches_v145 on public.tips(ai_source, source, status);
+create index if not exists idx_real_matches_time_v145 on public.tips(kickoff_time, event_time, match_time);
+create index if not exists idx_real_matches_league_v145 on public.tips(league_id, league_name);
+
+-- 7. Refresh Supabase/PostgREST schema cache
 notify pgrst, 'reload schema';

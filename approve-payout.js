@@ -3,120 +3,93 @@ const { createClient } = require('@supabase/supabase-js');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-function supabaseAdmin() {
+function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
+  if (!url || !key) throw new Error('Missing SUPABASE_URL/VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
   return createClient(url, key);
 }
 
-function response(code, body) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
-}
-
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
 
   try {
-    const { request_id, admin_user_id } = JSON.parse(event.body || '{}');
-    if (!request_id) return response(400, { error: 'Missing request_id' });
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('Missing STRIPE_SECRET_KEY');
 
-    const supabase = supabaseAdmin();
+    const { user_id, email } = JSON.parse(event.body || '{}');
 
-    const { data: payout, error: payoutError } = await supabase
-      .from('payout_requests')
-      .select('*')
-      .eq('id', request_id)
-      .maybeSingle();
-
-    if (payoutError) throw payoutError;
-    if (!payout) throw new Error('PAYOUT_NOT_FOUND');
-    if (payout.status !== 'pending') throw new Error('PAYOUT_ALREADY_PROCESSED');
-
-    const { data: accountRow, error: accountError } = await supabase
-      .from('user_stripe_accounts')
-      .select('*')
-      .eq('user_id', payout.user_id)
-      .maybeSingle();
-
-    if (accountError) throw accountError;
-    if (!accountRow?.stripe_account_id) throw new Error('STRIPE_CONNECT_NOT_CONNECTED');
-
-    const account = await stripe.accounts.retrieve(accountRow.stripe_account_id);
-
-    await supabase.from('user_stripe_accounts').upsert({
-      user_id: payout.user_id,
-      stripe_account_id: account.id,
-      charges_enabled: !!account.charges_enabled,
-      payouts_enabled: !!account.payouts_enabled,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-
-    if (!account.payouts_enabled) throw new Error('STRIPE_PAYOUTS_NOT_ENABLED');
-
-    const amount = Number(payout.amount || 0);
-    const amountMinor = Math.round(amount * 100);
-    if (!amountMinor || amountMinor < 100) throw new Error('INVALID_PAYOUT_AMOUNT');
-
-    let transfer;
-    try {
-      transfer = await stripe.transfers.create({
-        amount: amountMinor,
-        currency: (payout.currency || 'pln').toLowerCase(),
-        destination: account.id,
-        metadata: {
-          payout_request_id: payout.id,
-          user_id: payout.user_id,
-          admin_user_id: admin_user_id || ''
-        }
-      }, { idempotencyKey: `betai_payout_${payout.id}` });
-    } catch (e) {
-      if (String(e.message || '').toLowerCase().includes('insufficient')) {
-        throw new Error('INSUFFICIENT_STRIPE_BALANCE');
-      }
-      throw new Error(`STRIPE_TRANSFER_FAILED: ${e.message}`);
+    if (!user_id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
     }
 
-    const now = new Date().toISOString();
+    const supabase = getSupabase();
 
-    const { error: updateError } = await supabase
-      .from('payout_requests')
-      .update({
-        status: 'paid',
-        stripe_transfer_id: transfer.id,
-        stripe_status: 'transferred',
-        processed_at: now,
-        updated_at: now
+    const { data: existing, error: existingError } = await supabase
+      .from('user_stripe_accounts')
+      .select('*')
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    let accountId = existing?.stripe_account_id;
+
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        country: 'PL',
+        email: email || undefined,
+        capabilities: {
+          transfers: { requested: true }
+        },
+        business_type: 'individual',
+        metadata: { user_id }
+      });
+
+      accountId = account.id;
+
+      const { error: upsertError } = await supabase
+        .from('user_stripe_accounts')
+        .upsert({
+          user_id,
+          stripe_account_id: accountId,
+          charges_enabled: Boolean(account.charges_enabled),
+          payouts_enabled: Boolean(account.payouts_enabled),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+      if (upsertError) throw upsertError;
+    }
+
+    const siteUrl =
+      process.env.SITE_URL ||
+      process.env.URL ||
+      process.env.DEPLOY_PRIME_URL ||
+      'https://unique-queijadas-333bcd.netlify.app';
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${siteUrl}/?stripe_connect=refresh`,
+      return_url: `${siteUrl}/?stripe_connect=success`,
+      type: 'account_onboarding'
+    });
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: accountLink.url,
+        account_id: accountId
       })
-      .eq('id', payout.id);
-
-    if (updateError) throw updateError;
-
-    await supabase.from('wallet_transactions').insert({
-      user_id: payout.user_id,
-      amount: -amount,
-      type: 'payout',
-      status: 'completed',
-      provider: 'stripe',
-      provider_session_id: transfer.id
-    });
-
-    await supabase.from('admin_logs').insert({
-      admin_user_id: admin_user_id || null,
-      action: 'approve_payout_stripe_transfer',
-      target_table: 'payout_requests',
-      target_id: payout.id,
-      metadata: {
-        amount,
-        user_id: payout.user_id,
-        stripe_transfer_id: transfer.id,
-        stripe_account_id: account.id
-      }
-    });
-
-    return response(200, { ok: true, status: 'paid', transfer_id: transfer.id });
+    };
   } catch (error) {
-    console.error('approve-payout error:', error);
-    return response(500, { error: error.message || 'APPROVE_PAYOUT_FAILED' });
+    console.error('create-stripe-account error:', error);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: error.message || 'Stripe Connect backend error' })
+    };
   }
 };

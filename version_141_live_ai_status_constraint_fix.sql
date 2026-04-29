@@ -1,89 +1,124 @@
 -- =========================
--- VERSION 137 — AI GENERATOR SUPABASE V2 FIX
+-- VERSION 139 — LIVE AI PICKS FINAL
 -- =========================
 
--- Required columns used by the real AI generator Netlify Function
 alter table public.tips add column if not exists ai_source text default 'user';
-alter table public.tips add column if not exists source text default 'user';
-alter table public.tips add column if not exists event_time timestamptz;
-alter table public.tips add column if not exists kickoff_time timestamptz;
-alter table public.tips add column if not exists country text;
+alter table public.tips add column if not exists source text default 'manual';
 alter table public.tips add column if not exists match_name text;
 alter table public.tips add column if not exists league_name text;
-alter table public.tips add column if not exists sport text default 'football';
-alter table public.tips add column if not exists bookmaker text;
+alter table public.tips add column if not exists country text;
 alter table public.tips add column if not exists team_home text;
 alter table public.tips add column if not exists team_away text;
 alter table public.tips add column if not exists pick text;
 alter table public.tips add column if not exists odds numeric;
 alter table public.tips add column if not exists result text default 'pending';
+alter table public.tips add column if not exists status text default 'pending';
 alter table public.tips add column if not exists profit numeric default 0;
 alter table public.tips add column if not exists ai_confidence numeric default 0;
 alter table public.tips add column if not exists ai_score numeric default 0;
-alter table public.tips add column if not exists ai_analysis text;
 alter table public.tips add column if not exists value_score numeric default 0;
 alter table public.tips add column if not exists model_probability numeric default 0;
 alter table public.tips add column if not exists implied_probability numeric default 0;
+alter table public.tips add column if not exists ai_analysis text;
+alter table public.tips add column if not exists analysis text;
 alter table public.tips add column if not exists risk_level text default 'medium';
+alter table public.tips add column if not exists bookmaker text;
+alter table public.tips add column if not exists event_time timestamptz;
+alter table public.tips add column if not exists kickoff_time timestamptz;
+alter table public.tips add column if not exists match_time timestamptz;
+alter table public.tips add column if not exists live_minute integer;
+alter table public.tips add column if not exists live_score_home integer;
+alter table public.tips add column if not exists live_score_away integer;
+alter table public.tips add column if not exists live_status text;
 
--- Run log table for generator
 create table if not exists public.ai_pick_runs (
   id uuid primary key default gen_random_uuid(),
   status text default 'pending',
-  source text default 'api_football_odds_openai',
+  source text default 'ai_engine',
   picks_created integer default 0,
   error_message text,
   created_at timestamptz default now(),
   finished_at timestamptz
 );
 
--- Keep old user tips separate from AI picks
-update public.tips
-set ai_source = 'user'
-where ai_source is null or ai_source = '' or ai_source != 'real_ai_engine';
+create index if not exists idx_tips_ai_source_v139 on public.tips(ai_source);
+create index if not exists idx_tips_source_v139 on public.tips(source);
+create index if not exists idx_tips_live_status_v139 on public.tips(live_status);
+create index if not exists idx_tips_event_time_v139 on public.tips(event_time);
 
--- Recreate AI views safely
+-- Dashboard ludzi: tylko user/manual.
+drop view if exists public.user_only_tips cascade;
+create view public.user_only_tips as
+select *
+from public.tips
+where coalesce(ai_source, 'user') = 'user'
+order by created_at desc;
+
+-- Typy AI: pre-match + live, ale tylko engine.
 drop view if exists public.ai_events_feed cascade;
-drop view if exists public.ai_stats_main cascade;
-drop view if exists public.ai_win_loss_distribution cascade;
-drop view if exists public.ai_stats_by_odds_range cascade;
-drop view if exists public.ai_streak cascade;
-drop view if exists public.ai_recent_form cascade;
-drop view if exists public.ai_stats_by_league cascade;
-
 create view public.ai_events_feed as
 select *
 from public.tips
 where ai_source = 'real_ai_engine'
+order by
+  case when source = 'live_ai_engine' then 0 else 1 end,
+  coalesce(event_time, kickoff_time, match_time, created_at) desc;
+
+-- LIVE AI only.
+drop view if exists public.ai_live_events_feed cascade;
+create view public.ai_live_events_feed as
+select *
+from public.tips
+where ai_source = 'real_ai_engine'
+  and source = 'live_ai_engine'
 order by created_at desc;
 
+-- AI stats.
+drop view if exists public.ai_stats_main cascade;
 create view public.ai_stats_main as
 select
   count(*) as total_picks,
+  count(*) filter (where source = 'live_ai_engine') as live_picks,
+  count(*) filter (where source <> 'live_ai_engine') as prematch_picks,
   count(*) filter (where result = 'win') as wins,
-  count(*) filter (where result = 'lose') as losses,
+  count(*) filter (where result in ('lose','loss')) as losses,
   round(
-    case when count(*) filter (where result in ('win','lose')) > 0
-    then (count(*) filter (where result = 'win')::numeric / count(*) filter (where result in ('win','lose'))::numeric) * 100
+    case when count(*) filter (where result in ('win','lose','loss')) > 0
+    then (count(*) filter (where result = 'win')::numeric / count(*) filter (where result in ('win','lose','loss'))::numeric) * 100
     else 0 end, 2
   ) as winrate,
   round(coalesce(sum(profit),0), 2) as total_profit,
   round(
-    case when count(*) filter (where result in ('win','lose')) > 0
-    then (coalesce(sum(profit),0) / count(*) filter (where result in ('win','lose'))::numeric) * 100
+    case when count(*) filter (where result in ('win','lose','loss')) > 0
+    then (coalesce(sum(profit),0) / count(*) filter (where result in ('win','lose','loss'))::numeric) * 100
     else 0 end, 2
-  ) as roi
+  ) as roi,
+  round(avg(coalesce(ai_confidence, 0)), 2) as avg_confidence,
+  round(avg(coalesce(value_score, 0)), 2) as avg_value_score
 from public.tips
 where ai_source = 'real_ai_engine';
 
-create view public.ai_win_loss_distribution as
+-- League stats.
+drop view if exists public.ai_stats_by_league cascade;
+create view public.ai_stats_by_league as
 select
-  count(*) filter (where result = 'win') as wins,
-  count(*) filter (where result = 'lose') as losses,
-  count(*) filter (where result not in ('win','lose') or result is null or result = 'pending') as push
+  coalesce(league_name, 'Unknown') as league,
+  count(*) as bets,
+  count(*) filter (where source = 'live_ai_engine') as live_bets,
+  round(avg(coalesce(ai_confidence,0)), 2) as avg_confidence,
+  round(
+    case when count(*) filter (where result in ('win','lose','loss')) > 0
+    then (count(*) filter (where result = 'win')::numeric / count(*) filter (where result in ('win','lose','loss'))::numeric) * 100
+    else 0 end, 2
+  ) as winrate,
+  round(coalesce(sum(profit),0), 2) as profit
 from public.tips
-where ai_source = 'real_ai_engine';
+where ai_source = 'real_ai_engine'
+group by coalesce(league_name, 'Unknown')
+order by bets desc;
 
+-- Odds performance.
+drop view if exists public.ai_stats_by_odds_range cascade;
 create view public.ai_stats_by_odds_range as
 select
   case
@@ -93,61 +128,28 @@ select
     when odds < 3.0 then '2.5-3.0'
     else '3.0+'
   end as range,
+  count(*) as total,
   count(*) filter (where result = 'win') as wins,
-  count(*) filter (where result = 'lose') as losses
+  count(*) filter (where result in ('lose','loss')) as losses
 from public.tips
 where ai_source = 'real_ai_engine'
-group by range
-order by range;
+group by 1
+order by 1;
 
+-- Recent form.
+drop view if exists public.ai_recent_form cascade;
 create view public.ai_recent_form as
-select result
+select result, source, created_at
 from public.tips
 where ai_source = 'real_ai_engine'
 order by created_at desc
 limit 20;
 
-create view public.ai_stats_by_league as
-select
-  coalesce(league_name, 'Unknown') as league,
-  count(*) as bets,
-  round(
-    case when count(*) filter (where result in ('win','lose')) > 0
-    then (count(*) filter (where result = 'win')::numeric / count(*) filter (where result in ('win','lose'))::numeric) * 100
-    else 0 end, 2
-  ) as winrate,
-  round(coalesce(sum(profit),0), 2) as profit,
-  round(
-    case when count(*) filter (where result in ('win','lose')) > 0
-    then (coalesce(sum(profit),0) / count(*) filter (where result in ('win','lose'))::numeric) * 100
-    else 0 end, 2
-  ) as roi
-from public.tips
-where ai_source = 'real_ai_engine'
-group by league_name
-order by bets desc;
-
-create view public.ai_streak as
-select
-  count(*) filter (where result = 'win') as total_wins,
-  count(*) filter (where result = 'lose') as total_losses
-from public.tips
-where ai_source = 'real_ai_engine';
-
--- Public reads for frontend
 alter table public.tips enable row level security;
-drop policy if exists "ai_dashboard_public_read" on public.tips;
-create policy "ai_dashboard_public_read" on public.tips for select using (true);
+drop policy if exists "tips_public_read_v139" on public.tips;
+create policy "tips_public_read_v139"
+on public.tips
+for select
+using (true);
 
-alter table public.ai_pick_runs enable row level security;
-drop policy if exists "ai_pick_runs_admin_read" on public.ai_pick_runs;
-create policy "ai_pick_runs_admin_read" on public.ai_pick_runs
-for select using (
-  exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid() and p.email = 'smilhytv@gmail.com'
-  )
-);
-
--- Force PostgREST schema refresh
 NOTIFY pgrst, 'reload schema';

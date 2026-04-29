@@ -1,13 +1,11 @@
-# Wersja 165 — GLOBAL ULTRA PRO SYSTEM
-
-Pełna aktualizacja wyglądu całej aplikacji bez zmiany logiki działania.
+# Wersja 157 — Admin wypłaty SaaS Ultra Pro Max
 
 Zmiany:
-- globalny dark SaaS Ultra Pro look,
-- spójne karty, tabele, zakładki, sidebar, topbar, feed i admin panele,
-- hover glow, soft neon borders, glassmorphism,
-- dopasowanie Admin finanse i Admin wypłaty do dashboardu,
-- poprawione spacingi i wyrównanie na wszystkich zakładkach,
-- mobile polish i lepszy wygląd modali/analizy.
+- nowa kolorystyka panelu Admin wypłaty zgodna z dashboardem głównym,
+- usunięte białe karty i niespójne kolory,
+- ciemne premium cards, teal glow, lepsza typografia,
+- wyrównane statystyki, cron card i tabela,
+- statusy wypłat: pending, paid, rejected, processing, failed,
+- poprawione odstępy, responsywność i czytelność.
 
-Nie zmieniano logiki Supabase/Stripe/API — tylko UI i layout.
+SQL: `supabase/version_157_admin_payouts_ultra_pro_ui.sql` — opcjonalny, frontend-only.

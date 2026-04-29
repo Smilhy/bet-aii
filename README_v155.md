@@ -1,11 +1,10 @@
-# Wersja 155 — UI PRO Analysis + Banner Fix
+# Wersja 150 — Dashboard Statystyk PRO
 
-Dodano:
-- szerszy modal analizy meczu,
-- czytelne sekcje analizy zamiast pionowego tekstu,
-- progress bary H/D/A,
-- kolory value: zielony/czerwony,
-- badge jakości 💎 / 🔥 / ⭐,
-- naprawa bannera/statystyk — usunięte zielone kratki/tła pod liczbami.
+Dodane:
+- osobne zakładki: LIVE teraz, Zaraz startują, Zakończone/Rozliczone
+- zakończone mecze pokazują wynik FT, profit oraz ikonę wygrana/przegrana/zwrot
+- dashboard PRO: profit, ROI, winrate, aktywne mecze, rozliczone mecze
+- statystyki po ligach i rynkach
 
-SQL: `supabase/version_155_ui_pro_analysis_banner_fix.sql`
+Supabase SQL:
+`supabase/version_150_pro_stats_dashboard_settled_tabs.sql`

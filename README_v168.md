@@ -1,2 +1,1 @@
-Wersja 168: pełna paczka projektu.
-Usunięto prawą kolumnę tylko w zakładce Admin wypłaty. Inne zakładki zostają bez zmian.
+Version 166: Ultra PRO chart/ring and dashboard header alignment fix. Logic unchanged.

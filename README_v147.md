@@ -1,12 +1,22 @@
-# Wersja 147 — real AI PRE/LIVE schema fix
+# Wersja 144 — tylko realne mecze
 
-Naprawia błąd `record "new" has no field "confidence"` przy kliknięciu generowania/skanowania.
+Zmiany:
+- usunięty fake `Generate AI Picks` i funkcja `generate-ai-picks.js`,
+- zostaje tylko skaner realnych meczów API-Football: LIVE teraz + mecze startujące w najbliższych godzinach,
+- automatyczne dopisywanie brakujących lig do `league_catalog`,
+- widoki Supabase tylko dla realnych meczów,
+- dodany endpoint `settle-live-ai-picks.js` do rozliczania meczów po FT,
+- statystyki globalne i per liga z realnych AI picków.
 
-Co zmieniono:
-- wyłączony stary trigger z wersji 146, który losowo nadpisywał PRE typy,
-- dodane brakujące kolumny `confidence`, `ai_confidence`, `model_probability`, `external_fixture_id` itd.,
-- LIVE i PRE są rozdzielone w widokach,
-- realne mecze zostają tylko z `ai_source = real_ai_engine` i `source = live_ai_engine`.
+W Supabase uruchom:
+`supabase/version_144_real_matches_only_auto_settlement_stats.sql`
 
-Uruchom w Supabase:
-`supabase/version_147_real_ai_no_random_schema_fix.sql`
+W Netlify ENV wymagane:
+- `API_FOOTBALL_KEY`
+- `SUPABASE_URL` albo `VITE_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- opcjonalnie `OPENAI_API_KEY`
+
+Endpointy:
+- `/.netlify/functions/generate-live-ai-picks` — pobiera realne LIVE/soon mecze,
+- `/.netlify/functions/settle-live-ai-picks` — rozlicza zakończone mecze.
