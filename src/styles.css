@@ -3980,3 +3980,198 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
     50%{box-shadow:0 0 34px rgba(32,232,191,.10)}
   }
 }
+
+
+/* =========================================================
+   VERSION 166 — ULTRA PRO CHARTS + HEADER ALIGNMENT FIX
+   Fix requested: premium donut/ring, aligned labels/buttons,
+   polished dashboard spacing without changing app logic.
+   ========================================================= */
+.ai-premium-header{
+  align-items:flex-start!important;
+  gap:22px!important;
+  padding:14px 0 22px!important;
+}
+.ai-brand-title{min-width:0;flex:1;}
+.ai-brand-title h1{line-height:1.05!important;}
+.ai-brand-title p{max-width:720px;line-height:1.35!important;}
+.ai-header-actions{
+  margin-left:auto!important;
+  display:grid!important;
+  grid-template-columns:auto auto auto!important;
+  grid-template-areas:
+    "status refresh scan"
+    ". settle settle"!important;
+  align-items:center!important;
+  justify-content:end!important;
+  gap:10px!important;
+  min-width:470px!important;
+  padding:10px 12px!important;
+  border:1px solid rgba(32,255,208,.10)!important;
+  border-radius:18px!important;
+  background:linear-gradient(135deg,rgba(8,18,28,.72),rgba(10,26,38,.46))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 55px rgba(0,0,0,.22)!important;
+  backdrop-filter:blur(14px)!important;
+}
+.ai-live-dot{
+  grid-area:status;
+  white-space:nowrap!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  height:40px!important;
+  color:#9fb4c6!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+}
+.ai-header-actions button{
+  height:40px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  white-space:nowrap!important;
+  line-height:1!important;
+  border-radius:13px!important;
+}
+.ai-header-actions button:nth-of-type(1){grid-area:refresh;}
+.ai-header-actions button:nth-of-type(2){grid-area:scan;}
+.ai-header-actions button:nth-of-type(3){grid-area:settle;justify-self:start;min-width:168px;}
+.ai-header-actions .ai-live-action{
+  font-weight:1000!important;
+  letter-spacing:-.01em!important;
+}
+.ai-header-actions .ai-live-action.settle{
+  background:linear-gradient(135deg,#20ffd0,#14f195)!important;
+  color:#041015!important;
+  box-shadow:0 12px 36px rgba(32,255,208,.18)!important;
+}
+
+/* Premium donut/ring — replaces flat default chart */
+.ai-donut-panel{overflow:hidden;position:relative;}
+.ai-donut-panel:before{
+  content:"";
+  position:absolute;
+  width:230px;height:230px;
+  left:-70px;top:-80px;
+  background:radial-gradient(circle,rgba(32,255,208,.12),transparent 66%);
+  pointer-events:none;
+}
+.ai-donut-wrap{
+  grid-template-columns:210px 1fr!important;
+  min-height:230px!important;
+}
+.ai-donut{
+  width:172px!important;
+  height:172px!important;
+  border-radius:50%!important;
+  margin:auto!important;
+  background:
+    conic-gradient(from -90deg,
+      #20ffd0 0 var(--win),
+      #ff4d6d var(--win) calc(var(--win) + var(--loss)),
+      rgba(148,163,184,.34) calc(var(--win) + var(--loss)) 100%)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  position:relative!important;
+  isolation:isolate!important;
+  box-shadow:
+    0 0 0 1px rgba(32,255,208,.18),
+    0 0 34px rgba(32,255,208,.22),
+    inset 0 0 26px rgba(255,255,255,.035)!important;
+  animation:ultraRingIn .8s ease both!important;
+}
+.ai-donut:before{
+  content:""!important;
+  position:absolute!important;
+  inset:24px!important;
+  width:auto!important;height:auto!important;
+  border-radius:50%!important;
+  background:linear-gradient(180deg,#06111c,#081725)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    inset 0 12px 30px rgba(0,0,0,.50)!important;
+  z-index:0!important;
+}
+.ai-donut:after{
+  content:""!important;
+  position:absolute!important;
+  inset:-7px!important;
+  border-radius:50%!important;
+  background:conic-gradient(from -90deg,rgba(32,255,208,.45),rgba(59,130,246,.22),rgba(139,92,246,.20),rgba(32,255,208,.45))!important;
+  filter:blur(14px)!important;
+  opacity:.33!important;
+  z-index:-1!important;
+}
+.ai-donut strong{
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  color:#f7fbff!important;
+  font-size:34px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.06em!important;
+  text-shadow:0 0 24px rgba(32,255,208,.22)!important;
+}
+.ai-donut span{
+  position:relative!important;
+  z-index:1!important;
+  display:block!important;
+  margin:8px 0 0!important;
+  color:#7f95a9!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.11em!important;
+}
+.ai-donut-legend{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  justify-content:center!important;
+  min-width:0!important;
+}
+.ai-donut-legend p{
+  min-height:40px!important;
+  display:grid!important;
+  grid-template-columns:14px minmax(80px,1fr) auto!important;
+  gap:10px!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:10px 12px!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(255,255,255,.055)!important;
+  color:#b6c8d6!important;
+  font-weight:950!important;
+}
+.ai-donut-legend p i{width:10px!important;height:10px!important;margin:0!important;box-shadow:0 0 18px currentColor!important;}
+.ai-donut-legend p b{margin-left:0!important;color:#f5fbff!important;font-weight:1000!important;white-space:nowrap!important;}
+
+/* Ultra PRO odds chart polish */
+.ai-odds-chart{
+  border-radius:16px!important;
+  padding:18px 12px 0!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.005)),
+    repeating-linear-gradient(to top,transparent 0 39px,rgba(255,255,255,.045) 40px)!important;
+}
+.ai-odds-col i.green{background:linear-gradient(180deg,#20ffd0,#14f195)!important;box-shadow:0 0 18px rgba(32,255,208,.28)!important;}
+.ai-odds-col i.red{background:linear-gradient(180deg,#ff6b81,#ff3b5f)!important;box-shadow:0 0 18px rgba(255,77,97,.18)!important;}
+.ai-odds-col small{color:#a9bfd0!important;font-weight:950!important;}
+
+/* General alignment polish for highlighted dashboard area */
+.ai-mode-row{align-items:center!important;}
+.ai-mode-row button{height:40px!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;}
+.ai-value-filter-panel{align-items:stretch!important;}
+.ai-value-filter-panel label,.ai-value-filter-panel>div{display:flex!important;flex-direction:column!important;justify-content:center!important;}
+.ai-panel h3{line-height:1.2!important;}
+
+@keyframes ultraRingIn{from{transform:scale(.94);opacity:.65;filter:blur(1px)}to{transform:scale(1);opacity:1;filter:blur(0)}}
+@media(max-width:1180px){
+  .ai-header-actions{min-width:100%!important;grid-template-columns:1fr 1fr!important;grid-template-areas:"status status" "refresh scan" "settle settle"!important;justify-content:stretch!important;}
+  .ai-header-actions button{width:100%!important;}
+  .ai-donut-wrap{grid-template-columns:1fr!important;}
+}
