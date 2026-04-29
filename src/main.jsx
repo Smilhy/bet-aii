@@ -4017,7 +4017,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
