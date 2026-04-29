@@ -234,53 +234,7 @@ function getDisplayRole(user, plan = 'free') {
 
 
 
-const staticTips = [
-  {
-    id: 'demo-1',
-    author_name: 'FitMateusz',
-    league: 'Liga Mistrzów',
-    team_home: 'Real Madryt',
-    team_away: 'Bayern Monachium',
-    bet_type: 'Powyżej 2.5 gola',
-    odds: 1.72,
-    analysis: 'Wysokie prawdopodobieństwo na powyżej 2.5 gola. Obie drużyny w dobrej formie ofensywnej.',
-    ai_probability: 72,
-    access_type: 'premium',
-    price: 39,
-    status: 'won',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'demo-2',
-    author_name: 'Zuzanna07',
-    league: 'Premier League',
-    team_home: 'Arsenal',
-    team_away: 'Chelsea',
-    bet_type: '1X (podwójna szansa)',
-    odds: 1.48,
-    analysis: 'Arsenal u siebie jest bardzo mocny. Chelsea ma problemy w defensywie w ostatnich meczach.',
-    ai_probability: 65,
-    access_type: 'premium',
-    price: 29,
-    status: 'pending',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'demo-3',
-    author_name: 'AI Tip',
-    league: 'La Liga',
-    team_home: 'Barcelona',
-    team_away: 'Atletico Madryt',
-    bet_type: 'Barcelona wygra',
-    odds: 1.85,
-    analysis: 'Barcelona ma przewagę u siebie, ale Atletico potrafi dobrze bronić.',
-    ai_probability: 58,
-    access_type: 'free',
-    price: 0,
-    status: 'pending',
-    created_at: new Date().toISOString()
-  }
-]
+const staticTips = []
 
 
 
@@ -975,62 +929,40 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     let saveError = null
 
     const insertDirectTip = async (currentUserId) => {
-      const basePayload = {
-        author_id: currentUserId || user?.id || null,
-        author_name: payload.author_name,
+      const uid = currentUserId || user?.id || null
+      if (!uid) {
+        return { data: null, error: new Error('Brak aktywnej sesji użytkownika. Zaloguj się ponownie.') }
+      }
+
+      const cleanPayload = {
+        author_id: uid,
+        user_id: uid,
+        author_email: user?.email || null,
+        author_name: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
         league: payload.league,
         team_home: payload.team_home,
         team_away: payload.team_away,
         match_time: payload.match_time,
         bet_type: payload.bet_type,
-        odds: payload.odds,
-        analysis: payload.analysis,
-        ai_probability: payload.ai_probability,
-        access_type: payload.access_type,
-        price: payload.price,
+        odds: Number(payload.odds),
+        analysis: payload.analysis || '',
+        ai_probability: Number(payload.ai_probability || 0),
+        ai_confidence: Number(payload.ai_confidence || payload.ai_probability || 0),
+        ai_score: Number(payload.ai_score || 0),
+        ai_analysis: payload.ai_analysis || payload.analysis || '',
+        access_type: payload.access_type === 'premium' ? 'premium' : 'free',
+        is_premium: payload.access_type === 'premium',
+        price: payload.access_type === 'premium' ? Number(payload.price || 0) : 0,
         status: 'pending',
-        tags: payload.tags,
-        notify_followers: payload.notify_followers
+        tags: payload.tags || [],
+        notify_followers: payload.notify_followers !== false
       }
 
-      const payloadVariants = [
-        {
-          ...basePayload,
-          user_id: currentUserId || user?.id || null,
-          author_email: user?.email || null,
-          ai_confidence: payload.ai_confidence,
-          ai_score: payload.ai_score,
-          ai_analysis: payload.ai_analysis,
-          is_premium: payload.is_premium
-        },
-        basePayload,
-        {
-          author_id: basePayload.author_id,
-          author_name: basePayload.author_name,
-          league: basePayload.league,
-          team_home: basePayload.team_home,
-          team_away: basePayload.team_away,
-          bet_type: basePayload.bet_type,
-          odds: basePayload.odds,
-          analysis: basePayload.analysis,
-          ai_probability: basePayload.ai_probability,
-          access_type: basePayload.access_type,
-          price: basePayload.price,
-          status: basePayload.status
-        }
-      ]
-
-      let lastError = null
-      for (const item of payloadVariants) {
-        const { data, error } = await supabase
-          .from('tips')
-          .insert(item)
-          .select('*')
-          .single()
-        if (!error) return { data, error: null }
-        lastError = error
-      }
-      return { data: null, error: lastError }
+      return await supabase
+        .from('tips')
+        .insert(cleanPayload)
+        .select('*')
+        .single()
     }
 
     try {
@@ -3169,8 +3101,7 @@ function App() {
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
-      const fallback = staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips))
-      setTips(fallback)
+      setTips([])
       return
     }
 
