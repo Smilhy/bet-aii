@@ -5793,3 +5793,123 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
     border-radius: 18px !important;
   }
 }
+
+/* Wersja 198 — Ranking Ultra Pro: ożywienie + hover + dynamiczny ranking */
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{
+  isolation:isolate!important;
+  transform:translateZ(0)!important;
+  transition:transform .38s cubic-bezier(.2,.8,.2,1), box-shadow .38s ease, border-color .38s ease!important;
+  will-change:transform, box-shadow!important;
+  border-color:rgba(31,226,174,.24)!important;
+  box-shadow:0 26px 78px rgba(0,0,0,.42),0 0 34px rgba(31,226,174,.10),inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:hover{
+  transform:translateY(-3px) scale(1.006)!important;
+  border-color:rgba(31,226,174,.42)!important;
+  box-shadow:0 34px 94px rgba(0,0,0,.52),0 0 42px rgba(31,226,174,.16),0 0 28px rgba(255,193,79,.10),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::before{
+  display:block!important;
+  content:""!important;
+  position:absolute!important;
+  inset:-35% auto -35% -65%!important;
+  width:46%!important;
+  z-index:2!important;
+  opacity:.0!important;
+  pointer-events:none!important;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.04) 34%,rgba(255,255,255,.22) 48%,rgba(255,255,255,.05) 62%,transparent 100%)!important;
+  filter:blur(1px)!important;
+  transform:skewX(-18deg)!important;
+  animation:rankingLightSweep 5.8s ease-in-out infinite!important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::after{
+  display:block!important;
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  opacity:.34!important;
+  background:
+    radial-gradient(circle at 68% 32%,rgba(255,211,103,.26),transparent 18%),
+    radial-gradient(circle at 90% 45%,rgba(31,226,174,.16),transparent 20%),
+    linear-gradient(90deg,rgba(31,226,174,.06),transparent 38%,rgba(255,185,64,.06) 78%,transparent)!important;
+  mix-blend-mode:screen!important;
+  animation:rankingTrophyGlow 4.6s ease-in-out infinite!important;
+}
+@keyframes rankingLightSweep{
+  0%,18%{left:-70%;opacity:0}
+  28%{opacity:.55}
+  54%{left:125%;opacity:.22}
+  62%,100%{left:125%;opacity:0}
+}
+@keyframes rankingTrophyGlow{
+  0%,100%{opacity:.24;filter:saturate(1) brightness(1)}
+  50%{opacity:.46;filter:saturate(1.18) brightness(1.08)}
+}
+
+.app-shell.no-rightbar-page .leaderboard-stats div,
+.app-shell.no-rightbar-page .ai-ranking-card,
+.app-shell.no-rightbar-page .leaderboard-row:not(.header){
+  transition:transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease, border-color .22s ease, background .22s ease, filter .22s ease!important;
+}
+.app-shell.no-rightbar-page .leaderboard-stats div:hover{
+  transform:translateY(-4px)!important;
+  border-color:rgba(31,226,174,.22)!important;
+  background:linear-gradient(135deg,rgba(31,226,174,.09),rgba(255,255,255,.028))!important;
+  box-shadow:0 22px 56px rgba(0,0,0,.34),0 0 26px rgba(31,226,174,.10)!important;
+}
+.app-shell.no-rightbar-page .ai-ranking-card:hover{
+  transform:translateY(-5px) scale(1.012)!important;
+  border-color:rgba(31,226,174,.28)!important;
+  background:linear-gradient(145deg,rgba(16,29,47,.98),rgba(8,24,35,.96))!important;
+  box-shadow:0 24px 64px rgba(0,0,0,.38),0 0 26px rgba(31,226,174,.10)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row:not(.header):hover{
+  transform:translateX(4px)!important;
+  background:linear-gradient(90deg,rgba(31,226,174,.075),rgba(255,255,255,.018))!important;
+  border-color:rgba(31,226,174,.16)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row .place{
+  position:relative!important;
+  overflow:hidden!important;
+  transition:transform .22s ease, box-shadow .22s ease, filter .22s ease!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row:hover .place{
+  transform:scale(1.08)!important;
+  filter:brightness(1.08)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row .place-1{
+  box-shadow:0 0 0 1px rgba(255,214,91,.20),0 0 24px rgba(255,202,55,.22)!important;
+  animation:rankingGoldPulse 3.2s ease-in-out infinite!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row .place-2{
+  box-shadow:0 0 20px rgba(206,231,255,.12)!important;
+}
+.app-shell.no-rightbar-page .leaderboard-row .place-3{
+  box-shadow:0 0 20px rgba(31,226,174,.14)!important;
+}
+@keyframes rankingGoldPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,214,91,.18),0 0 18px rgba(255,202,55,.16)}
+  50%{box-shadow:0 0 0 1px rgba(255,214,91,.34),0 0 34px rgba(255,202,55,.34)}
+}
+.app-shell.no-rightbar-page .leaderboard-table{
+  position:relative!important;
+}
+.app-shell.no-rightbar-page .leaderboard-table::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;right:0!important;top:0!important;height:1px!important;
+  background:linear-gradient(90deg,transparent,rgba(31,226,174,.55),rgba(255,202,55,.35),transparent)!important;
+  opacity:.75!important;
+  pointer-events:none!important;
+}
+@media (prefers-reduced-motion: reduce){
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero,
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::before,
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero::after,
+  .app-shell.no-rightbar-page .leaderboard-row .place-1{
+    animation:none!important;
+    transition:none!important;
+  }
+}
