@@ -151,36 +151,6 @@ function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
 
-function isSchemaError(error) {
-  const msg = String(error?.message || error || '').toLowerCase()
-  return msg.includes('column') || msg.includes('schema cache') || msg.includes('could not find') || msg.includes('pgrst204') || msg.includes('42703')
-}
-
-function normalizeTipRow(row = {}) {
-  const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
-  const premium = isTipPremium(row)
-  return {
-    ...row,
-    author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
-    user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
-    author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
-    author_email: row.author_email || row.email || null,
-    league: row.league || 'Liga',
-    team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
-    team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
-    bet_type: row.bet_type || row.prediction || row.type || 'Typ',
-    odds: Number(row.odds || row.course || 0),
-    analysis: row.analysis || row.description || '',
-    ai_analysis: row.ai_analysis || row.analysis || row.description || '',
-    ai_probability: Number(row.ai_probability ?? row.ai_confidence ?? row.confidence ?? 0),
-    ai_confidence: Number(row.ai_confidence ?? row.ai_probability ?? row.confidence ?? 0),
-    access_type: premium ? 'premium' : 'free',
-    is_premium: premium,
-    status: row.status || 'pending',
-    created_at: row.created_at || new Date().toISOString()
-  }
-}
-
 function isTipPremium(tip) {
   const accessType = String(tip?.access_type || tip?.access || tip?.type || '').toLowerCase()
   return Boolean(
@@ -264,7 +234,53 @@ function getDisplayRole(user, plan = 'free') {
 
 
 
-const staticTips = []
+const staticTips = [
+  {
+    id: 'demo-1',
+    author_name: 'FitMateusz',
+    league: 'Liga Mistrzów',
+    team_home: 'Real Madryt',
+    team_away: 'Bayern Monachium',
+    bet_type: 'Powyżej 2.5 gola',
+    odds: 1.72,
+    analysis: 'Wysokie prawdopodobieństwo na powyżej 2.5 gola. Obie drużyny w dobrej formie ofensywnej.',
+    ai_probability: 72,
+    access_type: 'premium',
+    price: 39,
+    status: 'won',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'demo-2',
+    author_name: 'Zuzanna07',
+    league: 'Premier League',
+    team_home: 'Arsenal',
+    team_away: 'Chelsea',
+    bet_type: '1X (podwójna szansa)',
+    odds: 1.48,
+    analysis: 'Arsenal u siebie jest bardzo mocny. Chelsea ma problemy w defensywie w ostatnich meczach.',
+    ai_probability: 65,
+    access_type: 'premium',
+    price: 29,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'demo-3',
+    author_name: 'AI Tip',
+    league: 'La Liga',
+    team_home: 'Barcelona',
+    team_away: 'Atletico Madryt',
+    bet_type: 'Barcelona wygra',
+    odds: 1.85,
+    analysis: 'Barcelona ma przewagę u siebie, ale Atletico potrafi dobrze bronić.',
+    ai_probability: 58,
+    access_type: 'free',
+    price: 0,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  }
+]
 
 
 
@@ -392,6 +408,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             <h1>{line.prefix}<strong>{line.accent}</strong></h1>
           </div>
         </div>
+        <button type="button" className="betai-hero-cta" onClick={onStatsClick}>Zobacz statystyki <span>→</span></button>
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
@@ -404,143 +421,11 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   )
 }
 
-function LiveChatPanel({ user }) {
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState('')
-  const [status, setStatus] = useState('Live chat gotowy')
-  const [sending, setSending] = useState(false)
-
-  const email = String(user?.email || '').toLowerCase()
-  const userName = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
-
-  const loadMessages = async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      setStatus('Supabase nie jest skonfigurowany')
-      return
-    }
-    try {
-      const { data, error } = await supabase
-        .from('live_chat_messages')
-        .select('id,user_email,user_name,avatar_url,message,tipped_amount,created_at')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (error) throw error
-      setMessages((data || []).reverse())
-      setStatus('Połączono live')
-    } catch (error) {
-      console.error('live chat load error', error)
-      setStatus('Live chat: sprawdź SQL/Supabase')
-    }
-  }
-
-  useEffect(() => {
-    loadMessages()
-    if (!isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel('betai-live-chat-dashboard')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'live_chat_messages' }, loadMessages)
-      .subscribe()
-    const timer = setInterval(loadMessages, 10000)
-    return () => {
-      clearInterval(timer)
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
-  useEffect(() => {
-    const host = document.querySelector('.live-chat-panel .live-chat-messages')
-    if (host) host.scrollTop = host.scrollHeight
-  }, [messages.length])
-
-  const todayCount = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
-    return messages.filter(m => new Date(m.created_at).getTime() >= start.getTime()).length
-  }, [messages])
-
-  const leader = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
-    const map = new Map()
-    messages.forEach(m => {
-      const ts = new Date(m.created_at).getTime()
-      const key = String(m.user_email || '').toLowerCase()
-      if (key && ts >= start.getTime()) map.set(key, { count: (map.get(key)?.count || 0) + 1, name: m.user_name || key.split('@')[0] })
-    })
-    return [...map.values()].sort((a,b) => b.count - a.count)[0]
-  }, [messages])
-
-  const sendMessage = async () => {
-    const clean = text.trim().slice(0, 240)
-    if (!clean || sending) return
-    if (!email) {
-      setStatus('Musisz być zalogowany')
-      return
-    }
-    setSending(true)
-    try {
-      const { error } = await supabase.from('live_chat_messages').insert({
-        user_email: email,
-        user_name: userName,
-        avatar_url: user?.user_metadata?.avatar_url || '',
-        message: clean,
-        tipped_amount: 0
-      })
-      if (error) throw error
-      setText('')
-      setStatus('Wiadomość wysłana')
-      await loadMessages()
-    } catch (error) {
-      console.error('live chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości')
-    } finally {
-      setSending(false)
-    }
-  }
-
-  return (
-    <section className="panel live-chat-panel">
-      <div className="live-chat-head">
-        <div>
-          <span className="live-chat-kicker">BETAI LIVE CHAT</span>
-          <h2>💬 Czat społeczności</h2>
-        </div>
-        <span className="live-chat-online">{Math.max(1, new Set(messages.map(m => m.user_email)).size)} online</span>
-      </div>
-      <div className="live-chat-stats">
-        <div><b>{todayCount}</b><span>wiadomości dziś</span></div>
-        <div><b>{leader?.name || '—'}</b><span>{leader ? `${leader.count} top` : 'lider dnia'}</span></div>
-      </div>
-      <div className="live-chat-messages">
-        {messages.length ? messages.map(msg => {
-          const mine = String(msg.user_email || '').toLowerCase() === email
-          const name = msg.user_name || String(msg.user_email || '').split('@')[0] || 'User'
-          return (
-            <div className={`live-chat-msg ${mine ? 'mine' : ''}`} key={msg.id || msg.created_at}>
-              <div className="live-chat-avatar">{name.slice(0,2).toUpperCase()}</div>
-              <div className="live-chat-bubble">
-                <div className="live-chat-meta"><strong>{name}</strong><span>{new Date(msg.created_at).toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'})}</span></div>
-                <p>{msg.message}</p>
-                <small>Tips: {Number(msg.tipped_amount || 0)}</small>
-              </div>
-            </div>
-          )
-        }) : <div className="live-chat-empty">Brak wiadomości. Napisz pierwszą wiadomość.</div>}
-      </div>
-      <div className="live-chat-input-row">
-        <input value={text} maxLength={240} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Napisz wiadomość..." />
-        <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
-      </div>
-      <div className="live-chat-status">{status}</div>
-    </section>
-  )
-}
-
-
-function Rightbar({ ranking = [], user = null }) {
+function Rightbar({ ranking = [] }) {
   const realRanking = Array.isArray(ranking) ? ranking : []
 
   return (
     <aside className="rightbar">
-      <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top tipsterzy</h2><a>Ranking real</a></div>
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
@@ -587,7 +472,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
-  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
+  const author = tip.author_name || 'AdrianNowak'
   const authorId = getTipAuthorId(tip)
   const currentUsername = (currentUser?.email || '').split('@')[0]
   const isOwnTip = Boolean(
@@ -912,10 +797,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [message, setMessage] = useState('')
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = true
+  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
 
   const payload = useMemo(() => ({
-    author_name: user?.email?.split('@')[0] || 'Użytkownik',
+    author_name: user?.email?.split('@')[0] || 'AdrianNowak',
     author_id: user?.id || null,
     league: form.league,
     team_home: form.team_home,
@@ -944,9 +829,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
-    if (payload.access_type === 'premium' && Number(payload.price || 0) < 0) {
-      setMessage('Cena premium nie może być ujemna.')
-      onToast?.({ type: 'error', title: 'Cena premium', message: 'Podaj poprawną cenę typu premium.' })
+    if (payload.access_type === 'premium' && !premiumAllowed) {
+      setMessage('Premium wymagane do publikowania płatnych typów.')
+      onToast?.({ type: 'error', title: 'Paywall', message: 'Aktywuj subskrypcję Premium, aby publikować płatne typy.' })
       return
     }
     if (!isSupabaseConfigured || !supabase) {
@@ -955,101 +840,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
     setSaving(true)
-    let savedTip = null
-    let saveError = null
-
-    const insertDirectTip = async (currentUserId) => {
-      const uid = currentUserId || user?.id || null
-      if (!uid) {
-        return { data: null, error: new Error('Brak aktywnej sesji użytkownika. Zaloguj się ponownie.') }
-      }
-
-      const cleanPayload = {
-        author_id: uid,
-        user_id: uid,
-        author_email: user?.email || null,
-        author_name: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        username: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        league: payload.league,
-        team_home: payload.team_home,
-        team_away: payload.team_away,
-        match: `${payload.team_home} vs ${payload.team_away}`,
-        match_time: payload.match_time || null,
-        bet_type: payload.bet_type,
-        prediction: payload.bet_type,
-        odds: Number(payload.odds),
-        analysis: payload.analysis || '',
-        ai_probability: Number(payload.ai_probability || 0),
-        ai_confidence: Number(payload.ai_confidence || payload.ai_probability || 0),
-        ai_score: Number(payload.ai_score || 0),
-        ai_analysis: payload.ai_analysis || payload.analysis || '',
-        access_type: payload.access_type === 'premium' ? 'premium' : 'free',
-        is_premium: payload.access_type === 'premium',
-        price: payload.access_type === 'premium' ? Number(payload.price || 0) : 0,
-        status: 'pending',
-        tags: payload.tags || [],
-        notify_followers: payload.notify_followers !== false
-      }
-
-      const firstAttempt = await supabase.from('tips').insert(cleanPayload).select('*').single()
-      if (!firstAttempt.error || !isSchemaError(firstAttempt.error)) return firstAttempt
-
-      console.warn('tips insert schema fallback:', firstAttempt.error)
-      const legacyPayload = {
-        user_id: uid,
-        username: cleanPayload.author_name,
-        match: cleanPayload.match,
-        prediction: cleanPayload.bet_type,
-        odds: cleanPayload.odds,
-        is_premium: cleanPayload.is_premium,
-        league: cleanPayload.league,
-        status: 'pending'
-      }
-
-      return await supabase.from('tips').insert(legacyPayload).select('*').single()
-    }
-
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      const currentUserId = sessionData?.session?.user?.id || user?.id || null
-
-      const { data: directData, error: directError } = await insertDirectTip(currentUserId)
-      if (!directError) {
-        savedTip = normalizeTipRow(directData)
-        saveError = null
-      } else {
-        saveError = directError
-        if (token) {
-          const response = await fetch('/.netlify/functions/add-user-tip', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + token
-            },
-            body: JSON.stringify({ tip: payload })
-          })
-          const result = await response.json().catch(() => ({}))
-          if (!response.ok) throw new Error((result.error || 'Nie udało się zapisać typu') + ' | Supabase: ' + (directError.message || directError))
-          savedTip = normalizeTipRow(result.tip || {})
-          saveError = null
-        }
-      }
-    } catch (error) {
-      saveError = error
-    }
-
+    const { error } = await supabase.from('tips').insert(payload)
     setSaving(false)
-    if (saveError) {
-      const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
-      console.error('ADD TIP SAVE ERROR:', saveError)
-      setMessage('❌ Nie dodano typu: ' + cleanMessage)
-      onToast?.({ type: 'error', title: 'Nie dodano typu', message: cleanMessage })
+    if (error) {
+      setMessage('Błąd zapisu: ' + formatAppErrorMessage(error.message))
+      onToast?.({ type: 'error', title: 'Błąd zapisu', message: formatAppErrorMessage(error.message) })
       return
     }
-    setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
-    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
-    onTipSaved(savedTip)
+    setMessage('✅ Typ zapisany w Supabase i dodany do feedu.')
+    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w feedzie.' })
+    onTipSaved()
   }
 
   return (
@@ -1058,7 +858,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
         <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
-          Możesz dodawać kupony darmowe i premium. Premium może mieć cenę, darmowy jest widoczny dla wszystkich.
+          {premiumAllowed ? 'VIP: możesz dodawać typy bez limitu i sprzedawać typy premium.' : 'FREE: możesz dodać maksymalnie 5 darmowych typów dziennie. Sprzedaż premium jest zablokowana.'}
         </div>
       </div>
 
@@ -1107,13 +907,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </button>
           <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
             <strong>🔒 Premium</strong>
-            <span>Możesz publikować płatne typy premium.</span>
+            <span>{premiumAllowed ? 'Możesz publikować i sprzedawać płatne typy premium.' : 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'}</span>
           </button>
         </div>
 
+        {isPremium && !premiumAllowed && (
+          <div className="premium-lock-info">
+            Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.
+          </div>
+        )}
         {isPremium && premiumAllowed && (
           <div className="premium-lock-info success">
-            Tryb premium — możesz publikować płatny typ.
+            VIP aktywny — możesz publikować płatne typy premium.
           </div>
         )}
 
@@ -2136,7 +1941,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
         <div className="payment-summary">
           <span>Tipster</span>
-          <strong>{tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'}</strong>
+          <strong>{tip.author_name || 'AdrianNowak'}</strong>
         </div>
 
         <div className="payment-price">
@@ -3146,7 +2951,8 @@ function App() {
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
-      setTips([])
+      const fallback = staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips))
+      setTips(fallback)
       return
     }
 
@@ -3166,16 +2972,15 @@ function App() {
     setLoading(false)
 
     if (tipsError) {
-      console.error('FETCH TIPS ERROR:', tipsError)
-      showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
-      setTips([])
+      console.error(tipsError)
+      setTips(staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips)))
       return
     }
 
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = (tipsData || []).map(normalizeTipRow)
+    const sourceTips = tipsData?.length ? tipsData : staticTips
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
@@ -4191,13 +3996,12 @@ function App() {
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const filteredTips = userOnlyTips.filter(tip => {
-    const normalizedTip = normalizeTipRow(tip)
     if (activeFilter === 'all') return true
-    if (activeFilter === 'free') return !isTipPremium(normalizedTip)
-    if (activeFilter === 'premium') return isTipPremium(normalizedTip)
-    if (activeFilter === 'mine') return Boolean(sessionUser?.id && (getTipAuthorId(normalizedTip) === sessionUser.id || normalizedTip.user_id === sessionUser.id))
+    if (activeFilter === 'free') return tip.access_type === 'free'
+    if (activeFilter === 'premium') return tip.access_type === 'premium'
+    if (activeFilter === 'mine') return (tip.author_id && sessionUser?.id ? tip.author_id === sessionUser.id : (tip.author_name || 'AdrianNowak') === 'AdrianNowak')
     return true
-  }).map(normalizeTipRow)
+  })
 
   const filterItems = [
     ['all', 'Wszystkie'],
@@ -4243,10 +4047,7 @@ function App() {
             user={sessionUser}
             userPlan={accountPlan}
             onToast={showToast}
-            onTipSaved={(savedTip) => {
-              if (savedTip?.id) {
-                setTips(prev => [savedTip, ...prev.filter(tip => tip.id !== savedTip.id)])
-              }
+            onTipSaved={() => {
               fetchTips(sessionUser?.id)
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
@@ -4388,7 +4189,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} user={sessionUser} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} />}
     </div>
   )
 }
