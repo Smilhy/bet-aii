@@ -6490,3 +6490,32 @@ html,body,#root{
     padding-top:76px!important;
   }
 }
+
+/* Wersja 214 — PRAWA KOLUMNA DO GÓRY: wyrównanie z górną wyszukiwarką
+   Zakres: tylko CSS/layout prawej kolumny dashboardu. Funkcje, login i loader bez zmian. */
+@media (min-width:1001px){
+  .rightbar{
+    padding-top:18px!important;
+    margin-top:0!important;
+    align-self:start!important;
+    top:0!important;
+  }
+
+  .rightbar .live-chat-panel,
+  .rightbar .real-ranking-panel,
+  .rightbar .panel{
+    margin-top:0!important;
+  }
+}
+
+@media (min-width:1201px){
+  .rightbar{
+    padding-top:18px!important;
+  }
+}
+
+@media (min-width:1001px) and (max-width:1200px){
+  .rightbar{
+    padding-top:18px!important;
+  }
+}
