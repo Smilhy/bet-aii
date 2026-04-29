@@ -4269,3 +4269,460 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
 .payout-table{overflow:hidden!important;border-radius:26px!important;border:1px solid rgba(148,163,184,.14)!important;background:linear-gradient(145deg,rgba(15,23,42,.78),rgba(2,8,23,.96))!important;box-shadow:0 22px 64px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05)!important}.payout-row{display:grid!important;grid-template-columns:1.3fr 1fr .9fr!important;align-items:center!important;gap:16px!important;padding:17px 20px!important;border-bottom:1px solid rgba(148,163,184,.10)!important;color:#eaf3ff!important;min-height:62px!important}.payout-row:last-child{border-bottom:0!important}.payout-row.header{min-height:50px!important;background:rgba(2,8,23,.82)!important;color:rgba(190,211,232,.66)!important;font-size:12px!important;text-transform:uppercase!important;letter-spacing:.1em!important;font-weight:900!important}.payout-row:not(.header):hover{background:rgba(0,255,198,.045)!important}.payout-row span:nth-child(2){font-weight:900!important;color:#f8fbff!important}
 .payout-status{width:max-content!important;min-width:84px!important;text-align:center!important;padding:7px 10px!important;border-radius:999px!important;border:1px solid rgba(148,163,184,.16)!important;background:rgba(148,163,184,.10)!important;color:#dbeafe!important;font-weight:900!important;font-size:12px!important;text-transform:uppercase!important}.payout-status.pending{background:rgba(245,158,11,.12)!important;border-color:rgba(245,158,11,.24)!important;color:#fbbf24!important}.payout-status.paid,.payout-status.approved{background:rgba(16,185,129,.12)!important;border-color:rgba(16,185,129,.24)!important;color:#34d399!important}.payout-status.rejected,.payout-status.failed{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.25)!important;color:#fb7185!important}.payout-empty{padding:28px!important;color:rgba(190,211,232,.68)!important;text-align:center!important}.payout-empty strong{display:block!important;color:#f8fbff!important;margin-bottom:6px!important;font-size:18px!important}
 @media(max-width:1180px){.payout-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.payout-hero,.payout-request-card,.stripe-connect-note{align-items:flex-start!important;flex-direction:column!important}.payout-available{text-align:left!important;min-width:0!important;width:100%!important}}@media(max-width:720px){.payout-grid{grid-template-columns:1fr!important}.payout-row{grid-template-columns:1fr!important;gap:8px!important}.payout-row.header{display:none!important}.payout-request-card button{width:100%!important}}
+
+/* VERSION 171 — Zarobki tab: remove rightbar + Ultra Pro dashboard matched UI */
+.app-shell.no-rightbar-page .earnings-page{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 0 34px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:20px!important;
+}
+
+.earnings-page .page-title{
+  position:relative!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  padding:28px!important;
+  border-radius:30px!important;
+  border:1px solid rgba(45,212,191,.16)!important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(20,184,166,.22), transparent 32%),
+    radial-gradient(circle at 88% 16%, rgba(59,130,246,.18), transparent 30%),
+    linear-gradient(135deg, rgba(15,23,42,.96), rgba(2,8,23,.98))!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+.earnings-page .page-title::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent)!important;
+  transform:translateX(-70%)!important;
+}
+.earnings-page .page-title h1{
+  margin:0!important;
+  color:#f7fbff!important;
+  font-size:clamp(30px, 3vw, 46px)!important;
+  line-height:.95!important;
+  letter-spacing:-.055em!important;
+  font-weight:1000!important;
+}
+.earnings-page .page-title p{
+  max-width:780px!important;
+  margin:12px 0 0!important;
+  color:rgba(203,213,225,.72)!important;
+  font-size:15px!important;
+  line-height:1.65!important;
+  font-weight:750!important;
+}
+
+.earnings-page .stripe-connect-card{
+  position:relative!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:22px!important;
+  padding:22px 24px!important;
+  border-radius:26px!important;
+  border:1px solid rgba(45,212,191,.14)!important;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(45,212,191,.16), transparent 36%),
+    linear-gradient(135deg, rgba(15,23,42,.88), rgba(2,8,23,.96))!important;
+  box-shadow:0 18px 56px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.055)!important;
+  color:#eaf6ff!important;
+}
+.earnings-page .stripe-connect-card strong{
+  color:#f8fdff!important;
+  font-size:18px!important;
+  line-height:1.1!important;
+  letter-spacing:-.025em!important;
+  font-weight:1000!important;
+}
+.earnings-page .stripe-connect-card span{
+  color:rgba(203,213,225,.72)!important;
+  margin-top:7px!important;
+  font-size:14px!important;
+  line-height:1.55!important;
+  font-weight:800!important;
+}
+.earnings-page .stripe-connect-card button{
+  min-height:46px!important;
+  padding:0 20px!important;
+  border:0!important;
+  border-radius:16px!important;
+  background:linear-gradient(135deg,#18ffd1,#00a3ff)!important;
+  color:#02120f!important;
+  font-weight:1000!important;
+  letter-spacing:-.025em!important;
+  box-shadow:0 16px 42px rgba(0,255,198,.22)!important;
+  cursor:pointer!important;
+  transition:transform .18s ease, box-shadow .18s ease!important;
+}
+.earnings-page .stripe-connect-card button:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 22px 54px rgba(0,255,198,.30)!important;
+}
+
+.earnings-page .earnings-hero{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:16px!important;
+  align-items:stretch!important;
+  justify-content:initial!important;
+  padding:0!important;
+  margin:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+}
+.earnings-page .earnings-hero > div{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:150px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:22px!important;
+  border-radius:26px!important;
+  border:1px solid rgba(148,163,184,.12)!important;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(45,212,191,.12), transparent 34%),
+    linear-gradient(180deg, rgba(15,23,42,.86), rgba(2,8,23,.96))!important;
+  box-shadow:0 20px 60px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.055)!important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease!important;
+}
+.earnings-page .earnings-hero > div:hover{
+  transform:translateY(-3px)!important;
+  border-color:rgba(45,212,191,.25)!important;
+  box-shadow:0 26px 72px rgba(0,0,0,.34), 0 0 0 1px rgba(45,212,191,.07), inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+.earnings-page .earnings-hero span{
+  color:rgba(148,163,184,.90)!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.07em!important;
+  text-transform:uppercase!important;
+}
+.earnings-page .earnings-hero strong{
+  color:#f8fdff!important;
+  font-size:clamp(28px,2.2vw,40px)!important;
+  line-height:1!important;
+  letter-spacing:-.055em!important;
+  font-weight:1000!important;
+}
+.earnings-page .earnings-hero p{
+  margin:0!important;
+  color:rgba(203,213,225,.62)!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  font-weight:750!important;
+}
+
+.earnings-page .earnings-table-card{
+  overflow:hidden!important;
+  border-radius:28px!important;
+  border:1px solid rgba(148,163,184,.12)!important;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(59,130,246,.10), transparent 30%),
+    linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,8,23,.98))!important;
+  box-shadow:0 24px 78px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.055)!important;
+  color:#eaf6ff!important;
+}
+.earnings-page .earnings-table-head{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  padding:24px 24px 14px!important;
+  border-bottom:1px solid rgba(148,163,184,.10)!important;
+}
+.earnings-page .earnings-table-head h2{
+  margin:0!important;
+  color:#f8fdff!important;
+  font-size:24px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+  letter-spacing:-.04em!important;
+}
+.earnings-page .earnings-table-head span{
+  color:#8ea6b8!important;
+  font-weight:1000!important;
+  font-size:13px!important;
+}
+.earnings-page .earnings-table{
+  width:calc(100% - 32px)!important;
+  margin:16px!important;
+  table-layout:fixed!important;
+  border-collapse:separate!important;
+  border-spacing:0!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,rgba(12,28,42,.88),rgba(7,16,27,.98))!important;
+  border:1px solid rgba(148,163,184,.10)!important;
+  color:#eaf6ff!important;
+}
+.earnings-page .earnings-table th,
+.earnings-page .earnings-table td{
+  text-align:left!important;
+  vertical-align:middle!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.earnings-page .earnings-table thead th{
+  padding:15px 18px!important;
+  background:rgba(255,255,255,.025)!important;
+  color:#8fa8ba!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+  border-bottom:1px solid rgba(148,163,184,.10)!important;
+}
+.earnings-page .earnings-table tbody td{
+  padding:17px 18px!important;
+  color:#eaf6ff!important;
+  border-bottom:1px solid rgba(148,163,184,.075)!important;
+  font-weight:850!important;
+}
+.earnings-page .earnings-table tbody tr:last-child td{border-bottom:0!important;}
+.earnings-page .earnings-table tbody tr:hover td{background:rgba(45,212,191,.045)!important;}
+.earnings-page .status-pill.success{
+  background:rgba(16,185,129,.12)!important;
+  color:#34d399!important;
+  border:1px solid rgba(52,211,153,.22)!important;
+  border-radius:999px!important;
+  padding:7px 11px!important;
+  font-weight:1000!important;
+}
+.earnings-page .empty-wallet{
+  margin:16px!important;
+  padding:34px!important;
+  text-align:center!important;
+  border-radius:22px!important;
+  border:1px dashed rgba(45,212,191,.18)!important;
+  background:rgba(15,23,42,.52)!important;
+  color:rgba(203,213,225,.72)!important;
+}
+.earnings-page .empty-wallet strong{
+  display:block!important;
+  color:#f8fdff!important;
+  font-size:18px!important;
+  margin-bottom:8px!important;
+}
+
+@media(max-width:1180px){
+  .earnings-page .earnings-hero{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .earnings-page .page-title{align-items:flex-start!important;flex-direction:column!important;}
+}
+@media(max-width:720px){
+  .earnings-page .earnings-hero{grid-template-columns:1fr!important;}
+  .earnings-page .stripe-connect-card{align-items:flex-start!important;flex-direction:column!important;}
+  .earnings-page .stripe-connect-card button{width:100%!important;}
+  .earnings-page .earnings-table{display:block!important;overflow-x:auto!important;table-layout:auto!important;}
+}
+
+/* =========================================================
+   VERSION 172 — ADMIN FINANSE: NO RIGHTBAR + ULTRA PRO FINAL
+   Scope only: Admin finanse page. Logic untouched.
+========================================================= */
+.app-shell.no-rightbar-page{
+  grid-template-columns:270px minmax(0,1fr)!important;
+  max-width:1680px!important;
+  width:100%!important;
+  gap:24px!important;
+}
+.app-shell.no-rightbar-page .main{
+  width:100%!important;
+  max-width:none!important;
+}
+.admin-finance-page{
+  width:100%!important;
+  max-width:1440px!important;
+  margin:0 auto!important;
+  padding:0 0 28px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:20px!important;
+}
+.admin-finance-page .page-title.admin-finance-title{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:132px!important;
+  padding:30px 32px!important;
+  border-radius:28px!important;
+  align-items:center!important;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(45,212,191,.30), transparent 32%),
+    radial-gradient(circle at 8% 0%, rgba(59,130,246,.16), transparent 34%),
+    linear-gradient(135deg, rgba(9,22,35,.98), rgba(5,15,25,.99))!important;
+  border:1px solid rgba(45,212,191,.22)!important;
+  box-shadow:0 26px 80px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+.admin-finance-page .page-title.admin-finance-title:after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.045), transparent)!important;
+  transform:translateX(-60%)!important;
+  opacity:.55!important;
+}
+.admin-finance-page .admin-finance-title h1{
+  font-size:clamp(34px,3vw,48px)!important;
+  line-height:.98!important;
+  font-weight:1000!important;
+  letter-spacing:-.065em!important;
+  color:#f8fdff!important;
+  margin:0!important;
+}
+.admin-finance-page .admin-finance-title p{
+  max-width:720px!important;
+  margin:10px 0 0!important;
+  color:#a5bacb!important;
+  font-size:14px!important;
+  line-height:1.55!important;
+  font-weight:800!important;
+}
+.admin-finance-page .admin-finance-title button{
+  height:48px!important;
+  min-width:164px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(94,234,212,.42)!important;
+  background:linear-gradient(135deg,#2df5c8,#12b8a6 55%,#0ea5e9)!important;
+  color:#021412!important;
+  font-weight:1000!important;
+  letter-spacing:-.02em!important;
+  box-shadow:0 16px 44px rgba(20,184,166,.30), inset 0 1px 0 rgba(255,255,255,.42)!important;
+  transition:transform .18s ease, box-shadow .18s ease!important;
+}
+.admin-finance-page .admin-finance-title button:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 20px 58px rgba(20,184,166,.38), inset 0 1px 0 rgba(255,255,255,.48)!important;
+}
+.admin-finance-page .admin-finance-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+  align-items:stretch!important;
+}
+.admin-finance-page .finance-card,
+.admin-finance-page .finance-card.primary,
+.admin-finance-page .finance-card.warning{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:134px!important;
+  padding:22px 24px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 90% 16%, rgba(45,212,191,.10), transparent 34%),
+    linear-gradient(180deg, rgba(13,30,45,.98), rgba(5,14,24,.995))!important;
+  border:1px solid rgba(148,163,184,.13)!important;
+  box-shadow:0 20px 54px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.045)!important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease!important;
+}
+.admin-finance-page .finance-card:hover{
+  transform:translateY(-3px)!important;
+  border-color:rgba(45,212,191,.28)!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.46), 0 0 0 1px rgba(45,212,191,.08)!important;
+}
+.admin-finance-page .finance-card.primary{
+  background:
+    radial-gradient(circle at 90% 16%, rgba(94,234,212,.28), transparent 38%),
+    linear-gradient(135deg, rgba(5,92,72,.98), rgba(10,113,102,.92))!important;
+  border-color:rgba(94,234,212,.44)!important;
+}
+.admin-finance-page .finance-card.warning{
+  background:
+    radial-gradient(circle at 90% 16%, rgba(245,158,11,.18), transparent 36%),
+    linear-gradient(180deg, rgba(32,24,12,.98), rgba(6,15,25,.995))!important;
+  border-color:rgba(245,158,11,.30)!important;
+}
+.admin-finance-page .finance-card span{
+  color:#9fb6c8!important;
+  font-size:11.5px!important;
+  font-weight:1000!important;
+  letter-spacing:.095em!important;
+  text-transform:uppercase!important;
+}
+.admin-finance-page .finance-card strong{
+  color:#f8fdff!important;
+  font-size:clamp(27px,2vw,34px)!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.055em!important;
+}
+.admin-finance-page .finance-card p{
+  color:#89a2b5!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  font-weight:800!important;
+}
+.admin-finance-page .earnings-table-card{
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(45,212,191,.09), transparent 30%),
+    linear-gradient(180deg, rgba(10,25,38,.985), rgba(5,13,22,.995))!important;
+  border:1px solid rgba(148,163,184,.12)!important;
+  box-shadow:0 24px 78px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+.admin-finance-page .earnings-table-head{
+  padding:24px 24px 16px!important;
+  align-items:center!important;
+}
+.admin-finance-page .earnings-table-head h2{
+  color:#f8fdff!important;
+  font-size:24px!important;
+  font-weight:1000!important;
+  letter-spacing:-.045em!important;
+}
+.admin-finance-page .earnings-table-head span{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:32px!important;
+  padding:7px 12px!important;
+  border-radius:999px!important;
+  color:#8fffe7!important;
+  background:rgba(45,212,191,.08)!important;
+  border:1px solid rgba(45,212,191,.16)!important;
+  font-weight:1000!important;
+}
+.admin-finance-page .earnings-table{
+  width:calc(100% - 36px)!important;
+  margin:0 18px 20px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(12,28,42,.98),rgba(7,16,27,.995))!important;
+}
+.admin-finance-page .earnings-table thead th{
+  padding:16px 18px!important;
+  color:#8ea7ba!important;
+  font-size:11.5px!important;
+  font-weight:1000!important;
+}
+.admin-finance-page .earnings-table tbody td{
+  padding:18px!important;
+  color:#edf8ff!important;
+  font-weight:850!important;
+}
+.admin-finance-page .status-pill{
+  background:rgba(45,212,191,.10)!important;
+  color:#6dffe4!important;
+  border:1px solid rgba(45,212,191,.20)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+.admin-finance-page .status-pill.success{
+  background:rgba(34,197,94,.12)!important;
+  color:#86efac!important;
+  border-color:rgba(34,197,94,.22)!important;
+}
+@media(max-width:1100px){.admin-finance-page{max-width:100%!important}.admin-finance-page .admin-finance-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:720px){.admin-finance-page .admin-finance-grid{grid-template-columns:1fr!important}.admin-finance-page .page-title.admin-finance-title{padding:22px!important;flex-direction:column!important;align-items:flex-start!important}.admin-finance-page .admin-finance-title button{width:100%!important}.admin-finance-page .earnings-table{display:block!important;overflow-x:auto!important;table-layout:auto!important}}
