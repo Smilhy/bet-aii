@@ -1,7 +1,4 @@
-const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -10,43 +7,120 @@ function getSupabase() {
   return createClient(url, key);
 }
 
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
+function normalizeEmail(email) {
+  return email ? String(email).trim().toLowerCase() : null;
+}
 
-  try {
-    const { user_id } = JSON.parse(event.body || '{}');
-    if (!user_id) return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
+async function resolvePremiumUserId(supabase, { userId, customerId, email, expectedUserId, expectedEmail }) {
+  if (userId) return userId;
 
-    const supabase = getSupabase();
-    const { data: subData } = await supabase
-      .from('user_subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', user_id)
-      .maybeSingle();
-
-    const { data: profileData } = await supabase
+  if (customerId) {
+    const { data: byProfileCustomer } = await supabase
       .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user_id)
+      .select('id')
+      .eq('stripe_customer_id', customerId)
       .maybeSingle();
+    if (byProfileCustomer?.id) return byProfileCustomer.id;
 
-    const customerId = subData?.stripe_customer_id || profileData?.stripe_customer_id;
-
-    if (!customerId) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Brak aktywnego klienta Stripe dla tego konta.' }) };
-    }
-
-    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://unique-queijadas-333bcd.netlify.app';
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: `${siteUrl}/?billing=return`
-    });
-
-    return { statusCode: 200, body: JSON.stringify({ url: portal.url }) };
-  } catch (error) {
-    console.error('create-customer-portal error:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Stripe customer portal error' }) };
+    const { data: bySubCustomer } = await supabase
+      .from('user_subscriptions')
+      .select('user_id')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle();
+    if (bySubCustomer?.user_id) return bySubCustomer.user_id;
   }
-};
+
+  const emails = [email, expectedEmail].map(normalizeEmail).filter(Boolean);
+  for (const e of emails) {
+    const { data: byEmail } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('email', e)
+      .maybeSingle();
+    if (byEmail?.id) return byEmail.id;
+  }
+
+  if (expectedUserId) return expectedUserId;
+  return null;
+}
+
+async function forcePremiumUpdate(supabase, payload) {
+  const {
+    userId,
+    expectedUserId,
+    email,
+    expectedEmail,
+    customerId,
+    subscriptionId,
+    status = 'active',
+    currentPeriodEnd = null,
+    cancelAtPeriodEnd = false,
+    forcePremium = true
+  } = payload;
+
+  const resolvedUserId = await resolvePremiumUserId(supabase, {
+    userId,
+    expectedUserId,
+    customerId,
+    email,
+    expectedEmail
+  });
+
+  if (!resolvedUserId) {
+    throw new Error(`Premium sync failed: user not resolved for customer=${customerId || '-'} email=${email || expectedEmail || '-'}`);
+  }
+
+  const activeStatuses = ['active', 'trialing', 'paid', 'complete'];
+  const isActive = forcePremium || activeStatuses.includes(String(status || '').toLowerCase());
+  const plan = isActive ? 'premium' : 'free';
+  const subscriptionStatus = isActive ? 'active' : (status || 'inactive');
+  const periodEndIso = currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null;
+  const finalEmail = normalizeEmail(email) || normalizeEmail(expectedEmail);
+
+  const profilePayload = {
+    plan,
+    subscription_status: subscriptionStatus,
+    stripe_customer_id: customerId || null,
+    stripe_subscription_id: subscriptionId || null,
+    current_period_end: periodEndIso
+  };
+  if (finalEmail) profilePayload.email = finalEmail;
+
+  const { data: updatedProfile, error: profileError } = await supabase
+    .from('profiles')
+    .update(profilePayload)
+    .eq('id', resolvedUserId)
+    .select('id,email,plan,subscription_status,stripe_customer_id')
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+  if (!updatedProfile?.id) throw new Error(`Premium sync failed: profile update matched no rows for user_id=${resolvedUserId}`);
+
+  const { error: subscriptionError } = await supabase
+    .from('user_subscriptions')
+    .upsert({
+      user_id: resolvedUserId,
+      plan,
+      status: subscriptionStatus,
+      stripe_customer_id: customerId || null,
+      stripe_subscription_id: subscriptionId || null,
+      current_period_end: periodEndIso,
+      cancel_at_period_end: Boolean(cancelAtPeriodEnd),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+
+  if (subscriptionError) {
+    console.warn('Premium sync warning: user_subscriptions upsert failed:', subscriptionError.message);
+  }
+
+  return {
+    ok: true,
+    userId: resolvedUserId,
+    plan,
+    status: subscriptionStatus,
+    profile: updatedProfile,
+    subscriptionWarning: subscriptionError?.message || null
+  };
+}
+
+module.exports = { getSupabase, normalizeEmail, resolvePremiumUserId, forcePremiumUpdate };

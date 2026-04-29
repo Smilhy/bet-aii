@@ -1,2 +1,3 @@
-registry=https://registry.npmjs.org/
-always-auth=false
+-- VERSION 158 — ADMIN PAYOUTS DARK BOX FIX
+-- UI-only release. No database changes required.
+notify pgrst, 'reload schema';

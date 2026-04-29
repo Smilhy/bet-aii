@@ -3,171 +3,73 @@ const { createClient } = require('@supabase/supabase-js');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
-  return createClient(url, key);
-}
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   try {
-    const { user_id, email } = JSON.parse(event.body || '{}');
+    const { request_id } = JSON.parse(event.body || '{}');
 
-    if (!user_id) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
+    if (!request_id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing request_id' }) };
     }
 
-    const supabase = getSupabase();
-    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://unique-queijadas-333bcd.netlify.app';
-    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
-    const amount = Number(process.env.PREMIUM_MONTHLY_PRICE_GROSZE || process.env.PREMIUM_PRICE_GROSZE || 2900);
+    const supabase = createClient(
+      process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-    let customerId = null;
-
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id,email')
-      .eq('id', user_id)
+    const { data: payout, error: payoutError } = await supabase
+      .from('payout_requests')
+      .select('*')
+      .eq('id', request_id)
       .maybeSingle();
 
-    const { data: existingSubscription } = await supabase
-      .from('user_subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', user_id)
+    if (payoutError) throw payoutError;
+    if (!payout) throw new Error('PAYOUT_NOT_FOUND');
+    if (payout.status !== 'pending') throw new Error('PAYOUT_ALREADY_PROCESSED');
+
+    const { data: account, error: accountError } = await supabase
+      .from('user_stripe_accounts')
+      .select('*')
+      .eq('user_id', payout.user_id)
       .maybeSingle();
 
-    customerId = existingProfile?.stripe_customer_id || existingSubscription?.stripe_customer_id || null;
+    if (accountError) throw accountError;
+    if (!account?.stripe_account_id) throw new Error('STRIPE_CONNECT_NOT_CONNECTED');
 
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: email || existingProfile?.email || undefined,
-        metadata: {
-          user_id,
-          app: 'betai'
-        }
-      });
-      customerId = customer.id;
+    // Refresh account status from Stripe before transfer.
+    const stripeAccount = await stripe.accounts.retrieve(account.stripe_account_id);
 
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: user_id,
-          email: email || existingProfile?.email || null,
-          plan: existingProfile?.plan || 'free',
-          subscription_status: existingProfile?.subscription_status || 'inactive',
-          stripe_customer_id: customerId
-        }, { onConflict: 'id' });
+    await supabase.from('user_stripe_accounts').upsert({
+      user_id: payout.user_id,
+      stripe_account_id: account.stripe_account_id,
+      charges_enabled: Boolean(stripeAccount.charges_enabled),
+      payouts_enabled: Boolean(stripeAccount.payouts_enabled),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
 
-      await supabase
-        .from('user_subscriptions')
-        .upsert({
-          user_id,
-          plan: 'free',
-          status: 'inactive',
-          stripe_customer_id: customerId,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+    if (!stripeAccount.payouts_enabled) {
+      throw new Error('STRIPE_PAYOUTS_NOT_ENABLED');
     }
 
-    // If this customer already has an active test/live subscription, do not create duplicates.
-    // The frontend can call sync-premium-session on the existing customer after return, but here we keep checkout clean.
-    if (customerId) {
-      try {
-        await stripe.customers.update(customerId, {
-          email: email || existingProfile?.email || undefined,
-          metadata: { user_id, app: 'betai' }
-        });
-
-        const activeSubscriptions = await stripe.subscriptions.list({
-          customer: customerId,
-          status: 'active',
-          limit: 1
-        });
-
-        if (activeSubscriptions.data?.length) {
-          await supabase.from('profiles').update({
-            plan: 'premium',
-            subscription_status: 'active',
-            stripe_customer_id: customerId,
-            stripe_subscription_id: activeSubscriptions.data[0].id,
-            current_period_end: activeSubscriptions.data[0].current_period_end
-              ? new Date(activeSubscriptions.data[0].current_period_end * 1000).toISOString()
-              : null
-          }).eq('id', user_id);
-
-          await supabase.from('user_subscriptions').upsert({
-            user_id,
-            plan: 'premium',
-            status: 'active',
-            stripe_customer_id: customerId,
-            stripe_subscription_id: activeSubscriptions.data[0].id,
-            current_period_end: activeSubscriptions.data[0].current_period_end
-              ? new Date(activeSubscriptions.data[0].current_period_end * 1000).toISOString()
-              : null,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
-
-          return {
-            statusCode: 200,
-            body: JSON.stringify({ alreadyActive: true, url: `${siteUrl}/?premium=success&already_active=1` })
-          };
-        }
-      } catch (subCheckError) {
-        console.warn('Active subscription check warning:', subCheckError.message);
-      }
-    }
-
-    const lineItem = priceId
-      ? { price: priceId, quantity: 1 }
-      : {
-          price_data: {
-            currency: 'pln',
-            recurring: { interval: 'month' },
-            product_data: {
-              name: 'BetAI Premium Monthly',
-              description: 'Subskrypcja Premium: paywall, typy premium, większe limity i monetyzacja analiz'
-            },
-            unit_amount: amount
-          },
-          quantity: 1
-        };
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      customer: customerId,
-      client_reference_id: user_id,
-      line_items: [lineItem],
-      allow_promotion_codes: true,
-      success_url: `${siteUrl}/?premium=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/?premium=cancel`,
+    const transfer = await stripe.transfers.create({
+      amount: Math.round(Number(payout.amount) * 100),
+      currency: 'pln',
+      destination: account.stripe_account_id,
       metadata: {
-        kind: 'premium_subscription',
-        user_id,
-        amount: String(amount / 100)
-      },
-      subscription_data: {
-        metadata: {
-          kind: 'premium_subscription',
-          user_id
-        }
+        payout_request_id: payout.id,
+        user_id: payout.user_id
       }
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ url: session.url })
+      body: JSON.stringify({ ok: true, transfer_id: transfer.id })
     };
   } catch (error) {
-    console.error('create-premium-checkout error:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message || 'Stripe Premium subscription checkout error' })
-    };
+    console.error('send-tipster-payout error:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Stripe payout error' }) };
   }
 };

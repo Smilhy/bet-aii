@@ -1,31 +1,12 @@
 -- =========================
--- VERSION 136 — AI PICKS DASHBOARD PREMIUM
--- Safe rebuild of AI tab views. Does NOT delete user tips.
+-- VERSION 134 — AI / USER FEED SEPARATION + DEEP STATS
+-- Dashboard = typy użytkowników
+-- Typy AI = tylko typy wygenerowane przez silnik AI
 -- =========================
 
--- Clean old views first, because PostgreSQL cannot change view columns with CREATE OR REPLACE.
-drop view if exists public.ai_events_feed cascade;
-drop view if exists public.ai_events_status cascade;
-drop view if exists public.ai_events_summary cascade;
-drop view if exists public.ai_stats_main cascade;
-drop view if exists public.ai_stats_by_league cascade;
-drop view if exists public.ai_recent_events cascade;
-drop view if exists public.ai_streak cascade;
-drop view if exists public.ai_recent_form cascade;
-drop view if exists public.ai_stats_by_odds_range cascade;
-drop view if exists public.ai_only_picks cascade;
-drop view if exists public.user_only_tips cascade;
-
--- Required columns for AI engine and UI.
-alter table public.tips add column if not exists ai_source text default 'user';
-alter table public.tips add column if not exists league_name text;
-alter table public.tips add column if not exists team_home text;
-alter table public.tips add column if not exists team_away text;
-alter table public.tips add column if not exists match_name text;
-alter table public.tips add column if not exists pick text;
-alter table public.tips add column if not exists odds numeric;
-alter table public.tips add column if not exists result text;
-alter table public.tips add column if not exists profit numeric default 0;
+-- 1) Kolumny potrzebne dla silnika AI i statystyk
+alter table public.tips add column if not exists ai_source text;
+alter table public.tips add column if not exists source text;
 alter table public.tips add column if not exists ai_confidence numeric default 0;
 alter table public.tips add column if not exists ai_score numeric default 0;
 alter table public.tips add column if not exists ai_analysis text;
@@ -33,108 +14,122 @@ alter table public.tips add column if not exists value_score numeric default 0;
 alter table public.tips add column if not exists implied_probability numeric default 0;
 alter table public.tips add column if not exists model_probability numeric default 0;
 alter table public.tips add column if not exists risk_level text default 'medium';
-alter table public.tips add column if not exists sport text default 'football';
+alter table public.tips add column if not exists event_time timestamptz;
+alter table public.tips add column if not exists country text;
 alter table public.tips add column if not exists bookmaker text;
-alter table public.tips add column if not exists kickoff_time timestamptz;
 
--- Make sure normal user tips stay on dashboard. Only backend AI should use real_ai_engine.
+-- 2) Oznaczamy stare typy jako USER, ale ich NIE usuwamy.
+-- Realne AI ma zawsze ai_source/source = real_ai_engine.
 update public.tips
-set ai_source = 'user'
-where ai_source is null or ai_source = '';
+set
+  ai_source = 'user',
+  source = coalesce(nullif(source, ''), 'user')
+where coalesce(ai_source, source, '') <> 'real_ai_engine';
 
-alter table public.tips alter column ai_source set default 'user';
+-- 3) Logi uruchomień generatora AI
+create table if not exists public.ai_pick_runs (
+  id uuid primary key default gen_random_uuid(),
+  source text default 'api-football+odds+openai',
+  inserted_count integer default 0,
+  status text default 'success',
+  error_message text,
+  created_at timestamptz default now(),
+  finished_at timestamptz
+);
 
--- Dashboard: user/tipster feed only.
-create view public.user_only_tips as
+alter table public.ai_pick_runs enable row level security;
+drop policy if exists "ai_pick_runs_read" on public.ai_pick_runs;
+create policy "ai_pick_runs_read"
+on public.ai_pick_runs
+for select
+using (true);
+
+-- 4) Dashboard feed: tylko typy ludzi/typerów
+create or replace view public.user_only_tips as
 select *
 from public.tips
-where coalesce(ai_source, 'user') = 'user'
+where coalesce(ai_source, source, 'user') <> 'real_ai_engine'
 order by created_at desc;
 
--- AI tab: only real AI engine picks.
-create view public.ai_only_picks as
+-- 5) Zakładka Typy AI: tylko silnik AI
+create or replace view public.ai_only_picks as
 select *
 from public.tips
-where ai_source = 'real_ai_engine'
-order by coalesce(kickoff_time, match_time, created_at) desc nulls last;
+where coalesce(ai_source, source, '') = 'real_ai_engine'
+order by ai_score desc, value_score desc, ai_confidence desc, created_at desc;
 
-create view public.ai_events_feed as
+-- 6) Top AI picks — value + confidence
+create or replace view public.real_ai_top_picks as
 select *
-from public.tips
-where ai_source = 'real_ai_engine'
-order by coalesce(kickoff_time, match_time, created_at) desc nulls last;
+from public.ai_only_picks
+where coalesce(ai_score, 0) > 0
+order by value_score desc, ai_score desc, ai_confidence desc
+limit 50;
 
-create view public.ai_events_status as
+-- 7) Statystyki AI — karty jak w dashboardach typu betting stats
+create or replace view public.ai_stats_overview as
 select
-  *,
+  count(*)::integer as total_picks,
+  round(avg(coalesce(ai_confidence, 0)), 2) as avg_confidence,
+  round(avg(coalesce(ai_score, 0)), 2) as avg_ai_score,
+  round(avg(coalesce(value_score, 0)), 2) as avg_value_score,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won','wygrany'))::integer as wins,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('lose','loss','lost','przegrany'))::integer as losses,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('pending','live'))::integer as pending,
   case
-    when result in ('win','won','lose','loss','lost','void','push') then 'finished'
-    when coalesce(kickoff_time, match_time, created_at) <= now() then 'live'
-    else 'upcoming'
-  end as ai_status
-from public.ai_events_feed;
-
-create view public.ai_events_summary as
-select
-  count(*) filter (where ai_status = 'live') as live_now,
-  count(*) filter (where ai_status = 'upcoming') as upcoming,
-  count(*) filter (where ai_status = 'finished') as finished,
-  count(*) as total
-from public.ai_events_status;
-
-create view public.ai_stats_main as
-select
-  count(*) as total_picks,
-  count(*) filter (where result in ('win','won')) as wins,
-  count(*) filter (where result in ('lose','loss','lost')) as losses,
-  count(*) filter (where result in ('void','push')) as pushes,
-  round(case when count(*) filter (where result in ('win','won','lose','loss','lost')) > 0 then (count(*) filter (where result in ('win','won'))::numeric / count(*) filter (where result in ('win','won','lose','loss','lost'))::numeric) * 100 else 0 end, 2) as winrate,
-  round(coalesce(sum(case when result in ('win','won') then (coalesce(odds,0)-1)*100 when result in ('lose','loss','lost') then -100 else coalesce(profit,0) end),0),2) as total_profit,
-  round(case when count(*) filter (where result in ('win','won','lose','loss','lost')) > 0 then (coalesce(sum(case when result in ('win','won') then (coalesce(odds,0)-1)*100 when result in ('lose','loss','lost') then -100 else 0 end),0) / (count(*) filter (where result in ('win','won','lose','loss','lost')) * 100)::numeric) * 100 else 0 end, 2) as roi,
-  round(avg(coalesce(ai_confidence,0)),2) as avg_confidence,
-  round(avg(coalesce(value_score,0)),2) as avg_value_score
+    when count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won','lose','loss','lost')) = 0 then 0
+    else round(
+      (count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won'))::numeric /
+       nullif(count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won','lose','loss','lost')), 0)) * 100,
+      2
+    )
+  end as winrate,
+  round(coalesce(sum(
+    case
+      when lower(coalesce(result, status, 'pending')) in ('win','won','wygrany') then coalesce(odds, 0) - 1
+      when lower(coalesce(result, status, 'pending')) in ('lose','loss','lost','przegrany') then -1
+      else 0
+    end
+  ), 0) * 100, 2) as profit_units
 from public.tips
-where ai_source = 'real_ai_engine';
+where coalesce(ai_source, source, '') = 'real_ai_engine';
 
-create view public.ai_stats_by_league as
+-- 8) Performance by league
+create or replace view public.ai_stats_by_league as
 select
-  coalesce(league_name, league, 'Unknown') as league,
-  count(*) as picks,
-  count(*) filter (where result in ('win','won')) as wins,
-  count(*) filter (where result in ('lose','loss','lost')) as losses,
-  round(case when count(*) filter (where result in ('win','won','lose','loss','lost')) > 0 then (count(*) filter (where result in ('win','won'))::numeric / count(*) filter (where result in ('win','won','lose','loss','lost'))::numeric) * 100 else 0 end, 2) as winrate,
-  round(coalesce(sum(case when result in ('win','won') then (coalesce(odds,0)-1)*100 when result in ('lose','loss','lost') then -100 else coalesce(profit,0) end),0),2) as profit,
-  round(avg(coalesce(ai_confidence,0)),2) as avg_confidence
+  coalesce(league, league_name, 'Unknown') as league,
+  count(*)::integer as picks,
+  round(avg(coalesce(ai_confidence, 0)), 2) as avg_confidence,
+  round(avg(coalesce(value_score, 0)), 2) as avg_value,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won','wygrany'))::integer as wins,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('lose','loss','lost','przegrany'))::integer as losses
 from public.tips
-where ai_source = 'real_ai_engine'
-group by coalesce(league_name, league, 'Unknown')
-order by picks desc, winrate desc;
+where coalesce(ai_source, source, '') = 'real_ai_engine'
+group by coalesce(league, league_name, 'Unknown')
+order by picks desc, avg_value desc;
 
-create view public.ai_recent_form as
-select result, created_at
-from public.tips
-where ai_source = 'real_ai_engine'
-order by created_at desc
-limit 20;
-
-create view public.ai_stats_by_odds_range as
+-- 9) Performance by market / typ zakładu
+create or replace view public.ai_stats_by_market as
 select
-  case
-    when odds < 1.50 then '1.01 - 1.50'
-    when odds >= 1.50 and odds < 2.00 then '1.51 - 2.00'
-    when odds >= 2.00 and odds < 2.50 then '2.01 - 2.50'
-    when odds >= 2.50 and odds < 3.00 then '2.51 - 3.00'
-    when odds >= 3.00 then '3.01+'
-    else 'Unknown'
-  end as odds_range,
-  count(*) as total,
-  count(*) filter (where result in ('win','won')) as wins,
-  count(*) filter (where result in ('lose','loss','lost')) as losses
+  coalesce(bet_type, pick, 'Unknown') as market,
+  count(*)::integer as picks,
+  round(avg(coalesce(ai_confidence, 0)), 2) as avg_confidence,
+  round(avg(coalesce(value_score, 0)), 2) as avg_value,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('win','won','wygrany'))::integer as wins,
+  count(*) filter (where lower(coalesce(result, status, 'pending')) in ('lose','loss','lost','przegrany'))::integer as losses
 from public.tips
-where ai_source = 'real_ai_engine'
-group by 1
-order by 1;
+where coalesce(ai_source, source, '') = 'real_ai_engine'
+group by coalesce(bet_type, pick, 'Unknown')
+order by picks desc, avg_value desc;
 
-alter table public.tips enable row level security;
-drop policy if exists "tips_public_read_v136" on public.tips;
-create policy "tips_public_read_v136" on public.tips for select using (true);
+-- 10) Buckety ryzyka / confidence
+create or replace view public.ai_stats_by_risk as
+select
+  coalesce(risk_level, 'medium') as risk_level,
+  count(*)::integer as picks,
+  round(avg(coalesce(ai_confidence, 0)), 2) as avg_confidence,
+  round(avg(coalesce(value_score, 0)), 2) as avg_value
+from public.tips
+where coalesce(ai_source, source, '') = 'real_ai_engine'
+group by coalesce(risk_level, 'medium')
+order by case coalesce(risk_level, 'medium') when 'low' then 1 when 'medium' then 2 else 3 end;

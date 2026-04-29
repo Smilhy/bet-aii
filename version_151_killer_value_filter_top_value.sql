@@ -1,135 +1,158 @@
--- VERSION 149 — AUTO SETTLEMENT STEP + REAL AI STATS
--- Krok 1: rozliczanie FT, poprawne statusy won/lost/void, statystyki i widoki wyników.
+-- VERSION 147 — REAL AI PRE/LIVE SCHEMA FIX + NO RANDOM TRIGGER
+-- Fixuje błąd: record "new" has no field "confidence"
+-- oraz wyłącza stary trigger z wersji 146, który nadpisywał realne typy PRE losowymi danymi.
 
-alter table public.tips add column if not exists external_fixture_id bigint;
-alter table public.tips add column if not exists market text;
-alter table public.tips add column if not exists selection text;
-alter table public.tips add column if not exists odds numeric;
-alter table public.tips add column if not exists profit numeric default 0;
-alter table public.tips add column if not exists result text default 'pending';
-alter table public.tips add column if not exists settled_at timestamp with time zone;
+-- =========================
+-- 1. BRAKUJĄCE KOLUMNY POD REAL AI ENGINE
+-- =========================
+alter table public.tips add column if not exists external_fixture_id text;
+alter table public.tips add column if not exists league_name text;
+alter table public.tips add column if not exists country text;
+alter table public.tips add column if not exists team_home text;
+alter table public.tips add column if not exists team_away text;
+alter table public.tips add column if not exists match_name text;
+alter table public.tips add column if not exists bet_type text;
+alter table public.tips add column if not exists pick text;
+alter table public.tips add column if not exists odds numeric default 1;
+alter table public.tips add column if not exists implied_probability numeric;
+alter table public.tips add column if not exists model_probability numeric;
+alter table public.tips add column if not exists probability numeric;
+alter table public.tips add column if not exists value_score numeric default 0;
+alter table public.tips add column if not exists ai_confidence numeric default 0;
+alter table public.tips add column if not exists confidence numeric default 0;
+alter table public.tips add column if not exists ai_score numeric default 0;
+alter table public.tips add column if not exists risk_level text;
+alter table public.tips add column if not exists bookmaker text;
+alter table public.tips add column if not exists event_time timestamptz;
+alter table public.tips add column if not exists kickoff_time timestamptz;
+alter table public.tips add column if not exists match_time timestamptz;
+alter table public.tips add column if not exists live_minute integer default 0;
 alter table public.tips add column if not exists live_score_home integer default 0;
 alter table public.tips add column if not exists live_score_away integer default 0;
 alter table public.tips add column if not exists live_status text;
-alter table public.tips add column if not exists ai_source text default 'real_ai_engine';
-alter table public.tips add column if not exists source text default 'live_ai_engine';
-alter table public.tips add column if not exists value_score numeric;
-alter table public.tips add column if not exists ai_confidence numeric;
-alter table public.tips add column if not exists model_probability numeric;
-alter table public.tips add column if not exists implied_probability numeric;
+alter table public.tips add column if not exists result text default 'pending';
+alter table public.tips add column if not exists profit numeric default 0;
+alter table public.tips add column if not exists source text default 'manual';
+alter table public.tips add column if not exists ai_source text default 'user';
+alter table public.tips add column if not exists analysis text;
+alter table public.tips add column if not exists ai_analysis text;
+alter table public.tips add column if not exists access_type text default 'free';
+alter table public.tips add column if not exists is_premium boolean default false;
+alter table public.tips add column if not exists price numeric default 0;
 
+-- =========================
+-- 2. WYŁĄCZ STARY RANDOM/FALLBACK Z V146
+-- =========================
+drop trigger if exists trg_generate_pre_logic on public.tips;
+drop function if exists public.generate_pre_match_logic();
+
+-- =========================
+-- 3. STATUSY
+-- =========================
 alter table public.tips drop constraint if exists tips_status_check;
 alter table public.tips add constraint tips_status_check
 check (status in ('pending','live','won','lost','void'));
 
-alter table public.tips drop constraint if exists tips_result_check;
-alter table public.tips add constraint tips_result_check
-check (result in ('pending','live','win','loss','void'));
+alter table public.tips alter column status set default 'pending';
 
--- Napraw stare rekordy, jeśli wcześniejsza funkcja próbowała zapisać status win/loss.
-update public.tips set status = 'won' where status = 'win';
-update public.tips set status = 'lost' where status = 'loss';
-update public.tips set result = 'win' where status = 'won' and coalesce(result,'pending') not in ('win','loss','void');
-update public.tips set result = 'loss' where status = 'lost' and coalesce(result,'pending') not in ('win','loss','void');
-update public.tips set result = 'void' where status = 'void' and coalesce(result,'pending') not in ('win','loss','void');
+-- =========================
+-- 4. UNIKALNOŚĆ MECZU Z API-FOOTBALL
+-- =========================
+drop index if exists idx_unique_fixture;
+create unique index if not exists idx_unique_real_fixture_v147
+on public.tips(external_fixture_id)
+where external_fixture_id is not null and ai_source = 'real_ai_engine' and source = 'live_ai_engine';
 
--- Zysk liczony na stake 100 PLN, żeby dashboard miał stałą bazę.
-create or replace function public.recalculate_real_ai_profit()
+-- =========================
+-- 5. AUTO LIGI — DOPISUJE BRAKUJĄCE LIGI
+-- =========================
+create table if not exists public.leagues (
+  id bigserial primary key,
+  league_id integer unique,
+  name text,
+  country text,
+  created_at timestamptz default now()
+);
+
+alter table public.tips add column if not exists league_id integer;
+
+create or replace function public.auto_insert_league_v147()
 returns trigger as $$
 begin
-  if new.status = 'won' then
-    new.result := 'win';
-    new.profit := round((coalesce(new.odds, 0) - 1) * 100, 2);
-    new.settled_at := coalesce(new.settled_at, now());
-  elsif new.status = 'lost' then
-    new.result := 'loss';
-    new.profit := -100;
-    new.settled_at := coalesce(new.settled_at, now());
-  elsif new.status = 'void' then
-    new.result := 'void';
-    new.profit := 0;
-    new.settled_at := coalesce(new.settled_at, now());
-  elsif new.status = 'live' then
-    new.result := 'live';
-  else
-    new.result := 'pending';
+  if new.league_id is not null then
+    insert into public.leagues (league_id, name, country)
+    values (new.league_id, coalesce(new.league_name, new.league), new.country)
+    on conflict (league_id) do update set
+      name = coalesce(excluded.name, public.leagues.name),
+      country = coalesce(excluded.country, public.leagues.country);
+  elsif coalesce(new.league_name, new.league) is not null then
+    insert into public.leagues (league_id, name, country)
+    values (null, coalesce(new.league_name, new.league), new.country)
+    on conflict do nothing;
   end if;
   return new;
 end;
 $$ language plpgsql;
 
-drop trigger if exists trg_recalculate_real_ai_profit on public.tips;
-create trigger trg_recalculate_real_ai_profit
-before insert or update of status, odds on public.tips
-for each row execute function public.recalculate_real_ai_profit();
+drop trigger if exists trg_auto_league on public.tips;
+drop trigger if exists trg_auto_league_v147 on public.tips;
+create trigger trg_auto_league_v147
+after insert on public.tips
+for each row execute function public.auto_insert_league_v147();
 
-create index if not exists idx_tips_real_ai_settlement_v149 on public.tips(ai_source, source, status, settled_at);
-create index if not exists idx_tips_real_ai_fixture_v149 on public.tips(external_fixture_id) where external_fixture_id is not null;
-create index if not exists idx_tips_real_ai_market_v149 on public.tips(market);
-
-create or replace view public.ai_settled_picks as
+-- =========================
+-- 6. REALNE WIDOKI LIVE / PRE
+-- =========================
+create or replace view public.ai_live_matches as
 select *
 from public.tips
 where ai_source = 'real_ai_engine'
   and source = 'live_ai_engine'
-  and status in ('won','lost','void')
-order by settled_at desc nulls last, created_at desc;
+  and status = 'live'
+order by created_at desc;
 
-create or replace view public.ai_open_picks as
+create or replace view public.ai_pre_matches as
 select *
 from public.tips
 where ai_source = 'real_ai_engine'
   and source = 'live_ai_engine'
-  and status in ('pending','live')
-order by case when status = 'live' then 0 else 1 end, kickoff_time asc nulls last, created_at desc;
+  and status = 'pending'
+order by coalesce(kickoff_time, event_time, match_time, created_at) asc;
 
-create or replace view public.ai_stats_v149 as
+create or replace view public.ai_real_matches as
+select *
+from public.tips
+where ai_source = 'real_ai_engine'
+  and source = 'live_ai_engine'
+  and status in ('live','pending')
+order by
+  case when status = 'live' then 0 else 1 end,
+  coalesce(kickoff_time, event_time, match_time, created_at) asc;
+
+-- =========================
+-- 7. STATYSTYKI REAL AI
+-- =========================
+create or replace view public.ai_stats as
 select
-  count(*) as total_picks,
-  count(*) filter (where status = 'live') as live_picks,
-  count(*) filter (where status = 'pending') as pre_picks,
   count(*) filter (where status = 'won') as wins,
   count(*) filter (where status = 'lost') as losses,
   count(*) filter (where status = 'void') as voids,
-  count(*) filter (where status in ('won','lost','void')) as settled_picks,
-  round(sum(coalesce(profit,0)), 2) as profit,
-  round((sum(coalesce(profit,0)) / nullif(count(*) filter (where status in ('won','lost')) * 100, 0)) * 100, 2) as roi_percent,
-  round((count(*) filter (where status = 'won')::numeric / nullif(count(*) filter (where status in ('won','lost')),0)) * 100, 2) as winrate,
-  round(avg(ai_confidence), 2) as avg_confidence,
-  round(avg(value_score), 2) as avg_value_score
+  count(*) filter (where status = 'pending') as pending,
+  count(*) filter (where status = 'live') as live,
+  count(*) as total,
+  round((count(*) filter (where status = 'won')::numeric / nullif(count(*) filter (where status in ('won','lost')),0)) * 100, 2) as winrate
 from public.tips
 where ai_source = 'real_ai_engine'
   and source = 'live_ai_engine';
 
-create or replace view public.ai_market_stats_v149 as
-select
-  coalesce(market, selection, pick, 'unknown') as market,
-  count(*) as picks,
-  count(*) filter (where status = 'won') as wins,
-  count(*) filter (where status = 'lost') as losses,
-  round(sum(coalesce(profit,0)), 2) as profit,
-  round((count(*) filter (where status = 'won')::numeric / nullif(count(*) filter (where status in ('won','lost')),0)) * 100, 2) as winrate,
-  round((sum(coalesce(profit,0)) / nullif(count(*) filter (where status in ('won','lost')) * 100, 0)) * 100, 2) as roi_percent
-from public.tips
-where ai_source = 'real_ai_engine'
-  and source = 'live_ai_engine'
-group by 1
-order by profit desc nulls last, picks desc;
+-- =========================
+-- 8. INDEXY
+-- =========================
+create index if not exists idx_real_ai_feed_v147 on public.tips(ai_source, source, status);
+create index if not exists idx_real_ai_kickoff_v147 on public.tips(kickoff_time);
+create index if not exists idx_real_ai_confidence_v147 on public.tips(ai_confidence);
 
-create or replace view public.ai_league_stats_v149 as
-select
-  coalesce(league_name, league, 'Unknown') as league,
-  coalesce(country, '') as country,
-  count(*) as picks,
-  count(*) filter (where status = 'won') as wins,
-  count(*) filter (where status = 'lost') as losses,
-  round(sum(coalesce(profit,0)), 2) as profit,
-  round((count(*) filter (where status = 'won')::numeric / nullif(count(*) filter (where status in ('won','lost')),0)) * 100, 2) as winrate,
-  round((sum(coalesce(profit,0)) / nullif(count(*) filter (where status in ('won','lost')) * 100, 0)) * 100, 2) as roi_percent
-from public.tips
-where ai_source = 'real_ai_engine'
-  and source = 'live_ai_engine'
-group by 1,2
-order by profit desc nulls last, picks desc;
-
+-- =========================
+-- 9. REFRESH SUPABASE CACHE
+-- =========================
 notify pgrst, 'reload schema';
