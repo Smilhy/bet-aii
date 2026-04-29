@@ -1,0 +1,4 @@
+Wersja 209
+- Usunięto przycisk "Zobacz statystyki" z głównego bannera dashboardu.
+- Loader i ekran logowania bez zmian.
+- Pełna paczka gotowa do wdrożenia.

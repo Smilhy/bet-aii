@@ -6368,3 +6368,67 @@ html,body,#root{
     width: 220px !important;
   }
 }
+
+/* WERSJA 210 — DASHBOARD SZERZEJ O POŁOWĘ: mniej czarnego pola po bokach, ale zostaje margines */
+@media (min-width:1001px){
+  html,
+  body,
+  #root{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+    background:#020914!important;
+  }
+
+  .app-shell{
+    width:95%!important;
+    max-width:1900px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:0!important;
+    padding-right:0!important;
+    background:radial-gradient(circle at 82% 3%,rgba(31,226,174,.12),transparent 27%),#020914!important;
+  }
+
+  .main,
+  .feed-section,
+  .dashboard-hero,
+  .betai-animated-hero,
+  .feed-title,
+  .feed,
+  .topbar{
+    width:100%!important;
+    max-width:none!important;
+  }
+}
+
+@media (min-width:1201px){
+  .app-shell{
+    grid-template-columns:250px minmax(0,1fr) clamp(430px,24.5vw,510px)!important;
+    gap:18px!important;
+  }
+  .rightbar{
+    min-width:430px!important;
+    max-width:510px!important;
+  }
+}
+
+@media (min-width:1500px){
+  .app-shell{
+    grid-template-columns:250px minmax(0,1fr) 510px!important;
+    gap:20px!important;
+  }
+  .rightbar{
+    min-width:510px!important;
+    max-width:510px!important;
+  }
+}
+
+@media (min-width:1001px) and (max-width:1200px){
+  .app-shell{
+    width:95%!important;
+    max-width:1140px!important;
+    grid-template-columns:230px minmax(0,1fr) 390px!important;
+    gap:14px!important;
+  }
+}

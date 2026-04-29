@@ -408,7 +408,6 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             <h1>{line.prefix}<strong>{line.accent}</strong></h1>
           </div>
         </div>
-        <button type="button" className="betai-hero-cta" onClick={onStatsClick}>Zobacz statystyki <span>→</span></button>
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
