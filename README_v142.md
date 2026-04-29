@@ -1,17 +1,15 @@
-# wersja 142 — LIVE AI real-only visibility
+# BetAI — wersja 139 LIVE AI PICKS FINAL
 
-Poprawki:
-- Typy AI domyślnie otwierają zakładkę LIVE realne mecze.
-- LIVE lista filtruje tylko rekordy z `ai_source = real_ai_engine` oraz `source` zaczynającym się od `live_ai_engine` albo z polami `live_status/live_minute`.
-- Pre-match AI i wszystkie AI są osobno, żeby nie mieszać sztucznych/starych typów z realnymi LIVE.
-- SQL usuwa ewentualne demo/mock/sample rekordy AI z Supabase.
-- SQL automatycznie dopisuje brakujące ligi do tabeli `leagues` przy każdym nowym typie.
+Dodano końcowy etap AI:
+- realne pre-match AI z Odds API,
+- LIVE AI z API-Football,
+- osobny endpoint `/.netlify/functions/generate-live-ai-picks`,
+- zakładka Typy AI ma przycisk `Generate LIVE AI`,
+- Dashboard dalej pokazuje typy użytkowników.
 
-Po wdrożeniu uruchom w Supabase:
-`supabase/version_142_live_real_only_visibility.sql`
-
-W Netlify ENV muszą być:
-- `API_FOOTBALL_KEY`
-- `SUPABASE_URL` albo `VITE_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- opcjonalnie `OPENAI_API_KEY`
+## Wdrożenie
+1. Wrzuć całą paczkę na GitHub.
+2. Supabase SQL Editor: odpal `supabase/version_139_live_ai_picks.sql`.
+3. Netlify ENV: `OPENAI_API_KEY`, `API_FOOTBALL_KEY`, `ODDS_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL` / `SUPABASE_URL`.
+4. Netlify: Clear cache and deploy site.
+5. Zakładka Typy AI: kliknij `Generate AI Picks` albo `Generate LIVE AI`.

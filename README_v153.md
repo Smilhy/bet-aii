@@ -1,10 +1,11 @@
-# Wersja 153 — Tabs Logic + Analiza + Auto Refresh
+# Wersja 149 — krok 1
 
-Zmiany:
-- TOP VALUE pokazuje razem mocne LIVE + PRE.
-- LIVE teraz pokazuje tylko mecze trwające.
-- Zaraz startują pokazuje tylko mecze PRE.
-- Dodany przycisk **Analiza** przy każdym meczu.
-- Modal analizy pokazuje typ, kurs, value, rozkład H/D/A, xG, strzały, posiadanie, rożne, H2H i pełną analizę AI.
-- Automatyczne skanowanie/odświeżanie typów co 10 minut.
-- SQL: `supabase/version_153_tabs_analysis_autorefresh.sql`.
+Dodane:
+- ręczne rozliczanie zakończonych meczów przyciskiem „Rozlicz zakończone”,
+- Netlify function `settle-live-ai-picks`,
+- poprawne statusy `won/lost/void` zamiast błędnego `win/loss` w kolumnie status,
+- profit / ROI / winrate po rozliczeniu,
+- widoki Supabase: `ai_stats_v149`, `ai_market_stats_v149`, `ai_league_stats_v149`, `ai_settled_picks`, `ai_open_picks`.
+
+Uruchom SQL:
+`supabase/version_149_auto_settlement_stats_step.sql`
