@@ -2550,27 +2550,79 @@ function AdminFinanceView({ report, onRefresh }) {
 
 function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   const profile = getUserProfileView(user)
-  const pendingRequests = requests.filter(request => (request.status || 'pending') === 'pending')
-  const processingRequests = requests.filter(request => request.status === 'processing')
-  const paidRequests = requests.filter(request => request.status === 'paid')
-  const failedRequests = requests.filter(request => request.status === 'failed' || request.stripe_status === 'failed')
-  const rejectedRequests = requests.filter(request => request.status === 'rejected')
-  const payableRequests = pendingRequests.filter(request => Number(request.amount || 0) >= 50)
-  const totalPending = pendingRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
-  const totalPaid = paidRequests.reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [query, setQuery] = useState('')
+  const [amountFilter, setAmountFilter] = useState('all')
+  const [selectedIds, setSelectedIds] = useState([])
+
+  const normalizedRequests = requests.map(request => ({
+    ...request,
+    normalizedStatus: (request.status || 'pending').toLowerCase(),
+    amountNumber: Number(request.amount || 0),
+    searchText: String((request.id || '') + ' ' + (request.user_id || '') + ' ' + (request.status || '') + ' ' + (request.stripe_status || '') + ' ' + (request.stripe_transfer_id || '')).toLowerCase()
+  }))
+
+  const pendingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'pending')
+  const processingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'processing')
+  const paidRequests = normalizedRequests.filter(request => request.normalizedStatus === 'paid')
+  const failedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'failed' || request.stripe_status === 'failed')
+  const rejectedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'rejected')
+  const payableRequests = pendingRequests.filter(request => request.amountNumber >= 50)
+  const totalPending = pendingRequests.reduce((sum, request) => sum + request.amountNumber, 0)
+  const totalPaid = paidRequests.reduce((sum, request) => sum + request.amountNumber, 0)
   const automationReady = payableRequests.length > 0
+
+  const filteredRequests = normalizedRequests.filter(request => {
+    const matchesStatus = statusFilter === 'all' || request.normalizedStatus === statusFilter
+    const matchesQuery = !query.trim() || request.searchText.includes(query.trim().toLowerCase())
+    const matchesAmount = amountFilter === 'all'
+      || (amountFilter === 'payable' && request.amountNumber >= 50)
+      || (amountFilter === 'small' && request.amountNumber < 50)
+    return matchesStatus && matchesQuery && matchesAmount
+  })
+
+  const selectedRequests = normalizedRequests.filter(request => selectedIds.includes(request.id))
+  const selectedPending = selectedRequests.filter(request => request.normalizedStatus === 'pending')
+
+  const toggleSelected = (id) => {
+    setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id])
+  }
+
+  const toggleAllVisible = () => {
+    const visiblePendingIds = filteredRequests.filter(request => request.normalizedStatus === 'pending').map(request => request.id)
+    const allSelected = visiblePendingIds.length > 0 && visiblePendingIds.every(id => selectedIds.includes(id))
+    setSelectedIds(current => allSelected ? current.filter(id => !visiblePendingIds.includes(id)) : Array.from(new Set([...current, ...visiblePendingIds])))
+  }
+
+  const bulkUpdate = (status) => {
+    selectedPending.forEach(request => onUpdateStatus(request.id, status))
+    setSelectedIds([])
+  }
+
+  const exportCsv = () => {
+    const headers = ['user_id', 'created_at', 'amount', 'status', 'stripe_status', 'stripe_transfer_id']
+    const rows = filteredRequests.map(request => headers.map(key => '"' + String(request[key] ?? '').replaceAll('"', '""') + '"').join(','))
+    const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'admin-wyplaty-' + new Date().toISOString().slice(0, 10) + '.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   const getStripeLabel = (request) => {
     if (request.stripe_transfer_id) return request.stripe_transfer_id
-    if (request.status === 'rejected') return 'nie dotyczy'
-    if (Number(request.amount || 0) < 50 && (request.status || 'pending') === 'pending') return 'poniżej minimum'
-    if (request.stripe_status === 'failed' || request.status === 'failed') return 'błąd Stripe'
-    if (request.status === 'processing') return 'przetwarzanie'
+    if (request.normalizedStatus === 'rejected') return 'nie dotyczy'
+    if (request.amountNumber < 50 && request.normalizedStatus === 'pending') return 'poniżej minimum'
+    if (request.stripe_status === 'failed' || request.normalizedStatus === 'failed') return 'błąd Stripe'
+    if (request.normalizedStatus === 'processing') return 'przetwarzanie'
     return 'czeka'
   }
 
   if (!profile.isAdmin) {
     return (
-      <section className="admin-payout-page">
+      <section className="admin-payout-page admin-payout-page-pro">
         <div className="admin-denied">
           <strong>Brak dostępu</strong>
           <span>Ten panel jest dostępny tylko dla administratora.</span>
@@ -2580,20 +2632,21 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   return (
-    <section className="admin-payout-page">
-      <div className="admin-payout-hero">
+    <section className="admin-payout-page admin-payout-page-pro">
+      <div className="admin-payout-hero admin-payout-hero-pro">
         <div>
+          <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
           <h1>Admin wypłaty</h1>
-          <p>PRO panel do realnych wypłat Stripe Connect: approve, reject, transfer ID i gotowość pod cron.</p>
+          <p>PRO panel do realnych wypłat Stripe Connect: approve, reject, transfer ID, CSV, filtry i gotowość pod cron.</p>
         </div>
         <div className="admin-payout-badge">ADMIN PRO</div>
       </div>
 
-      <div className="admin-payout-stats admin-payout-stats-pro">
-        <div><span>Zgłoszenia</span><b>{requests.length}</b></div>
-        <div><span>Pending</span><b>{totalPending.toFixed(2)} zł</b></div>
-        <div><span>Wypłacone</span><b>{totalPaid.toFixed(2)} zł</b></div>
-        <div><span>Odrzucone</span><b>{rejectedRequests.length}</b></div>
+      <div className="admin-payout-stats admin-payout-stats-pro admin-payout-stat-cards-pro">
+        <div><span>Zgłoszenia</span><b>{requests.length}</b><small>Wszystkie zgłoszenia</small></div>
+        <div><span>Pending</span><b>{pendingRequests.length}</b><small>{totalPending.toFixed(2)} zł oczekuje</small></div>
+        <div><span>Wypłacone</span><b>{paidRequests.length}</b><small>{totalPaid.toFixed(2)} zł zrealizowane</small></div>
+        <div><span>Odrzucone</span><b>{rejectedRequests.length}</b><small>Do audytu</small></div>
       </div>
 
       <div className="admin-payout-summary admin-payout-summary-pro">
@@ -2609,16 +2662,46 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
         </div>
       </div>
 
-      <div className="admin-cron-card">
+      <div className="admin-cron-card admin-cron-card-pro">
         <div>
-          <strong>Automatyczne wypłaty — cron ready</strong>
+          <strong>Automatyczne wypłaty — cron ready <em>Aktywne</em></strong>
           <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje tylko pending wypłaty od 50 zł, blokuje duplikaty statusem processing i używa idempotency key.</span>
         </div>
-        <button type="button" className="cron-run-button" onClick={onRunCron} disabled={!automationReady}>{automationReady ? 'Uruchom test cron' : 'Brak pending ≥ 50 zł'}</button>
+        <button type="button" className="cron-run-button" onClick={onRunCron} disabled={!automationReady}>{automationReady ? 'Uruchom teraz' : 'Brak pending ≥ 50 zł'}</button>
       </div>
 
-      <div className="admin-payout-table">
-        <div className="admin-payout-row header">
+      <div className="admin-payout-toolbar">
+        <div className="admin-search-field">
+          <span>⌕</span>
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po ID użytkownika, statusie, Stripe ID..." />
+        </div>
+        <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+          <option value="all">Status: wszystkie</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="paid">Paid</option>
+          <option value="rejected">Rejected</option>
+          <option value="failed">Failed</option>
+        </select>
+        <select value={amountFilter} onChange={event => setAmountFilter(event.target.value)}>
+          <option value="all">Kwota: wszystkie</option>
+          <option value="payable">Gotowe ≥ 50 zł</option>
+          <option value="small">Poniżej 50 zł</option>
+        </select>
+        <button type="button" onClick={exportCsv}>Eksport CSV</button>
+      </div>
+
+      <div className="admin-bulk-bar">
+        <strong>Zaznaczone: {selectedPending.length}</strong>
+        <button type="button" disabled={!selectedPending.length} onClick={() => bulkUpdate('paid')}>Zatwierdź wypłaty</button>
+        <button type="button" className="danger" disabled={!selectedPending.length} onClick={() => bulkUpdate('rejected')}>Odrzuć</button>
+        <button type="button" onClick={() => setSelectedIds([])}>Wyczyść</button>
+        <span>{filteredRequests.length} pozycji po filtrze</span>
+      </div>
+
+      <div className="admin-payout-table admin-payout-table-pro">
+        <div className="admin-payout-row header admin-payout-row-pro">
+          <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(r => r.normalizedStatus === 'pending') && filteredRequests.filter(r => r.normalizedStatus === 'pending').every(r => selectedIds.includes(r.id))} /></span>
           <span>User ID</span>
           <span>Data</span>
           <span>Kwota</span>
@@ -2627,36 +2710,37 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
           <span>Akcje</span>
         </div>
 
-        {requests.length ? requests.map(request => (
-          <div className="admin-payout-row" key={request.id}>
+        {filteredRequests.length ? filteredRequests.map(request => (
+          <div className="admin-payout-row admin-payout-row-pro" key={request.id}>
+            <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
             <span className="mono">{request.user_id ? request.user_id.slice(0, 8) + '...' : '—'}</span>
             <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
-            <span><b>{Number(request.amount || 0).toFixed(2)} zł</b></span>
-            <span className={`payout-status ${request.status || 'pending'}`}>{request.status || 'pending'}</span>
+            <span><b>{request.amountNumber.toFixed(2)} zł</b></span>
+            <span className={`payout-status ${request.normalizedStatus}`}>{request.normalizedStatus}</span>
             <span className="admin-stripe-cell">
-              <b>{request.stripe_status || (request.status === 'rejected' ? 'rejected' : '—')}</b>
+              <b>{request.stripe_status || (request.normalizedStatus === 'rejected' ? 'rejected' : '—')}</b>
               <small>{getStripeLabel(request)}</small>
             </span>
             <span className="admin-actions">
-              {(request.status || 'pending') === 'pending' ? (
+              {request.normalizedStatus === 'pending' ? (
                 <>
-                  <button type="button" disabled={Number(request.amount || 0) < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>✅ Stripe transfer</button>
-                  <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>❌ Odrzuć</button>
+                  <button type="button" disabled={request.amountNumber < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>Zatwierdź</button>
+                  <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
                 </>
               ) : (
-                <span className="admin-action-locked">Zamknięte</span>
+                <span className="admin-action-locked">Szczegóły</span>
               )}
             </span>
           </div>
         )) : (
           <div className="admin-empty">
-            <strong>Brak zgłoszeń wypłat</strong>
-            <span>Gdy tipster poprosi o wypłatę, pojawi się tutaj.</span>
+            <strong>Brak zgłoszeń dla wybranych filtrów</strong>
+            <span>Zmień status, kwotę lub wyszukiwane ID.</span>
           </div>
         )}
       </div>
 
-      <div className="stripe-connect-note">
+      <div className="stripe-connect-note stripe-connect-note-pro">
         <strong>System finalizacji wypłat</strong>
         <span>Manual approve wykonuje realny Stripe transfer. Cron może przetwarzać pending automatycznie, jeżeli ustawisz CRON_SECRET i harmonogram Netlify.</span>
       </div>
