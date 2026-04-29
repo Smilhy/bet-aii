@@ -974,34 +974,93 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     let savedTip = null
     let saveError = null
 
+    const insertDirectTip = async (currentUserId) => {
+      const basePayload = {
+        author_id: currentUserId || user?.id || null,
+        author_name: payload.author_name,
+        league: payload.league,
+        team_home: payload.team_home,
+        team_away: payload.team_away,
+        match_time: payload.match_time,
+        bet_type: payload.bet_type,
+        odds: payload.odds,
+        analysis: payload.analysis,
+        ai_probability: payload.ai_probability,
+        access_type: payload.access_type,
+        price: payload.price,
+        status: 'pending',
+        tags: payload.tags,
+        notify_followers: payload.notify_followers
+      }
+
+      const payloadVariants = [
+        {
+          ...basePayload,
+          user_id: currentUserId || user?.id || null,
+          author_email: user?.email || null,
+          ai_confidence: payload.ai_confidence,
+          ai_score: payload.ai_score,
+          ai_analysis: payload.ai_analysis,
+          is_premium: payload.is_premium
+        },
+        basePayload,
+        {
+          author_id: basePayload.author_id,
+          author_name: basePayload.author_name,
+          league: basePayload.league,
+          team_home: basePayload.team_home,
+          team_away: basePayload.team_away,
+          bet_type: basePayload.bet_type,
+          odds: basePayload.odds,
+          analysis: basePayload.analysis,
+          ai_probability: basePayload.ai_probability,
+          access_type: basePayload.access_type,
+          price: basePayload.price,
+          status: basePayload.status
+        }
+      ]
+
+      let lastError = null
+      for (const item of payloadVariants) {
+        const { data, error } = await supabase
+          .from('tips')
+          .insert(item)
+          .select('*')
+          .single()
+        if (!error) return { data, error: null }
+        lastError = error
+      }
+      return { data: null, error: lastError }
+    }
+
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
-      const response = await fetch('/.netlify/functions/add-user-tip', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: 'Bearer ' + token } : {})
-        },
-        body: JSON.stringify({ tip: payload })
-      })
-      const result = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(result.error || 'Nie udało się zapisać typu')
-      savedTip = result.tip || null
-      saveError = null
-    } catch (serverError) {
-      saveError = serverError
-      const { data: directData, error: directError } = await supabase
-        .from('tips')
-        .insert(payload)
-        .select('*')
-        .single()
-      if (directError) {
-        saveError = new Error(`${serverError.message || serverError} | Direct: ${directError.message || directError}`)
-      } else {
+      const currentUserId = sessionData?.session?.user?.id || user?.id || null
+
+      const { data: directData, error: directError } = await insertDirectTip(currentUserId)
+      if (!directError) {
         savedTip = directData
         saveError = null
+      } else {
+        saveError = directError
+        if (token) {
+          const response = await fetch('/.netlify/functions/add-user-tip', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify({ tip: payload })
+          })
+          const result = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error((result.error || 'Nie udało się zapisać typu') + ' | Supabase: ' + (directError.message || directError))
+          savedTip = result.tip || null
+          saveError = null
+        }
       }
+    } catch (error) {
+      saveError = error
     }
 
     setSaving(false)

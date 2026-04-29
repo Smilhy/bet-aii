@@ -36,9 +36,6 @@ async function tryInsert(supabase, payloads) {
     const { data, error } = await supabase.from('tips').insert(payload).select('*').single()
     if (!error) return { data, error: null }
     lastError = error
-    const msg = String(error.message || '').toLowerCase()
-    const retryable = msg.includes('column') || msg.includes('schema cache') || msg.includes('not-null') || msg.includes('null value') || msg.includes('violates')
-    if (!retryable) break
   }
   return { data: null, error: lastError }
 }
@@ -60,10 +57,9 @@ exports.handler = async (event) => {
     const { tip = {} } = JSON.parse(event.body || '{}')
     const accessType = tip.access_type === 'premium' ? 'premium' : 'free'
     const authorName = toText(tip.author_name, user.email ? user.email.split('@')[0] : 'Użytkownik')
-    const clean = {
+
+    const base = {
       author_id: user.id,
-      user_id: user.id,
-      author_email: user.email || null,
       author_name: authorName,
       league: toText(tip.league),
       team_home: toText(tip.team_home),
@@ -73,55 +69,45 @@ exports.handler = async (event) => {
       odds: toNumber(tip.odds, 0),
       analysis: toText(tip.analysis),
       ai_probability: clampPercent(tip.ai_probability || tip.ai_confidence),
-      ai_confidence: clampPercent(tip.ai_confidence || tip.ai_probability),
-      ai_score: clampPercent(tip.ai_score),
-      ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
-      is_premium: accessType === 'premium',
       price: accessType === 'premium' ? Math.max(0, toNumber(tip.price, 0)) : 0,
+      status: 'pending',
       tags: Array.isArray(tip.tags) ? tip.tags.map(tag => String(tag).trim()).filter(Boolean) : [],
-      notify_followers: tip.notify_followers !== false,
-      status: 'pending'
+      notify_followers: tip.notify_followers !== false
     }
 
-    if (!clean.league || !clean.team_home || !clean.team_away || !clean.bet_type || !clean.odds) {
+    if (!base.league || !base.team_home || !base.team_away || !base.bet_type || !base.odds) {
       return json(400, { error: 'Uzupełnij ligę, drużyny, typ i kurs.' })
     }
 
-    const fullPayload = { ...clean }
-    const withoutNewerColumns = {
-      author_id: clean.author_id,
-      author_name: clean.author_name,
-      league: clean.league,
-      team_home: clean.team_home,
-      team_away: clean.team_away,
-      match_time: clean.match_time,
-      bet_type: clean.bet_type,
-      odds: clean.odds,
-      analysis: clean.analysis,
-      ai_probability: clean.ai_probability,
-      access_type: clean.access_type,
-      price: clean.price,
-      status: clean.status,
-      tags: clean.tags,
-      notify_followers: clean.notify_followers
-    }
-    const minimalPayload = {
-      author_id: clean.author_id,
-      author_name: clean.author_name,
-      league: clean.league,
-      team_home: clean.team_home,
-      team_away: clean.team_away,
-      bet_type: clean.bet_type,
-      odds: clean.odds,
-      analysis: clean.analysis,
-      ai_probability: clean.ai_probability,
-      access_type: clean.access_type,
-      price: clean.price,
-      status: clean.status
-    }
+    const payloads = [
+      {
+        ...base,
+        user_id: user.id,
+        author_email: user.email || null,
+        ai_confidence: clampPercent(tip.ai_confidence || tip.ai_probability),
+        ai_score: clampPercent(tip.ai_score),
+        ai_analysis: toText(tip.ai_analysis || tip.analysis),
+        is_premium: accessType === 'premium'
+      },
+      base,
+      {
+        author_id: base.author_id,
+        author_name: base.author_name,
+        league: base.league,
+        team_home: base.team_home,
+        team_away: base.team_away,
+        bet_type: base.bet_type,
+        odds: base.odds,
+        analysis: base.analysis,
+        ai_probability: base.ai_probability,
+        access_type: base.access_type,
+        price: base.price,
+        status: base.status
+      }
+    ]
 
-    const { data, error } = await tryInsert(supabase, [fullPayload, withoutNewerColumns, minimalPayload])
+    const { data, error } = await tryInsert(supabase, payloads)
     if (error) throw error
 
     return json(200, { ok: true, tip: data })
