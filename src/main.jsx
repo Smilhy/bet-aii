@@ -4000,7 +4000,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view === 'adminPayouts' ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${view === 'adminPayouts' || view === 'adminFinance' ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4170,7 +4170,7 @@ function App() {
         )}
       </main>
 
-      {view !== 'adminPayouts' && <Rightbar ranking={realRanking} />}
+      {view !== 'adminPayouts' && view !== 'adminFinance' && <Rightbar ranking={realRanking} />}
     </div>
   )
 }
