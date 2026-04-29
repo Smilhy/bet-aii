@@ -1,0 +1,11 @@
+WERSJA 211 — LAYOUT FULL WIDTH + ŚRODEK WYŻEJ
+
+Zastosowane zmiany:
+✅ Środkowa kolumna dashboardu przesunięta wyżej — zmniejszony górny padding i odstęp topbara.
+✅ Hero oraz cała zawartość dashboardu zaczynają się wyżej, bez dużej pustej przestrzeni.
+✅ Lewa kolumna lekko rozszerzona.
+✅ Prawa kolumna lekko rozszerzona, w tym obszar live chat/ranking.
+✅ Cały layout jest bardziej full width: 96.5% szerokości ekranu, ale nadal zostaje trochę czarnego tła po bokach.
+✅ Zmieniono tylko CSS/layout — funkcje, logika, loader i login bez zmian.
+
+Bazowano na pliku użytkownika: wersja_210.zip
