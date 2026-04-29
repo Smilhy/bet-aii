@@ -3191,14 +3191,14 @@ function App() {
 
     if (tipsError) {
       console.error(tipsError)
-      setTips(staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips)))
+      setTips([])
       return
     }
 
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = tipsData?.length ? tipsData : staticTips
+    const sourceTips = tipsData || []
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
