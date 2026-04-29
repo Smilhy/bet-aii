@@ -557,7 +557,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
-  const author = tip.author_name || 'AdrianNowak'
+  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
   const authorId = getTipAuthorId(tip)
   const currentUsername = (currentUser?.email || '').split('@')[0]
   const isOwnTip = Boolean(
@@ -885,7 +885,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const premiumAllowed = true
 
   const payload = useMemo(() => ({
-    author_name: user?.email?.split('@')[0] || 'AdrianNowak',
+    author_name: user?.email?.split('@')[0] || 'Użytkownik',
     author_id: user?.id || null,
     league: form.league,
     team_home: form.team_home,
@@ -2091,7 +2091,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
         <div className="payment-summary">
           <span>Tipster</span>
-          <strong>{tip.author_name || 'AdrianNowak'}</strong>
+          <strong>{tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'}</strong>
         </div>
 
         <div className="payment-price">
@@ -4148,7 +4148,7 @@ function App() {
     if (activeFilter === 'all') return true
     if (activeFilter === 'free') return tip.access_type === 'free'
     if (activeFilter === 'premium') return tip.access_type === 'premium'
-    if (activeFilter === 'mine') return (tip.author_id && sessionUser?.id ? tip.author_id === sessionUser.id : (tip.author_name || 'AdrianNowak') === 'AdrianNowak')
+    if (activeFilter === 'mine') return Boolean(sessionUser?.id && (tip.author_id === sessionUser.id || tip.user_id === sessionUser.id))
     return true
   })
 
