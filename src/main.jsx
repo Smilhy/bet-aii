@@ -2045,38 +2045,53 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
 function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
-    <section className="subscription-page">
-      <div className="subscription-hero">
-        <div>
+    <section className="subscription-page subscription-ultra-page">
+      <div className="subscription-hero subscription-ultra-hero">
+        <div className="subscription-hero-copy">
+          <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
           <h1>Subskrypcja BetAI</h1>
-          <p>Stripe SaaS: miesięczny Premium, paywall i dostęp PRO dla tipsterów.</p>
+          <p>Ultra profesjonalny panel Premium: paywall, sprzedaż typów, AI, statystyki PRO i pełna kontrola subskrypcji przez Stripe.</p>
+          <div className="subscription-hero-pills">
+            <em>Stripe Billing</em>
+            <em>Marketplace PRO</em>
+            <em>AI + Statystyki</em>
+          </div>
         </div>
-        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</div>
+        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>
+          <small>Aktualny plan</small>
+          <b>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</b>
+        </div>
       </div>
 
-      <div className="pricing-grid">
-        <div className="pricing-card">
-          <span>FREE</span>
+      <div className="pricing-grid subscription-pricing-grid">
+        <div className="pricing-card subscription-plan-card free-plan-card">
+          <div className="plan-topline">
+            <span>FREE</span>
+            <em>Start</em>
+          </div>
           <strong>0 zł</strong>
           <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
           <ul>
-            <li>✓ 5 darmowych typów dziennie</li>
-            <li>✓ 1 wypłata miesięcznie</li>
-            <li>✕ Sprzedaż typów premium</li>
-            <li>✕ Avatar, bonusy i dropy</li>
+            <li><b>✓</b> 5 darmowych typów dziennie</li>
+            <li><b>✓</b> 1 wypłata miesięcznie</li>
+            <li><i>✕</i> Sprzedaż typów premium</li>
+            <li><i>✕</i> Avatar, bonusy i dropy</li>
           </ul>
         </div>
 
-        <div className="pricing-card featured">
-          <span>PREMIUM</span>
-          <strong>29 zł / miesiąc</strong>
-          <p>Pełny SaaS plan z paywallem i marketplace premium.</p>
+        <div className="pricing-card featured subscription-plan-card premium-plan-card">
+          <div className="plan-topline">
+            <span>PREMIUM</span>
+            <em>Najlepszy wybór</em>
+          </div>
+          <strong>29 zł <small>/ miesiąc</small></strong>
+          <p>Pełny SaaS plan z paywallem, marketplace premium i narzędziami dla aktywnych tipsterów.</p>
           <ul>
-            <li>✓ Sprzedaż typów premium</li>
-            <li>✓ Brak limitu dodawania typów</li>
-            <li>✓ 3 wypłaty miesięcznie</li>
-            <li>✓ Avatar, AI, statystyki, bonusy i dropy</li>
-            <li>✓ Stripe Billing Portal</li>
+            <li><b>✓</b> Sprzedaż typów premium</li>
+            <li><b>✓</b> Brak limitu dodawania typów</li>
+            <li><b>✓</b> 3 wypłaty miesięcznie</li>
+            <li><b>✓</b> Avatar, AI, statystyki, bonusy i dropy</li>
+            <li><b>✓</b> Stripe Billing Portal</li>
           </ul>
           {isPremium ? (
             <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
@@ -2086,9 +2101,11 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
         </div>
       </div>
 
-      <div className="paywall-rules-card">
-        <strong>Paywall aktywny</strong>
-        <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
+      <div className="paywall-rules-card subscription-rules-card">
+        <div>
+          <strong>Paywall aktywny</strong>
+          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
+        </div>
       </div>
     </section>
   )
@@ -4000,7 +4017,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4170,7 +4187,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet'].includes(view) && <Rightbar ranking={realRanking} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions'].includes(view) && <Rightbar ranking={realRanking} />}
     </div>
   )
 }
