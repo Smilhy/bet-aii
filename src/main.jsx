@@ -1616,14 +1616,49 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <h4>Statystyki modelu</h4>
                 <div className="ai-analysis-stats-grid">{rows.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div>
               </div>
-              <div className="ai-analysis-card">
+              <div className="ai-analysis-card ai-analysis-story">
                 <h4>Pełna analiza AI</h4>
-                <p>{analysisTip.model_reason || analysisTip.ai_analysis || analysisTip.analysis || getAiAnalysis(analysisTip)}</p>
-                <ul>
-                  <li>Model porównuje formę, tempo, H2H, xG/proxy, value score oraz kurs.</li>
-                  <li>TOP VALUE pokazuje razem LIVE + PRE, a zakładki LIVE/PRE filtrują je osobno.</li>
-                  <li>To analiza modelu AI, nie porada inwestycyjna.</li>
-                </ul>
+                <div className="ai-analysis-pro-summary">
+                  <div>
+                    <span>Forma</span>
+                    <b>{home}</b>
+                    <p>{statNumber(analysisTip.form_home_score)} pkt/m • xG {statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)}</p>
+                  </div>
+                  <div>
+                    <span>Forma</span>
+                    <b>{away}</b>
+                    <p>{statNumber(analysisTip.form_away_score)} pkt/m • xG {statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)}</p>
+                  </div>
+                  <div>
+                    <span>Value</span>
+                    <b className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip).toFixed(1)} pp</b>
+                    <p>Implied {Number(analysisTip.odds || 0) > 0 ? (100 / Number(analysisTip.odds || 1)).toFixed(1) : '0.0'}% • Model {probabilityOf(analysisTip).toFixed(0)}%</p>
+                  </div>
+                </div>
+
+                <div className="ai-analysis-readable">
+                  <h5>Wniosek modelu</h5>
+                  <p>{analysisTip.model_reason || analysisTip.ai_analysis || analysisTip.analysis || getAiAnalysis(analysisTip)}</p>
+                </div>
+
+                <div className="ai-analysis-bullets">
+                  <div>
+                    <b>Dlaczego ten typ?</b>
+                    <ul>
+                      <li>Model porównuje formę, tempo meczu, H2H, xG/proxy, value score i kurs.</li>
+                      <li>Wybrany rynek: <strong>{normalizeMarket(analysisTip)}</strong>.</li>
+                      <li>Typ AI: <strong>{normalizePick(analysisTip)}</strong>.</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <b>Ocena jakości</b>
+                    <ul>
+                      <li>Badge jakości: <strong>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</strong>.</li>
+                      <li>Kolor value: <strong className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip) >= 0 ? 'zielony dodatni value' : 'czerwony ujemny value'}</strong>.</li>
+                      <li>To analiza modelu AI, nie porada inwestycyjna.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

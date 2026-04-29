@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-153-tabs-analysis-autorefresh",
-  "version": "153.0.0",
+  "name": "betai-wersja-155-ui-pro-analysis",
+  "version": "155.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
