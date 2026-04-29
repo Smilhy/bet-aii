@@ -957,3 +957,13 @@ OPENAI_MODEL=gpt-4o-mini
 
 Po deployu kliknij w zakładce Typy AI: Generate AI Picks.
 Generator zapisuje tylko realne picki z `ai_source = real_ai_engine`.
+
+
+## Wersja 152 — fix confidence + zakładka Zakończone/Rozliczone
+- naprawia błąd Supabase: `record "new" has no field "confidence"`
+- dodaje/utrzymuje zakładki: TOP VALUE, LIVE teraz, Zaraz startują, Zakończone/Rozliczone
+- dodaje widok `ai_settled_matches`
+- dodaje kolumny wymagane przez REAL AI PRO
+- czyści stare triggery PRE/random, które psuły zapis
+
+SQL: `supabase/version_152_tabs_settled_confidence_fix.sql`

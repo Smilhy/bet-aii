@@ -1266,6 +1266,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [minValue, setMinValue] = useState(5)
   const [minOdds, setMinOdds] = useState(1.35)
   const [minProbability, setMinProbability] = useState(60)
+  const [analysisTip, setAnalysisTip] = useState(null)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (liveGenerating || settleGenerating || loading) return
+      if (typeof onGenerateLive === 'function') {
+        onGenerateLive({ silent: true, auto: true })
+      } else if (typeof onRefresh === 'function') {
+        onRefresh()
+      }
+    }, 10 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [onGenerateLive, onRefresh, liveGenerating, settleGenerating, loading])
 
   const aiTips = (tips || [])
     .filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
@@ -1303,12 +1316,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const isLiveMatch = (tip) => {
     const status = String(tip.status || '').toLowerCase()
     const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && liveStatus !== 'NS' && liveStatus !== 'FT' && (status === 'live' || Number(tip.live_minute || 0) > 0)
+    return !isSettled(tip) && !['NS','NOT_STARTED','FT','AET','PEN','FINISHED','MATCH FINISHED'].includes(liveStatus) && (status === 'live' || ['LIVE','1H','2H','HT'].includes(liveStatus) || Number(tip.live_minute || 0) > 0)
   }
   const isUpcomingMatch = (tip) => {
     const status = String(tip.status || '').toLowerCase()
     const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && (status === 'pending' || liveStatus === 'NS')
+    return !isSettled(tip) && !isLiveMatch(tip) && (status === 'pending' || ['NS','NOT_STARTED',''].includes(liveStatus))
   }
   const scoreText = (tip) => {
     const h = tip.live_score_home ?? tip.final_score_home ?? tip.home_score ?? null
@@ -1420,6 +1433,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const donutWin = Math.max(0, Math.min(100, winrate))
   const donutLoss = (wins + losses) ? Math.round((losses / (wins + losses)) * 100) : 0
 
+  const statNumber = (value, suffix = '') => {
+    const n = Number(value)
+    if (!Number.isFinite(n)) return '—'
+    return `${Math.round(n * 10) / 10}${suffix}`
+  }
+  const pct = (value) => statNumber(value, '%')
+  const analysisVerdict = (tip) => {
+    if (!tip) return 'AI'
+    if (isLiveMatch(tip)) return 'LIVE VALUE'
+    if (isUpcomingMatch(tip)) return 'PRE VALUE'
+    return resultLabel(tip).text
+  }
+
   return (
     <section className="ai-premium-dashboard">
       <header className="ai-premium-header">
@@ -1431,7 +1457,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
         </div>
         <div className="ai-header-actions">
-          <span className="ai-live-dot">● Last updated: now</span>
+          <span className="ai-live-dot">● Auto refresh co 10 min</span>
           <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
           <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button>
           <button className="ai-live-action settle" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button>
@@ -1525,7 +1551,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       </div>
 
       <div className="ai-panel ai-recent-picks-panel">
-        <h3>{mode === 'topvalue' ? 'TOP VALUE — tylko najmocniejsze typy AI' : mode === 'live' ? 'Realne mecze LIVE teraz — tylko mocne value' : mode === 'upcoming' ? 'Realne mecze, które zaraz startują — tylko mocne value' : 'Zakończone / rozliczone mecze'}</h3>
+        <h3>{mode === 'topvalue' ? 'TOP VALUE — najmocniejsze realne typy LIVE + PRE' : mode === 'live' ? 'LIVE teraz — tylko mecze trwające' : mode === 'upcoming' ? 'Zaraz startują — tylko mecze PRE' : 'Zakończone / rozliczone mecze'}</h3>
         {filtered.length ? filtered.slice(0, 12).map(tip => {
           const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
           const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
@@ -1541,9 +1567,68 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div><span className={`ai-quality-badge ${q.cls}`}>{q.icon} {q.text}</span></div>
             <div><b className={p < 0 ? 'danger-text' : 'success-text'}>{p >= 0 ? '+' : ''}{Math.round(p)} PLN</b><small>Profit</small></div>
             <div><span className={`ai-result-pill ${res} ${resultLabel(tip).cls}`}>{resultLabel(tip).icon} {resultLabel(tip).text}</span></div>
+            <div><button className="ai-analysis-button" onClick={() => setAnalysisTip(tip)}>Analiza</button></div>
           </div>
         }) : <div className="ai-empty-state"><strong>{mode === 'settled' ? 'Brak zakończonych/rozliczonych meczów' : 'Brak typów AI'}</strong><span>{mode === 'settled' ? 'Kliknij Rozlicz zakończone po meczach FT. Tutaj pojawi się wynik, profit i ikonka wygrana/przegrana/zwrot.' : 'Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj REAL AI PRO i sprawdź API_FOOTBALL_KEY w Netlify ENV.'}</span></div>}
       </div>
+
+      {analysisTip && (() => {
+        const home = analysisTip.team_home || analysisTip.home_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[0] : 'Home')
+        const away = analysisTip.team_away || analysisTip.away_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[1] : 'Away')
+        const hdaHome = Math.max(0, Math.min(100, Math.round(probabilityOf(analysisTip))))
+        const hdaDraw = Math.max(0, Math.min(100, Math.round(100 - hdaHome - 20)))
+        const hdaAway = Math.max(0, Math.min(100, 100 - hdaHome - hdaDraw))
+        const rows = [
+          ['Forma gospodarzy', statNumber(analysisTip.form_home_score)],
+          ['Forma gości', statNumber(analysisTip.form_away_score)],
+          ['xG gospodarzy', statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)],
+          ['xG gości', statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)],
+          ['Strzały', `${statNumber(analysisTip.shots_home ?? analysisTip.shots_total_home)} : ${statNumber(analysisTip.shots_away ?? analysisTip.shots_total_away)}`],
+          ['Strzały celne', `${statNumber(analysisTip.shots_on_home)} : ${statNumber(analysisTip.shots_on_away)}`],
+          ['Posiadanie', `${pct(analysisTip.possession_home)} : ${pct(analysisTip.possession_away)}`],
+          ['Rzuty rożne', `${statNumber(analysisTip.corners_home)} : ${statNumber(analysisTip.corners_away)}`],
+          ['Groźne ataki', `${statNumber(analysisTip.dangerous_attacks_home)} : ${statNumber(analysisTip.dangerous_attacks_away)}`],
+          ['BTTS H2H', pct(analysisTip.h2h_btts_rate)],
+          ['Over 2.5 H2H', pct(analysisTip.h2h_over25_rate)],
+          ['Śr. gole H2H', statNumber(analysisTip.h2h_avg_goals)]
+        ]
+        return (
+          <div className="ai-analysis-overlay" onClick={() => setAnalysisTip(null)}>
+            <div className="ai-analysis-modal" onClick={e => e.stopPropagation()}>
+              <button className="ai-analysis-close" onClick={() => setAnalysisTip(null)}>×</button>
+              <h3>Analiza meczu</h3>
+              <div className="ai-analysis-match-card">
+                <h2>{home} vs {away}</h2>
+                <p>{normalizeLeague(analysisTip)} • {isLiveMatch(analysisTip) ? `LIVE ${analysisTip.live_minute || '-'}' • wynik ${scoreText(analysisTip)}` : `start ${kickoffLabel(analysisTip)}`}</p>
+                <div className="ai-analysis-tags"><span>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</span><span>{analysisVerdict(analysisTip)}</span><span>{normalizeMarket(analysisTip)}</span></div>
+                <div className="ai-analysis-top-grid">
+                  <div><small>Typ AI</small><b>{normalizePick(analysisTip)}</b></div>
+                  <div><small>Prawdopodobieństwo</small><b>{probabilityOf(analysisTip).toFixed(0)}%</b></div>
+                  <div><small>Kurs</small><b>{Number(analysisTip.odds || 0).toFixed(2)}</b></div>
+                  <div><small>Value</small><b>{valueOf(analysisTip).toFixed(1)} pp</b></div>
+                </div>
+              </div>
+              <div className="ai-analysis-card">
+                <h4>Rozkład H / D / A</h4>
+                {[['H', hdaHome], ['D', hdaDraw], ['A', hdaAway]].map(([label, value]) => <p key={label}><span>{label}</span><i><em style={{width:`${value}%`}} /></i><b>{value}%</b></p>)}
+              </div>
+              <div className="ai-analysis-card">
+                <h4>Statystyki modelu</h4>
+                <div className="ai-analysis-stats-grid">{rows.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div>
+              </div>
+              <div className="ai-analysis-card">
+                <h4>Pełna analiza AI</h4>
+                <p>{analysisTip.model_reason || analysisTip.ai_analysis || analysisTip.analysis || getAiAnalysis(analysisTip)}</p>
+                <ul>
+                  <li>Model porównuje formę, tempo, H2H, xG/proxy, value score oraz kurs.</li>
+                  <li>TOP VALUE pokazuje razem LIVE + PRE, a zakładki LIVE/PRE filtrują je osobno.</li>
+                  <li>To analiza modelu AI, nie porada inwestycyjna.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </section>
   )
 }

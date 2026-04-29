@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-151-killer-value-filter",
-  "version": "151.0.0",
+  "name": "betai-wersja-153-tabs-analysis-autorefresh",
+  "version": "153.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
