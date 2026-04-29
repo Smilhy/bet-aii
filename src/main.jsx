@@ -1010,7 +1010,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         odds: Number(payload.odds),
         analysis: payload.analysis || '',
         ai_probability: Number(payload.ai_probability || 0),
-        ai_confidence: Number(payload.ai_confidence || payload.ai_probability || 0),
         ai_score: Number(payload.ai_score || 0),
         ai_analysis: payload.ai_analysis || payload.analysis || '',
         access_type: payload.access_type === 'premium' ? 'premium' : 'free',
@@ -1025,17 +1024,36 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const firstAttempt = await supabase.from('tips').insert(fullPayload).select('*').single()
       if (!firstAttempt.error) return firstAttempt
 
-      console.warn('tips full insert failed, trying safe payload:', firstAttempt.error)
+      console.warn('tips full insert failed, trying schema-compatible payload:', firstAttempt.error)
       saveTipDebug('PEŁNY ZAPIS NIE PRZESZEDŁ', firstAttempt.error.message || String(firstAttempt.error))
+
+      const compatiblePayload = { ...fullPayload }
+      let lastError = firstAttempt.error
+      for (let i = 0; i < 10; i += 1) {
+        const missingColumn = String(lastError?.message || '').match(/'([^']+)' column of 'tips'/)?.[1]
+        if (!missingColumn || !(missingColumn in compatiblePayload)) break
+        delete compatiblePayload[missingColumn]
+        saveTipDebug('USUNIĘTO BRAKUJĄCĄ KOLUMNĘ', missingColumn)
+        const retry = await supabase.from('tips').insert(compatiblePayload).select('*').single()
+        if (!retry.error) return retry
+        lastError = retry.error
+      }
 
       const safePayload = {
         user_id: uid,
+        author_id: uid,
+        author_name: fullPayload.author_name,
         username: fullPayload.author_name,
+        league: fullPayload.league,
+        team_home: fullPayload.team_home,
+        team_away: fullPayload.team_away,
         match: fullPayload.match,
+        bet_type: fullPayload.bet_type,
         prediction: fullPayload.bet_type,
         odds: fullPayload.odds,
+        access_type: fullPayload.access_type,
         is_premium: fullPayload.is_premium,
-        league: fullPayload.league,
+        price: fullPayload.price,
         status: 'pending'
       }
 

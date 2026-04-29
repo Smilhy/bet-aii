@@ -61,7 +61,6 @@ exports.handler = async (event) => {
       odds: toNumber(tip.odds, 0),
       analysis: toText(tip.analysis),
       ai_probability: clampPercent(tip.ai_probability || tip.ai_confidence),
-      ai_confidence: clampPercent(tip.ai_confidence || tip.ai_probability),
       ai_score: clampPercent(tip.ai_score),
       ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
@@ -77,9 +76,46 @@ exports.handler = async (event) => {
     }
 
     const { data, error } = await supabase.from('tips').insert(payload).select('*').single()
-    if (error) throw error
+    if (!error) return json(200, { ok: true, tip: data })
 
-    return json(200, { ok: true, tip: data })
+    const safePayload = {
+      user_id: user.id,
+      author_id: user.id,
+      author_email: user.email || null,
+      author_name: authorName,
+      username: authorName,
+      league: payload.league,
+      team_home: payload.team_home,
+      team_away: payload.team_away,
+      match: `${payload.team_home} vs ${payload.team_away}`,
+      match_time: payload.match_time,
+      bet_type: payload.bet_type,
+      prediction: payload.bet_type,
+      odds: payload.odds,
+      analysis: payload.analysis,
+      ai_probability: payload.ai_probability,
+      ai_score: payload.ai_score,
+      ai_analysis: payload.ai_analysis,
+      access_type: payload.access_type,
+      is_premium: payload.is_premium,
+      price: payload.price,
+      status: 'pending',
+      tags: payload.tags,
+      notify_followers: payload.notify_followers
+    }
+
+    let retryPayload = { ...safePayload }
+    let lastError = error
+    for (let i = 0; i < 10; i += 1) {
+      const missingColumn = String(lastError?.message || '').match(/'([^']+)' column of 'tips'/)?.[1]
+      if (!missingColumn || !(missingColumn in retryPayload)) break
+      delete retryPayload[missingColumn]
+      const retry = await supabase.from('tips').insert(retryPayload).select('*').single()
+      if (!retry.error) return json(200, { ok: true, tip: retry.data, warning: 'Zapisano typ w trybie zgodności ze starszym schematem bazy.' })
+      lastError = retry.error
+    }
+
+    throw lastError
   } catch (error) {
     console.error('add-user-tip error:', error)
     return json(500, { error: error.message || 'Nie udało się zapisać kuponu.' })
