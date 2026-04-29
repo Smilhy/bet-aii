@@ -1,0 +1,15 @@
+WERSJA 213 — RIGHTBAR HERO ALIGN
+
+Zrobione:
+- prawa kolumna dashboardu (chat + ranking + AI typy dnia + wyniki) przesunięta do góry,
+- start prawej kolumny wyrównany do góry hero / środkowej sekcji,
+- usunięty dodatkowy górny odstęp przez nadpisanie padding-top i margin-top,
+- zakres zmian ograniczony do layoutu/CSS.
+
+Bez zmian:
+- logika aplikacji,
+- live chat,
+- ranking,
+- AI typy dnia,
+- loader,
+- login.

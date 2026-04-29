@@ -6462,3 +6462,31 @@ html,body,#root{
     margin-bottom:0!important;
   }
 }
+
+/* Wersja 213 — prawa kolumna dashboardu wyrównana do góry hero
+   Zakres: tylko layout/CSS prawej kolumny. Funkcje, login i loader bez zmian. */
+@media (min-width:1001px){
+  .rightbar{
+    padding-top:76px!important;
+    margin-top:0!important;
+    align-self:start!important;
+  }
+
+  .rightbar .live-chat-panel,
+  .rightbar .real-ranking-panel,
+  .rightbar .panel{
+    margin-top:0!important;
+  }
+}
+
+@media (min-width:1201px){
+  .rightbar{
+    padding-top:76px!important;
+  }
+}
+
+@media (min-width:1001px) and (max-width:1200px){
+  .rightbar{
+    padding-top:76px!important;
+  }
+}
