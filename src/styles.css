@@ -5663,3 +5663,86 @@ tr:hover td,.payout-row:not(.header):hover,.admin-payout-row:not(.header):hover{
 @media(max-width:1120px){.app-shell.no-rightbar-page .ranking-hero-stage{opacity:.50!important;right:52px!important;left:42%!important}.app-shell.no-rightbar-page .ranking-colorloop-hero .leaderboard-badge{right:28px!important;z-index:6!important}}
 @media(max-width:760px){.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{padding:30px 22px 190px!important;min-height:455px!important}.app-shell.no-rightbar-page .ranking-hero-stage{left:0!important;right:0!important;bottom:22px!important;opacity:.88!important;transform:scale(.82)!important}.app-shell.no-rightbar-page .ranking-colorloop-hero .leaderboard-badge{position:relative!important;right:auto!important;top:auto!important;transform:none!important;width:100%!important;height:76px!important;margin-top:22px!important}.app-shell.no-rightbar-page .ranking-hero-metrics{gap:12px!important}.app-shell.no-rightbar-page .ranking-hero-metrics span{font-size:12px!important}}
 @media (prefers-reduced-motion: reduce){.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero,.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:before,.app-shell.no-rightbar-page .ranking-step,.app-shell.no-rightbar-page .ranking-trophy,.app-shell.no-rightbar-page .ranking-colorloop-hero .leaderboard-badge{animation:none!important}}
+
+/* VERSION 188 — Ranking banner uses the exact selected gold image + looping color glow */
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{
+  isolation:isolate!important;
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:280px!important;
+  padding:0!important;
+  border-radius:24px!important;
+  border:1px solid rgba(255,184,74,.36)!important;
+  background-image:url('/ranking-gold-banner-selected.png')!important;
+  background-size:100% 100%!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  box-shadow:
+    0 32px 105px rgba(0,0,0,.58),
+    0 0 42px rgba(255,184,74,.22),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+  animation:rankingSelectedBannerGlow 9s ease-in-out infinite!important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  opacity:.56!important;
+  mix-blend-mode:color!important;
+  background:linear-gradient(105deg,
+    rgba(31,226,174,.95) 0%,
+    rgba(31,226,174,.65) 22%,
+    rgba(168,85,247,.95) 48%,
+    rgba(255,184,74,.95) 76%,
+    rgba(255,184,74,.72) 100%)!important;
+  background-size:330% 330%!important;
+  animation:rankingSelectedColorLoop 9s ease-in-out infinite!important;
+}
+.app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:after{
+  content:""!important;
+  position:absolute!important;
+  inset:-40% -20%!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(112deg,transparent 14%,rgba(255,255,255,.20) 25%,transparent 36%),
+    radial-gradient(circle at 70% 42%,rgba(255,214,87,.28),transparent 24%),
+    radial-gradient(circle at 23% 48%,rgba(31,226,174,.20),transparent 21%),
+    radial-gradient(circle at 49% 50%,rgba(168,85,247,.22),transparent 25%)!important;
+  mix-blend-mode:screen!important;
+  opacity:.72!important;
+  transform:translateX(-26%)!important;
+  animation:rankingSelectedShimmer 5.8s ease-in-out infinite!important;
+}
+.app-shell.no-rightbar-page .ranking-colorloop-hero > *{
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+@keyframes rankingSelectedColorLoop{
+  0%,100%{background-position:0% 50%;opacity:.52;filter:hue-rotate(0deg) saturate(1.08)}
+  33%{background-position:48% 50%;opacity:.60;filter:hue-rotate(24deg) saturate(1.18)}
+  66%{background-position:100% 50%;opacity:.50;filter:hue-rotate(-12deg) saturate(1.14)}
+}
+@keyframes rankingSelectedShimmer{
+  0%,100%{transform:translateX(-30%) rotate(.001deg);opacity:.40}
+  50%{transform:translateX(18%) rotate(.001deg);opacity:.82}
+}
+@keyframes rankingSelectedBannerGlow{
+  0%,100%{border-color:rgba(31,226,174,.36);box-shadow:0 32px 105px rgba(0,0,0,.58),0 0 44px rgba(31,226,174,.26),inset 0 1px 0 rgba(255,255,255,.10)}
+  33%{border-color:rgba(168,85,247,.40);box-shadow:0 32px 105px rgba(0,0,0,.58),0 0 54px rgba(168,85,247,.28),inset 0 1px 0 rgba(255,255,255,.10)}
+  66%{border-color:rgba(255,184,74,.46);box-shadow:0 32px 105px rgba(0,0,0,.58),0 0 62px rgba(255,184,74,.34),inset 0 1px 0 rgba(255,255,255,.10)}
+}
+@media(max-width:900px){
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{min-height:210px!important;background-size:cover!important;background-position:center!important}
+}
+@media(max-width:560px){
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{min-height:170px!important;border-radius:20px!important;background-size:cover!important;background-position:center!important}
+}
+@media (prefers-reduced-motion: reduce){
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero,
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:before,
+  .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero:after{animation:none!important}
+}
