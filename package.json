@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-201-dashboard-ultra-pro",
-  "version": "201.0.0",
+  "name": "betai-wersja-202-full-width",
+  "version": "202.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
