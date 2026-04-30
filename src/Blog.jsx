@@ -6,21 +6,19 @@ const Blog = () => {
   const [articles, setArticles] = useState([]);
   const parser = new Parser();
 
-  // Function to fetch articles from RSS
   const fetchArticles = async () => {
     try {
       const feed = await parser.parseURL('https://www.sport.pl/rss/');
-      setArticles(feed.items); // Set fetched articles
+      setArticles(feed.items); // Pobieramy artykuły
     } catch (error) {
-      console.error('Error fetching articles:', error);
+      console.error('Błąd podczas pobierania artykułów:', error);
     }
   };
 
-  // Fetch articles every 10 minutes
   useEffect(() => {
-    fetchArticles(); // Initial fetch
-    const interval = setInterval(fetchArticles, 10 * 60 * 1000); // Every 10 minutes
-    return () => clearInterval(interval); // Cleanup on unmount
+    fetchArticles(); // Początkowe pobieranie
+    const interval = setInterval(fetchArticles, 10 * 60 * 1000); // Odświeżanie co 10 minut
+    return () => clearInterval(interval);
   }, []);
 
   return (
