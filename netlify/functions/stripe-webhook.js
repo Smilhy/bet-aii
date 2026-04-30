@@ -1,6 +1,5 @@
 const Stripe = require('stripe');
 const { getSupabase, forcePremiumUpdate, normalizeEmail } = require('./stripe-premium-utils');
-const { recordWalletTopup } = require('./sync-wallet-session');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -275,7 +274,18 @@ exports.handler = async (event) => {
       const userId = session.client_reference_id || session.metadata?.user_id;
 
       if (userId && kind === 'wallet_topup') {
-        await recordWalletTopup(supabase, session, userId);
+        const amount = Number(session.metadata.amount || 0);
+        if (amount > 0) {
+          const { error } = await supabase.from('wallet_transactions').insert({
+            user_id: userId,
+            amount,
+            type: 'topup',
+            provider: 'stripe',
+            provider_session_id: session.id,
+            status: 'completed'
+          });
+          if (error && !String(error.message || '').toLowerCase().includes('duplicate')) throw error;
+        }
       }
 
       if (kind === 'tip_purchase') await handleTipPurchase(supabase, session);

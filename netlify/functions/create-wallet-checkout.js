@@ -27,7 +27,6 @@ exports.handler = async (event) => {
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: email || undefined,
-      client_reference_id: user_id,
       line_items: [
         {
           price_data: {
@@ -46,7 +45,6 @@ exports.handler = async (event) => {
       metadata: {
         kind: 'wallet_topup',
         user_id,
-        email: email || '',
         amount: String(topupAmount)
       }
     });

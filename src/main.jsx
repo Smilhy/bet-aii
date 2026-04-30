@@ -3690,39 +3690,13 @@ function App() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('wallet_topup') === 'success') {
-      const sessionId = params.get('session_id')
-      async function syncWalletAfterStripe() {
-        try {
-          showToast({ type: 'info', title: 'Płatność zakończona', message: 'Potwierdzam płatność Stripe i aktualizuję saldo...' })
-          if (sessionId && sessionUser?.id) {
-            const response = await fetch('/.netlify/functions/sync-wallet-session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                session_id: sessionId,
-                expected_user_id: sessionUser.id
-              })
-            })
-            const data = await response.json().catch(() => ({}))
-            if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować salda.')
-            setWalletBalance(Math.max(0, Number(data.balance || 0)))
-            showToast({ type: 'success', title: 'Saldo zaktualizowane', message: `Dodano ${Number(data.amount || 0).toFixed(2)} zł do portfela.` })
-          } else {
-            showToast({ type: 'success', title: 'Płatność zakończona', message: 'Stripe potwierdził płatność. Saldo odświeży się po zalogowaniu.' })
-          }
-          if (sessionUser?.id) {
-            await fetchWalletBalance(sessionUser.id)
-            await fetchTipsterEarnings(sessionUser.id)
-            await fetchStripeConnectStatus(sessionUser.id)
-          }
-        } catch (error) {
-          showToast({ type: 'error', title: 'Saldo nie zostało odświeżone', message: formatAppErrorMessage(error.message) })
-          if (sessionUser?.id) fetchWalletBalance(sessionUser.id)
-        } finally {
-          window.history.replaceState({}, document.title, window.location.pathname)
-        }
+      showToast({ type: 'success', title: 'Płatność zakończona', message: 'Jeśli Stripe potwierdził płatność, saldo zaraz się odświeży.' })
+      if (sessionUser?.id) {
+        fetchWalletBalance(sessionUser.id)
+        fetchTipsterEarnings(sessionUser.id)
+        fetchStripeConnectStatus(sessionUser.id)
       }
-      syncWalletAfterStripe()
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('wallet_topup') === 'cancel') {
       showToast({ type: 'info', title: 'Płatność anulowana', message: 'Doładowanie nie zostało opłacone.' })
