@@ -389,17 +389,21 @@ function formatAppErrorMessage(rawMessage) {
 function getTipErrorToast(cleanMessage) {
   if (cleanMessage.includes('5 typów dziennie') || cleanMessage.includes('FREE')) {
     return {
-      type: 'error',
+      type: 'limit',
       title: 'Limit konta FREE',
-      message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.'
+      message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.',
+      cta: 'Przejdź na Premium',
+      event: 'betai:start-premium-checkout'
     }
   }
 
   if (cleanMessage.includes('Premium') || cleanMessage.includes('premium')) {
     return {
-      type: 'error',
+      type: 'premium',
       title: 'Wymagane konto Premium',
-      message: 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
+      message: 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.',
+      cta: 'Aktywuj Premium',
+      event: 'betai:start-premium-checkout'
     }
   }
 
@@ -988,7 +992,30 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
   const freeDailyLimit = 5
   const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
+  const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
+  const freeLimitBlocked = !premiumAllowed && freeTipsLeft <= 0
 
+  const showPremiumRequired = () => {
+    const premiumMessage = 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
+    saveTipDebug('BLOKADA PREMIUM', premiumMessage)
+    setMessage('🔒 ' + premiumMessage)
+    onToast?.({ type: 'premium', title: 'Wymagane konto Premium', message: premiumMessage, cta: 'Aktywuj Premium', event: 'betai:start-premium-checkout' })
+  }
+
+  const showFreeLimitReached = () => {
+    const limitMessage = 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
+    saveTipDebug('LIMIT FREE', limitMessage)
+    setMessage('❌ ' + limitMessage)
+    onToast?.({ type: 'limit', title: 'Limit konta FREE', message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.', cta: 'Przejdź na Premium', event: 'betai:start-premium-checkout' })
+  }
+
+  const chooseAccessType = (accessType) => {
+    if (accessType === 'premium' && !premiumAllowed) {
+      showPremiumRequired()
+      return
+    }
+    update('access_type', accessType)
+  }
 
   useEffect(() => {
     let active = true
@@ -1054,17 +1081,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
     if (payload.access_type === 'premium' && !premiumAllowed) {
-      const premiumMessage = 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
-      saveTipDebug('BLOKADA PREMIUM', premiumMessage)
-      setMessage('🔒 ' + premiumMessage)
-      onToast?.({ type: 'error', title: 'Wymagane konto Premium', message: premiumMessage })
+      showPremiumRequired()
       return
     }
-    if (!premiumAllowed && dailyTipCount >= freeDailyLimit) {
-      const limitMessage = 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
-      saveTipDebug('LIMIT FREE', limitMessage)
-      setMessage('❌ ' + limitMessage)
-      onToast?.({ type: 'error', title: 'Limit konta FREE', message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.' })
+    if (freeLimitBlocked) {
+      showFreeLimitReached()
       return
     }
     saveTipDebug('KLIK DODAJ TYP', 'formularz wysłany')
@@ -1200,10 +1221,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       <div className="page-title">
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
-        <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
-          {premiumAllowed
-            ? 'Konto Premium/Admin: możesz dodawać typy bez limitu i publikować typy premium.'
-            : `Konto FREE: możesz dodać maksymalnie 5 typów dziennie. Pozostało dzisiaj: ${freeTipsLeft}/5. Typy premium wymagają konta Premium.`}
+        <div className={`plan-limit-card ${premiumAllowed ? 'premium' : freeLimitBlocked ? 'blocked' : 'free'}`}>
+          <div className="plan-limit-head">
+            <span>{premiumAllowed ? '👑 Premium/Admin' : freeLimitBlocked ? '🚫 Limit FREE osiągnięty' : '💧 Konto FREE'}</span>
+            <strong>{premiumAllowed ? 'Bez limitu' : `${freeTipsLeft}/5 zostało`}</strong>
+          </div>
+          <div className="plan-limit-bar"><i style={{ width: `${premiumAllowed ? 100 : freeLimitPercent}%` }} /></div>
+          <p>{premiumAllowed
+            ? 'Możesz dodawać typy bez limitu i publikować typy premium.'
+            : freeLimitBlocked
+              ? 'Masz maksymalny limit 5 typów dziennie. Przejdź na Premium, aby dodawać dalej.'
+              : `Możesz dodać jeszcze ${freeTipsLeft} typów dzisiaj. Typy premium wymagają konta Premium.`}</p>
+          {!premiumAllowed && <button type="button" className="mini-premium-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Odblokuj Premium</button>}
         </div>
       </div>
 
@@ -1246,15 +1275,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         <label>Dostęp</label>
         <div className="access-grid">
-          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => update('access_type', 'free')}>
+          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => chooseAccessType('free')}>
             <strong>💧 Darmowy</strong>
             <span>Twój typ będzie widoczny dla wszystkich</span>
           </button>
-          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
+          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''} ${!premiumAllowed ? 'locked' : ''}`} onClick={() => chooseAccessType('premium')}>
             <strong>🔒 Premium</strong>
             <span>Możesz publikować płatne typy premium.</span>
           </button>
         </div>
+
+        {!premiumAllowed && (
+          <div className="premium-lock-info warning">
+            🔒 Nie posiadasz konta Premium — publikowanie płatnych typów jest zablokowane.
+            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Aktywuj Premium</button>
+          </div>
+        )}
 
         {isPremium && premiumAllowed && (
           <div className="premium-lock-info success">
@@ -1286,8 +1322,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
 
-        <button className="submit-btn" type="button" onClick={submitTip} disabled={saving}>
-          {saving ? 'Zapisywanie...' : '✈ Dodaj typ'}
+        <button className={`submit-btn ${freeLimitBlocked ? 'limit-blocked' : ''}`} type="button" onClick={submitTip} disabled={saving}>
+          {saving ? 'Zapisywanie...' : freeLimitBlocked ? '🚫 Limit 5/5 — przejdź na Premium' : '✈ Dodaj typ'}
         </button>
       </form>
     </section>
@@ -1297,13 +1333,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
 function Toast({ toast, onClose }) {
   if (!toast) return null
+  const runAction = () => {
+    if (toast.event && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(toast.event))
+    if (toast.onClick) toast.onClick()
+  }
   return (
     <div className={`toast ${toast.type || 'success'}`}>
-      <div>
+      <div className="toast-icon">{toast.type === 'success' ? '✅' : toast.type === 'premium' ? '👑' : toast.type === 'limit' ? '🚫' : '⚠️'}</div>
+      <div className="toast-body">
         <strong>{toast.title}</strong>
         <span>{toast.message}</span>
+        {toast.cta && <button type="button" className="toast-cta" onClick={runAction}>{toast.cta}</button>}
       </div>
-      <button onClick={onClose}>×</button>
+      <button className="toast-close" onClick={onClose}>×</button>
     </div>
   )
 }
