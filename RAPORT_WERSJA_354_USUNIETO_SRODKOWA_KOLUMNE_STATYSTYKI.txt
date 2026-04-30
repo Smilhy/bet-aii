@@ -1,0 +1,4 @@
+Wersja 354
+- zakładka Statystyki została wyczyszczona
+- usunięto środkową kolumnę / środkową ramkę z widoku Statystyki
+- pozostawiono lewy sidebar, górny pasek i prawy panel bez zmian
