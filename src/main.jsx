@@ -4018,7 +4018,7 @@ function App() {
     const currentEmail = normalizeEmail(sessionUser?.email)
     if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
       setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split(')[0], is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active' }))
+      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active' }))
       return
     }
 
