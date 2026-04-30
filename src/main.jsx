@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
+const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 var userPlan = 'free'; // global anti-crash fallback
 
@@ -246,9 +247,33 @@ function getUserProfileView(user) {
 
 
 
+function getProfileEmail(user) {
+  return normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
+}
+
+function getProfileUsername(user) {
+  const email = getProfileEmail(user)
+  return normalizeEmail(
+    user?.username ||
+    user?.author_name ||
+    user?.name ||
+    user?.user_metadata?.username ||
+    user?.user_metadata?.name ||
+    user?.raw_user_meta_data?.username ||
+    (email ? email.split('@')[0] : '')
+  )
+}
+
+function isGuaranteedPremiumIdentity(user) {
+  const email = getProfileEmail(user)
+  const username = getProfileUsername(user)
+  return BETAI_PREMIUM_EMAILS.includes(email) || BETAI_PREMIUM_USERNAMES.includes(username)
+}
+
 function isAdminUser(user) {
-  const email = normalizeEmail(user?.email || user?.author_email)
-  return BETAI_ADMIN_EMAILS.includes(email) || Boolean(user?.is_admin)
+  const email = getProfileEmail(user)
+  const username = getProfileUsername(user)
+  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv' || Boolean(user?.is_admin)
 }
 
 function isPremiumAccount(plan) {
@@ -258,16 +283,16 @@ function isPremiumAccount(plan) {
 
 function isPremiumProfile(profile) {
   if (!profile) return false
-  const email = normalizeEmail(profile.email || profile.author_email)
-  return BETAI_PREMIUM_EMAILS.includes(email) ||
+  return isGuaranteedPremiumIdentity(profile) ||
     Boolean(profile.is_premium) ||
     Boolean(profile.is_admin) ||
     isPremiumAccount(profile.plan) ||
-    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase())
+    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
+    ['admin', 'premium'].includes(String(profile.status || '').toLowerCase())
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
-  return isAdminUser(user) || isPremiumProfile(user) || isPremiumAccount(plan)
+  return isAdminUser(user) || isGuaranteedPremiumIdentity(user) || isPremiumProfile(user) || isPremiumAccount(plan)
 }
 
 function getPlanLimits(plan) {
@@ -1006,7 +1031,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [dailyTipCount, setDailyTipCount] = useState(0)
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan)
+  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan) || isGuaranteedPremiumIdentity(user)
   const freeDailyLimit = 5
   const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
   const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
@@ -4438,7 +4463,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={{ ...(sessionUser || {}), ...(accountProfile || {}) }} userPlan={accountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={{ ...(accountProfile || {}), ...(sessionUser || {}), email: sessionUser?.email || accountProfile?.email, username: accountProfile?.username || sessionUser?.email?.split('@')[0] }} userPlan={accountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -4454,7 +4479,7 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
-            user={{ ...(sessionUser || {}), ...(accountProfile || {}) }}
+            user={{ ...(accountProfile || {}), ...(sessionUser || {}), email: sessionUser?.email || accountProfile?.email, username: accountProfile?.username || sessionUser?.email?.split('@')[0] }}
             userPlan={accountPlan}
             onToast={showToast}
             onTipSaved={(savedTip) => {
