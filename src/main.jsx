@@ -253,8 +253,16 @@ function isPremiumAccount(plan) {
   return ['premium', 'vip', 'active', 'trialing', 'admin'].includes(value)
 }
 
+function isPremiumProfile(profile) {
+  if (!profile) return false
+  return Boolean(profile.is_premium) ||
+    Boolean(profile.is_admin) ||
+    isPremiumAccount(profile.plan) ||
+    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase())
+}
+
 function hasUnlimitedTipAccess(user, plan = 'free') {
-  return isAdminUser(user) || isPremiumAccount(plan)
+  return isAdminUser(user) || isPremiumAccount(plan) || isPremiumProfile(user)
 }
 
 function getPlanLimits(plan) {
@@ -289,8 +297,8 @@ function hasActiveTipsterSubscription(tip, subscriptions = []) {
 
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
-  if (profile?.isAdmin) return 'ADMIN'
-  if (isPremiumAccount(plan)) return 'VIP'
+  if (profile?.isAdmin || Boolean(user?.is_admin)) return 'ADMIN'
+  if (isPremiumAccount(plan) || isPremiumProfile(user)) return 'VIP'
   return 'FREE'
 }
 
@@ -3177,6 +3185,7 @@ function App() {
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
   const [accountPlan, setUserPlan] = useState('free')
+  const [accountProfile, setAccountProfile] = useState(null)
   const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
@@ -4004,10 +4013,12 @@ function App() {
     const currentEmail = String(sessionUser?.email || '').toLowerCase()
     if (currentEmail === 'smilhytv@gmail.com') {
       setUserPlan('premium')
+      setAccountProfile(prev => ({ ...(prev || {}), email: currentEmail, is_admin: true, is_premium: true, plan: 'premium', subscription_status: 'active' }))
       return
     }
 
     if (!isSupabaseConfigured || !supabase || !userId) {
+      setAccountProfile(null)
       setUserPlan('free')
       return
     }
@@ -4027,18 +4038,17 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
+      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
       .eq('id', userId)
       .maybeSingle()
 
     if (!profileError) profileData = profData
+    setAccountProfile(profileData || null)
 
     const subPremium = subscriptionData && (
       subscriptionData.plan === 'premium' || ['active','trialing'].includes(subscriptionData.status)
     )
-    const profilePremium = profileData && (
-      profileData.plan === 'premium' || ['active','trialing'].includes(profileData.subscription_status)
-    )
+    const profilePremium = isPremiumProfile(profileData)
 
     // Important: profile can be newer than stale user_subscriptions. Do not return FREE only because old row says inactive.
     if (subPremium || profilePremium) {
@@ -4423,7 +4433,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={sessionUser} userPlan={accountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={{ ...(sessionUser || {}), ...(accountProfile || {}) }} userPlan={accountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -4439,7 +4449,7 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
-            user={sessionUser}
+            user={{ ...(sessionUser || {}), ...(accountProfile || {}) }}
             userPlan={accountPlan}
             onToast={showToast}
             onTipSaved={(savedTip) => {
