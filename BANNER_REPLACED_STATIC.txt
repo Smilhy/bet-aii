@@ -1,0 +1,1 @@
+Banner replaced with provided image. No animation applied.

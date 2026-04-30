@@ -1,0 +1,10 @@
+WERSJA 202 — FULL WIDTH DASHBOARD
+
+Zmiany:
+- Dashboard rozciągnięty do pełnej szerokości okna.
+- Usunięte ograniczenie max-width:1600px i centrowanie layoutu.
+- Zmniejszone puste miejsce po bokach.
+- Prawa kolumna chat/ranking poszerzona do 440–520px zależnie od ekranu.
+- Chat ma większą wysokość i szersze dymki wiadomości.
+- Feed/main content korzysta z pełnej dostępnej szerokości.
+- Zachowane loader/login i logika aplikacji.

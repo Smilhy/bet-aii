@@ -1,1 +1,0 @@
-WERSJA 211 NA SZTYWNO POD NOWY DASHBOARD\n\nWrzuć całą zawartość na Netlify, zrób Ctrl+Shift+R i kliknij Wejdź w konto w Lidze.\n

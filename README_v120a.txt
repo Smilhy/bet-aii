@@ -1,1 +1,0 @@
-Wersja 120a: zmienione zasady punktów: analiza +1, wygrany typ +1, przegrany typ -2.

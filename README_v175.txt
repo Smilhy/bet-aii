@@ -1,1 +1,0 @@
-Wersja 175: naprawione wykrywanie nadawcy i odbiorcy napiwku. Przycisk Wyślij napiwek działa także gdy email zalogowanego usera nie jest dostępny bezpośrednio w state.user.

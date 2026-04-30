@@ -1,0 +1,17 @@
+WERSJA 203 — 75% CENTERED LAYOUT
+
+Baza: wersja_202_full_width.zip
+
+Zmiany:
+- Dashboard nie jest już ustawiony na 100% szerokości.
+- Desktop od 1201px: app-shell ustawiony na 75% szerokości i wyśrodkowany.
+- Dodany max-width 1600px oraz czarne tło po bokach.
+- Zmniejszone proporcje kolumn względem wersji full width:
+  sidebar 240px, prawa kolumna chat/ranking 380-400px.
+- Chat nadal pozostaje czytelny: wysokość wiadomości 300-315px, dymki dopasowane do nowej ramki.
+- Dla mniejszych desktopów 1001-1200px ustawiono bezpieczne 86%, żeby układ się nie łamał.
+
+Efekt:
+- mniej rozciągnięcia niż wersja 202,
+- zostaje czarna przestrzeń po bokach,
+- dashboard dalej wygląda szeroko i premium.

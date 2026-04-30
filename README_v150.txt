@@ -1,1 +1,0 @@
-Wersja 150: naprawiony bonus dziennego logowania. Teraz można odebrać tylko raz na 24h, liczony dokładnie od ostatniego odbioru. Przycisk pokazuje blokadę i czas do kolejnego odbioru.

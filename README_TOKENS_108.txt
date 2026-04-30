@@ -1,1 +1,0 @@
-Wersja 108 dodaje widok żetonów w lewym panelu jako osobną statystykę oraz w górnym pasku obok portfela.

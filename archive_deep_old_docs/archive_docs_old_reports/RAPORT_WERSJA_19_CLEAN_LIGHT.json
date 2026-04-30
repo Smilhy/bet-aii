@@ -1,9 +1,0 @@
-{
-  "index_exists": true,
-  "index_kb": 1120.6,
-  "has_login": true,
-  "has_dashboard": true,
-  "has_supabase_storage_v17": true,
-  "has_live_chat_sql": true,
-  "archived_count": 14
-}

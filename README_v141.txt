@@ -1,1 +1,0 @@
-Wersja 141: pełny moduł Typerzy PRO w stylu SaaS Ultra. Ranking użytkowników, profil, statystyki, miesiące admina, auto-dodawanie nowych userów, koszt dodania typu wg planu, automatyczne naliczanie żetonów za analizę i rozliczenie typu.

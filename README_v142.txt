@@ -1,1 +1,0 @@
-Wersja 142: przywrócone Bonus + Nagrody do wersji z Typerzy PRO.

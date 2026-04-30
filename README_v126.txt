@@ -1,1 +1,0 @@
-Wersja 126: poprawione kolory sekcji kupno/sprzedaż, dużo szersze ramki, marża 50% na kupnie (1000 żetonów = 1.50 PLN), sprzedaż zostaje 1000 żetonów = 1.00 PLN.

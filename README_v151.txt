@@ -1,1 +1,0 @@
-Wersja 151: Ligi zmienione na prawdziwy klawisz/button i dodane twarde otwieranie zakładki. Klik działa niezależnie od starego routingu.

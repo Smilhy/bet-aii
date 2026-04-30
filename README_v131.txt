@@ -1,1 +1,0 @@
-Wersja 131: auto-blokada przycisku wypłaty (disabled + tooltip) oraz licznik pozostałych wypłat, np. 'zostało Ci 1/2 wypłat w tym miesiącu'.

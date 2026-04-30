@@ -1,1 +1,0 @@
-Wersja 197: pełna paczka z przypiętym window.supabase i poprawką rankingu ligi. Wgraj całą zawartość na Netlify. SQL do ligi masz już wykonany; nie trzeba nic nowego wklejać. Zrób Ctrl+Shift+R i zaloguj się ponownie.

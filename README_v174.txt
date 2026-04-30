@@ -1,1 +1,0 @@
-Wersja 174: naprawiony przycisk Wyślij napiwek. Klik pobiera żetony z nadawcy, dopisuje do odbiorcy, zapisuje historię i wysyła wiadomość systemową.

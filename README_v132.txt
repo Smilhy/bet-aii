@@ -1,1 +1,0 @@
-Wersja 132: usunięte maile/nazwy z kafelków metod wpłaty — dane pokazują się dopiero po kliknięciu. Konto admina smilhytv@gmail.com ma wymuszony plan Premium i limit 2 wypłat/miesiąc. Free dalej ma 1 wypłatę/30 dni.

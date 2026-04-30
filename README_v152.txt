@@ -1,1 +1,0 @@
-Wersja 152: ograniczenie wiadomości do 3 najnowszych w panelu admina + sortowanie.

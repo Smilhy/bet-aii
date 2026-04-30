@@ -1,1 +1,0 @@
-Wersja 168: dodany Wykres PRO w profilu typera oraz paywall typów dla subskrybentów. Typy płatne pokazują analizę tylko właścicielowi lub aktywnemu subskrybentowi.

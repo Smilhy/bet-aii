@@ -1,0 +1,1 @@
+Improved banner layout: cover fit, centered image, reduced overlay, better contrast and spacing.

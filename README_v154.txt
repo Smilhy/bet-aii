@@ -1,1 +1,0 @@
-Wersja 154: prawdziwa naprawa ostatnich wiadomości platformy w panelu admina. Pokazuje tylko 3 nieodczytane, a kliknięcie oznacza wiadomość jako odczytaną i usuwa ją z listy.

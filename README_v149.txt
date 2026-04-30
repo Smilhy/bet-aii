@@ -1,1 +1,0 @@
-Wersja 149: naprawione wejście do zakładki Ligi i przywrócona zawartość rankingu 1-100. Klik w Ligi działa od razu i pokazuje ranking oraz wejście do profilu typera.

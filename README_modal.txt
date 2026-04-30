@@ -1,1 +1,0 @@
-Reupload wersji 162 modal profilu typera.

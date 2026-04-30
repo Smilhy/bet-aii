@@ -1,1 +1,0 @@
-Wersja 177: tip jar używa tożsamości live z lewego panelu i settingsEmail, bez skanowania emaili z całego DOM. Naprawia mylenie zalogowanego usera z profilem odbiorcy.

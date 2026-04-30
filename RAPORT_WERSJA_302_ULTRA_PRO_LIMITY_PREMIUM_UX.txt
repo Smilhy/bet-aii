@@ -1,0 +1,14 @@
+WERSJA 302 — ULTRA PRO LIMITS + PREMIUM UX
+
+Zmiany:
+- Ultra Pro toast w prawym górnym rogu dla limitu FREE i Premium.
+- CTA w toastach: "Przejdź na Premium" / "Aktywuj Premium".
+- Karta limitu na ekranie dodawania typu z paskiem postępu 0–5.
+- Stan "Limit FREE osiągnięty" z czerwonym stylem i przyciskiem Premium.
+- Premium button oznaczony jako zablokowany dla kont free.
+- Próba kliknięcia Premium na koncie free pokazuje komunikat zamiast cichego przełączenia.
+- Przycisk dodawania zmienia tekst po osiągnięciu limitu 5/5.
+- Dodany SQL: supabase/version_302_ultra_pro_limits_premium_ux.sql
+
+Baza startowa: wersja 300
+Poprzednia poprawka: wersja 301

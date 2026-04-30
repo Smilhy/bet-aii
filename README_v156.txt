@@ -1,1 +1,0 @@
-Wersja 156: Historia odbiorów w Bonus + Nagrody ograniczona do 5 najnowszych wpisów.

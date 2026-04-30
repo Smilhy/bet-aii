@@ -1,1 +1,0 @@
-Wersja 133: naprawiony kalkulator PLN -> Żetony. Teraz poprawnie przelicza 1000 PLN według marży 50% i pokazuje właściwy wynik w podglądzie.

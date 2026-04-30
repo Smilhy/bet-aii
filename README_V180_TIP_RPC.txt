@@ -1,1 +1,0 @@
-Wersja 180: napiwek działa przez RPC w Supabase. Wklej SQL_BETAI_TIP_RPC_V180.sql do SQL Editor, uruchom, potem wrzuć index.html na hosting.

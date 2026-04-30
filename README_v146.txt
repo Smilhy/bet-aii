@@ -1,1 +1,0 @@
-Wersja 146: Typerzy odblokowane dla wszystkich użytkowników, nie tylko admina. Dodane seedowane konta typerów i konto smilhtv/smilhytv jako admin/typer, żeby zakładka nie była pusta.
