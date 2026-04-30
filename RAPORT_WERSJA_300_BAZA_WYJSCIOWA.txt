@@ -1,0 +1,7 @@
+# RAPORT WERSJA 300
+
+Nowa baza wyjściowa projektu BetAI.
+
+- Ta paczka jest traktowana jako aktualny punkt startowy.
+- Kolejne poprawki będą numerowane: wersja 301, 302, 303...
+- Pełne pliki projektu zostały zachowane.
