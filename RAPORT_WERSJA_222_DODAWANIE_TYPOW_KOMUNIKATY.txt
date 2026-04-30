@@ -1,6 +1,0 @@
-WERSJA 222
-- Naprawiony zapis typów/kuponów z fallbackiem na starszy schemat Supabase.
-- Dodany jasny komunikat: sukces albo błąd zapisu.
-- Błędy Supabase są widoczne w konsoli jako ADD TIP SAVE ERROR / FETCH TIPS ERROR.
-- Dashboard normalizuje stare rekordy i nowe rekordy, żeby pokazywały się w feedzie.
-- Dodany SQL: supabase/version_222_final_save_messages_fix.sql

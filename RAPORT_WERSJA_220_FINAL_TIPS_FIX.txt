@@ -1,5 +1,0 @@
-WERSJA 220 - finalna poprawka dodawania typów/kuponów
-- Poprawiono zgodność frontendu z tabelą tips w Supabase.
-- Usunięto fake fallback nazw typu AdrianNowak.
-- Filtr Moje sprawdza realne user_id/author_id.
-- Dodano SQL: supabase/version_220_final_tips_full_fix.sql

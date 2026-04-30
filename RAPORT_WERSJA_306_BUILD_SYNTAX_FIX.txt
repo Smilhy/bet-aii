@@ -1,3 +1,0 @@
-Wersja 306 - poprawka błędu buildu Netlify.
-Naprawiono literówkę w src/main.jsx: currentEmail.split('@')[0].
-Poprawka usuwa błąd: Expected ')' but found 'premium'.

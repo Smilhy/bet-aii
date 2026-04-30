@@ -1,6 +1,0 @@
-WERSJA 224
-Naprawiono realną przyczynę błędu: Netlify Function zapisywała access_type, a tabela tips nie miała tej kolumny.
-Dodano pełny schemat tips zgodny z frontendem i funkcją add-user-tip.
-Dodano profiles + backfill z auth.users + trigger nowych użytkowników.
-Dodano widoki tipster_stats, tipster_earnings_summary i tipster_ranking.
-Dodano komunikaty zapisu pozostawione z wersji debug.

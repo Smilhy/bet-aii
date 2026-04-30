@@ -1,6 +1,0 @@
-Wersja 355
-- zakładka Statystyki została przebudowana na AI Real Plus • Analiza meczów
-- lista meczów z przyciskiem Generuj analizę
-- modal na środku ekranu z analizą AI po kliknięciu
-- analizowane rynki: 1X2, DNB, rogi, over/under gole, cards, BTTS
-- auto refresh co 10 minut
