@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
+const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com']
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com']
+function normalizeEmail(value) { return String(value || '').trim().toLowerCase() }
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -62,12 +66,31 @@ exports.handler = async (event) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin,is_premium,email')
+      .select('is_admin,is_premium,plan,subscription_status,email')
       .eq('id', user.id)
       .maybeSingle()
 
-    const isAdmin = Boolean(profile?.is_admin) || String(user.email || '').toLowerCase() === 'smilhytv@gmail.com'
-    const isPremiumUser = Boolean(profile?.is_premium) || isAdmin
+    let subscription = null
+    let subscriptionResult = await supabase
+      .from('user_subscriptions')
+      .select('plan,status,current_period_end')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (subscriptionResult.error) {
+      subscriptionResult = await supabase
+        .from('user_subscriptions')
+        .select('plan,status,current_period_end')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle()
+    }
+    if (!subscriptionResult.error) subscription = subscriptionResult.data
+
+    const currentEmail = normalizeEmail(user.email)
+    const isAdmin = Boolean(profile?.is_admin) || BETAI_ADMIN_EMAILS.includes(currentEmail)
+    const isPremiumUser = BETAI_PREMIUM_EMAILS.includes(currentEmail) || Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing','premium'].includes(String(profile?.subscription_status || '').toLowerCase()) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
 
     if (accessType === 'premium' && !isPremiumUser) {
       return json(403, { error: 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.' })

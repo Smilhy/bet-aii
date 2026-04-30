@@ -1,0 +1,11 @@
+Wersja 303 — naprawa limitów FREE/Premium/Admin
+
+Poprawione:
+- admin smilhytv@gmail.com jest zawsze traktowany jako Premium/Admin w aplikacji,
+- admin i konta Premium mogą dodawać typy darmowe oraz premium bez limitu,
+- konta FREE mają limit 5 darmowych typów dziennie,
+- konta FREE nie mogą dodawać typów premium,
+- poprawiona funkcja Netlify add-user-tip oraz SQL triggerów Supabase.
+
+Po deployu uruchom w Supabase SQL Editor plik:
+supabase/version_303_admin_premium_limits_fix.sql
