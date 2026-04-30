@@ -4510,7 +4510,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={notifications.filter(n => !n.is_read).length} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
@@ -4529,7 +4529,7 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
-            user={effectiveAccountProfile}
+            user={{ ...(accountProfile || {}), ...(sessionUser || {}), email: sessionUser?.email || accountProfile?.email, username: accountProfile?.username || sessionUser?.email?.split('@')[0] }}
             userPlan={effectiveAccountPlan}
             onToast={showToast}
             onTipSaved={(savedTip) => {
@@ -4664,24 +4664,4 @@ function App() {
               ))}
             </div>
 
-            <div className="feed-stats">
-              <span>Wszystkie: <b>{userOnlyTips.length}</b></span>
-              <span>Premium: <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b></span>
-              <span>Darmowe: <b>{userOnlyTips.filter(t => t.access_type === 'free').length}</b></span>
-            </div>
-
-            <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
-                <div className="empty-state">Brak typów w tym filtrze.</div>
-              )}
-            </div>
-          </section>
-        )}
-      </main>
-
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
-    </div>
-  )
-}
-
-createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>)
+            <div className="feed-s
