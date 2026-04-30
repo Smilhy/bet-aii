@@ -1,0 +1,13 @@
+WERSJA 201 — DASHBOARD ULTRA PRO
+
+Zmiany:
+- Rozszerzona prawa kolumna dashboardu, aby live chat był widoczny i nie był przycięty.
+- Czat społeczności przerobiony na ciemny ultra-pro panel pasujący do zrzutu ekranu.
+- Dodane ożywienie dashboardu: hover, glow, płynne podbicia kart i przycisków.
+- Ranking w prawej kolumnie otrzymał ciemny ultra-pro wygląd, hover i wyróżnienie lidera.
+- Zachowany loader i login bez zmian.
+- Pakiet produkcyjny gotowy do wgrania.
+
+Uwaga techniczna:
+- W tym środowisku nie ma zainstalowanych lokalnych zależności npm, więc build Vite nie został wykonany tutaj.
+- Po zainstalowaniu zależności komenda npm run build użyje standardowego Vite.

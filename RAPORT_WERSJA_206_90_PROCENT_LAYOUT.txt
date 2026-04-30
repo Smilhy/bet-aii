@@ -1,0 +1,11 @@
+WERSJA 206 — 90% LAYOUT / 5% CZARNE BOKI
+
+Baza: wersja_202_full_width.zip
+
+Zmiany:
+- Dashboard .app-shell ustawiony na width: 90% na desktopie.
+- Zostawione ok. 5% czarnego tła po lewej i prawej stronie.
+- Zachowany szeroki układ z wersji 202, ale bez pełnego rozciągnięcia do krawędzi.
+- Dopasowana prawa kolumna chat/ranking, żeby nadal była czytelna po zwężeniu do 90%.
+- Dodane delikatne boczne linie dla premium efektu ramki.
+- Mobile/tablet poniżej 1000px pozostawione jako 100%, żeby nie psuć responsywności.

@@ -1,0 +1,1 @@
+Replaced banner image exactly with provided second image. No styling or animation changes.

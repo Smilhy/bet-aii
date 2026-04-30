@@ -1,0 +1,1 @@
+Added light sweep shimmer animation + subtle glow on trophy. No color distortion.

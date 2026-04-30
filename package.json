@@ -1,0 +1,18 @@
+{
+  "name": "betai-wersja-216",
+  "version": "216.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "@vitejs/plugin-react": "4.3.1",
+    "vite": "5.4.8",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "stripe": "17.2.1"
+  },
+  "devDependencies": {}
+}
