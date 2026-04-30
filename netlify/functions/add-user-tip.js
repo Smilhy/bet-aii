@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
+const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com']
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com']
+function normalizeEmail(value) { return String(value || '').trim().toLowerCase() }
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -26,6 +30,18 @@ function toNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback
 }
 
+
+function formatTipInsertError(error) {
+  const message = String(error?.message || error || '')
+  if (message.includes('FREE_LIMIT') || message.includes('FREE_TIP_LIMIT_REACHED')) {
+    return 'FREE_LIMIT: Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
+  }
+  if (message.includes('PREMIUM_REQUIRED')) {
+    return 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
+  }
+  return message || 'Nie udało się zapisać kuponu.'
+}
+
 function clampPercent(value) {
   return Math.max(0, Math.min(100, Math.round(toNumber(value, 0))))
 }
@@ -48,6 +64,52 @@ exports.handler = async (event) => {
     const accessType = tip.access_type === 'premium' || tip.is_premium === true ? 'premium' : 'free'
     const authorName = toText(tip.author_name, user.email ? user.email.split('@')[0] : 'Użytkownik')
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin,is_premium,plan,subscription_status,email')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    let subscription = null
+    let subscriptionResult = await supabase
+      .from('user_subscriptions')
+      .select('plan,status,current_period_end')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (subscriptionResult.error) {
+      subscriptionResult = await supabase
+        .from('user_subscriptions')
+        .select('plan,status,current_period_end')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle()
+    }
+    if (!subscriptionResult.error) subscription = subscriptionResult.data
+
+    const currentEmail = normalizeEmail(user.email)
+    const isAdmin = Boolean(profile?.is_admin) || BETAI_ADMIN_EMAILS.includes(currentEmail)
+    const isPremiumUser = BETAI_PREMIUM_EMAILS.includes(currentEmail) || Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing','premium'].includes(String(profile?.subscription_status || '').toLowerCase()) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
+
+    if (accessType === 'premium' && !isPremiumUser) {
+      return json(403, { error: 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.' })
+    }
+
+    if (!isPremiumUser) {
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
+      const { count, error: countError } = await supabase
+        .from('tips')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', startOfDay.toISOString())
+
+      if (!countError && Number(count || 0) >= 5) {
+        return json(403, { error: 'FREE_LIMIT: Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.' })
+      }
+    }
+
     const payload = {
       author_id: user.id,
       user_id: user.id,
@@ -64,7 +126,6 @@ exports.handler = async (event) => {
       ai_score: clampPercent(tip.ai_score),
       ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
-      is_premium: accessType === 'premium',
       price: accessType === 'premium' ? Math.max(0, toNumber(tip.price, 0)) : 0,
       status: 'pending',
       tags: Array.isArray(tip.tags) ? tip.tags.map(tag => String(tag).trim()).filter(Boolean) : [],
@@ -77,6 +138,12 @@ exports.handler = async (event) => {
 
     const { data, error } = await supabase.from('tips').insert(payload).select('*').single()
     if (!error) return json(200, { ok: true, tip: data })
+    if (String(error.message || '').includes('non-DEFAULT value into column "is_premium"')) {
+      const noGeneratedPayload = { ...payload }
+      delete noGeneratedPayload.is_premium
+      const retryGenerated = await supabase.from('tips').insert(noGeneratedPayload).select('*').single()
+      if (!retryGenerated.error) return json(200, { ok: true, tip: retryGenerated.data })
+    }
 
     const safePayload = {
       user_id: user.id,
@@ -97,7 +164,6 @@ exports.handler = async (event) => {
       ai_score: payload.ai_score,
       ai_analysis: payload.ai_analysis,
       access_type: payload.access_type,
-      is_premium: payload.is_premium,
       price: payload.price,
       status: 'pending',
       tags: payload.tags,
@@ -118,6 +184,6 @@ exports.handler = async (event) => {
     throw lastError
   } catch (error) {
     console.error('add-user-tip error:', error)
-    return json(500, { error: error.message || 'Nie udało się zapisać kuponu.' })
+    return json(500, { error: formatTipInsertError(error) })
   }
 }
