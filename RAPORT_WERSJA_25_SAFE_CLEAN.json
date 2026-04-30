@@ -1,0 +1,25 @@
+{
+  "mode": "SAFE-CLEAN",
+  "index_kb_before": 1141.1,
+  "index_kb_after": 1143.5,
+  "script_blocks": 85,
+  "style_blocks": 156,
+  "createClient_total": 11,
+  "direct_createClient_assignments": 1,
+  "fallback_window_supabase_assignments": 10,
+  "setInterval": 18,
+  "setTimeout": 158,
+  "empty_catches": 0,
+  "bad_await": 0,
+  "script_tags_ok": true,
+  "style_tags_ok": true,
+  "has_v25_controller": true,
+  "has_v25_css": true,
+  "moved_to_deep_archive": [
+    "archive_docs_old_reports",
+    "RAPORT_WERSJA_24_MODULE_CLEAN.txt",
+    "RAPORT_WERSJA_24_MODULE_CLEAN.json",
+    "INSTRUKCJA_WERSJA_24_MODULE_CLEAN.txt",
+    "RAPORT_MODULY_SCRIPT_WERSJA_24.txt"
+  ]
+}

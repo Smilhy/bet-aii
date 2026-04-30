@@ -1,0 +1,45 @@
+BETAI - WERSJA 19 CLEAN-LIGHT
+
+Cel:
+Posprzątana paczka bez ryzyka rozsypania strony.
+
+Co zrobiłem:
+- NIE ruszałem logiki strony w index.html.
+- NIE usuwałem loadera.
+- NIE usuwałem logowania.
+- NIE usuwałem dashboardu.
+- Stare/duplikujące SQL przeniosłem do folderu:
+  archive_sql_old_versions/
+- Aktualne SQL zostawiłem w głównym folderze.
+
+Dlaczego to jest bezpieczne:
+Pliki SQL w paczce nie uruchamiają się same w przeglądarce.
+Strona działa z index.html, więc przeniesienie starych SQL do archiwum nie powinno popsuć działania strony.
+
+Przeniesione do archiwum:
+- SETUP_SUPABASE.sql
+- supabase_chat_setup.sql
+- SQL_CHAT_DIAGNOSIS.sql
+- SQL_REALTIME_UPGRADE_OPTIONAL.sql
+- SQL_BETAI_TIP_RPC_V180.sql
+- SQL_BETAI_TIP_RPC_V182.sql
+- SQL_BETAI_TIP_RPC_V183.sql
+- SQL_BETAI_TIP_RPC_V185.sql
+- SQL_BETAI_TIP_RPC_V186.sql
+- SQL_BETAI_TIP_RPC_V187.sql
+- SQL_BETAI_SUBSCRIPTIONS_V202.sql
+- SQL_BETAI_SUBSCRIPTIONS_V203.sql
+- SQL_BETAI_DM_REALTIME_PUSH_V4.sql
+- SUPABASE_AVATARS_TRWALY_ZAPIS.sql
+
+KROKI:
+1. Rozpakuj paczkę.
+2. Używaj normalnie index.html / wdrożenia strony.
+3. Jeśli konfigurujesz Supabase:
+   - live chat: SUPABASE_LIVE_CHAT_V226.sql
+   - avatar/storage: SUPABASE_AVATAR_STORAGE_V17.sql
+4. Stare SQL są tylko backupem w archive_sql_old_versions.
+
+Następny możliwy etap:
+Wersja 20 może czyścić index.html: jeden Supabase client, mniej timerów i mniej pustych catch{}.
+To jest większa zmiana i trzeba ją robić ostrożnie.

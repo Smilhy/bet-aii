@@ -1,0 +1,1 @@
+Wersja 145 PRO MAX: prowizja platformy 20% od sprzedaży typów, bardziej premium SaaS UI oraz system ocen typerów (gwiazdki + opinie).

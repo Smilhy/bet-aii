@@ -1,0 +1,26 @@
+BETAI - WERSJA 23 SUPABASE-CLEAN
+
+Krok 3 optymalizacji:
+- Przepiąłem bezpiecznie deklaracje typu:
+  const X = createClient(...)
+  na:
+  const X = window.supabase || createClient(...)
+- Główny klient `const supabase = createClient(...)` został zostawiony jako źródło prawdy.
+- Dodałem helper debug:
+  betaiCheckSupabaseClients()
+
+Kontrola:
+- createClient() przed: 11
+- createClient() po: 11
+- bezpośrednie '= createClient(' po: 1
+- fallback 'window.supabase || createClient' po: 10
+- główny const supabase = createClient: 1
+- podejrzane await bez async: 0
+- puste catch: 0
+- tagi script OK: True
+- tagi style OK: True
+- index.html: 1140.7 KB
+
+Ważne:
+Liczba createClient() tekstowo może nadal być podobna, bo fallback dalej zawiera createClient().
+Najważniejsze, że bezpośrednie osobne inicjalizacje zostały ograniczone.

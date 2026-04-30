@@ -1,0 +1,1 @@
+Wersja 166: subskrypcje i napiwki dla każdego użytkownika. Każdy typer może ustawić ceny subskrypcji (tydzień/miesiąc/pół roku/rok), każdy user może kupić subskrypcję lub wysłać dobrowolny napiwek. Żetony automatycznie aktualizują portfel. Dodane badge popularny / top seller.

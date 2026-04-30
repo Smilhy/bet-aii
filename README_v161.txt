@@ -1,0 +1,1 @@
+Wersja 161: przycisk 'Wejdź w konto' w Liga typerów otwiera nową zakładkę z żywym panelem profilu typera w stylu panelu admina. Na razie aktywne dla smilhytv@gmail.com.

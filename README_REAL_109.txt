@@ -1,0 +1,1 @@
+Najpierw uruchom plik SQL_BETAI_TOKENS_AND_NOTIFICATIONS.sql w Supabase SQL Editor. Potem wrzuć index z tej paczki. Ta wersja zapisuje żetony i wiadomości BetAI w Supabase: 100 żetonów jednorazowo dla nowego usera i admin może przyznawać żetony użytkownikowi lub wszystkim.

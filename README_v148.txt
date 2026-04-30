@@ -1,0 +1,1 @@
+Wersja 148: naprawione wejście do zakładki Typerzy dla zwykłych użytkowników Free. NavTrade nie jest już blokowane przez feature-disabled i działa dla wszystkich kont.

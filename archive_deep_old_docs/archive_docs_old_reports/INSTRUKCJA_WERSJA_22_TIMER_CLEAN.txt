@@ -1,0 +1,11 @@
+BETAI - WERSJA 22 TIMER-CLEAN
+
+Test:
+1. Zaloguj się.
+2. Klikaj po menu/dashboardzie.
+3. Otwórz live chat.
+4. Poczekaj 5-10 minut.
+5. Sprawdź, czy nie ma 10-sekundowych freeze.
+
+Admin debug:
+betaiShowAdminErrorLog()

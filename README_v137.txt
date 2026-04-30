@@ -1,0 +1,1 @@
+Wersja 137: status planu po lewej przy nicku jest teraz żywy i zintegrowany z zakupem. Free/Premium/VIP zmienia się automatycznie po zakupie Premium lub VIP. Konto admina też zmienia plan dynamicznie, ale zachowuje badge Admin.

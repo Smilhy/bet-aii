@@ -1,0 +1,1 @@
+Wersja 143: blokada pakietów na 30 dni. Nie można kupować Premium/VIP w kółko. Free -> Premium dozwolone, Premium -> VIP dozwolone jako upgrade, VIP -> Premium zablokowane do końca 30 dni. Przyciski są wyszarzone i pokazują komunikat.

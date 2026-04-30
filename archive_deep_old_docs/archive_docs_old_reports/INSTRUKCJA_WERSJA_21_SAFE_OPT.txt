@@ -1,0 +1,16 @@
+BETAI - INSTRUKCJA WERSJA 21 SAFE-OPT
+
+To jest bezpieczny krok optymalizacji.
+Nie usuwa funkcji. Dodaje diagnostykę błędów dla admina.
+
+Test:
+- logowanie
+- dashboard
+- kliknięcia menu
+- live chat
+- avatar
+- po 5 minutach sprawdź, czy nie ma freeze
+
+Admin debug:
+W konsoli przeglądarki wpisz:
+betaiShowAdminErrorLog()

@@ -1,5 +1,0 @@
-WERSJA 218 - FINAL TIPS SAVE FIX
-- Usunięto fallback demo/fake typów z dashboardu przy pustej bazie.
-- Dashboard nie pokazuje już FitMateusz/Zuzanna07/AI Tip, jeśli Supabase zwraca pustą tabelę.
-- Dodano finalny SQL zgodny z kolumnami używanymi przez frontend i funkcję Netlify.
-- Naprawa dotyczy wyłącznie zapisu/pobierania typów, bez zmian layoutu.

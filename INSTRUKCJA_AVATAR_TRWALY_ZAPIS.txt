@@ -1,0 +1,39 @@
+BETAI - AVATAR TRWALY ZAPIS
+
+Problem:
+Avatar zapisywał się tylko lokalnie w przeglądarce, dlatego inni użytkownicy go nie widzieli
+i po zmianie urządzenia nie był zapamiętany.
+
+Co poprawiono:
+- avatar zapisuje się do Supabase w tabeli public.betai_user_avatars
+- po zalogowaniu avatar pobiera się z Supabase
+- live chat pobiera avatary innych użytkowników z Supabase
+- reset avatara usuwa go także z Supabase
+
+KROK PO KROKU:
+
+1. Rozpakuj "wersja 14.zip".
+
+2. Otwórz plik:
+   SQL_AVATARS_SYNC.sql
+   albo:
+   SUPABASE_AVATARS_TRWALY_ZAPIS.sql
+
+3. Wejdź do Supabase -> SQL Editor -> New query.
+
+4. Wklej cały kod z pliku SQL.
+
+5. Kliknij RUN.
+
+6. Wgraj/uruchom aplikację z tej paczki.
+
+7. Test:
+   - zaloguj się na konto użytkownika
+   - ustaw avatar w Ustawieniach
+   - odśwież stronę
+   - avatar powinien zostać
+   - napisz wiadomość na live chacie
+   - inne konto/admin powinno widzieć Twój avatar
+
+WAŻNE:
+Ten SQL można uruchamiać ponownie.

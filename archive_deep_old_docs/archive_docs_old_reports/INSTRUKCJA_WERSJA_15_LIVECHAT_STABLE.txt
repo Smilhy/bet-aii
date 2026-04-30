@@ -1,0 +1,23 @@
+BETAI - WERSJA 15 LIVE CHAT STABLE
+
+Co naprawiono:
+- Live chat nie przełącza się od razu na tryb lokalny po jednym błędzie Supabase.
+- Dodano retry/reconnect.
+- Ograniczono pobieranie wiadomości z 80 do 35, żeby mniej muliło.
+- Zablokowano nakładające się odświeżenia live chatu.
+- Wysyłka wiadomości najpierw próbuje Supabase, dopiero potem fallback.
+
+Co zrobić:
+1. Rozpakuj ZIP.
+2. Uruchom/wgraj aplikację z tej paczki.
+3. Jeżeli wcześniej nie uruchamiałeś SQL live chatu, odpal:
+   SUPABASE_LIVE_CHAT_V226.sql
+4. Jeżeli avatar ma być trwały, odpal:
+   SQL_AVATARS_SYNC.sql
+5. Odśwież stronę po wdrożeniu.
+
+Test:
+- Zaloguj się jako użytkownik.
+- Napisz wiadomość.
+- Zaloguj się jako admin smilhytv@gmail.com.
+- Admin powinien widzieć wiadomości live.

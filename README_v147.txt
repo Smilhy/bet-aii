@@ -1,0 +1,1 @@
+Wersja 147: dodana zakładka Ligi jako ranking typerów 1-100. Każdy user jest typerem i można kliknąć profil, żeby przejść do statystyk.

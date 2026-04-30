@@ -1,0 +1,11 @@
+{
+  "setInterval": 18,
+  "setTimeout": 158,
+  "requestAnimationFrame": 15,
+  "createClient": 11,
+  "empty_catches": 0,
+  "bad_await": 0,
+  "index_kb": 1139.9,
+  "has_v22_guard": true,
+  "lc226_refresh_throttled": true
+}

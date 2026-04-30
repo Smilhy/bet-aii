@@ -1,0 +1,1 @@
+Wersja 125: manualne wpłaty + kalkulator + panel admina do zatwierdzania wpłat i przyznawania żetonów.

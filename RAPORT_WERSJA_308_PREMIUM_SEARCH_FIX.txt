@@ -1,1 +1,0 @@
-Wersja 308: naprawiono rozpoznawanie Premium/Admin w UI oraz wyszukiwarkę w topbarze. SQL nie jest wymagany.

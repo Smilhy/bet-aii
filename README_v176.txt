@@ -1,0 +1,1 @@
+Wersja 176: naprawione mapowanie zalogowanego użytkownika na podstawie lewego panelu (#userName) i tabeli ligi. Napiwek rozróżnia nadawcę i odbiorcę poprawnie.

@@ -1,0 +1,46 @@
+BETAI - WERSJA 25 SAFE-CLEAN
+
+Tryb: bezpieczne, powolne czyszczenie.
+
+Co zrobiłem:
+- NIE usunąłem żadnej głównej funkcji strony.
+- Zachowane: loader, login, dashboard, live chat, avatar storage, admin panel.
+- Dodałem kontroler SAFE-CLEAN z flagami: window.BETAI_SAFE_CLEAN
+- Dodałem funkcję admin/dev: betaiSafeCleanStatus()
+- Dodałem awaryjne wyłączenie redukcji efektów: betaiSafeCleanDisable()
+- Zredukowałem najcięższe efekty wizualne przez klasę CSS, bez kasowania kodu.
+- Stare raporty/dokumenty przeniosłem głębiej do archive_deep_old_docs.
+
+Dlaczego to bezpieczne:
+- Kod funkcji nadal jest w paczce.
+- Nic z core systemu nie jest usunięte.
+- Redukcje wizualne można wyłączyć funkcją betaiSafeCleanDisable().
+
+Kontrola:
+- index.html przed: 1141.1 KB
+- index.html po: 1143.5 KB
+- script blocks: 85
+- style blocks: 156
+- createClient(): 11
+- direct createClient assignments: 1
+- fallback window.supabase: 10
+- setInterval(): 18
+- setTimeout(): 158
+- puste catch: 0
+- podejrzane await bez async: 0
+- script tags OK: True
+- style tags OK: True
+- v25 controller: True
+- v25 css: True
+
+Test:
+1. Zaloguj się.
+2. Przeklikaj dashboard.
+3. Sprawdź live chat.
+4. Sprawdź avatar.
+5. Jako admin w konsoli:
+   betaiSafeCleanStatus()
+   betaiShowAdminErrorLog()
+
+Następny krok:
+Wersja 26 może wyłączać pojedynczy stary moduł na próbę, ale tylko po potwierdzeniu, że v25 działa stabilnie.

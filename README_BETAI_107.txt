@@ -1,0 +1,1 @@
+Wersja 107: dzwonek otwiera wiadomości BetAI, jednorazowy bonus 100 żetonów za rejestrację, admin może wysyłać komunikaty i nagrody do usera lub wszystkich.

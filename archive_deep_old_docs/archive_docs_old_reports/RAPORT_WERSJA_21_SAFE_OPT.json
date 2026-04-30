@@ -1,0 +1,10 @@
+{
+  "empty_catch_before": 131,
+  "empty_catch_after": 0,
+  "remaining_empty_catches_all": 0,
+  "createClient": 11,
+  "setInterval": 17,
+  "setTimeout": 158,
+  "bad_await": 0,
+  "index_kb": 1138.2
+}

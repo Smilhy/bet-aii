@@ -1,0 +1,1 @@
+Wersja 144: pełny moduł Typerzy PRO Ultra SaaS. Ranking TOP 100, filtry, search, avatar, yield, profit, ilość typów, sprzedaż typów, buy button, lock analizy, auto rozliczanie, reputacja i profil typera.

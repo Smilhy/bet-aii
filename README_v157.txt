@@ -1,0 +1,1 @@
+Wersja 157: zakładka Ligi ma jedną dużą tabelę rankingową 1-100, sortowaną malejąco po profit. Największy profit ma miejsce 1.

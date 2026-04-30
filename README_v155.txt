@@ -1,0 +1,1 @@
+Wersja 155 FIX: zakładka Typerzy ma dużą sekcję wszystkich userów jako typerów, klikalne karty prowadzą do profilu i statystyk. Dodane seedowane profile, tipy i sprzedaże.

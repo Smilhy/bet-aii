@@ -1,0 +1,18 @@
+BETAI - INSTRUKCJA WERSJA 20 PERFORMANCE
+
+1. Rozpakuj paczkę.
+2. Wgraj/uruchom stronę normalnie.
+3. Jeśli Supabase już masz ustawiony, nie musisz od nowa odpalać wszystkich SQL.
+4. Dla nowego projektu Supabase odpal:
+   - SUPABASE_LIVE_CHAT_V226.sql
+   - SUPABASE_AVATAR_STORAGE_V17.sql
+
+Co testować:
+- Logowanie.
+- Dashboard.
+- Kliknięcia w menu.
+- Live chat.
+- Ustawianie avatara.
+- Czy po kilku minutach nie pojawia się freeze.
+
+Jeśli wszystko działa, kolejny etap to wersja 21: głębsze czyszczenie timerów i pustych catch.

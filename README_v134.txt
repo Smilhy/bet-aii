@@ -1,0 +1,1 @@
+Wersja 134: sklep uproszczony do Premium 30 dni (50 żetonów), VIP 30 dni (100 żetonów) i Dzienne logowanie (+10 żetonów raz dziennie).

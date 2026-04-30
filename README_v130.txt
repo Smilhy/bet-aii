@@ -1,0 +1,1 @@
+Wersja 130: limity wypłat wg planu + widoczny komunikat, że limit wypłat został osiągnięty/wyczerpany.

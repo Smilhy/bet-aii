@@ -1,0 +1,25 @@
+{
+  "create_clients": 11,
+  "direct_clients": 8,
+  "fallback_clients": 3,
+  "intervals": 17,
+  "timeouts": 158,
+  "empty_catches": 313,
+  "bad_await": 0,
+  "index_kb": 1122.1,
+  "sql_root": [
+    "SQL_BETAI_TOKENS_AND_NOTIFICATIONS.sql",
+    "SQL_BETAI_FINANCE_EARNING_V111.sql",
+    "SQL_ADMIN_AUDIT_118.sql",
+    "SQL_DEPOSITS_125.sql",
+    "SQL_BETAI_TIP_RPC_V188.sql",
+    "SQL_BETAI_LEAGUES_REAL_USERS_V189.sql",
+    "SQL_BETAI_FINAL_FULL_V195.sql",
+    "SQL_BETAI_LIVE_PROFIT_V198.sql",
+    "SQL_BETAI_SUBSCRIPTIONS_V204.sql",
+    "SQL_BETAI_TAB_LOCKS_V218.sql",
+    "SUPABASE_LIVE_CHAT_V226.sql",
+    "SQL_AVATARS_SYNC.sql",
+    "SUPABASE_AVATAR_STORAGE_V17.sql"
+  ]
+}

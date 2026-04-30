@@ -1,0 +1,3 @@
+DIAGNOZA:
+Największy problem wydajnościowy to avatar base64 + zbyt dużo odświeżeń UI.
+v17 przenosi avatar do Storage i zmniejsza ciężar live chatu.
