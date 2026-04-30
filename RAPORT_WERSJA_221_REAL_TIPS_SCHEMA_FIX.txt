@@ -1,0 +1,16 @@
+WERSJA 221 - REAL TIPS FULL SCHEMA FIX
+
+Naprawiono prawdziwą przyczynę problemu „Brak typów w tym filtrze”: poprzedni SQL tworzył zbyt prostą tabelę tips, a frontend i funkcja Netlify zapisują dużo więcej kolumn (author_id, team_home, team_away, league, bet_type, access_type itd.).
+
+Zmiany:
+- dodano pełny SQL: supabase/version_221_real_tips_schema_fix.sql
+- SQL nie usuwa tabeli tips, tylko dodaje brakujące kolumny i naprawia RLS
+- zachowana obsługa FREE/PREMIUM
+- dodane tabele unlocked_tips i tipster_subscriptions jeśli brakowały
+- refresh schema cache Supabase/PostgREST
+
+Instrukcja:
+1. Supabase -> SQL Editor -> wklej zawartość supabase/version_221_real_tips_schema_fix.sql -> Run
+2. Wgraj paczkę wersja_221.zip
+3. Zrób Ctrl+F5 i zaloguj się ponownie
+4. Dodaj typ i kliknij Odśwież

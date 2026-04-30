@@ -1,0 +1,11 @@
+Wersja 304 — Premium/Admin status fix
+
+Poprawki:
+- Frontend pobiera z profiles kolumny: is_admin, is_premium, plan, subscription_status.
+- Admin smilhytv@gmail.com traktowany jako Premium/Admin bez limitu.
+- Użytkownik buchajson1988@gmail.com / buchajson1988 traktowany jako Premium bez limitu.
+- Pozostali użytkownicy mają zostać FREE po uruchomieniu SQL.
+- Formularz dodawania typów nie pokazuje już limitu FREE dla Admin/Premium.
+
+Po wdrożeniu uruchom:
+supabase/version_304_premium_status_frontend_fix.sql

@@ -1,12 +1,8 @@
+var userPlan = 'free'; // global anti-crash fallback
 import React, { useMemo, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
-const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
-const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988'];
-function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
-var userPlan = 'free'; // global anti-crash fallback
 
 const PLATFORM_COMMISSION_RATE = 0.20
 
@@ -155,64 +151,6 @@ function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
 
-
-function saveTipDebug(status, details = '') {
-  const text = `[${new Date().toLocaleString('pl-PL')}] ${status}${details ? ': ' + details : ''}`
-  try { window.localStorage.setItem('betai_last_tip_save_status', text) } catch (_) {}
-  console.log('BETAI TIP SAVE STATUS:', text)
-  return text
-}
-
-function readTipDebug() {
-  try { return window.localStorage.getItem('betai_last_tip_save_status') || '' } catch (_) { return '' }
-}
-
-function buildRankingFromTips(tips = []) {
-  const map = new Map()
-  ;(tips || []).forEach(tip => {
-    const normalized = normalizeTipRow(tip)
-    const id = normalized.author_id || normalized.user_id || normalized.author_email || normalized.author_name || 'unknown'
-    const current = map.get(id) || { tipster_id: id, username: normalized.author_name || 'Użytkownik', email: normalized.author_email || '', total_tips: 0, wins: 0, losses: 0, roi: 0, winrate: 0, earnings: 0 }
-    current.total_tips += 1
-    const st = String(normalized.status || normalized.result || '').toLowerCase()
-    if (['won','win','wygrany','wygrana'].includes(st)) current.wins += 1
-    if (['lost','loss','lose','przegrany','przegrana'].includes(st)) current.losses += 1
-    current.winrate = current.total_tips ? (current.wins / current.total_tips) * 100 : 0
-    map.set(id, current)
-  })
-  return Array.from(map.values()).sort((a,b) => (b.total_tips || 0) - (a.total_tips || 0)).slice(0, 10)
-}
-
-function isSchemaError(error) {
-  const msg = String(error?.message || error || '').toLowerCase()
-  return msg.includes('column') || msg.includes('schema cache') || msg.includes('could not find') || msg.includes('pgrst204') || msg.includes('42703')
-}
-
-function normalizeTipRow(row = {}) {
-  const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
-  const premium = isTipPremium(row)
-  return {
-    ...row,
-    author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
-    user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
-    author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
-    author_email: row.author_email || row.email || null,
-    league: row.league || 'Liga',
-    team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
-    team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
-    bet_type: row.bet_type || row.prediction || row.type || 'Typ',
-    odds: Number(row.odds || row.course || 0),
-    analysis: row.analysis || row.description || '',
-    ai_analysis: row.ai_analysis || row.analysis || row.description || '',
-    ai_probability: Number(row.ai_probability ?? row.ai_confidence ?? row.confidence ?? 0),
-    ai_confidence: Number(row.ai_confidence ?? row.ai_probability ?? row.confidence ?? 0),
-    access_type: premium ? 'premium' : 'free',
-    is_premium: premium,
-    status: row.status || 'pending',
-    created_at: row.created_at || new Date().toISOString()
-  }
-}
-
 function isTipPremium(tip) {
   const accessType = String(tip?.access_type || tip?.access || tip?.type || '').toLowerCase()
   return Boolean(
@@ -247,83 +185,14 @@ function getUserProfileView(user) {
 
 
 
-function getProfileEmail(user) {
-  return normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
-}
-
-function getProfileUsername(user) {
-  const email = getProfileEmail(user)
-  return normalizeEmail(
-    user?.username ||
-    user?.author_name ||
-    user?.name ||
-    user?.user_metadata?.username ||
-    user?.user_metadata?.name ||
-    user?.raw_user_meta_data?.username ||
-    (email ? email.split('@')[0] : '')
-  )
-}
-
-function isGuaranteedPremiumIdentity(user) {
-  const email = getProfileEmail(user)
-  const username = getProfileUsername(user)
-  return BETAI_PREMIUM_EMAILS.includes(email) || BETAI_PREMIUM_USERNAMES.includes(username)
-}
-
 function isAdminUser(user) {
-  const email = getProfileEmail(user)
-  const username = getProfileUsername(user)
-  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv' || Boolean(user?.is_admin)
+  const email = String(user?.email || '').toLowerCase()
+  return email === 'smilhytv@gmail.com'
 }
 
 function isPremiumAccount(plan) {
   const value = String(plan || '').toLowerCase()
-  return ['premium', 'vip', 'active', 'trialing', 'admin'].includes(value)
-}
-
-function isPremiumProfile(profile) {
-  if (!profile) return false
-  return isGuaranteedPremiumIdentity(profile) ||
-    Boolean(profile.is_premium) ||
-    Boolean(profile.is_admin) ||
-    isPremiumAccount(profile.plan) ||
-    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
-    ['admin', 'premium'].includes(String(profile.status || '').toLowerCase())
-}
-
-function hasUnlimitedTipAccess(user, plan = 'free') {
-  return isAdminUser(user) || isGuaranteedPremiumIdentity(user) || isPremiumProfile(user) || isPremiumAccount(plan)
-}
-
-function buildEffectiveAccountProfile(accountProfile, sessionUser) {
-  const sessionEmail = normalizeEmail(sessionUser?.email || accountProfile?.email)
-  const fallbackUsername = sessionEmail ? sessionEmail.split('@')[0] : ''
-  const merged = {
-    ...(sessionUser || {}),
-    ...(accountProfile || {}),
-    id: accountProfile?.id || sessionUser?.id || null,
-    email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || fallbackUsername
-  }
-  if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
-    merged.is_premium = true
-    merged.plan = 'premium'
-    merged.subscription_status = 'active'
-    merged.status = isAdminUser(merged) ? 'admin' : 'premium'
-  }
-  if (isAdminUser(merged)) {
-    merged.is_admin = true
-    merged.is_premium = true
-    merged.plan = 'premium'
-    merged.subscription_status = 'active'
-    merged.status = 'admin'
-  }
-  return merged
-}
-
-function getEffectiveAccountPlan(accountProfile, sessionUser, storedPlan = 'free') {
-  const effectiveProfile = buildEffectiveAccountProfile(accountProfile, sessionUser)
-  return hasUnlimitedTipAccess(effectiveProfile, storedPlan) ? 'premium' : 'free'
+  return ['premium', 'vip', 'active', 'trialing'].includes(value)
 }
 
 function getPlanLimits(plan) {
@@ -358,14 +227,60 @@ function hasActiveTipsterSubscription(tip, subscriptions = []) {
 
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
-  if (profile?.isAdmin || Boolean(user?.is_admin)) return 'ADMIN'
-  if (isPremiumAccount(plan) || isPremiumProfile(user)) return 'VIP'
+  if (profile?.isAdmin) return 'ADMIN'
+  if (isPremiumAccount(plan)) return 'VIP'
   return 'FREE'
 }
 
 
 
-const staticTips = []
+const staticTips = [
+  {
+    id: 'demo-1',
+    author_name: 'FitMateusz',
+    league: 'Liga Mistrzów',
+    team_home: 'Real Madryt',
+    team_away: 'Bayern Monachium',
+    bet_type: 'Powyżej 2.5 gola',
+    odds: 1.72,
+    analysis: 'Wysokie prawdopodobieństwo na powyżej 2.5 gola. Obie drużyny w dobrej formie ofensywnej.',
+    ai_probability: 72,
+    access_type: 'premium',
+    price: 39,
+    status: 'won',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'demo-2',
+    author_name: 'Zuzanna07',
+    league: 'Premier League',
+    team_home: 'Arsenal',
+    team_away: 'Chelsea',
+    bet_type: '1X (podwójna szansa)',
+    odds: 1.48,
+    analysis: 'Arsenal u siebie jest bardzo mocny. Chelsea ma problemy w defensywie w ostatnich meczach.',
+    ai_probability: 65,
+    access_type: 'premium',
+    price: 29,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'demo-3',
+    author_name: 'AI Tip',
+    league: 'La Liga',
+    team_home: 'Barcelona',
+    team_away: 'Atletico Madryt',
+    bet_type: 'Barcelona wygra',
+    odds: 1.85,
+    analysis: 'Barcelona ma przewagę u siebie, ale Atletico potrafi dobrze bronić.',
+    ai_probability: 58,
+    access_type: 'free',
+    price: 0,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  }
+]
 
 
 
@@ -436,53 +351,6 @@ function formatMoney(value) {
 }
 
 
-
-function formatAppErrorMessage(rawMessage) {
-  const message = String(rawMessage || '')
-
-  if (message.includes('FREE_LIMIT') || message.includes('FREE_TIP_LIMIT_REACHED')) {
-    return 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Przejdź na Premium, aby dodawać bez limitu.'
-  }
-
-  if (message.includes('PREMIUM_REQUIRED')) {
-    return 'Nie posiadasz konta Premium. Typy premium możesz dodawać po aktywacji Premium.'
-  }
-
-  if (message.includes('new row violates row-level security') || message.includes('row-level security')) {
-    return 'Brak uprawnień do zapisu. Zaloguj się ponownie i spróbuj jeszcze raz.'
-  }
-
-  if (message.includes('duplicate key')) {
-    return 'Ten rekord już istnieje w bazie.'
-  }
-
-  return message.replace(/^Error:\s*/i, '').replace(/\s*\|\s*Supabase:.*/i, '').trim() || 'Wystąpił błąd. Spróbuj ponownie.'
-}
-
-function getTipErrorToast(cleanMessage) {
-  if (cleanMessage.includes('5 typów dziennie') || cleanMessage.includes('FREE')) {
-    return {
-      type: 'limit',
-      title: 'Limit konta FREE',
-      message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.',
-      cta: 'Przejdź na Premium',
-      event: 'betai:start-premium-checkout'
-    }
-  }
-
-  if (cleanMessage.includes('Premium') || cleanMessage.includes('premium')) {
-    return {
-      type: 'premium',
-      title: 'Wymagane konto Premium',
-      message: 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.',
-      cta: 'Aktywuj Premium',
-      event: 'betai:start-premium-checkout'
-    }
-  }
-
-  return { type: 'error', title: 'Nie dodano typu', message: cleanMessage }
-}
-
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const heroLines = [
     { prefix: 'Win more bets with ', accent: 'AI' },
@@ -540,6 +408,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             <h1>{line.prefix}<strong>{line.accent}</strong></h1>
           </div>
         </div>
+        <button type="button" className="betai-hero-cta" onClick={onStatsClick}>Zobacz statystyki <span>→</span></button>
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
@@ -552,144 +421,11 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   )
 }
 
-function LiveChatPanel({ user }) {
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState('')
-  const [status, setStatus] = useState('Live chat gotowy')
-  const [sending, setSending] = useState(false)
-
-  const email = String(user?.email || '').toLowerCase()
-  const userName = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
-
-  const loadMessages = async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      setStatus('Supabase nie jest skonfigurowany')
-      return
-    }
-    try {
-      const { data, error } = await supabase
-        .from('live_chat_messages')
-        .select('id,user_email,user_name,avatar_url,message,tipped_amount,created_at')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (error) throw error
-      setMessages((data || []).reverse())
-      setStatus('Połączono live')
-    } catch (error) {
-      console.error('live chat load error', error)
-      setStatus('Live chat: sprawdź SQL/Supabase')
-    }
-  }
-
-  useEffect(() => {
-    loadMessages()
-    if (!isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel('betai-live-chat-dashboard')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'live_chat_messages' }, loadMessages)
-      .subscribe()
-    const timer = setInterval(loadMessages, 10000)
-    return () => {
-      clearInterval(timer)
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
-  useEffect(() => {
-    const host = document.querySelector('.live-chat-panel .live-chat-messages')
-    if (host) host.scrollTop = host.scrollHeight
-  }, [messages.length])
-
-  const todayCount = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
-    return messages.filter(m => new Date(m.created_at).getTime() >= start.getTime()).length
-  }, [messages])
-
-  const leader = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
-    const map = new Map()
-    messages.forEach(m => {
-      const ts = new Date(m.created_at).getTime()
-      const key = String(m.user_email || '').toLowerCase()
-      if (key && ts >= start.getTime()) map.set(key, { count: (map.get(key)?.count || 0) + 1, name: m.user_name || key.split('@')[0] })
-    })
-    return [...map.values()].sort((a,b) => b.count - a.count)[0]
-  }, [messages])
-
-  const sendMessage = async () => {
-    const clean = text.trim().slice(0, 240)
-    if (!clean || sending) return
-    if (!email) {
-      setStatus('Musisz być zalogowany')
-      return
-    }
-    setSending(true)
-    try {
-      const { error } = await supabase.from('live_chat_messages').insert({
-        user_email: email,
-        user_name: userName,
-        avatar_url: user?.user_metadata?.avatar_url || '',
-        message: clean,
-        tipped_amount: 0
-      })
-      if (error) throw error
-      setText('')
-      setStatus('Wiadomość wysłana')
-      await loadMessages()
-    } catch (error) {
-      console.error('live chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości')
-    } finally {
-      setSending(false)
-    }
-  }
-
-  return (
-    <section className="panel live-chat-panel">
-      <div className="live-chat-head">
-        <div>
-          <span className="live-chat-kicker">BETAI LIVE CHAT</span>
-          <h2>💬 Czat społeczności</h2>
-        </div>
-        <span className="live-chat-online">{Math.max(1, new Set(messages.map(m => m.user_email)).size)} online</span>
-      </div>
-      <div className="live-chat-stats">
-        <div><b>{todayCount}</b><span>wiadomości dziś</span></div>
-        <div><b>{leader?.name || '—'}</b><span>{leader ? `${leader.count} top` : 'lider dnia'}</span></div>
-      </div>
-      <div className="live-chat-messages">
-        {messages.length ? messages.map(msg => {
-          const mine = String(msg.user_email || '').toLowerCase() === email
-          const name = msg.user_name || String(msg.user_email || '').split('@')[0] || 'User'
-          return (
-            <div className={`live-chat-msg ${mine ? 'mine' : ''}`} key={msg.id || msg.created_at}>
-              <div className="live-chat-avatar">{name.slice(0,2).toUpperCase()}</div>
-              <div className="live-chat-bubble">
-                <div className="live-chat-meta"><strong>{name}</strong><span>{new Date(msg.created_at).toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'})}</span></div>
-                <p>{msg.message}</p>
-                <small>Tips: {Number(msg.tipped_amount || 0)}</small>
-              </div>
-            </div>
-          )
-        }) : <div className="live-chat-empty">Brak wiadomości. Napisz pierwszą wiadomość.</div>}
-      </div>
-      <div className="live-chat-input-row">
-        <input value={text} maxLength={240} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Napisz wiadomość..." />
-        <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
-      </div>
-      <div className="live-chat-status">{status}</div>
-    </section>
-  )
-}
-
-
-function Rightbar({ ranking = [], tips = [], user = null }) {
-  const fallbackRanking = buildRankingFromTips(tips)
-  const realRanking = Array.isArray(ranking) && ranking.length ? ranking : fallbackRanking
+function Rightbar({ ranking = [] }) {
+  const realRanking = Array.isArray(ranking) ? ranking : []
 
   return (
     <aside className="rightbar">
-      <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top tipsterzy</h2><a>Ranking real</a></div>
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
@@ -736,7 +472,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
-  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
+  const author = tip.author_name || 'AdrianNowak'
   const authorId = getTipAuthorId(tip)
   const currentUsername = (currentUser?.email || '').split('@')[0]
   const isOwnTip = Boolean(
@@ -1059,110 +795,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
-  const [dailyTipCount, setDailyTipCount] = useState(0)
-  const [livePremiumAccess, setLivePremiumAccess] = useState(false)
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan) || isGuaranteedPremiumIdentity(user) || livePremiumAccess
-  const freeDailyLimit = 5
-  const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
-  const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
-  const freeLimitBlocked = !premiumAllowed && freeTipsLeft <= 0
-
-  const showPremiumRequired = () => {
-    const premiumMessage = 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
-    saveTipDebug('BLOKADA PREMIUM', premiumMessage)
-    setMessage('🔒 ' + premiumMessage)
-    onToast?.({ type: 'premium', title: 'Wymagane konto Premium', message: premiumMessage, cta: 'Aktywuj Premium', event: 'betai:start-premium-checkout' })
-  }
-
-  const showFreeLimitReached = () => {
-    const limitMessage = 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
-    saveTipDebug('LIMIT FREE', limitMessage)
-    setMessage('❌ ' + limitMessage)
-    onToast?.({ type: 'limit', title: 'Limit konta FREE', message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.', cta: 'Przejdź na Premium', event: 'betai:start-premium-checkout' })
-  }
-
-  const chooseAccessType = (accessType) => {
-    if (accessType === 'premium' && !premiumAllowed) {
-      showPremiumRequired()
-      return
-    }
-    update('access_type', accessType)
-  }
-
-  useEffect(() => {
-    let active = true
-    async function loadLivePremiumAccess() {
-      const email = normalizeEmail(user?.email)
-      if (!user?.id) {
-        if (active) setLivePremiumAccess(false)
-        return
-      }
-      if (isGuaranteedPremiumIdentity(user) || isAdminUser(user) || isPremiumProfile(user) || isPremiumAccount(userPlan)) {
-        if (active) setLivePremiumAccess(true)
-        return
-      }
-      if (!isSupabaseConfigured || !supabase) {
-        if (active) setLivePremiumAccess(false)
-        return
-      }
-      let profilePremium = false
-      let subscriptionPremium = false
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin,is_premium,plan,subscription_status,email,username')
-          .eq('id', user.id)
-          .maybeSingle()
-        profilePremium = isPremiumProfile({ ...(profile || {}), email: profile?.email || email, username: profile?.username || user?.username })
-      } catch (error) {
-        console.warn('Premium profile check skipped:', error)
-      }
-      try {
-        const { data: subscription } = await supabase
-          .from('user_subscriptions')
-          .select('plan,status,current_period_end')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        const subStatus = String(subscription?.status || '').toLowerCase()
-        const subPlan = String(subscription?.plan || '').toLowerCase()
-        const notExpired = !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() > Date.now()
-        subscriptionPremium = notExpired && (subPlan === 'premium' || ['active', 'trialing', 'premium'].includes(subStatus))
-      } catch (error) {
-        console.warn('Premium subscription check skipped:', error)
-      }
-      if (active) setLivePremiumAccess(Boolean(profilePremium || subscriptionPremium))
-    }
-    loadLivePremiumAccess()
-    return () => { active = false }
-  }, [user?.id, user?.email, userPlan])
-
-  useEffect(() => {
-    let active = true
-    async function loadDailyTipCount() {
-      if (!user?.id || !isSupabaseConfigured || !supabase || premiumAllowed) {
-        if (active) setDailyTipCount(0)
-        return
-      }
-
-      const startOfDay = new Date()
-      startOfDay.setHours(0, 0, 0, 0)
-      const { count, error } = await supabase
-        .from('tips')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .gte('created_at', startOfDay.toISOString())
-
-      if (!error && active) setDailyTipCount(Number(count || 0))
-    }
-
-    loadDailyTipCount()
-    return () => { active = false }
-  }, [user?.id, premiumAllowed])
+  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
 
   const payload = useMemo(() => ({
-    author_name: user?.email?.split('@')[0] || 'Użytkownik',
+    author_name: user?.email?.split('@')[0] || 'AdrianNowak',
     author_id: user?.id || null,
     league: form.league,
     team_home: form.team_home,
@@ -1187,154 +825,31 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const submitTip = async () => {
     setMessage('')
     if (!payload.team_home || !payload.team_away || !payload.league || !payload.bet_type || !payload.odds) {
-      saveTipDebug('BŁĄD FORMULARZA', 'Uzupełnij: liga, drużyny, typ i kurs.'); setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
+      setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
-    if (payload.access_type === 'premium' && Number(payload.price || 0) < 0) {
-      setMessage('Cena premium nie może być ujemna.')
-      onToast?.({ type: 'error', title: 'Cena premium', message: 'Podaj poprawną cenę typu premium.' })
+    if (payload.access_type === 'premium' && !premiumAllowed) {
+      setMessage('Premium wymagane do publikowania płatnych typów.')
+      onToast?.({ type: 'error', title: 'Paywall', message: 'Aktywuj subskrypcję Premium, aby publikować płatne typy.' })
       return
     }
     if (!isSupabaseConfigured || !supabase) {
-      saveTipDebug('BŁĄD SUPABASE', 'Brak konfiguracji ENV w Netlify.'); setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
+      setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
       onToast?.({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji ENV w Netlify.' })
       return
     }
-    if (payload.access_type === 'premium' && !premiumAllowed) {
-      showPremiumRequired()
-      return
-    }
-    if (freeLimitBlocked) {
-      showFreeLimitReached()
-      return
-    }
-    saveTipDebug('KLIK DODAJ TYP', 'formularz wysłany')
     setSaving(true)
-    let savedTip = null
-    let saveError = null
-
-    const insertDirectTip = async (currentUserId) => {
-      const uid = currentUserId || user?.id || null
-      if (!uid) {
-        return { data: null, error: new Error('Brak aktywnej sesji użytkownika. Zaloguj się ponownie.') }
-      }
-
-      const fullPayload = {
-        author_id: uid,
-        user_id: uid,
-        author_email: user?.email || null,
-        author_name: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        username: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        league: payload.league,
-        team_home: payload.team_home,
-        team_away: payload.team_away,
-        match: `${payload.team_home} vs ${payload.team_away}`,
-        match_time: payload.match_time || null,
-        bet_type: payload.bet_type,
-        prediction: payload.bet_type,
-        odds: Number(payload.odds),
-        analysis: payload.analysis || '',
-        ai_probability: Number(payload.ai_probability || 0),
-        ai_score: Number(payload.ai_score || 0),
-        ai_analysis: payload.ai_analysis || payload.analysis || '',
-        access_type: payload.access_type === 'premium' ? 'premium' : 'free',
-        is_premium: payload.access_type === 'premium',
-        price: payload.access_type === 'premium' ? Number(payload.price || 0) : 0,
-        status: 'pending',
-        tags: payload.tags || [],
-        notify_followers: payload.notify_followers !== false
-      }
-
-      saveTipDebug('PRÓBA ZAPISU', `${fullPayload.match} / ${fullPayload.bet_type} / user_id=${uid}`)
-      const firstAttempt = await supabase.from('tips').insert(fullPayload).select('*').single()
-      if (!firstAttempt.error) return firstAttempt
-      if (String(firstAttempt.error.message || '').includes('non-DEFAULT value into column \"is_premium\"')) {
-        const noGeneratedPayload = { ...fullPayload }
-        delete noGeneratedPayload.is_premium
-        const retryWithoutGenerated = await supabase.from('tips').insert(noGeneratedPayload).select('*').single()
-        if (!retryWithoutGenerated.error) return retryWithoutGenerated
-      }
-
-      console.warn('tips full insert failed, trying schema-compatible payload:', firstAttempt.error)
-      saveTipDebug('PEŁNY ZAPIS NIE PRZESZEDŁ', firstAttempt.error.message || String(firstAttempt.error))
-
-      const compatiblePayload = { ...fullPayload }
-      let lastError = firstAttempt.error
-      for (let i = 0; i < 10; i += 1) {
-        const missingColumn = String(lastError?.message || '').match(/'([^']+)' column of 'tips'/)?.[1]
-        if (!missingColumn || !(missingColumn in compatiblePayload)) break
-        delete compatiblePayload[missingColumn]
-        saveTipDebug('USUNIĘTO BRAKUJĄCĄ KOLUMNĘ', missingColumn)
-        const retry = await supabase.from('tips').insert(compatiblePayload).select('*').single()
-        if (!retry.error) return retry
-        lastError = retry.error
-      }
-
-      const safePayload = {
-        user_id: uid,
-        author_id: uid,
-        author_name: fullPayload.author_name,
-        username: fullPayload.author_name,
-        league: fullPayload.league,
-        team_home: fullPayload.team_home,
-        team_away: fullPayload.team_away,
-        match: fullPayload.match,
-        bet_type: fullPayload.bet_type,
-        prediction: fullPayload.bet_type,
-        odds: fullPayload.odds,
-        access_type: fullPayload.access_type,
-        price: fullPayload.price,
-        status: 'pending'
-      }
-
-      const safeAttempt = await supabase.from('tips').insert(safePayload).select('*').single()
-      if (safeAttempt.error) saveTipDebug('ZAPIS AWARYJNY BŁĄD', safeAttempt.error.message || String(safeAttempt.error))
-      return safeAttempt
-    }
-
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      const currentUserId = sessionData?.session?.user?.id || user?.id || null
-
-      const { data: directData, error: directError } = await insertDirectTip(currentUserId)
-      if (!directError) {
-        savedTip = normalizeTipRow(directData)
-        saveError = null
-      } else {
-        saveError = directError
-        if (token) {
-          const response = await fetch('/.netlify/functions/add-user-tip', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + token
-            },
-            body: JSON.stringify({ tip: payload })
-          })
-          const result = await response.json().catch(() => ({}))
-          if (!response.ok) { saveTipDebug('NETLIFY FUNCTION BŁĄD', result.error || 'Nie udało się zapisać typu'); throw new Error((result.error || 'Nie udało się zapisać typu') + ' | Supabase: ' + (directError.message || directError)) }
-          savedTip = normalizeTipRow(result.tip || {})
-          saveError = null
-        }
-      }
-    } catch (error) {
-      saveError = error
-    }
-
+    const { error } = await supabase.from('tips').insert(payload)
     setSaving(false)
-    if (saveError) {
-      const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
-      console.error('ADD TIP SAVE ERROR:', saveError)
-      saveTipDebug('NIE DODANO TYPU', cleanMessage); setMessage('❌ ' + cleanMessage)
-      onToast?.(getTipErrorToast(cleanMessage))
+    if (error) {
+      setMessage('Błąd zapisu: ' + formatAppErrorMessage(error.message))
+      onToast?.({ type: 'error', title: 'Błąd zapisu', message: formatAppErrorMessage(error.message) })
       return
     }
-    saveTipDebug('DODANO TYP OK', savedTip?.id ? 'id=' + savedTip.id : 'zapis zakończony'); setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
-    if (!premiumAllowed) setDailyTipCount(prev => prev + 1)
-    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
-    onTipSaved(savedTip)
+    setMessage('✅ Typ zapisany w Supabase i dodany do feedu.')
+    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w feedzie.' })
+    onTipSaved()
   }
 
   return (
@@ -1342,18 +857,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       <div className="page-title">
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
-        <div className={`plan-limit-card ${premiumAllowed ? 'premium' : freeLimitBlocked ? 'blocked' : 'free'}`}>
-          <div className="plan-limit-head">
-            <span>{premiumAllowed ? '👑 Premium/Admin' : freeLimitBlocked ? '🚫 Limit FREE osiągnięty' : '💧 Konto FREE'}</span>
-            <strong>{premiumAllowed ? 'Bez limitu' : `${freeTipsLeft}/5 zostało`}</strong>
-          </div>
-          <div className="plan-limit-bar"><i style={{ width: `${premiumAllowed ? 100 : freeLimitPercent}%` }} /></div>
-          <p>{premiumAllowed
-            ? 'Możesz dodawać typy bez limitu i publikować typy premium.'
-            : freeLimitBlocked
-              ? 'Masz maksymalny limit 5 typów dziennie. Przejdź na Premium, aby dodawać dalej.'
-              : `Możesz dodać jeszcze ${freeTipsLeft} typów dzisiaj. Typy premium wymagają konta Premium.`}</p>
-          {!premiumAllowed && <button type="button" className="mini-premium-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Odblokuj Premium</button>}
+        <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
+          {premiumAllowed ? 'VIP: możesz dodawać typy bez limitu i sprzedawać typy premium.' : 'FREE: możesz dodać maksymalnie 5 darmowych typów dziennie. Sprzedaż premium jest zablokowana.'}
         </div>
       </div>
 
@@ -1396,26 +901,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         <label>Dostęp</label>
         <div className="access-grid">
-          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => chooseAccessType('free')}>
+          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => update('access_type', 'free')}>
             <strong>💧 Darmowy</strong>
             <span>Twój typ będzie widoczny dla wszystkich</span>
           </button>
-          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''} ${!premiumAllowed ? 'locked' : ''}`} onClick={() => chooseAccessType('premium')}>
+          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''}`} onClick={() => update('access_type', 'premium')}>
             <strong>🔒 Premium</strong>
-            <span>Możesz publikować płatne typy premium.</span>
+            <span>{premiumAllowed ? 'Możesz publikować i sprzedawać płatne typy premium.' : 'Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.'}</span>
           </button>
         </div>
 
-        {!premiumAllowed && (
-          <div className="premium-lock-info warning">
-            🔒 Nie posiadasz konta Premium — publikowanie płatnych typów jest zablokowane.
-            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Aktywuj Premium</button>
+        {isPremium && !premiumAllowed && (
+          <div className="premium-lock-info">
+            Konto FREE może dodawać tylko darmowe typy. Kup Premium, aby publikować i sprzedawać typy premium.
           </div>
         )}
-
         {isPremium && premiumAllowed && (
           <div className="premium-lock-info success">
-            Tryb premium — możesz publikować płatny typ.
+            VIP aktywny — możesz publikować płatne typy premium.
           </div>
         )}
 
@@ -1443,8 +946,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
 
-        <button className={`submit-btn ${freeLimitBlocked ? 'limit-blocked' : ''}`} type="button" onClick={submitTip} disabled={saving}>
-          {saving ? 'Zapisywanie...' : freeLimitBlocked ? '🚫 Limit 5/5 — przejdź na Premium' : '✈ Dodaj typ'}
+        <button className="submit-btn" type="button" onClick={submitTip} disabled={saving}>
+          {saving ? 'Zapisywanie...' : '✈ Dodaj typ'}
         </button>
       </form>
     </section>
@@ -1454,19 +957,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
 function Toast({ toast, onClose }) {
   if (!toast) return null
-  const runAction = () => {
-    if (toast.event && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(toast.event))
-    if (toast.onClick) toast.onClick()
-  }
   return (
     <div className={`toast ${toast.type || 'success'}`}>
-      <div className="toast-icon">{toast.type === 'success' ? '✅' : toast.type === 'premium' ? '👑' : toast.type === 'limit' ? '🚫' : '⚠️'}</div>
-      <div className="toast-body">
+      <div>
         <strong>{toast.title}</strong>
         <span>{toast.message}</span>
-        {toast.cta && <button type="button" className="toast-cta" onClick={runAction}>{toast.cta}</button>}
       </div>
-      <button className="toast-close" onClick={onClose}>×</button>
+      <button onClick={onClose}>×</button>
     </div>
   )
 }
@@ -1566,45 +1063,57 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
 
   return (
-    <section className="wallet-panel wallet-ultra-page">
-      <div className="wallet-ultra-hero">
-        <div>
-          <span className="wallet-kicker">Portfel BetAI</span>
-          <h1>Portfel</h1>
-          <p>Zarządzaj saldem, doładowaniami i odblokowanymi typami premium w jednym, dopracowanym panelu.</p>
-        </div>
-        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
-      </div>
-
+    <section className="wallet-panel">
       <div className="wallet-main-card">
         <div>
           <span>Saldo konta</span>
           <strong>{Number(wallet || 0).toFixed(2)} zł</strong>
           <p>Saldo używane do odblokowania typów premium.</p>
         </div>
-        <div className="wallet-balance-pill">Aktywne saldo</div>
+        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
       </div>
 
       <div className="wallet-grid">
-        <div className="wallet-stat"><span>Odblokowane typy</span><b>{unlockedList.length}</b></div>
-        <div className="wallet-stat"><span>Wydano</span><b>{spent.toFixed(2)} zł</b></div>
-        <div className="wallet-stat"><span>Status</span><b>VIP</b></div>
+        <div className="wallet-stat">
+          <span>Odblokowane typy</span>
+          <b>{unlockedList.length}</b>
+        </div>
+        <div className="wallet-stat">
+          <span>Wydano</span>
+          <b>{spent.toFixed(2)} zł</b>
+        </div>
+        <div className="wallet-stat">
+          <span>Status</span>
+          <b>VIP</b>
+        </div>
       </div>
 
-      <div className="unlocked-list wallet-ultra-list">
-        <div className="unlocked-head"><h3>Odblokowane typy</h3><span>{unlockedList.length} zakupów</span></div>
+      <div className="unlocked-list">
+        <div className="unlocked-head">
+          <h3>Odblokowane typy</h3>
+          <span>{unlockedList.length} zakupów</span>
+        </div>
+
         {unlockedList.length ? unlockedList.map(tip => (
           <div className="unlocked-item" key={tip.id}>
-            <div><strong>{tip.team_home} vs {tip.team_away}</strong><span>{tip.bet_type} • kurs {tip.odds}</span></div>
+            <div>
+              <strong>{tip.team_home} vs {tip.team_away}</strong>
+              <span>{tip.bet_type} • kurs {tip.odds}</span>
+            </div>
             <b>{Number(tip.price || 0).toFixed(2)} zł</b>
           </div>
         )) : (
-          <div className="empty-wallet"><strong>Nie masz jeszcze odblokowanych typów</strong><span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span></div>
+          <div className="empty-wallet">
+            <strong>Nie masz jeszcze odblokowanych typów</strong>
+            <span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span>
+          </div>
         )}
       </div>
     </section>
   )
 }
+
+
 function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   const unread = notifications.filter(item => !item.is_read).length
 
@@ -2212,26 +1721,12 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
   return (
     <section className="leaderboard-page">
-      <div className="leaderboard-hero ranking-colorloop-hero">
-        <div className="ranking-hero-copy">
-          <span className="ranking-kicker">ULTRA PRO RANKING</span>
+      <div className="leaderboard-hero">
+        <div>
           <h1>Ranking tipsterów</h1>
-          <p>Rywalizuj z najlepszymi i wspinaj się na szczyt. Analizuj wyniki, poprawiaj strategię i dominuj w obstawianiu.</p>
-          <div className="ranking-hero-metrics">
-            <span>↗ ROI</span>
-            <span>🏆 Sprzedaż</span>
-            <span>🎯 Skuteczność</span>
-            <span>👥 Aktywność</span>
-          </div>
+          <p>Realny leaderboard z Supabase: ROI, sprzedaż, winrate i aktywność tipsterów.</p>
         </div>
-        <div className="ranking-hero-stage" aria-hidden="true">
-          <div className="ranking-podium">
-            <div className="ranking-step ranking-step-2">2</div>
-            <div className="ranking-step ranking-step-1"><span className="ranking-trophy">🏆</span><b>1</b></div>
-            <div className="ranking-step ranking-step-3">3</div>
-          </div>
-        </div>
-        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
+        <div className="leaderboard-badge">REAL STATS</div>
       </div>
 
       <div className="leaderboard-stats">
@@ -2444,7 +1939,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
         <div className="payment-summary">
           <span>Tipster</span>
-          <strong>{tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'}</strong>
+          <strong>{tip.author_name || 'AdrianNowak'}</strong>
         </div>
 
         <div className="payment-price">
@@ -2550,53 +2045,38 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
 function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
-    <section className="subscription-page subscription-ultra-page">
-      <div className="subscription-hero subscription-ultra-hero">
-        <div className="subscription-hero-copy">
-          <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
+    <section className="subscription-page">
+      <div className="subscription-hero">
+        <div>
           <h1>Subskrypcja BetAI</h1>
-          <p>Ultra profesjonalny panel Premium: paywall, sprzedaż typów, AI, statystyki PRO i pełna kontrola subskrypcji przez Stripe.</p>
-          <div className="subscription-hero-pills">
-            <em>Stripe Billing</em>
-            <em>Marketplace PRO</em>
-            <em>AI + Statystyki</em>
-          </div>
+          <p>Stripe SaaS: miesięczny Premium, paywall i dostęp PRO dla tipsterów.</p>
         </div>
-        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>
-          <small>Aktualny plan</small>
-          <b>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</b>
-        </div>
+        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</div>
       </div>
 
-      <div className="pricing-grid subscription-pricing-grid">
-        <div className="pricing-card subscription-plan-card free-plan-card">
-          <div className="plan-topline">
-            <span>FREE</span>
-            <em>Start</em>
-          </div>
+      <div className="pricing-grid">
+        <div className="pricing-card">
+          <span>FREE</span>
           <strong>0 zł</strong>
           <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
           <ul>
-            <li><b>✓</b> 5 darmowych typów dziennie</li>
-            <li><b>✓</b> 1 wypłata miesięcznie</li>
-            <li><i>✕</i> Sprzedaż typów premium</li>
-            <li><i>✕</i> Avatar, bonusy i dropy</li>
+            <li>✓ 5 darmowych typów dziennie</li>
+            <li>✓ 1 wypłata miesięcznie</li>
+            <li>✕ Sprzedaż typów premium</li>
+            <li>✕ Avatar, bonusy i dropy</li>
           </ul>
         </div>
 
-        <div className="pricing-card featured subscription-plan-card premium-plan-card">
-          <div className="plan-topline">
-            <span>PREMIUM</span>
-            <em>Najlepszy wybór</em>
-          </div>
-          <strong>29 zł <small>/ miesiąc</small></strong>
-          <p>Pełny SaaS plan z paywallem, marketplace premium i narzędziami dla aktywnych tipsterów.</p>
+        <div className="pricing-card featured">
+          <span>PREMIUM</span>
+          <strong>29 zł / miesiąc</strong>
+          <p>Pełny SaaS plan z paywallem i marketplace premium.</p>
           <ul>
-            <li><b>✓</b> Sprzedaż typów premium</li>
-            <li><b>✓</b> Brak limitu dodawania typów</li>
-            <li><b>✓</b> 3 wypłaty miesięcznie</li>
-            <li><b>✓</b> Avatar, AI, statystyki, bonusy i dropy</li>
-            <li><b>✓</b> Stripe Billing Portal</li>
+            <li>✓ Sprzedaż typów premium</li>
+            <li>✓ Brak limitu dodawania typów</li>
+            <li>✓ 3 wypłaty miesięcznie</li>
+            <li>✓ Avatar, AI, statystyki, bonusy i dropy</li>
+            <li>✓ Stripe Billing Portal</li>
           </ul>
           {isPremium ? (
             <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
@@ -2606,11 +2086,9 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
         </div>
       </div>
 
-      <div className="paywall-rules-card subscription-rules-card">
-        <div>
-          <strong>Paywall aktywny</strong>
-          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
-        </div>
+      <div className="paywall-rules-card">
+        <strong>Paywall aktywny</strong>
+        <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
       </div>
     </section>
   )
@@ -2828,8 +2306,8 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
   const role = profile.isAdmin ? 'ADMIN' : planLimits.isPremium ? 'VIP TIPSTER' : premiumTips.length ? 'TIPSTER' : 'FREE USER'
 
   return (
-    <section className="profile-page profile-ultra-page">
-      <div className="profile-hero profile-ultra-hero">
+    <section className="profile-page">
+      <div className="profile-hero">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar-big">{profile.initials}</div>
           <button className={`avatar-edit-btn ${planLimits.canEditAvatar ? '' : 'locked'}`} type="button" onClick={() => {
@@ -2850,20 +2328,20 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
         </div>
       </div>
 
-      <div className="profile-stats-grid profile-ultra-stats">
+      <div className="profile-stats-grid">
         <div className="profile-stat"><span>Dodane typy</span><b>{myTips.length}</b><small>Wszystkie Twoje typy</small></div>
         <div className="profile-stat"><span>Premium</span><b>{premiumTips.length}</b><small>Typy na sprzedaż</small></div>
         <div className="profile-stat"><span>Sprzedaże</span><b>{soldPayments.length}</b><small>Zakupy Twoich typów</small></div>
         <div className="profile-stat"><span>Winrate</span><b>{winrate}%</b><small>Na podstawie statusów</small></div>
       </div>
 
-      <div className="profile-money-card profile-ultra-money">
+      <div className="profile-money-card">
         <div><span>Przychód brutto</span><strong>{grossRevenue.toFixed(2)} zł</strong></div>
         <div><span>Prowizja platformy</span><strong>{platformFee.toFixed(2)} zł</strong></div>
         <div><span>Do wypłaty</span><strong>{payout.toFixed(2)} zł</strong></div>
       </div>
 
-      <div className="profile-split profile-ultra-split">
+      <div className="profile-split">
         <div className="profile-panel">
           <div className="profile-panel-head"><h3>Moje typy</h3><span>{myTips.length}</span></div>
           {myTips.length ? myTips.map(tip => (
@@ -3281,10 +2759,8 @@ function disabledTopUp(showToast) {
 
 function App() {
   const [tips, setTips] = useState([])
-  const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
-  const [topSearch, setTopSearch] = useState('')
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
@@ -3295,9 +2771,6 @@ function App() {
   const [paymentHistory, setPaymentHistory] = useState([])
   const [payoutRequests, setPayoutRequests] = useState([])
   const [accountPlan, setUserPlan] = useState('free')
-  const [accountProfile, setAccountProfile] = useState(null)
-  const effectiveAccountProfile = buildEffectiveAccountProfile(accountProfile, sessionUser)
-  const effectiveAccountPlan = getEffectiveAccountPlan(accountProfile, sessionUser, accountPlan)
   const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
@@ -3459,7 +2932,8 @@ function App() {
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
-      setTips([])
+      const fallback = staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips))
+      setTips(fallback)
       return
     }
 
@@ -3479,16 +2953,15 @@ function App() {
     setLoading(false)
 
     if (tipsError) {
-      console.error('FETCH TIPS ERROR:', tipsError)
-      showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
-      setTips([])
+      console.error(tipsError)
+      setTips(staticTips.filter(tip => isVisibleTipForUser(tip, userId, unlockedTips)))
       return
     }
 
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = (tipsData || []).map(normalizeTipRow)
+    const sourceTips = tipsData?.length ? tipsData : staticTips
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
@@ -3496,7 +2969,6 @@ function App() {
       setTipsterSubscriptions(activeSubs)
     }
     setTips(sourceTips)
-    setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
   }
 
@@ -4122,15 +3594,7 @@ function App() {
   }
 
   async function fetchUserPlan(userId = sessionUser?.id) {
-    const currentEmail = normalizeEmail(sessionUser?.email)
-    if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
-      setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active' }))
-      return
-    }
-
     if (!isSupabaseConfigured || !supabase || !userId) {
-      setAccountProfile(null)
       setUserPlan('free')
       return
     }
@@ -4138,7 +3602,7 @@ function App() {
     let subscriptionData = null
     let profileData = null
 
-    let subResult = await supabase
+    const { data: subData, error: subError } = await supabase
       .from('user_subscriptions')
       .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
       .eq('user_id', userId)
@@ -4146,58 +3610,25 @@ function App() {
       .limit(1)
       .maybeSingle()
 
-    if (subResult.error) {
-      subResult = await supabase
-        .from('user_subscriptions')
-        .select('plan,status,current_period_end')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle()
-    }
-
-    if (!subResult.error) subscriptionData = subResult.data
+    if (!subError) subscriptionData = subData
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
+      .select('plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
       .eq('id', userId)
       .maybeSingle()
 
     if (!profileError) profileData = profData
 
     const subPremium = subscriptionData && (
-      subscriptionData.plan === 'premium' || ['active','trialing'].includes(String(subscriptionData.status || '').toLowerCase())
+      subscriptionData.plan === 'premium' || ['active','trialing'].includes(subscriptionData.status)
     )
-    const profilePremium = isPremiumProfile(profileData)
-    const effectivePremium = Boolean(subPremium || profilePremium)
+    const profilePremium = profileData && (
+      profileData.plan === 'premium' || ['active','trialing'].includes(profileData.subscription_status)
+    )
 
-    const effectiveProfile = buildEffectiveAccountProfile({
-      ...(profileData || {}),
-      id: profileData?.id || userId,
-      email: profileData?.email || currentEmail || sessionUser?.email || '',
-      username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
-      is_premium: effectivePremium || Boolean(profileData?.is_premium),
-      plan: effectivePremium ? 'premium' : (profileData?.plan || 'free'),
-      subscription_status: effectivePremium ? 'active' : (profileData?.subscription_status || 'free')
-    }, sessionUser)
-
-    setAccountProfile(effectiveProfile)
-
-    try {
-      await supabase.from('profiles').upsert({
-        id: userId,
-        email: effectiveProfile.email,
-        username: effectiveProfile.username || effectiveProfile.email?.split('@')?.[0] || 'user',
-        is_admin: Boolean(effectiveProfile.is_admin),
-        is_premium: Boolean(effectiveProfile.is_premium),
-        plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
-        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free')
-      }, { onConflict: 'id' })
-    } catch (syncError) {
-      console.warn('Profile sync skipped:', syncError)
-    }
-
-    if (hasUnlimitedTipAccess(effectiveProfile, effectiveProfile.plan)) {
+    // Important: profile can be newer than stale user_subscriptions. Do not return FREE only because old row says inactive.
+    if (subPremium || profilePremium) {
       setUserPlan('premium')
       return
     }
@@ -4546,26 +3977,12 @@ function App() {
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const filteredTips = userOnlyTips.filter(tip => {
-    const normalizedTip = normalizeTipRow(tip)
-    const query = topSearch.trim().toLowerCase()
-    const searchableText = [
-      normalizedTip.home_team,
-      normalizedTip.away_team,
-      normalizedTip.match,
-      normalizedTip.league,
-      normalizedTip.type,
-      normalizedTip.pick,
-      normalizedTip.description,
-      normalizedTip.author_name,
-      normalizedTip.username
-    ].filter(Boolean).join(' ').toLowerCase()
-    if (query && !searchableText.includes(query)) return false
     if (activeFilter === 'all') return true
-    if (activeFilter === 'free') return !isTipPremium(normalizedTip)
-    if (activeFilter === 'premium') return isTipPremium(normalizedTip)
-    if (activeFilter === 'mine') return Boolean(sessionUser?.id && (getTipAuthorId(normalizedTip) === sessionUser.id || normalizedTip.user_id === sessionUser.id))
+    if (activeFilter === 'free') return tip.access_type === 'free'
+    if (activeFilter === 'premium') return tip.access_type === 'premium'
+    if (activeFilter === 'mine') return (tip.author_id && sessionUser?.id ? tip.author_id === sessionUser.id : (tip.author_name || 'AdrianNowak') === 'AdrianNowak')
     return true
-  }).map(normalizeTipRow)
+  })
 
   const filterItems = [
     ['all', 'Wszystkie'],
@@ -4583,7 +4000,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4592,14 +4009,11 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={sessionUser} userPlan={accountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
-          <label className="search top-search-field" aria-label="Szukaj meczów, lig i użytkowników">
-            <span>⌕</span>
-            <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
-          </label>
+          <div className="search">⌕ Szukaj meczów, lig, użytkowników...</div>
           <div className="top-actions">
             <button type="button" className="notice notice-button" onClick={() => setView('notifications')}>🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <span>✉</span>
@@ -4611,14 +4025,10 @@ function App() {
 
         {view === 'add' && (
           <AddTipForm
-            user={effectiveAccountProfile}
-            userPlan={effectiveAccountPlan}
+            user={sessionUser}
+            userPlan={accountPlan}
             onToast={showToast}
-            onTipSaved={(savedTip) => {
-              setLastTipSaveStatus(readTipDebug())
-              if (savedTip?.id) {
-                setTips(prev => [savedTip, ...prev.filter(tip => tip.id !== savedTip.id)])
-              }
+            onTipSaved={() => {
               fetchTips(sessionUser?.id)
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
@@ -4655,7 +4065,7 @@ function App() {
         )}
 
         {view === 'subscriptions' && (
-          <SubscriptionView userPlan={effectiveAccountPlan} onUpgrade={runPremiumCheckout} onManage={openCustomerPortal} />
+          <SubscriptionView userPlan={accountPlan} onUpgrade={runPremiumCheckout} onManage={openCustomerPortal} />
         )}
 
         {view === 'earnings' && (
@@ -4668,7 +4078,7 @@ function App() {
             tips={tips}
             payments={paymentHistory}
             unlockedTips={unlockedTips}
-            userPlan={effectiveAccountPlan}
+            userPlan={accountPlan}
           />
         )}
 
@@ -4682,7 +4092,7 @@ function App() {
         )}
 
         {view === 'payouts' && (
-          <PayoutsView user={effectiveAccountProfile} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
+          <PayoutsView user={sessionUser} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} userPlan={accountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
 
@@ -4697,7 +4107,7 @@ function App() {
           <TipsterProfileView
             tipsterId={selectedTipsterId}
             onBack={() => setSelectedTipsterId(null)}
-            currentUser={effectiveAccountProfile}
+            currentUser={sessionUser}
             followingTipsters={followingTipsters}
             onToggleFollow={toggleFollowTipster}
             onUnlock={unlockTip}
@@ -4714,7 +4124,6 @@ function App() {
               <div>
                 <h2>Ostatnie typy</h2>
                 <p>Feed pobierany z Supabase. Nowy typ pojawi się tutaj po zapisie.</p>
-                {lastTipSaveStatus && <p className="tip-save-status">Status dodawania: {lastTipSaveStatus}</p>}
               </div>
               <div className="feed-actions">
                 <button onClick={() => setView('add')}>+ Dodaj typ</button>
@@ -4753,7 +4162,7 @@ function App() {
             </div>
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={sessionUser} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
@@ -4761,7 +4170,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet'].includes(view) && <Rightbar ranking={realRanking} />}
     </div>
   )
 }

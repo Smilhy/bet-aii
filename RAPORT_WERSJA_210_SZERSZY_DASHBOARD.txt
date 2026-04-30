@@ -1,0 +1,7 @@
+WERSJA 210 — SZERSZY DASHBOARD
+
+Zmiany:
+- Rozciągnięto główny dashboard z 90% do 95% szerokości ekranu.
+- Zostawiono trochę czarnego tła po bokach, zgodnie z prośbą.
+- Zachowano usunięty przycisk „Zobacz statystyki” z wersji 209.
+- Loader i ekran logowania pozostają bez zmian.

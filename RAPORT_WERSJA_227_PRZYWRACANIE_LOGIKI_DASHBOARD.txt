@@ -1,0 +1,16 @@
+WERSJA 227 - PRZYWRÓCENIE LOGIKI DASHBOARDU
+
+Naprawione:
+- błąd składni w src/main.jsx w funkcji fetchFollowingTipsters,
+- dashboard ponownie pobiera typy z Supabase z tabeli tips,
+- feed pokazuje darmowe i premium typy,
+- dodawanie typu zapisuje typ bezpośrednio do Supabase i ma fallback przez Netlify Function,
+- Netlify Function add-user-tip ma fallback dla starszego schematu bazy,
+- dodany bezpieczny SQL: supabase/version_227_restore_dashboard_logic.sql.
+
+WAŻNE:
+1. Wgraj paczkę na GitHub/Netlify.
+2. W Supabase SQL Editor uruchom plik: supabase/version_227_restore_dashboard_logic.sql
+3. Po SQL odczekaj kilka sekund i odśwież stronę.
+
+Ten SQL NIE usuwa tabeli tips i NIE kasuje istniejących typów.
