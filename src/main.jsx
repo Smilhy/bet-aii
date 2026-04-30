@@ -402,13 +402,9 @@ return (
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
         {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
-        <button>♙ Typy ludzi</button>
         <button>♕ Top typerzy</button>
         <button>▣ Moje subskrypcje</button>
-        <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>☷ Ranking</button>
-        <button>◷ Kalendarz</button>
         <button>☰ Blog</button>
-        <button>♧ Społeczność</button>
         <button>⚙ Ustawienia</button>
       </nav>
 
