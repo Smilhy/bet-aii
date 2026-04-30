@@ -1,0 +1,14 @@
+WERSJA 313 - STRIPE WEBHOOK AUTO WALLET
+
+Dodane:
+- Webhook Stripe checkout.session.completed automatycznie dopisuje saldo dla wallet_topup.
+- sync-wallet-session używa RPC record_wallet_topup_final.
+- Jedna sesja Stripe nie może dodać salda drugi raz.
+- profiles.balance, wallet_transactions i user_transactions są synchronizowane.
+
+Po wdrożeniu:
+1. Supabase SQL: supabase/version_313_stripe_webhook_auto_wallet.sql (Run without RLS).
+2. Stripe Dashboard -> Webhooks -> endpoint:
+   https://TWOJA-DOMENA/.netlify/functions/stripe-webhook
+3. Event minimum: checkout.session.completed.
+4. W Netlify ustaw STRIPE_WEBHOOK_SECRET z tego webhooka.
