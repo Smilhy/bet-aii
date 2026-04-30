@@ -1,0 +1,10 @@
+WERSJA 311 - STRIPE PREMIUM CHECK / FIX
+
+Sprawdzone w paczce 310:
+- funkcje Stripe istnieja: create-premium-checkout, sync-premium-session, stripe-webhook
+- frontend po powrocie ze Stripe wywoluje sync-premium-session
+- znaleziono brakujacy plik SQL version_310_final_premium_limit_fix.sql w paczce 310
+- wzmocniono synchronizacje Premium: jesli user kupi Premium, a profiles nie istnieje, funkcja Netlify tworzy profil i dopiero nadaje Premium
+- dodano finalny SQL version_311_stripe_premium_verified_fix.sql
+
+Po wdrozeniu uruchom SQL: supabase/version_311_stripe_premium_verified_fix.sql
