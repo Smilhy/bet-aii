@@ -70,13 +70,23 @@ exports.handler = async (event) => {
       .eq('id', user.id)
       .maybeSingle()
 
-    const { data: subscription } = await supabase
+    let subscription = null
+    let subscriptionResult = await supabase
       .from('user_subscriptions')
-      .select('plan,status')
+      .select('plan,status,current_period_end')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle()
+    if (subscriptionResult.error) {
+      subscriptionResult = await supabase
+        .from('user_subscriptions')
+        .select('plan,status,current_period_end')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle()
+    }
+    if (!subscriptionResult.error) subscription = subscriptionResult.data
 
     const currentEmail = normalizeEmail(user.email)
     const isAdmin = Boolean(profile?.is_admin) || BETAI_ADMIN_EMAILS.includes(currentEmail)

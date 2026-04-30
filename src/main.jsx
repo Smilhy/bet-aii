@@ -1060,9 +1060,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [dailyTipCount, setDailyTipCount] = useState(0)
+  const [livePremiumAccess, setLivePremiumAccess] = useState(false)
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan) || isGuaranteedPremiumIdentity(user)
+  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan) || isGuaranteedPremiumIdentity(user) || livePremiumAccess
   const freeDailyLimit = 5
   const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
   const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
@@ -1089,6 +1090,53 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
     update('access_type', accessType)
   }
+
+  useEffect(() => {
+    let active = true
+    async function loadLivePremiumAccess() {
+      const email = normalizeEmail(user?.email)
+      if (!user?.id) {
+        if (active) setLivePremiumAccess(false)
+        return
+      }
+      if (isGuaranteedPremiumIdentity(user) || isAdminUser(user) || isPremiumProfile(user) || isPremiumAccount(userPlan)) {
+        if (active) setLivePremiumAccess(true)
+        return
+      }
+      if (!isSupabaseConfigured || !supabase) {
+        if (active) setLivePremiumAccess(false)
+        return
+      }
+      let profilePremium = false
+      let subscriptionPremium = false
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin,is_premium,plan,subscription_status,email,username')
+          .eq('id', user.id)
+          .maybeSingle()
+        profilePremium = isPremiumProfile({ ...(profile || {}), email: profile?.email || email, username: profile?.username || user?.username })
+      } catch (error) {
+        console.warn('Premium profile check skipped:', error)
+      }
+      try {
+        const { data: subscription } = await supabase
+          .from('user_subscriptions')
+          .select('plan,status,current_period_end')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        const subStatus = String(subscription?.status || '').toLowerCase()
+        const subPlan = String(subscription?.plan || '').toLowerCase()
+        const notExpired = !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() > Date.now()
+        subscriptionPremium = notExpired && (subPlan === 'premium' || ['active', 'trialing', 'premium'].includes(subStatus))
+      } catch (error) {
+        console.warn('Premium subscription check skipped:', error)
+      }
+      if (active) setLivePremiumAccess(Boolean(profilePremium || subscriptionPremium))
+    }
+    loadLivePremiumAccess()
+    return () => { active = false }
+  }, [user?.id, user?.email, userPlan])
 
   useEffect(() => {
     let active = true
@@ -4090,7 +4138,7 @@ function App() {
     let subscriptionData = null
     let profileData = null
 
-    const { data: subData, error: subError } = await supabase
+    let subResult = await supabase
       .from('user_subscriptions')
       .select('plan,status,current_period_end,cancel_at_period_end,stripe_subscription_id,stripe_customer_id')
       .eq('user_id', userId)
@@ -4098,7 +4146,16 @@ function App() {
       .limit(1)
       .maybeSingle()
 
-    if (!subError) subscriptionData = subData
+    if (subResult.error) {
+      subResult = await supabase
+        .from('user_subscriptions')
+        .select('plan,status,current_period_end')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle()
+    }
+
+    if (!subResult.error) subscriptionData = subResult.data
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
@@ -4107,15 +4164,40 @@ function App() {
       .maybeSingle()
 
     if (!profileError) profileData = profData
-    setAccountProfile(profileData || null)
 
     const subPremium = subscriptionData && (
-      subscriptionData.plan === 'premium' || ['active','trialing'].includes(subscriptionData.status)
+      subscriptionData.plan === 'premium' || ['active','trialing'].includes(String(subscriptionData.status || '').toLowerCase())
     )
     const profilePremium = isPremiumProfile(profileData)
+    const effectivePremium = Boolean(subPremium || profilePremium)
 
-    // Important: profile can be newer than stale user_subscriptions. Do not return FREE only because old row says inactive.
-    if (subPremium || profilePremium) {
+    const effectiveProfile = buildEffectiveAccountProfile({
+      ...(profileData || {}),
+      id: profileData?.id || userId,
+      email: profileData?.email || currentEmail || sessionUser?.email || '',
+      username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
+      is_premium: effectivePremium || Boolean(profileData?.is_premium),
+      plan: effectivePremium ? 'premium' : (profileData?.plan || 'free'),
+      subscription_status: effectivePremium ? 'active' : (profileData?.subscription_status || 'free')
+    }, sessionUser)
+
+    setAccountProfile(effectiveProfile)
+
+    try {
+      await supabase.from('profiles').upsert({
+        id: userId,
+        email: effectiveProfile.email,
+        username: effectiveProfile.username || effectiveProfile.email?.split('@')?.[0] || 'user',
+        is_admin: Boolean(effectiveProfile.is_admin),
+        is_premium: Boolean(effectiveProfile.is_premium),
+        plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
+        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free')
+      }, { onConflict: 'id' })
+    } catch (syncError) {
+      console.warn('Profile sync skipped:', syncError)
+    }
+
+    if (hasUnlimitedTipAccess(effectiveProfile, effectiveProfile.plan)) {
       setUserPlan('premium')
       return
     }
