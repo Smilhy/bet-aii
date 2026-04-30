@@ -1,0 +1,19 @@
+{
+    "name": "project-dashboard",
+    "version": "1.0.0",
+    "description": "Dashboard project",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "build": "npm install && npm run build"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "axios": "^0.21.1"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.7"
+    },
+    "author": "",
+    "license": "ISC"
+}
