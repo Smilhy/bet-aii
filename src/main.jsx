@@ -250,7 +250,11 @@ function isAdminUser(user) {
 
 function isPremiumAccount(plan) {
   const value = String(plan || '').toLowerCase()
-  return ['premium', 'vip', 'active', 'trialing'].includes(value)
+  return ['premium', 'vip', 'active', 'trialing', 'admin'].includes(value)
+}
+
+function hasUnlimitedTipAccess(user, plan = 'free') {
+  return isAdminUser(user) || isPremiumAccount(plan)
 }
 
 function getPlanLimits(plan) {
@@ -989,7 +993,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [dailyTipCount, setDailyTipCount] = useState(0)
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
+  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan)
   const freeDailyLimit = 5
   const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
   const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
@@ -3997,6 +4001,12 @@ function App() {
   }
 
   async function fetchUserPlan(userId = sessionUser?.id) {
+    const currentEmail = String(sessionUser?.email || '').toLowerCase()
+    if (currentEmail === 'smilhytv@gmail.com') {
+      setUserPlan('premium')
+      return
+    }
+
     if (!isSupabaseConfigured || !supabase || !userId) {
       setUserPlan('free')
       return

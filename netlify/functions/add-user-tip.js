@@ -62,12 +62,20 @@ exports.handler = async (event) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin,is_premium,email')
+      .select('is_admin,is_premium,plan,subscription_status,email')
       .eq('id', user.id)
       .maybeSingle()
 
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('plan,status')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
     const isAdmin = Boolean(profile?.is_admin) || String(user.email || '').toLowerCase() === 'smilhytv@gmail.com'
-    const isPremiumUser = Boolean(profile?.is_premium) || isAdmin
+    const isPremiumUser = Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing'].includes(profile?.subscription_status) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
 
     if (accessType === 'premium' && !isPremiumUser) {
       return json(403, { error: 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.' })
