@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
+const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com']
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com']
+function normalizeEmail(value) { return String(value || '').trim().toLowerCase() }
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -74,8 +78,9 @@ exports.handler = async (event) => {
       .limit(1)
       .maybeSingle()
 
-    const isAdmin = Boolean(profile?.is_admin) || String(user.email || '').toLowerCase() === 'smilhytv@gmail.com'
-    const isPremiumUser = Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing'].includes(profile?.subscription_status) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
+    const currentEmail = normalizeEmail(user.email)
+    const isAdmin = Boolean(profile?.is_admin) || BETAI_ADMIN_EMAILS.includes(currentEmail)
+    const isPremiumUser = BETAI_PREMIUM_EMAILS.includes(currentEmail) || Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing','premium'].includes(String(profile?.subscription_status || '').toLowerCase()) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
 
     if (accessType === 'premium' && !isPremiumUser) {
       return json(403, { error: 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.' })

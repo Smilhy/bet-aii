@@ -1,8 +1,11 @@
-var userPlan = 'free'; // global anti-crash fallback
 import React, { useMemo, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
+const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
+function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
+var userPlan = 'free'; // global anti-crash fallback
 
 const PLATFORM_COMMISSION_RATE = 0.20
 
@@ -244,8 +247,8 @@ function getUserProfileView(user) {
 
 
 function isAdminUser(user) {
-  const email = String(user?.email || '').toLowerCase()
-  return email === 'smilhytv@gmail.com'
+  const email = normalizeEmail(user?.email || user?.author_email)
+  return BETAI_ADMIN_EMAILS.includes(email) || Boolean(user?.is_admin)
 }
 
 function isPremiumAccount(plan) {
@@ -255,14 +258,16 @@ function isPremiumAccount(plan) {
 
 function isPremiumProfile(profile) {
   if (!profile) return false
-  return Boolean(profile.is_premium) ||
+  const email = normalizeEmail(profile.email || profile.author_email)
+  return BETAI_PREMIUM_EMAILS.includes(email) ||
+    Boolean(profile.is_premium) ||
     Boolean(profile.is_admin) ||
     isPremiumAccount(profile.plan) ||
     ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase())
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
-  return isAdminUser(user) || isPremiumAccount(plan) || isPremiumProfile(user)
+  return isAdminUser(user) || isPremiumProfile(user) || isPremiumAccount(plan)
 }
 
 function getPlanLimits(plan) {
@@ -4010,10 +4015,10 @@ function App() {
   }
 
   async function fetchUserPlan(userId = sessionUser?.id) {
-    const currentEmail = String(sessionUser?.email || '').toLowerCase()
-    if (currentEmail === 'smilhytv@gmail.com') {
+    const currentEmail = normalizeEmail(sessionUser?.email)
+    if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
       setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), email: currentEmail, is_admin: true, is_premium: true, plan: 'premium', subscription_status: 'active' }))
+      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split(')[0], is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active' }))
       return
     }
 
