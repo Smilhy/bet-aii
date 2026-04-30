@@ -58,13 +58,9 @@ exports.handler = async (event) => {
         .upsert({
           id: user_id,
           email: email || existingProfile?.email || null,
-          username: (email || existingProfile?.email || 'user').split('@')[0],
-          is_admin: false,
-          is_premium: false,
           plan: existingProfile?.plan || 'free',
           subscription_status: existingProfile?.subscription_status || 'inactive',
-          stripe_customer_id: customerId,
-          updated_at: new Date().toISOString()
+          stripe_customer_id: customerId
         }, { onConflict: 'id' });
 
       await supabase

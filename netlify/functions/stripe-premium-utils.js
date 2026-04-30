@@ -86,35 +86,11 @@ async function forcePremiumUpdate(supabase, payload) {
   };
   if (finalEmail) profilePayload.email = finalEmail;
 
-  // Ensure profile exists before updating premium status.
-  // This fixes new buyers whose auth.users row exists but public.profiles row was not created yet.
-  const usernameFromEmail = finalEmail ? finalEmail.split('@')[0] : 'user';
-  const { error: ensureProfileError } = await supabase
-    .from('profiles')
-    .upsert({
-      id: resolvedUserId,
-      email: finalEmail || null,
-      username: usernameFromEmail,
-      is_premium: isActive,
-      plan,
-      subscription_status: subscriptionStatus,
-      stripe_customer_id: customerId || null,
-      stripe_subscription_id: subscriptionId || null,
-      current_period_end: periodEndIso,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'id' });
-
-  if (ensureProfileError) throw ensureProfileError;
-
   const { data: updatedProfile, error: profileError } = await supabase
     .from('profiles')
-    .update({
-      ...profilePayload,
-      is_premium: isActive,
-      updated_at: new Date().toISOString()
-    })
+    .update(profilePayload)
     .eq('id', resolvedUserId)
-    .select('id,email,plan,subscription_status,stripe_customer_id,is_premium')
+    .select('id,email,plan,subscription_status,stripe_customer_id')
     .maybeSingle();
 
   if (profileError) throw profileError;

@@ -1,2 +1,0 @@
-Wersja 305: twardy fix Premium/Admin po emailu dla smilhytv@gmail.com oraz buchajson1988@gmail.com. FREE ma limit 5 typow dziennie.
-Uruchom SQL: supabase/version_305_hard_premium_access_fix.sql
