@@ -363,6 +363,49 @@ function formatMoney(value) {
 }
 
 
+
+function formatAppErrorMessage(rawMessage) {
+  const message = String(rawMessage || '')
+
+  if (message.includes('FREE_LIMIT') || message.includes('FREE_TIP_LIMIT_REACHED')) {
+    return 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Przejdź na Premium, aby dodawać bez limitu.'
+  }
+
+  if (message.includes('PREMIUM_REQUIRED')) {
+    return 'Nie posiadasz konta Premium. Typy premium możesz dodawać po aktywacji Premium.'
+  }
+
+  if (message.includes('new row violates row-level security') || message.includes('row-level security')) {
+    return 'Brak uprawnień do zapisu. Zaloguj się ponownie i spróbuj jeszcze raz.'
+  }
+
+  if (message.includes('duplicate key')) {
+    return 'Ten rekord już istnieje w bazie.'
+  }
+
+  return message.replace(/^Error:\s*/i, '').replace(/\s*\|\s*Supabase:.*/i, '').trim() || 'Wystąpił błąd. Spróbuj ponownie.'
+}
+
+function getTipErrorToast(cleanMessage) {
+  if (cleanMessage.includes('5 typów dziennie') || cleanMessage.includes('FREE')) {
+    return {
+      type: 'error',
+      title: 'Limit konta FREE',
+      message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.'
+    }
+  }
+
+  if (cleanMessage.includes('Premium') || cleanMessage.includes('premium')) {
+    return {
+      type: 'error',
+      title: 'Wymagane konto Premium',
+      message: 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
+    }
+  }
+
+  return { type: 'error', title: 'Nie dodano typu', message: cleanMessage }
+}
+
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const heroLines = [
     { prefix: 'Win more bets with ', accent: 'AI' },
@@ -939,9 +982,36 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [dailyTipCount, setDailyTipCount] = useState(0)
 
   const isPremium = form.access_type === 'premium'
-  const premiumAllowed = true
+  const premiumAllowed = isPremiumAccount(userPlan) || isAdminUser(user)
+  const freeDailyLimit = 5
+  const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
+
+
+  useEffect(() => {
+    let active = true
+    async function loadDailyTipCount() {
+      if (!user?.id || !isSupabaseConfigured || !supabase || premiumAllowed) {
+        if (active) setDailyTipCount(0)
+        return
+      }
+
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
+      const { count, error } = await supabase
+        .from('tips')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', startOfDay.toISOString())
+
+      if (!error && active) setDailyTipCount(Number(count || 0))
+    }
+
+    loadDailyTipCount()
+    return () => { active = false }
+  }, [user?.id, premiumAllowed])
 
   const payload = useMemo(() => ({
     author_name: user?.email?.split('@')[0] || 'Użytkownik',
@@ -981,6 +1051,20 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (!isSupabaseConfigured || !supabase) {
       saveTipDebug('BŁĄD SUPABASE', 'Brak konfiguracji ENV w Netlify.'); setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
       onToast?.({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji ENV w Netlify.' })
+      return
+    }
+    if (payload.access_type === 'premium' && !premiumAllowed) {
+      const premiumMessage = 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
+      saveTipDebug('BLOKADA PREMIUM', premiumMessage)
+      setMessage('🔒 ' + premiumMessage)
+      onToast?.({ type: 'error', title: 'Wymagane konto Premium', message: premiumMessage })
+      return
+    }
+    if (!premiumAllowed && dailyTipCount >= freeDailyLimit) {
+      const limitMessage = 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
+      saveTipDebug('LIMIT FREE', limitMessage)
+      setMessage('❌ ' + limitMessage)
+      onToast?.({ type: 'error', title: 'Limit konta FREE', message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.' })
       return
     }
     saveTipDebug('KLIK DODAJ TYP', 'formularz wysłany')
@@ -1023,6 +1107,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       saveTipDebug('PRÓBA ZAPISU', `${fullPayload.match} / ${fullPayload.bet_type} / user_id=${uid}`)
       const firstAttempt = await supabase.from('tips').insert(fullPayload).select('*').single()
       if (!firstAttempt.error) return firstAttempt
+      if (String(firstAttempt.error.message || '').includes('non-DEFAULT value into column \"is_premium\"')) {
+        const noGeneratedPayload = { ...fullPayload }
+        delete noGeneratedPayload.is_premium
+        const retryWithoutGenerated = await supabase.from('tips').insert(noGeneratedPayload).select('*').single()
+        if (!retryWithoutGenerated.error) return retryWithoutGenerated
+      }
 
       console.warn('tips full insert failed, trying schema-compatible payload:', firstAttempt.error)
       saveTipDebug('PEŁNY ZAPIS NIE PRZESZEDŁ', firstAttempt.error.message || String(firstAttempt.error))
@@ -1052,7 +1142,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         prediction: fullPayload.bet_type,
         odds: fullPayload.odds,
         access_type: fullPayload.access_type,
-        is_premium: fullPayload.is_premium,
         price: fullPayload.price,
         status: 'pending'
       }
@@ -1096,11 +1185,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (saveError) {
       const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
       console.error('ADD TIP SAVE ERROR:', saveError)
-      saveTipDebug('NIE DODANO TYPU', cleanMessage); setMessage('❌ Nie dodano typu: ' + cleanMessage)
-      onToast?.({ type: 'error', title: 'Nie dodano typu', message: cleanMessage })
+      saveTipDebug('NIE DODANO TYPU', cleanMessage); setMessage('❌ ' + cleanMessage)
+      onToast?.(getTipErrorToast(cleanMessage))
       return
     }
     saveTipDebug('DODANO TYP OK', savedTip?.id ? 'id=' + savedTip.id : 'zapis zakończony'); setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
+    if (!premiumAllowed) setDailyTipCount(prev => prev + 1)
     onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
     onTipSaved(savedTip)
   }
@@ -1111,7 +1201,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
         <div className={`plan-limit-note ${premiumAllowed ? 'premium' : 'free'}`}>
-          Możesz dodawać kupony darmowe i premium. Premium może mieć cenę, darmowy jest widoczny dla wszystkich.
+          {premiumAllowed
+            ? 'Konto Premium/Admin: możesz dodawać typy bez limitu i publikować typy premium.'
+            : `Konto FREE: możesz dodać maksymalnie 5 typów dziennie. Pozostało dzisiaj: ${freeTipsLeft}/5. Typy premium wymagają konta Premium.`}
         </div>
       </div>
 
