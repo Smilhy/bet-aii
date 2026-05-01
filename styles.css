@@ -7301,3 +7301,11 @@ html,body,#root{
 }
 
 /* VERSION 380
+/* VERSION 383 — Ultra Pro banner shine every 3 seconds */
+.ultra-page-banner,.app-shell.no-rightbar-page .ultra-page-banner{position:relative!important;overflow:hidden!important;isolation:isolate!important;}
+.ultra-page-banner::before,.app-shell.no-rightbar-page .ultra-page-banner::before{content:""!important;position:absolute!important;inset:-38% -72%!important;z-index:2!important;pointer-events:none!important;background:linear-gradient(105deg,transparent 0%,transparent 38%,rgba(255,255,255,.02) 43%,rgba(255,255,255,.34) 48%,rgba(31,226,174,.30) 52%,rgba(255,255,255,.16) 56%,transparent 64%,transparent 100%)!important;transform:translateX(-82%) skewX(-14deg)!important;mix-blend-mode:screen!important;opacity:0!important;animation:betaiUltraBannerShine 3s ease-in-out infinite!important;will-change:transform,opacity!important;}
+.ultra-page-banner::after,.app-shell.no-rightbar-page .ultra-page-banner::after{z-index:1!important;}
+.ultra-page-banner>img,.app-shell.no-rightbar-page .ultra-page-banner>img{position:relative!important;z-index:0!important;}
+.ultra-page-banner-actions,.app-shell.no-rightbar-page .ultra-page-banner-actions{z-index:4!important;}
+@keyframes betaiUltraBannerShine{0%{transform:translateX(-82%) skewX(-14deg);opacity:0;}9%{opacity:.86;}26%{transform:translateX(82%) skewX(-14deg);opacity:.64;}36%{opacity:0;}100%{transform:translateX(82%) skewX(-14deg);opacity:0;}}
+@media (prefers-reduced-motion: reduce){.ultra-page-banner::before,.app-shell.no-rightbar-page .ultra-page-banner::before{animation:none!important;opacity:0!important;}}
