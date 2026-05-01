@@ -7427,3 +7427,259 @@ html,body,#root{
   .app-shell.no-rightbar-page .ultra-page-banner-actions{right:16px!important;bottom:14px!important;max-width:calc(100% - 32px)!important;}
   .app-shell.no-rightbar-page .ultra-page-banner-actions button{min-height:38px!important;padding:0 12px!important;font-size:12px!important;}
 }
+
+/* VERSION 377 — Typy AI layout applied to all non-dashboard tabs */
+:root{
+  --betai-unified-content-max:1280px;
+  --betai-unified-shell-max:1660px;
+  --betai-unified-banner-radius:32px;
+}
+
+.app-shell.no-rightbar-page{
+  width:100%!important;
+  max-width:var(--betai-unified-shell-max)!important;
+  grid-template-columns:270px minmax(0,1fr)!important;
+  gap:24px!important;
+}
+
+.app-shell.no-rightbar-page .main{
+  min-width:0!important;
+  width:100%!important;
+  padding-top:18px!important;
+}
+
+/* Use Typy AI middle-column width on every non-dashboard tab */
+.app-shell.no-rightbar-page .add-page,
+.app-shell.no-rightbar-page .wallet-panel,
+.app-shell.no-rightbar-page .wallet-ultra-page,
+.app-shell.no-rightbar-page .profile-page,
+.app-shell.no-rightbar-page .profile-ultra-page,
+.app-shell.no-rightbar-page .leaderboard-page,
+.app-shell.no-rightbar-page .articles-page,
+.app-shell.no-rightbar-page .referrals-view,
+.app-shell.no-rightbar-page .notifications-page,
+.app-shell.no-rightbar-page .payments-page,
+.app-shell.no-rightbar-page .subscription-page,
+.app-shell.no-rightbar-page .subscription-ultra-page,
+.app-shell.no-rightbar-page .earnings-page,
+.app-shell.no-rightbar-page .payout-page,
+.app-shell.no-rightbar-page .admin-finance-page,
+.app-shell.no-rightbar-page .admin-payout-page,
+.app-shell.no-rightbar-page .admin-payout-page-pro,
+.app-shell.no-rightbar-page .ai-premium-dashboard{
+  width:100%!important;
+  max-width:var(--betai-unified-content-max)!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+
+/* Make the first banner the real full-width hero */
+.app-shell.no-rightbar-page .ultra-page-banner,
+.app-shell.no-rightbar-page .add-page .ultra-page-banner,
+.app-shell.no-rightbar-page .wallet-ultra-page .ultra-page-banner,
+.app-shell.no-rightbar-page .profile-ultra-page .ultra-page-banner,
+.app-shell.no-rightbar-page .leaderboard-page .ultra-page-banner,
+.app-shell.no-rightbar-page .articles-page .ultra-page-banner,
+.app-shell.no-rightbar-page .referrals-view .ultra-page-banner,
+.app-shell.no-rightbar-page .notifications-page .ultra-page-banner,
+.app-shell.no-rightbar-page .payments-page .ultra-page-banner,
+.app-shell.no-rightbar-page .subscription-ultra-page .ultra-page-banner,
+.app-shell.no-rightbar-page .earnings-page .ultra-page-banner,
+.app-shell.no-rightbar-page .payout-page .ultra-page-banner,
+.app-shell.no-rightbar-page .admin-finance-page .ultra-page-banner,
+.app-shell.no-rightbar-page .admin-payout-page-pro .ultra-page-banner,
+.app-shell.no-rightbar-page .ai-premium-dashboard .ultra-page-banner{
+  width:100%!important;
+  max-width:var(--betai-unified-content-max)!important;
+  margin:0 auto 22px!important;
+  border-radius:var(--betai-unified-banner-radius)!important;
+  aspect-ratio:1916 / 821!important;
+  min-height:0!important;
+  padding:0!important;
+  display:grid!important;
+  align-items:stretch!important;
+  background:linear-gradient(135deg,rgba(5,17,27,.98),rgba(4,11,18,.98))!important;
+  border:1px solid rgba(31,226,174,.18)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.05)!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+
+.app-shell.no-rightbar-page .ultra-page-banner > img,
+.app-shell.no-rightbar-page .ultra-page-banner > .ultra-page-banner-actions{
+  grid-area:1 / 1!important;
+}
+
+.app-shell.no-rightbar-page .ultra-page-banner > img{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  display:block!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  aspect-ratio:1916 / 821!important;
+  transform:scale(1.005)!important;
+  filter:saturate(1.04) contrast(1.03)!important;
+}
+
+.app-shell.no-rightbar-page .ultra-page-banner::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:linear-gradient(100deg,rgba(4,11,18,.12),transparent 34%,rgba(255,255,255,.08) 56%,transparent 78%,rgba(4,11,18,.16))!important;
+  mix-blend-mode:screen!important;
+  opacity:.72!important;
+}
+
+/* Overlay action buttons cleanly on banner 1 instead of making a second hero */
+.app-shell.no-rightbar-page .ultra-page-banner-actions{
+  position:relative!important;
+  align-self:end!important;
+  justify-self:end!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  margin:0 20px 20px 20px!important;
+  max-width:min(58%, 560px)!important;
+  z-index:3!important;
+}
+
+.app-shell.no-rightbar-page .ultra-page-banner-actions button{
+  min-height:44px!important;
+  padding:0 18px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(31,226,174,.28)!important;
+  background:linear-gradient(135deg,#1fe2ae,#73f8dc)!important;
+  color:#06130f!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  letter-spacing:-.01em!important;
+  box-shadow:0 16px 34px rgba(31,226,174,.24)!important;
+  cursor:pointer!important;
+}
+
+.app-shell.no-rightbar-page .ultra-page-banner-actions button:hover:not(:disabled){
+  transform:translateY(-1px)!important;
+  filter:brightness(1.02)!important;
+}
+
+/* Match the visual rhythm and typography from Typy AI */
+.app-shell.no-rightbar-page .page-title,
+.app-shell.no-rightbar-page .wallet-main-card,
+.app-shell.no-rightbar-page .wallet-stat,
+.app-shell.no-rightbar-page .unlocked-list,
+.app-shell.no-rightbar-page .payments-table,
+.app-shell.no-rightbar-page .earnings-table-card,
+.app-shell.no-rightbar-page .stripe-connect-card,
+.app-shell.no-rightbar-page .finance-card,
+.app-shell.no-rightbar-page .pricing-card,
+.app-shell.no-rightbar-page .paywall-rules-card,
+.app-shell.no-rightbar-page .leaderboard-stats div,
+.app-shell.no-rightbar-page .ai-ranking-card,
+.app-shell.no-rightbar-page .notifications-list .notification-item,
+.app-shell.no-rightbar-page .referral-card,
+.app-shell.no-rightbar-page .referral-summary-card,
+.app-shell.no-rightbar-page .profile-panel,
+.app-shell.no-rightbar-page .tipster-pro-card,
+.app-shell.no-rightbar-page .admin-payout-stats > div,
+.app-shell.no-rightbar-page .admin-payout-summary > div,
+.app-shell.no-rightbar-page .admin-payout-toolbar,
+.app-shell.no-rightbar-page .admin-payout-table-wrap,
+.app-shell.no-rightbar-page .payout-summary-card,
+.app-shell.no-rightbar-page .payout-request-card,
+.app-shell.no-rightbar-page .payout-list-card{
+  border-radius:26px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  background:linear-gradient(180deg,rgba(11,24,36,.94),rgba(5,14,22,.96))!important;
+  box-shadow:0 18px 56px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+.app-shell.no-rightbar-page .page-title h1,
+.app-shell.no-rightbar-page .wallet-main-card strong,
+.app-shell.no-rightbar-page .leaderboard-stats b,
+.app-shell.no-rightbar-page .pricing-card strong,
+.app-shell.no-rightbar-page .finance-card strong,
+.app-shell.no-rightbar-page .earnings-hero strong,
+.app-shell.no-rightbar-page .payments-total b{
+  letter-spacing:-.035em!important;
+}
+
+/* Hide duplicate top hero rows/cards where actions already live on banner 1 */
+.app-shell.no-rightbar-page .wallet-ultra-hero,
+.app-shell.no-rightbar-page .notifications-page > .leaderboard-hero,
+.app-shell.no-rightbar-page .notifications-page > .feed-actions,
+.app-shell.no-rightbar-page .payments-page > .payments-hero,
+.app-shell.no-rightbar-page .subscription-ultra-page > .subscription-hero,
+.app-shell.no-rightbar-page .referrals-view > .section-hero,
+.app-shell.no-rightbar-page .earnings-page > .page-title,
+.app-shell.no-rightbar-page .admin-finance-page > .page-title,
+.app-shell.no-rightbar-page .admin-payout-page-pro > .admin-payout-hero,
+.app-shell.no-rightbar-page .ai-premium-dashboard > .ai-premium-header{
+  display:none!important;
+}
+
+/* Smooth, alive feeling like the AI tab */
+.app-shell.no-rightbar-page .ultra-page-banner,
+.app-shell.no-rightbar-page .page-title,
+.app-shell.no-rightbar-page .wallet-main-card,
+.app-shell.no-rightbar-page .wallet-stat,
+.app-shell.no-rightbar-page .leaderboard-stats div,
+.app-shell.no-rightbar-page .ai-ranking-card,
+.app-shell.no-rightbar-page .pricing-card,
+.app-shell.no-rightbar-page .finance-card,
+.app-shell.no-rightbar-page .payments-row:not(.header),
+.app-shell.no-rightbar-page .notification-item,
+.app-shell.no-rightbar-page .admin-payout-stats > div,
+.app-shell.no-rightbar-page .admin-payout-summary > div{
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease!important;
+}
+
+.app-shell.no-rightbar-page .page-title:hover,
+.app-shell.no-rightbar-page .wallet-main-card:hover,
+.app-shell.no-rightbar-page .wallet-stat:hover,
+.app-shell.no-rightbar-page .leaderboard-stats div:hover,
+.app-shell.no-rightbar-page .ai-ranking-card:hover,
+.app-shell.no-rightbar-page .pricing-card:hover,
+.app-shell.no-rightbar-page .finance-card:hover,
+.app-shell.no-rightbar-page .payments-row:not(.header):hover,
+.app-shell.no-rightbar-page .notification-item:hover,
+.app-shell.no-rightbar-page .admin-payout-stats > div:hover,
+.app-shell.no-rightbar-page .admin-payout-summary > div:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(31,226,174,.16)!important;
+  box-shadow:0 22px 62px rgba(0,0,0,.30),0 0 0 1px rgba(31,226,174,.08) inset!important;
+}
+
+@media(max-width:1440px){
+  :root{--betai-unified-shell-max:1520px;--betai-unified-content-max:1180px;}
+}
+
+@media(max-width:1280px){
+  .app-shell.no-rightbar-page .ultra-page-banner-actions{
+    max-width:min(70%, 580px)!important;
+  }
+}
+
+@media(max-width:900px){
+  :root{--betai-unified-content-max:100%;}
+  .app-shell.no-rightbar-page{
+    grid-template-columns:1fr!important;
+    padding:14px!important;
+  }
+  .app-shell.no-rightbar-page .ultra-page-banner{
+    border-radius:24px!important;
+    margin-bottom:16px!important;
+  }
+  .app-shell.no-rightbar-page .ultra-page-banner-actions{
+    max-width:calc(100% - 28px)!important;
+    margin:0 14px 14px 14px!important;
+  }
+  .app-shell.no-rightbar-page .ultra-page-banner-actions button{
+    min-height:40px!important;
+    padding:0 14px!important;
+    font-size:12px!important;
+  }
+}
+
