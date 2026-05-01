@@ -465,6 +465,8 @@ function UltraPageBanner({ variant = 'dashboard', children = null }) {
   return (
     <section className={`ultra-page-banner ultra-page-banner-${variant}`}>
       <img src={src} alt="" loading="eager" />
+      <span className="ultra-banner-shine" aria-hidden="true"></span>
+      <span className="ultra-banner-glow" aria-hidden="true"></span>
       {children && <div className="ultra-page-banner-actions">{children}</div>}
     </section>
   )
