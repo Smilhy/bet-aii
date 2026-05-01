@@ -460,11 +460,12 @@ const ULTRA_PAGE_BANNERS = {
   aiPicks: '/ultra-ai-banner.png'
 }
 
-function UltraPageBanner({ variant = 'dashboard' }) {
+function UltraPageBanner({ variant = 'dashboard', children = null }) {
   const src = ULTRA_PAGE_BANNERS[variant] || ULTRA_PAGE_BANNERS.dashboard
   return (
     <section className={`ultra-page-banner ultra-page-banner-${variant}`}>
       <img src={src} alt="" loading="eager" />
+      {children && <div className="ultra-page-banner-actions">{children}</div>}
     </section>
   )
 }
@@ -1684,7 +1685,7 @@ function ReferralsView({ user, data, loading, onRefresh }) {
 
   return (
     <section className="referrals-view pro-section">
-      <UltraPageBanner variant="referrals" />
+      <UltraPageBanner variant="referrals"><button type="button" onClick={onRefresh} disabled={loading}>{loading ? 'Odświeżanie...' : 'Odśwież'}</button></UltraPageBanner>
       <div className="section-hero referral-hero">
         <div>
           <span className="eyebrow">GROWTH SYSTEM</span>
@@ -1795,7 +1796,7 @@ function ArticlesView() {
 
   return (
     <section className="articles-page">
-      <UltraPageBanner variant="articles" />
+      <UltraPageBanner variant="articles"><button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button></UltraPageBanner>
       <div className="articles-hero articles-hero-compact">
         <div>
           <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
@@ -1886,7 +1887,7 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
 
   return (
     <section className="wallet-panel wallet-ultra-page">
-      <UltraPageBanner variant="wallet" />
+      <UltraPageBanner variant="wallet"><button type="button" onClick={onTopUp}>+ Doładuj 100 zł</button></UltraPageBanner>
       <div className="wallet-ultra-hero">
         <div>
           <span className="wallet-kicker">Portfel BetAI</span>
@@ -1930,7 +1931,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 
   return (
     <section className="leaderboard-page notifications-page">
-      <UltraPageBanner variant="notifications" />
+      <UltraPageBanner variant="notifications"><button type="button" onClick={onRefresh}>Odśwież</button><button type="button" onClick={onMarkAllRead}>Oznacz jako przeczytane</button></UltraPageBanner>
       <div className="leaderboard-hero">
         <div>
           <h1>Powiadomienia</h1>
@@ -2260,7 +2261,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-premium-dashboard">
-      <UltraPageBanner variant="aiPicks" />
+      <UltraPageBanner variant="aiPicks"><button type="button" onClick={onRefresh} disabled={loading}>↻ Refresh</button><button type="button" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button><button type="button" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button></UltraPageBanner>
       <header className="ai-premium-header">
         <div className="ai-brand-title">
           <span className="ai-logo-mark">▟</span>
@@ -2874,7 +2875,7 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
     <section className="subscription-page subscription-ultra-page">
-      <UltraPageBanner variant="subscriptions" />
+      <UltraPageBanner variant="subscriptions">{isPremium ? <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button> : <button type="button" onClick={onUpgrade}>Aktywuj Premium</button>}</UltraPageBanner>
       <div className="subscription-hero subscription-ultra-hero">
         <div className="subscription-hero-copy">
           <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
@@ -2998,7 +2999,7 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
 
   return (
     <section className="earnings-page">
-      <UltraPageBanner variant="earnings" />
+      <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
       <div className="page-title">
         <h1>Zarobki tipstera</h1>
         <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
@@ -3317,7 +3318,7 @@ function AdminFinanceView({ report, onRefresh }) {
 
   return (
     <section className="admin-finance-page">
-      <UltraPageBanner variant="adminFinance" />
+      <UltraPageBanner variant="adminFinance"><button type="button" onClick={onRefresh}>Odśwież raport</button></UltraPageBanner>
       <div className="page-title admin-finance-title">
         <div>
           <h1>Admin — raport platformy</h1>
@@ -3484,7 +3485,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
   return (
     <section className="admin-payout-page admin-payout-page-pro">
-      <UltraPageBanner variant="adminPayouts" />
+      <UltraPageBanner variant="adminPayouts"><button type="button" onClick={onRunCron}>Uruchom cron wypłat</button></UltraPageBanner>
       <div className="admin-payout-hero admin-payout-hero-pro">
         <div>
           <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
@@ -4971,7 +4972,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile','articles'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -5133,7 +5134,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard','articles'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
     </div>
   )
 }
