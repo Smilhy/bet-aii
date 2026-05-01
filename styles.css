@@ -349,3 +349,68 @@ exports.handler = async function () {
     return json(500, { error: error.message || 'Real AI PRO Engine error' })
   }
 }
+
+
+/* BETAI FIX 369 — przyciski emotek i TIP obok wysyłania wiadomości */
+.livechat226-input-wrap.betai-input-actions-final,
+.betai-input-wrap-final.betai-input-actions-final {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 38px 78px 46px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.betai-emoji-inline-final {
+  position: relative !important;
+  width: 38px !important;
+  height: 43px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.betai-emoji-inline-final .betai-emoji-toggle-final {
+  width: 38px !important;
+  height: 43px !important;
+  border-radius: 13px !important;
+  font-size: 16px !important;
+}
+
+.betai-tip-inline-final {
+  width: 78px !important;
+  height: 43px !important;
+  margin: 0 !important;
+  padding: 0 8px !important;
+  border-radius: 13px !important;
+  font-size: 11px !important;
+}
+
+.betai-emoji-panel-inline-final {
+  left: auto !important;
+  right: 0 !important;
+  bottom: 51px !important;
+}
+
+.betai-bottom-reactions-compact {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  .livechat226-input-wrap.betai-input-actions-final,
+  .betai-input-wrap-final.betai-input-actions-final {
+    grid-template-columns: minmax(0, 1fr) 36px 68px 42px !important;
+    gap: 6px !important;
+  }
+
+  .betai-emoji-inline-final,
+  .betai-emoji-inline-final .betai-emoji-toggle-final,
+  .betai-tip-inline-final,
+  .livechat226-send.betai-send-final {
+    height: 40px !important;
+  }
+
+  .betai-tip-inline-final {
+    width: 68px !important;
+    font-size: 10px !important;
+  }
+}

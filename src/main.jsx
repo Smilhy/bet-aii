@@ -167,6 +167,17 @@ function readTipDebug() {
   try { return window.localStorage.getItem('betai_last_tip_save_status') || '' } catch (_) { return '' }
 }
 
+function getUnlockedTipsStorageKey(userId = 'guest') {
+  return `betai_unlocked_tips_${userId || 'guest'}`
+}
+
+function clearGuestUnlockedTips() {
+  try {
+    localStorage.removeItem('betai_unlocked_tips_v1')
+    localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+  } catch (_) {}
+}
+
 function buildRankingFromTips(tips = []) {
   const map = new Map()
   ;(tips || []).forEach(tip => {
@@ -404,7 +415,7 @@ return (
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
         <button>♕ Top typerzy</button>
         <button>▣ Moje subskrypcje</button>
-        <button>☰ Blog</button>
+        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły</button>
         <button>⚙ Ustawienia</button>
       </nav>
 
@@ -550,15 +561,27 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 function LiveChatPanel({ user }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
-  const [status, setStatus] = useState('Live chat gotowy')
+  const [status, setStatus] = useState('🎁 Tip na czacie = max 1 nagroda / 24h')
   const [sending, setSending] = useState(false)
+  const [onlineCount, setOnlineCount] = useState(1)
+  const [tippingId, setTippingId] = useState('')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
-  const email = String(user?.email || '').toLowerCase()
-  const userName = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const email = normalizeEmail(user?.email)
+  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+
+  const nameFromEmail = (value = '') => {
+    const clean = normalizeEmail(value)
+    if (!clean) return 'Gość'
+    if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
+    return clean.split('@')[0].replace(/[._-]+/g, ' ').split(' ').filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+  }
+
+  const initialsFromName = (name = '') => String(name || 'LC').split(' ').filter(Boolean).slice(0, 2).map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase() || 'LC'
 
   const loadMessages = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      setStatus('Supabase nie jest skonfigurowany')
+      setStatus('Live chat: Supabase nie jest skonfigurowany')
       return
     }
     try {
@@ -569,10 +592,10 @@ function LiveChatPanel({ user }) {
         .limit(20)
       if (error) throw error
       setMessages((data || []).reverse())
-      setStatus('Połączono live')
+      setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
     } catch (error) {
       console.error('live chat load error', error)
-      setStatus('Live chat: sprawdź SQL/Supabase')
+      setStatus('Live chat: reconnect z Supabase...')
     }
   }
 
@@ -580,10 +603,13 @@ function LiveChatPanel({ user }) {
     loadMessages()
     if (!isSupabaseConfigured || !supabase) return undefined
     const channel = supabase
-      .channel('betai-live-chat-dashboard')
+      .channel('betai-live-chat-226-react')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'live_chat_messages' }, loadMessages)
-      .subscribe()
-    const timer = setInterval(loadMessages, 10000)
+      .subscribe((nextStatus) => {
+        if (nextStatus === 'SUBSCRIBED') setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
+        if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(nextStatus)) setStatus('Realtime chwilowo niedostępny — włączone odświeżanie.')
+      })
+    const timer = setInterval(loadMessages, 2500)
     return () => {
       clearInterval(timer)
       supabase.removeChannel(channel)
@@ -591,31 +617,67 @@ function LiveChatPanel({ user }) {
   }, [])
 
   useEffect(() => {
-    const host = document.querySelector('.live-chat-panel .live-chat-messages')
+    const host = document.querySelector('.betai-chat-messages-final')
     if (host) host.scrollTop = host.scrollHeight
   }, [messages.length])
 
+  useEffect(() => {
+    const key = 'betai_live_presence_react_226'
+    const tabKey = 'betai_live_tab_id_react_226'
+    const getTabId = () => {
+      let id = sessionStorage.getItem(tabKey)
+      if (!id) {
+        id = 'tab_' + Math.random().toString(36).slice(2) + '_' + Date.now()
+        sessionStorage.setItem(tabKey, id)
+      }
+      return id
+    }
+    const heartbeat = () => {
+      let map = {}
+      try { map = JSON.parse(localStorage.getItem(key) || '{}') } catch (_) { map = {} }
+      const now = Date.now()
+      Object.keys(map).forEach(id => { if (!map[id] || now - map[id].ts > 45000) delete map[id] })
+      map[getTabId()] = { ts: now }
+      try { localStorage.setItem(key, JSON.stringify(map)) } catch (_) {}
+      const uniqueUsers = new Set(messages.map(m => normalizeEmail(m.user_email)).filter(Boolean)).size
+      setOnlineCount(Math.max(1, Object.keys(map).length, uniqueUsers))
+    }
+    heartbeat()
+    const timer = setInterval(heartbeat, 10000)
+    window.addEventListener('storage', heartbeat)
+    window.addEventListener('focus', heartbeat)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('storage', heartbeat)
+      window.removeEventListener('focus', heartbeat)
+    }
+  }, [messages])
+
   const todayCount = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
+    const start = new Date(); start.setHours(0, 0, 0, 0)
     return messages.filter(m => new Date(m.created_at).getTime() >= start.getTime()).length
   }, [messages])
 
   const leader = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0)
+    const start = new Date(); start.setHours(0, 0, 0, 0)
     const map = new Map()
     messages.forEach(m => {
       const ts = new Date(m.created_at).getTime()
-      const key = String(m.user_email || '').toLowerCase()
-      if (key && ts >= start.getTime()) map.set(key, { count: (map.get(key)?.count || 0) + 1, name: m.user_name || key.split('@')[0] })
+      const key = normalizeEmail(m.user_email)
+      if (key && ts >= start.getTime()) map.set(key, { email: key, count: (map.get(key)?.count || 0) + 1, name: m.user_name || nameFromEmail(key) })
     })
-    return [...map.values()].sort((a,b) => b.count - a.count)[0]
+    return [...map.values()].sort((a, b) => b.count - a.count)[0] || null
   }, [messages])
 
   const sendMessage = async () => {
-    const clean = text.trim().slice(0, 240)
+    const clean = String(text || '').trim().slice(0, 240)
     if (!clean || sending) return
     if (!email) {
-      setStatus('Musisz być zalogowany')
+      setStatus('Musisz być zalogowany, aby pisać na live chacie.')
+      return
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      setStatus('Live chat: Supabase nie jest skonfigurowany')
       return
     }
     setSending(true)
@@ -623,57 +685,145 @@ function LiveChatPanel({ user }) {
       const { error } = await supabase.from('live_chat_messages').insert({
         user_email: email,
         user_name: userName,
-        avatar_url: user?.user_metadata?.avatar_url || '',
+        avatar_url: user?.avatar_url || user?.user_metadata?.avatar_url || '',
         message: clean,
-        tipped_amount: 0
+        tipped_amount: 0,
+        created_at: new Date().toISOString()
       })
       if (error) throw error
       setText('')
-      setStatus('Wiadomość wysłana')
+      setStatus('Wiadomość wysłana na live chat.')
       await loadMessages()
     } catch (error) {
       console.error('live chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości')
+      setStatus('Nie udało się wysłać wiadomości online. Sprawdź Supabase i spróbuj ponownie.')
     } finally {
       setSending(false)
     }
   }
 
+  const sendTip = async (msg) => {
+    if (!msg?.id || tippingId) return
+    const targetEmail = normalizeEmail(msg.user_email)
+    if (!email) {
+      setStatus('Musisz być zalogowany, aby wysłać tip.')
+      return
+    }
+    if (email === targetEmail) {
+      setStatus('Nie możesz tipować samego siebie.')
+      return
+    }
+    setTippingId(String(msg.id))
+    try {
+      const nextAmount = Number(msg.tipped_amount || 0) + 1
+      await supabase.from('live_chat_messages').update({ tipped_amount: nextAmount }).eq('id', msg.id)
+      try {
+        await supabase.from('live_chat_tips').insert({
+          message_id: String(msg.id),
+          from_email: email,
+          to_email: targetEmail,
+          amount: 1
+        })
+      } catch (_) {}
+      setStatus(`Tip wysłany do ${msg.user_name || nameFromEmail(targetEmail)}.`)
+      await loadMessages()
+    } catch (error) {
+      console.error('live chat tip error', error)
+      setStatus('Nie udało się wysłać tipa.')
+    } finally {
+      setTippingId('')
+    }
+  }
+
+  const addEmoji = (emoji) => {
+    setText(prev => `${prev || ''}${emoji}`.trimStart())
+    setShowEmojiPicker(false)
+  }
+
+  const chatEmojis = ['🔥', '🎯', '💎', '👏', '😂', '😮', '🎉', '🚀', '👀', '🙂', '👍', '❤️']
+
   return (
-    <section className="panel live-chat-panel">
-      <div className="live-chat-head">
-        <div>
-          <span className="live-chat-kicker">BETAI LIVE CHAT</span>
-          <h2>💬 Czat społeczności</h2>
+    <section className="card widget livechat226-card betai-right-chat-final" id="betaiChatWidget">
+      <div className="betai-live-head-final">
+        <div className="betai-live-title-wrap-final">
+          <span className="livechat226-title-dot"></span>
+          <div className="livechat226-kicker">BETAI LIVE CHAT</div>
+          <span className="betai-online-final">{onlineCount} online</span>
         </div>
-        <span className="live-chat-online">{Math.max(1, new Set(messages.map(m => m.user_email)).size)} online</span>
+        <div className="betai-live-actions-final">
+          <div className="livechat226-head-badge">LIVE</div>
+          <button aria-label="Ustawienia czatu" className="betai-gear-final" type="button">⚙</button>
+        </div>
       </div>
-      <div className="live-chat-stats">
-        <div><b>{todayCount}</b><span>wiadomości dziś</span></div>
-        <div><b>{leader?.name || '—'}</b><span>{leader ? `${leader.count} top` : 'lider dnia'}</span></div>
+
+      <div className="betai-chat-stats-final">
+        <div className="livechat226-stat betai-chat-stat-final">
+          <span>TOP UŻYTKOWNIK (24H)</span>
+          <div className="betai-stat-user-final"><b className="betai-trophy-final">🏆</b><div><strong>{leader?.name || 'Brak lidera'}</strong><small>{leader ? `${leader.count} wiadomości` : `${todayCount} wiadomości dziś`}</small></div></div>
+        </div>
+        <div className="livechat226-stat betai-chat-stat-final"><span>NAGRODA DNIA</span><strong>🪙 1 żeton / 24h</strong><small>dla najbardziej aktywnych</small></div>
+        <div className="livechat226-stat betai-chat-stat-final"><span>AKTYWNI TERAZ</span><strong>👥 {onlineCount}</strong></div>
       </div>
-      <div className="live-chat-messages">
+
+
+      <div className="livechat226-messages betai-chat-messages-final" id="liveChatMessages226">
         {messages.length ? messages.map(msg => {
-          const mine = String(msg.user_email || '').toLowerCase() === email
-          const name = msg.user_name || String(msg.user_email || '').split('@')[0] || 'User'
+          const msgEmail = normalizeEmail(msg.user_email)
+          const mine = msgEmail && msgEmail === email
+          const isAdmin = msgEmail === 'smilhytv@gmail.com'
+          const isLeader = leader?.email && leader.email === msgEmail
+          const name = msg.user_name || nameFromEmail(msgEmail)
+          const avatar = msg.avatar_url || ''
           return (
-            <div className={`live-chat-msg ${mine ? 'mine' : ''}`} key={msg.id || msg.created_at}>
-              <div className="live-chat-avatar">{name.slice(0,2).toUpperCase()}</div>
-              <div className="live-chat-bubble">
-                <div className="live-chat-meta"><strong>{name}</strong><span>{new Date(msg.created_at).toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'})}</span></div>
-                <p>{msg.message}</p>
-                <small>Tips: {Number(msg.tipped_amount || 0)}</small>
+            <div className={`livechat226-msg ${mine ? 'me' : ''}`} key={msg.id || msg.created_at}>
+              <div className="livechat226-avatar" style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}>{avatar ? '' : initialsFromName(name)}</div>
+              <div className="livechat226-bubble">
+                <div className="livechat226-meta">
+                  <span className="livechat226-name">{name}</span>
+                  {isAdmin && <span className="livechat226-badge admin">Admin</span>}
+                  {isLeader && <span className="livechat226-badge leader">Top aktywność</span>}
+                  <span className="livechat226-time">{msg.created_at ? new Date(msg.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : '--:--'}</span>
+                </div>
+                <div className="livechat226-text">{msg.message}</div>
+                <div className="livechat226-actions">
+                  {mine ? <span className="livechat226-tipmeta">Twoja wiadomość</span> : <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button>}
+                  <span className="livechat226-tipmeta">Tips: {Number(msg.tipped_amount || 0)}</span>
+                </div>
               </div>
             </div>
           )
-        }) : <div className="live-chat-empty">Brak wiadomości. Napisz pierwszą wiadomość.</div>}
+        }) : <div className="livechat226-empty">Brak wiadomości. Napisz pierwszą wiadomość i uruchom live chat.</div>}
       </div>
-      <div className="live-chat-input-row">
-        <input value={text} maxLength={240} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Napisz wiadomość..." />
-        <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
-      </div>
-      <div className="live-chat-status">{status}</div>
-    </section>
+
+      <div className="livechat226-composer betai-composer-final">
+        <div className="livechat226-input-wrap betai-input-wrap-final betai-input-actions-final">
+          <input className="livechat226-input" maxLength={240} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage() } }} placeholder="Napisz wiadomość..." />
+
+          <div className="betai-emoji-picker-wrap-final betai-emoji-inline-final">
+            <button
+              className="betai-emoji-toggle-final"
+              type="button"
+              onClick={() => setShowEmojiPicker(prev => !prev)}
+              aria-expanded={showEmojiPicker}
+              aria-label="Pokaż emotki"
+              title="Emotki"
+            >
+              😊
+            </button>
+            {showEmojiPicker && (
+              <div className="betai-emoji-panel-final betai-emoji-panel-inline-final">
+                {chatEmojis.map((emoji) => (
+                  <button className="livechat226-emoji" key={emoji} type="button" onClick={() => addEmoji(emoji)}>{emoji}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button className="betai-tip-main-final betai-tip-inline-final" type="button" onClick={() => setStatus('Tip możesz wysłać przy wiadomości innego użytkownika.')}>🎁 TIP 1</button>
+          <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
+        </div>
+        <div className="livechat226-bottom-row betai-chat-note-final"><div className="livechat226-status">{status}</div></div>
+      </div>    </section>
   )
 }
 
@@ -1551,6 +1701,150 @@ function ReferralsView({ user, data, loading, onRefresh }) {
             </div>
           )) : <div className="empty-state">Jeszcze nie masz poleconych użytkowników.</div>}
         </div>
+      </div>
+    </section>
+  )
+}
+
+function ArticlesView() {
+  const [articles, setArticles] = useState([])
+  const [loadingArticles, setLoadingArticles] = useState(true)
+  const [articlesError, setArticlesError] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [articleQuery, setArticleQuery] = useState('')
+  const [lastUpdated, setLastUpdated] = useState(null)
+
+  async function loadArticles(silent = false) {
+    if (!silent) setLoadingArticles(true)
+    setArticlesError('')
+    try {
+      const response = await fetch('/.netlify/functions/sportpl-articles?limit=30&t=' + Date.now(), {
+        headers: { 'Accept': 'application/json' }
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać artykułów Sport.pl')
+      setArticles(Array.isArray(data.articles) ? data.articles : [])
+      setLastUpdated(data.updatedAt || new Date().toISOString())
+    } catch (error) {
+      setArticlesError(error.message || 'Nie udało się pobrać artykułów')
+    } finally {
+      if (!silent) setLoadingArticles(false)
+    }
+  }
+
+  useEffect(() => {
+    loadArticles(false)
+    const timer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const categories = useMemo(() => {
+    const set = new Set((articles || []).map(item => item.category || 'Sport').filter(Boolean))
+    return ['all', ...Array.from(set).slice(0, 8)]
+  }, [articles])
+
+  const filteredArticles = useMemo(() => {
+    const q = articleQuery.trim().toLowerCase()
+    return (articles || []).filter(article => {
+      if (activeCategory !== 'all' && article.category !== activeCategory) return false
+      if (!q) return true
+      return [article.title, article.excerpt, article.category, article.author].filter(Boolean).join(' ').toLowerCase().includes(q)
+    })
+  }, [articles, activeCategory, articleQuery])
+
+  const mainArticle = filteredArticles[0]
+  const sideArticles = filteredArticles.slice(1, 4)
+  const listArticles = filteredArticles.slice(4)
+
+  const formatArticleDate = (value) => {
+    if (!value) return 'Teraz'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Teraz'
+    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <section className="articles-page">
+      <div className="articles-hero">
+        <div>
+          <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
+          <h1>Artykuły</h1>
+          <p>Aktualne wiadomości sportowe pobierane automatycznie ze Sport.pl. Panel odświeża się co 10 minut i zachowuje styl Bet+AI.</p>
+          <div className="articles-meta-row">
+            <em>Auto refresh: 10 min</em>
+            <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
+          </div>
+        </div>
+        <button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button>
+      </div>
+
+      <div className="articles-toolbar">
+        <label className="articles-search">
+          <span>⌕</span>
+          <input value={articleQuery} onChange={event => setArticleQuery(event.target.value)} placeholder="Szukaj artykułów, drużyn, lig..." />
+        </label>
+        <div className="articles-categories">
+          {categories.map(category => (
+            <button key={category} className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)}>
+              {category === 'all' ? 'Wszystkie' : category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {articlesError && <div className="articles-error">⚠️ {articlesError}</div>}
+      {loadingArticles && !articles.length && <div className="articles-loading">Ładowanie artykułów Sport.pl...</div>}
+
+      {!loadingArticles && !filteredArticles.length && (
+        <div className="articles-empty">
+          <strong>Brak artykułów dla tego filtra</strong>
+          <span>Zmień kategorię albo wyczyść wyszukiwarkę.</span>
+        </div>
+      )}
+
+      {mainArticle && (
+        <div className="articles-featured-grid">
+          <a className="article-main-card" href={mainArticle.url} target="_blank" rel="noreferrer">
+            <div className="article-image-wrap">
+              {mainArticle.image ? <img src={mainArticle.image} alt="" loading="lazy" /> : <div className="article-image-placeholder">Sport.pl</div>}
+              <span>{mainArticle.category || 'Sport'}</span>
+            </div>
+            <div className="article-main-content">
+              <em>{formatArticleDate(mainArticle.publishedAt)} • Sport.pl</em>
+              <h2>{mainArticle.title}</h2>
+              <p>{mainArticle.excerpt || 'Kliknij, aby przeczytać pełny artykuł w Sport.pl.'}</p>
+              <strong>Czytaj artykuł ↗</strong>
+            </div>
+          </a>
+
+          <div className="article-side-list">
+            {sideArticles.map(article => (
+              <a className="article-side-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-mini-placeholder">S</div>}
+                <div>
+                  <span>{article.category || 'Sport'} • {formatArticleDate(article.publishedAt)}</span>
+                  <h3>{article.title}</h3>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="articles-grid">
+        {listArticles.map(article => (
+          <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+            <div className="article-card-image">
+              {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
+              <span>{article.category || 'Sport'}</span>
+            </div>
+            <div className="article-card-body">
+              <em>{formatArticleDate(article.publishedAt)}</em>
+              <h3>{article.title}</h3>
+              <p>{article.excerpt || 'Krótki opis artykułu pojawi się po pobraniu danych.'}</p>
+            </div>
+          </a>
+        ))}
       </div>
     </section>
   )
@@ -4313,6 +4607,57 @@ function App() {
     }
   }
 
+  async function fetchTipsterEarnings(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+      return
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_tipster_earnings', { p_user_id: userId })
+      if (!error && data) {
+        const row = Array.isArray(data) ? data[0] : data
+        const history = Array.isArray(row?.history) ? row.history : []
+        setTipsterEarnings({
+          total: Number(row?.total || row?.total_earnings || 0),
+          sales: Number(row?.sales || row?.sales_count || 0),
+          history,
+          available_to_payout: Number(row?.available_to_payout || row?.available || row?.total || 0)
+        })
+        return
+      }
+    } catch (error) {
+      console.warn('fetchTipsterEarnings rpc skipped:', error)
+    }
+
+    try {
+      const { data: ownTips } = await supabase
+        .from('tips')
+        .select('id')
+        .or(`author_id.eq.${userId},user_id.eq.${userId}`)
+
+      const ids = (ownTips || []).map(row => row.id).filter(Boolean)
+      if (!ids.length) {
+        setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+        return
+      }
+
+      const { data: paymentsRows, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .in('tip_id', ids)
+        .order('created_at', { ascending: false })
+
+      if (paymentsError) throw paymentsError
+      const history = (paymentsRows || []).map(row => ({ ...row, amount: Number(row.amount || 0) * (1 - PLATFORM_COMMISSION_RATE) }))
+      const total = history.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      setTipsterEarnings({ total, sales: history.length, history, available_to_payout: total })
+    } catch (error) {
+      console.error('fetchTipsterEarnings error', error)
+      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    }
+  }
+
   useEffect(() => {
     let unsubscribe = null
 
@@ -4537,8 +4882,15 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
-  const userOnlyTips = tips.filter(isUserTip)
+  const userOnlyTips = tips.filter(isUserTip).map(normalizeTipRow)
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
+
+  const feedCounts = {
+    all: userOnlyTips.length,
+    premium: userOnlyTips.filter(tip => isTipPremium(tip)).length,
+    free: userOnlyTips.filter(tip => !isTipPremium(tip)).length,
+    mine: userOnlyTips.filter(tip => Boolean(sessionUser?.id && (getTipAuthorId(tip) === sessionUser.id || tip.user_id === sessionUser.id))).length
+  }
 
   const filteredTips = userOnlyTips.filter(tip => {
     const normalizedTip = normalizeTipRow(tip)
@@ -4564,8 +4916,8 @@ function App() {
 
   const filterItems = [
     ['all', 'Wszystkie'],
-    ['free', 'Darmowe'],
     ['premium', 'Premium'],
+    ['free', 'Darmowe'],
     ['mine', 'Moje']
   ]
 
@@ -4578,7 +4930,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile','articles'].includes(view) ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4627,6 +4979,10 @@ function App() {
 
         {view === 'leaderboard' && (
           <LeaderboardView tips={tips} ranking={realRanking} />
+        )}
+
+        {view === 'articles' && (
+          <ArticlesView />
         )}
 
         {view === 'referrals' && (
@@ -4701,18 +5057,6 @@ function App() {
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
             <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
-            <div className="feed-title">
-              <div>
-                <h2>Ostatnie typy</h2>
-                <p>Feed pobierany z Supabase. Nowy typ pojawi się tutaj po zapisie.</p>
-                {lastTipSaveStatus && <p className="tip-save-status">Status dodawania: {lastTipSaveStatus}</p>}
-              </div>
-              <div className="feed-actions">
-                <button onClick={() => setView('add')}>+ Dodaj typ</button>
-                <button onClick={() => fetchTips(sessionUser?.id)}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
-              </div>
-            </div>
-
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>
@@ -4720,7 +5064,7 @@ function App() {
                 <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
-                <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b>
+                <b>{feedCounts.premium}</b>
                 <small>typów premium</small>
               </div>
             </div>
@@ -4732,16 +5076,12 @@ function App() {
                   className={activeFilter === key ? 'active' : ''}
                   onClick={() => setActiveFilter(key)}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <b>{feedCounts[key]}</b>
                 </button>
               ))}
             </div>
 
-            <div className="feed-stats">
-              <span>Wszystkie: <b>{userOnlyTips.length}</b></span>
-              <span>Premium: <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b></span>
-              <span>Darmowe: <b>{userOnlyTips.filter(t => t.access_type === 'free').length}</b></span>
-            </div>
 
             <div className="feed">
               {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
@@ -4752,7 +5092,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard','articles'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
     </div>
   )
 }

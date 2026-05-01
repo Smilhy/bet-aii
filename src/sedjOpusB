@@ -167,6 +167,17 @@ function readTipDebug() {
   try { return window.localStorage.getItem('betai_last_tip_save_status') || '' } catch (_) { return '' }
 }
 
+function getUnlockedTipsStorageKey(userId = 'guest') {
+  return `betai_unlocked_tips_${userId || 'guest'}`
+}
+
+function clearGuestUnlockedTips() {
+  try {
+    localStorage.removeItem('betai_unlocked_tips_v1')
+    localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
+  } catch (_) {}
+}
+
 function buildRankingFromTips(tips = []) {
   const map = new Map()
   ;(tips || []).forEach(tip => {
@@ -4236,6 +4247,57 @@ function App() {
     }
   }
 
+  async function fetchTipsterEarnings(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+      return
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_tipster_earnings', { p_user_id: userId })
+      if (!error && data) {
+        const row = Array.isArray(data) ? data[0] : data
+        const history = Array.isArray(row?.history) ? row.history : []
+        setTipsterEarnings({
+          total: Number(row?.total || row?.total_earnings || 0),
+          sales: Number(row?.sales || row?.sales_count || 0),
+          history,
+          available_to_payout: Number(row?.available_to_payout || row?.available || row?.total || 0)
+        })
+        return
+      }
+    } catch (error) {
+      console.warn('fetchTipsterEarnings rpc skipped:', error)
+    }
+
+    try {
+      const { data: ownTips } = await supabase
+        .from('tips')
+        .select('id')
+        .or(`author_id.eq.${userId},user_id.eq.${userId}`)
+
+      const ids = (ownTips || []).map(row => row.id).filter(Boolean)
+      if (!ids.length) {
+        setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+        return
+      }
+
+      const { data: paymentsRows, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .in('tip_id', ids)
+        .order('created_at', { ascending: false })
+
+      if (paymentsError) throw paymentsError
+      const history = (paymentsRows || []).map(row => ({ ...row, amount: Number(row.amount || 0) * (1 - PLATFORM_COMMISSION_RATE) }))
+      const total = history.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      setTipsterEarnings({ total, sales: history.length, history, available_to_payout: total })
+    } catch (error) {
+      console.error('fetchTipsterEarnings error', error)
+      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
+    }
+  }
+
   useEffect(() => {
     let unsubscribe = null
 
@@ -4460,8 +4522,15 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
-  const userOnlyTips = tips.filter(isUserTip)
+  const userOnlyTips = tips.filter(isUserTip).map(normalizeTipRow)
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
+
+  const feedCounts = {
+    all: userOnlyTips.length,
+    premium: userOnlyTips.filter(tip => isTipPremium(tip)).length,
+    free: userOnlyTips.filter(tip => !isTipPremium(tip)).length,
+    mine: userOnlyTips.filter(tip => Boolean(sessionUser?.id && (getTipAuthorId(tip) === sessionUser.id || tip.user_id === sessionUser.id))).length
+  }
 
   const filteredTips = userOnlyTips.filter(tip => {
     const normalizedTip = normalizeTipRow(tip)
@@ -4487,8 +4556,8 @@ function App() {
 
   const filterItems = [
     ['all', 'Wszystkie'],
-    ['free', 'Darmowe'],
     ['premium', 'Premium'],
+    ['free', 'Darmowe'],
     ['mine', 'Moje']
   ]
 
@@ -4647,7 +4716,7 @@ function App() {
                 <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
               </div>
               <div className="monetization-stats">
-                <b>{userOnlyTips.filter(t => t.access_type === 'premium').length}</b>
+                <b>{feedCounts.premium}</b>
                 <small>typów premium</small>
               </div>
             </div>
@@ -4659,7 +4728,8 @@ function App() {
                   className={activeFilter === key ? 'active' : ''}
                   onClick={() => setActiveFilter(key)}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <b>{feedCounts[key]}</b>
                 </button>
               ))}
             </div>
