@@ -5097,7 +5097,7 @@ function App() {
 
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
-            <UltraPageBanner variant="dashboard" />
+            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>

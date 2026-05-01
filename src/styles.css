@@ -7188,3 +7188,114 @@ html,body,#root{
   .ultra-page-banner{border-radius:18px!important;}
   .ultra-page-banner img{min-height:126px!important;}
 }
+
+
+/* VERSION 374 — unified banner size + equal page width across tabs */
+.ultra-page-banner,
+.add-page .ultra-page-banner,
+.wallet-ultra-page .ultra-page-banner,
+.profile-ultra-page .ultra-page-banner,
+.leaderboard-page .ultra-page-banner,
+.articles-page .ultra-page-banner,
+.referrals-page .ultra-page-banner,
+.notifications-page .ultra-page-banner,
+.payments-page .ultra-page-banner,
+.subscription-ultra-page .ultra-page-banner,
+.earnings-page .ultra-page-banner,
+.payout-page .ultra-page-banner,
+.admin-finance-page .ultra-page-banner,
+.admin-payout-page .ultra-page-banner,
+.admin-payout-page-pro .ultra-page-banner,
+.ai-premium-dashboard .ultra-page-banner{
+  width:100%!important;
+  max-width:1068px!important;
+  margin:0 auto 22px!important;
+  aspect-ratio:1916/821!important;
+  min-height:0!important;
+  display:block!important;
+}
+.ultra-page-banner img{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:1916/821!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+}
+.add-page,
+.wallet-panel,
+.wallet-ultra-page,
+.profile-page,
+.profile-ultra-page,
+.leaderboard-page,
+.articles-page,
+.referrals-page,
+.notifications-page,
+.payments-page,
+.subscription-page,
+.subscription-ultra-page,
+.earnings-page,
+.payout-page,
+.admin-finance-page,
+.admin-payout-page,
+.admin-payout-page-pro,
+.ai-premium-dashboard{
+  width:100%!important;
+  max-width:1068px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.add-page,
+.wallet-panel,
+.wallet-ultra-page,
+.profile-page,
+.profile-ultra-page,
+.leaderboard-page,
+.articles-page,
+.referrals-page,
+.notifications-page,
+.payments-page,
+.subscription-page,
+.subscription-ultra-page,
+.earnings-page,
+.payout-page,
+.admin-finance-page,
+.admin-payout-page,
+.admin-payout-page-pro,
+.ai-premium-dashboard{
+  padding-left:0!important;
+  padding-right:0!important;
+}
+.old-ranking-hero-hidden{
+  display:none!important;
+  visibility:hidden!important;
+  max-height:0!important;
+  overflow:hidden!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+@media(max-width:1200px){
+  .ultra-page-banner,
+  .add-page,
+  .wallet-panel,
+  .wallet-ultra-page,
+  .profile-page,
+  .profile-ultra-page,
+  .leaderboard-page,
+  .articles-page,
+  .referrals-page,
+  .notifications-page,
+  .payments-page,
+  .subscription-page,
+  .subscription-ultra-page,
+  .earnings-page,
+  .payout-page,
+  .admin-finance-page,
+  .admin-payout-page,
+  .admin-payout-page-pro,
+  .ai-premium-dashboard{
+    max-width:100%!important;
+  }
+}
