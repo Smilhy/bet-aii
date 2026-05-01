@@ -8038,3 +8038,46 @@ html,body,#root{
     opacity:0!important;
   }
 }
+
+
+/* VERSION 385 — ULTRA PRO live chat: usuwa pustą przestrzeń pod statusem */
+@media (min-width:1001px){
+  .rightbar .live-chat-panel{
+    min-height:0!important;
+    height:auto!important;
+    padding:14px 14px 10px!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+
+  .rightbar .live-chat-status{
+    margin-top:6px!important;
+    margin-bottom:0!important;
+    min-height:auto!important;
+    line-height:1.25!important;
+    padding-bottom:0!important;
+  }
+
+  .rightbar .live-chat-input-row{
+    margin-top:8px!important;
+  }
+
+  .rightbar .live-chat-messages{
+    height:250px!important;
+    max-height:250px!important;
+  }
+}
+
+@media (min-width:1400px){
+  .rightbar .live-chat-messages{
+    height:270px!important;
+    max-height:270px!important;
+  }
+}
+
+@media (min-width:1600px){
+  .rightbar .live-chat-messages{
+    height:285px!important;
+    max-height:285px!important;
+  }
+}

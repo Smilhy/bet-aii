@@ -1,0 +1,1 @@
+Wersja 385: skrócony panel BETAI LIVE CHAT w prawej kolumnie. Usunięta pusta przestrzeń pod tekstem statusu, ramka dopasowana bliżej napisu live chat połączony.
