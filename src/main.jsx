@@ -442,6 +442,34 @@ function formatMoney(value) {
 }
 
 
+const ULTRA_PAGE_BANNERS = {
+  dashboard: '/ultra-dashboard-banner.png',
+  articles: '/ultra-articles-banner.png',
+  add: '/ultra-add-banner.png',
+  wallet: '/ultra-wallet-banner.png',
+  profile: '/ultra-profile-banner.png',
+  leaderboard: '/ultra-ranking-banner.png',
+  referrals: '/ultra-referrals-banner.png',
+  notifications: '/ultra-notifications-banner.png',
+  payments: '/ultra-payments-banner.png',
+  subscriptions: '/ultra-subscription-banner.png',
+  earnings: '/ultra-earnings-banner.png',
+  payouts: '/ultra-payouts-banner.png',
+  adminFinance: '/ultra-admin-finance-banner.png',
+  adminPayouts: '/ultra-admin-payouts-banner.png',
+  aiPicks: '/ultra-ai-banner.png'
+}
+
+function UltraPageBanner({ variant = 'dashboard' }) {
+  const src = ULTRA_PAGE_BANNERS[variant] || ULTRA_PAGE_BANNERS.dashboard
+  return (
+    <section className={`ultra-page-banner ultra-page-banner-${variant}`}>
+      <img src={src} alt="" loading="eager" />
+    </section>
+  )
+}
+
+
 
 function formatAppErrorMessage(rawMessage) {
   const message = String(rawMessage || '')
@@ -1484,6 +1512,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page">
+      <UltraPageBanner variant="add" />
       <div className="page-title">
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
@@ -1655,6 +1684,7 @@ function ReferralsView({ user, data, loading, onRefresh }) {
 
   return (
     <section className="referrals-view pro-section">
+      <UltraPageBanner variant="referrals" />
       <div className="section-hero referral-hero">
         <div>
           <span className="eyebrow">GROWTH SYSTEM</span>
@@ -1765,11 +1795,11 @@ function ArticlesView() {
 
   return (
     <section className="articles-page">
-      <div className="articles-hero">
+      <UltraPageBanner variant="articles" />
+      <div className="articles-hero articles-hero-compact">
         <div>
           <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
           <h1>Artykuły</h1>
-          <p>Aktualne wiadomości sportowe pobierane automatycznie ze Sport.pl. Panel odświeża się co 10 minut i zachowuje styl Bet+AI.</p>
           <div className="articles-meta-row">
             <em>Auto refresh: 10 min</em>
             <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
@@ -1856,6 +1886,7 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
 
   return (
     <section className="wallet-panel wallet-ultra-page">
+      <UltraPageBanner variant="wallet" />
       <div className="wallet-ultra-hero">
         <div>
           <span className="wallet-kicker">Portfel BetAI</span>
@@ -1899,6 +1930,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 
   return (
     <section className="leaderboard-page notifications-page">
+      <UltraPageBanner variant="notifications" />
       <div className="leaderboard-hero">
         <div>
           <h1>Powiadomienia</h1>
@@ -2228,6 +2260,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-premium-dashboard">
+      <UltraPageBanner variant="aiPicks" />
       <header className="ai-premium-header">
         <div className="ai-brand-title">
           <span className="ai-logo-mark">▟</span>
@@ -2501,7 +2534,8 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
   return (
     <section className="leaderboard-page">
-      <div className="leaderboard-hero ranking-colorloop-hero">
+      <UltraPageBanner variant="leaderboard" />
+      <div className="leaderboard-hero ranking-colorloop-hero old-ranking-hero-hidden">
         <div className="ranking-hero-copy">
           <span className="ranking-kicker">ULTRA PRO RANKING</span>
           <h1>Ranking tipsterów</h1>
@@ -2840,6 +2874,7 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
     <section className="subscription-page subscription-ultra-page">
+      <UltraPageBanner variant="subscriptions" />
       <div className="subscription-hero subscription-ultra-hero">
         <div className="subscription-hero-copy">
           <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
@@ -2909,6 +2944,7 @@ function PaymentsView({ payments }) {
 
   return (
     <section className="payments-page">
+      <UltraPageBanner variant="payments" />
       <div className="payments-hero">
         <div>
           <h1>Historia płatności</h1>
@@ -2962,6 +2998,7 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
 
   return (
     <section className="earnings-page">
+      <UltraPageBanner variant="earnings" />
       <div className="page-title">
         <h1>Zarobki tipstera</h1>
         <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
@@ -3118,6 +3155,7 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
 
   return (
     <section className="profile-page profile-ultra-page">
+      <UltraPageBanner variant="profile" />
       <div className="profile-hero profile-ultra-hero">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar-big">{profile.initials}</div>
@@ -3213,6 +3251,7 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
   return (
     <section className="payout-page">
+      <UltraPageBanner variant="payouts" />
       <div className="payout-hero">
         <div>
           <h1>Wypłaty tipstera</h1>
@@ -3278,6 +3317,7 @@ function AdminFinanceView({ report, onRefresh }) {
 
   return (
     <section className="admin-finance-page">
+      <UltraPageBanner variant="adminFinance" />
       <div className="page-title admin-finance-title">
         <div>
           <h1>Admin — raport platformy</h1>
@@ -3444,6 +3484,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
   return (
     <section className="admin-payout-page admin-payout-page-pro">
+      <UltraPageBanner variant="adminPayouts" />
       <div className="admin-payout-hero admin-payout-hero-pro">
         <div>
           <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
@@ -5056,7 +5097,7 @@ function App() {
 
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
-            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
+            <UltraPageBanner variant="dashboard" />
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>
