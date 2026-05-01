@@ -415,7 +415,7 @@ return (
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
         <button>♕ Top typerzy</button>
         <button>▣ Moje subskrypcje</button>
-        <button>☰ Blog</button>
+        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły</button>
         <button>⚙ Ustawienia</button>
       </nav>
 
@@ -439,6 +439,35 @@ function formatRankingName(row) {
 
 function formatMoney(value) {
   return `${Number(value || 0).toFixed(2)} zł`
+}
+
+
+const ULTRA_PAGE_BANNERS = {
+  dashboard: '/ultra-dashboard-banner.png',
+  articles: '/ultra-articles-banner.png',
+  add: '/ultra-add-banner.png',
+  wallet: '/ultra-wallet-banner.png',
+  profile: '/ultra-profile-banner.png',
+  leaderboard: '/ultra-ranking-banner.png',
+  referrals: '/ultra-referrals-banner.png',
+  notifications: '/ultra-notifications-banner.png',
+  payments: '/ultra-payments-banner.png',
+  subscriptions: '/ultra-subscription-banner.png',
+  earnings: '/ultra-earnings-banner.png',
+  payouts: '/ultra-payouts-banner.png',
+  adminFinance: '/ultra-admin-finance-banner.png',
+  adminPayouts: '/ultra-admin-payouts-banner.png',
+  aiPicks: '/ultra-ai-banner.png'
+}
+
+function UltraPageBanner({ variant = 'dashboard', children = null }) {
+  const src = ULTRA_PAGE_BANNERS[variant] || ULTRA_PAGE_BANNERS.dashboard
+  return (
+    <section className={`ultra-page-banner ultra-page-banner-${variant}`}>
+      <img src={src} alt="" loading="eager" />
+      {children && <div className="ultra-page-banner-actions">{children}</div>}
+    </section>
+  )
 }
 
 
@@ -1484,6 +1513,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page">
+      <UltraPageBanner variant="add" />
       <div className="page-title">
         <h1>Dodaj nowy typ</h1>
         <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
@@ -1655,6 +1685,7 @@ function ReferralsView({ user, data, loading, onRefresh }) {
 
   return (
     <section className="referrals-view pro-section">
+      <UltraPageBanner variant="referrals"><button type="button" onClick={onRefresh} disabled={loading}>{loading ? 'Odświeżanie...' : 'Odśwież'}</button></UltraPageBanner>
       <div className="section-hero referral-hero">
         <div>
           <span className="eyebrow">GROWTH SYSTEM</span>
@@ -1706,12 +1737,157 @@ function ReferralsView({ user, data, loading, onRefresh }) {
   )
 }
 
+function ArticlesView() {
+  const [articles, setArticles] = useState([])
+  const [loadingArticles, setLoadingArticles] = useState(true)
+  const [articlesError, setArticlesError] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [articleQuery, setArticleQuery] = useState('')
+  const [lastUpdated, setLastUpdated] = useState(null)
+
+  async function loadArticles(silent = false) {
+    if (!silent) setLoadingArticles(true)
+    setArticlesError('')
+    try {
+      const response = await fetch('/.netlify/functions/sportpl-articles?limit=30&t=' + Date.now(), {
+        headers: { 'Accept': 'application/json' }
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać artykułów Sport.pl')
+      setArticles(Array.isArray(data.articles) ? data.articles : [])
+      setLastUpdated(data.updatedAt || new Date().toISOString())
+    } catch (error) {
+      setArticlesError(error.message || 'Nie udało się pobrać artykułów')
+    } finally {
+      if (!silent) setLoadingArticles(false)
+    }
+  }
+
+  useEffect(() => {
+    loadArticles(false)
+    const timer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const categories = useMemo(() => {
+    const set = new Set((articles || []).map(item => item.category || 'Sport').filter(Boolean))
+    return ['all', ...Array.from(set).slice(0, 8)]
+  }, [articles])
+
+  const filteredArticles = useMemo(() => {
+    const q = articleQuery.trim().toLowerCase()
+    return (articles || []).filter(article => {
+      if (activeCategory !== 'all' && article.category !== activeCategory) return false
+      if (!q) return true
+      return [article.title, article.excerpt, article.category, article.author].filter(Boolean).join(' ').toLowerCase().includes(q)
+    })
+  }, [articles, activeCategory, articleQuery])
+
+  const mainArticle = filteredArticles[0]
+  const sideArticles = filteredArticles.slice(1, 4)
+  const listArticles = filteredArticles.slice(4)
+
+  const formatArticleDate = (value) => {
+    if (!value) return 'Teraz'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Teraz'
+    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <section className="articles-page">
+      <UltraPageBanner variant="articles"><button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button></UltraPageBanner>
+      <div className="articles-hero articles-hero-compact">
+        <div>
+          <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
+          <h1>Artykuły</h1>
+          <div className="articles-meta-row">
+            <em>Auto refresh: 10 min</em>
+            <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
+          </div>
+        </div>
+        <button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button>
+      </div>
+
+      <div className="articles-toolbar">
+        <label className="articles-search">
+          <span>⌕</span>
+          <input value={articleQuery} onChange={event => setArticleQuery(event.target.value)} placeholder="Szukaj artykułów, drużyn, lig..." />
+        </label>
+        <div className="articles-categories">
+          {categories.map(category => (
+            <button key={category} className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)}>
+              {category === 'all' ? 'Wszystkie' : category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {articlesError && <div className="articles-error">⚠️ {articlesError}</div>}
+      {loadingArticles && !articles.length && <div className="articles-loading">Ładowanie artykułów Sport.pl...</div>}
+
+      {!loadingArticles && !filteredArticles.length && (
+        <div className="articles-empty">
+          <strong>Brak artykułów dla tego filtra</strong>
+          <span>Zmień kategorię albo wyczyść wyszukiwarkę.</span>
+        </div>
+      )}
+
+      {mainArticle && (
+        <div className="articles-featured-grid">
+          <a className="article-main-card" href={mainArticle.url} target="_blank" rel="noreferrer">
+            <div className="article-image-wrap">
+              {mainArticle.image ? <img src={mainArticle.image} alt="" loading="lazy" /> : <div className="article-image-placeholder">Sport.pl</div>}
+              <span>{mainArticle.category || 'Sport'}</span>
+            </div>
+            <div className="article-main-content">
+              <em>{formatArticleDate(mainArticle.publishedAt)} • Sport.pl</em>
+              <h2>{mainArticle.title}</h2>
+              <p>{mainArticle.excerpt || 'Kliknij, aby przeczytać pełny artykuł w Sport.pl.'}</p>
+              <strong>Czytaj artykuł ↗</strong>
+            </div>
+          </a>
+
+          <div className="article-side-list">
+            {sideArticles.map(article => (
+              <a className="article-side-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-mini-placeholder">S</div>}
+                <div>
+                  <span>{article.category || 'Sport'} • {formatArticleDate(article.publishedAt)}</span>
+                  <h3>{article.title}</h3>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="articles-grid">
+        {listArticles.map(article => (
+          <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+            <div className="article-card-image">
+              {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
+              <span>{article.category || 'Sport'}</span>
+            </div>
+            <div className="article-card-body">
+              <em>{formatArticleDate(article.publishedAt)}</em>
+              <h3>{article.title}</h3>
+              <p>{article.excerpt || 'Krótki opis artykułu pojawi się po pobraniu danych.'}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   const unlockedList = tips.filter(tip => unlockedTips.has(tip.id))
   const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
 
   return (
     <section className="wallet-panel wallet-ultra-page">
+      <UltraPageBanner variant="wallet"><button type="button" onClick={onTopUp}>+ Doładuj 100 zł</button></UltraPageBanner>
       <div className="wallet-ultra-hero">
         <div>
           <span className="wallet-kicker">Portfel BetAI</span>
@@ -1755,6 +1931,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 
   return (
     <section className="leaderboard-page notifications-page">
+      <UltraPageBanner variant="notifications"><button type="button" onClick={onRefresh}>Odśwież</button><button type="button" onClick={onMarkAllRead}>Oznacz jako przeczytane</button></UltraPageBanner>
       <div className="leaderboard-hero">
         <div>
           <h1>Powiadomienia</h1>
@@ -2084,6 +2261,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-premium-dashboard">
+      <UltraPageBanner variant="aiPicks"><button type="button" onClick={onRefresh} disabled={loading}>↻ Refresh</button><button type="button" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button><button type="button" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button></UltraPageBanner>
       <header className="ai-premium-header">
         <div className="ai-brand-title">
           <span className="ai-logo-mark">▟</span>
@@ -2357,7 +2535,8 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
   return (
     <section className="leaderboard-page">
-      <div className="leaderboard-hero ranking-colorloop-hero">
+      <UltraPageBanner variant="leaderboard" />
+      <div className="leaderboard-hero ranking-colorloop-hero old-ranking-hero-hidden">
         <div className="ranking-hero-copy">
           <span className="ranking-kicker">ULTRA PRO RANKING</span>
           <h1>Ranking tipsterów</h1>
@@ -2696,6 +2875,7 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
   const isPremium = isPremiumAccount(userPlan)
   return (
     <section className="subscription-page subscription-ultra-page">
+      <UltraPageBanner variant="subscriptions">{isPremium ? <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button> : <button type="button" onClick={onUpgrade}>Aktywuj Premium</button>}</UltraPageBanner>
       <div className="subscription-hero subscription-ultra-hero">
         <div className="subscription-hero-copy">
           <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
@@ -2765,6 +2945,7 @@ function PaymentsView({ payments }) {
 
   return (
     <section className="payments-page">
+      <UltraPageBanner variant="payments" />
       <div className="payments-hero">
         <div>
           <h1>Historia płatności</h1>
@@ -2818,6 +2999,7 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
 
   return (
     <section className="earnings-page">
+      <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
       <div className="page-title">
         <h1>Zarobki tipstera</h1>
         <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
@@ -2974,6 +3156,7 @@ function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) 
 
   return (
     <section className="profile-page profile-ultra-page">
+      <UltraPageBanner variant="profile" />
       <div className="profile-hero profile-ultra-hero">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar-big">{profile.initials}</div>
@@ -3069,6 +3252,7 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
   return (
     <section className="payout-page">
+      <UltraPageBanner variant="payouts" />
       <div className="payout-hero">
         <div>
           <h1>Wypłaty tipstera</h1>
@@ -3134,6 +3318,7 @@ function AdminFinanceView({ report, onRefresh }) {
 
   return (
     <section className="admin-finance-page">
+      <UltraPageBanner variant="adminFinance"><button type="button" onClick={onRefresh}>Odśwież raport</button></UltraPageBanner>
       <div className="page-title admin-finance-title">
         <div>
           <h1>Admin — raport platformy</h1>
@@ -3300,6 +3485,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
   return (
     <section className="admin-payout-page admin-payout-page-pro">
+      <UltraPageBanner variant="adminPayouts"><button type="button" onClick={onRunCron}>Uruchom cron wypłat</button></UltraPageBanner>
       <div className="admin-payout-hero admin-payout-hero-pro">
         <div>
           <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
@@ -4786,7 +4972,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','notifications','leaderboard','profile'].includes(view) ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -4835,6 +5021,10 @@ function App() {
 
         {view === 'leaderboard' && (
           <LeaderboardView tips={tips} ranking={realRanking} />
+        )}
+
+        {view === 'articles' && (
+          <ArticlesView />
         )}
 
         {view === 'referrals' && (
@@ -4944,7 +5134,7 @@ function App() {
         )}
       </main>
 
-      {!['adminPayouts','payouts','adminFinance','earnings','payments','referrals','wallet','subscriptions','leaderboard'].includes(view) && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
     </div>
   )
 }
