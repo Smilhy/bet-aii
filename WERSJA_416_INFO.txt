@@ -1,0 +1,7 @@
+Wersja 416
+- podmieniony coin hero na oryginalny wysokiej jakości banner
+- banner ustawiony jako cała warstwa środkowej kolumny hero, bez zbyt dużego przybliżenia
+- obraz dopasowany do całego section hero (inner frame), bez jakości ze screena
+- statystyki po prawej pozostają na wierzchu z lżejszym glass tłem
+- przycisk saldo/żetony u góry nadal niebieski jak Wyloguj
+- Żetony w lewej kolumnie nadal niebieskie
