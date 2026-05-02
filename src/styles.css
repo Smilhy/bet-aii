@@ -8240,3 +8240,177 @@ html,body,#root{
   18%{box-shadow:0 26px 78px rgba(0,0,0,.38),0 0 34px rgba(31,226,174,.28), inset 0 1px 0 rgba(255,255,255,.12)!important;}
   36%{box-shadow:0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;}
 }
+
+
+/* VERSION 387 — FINAL FIX: live chat bez ucinania + pewny widoczny błysk */
+@media (min-width:1001px){
+  .rightbar .livechat226-card,
+  .rightbar .betai-right-chat-final,
+  .livechat226-card.betai-right-chat-final{
+    height:440px!important;
+    min-height:440px!important;
+    max-height:440px!important;
+    box-sizing:border-box!important;
+    padding:12px!important;
+    gap:8px!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+    border-radius:22px!important;
+  }
+
+  .rightbar .betai-live-head-final{
+    flex:0 0 auto!important;
+    margin:0!important;
+  }
+
+  .rightbar .betai-chat-stats-final{
+    flex:0 0 auto!important;
+    gap:7px!important;
+    margin:0!important;
+  }
+
+  .rightbar .livechat226-stat,
+  .rightbar .betai-chat-stat-final{
+    padding:8px!important;
+    border-radius:14px!important;
+    min-height:58px!important;
+    box-sizing:border-box!important;
+  }
+
+  .rightbar .livechat226-messages,
+  .rightbar .betai-chat-messages-final{
+    flex:1 1 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    overflow:auto!important;
+  }
+
+  .rightbar .livechat226-composer,
+  .rightbar .betai-composer-final{
+    flex:0 0 auto!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  .rightbar .livechat226-bottom-row,
+  .rightbar .betai-chat-note-final{
+    margin:5px 0 0!important;
+    padding:0!important;
+    min-height:0!important;
+    line-height:1.15!important;
+  }
+
+  .rightbar .livechat226-status{
+    margin:0!important;
+    padding:0!important;
+    min-height:0!important;
+    line-height:1.18!important;
+    font-size:10.5px!important;
+  }
+
+  .rightbar .real-ranking-panel{
+    margin-top:12px!important;
+  }
+}
+
+@media (min-width:1500px){
+  .rightbar .livechat226-card,
+  .rightbar .betai-right-chat-final,
+  .livechat226-card.betai-right-chat-final{
+    height:455px!important;
+    min-height:455px!important;
+    max-height:455px!important;
+  }
+}
+
+/* Błysk widoczny również na dashboard hero i wszystkich ultra bannerach */
+.ultra-page-banner,
+.betai-animated-hero,
+.dashboard-hero{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+
+.ultra-page-banner > img{
+  animation:betaiImageFlash387 3s ease-in-out infinite!important;
+}
+
+.ultra-page-banner::before,
+.betai-animated-hero::before,
+.dashboard-hero::before{
+  content:""!important;
+  position:absolute!important;
+  top:-45%!important;
+  left:-95%!important;
+  width:90%!important;
+  height:200%!important;
+  z-index:50!important;
+  pointer-events:none!important;
+  opacity:0!important;
+  display:block!important;
+  transform:skewX(-18deg)!important;
+  background:linear-gradient(105deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 28%,
+    rgba(255,255,255,.20) 40%,
+    rgba(255,255,255,.95) 49%,
+    rgba(31,226,174,.90) 54%,
+    rgba(255,255,255,.40) 63%,
+    rgba(255,255,255,0) 78%,
+    rgba(255,255,255,0) 100%
+  )!important;
+  mix-blend-mode:screen!important;
+  filter:drop-shadow(0 0 22px rgba(31,226,174,.75))!important;
+  animation:betaiShine387 3s cubic-bezier(.18,.75,.22,1) infinite!important;
+}
+
+.ultra-page-banner::after,
+.betai-animated-hero::after,
+.dashboard-hero::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:49!important;
+  pointer-events:none!important;
+  opacity:0!important;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(31,226,174,.42), transparent 26%),
+    radial-gradient(circle at 75% 80%, rgba(124,92,255,.32), transparent 32%)!important;
+  mix-blend-mode:screen!important;
+  animation:betaiGlow387 3s ease-in-out infinite!important;
+}
+
+.ultra-page-banner-actions,
+.betai-hero-content,
+.betai-hero-stats,
+.dashboard-hero > *{
+  position:relative!important;
+  z-index:80!important;
+}
+
+@keyframes betaiShine387{
+  0%{left:-95%;opacity:0;}
+  6%{opacity:0;}
+  13%{opacity:1;}
+  29%{left:118%;opacity:.95;}
+  39%{left:140%;opacity:0;}
+  100%{left:140%;opacity:0;}
+}
+
+@keyframes betaiGlow387{
+  0%,100%{opacity:0;}
+  10%{opacity:.10;}
+  20%{opacity:.40;}
+  34%{opacity:.14;}
+  44%{opacity:0;}
+}
+
+@keyframes betaiImageFlash387{
+  0%,100%{filter:saturate(1.04) contrast(1.04) brightness(1.01);}
+  18%{filter:saturate(1.18) contrast(1.11) brightness(1.16);}
+  36%{filter:saturate(1.04) contrast(1.04) brightness(1.01);}
+}
