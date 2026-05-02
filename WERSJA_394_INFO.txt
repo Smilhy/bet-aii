@@ -1,0 +1,5 @@
+Wersja 394
+- Dodano nowy obraz Bet+AI Coin jako kolejny animowany slajd w hero dashboardu.
+- Nie usunięto poprzednich slajdów/animacji hero.
+- Zachowano układ tabeli/statystyk hero „MECZÓW DZIŚ” po prawej stronie.
+- Loader i login bez zmian.

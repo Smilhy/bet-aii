@@ -527,12 +527,13 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
     { prefix: 'Win more bets with ', accent: 'Stats' },
     { prefix: 'Win more bets with ', accent: '+EV' }
   ]
+  const heroPanels = ['main', 'alt', 'coin']
   const [panel, setPanel] = useState('main')
   const [lineIndex, setLineIndex] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const panelTimer = setInterval(() => setPanel(prev => prev === 'main' ? 'alt' : 'main'), 8000)
+    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'main'), 8000)
     const lineTimer = setInterval(() => setLineIndex(prev => (prev + 1) % heroLines.length), 3500)
     return () => { clearInterval(panelTimer); clearInterval(lineTimer) }
   }, [])
@@ -575,6 +576,9 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
           </div>
           <div className={`betai-hero-panel betai-hero-panel-alt ${panel === 'alt' ? 'active' : ''}`}>
             <h1>{line.prefix}<strong>{line.accent}</strong></h1>
+          </div>
+          <div className={`betai-hero-panel betai-hero-panel-coin ${panel === 'coin' ? 'active' : ''}`}>
+            <img src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
           </div>
         </div>
       </div>
@@ -2309,54 +2313,22 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 }
 
 function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, onMarkAllRead, panelStyle = null }) {
-  const [tab, setTab] = useState('betai')
   if (!open) return null
-  const unread = notifications.filter(item => !item.is_read)
-  const items = unread.length ? unread : notifications.slice(0, 8)
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel betai-notify-panel-with-dm" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości BetAI i użytkowników">
+      <div className="betai-notify-panel betai-notify-panel-with-dm betai-notify-users-only" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości użytkowników">
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-kicker">BETAI MESSAGES</div>
-            <div className="betai-notify-title">Wiadomości</div>
-            <div className="betai-notify-sub">Powiadomienia strony oraz prywatne wiadomości użytkowników.</div>
+            <div className="betai-notify-kicker">USER MESSAGES</div>
+            <div className="betai-notify-title">Wiadomości użytkowników</div>
+            <div className="betai-notify-sub">Prywatny czat między użytkownikami — panel otwierany pod dzwonkiem.</div>
           </div>
           <div className="betai-notify-actions">
-            {tab === 'betai' && <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>}
             <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
           </div>
         </div>
-        <div className="betai-notify-tabs">
-          <button type="button" className={tab === 'betai' ? 'active' : ''} onClick={() => setTab('betai')}>🔔 BetAI <b>{unread.length}</b></button>
-          <button type="button" className={tab === 'users' ? 'active' : ''} onClick={() => setTab('users')}>💬 Użytkownicy <b>{dmUnreadCount}</b></button>
-        </div>
-        {tab === 'betai' ? (
-          <>
-            <div className="betai-notify-stats">
-              <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
-              <div className="betai-notify-stat"><span>Nowe wiadomości</span><strong>{unread.length}</strong></div>
-            </div>
-            <div className="betai-notify-list">
-              {items.length ? items.map((item, index) => (
-                <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
-                  <div className="betai-notify-head">
-                    <strong>{item.title || 'Wiadomość BetAI'}</strong>
-                    <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
-                  </div>
-                  <div className="betai-notify-body">{getNotificationBody(item)}</div>
-                  <div className="betai-notify-chips">
-                    <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
-                    {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
-                  </div>
-                </div>
-              )) : (
-                <div className="betai-notify-empty">Nie masz teraz nowych wiadomości BetAI.</div>
-              )}
-            </div>
-          </>
-        ) : <UserMessagesPanel user={user} visible={open && tab === 'users'} onUnreadChange={onDmUnreadChange} />}
+        <UserMessagesPanel user={user} visible={open} onUnreadChange={onDmUnreadChange} />
       </div>
     </div>
   )
