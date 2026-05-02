@@ -1,5 +1,0 @@
-Wersja 426
-- poprawka błędu Netlify EACCES dla esbuild
-- paczka nie zawiera node_modules, żeby Netlify zrobił czystą instalację zależności
-- netlify.toml robi rm -rf node_modules, npm ci i chmod +x dla esbuild przed buildem
-- zachowane zmiany z wersji 425: nowe logo, nowy slajd hero, dotychczasowy układ dashboardu

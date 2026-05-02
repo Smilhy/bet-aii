@@ -384,9 +384,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
-      <div className="brand brand-logo" aria-label="Bet+AI">
-        <img className="brand-image" src="/betai-sidebar-logo.png" alt="Bet+AI" />
-      </div>
+      <div className="brand">Bet<span>+AI</span></div>
 
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
@@ -530,13 +528,13 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
     { prefix: 'Win more bets with ', accent: 'Stats' },
     { prefix: 'Win more bets with ', accent: '+EV' }
   ]
-  const heroPanels = ['brand', 'alt', 'coin']
-  const [panel, setPanel] = useState('brand')
+  const heroPanels = ['main', 'alt', 'coin']
+  const [panel, setPanel] = useState('main')
   const [lineIndex, setLineIndex] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'brand'), 8000)
+    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'main'), 8000)
     const lineTimer = setInterval(() => setLineIndex(prev => (prev + 1) % heroLines.length), 3500)
     return () => { clearInterval(panelTimer); clearInterval(lineTimer) }
   }, [])
@@ -558,7 +556,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   return (
     <section
-      className={`betai-animated-hero betai-parallax-hero ${panel === 'brand' ? 'betai-hero-brand-active' : ''} ${panel === 'alt' ? 'betai-hero-alt-image-active' : ''} ${panel === 'coin' ? 'betai-hero-coin-active' : ''}`} 
+      className={`betai-animated-hero betai-parallax-hero ${panel === 'coin' ? 'betai-hero-coin-active' : ''}`} 
       aria-label="BetAI predictions hero"
       onMouseMove={handleHeroMove}
       onMouseLeave={resetHeroMove}
@@ -570,17 +568,16 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       <div className="betai-hero-orb betai-hero-orb-ring" />
       <div className="betai-hero-orb betai-hero-orb-glow" />
       <div className="betai-hero-player" />
-      <img className="betai-hero-full-brand-bg" src="/betai-brand-hero.jpg" alt="Bet+AI - Dane. Analiza. Przewaga." />
-      <img className="betai-hero-full-alt-bg" src="/betai-live-hero-wide-ultra.png" alt="Bet+AI - live betting AI hero" />
       <img className="betai-hero-full-coin-bg" src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
       <div className="betai-hero-copy">
         <div className="betai-hero-kicker"><span />BETAI PREDICTIONS</div>
         <div className="betai-hero-rotator">
-          <div className={`betai-hero-panel betai-hero-panel-brand ${panel === 'brand' ? 'active' : ''}`}>
-            <img src="/betai-brand-hero.jpg" alt="Bet+AI - Dane. Analiza. Przewaga." />
+          <div className={`betai-hero-panel ${panel === 'main' ? 'active' : ''}`}>
+            <h1><span>AI</span>, która<br />wyprzedza<br />rynek.</h1>
+            <p>Analizujemy tysiące danych w czasie rzeczywistym.</p>
           </div>
-          <div className={`betai-hero-panel betai-hero-panel-alt betai-hero-panel-alt-image ${panel === 'alt' ? 'active' : ''}`}>
-            <img src="/betai-live-hero-wide-ultra.png" alt="Bet+AI - live betting AI hero" />
+          <div className={`betai-hero-panel betai-hero-panel-alt ${panel === 'alt' ? 'active' : ''}`}>
+            <h1>{line.prefix}<strong>{line.accent}</strong></h1>
           </div>
           <div className={`betai-hero-panel betai-hero-panel-coin ${panel === 'coin' ? 'active' : ''}`}>
             <img src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
