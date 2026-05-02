@@ -1,0 +1,4 @@
+Wersja 406
+- prawa ramka powiadomienia/toast ustawiona na niebieski styl jak przycisk Wyloguj
+- zmieniony wygląd toast.success (np. Witaj ponownie)
+- nie ruszono tabeli MECZÓW DZIŚ
