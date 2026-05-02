@@ -1,6 +1,0 @@
-Wersja 408
-- wyrównany slajd Bet+AI Coin do tej samej ramki/obszaru co inne slajdy hero
-- baner coin nie wystaje i jest dopasowany w środkowej ramce hero
-- górny przycisk saldo/żetony ustawiony na niebiesko jak Wyloguj
-- Żetony w lewej kolumnie mają niebieski kolor
-- nie ruszono tabeli MECZÓW DZIŚ po prawej stronie
