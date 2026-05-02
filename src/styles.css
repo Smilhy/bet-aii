@@ -8972,3 +8972,114 @@ html,body,#root{
   color: #10bce8 !important;
   font-weight: 900 !important;
 }
+
+
+/* WERSJA 409 — FINAL: coin slide fills the whole hero frame area
+   Cel: obraz Bet+AI Coin ma wypełniać CAŁĄ środkową/lewą ramkę hero,
+   bez pustego miejsca pod spodem. Prawa kolumna MECZÓW DZIŚ zostaje nietknięta. */
+@media (min-width: 1000px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height:318px!important;
+    padding:24px 250px 24px 24px!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    position:absolute!important;
+    left:24px!important;
+    top:24px!important;
+    bottom:24px!important;
+    right:250px!important;
+    width:auto!important;
+    max-width:none!important;
+    min-height:0!important;
+    height:auto!important;
+    display:block!important;
+    z-index:3!important;
+    transform:none!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-kicker{
+    display:none!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-rotator{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    border-radius:24px!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel{
+    inset:0!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel-coin{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    padding:0!important;
+    margin:0!important;
+    display:block!important;
+    overflow:hidden!important;
+    border-radius:24px!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel-coin img{
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-height:none!important;
+    min-height:100%!important;
+    object-fit:cover!important;
+    object-position:center center!important;
+    border-radius:24px!important;
+    border:1px solid rgba(31,226,174,.22)!important;
+    box-shadow:0 18px 42px rgba(0,0,0,.30),0 0 22px rgba(31,226,174,.10)!important;
+    transform:none!important;
+    animation:betaiCoinHeroGlow 2.8s ease-in-out infinite alternate!important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    position:absolute!important;
+    right:18px!important;
+    top:18px!important;
+    bottom:18px!important;
+    width:220px!important;
+    z-index:5!important;
+  }
+}
+
+@media (min-width: 1000px) and (max-width: 1180px){
+  .betai-animated-hero.betai-hero-coin-active{
+    padding-right:230px!important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    right:230px!important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    width:202px!important;
+  }
+}
+
+/* top middle wallet / tokens button: final blue like Wyloguj, after all earlier global button rules */
+.topbar .wallet-top-btn.wallet-stack-top,
+.topbar button.wallet-top-btn.wallet-stack-top{
+  background:linear-gradient(135deg,#18f0c8,#10bce8)!important;
+  border:1px solid rgba(24,240,200,.32)!important;
+  color:#04121a!important;
+  box-shadow:0 10px 22px rgba(20,224,201,.20)!important;
+}
+.topbar .wallet-top-btn.wallet-stack-top strong,
+.topbar .wallet-top-btn.wallet-stack-top small{
+  color:#04121a!important;
+}
+.wallet-row.wallet-row-tokens span,
+.wallet-row.wallet-row-tokens b{
+  color:#10bce8!important;
+  font-weight:900!important;
+}

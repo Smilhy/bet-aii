@@ -1,0 +1,5 @@
+Wersja 409
+- FINAL: slajd Bet+AI Coin wypełnia całą środkową/lewą ramkę hero od góry do dołu
+- usunięte puste miejsce pod banerem w trybie coin
+- prawa kolumna MECZÓW DZIŚ zostaje po prawej, bez zmiany układu
+- górny przycisk saldo/żetony na niebiesko jak Wyloguj
