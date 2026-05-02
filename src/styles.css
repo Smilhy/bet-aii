@@ -8436,3 +8436,62 @@ html,body,#root{
 .betai-notify-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}.betai-notify-head strong{font-size:15px;line-height:1.15}.betai-notify-time{color:#91a6b4;font-size:12px;white-space:nowrap}.betai-notify-body{color:#d9e7ef;font-size:13px;line-height:1.5;margin-bottom:10px}.betai-notify-chips{display:flex;flex-wrap:wrap;gap:8px}
 .betai-chip{display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#eef8fb}.betai-chip.reward{background:linear-gradient(135deg,rgba(245,158,11,.24),rgba(217,119,6,.20));border-color:rgba(245,158,11,.28);color:#ffe8b3}.betai-chip.system{background:linear-gradient(135deg,rgba(73,223,255,.18),rgba(31,226,174,.14));border-color:rgba(73,223,255,.24);color:#d7fbff}.betai-notify-empty{border-radius:18px;border:1px dashed rgba(255,255,255,.08);padding:24px 16px;text-align:center;color:#9ab1c0;font-size:14px}
 @media (max-width:980px){.betai-notify-panel{left:50%;right:auto;transform:translateX(-50%);top:86px;width:min(96vw,460px)}.wallet-stack-top{min-width:auto!important}}
+
+/* WERSJA 389 — FIX HERO DASHBOARD: przywrócenie „Mecze dziś” na prawą stronę banneru.
+   Poprzedni efekt błysku ustawił .betai-hero-stats jako relative, przez co statystyki spadały pod hero. */
+@media (min-width: 1000px){
+  .betai-animated-hero > .betai-hero-stats{
+    position: absolute !important;
+    right: 12px !important;
+    top: 17px !important;
+    bottom: 17px !important;
+    left: auto !important;
+    width: 239px !important;
+    height: auto !important;
+    margin: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(4, 1fr) !important;
+    gap: 13px !important;
+    z-index: 80 !important;
+    transform: translate3d(calc(var(--mx,0) * 10px),calc(var(--my,0) * 7px),0) !important;
+  }
+
+  .betai-animated-hero > .betai-hero-copy{
+    position: relative !important;
+    z-index: 80 !important;
+    max-width: 650px !important;
+    padding-right: 0 !important;
+  }
+
+  .betai-animated-hero{
+    padding-right: 288px !important;
+  }
+
+  .betai-animated-hero > .betai-hero-stats div:nth-child(n+5){
+    display: none !important;
+  }
+}
+
+@media (min-width: 1000px) and (max-width: 1180px){
+  .betai-animated-hero{
+    padding-right: 252px !important;
+  }
+  .betai-animated-hero > .betai-hero-stats{
+    width: 220px !important;
+  }
+}
+
+@media (max-width: 999px){
+  .betai-animated-hero > .betai-hero-stats{
+    position: relative !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    margin-top: 18px !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows: none !important;
+    transform: none !important;
+  }
+}

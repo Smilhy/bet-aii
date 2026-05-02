@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
@@ -610,6 +610,146 @@ function LiveChatPanel({ user }) {
 
   const initialsFromName = (name = '') => String(name || 'LC').split(' ').filter(Boolean).slice(0, 2).map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase() || 'LC'
 
+  const todayKey = () => new Date().toISOString().slice(0, 10)
+
+  const safeInsertSystemNotification = async (recipientEmail, title, body, rewardTokens = 0) => {
+    const recipient = normalizeEmail(recipientEmail)
+    if (!recipient || !isSupabaseConfigured || !supabase) return
+    try {
+      await supabase.from('betai_system_notifications').insert({
+        recipient_email: recipient,
+        title,
+        body,
+        reward_tokens: Number(rewardTokens || 0) || 0,
+        sent_by: 'betai',
+        is_read: false
+      })
+    } catch (error) {
+      console.warn('chat notification skipped', error)
+    }
+  }
+
+  const getTokenWallet = async (walletEmail, fallbackUserId = null) => {
+    const walletKey = normalizeEmail(walletEmail)
+    if (!walletKey || !isSupabaseConfigured || !supabase) return { email: walletKey, balance: 0, user_id: fallbackUserId }
+    try {
+      const { data, error } = await supabase
+        .from('betai_token_wallets')
+        .select('*')
+        .eq('email', walletKey)
+        .maybeSingle()
+      if (!error && data) return { ...data, balance: Number(data.balance || 0) || 0 }
+    } catch (error) {
+      console.warn('chat get wallet skipped', error)
+    }
+    try {
+      const localBalance = Number(localStorage.getItem('betai_tokens_' + walletKey) || '0') || 0
+      return { email: walletKey, balance: localBalance, user_id: fallbackUserId }
+    } catch (_) {
+      return { email: walletKey, balance: 0, user_id: fallbackUserId }
+    }
+  }
+
+  const setTokenWallet = async (walletEmail, nextBalance, fallbackUserId = null) => {
+    const walletKey = normalizeEmail(walletEmail)
+    const cleanBalance = Math.max(0, Number(nextBalance || 0) || 0)
+    if (!walletKey) return cleanBalance
+    try { localStorage.setItem('betai_tokens_' + walletKey, String(cleanBalance)) } catch (_) {}
+    if (!isSupabaseConfigured || !supabase) return cleanBalance
+    try {
+      await supabase.from('betai_token_wallets').upsert({
+        email: walletKey,
+        user_id: fallbackUserId || null,
+        balance: cleanBalance,
+        welcome_bonus_claimed: true,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'email' })
+    } catch (error) {
+      console.warn('chat set wallet skipped', error)
+    }
+    return cleanBalance
+  }
+
+  const addTokenTransaction = async (walletEmail, deltaTokens, reason, refType = 'live_chat', refData = null) => {
+    const walletKey = normalizeEmail(walletEmail)
+    if (!walletKey || !isSupabaseConfigured || !supabase) return
+    try {
+      await supabase.from('betai_token_transactions').insert({
+        email: walletKey,
+        delta_tokens: Number(deltaTokens || 0) || 0,
+        delta_pln: 0,
+        reason,
+        ref_type: refType,
+        ref_data: refData || null
+      })
+    } catch (error) {
+      console.warn('chat token tx skipped', error)
+    }
+  }
+
+  const awardDailyLeaderIfNeeded = async (currentMessages = messages) => {
+    if (!isSupabaseConfigured || !supabase) return
+    const start = new Date(); start.setHours(0, 0, 0, 0)
+    const activity = new Map()
+    ;(currentMessages || []).forEach(m => {
+      const ts = new Date(m.created_at).getTime()
+      const key = normalizeEmail(m.user_email)
+      if (key && ts >= start.getTime()) activity.set(key, { email: key, count: (activity.get(key)?.count || 0) + 1, name: m.user_name || nameFromEmail(key), user_id: m.user_id || null })
+    })
+    const dailyLeader = [...activity.values()].sort((a, b) => b.count - a.count)[0]
+    if (!dailyLeader?.email || dailyLeader.count < 1) return
+    const rewardDate = todayKey()
+    try {
+      const { data: existing } = await supabase.from('live_chat_daily_rewards').select('reward_date,winner_email').eq('reward_date', rewardDate).maybeSingle()
+      if (existing?.reward_date) return
+      const { error } = await supabase.from('live_chat_daily_rewards').insert({
+        reward_date: rewardDate,
+        winner_email: dailyLeader.email,
+        winner_name: dailyLeader.name,
+        message_count: dailyLeader.count,
+        tokens_awarded: 1
+      })
+      if (error) return
+      const wallet = await getTokenWallet(dailyLeader.email, dailyLeader.user_id)
+      await setTokenWallet(dailyLeader.email, Number(wallet.balance || 0) + 1, wallet.user_id || dailyLeader.user_id || null)
+      await addTokenTransaction(dailyLeader.email, 1, 'live_chat_daily_leader', 'live_chat_daily_rewards', { reward_date: rewardDate, message_count: dailyLeader.count })
+      await safeInsertSystemNotification(dailyLeader.email, 'Nagroda za aktywność na czacie', `Gratulacje! Jesteś liderem aktywności BetAI Live Chat za dziś. Dodaliśmy 1 żeton do Twojego konta.`, 1)
+      setStatus(`🏆 ${dailyLeader.name} dostał 1 żeton za top aktywność 24h.`)
+    } catch (error) {
+      console.warn('daily chat reward skipped', error)
+    }
+  }
+
+  const loadOnlineCount = async () => {
+    if (!email || !isSupabaseConfigured || !supabase) {
+      setOnlineCount(email ? 1 : 0)
+      return
+    }
+    const now = new Date().toISOString()
+    try {
+      await supabase.from('presence_heartbeats').upsert({
+        user_id: user?.id || email,
+        email,
+        last_seen: now
+      }, { onConflict: 'user_id' })
+    } catch (error) {
+      console.warn('chat heartbeat skipped', error)
+    }
+    try {
+      const cutoff = new Date(Date.now() - 60 * 1000).toISOString()
+      const { data, error } = await supabase
+        .from('presence_heartbeats')
+        .select('user_id,email,last_seen')
+        .gte('last_seen', cutoff)
+      if (error) throw error
+      const active = new Set((data || []).map(row => normalizeEmail(row.email) || String(row.user_id || '')).filter(Boolean))
+      setOnlineCount(active.size)
+    } catch (error) {
+      console.warn('chat online count skipped', error)
+      setOnlineCount(email ? 1 : 0)
+    }
+  }
+
   const loadMessages = async () => {
     if (!isSupabaseConfigured || !supabase) {
       setStatus('Live chat: Supabase nie jest skonfigurowany')
@@ -622,8 +762,10 @@ function LiveChatPanel({ user }) {
         .order('created_at', { ascending: false })
         .limit(20)
       if (error) throw error
-      setMessages((data || []).reverse())
+      const nextMessages = (data || []).reverse()
+      setMessages(nextMessages)
       setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
+      awardDailyLeaderIfNeeded(nextMessages)
     } catch (error) {
       console.error('live chat load error', error)
       setStatus('Live chat: reconnect z Supabase...')
@@ -653,36 +795,14 @@ function LiveChatPanel({ user }) {
   }, [messages.length])
 
   useEffect(() => {
-    const key = 'betai_live_presence_react_226'
-    const tabKey = 'betai_live_tab_id_react_226'
-    const getTabId = () => {
-      let id = sessionStorage.getItem(tabKey)
-      if (!id) {
-        id = 'tab_' + Math.random().toString(36).slice(2) + '_' + Date.now()
-        sessionStorage.setItem(tabKey, id)
-      }
-      return id
-    }
-    const heartbeat = () => {
-      let map = {}
-      try { map = JSON.parse(localStorage.getItem(key) || '{}') } catch (_) { map = {} }
-      const now = Date.now()
-      Object.keys(map).forEach(id => { if (!map[id] || now - map[id].ts > 45000) delete map[id] })
-      map[getTabId()] = { ts: now }
-      try { localStorage.setItem(key, JSON.stringify(map)) } catch (_) {}
-      const uniqueUsers = new Set(messages.map(m => normalizeEmail(m.user_email)).filter(Boolean)).size
-      setOnlineCount(Math.max(1, Object.keys(map).length, uniqueUsers))
-    }
-    heartbeat()
-    const timer = setInterval(heartbeat, 10000)
-    window.addEventListener('storage', heartbeat)
-    window.addEventListener('focus', heartbeat)
+    loadOnlineCount()
+    const timer = setInterval(loadOnlineCount, 15000)
+    window.addEventListener('focus', loadOnlineCount)
     return () => {
       clearInterval(timer)
-      window.removeEventListener('storage', heartbeat)
-      window.removeEventListener('focus', heartbeat)
+      window.removeEventListener('focus', loadOnlineCount)
     }
-  }, [messages])
+  }, [email, user?.id])
 
   const todayCount = useMemo(() => {
     const start = new Date(); start.setHours(0, 0, 0, 0)
@@ -740,27 +860,52 @@ function LiveChatPanel({ user }) {
       setStatus('Musisz być zalogowany, aby wysłać tip.')
       return
     }
+    if (!targetEmail) {
+      setStatus('Nie znaleziono konta odbiorcy tipa.')
+      return
+    }
     if (email === targetEmail) {
       setStatus('Nie możesz tipować samego siebie.')
       return
     }
+    if (!isSupabaseConfigured || !supabase) {
+      setStatus('Tipy wymagają połączenia z Supabase.')
+      return
+    }
+
     setTippingId(String(msg.id))
     try {
+      const senderWallet = await getTokenWallet(email, user?.id || null)
+      if (Number(senderWallet.balance || 0) < 1) {
+        setStatus('Masz za mało żetonów, aby wysłać tip.')
+        return
+      }
+
+      const receiverWallet = await getTokenWallet(targetEmail, null)
+      const nextSenderBalance = Number(senderWallet.balance || 0) - 1
+      const nextReceiverBalance = Number(receiverWallet.balance || 0) + 1
+      await setTokenWallet(email, nextSenderBalance, senderWallet.user_id || user?.id || null)
+      await setTokenWallet(targetEmail, nextReceiverBalance, receiverWallet.user_id || null)
+
       const nextAmount = Number(msg.tipped_amount || 0) + 1
       await supabase.from('live_chat_messages').update({ tipped_amount: nextAmount }).eq('id', msg.id)
-      try {
-        await supabase.from('live_chat_tips').insert({
-          message_id: String(msg.id),
-          from_email: email,
-          to_email: targetEmail,
-          amount: 1
-        })
-      } catch (_) {}
-      setStatus(`Tip wysłany do ${msg.user_name || nameFromEmail(targetEmail)}.`)
+      await supabase.from('live_chat_tips').insert({
+        message_id: String(msg.id),
+        from_email: email,
+        to_email: targetEmail,
+        amount: 1
+      })
+      await addTokenTransaction(email, -1, 'live_chat_tip_sent', 'live_chat_tips', { message_id: String(msg.id), to_email: targetEmail })
+      await addTokenTransaction(targetEmail, 1, 'live_chat_tip_received', 'live_chat_tips', { message_id: String(msg.id), from_email: email })
+      await safeInsertSystemNotification(targetEmail, 'Dostałeś tip na czacie', `${userName} wysłał Ci 1 żeton za wiadomość na BetAI Live Chat.`, 1)
+      await safeInsertSystemNotification(email, 'Tip wysłany', `Wysłałeś 1 żeton do ${msg.user_name || nameFromEmail(targetEmail)}.`, 0)
+
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      setStatus(`Tip wysłany do ${msg.user_name || nameFromEmail(targetEmail)}. Twoje saldo: ${nextSenderBalance} żetonów.`)
       await loadMessages()
     } catch (error) {
       console.error('live chat tip error', error)
-      setStatus('Nie udało się wysłać tipa.')
+      setStatus('Nie udało się wysłać tipa albo zapisać salda.')
     } finally {
       setTippingId('')
     }
@@ -1976,14 +2121,14 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   )
 }
 
-function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead }) {
+function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead, panelStyle = null }) {
   if (!open) return null
   const unread = notifications.filter(item => !item.is_read)
   const items = unread.length ? unread : notifications.slice(0, 8)
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel" role="dialog" aria-modal="true" aria-label="Wiadomości BetAI">
+      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości BetAI">
         <div className="betai-notify-header">
           <div>
             <div className="betai-notify-kicker">BETAI NEWS</div>
@@ -3702,6 +3847,8 @@ function App() {
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
   const [notifications, setNotifications] = useState([])
   const [notifyPanelOpen, setNotifyPanelOpen] = useState(false)
+  const [notifyPanelStyle, setNotifyPanelStyle] = useState(null)
+  const notifyButtonRef = useRef(null)
   const [tokenBalance, setTokenBalance] = useState(0)
   const [realRanking, setRealRanking] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
@@ -3964,6 +4111,72 @@ function App() {
 
     combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     setNotifications(combined)
+  }
+
+  async function ensureUserWalletAndWelcome(user = sessionUser) {
+    const email = normalizeEmail(user?.email || accountProfile?.email || '')
+    if (!email || !isSupabaseConfigured || !supabase) return
+    try {
+      const { data: existing } = await supabase
+        .from('betai_token_wallets')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabase.from('betai_token_wallets').upsert({
+          email,
+          user_id: user?.id || null,
+          balance: 100,
+          welcome_bonus_claimed: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'email' })
+        await supabase.from('betai_token_transactions').insert({
+          email,
+          delta_tokens: 100,
+          delta_pln: 0,
+          reason: 'welcome_bonus',
+          ref_type: 'system'
+        })
+        await supabase.from('betai_system_notifications').insert({
+          recipient_email: email,
+          title: 'Witamy w BetAI 👋',
+          body: 'Miło Cię widzieć! Na start dodaliśmy 100 żetonów do Twojego konta. Możesz nimi tipować najlepsze wiadomości na czacie.',
+          reward_tokens: 100,
+          sent_by: 'betai',
+          is_read: false
+        })
+        setTokenBalance(100)
+        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Miło Cię widzieć! Dodaliśmy 100 żetonów na start.' })
+      } else {
+        const balance = Number(existing.balance || 0) || 0
+        setTokenBalance(balance)
+        if (!existing.welcome_bonus_claimed) {
+          const next = balance + 100
+          await supabase.from('betai_token_wallets').update({ balance: next, welcome_bonus_claimed: true, updated_at: new Date().toISOString() }).eq('email', email)
+          await supabase.from('betai_token_transactions').insert({ email, delta_tokens: 100, delta_pln: 0, reason: 'welcome_bonus', ref_type: 'system' })
+          await supabase.from('betai_system_notifications').insert({
+            recipient_email: email,
+            title: 'Witamy w BetAI 👋',
+            body: 'Miło Cię widzieć! Przyznaliśmy jednorazowy bonus powitalny: 100 żetonów.',
+            reward_tokens: 100,
+            sent_by: 'betai',
+            is_read: false
+          })
+          setTokenBalance(next)
+          showToast({ type: 'success', title: 'Bonus powitalny', message: 'Dodaliśmy 100 żetonów do Twojego konta.' })
+        } else {
+          showToast({ type: 'success', title: 'Witaj ponownie 👋', message: 'Miło Cię widzieć z powrotem w BetAI.' })
+        }
+      }
+      await fetchNotifications(user?.id)
+    } catch (error) {
+      console.warn('ensure wallet/welcome skipped', error)
+      try {
+        const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+        setTokenBalance(localTokens)
+      } catch (_) {}
+    }
   }
 
   async function resolveTipsterId(tipsterId, authorName) {
@@ -4821,6 +5034,7 @@ function App() {
       try { await fetchReferralData(userId) } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
+      try { await ensureUserWalletAndWelcome({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
     }
 
     async function loadSession() {
@@ -4837,6 +5051,7 @@ function App() {
 
         if (user?.id) {
           safeInitialLoad(user.id)
+          ensureUserWalletAndWelcome(user)
         }
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -4857,6 +5072,7 @@ function App() {
 
           setUnlockedTips(new Set())
           safeInitialLoad(nextUser.id)
+          ensureUserWalletAndWelcome(nextUser)
         })
 
         unsubscribe = listener?.subscription?.unsubscribe
@@ -5017,6 +5233,12 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
+    const refreshTokens = () => fetchNotifications(sessionUser?.id)
+    window.addEventListener('betai-token-balance-changed', refreshTokens)
+    return () => window.removeEventListener('betai-token-balance-changed', refreshTokens)
+  }, [sessionUser?.id])
+
+  useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
       fetchNotifications(sessionUser.id)
     }
@@ -5031,6 +5253,18 @@ function App() {
       fetchReferralData(sessionUser.id)
     }
   }, [view, sessionUser?.id])
+
+  function toggleNotifyPanel() {
+    const rect = notifyButtonRef.current?.getBoundingClientRect?.()
+    if (rect) {
+      const width = Math.min(460, Math.max(320, window.innerWidth - 28))
+      const left = Math.min(Math.max(14, rect.right - width), Math.max(14, window.innerWidth - width - 14))
+      const top = Math.min(rect.bottom + 10, window.innerHeight - 120)
+      setNotifyPanelStyle({ top: `${top}px`, left: `${left}px`, right: 'auto' })
+    }
+    setNotifyPanelOpen(prev => !prev)
+    fetchNotifications(sessionUser?.id)
+  }
 
   const userOnlyTips = tips.filter(isUserTip).map(normalizeTipRow)
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
@@ -5089,7 +5323,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
+      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
       <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
@@ -5099,7 +5333,7 @@ function App() {
             <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
           </label>
           <div className="top-actions">
-            <button type="button" className="notice notice-button notify-btn" onClick={() => { setNotifyPanelOpen(prev => !prev); fetchNotifications(sessionUser?.id) }} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <span>✉</span>
             <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
