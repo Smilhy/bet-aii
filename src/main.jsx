@@ -568,6 +568,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       <div className="betai-hero-orb betai-hero-orb-ring" />
       <div className="betai-hero-orb betai-hero-orb-glow" />
       <div className="betai-hero-player" />
+      <img className="betai-hero-full-coin-bg" src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
       <div className="betai-hero-copy">
         <div className="betai-hero-kicker"><span />BETAI PREDICTIONS</div>
         <div className="betai-hero-rotator">
