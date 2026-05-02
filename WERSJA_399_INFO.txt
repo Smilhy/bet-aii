@@ -1,7 +1,0 @@
-Wersja 399
-- slajd Bet+AI Coin w hero rozciągnięty na całą środkową ramkę, bez małej miniatury
-- górny portfel/żetony ma kolor jak przycisk Wyloguj
-- czerwony badge LIVE w prawym czacie ukryty
-- w lewej kolumnie dodany licznik Żetony podpięty pod tokenBalance
-- tabela "MECZÓW DZIŚ" nie była ruszana i zostaje po prawej stronie hero
-- node_modules usunięte z paczki dla Netlify

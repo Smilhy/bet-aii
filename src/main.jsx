@@ -380,7 +380,7 @@ const staticTips = []
 
 
 
-function Sidebar({ view, setView, wallet, unlockedCount, tokenBalance = 0, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
+function Sidebar({ view, setView, wallet, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
@@ -393,7 +393,6 @@ return (
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row token-wallet-row"><span>Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Doładuj konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
@@ -932,7 +931,6 @@ function LiveChatPanel({ user }) {
           <span className="betai-online-final">{onlineCount} online</span>
         </div>
         <div className="betai-live-actions-final">
-          <div className="livechat226-head-badge">LIVE</div>
           <button aria-label="Ustawienia czatu" className="betai-gear-final" type="button">⚙</button>
         </div>
       </div>
@@ -1003,7 +1001,7 @@ function LiveChatPanel({ user }) {
           <button className="betai-tip-main-final betai-tip-inline-final" type="button" onClick={() => setStatus('Tip możesz wysłać przy wiadomości innego użytkownika.')}>🎁 TIP 1</button>
           <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
         </div>
-        <div className="livechat226-bottom-row betai-chat-note-final"><div className="livechat226-status">{status}</div></div>
+        
       </div>    </section>
   )
 }
@@ -5557,7 +5555,7 @@ function App() {
       />
       <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
       <UserMessagesPopup open={dmPanelOpen} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={dmPanelStyle} onClose={() => setDmPanelOpen(false)} />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} tokenBalance={tokenBalance} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">
