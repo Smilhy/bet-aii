@@ -380,7 +380,7 @@ const staticTips = []
 
 
 
-function Sidebar({ view, setView, wallet, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
+function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
@@ -393,6 +393,7 @@ return (
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+        <div className="wallet-row wallet-row-tokens"><span>Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Doładuj konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
@@ -5555,7 +5556,7 @@ function App() {
       />
       <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
       <UserMessagesPopup open={dmPanelOpen} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={dmPanelStyle} onClose={() => setDmPanelOpen(false)} />
-      <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
+      <Sidebar view={view} setView={setView} wallet={walletBalance} tokenBalance={tokenBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
         <header className="topbar">

@@ -8609,3 +8609,65 @@ html,body,#root{
   .betai-animated-hero .betai-hero-panel-coin,
   .betai-animated-hero .betai-hero-panel-coin img{height: 226px !important;}
 }
+
+
+/* WERSJA 402 — HERO COIN BLEND FIX
+   Baner żetonu ma wyglądać jak natywny slajd hero, wtopiony w tło, bez twardej ramki.
+   NIE RUSZAĆ: .betai-hero-stats / MECZÓW DZIŚ zostaje po prawej stronie. */
+@media (min-width: 1000px){
+  .betai-animated-hero .betai-hero-panel-coin{
+    inset:-4px 0 auto -4px !important;
+    width:calc(100% + 8px) !important;
+    height:258px !important;
+    overflow:visible !important;
+  }
+
+  .betai-animated-hero .betai-hero-panel-coin img{
+    width:100% !important;
+    height:258px !important;
+    max-height:none !important;
+    object-fit:cover !important;
+    object-position:center center !important;
+    border:0 !important;
+    border-radius:34px !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    filter:saturate(1.04) brightness(1.03) drop-shadow(0 26px 56px rgba(0,0,0,.28)) drop-shadow(0 0 32px rgba(31,226,174,.10)) !important;
+    opacity:.985 !important;
+  }
+}
+
+@media (min-width: 1000px) and (max-width: 1180px){
+  .betai-animated-hero .betai-hero-panel-coin,
+  .betai-animated-hero .betai-hero-panel-coin img{height:232px !important;}
+}
+
+@media (max-width: 999px){
+  .betai-hero-panel-coin img{
+    border:0 !important;
+    box-shadow:none !important;
+    filter:saturate(1.03) brightness(1.02) !important;
+  }
+}
+
+
+/* WERSJA 403 — przywrócenie żetonów w lewej kolumnie + niebieski górny portfel */
+.wallet-row-tokens span,
+.wallet-row-tokens b{
+  color:#75f4ce!important;
+  font-weight:900!important;
+}
+.wallet-top-btn{
+  background:linear-gradient(135deg,#18f0c8,#10bce8)!important;
+  border:1px solid rgba(24,240,200,.32)!important;
+  color:#04121a!important;
+  box-shadow:0 10px 22px rgba(20,224,201,.20)!important;
+}
+.wallet-top-btn:hover{
+  filter:brightness(1.05)!important;
+  transform:translateY(-1px)!important;
+}
+.wallet-stack-top strong,
+.wallet-stack-top small{
+  color:#04121a!important;
+}
