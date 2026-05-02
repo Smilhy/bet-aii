@@ -1,0 +1,6 @@
+Wersja 396
+- podmieniony stary baner/slajd Bet+AI Coin w hero dashboardu
+- nowy slajd używa białego żetonu zgodnego z nowym projektem
+- użyta większa rozdzielczość obrazu 2560x1440 dla lepszego wyglądu w hero
+- nie ruszono układu tabeli "MECZÓW DZIŚ" (pozostaje po prawej stronie)
+- brak zmian w loaderze i loginie

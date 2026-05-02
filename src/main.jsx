@@ -2312,7 +2312,52 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   )
 }
 
-function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, onMarkAllRead, panelStyle = null }) {
+function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead, panelStyle = null }) {
+  if (!open) return null
+  const unread = notifications.filter(item => !item.is_read)
+  const items = unread.length ? unread : notifications.slice(0, 8)
+
+  return (
+    <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
+      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Powiadomienia BetAI">
+        <div className="betai-notify-header">
+          <div>
+            <div className="betai-notify-kicker">BETAI NEWS</div>
+            <div className="betai-notify-title">Powiadomienia BetAI</div>
+            <div className="betai-notify-sub">Nagrody, informacje od strony i komunikaty od admina.</div>
+          </div>
+          <div className="betai-notify-actions">
+            <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>
+            <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
+          </div>
+        </div>
+        <div className="betai-notify-stats">
+          <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
+          <div className="betai-notify-stat"><span>Nowe powiadomienia</span><strong>{unread.length}</strong></div>
+        </div>
+        <div className="betai-notify-list">
+          {items.length ? items.map((item, index) => (
+            <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
+              <div className="betai-notify-head">
+                <strong>{item.title || 'Wiadomość BetAI'}</strong>
+                <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
+              </div>
+              <div className="betai-notify-body">{getNotificationBody(item)}</div>
+              <div className="betai-notify-chips">
+                <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
+                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
+              </div>
+            </div>
+          )) : (
+            <div className="betai-notify-empty">Nie masz teraz nowych powiadomień BetAI.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, panelStyle = null }) {
   if (!open) return null
 
   return (
@@ -2322,9 +2367,10 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, user = n
           <div>
             <div className="betai-notify-kicker">USER MESSAGES</div>
             <div className="betai-notify-title">Wiadomości użytkowników</div>
-            <div className="betai-notify-sub">Prywatny czat między użytkownikami — panel otwierany pod dzwonkiem.</div>
+            <div className="betai-notify-sub">Prywatny czat user → user. Ten panel otwiera się z koperty, nie z dzwonka.</div>
           </div>
           <div className="betai-notify-actions">
+            <span className="betai-dm-unread">{Number(dmUnreadCount || 0)} nowe</span>
             <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
           </div>
         </div>
@@ -4016,8 +4062,11 @@ function App() {
   const [notifications, setNotifications] = useState([])
   const [notifyPanelOpen, setNotifyPanelOpen] = useState(false)
   const [notifyPanelStyle, setNotifyPanelStyle] = useState(null)
+  const [dmPanelOpen, setDmPanelOpen] = useState(false)
+  const [dmPanelStyle, setDmPanelStyle] = useState(null)
   const [dmUnreadCount, setDmUnreadCount] = useState(0)
   const notifyButtonRef = useRef(null)
+  const mailButtonRef = useRef(null)
   const [tokenBalance, setTokenBalance] = useState(0)
   const [realRanking, setRealRanking] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
@@ -5431,8 +5480,21 @@ function App() {
       const top = Math.min(rect.bottom + 10, window.innerHeight - 120)
       setNotifyPanelStyle({ top: `${top}px`, left: `${left}px`, right: 'auto' })
     }
+    setDmPanelOpen(false)
     setNotifyPanelOpen(prev => !prev)
     fetchNotifications(sessionUser?.id)
+  }
+
+  function toggleDmPanel() {
+    const rect = mailButtonRef.current?.getBoundingClientRect?.()
+    if (rect) {
+      const width = Math.min(860, Math.max(360, window.innerWidth - 28))
+      const left = Math.min(Math.max(14, rect.right - width), Math.max(14, window.innerWidth - width - 14))
+      const top = Math.min(rect.bottom + 10, window.innerHeight - 120)
+      setDmPanelStyle({ top: `${top}px`, left: `${left}px`, right: 'auto' })
+    }
+    setNotifyPanelOpen(false)
+    setDmPanelOpen(prev => !prev)
   }
 
   const userOnlyTips = tips.filter(isUserTip).map(normalizeTipRow)
@@ -5492,7 +5554,8 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
+      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
+      <UserMessagesPopup open={dmPanelOpen} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={dmPanelStyle} onClose={() => setDmPanelOpen(false)} />
       <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
@@ -5502,8 +5565,8 @@ function App() {
             <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
           </label>
           <div className="top-actions">
-            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia i wiadomości BetAI">🔔<b>{notifications.filter(n => !n.is_read).length + Number(dmUnreadCount || 0)}</b></button>
-            <button type="button" className="notice notice-button mail-btn" onClick={toggleNotifyPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
             <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
