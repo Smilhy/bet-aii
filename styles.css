@@ -7438,3 +7438,162 @@ html,body,#root{
     max-height:285px!important;
   }
 }
+
+
+/* VERSION 386 — HARD FIX: live chat krótszy + mocny widoczny błysk banerów */
+@media (min-width:1001px){
+  .rightbar .livechat226-card,
+  .rightbar .betai-right-chat-final,
+  .livechat226-card.betai-right-chat-final{
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    padding:12px!important;
+    gap:8px!important;
+    border-radius:22px!important;
+  }
+
+  .rightbar .betai-live-head-final{
+    margin-bottom:0!important;
+  }
+
+  .rightbar .betai-chat-stats-final{
+    gap:7px!important;
+    margin:0!important;
+  }
+
+  .rightbar .livechat226-stat,
+  .rightbar .betai-chat-stat-final{
+    padding:8px!important;
+    border-radius:14px!important;
+  }
+
+  .rightbar .livechat226-messages,
+  .rightbar .betai-chat-messages-final{
+    height:190px!important;
+    min-height:190px!important;
+    max-height:190px!important;
+    margin:0!important;
+  }
+
+  .rightbar .livechat226-composer,
+  .rightbar .betai-composer-final{
+    margin-top:0!important;
+    padding-top:0!important;
+  }
+
+  .rightbar .livechat226-bottom-row,
+  .rightbar .betai-chat-note-final{
+    margin:4px 0 0!important;
+    padding:0!important;
+    min-height:0!important;
+    line-height:1.15!important;
+  }
+
+  .rightbar .livechat226-status{
+    margin:0!important;
+    padding:0!important;
+    min-height:0!important;
+    line-height:1.18!important;
+    font-size:10.5px!important;
+  }
+}
+
+@media (min-width:1500px){
+  .rightbar .livechat226-messages,
+  .rightbar .betai-chat-messages-final{
+    height:205px!important;
+    min-height:205px!important;
+    max-height:205px!important;
+  }
+}
+
+.ultra-page-banner{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  animation:betaiBannerFramePulse386 3s ease-in-out infinite!important;
+}
+
+.ultra-page-banner::before{
+  content:""!important;
+  position:absolute!important;
+  top:-35%!important;
+  left:-90%!important;
+  width:85%!important;
+  height:180%!important;
+  z-index:20!important;
+  display:block!important;
+  pointer-events:none!important;
+  opacity:0!important;
+  background:linear-gradient(105deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 28%,
+    rgba(255,255,255,.22) 40%,
+    rgba(255,255,255,.95) 49%,
+    rgba(31,226,174,.85) 54%,
+    rgba(255,255,255,.38) 62%,
+    rgba(255,255,255,0) 76%,
+    rgba(255,255,255,0) 100%
+  )!important;
+  transform:skewX(-18deg)!important;
+  mix-blend-mode:screen!important;
+  filter:drop-shadow(0 0 18px rgba(31,226,174,.65))!important;
+  animation:betaiBannerShineStrong386 3s cubic-bezier(.18,.75,.22,1) infinite!important;
+}
+
+.ultra-page-banner::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:19!important;
+  pointer-events:none!important;
+  opacity:0!important;
+  background:
+    radial-gradient(circle at 25% 15%, rgba(31,226,174,.42), transparent 26%),
+    radial-gradient(circle at 75% 80%, rgba(124,92,255,.34), transparent 32%)!important;
+  mix-blend-mode:screen!important;
+  animation:betaiBannerGlowStrong386 3s ease-in-out infinite!important;
+}
+
+.ultra-page-banner > img{
+  position:relative!important;
+  z-index:1!important;
+}
+
+.ultra-banner-shine{
+  z-index:21!important;
+  opacity:1!important;
+  animation:betaiRealBannerShine 3s cubic-bezier(.22,.8,.18,1) infinite!important;
+}
+
+.ultra-banner-glow{
+  z-index:18!important;
+}
+
+.ultra-page-banner-actions{
+  z-index:30!important;
+}
+
+@keyframes betaiBannerShineStrong386{
+  0%{left:-90%;opacity:0;}
+  6%{opacity:0;}
+  13%{opacity:1;}
+  28%{left:118%;opacity:.95;}
+  38%{left:140%;opacity:0;}
+  100%{left:140%;opacity:0;}
+}
+
+@keyframes betaiBannerGlowStrong386{
+  0%,100%{opacity:0;}
+  10%{opacity:.12;}
+  20%{opacity:.42;}
+  34%{opacity:.14;}
+  44%{opacity:0;}
+}
+
+@keyframes betaiBannerFramePulse386{
+  0%,100%{box-shadow:0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;}
+  18%{box-shadow:0 26px 78px rgba(0,0,0,.38),0 0 34px rgba(31,226,174,.28), inset 0 1px 0 rgba(255,255,255,.12)!important;}
+  36%{box-shadow:0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)!important;}
+}

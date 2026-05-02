@@ -1,0 +1,1 @@
+Wersja 386 FULL: pełna paczka projektu z dist, public, src, netlify, supabase. Poprawki: mocny błysk banerów i skrócony live chat.
