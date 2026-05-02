@@ -8415,24 +8415,77 @@ html,body,#root{
   36%{filter:saturate(1.04) contrast(1.04) brightness(1.01);}
 }
 
-/* WERSJA 388 — BetAI news popup przeniesiony z paczki referencyjnej */
-.notify-btn{position:relative;overflow:visible!important}
-.notify-btn b{min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#22c55e,#16a34a);color:#f0fff7;font-size:11px;font-weight:900;box-shadow:0 0 0 1px rgba(34,197,94,.18),0 0 16px rgba(34,197,94,.22)}
-.wallet-stack-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important;line-height:1.05!important;min-width:132px!important}
-.wallet-stack-top strong{font-size:13px!important;font-weight:900!important;color:#eef8fb!important}
-.wallet-stack-top small{font-size:11px!important;font-weight:900!important;letter-spacing:.04em!important;color:#7ef5cf!important}
-.betai-notify-overlay{position:fixed;inset:0;z-index:12000;pointer-events:auto;background:rgba(0,0,0,.02)}
-.betai-notify-panel{position:absolute;top:92px;right:266px;width:min(460px,calc(100vw - 28px));max-height:min(78vh,760px);overflow:hidden;border-radius:24px;border:1px solid rgba(255,255,255,.08);background:radial-gradient(circle at 15% 0%,rgba(73,223,255,.08),transparent 24%),radial-gradient(circle at 100% 0%,rgba(31,226,174,.08),transparent 22%),linear-gradient(180deg,rgba(7,16,28,.985),rgba(4,10,18,.995));box-shadow:0 28px 80px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05);color:#eef8fb}
-.betai-notify-header{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.betai-notify-kicker{color:#75f4ce;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
-.betai-notify-title{font-size:28px;line-height:.95;font-weight:900;letter-spacing:-.05em}
-.betai-notify-sub{margin-top:8px;color:#9bb0bd;font-size:13px}
-.betai-notify-actions{display:flex;gap:8px}.betai-notify-btn{min-width:42px;height:42px;border:none;border-radius:14px;background:rgba(255,255,255,.05);color:#eef8fb;font-weight:900;cursor:pointer}.betai-notify-btn:hover{background:rgba(31,226,174,.12)}
-.betai-notify-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
-.betai-notify-stat{border-radius:18px;border:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));padding:14px}.betai-notify-stat span{display:block;color:#8ea4b3;font-size:12px;font-weight:700;margin-bottom:8px}.betai-notify-stat strong{font-size:24px;line-height:1;font-weight:900}
-.betai-notify-list{max-height:min(54vh,520px);overflow:auto;padding:14px 14px 16px;display:grid;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(31,226,174,.42) rgba(255,255,255,.04)}
-.betai-notify-list::-webkit-scrollbar{width:10px}.betai-notify-list::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:999px}.betai-notify-list::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(73,223,255,.55),rgba(31,226,174,.48));border-radius:999px;border:2px solid rgba(7,16,28,.85)}
-.betai-notify-card{border-radius:18px;border:1px solid rgba(255,255,255,.05);background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.015));padding:14px}.betai-notify-card.unread{border-color:rgba(31,226,174,.18);box-shadow:0 10px 22px rgba(31,226,174,.08);background:linear-gradient(135deg,rgba(31,226,174,.09),rgba(73,223,255,.05))}
-.betai-notify-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}.betai-notify-head strong{font-size:15px;line-height:1.15}.betai-notify-time{color:#91a6b4;font-size:12px;white-space:nowrap}.betai-notify-body{color:#d9e7ef;font-size:13px;line-height:1.5;margin-bottom:10px}.betai-notify-chips{display:flex;flex-wrap:wrap;gap:8px}
-.betai-chip{display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#eef8fb}.betai-chip.reward{background:linear-gradient(135deg,rgba(245,158,11,.24),rgba(217,119,6,.20));border-color:rgba(245,158,11,.28);color:#ffe8b3}.betai-chip.system{background:linear-gradient(135deg,rgba(73,223,255,.18),rgba(31,226,174,.14));border-color:rgba(73,223,255,.24);color:#d7fbff}.betai-notify-empty{border-radius:18px;border:1px dashed rgba(255,255,255,.08);padding:24px 16px;text-align:center;color:#9ab1c0;font-size:14px}
-@media (max-width:980px){.betai-notify-panel{left:50%;right:auto;transform:translateX(-50%);top:86px;width:min(96vw,460px)}.wallet-stack-top{min-width:auto!important}}
+
+/* VERSION 388 — Dashboard hero: Bet+AI Coin jako druga animowana scena */
+.betai-animated-hero{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+
+.betai-coin-hero-slide{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  z-index:0!important;
+  opacity:0!important;
+  transform:scale(1.035)!important;
+  filter:saturate(1.08) contrast(1.08) brightness(.86)!important;
+  animation:betaiCoinHeroScene388 16s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+
+.betai-animated-hero::after{
+  z-index:3!important;
+}
+
+.betai-animated-hero::before{
+  z-index:4!important;
+}
+
+.betai-hero-bg,
+.betai-hero-orb,
+.betai-hero-player{
+  z-index:1!important;
+}
+
+.betai-hero-copy,
+.betai-hero-stats{
+  position:relative!important;
+  z-index:8!important;
+}
+
+.betai-animated-hero .betai-hero-copy::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-24px -34px!important;
+  z-index:-1!important;
+  border-radius:28px!important;
+  background:linear-gradient(90deg,rgba(2,9,20,.76),rgba(2,9,20,.18),transparent)!important;
+  opacity:.72!important;
+  pointer-events:none!important;
+}
+
+@keyframes betaiCoinHeroScene388{
+  0%,38%{
+    opacity:0;
+    transform:scale(1.035) translateX(0);
+  }
+  46%,72%{
+    opacity:.92;
+    transform:scale(1.0) translateX(0);
+  }
+  82%,100%{
+    opacity:0;
+    transform:scale(1.025) translateX(-1.5%);
+  }
+}
+
+@media (max-width:900px){
+  .betai-coin-hero-slide{
+    object-position:center center!important;
+  }
+}
