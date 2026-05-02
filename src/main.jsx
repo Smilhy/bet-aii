@@ -556,7 +556,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   return (
     <section
-      className="betai-animated-hero betai-parallax-hero"
+      className={`betai-animated-hero betai-parallax-hero ${panel === 'coin' ? 'betai-hero-coin-active' : ''}`} 
       aria-label="BetAI predictions hero"
       onMouseMove={handleHeroMove}
       onMouseLeave={resetHeroMove}

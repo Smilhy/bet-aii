@@ -8789,3 +8789,95 @@ html,body,#root{
   background:linear-gradient(135deg,#18f0c8,#10bce8)!important;
   color:#04121a!important;
 }
+
+
+/* WERSJA 407 — REAL full hero banner coin slide
+   Kiedy aktywny jest slajd Bet+AI Coin, obraz wypełnia cały środkowy/lewy obszar hero
+   aż do prawej kolumny statystyk. NIE RUSZAĆ: .betai-hero-stats / MECZÓW DZIŚ zostaje po prawej. */
+@media (min-width: 1000px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height: 334px !important;
+    padding: 18px 250px 18px 18px !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    position:absolute !important;
+    left:18px !important;
+    top:18px !important;
+    right:250px !important;
+    bottom:18px !important;
+    width:auto !important;
+    max-width:none !important;
+    min-height:0 !important;
+    height:auto !important;
+    display:block !important;
+    transform:none !important;
+    z-index:3 !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-kicker{
+    display:none !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-rotator{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    border-radius:24px !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel-coin{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    display:block !important;
+    overflow:hidden !important;
+    border-radius:24px !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel-coin img{
+    width:100% !important;
+    height:100% !important;
+    max-height:none !important;
+    object-fit:cover !important;
+    object-position:center center !important;
+    border:0 !important;
+    border-radius:24px !important;
+    box-shadow:0 22px 68px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08) !important;
+    filter:saturate(1.06) brightness(1.04) contrast(1.04) !important;
+    opacity:1 !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-bg,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-orb,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-player{
+    opacity:.22 !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    position:absolute !important;
+    right:18px !important;
+    top:18px !important;
+    bottom:18px !important;
+    width:214px !important;
+    z-index:6 !important;
+  }
+}
+
+@media (min-width: 1000px) and (max-width: 1180px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height: 308px !important;
+    padding-right:226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    right:226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    width:196px !important;
+  }
+}
