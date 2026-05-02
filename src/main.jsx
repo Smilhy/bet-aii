@@ -2121,46 +2121,242 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   )
 }
 
-function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead, panelStyle = null }) {
+function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
+  const [users, setUsers] = useState([])
+  const [activeUser, setActiveUser] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [text, setText] = useState('')
+  const [search, setSearch] = useState('')
+  const [unreadMap, setUnreadMap] = useState({})
+  const [status, setStatus] = useState('Kliknij użytkownika po lewej i napisz prywatną wiadomość.')
+  const [sending, setSending] = useState(false)
+
+  const myId = user?.id || ''
+  const myEmail = normalizeEmail(user?.email || '')
+
+  const displayName = (email = '', username = '') => {
+    const clean = normalizeEmail(email)
+    if (username) return String(username)
+    if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
+    return clean ? clean.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Użytkownik'
+  }
+  const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
+
+  const loadUsers = async () => {
+    if (!isSupabaseConfigured || !supabase || !myEmail) return
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id,email,username,created_at')
+        .order('created_at', { ascending: false })
+        .limit(120)
+      if (error) throw error
+      const rows = (Array.isArray(data) ? data : [])
+        .filter(row => normalizeEmail(row?.email) && normalizeEmail(row?.email) !== myEmail)
+        .map(row => ({
+          id: row.id,
+          email: normalizeEmail(row.email),
+          name: displayName(row.email, row.username),
+          initials: initials(displayName(row.email, row.username))
+        }))
+      setUsers(rows)
+      setActiveUser(prev => prev && rows.some(row => String(row.id) === String(prev.id)) ? prev : (rows[0] || null))
+    } catch (error) {
+      console.warn('user messages load users skipped', error)
+      setStatus('Nie udało się wczytać listy użytkowników. Sprawdź tabelę profiles/RLS.')
+    }
+  }
+
+  const loadUnread = async () => {
+    if (!isSupabaseConfigured || !supabase || !myId) return
+    try {
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('sender_id,is_read')
+        .eq('receiver_id', myId)
+        .eq('is_read', false)
+      if (error) throw error
+      const next = {}
+      ;(Array.isArray(data) ? data : []).forEach(row => {
+        const key = String(row.sender_id || '')
+        if (key) next[key] = (next[key] || 0) + 1
+      })
+      setUnreadMap(next)
+      onUnreadChange?.(Object.values(next).reduce((sum, value) => sum + Number(value || 0), 0))
+    } catch (error) {
+      console.warn('user messages unread skipped', error)
+    }
+  }
+
+  const loadConversation = async (target = activeUser) => {
+    if (!isSupabaseConfigured || !supabase || !myId || !target?.id) {
+      setMessages([])
+      return
+    }
+    try {
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('id,sender_id,receiver_id,message_text,created_at,is_read')
+        .or(`and(sender_id.eq.${myId},receiver_id.eq.${target.id}),and(sender_id.eq.${target.id},receiver_id.eq.${myId})`)
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      setMessages(Array.isArray(data) ? data : [])
+      await supabase.from('direct_messages').update({ is_read: true }).eq('sender_id', target.id).eq('receiver_id', myId).eq('is_read', false)
+      await loadUnread()
+    } catch (error) {
+      console.warn('user messages conversation skipped', error)
+      setStatus('Nie udało się wczytać rozmowy. Uruchom SQL dla direct_messages.')
+    }
+  }
+
+  const sendMessage = async () => {
+    const clean = String(text || '').trim().slice(0, 800)
+    if (!clean || sending) return
+    if (!activeUser?.id) {
+      setStatus('Najpierw wybierz odbiorcę z listy użytkowników.')
+      return
+    }
+    if (!isSupabaseConfigured || !supabase || !myId) {
+      setStatus('Musisz być zalogowany i mieć połączenie z Supabase.')
+      return
+    }
+    setSending(true)
+    try {
+      const { error } = await supabase.from('direct_messages').insert({
+        sender_id: myId,
+        receiver_id: activeUser.id,
+        message_text: clean,
+        is_read: false
+      })
+      if (error) throw error
+      setText('')
+      setStatus('Wiadomość wysłana.')
+      await loadConversation(activeUser)
+    } catch (error) {
+      console.warn('user messages send failed', error)
+      setStatus('Wysyłka nie powiodła się. Sprawdź SQL/RLS direct_messages.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!visible || !myId) return undefined
+    loadUsers()
+    loadUnread()
+    const timer = setInterval(() => {
+      loadUnread()
+      loadConversation(activeUser)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [visible, myId, activeUser?.id])
+
+  useEffect(() => {
+    if (visible && activeUser?.id) loadConversation(activeUser)
+  }, [visible, activeUser?.id])
+
+  const filteredUsers = users.filter(item => {
+    const q = normalizeEmail(search)
+    return !q || normalizeEmail(item.email).includes(q) || normalizeEmail(item.name).includes(q)
+  })
+  const activeUnread = Object.values(unreadMap).reduce((sum, value) => sum + Number(value || 0), 0)
+
+  return (
+    <div className="betai-dm-box">
+      <div className="betai-dm-toolbar">
+        <div>
+          <div className="betai-notify-kicker">USER MESSAGES</div>
+          <div className="betai-dm-title">Wiadomości użytkowników</div>
+        </div>
+        <span className="betai-dm-unread">{activeUnread} nowe</span>
+      </div>
+      <div className="betai-dm-layout">
+        <aside className="betai-dm-users">
+          <input className="betai-dm-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj użytkownika..." />
+          <div className="betai-dm-user-list">
+            {filteredUsers.length ? filteredUsers.map(item => (
+              <button type="button" className={activeUser?.id === item.id ? 'betai-dm-user active' : 'betai-dm-user'} key={item.id || item.email} onClick={() => setActiveUser(item)}>
+                <span className="betai-dm-avatar">{item.initials}</span>
+                <span><strong>{item.name}</strong><small>{item.email}</small></span>
+                {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
+              </button>
+            )) : <div className="betai-dm-empty">Brak użytkowników.</div>}
+          </div>
+        </aside>
+        <section className="betai-dm-conversation">
+          <div className="betai-dm-active">
+            <span className="betai-dm-avatar big">{activeUser?.initials || 'BU'}</span>
+            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email || 'Prywatny czat user → user'}</small></div>
+          </div>
+          <div className="betai-dm-messages">
+            {activeUser ? (messages.length ? messages.map(msg => {
+              const mine = String(msg.sender_id || '') === String(myId)
+              return <div className={mine ? 'betai-dm-msg me' : 'betai-dm-msg'} key={msg.id || msg.created_at}>
+                <div className="betai-dm-bubble">{msg.message_text}</div>
+                <small>{mine ? 'Ty' : activeUser.name} • {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : '--:--'}</small>
+              </div>
+            }) : <div className="betai-dm-empty">Brak wiadomości. Napisz pierwszą.</div>) : <div className="betai-dm-empty">Kliknij użytkownika po lewej.</div>}
+          </div>
+          <div className="betai-dm-compose">
+            <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} placeholder="Napisz wiadomość prywatną..." />
+            <button type="button" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? '...' : 'Wyślij'}</button>
+          </div>
+          <div className="betai-dm-status">{status}</div>
+        </section>
+      </div>
+    </div>
+  )
+}
+
+function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, onMarkAllRead, panelStyle = null }) {
+  const [tab, setTab] = useState('betai')
   if (!open) return null
   const unread = notifications.filter(item => !item.is_read)
   const items = unread.length ? unread : notifications.slice(0, 8)
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości BetAI">
+      <div className="betai-notify-panel betai-notify-panel-with-dm" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości BetAI i użytkowników">
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-kicker">BETAI NEWS</div>
-            <div className="betai-notify-title">Wiadomości BetAI</div>
-            <div className="betai-notify-sub">Nagrody, informacje od strony i komunikaty od admina.</div>
+            <div className="betai-notify-kicker">BETAI MESSAGES</div>
+            <div className="betai-notify-title">Wiadomości</div>
+            <div className="betai-notify-sub">Powiadomienia strony oraz prywatne wiadomości użytkowników.</div>
           </div>
           <div className="betai-notify-actions">
-            <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>
+            {tab === 'betai' && <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>}
             <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
           </div>
         </div>
-        <div className="betai-notify-stats">
-          <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
-          <div className="betai-notify-stat"><span>Nowe wiadomości</span><strong>{unread.length}</strong></div>
+        <div className="betai-notify-tabs">
+          <button type="button" className={tab === 'betai' ? 'active' : ''} onClick={() => setTab('betai')}>🔔 BetAI <b>{unread.length}</b></button>
+          <button type="button" className={tab === 'users' ? 'active' : ''} onClick={() => setTab('users')}>💬 Użytkownicy <b>{dmUnreadCount}</b></button>
         </div>
-        <div className="betai-notify-list">
-          {items.length ? items.map((item, index) => (
-            <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
-              <div className="betai-notify-head">
-                <strong>{item.title || 'Wiadomość BetAI'}</strong>
-                <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
-              </div>
-              <div className="betai-notify-body">{getNotificationBody(item)}</div>
-              <div className="betai-notify-chips">
-                <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
-                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
-              </div>
+        {tab === 'betai' ? (
+          <>
+            <div className="betai-notify-stats">
+              <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
+              <div className="betai-notify-stat"><span>Nowe wiadomości</span><strong>{unread.length}</strong></div>
             </div>
-          )) : (
-            <div className="betai-notify-empty">Nie masz teraz nowych wiadomości BetAI.</div>
-          )}
-        </div>
+            <div className="betai-notify-list">
+              {items.length ? items.map((item, index) => (
+                <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
+                  <div className="betai-notify-head">
+                    <strong>{item.title || 'Wiadomość BetAI'}</strong>
+                    <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
+                  </div>
+                  <div className="betai-notify-body">{getNotificationBody(item)}</div>
+                  <div className="betai-notify-chips">
+                    <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
+                    {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
+                  </div>
+                </div>
+              )) : (
+                <div className="betai-notify-empty">Nie masz teraz nowych wiadomości BetAI.</div>
+              )}
+            </div>
+          </>
+        ) : <UserMessagesPanel user={user} visible={open && tab === 'users'} onUnreadChange={onDmUnreadChange} />}
       </div>
     </div>
   )
@@ -3848,6 +4044,7 @@ function App() {
   const [notifications, setNotifications] = useState([])
   const [notifyPanelOpen, setNotifyPanelOpen] = useState(false)
   const [notifyPanelStyle, setNotifyPanelStyle] = useState(null)
+  const [dmUnreadCount, setDmUnreadCount] = useState(0)
   const notifyButtonRef = useRef(null)
   const [tokenBalance, setTokenBalance] = useState(0)
   const [realRanking, setRealRanking] = useState([])
@@ -5323,7 +5520,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
-      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
+      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
       <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
@@ -5333,8 +5530,8 @@ function App() {
             <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
           </label>
           <div className="top-actions">
-            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
-            <span>✉</span>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia i wiadomości BetAI">🔔<b>{notifications.filter(n => !n.is_read).length + Number(dmUnreadCount || 0)}</b></button>
+            <button type="button" className="notice notice-button mail-btn" onClick={toggleNotifyPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
             <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
