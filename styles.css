@@ -7771,3 +7771,77 @@ html,body,#root{
   18%{filter:saturate(1.18) contrast(1.11) brightness(1.16);}
   36%{filter:saturate(1.04) contrast(1.04) brightness(1.01);}
 }
+
+
+/* WERSJA 399 — hero coin full frame + blue wallet/token + remove red LIVE badge */
+.wallet-top-btn.wallet-stack-top{
+  background:linear-gradient(135deg,#18f0c8,#10bce8)!important;
+  border:1px solid rgba(24,240,200,.34)!important;
+  color:#04121a!important;
+  box-shadow:0 10px 24px rgba(20,224,201,.22)!important;
+}
+.wallet-top-btn.wallet-stack-top strong,
+.wallet-top-btn.wallet-stack-top small{
+  color:#04121a!important;
+  text-shadow:none!important;
+}
+.token-wallet-row{
+  margin-top:8px!important;
+  padding-top:8px!important;
+  border-top:1px solid rgba(24,240,200,.13)!important;
+}
+.token-wallet-row span{color:#8af7e8!important;font-weight:900!important;}
+.token-wallet-row b{color:#42e8ff!important;text-shadow:0 0 12px rgba(66,232,255,.30)!important;}
+
+/* coin slide: make it fill the left/middle hero frame instead of small thumbnail */
+.betai-hero-panel-coin{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  overflow:hidden!important;
+  border-radius:24px!important;
+  z-index:4!important;
+}
+.betai-hero-panel-coin img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  border-radius:24px!important;
+  border:1px solid rgba(31,226,174,.24)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.34),0 0 36px rgba(31,226,174,.14)!important;
+}
+.betai-hero-panel-coin.active img{
+  animation:betaiCoinHeroFloat 5.8s ease-in-out infinite,betaiCoinHeroGlow 2.8s ease-in-out infinite alternate!important;
+}
+/* widen rotator area but keep stats/table on right untouched */
+.betai-hero-copy{
+  width:calc(100% - 18px)!important;
+  max-width:calc(100% - 18px)!important;
+  min-height:258px!important;
+}
+.betai-hero-rotator{
+  width:min(100%,720px)!important;
+  min-height:258px!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+}
+.betai-hero-panel:not(.betai-hero-panel-coin){
+  z-index:5!important;
+}
+/* hide the red LIVE pill in live chat header */
+.live-chat-panel .live-badge,
+.live-chat-panel .chat-live-badge,
+.live-chat-panel [class*="live-badge"],
+.live-chat-panel [class*="LiveBadge"],
+.live-chat-panel .panel-head .live,
+.live-chat-panel .panel-head em,
+.live-chat-panel .panel-head .status-pill{
+  display:none!important;
+}
