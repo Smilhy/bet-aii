@@ -641,3 +641,78 @@
     transform:translate3d(0,-50%,0) scale(0.965) !important;
   }
 }
+
+
+/* WERSJA 418 — full-width stretched coin hero to inner edges, ultra-pro quality */
+@keyframes betaiCoinEdgeFloat {
+  0% { transform: translate3d(0,0,0) scale(1.006); }
+  25% { transform: translate3d(-4px,-2px,0) scale(1.010); }
+  50% { transform: translate3d(0,1px,0) scale(1.012); }
+  75% { transform: translate3d(4px,-1px,0) scale(1.010); }
+  100% { transform: translate3d(0,0,0) scale(1.006); }
+}
+
+@media (min-width:1000px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height:334px !important;
+    padding:18px !important;
+    overflow:hidden !important;
+    background:#06131d !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-full-coin-bg{
+    display:block !important;
+    position:absolute !important;
+    left:18px !important;
+    top:18px !important;
+    width:calc(100% - 36px) !important;
+    height:calc(100% - 36px) !important;
+    max-width:none !important;
+    max-height:none !important;
+    min-height:0 !important;
+    object-fit:fill !important;
+    object-position:center center !important;
+    transform:translate3d(0,0,0) scale(1.006) !important;
+    transform-origin:center center !important;
+    border-radius:26px !important;
+    z-index:1 !important;
+    opacity:1 !important;
+    animation:betaiCoinEdgeFloat 11s ease-in-out infinite, betaiCoinGlow 8s ease-in-out infinite !important;
+    box-shadow:0 18px 52px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    will-change:transform, filter !important;
+    backface-visibility:hidden !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    opacity:0 !important;
+    pointer-events:none !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-bg,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-orb,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-player,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel-coin{
+    display:none !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    position:absolute !important;
+    right:18px !important;
+    top:18px !important;
+    bottom:18px !important;
+    width:214px !important;
+    z-index:8 !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats div{
+    background:linear-gradient(180deg,rgba(6,17,26,.26),rgba(6,14,22,.32)) !important;
+    border:1px solid rgba(255,255,255,.07) !important;
+    box-shadow:0 8px 22px rgba(0,0,0,.10) !important;
+    backdrop-filter:blur(14px) saturate(1.18) !important;
+    -webkit-backdrop-filter:blur(14px) saturate(1.18) !important;
+  }
+}
+
+@media (min-width:1000px) and (max-width:1180px){
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{ width:196px !important; }
+}
