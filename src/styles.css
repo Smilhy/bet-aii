@@ -8881,3 +8881,94 @@ html,body,#root{
     width:196px !important;
   }
 }
+
+
+/* WERSJA 408 — coin hero aligned like other slides + top token button blue */
+@media (min-width: 1000px){
+  /* keep the right MECZÓW DZIŚ stats column untouched */
+  .betai-animated-hero > .betai-hero-copy{
+    width: 100% !important;
+    max-width: calc(100% - 242px) !important;
+    min-height: 252px !important;
+  }
+
+  .betai-animated-hero .betai-hero-kicker{
+    margin-bottom: 14px !important;
+  }
+
+  .betai-animated-hero .betai-hero-rotator{
+    position: relative !important;
+    width: 100% !important;
+    min-height: 214px !important;
+    height: 214px !important;
+  }
+
+  .betai-animated-hero .betai-hero-panel.betai-hero-panel-coin{
+    inset: 0 !important;
+    width: 100% !important;
+    height: 214px !important;
+    padding-right: 6px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    border-radius: 22px !important;
+  }
+
+  .betai-animated-hero .betai-hero-panel.betai-hero-panel-coin img{
+    width: 100% !important;
+    height: 214px !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    border-radius: 22px !important;
+    border: 1px solid rgba(31,226,174,.20) !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,.28), 0 0 24px rgba(31,226,174,.10) !important;
+    transform: none !important;
+    animation: betaiCoinHeroGlow 2.8s ease-in-out infinite alternate !important;
+  }
+}
+
+@media (min-width: 1180px){
+  .betai-animated-hero > .betai-hero-copy{
+    max-width: calc(100% - 248px) !important;
+  }
+  .betai-animated-hero .betai-hero-rotator,
+  .betai-animated-hero .betai-hero-panel.betai-hero-panel-coin,
+  .betai-animated-hero .betai-hero-panel.betai-hero-panel-coin img{
+    min-height: 220px !important;
+    height: 220px !important;
+  }
+}
+
+@media (max-width: 999px){
+  .betai-hero-panel.betai-hero-panel-coin,
+  .betai-hero-panel.betai-hero-panel-coin img{
+    height: auto !important;
+  }
+}
+
+/* top middle wallet / tokens button must be blue like Wyloguj */
+.topbar .wallet-top-btn.wallet-stack-top{
+  background: linear-gradient(135deg,#18f0c8,#10bce8) !important;
+  border: 1px solid rgba(24,240,200,.32) !important;
+  color: #04121a !important;
+  box-shadow: 0 10px 22px rgba(20,224,201,.20) !important;
+}
+
+.topbar .wallet-top-btn.wallet-stack-top strong,
+.topbar .wallet-top-btn.wallet-stack-top small{
+  color: #04121a !important;
+}
+
+.topbar .wallet-top-btn.wallet-stack-top:hover{
+  filter: brightness(1.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* left sidebar token row blue emphasis */
+.wallet-row.wallet-row-tokens span,
+.wallet-row.wallet-row-tokens b{
+  color: #10bce8 !important;
+  font-weight: 900 !important;
+}
