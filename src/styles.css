@@ -9003,3 +9003,173 @@ html,body,#root{
   color: #10bce8 !important;
   font-weight: 900 !important;
 }
+
+
+/* WERSJA 411 — hero coin matches the user-approved screenshot exactly */
+@media (min-width: 1000px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height: 334px !important;
+    padding: 18px 250px 18px 18px !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    position:absolute !important;
+    left:18px !important;
+    top:18px !important;
+    right:250px !important;
+    bottom:18px !important;
+    width:auto !important;
+    max-width:none !important;
+    min-height:0 !important;
+    height:auto !important;
+    display:block !important;
+    z-index:3 !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-kicker{
+    display:none !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-rotator,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin img{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:hidden !important;
+    border-radius:24px !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin img{
+    object-fit:cover !important;
+    object-position:left center !important;
+    border:0 !important;
+    box-shadow:0 18px 52px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    filter:brightness(1.01) saturate(1.02) !important;
+  }
+
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    position:absolute !important;
+    right:18px !important;
+    top:18px !important;
+    bottom:18px !important;
+    width:214px !important;
+    z-index:6 !important;
+  }
+}
+
+@media (min-width: 1000px) and (max-width:1180px){
+  .betai-animated-hero.betai-hero-coin-active{
+    padding-right:226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    right:226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    width:196px !important;
+  }
+}
+
+/* top middle wallet / tokens button blue like Wyloguj */
+.topbar .wallet-top-btn.wallet-stack-top,
+.wallet-top-btn.wallet-stack-top{
+  background:linear-gradient(135deg,#18f0c8,#10bce8) !important;
+  border:1px solid rgba(24,240,200,.32) !important;
+  color:#04121a !important;
+  box-shadow:0 10px 22px rgba(20,224,201,.20) !important;
+}
+.topbar .wallet-top-btn.wallet-stack-top strong,
+.topbar .wallet-top-btn.wallet-stack-top small,
+.wallet-top-btn.wallet-stack-top strong,
+.wallet-top-btn.wallet-stack-top small{
+  color:#04121a !important;
+}
+.wallet-row.wallet-row-tokens span,
+.wallet-row.wallet-row-tokens b{
+  color:#10bce8 !important;
+  font-weight:900 !important;
+}
+
+
+/* WERSJA 412 — final hero coin based on user-approved screenshot */
+@media (min-width: 1000px){
+  .betai-animated-hero.betai-hero-coin-active{
+    min-height: 334px !important;
+    padding: 18px 250px 18px 18px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    position: absolute !important;
+    left: 18px !important;
+    top: 18px !important;
+    right: 250px !important;
+    bottom: 18px !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    z-index: 3 !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-kicker{
+    display: none !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-rotator,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin,
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin img{
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active .betai-hero-panel.betai-hero-panel-coin img{
+    object-fit: cover !important;
+    object-position: left center !important;
+    border: 0 !important;
+    box-shadow: 0 18px 50px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05) !important;
+    filter: brightness(1.01) saturate(1.02) !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    position: absolute !important;
+    right: 18px !important;
+    top: 18px !important;
+    bottom: 18px !important;
+    width: 214px !important;
+    z-index: 6 !important;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1180px){
+  .betai-animated-hero.betai-hero-coin-active{
+    padding-right: 226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-copy{
+    right: 226px !important;
+  }
+  .betai-animated-hero.betai-hero-coin-active > .betai-hero-stats{
+    width: 196px !important;
+  }
+}
+/* top wallet button blue like Wyloguj */
+.topbar .wallet-top-btn.wallet-stack-top,
+.wallet-top-btn.wallet-stack-top{
+  background: linear-gradient(135deg,#18f0c8,#10bce8) !important;
+  border: 1px solid rgba(24,240,200,.32) !important;
+  color: #04121a !important;
+  box-shadow: 0 10px 22px rgba(20,224,201,.20) !important;
+}
+.topbar .wallet-top-btn.wallet-stack-top strong,
+.topbar .wallet-top-btn.wallet-stack-top small,
+.wallet-top-btn.wallet-stack-top strong,
+.wallet-top-btn.wallet-stack-top small{
+  color: #04121a !important;
+}
+.wallet-row.wallet-row-tokens span,
+.wallet-row.wallet-row-tokens b{
+  color: #10bce8 !important;
+  font-weight: 900 !important;
+}
