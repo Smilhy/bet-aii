@@ -1928,6 +1928,14 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
     </section>
   )
 }
+function getNotificationBody(item = {}) {
+  return item.message || item.body || item.description || 'Masz nowe powiadomienie.'
+}
+
+function getNotificationKey(item = {}, index = 0) {
+  return `${item.source || 'notify'}-${item.id || item.created_at || index}`
+}
+
 function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   const unread = notifications.filter(item => !item.is_read).length
 
@@ -1949,10 +1957,10 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
 
       <div className="unlocked-list notifications-list">
         {notifications.length ? notifications.map(item => (
-          <div className={item.is_read ? 'unlocked-item notification-item read' : 'unlocked-item notification-item'} key={item.id}>
+          <div className={item.is_read ? 'unlocked-item notification-item read' : 'unlocked-item notification-item'} key={getNotificationKey(item, item.id)}>
             <div>
               <strong>{item.title || 'Powiadomienie'}</strong>
-              <span>{item.message || 'Masz nowe powiadomienie.'}</span>
+              <span>{getNotificationBody(item)}</span>
               <small>{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL') : ''}</small>
             </div>
             <b>{item.is_read ? 'OK' : 'NEW'}</b>
@@ -1965,6 +1973,51 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
         )}
       </div>
     </section>
+  )
+}
+
+function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose, onMarkAllRead }) {
+  if (!open) return null
+  const unread = notifications.filter(item => !item.is_read)
+  const items = unread.length ? unread : notifications.slice(0, 8)
+
+  return (
+    <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
+      <div className="betai-notify-panel" role="dialog" aria-modal="true" aria-label="Wiadomości BetAI">
+        <div className="betai-notify-header">
+          <div>
+            <div className="betai-notify-kicker">BETAI NEWS</div>
+            <div className="betai-notify-title">Wiadomości BetAI</div>
+            <div className="betai-notify-sub">Nagrody, informacje od strony i komunikaty od admina.</div>
+          </div>
+          <div className="betai-notify-actions">
+            <button className="betai-notify-btn" type="button" title="Oznacz jako przeczytane" onClick={onMarkAllRead}>✓</button>
+            <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
+          </div>
+        </div>
+        <div className="betai-notify-stats">
+          <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
+          <div className="betai-notify-stat"><span>Nowe wiadomości</span><strong>{unread.length}</strong></div>
+        </div>
+        <div className="betai-notify-list">
+          {items.length ? items.map((item, index) => (
+            <div className={item.is_read ? 'betai-notify-card' : 'betai-notify-card unread'} key={getNotificationKey(item, index)}>
+              <div className="betai-notify-head">
+                <strong>{item.title || 'Wiadomość BetAI'}</strong>
+                <span className="betai-notify-time">{item.created_at ? new Date(item.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
+              </div>
+              <div className="betai-notify-body">{getNotificationBody(item)}</div>
+              <div className="betai-notify-chips">
+                <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
+                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
+              </div>
+            </div>
+          )) : (
+            <div className="betai-notify-empty">Nie masz teraz nowych wiadomości BetAI.</div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -3648,6 +3701,8 @@ function App() {
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
   const [notifications, setNotifications] = useState([])
+  const [notifyPanelOpen, setNotifyPanelOpen] = useState(false)
+  const [tokenBalance, setTokenBalance] = useState(0)
   const [realRanking, setRealRanking] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
@@ -3854,25 +3909,61 @@ function App() {
   }
 
   async function fetchNotifications(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
+    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
+      setTokenBalance(0)
       return
     }
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50)
+    const combined = []
 
-    if (error) {
-      console.error('fetchNotifications error', error)
-      setNotifications([])
-      return
+    if (userId) {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50)
+        if (!error && Array.isArray(data)) combined.push(...data.map(row => ({ ...row, source: 'follow' })))
+      } catch (error) {
+        console.warn('fetch notifications table skipped', error)
+      }
     }
 
-    setNotifications(data || [])
+    if (email) {
+      try {
+        const { data, error } = await supabase
+          .from('betai_system_notifications')
+          .select('*')
+          .eq('recipient_email', email)
+          .order('created_at', { ascending: false })
+          .limit(100)
+        if (!error && Array.isArray(data)) combined.push(...data.map(row => ({ ...row, source: 'system', message: row.body || row.message || '' })))
+      } catch (error) {
+        console.warn('fetch betai_system_notifications skipped', error)
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('betai_token_wallets')
+          .select('balance')
+          .eq('email', email)
+          .maybeSingle()
+        if (!error && data) setTokenBalance(Number(data.balance || 0) || 0)
+        else {
+          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+          setTokenBalance(localTokens)
+        }
+      } catch (error) {
+        const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+        setTokenBalance(localTokens)
+      }
+    }
+
+    combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    setNotifications(combined)
   }
 
   async function resolveTipsterId(tipsterId, authorName) {
@@ -3959,21 +4050,35 @@ function App() {
   }
 
   async function markAllNotificationsRead() {
-    if (!sessionUser?.id || !isSupabaseConfigured || !supabase) return
+    if (!isSupabaseConfigured || !supabase) return
+    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    let failed = false
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', sessionUser.id)
-      .eq('is_read', false)
-
-    if (error) {
-      showToast({ type: 'error', title: 'Powiadomienia', message: formatAppErrorMessage(error.message) })
-      return
+    if (sessionUser?.id) {
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', sessionUser.id)
+          .eq('is_read', false)
+        if (error) failed = true
+      } catch (_) { failed = true }
     }
 
-    await fetchNotifications(sessionUser.id)
-    showToast({ type: 'success', title: 'Powiadomienia', message: 'Oznaczono jako przeczytane.' })
+    if (email) {
+      try {
+        const { error } = await supabase
+          .from('betai_system_notifications')
+          .update({ is_read: true })
+          .eq('recipient_email', email)
+          .eq('is_read', false)
+        if (error) failed = true
+      } catch (_) { failed = true }
+    }
+
+    await fetchNotifications(sessionUser?.id)
+    if (failed) showToast({ type: 'info', title: 'Powiadomienia', message: 'Część powiadomień mogła już być oznaczona albo tabela nie istnieje.' })
+    else showToast({ type: 'success', title: 'Powiadomienia', message: 'Oznaczono jako przeczytane.' })
   }
 
 
@@ -4004,6 +4109,7 @@ function App() {
       setUnlockedTips(new Set())
       setFollowingTipsters(new Set())
       setNotifications([])
+      setTokenBalance(0)
     }
   }, [sessionUser?.id])
 
@@ -4983,6 +5089,7 @@ function App() {
         onClose={() => setSelectedPayment(null)}
         onSuccess={handlePaymentSuccess}
       />
+      <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
       <Sidebar view={view} setView={setView} wallet={walletBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
@@ -4992,10 +5099,10 @@ function App() {
             <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
           </label>
           <div className="top-actions">
-            <button type="button" className="notice notice-button" onClick={() => setView('notifications')}>🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" className="notice notice-button notify-btn" onClick={() => { setNotifyPanelOpen(prev => !prev); fetchNotifications(sessionUser?.id) }} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <span>✉</span>
             <span className="user-top-email">{userProfile.email}</span>
-            <button className="wallet-top-btn" onClick={() => setView('wallet')}>{Number(walletBalance || 0).toFixed(2)} zł</button>
+            <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
             <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
           </div>
         </header>
