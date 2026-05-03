@@ -10681,3 +10681,17 @@ button.notify-btn b{
   background: rgba(3,18,25,.08) !important;
   border-color: rgba(3,18,25,.10) !important;
 }
+
+
+/* WERSJA 445 — poprawka slajdu coin: mniej rozciągnięty, bez zjadania lewej strony */
+.betai-hero-slide-img.slide-2,
+.betai-hero-slide-img.slide-2.active{
+  object-fit: cover !important;
+  object-position: 44% center !important;
+  transform: translate3d(0,0,0) scale(1.01) !important;
+}
+
+/* delikatne doprecyzowanie aktywnego slajdu, bez dodatkowego zoomu */
+.betai-hero-slide-img.slide-2.active{
+  filter: saturate(1.03) contrast(1.02) !important;
+}
