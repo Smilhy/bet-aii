@@ -1,0 +1,6 @@
+Wersja 433
+- usunięte stare tekstowe logo Bet+AI z lewego górnego rogu sidebaru
+- dodane nowe logo z przesłanej grafiki
+- logo przycięte z dużych czarnych marginesów i dopasowane do sidebaru
+- dodany delikatny ultra/pro glow i błysk co kilka sekund
+- nie ruszano dashboardu, hero, czatu ani tabeli MECZÓW DZIŚ

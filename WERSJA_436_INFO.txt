@@ -1,0 +1,6 @@
+Wersja 436
+- logo w lewym sidebarze zmniejszone o około 10%
+- logo nadal jest lekko przesunięte w lewo
+- ramka/linia nad logo jest krótsza i bliżej dopasowana do logo
+- zostawiony efekt glow i rozbłysk światła
+- dashboard, hero, czat i MECZÓW DZIŚ bez zmian

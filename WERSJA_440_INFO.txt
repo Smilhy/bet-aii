@@ -1,0 +1,5 @@
+Wersja 440
+- górny przycisk + Dodaj typ usunięty
+- profil/nick/status przeniesiony na miejsce usuniętego przycisku
+- dolny przycisk + Dodaj typ dodany przy filtrach typów
+- hero, czat i MECZÓW DZIŚ bez zmian

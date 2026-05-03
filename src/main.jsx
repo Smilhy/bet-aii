@@ -4,7 +4,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
-const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988'];
+const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988', 'buchajsonek1988', 'buchajson', 'buchajsonek'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 var userPlan = 'free'; // global anti-crash fallback
 
@@ -370,7 +370,7 @@ function hasActiveTipsterSubscription(tip, subscriptions = []) {
 function getDisplayRole(user, plan = 'free') {
   const profile = getUserProfileView(user)
   if (profile?.isAdmin || Boolean(user?.is_admin)) return 'ADMIN'
-  if (isPremiumAccount(plan) || isPremiumProfile(user)) return 'VIP'
+  if (isPremiumAccount(plan) || isPremiumProfile(user)) return 'PREMIUM'
   return 'FREE'
 }
 
@@ -384,7 +384,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
-      <div className="brand">Bet<span>+AI</span></div>
+      <div className="brand brand-logo-pro" aria-label="Bet+AI"><img src="/betai-sidebar-logo-new.png" alt="Bet+AI" /></div>
 
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
@@ -522,21 +522,13 @@ function getTipErrorToast(cleanMessage) {
 }
 
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
-  const heroLines = [
-    { prefix: 'Win more bets with ', accent: 'AI' },
-    { prefix: 'Win more bets with ', accent: 'Data' },
-    { prefix: 'Win more bets with ', accent: 'Stats' },
-    { prefix: 'Win more bets with ', accent: '+EV' }
-  ]
-  const heroPanels = ['main', 'alt', 'coin']
-  const [panel, setPanel] = useState('main')
-  const [lineIndex, setLineIndex] = useState(0)
+  const heroPanels = ['slide1', 'slide2', 'slide3']
+  const [panel, setPanel] = useState('slide1')
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'main'), 8000)
-    const lineTimer = setInterval(() => setLineIndex(prev => (prev + 1) % heroLines.length), 3500)
-    return () => { clearInterval(panelTimer); clearInterval(lineTimer) }
+    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'slide1'), 8000)
+    return () => { clearInterval(panelTimer) }
   }, [])
 
   const premiumTips = tips.filter(t => isTipPremium(t))
@@ -545,7 +537,6 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const wins = settled.filter(t => ['won', 'win'].includes(String(t.status || '').toLowerCase())).length
   const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : -7
   const today = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-  const line = heroLines[lineIndex]
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
@@ -556,33 +547,16 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   return (
     <section
-      className={`betai-animated-hero betai-parallax-hero ${panel === 'coin' ? 'betai-hero-coin-active' : ''}`} 
+      className="betai-animated-hero betai-parallax-hero betai-hero-image-slides"
       aria-label="BetAI predictions hero"
       onMouseMove={handleHeroMove}
       onMouseLeave={resetHeroMove}
       style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
     >
-      <div className="betai-hero-bg betai-hero-bg-one" />
-      <div className="betai-hero-bg betai-hero-bg-two" />
-      <div className="betai-hero-orb betai-hero-orb-pill" />
-      <div className="betai-hero-orb betai-hero-orb-ring" />
-      <div className="betai-hero-orb betai-hero-orb-glow" />
-      <div className="betai-hero-player" />
-      <img className="betai-hero-full-coin-bg" src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
-      <div className="betai-hero-copy">
-        <div className="betai-hero-kicker"><span />BETAI PREDICTIONS</div>
-        <div className="betai-hero-rotator">
-          <div className={`betai-hero-panel ${panel === 'main' ? 'active' : ''}`}>
-            <h1><span>AI</span>, która<br />wyprzedza<br />rynek.</h1>
-            <p>Analizujemy tysiące danych w czasie rzeczywistym.</p>
-          </div>
-          <div className={`betai-hero-panel betai-hero-panel-alt ${panel === 'alt' ? 'active' : ''}`}>
-            <h1>{line.prefix}<strong>{line.accent}</strong></h1>
-          </div>
-          <div className={`betai-hero-panel betai-hero-panel-coin ${panel === 'coin' ? 'active' : ''}`}>
-            <img src="/betai-coin-hero-animation.png" alt="Bet+AI Coin - AI Match Picks" />
-          </div>
-        </div>
+      <div className="betai-hero-image-stage" aria-hidden="true">
+        <img className={`betai-hero-slide-img slide-1 ${panel === 'slide1' ? 'active' : ''}`} src="/betai-hero-slide-1-logo.png" alt="" />
+        <img className={`betai-hero-slide-img slide-2 ${panel === 'slide2' ? 'active' : ''}`} src="/betai-hero-slide-2-coin.png" alt="" />
+        <img className={`betai-hero-slide-img slide-3 ${panel === 'slide3' ? 'active' : ''}`} src="/betai-hero-slide-3-typy.png" alt="" />
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
@@ -3557,84 +3531,145 @@ function TipsterPricingSettings({ user, onToast }) {
   )
 }
 
-function ProfileView({ user, tips, payments, unlockedTips, userPlan = 'free' }) {
+function ProfileView({ user, tips = [] }) {
   const profile = getUserProfileView(user)
-  const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
-  const premiumTips = myTips.filter(tip => isTipPremium(tip))
-  const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
-  const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  const platformFee = grossRevenue * PLATFORM_COMMISSION_RATE
-  const payout = grossRevenue - platformFee
-  const winrate = myTips.length ? Math.round((myTips.filter(t => t.status === 'won').length / myTips.length) * 100) : 0
-  const planLimits = getPlanLimits(userPlan)
-  const role = profile.isAdmin ? 'ADMIN' : planLimits.isPremium ? 'VIP TIPSTER' : premiumTips.length ? 'TIPSTER' : 'FREE USER'
+  const displayName = profile?.username || 'smilhytv'
+  const sampleTips = [
+    { icon: '⚽', match: 'Real Madryt vs Bayern Monachium', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Powyżej 2.5 gola', odds: '1.72', stake: '200 zł', status: 'WYGRANY', result: '+144.00 zł', tone: 'win' },
+    { icon: '⚽', match: 'Manchester City vs Inter Mediolan', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Obie drużyny strzelą', odds: '1.80', stake: '150 zł', status: 'AKTYWNY', result: '—', tone: 'active' },
+    { icon: '🎾', match: 'Iga Świątek vs Aryna Sabalenka', meta: 'Roland Garros  •  15.06.2025 15:30', type: 'Iga Świątek wygra', odds: '1.65', stake: '120 zł', status: 'WYGRANY', result: '+78.00 zł', tone: 'win' },
+    { icon: '🏀', match: 'Boston Celtics vs Miami Heat', meta: 'NBA  •  15.06.2025 02:30', type: 'Celtics -6.5 handicap', odds: '1.90', stake: '180 zł', status: 'PRZEGRANY', result: '-180.00 zł', tone: 'loss' },
+    { icon: '⚽', match: 'Juventus vs AC Milan', meta: 'Serie A  •  14.06.2025 20:45', type: 'AC Milan (0) DNB', odds: '2.05', stake: '100 zł', status: 'WYGRANY', result: '+105.00 zł', tone: 'win' },
+    { icon: '🎾', match: 'Carlos Alcaraz vs Novak Djokovic', meta: 'ATP 250 Queens  •  14.06.2025 16:00', type: 'Powyżej 21.5 gemy', odds: '1.88', stake: '130 zł', status: 'AKTYWNY', result: '—', tone: 'active' }
+  ]
+  const realRows = Array.isArray(tips) && tips.length ? tips.slice(0, 6).map((tip, index) => {
+    const status = String(tip.status || 'active').toLowerCase()
+    const tone = ['won','win'].includes(status) ? 'win' : ['lost','loss'].includes(status) ? 'loss' : 'active'
+    const result = tone === 'win' ? `+${Number(tip.profit || tip.stake || 120).toFixed(2)} zł` : tone === 'loss' ? `-${Number(tip.stake || 100).toFixed(2)} zł` : '—'
+    return {
+      icon: index % 3 === 2 ? '🎾' : '⚽',
+      match: `${tip.team_home || 'Real Madryt'} vs ${tip.team_away || 'Bayern Monachium'}`,
+      meta: `${tip.league || 'Liga Mistrzów'}  •  ${tip.match_date ? new Date(tip.match_date).toLocaleString('pl-PL') : '15.06.2025 21:00'}`,
+      type: tip.bet_type || tip.pick || 'Powyżej 2.5 gola',
+      odds: Number(tip.odds || tip.course || 1.72).toFixed(2),
+      stake: `${Number(tip.stake || 100)} zł`,
+      status: tone === 'win' ? 'WYGRANY' : tone === 'loss' ? 'PRZEGRANY' : 'AKTYWNY',
+      result,
+      tone
+    }
+  }) : sampleTips
 
   return (
-    <section className="profile-page profile-ultra-page">
-      <UltraPageBanner variant="profile" />
-      <div className="profile-hero profile-ultra-hero">
-        <div className="profile-avatar-wrap">
-          <div className="profile-avatar-big">{profile.initials}</div>
-          <button className={`avatar-edit-btn ${planLimits.canEditAvatar ? '' : 'locked'}`} type="button" onClick={() => {
-            if (!planLimits.canEditAvatar) {
-              alert('Zmiana avatara jest dostępna tylko dla kont PREMIUM.')
-              return
-            }
-            alert('Avatar PRO: w następnym etapie podłączymy upload zdjęcia do Supabase Storage.')
-          }}>{planLimits.canEditAvatar ? 'Zmień avatar' : 'Avatar PREMIUM'}</button>
-        </div>
+    <section className="profile-page profile-ultra-page my-profile-stats-page" aria-label="Mój profil">
+      <div className="my-profile-hero-shell">
         <div>
-          <h1>{profile.username}</h1>
-          <p>{profile.email}</p>
-          <span className={`role-badge ${role.toLowerCase().replaceAll(' ', '-')}`}>{role}</span>
-          <div className="plan-benefits-line">
-            {planLimits.isPremium ? 'PREMIUM: sprzedaż typów, brak limitu dodawania, 3 wypłaty/miesiąc, bonusy i promocje.' : 'FREE: 5 typów dziennie, brak sprzedaży premium, 1 wypłata/miesiąc, avatar i bonusy zablokowane.'}
+          <p className="my-profile-kicker">BETAI PROFILE ANALYTICS</p>
+          <h1>Moje typy i statystyki</h1>
+          <p>Śledź swoje typy, analizuj wyniki i rozwijaj skuteczność.</p>
+        </div>
+        <button className="my-profile-date-btn" type="button">📅 18 maj 2025 - 16 cze 2025 <span>⌄</span></button>
+      </div>
+
+      <div className="my-profile-metrics-grid">
+        <div className="my-profile-metric-card active">
+          <div className="my-profile-metric-icon">◎</div>
+          <div><span>Skuteczność ⓘ</span><strong>78%</strong><small><b>+6%</b> vs poprzednie 30 dni</small></div>
+        </div>
+        <div className="my-profile-metric-card">
+          <div className="my-profile-metric-icon">↗</div>
+          <div><span>ROI ⓘ</span><strong>+12.4%</strong><small><b>+2.1%</b> vs poprzednie 30 dni</small></div>
+        </div>
+        <div className="my-profile-metric-card">
+          <div className="my-profile-metric-icon">▱</div>
+          <div><span>Zysk ⓘ</span><strong>+1 248 zł</strong><small><b>+312 zł</b> vs poprzednie 30 dni</small></div>
+        </div>
+        <div className="my-profile-metric-card">
+          <div className="my-profile-metric-icon">🎟</div>
+          <div><span>Aktywne typy ⓘ</span><strong>14</strong><small>W grze</small></div>
+        </div>
+      </div>
+
+      <div className="my-profile-main-grid">
+        <div className="my-profile-card my-profile-tips-card">
+          <div className="my-profile-card-head">
+            <h2>Moje typy</h2>
+          </div>
+          <div className="my-profile-filter-row">
+            <button className="active" type="button">◎ Wszystkie</button>
+            <button type="button">💙 Premium</button>
+            <button type="button">🟢 Na żywo</button>
+            <button type="button">▣ Zakończone</button>
+          </div>
+          <div className="my-profile-table">
+            <div className="my-profile-table-head">
+              <span>Mecz</span><span>Typ</span><span>Kurs</span><span>Stawka</span><span>Status</span><span>Wynik</span>
+            </div>
+            {realRows.map((row, idx) => (
+              <div className="my-profile-table-row" key={`${row.match}-${idx}`}>
+                <div className="my-profile-match"><i>{row.icon}</i><div><b>{row.match}</b><small>{row.meta}</small></div></div>
+                <span>{row.type}</span>
+                <span>{row.odds}</span>
+                <span>{row.stake}</span>
+                <em className={`my-status ${row.tone}`}>{row.status}</em>
+                <strong className={`my-result ${row.tone}`}>{row.result}</strong>
+              </div>
+            ))}
+          </div>
+          <button className="my-profile-more-btn" type="button">Zobacz wszystkie typy</button>
+        </div>
+
+        <div className="my-profile-card my-profile-chart-card">
+          <div className="my-profile-card-head">
+            <h2>Statystyki wyników</h2>
+            <button type="button">Ostatnie 30 dni ⌄</button>
+          </div>
+          <div className="my-profile-chart-grid">
+            <div className="my-profile-line-card">
+              <span>Wynik netto (zł)</span>
+              <strong>+1 248 zł</strong>
+              <svg viewBox="0 0 520 300" role="img" aria-label="Wykres wyniku netto">
+                <defs>
+                  <linearGradient id="myProfileLineFill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#1fe2ae" stopOpacity=".42" />
+                    <stop offset="100%" stopColor="#1fe2ae" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <g className="grid-lines"><path d="M40 60H500M40 140H500M40 220H500" /></g>
+                <path className="area" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48 L492 242 L42 242 Z" />
+                <path className="line" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48" />
+                <g className="dots"><circle cx="72" cy="195" r="4"/><circle cx="126" cy="182" r="4"/><circle cx="244" cy="118" r="4"/><circle cx="330" cy="106" r="4"/><circle cx="456" cy="84" r="4"/><circle cx="492" cy="48" r="4"/></g>
+                <g className="axis"><text x="40" y="46">1.5k zł</text><text x="42" y="146">750 zł</text><text x="42" y="226">0 zł</text><text x="42" y="286">18 maj</text><text x="150" y="286">25 maj</text><text x="266" y="286">1 cze</text><text x="385" y="286">8 cze</text><text x="470" y="286">16 cze</text></g>
+              </svg>
+            </div>
+            <div className="my-profile-donut-card">
+              <span>Udział typów</span>
+              <div className="my-profile-donut"><div><strong>78%</strong><small>Skuteczność</small></div></div>
+              <div className="my-profile-legend"><span><i className="win"/>Wygrane <b>78% (47)</b></span><span><i className="loss"/>Przegrane <b>16% (10)</b></span><span><i className="active"/>Aktywne <b>6% (4)</b></span></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="profile-stats-grid profile-ultra-stats">
-        <div className="profile-stat"><span>Dodane typy</span><b>{myTips.length}</b><small>Wszystkie Twoje typy</small></div>
-        <div className="profile-stat"><span>Premium</span><b>{premiumTips.length}</b><small>Typy na sprzedaż</small></div>
-        <div className="profile-stat"><span>Sprzedaże</span><b>{soldPayments.length}</b><small>Zakupy Twoich typów</small></div>
-        <div className="profile-stat"><span>Winrate</span><b>{winrate}%</b><small>Na podstawie statusów</small></div>
-      </div>
-
-      <div className="profile-money-card profile-ultra-money">
-        <div><span>Przychód brutto</span><strong>{grossRevenue.toFixed(2)} zł</strong></div>
-        <div><span>Prowizja platformy</span><strong>{platformFee.toFixed(2)} zł</strong></div>
-        <div><span>Do wypłaty</span><strong>{payout.toFixed(2)} zł</strong></div>
-      </div>
-
-      <div className="profile-split profile-ultra-split">
-        <div className="profile-panel">
-          <div className="profile-panel-head"><h3>Moje typy</h3><span>{myTips.length}</span></div>
-          {myTips.length ? myTips.map(tip => (
-            <div className="profile-tip-row" key={tip.id}>
-              <div><b>{tip.team_home} vs {tip.team_away}</b><span>{tip.league} • {tip.bet_type}</span></div>
-              <em>{isTipPremium(tip) ? 'Premium' : 'Free'}</em>
-            </div>
-          )) : <div className="profile-empty">Nie dodałeś jeszcze żadnych typów.</div>}
+      <div className="my-profile-bottom-grid">
+        <div className="my-profile-card my-profile-mini-card">
+          <div className="mini-orb">⚽</div>
+          <div><h3>Najlepsza dyscyplina</h3><strong>Piłka nożna<br/><span>83%</span></strong><p>Skuteczność</p></div>
+          <button type="button">Zobacz szczegóły</button>
         </div>
-
-        <div className="profile-panel">
-          <div className="profile-panel-head"><h3>Odblokowane</h3><span>{unlockedTips.size}</span></div>
-          <div className="profile-empty">Masz {unlockedTips.size} odblokowanych typów premium na tym koncie.</div>
+        <div className="my-profile-card my-profile-mini-card blue">
+          <div className="mini-orb">〽</div>
+          <div><h3>Średni kurs</h3><strong>1.92</strong><p>Średni kurs<br/><b>+0.14 vs poprzednie 30 dni</b></p></div>
+          <button type="button">Zobacz analizę</button>
         </div>
       </div>
 
-      {planLimits.isPremium && (
-        <TipsterPricingSettings user={user} onToast={() => {}} />
-      )}
-
-      <div className="tipster-pro-card">
-        <div><strong>{planLimits.isPremium ? "Konto PREMIUM aktywne" : "Zostań tipsterem PRO"}</strong><span>{planLimits.isPremium ? "Możesz sprzedawać typy premium, korzystać z bonusów i wypłacać do 3 razy w miesiącu." : "Premium odblokowuje sprzedaż typów, avatar, bonusy, AI/statystyki i znosi limit 5 typów dziennie."}</span></div>
-        <button>{planLimits.isPremium ? "Premium aktywne" : "Aktywuj PRO"}</button>
+      <div className="my-profile-ai-tip">
+        <div><span>💡</span><b>Wskazówka AI</b><p>Twoja skuteczność wzrasta o 14% w weekendy. Rozważ zwiększenie aktywności w tych dniach.</p></div>
+        <button type="button">Zobacz rekomendacje ↗</button>
       </div>
     </section>
   )
 }
-
 
 
 function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
@@ -5568,9 +5603,12 @@ function App() {
           <div className="top-actions">
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
-            <span className="user-top-email">{userProfile.email}</span>
             <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
-            <button className="add-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
+            <button type="button" className={`top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
+              <span className="top-user-avatar">{(getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}</span>
+              <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
+              <span className="top-user-chevron">⌄</span>
+            </button>
           </div>
         </header>
 
@@ -5698,6 +5736,7 @@ function App() {
                   <b>{feedCounts[key]}</b>
                 </button>
               ))}
+              <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
             </div>
 
 
