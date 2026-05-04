@@ -11390,3 +11390,166 @@ button.notify-btn b{
   .auth-pro-visual{min-height:320px;}
   .auth-pro-footer{grid-template-columns:1fr; padding:16px;}
 }
+
+/* Wersja 463 — poprawiona lewa kolumna zgodnie z referencją */
+.auth-pro-main{
+  grid-template-columns:minmax(470px, 640px) minmax(620px, 1fr);
+  gap:22px;
+}
+.auth-pro-panel{
+  padding:20px 24px 18px;
+  border-radius:26px;
+  border:1px solid rgba(41,223,255,.24);
+  background:linear-gradient(180deg, rgba(2,12,22,.98), rgba(1,9,18,.985));
+  box-shadow:0 0 0 1px rgba(18,245,239,.08) inset, 0 0 28px rgba(18,173,255,.09), 0 18px 46px rgba(0,0,0,.38);
+}
+.auth-pro-panel::after{
+  content:'';
+  position:absolute;
+  inset:10px;
+  border-radius:20px;
+  border:1px solid rgba(25,193,233,.06);
+  pointer-events:none;
+}
+.auth-pro-logo-box{
+  width:min(74%, 360px);
+  margin:0 auto 10px;
+  padding:16px 18px;
+  background:rgba(1,8,16,.94);
+  border:1px solid rgba(20,158,204,.14);
+  border-radius:4px;
+  box-shadow:0 6px 20px rgba(0,0,0,.24);
+}
+.auth-pro-logo{
+  width:100%;
+  max-width:250px;
+}
+.auth-pro-title{
+  max-width:430px;
+  margin:8px auto 8px;
+  font-size:clamp(42px, 3.1vw, 72px);
+  font-weight:900;
+  line-height:.94;
+  letter-spacing:-.04em;
+}
+.auth-pro-title span{
+  color:#33eefe;
+}
+.auth-pro-subtitle{
+  max-width:430px;
+  margin:0 auto 18px;
+  font-size:clamp(15px, .92vw, 17px);
+  color:rgba(231,243,252,.80);
+  line-height:1.45;
+}
+.auth-pro-tabs{
+  margin-bottom:14px;
+  padding:4px;
+  border-radius:16px;
+  border:1px solid rgba(24,165,206,.18);
+  background:rgba(2,10,18,.82);
+}
+.auth-pro-tab{
+  height:52px;
+  font-size:clamp(17px, 1vw, 20px);
+  letter-spacing:-.01em;
+}
+.auth-pro-tab.active{
+  color:#081620;
+  background:linear-gradient(135deg, #39f2ff, #1be2ff 46%, #0ec0ff);
+  box-shadow:0 0 14px rgba(21,232,255,.22), inset 0 1px 0 rgba(255,255,255,.42);
+}
+.auth-pro-form{gap:10px;}
+.auth-pro-field label{
+  margin:0 0 7px;
+  font-size:clamp(14px,.9vw,17px);
+}
+.auth-pro-input-wrap{
+  min-height:56px;
+  padding:0 16px;
+  gap:10px;
+  border-radius:14px;
+  border:1px solid rgba(25,150,194,.18);
+  background:linear-gradient(180deg, rgba(2,11,22,.98), rgba(1,9,18,.98));
+}
+.auth-pro-input-wrap input{
+  font-size:17px;
+}
+.auth-pro-input-icon,
+.auth-pro-eye{
+  font-size:18px;
+}
+.auth-pro-checkrow{
+  gap:10px;
+  margin-top:2px;
+  font-size:clamp(14px,.9vw,17px);
+}
+.auth-pro-checkbox-box{
+  width:22px;
+  height:22px;
+  border-radius:5px;
+}
+.auth-pro-submit{
+  margin-top:8px;
+  min-height:60px;
+  border-radius:16px;
+  font-size:clamp(18px,1.15vw,25px);
+  box-shadow:0 0 18px rgba(18,220,255,.20), inset 0 1px 0 rgba(255,255,255,.42);
+}
+.auth-pro-switcher{
+  margin-top:10px;
+  font-size:clamp(15px,.95vw,18px);
+}
+.auth-pro-visual{
+  min-height:740px;
+}
+@media (max-width: 1280px){
+  .auth-pro-main{grid-template-columns:1fr;}
+  .auth-pro-logo-box{width:min(76%, 360px);}
+}
+@media (max-width: 760px){
+  .auth-pro-logo-box{width:min(88%, 320px); padding:12px 14px;}
+  .auth-pro-title{font-size:clamp(34px, 8.6vw, 46px); max-width:320px;}
+  .auth-pro-subtitle{max-width:320px;}
+  .auth-pro-input-wrap{min-height:54px;}
+}
+
+/* Wersja 464 — poprawiona prawa ramka / widoczność showcase */
+.auth-pro-main{
+  grid-template-columns:minmax(470px, 620px) minmax(700px, 1fr);
+  gap:20px;
+}
+.auth-pro-visual{
+  min-height:740px;
+  padding:12px;
+  border-radius:26px;
+  border:1px solid rgba(41,223,255,.22);
+  background:linear-gradient(180deg, rgba(1,10,18,.94), rgba(1,8,15,.98));
+  box-shadow:0 16px 42px rgba(0,0,0,.34);
+}
+.auth-pro-visual::before{
+  content:'';
+  position:absolute;
+  inset:12px;
+  border-radius:20px;
+  border:1px solid rgba(25,193,233,.08);
+  pointer-events:none;
+}
+.auth-pro-visual-art{
+  position:absolute;
+  inset:12px;
+  border-radius:20px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.12)),
+    url('/auth-showcase-461.webp') center center / contain no-repeat;
+}
+@media (max-width: 1280px){
+  .auth-pro-main{grid-template-columns:1fr;}
+  .auth-pro-visual{min-height:560px;}
+  .auth-pro-visual-art{background-size:contain;}
+}
+@media (max-width: 760px){
+  .auth-pro-visual{min-height:340px;padding:10px;}
+  .auth-pro-visual::before,
+  .auth-pro-visual-art{inset:10px;}
+}

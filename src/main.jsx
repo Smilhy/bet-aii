@@ -3009,7 +3009,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('register')
+  const [mode, setMode] = useState('login')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
