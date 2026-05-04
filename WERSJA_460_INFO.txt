@@ -1,0 +1,6 @@
+Wersja 460
+- poprzedni panel auth usunięty wizualnie, logika została zachowana
+- nowy panel logowania/rejestracji zrobiony na bazie dostarczonego zdjęcia 2K
+- nowe assety: auth-final-460-2k.png oraz auth-final-460-2k.webp
+- zachowany preload obrazu dla szybszego startu
+- zaktualizowane dopasowanie tabów, pól, checkboxa, przycisku i linku dolnego

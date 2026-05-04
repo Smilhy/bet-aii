@@ -10937,7 +10937,7 @@ button.notify-btn b{
   .auth-final-stage{background-position:center center;}
 }
 
-/* Wersja 459 — panel auth na obrazie 2K */
+/* Wersja 460 — nowy panel auth z podanego zdjęcia 2K, stara warstwa wizualna usunięta, logika zachowana */
 .auth-final-screen{
   min-height:100vh !important;
   width:100% !important;
@@ -10946,59 +10946,156 @@ button.notify-btn b{
   justify-content:center !important;
   overflow:hidden !important;
   background:
-    radial-gradient(circle at 62% 20%, rgba(21,170,255,.12), transparent 30%),
-    radial-gradient(circle at 10% 14%, rgba(20,245,239,.06), transparent 24%),
-    #01050d !important;
+    radial-gradient(circle at 60% 18%, rgba(18,182,255,.10), transparent 30%),
+    radial-gradient(circle at 15% 12%, rgba(18,245,239,.05), transparent 24%),
+    #01060f !important;
   padding:0 !important;
 }
 .auth-final-stage{
   position:relative !important;
-  width:min(94vw,1880px) !important;
+  width:min(95vw,1900px) !important;
   height:auto !important;
   aspect-ratio:16/9 !important;
   min-width:0 !important;
-  max-width:1880px !important;
-  max-height:92vh !important;
-  background:url('/auth-final-459-2k.webp') center center / 100% 100% no-repeat !important;
+  max-width:1900px !important;
+  max-height:93vh !important;
+  background:url('/auth-final-460-2k.webp') center center / 100% 100% no-repeat !important;
   flex:0 0 auto !important;
   isolation:isolate !important;
   overflow:visible !important;
   filter:none !important;
   transform:none !important;
-  will-change:transform !important;
 }
-.auth-final-stage::before{opacity:.18 !important;filter:none !important;}
-.auth-final-stage::after{opacity:.32 !important;}
+.auth-final-stage::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg, transparent 0%, transparent 38%, rgba(255,255,255,.045) 48%, transparent 58%, transparent 100%);
+  background-size:260% 100%;
+  animation:authFinalSweep460 9s ease-in-out infinite;
+  mix-blend-mode:screen;
+  opacity:.26 !important;
+}
+.auth-final-stage::after{
+  content:'';
+  position:absolute;
+  left:52.1%;
+  top:13.1%;
+  width:15.8%;
+  height:27.7%;
+  pointer-events:none;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(54,232,255,.12), transparent 66%);
+  filter:blur(1px);
+  animation:authFinalPulse460 4.8s ease-in-out infinite;
+  mix-blend-mode:screen;
+  opacity:.34 !important;
+}
+.auth-final-form{
+  position:absolute;
+  inset:0;
+  margin:0;
+  padding:0;
+  z-index:3;
+}
+.auth-final-tab,
+.auth-final-submit,
+.auth-final-bottom-link{
+  position:absolute;
+  z-index:5;
+  border:0;
+  background:transparent;
+  color:transparent;
+  font-size:0;
+  cursor:pointer;
+}
+.auth-final-tab:hover,
+.auth-final-submit:hover,
+.auth-final-bottom-link:hover{filter:brightness(1.03);}
+.auth-final-tab-login{left:6.88% !important;top:29.53% !important;width:14.31% !important;height:5.74% !important;border-radius:13px;}
+.auth-final-tab-register{left:21.20% !important;top:29.53% !important;width:14.42% !important;height:5.74% !important;border-radius:13px;}
 .auth-final-input{
+  position:absolute;
+  z-index:4;
   box-sizing:border-box !important;
+  border:0 !important;
+  outline:0 !important;
   border-radius:14px !important;
-  padding:0 2.35% 0 5.18% !important;
-  font:800 clamp(12px,.95vw,18px) Inter, Arial, sans-serif !important;
-  color:#f3ffff !important;
-  height:5.76% !important;
+  background:transparent !important;
+  color:#efffff !important;
+  text-shadow:0 0 6px rgba(18,245,239,.08);
+  padding:0 2.35% 0 5.15% !important;
+  font:800 clamp(12px,.94vw,18px) Inter, Arial, sans-serif !important;
   line-height:1 !important;
   display:block !important;
+  caret-color:#15f5ef !important;
 }
-.auth-final-input:focus{box-shadow:inset 0 0 0 1px rgba(20,245,239,.35),0 0 20px rgba(20,245,239,.10) !important;}
-.auth-final-tab-login{left:6.98% !important;top:29.50% !important;width:14.36% !important;height:5.78% !important;}
-.auth-final-tab-register{left:21.34% !important;top:29.50% !important;width:14.42% !important;height:5.78% !important;}
-.auth-final-username{left:6.98% !important;top:38.63% !important;width:28.60% !important;height:5.76% !important;}
-.auth-final-email{left:6.98% !important;top:47.04% !important;width:28.60% !important;height:5.76% !important;}
-.auth-final-password{left:6.98% !important;top:55.45% !important;width:28.60% !important;height:5.76% !important;}
-.auth-final-confirm{left:6.98% !important;top:63.86% !important;width:28.60% !important;height:5.76% !important;}
-.auth-final-checkbox{left:7.14% !important;top:70.98% !important;width:1.56% !important;height:2.76% !important;display:block !important;}
-.auth-final-checkbox span{border-radius:4px !important;}
-.auth-final-checkbox input:checked + span::after{top:50% !important;font-size:min(.90vw,16px) !important;}
-.auth-final-submit{left:6.98% !important;top:74.84% !important;width:28.60% !important;height:7.12% !important;}
-.auth-final-bottom-link{left:19.34% !important;top:82.54% !important;width:10.84% !important;height:3.58% !important;}
-.auth-final-form.is-login .auth-final-email{top:38.63% !important;}
-.auth-final-form.is-login .auth-final-password{top:47.04% !important;}
-.auth-final-form.is-login .auth-final-submit{top:60.70% !important;}
-.auth-final-message{left:6.98% !important;top:25.16% !important;width:28.60% !important;}
+.auth-final-input:focus{
+  box-shadow:inset 0 0 0 1px rgba(20,245,239,.33), 0 0 18px rgba(20,245,239,.10) !important;
+}
+.auth-final-input:-webkit-autofill,
+.auth-final-input:-webkit-autofill:hover,
+.auth-final-input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#efffff;
+  transition:background-color 99999s ease-in-out 0s;
+  box-shadow:0 0 0 1000px transparent inset;
+}
+.auth-final-username{left:6.90% !important;top:38.67% !important;width:28.74% !important;height:5.74% !important;}
+.auth-final-email{left:6.90% !important;top:47.08% !important;width:28.74% !important;height:5.74% !important;}
+.auth-final-password{left:6.90% !important;top:55.49% !important;width:28.74% !important;height:5.74% !important;}
+.auth-final-confirm{left:6.90% !important;top:63.89% !important;width:28.74% !important;height:5.74% !important;}
+.auth-final-checkbox{
+  position:absolute;
+  z-index:5;
+  left:7.02% !important;
+  top:70.94% !important;
+  width:1.54% !important;
+  height:2.72% !important;
+  cursor:pointer;
+  display:block !important;
+}
+.auth-final-checkbox input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.auth-final-checkbox span{position:absolute;inset:0;border-radius:4px !important;background:transparent;}
+.auth-final-checkbox input:checked + span{background:rgba(20,245,239,.16);box-shadow:inset 0 0 0 2px rgba(20,245,239,.86),0 0 12px rgba(20,245,239,.18);}
+.auth-final-checkbox input:checked + span::after{content:'✓';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#14f5ef;font-size:min(.88vw,16px);font-weight:900;}
+.auth-final-submit{left:6.90% !important;top:74.83% !important;width:28.74% !important;height:7.14% !important;border-radius:16px;}
+.auth-final-submit:disabled{cursor:wait;background:rgba(0,0,0,.10)}
+.auth-final-bottom-link{left:19.32% !important;top:82.53% !important;width:10.78% !important;height:3.58% !important;border-radius:10px;}
+.auth-final-message{
+  position:absolute;
+  z-index:8;
+  left:6.90% !important;
+  top:25.14% !important;
+  width:28.74% !important;
+  min-height:34px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,86,116,.40);
+  background:rgba(20,6,13,.78);
+  color:#ffd7df;
+  font:800 clamp(11px,.84vw,14px) Inter, Arial, sans-serif;
+  box-shadow:0 12px 30px rgba(0,0,0,.24);
+}
+.auth-final-form.is-login .auth-final-username,
+.auth-final-form.is-login .auth-final-confirm,
+.auth-final-form.is-login .auth-final-checkbox{display:none;}
+.auth-final-form.is-login .auth-final-email{top:38.67% !important;}
+.auth-final-form.is-login .auth-final-password{top:47.08% !important;}
+.auth-final-form.is-login .auth-final-submit{top:60.72% !important;}
+@keyframes authFinalSweep460{
+  0%,38%{background-position:150% 0;opacity:.08}
+  55%{opacity:.26}
+  78%,100%{background-position:-120% 0;opacity:.05}
+}
+@keyframes authFinalPulse460{
+  0%,100%{transform:scale(.97);opacity:.26}
+  50%{transform:scale(1.03);opacity:.42}
+}
 @media (max-width:1050px){
-  .auth-final-stage{width:96vw !important;max-height:90vh !important;}
+  .auth-final-stage{width:96vw !important;max-height:91vh !important;}
   .auth-final-input{font-size:clamp(10px,1.45vw,16px) !important;}
 }
 @media (max-height:780px){
-  .auth-final-stage{width:min(86vw,1600px) !important;max-height:88vh !important;}
+  .auth-final-stage{width:min(87vw,1650px) !important;max-height:89vh !important;}
 }
