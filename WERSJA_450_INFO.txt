@@ -1,0 +1,6 @@
+Wersja 450
+- Update TYLKO wyglądu ekranu logowania/rejestracji na bazie paczki wersja 449.
+- Dodany przełącznik Logowanie / Zarejestruj się.
+- Nowy ciemny neonowy layout Bet+AI zgodny z mockupem użytkownika.
+- Dodana prawa sekcja prezentująca AI analizy, typy, statystyki live, społeczność i podgląd dashboardu.
+- Zachowano istniejącą logikę Supabase, dashboard, typy, portfel, admin i resztę funkcji bez przebudowy.
