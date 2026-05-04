@@ -1,5 +1,0 @@
-WERSJA 448
-- Zwężona ramka „MECZÓW DZIŚ” i przesunięta maksymalnie w prawo.
-- Przycisk „+ Dodaj typ” zmieniony na niebieski styl jak „Wyloguj”.
-- Zachowany mocny puls i premium glow przy przycisku.
-- Bazowane na wersji 447.
