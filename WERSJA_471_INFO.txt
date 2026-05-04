@@ -1,0 +1,1 @@
+WERSJA 471 — panel logowania/rejestracji zrobiony 1:1 na podstawie przesłanego zdjęcia. Dodano żywe pola formularza, klikalne zakładki logowania/rejestracji, checkbox oraz przycisk submit na tle referencyjnego panelu. Dashboard i układ Mecze dziś nie były ruszane.
