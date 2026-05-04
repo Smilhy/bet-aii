@@ -1,1 +1,7 @@
-WERSJA 471 — panel logowania/rejestracji zrobiony 1:1 na podstawie przesłanego zdjęcia. Dodano żywe pola formularza, klikalne zakładki logowania/rejestracji, checkbox oraz przycisk submit na tle referencyjnego panelu. Dashboard i układ Mecze dziś nie były ruszane.
+Wersja 471
+- Poprawiony panel logowania/rejestracji według ostatniego zaakceptowanego widoku.
+- Logo bez czarnego tła, z żywym glow i wtopieniem w panel.
+- Napis AI w kolorze niebiesko-turkusowym.
+- Przycisk Załóż konto / Zaloguj się ustawiony na cyan/turkus jak w referencji.
+- Dodane ultra-pro wyostrzenie, saturacja, glow i subtelne animacje.
+- Dashboard i pozostałe funkcje bez zmian.
