@@ -1,0 +1,5 @@
+Wersja 473
+- usunięty lewy fragment/sliver z prawego panelu auth
+- usunięty dolny pasek/benefity wklejone w prawy obraz
+- nowy wyostrzony crop prawego panelu
+- reszta strony bez zmian

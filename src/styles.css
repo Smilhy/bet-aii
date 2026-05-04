@@ -12583,3 +12583,18 @@ button.notify-btn b{
   .auth-pro-visual{min-height:320px !important;}
   .auth-pro-footer{grid-template-columns:1fr !important;gap:8px !important;}
 }
+
+
+/* Wersja 473 — usunięte elementy zaznaczone czerwonymi ramkami z prawego panelu */
+.auth-pro-visual-art{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.025)),
+    url('/auth-showcase-473.webp') center center / cover no-repeat !important;
+  filter:contrast(1.20) saturate(1.24) brightness(1.08) drop-shadow(0 0 18px rgba(18,220,255,.22)) !important;
+}
+.auth-pro-visual{
+  overflow:hidden !important;
+}
+.auth-pro-visual::after{
+  inset:12px !important;
+}
