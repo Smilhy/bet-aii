@@ -3093,72 +3093,175 @@ function AuthView({ onAuth }) {
   }
 
   return (
-    <div className="auth-final-screen">
-      <div className="auth-final-stage" aria-label="BetAI logowanie i rejestracja">
-        <form className={`auth-final-form ${mode === 'login' ? 'is-login' : 'is-register'}`} onSubmit={submitAuth}>
-          <button type="button" className="auth-final-tab auth-final-tab-login" onClick={() => { setMode('login'); setAuthMessage('') }} aria-label="Zaloguj się" />
-          <button type="button" className="auth-final-tab auth-final-tab-register" onClick={() => { setMode('register'); setAuthMessage('') }} aria-label="Zarejestruj się" />
+    <div className="auth-pro-screen">
+      <div className="auth-pro-shell">
+        <div className="auth-pro-main">
+          <section className="auth-pro-panel" aria-label="BetAI logowanie i rejestracja">
+            <div className="auth-pro-logo-box">
+              <img src="/auth-brand-461.webp" alt="Bet+AI" className="auth-pro-logo" />
+            </div>
 
-          <input
-            className="auth-final-input auth-final-username"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            type="text"
-            autoComplete="username"
-            aria-label="Nazwa użytkownika"
-            tabIndex={mode === 'register' ? 0 : -1}
-          />
+            <h1 className="auth-pro-title">
+              Dołącz do platformy <span>AI</span>
+            </h1>
+            <p className="auth-pro-subtitle">
+              Zarejestruj się i korzystaj z analityki AI, typów oraz statystyk na żywo.
+            </p>
 
-          <input
-            className="auth-final-input auth-final-email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            type="email"
-            autoComplete="email"
-            aria-label="Email"
-          />
+            <div className="auth-pro-tabs" role="tablist" aria-label="Tryb logowania i rejestracji">
+              <button
+                type="button"
+                className={`auth-pro-tab ${mode === 'login' ? 'active' : ''}`}
+                onClick={() => { setMode('login'); setAuthMessage('') }}
+              >
+                Zaloguj się
+              </button>
+              <button
+                type="button"
+                className={`auth-pro-tab ${mode === 'register' ? 'active' : ''}`}
+                onClick={() => { setMode('register'); setAuthMessage('') }}
+              >
+                Zarejestruj się
+              </button>
+            </div>
 
-          <input
-            className="auth-final-input auth-final-password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            type="password"
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            aria-label="Hasło"
-          />
+            <form className="auth-pro-form" onSubmit={submitAuth}>
+              {authMessage && <div className="auth-pro-message">{authMessage}</div>}
 
-          <input
-            className="auth-final-input auth-final-confirm"
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            type="password"
-            autoComplete="new-password"
-            aria-label="Powtórz hasło"
-            tabIndex={mode === 'register' ? 0 : -1}
-          />
+              {mode === 'register' && (
+                <div className="auth-pro-field">
+                  <label>Nazwa użytkownika</label>
+                  <div className="auth-pro-input-wrap">
+                    <span className="auth-pro-input-icon" aria-hidden="true">👤</span>
+                    <input
+                      value={username}
+                      onChange={e => setUsername(e.target.value)}
+                      type="text"
+                      autoComplete="username"
+                      placeholder="Wybierz nazwę użytkownika"
+                      aria-label="Nazwa użytkownika"
+                    />
+                  </div>
+                </div>
+              )}
 
-          <label className="auth-final-checkbox" aria-label="Akceptuję regulamin">
-            <input
-              type="checkbox"
-              checked={acceptedRules}
-              onChange={e => setAcceptedRules(e.target.checked)}
-              required={mode === 'register'}
-              tabIndex={mode === 'register' ? 0 : -1}
-            />
-            <span />
-          </label>
+              <div className="auth-pro-field">
+                <label>Email</label>
+                <div className="auth-pro-input-wrap">
+                  <span className="auth-pro-input-icon" aria-hidden="true">✉</span>
+                  <input
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Wpisz swój adres email"
+                    aria-label="Email"
+                  />
+                </div>
+              </div>
 
-          {authMessage && <div className="auth-final-message">{authMessage}</div>}
+              <div className="auth-pro-field">
+                <label>Hasło</label>
+                <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
+                  <span className="auth-pro-input-icon" aria-hidden="true">🔒</span>
+                  <input
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    type="password"
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    placeholder="Minimum 8 znaków"
+                    aria-label="Hasło"
+                  />
+                  <span className="auth-pro-eye" aria-hidden="true">◔</span>
+                </div>
+              </div>
 
-          <button className="auth-final-submit" disabled={loading} type="submit" aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'} />
+              {mode === 'register' && (
+                <div className="auth-pro-field">
+                  <label>Powtórz hasło</label>
+                  <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
+                    <span className="auth-pro-input-icon" aria-hidden="true">🔒</span>
+                    <input
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Powtórz swoje hasło"
+                      aria-label="Powtórz hasło"
+                    />
+                    <span className="auth-pro-eye" aria-hidden="true">◔</span>
+                  </div>
+                </div>
+              )}
 
-          <button
-            type="button"
-            className="auth-final-bottom-link"
-            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthMessage('') }}
-            aria-label={mode === 'login' ? 'Załóż konto' : 'Zaloguj się'}
-          />
-        </form>
+              {mode === 'register' && (
+                <label className="auth-pro-checkrow">
+                  <input
+                    type="checkbox"
+                    checked={acceptedRules}
+                    onChange={e => setAcceptedRules(e.target.checked)}
+                    required={mode === 'register'}
+                  />
+                  <span className="auth-pro-checkbox-box" aria-hidden="true" />
+                  <span>
+                    Akceptuję <a href="#">Regulamin</a> oraz <a href="#">Politykę prywatności</a>
+                  </span>
+                </label>
+              )}
+
+              <button className="auth-pro-submit" disabled={loading} type="submit">
+                <span>{loading ? 'Ładowanie...' : mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}</span>
+                <strong>→</strong>
+              </button>
+            </form>
+
+            <div className="auth-pro-switcher">
+              <span>{mode === 'login' ? 'Nie masz jeszcze konta?' : 'Masz już konto?'}</span>
+              <button
+                type="button"
+                className="auth-pro-switcher-btn"
+                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthMessage('') }}
+              >
+                {mode === 'login' ? 'Zarejestruj się' : 'Zaloguj się'}
+              </button>
+            </div>
+          </section>
+
+          <section className="auth-pro-visual" aria-hidden="true">
+            <div className="auth-pro-visual-art" />
+          </section>
+        </div>
+
+        <div className="auth-pro-footer">
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon">🛡</div>
+            <div>
+              <strong>Bezpieczne dane</strong>
+              <span>Twoje dane są u nas w pełni chronione</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon">📝</div>
+            <div>
+              <strong>Szybka rejestracja</strong>
+              <span>Załóż konto w mniej niż 30 sekund</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon">📈</div>
+            <div>
+              <strong>Darmowe typy AI</strong>
+              <span>Codziennie nowe typy o wysokiej skuteczności</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon">👥</div>
+            <div>
+              <strong>Aktywna społeczność</strong>
+              <span>Tysiące typerów dzieli się wiedzą i wygrywa razem</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -1,0 +1,7 @@
+Wersja 461
+- poprzedni pseudo-panel oparty o klikalne overlaye na zdjęciu został zastąpiony prawdziwym panelem Auth Final Panel
+- lewy panel logowania/rejestracji jest teraz realnym HTML/CSS z prawdziwymi polami, labelami, przyciskami i checkboxem
+- logika logowania/rejestracji została zachowana
+- dodane realne logo Bet+AI jako osobny asset
+- prawa strona to showcase graficzny, a nie interaktywny formularz
+- zbudowany nowy dist produkcyjny

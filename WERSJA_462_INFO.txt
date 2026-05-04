@@ -1,0 +1,7 @@
+Wersja 462
+- Auth Final Panel wykonany jako realny panel HTML/CSS na podstawie dostarczonego zdjęcia
+- lewa strona to prawdziwy formularz logowania/rejestracji
+- są realne inputy, labelki, checkbox i przyciski
+- logo jest osobnym realnym elementem
+- logika logowania i rejestracji została zachowana
+- gotowy dist produkcyjny w paczce
