@@ -1,6 +1,0 @@
-Wersja 456
-- usunięty fullscreen z auth panelu
-- panel zmniejszony o około 20% względem wersji fullscreen
-- dodany nowy obraz auth w 4K (3840x2160), bez rozciągania 100%/100%
-- poprawione dopasowanie pól tekstowych
-- poprawione wyrównanie checkboxa przy "Akceptuję Regulamin"

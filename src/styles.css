@@ -10937,7 +10937,7 @@ button.notify-btn b{
   .auth-final-stage{background-position:center center;}
 }
 
-/* Wersja 456 — bez fullscreen, 20% mniejszy panel, obraz 4K bez rozciągania + równe checkbox/regulamin */
+/* Wersja 457 — panel auth powiększony o 30% względem wersji 456, nadal bez fullscreen */
 .auth-final-screen{
   min-height:100vh !important;
   width:100% !important;
@@ -10953,12 +10953,12 @@ button.notify-btn b{
 }
 .auth-final-stage{
   position:relative !important;
-  width:min(80vw,1536px) !important;
+  width:min(96vw,1996px) !important;
   height:auto !important;
   aspect-ratio:16/9 !important;
   min-width:0 !important;
-  max-width:1536px !important;
-  max-height:86vh !important;
+  max-width:1996px !important;
+  max-height:94vh !important;
   background:url('/auth-final-456-4k.png') center center / contain no-repeat !important;
   flex:0 0 auto !important;
   isolation:isolate !important;
@@ -10977,7 +10977,7 @@ button.notify-btn b{
   box-sizing:border-box !important;
   border-radius:14px !important;
   padding:0 2.4% 0 5.25% !important;
-  font:800 clamp(11px,.86vw,17px) Inter, Arial, sans-serif !important;
+  font:800 clamp(12px,.96vw,18px) Inter, Arial, sans-serif !important;
   color:#f3ffff !important;
   height:5.72% !important;
   line-height:1 !important;
@@ -10997,7 +10997,7 @@ button.notify-btn b{
 .auth-final-checkbox span{border-radius:4px !important;}
 .auth-final-checkbox input:checked + span::after{
   top:50% !important;
-  font-size:min(.82vw,15px) !important;
+  font-size:min(.92vw,16px) !important;
 }
 .auth-final-submit{left:7.02% !important;top:74.86% !important;width:28.68% !important;height:7.12% !important;}
 .auth-final-bottom-link{left:19.30% !important;top:82.54% !important;width:10.88% !important;height:3.60% !important;}
@@ -11008,9 +11008,9 @@ button.notify-btn b{
 .auth-final-form.is-login .auth-final-submit{top:60.74% !important;}
 .auth-final-message{left:7.02% !important;top:25.18% !important;width:28.68% !important;}
 @media (max-width:1050px){
-  .auth-final-stage{width:92vw !important;max-height:86vh !important;}
-  .auth-final-input{font-size:clamp(10px,1.4vw,15px) !important;}
+  .auth-final-stage{width:96vw !important;max-height:92vh !important;}
+  .auth-final-input{font-size:clamp(10px,1.45vw,16px) !important;}
 }
 @media (max-height:780px){
-  .auth-final-stage{width:min(76vw,1380px) !important;max-height:84vh !important;}
+  .auth-final-stage{width:min(86vw,1650px) !important;max-height:90vh !important;}
 }
