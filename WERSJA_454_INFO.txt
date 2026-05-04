@@ -1,0 +1,5 @@
+Wersja 454: poprawka ekranu logowania/rejestracji.
+- Naprawione nachodzenie pól formularza na lewy panel.
+- Pola nie wychodzą poza ramkę.
+- Zachowany zaakceptowany wygląd auth i przełącznik logowanie/rejestracja.
+- Dashboard i reszta strony bez zmian.

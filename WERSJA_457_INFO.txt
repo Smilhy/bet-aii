@@ -1,5 +1,0 @@
-Wersja 457
-- panel auth powiększony o około 30% względem wersji 456
-- nadal bez fullscreen
-- zachowany obraz 4K
-- utrzymane poprawki checkboxa regulaminu i dopasowania pól
