@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-470",
-  "version": "470.0.0",
+  "name": "betai-wersja-467",
+  "version": "467.0.0",
   "scripts": {
     "dev": "vite",
     "build": "node ./node_modules/vite/bin/vite.js build",

@@ -3017,37 +3017,6 @@ function AuthView({ onAuth }) {
   const [acceptedRules, setAcceptedRules] = useState(false)
   const [loading, setLoading] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const articleCards = [
-    { tag: 'ANALIZA', time: '2h temu', title: 'Klopp: „To nie koniec, to nowy początek”', meta: '24', comments: 'Komentarze' },
-    { tag: 'ZAPOWIEDŹ', time: '4h temu', title: 'Derby d’Italia: Inter — Juventus', meta: '18', comments: 'Komentarze' },
-    { tag: 'TYPY AI', time: '5h temu', title: 'AI typuje: Najlepsze kupony weekendu', meta: '32', comments: 'Komentarze' },
-    { tag: 'WYWIAD', time: '6h temu', title: 'Bellingham: „Chcemy wygrać wszystko”', meta: '27', comments: 'Komentarze' }
-  ]
-
-  const liveResults = [
-    { league: 'PREMIER LEAGUE', minute: "82'", home: 'Tottenham', score: '2 : 1', away: 'Liverpool' },
-    { league: 'SERIE A', minute: "75'", home: 'Inter', score: '1 : 0', away: 'Juventus' },
-    { league: 'LA LIGA', minute: "68'", home: 'Barcelona', score: '3 : 2', away: 'Real Sociedad' },
-    { league: 'BUNDESLIGA', minute: "81'", home: 'Leverkusen', score: '1 : 1', away: 'Bayern' }
-  ]
-
-  const topTipsters = [
-    { rank: 1, name: 'smilbytv', roi: '+20.6%', winRate: '60%', profit: '+125.40 zł' },
-    { rank: 2, name: 'bukajhjoniek1988', roi: '+18.1%', winRate: '57%', profit: '+98.20 zł' },
-    { rank: 3, name: 'krystian_typer', roi: '+16.3%', winRate: '55%', profit: '+76.80 zł' },
-    { rank: 4, name: 'pirotek1987', roi: '+14.8%', winRate: '52%', profit: '+64.30 zł' },
-    { rank: 5, name: 'PilkarskiGuru', roi: '+13.2%', winRate: '51%', profit: '+58.10 zł' }
-  ]
-
-  const chatMessages = [
-    { name: 'ZielonyKról', text: 'Dzisiaj grubo! 🔥', time: '2 min' },
-    { name: 'smilbytv', text: 'AI ma dzisiaj wysoką pewność 💪', time: '1 min', admin: true },
-    { name: 'krystian_typer', text: 'Lech - Legia pewniak? 🤔', time: '1 min' },
-    { name: 'pirotek1987', text: 'Inter wygląda mocno dzisiaj!', time: '30 sek' }
-  ]
 
   async function submitAuth(e) {
     e.preventDefault()
@@ -3124,29 +3093,46 @@ function AuthView({ onAuth }) {
   }
 
   return (
-    <div className="auth-real-screen">
-      <div className="auth-real-shell">
-        <div className="auth-real-grid">
-          <section className="auth-real-panel" aria-label="BetAI logowanie i rejestracja">
-            <div className="auth-real-logo-wrap">
-              <img src="/auth-brand-467.webp" alt="Bet+AI" className="auth-real-logo" />
+    <div className="auth-pro-screen">
+      <div className="auth-pro-shell">
+        <div className="auth-pro-main">
+          <section className="auth-pro-panel" aria-label="BetAI logowanie i rejestracja">
+            <div className="auth-pro-logo-box">
+              <img src="/auth-brand-469-transparent.png" alt="Bet+AI" className="auth-pro-logo" />
             </div>
 
-            <h1 className="auth-real-title">
+            <h1 className="auth-pro-title">
               Dołącz do platformy <span>AI</span>
             </h1>
-            <p className="auth-real-subtitle">
-              dla typerów i analityków sportowych
+            <p className="auth-pro-subtitle">
+              Zarejestruj się i korzystaj z analityki AI, typów oraz statystyk na żywo.
             </p>
 
-            <form className="auth-real-form" onSubmit={submitAuth}>
-              {authMessage && <div className="auth-real-message">{authMessage}</div>}
+            <div className="auth-pro-tabs" role="tablist" aria-label="Tryb logowania i rejestracji">
+              <button
+                type="button"
+                className={`auth-pro-tab ${mode === 'login' ? 'active' : ''}`}
+                onClick={() => { setMode('login'); setAuthMessage('') }}
+              >
+                Zaloguj się
+              </button>
+              <button
+                type="button"
+                className={`auth-pro-tab ${mode === 'register' ? 'active' : ''}`}
+                onClick={() => { setMode('register'); setAuthMessage('') }}
+              >
+                Zarejestruj się
+              </button>
+            </div>
+
+            <form className="auth-pro-form" onSubmit={submitAuth}>
+              {authMessage && <div className="auth-pro-message">{authMessage}</div>}
 
               {mode === 'register' && (
-                <div className="auth-real-field">
+                <div className="auth-pro-field">
                   <label>Nazwa użytkownika</label>
-                  <div className="auth-real-input-wrap">
-                    <span className="auth-real-input-icon user" aria-hidden="true" />
+                  <div className="auth-pro-input-wrap">
+                    <span className="auth-pro-input-icon auth-pro-input-icon-user" aria-hidden="true">◦</span>
                     <input
                       value={username}
                       onChange={e => setUsername(e.target.value)}
@@ -3159,10 +3145,10 @@ function AuthView({ onAuth }) {
                 </div>
               )}
 
-              <div className="auth-real-field">
+              <div className="auth-pro-field">
                 <label>Email</label>
-                <div className="auth-real-input-wrap">
-                  <span className="auth-real-input-icon mail" aria-hidden="true" />
+                <div className="auth-pro-input-wrap">
+                  <span className="auth-pro-input-icon auth-pro-input-icon-mail" aria-hidden="true">◦</span>
                   <input
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -3174,73 +3160,66 @@ function AuthView({ onAuth }) {
                 </div>
               </div>
 
-              <div className="auth-real-field">
+              <div className="auth-pro-field">
                 <label>Hasło</label>
-                <div className="auth-real-input-wrap">
-                  <span className="auth-real-input-icon lock" aria-hidden="true" />
+                <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
+                  <span className="auth-pro-input-icon auth-pro-input-icon-lock" aria-hidden="true">◦</span>
                   <input
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                    placeholder={mode === 'login' ? 'Wpisz hasło' : 'Wpisz hasło'}
+                    placeholder="Minimum 8 znaków"
                     aria-label="Hasło"
                   />
-                  <button type="button" className="auth-real-eye" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}>
-                    {showPassword ? 'Ukryj' : 'Pokaż'}
-                  </button>
+                  <span className="auth-pro-eye" aria-hidden="true">◦</span>
                 </div>
               </div>
 
               {mode === 'register' && (
-                <div className="auth-real-field">
+                <div className="auth-pro-field">
                   <label>Powtórz hasło</label>
-                  <div className="auth-real-input-wrap">
-                    <span className="auth-real-input-icon lock" aria-hidden="true" />
+                  <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
+                    <span className="auth-pro-input-icon auth-pro-input-icon-lock" aria-hidden="true">◦</span>
                     <input
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type="password"
                       autoComplete="new-password"
-                      placeholder="Powtórz hasło"
+                      placeholder="Powtórz swoje hasło"
                       aria-label="Powtórz hasło"
                     />
-                    <button type="button" className="auth-real-eye" onClick={() => setShowConfirmPassword(value => !value)} aria-label={showConfirmPassword ? 'Ukryj hasło' : 'Pokaż hasło'}>
-                      {showConfirmPassword ? 'Ukryj' : 'Pokaż'}
-                    </button>
+                    <span className="auth-pro-eye" aria-hidden="true">◦</span>
                   </div>
                 </div>
               )}
 
               {mode === 'register' && (
-                <label className="auth-real-checkrow">
+                <label className="auth-pro-checkrow">
                   <input
                     type="checkbox"
                     checked={acceptedRules}
                     onChange={e => setAcceptedRules(e.target.checked)}
                     required={mode === 'register'}
                   />
-                  <span className="auth-real-checkbox-box" aria-hidden="true" />
+                  <span className="auth-pro-checkbox-box" aria-hidden="true" />
                   <span>
-                    Akceptuję <a href="#">Regulamin</a> oraz <a href="#">Politykę prywatności</a>.
-                    <small>Potwierdzam, że mam ukończone 18 lat.</small>
+                    Akceptuję <a href="#">Regulamin</a> oraz <a href="#">Politykę prywatności</a>
                   </span>
                 </label>
               )}
 
-              <button className="auth-real-submit" disabled={loading} type="submit">
-                <span className="auth-real-submit-label"><i aria-hidden="true" />{loading ? 'Ładowanie...' : mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}</span>
+              <button className="auth-pro-submit" disabled={loading} type="submit">
+                <span>{loading ? 'Ładowanie...' : mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}</span>
                 <strong>→</strong>
               </button>
             </form>
 
-            <div className="auth-real-divider"><span>LUB</span></div>
-
-            <div className="auth-real-switcher">
+            <div className="auth-pro-switcher">
               <span>{mode === 'login' ? 'Nie masz jeszcze konta?' : 'Masz już konto?'}</span>
               <button
                 type="button"
-                className="auth-real-switcher-btn"
+                className="auth-pro-switcher-btn"
                 onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthMessage('') }}
               >
                 {mode === 'login' ? 'Zarejestruj się' : 'Zaloguj się'}
@@ -3248,169 +3227,40 @@ function AuthView({ onAuth }) {
             </div>
           </section>
 
-          <section className="auth-real-dashboard" aria-hidden="true">
-            <div className="auth-real-status-bar">
-              <span className="auth-real-status-dot" />
-              AI ANALIZA W TOKU
-              <span className="auth-real-status-line" />
-            </div>
-
-            <div className="auth-real-dashboard-grid">
-              <div className="auth-real-mainboard">
-                <div className="auth-real-nav">
-                  <button className="active" type="button">Artykuły</button>
-                  <button type="button">News</button>
-                  <button type="button">TV - PPV</button>
-                  <button type="button">Wyniki live</button>
-                </div>
-
-                <div className="auth-real-hero-card">
-                  <div className="auth-real-hero-copy">
-                    <span className="auth-real-badge">TRENDING</span>
-                    <h2>City wygrywa hit Premier League!</h2>
-                    <p>Haaland show! Manchester City pokonuje Arsenal 3:1 w meczu pełnym emocji i zwrotów akcji.</p>
-                    <button type="button">Czytaj artykuł</button>
-                    <div className="auth-real-hero-dots">
-                      <span className="active" />
-                      <span />
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                  </div>
-
-                  <div className="auth-real-player-visual">
-                    <div className="auth-real-player-head" />
-                    <div className="auth-real-player-body" />
-                  </div>
-
-                  <div className="auth-real-hero-side">
-                    <div className="auth-real-score-box">
-                      <span>PREMIER LEAGUE</span>
-                      <div className="auth-real-score-line"><strong>3 : 1</strong></div>
-                      <div className="auth-real-score-teams"><span>Man City</span><span>Arsenal</span></div>
-                      <button type="button">Zobacz skrót</button>
-                    </div>
-                    <div className="auth-real-score-box smaller">
-                      <span>LA LIGA</span>
-                      <div className="auth-real-score-line"><strong>2 : 2</strong></div>
-                      <div className="auth-real-score-teams"><span>Barcelona</span><span>Real Madrid</span></div>
-                      <button type="button">Zobacz skrót</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="auth-real-article-grid">
-                  {articleCards.map(card => (
-                    <article key={card.title} className="auth-real-article-card">
-                      <div className="auth-real-article-top">
-                        <span className="auth-real-article-tag">{card.tag}</span>
-                        <span className="auth-real-article-time">{card.time}</span>
-                      </div>
-                      <h3>{card.title}</h3>
-                      <div className="auth-real-article-meta">
-                        <span>{card.meta}</span>
-                        <span>{card.comments}</span>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="auth-real-live-strip">
-                  <div className="auth-real-strip-head">
-                    <strong>WYNIKI LIVE</strong>
-                    <button type="button">Zobacz wszystkie</button>
-                  </div>
-                  <div className="auth-real-live-grid">
-                    {liveResults.map(item => (
-                      <div key={`${item.league}-${item.home}`} className="auth-real-live-card">
-                        <div className="auth-real-live-card-head">
-                          <span>{item.league}</span>
-                          <strong>{item.minute}</strong>
-                        </div>
-                        <div className="auth-real-live-score">{item.score}</div>
-                        <div className="auth-real-live-teams">
-                          <span>{item.home}</span>
-                          <span>{item.away}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <aside className="auth-real-sidebar">
-                <div className="auth-real-score-panel">
-                  <div className="auth-real-side-title">AI SCORE</div>
-                  <div className="auth-real-gauge-row">
-                    <div className="auth-real-gauge">
-                      <div className="auth-real-gauge-inner">
-                        <strong>87%</strong>
-                      </div>
-                    </div>
-                    <div className="auth-real-mini-chart">
-                      <span />
-                    </div>
-                  </div>
-                  <div className="auth-real-gauge-meta">
-                    <span>PEWNOŚĆ TYPU</span>
-                    <strong>WYSOKA</strong>
-                  </div>
-                </div>
-
-                <div className="auth-real-ranking-panel">
-                  <div className="auth-real-panel-head">
-                    <strong>TOP TYPERZY</strong>
-                    <span>Ranking realny</span>
-                  </div>
-                  <div className="auth-real-ranking-list">
-                    {topTipsters.map(tipster => (
-                      <div key={tipster.rank} className="auth-real-ranking-item">
-                        <div className="auth-real-ranking-left">
-                          <span className={`auth-real-rank-badge rank-${tipster.rank}`}>{tipster.rank}</span>
-                          <div>
-                            <strong>{tipster.name}</strong>
-                            <small>ROI: {tipster.roi} • WR: {tipster.winRate}</small>
-                          </div>
-                        </div>
-                        <span className="auth-real-profit">{tipster.profit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="auth-real-chat-panel">
-                  <div className="auth-real-panel-head">
-                    <strong>BET+AI LIVE CHAT</strong>
-                    <span>• 243 online</span>
-                  </div>
-                  <div className="auth-real-chat-list">
-                    {chatMessages.map(message => (
-                      <div key={`${message.name}-${message.time}`} className="auth-real-chat-item">
-                        <div className="auth-real-chat-avatar">{message.name.slice(0,1)}</div>
-                        <div className="auth-real-chat-copy">
-                          <div className="auth-real-chat-topline">
-                            <strong>{message.name}</strong>
-                            {message.admin && <em>ADMIN</em>}
-                          </div>
-                          <span>{message.text}</span>
-                        </div>
-                        <small>{message.time}</small>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="auth-real-chat-input">
-                    <span>Napisz wiadomość...</span>
-                    <button type="button">➜</button>
-                  </div>
-                </div>
-
-                <div className="auth-real-orb-panel">
-                  <div className="auth-real-orb" />
-                </div>
-              </aside>
-            </div>
+          <section className="auth-pro-visual" aria-hidden="true">
+            <div className="auth-pro-visual-art" />
           </section>
+        </div>
+
+        <div className="auth-pro-footer">
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-shield">◦</div>
+            <div>
+              <strong>Bezpieczne dane</strong>
+              <span>Twoje dane są u nas w pełni chronione</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-quick">◦</div>
+            <div>
+              <strong>Szybka rejestracja</strong>
+              <span>Załóż konto w mniej niż 30 sekund</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-chart">◦</div>
+            <div>
+              <strong>Darmowe typy AI</strong>
+              <span>Codziennie nowe typy o wysokiej skuteczności</span>
+            </div>
+          </div>
+          <div className="auth-pro-footer-item">
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-users">◦</div>
+            <div>
+              <strong>Aktywna społeczność</strong>
+              <span>Tysiące typerów dzieli się wiedzą i wygrywa razem</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
