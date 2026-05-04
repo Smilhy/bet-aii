@@ -3009,7 +3009,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('register')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -3132,7 +3132,7 @@ function AuthView({ onAuth }) {
                 <div className="auth-pro-field">
                   <label>Nazwa użytkownika</label>
                   <div className="auth-pro-input-wrap">
-                    <span className="auth-pro-input-icon" aria-hidden="true">👤</span>
+                    <span className="auth-pro-input-icon auth-pro-input-icon-user" aria-hidden="true">◦</span>
                     <input
                       value={username}
                       onChange={e => setUsername(e.target.value)}
@@ -3148,7 +3148,7 @@ function AuthView({ onAuth }) {
               <div className="auth-pro-field">
                 <label>Email</label>
                 <div className="auth-pro-input-wrap">
-                  <span className="auth-pro-input-icon" aria-hidden="true">✉</span>
+                  <span className="auth-pro-input-icon auth-pro-input-icon-mail" aria-hidden="true">◦</span>
                   <input
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -3163,7 +3163,7 @@ function AuthView({ onAuth }) {
               <div className="auth-pro-field">
                 <label>Hasło</label>
                 <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
-                  <span className="auth-pro-input-icon" aria-hidden="true">🔒</span>
+                  <span className="auth-pro-input-icon auth-pro-input-icon-lock" aria-hidden="true">◦</span>
                   <input
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -3172,7 +3172,7 @@ function AuthView({ onAuth }) {
                     placeholder="Minimum 8 znaków"
                     aria-label="Hasło"
                   />
-                  <span className="auth-pro-eye" aria-hidden="true">◔</span>
+                  <span className="auth-pro-eye" aria-hidden="true">◦</span>
                 </div>
               </div>
 
@@ -3180,7 +3180,7 @@ function AuthView({ onAuth }) {
                 <div className="auth-pro-field">
                   <label>Powtórz hasło</label>
                   <div className="auth-pro-input-wrap auth-pro-input-wrap-password">
-                    <span className="auth-pro-input-icon" aria-hidden="true">🔒</span>
+                    <span className="auth-pro-input-icon auth-pro-input-icon-lock" aria-hidden="true">◦</span>
                     <input
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
@@ -3189,7 +3189,7 @@ function AuthView({ onAuth }) {
                       placeholder="Powtórz swoje hasło"
                       aria-label="Powtórz hasło"
                     />
-                    <span className="auth-pro-eye" aria-hidden="true">◔</span>
+                    <span className="auth-pro-eye" aria-hidden="true">◦</span>
                   </div>
                 </div>
               )}
@@ -3234,28 +3234,28 @@ function AuthView({ onAuth }) {
 
         <div className="auth-pro-footer">
           <div className="auth-pro-footer-item">
-            <div className="auth-pro-footer-icon">🛡</div>
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-shield">◦</div>
             <div>
               <strong>Bezpieczne dane</strong>
               <span>Twoje dane są u nas w pełni chronione</span>
             </div>
           </div>
           <div className="auth-pro-footer-item">
-            <div className="auth-pro-footer-icon">📝</div>
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-quick">◦</div>
             <div>
               <strong>Szybka rejestracja</strong>
               <span>Załóż konto w mniej niż 30 sekund</span>
             </div>
           </div>
           <div className="auth-pro-footer-item">
-            <div className="auth-pro-footer-icon">📈</div>
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-chart">◦</div>
             <div>
               <strong>Darmowe typy AI</strong>
               <span>Codziennie nowe typy o wysokiej skuteczności</span>
             </div>
           </div>
           <div className="auth-pro-footer-item">
-            <div className="auth-pro-footer-icon">👥</div>
+            <div className="auth-pro-footer-icon auth-pro-footer-icon-users">◦</div>
             <div>
               <strong>Aktywna społeczność</strong>
               <span>Tysiące typerów dzieli się wiedzą i wygrywa razem</span>
