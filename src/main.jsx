@@ -3098,7 +3098,7 @@ function AuthView({ onAuth }) {
         <div className="auth-pro-main">
           <section className="auth-pro-panel" aria-label="BetAI logowanie i rejestracja">
             <div className="auth-pro-logo-box">
-              <img src="/auth-brand-469-transparent.png" alt="Bet+AI" className="auth-pro-logo" />
+              <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth-pro-logo" />
             </div>
 
             <h1 className="auth-pro-title">
