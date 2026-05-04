@@ -11957,3 +11957,68 @@ button.notify-btn b{
   .auth-pro-visual{min-height:320px;}
   .auth-pro-footer{grid-template-columns:1fr; gap:6px;}
 }
+
+/* Wersja 467 — poprawione logo, fonty i dopasowanie prawej strony */
+.auth-pro-screen,
+.auth-pro-panel,
+.auth-pro-visual,
+.auth-pro-footer,
+.auth-pro-field label,
+.auth-pro-input-wrap input,
+.auth-pro-tab,
+.auth-pro-switcher,
+.auth-pro-footer-item strong,
+.auth-pro-footer-item span{
+  font-family:'Inter', Arial, sans-serif;
+}
+.auth-pro-title{
+  font-family:'Montserrat', Inter, Arial, sans-serif;
+}
+.auth-pro-shell{
+  width:min(1986px, 97vw);
+}
+.auth-pro-main{
+  grid-template-columns:39.2% 59.6%;
+  gap:1.2%;
+  height:min(80vh, 920px);
+}
+.auth-pro-panel{
+  padding:20px 30px 20px;
+}
+.auth-pro-logo-box{
+  margin:4px auto 12px;
+}
+.auth-pro-logo{
+  width:min(420px, 96%);
+  max-width:420px;
+}
+.auth-pro-title{
+  max-width:560px;
+  font-size:clamp(40px, 2.85vw, 64px);
+  margin:0 auto 10px;
+}
+.auth-pro-subtitle{
+  max-width:540px;
+  font-size:clamp(15px, .94vw, 18px);
+}
+.auth-pro-visual{
+  border-radius:28px;
+  overflow:hidden;
+}
+.auth-pro-visual-art{
+  border-radius:28px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.07)),
+    url('/auth-showcase-467.webp') center center / contain no-repeat;
+}
+.auth-pro-footer{
+  margin-top:12px;
+  padding-top:2px;
+}
+@media (min-width: 1500px){
+  .auth-pro-main{height:min(81vh, 940px);}
+}
+@media (max-width: 1280px){
+  .auth-pro-main{grid-template-columns:1fr; height:auto;}
+  .auth-pro-visual{min-height:540px;}
+}
