@@ -3009,12 +3009,12 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('register')
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('smilhytv@gmail.com')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedRules, setAcceptedRules] = useState(false)
   const [loading, setLoading] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
 
@@ -3037,15 +3037,15 @@ function AuthView({ onAuth }) {
         setAuthMessage('Wpisz nazwę użytkownika.')
         return
       }
-      if (password.length < 6) {
-        setAuthMessage('Hasło musi mieć minimum 6 znaków.')
+      if (password.length < 8) {
+        setAuthMessage('Hasło musi mieć minimum 8 znaków.')
         return
       }
       if (password !== confirmPassword) {
-        setAuthMessage('Hasła nie są takie same.')
+        setAuthMessage('Hasła muszą być takie same.')
         return
       }
-      if (!acceptedTerms) {
+      if (!acceptedRules) {
         setAuthMessage('Zaakceptuj regulamin i politykę prywatności.')
         return
       }
@@ -3058,11 +3058,7 @@ function AuthView({ onAuth }) {
       : await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: {
-              username: username.trim()
-            }
-          }
+          options: { data: { username: username || email.split('@')[0] } }
         })
 
     setLoading(false)
@@ -3096,166 +3092,77 @@ function AuthView({ onAuth }) {
     onAuth?.(authedUser)
   }
 
-  const isLogin = mode === 'login'
-
   return (
-    <div className="auth-screen auth-screen-ultra">
-      <div className="auth-bg-grid" aria-hidden="true"></div>
-      <div className="auth-orb auth-orb-one" aria-hidden="true"></div>
-      <div className="auth-orb auth-orb-two" aria-hidden="true"></div>
+    <div className="auth-final-screen">
+      <div className="auth-final-stage" aria-label="BetAI logowanie i rejestracja">
+        <form className={`auth-final-form ${mode === 'login' ? 'is-login' : 'is-register'}`} onSubmit={submitAuth}>
+          <button type="button" className="auth-final-tab auth-final-tab-login" onClick={() => { setMode('login'); setAuthMessage('') }} aria-label="Zaloguj się" />
+          <button type="button" className="auth-final-tab auth-final-tab-register" onClick={() => { setMode('register'); setAuthMessage('') }} aria-label="Zarejestruj się" />
 
-      <section className="auth-layout-ultra" aria-label="Bet+AI logowanie i rejestracja">
-        <div className="auth-card auth-card-ultra">
-          <div className="auth-brand auth-brand-ultra">
-            <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" />
-          </div>
+          <input
+            className="auth-final-input auth-final-username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            type="text"
+            autoComplete="username"
+            aria-label="Nazwa użytkownika"
+            tabIndex={mode === 'register' ? 0 : -1}
+          />
 
-          <div className="auth-title-block">
-            <h1>{isLogin ? 'Witaj ponownie' : 'Dołącz do platformy AI'}</h1>
-            <p>{isLogin ? 'Zaloguj się, aby kontynuować i wyprzedzać innych.' : 'Zarejestruj się i korzystaj z analityki AI, typów oraz statystyk na żywo.'}</p>
-          </div>
+          <input
+            className="auth-final-input auth-final-email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            type="email"
+            autoComplete="email"
+            aria-label="Email"
+          />
 
-          <div className="auth-mode-tabs" role="tablist" aria-label="Wybierz tryb">
-            <button type="button" className={isLogin ? 'active' : ''} onClick={() => { setMode('login'); setAuthMessage('') }}>Logowanie</button>
-            <button type="button" className={!isLogin ? 'active' : ''} onClick={() => { setMode('register'); setAuthMessage('') }}>Zarejestruj się</button>
-          </div>
+          <input
+            className="auth-final-input auth-final-password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            type="password"
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            aria-label="Hasło"
+          />
 
-          <form onSubmit={submitAuth} className="auth-form-ultra">
-            {!isLogin && (
-              <label className="auth-field">
-                <span>Nazwa użytkownika</span>
-                <div className="auth-input-wrap">
-                  <b>♙</b>
-                  <input value={username} onChange={e => setUsername(e.target.value)} type="text" placeholder="Wybierz nazwę użytkownika" />
-                </div>
-              </label>
-            )}
+          <input
+            className="auth-final-input auth-final-confirm"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+            aria-label="Powtórz hasło"
+            tabIndex={mode === 'register' ? 0 : -1}
+          />
 
-            <label className="auth-field">
-              <span>Email</span>
-              <div className="auth-input-wrap">
-                <b>✉</b>
-                <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Wpisz swój adres email" />
-              </div>
-            </label>
+          <label className="auth-final-checkbox" aria-label="Akceptuję regulamin">
+            <input
+              type="checkbox"
+              checked={acceptedRules}
+              onChange={e => setAcceptedRules(e.target.checked)}
+              required={mode === 'register'}
+              tabIndex={mode === 'register' ? 0 : -1}
+            />
+            <span />
+          </label>
 
-            <label className="auth-field">
-              <span>Hasło</span>
-              <div className="auth-input-wrap">
-                <b>▣</b>
-                <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder={isLogin ? 'Wpisz swoje hasło' : 'Minimum 6 znaków'} />
-              </div>
-            </label>
+          {authMessage && <div className="auth-final-message">{authMessage}</div>}
 
-            {!isLogin && (
-              <label className="auth-field">
-                <span>Powtórz hasło</span>
-                <div className="auth-input-wrap">
-                  <b>▣</b>
-                  <input value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} type="password" placeholder="Powtórz swoje hasło" />
-                </div>
-              </label>
-            )}
+          <button className="auth-final-submit" disabled={loading} type="submit" aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'} />
 
-            {isLogin ? (
-              <div className="auth-row-options">
-                <label className="auth-check"><input type="checkbox" /> <span>Zapamiętaj mnie</span></label>
-                <button type="button">Nie pamiętasz hasła?</button>
-              </div>
-            ) : (
-              <label className="auth-check auth-check-register">
-                <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} />
-                <span>Akceptuję <b>Regulamin</b> oraz <b>Politykę prywatności</b></span>
-              </label>
-            )}
-
-            {authMessage && <div className="auth-message auth-message-ultra">{authMessage}</div>}
-
-            <button className="auth-submit auth-submit-ultra" disabled={loading}>
-              {loading ? 'Proszę czekać...' : isLogin ? 'Zaloguj się' : 'Załóż konto'} <em>→</em>
-            </button>
-          </form>
-
-          <div className="auth-divider"><span>LUB</span></div>
-
-          <div className="auth-socials">
-            <button type="button"><strong>G</strong> Kontynuuj przez Google</button>
-            <button type="button"><strong></strong> Kontynuuj przez Apple</button>
-          </div>
-
-          <button className="auth-switch auth-switch-ultra" onClick={() => { setMode(isLogin ? 'register' : 'login'); setAuthMessage('') }}>
-            {isLogin ? 'Nie masz konta? Załóż konto' : 'Masz już konto? Zaloguj się'}
-          </button>
-        </div>
-
-        <div className="auth-showcase-ultra">
-          <div className="auth-showcase-topline">
-            <span>AI, która przewyższa</span>
-            <strong>Bet+AI Match Picks</strong>
-          </div>
-
-          <div className="auth-holo-ball" aria-hidden="true">
-            <div className="auth-holo-ring"></div>
-            <div className="auth-holo-core">⚽</div>
-          </div>
-
-          <div className="auth-feature-card auth-feature-card-a">
-            <i>🧠</i>
-            <strong>AI Analizy</strong>
-            <span>Zaawansowane modele AI analizujące mecze w czasie rzeczywistym</span>
-          </div>
-          <div className="auth-feature-card auth-feature-card-b">
-            <i>🎯</i>
-            <strong>Precyzyjne typy</strong>
-            <span>Wyższa skuteczność dzięki algorytmom i danym</span>
-          </div>
-          <div className="auth-feature-card auth-feature-card-c">
-            <i>📊</i>
-            <strong>Statystyki live</strong>
-            <span>Szczegółowe statystyki na żywo i wyniki live</span>
-          </div>
-          <div className="auth-feature-card auth-feature-card-d">
-            <i>👥</i>
-            <strong>Społeczność</strong>
-            <span>Dziel się typami, dyskutuj i wygrywaj razem</span>
-          </div>
-
-          <div className="auth-dashboard-preview">
-            <div className="preview-sidebar">
-              <img src="/betai-sidebar-logo-new.png" alt="" />
-              <span className="preview-user">SM <b>smilhytv</b></span>
-              <span className="preview-nav active">Dashboard</span>
-              <span className="preview-nav">Artykuły</span>
-              <span className="preview-nav">Typy AI</span>
-              <span className="preview-nav">Wyniki live</span>
-            </div>
-            <div className="preview-main">
-              <div className="preview-topbar"></div>
-              <div className="preview-hero">
-                <h3>AI zmienia sposób,<br />w jaki <span>typujesz.</span></h3>
-                <p>Zaawansowane analizy, trafne typy i społeczność, która wygrywa.</p>
-              </div>
-              <div className="preview-grid">
-                <div><b>12</b><span>Typy AI dnia</span></div>
-                <div><b>243</b><span>Marketplace</span></div>
-                <div><b>87%</b><span>Skuteczność AI</span></div>
-                <div><b>Live</b><span>Wyniki</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="auth-benefits-ultra">
-        <div><b>🛡</b><strong>Bezpieczne dane</strong><span>Twoje dane są u nas w pełni chronione</span></div>
-        <div><b>⚡</b><strong>Szybka rejestracja</strong><span>Załóż konto w mniej niż 30 sekund</span></div>
-        <div><b>📈</b><strong>Darmowe typy AI</strong><span>Codziennie nowe typy o wysokiej skuteczności</span></div>
-        <div><b>👥</b><strong>Aktywna społeczność</strong><span>Tysiące typerów dzieli się wiedzą</span></div>
+          <button
+            type="button"
+            className="auth-final-bottom-link"
+            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthMessage('') }}
+            aria-label={mode === 'login' ? 'Załóż konto' : 'Zaloguj się'}
+          />
+        </form>
       </div>
     </div>
   )
 }
-
 
 function PaymentModal({ tip, user, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
