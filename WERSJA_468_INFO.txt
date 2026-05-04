@@ -1,0 +1,5 @@
+Wersja 468
+- naprawiono wygląd lewej ramki logowania/rejestracji według przesłanej referencji
+- powiększono i podniesiono panel, logo, tytuł, zakładki, pola formularza oraz przycisk
+- przywrócono szeroki układ auth na desktopie z prawą grafiką bez zmian funkcjonalnych
+- dashboard i układ „Mecze dziś” nie były ruszane
