@@ -10936,3 +10936,81 @@ button.notify-btn b{
 @media (max-aspect-ratio: 4/3){
   .auth-final-stage{background-position:center center;}
 }
+
+/* Wersja 456 — bez fullscreen, 20% mniejszy panel, obraz 4K bez rozciągania + równe checkbox/regulamin */
+.auth-final-screen{
+  min-height:100vh !important;
+  width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  background:
+    radial-gradient(circle at 62% 20%, rgba(21,170,255,.12), transparent 30%),
+    radial-gradient(circle at 10% 14%, rgba(20,245,239,.06), transparent 24%),
+    #01050d !important;
+  padding:0 !important;
+}
+.auth-final-stage{
+  position:relative !important;
+  width:min(80vw,1536px) !important;
+  height:auto !important;
+  aspect-ratio:16/9 !important;
+  min-width:0 !important;
+  max-width:1536px !important;
+  max-height:86vh !important;
+  background:url('/auth-final-456-4k.png') center center / contain no-repeat !important;
+  flex:0 0 auto !important;
+  isolation:isolate !important;
+  overflow:visible !important;
+  filter:none !important;
+  transform:none !important;
+}
+.auth-final-stage::before{
+  opacity:.28 !important;
+  filter:none !important;
+}
+.auth-final-stage::after{
+  opacity:.42 !important;
+}
+.auth-final-input{
+  box-sizing:border-box !important;
+  border-radius:14px !important;
+  padding:0 2.4% 0 5.25% !important;
+  font:800 clamp(11px,.86vw,17px) Inter, Arial, sans-serif !important;
+  color:#f3ffff !important;
+  height:5.72% !important;
+  line-height:1 !important;
+  display:block !important;
+}
+.auth-final-username{left:7.02% !important;top:38.76% !important;width:28.68% !important;height:5.70% !important;}
+.auth-final-email{left:7.02% !important;top:47.16% !important;width:28.68% !important;height:5.70% !important;}
+.auth-final-password{left:7.02% !important;top:55.56% !important;width:28.68% !important;height:5.70% !important;}
+.auth-final-confirm{left:7.02% !important;top:63.96% !important;width:28.68% !important;height:5.70% !important;}
+.auth-final-checkbox{
+  left:7.10% !important;
+  top:70.98% !important;
+  width:1.46% !important;
+  height:2.62% !important;
+  display:block !important;
+}
+.auth-final-checkbox span{border-radius:4px !important;}
+.auth-final-checkbox input:checked + span::after{
+  top:50% !important;
+  font-size:min(.82vw,15px) !important;
+}
+.auth-final-submit{left:7.02% !important;top:74.86% !important;width:28.68% !important;height:7.12% !important;}
+.auth-final-bottom-link{left:19.30% !important;top:82.54% !important;width:10.88% !important;height:3.60% !important;}
+.auth-final-tab-login{left:7.02% !important;top:29.56% !important;width:14.32% !important;height:5.72% !important;}
+.auth-final-tab-register{left:21.34% !important;top:29.56% !important;width:14.36% !important;height:5.72% !important;}
+.auth-final-form.is-login .auth-final-email{top:38.76% !important;}
+.auth-final-form.is-login .auth-final-password{top:47.16% !important;}
+.auth-final-form.is-login .auth-final-submit{top:60.74% !important;}
+.auth-final-message{left:7.02% !important;top:25.18% !important;width:28.68% !important;}
+@media (max-width:1050px){
+  .auth-final-stage{width:92vw !important;max-height:86vh !important;}
+  .auth-final-input{font-size:clamp(10px,1.4vw,15px) !important;}
+}
+@media (max-height:780px){
+  .auth-final-stage{width:min(76vw,1380px) !important;max-height:84vh !important;}
+}
