@@ -1,0 +1,5 @@
+Wersja 469
+- Nowy realny panel logowania/rejestracji inspirowany dostarczonym screenshotem.
+- Lewa kolumna: nowy formularz rejestracji/logowania w stylu premium.
+- Prawa kolumna: zbudowany z komponentów mock panel news/live/chat/ranking zamiast statycznego bannera.
+- Zachowana funkcjonalność logowania i rejestracji przez Supabase.
