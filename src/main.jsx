@@ -3008,6 +3008,29 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 }
 
 
+
+function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
+  return (
+    <label className="auth481-field">
+      <span className="auth481-label">{label}</span>
+      <div className="auth481-input-shell">
+        <span className="auth481-field-icon">{icon}</span>
+        <input
+          className="auth481-input"
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          spellCheck="false"
+        />
+        {rightControl ? <span className="auth481-field-right">{rightControl}</span> : null}
+      </div>
+    </label>
+  )
+}
+
 function AuthView({ onAuth }) {
   const [mode, setMode] = useState('login')
   const [submitting, setSubmitting] = useState(false)
@@ -3246,27 +3269,7 @@ function AuthView({ onAuth }) {
     )
   }
 
-  function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
-    return (
-      <label className="auth481-field">
-        <span className="auth481-label">{label}</span>
-        <div className="auth481-input-shell">
-          <span className="auth481-field-icon">{icon}</span>
-          <input
-            className="auth481-input"
-            type={type}
-            name={name}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            autoComplete={autoComplete}
-            spellCheck="false"
-          />
-          {rightControl ? <span className="auth481-field-right">{rightControl}</span> : null}
-        </div>
-      </label>
-    )
-  }
+
 
   const submitLabel = mode === 'login' ? 'Zaloguj się' : 'Załóż konto'
   const submitNote = mode === 'login'
