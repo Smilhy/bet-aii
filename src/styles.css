@@ -12640,3 +12640,30 @@ button.notify-btn b{
   .auth-pro-visual{min-height:320px;}
   .auth-pro-visual-art{background-position:center top;}
 }
+
+/* =========================================================
+   WERSJA 475 — stary panel logowania/rejestracji zastąpiony
+   pełnym ultra-pro zdjęciem 2560x1440 od użytkownika
+   ========================================================= */
+.auth-image-screen{
+  min-height:100vh;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#010712;
+}
+.auth-image-full{
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  object-position:center center;
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+  image-rendering:auto;
+}
+@media (max-aspect-ratio: 16/9){
+  .auth-image-full{object-fit:contain;background:#010712;}
+}
