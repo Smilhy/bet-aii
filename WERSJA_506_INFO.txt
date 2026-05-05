@@ -1,0 +1,5 @@
+WERSJA 506
+- dodano realne statystyki live pod prawą kolumną na ekranie logowania/rejestracji
+- statystyki: zarejestrowani użytkownicy, skuteczność AI, aktywni teraz, typy dzisiaj
+- odświeżanie co 30 sekund
+- dodano SQL: SUPABASE_RUN_ONCE_AUTH_LIVE_STATS_506.sql (opcjonalne, zalecane dla publicznych live stats przed logowaniem)

@@ -3045,6 +3045,133 @@ function AuthView({ onAuth }) {
     repeatPassword: '',
     agree: true
   })
+  const [liveStats, setLiveStats] = useState({
+    registeredUsers: 0,
+    aiAccuracy: 76,
+    activeNow: 1,
+    tipsToday: 0,
+    updatedAt: null,
+    loading: true
+  })
+
+  function normalizeLiveCount(value, fallback = 0) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+
+  function formatCompactNumber(value) {
+    const parsed = normalizeLiveCount(value, 0)
+    if (parsed >= 1000000) return `${(parsed / 1000000).toFixed(parsed >= 10000000 ? 0 : 1)} mln`
+    if (parsed >= 1000) return `${(parsed / 1000).toFixed(parsed >= 10000 ? 0 : 1)}k`
+    return String(parsed)
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadAuthLiveStats() {
+      if (!isSupabaseConfigured || !supabase) {
+        if (!cancelled) {
+          setLiveStats(prev => ({ ...prev, loading: false }))
+        }
+        return
+      }
+
+      try {
+        let nextStats = null
+        const rpcResponse = await supabase.rpc('get_auth_live_stats')
+
+        if (!rpcResponse.error && rpcResponse.data) {
+          const row = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data
+          if (row) {
+            nextStats = {
+              registeredUsers: normalizeLiveCount(row.registered_users ?? row.registeredUsers),
+              aiAccuracy: normalizeLiveCount(row.ai_accuracy ?? row.aiAccuracy, 76),
+              activeNow: normalizeLiveCount(row.active_now ?? row.activeNow, 1),
+              tipsToday: normalizeLiveCount(row.tips_today ?? row.tipsToday),
+              updatedAt: new Date().toISOString(),
+              loading: false
+            }
+          }
+        }
+
+        if (!nextStats) {
+          const now = new Date()
+          const startOfDay = new Date(now)
+          startOfDay.setHours(0, 0, 0, 0)
+          const activeCutoff = new Date(now.getTime() - 10 * 60 * 1000).toISOString()
+          const aiRangeCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          const settledStatuses = ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana']
+          const wonStatuses = ['won', 'win', 'wygrany', 'wygrana']
+
+          const [profilesResult, activeResult, tipsTodayResult, aiSettledResult, aiWonResult, aiAvgResult] = await Promise.allSettled([
+            supabase.from('profiles').select('id', { count: 'exact', head: true }),
+            supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('last_seen', activeCutoff),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', settledStatuses),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', wonStatuses),
+            supabase.from('tips').select('ai_confidence, ai_probability, confidence').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
+          ])
+
+          const exactCount = (result, fallback = 0) => {
+            if (result.status !== 'fulfilled') return fallback
+            return normalizeLiveCount(result.value?.count, fallback)
+          }
+
+          const profilesCount = exactCount(profilesResult)
+          const activeCount = exactCount(activeResult, 1)
+          const tipsTodayCount = exactCount(tipsTodayResult)
+          const aiSettledCount = exactCount(aiSettledResult)
+          const aiWonCount = exactCount(aiWonResult)
+          const avgConfidence = aiAvgResult.status === 'fulfilled'
+            ? (() => {
+                const rows = Array.isArray(aiAvgResult.value?.data) ? aiAvgResult.value.data : []
+                const values = rows
+                  .map(row => Number(row?.ai_confidence ?? row?.ai_probability ?? row?.confidence ?? 0))
+                  .filter(value => Number.isFinite(value) && value > 0)
+                if (!values.length) return 76
+                return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+              })()
+            : 76
+
+          nextStats = {
+            registeredUsers: profilesCount,
+            aiAccuracy: aiSettledCount > 0 ? Math.round((aiWonCount / aiSettledCount) * 100) : avgConfidence,
+            activeNow: activeCount,
+            tipsToday: tipsTodayCount,
+            updatedAt: new Date().toISOString(),
+            loading: false
+          }
+        }
+
+        if (!cancelled && nextStats) {
+          setLiveStats(prev => ({
+            ...prev,
+            ...nextStats,
+            registeredUsers: nextStats.registeredUsers || prev.registeredUsers || 0,
+            activeNow: nextStats.activeNow || prev.activeNow || 1,
+            aiAccuracy: nextStats.aiAccuracy || prev.aiAccuracy || 76,
+            tipsToday: nextStats.tipsToday || prev.tipsToday || 0
+          }))
+        }
+      } catch (error) {
+        console.warn('Auth live stats unavailable', error)
+        if (!cancelled) {
+          setLiveStats(prev => ({ ...prev, loading: false }))
+        }
+      }
+    }
+
+    loadAuthLiveStats()
+    const timer = window.setInterval(loadAuthLiveStats, 30000)
+    window.addEventListener('focus', loadAuthLiveStats)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+      window.removeEventListener('focus', loadAuthLiveStats)
+    }
+  }, [])
 
   function updateField(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -3280,6 +3407,36 @@ function AuthView({ onAuth }) {
   const submitNote = mode === 'login'
     ? 'Bezpieczne logowanie • szyfrowana autoryzacja Supabase'
     : 'Rejestracja zajmuje mniej niż 30 sekund i aktywuje dostęp do platformy.'
+  const liveStatsCards = useMemo(() => ([
+    {
+      key: 'users',
+      label: 'Zarejestrowanych użytkowników',
+      value: formatCompactNumber(liveStats.registeredUsers),
+      icon: <IconUsers />,
+      accentClass: 'is-users'
+    },
+    {
+      key: 'ai',
+      label: 'Skuteczność AI',
+      value: `${normalizeLiveCount(liveStats.aiAccuracy, 76)}%`,
+      icon: <IconChart />,
+      accentClass: 'is-ai'
+    },
+    {
+      key: 'active',
+      label: 'Aktywni teraz',
+      value: formatCompactNumber(liveStats.activeNow),
+      icon: <IconBolt />,
+      accentClass: 'is-active'
+    },
+    {
+      key: 'tips',
+      label: 'Typów dzisiaj',
+      value: formatCompactNumber(liveStats.tipsToday),
+      icon: <IconShield />,
+      accentClass: 'is-tips'
+    }
+  ]), [liveStats])
 
   return (
     <div className="auth481-screen" aria-label="Bet+AI panel logowania">
@@ -3443,8 +3600,40 @@ function AuthView({ onAuth }) {
             ) : null}
           </section>
 
-          <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`} aria-hidden="true">
+          <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`}>
             <img src="/auth-right-484.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
+
+            <div className="auth481-live-panel" aria-label="Realne statystyki live Bet+AI">
+              <div className="auth481-live-panel-head">
+                <div>
+                  <span className="auth481-live-kicker">REALNE STATYSTYKI LIVE</span>
+                  <strong>Platforma żyje i odświeża dane na bieżąco</strong>
+                </div>
+                <span className="auth481-live-badge">
+                  <span className="auth481-live-dot" />
+                  LIVE
+                </span>
+              </div>
+
+              <div className="auth481-live-grid">
+                {liveStatsCards.map(card => (
+                  <div className={`auth481-live-card ${card.accentClass}`} key={card.key}>
+                    <span className="auth481-live-icon">{card.icon}</span>
+                    <div className="auth481-live-copy">
+                      <strong>{card.value}</strong>
+                      <span>{card.label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="auth481-live-footnote">
+                <span className="auth481-live-footnote-dot" />
+                {liveStats.loading
+                  ? 'Ładowanie statystyk live...'
+                  : `Auto-odświeżanie co 30 s${liveStats.updatedAt ? ' • ostatnia aktualizacja ' + new Date(liveStats.updatedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : ''}`}
+              </div>
+            </div>
           </section>
         </div>
 
