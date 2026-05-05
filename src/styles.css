@@ -15174,3 +15174,102 @@ button.notify-btn b{
   border-color:rgba(49, 235, 213, .28) !important;
   box-shadow:0 0 18px rgba(45, 229, 210, .16), inset 0 1px 0 rgba(97, 255, 234, .16) !important;
 }
+
+/* WERSJA 510 — Live support chat tylko do admina smilhytv */
+.support510{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:9999;
+  font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.support510-fab{
+  position:relative;
+  width:68px;
+  height:68px;
+  border-radius:50%;
+  border:1px solid rgba(39, 232, 210, .42);
+  background:
+    radial-gradient(circle at 35% 20%, rgba(96,255,232,.24), transparent 42%),
+    linear-gradient(180deg, #29dccd, #0aa89f);
+  color:#04151c;
+  font-size:28px;
+  font-weight:900;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  box-shadow:0 0 0 5px rgba(37,218,205,.10), 0 0 34px rgba(31,223,207,.35), 0 18px 36px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.support510-fab:hover{transform:translateY(-2px) scale(1.03); filter:brightness(1.06);}
+.support510-fab-pulse{
+  position:absolute;
+  inset:-8px;
+  border-radius:50%;
+  border:1px solid rgba(42,239,220,.36);
+  animation:support510Pulse 1.9s ease-out infinite;
+}
+@keyframes support510Pulse{
+  0%{transform:scale(.92); opacity:.7}
+  80%{transform:scale(1.28); opacity:0}
+  100%{transform:scale(1.28); opacity:0}
+}
+.support510-panel{
+  width:min(430px, calc(100vw - 32px));
+  height:min(720px, calc(100vh - 124px));
+  margin-bottom:18px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid rgba(40,222,255,.22);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(39,226,205,.18), transparent 34%),
+    linear-gradient(180deg, rgba(5,18,30,.97), rgba(4,13,24,.98));
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 44px rgba(26,216,205,.18), 0 28px 80px rgba(0,0,0,.55);
+  display:flex;
+  flex-direction:column;
+  animation:support510In .24s ease both;
+}
+@keyframes support510In{from{opacity:0; transform:translateY(16px) scale(.98)}to{opacity:1; transform:translateY(0) scale(1)}}
+.support510-head{
+  min-height:104px;
+  padding:22px 22px 18px;
+  background:
+    radial-gradient(circle at top left, rgba(74,255,226,.30), transparent 50%),
+    linear-gradient(135deg, rgba(37,215,199,.96), rgba(83,216,205,.88));
+  color:#031419;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.support510-head strong{display:block; font-size:21px; font-weight:950; letter-spacing:-.02em;}
+.support510-head span{display:flex; align-items:center; gap:8px; margin-top:12px; color:rgba(3,20,25,.78); font-size:14px; font-weight:700;}
+.support510-head i{width:10px; height:10px; border-radius:50%; background:#1cffc8; box-shadow:0 0 0 5px rgba(28,255,200,.22), 0 0 16px rgba(28,255,200,.7);}
+.support510-head button{
+  width:44px; height:44px; border:0; border-radius:16px; background:rgba(4,33,37,.14); color:#04232a; font-size:26px; font-weight:900; cursor:pointer;
+}
+.support510-admin-tabs{display:flex; gap:8px; overflow:auto; padding:10px 12px; border-bottom:1px solid rgba(48,222,255,.14); background:rgba(2,9,18,.42);}
+.support510-admin-tabs button{min-width:120px; max-width:150px; text-align:left; border:1px solid rgba(43,225,218,.16); background:rgba(5,18,32,.86); color:#dffcff; border-radius:14px; padding:9px 10px; cursor:pointer;}
+.support510-admin-tabs button.active{border-color:rgba(47,239,219,.48); box-shadow:0 0 18px rgba(32,221,207,.18);}
+.support510-admin-tabs b{display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.support510-admin-tabs span{display:block; margin-top:4px; color:#8fc5d1; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.support510-empty-mini{color:#89b8c6; font-size:12px; padding:8px;}
+.support510-body{flex:1; overflow:auto; padding:18px 16px; display:flex; flex-direction:column; gap:12px; background:linear-gradient(180deg, rgba(3,11,22,.15), rgba(3,11,22,.45));}
+.support510-welcome{align-self:flex-start; max-width:86%; padding:13px 15px; border-radius:18px 18px 18px 6px; background:linear-gradient(135deg, rgba(39,220,204,.96), rgba(84,220,207,.92)); color:#052027; box-shadow:0 10px 26px rgba(0,0,0,.16);}
+.support510-welcome strong{display:block; font-size:15px; font-weight:900;}
+.support510-welcome span{display:block; margin-top:6px; font-size:12px; color:rgba(3,20,25,.72); font-weight:700;}
+.support510-msg{align-self:flex-start; max-width:84%; padding:11px 13px; border-radius:16px 16px 16px 5px; border:1px solid rgba(65,223,255,.14); background:rgba(9,24,39,.94); color:#e8faff; box-shadow:0 8px 18px rgba(0,0,0,.18);}
+.support510-msg.mine{align-self:flex-end; border-radius:16px 16px 5px 16px; background:linear-gradient(135deg, rgba(18,182,173,.98), rgba(28,220,202,.90)); color:#031419;}
+.support510-msg.admin{border-color:rgba(56,240,215,.28); box-shadow:0 0 22px rgba(41,228,211,.12), 0 8px 18px rgba(0,0,0,.18);}
+.support510-msg p{margin:0; font-size:14px; line-height:1.45; font-weight:700; white-space:pre-wrap; overflow-wrap:anywhere;}
+.support510-msg span{display:block; margin-top:7px; font-size:11px; color:#8fb9c8; font-weight:800;}
+.support510-msg.mine span{color:rgba(3,20,25,.68);}
+.support510-status{margin:0 16px 10px; padding:10px 12px; border-radius:14px; background:rgba(22,118,111,.18); border:1px solid rgba(48,232,212,.16); color:#c6fff7; font-size:12px; line-height:1.35; text-align:center; font-weight:800;}
+.support510-compose{margin:0 14px 14px; min-height:104px; border-radius:20px; border:1px solid rgba(50,220,230,.12); background:rgba(255,255,255,.035); display:grid; grid-template-columns:1fr 48px; gap:10px; padding:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.03);}
+.support510-compose textarea{width:100%; min-height:78px; border:0; outline:none; resize:none; background:transparent; color:#e8fbff; font:700 14px/1.45 Inter, sans-serif;}
+.support510-compose textarea::placeholder{color:#9bb5c3;}
+.support510-compose button{align-self:end; width:46px; height:46px; border-radius:15px; border:1px solid rgba(47,239,219,.30); background:linear-gradient(180deg, #2ee8d7, #10a79f); color:#03141b; font-size:21px; font-weight:900; cursor:pointer; box-shadow:0 0 18px rgba(40,220,206,.22);}
+.support510-compose button:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.2);}
+.support510-powered{padding:0 14px 16px; text-align:center; color:#6f8f9a; font-size:12px; font-weight:700;}
+.support510-powered b{color:#2fe7d5;}
+@media(max-width:720px){.support510{right:14px; bottom:14px}.support510-panel{height:min(690px, calc(100vh - 108px)); border-radius:24px}.support510-fab{width:60px;height:60px}.support510-head{min-height:92px;padding:18px}.support510-head strong{font-size:18px}}

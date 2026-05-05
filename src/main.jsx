@@ -1144,6 +1144,213 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
   )
 }
 
+function SupportChatWidget({ user }) {
+  const adminEmail = 'smilhytv@gmail.com'
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [text, setText] = useState('')
+  const [status, setStatus] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [selectedKey, setSelectedKey] = useState('')
+  const email = normalizeEmail(user?.email)
+  const adminMode = isAdminUser(user) || email === adminEmail
+  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+
+  const conversationKey = (message) => normalizeEmail(message?.user_email || message?.sender_email || '') || String(message?.user_id || message?.sender_id || '')
+  const conversations = useMemo(() => {
+    const map = new Map()
+    ;(messages || []).forEach(message => {
+      const key = conversationKey(message)
+      if (!key) return
+      const current = map.get(key) || {
+        key,
+        email: normalizeEmail(message.user_email || message.sender_email),
+        name: message.user_name || message.sender_name || key.split('@')[0] || 'Użytkownik',
+        last: message.created_at,
+        unread: 0,
+        messages: []
+      }
+      current.messages.push(message)
+      current.last = message.created_at || current.last
+      if (message.sender_role !== 'admin' && !message.is_read) current.unread += 1
+      map.set(key, current)
+    })
+    return Array.from(map.values()).sort((a,b) => new Date(b.last || 0) - new Date(a.last || 0))
+  }, [messages])
+
+  const visibleMessages = useMemo(() => {
+    if (!adminMode) return messages.slice().sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
+    const key = selectedKey || conversations[0]?.key || ''
+    return messages
+      .filter(message => conversationKey(message) === key)
+      .sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
+  }, [messages, adminMode, selectedKey, conversations])
+
+  const selectedConversation = adminMode ? conversations.find(item => item.key === (selectedKey || conversations[0]?.key)) || conversations[0] : null
+
+  async function loadSupportMessages() {
+    if (!isSupabaseConfigured || !supabase || !user?.id) return
+    try {
+      setLoading(true)
+      let query = supabase
+        .from('support_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(adminMode ? 120 : 80)
+
+      if (!adminMode) {
+        query = query.or(`user_id.eq.${user.id},user_email.eq.${email}`)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      const rows = Array.isArray(data) ? data : []
+      setMessages(rows)
+      if (adminMode && !selectedKey && rows.length) {
+        const firstKey = conversationKey(rows[0])
+        if (firstKey) setSelectedKey(firstKey)
+      }
+      setStatus('')
+    } catch (error) {
+      console.warn('support chat load error', error)
+      setStatus('Czat pomocy wymaga uruchomienia pliku SUPABASE_SUPPORT_CHAT_510.sql w Supabase.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!open || !user?.id) return
+    loadSupportMessages()
+    const timer = setInterval(loadSupportMessages, 10000)
+    return () => clearInterval(timer)
+  }, [open, user?.id, adminMode, selectedKey])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !open || !user?.id) return
+    let channel
+    try {
+      channel = supabase
+        .channel('support_messages_live_' + user.id)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' }, () => loadSupportMessages())
+        .subscribe()
+    } catch (error) {
+      console.warn('support realtime skipped', error)
+    }
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [open, user?.id])
+
+  async function sendSupportMessage() {
+    const clean = text.trim()
+    if (!clean || !user?.id || !isSupabaseConfigured || !supabase) return
+    try {
+      setLoading(true)
+      const target = selectedConversation
+      const payload = adminMode ? {
+        user_id: target?.messages?.[0]?.user_id || null,
+        user_email: target?.email || target?.key || '',
+        user_name: target?.name || target?.email || 'Użytkownik',
+        admin_email: adminEmail,
+        sender_id: user.id,
+        sender_email: email,
+        sender_name: userName || 'Admin',
+        sender_role: 'admin',
+        message: clean,
+        is_read: false
+      } : {
+        user_id: user.id,
+        user_email: email,
+        user_name: userName,
+        admin_email: adminEmail,
+        sender_id: user.id,
+        sender_email: email,
+        sender_name: userName,
+        sender_role: 'user',
+        message: clean,
+        is_read: false
+      }
+      const { error } = await supabase.from('support_messages').insert(payload)
+      if (error) throw error
+      setText('')
+      setStatus(adminMode ? 'Odpowiedź wysłana do użytkownika.' : 'Wiadomość wysłana do admina. Odpowiedź pojawi się tutaj live.')
+      await loadSupportMessages()
+    } catch (error) {
+      console.error('support chat send error', error)
+      setStatus('Nie udało się wysłać wiadomości. Uruchom SUPABASE_SUPPORT_CHAT_510.sql i spróbuj ponownie.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!user?.id) return null
+
+  return (
+    <div className={`support510 ${open ? 'is-open' : ''}`}>
+      {open ? (
+        <section className="support510-panel" aria-label="Wsparcie TypyAI.pl live">
+          <header className="support510-head">
+            <div>
+              <strong>{adminMode ? 'Centrum wsparcia' : 'Wsparcie TypyAI.pl'}</strong>
+              <span><i /> {adminMode ? 'Panel admina live' : 'Natychmiastowa odpowiedź live'}</span>
+            </div>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
+          </header>
+
+          {adminMode ? (
+            <div className="support510-admin-tabs">
+              {conversations.length ? conversations.slice(0, 5).map(item => (
+                <button key={item.key} type="button" className={(selectedKey || conversations[0]?.key) === item.key ? 'active' : ''} onClick={() => setSelectedKey(item.key)}>
+                  <b>{item.name}</b>
+                  <span>{item.unread ? `${item.unread} nowe` : item.email}</span>
+                </button>
+              )) : <span className="support510-empty-mini">Brak rozmów</span>}
+            </div>
+          ) : null}
+
+          <div className="support510-body">
+            {!visibleMessages.length ? (
+              <div className="support510-welcome">
+                <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
+                <span>Wiadomość trafia tylko do admina: smilhytv / smilhytv@gmail.com</span>
+              </div>
+            ) : visibleMessages.map(message => {
+              const mine = normalizeEmail(message.sender_email) === email
+              const isAdminMessage = message.sender_role === 'admin'
+              return (
+                <div className={`support510-msg ${mine ? 'mine' : ''} ${isAdminMessage ? 'admin' : ''}`} key={message.id || message.created_at}>
+                  <p>{message.message}</p>
+                  <span>{isAdminMessage ? 'Admin' : (message.sender_name || message.user_name || 'Użytkownik')} · {message.created_at ? new Date(message.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : 'teraz'}</span>
+                </div>
+              )
+            })}
+          </div>
+
+          {status ? <div className="support510-status">{status}</div> : null}
+
+          <footer className="support510-compose">
+            <textarea value={text} onChange={event => setText(event.target.value)} placeholder={adminMode ? 'Napisz odpowiedź...' : 'Wpisz swoją wiadomość...'} onKeyDown={event => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                sendSupportMessage()
+              }
+            }} />
+            <button type="button" onClick={sendSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
+          </footer>
+          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
+        </section>
+      ) : null}
+
+      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
+        {open ? '×' : '💬'}
+        {!open ? <span className="support510-fab-pulse" /> : null}
+      </button>
+    </div>
+  )
+}
+
+
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
@@ -6572,6 +6779,7 @@ function App() {
       </main>
 
       {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
   )
 }
