@@ -3156,7 +3156,7 @@ function AuthView({ onAuth }) {
       }
     } catch (error) {
       showMessage('error', String(error?.message || '').includes('Database error saving new user')
-        ? 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_500.sql w Supabase SQL Editor i spróbuj ponownie.'
+        ? 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql w Supabase SQL Editor i spróbuj ponownie.'
         : (error?.message || 'Nie udało się wykonać autoryzacji.'))
     } finally {
       setSubmitting(false)
