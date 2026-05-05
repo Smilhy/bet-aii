@@ -3336,7 +3336,7 @@ function AuthView({ onAuth }) {
           </section>
 
           <section className="auth481-right-column" aria-hidden="true">
-            <img src="/auth-right-482.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
+            <img src="/auth-right-484.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
           </section>
         </div>
 
