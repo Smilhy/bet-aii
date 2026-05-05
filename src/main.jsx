@@ -649,12 +649,13 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const heroSlides = [
-    '/betai-hero-live-1.png',
-    '/betai-hero-live-2.png',
-    '/betai-hero-live-3.png',
-    '/betai-hero-live-4.png',
-    '/betai-hero-live-5.png',
-    '/betai-hero-live-6.png'
+    '/betai-hero-ultra-1-logo.jpg',
+    '/betai-hero-ultra-2-platform.jpg',
+    '/betai-hero-ultra-3-marketplace.jpg',
+    '/betai-hero-ultra-4-rewards.jpg',
+    '/betai-hero-ultra-5-community.jpg',
+    '/betai-hero-ultra-6-ai.jpg',
+    '/betai-hero-ultra-7-media.jpg'
   ]
   const [panel, setPanel] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
@@ -662,7 +663,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   useEffect(() => {
     if (isHeroPaused) return undefined
-    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
+    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 5200)
     return () => { clearInterval(panelTimer) }
   }, [heroSlides.length, isHeroPaused])
 
@@ -670,19 +671,10 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
     setPanel(index)
   }
 
-  const premiumTips = tips.filter(t => isTipPremium(t))
-  const validConfidenceValues = tips
-    .map(tip => Number(tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0))
-    .filter(value => Number.isFinite(value) && value > 0)
-  const avgConfidence = validConfidenceValues.length
-    ? Math.round(validConfidenceValues.reduce((sum, value) => sum + value, 0) / validConfidenceValues.length)
-    : 85
-  const settled = tips.filter(t => ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(String(t.status || '').toLowerCase()))
-  const wins = settled.filter(t => ['won', 'win', 'wygrany', 'wygrana'].includes(String(t.status || '').toLowerCase())).length
-  const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
-  const matchesToday = Math.max(tips.length || 0, 50)
-  const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: '2-digit', year: 'numeric' })
+  const goToNextHeroSlide = () => {
+    setPanel(prev => (prev + 1) % heroSlides.length)
+  }
+
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
@@ -703,7 +695,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       }}
       style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
     >
-      <div className="betai-hero-image-stage" aria-hidden="true">
+      <div className="betai-hero-image-stage" aria-hidden="true" onClick={goToNextHeroSlide}>
         {heroSlides.map((src, index) => (
           <img
             key={src}
@@ -728,13 +720,6 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             role="tab"
           />
         ))}
-      </div>
-      <div className="betai-hero-stats" aria-label="Realne statystyki hero">
-        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
-        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
-        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
-        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
-        <div><i>📅</i><span>DZISIAJ</span><strong>{today}</strong></div>
       </div>
     </section>
   )
@@ -5492,82 +5477,111 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
 }
 
 function DashboardUpdatePreview() {
+  const [activeBox, setActiveBox] = useState('Typy AI dnia')
+  const [expandedRow, setExpandedRow] = useState('')
+  const [liveTick, setLiveTick] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => setLiveTick(prev => (prev + 1) % 4), 3500)
+    return () => clearInterval(timer)
+  }, [])
+
+  const articles = [
+    { tag: 'ANALIZA', title: 'Derby Mediolanu: Inter faworytem?', time: '2h temu', comments: 24, cls: 'one' },
+    { tag: 'AI TYP', title: '5 kuponów AI na weekend', time: '5h temu', comments: 18, cls: 'two' },
+    { tag: 'NEWS', title: 'Transfery, kontuzje, powroty', time: '1d temu', comments: 32, cls: 'three' }
+  ]
   const liveRows = [
-    ['Premier League', '82\'', 'Tottenham', '2 : 1', 'Liverpool'],
-    ['LaLiga', '68\'', 'Barcelona', '2 : 2', 'Real Madryt'],
-    ['Serie A', '75\'', 'Inter', '1 : 0', 'Juventus']
+    { league: 'PREMIER LEAGUE', minute: `${82 + (liveTick % 2)}'`, home: 'Tottenham', away: 'Liverpool', score: '2 : 1', homeLogo: 'TOT', awayLogo: 'LIV' },
+    { league: 'LALIGA', minute: `${68 + (liveTick % 3)}'`, home: 'Barcelona', away: 'Real Madryt', score: '2 : 2', homeLogo: 'BAR', awayLogo: 'RMA' },
+    { league: 'SERIE A', minute: `${75 + (liveTick % 2)}'`, home: 'Inter', away: 'Juventus', score: '1 : 0', homeLogo: 'INT', awayLogo: 'JUV' }
   ]
   const aiTips = [
-    ['⚽', 'Man City vs Arsenal', 'Typ: Powyżej 2.5 gola', '88%'],
-    ['🔴', 'Bayern vs Dortmund', 'Typ: Bayern wygra', '82%'],
-    ['🔵', 'PSG vs Lyon', 'Typ: Powyżej 2.5 gola', '81%'],
-    ['🦁', 'Chelsea vs Newcastle', 'Typ: Obie strzelą gola', '79%']
-  ]
-  const articles = [
-    ['ANALIZA', 'Derby Mediolanu: Inter faworytem?', '2h temu', '24'],
-    ['AI TYP', '5 kuponów AI na weekend', '5h temu', '18'],
-    ['NEWS', 'Transfery, kontuzje, powroty', '1d temu', '32']
+    { logo: 'MC', league: 'LIGA MISTRZÓW · DZIŚ 21:00', match: 'Man City vs Arsenal', pick: 'Typ: Powyżej 2.5 gola', confidence: '88%' },
+    { logo: 'BAY', league: 'BUNDESLIGA · JUTRO 15:30', match: 'Bayern vs Dortmund', pick: 'Typ: Bayern wygra', confidence: '82%' },
+    { logo: 'PSG', league: 'LIGUE 1 · JUTRO 20:45', match: 'PSG vs Lyon', pick: 'Typ: Powyżej 2.5 gola', confidence: '81%' },
+    { logo: 'CHE', league: 'PREMIER LEAGUE · 25.05 17:30', match: 'Chelsea vs Newcastle', pick: 'Typ: Obie strzelą gola', confidence: '79%' }
   ]
   const sellers = [
-    ['TopExpertPL', 'TIPSTER', 'ROI 22.4%', '49,00 zł', '4.9'],
-    ['BetKing', 'VERIFIED', 'ROI 18.7%', '39,00 zł', '4.8'],
-    ['AI Master', 'TOP AI', 'ROI 27.1%', '59,00 zł', '5.0'],
-    ['StatKing', 'TIPSTER', 'ROI 16.3%', '29,00 zł', '4.7']
+    { name: 'TopExpertPL', badge: 'TIPSTER', roi: 'ROI 22.4%', price: '49,00 zł', rate: '4.9', mark: 'TE' },
+    { name: 'BetKing', badge: 'VERIFIED', roi: 'ROI 18.7%', price: '39,00 zł', rate: '4.8', mark: 'BK' },
+    { name: 'AI Master', badge: 'TOP AI', roi: 'ROI 27.1%', price: '59,00 zł', rate: '5.0', mark: 'AI' },
+    { name: 'StatKing', badge: 'TIPSTER', roi: 'ROI 16.3%', price: '29,00 zł', rate: '4.7', mark: 'SK' }
+  ]
+  const cards = [
+    { title: 'Typy AI dnia', value: '12', sub: 'Wysoka pewność', link: '7 nowych', icon: '🧠' },
+    { title: 'Marketplace premium', value: '243', sub: 'Typy dostępne', link: 'Sprawdź oferty →', icon: '🛒' },
+    { title: 'Skuteczność AI', value: '87%', sub: 'ROI: +24.6%', link: 'Ostatnie 30 dni', icon: 'ring' },
+    { title: 'Śledzone ligi', value: '12', sub: 'Nadchodzących meczów', link: 'Zobacz kalendarz →', icon: '★' }
   ]
 
+  const showMore = (name) => setActiveBox(prev => prev === name ? '' : name)
+
   return (
-    <section className="dashboard-update-preview" aria-label="Nowy układ dashboardu">
-      <div className="du-metric-grid">
-        <article className="du-metric-card"><div className="du-icon">🧠</div><div><span>Typy AI dnia</span><strong>12</strong><small>Wysoka pewność</small><b>7 nowych</b></div><em>➜</em></article>
-        <article className="du-metric-card"><div className="du-icon">🛒</div><div><span>Marketplace premium</span><strong>243</strong><small>Typy dostępne</small><b>Sprawdź oferty →</b></div><em>➜</em></article>
-        <article className="du-metric-card"><div className="du-ring">87%</div><div><span>Skuteczność AI</span><small>ROI: +24.6%</small><small>Ostatnie 30 dni</small></div></article>
-        <article className="du-metric-card"><div className="du-icon">★</div><div><span>Śledzone ligi</span><strong>12</strong><small>Nadchodzących meczów</small><b>Zobacz kalendarz →</b></div><em>➜</em></article>
+    <section className="dashboard-update-preview du-exact" aria-label="Dashboard 1 do 1">
+      <div className="du-metric-grid" aria-label="Szybkie kafelki">
+        {cards.map(card => (
+          <button type="button" key={card.title} className={`du-metric-card ${activeBox === card.title ? 'is-active' : ''}`} onClick={() => showMore(card.title)}>
+            {card.icon === 'ring' ? <div className="du-ring"><span>87%</span></div> : <div className="du-icon">{card.icon}</div>}
+            <div>
+              <span>{card.title}</span>
+              {card.icon !== 'ring' && <strong>{card.value}</strong>}
+              <small>{card.sub}</small>
+              <b>{card.link}</b>
+            </div>
+            {card.icon !== 'ring' && <em>➜</em>}
+          </button>
+        ))}
       </div>
+
+      {activeBox ? <div className="du-inline-status">Aktywny moduł: <strong>{activeBox}</strong> — kliknij elementy niżej, żeby rozwinąć szczegóły.</div> : null}
 
       <div className="du-content-grid">
         <article className="du-panel du-articles">
-          <header><h3>Najnowsze artykuły</h3><button>Zobacz wszystkie</button></header>
-          {articles.map(([tag, title, time, comments], index) => (
-            <div className="du-article-row" key={title}>
-              <div className={`du-thumb du-thumb-${index + 1}`}></div>
-              <div><b>{tag}</b><strong>{title}</strong><small>{time} temu <span>♡ {comments}</span></small></div>
-            </div>
+          <header><h3>Najnowsze artykuły</h3><button type="button" onClick={() => showMore('Najnowsze artykuły')}>Zobacz wszystkie</button></header>
+          {articles.map(article => (
+            <button type="button" className={`du-article-row ${expandedRow === article.title ? 'open' : ''}`} key={article.title} onClick={() => setExpandedRow(expandedRow === article.title ? '' : article.title)}>
+              <div className={`du-thumb du-thumb-${article.cls}`}><span /></div>
+              <div><b>{article.tag}</b><strong>{article.title}</strong><small>{article.time} <span>♡ {article.comments}</span></small>{expandedRow === article.title && <p>Krótki podgląd artykułu oraz miejsce na późniejszą treść po aktualizacji.</p>}</div>
+            </button>
           ))}
         </article>
 
         <article className="du-panel du-live">
-          <header><h3>Wyniki live</h3><button>Zobacz wszystkie</button></header>
-          {liveRows.map(([league, minute, home, score, away]) => (
-            <div className="du-live-row" key={home + away}>
-              <div><span>{league}</span><b>{minute}</b></div>
-              <div className="du-match"><strong>{home}</strong><em>{score}</em><strong>{away}</strong></div>
+          <header><h3>Wyniki live</h3><button type="button" onClick={() => showMore('Wyniki live')}>Zobacz wszystkie</button></header>
+          {liveRows.map(row => (
+            <button type="button" className={`du-live-row ${expandedRow === row.home ? 'open' : ''}`} key={row.home} onClick={() => setExpandedRow(expandedRow === row.home ? '' : row.home)}>
+              <div><span>{row.league}</span><b>{row.minute}</b></div>
+              <div className="du-match"><strong><span className="du-team-logo">{row.homeLogo}</span>{row.home}</strong><em>{row.score}</em><strong><span className="du-team-logo away">{row.awayLogo}</span>{row.away}</strong></div>
               <i>LIVE</i>
-            </div>
+              {expandedRow === row.home && <p>Statystyki meczu: posiadanie, strzały i xG będą podpięte pod live API.</p>}
+            </button>
           ))}
         </article>
 
         <article className="du-panel du-ai-tips">
-          <header><h3>Typy AI</h3><button>Zobacz wszystkie</button></header>
-          {aiTips.map(([icon, match, pick, confidence]) => (
-            <div className="du-tip-row" key={match}>
-              <span>{icon}</span>
-              <div><strong>{match}</strong><small>{pick}</small></div>
-              <b>{confidence}</b>
-              <button>Zobacz</button>
+          <header><h3>Typy AI</h3><button type="button" onClick={() => showMore('Typy AI')}>Zobacz wszystkie</button></header>
+          {aiTips.map(tip => (
+            <div className={`du-tip-row ${expandedRow === tip.match ? 'open' : ''}`} key={tip.match}>
+              <span>{tip.logo}</span>
+              <div><small>{tip.league}</small><strong>{tip.match}</strong><small>{tip.pick}</small>{expandedRow === tip.match && <p>AI analiza: wysoka pewność, value kursowe i stabilny trend formy.</p>}</div>
+              <b>{tip.confidence}</b>
+              <button type="button" onClick={() => setExpandedRow(expandedRow === tip.match ? '' : tip.match)}>Zobacz</button>
             </div>
           ))}
         </article>
       </div>
 
       <article className="du-panel du-marketplace">
-        <header><h3>Marketplace premium</h3><button>Zobacz wszystkie oferty →</button></header>
+        <header><h3>Marketplace premium</h3><button type="button" onClick={() => showMore('Marketplace premium')}>Zobacz wszystkie oferty →</button></header>
         <div className="du-seller-grid">
-          {sellers.map(([name, badge, roi, price, rate]) => (
-            <div className="du-seller-card" key={name}>
-              <div className="du-avatar">AI</div>
-              <div><strong>{name}</strong><b>{badge}</b><small>Skuteczność<br />{roi}</small></div>
-              <footer><span>★ {rate}</span><em>{price}</em></footer>
-            </div>
+          {sellers.map(seller => (
+            <button type="button" className={`du-seller-card ${expandedRow === seller.name ? 'open' : ''}`} key={seller.name} onClick={() => setExpandedRow(expandedRow === seller.name ? '' : seller.name)}>
+              <div className="du-avatar">{seller.mark}</div>
+              <div><strong>{seller.name}</strong><b>{seller.badge}</b><small>Skuteczność<br />{seller.roi}</small></div>
+              <footer><span>★ {seller.rate}</span><em>{seller.price}</em></footer>
+              {expandedRow === seller.name && <p>Otwierany podgląd oferty premium — tutaj później podepniesz zakup/subskrypcję.</p>}
+            </button>
           ))}
         </div>
       </article>
@@ -7251,18 +7265,6 @@ function App() {
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
             <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
-            <div className="monetization-panel">
-              <div>
-                <strong>💰 Marketplace premium</strong>
-                <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
-                <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
-              </div>
-              <div className="monetization-stats">
-                <b>{feedCounts.premium}</b>
-                <small>typów premium</small>
-              </div>
-            </div>
-
             <DashboardUpdatePreview />
           </section>
         )}

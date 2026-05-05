@@ -1,0 +1,11 @@
+Wersja 529
+
+Zmiany:
+- całkowicie usunięty stary hero banner,
+- dodane 7 nowych slajdów hero na podstawie dostarczonych obrazów,
+- slajder zapętlony automatycznie,
+- kliknięcie w baner przełącza na kolejny slajd,
+- aktywne kropki nawigacji do każdego slajdu,
+- obrazy hero dodatkowo wyostrzone i podbite kontrastem,
+- dodany błysk światła / light sweep w hero,
+- stara prawa kolumna statystyk została usunięta z hero.
