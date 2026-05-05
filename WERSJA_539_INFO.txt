@@ -1,0 +1,1 @@
+Wersja 539: globalne zmniejszenie całej strony do skali 80% przy normalnym zoomie przeglądarki 100%. Dotyczy logowania, rejestracji i wszystkich zakładek po zalogowaniu.

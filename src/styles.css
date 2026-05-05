@@ -19029,3 +19029,163 @@ img,video,canvas,svg{max-width:100%;}
   35%{opacity:.18}
   100%{transform:translateX(210%) rotate(18deg);opacity:0}
 }
+
+/* WERSJA 539 — globalne dopasowanie jak przeglądarka ustawiona na 80% */
+html,
+body{
+  overflow-x:hidden!important;
+}
+#root{
+  width:125%!important;
+  min-width:125%!important;
+  min-height:125vh!important;
+  transform:scale(.8)!important;
+  transform-origin:top left!important;
+  will-change:transform!important;
+}
+@supports (zoom: 1){
+  body.betai-disable-transform-scale #root{
+    transform:none!important;
+    width:100%!important;
+    min-width:100%!important;
+    min-height:100vh!important;
+  }
+}
+@media (max-width: 900px){
+  #root{
+    width:100%!important;
+    min-width:100%!important;
+    min-height:100vh!important;
+    transform:none!important;
+  }
+}
+
+/* WERSJA 541 — logowanie zostaje jak zoom 80%, dashboard i wszystkie zakładki wracają na zoom 95% */
+body:has(.auth481-screen) #root{
+  width:125%!important;
+  min-width:125%!important;
+  min-height:125vh!important;
+  transform:scale(.8)!important;
+  transform-origin:top left!important;
+}
+body:has(.app-shell) #root{
+  width:105.263158%!important;
+  min-width:105.263158%!important;
+  min-height:105.263158vh!important;
+  transform:scale(.95)!important;
+  transform-origin:top left!important;
+}
+@media (max-width: 900px){
+  body:has(.auth481-screen) #root,
+  body:has(.app-shell) #root{
+    width:100%!important;
+    min-width:100%!important;
+    min-height:100vh!important;
+    transform:none!important;
+  }
+}
+
+
+/* WERSJA 543 — auth/login/register panel at visual 80% only */
+.auth481-screen{
+  overflow-x:hidden;
+}
+.auth481-screen .auth481-wrap{
+  transform: scale(0.8);
+  transform-origin: top center;
+  width: min(1860px, 125vw);
+  margin: 0 auto calc(-1 * clamp(150px, 14vw, 260px));
+}
+.auth481-screen .auth481-language-corner{
+  z-index: 12;
+}
+@media (max-width: 1400px){
+  .auth481-screen .auth481-wrap{
+    width: min(1720px, 128vw);
+    margin-bottom: calc(-1 * clamp(120px, 12vw, 220px));
+  }
+}
+@media (max-width: 1180px){
+  .auth481-screen .auth481-wrap{
+    transform: none;
+    width: min(96vw, 1500px);
+    margin-bottom: 0;
+  }
+}
+
+
+/* WERSJA 544 — Ranking right-column referral bottom frame restored */
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-side-card.referral-card{
+  padding-bottom:14px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-side-card.referral-card .ranking536-ref-stats{
+  margin-bottom:14px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-side-card.referral-card .ranking536-side-btn{
+  width:calc(100% - 28px)!important;
+  margin:0 14px 0!important;
+  height:54px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(31,228,235,.34)!important;
+  background:linear-gradient(180deg, rgba(4,18,29,.84), rgba(2,12,20,.96))!important;
+  color:#1fe4eb!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(17,226,235,.06), 0 14px 26px rgba(0,0,0,.18)!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-side-card.referral-card .ranking536-side-btn:hover{
+  transform:translateY(-1px)!important;
+  filter:none!important;
+  background:linear-gradient(180deg, rgba(6,24,38,.92), rgba(3,14,22,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(17,226,235,.09), 0 18px 30px rgba(0,0,0,.22), 0 0 24px rgba(17,226,235,.10)!important;
+}
+
+
+/* WERSJA 545 — Ranking: restore live chat panel at the top of right column */
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap{
+  width:100%!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-card,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-right-chat-final,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-card.betai-right-chat-final{
+  width:100%!important;
+  min-height:596px!important;
+  margin:0!important;
+  border-radius:20px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-live-head-final{
+  gap:8px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-kicker{
+  font-size:13px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-online-final{
+  font-size:10px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-stats-final{
+  grid-template-columns:1fr 1fr 1fr!important;
+  gap:8px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-stat,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-stat-final{
+  min-height:74px!important;
+  padding:10px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-stat span,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-stat-final span{
+  font-size:9px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-stat strong,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-stat-final strong{
+  font-size:13px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-stat small,
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-stat-final small{
+  font-size:10px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .betai-chat-messages-final{
+  height:236px!important;
+  min-height:236px!important;
+  max-height:236px!important;
+}
+.app-shell.no-rightbar-page .ranking-page-536 .ranking536-chat-wrap .livechat226-composer{
+  margin-top:2px!important;
+}

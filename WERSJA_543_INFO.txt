@@ -1,0 +1,1 @@
+Wersja 543: tylko ekran logowania/rejestracji ma wizualną skalę 80%. Dashboard i zakładki pozostają bez zmiany.
