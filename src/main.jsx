@@ -3009,14 +3009,215 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
+  const [mode, setMode] = useState('login')
+  const [submitting, setSubmitting] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [authInfo, setAuthInfo] = useState('Kliknij w zakładkę i zaloguj się bez zmiany wyglądu panelu.')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false)
+  const [form, setForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    repeatPassword: '',
+    agree: true
+  })
+
+  function updateField(field, value) {
+    setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  function switchMode(nextMode) {
+    setMode(nextMode)
+    setAuthError('')
+    setAuthInfo(nextMode === 'login'
+      ? 'Zaloguj się na swoim koncie Bet+AI.'
+      : 'Załóż konto bez zmiany ultra-pro wyglądu ekranu startowego.')
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setAuthError('')
+
+    if (!isSupabaseConfigured || !supabase) {
+      setAuthError('Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.')
+      return
+    }
+
+    const email = String(form.email || '').trim().toLowerCase()
+    const password = String(form.password || '')
+    const username = String(form.username || '').trim()
+
+    if (!email) {
+      setAuthError('Wpisz adres email.')
+      return
+    }
+
+    if (!password) {
+      setAuthError('Wpisz hasło.')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      if (mode === 'register') {
+        if (!username) {
+          throw new Error('Wpisz nazwę użytkownika.')
+        }
+        if (password.length < 8) {
+          throw new Error('Hasło musi mieć minimum 8 znaków.')
+        }
+        if (password !== form.repeatPassword) {
+          throw new Error('Hasła nie są identyczne.')
+        }
+        if (!form.agree) {
+          throw new Error('Zaakceptuj Regulamin oraz Politykę prywatności.')
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username,
+              display_name: username
+            }
+          }
+        })
+
+        if (error) throw error
+
+        if (data?.session?.user) {
+          onAuth?.(data.session.user)
+          setAuthInfo('Konto zostało utworzone i jesteś już zalogowany.')
+        } else {
+          setAuthInfo('Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.')
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+
+        if (error) throw error
+        if (data?.user) {
+          onAuth?.(data.user)
+          setAuthInfo('Logowanie zakończone sukcesem.')
+        }
+      }
+    } catch (error) {
+      setAuthError(error?.message || 'Nie udało się wykonać autoryzacji.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
-    <div className="auth-image-screen" aria-label="Bet+AI ekran startowy">
-      <img
-        src="/auth-full-475.png"
-        alt="Bet+AI AI Match Picks — ultra pro ekran startowy"
-        className="auth-image-full"
-        draggable="false"
-      />
+    <div className="auth-live-screen" aria-label="Bet+AI panel logowania">
+      <div className="auth-live-stage">
+        <div className="auth-live-ambient auth-live-ambient-left" aria-hidden="true" />
+        <div className="auth-live-ambient auth-live-ambient-right" aria-hidden="true" />
+        <div className="auth-live-scanline" aria-hidden="true" />
+        <div className="auth-live-grid" aria-hidden="true" />
+
+        <img
+          src="/auth-full-475.png"
+          alt="Bet+AI AI Match Picks — panel logowania"
+          className="auth-live-image"
+          draggable="false"
+        />
+
+        <form className="auth-overlay-form" onSubmit={handleSubmit}>
+          <div className="auth-overlay-left" aria-hidden="true">
+            <div className={`auth-tab-indicator ${mode === 'login' ? 'is-login' : 'is-register'}`} />
+          </div>
+
+          <button
+            type="button"
+            className="auth-tab-hit auth-tab-hit-login"
+            aria-label="Przełącz na logowanie"
+            onClick={() => switchMode('login')}
+          />
+          <button
+            type="button"
+            className="auth-tab-hit auth-tab-hit-register"
+            aria-label="Przełącz na rejestrację"
+            onClick={() => switchMode('register')}
+          />
+
+          {mode === 'register' && (
+            <input
+              className="auth-input-hit auth-input-username"
+              type="text"
+              autoComplete="username"
+              value={form.username}
+              onChange={(event) => updateField('username', event.target.value)}
+              aria-label="Nazwa użytkownika"
+            />
+          )}
+
+          <input
+            className={`auth-input-hit ${mode === 'login' ? 'auth-input-login-email' : 'auth-input-email'}`}
+            type="email"
+            autoComplete={mode === 'login' ? 'username' : 'email'}
+            value={form.email}
+            onChange={(event) => updateField('email', event.target.value)}
+            aria-label="Email"
+          />
+
+          <input
+            className={`auth-input-hit ${mode === 'login' ? 'auth-input-login-password' : 'auth-input-password'}`}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            value={form.password}
+            onChange={(event) => updateField('password', event.target.value)}
+            aria-label="Hasło"
+          />
+
+          <button
+            type="button"
+            className={`auth-eye-hit ${mode === 'login' ? 'auth-eye-login-password' : 'auth-eye-password'}`}
+            aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+            onClick={() => setShowPassword(prev => !prev)}
+          />
+
+          {mode === 'register' && (
+            <>
+              <input
+                className="auth-input-hit auth-input-repeat"
+                type={showRepeatPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                value={form.repeatPassword}
+                onChange={(event) => updateField('repeatPassword', event.target.value)}
+                aria-label="Powtórz hasło"
+              />
+              <button
+                type="button"
+                className="auth-eye-hit auth-eye-repeat"
+                aria-label={showRepeatPassword ? 'Ukryj powtórzone hasło' : 'Pokaż powtórzone hasło'}
+                onClick={() => setShowRepeatPassword(prev => !prev)}
+              />
+              <label className="auth-checkbox-hit" aria-label="Akceptuję regulamin i politykę prywatności">
+                <input
+                  type="checkbox"
+                  checked={form.agree}
+                  onChange={(event) => updateField('agree', event.target.checked)}
+                />
+                <span />
+              </label>
+            </>
+          )}
+
+          <button type="submit" className="auth-submit-hit" disabled={submitting} aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}>
+            <span className="sr-only">{submitting ? 'Przetwarzanie' : (mode === 'login' ? 'Zaloguj się' : 'Załóż konto')}</span>
+          </button>
+        </form>
+      </div>
+
+      <div className={`auth-live-status ${authError ? 'is-error' : 'is-info'}`}>
+        {submitting ? 'Trwa autoryzacja...' : (authError || authInfo)}
+      </div>
     </div>
   )
 }
