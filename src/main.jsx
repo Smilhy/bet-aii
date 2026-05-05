@@ -3053,6 +3053,34 @@ function AuthView({ onAuth }) {
     updatedAt: null,
     loading: true
   })
+  const supportedAuthLanguages = ['pl', 'en', 'de', 'es', 'ru']
+  const [authLang, setAuthLang] = useState(() => {
+    try {
+      const saved = localStorage.getItem('betai_language')
+      if (saved && supportedAuthLanguages.includes(saved)) return saved
+      const browserLang = String(navigator?.language || 'pl').slice(0, 2).toLowerCase()
+      return supportedAuthLanguages.includes(browserLang) ? browserLang : 'pl'
+    } catch (_) {
+      return 'pl'
+    }
+  })
+
+  const authTranslations = {
+    pl: {
+      languageLabel: 'Język', login: 'Zaloguj się', register: 'Zarejestruj się', heroLine1: 'Dołącz do', heroLine2: 'platformy', subtitle1: 'Zarejestruj się i korzystaj z analityki AI, typów', subtitle2: 'oraz statystyk na żywo.', username: 'Nazwa użytkownika', usernamePlaceholder: 'Wybierz nazwę użytkownika', email: 'Email', emailPlaceholder: 'Wpisz swój adres email', password: 'Hasło', passwordPlaceholder: 'Minimum 8 znaków', repeatPassword: 'Powtórz hasło', repeatPasswordPlaceholder: 'Powtórz swoje hasło', forgot: 'Nie pamiętasz hasła?', encrypted: 'Szyfrowane logowanie', accept1: 'Akceptuję', terms: 'Regulamin', accept2: 'oraz', privacy: 'Politykę prywatności', submitLogin: 'Zaloguj się', submitRegister: 'Załóż konto', authorizing: 'Trwa autoryzacja...', submitNoteLogin: 'Bezpieczne logowanie • szyfrowana autoryzacja Supabase', submitNoteRegister: 'Rejestracja zajmuje mniej niż 30 sekund i aktywuje dostęp do platformy.', socialHeading: 'Śledź nas i dołącz do społeczności', liveKicker: 'REALNE STATYSTYKI LIVE', liveTitle: 'Platforma żyje i odświeża dane na bieżąco', liveBadge: 'LIVE', registeredUsers: 'Zarejestrowanych użytkowników', aiAccuracy: 'Skuteczność AI', activeNow: 'Aktywni teraz', tipsToday: 'Typów dzisiaj', liveLoading: 'Ładowanie statystyk live...', liveRefresh: 'Auto-odświeżanie co 30 s', lastUpdate: 'ostatnia aktualizacja', safeData: 'Bezpieczne dane', safeDataText: 'Twoje dane są u nas w pełni chronione.', fastRegister: 'Szybka rejestracja', fastRegisterText: 'Załóż konto w mniej niż 30 sekund.', freeAi: 'Darmowe typy AI', freeAiText: 'Codziennie nowe typy o wysokiej skuteczności.', community: 'Aktywna społeczność', communityText: 'Tysiące typerów dzieli się wiedzą i wygrywa razem.', showPassword: 'Pokaż hasło', hidePassword: 'Ukryj hasło', showRepeat: 'Pokaż powtórzone hasło', hideRepeat: 'Ukryj powtórzone hasło', resetMissingEmail: 'Wpisz adres email, aby zresetować hasło.', resetSending: 'Wysyłanie linku do resetu hasła...', resetSuccess: 'Link do resetu hasła został wysłany na Twój adres email.', notConfiguredReset: 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć reset hasła.', notConfiguredLogin: 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.', enterEmail: 'Wpisz adres email.', enterPassword: 'Wpisz hasło.', enterUsername: 'Wpisz nazwę użytkownika.', shortPassword: 'Hasło musi mieć minimum 8 znaków.', passwordMismatch: 'Hasła nie są identyczne.', acceptTermsError: 'Zaakceptuj Regulamin oraz Politykę prywatności.', accountCreatedLogged: 'Konto zostało utworzone i jesteś już zalogowany.', accountCreatedConfirm: 'Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.', loginSuccess: 'Logowanie zakończone sukcesem.', dbError: 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql w Supabase SQL Editor i spróbuj ponownie.', emailLimit: 'Limit wysyłki email został przekroczony. Do testów wyłącz Confirm email albo podłącz Custom SMTP i ustaw większy limit w Supabase.', authFailed: 'Nie udało się wykonać autoryzacji.' },
+    en: { languageLabel: 'Language', login: 'Log in', register: 'Register', heroLine1: 'Join the', heroLine2: 'platform', subtitle1: 'Sign up and use AI analytics, picks', subtitle2: 'and live statistics.', username: 'Username', usernamePlaceholder: 'Choose a username', email: 'Email', emailPlaceholder: 'Enter your email address', password: 'Password', passwordPlaceholder: 'Minimum 8 characters', repeatPassword: 'Repeat password', repeatPasswordPlaceholder: 'Repeat your password', forgot: 'Forgot password?', encrypted: 'Encrypted login', accept1: 'I accept the', terms: 'Terms', accept2: 'and', privacy: 'Privacy Policy', submitLogin: 'Log in', submitRegister: 'Create account', authorizing: 'Authorizing...', submitNoteLogin: 'Secure login • encrypted Supabase authorization', submitNoteRegister: 'Registration takes less than 30 seconds and activates platform access.', socialHeading: 'Follow us and join the community', liveKicker: 'REAL LIVE STATS', liveTitle: 'The platform is alive and refreshes data live', liveBadge: 'LIVE', registeredUsers: 'Registered users', aiAccuracy: 'AI accuracy', activeNow: 'Active now', tipsToday: 'Picks today', liveLoading: 'Loading live stats...', liveRefresh: 'Auto-refresh every 30 s', lastUpdate: 'last update', safeData: 'Secure data', safeDataText: 'Your data is fully protected with us.', fastRegister: 'Fast registration', fastRegisterText: 'Create an account in less than 30 seconds.', freeAi: 'Free AI picks', freeAiText: 'New high-accuracy picks every day.', community: 'Active community', communityText: 'Thousands of bettors share knowledge and win together.', showPassword: 'Show password', hidePassword: 'Hide password', showRepeat: 'Show repeated password', hideRepeat: 'Hide repeated password', resetMissingEmail: 'Enter your email to reset the password.', resetSending: 'Sending password reset link...', resetSuccess: 'Password reset link has been sent to your email.', notConfiguredReset: 'Supabase is not configured. Add keys to enable password reset.', notConfiguredLogin: 'Supabase is not configured. Add keys to enable login.', enterEmail: 'Enter your email address.', enterPassword: 'Enter your password.', enterUsername: 'Enter your username.', shortPassword: 'Password must be at least 8 characters.', passwordMismatch: 'Passwords do not match.', acceptTermsError: 'Accept the Terms and Privacy Policy.', accountCreatedLogged: 'Account created and you are already logged in.', accountCreatedConfirm: 'Account created. Check your email to confirm registration.', loginSuccess: 'Login successful.', dbError: 'Database registration error: run SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql once in Supabase SQL Editor and try again.', emailLimit: 'Email sending limit exceeded. For tests disable Confirm email or connect Custom SMTP and set a higher Supabase limit.', authFailed: 'Authorization failed.' },
+    de: { languageLabel: 'Sprache', login: 'Einloggen', register: 'Registrieren', heroLine1: 'Tritt der', heroLine2: 'Plattform', subtitle1: 'Registriere dich und nutze KI-Analysen, Tipps', subtitle2: 'und Live-Statistiken.', username: 'Benutzername', usernamePlaceholder: 'Benutzernamen wählen', email: 'E-Mail', emailPlaceholder: 'E-Mail-Adresse eingeben', password: 'Passwort', passwordPlaceholder: 'Mindestens 8 Zeichen', repeatPassword: 'Passwort wiederholen', repeatPasswordPlaceholder: 'Passwort wiederholen', forgot: 'Passwort vergessen?', encrypted: 'Verschlüsselter Login', accept1: 'Ich akzeptiere die', terms: 'AGB', accept2: 'und die', privacy: 'Datenschutzerklärung', submitLogin: 'Einloggen', submitRegister: 'Konto erstellen', authorizing: 'Autorisierung...', submitNoteLogin: 'Sicherer Login • verschlüsselte Supabase-Autorisierung', submitNoteRegister: 'Die Registrierung dauert weniger als 30 Sekunden und aktiviert den Zugang.', socialHeading: 'Folge uns und tritt der Community bei', liveKicker: 'ECHTE LIVE-STATISTIKEN', liveTitle: 'Die Plattform lebt und aktualisiert Daten live', liveBadge: 'LIVE', registeredUsers: 'Registrierte Nutzer', aiAccuracy: 'KI-Trefferquote', activeNow: 'Jetzt aktiv', tipsToday: 'Tipps heute', liveLoading: 'Live-Statistiken werden geladen...', liveRefresh: 'Auto-Aktualisierung alle 30 s', lastUpdate: 'letzte Aktualisierung', safeData: 'Sichere Daten', safeDataText: 'Deine Daten sind vollständig geschützt.', fastRegister: 'Schnelle Registrierung', fastRegisterText: 'Erstelle ein Konto in weniger als 30 Sekunden.', freeAi: 'Kostenlose KI-Tipps', freeAiText: 'Täglich neue Tipps mit hoher Trefferquote.', community: 'Aktive Community', communityText: 'Tausende Tipper teilen Wissen und gewinnen zusammen.', showPassword: 'Passwort anzeigen', hidePassword: 'Passwort verbergen', showRepeat: 'Wiederholtes Passwort anzeigen', hideRepeat: 'Wiederholtes Passwort verbergen', resetMissingEmail: 'Gib deine E-Mail ein, um das Passwort zurückzusetzen.', resetSending: 'Reset-Link wird gesendet...', resetSuccess: 'Der Reset-Link wurde an deine E-Mail gesendet.', notConfiguredReset: 'Supabase ist nicht konfiguriert. Füge Schlüssel hinzu, um den Reset zu aktivieren.', notConfiguredLogin: 'Supabase ist nicht konfiguriert. Füge Schlüssel hinzu, um Login zu aktivieren.', enterEmail: 'E-Mail-Adresse eingeben.', enterPassword: 'Passwort eingeben.', enterUsername: 'Benutzernamen eingeben.', shortPassword: 'Das Passwort muss mindestens 8 Zeichen haben.', passwordMismatch: 'Passwörter stimmen nicht überein.', acceptTermsError: 'Akzeptiere AGB und Datenschutzerklärung.', accountCreatedLogged: 'Konto wurde erstellt und du bist bereits eingeloggt.', accountCreatedConfirm: 'Konto wurde erstellt. Prüfe deine E-Mail zur Bestätigung.', loginSuccess: 'Login erfolgreich.', dbError: 'Datenbankfehler bei Registrierung: führe SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql einmal im Supabase SQL Editor aus.', emailLimit: 'E-Mail-Limit überschritten. Für Tests Confirm email deaktivieren oder Custom SMTP verbinden.', authFailed: 'Autorisierung fehlgeschlagen.' },
+    es: { languageLabel: 'Idioma', login: 'Iniciar sesión', register: 'Registrarse', heroLine1: 'Únete a la', heroLine2: 'plataforma', subtitle1: 'Regístrate y usa análisis de IA, pronósticos', subtitle2: 'y estadísticas en vivo.', username: 'Usuario', usernamePlaceholder: 'Elige un usuario', email: 'Email', emailPlaceholder: 'Introduce tu email', password: 'Contraseña', passwordPlaceholder: 'Mínimo 8 caracteres', repeatPassword: 'Repetir contraseña', repeatPasswordPlaceholder: 'Repite tu contraseña', forgot: '¿Olvidaste tu contraseña?', encrypted: 'Login cifrado', accept1: 'Acepto los', terms: 'Términos', accept2: 'y la', privacy: 'Política de privacidad', submitLogin: 'Iniciar sesión', submitRegister: 'Crear cuenta', authorizing: 'Autorizando...', submitNoteLogin: 'Login seguro • autorización cifrada de Supabase', submitNoteRegister: 'El registro tarda menos de 30 segundos y activa el acceso.', socialHeading: 'Síguenos y únete a la comunidad', liveKicker: 'ESTADÍSTICAS LIVE REALES', liveTitle: 'La plataforma vive y actualiza datos en directo', liveBadge: 'LIVE', registeredUsers: 'Usuarios registrados', aiAccuracy: 'Precisión IA', activeNow: 'Activos ahora', tipsToday: 'Pronósticos hoy', liveLoading: 'Cargando estadísticas live...', liveRefresh: 'Auto-actualización cada 30 s', lastUpdate: 'última actualización', safeData: 'Datos seguros', safeDataText: 'Tus datos están totalmente protegidos.', fastRegister: 'Registro rápido', fastRegisterText: 'Crea una cuenta en menos de 30 segundos.', freeAi: 'Pronósticos IA gratis', freeAiText: 'Nuevos pronósticos diarios de alta precisión.', community: 'Comunidad activa', communityText: 'Miles de usuarios comparten conocimiento y ganan juntos.', showPassword: 'Mostrar contraseña', hidePassword: 'Ocultar contraseña', showRepeat: 'Mostrar contraseña repetida', hideRepeat: 'Ocultar contraseña repetida', resetMissingEmail: 'Introduce tu email para restablecer la contraseña.', resetSending: 'Enviando enlace de restablecimiento...', resetSuccess: 'El enlace fue enviado a tu email.', notConfiguredReset: 'Supabase no está configurado. Añade claves para activar el reset.', notConfiguredLogin: 'Supabase no está configurado. Añade claves para activar login.', enterEmail: 'Introduce tu email.', enterPassword: 'Introduce tu contraseña.', enterUsername: 'Introduce tu usuario.', shortPassword: 'La contraseña debe tener al menos 8 caracteres.', passwordMismatch: 'Las contraseñas no coinciden.', acceptTermsError: 'Acepta los Términos y la Política de privacidad.', accountCreatedLogged: 'Cuenta creada y ya has iniciado sesión.', accountCreatedConfirm: 'Cuenta creada. Revisa tu email para confirmar el registro.', loginSuccess: 'Inicio de sesión correcto.', dbError: 'Error de base de datos en registro: ejecuta SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql en Supabase SQL Editor.', emailLimit: 'Límite de envío de email superado. Para pruebas desactiva Confirm email o conecta Custom SMTP.', authFailed: 'No se pudo autorizar.' },
+    ru: { languageLabel: 'Язык', login: 'Войти', register: 'Регистрация', heroLine1: 'Присоединяйся к', heroLine2: 'платформе', subtitle1: 'Зарегистрируйся и используй AI-аналитику, прогнозы', subtitle2: 'и live-статистику.', username: 'Имя пользователя', usernamePlaceholder: 'Выберите имя пользователя', email: 'Email', emailPlaceholder: 'Введите email', password: 'Пароль', passwordPlaceholder: 'Минимум 8 символов', repeatPassword: 'Повторите пароль', repeatPasswordPlaceholder: 'Повторите пароль', forgot: 'Забыли пароль?', encrypted: 'Защищенный вход', accept1: 'Я принимаю', terms: 'Условия', accept2: 'и', privacy: 'Политику конфиденциальности', submitLogin: 'Войти', submitRegister: 'Создать аккаунт', authorizing: 'Авторизация...', submitNoteLogin: 'Безопасный вход • шифрованная авторизация Supabase', submitNoteRegister: 'Регистрация занимает меньше 30 секунд и открывает доступ.', socialHeading: 'Подписывайся и вступай в сообщество', liveKicker: 'РЕАЛЬНАЯ LIVE-СТАТИСТИКА', liveTitle: 'Платформа живая и обновляет данные онлайн', liveBadge: 'LIVE', registeredUsers: 'Зарегистрированных пользователей', aiAccuracy: 'Точность AI', activeNow: 'Активны сейчас', tipsToday: 'Прогнозов сегодня', liveLoading: 'Загрузка live-статистики...', liveRefresh: 'Автообновление каждые 30 сек', lastUpdate: 'последнее обновление', safeData: 'Безопасные данные', safeDataText: 'Ваши данные полностью защищены.', fastRegister: 'Быстрая регистрация', fastRegisterText: 'Создайте аккаунт меньше чем за 30 секунд.', freeAi: 'Бесплатные AI-прогнозы', freeAiText: 'Новые точные прогнозы каждый день.', community: 'Активное сообщество', communityText: 'Тысячи игроков делятся знаниями и выигрывают вместе.', showPassword: 'Показать пароль', hidePassword: 'Скрыть пароль', showRepeat: 'Показать повтор пароля', hideRepeat: 'Скрыть повтор пароля', resetMissingEmail: 'Введите email для сброса пароля.', resetSending: 'Отправка ссылки сброса...', resetSuccess: 'Ссылка сброса отправлена на email.', notConfiguredReset: 'Supabase не настроен. Добавьте ключи для сброса пароля.', notConfiguredLogin: 'Supabase не настроен. Добавьте ключи для входа.', enterEmail: 'Введите email.', enterPassword: 'Введите пароль.', enterUsername: 'Введите имя пользователя.', shortPassword: 'Пароль должен быть минимум 8 символов.', passwordMismatch: 'Пароли не совпадают.', acceptTermsError: 'Примите Условия и Политику конфиденциальности.', accountCreatedLogged: 'Аккаунт создан, вы уже вошли.', accountCreatedConfirm: 'Аккаунт создан. Проверьте email для подтверждения.', loginSuccess: 'Вход выполнен успешно.', dbError: 'Ошибка базы при регистрации: один раз запустите SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql в Supabase SQL Editor.', emailLimit: 'Превышен лимит отправки email. Для тестов отключите Confirm email или подключите Custom SMTP.', authFailed: 'Авторизация не выполнена.' }
+  }
+
+  function setLanguage(nextLang) {
+    if (!supportedAuthLanguages.includes(nextLang)) return
+    setAuthLang(nextLang)
+    try { localStorage.setItem('betai_language', nextLang) } catch (_) {}
+  }
+
+  const t = authTranslations[authLang] || authTranslations.pl
 
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)
@@ -3189,18 +3217,18 @@ function AuthView({ onAuth }) {
 
   async function handleForgotPassword() {
     if (!isSupabaseConfigured || !supabase) {
-      showMessage('error', 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć reset hasła.')
+      showMessage('error', t.notConfiguredReset)
       return
     }
 
     const email = String(form.email || '').trim().toLowerCase()
     if (!email) {
-      showMessage('error', 'Wpisz adres email, aby zresetować hasło.')
+      showMessage('error', t.resetMissingEmail)
       return
     }
 
     setSubmitting(true)
-    showMessage('info', 'Wysyłanie linku do resetu hasła...')
+    showMessage('info', t.resetSending)
 
     try {
       const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
@@ -3209,9 +3237,9 @@ function AuthView({ onAuth }) {
         redirectTo ? { redirectTo } : undefined
       )
       if (error) throw error
-      showMessage('success', 'Link do resetu hasła został wysłany na Twój adres email.')
+      showMessage('success', t.resetSuccess)
     } catch (error) {
-      showMessage('error', error?.message || 'Nie udało się wysłać linku resetującego hasło.')
+      showMessage('error', error?.message || t.authFailed)
     } finally {
       setSubmitting(false)
     }
@@ -3222,7 +3250,7 @@ function AuthView({ onAuth }) {
     setAuthMessage('')
 
     if (!isSupabaseConfigured || !supabase) {
-      showMessage('error', 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.')
+      showMessage('error', t.notConfiguredLogin)
       return
     }
 
@@ -3231,24 +3259,24 @@ function AuthView({ onAuth }) {
     const username = String(form.username || '').trim()
 
     if (!email) {
-      showMessage('error', 'Wpisz adres email.')
+      showMessage('error', t.enterEmail)
       return
     }
 
     if (!password) {
-      showMessage('error', 'Wpisz hasło.')
+      showMessage('error', t.enterPassword)
       return
     }
 
     setSubmitting(true)
-    showMessage('info', 'Trwa autoryzacja...')
+    showMessage('info', t.authorizing)
 
     try {
       if (mode === 'register') {
-        if (!username) throw new Error('Wpisz nazwę użytkownika.')
-        if (password.length < 8) throw new Error('Hasło musi mieć minimum 8 znaków.')
-        if (password !== form.repeatPassword) throw new Error('Hasła nie są identyczne.')
-        if (!form.agree) throw new Error('Zaakceptuj Regulamin oraz Politykę prywatności.')
+        if (!username) throw new Error(t.enterUsername)
+        if (password.length < 8) throw new Error(t.shortPassword)
+        if (password !== form.repeatPassword) throw new Error(t.passwordMismatch)
+        if (!form.agree) throw new Error(t.acceptTermsError)
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -3265,9 +3293,9 @@ function AuthView({ onAuth }) {
 
         if (data?.session?.user) {
           onAuth?.(data.session.user)
-          showMessage('success', 'Konto zostało utworzone i jesteś już zalogowany.')
+          showMessage('success', t.accountCreatedLogged)
         } else {
-          showMessage('success', 'Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.')
+          showMessage('success', t.accountCreatedConfirm)
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -3278,16 +3306,16 @@ function AuthView({ onAuth }) {
         if (error) throw error
         if (data?.user) {
           onAuth?.(data.user)
-          showMessage('success', 'Logowanie zakończone sukcesem.')
+          showMessage('success', t.loginSuccess)
         }
       }
     } catch (error) {
       const errorText = String(error?.message || '')
       showMessage('error', errorText.includes('Database error saving new user')
-        ? 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql w Supabase SQL Editor i spróbuj ponownie.'
+        ? t.dbError
         : errorText.toLowerCase().includes('email rate limit')
-          ? 'Limit wysyłki email został przekroczony. Do testów wyłącz Confirm email albo podłącz Custom SMTP i ustaw większy limit w Supabase.'
-          : (error?.message || 'Nie udało się wykonać autoryzacji.'))
+          ? t.emailLimit
+          : (error?.message || t.authFailed))
     } finally {
       setSubmitting(false)
     }
@@ -3403,84 +3431,101 @@ function AuthView({ onAuth }) {
 
 
 
-  const submitLabel = mode === 'login' ? 'Zaloguj się' : 'Załóż konto'
+  const submitLabel = mode === 'login' ? t.submitLogin : t.submitRegister
   const submitNote = mode === 'login'
-    ? 'Bezpieczne logowanie • szyfrowana autoryzacja Supabase'
-    : 'Rejestracja zajmuje mniej niż 30 sekund i aktywuje dostęp do platformy.'
+    ? t.submitNoteLogin
+    : t.submitNoteRegister
   const liveStatsCards = useMemo(() => ([
     {
       key: 'users',
-      label: 'Zarejestrowanych użytkowników',
+      label: t.registeredUsers,
       value: formatCompactNumber(liveStats.registeredUsers),
       icon: <IconUsers />,
       accentClass: 'is-users'
     },
     {
       key: 'ai',
-      label: 'Skuteczność AI',
+      label: t.aiAccuracy,
       value: `${normalizeLiveCount(liveStats.aiAccuracy, 76)}%`,
       icon: <IconChart />,
       accentClass: 'is-ai'
     },
     {
       key: 'active',
-      label: 'Aktywni teraz',
+      label: t.activeNow,
       value: formatCompactNumber(liveStats.activeNow),
       icon: <IconBolt />,
       accentClass: 'is-active'
     },
     {
       key: 'tips',
-      label: 'Typów dzisiaj',
+      label: t.tipsToday,
       value: formatCompactNumber(liveStats.tipsToday),
       icon: <IconShield />,
       accentClass: 'is-tips'
     }
-  ]), [liveStats])
+  ]), [liveStats, authLang])
 
   return (
-    <div className="auth481-screen" aria-label="Bet+AI panel logowania">
+    <div className="auth481-screen" aria-label="Bet+AI authentication panel">
       <div className="auth481-wrap">
         <div className="auth481-top-grid">
           <section className="auth481-left-card">
+            <div className="auth481-lang-switch" aria-label={t.languageLabel}>
+              <span>{t.languageLabel}</span>
+              <div className="auth481-lang-options">
+                {supportedAuthLanguages.map(langCode => (
+                  <button
+                    type="button"
+                    key={langCode}
+                    className={`auth481-lang-button ${authLang === langCode ? 'is-active' : ''}`}
+                    onClick={() => setLanguage(langCode)}
+                    aria-pressed={authLang === langCode}
+                  >
+                    {langCode.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
             <h1 className="auth481-title">
-              Dołącz do
+              {t.heroLine1}
               <br />
-              platformy <span>AI</span>
+              {t.heroLine2} <span>AI</span>
             </h1>
 
             <p className="auth481-subtitle">
-              Zarejestruj się i korzystaj z analityki AI, typów
+              {t.subtitle1}
               <br />
-              oraz statystyk na żywo.
+              {t.subtitle2}
             </p>
 
-            <div className={`auth481-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Wybierz tryb logowania">
+            <div className={`auth481-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
               <button
                 type="button"
                 className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
                 onClick={() => switchMode('login')}
               >
-                Zaloguj się
+                {t.login}
               </button>
               <button
                 type="button"
                 className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
                 onClick={() => switchMode('register')}
               >
-                Zarejestruj się
+                {t.register}
               </button>
             </div>
 
             <form className={`auth481-form auth481-form-${mode}`} onSubmit={handleSubmit} autoComplete="off">
               {mode === 'register' ? (
                 <AuthField
-                  label="Nazwa użytkownika"
+                  label={t.username}
                   value={form.username}
                   onChange={(event) => updateField('username', event.target.value)}
-                  placeholder="Wybierz nazwę użytkownika"
+                  placeholder={t.usernamePlaceholder}
                   icon={<IconUser />}
                   autoComplete="off"
                   name="betai_username"
@@ -3488,22 +3533,22 @@ function AuthView({ onAuth }) {
               ) : null}
 
               <AuthField
-                label="Email"
+                label={t.email}
                 type="email"
                 value={form.email}
                 onChange={(event) => updateField('email', event.target.value)}
-                placeholder="Wpisz swój adres email"
+                placeholder={t.emailPlaceholder}
                 icon={<IconMail />}
                 autoComplete={mode === 'login' ? 'username' : 'email'}
                 name="betai_email"
               />
 
               <AuthField
-                label="Hasło"
+                label={t.password}
                 type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={(event) => updateField('password', event.target.value)}
-                placeholder="Minimum 8 znaków"
+                placeholder={t.passwordPlaceholder}
                 icon={<IconLock />}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 name="betai_password"
@@ -3512,7 +3557,7 @@ function AuthView({ onAuth }) {
                     type="button"
                     className="auth481-eye"
                     onClick={() => setShowPassword(prev => !prev)}
-                    aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                    aria-label={showPassword ? t.hidePassword : t.showPassword}
                   >
                     <IconEye />
                   </button>
@@ -3522,19 +3567,19 @@ function AuthView({ onAuth }) {
               {mode === 'login' ? (
                 <div className="auth481-login-tools">
                   <button type="button" className="auth481-link-button" onClick={handleForgotPassword}>
-                    Nie pamiętasz hasła?
+                    {t.forgot}
                   </button>
-                  <span className="auth481-login-badge">Szyfrowane logowanie</span>
+                  <span className="auth481-login-badge">{t.encrypted}</span>
                 </div>
               ) : null}
 
               {mode === 'register' ? (
                 <AuthField
-                  label="Powtórz hasło"
+                  label={t.repeatPassword}
                   type={showRepeatPassword ? 'text' : 'password'}
                   value={form.repeatPassword}
                   onChange={(event) => updateField('repeatPassword', event.target.value)}
-                  placeholder="Powtórz swoje hasło"
+                  placeholder={t.repeatPasswordPlaceholder}
                   icon={<IconLock />}
                   autoComplete="new-password"
                   name="betai_repeat_password"
@@ -3543,7 +3588,7 @@ function AuthView({ onAuth }) {
                       type="button"
                       className="auth481-eye"
                       onClick={() => setShowRepeatPassword(prev => !prev)}
-                      aria-label={showRepeatPassword ? 'Ukryj powtórzone hasło' : 'Pokaż powtórzone hasło'}
+                      aria-label={showRepeatPassword ? t.hideRepeat : t.showRepeat}
                     >
                       <IconEye />
                     </button>
@@ -3560,7 +3605,7 @@ function AuthView({ onAuth }) {
                   />
                   <span className="auth481-checkmark" />
                   <span>
-                    Akceptuję <strong>Regulamin</strong> oraz <strong>Politykę prywatności</strong>
+                    {t.accept1} <strong>{t.terms}</strong> {t.accept2} <strong>{t.privacy}</strong>
                   </span>
                 </label>
               ) : null}
@@ -3572,7 +3617,7 @@ function AuthView({ onAuth }) {
             </form>
 
             <div className="auth481-social-block" aria-label="Social media Bet+AI">
-              <div className="auth481-social-heading">Śledź nas i dołącz do społeczności</div>
+              <div className="auth481-social-heading">{t.socialHeading}</div>
               <div className="auth481-social-row">
                 <a className="auth481-social-link is-telegram" href="#" aria-label="Telegram Bet+AI" title="Telegram">
                   <span className="auth481-social-icon"><IconTelegram /></span>
@@ -3606,12 +3651,12 @@ function AuthView({ onAuth }) {
             <div className="auth481-live-panel" aria-label="Realne statystyki live Bet+AI">
               <div className="auth481-live-panel-head">
                 <div>
-                  <span className="auth481-live-kicker">REALNE STATYSTYKI LIVE</span>
-                  <strong>Platforma żyje i odświeża dane na bieżąco</strong>
+                  <span className="auth481-live-kicker">{t.liveKicker}</span>
+                  <strong>{t.liveTitle}</strong>
                 </div>
                 <span className="auth481-live-badge">
                   <span className="auth481-live-dot" />
-                  LIVE
+                  {t.liveBadge}
                 </span>
               </div>
 
@@ -3630,8 +3675,8 @@ function AuthView({ onAuth }) {
               <div className="auth481-live-footnote">
                 <span className="auth481-live-footnote-dot" />
                 {liveStats.loading
-                  ? 'Ładowanie statystyk live...'
-                  : `Auto-odświeżanie co 30 s${liveStats.updatedAt ? ' • ostatnia aktualizacja ' + new Date(liveStats.updatedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : ''}`}
+                  ? t.liveLoading
+                  : `${t.liveRefresh}${liveStats.updatedAt ? ' • ' + t.lastUpdate + ' ' + new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang === 'de' ? 'de-DE' : authLang === 'es' ? 'es-ES' : authLang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : ''}`}
               </div>
             </div>
           </section>
@@ -3641,29 +3686,29 @@ function AuthView({ onAuth }) {
           <div className="auth481-feature-card">
             <span className="auth481-feature-icon"><IconShield /></span>
             <div>
-              <h3>Bezpieczne dane</h3>
-              <p>Twoje dane są u nas w pełni chronione.</p>
+              <h3>{t.safeData}</h3>
+              <p>{t.safeDataText}</p>
             </div>
           </div>
           <div className="auth481-feature-card">
             <span className="auth481-feature-icon"><IconBolt /></span>
             <div>
-              <h3>Szybka rejestracja</h3>
-              <p>Załóż konto w mniej niż 30 sekund.</p>
+              <h3>{t.fastRegister}</h3>
+              <p>{t.fastRegisterText}</p>
             </div>
           </div>
           <div className="auth481-feature-card">
             <span className="auth481-feature-icon"><IconChart /></span>
             <div>
-              <h3>Darmowe typy AI</h3>
-              <p>Codziennie nowe typy o wysokiej skuteczności.</p>
+              <h3>{t.freeAi}</h3>
+              <p>{t.freeAiText}</p>
             </div>
           </div>
           <div className="auth481-feature-card">
             <span className="auth481-feature-icon"><IconUsers /></span>
             <div>
-              <h3>Aktywna społeczność</h3>
-              <p>Tysiące typerów dzieli się wiedzą i wygrywa razem.</p>
+              <h3>{t.community}</h3>
+              <p>{t.communityText}</p>
             </div>
           </div>
         </div>
