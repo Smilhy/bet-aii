@@ -1,0 +1,1 @@
+Wersja 540: logowanie/rejestracja pozostaje w skali jak zoom 80%, a cała aplikacja po zalogowaniu — dashboard i wszystkie zakładki — działa w skali jak zoom 90%.
