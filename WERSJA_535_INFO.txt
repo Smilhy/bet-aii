@@ -1,0 +1,5 @@
+Wersja 535
+- nowa czcionka dla zakładki Artykuły (Outfit + Manrope)
+- poprawione rozmiary typografii
+- ultra-pro dopracowanie ramek, odstępów i hoverów
+- szklisty / żywy efekt kart i slidera

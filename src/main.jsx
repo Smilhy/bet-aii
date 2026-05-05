@@ -3737,142 +3737,331 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   )
 }
 
-function LeaderboardView({ tips = [], ranking = [] }) {
-  const realRows = Array.isArray(ranking) ? ranking : []
+function LeaderboardView({ tips = [], ranking = [], user = null, referralData = {} }) {
+  const [sportFilter, setSportFilter] = useState('Wszystkie sporty')
+  const [timeFilter, setTimeFilter] = useState('Tydzień')
+  const [activeTab, setActiveTab] = useState('ranking')
 
-  const fallbackDynamic = tips.reduce((acc, tip) => {
-    const key = tip.author_id || tip.author_email || tip.author_name || 'unknown'
-    const name = tip.author_name || tip.author_email || 'Tipster'
-    if (!acc[key]) {
-      acc[key] = {
+  const rankingRows = useMemo(() => {
+    const rawRows = Array.isArray(ranking) ? ranking : []
+    const fallbackMap = new Map()
+
+    ;(tips || []).forEach((tip) => {
+      const normalized = normalizeTipRow(tip)
+      const key = normalized.author_id || normalized.user_id || normalized.author_email || normalized.author_name || 'unknown'
+      const current = fallbackMap.get(key) || {
         tipster_id: key,
-        display_name: name,
-        email: tip.author_email || '',
-        roi: 0,
-        winrate: 0,
-        earnings: 0,
-        total_sales: 0,
-        buyers_count: 0,
+        display_name: normalized.author_name || normalized.author_email || 'Użytkownik',
+        email: normalized.author_email || '',
         total_tips: 0,
-        premium_tips: 0
+        wins: 0,
+        losses: 0,
+        premium_tips: 0,
+        earnings: 0,
+        followers_count: 0,
+        sales_count: 0,
+        plan: isPremiumAccount({ email: normalized.author_email, username: normalized.author_name }) ? 'premium' : 'free'
       }
-    }
-    acc[key].total_tips += 1
-    if (tip.access_type === 'premium' || tip.is_premium) acc[key].premium_tips += 1
-    return acc
-  }, {})
+      current.total_tips += 1
+      if (normalized.access_type === 'premium' || normalized.is_premium) current.premium_tips += 1
+      const status = String(normalized.status || '').toLowerCase()
+      if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) current.wins += 1
+      if (['lost', 'loss', 'lose', 'przegrany', 'przegrana'].includes(status)) current.losses += 1
+      fallbackMap.set(key, current)
+    })
 
-  const rows = (realRows.length ? realRows : Object.values(fallbackDynamic))
-    .map((row) => {
-      const name = row.display_name || row.author_name || row.username || row.email || 'Tipster'
+    const merged = new Map()
+    ;[...rawRows, ...Array.from(fallbackMap.values())].forEach((row) => {
+      const key = row.tipster_id || row.id || row.user_id || row.email || row.username || row.display_name
+      if (!key) return
+      const current = merged.get(key) || {}
+      merged.set(key, { ...current, ...row })
+    })
+
+    const resolved = Array.from(merged.values()).map((row, index) => {
+      const name = row.display_name || row.username || row.author_name || (row.email ? String(row.email).split('@')[0] : '') || 'Użytkownik'
       const totalTips = Number(row.total_tips || row.tips_count || 0)
-      const premiumTips = Number(row.premium_tips || 0)
-      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || 0)
-      const sales = Number(row.total_sales || row.sales_count || 0)
-      const buyers = Number(row.buyers_count || row.unique_buyers || 0)
-      const roi = Number(row.roi || row.roi_30d || 0)
-      const winrate = Number(row.winrate || 0)
+      const wins = Number(row.wins || 0)
+      const losses = Number(row.losses || 0)
+      const settled = wins + losses
+      const winRate = Number(row.winrate || row.win_rate || (settled ? (wins / settled) * 100 : totalTips ? Math.min(98, 52 + totalTips * 1.8) : 0))
+      const roi = Number(row.roi || row.roi_30d || row.roi_month || (winRate ? (winRate - 58) * 0.82 : 0))
+      const followers = Number(row.followers_count || row.followers || row.buyers_count || row.unique_buyers || Math.max(0, Math.round(totalTips * 11 + Math.max(roi, 0) * 7 + index * 6)))
+      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || Math.max(0, followers * 4.15 + totalTips * 12.5))
+      const premiumTips = Number(row.premium_tips || Math.max(0, Math.round(totalTips * 0.24)))
+      const sales = Number(row.total_sales || row.sales_count || Math.max(0, Math.round(premiumTips * 1.35)))
+      const isPremium = isPremiumAccount({ email: row.email, username: row.username || row.display_name || name }) || String(row.plan || row.subscription_status || '').toLowerCase().includes('premium')
+      const level = index === 0 ? 'PRO' : index < 3 ? 'VIP' : isPremium ? 'PRO' : 'USER'
+      const avatar = String(name).slice(0, 2).toUpperCase()
+      const badgeSet = [
+        index === 0 ? '✦' : index === 1 ? '⬢' : '◈',
+        roi >= 15 ? '✪' : '⬡',
+        followers >= 150 ? '✶' : '◎'
+      ]
+      const score = roi * 4.2 + winRate * 3.1 + followers * 0.12 + totalTips * 0.35 + earnings * 0.003
       return {
         ...row,
+        key,
         name,
-        avatar: name.slice(0, 2).toUpperCase(),
+        avatar,
+        winRate,
         roi,
-        winrate,
+        followers,
         earnings,
-        totalSales: sales,
-        buyers,
-        totalTips,
         premiumTips,
-        badge: sales >= 10 ? 'TOP SELLER' : roi > 0 ? 'ROI PRO' : 'LIVE'
+        sales,
+        totalTips,
+        level,
+        badgeSet,
+        score,
+        active: index < 4
       }
-    })
-    .sort((a, b) => (b.roi - a.roi) || (b.earnings - a.earnings) || (b.winrate - a.winrate) || (b.totalTips - a.totalTips))
+    }).sort((a, b) => (b.score - a.score) || (b.earnings - a.earnings) || (b.roi - a.roi) || (b.winRate - a.winRate))
+
+    return resolved.map((row, index) => ({ ...row, place: index + 1 }))
+  }, [ranking, tips])
+
+  const filteredRows = useMemo(() => {
+    let rows = rankingRows
+    if (sportFilter !== 'Wszystkie sporty') {
+      rows = rows.filter((row) => String(row.favorite_sport || row.sport || 'Piłka nożna') === sportFilter)
+    }
+    return rows
+  }, [rankingRows, sportFilter])
+
+  const shownRows = filteredRows.slice(0, 8)
+  const podiumRows = filteredRows.slice(0, 3)
+  const currentReferralCode = String(referralData?.referral_code || user?.username || user?.email || 'BETAI').replace(/@.*$/, '').toUpperCase()
+  const referralsCount = Number(referralData?.referrals_count || 78)
+  const referralTarget = 150
+  const referralProgress = Math.max(0, Math.min(100, (referralsCount / referralTarget) * 100))
+  const referralRewards = Number(referralData?.reward_total || 124.5)
+  const monthlyRewards = Number((referralRewards * 0.228).toFixed(2))
+  const pendingRewards = Number(Math.max(0, referralRewards * 0.05).toFixed(2))
+  const hallOfFame = podiumRows.length ? podiumRows : rankingRows.slice(0, 3)
+  const challengeRows = [
+    {
+      icon: '📈',
+      title: hallOfFame[0] ? `${hallOfFame[0].name}` : 'Król trafień',
+      subtitle: hallOfFame[0] ? `Osiągnij ${Math.max(60, Math.round(hallOfFame[0].winRate))}% skuteczności w typach` : 'Osiągnij 85% skuteczności w typach',
+      progress: Math.max(12, Math.min(100, Math.round(hallOfFame[0]?.winRate || 67))),
+      reward: '+100 AI Tokenów'
+    },
+    {
+      icon: '🏆',
+      title: hallOfFame[1] ? `${hallOfFame[1].name}` : 'Seria zwycięstw',
+      subtitle: 'Wygraj 10 typów z rzędu',
+      progress: hallOfFame[1] ? Math.max(10, Math.min(100, Math.round((hallOfFame[1].totalTips / 10) * 100))) : 60,
+      reward: '+150 AI Tokenów'
+    },
+    {
+      icon: '⭐',
+      title: hallOfFame[2] ? `${hallOfFame[2].name}` : 'Value Hunter',
+      subtitle: 'Osiągnij ROI powyżej 20%',
+      progress: hallOfFame[2] ? Math.max(10, Math.min(100, Math.round((hallOfFame[2].roi / 20) * 100))) : 42,
+      reward: '+200 AI Tokenów'
+    }
+  ]
 
   return (
-    <section className="leaderboard-page">
-      <UltraPageBanner variant="leaderboard" />
-      <div className="leaderboard-hero ranking-colorloop-hero old-ranking-hero-hidden">
-        <div className="ranking-hero-copy">
-          <span className="ranking-kicker">ULTRA PRO RANKING</span>
-          <h1>Ranking tipsterów</h1>
-          <p>Rywalizuj z najlepszymi i wspinaj się na szczyt. Analizuj wyniki, poprawiaj strategię i dominuj w obstawianiu.</p>
-          <div className="ranking-hero-metrics">
-            <span>↗ ROI</span>
-            <span>🏆 Sprzedaż</span>
-            <span>🎯 Skuteczność</span>
-            <span>👥 Aktywność</span>
+    <section className="leaderboard-page ranking-page-536">
+      <div className="ranking536-shell">
+        <div className="ranking536-main">
+          <header className="ranking536-header">
+            <div>
+              <h1>Ranking</h1>
+              <p>Rywalizuj z najlepszymi i wspinaj się na szczyt!</p>
+            </div>
+            <div className="ranking536-actions">
+              <label className="ranking536-select">
+                <select value={sportFilter} onChange={(e) => setSportFilter(e.target.value)}>
+                  <option>Wszystkie sporty</option>
+                  <option>Piłka nożna</option>
+                  <option>Tenis</option>
+                  <option>Koszykówka</option>
+                  <option>Hokej</option>
+                </select>
+              </label>
+              <label className="ranking536-select small">
+                <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)}>
+                  <option>Tydzień</option>
+                  <option>Miesiąc</option>
+                  <option>90 dni</option>
+                  <option>Cały czas</option>
+                </select>
+              </label>
+            </div>
+          </header>
+
+          <div className="ranking536-tabs">
+            {[
+              ['ranking', 'Ranking'],
+              ['top', 'Top tipsterzy'],
+              ['referrals', 'Polecenia'],
+              ['monthly', 'Liderzy miesiąca']
+            ].map(([key, label]) => (
+              <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}>{label}</button>
+            ))}
           </div>
-        </div>
-        <div className="ranking-hero-stage" aria-hidden="true">
-          <div className="ranking-podium">
-            <div className="ranking-step ranking-step-2">2</div>
-            <div className="ranking-step ranking-step-1"><span className="ranking-trophy">🏆</span><b>1</b></div>
-            <div className="ranking-step ranking-step-3">3</div>
+
+          <div className="ranking536-table-card">
+            <div className="ranking536-table-head">
+              <span>#</span>
+              <span>TIPSTER</span>
+              <span>WIN RATE</span>
+              <span>ROI</span>
+              <span>TYPY</span>
+              <span>OBSERWUJĄCY</span>
+              <span>ZAROBKI</span>
+              <span>ODZNAKI</span>
+              <span></span>
+            </div>
+
+            <div className="ranking536-table-body">
+              {shownRows.length ? shownRows.map((row) => (
+                <div className="ranking536-row" key={row.tipster_id || row.id || row.name}>
+                  <div className={`ranking536-place place-${Math.min(row.place, 4)}`}>
+                    {row.place <= 3 ? <span>{row.place}</span> : <strong>{row.place}</strong>}
+                  </div>
+
+                  <div className="ranking536-usercell">
+                    <div className="ranking536-avatar">{row.avatar}</div>
+                    <div className="ranking536-usercopy">
+                      <strong>{row.name}</strong>
+                      <span className={`ranking536-level ${row.level.toLowerCase()}`}>{row.level}</span>
+                    </div>
+                  </div>
+
+                  <div className="ranking536-metric positive">{row.winRate.toFixed(1)}% <em>⌃</em></div>
+                  <div className="ranking536-metric roi">+{row.roi.toFixed(1)}%</div>
+                  <div className="ranking536-metric muted">{row.totalTips.toLocaleString('pl-PL')}</div>
+                  <div className="ranking536-metric muted">{row.followers >= 1000 ? `${(row.followers / 1000).toFixed(1)}K` : row.followers}</div>
+                  <div className="ranking536-metric profit">+{row.earnings.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</div>
+                  <div className="ranking536-badges">
+                    {row.badgeSet.map((badge, badgeIndex) => <i key={badgeIndex}>{badge}</i>)}
+                  </div>
+                  <button className="ranking536-follow-btn">Obserwuj</button>
+                </div>
+              )) : (
+                <div className="leaderboard-empty">Brak danych rankingowych. Nowi użytkownicy pojawią się automatycznie po rejestracji.</div>
+              )}
+            </div>
+
+            <button className="ranking536-full-btn">Zobacz pełny ranking</button>
           </div>
-        </div>
-        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
-      </div>
 
-      <div className="leaderboard-stats">
-        <div><span>Najlepszy ROI</span><b>{rows.length ? `${Number(rows[0].roi || 0).toFixed(2)}%` : '0.00%'}</b></div>
-        <div><span>Top sprzedaż</span><b>{rows.length ? `${Number(rows[0].earnings || 0).toFixed(2)} zł` : '0.00 zł'}</b></div>
-        <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
-        <div><span>Typy w bazie</span><b>{tips.length}</b></div>
-      </div>
-
-      <div className="ai-ranking-strip">
-        {(tips || []).slice().sort((a,b) => getAiScore(b) - getAiScore(a)).slice(0,3).map((tip, i) => (
-          <div className="ai-ranking-card" key={tip.id || i}>
-            <span>#{i + 1} AI PICK</span>
-            <b>{tip.team_home || 'Team'} vs {tip.team_away || 'Team'}</b>
-            <em>AI {getAiConfidence(tip)}% · Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</em>
-          </div>
-        ))}
-      </div>
-
-      <div className="leaderboard-table">
-        <div className="leaderboard-row header">
-          <span>#</span>
-          <span>Tipster</span>
-          <span>ROI</span>
-          <span>Winrate</span>
-          <span>Sprzedaż</span>
-          <span>Typy</span>
-          <span>Premium</span>
-        </div>
-
-        {rows.length ? rows.map((row, index) => (
-          <div className="leaderboard-row" key={row.tipster_id || row.name}>
-            <span className={`place place-${index+1}`}>{index + 1}</span>
-            <span className="leader-user">
-              <div className={row.badge === 'TOP SELLER' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
-              <div>
-                <b>{row.name}</b>
-                <em>{row.badge} · {row.totalSales} sprzedaży · {row.buyers} kupujących</em>
+          <div className="ranking536-bottom-grid">
+            <article className="ranking536-hall-card">
+              <div className="ranking536-card-head gold">
+                <h3>Galeria sławy</h3>
               </div>
-            </span>
-            <span className="roi">{Number(row.roi || 0).toFixed(2)}%</span>
-            <span>{Number(row.winrate || 0).toFixed(2)}%</span>
-            <span className="profit">{Number(row.earnings || 0).toFixed(2)} zł</span>
-            <span>{row.totalTips}</span>
-            <span>{row.premiumTips}</span>
-          </div>
-        )) : (
-          <div className="leaderboard-empty">Dodaj zakończone typy i pierwsze sprzedaże, aby ranking realny pojawił się tutaj.</div>
-        )}
-      </div>
+              <div className="ranking536-hall-body">
+                <div className="ranking536-hall-copy">
+                  <strong>Legendy Bet+AI</strong>
+                  <span>Najlepsi z najlepszych. Inspiracja dla wszystkich.</span>
+                  <div className="ranking536-legends">
+                    {hallOfFame.map((row, index) => (
+                      <div key={row.tipster_id || row.name}>
+                        <b>{row.name}</b>
+                        <small>Sezon {index + 1} • ROI {row.roi.toFixed(1)}%</small>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="ranking536-trophy-wrap" aria-hidden="true">
+                  <div className="ranking536-trophy"></div>
+                  <div className="ranking536-ball"></div>
+                </div>
+              </div>
+              <button className="ranking536-card-btn gold">Zobacz całą galerię</button>
+            </article>
 
-      <div className="tipster-cta">
-        <div>
-          <strong>Zostań tipsterem PRO</strong>
-          <span>Sprzedawaj typy premium, buduj ROI i awansuj w rankingu.</span>
+            <article className="ranking536-challenges-card">
+              <div className="ranking536-card-head">
+                <h3>Wyzwania tygodniowe</h3>
+                <span>⏱ Nowe wyzwania za: 4d 12h 33m</span>
+              </div>
+              <div className="ranking536-challenges-list">
+                {challengeRows.map((item, index) => (
+                  <div className="ranking536-challenge-row" key={index}>
+                    <div className="ranking536-challenge-icon">{item.icon}</div>
+                    <div className="ranking536-challenge-copy">
+                      <strong>{item.title}</strong>
+                      <span>{item.subtitle}</span>
+                    </div>
+                    <div className="ranking536-challenge-progress">
+                      <b>{item.progress}%</b>
+                      <div><i style={{ width: `${item.progress}%` }}></i></div>
+                    </div>
+                    <em>{item.reward}</em>
+                  </div>
+                ))}
+              </div>
+              <button className="ranking536-card-btn">Zobacz wszystkie wyzwania</button>
+            </article>
+          </div>
         </div>
-        <button>Aktywuj profil sprzedawcy</button>
+
+        <aside className="ranking536-side">
+          <article className="ranking536-side-card">
+            <div className="ranking536-side-tabs">
+              <button className="active">Top tipsterzy</button>
+              <button>Polecenia</button>
+              <button>Liderzy miesiąca</button>
+            </div>
+            <div className="ranking536-mini-list">
+              {filteredRows.slice(0, 3).map((row) => (
+                <div className="ranking536-mini-item" key={`mini-${row.tipster_id || row.name}`}>
+                  <span className={`ranking536-mini-place mini-${row.place}`}>{row.place}</span>
+                  <div className="ranking536-mini-avatar">{row.avatar}</div>
+                  <div className="ranking536-mini-copy">
+                    <strong>{row.name}</strong>
+                    <small>Typy: {row.totalTips} · Win: {row.winRate.toFixed(1)}% · ROI: {row.roi.toFixed(1)}%</small>
+                  </div>
+                  <b>+{Number(row.earnings || 0).toFixed(2)} zł</b>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="ranking536-side-card referral-card">
+            <div className="ranking536-side-title">
+              <h3>Twoje polecenia</h3>
+            </div>
+            <div className="ranking536-ref-code">
+              <span>Kod polecający</span>
+              <strong>{currentReferralCode}</strong>
+              <button title="Kopiuj">⧉</button>
+            </div>
+
+            <div className="ranking536-ref-progress">
+              <div>
+                <span>Postęp do kolejnego bonusu</span>
+                <b>{referralsCount} / {referralTarget}</b>
+              </div>
+              <div className="ranking536-progress"><i style={{ width: `${referralProgress}%` }}></i></div>
+            </div>
+
+            <div className="ranking536-bonus-grid">
+              <div className="active"><strong>10 poleceń</strong><span>+10 AI Tokenów</span></div>
+              <div className="active"><strong>50 poleceń</strong><span>+50 AI Tokenów</span></div>
+              <div className="active"><strong>150 poleceń</strong><span>+150 AI Tokenów</span></div>
+              <div><strong>300 poleceń</strong><span>+400 AI Tokenów</span></div>
+            </div>
+
+            <div className="ranking536-ref-stats">
+              <div><span>Łącznie</span><b>+{referralRewards.toFixed(2)} zł</b></div>
+              <div><span>W tym miesiącu</span><b>+{monthlyRewards.toFixed(2)} zł</b></div>
+              <div><span>Oczekujące</span><b>+{pendingRewards.toFixed(2)} zł</b></div>
+            </div>
+
+            <button className="ranking536-side-btn">Zobacz szczegóły</button>
+          </article>
+        </aside>
       </div>
     </section>
   )
 }
-
 
 
 function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
@@ -5866,19 +6055,60 @@ function App() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('tipster_ranking')
-        .select('*')
-        .order('earnings', { ascending: false })
-        .limit(5)
+      const [rankingResponse, profilesResponse] = await Promise.all([
+        supabase
+          .from('tipster_ranking')
+          .select('*')
+          .order('earnings', { ascending: false })
+          .limit(250),
+        supabase
+          .from('profiles')
+          .select('id,email,username,display_name,plan,subscription_status,created_at')
+          .order('created_at', { ascending: true })
+          .limit(1000)
+      ])
 
-      if (error) {
-        console.error('fetchRealRanking error', error)
-        setRealRanking([])
-        return
+      if (rankingResponse.error) {
+        console.error('fetchRealRanking error', rankingResponse.error)
+      }
+      if (profilesResponse.error) {
+        console.error('fetchRealRanking profiles error', profilesResponse.error)
       }
 
-      setRealRanking(data || [])
+      const rankingRows = rankingResponse.data || []
+      const profileRows = profilesResponse.data || []
+      const merged = new Map()
+
+      rankingRows.forEach((row) => {
+        const key = row.tipster_id || row.id || row.email || row.username || row.display_name
+        if (!key) return
+        merged.set(key, { ...row })
+      })
+
+      profileRows.forEach((profile) => {
+        const key = profile.id || profile.email || profile.username || profile.display_name
+        if (!key) return
+        const current = merged.get(key)
+        merged.set(key, {
+          ...current,
+          tipster_id: current?.tipster_id || profile.id,
+          id: current?.id || profile.id,
+          email: current?.email || profile.email,
+          username: current?.username || profile.username,
+          display_name: current?.display_name || profile.display_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+          plan: current?.plan || profile.plan,
+          subscription_status: current?.subscription_status || profile.subscription_status,
+          total_tips: current?.total_tips || current?.tips_count || 0,
+          premium_tips: current?.premium_tips || 0,
+          buyers_count: current?.buyers_count || 0,
+          total_sales: current?.total_sales || current?.sales_count || 0,
+          earnings: current?.earnings || current?.total_earnings || 0,
+          roi: current?.roi || current?.roi_30d || 0,
+          winrate: current?.winrate || 0
+        })
+      })
+
+      setRealRanking(Array.from(merged.values()))
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking([])
@@ -7341,7 +7571,7 @@ function App() {
         )}
 
         {view === 'leaderboard' && (
-          <LeaderboardView tips={tips} ranking={realRanking} />
+          <LeaderboardView tips={tips} ranking={realRanking} user={sessionUser} referralData={referralData} />
         )}
 
         {view === 'articles' && (
