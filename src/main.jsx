@@ -682,7 +682,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
   const matchesToday = Math.max(tips.length || 0, 50)
   const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
