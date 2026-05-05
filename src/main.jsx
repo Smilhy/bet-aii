@@ -5407,9 +5407,7 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
           aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
           title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
         >
-          <span className="betai-language-flag" aria-hidden="true">
-            <img src={BETAI_LANG_FLAG_IMAGES?.[code]} alt="" className="betai-language-flag-img" loading="lazy" />
-          </span>
+          <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
         </button>
       ))}
     </div>
