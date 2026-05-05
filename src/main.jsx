@@ -2599,21 +2599,25 @@ function ArticlesView() {
   const [articles, setArticles] = useState([])
   const [loadingArticles, setLoadingArticles] = useState(true)
   const [articlesError, setArticlesError] = useState('')
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [articleQuery, setArticleQuery] = useState('')
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [topTab, setTopTab] = useState('Artykuły')
+  const [featureIndex, setFeatureIndex] = useState(0)
+  const [tvDay, setTvDay] = useState('Dziś')
+  const [liveSport, setLiveSport] = useState('Wszystkie')
 
   async function loadArticles(silent = false) {
     if (!silent) setLoadingArticles(true)
     setArticlesError('')
     try {
-      const response = await fetch('/.netlify/functions/sportpl-articles?limit=30&t=' + Date.now(), {
+      const response = await fetch('/.netlify/functions/sportpl-articles?limit=24&t=' + Date.now(), {
         headers: { 'Accept': 'application/json' }
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać artykułów Sport.pl')
-      setArticles(Array.isArray(data.articles) ? data.articles : [])
+      const list = Array.isArray(data.articles) ? data.articles : []
+      setArticles(list)
       setLastUpdated(data.updatedAt || new Date().toISOString())
+      setFeatureIndex(prev => (list.length ? Math.min(prev, Math.max(0, list.length - 1)) : 0))
     } catch (error) {
       setArticlesError(error.message || 'Nie udało się pobrać artykułów')
     } finally {
@@ -2623,118 +2627,248 @@ function ArticlesView() {
 
   useEffect(() => {
     loadArticles(false)
-    const timer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
-    return () => clearInterval(timer)
+    const refreshTimer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
+    return () => clearInterval(refreshTimer)
   }, [])
 
-  const categories = useMemo(() => {
-    const set = new Set((articles || []).map(item => item.category || 'Sport').filter(Boolean))
-    return ['all', ...Array.from(set).slice(0, 8)]
+  const normalizedArticles = useMemo(() => {
+    return (articles || []).map((article, index) => ({
+      ...article,
+      id: article.id || article.url || String(index),
+      image: article.image || '',
+      category: article.category || 'Sport',
+      excerpt: article.excerpt || 'Kliknij, aby przejść do pełnego materiału w Sport.pl.',
+      badge: index === 0 ? 'TRENDING' : (article.category || 'NEWS').toUpperCase()
+    }))
   }, [articles])
 
-  const filteredArticles = useMemo(() => {
-    const q = articleQuery.trim().toLowerCase()
-    return (articles || []).filter(article => {
-      if (activeCategory !== 'all' && article.category !== activeCategory) return false
-      if (!q) return true
-      return [article.title, article.excerpt, article.category, article.author].filter(Boolean).join(' ').toLowerCase().includes(q)
-    })
-  }, [articles, activeCategory, articleQuery])
+  const featureSlides = normalizedArticles.slice(0, 5)
+  const latestArticles = normalizedArticles.slice(1, 5)
 
-  const mainArticle = filteredArticles[0]
-  const sideArticles = filteredArticles.slice(1, 4)
-  const listArticles = filteredArticles.slice(4)
+  useEffect(() => {
+    if (featureSlides.length <= 1) return
+    const slider = setInterval(() => setFeatureIndex(prev => (prev + 1) % featureSlides.length), 5500)
+    return () => clearInterval(slider)
+  }, [featureSlides.length])
 
-  const formatArticleDate = (value) => {
+  useEffect(() => {
+    setFeatureIndex(0)
+  }, [topTab])
+
+  const activeSlide = featureSlides[featureIndex] || normalizedArticles[0] || {
+    title: 'Sport.pl — najnowsze wiadomości sportowe',
+    excerpt: 'Połączony moduł artykułów oczekuje na pobranie danych RSS.',
+    url: 'https://www.sport.pl/',
+    image: '',
+    category: 'Sport',
+    badge: 'TRENDING'
+  }
+
+  const sectionCopy = {
+    'Artykuły': 'Artykuły',
+    'News': 'News',
+    'TV / PPV': 'TV / PPV',
+    'Wyniki live': 'Wyniki live'
+  }
+
+  const tvSchedule = {
+    'Dziś': [
+      { time: '18:30', channel: 'CANAL+ SPORT', match: 'Manchester City – Arsenal', league: 'Premier League', live: true },
+      { time: '20:45', channel: 'ELEVEN SPORTS', match: 'Inter – Juventus', league: 'Serie A', live: true },
+      { time: '21:00', channel: 'polsat sport premium', match: 'Real Madryt – Betis', league: 'LaLiga', live: true },
+      { time: '21:00', channel: 'TVP SPORT', match: 'Lech – Legia', league: 'PKO BP Ekstraklasa', live: true },
+      { time: '23:15', channel: 'CANAL+ SPORT', match: 'NBA: Lakers – Nuggets', league: 'Playoffs', live: true }
+    ],
+    'Jutro': [
+      { time: '17:30', channel: 'CANAL+ SPORT', match: 'Tottenham – Liverpool', league: 'Premier League', live: false },
+      { time: '19:00', channel: 'ELEVEN SPORTS', match: 'Barcelona – Real Sociedad', league: 'LaLiga', live: false },
+      { time: '20:30', channel: 'TVP SPORT', match: 'Raków – Jagiellonia', league: 'Ekstraklasa', live: false },
+      { time: '21:00', channel: 'polsat sport premium', match: 'PSG – Lyon', league: 'Ligue 1', live: false },
+      { time: '22:15', channel: 'CANAL+ SPORT', match: 'Roma – Milan', league: 'Serie A', live: false }
+    ],
+    'Śr 17.05': [
+      { time: '18:45', channel: 'CANAL+ SPORT', match: 'Bayern – Dortmund', league: 'Bundesliga', live: false },
+      { time: '20:00', channel: 'ELEVEN SPORTS', match: 'Chelsea – Newcastle', league: 'Premier League', live: false },
+      { time: '20:45', channel: 'TVP SPORT', match: 'Polska – Niemcy', league: 'Towarzyski', live: false },
+      { time: '21:00', channel: 'polsat sport premium', match: 'Atletico – Sevilla', league: 'LaLiga', live: false },
+      { time: '22:00', channel: 'CANAL+ SPORT', match: 'Monaco – Marseille', league: 'Ligue 1', live: false }
+    ]
+  }
+
+  const ppvEvents = [
+    { time: '20.05.2024 • 22:00', title: 'Usyk vs Fury', subtitle: 'Walka o wszystkie pasy', price: '49.00 zł', tag: 'PPV' },
+    { time: '02.06.2024 • 04:00', title: 'UFC 302', subtitle: 'Makhachev vs Poirier', price: '49.00 zł', tag: 'PPV' },
+    { time: '08.06.2024 • 19:00', title: 'KSW 94', subtitle: 'Stadion Narodowy, Warszawa', price: '39.00 zł', tag: 'PPV' }
+  ]
+
+  const liveSports = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'Siatkówka', 'Dart']
+  const liveMatches = [
+    { sport: 'Piłka nożna', league: 'PREMIER LEAGUE', minute: '86′', home: 'Tottenham', away: 'Liverpool', homeScore: 2, awayScore: 1, homeInfo: '23′ Son', awayInfo: '17′ Salah', odds: ['1 2.45', 'X 3.40', '2 2.80'], delta: '+123' },
+    { sport: 'Piłka nożna', league: 'SERIE A', minute: 'HT', home: 'Inter', away: 'Juventus', homeScore: 1, awayScore: 0, homeInfo: '15′ Lautaro (k.)', awayInfo: '37′ Bremer', odds: ['1 1.90', 'X 3.50', '2 4.20'], delta: '+98' },
+    { sport: 'Piłka nożna', league: 'LALIGA', minute: '62′', home: 'Barcelona', away: 'Real Sociedad', homeScore: 3, awayScore: 2, homeInfo: '9′ Lewandowski', awayInfo: '49′ Oyarzabal', odds: ['1 1.90', 'X 4.20', '2 5.20'], delta: '+112' },
+    { sport: 'Piłka nożna', league: 'BUNDESLIGA', minute: '71′', home: 'Leverkusen', away: 'Bayern', homeScore: 1, awayScore: 1, homeInfo: '16′ Wirtz', awayInfo: '45+2′ Kane', odds: ['1 2.10', 'X 3.60', '2 3.40'], delta: '+107' }
+  ]
+
+  const visibleLiveMatches = liveSport === 'Wszystkie' ? liveMatches : liveMatches.filter(match => match.sport === liveSport)
+
+  const formatRelative = (value) => {
     if (!value) return 'Teraz'
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return 'Teraz'
-    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    const diff = Math.max(0, Date.now() - date.getTime())
+    const minutes = Math.round(diff / 60000)
+    if (minutes < 60) return `${Math.max(1, minutes)} min temu`
+    const hours = Math.round(minutes / 60)
+    if (hours < 24) return `${hours}h temu`
+    const days = Math.round(hours / 24)
+    return `${days}d temu`
   }
 
-  return (
-    <section className="articles-page">
-      <UltraPageBanner variant="articles"><button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button></UltraPageBanner>
-      <div className="articles-hero articles-hero-compact">
-        <div>
-          <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
-          <h1>Artykuły</h1>
-          <div className="articles-meta-row">
-            <em>Auto refresh: 10 min</em>
-            <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
-          </div>
-        </div>
-        <button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button>
-      </div>
+  const nextSlide = () => setFeatureIndex(prev => (prev + 1) % Math.max(1, featureSlides.length))
+  const prevSlide = () => setFeatureIndex(prev => (prev - 1 + Math.max(1, featureSlides.length)) % Math.max(1, featureSlides.length))
 
-      <div className="articles-toolbar">
-        <label className="articles-search">
-          <span>⌕</span>
-          <input value={articleQuery} onChange={event => setArticleQuery(event.target.value)} placeholder="Szukaj artykułów, drużyn, lig..." />
-        </label>
-        <div className="articles-categories">
-          {categories.map(category => (
-            <button key={category} className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)}>
-              {category === 'all' ? 'Wszystkie' : category}
-            </button>
-          ))}
-        </div>
+  return (
+    <section className="articles-page articles-page-pro">
+      <div className="articles-pro-tabs">
+        {Object.keys(sectionCopy).map(tab => (
+          <button key={tab} type="button" className={topTab === tab ? 'active' : ''} onClick={() => setTopTab(tab)}>
+            {tab}
+          </button>
+        ))}
       </div>
 
       {articlesError && <div className="articles-error">⚠️ {articlesError}</div>}
       {loadingArticles && !articles.length && <div className="articles-loading">Ładowanie artykułów Sport.pl...</div>}
 
-      {!loadingArticles && !filteredArticles.length && (
-        <div className="articles-empty">
-          <strong>Brak artykułów dla tego filtra</strong>
-          <span>Zmień kategorię albo wyczyść wyszukiwarkę.</span>
-        </div>
-      )}
-
-      {mainArticle && (
-        <div className="articles-featured-grid">
-          <a className="article-main-card" href={mainArticle.url} target="_blank" rel="noreferrer">
-            <div className="article-image-wrap">
-              {mainArticle.image ? <img src={mainArticle.image} alt="" loading="lazy" /> : <div className="article-image-placeholder">Sport.pl</div>}
-              <span>{mainArticle.category || 'Sport'}</span>
+      <div className="articles-pro-grid">
+        <div className="articles-pro-main">
+          <div className="articles-showcase-card">
+            <button type="button" className="showcase-nav left" onClick={prevSlide} aria-label="Poprzedni slajd">‹</button>
+            <a className="showcase-main-link" href={activeSlide.url} target="_blank" rel="noreferrer">
+              <div className="showcase-copy">
+                <span className="showcase-badge">{activeSlide.badge || 'TRENDING'}</span>
+                <h2>{activeSlide.title}</h2>
+                <p>{activeSlide.excerpt || 'Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.'}</p>
+                <strong>Czytaj artykuł</strong>
+              </div>
+              <div className="showcase-visual">
+                {activeSlide.image ? <img src={activeSlide.image} alt="" loading="lazy" /> : <div className="showcase-placeholder">Sport.pl</div>}
+                <div className="showcase-vs">VS</div>
+              </div>
+            </a>
+            <button type="button" className="showcase-nav right" onClick={nextSlide} aria-label="Następny slajd">›</button>
+            <div className="showcase-dots">
+              {featureSlides.map((slide, index) => (
+                <button key={slide.id || index} type="button" className={featureIndex === index ? 'active' : ''} onClick={() => setFeatureIndex(index)} aria-label={`Slajd ${index + 1}`}></button>
+              ))}
             </div>
-            <div className="article-main-content">
-              <em>{formatArticleDate(mainArticle.publishedAt)} • Sport.pl</em>
-              <h2>{mainArticle.title}</h2>
-              <p>{mainArticle.excerpt || 'Kliknij, aby przeczytać pełny artykuł w Sport.pl.'}</p>
-              <strong>Czytaj artykuł ↗</strong>
-            </div>
-          </a>
+          </div>
 
-          <div className="article-side-list">
-            {sideArticles.map(article => (
-              <a className="article-side-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
-                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-mini-placeholder">S</div>}
-                <div>
-                  <span>{article.category || 'Sport'} • {formatArticleDate(article.publishedAt)}</span>
-                  <h3>{article.title}</h3>
+          <div className="articles-pro-section-header">
+            <h3>Najnowsze artykuły</h3>
+            <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz wszystkie</a>
+          </div>
+
+          <div className="articles-latest-pro-grid">
+            {latestArticles.map((article, index) => (
+              <a key={article.id || article.url || index} className="article-pro-card" href={article.url} target="_blank" rel="noreferrer">
+                <div className="article-pro-thumb">
+                  {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
+                  <span>{index === 0 ? 'ANALIZA' : index === 1 ? 'ZAPOWIEDŹ' : index === 2 ? 'TYPY AI' : 'WYWIAD'}</span>
+                </div>
+                <div className="article-pro-body">
+                  <em>{formatRelative(article.publishedAt)}</em>
+                  <h4>{article.title}</h4>
+                  <p>{article.excerpt}</p>
+                  <div className="article-pro-meta"><span>◔ {Math.max(15, 24 - index * 3)}</span><span>◌ Komentarze</span></div>
                 </div>
               </a>
             ))}
           </div>
-        </div>
-      )}
 
-      <div className="articles-grid">
-        {listArticles.map(article => (
-          <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
-            <div className="article-card-image">
-              {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
-              <span>{article.category || 'Sport'}</span>
+          <div className="live-pro-panel">
+            <div className="articles-pro-section-header with-action">
+              <h3>Wyniki live</h3>
+              <button type="button">⚙ Ustawienia</button>
             </div>
-            <div className="article-card-body">
-              <em>{formatArticleDate(article.publishedAt)}</em>
-              <h3>{article.title}</h3>
-              <p>{article.excerpt || 'Krótki opis artykułu pojawi się po pobraniu danych.'}</p>
+            <div className="live-sport-filters">
+              {liveSports.map(label => (
+                <button key={label} type="button" className={liveSport === label ? 'active' : ''} onClick={() => setLiveSport(label)}>{label}</button>
+              ))}
             </div>
-          </a>
-        ))}
+            <div className="live-cards-grid">
+              {visibleLiveMatches.map((match, index) => (
+                <div className="live-match-card" key={match.home + match.away + index}>
+                  <div className="live-card-top"><span>{match.league}</span><em>{match.minute}</em></div>
+                  <div className="live-score-row">
+                    <div><strong>{match.home}</strong></div>
+                    <b>{match.homeScore} : {match.awayScore}</b>
+                    <div><strong>{match.away}</strong></div>
+                  </div>
+                  <div className="live-info-row"><span>{match.homeInfo}</span><span>{match.awayInfo}</span></div>
+                  <div className="live-odds-row">
+                    {match.odds.map(value => <span key={value}>{value}</span>)}
+                    <strong>{match.delta}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="live-more-btn">↻ Pokaż więcej meczów na żywo</button>
+          </div>
+        </div>
+
+        <aside className="articles-pro-side">
+          <div className="articles-side-card tv-live-card">
+            <div className="articles-side-header">
+              <h3>TV / Na żywo</h3>
+              <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz pełen program</a>
+            </div>
+            <div className="tv-day-tabs">
+              {Object.keys(tvSchedule).map(day => (
+                <button key={day} type="button" className={tvDay === day ? 'active' : ''} onClick={() => setTvDay(day)}>{day}</button>
+              ))}
+            </div>
+            <div className="tv-schedule-list">
+              {(tvSchedule[tvDay] || []).map((item, index) => (
+                <div className="tv-schedule-row" key={item.time + item.match + index}>
+                  <span className="tv-time">{item.time}</span>
+                  <div className="tv-channel-badge">{item.channel}</div>
+                  <div className="tv-match-copy">
+                    <strong>{item.match}</strong>
+                    <em>{item.league}</em>
+                  </div>
+                  <span className="tv-live-pill">{item.live ? 'NA ŻYWO' : 'WKRÓTCE'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="articles-side-card ppv-card">
+            <div className="articles-side-header">
+              <h3>PPV / Wydarzenia premium</h3>
+              <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz wszystkie</a>
+            </div>
+            <div className="ppv-event-list">
+              {ppvEvents.map((event, index) => (
+                <div className="ppv-event-row" key={event.title + index}>
+                  <div className="ppv-fighters">
+                    <div className="fighter-thumb"></div>
+                    <div className="fighter-thumb alt"></div>
+                  </div>
+                  <div className="ppv-copy">
+                    <em>{event.time}</em>
+                    <strong>{event.title}</strong>
+                    <span>{event.subtitle}</span>
+                    <div className="ppv-price-row"><b>{event.price}</b><small>{event.tag}</small></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
+
+      {lastUpdated && <div className="articles-updated-note">Źródło: Sport.pl RSS • Ostatnia aktualizacja: {new Date(lastUpdated).toLocaleString('pl-PL')}</div>}
     </section>
   )
 }

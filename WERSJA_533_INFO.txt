@@ -1,0 +1,14 @@
+Wersja 533
+
+Zmiany:
+- całkowicie przebudowana zakładka Artykuły,
+- usunięta poprzednia zawartość strony Artykuły,
+- nowy layout 1:1 w układzie jak na referencyjnym screenie:
+  * górne zakładki: Artykuły / News / TV / PPV / Wyniki live,
+  * duży slider hero z artykułem głównym,
+  * sekcja Najnowsze artykuły,
+  * prawa kolumna TV / Na żywo,
+  * prawa kolumna PPV / Wydarzenia premium,
+  * dolna sekcja Wyniki live,
+- nowe animacje slidera i przycisków,
+- pobieranie artykułów z funkcji Sport.pl z priorytetem RSS.
