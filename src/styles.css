@@ -19060,7 +19060,7 @@ body{
   }
 }
 
-/* WERSJA 540 — logowanie zostaje jak zoom 80%, cała aplikacja/dashboard wraca na zoom 90% */
+/* WERSJA 541 — logowanie zostaje jak zoom 80%, dashboard i wszystkie zakładki wracają na zoom 95% */
 body:has(.auth481-screen) #root{
   width:125%!important;
   min-width:125%!important;
@@ -19069,10 +19069,10 @@ body:has(.auth481-screen) #root{
   transform-origin:top left!important;
 }
 body:has(.app-shell) #root{
-  width:111.111111%!important;
-  min-width:111.111111%!important;
-  min-height:111.111111vh!important;
-  transform:scale(.9)!important;
+  width:105.263158%!important;
+  min-width:105.263158%!important;
+  min-height:105.263158vh!important;
+  transform:scale(.95)!important;
   transform-origin:top left!important;
 }
 @media (max-width: 900px){
