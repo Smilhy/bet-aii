@@ -8529,3 +8529,189 @@ html,body,#root{
     display:none!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 493 — polish premium panelu logowania / rejestracji
+   - subtelniejsze pozycjonowanie prawej kolumny między trybami
+   - płynna animacja zakładek i formularza
+   - mocniejszy neon glow pól po focusie
+   - link resetu hasła w trybie logowania
+   - lepszy spacing checkboxa i notatka pod przyciskiem
+   - delikatniej wtopiona prawa kolumna
+   ========================================================= */
+@keyframes auth481ModeReveal {
+  from {
+    opacity: .0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth481-tabs {
+  transition: box-shadow .22s ease, border-color .22s ease, background .22s ease !important;
+}
+
+.auth481-tab {
+  overflow: hidden;
+}
+
+.auth481-tab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.10) 35%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+
+.auth481-tab.is-active::after {
+  transform: translateX(120%);
+}
+
+.auth481-form {
+  transition: min-height .24s ease, gap .24s ease;
+}
+
+.auth481-form-login,
+.auth481-form-register {
+  animation: auth481ModeReveal .26s ease both;
+}
+
+.auth481-field {
+  transition: transform .18s ease;
+}
+
+.auth481-field:focus-within {
+  transform: translateY(-1px);
+}
+
+.auth481-input-shell {
+  transition: filter .2s ease, transform .2s ease;
+}
+
+.auth481-field:focus-within .auth481-label {
+  color: #d9fbff;
+  text-shadow: 0 0 10px rgba(34, 223, 254, .18);
+}
+
+.auth481-field:focus-within .auth481-field-icon,
+.auth481-field:focus-within .auth481-field-right {
+  color: #22defe;
+  filter: drop-shadow(0 0 8px rgba(34,223,254,.30));
+}
+
+.auth481-input:focus {
+  border-color: rgba(38,214,255,.68) !important;
+  box-shadow: 0 0 0 2px rgba(11,196,242,.16), 0 0 28px rgba(11,196,242,.22), inset 0 0 0 1px rgba(255,255,255,.04) !important;
+}
+
+.auth481-login-tools {
+  margin-top: -2px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth481-link-button {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #7ddfff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .18s ease, text-shadow .18s ease, transform .18s ease;
+}
+
+.auth481-link-button:hover {
+  color: #cbfbff;
+  text-shadow: 0 0 12px rgba(34,223,254,.25);
+  transform: translateY(-1px);
+}
+
+.auth481-login-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(34,223,254,.18);
+  background: rgba(5,18,34,.82);
+  color: #a7eefe;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.auth481-agree {
+  margin: 8px 0 16px !important;
+}
+
+.auth481-submit {
+  margin-top: 2px;
+}
+
+.auth481-submit-note {
+  margin-top: 10px;
+  text-align: center;
+  color: #86a8bf;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: .01em;
+}
+
+.auth481-right-column {
+  transition: padding-top .22s ease, margin-top .22s ease, filter .22s ease !important;
+}
+
+.auth481-right-column.auth481-right-login {
+  padding-top: 14px !important;
+  margin-top: 0 !important;
+}
+
+.auth481-right-column.auth481-right-register {
+  padding-top: 22px !important;
+  margin-top: 6px !important;
+}
+
+.auth481-right-column::before {
+  box-shadow:
+    0 0 0 1px rgba(20,150,210,.09) inset,
+    0 0 28px rgba(0,195,255,.11),
+    0 0 50px rgba(0,130,255,.08) !important;
+}
+
+.auth481-right-column::after {
+  opacity: .82 !important;
+}
+
+.auth481-right-image {
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,.10)) !important;
+}
+
+@media (max-width:1360px) {
+  .auth481-right-column.auth481-right-login {
+    padding-top: 12px !important;
+  }
+  .auth481-right-column.auth481-right-register {
+    padding-top: 18px !important;
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width:1100px) {
+  .auth481-login-tools {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .auth481-right-column.auth481-right-login,
+  .auth481-right-column.auth481-right-register {
+    padding-top: 8px !important;
+    margin-top: 6px !important;
+  }
+}

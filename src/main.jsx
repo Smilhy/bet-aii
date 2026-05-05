@@ -3037,6 +3037,36 @@ function AuthView({ onAuth }) {
     setAuthMessage('')
   }
 
+  async function handleForgotPassword() {
+    if (!isSupabaseConfigured || !supabase) {
+      showMessage('error', 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć reset hasła.')
+      return
+    }
+
+    const email = String(form.email || '').trim().toLowerCase()
+    if (!email) {
+      showMessage('error', 'Wpisz adres email, aby zresetować hasło.')
+      return
+    }
+
+    setSubmitting(true)
+    showMessage('info', 'Wysyłanie linku do resetu hasła...')
+
+    try {
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo ? { redirectTo } : undefined
+      )
+      if (error) throw error
+      showMessage('success', 'Link do resetu hasła został wysłany na Twój adres email.')
+    } catch (error) {
+      showMessage('error', error?.message || 'Nie udało się wysłać linku resetującego hasło.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     setAuthMessage('')
@@ -3204,6 +3234,9 @@ function AuthView({ onAuth }) {
   }
 
   const submitLabel = mode === 'login' ? 'Zaloguj się' : 'Załóż konto'
+  const submitNote = mode === 'login'
+    ? 'Bezpieczne logowanie • szyfrowana autoryzacja Supabase'
+    : 'Rejestracja zajmuje mniej niż 30 sekund i aktywuje dostęp do platformy.'
 
   return (
     <div className="auth481-screen" aria-label="Bet+AI panel logowania">
@@ -3241,7 +3274,7 @@ function AuthView({ onAuth }) {
               </button>
             </div>
 
-            <form className="auth481-form" onSubmit={handleSubmit} autoComplete="off">
+            <form className={`auth481-form auth481-form-${mode}`} onSubmit={handleSubmit} autoComplete="off">
               {mode === 'register' ? (
                 <AuthField
                   label="Nazwa użytkownika"
@@ -3286,6 +3319,15 @@ function AuthView({ onAuth }) {
                 }
               />
 
+              {mode === 'login' ? (
+                <div className="auth481-login-tools">
+                  <button type="button" className="auth481-link-button" onClick={handleForgotPassword}>
+                    Nie pamiętasz hasła?
+                  </button>
+                  <span className="auth481-login-badge">Szyfrowane logowanie</span>
+                </div>
+              ) : null}
+
               {mode === 'register' ? (
                 <AuthField
                   label="Powtórz hasło"
@@ -3326,6 +3368,7 @@ function AuthView({ onAuth }) {
               <button type="submit" className="auth481-submit" disabled={submitting}>
                 {submitting ? 'Trwa autoryzacja...' : `${submitLabel} →`}
               </button>
+              <div className="auth481-submit-note">{submitNote}</div>
             </form>
 
             {authMessage ? (
