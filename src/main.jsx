@@ -1351,6 +1351,118 @@ function SupportChatWidget({ user }) {
 }
 
 
+function AuthSupportChatGuest() {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [text, setText] = useState('')
+  const [status, setStatus] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    try {
+      setEmail(localStorage.getItem('betai_support_guest_email') || '')
+      setName(localStorage.getItem('betai_support_guest_name') || '')
+    } catch (_) {}
+  }, [])
+
+  async function sendGuestSupportMessage() {
+    const clean = text.trim()
+    const cleanEmail = normalizeEmail(email)
+    const cleanName = String(name || '').trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Gość')
+
+    if (!clean) {
+      setStatus('Wpisz wiadomość do supportu.')
+      return
+    }
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setStatus('Wpisz email, żeby admin mógł Ci odpisać.')
+      return
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      setStatus('Supabase nie jest skonfigurowane.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setStatus('Wysyłanie wiadomości do admina...')
+      try {
+        localStorage.setItem('betai_support_guest_email', cleanEmail)
+        localStorage.setItem('betai_support_guest_name', cleanName)
+      } catch (_) {}
+
+      const { error } = await supabase.from('support_messages').insert({
+        user_id: null,
+        user_email: cleanEmail,
+        user_name: cleanName,
+        admin_email: 'smilhytv@gmail.com',
+        sender_id: null,
+        sender_email: cleanEmail,
+        sender_name: cleanName,
+        sender_role: 'guest',
+        message: clean,
+        is_read: false
+      })
+      if (error) throw error
+      setText('')
+      setStatus('Wiadomość wysłana do admina smilhytv. Odpowiedź dostaniesz po zalogowaniu albo mailowo.')
+    } catch (error) {
+      console.error('guest support send error', error)
+      setStatus('Nie udało się wysłać. Uruchom SUPABASE_SUPPORT_CHAT_511.sql w Supabase i spróbuj ponownie.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className={`support510 support510-guest ${open ? 'is-open' : ''}`}>
+      {open ? (
+        <section className="support510-panel support510-guest-panel" aria-label="Wsparcie BetAI live">
+          <header className="support510-head">
+            <div>
+              <strong>Wsparcie BetAI</strong>
+              <span><i /> Live pomoc — wiadomość trafia do admina</span>
+            </div>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
+          </header>
+
+          <div className="support510-body">
+            <div className="support510-welcome">
+              <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
+              <span>Twoja wiadomość trafi tylko do: smilhytv / smilhytv@gmail.com</span>
+            </div>
+          </div>
+
+          <div className="support510-guest-fields">
+            <input value={name} onChange={event => setName(event.target.value)} placeholder="Twoja nazwa" />
+            <input value={email} onChange={event => setEmail(event.target.value)} placeholder="Twój email" type="email" />
+          </div>
+
+          {status ? <div className="support510-status">{status}</div> : null}
+
+          <footer className="support510-compose">
+            <textarea value={text} onChange={event => setText(event.target.value)} placeholder="Wpisz swoją wiadomość..." onKeyDown={event => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                sendGuestSupportMessage()
+              }
+            }} />
+            <button type="button" onClick={sendGuestSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
+          </footer>
+          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
+        </section>
+      ) : null}
+
+      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
+        {open ? '×' : '💬'}
+        {!open ? <span className="support510-fab-pulse" /> : null}
+      </button>
+    </div>
+  )
+}
+
+
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster }) {
   const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
   const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
@@ -4038,6 +4150,7 @@ function AuthView({ onAuth }) {
           </div>
         </div>
       </div>
+      <AuthSupportChatGuest />
     </div>
   )
 }
