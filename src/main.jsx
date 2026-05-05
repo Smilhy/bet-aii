@@ -37,6 +37,94 @@ const BETAI_DASHBOARD_TRANSLATIONS = {
     'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Doładuj konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj tipstera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top tipsterzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować tipstera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
   }
 }
+
+const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
+  en: {
+    'Zaloguj się': 'Log in', 'Zarejestruj się': 'Register', 'Załóż konto': 'Create account', 'Nazwa użytkownika': 'Username', 'Hasło': 'Password', 'Powtórz hasło': 'Repeat password', 'Regulamin': 'Terms', 'Politykę prywatności': 'Privacy policy', 'Nie pamiętasz hasła?': 'Forgot password?', 'Szyfrowane logowanie': 'Encrypted login',
+    'Realne statystyki live': 'Real live statistics', 'Platforma żyje i odświeża dane na bieżąco': 'The platform is live and refreshes data in real time', 'Zarejestrowanych użytkowników': 'Registered users', 'Skuteczność AI': 'AI accuracy', 'Typów dzisiaj': 'Picks today', 'Auto-odświeżanie co 30 s': 'Auto-refresh every 30s', 'ostatnia aktualizacja': 'last update',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP USER (24H)', 'NAGRODA DNIA': 'DAILY REWARD', 'AKTYWNI TERAZ': 'ACTIVE NOW', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'No leader', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.',
+    'Marketplace premium': 'Premium marketplace', 'Typy premium': 'Premium picks', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publishing paid picks is available only for Premium users.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Upgrade to Premium to monetize your analyses.', 'Kup Premium': 'Buy Premium',
+    'Wszystkie': 'All', 'Darmowe': 'Free', 'Moje': 'Mine', 'Dodaj typ': 'Add pick', 'Zobacz typ': 'View pick', 'Zobacz prognozę': 'View pick', 'Obserwuj tipstera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Today', 'Prognoz': 'Pick', 'Prognoza': 'Pick', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Ponad 2.5 gola': 'Over 2.5 goals', 'Kurs': 'Odds', 'Koef.': 'Odds', 'AI Analiza': 'AI analysis', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real is in excellent home form. Bayern has had defensive problems in recent matches.',
+    'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Brak danych': 'No data', 'Brak typów': 'No picks', 'Ładowanie...': 'Loading...', 'Łączenie...': 'Connecting...', 'Kup dostęp': 'Buy access', 'Szczegóły': 'Details',
+    'Bezpieczne dane': 'Secure data', 'Twoje dane są u nas w pełni chronione.': 'Your data is fully protected.', 'Szybka rejestracja': 'Fast registration', 'Załóż konto w mniej niż 30 sekund.': 'Create an account in under 30 seconds.', 'Darmowe typy AI': 'Free AI picks', 'Codziennie nowe typy o wysokiej skuteczności.': 'New high-accuracy picks every day.', 'Aktywna społeczność': 'Active community', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Thousands of bettors share knowledge and win together.',
+    'Bilans': 'Balance', 'Balans': 'Balance', 'Odblokowano': 'Unlocked', 'Popолнить счет': 'Top up account', 'Пополни́ть счет': 'Top up account', 'Witaj': 'Welcome', 'Meczów dziś': 'Matches today', 'Śr. pewność': 'Avg. confidence', 'Dostęp do inteligentnych typów': 'Access to intelligent picks', 'Sport': 'Sport'
+  },
+  de: {
+    'Zaloguj się': 'Einloggen', 'Zarejestruj się': 'Registrieren', 'Załóż konto': 'Konto erstellen', 'Nazwa użytkownika': 'Benutzername', 'Hasło': 'Passwort', 'Powtórz hasło': 'Passwort wiederholen', 'Regulamin': 'Bedingungen', 'Politykę prywatności': 'Datenschutz', 'Nie pamiętasz hasła?': 'Passwort vergessen?', 'Szyfrowane logowanie': 'Verschlüsselter Login',
+    'Realne statystyki live': 'Echte Live-Statistiken', 'Platforma żyje i odświeża dane na bieżąco': 'Die Plattform ist live und aktualisiert Daten laufend', 'Zarejestrowanych użytkowników': 'Registrierte Nutzer', 'Skuteczność AI': 'KI-Trefferquote', 'Typów dzisiaj': 'Tipps heute', 'Auto-odświeżanie co 30 s': 'Auto-Aktualisierung alle 30 s', 'ostatnia aktualizacja': 'letzte Aktualisierung',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP-NUTZER (24H)', 'NAGRODA DNIA': 'TAGESPREIS', 'AKTYWNI TERAZ': 'JETZT AKTIV', '1 żeton / 24h': '1 Token / 24h', 'Brak lidera': 'Kein Leader', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.',
+    'Marketplace premium': 'Premium-Marktplatz', 'Typy premium': 'Premium-Tipps', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen',
+    'Wszystkie': 'Alle', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'Dodaj typ': 'Tipp hinzufügen', 'Zobacz typ': 'Tipp ansehen', 'Zobacz prognozę': 'Prognose ansehen', 'Obserwuj tipstera': 'Tipster folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Heute', 'Prognoz': 'Tipp', 'Prognoza': 'Tipp', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Ponad 2.5 gola': 'Über 2,5 Tore', 'Kurs': 'Quote', 'Koef.': 'Quote', 'AI Analiza': 'KI-Analyse', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real ist zu Hause in sehr guter Form. Bayern hatte zuletzt Defensivprobleme.',
+    'Top tipsterzy': 'Top-Tipster', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Brak danych': 'Keine Daten', 'Brak typów': 'Keine Tipps', 'Ładowanie...': 'Laden...', 'Łączenie...': 'Verbinden...', 'Kup dostęp': 'Zugang kaufen', 'Szczegóły': 'Details',
+    'Bezpieczne dane': 'Sichere Daten', 'Twoje dane są u nas w pełni chronione.': 'Deine Daten sind vollständig geschützt.', 'Szybka rejestracja': 'Schnelle Registrierung', 'Załóż konto w mniej niż 30 sekund.': 'Erstelle ein Konto in weniger als 30 Sekunden.', 'Darmowe typy AI': 'Kostenlose KI-Tipps', 'Codziennie nowe typy o wysokiej skuteczności.': 'Täglich neue Tipps mit hoher Trefferquote.', 'Aktywna społeczność': 'Aktive Community', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Tausende Tipper teilen Wissen und gewinnen gemeinsam.',
+    'Bilans': 'Guthaben', 'Balans': 'Guthaben', 'Odblokowano': 'Freigeschaltet', 'Witaj': 'Willkommen', 'Meczów dziś': 'Spiele heute', 'Śr. pewność': 'Ø Sicherheit', 'Dostęp do inteligentnych typów': 'Zugang zu intelligenten Tipps', 'Sport': 'Sport'
+  },
+  es: {
+    'Zaloguj się': 'Iniciar sesión', 'Zarejestruj się': 'Registrarse', 'Załóż konto': 'Crear cuenta', 'Nazwa użytkownika': 'Usuario', 'Hasło': 'Contraseña', 'Powtórz hasło': 'Repetir contraseña', 'Regulamin': 'Términos', 'Politykę prywatności': 'Política de privacidad', 'Nie pamiętasz hasła?': '¿Olvidaste tu contraseña?', 'Szyfrowane logowanie': 'Inicio seguro',
+    'Realne statystyki live': 'Estadísticas live reales', 'Platforma żyje i odświeża dane na bieżąco': 'La plataforma está viva y actualiza datos en directo', 'Zarejestrowanych użytkowników': 'Usuarios registrados', 'Skuteczność AI': 'Precisión IA', 'Typów dzisiaj': 'Picks hoy', 'Auto-odświeżanie co 30 s': 'Auto-actualización cada 30 s', 'ostatnia aktualizacja': 'última actualización',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'USUARIO TOP (24H)', 'NAGRODA DNIA': 'PREMIO DEL DÍA', 'AKTYWNI TERAZ': 'ACTIVOS AHORA', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'Sin líder', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.',
+    'Marketplace premium': 'Marketplace premium', 'Typy premium': 'Picks premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publicar picks de pago solo está disponible para usuarios Premium.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium',
+    'Wszystkie': 'Todos', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'Dodaj typ': 'Añadir pick', 'Zobacz typ': 'Ver pick', 'Zobacz prognozę': 'Ver pronóstico', 'Obserwuj tipstera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Hoy', 'Prognoz': 'Pronóstico', 'Prognoza': 'Pronóstico', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Ponad 2.5 gola': 'Más de 2.5 goles', 'Kurs': 'Cuota', 'Koef.': 'Cuota', 'AI Analiza': 'Análisis IA', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real está muy fuerte en casa. Bayern tuvo problemas defensivos en los últimos partidos.',
+    'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Brak danych': 'Sin datos', 'Brak typów': 'Sin picks', 'Ładowanie...': 'Cargando...', 'Łączenie...': 'Conectando...', 'Kup dostęp': 'Comprar acceso', 'Szczegóły': 'Detalles',
+    'Bezpieczne dane': 'Datos seguros', 'Twoje dane są u nas w pełni chronione.': 'Tus datos están totalmente protegidos.', 'Szybka rejestracja': 'Registro rápido', 'Załóż konto w mniej niż 30 sekund.': 'Crea una cuenta en menos de 30 segundos.', 'Darmowe typy AI': 'Picks IA gratis', 'Codziennie nowe typy o wysokiej skuteczności.': 'Nuevos picks diarios de alta precisión.', 'Aktywna społeczność': 'Comunidad activa', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Miles de usuarios comparten conocimiento y ganan juntos.',
+    'Bilans': 'Saldo', 'Balans': 'Saldo', 'Odblokowano': 'Desbloqueado', 'Witaj': 'Bienvenido', 'Meczów dziś': 'Partidos hoy', 'Śr. pewność': 'Confianza media', 'Dostęp do inteligentnych typów': 'Acceso a picks inteligentes', 'Sport': 'Deporte'
+  },
+  ru: {
+    'Zaloguj się': 'Войти', 'Zarejestruj się': 'Регистрация', 'Załóż konto': 'Создать аккаунт', 'Nazwa użytkownika': 'Имя пользователя', 'Hasło': 'Пароль', 'Powtórz hasło': 'Повторите пароль', 'Regulamin': 'Условия', 'Politykę prywatności': 'Политику конфиденциальности', 'Nie pamiętasz hasła?': 'Забыли пароль?', 'Szyfrowane logowanie': 'Защищенный вход',
+    'Realne statystyki live': 'Реальная live-статистика', 'Platforma żyje i odświeża dane na bieżąco': 'Платформа живая и обновляет данные онлайн', 'Zarejestrowanych użytkowników': 'Зарегистрированных пользователей', 'Skuteczność AI': 'Точность AI', 'Typów dzisiaj': 'Прогнозов сегодня', 'Auto-odświeżanie co 30 s': 'Автообновление каждые 30 с', 'ostatnia aktualizacja': 'последнее обновление',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'онлайн', 'TOP UŻYTKOWNIK (24H)': 'ТОП ПОЛЬЗОВАТЕЛЬ (24Ч)', 'NAGRODA DNIA': 'НАГРАДА ДНЯ', 'AKTYWNI TERAZ': 'АКТИВНЫ СЕЙЧАС', '1 żeton / 24h': '1 жетон / 24ч', 'Brak lidera': 'Лидера нет', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.',
+    'Marketplace premium': 'Premium маркетплейс', 'Typy premium': 'Premium прогнозы', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Платные прогнозы доступны только Premium пользователям.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium',
+    'Wszystkie': 'Все', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'Dodaj typ': 'Добавить прогноз', 'Zobacz typ': 'Смотреть прогноз', 'Zobacz prognozę': 'Смотреть прогноз', 'Obserwuj tipstera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Liga Mistrzów': 'Лига чемпионов', 'Dzisiaj': 'Сегодня', 'Prognoz': 'Прогноз', 'Prognoza': 'Прогноз', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Ponad 2.5 gola': 'Тотал больше 2.5', 'Kurs': 'Коэф.', 'Koef.': 'Коэф.', 'AI Analiza': 'AI анализ', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real в отличной форме дома. У Bayern были проблемы в защите в последних матчах.',
+    'Top tipsterzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Brak danych': 'Нет данных', 'Brak typów': 'Нет прогнозов', 'Ładowanie...': 'Загрузка...', 'Łączenie...': 'Подключение...', 'Kup dostęp': 'Купить доступ', 'Szczegóły': 'Детали',
+    'Bezpieczne dane': 'Безопасные данные', 'Twoje dane są u nas w pełni chronione.': 'Ваши данные полностью защищены.', 'Szybka rejestracja': 'Быстрая регистрация', 'Załóż konto w mniej niż 30 sekund.': 'Создайте аккаунт меньше чем за 30 секунд.', 'Darmowe typy AI': 'Бесплатные AI-прогнозы', 'Codziennie nowe typy o wysokiej skuteczności.': 'Новые точные прогнозы каждый день.', 'Aktywna społeczność': 'Активное сообщество', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Тысячи игроков делятся знаниями и выигрывают вместе.',
+    'Bilans': 'Баланс', 'Balans': 'Баланс', 'Odblokowano': 'Разблокировано', 'Witaj': 'Добро пожаловать', 'Meczów dziś': 'Матчей сегодня', 'Śr. pewność': 'Ср. уверенность', 'Dostęp do inteligentnych typów': 'Доступ к интеллектуальным прогнозам', 'Sport': 'Спорт'
+  }
+}
+
+function buildBetaiTranslationDictionary(lang) {
+  const target = {
+    ...(BETAI_DASHBOARD_TRANSLATIONS[lang] || {}),
+    ...(BETAI_EXTRA_DASHBOARD_TRANSLATIONS[lang] || {})
+  }
+  const allDictionaries = [
+    BETAI_DASHBOARD_TRANSLATIONS.en, BETAI_DASHBOARD_TRANSLATIONS.de, BETAI_DASHBOARD_TRANSLATIONS.es, BETAI_DASHBOARD_TRANSLATIONS.ru,
+    BETAI_EXTRA_DASHBOARD_TRANSLATIONS.en, BETAI_EXTRA_DASHBOARD_TRANSLATIONS.de, BETAI_EXTRA_DASHBOARD_TRANSLATIONS.es, BETAI_EXTRA_DASHBOARD_TRANSLATIONS.ru
+  ].filter(Boolean)
+  const reverse = {}
+  Object.keys(target).forEach(pl => {
+    reverse[pl] = target[pl]
+    allDictionaries.forEach(dict => {
+      const value = dict[pl]
+      if (value) reverse[value] = target[pl]
+    })
+  })
+  return reverse
+}
+
+function translateBetaiTextValue(value, lang) {
+  const raw = String(value || '')
+  const trimmed = raw.trim()
+  if (!trimmed || lang === 'pl') return value
+  const dictionary = buildBetaiTranslationDictionary(lang)
+  const direct = dictionary[trimmed]
+  if (direct) return raw.replace(trimmed, direct)
+  const prefixMatch = trimmed.match(/^([+\-•\s]*[\p{Extended_Pictographic}\p{Emoji_Presentation}]?\s*)(.+)$/u)
+  if (prefixMatch && prefixMatch[2] && dictionary[prefixMatch[2]]) {
+    return raw.replace(trimmed, `${prefixMatch[1]}${dictionary[prefixMatch[2]]}`)
+  }
+  let next = trimmed
+  const keys = Object.keys(dictionary).sort((a, b) => b.length - a.length)
+  for (const key of keys) {
+    if (!key || key.length < 3) continue
+    if (next.includes(key)) next = next.split(key).join(dictionary[key])
+  }
+  next = next
+    .replace(/\bTypy\b/g, dictionary['Typ'] || 'Picks')
+    .replace(/\bWygrane\b/g, lang === 'en' ? 'Won' : lang === 'de' ? 'Gewonnen' : lang === 'es' ? 'Ganadas' : 'Выигрыши')
+    .replace(/\bKurs\b/g, dictionary['Kurs'] || 'Odds')
+  return next !== trimmed ? raw.replace(trimmed, next) : value
+}
+
 const PLATFORM_COMMISSION_RATE = 0.20
 
 function getMonthlyCount(rows = []) {
@@ -4713,15 +4801,8 @@ function DashboardAutoTranslator({ lang }) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.lang = lang || 'pl'
-    const dictionary = BETAI_DASHBOARD_TRANSLATIONS[lang] || null
-    if (!dictionary) return
     const skipTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'])
-    const translateText = (value) => {
-      const raw = String(value || '')
-      const trimmed = raw.trim()
-      if (!trimmed) return value
-      return dictionary[trimmed] || value
-    }
+    const translateText = (value) => translateBetaiTextValue(value, lang)
     const translateNode = (node) => {
       if (!node) return
       if (node.nodeType === Node.TEXT_NODE) {
@@ -4732,23 +4813,31 @@ function DashboardAutoTranslator({ lang }) {
       if (node.nodeType !== Node.ELEMENT_NODE) return
       if (skipTags.has(node.tagName)) return
       if (node.getAttribute?.('data-no-translate') === 'true') return
-      ;['placeholder', 'aria-label', 'title'].forEach(attr => {
+      ;['placeholder', 'aria-label', 'title', 'alt'].forEach(attr => {
         if (node.hasAttribute?.(attr)) {
-          const next = translateText(node.getAttribute(attr))
-          if (next !== node.getAttribute(attr)) node.setAttribute(attr, next)
+          const current = node.getAttribute(attr)
+          const next = translateText(current)
+          if (next !== current) node.setAttribute(attr, next)
         }
       })
       node.childNodes?.forEach(child => translateNode(child))
     }
+    let frame = null
     const translateRoot = () => {
-      const root = document.querySelector('.app-shell')
-      if (root) translateNode(root)
+      if (frame) window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const root = document.querySelector('.app-shell') || document.querySelector('#root')
+        if (root) translateNode(root)
+      })
     }
     translateRoot()
     const observer = new MutationObserver(() => translateRoot())
     const root = document.querySelector('#root') || document.body
-    observer.observe(root, { childList: true, subtree: true, characterData: true })
-    return () => observer.disconnect()
+    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'aria-label', 'title', 'alt'] })
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
   }, [lang])
   return null
 }
