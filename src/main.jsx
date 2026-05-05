@@ -682,7 +682,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
   const matchesToday = Math.max(tips.length || 0, 50)
   const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
+  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: '2-digit', year: 'numeric' })
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
@@ -734,7 +734,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
         <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
         <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
         <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
-        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
+        <div><i>📅</i><span>DZISIAJ</span><strong>{today}</strong></div>
       </div>
     </section>
   )
@@ -5490,6 +5490,91 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
     </div>
   )
 }
+
+function DashboardUpdatePreview() {
+  const liveRows = [
+    ['Premier League', '82\'', 'Tottenham', '2 : 1', 'Liverpool'],
+    ['LaLiga', '68\'', 'Barcelona', '2 : 2', 'Real Madryt'],
+    ['Serie A', '75\'', 'Inter', '1 : 0', 'Juventus']
+  ]
+  const aiTips = [
+    ['⚽', 'Man City vs Arsenal', 'Typ: Powyżej 2.5 gola', '88%'],
+    ['🔴', 'Bayern vs Dortmund', 'Typ: Bayern wygra', '82%'],
+    ['🔵', 'PSG vs Lyon', 'Typ: Powyżej 2.5 gola', '81%'],
+    ['🦁', 'Chelsea vs Newcastle', 'Typ: Obie strzelą gola', '79%']
+  ]
+  const articles = [
+    ['ANALIZA', 'Derby Mediolanu: Inter faworytem?', '2h temu', '24'],
+    ['AI TYP', '5 kuponów AI na weekend', '5h temu', '18'],
+    ['NEWS', 'Transfery, kontuzje, powroty', '1d temu', '32']
+  ]
+  const sellers = [
+    ['TopExpertPL', 'TIPSTER', 'ROI 22.4%', '49,00 zł', '4.9'],
+    ['BetKing', 'VERIFIED', 'ROI 18.7%', '39,00 zł', '4.8'],
+    ['AI Master', 'TOP AI', 'ROI 27.1%', '59,00 zł', '5.0'],
+    ['StatKing', 'TIPSTER', 'ROI 16.3%', '29,00 zł', '4.7']
+  ]
+
+  return (
+    <section className="dashboard-update-preview" aria-label="Nowy układ dashboardu">
+      <div className="du-metric-grid">
+        <article className="du-metric-card"><div className="du-icon">🧠</div><div><span>Typy AI dnia</span><strong>12</strong><small>Wysoka pewność</small><b>7 nowych</b></div><em>➜</em></article>
+        <article className="du-metric-card"><div className="du-icon">🛒</div><div><span>Marketplace premium</span><strong>243</strong><small>Typy dostępne</small><b>Sprawdź oferty →</b></div><em>➜</em></article>
+        <article className="du-metric-card"><div className="du-ring">87%</div><div><span>Skuteczność AI</span><small>ROI: +24.6%</small><small>Ostatnie 30 dni</small></div></article>
+        <article className="du-metric-card"><div className="du-icon">★</div><div><span>Śledzone ligi</span><strong>12</strong><small>Nadchodzących meczów</small><b>Zobacz kalendarz →</b></div><em>➜</em></article>
+      </div>
+
+      <div className="du-content-grid">
+        <article className="du-panel du-articles">
+          <header><h3>Najnowsze artykuły</h3><button>Zobacz wszystkie</button></header>
+          {articles.map(([tag, title, time, comments], index) => (
+            <div className="du-article-row" key={title}>
+              <div className={`du-thumb du-thumb-${index + 1}`}></div>
+              <div><b>{tag}</b><strong>{title}</strong><small>{time} temu <span>♡ {comments}</span></small></div>
+            </div>
+          ))}
+        </article>
+
+        <article className="du-panel du-live">
+          <header><h3>Wyniki live</h3><button>Zobacz wszystkie</button></header>
+          {liveRows.map(([league, minute, home, score, away]) => (
+            <div className="du-live-row" key={home + away}>
+              <div><span>{league}</span><b>{minute}</b></div>
+              <div className="du-match"><strong>{home}</strong><em>{score}</em><strong>{away}</strong></div>
+              <i>LIVE</i>
+            </div>
+          ))}
+        </article>
+
+        <article className="du-panel du-ai-tips">
+          <header><h3>Typy AI</h3><button>Zobacz wszystkie</button></header>
+          {aiTips.map(([icon, match, pick, confidence]) => (
+            <div className="du-tip-row" key={match}>
+              <span>{icon}</span>
+              <div><strong>{match}</strong><small>{pick}</small></div>
+              <b>{confidence}</b>
+              <button>Zobacz</button>
+            </div>
+          ))}
+        </article>
+      </div>
+
+      <article className="du-panel du-marketplace">
+        <header><h3>Marketplace premium</h3><button>Zobacz wszystkie oferty →</button></header>
+        <div className="du-seller-grid">
+          {sellers.map(([name, badge, roi, price, rate]) => (
+            <div className="du-seller-card" key={name}>
+              <div className="du-avatar">AI</div>
+              <div><strong>{name}</strong><b>{badge}</b><small>Skuteczność<br />{roi}</small></div>
+              <footer><span>★ {rate}</span><em>{price}</em></footer>
+            </div>
+          ))}
+        </div>
+      </article>
+    </section>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -7178,26 +7263,7 @@ function App() {
               </div>
             </div>
 
-            <div className="feed-filters">
-              {filterItems.map(([key, label]) => (
-                <button
-                  key={key}
-                  className={activeFilter === key ? 'active' : ''}
-                  onClick={() => setActiveFilter(key)}
-                >
-                  <span>{label}</span>
-                  <b>{feedCounts[key]}</b>
-                </button>
-              ))}
-              <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
-            </div>
-
-
-            <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
-                <div className="empty-state">Brak typów w tym filtrze.</div>
-              )}
-            </div>
+            <DashboardUpdatePreview />
           </section>
         )}
       </main>

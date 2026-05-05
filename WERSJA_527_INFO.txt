@@ -1,0 +1,1 @@
+Wersja 527: Dashboard — usunięto środkowe filtry Wszystkie/Premium/Darmowe/Moje i cały feed typów poniżej. W ich miejsce dodano nowy blok kafelków: statystyki AI, najnowsze artykuły, wyniki live, typy AI oraz Marketplace premium zgodnie z referencją użytkownika.

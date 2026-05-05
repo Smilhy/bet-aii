@@ -1,0 +1,1 @@
+Wersja 526: hero banner — naprawione dopasowanie prawej kolumny live statystyk. Usunięty duży pusty overlay, maska została dopasowana dokładnie pod statystyki, napisy i liczby są w pełni widoczne, data skrócona dla lepszego fitu.
