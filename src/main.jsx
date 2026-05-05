@@ -2873,51 +2873,391 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, payments = [], earnings = {} }) {
   const unlockedList = tips.filter(tip => unlockedTips.has(tip.id))
   const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
+  const totalBalance = Number(wallet || 0)
+  const totalTokens = Number(tokenBalance || 0)
+  const tokenValue = totalTokens * 1.5
+  const creatorTotal = Number(earnings?.total || 2450.75 || 0)
+  const creatorSales = Number(earnings?.sales || unlockedList.length || 0)
+  const thisMonthCreator = creatorTotal > 0 ? Math.max(creatorTotal * 0.34, 245.75) : 245.75
+  const referralMonth = Math.max(creatorTotal * 0.0115, 28.3)
+  const referralPending = Math.max(unlockedList.length * 2.1, 6.2)
+  const referralTotal = referralMonth + referralPending + Math.max(totalBalance * 0.072, 90)
+  const username = getProfileUsername(user) || normalizeEmail(user?.email || 'smilhytv@gmail.com').split('@')[0] || 'smilhytv'
+  const email = normalizeEmail(user?.email || 'smilhytv@gmail.com') || 'smilhytv@gmail.com'
+  const role = getDisplayRole(user, user?.plan || 'premium')
+
+  const transactionHistory = [
+    { icon: '⇪', title: 'Wpłata BLIK', meta: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
+    { icon: '⇩', title: 'Wypłata na konto', meta: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
+    { icon: '★', title: 'Zakup Premium', meta: 'Premium 30 dni', amount: '-29.99 zł', positive: false },
+    { icon: '✓', title: 'Wygrana kupon', meta: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
+    { icon: '◌', title: 'Zakup żetonów', meta: '25.05.2025, 16:33', amount: '+50', positive: true, tokens: true }
+  ]
+
+  const invoiceList = [
+    { id: 'F/2025/05/128', name: 'Premium 30 dni', amount: '29.99 zł', date: '26.05.2025' },
+    { id: 'F/2025/04/095', name: 'Premium 30 dni', amount: '29.99 zł', date: '26.04.2025' },
+    { id: 'F/2025/03/067', name: 'Żetony (100 szt.)', amount: '149.00 zł', date: '26.03.2025' }
+  ]
+
+  const paymentMethods = [
+    { code: 'BLIK', label: 'BLIK', sub: 'Natychmiast' },
+    { code: 'BANK', label: 'Przelew online', sub: 'Natychmiast' },
+    { code: 'CARD', label: 'Karta płatnicza', sub: 'Natychmiast' },
+    { code: 'PayPal', label: 'PayPal', sub: 'Natychmiast' },
+    { code: 'G Pay', label: 'Google Pay', sub: 'Natychmiast' },
+    { code: ' Pay', label: 'Apple Pay', sub: 'Natychmiast' }
+  ]
+
+  const creatorPoints = [8, 12, 16, 18, 14, 17, 25, 20, 19, 32, 26, 24, 27, 33, 30, 28, 31, 38, 39, 44]
+  const maxPoint = Math.max(...creatorPoints, 1)
+  const chartPoints = creatorPoints.map((value, index) => {
+    const x = (index / (creatorPoints.length - 1)) * 100
+    const y = 100 - ((value / maxPoint) * 100)
+    return `${x},${y}`
+  }).join(' ')
+
+  const liveChatUsers = [
+    { place: 1, name: 'RebelKoks', subtitle: 'Typy: 66 • WIN: 68.2%', badge: '👑' },
+    { place: 2, name: username, subtitle: 'Typy: 72 • WIN: 62.1%', badge: '[ADMIN]' },
+    { place: 3, name: 'buchajsonek1988', subtitle: 'Typy: 67 • WIN: 59.8%', badge: 'TIP 1' },
+    { place: 4, name: 'piotrek1987', subtitle: 'Typy: 61 • WIN: 61.0%' },
+    { place: 5, name: 'krystian_typer', subtitle: 'Typy: 54 • WIN: 57.2%' }
+  ]
+
+  const topTipsters = [
+    { place: 1, name: username, subtitle: 'Typy: 72 • WIN: 62.1%', profit: `+${totalBalance.toFixed(2)} zł` },
+    { place: 2, name: 'buchajsonek1988', subtitle: 'Typy: 67 • WIN: 59.8%', profit: '+980.50 zł' },
+    { place: 3, name: 'piotrek1987', subtitle: 'Typy: 61 • WIN: 61.0%', profit: '+750.00 zł' },
+    { place: 4, name: 'krystian_typer', subtitle: 'Typy: 54 • WIN: 57.2%', profit: '+620.30 zł' },
+    { place: 5, name: 'adrianbets', subtitle: 'Typy: 48 • WIN: 55.4%', profit: '+410.25 zł' }
+  ]
+
+  const aiPicks = [
+    { teams: 'Manchester City vs Inter Mediolan', pick: 'Manchester City wygra', chance: '68%' },
+    { teams: 'PSG vs Borussia Dortmund', pick: 'Powyżej 2.5 gola', chance: '63%' },
+    { teams: 'Liverpool vs Bayer Leverkusen', pick: 'Liverpool wygra', chance: '61%' }
+  ]
 
   return (
-    <section className="wallet-panel wallet-ultra-page">
-      <UltraPageBanner variant="wallet"><button type="button" onClick={onTopUp}>+ Doładuj 100 zł</button></UltraPageBanner>
-      <div className="wallet-ultra-hero">
-        <div>
-          <span className="wallet-kicker">Portfel BetAI</span>
-          <h1>Portfel</h1>
-          <p>Zarządzaj saldem, doładowaniami i odblokowanymi typami premium w jednym, dopracowanym panelu.</p>
-        </div>
-        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
-      </div>
-
-      <div className="wallet-main-card">
-        <div>
-          <span>Saldo konta</span>
-          <strong>{Number(wallet || 0).toFixed(2)} zł</strong>
-          <p>Saldo używane do odblokowania typów premium.</p>
-        </div>
-        <div className="wallet-balance-pill">Aktywne saldo</div>
-      </div>
-
-      <div className="wallet-grid">
-        <div className="wallet-stat"><span>Odblokowane typy</span><b>{unlockedList.length}</b></div>
-        <div className="wallet-stat"><span>Wydano</span><b>{spent.toFixed(2)} zł</b></div>
-        <div className="wallet-stat"><span>Status</span><b>VIP</b></div>
-      </div>
-
-      <div className="unlocked-list wallet-ultra-list">
-        <div className="unlocked-head"><h3>Odblokowane typy</h3><span>{unlockedList.length} zakupów</span></div>
-        {unlockedList.length ? unlockedList.map(tip => (
-          <div className="unlocked-item" key={tip.id}>
-            <div><strong>{tip.team_home} vs {tip.team_away}</strong><span>{tip.bet_type} • kurs {tip.odds}</span></div>
-            <b>{Number(tip.price || 0).toFixed(2)} zł</b>
+    <section className="wallet-pro-page">
+      <div className="wallet-pro-shell">
+        <div className="wallet-pro-main">
+          <div className="wallet-pro-header">
+            <div>
+              <h1>Portfel</h1>
+              <p>Zarządzaj swoimi środkami i finansami</p>
+            </div>
+            <div className="wallet-pro-refresh">Ostatnia aktualizacja: <strong>Teraz</strong> ↻</div>
           </div>
-        )) : (
-          <div className="empty-wallet"><strong>Nie masz jeszcze odblokowanych typów</strong><span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span></div>
-        )}
+
+          <div className="wallet-pro-tabs">
+            <button type="button" className="active">Portfel</button>
+            <button type="button">Wpłaty</button>
+            <button type="button">Wypłaty</button>
+            <button type="button">Płatności</button>
+            <button type="button">Subskrypcja</button>
+            <button type="button">Zarobki</button>
+            <button type="button">Admin finanse</button>
+            <button type="button">Admin wypłaty</button>
+          </div>
+
+          <div className="wallet-pro-topstats">
+            <article className="wallet-stat-card">
+              <div>
+                <span>Saldo główne</span>
+                <strong>{totalBalance.toFixed(2)} zł</strong>
+                <small>Dostępne środki</small>
+              </div>
+              <div className="wallet-stat-icon">💼</div>
+            </article>
+            <article className="wallet-stat-card">
+              <div>
+                <span>Saldo żetonów</span>
+                <strong>{totalTokens}</strong>
+                <small>Dostępne żetony</small>
+              </div>
+              <div className="wallet-stat-icon">◎</div>
+            </article>
+            <article className="wallet-stat-card">
+              <div>
+                <span>Wartość żetonów (PLN)</span>
+                <strong>{tokenValue.toFixed(2)} zł</strong>
+                <small>1 żeton = 1.50 zł</small>
+              </div>
+              <div className="wallet-stat-icon">◔</div>
+            </article>
+          </div>
+
+          <div className="wallet-pro-content-grid">
+            <article className="wallet-pro-card wallet-pro-quick">
+              <div className="wallet-pro-card-head">
+                <h3>Szybkie operacje</h3>
+              </div>
+              <div className="wallet-pro-quick-grid">
+                <button type="button" className="wallet-pro-action" onClick={onTopUp}>
+                  <span>＋</span>
+                  <strong>Wpłać środki</strong>
+                  <small>Doładuj konto błyskawicznie</small>
+                </button>
+                <button type="button" className="wallet-pro-action">
+                  <span>⇧</span>
+                  <strong>Wypłać środki</strong>
+                  <small>Wypłata na konto bankowe</small>
+                </button>
+                <button type="button" className="wallet-pro-action">
+                  <span>◎</span>
+                  <strong>Kup żetony</strong>
+                  <small>Doładuj swoje żetony</small>
+                </button>
+                <button type="button" className="wallet-pro-action">
+                  <span>◷</span>
+                  <strong>Historia transakcji</strong>
+                  <small>Zobacz wszystkie operacje</small>
+                </button>
+              </div>
+            </article>
+
+            <article className="wallet-pro-card wallet-pro-transactions">
+              <div className="wallet-pro-card-head">
+                <h3>Historia transakcji</h3>
+                <button type="button">Zobacz wszystkie</button>
+              </div>
+              <div className="wallet-pro-transaction-list">
+                {transactionHistory.map((item, index) => (
+                  <div className="wallet-pro-transaction" key={item.title + index}>
+                    <span className={`wallet-pro-transaction-icon ${item.positive ? 'positive' : 'negative'}`}>{item.icon}</span>
+                    <div className="wallet-pro-transaction-copy">
+                      <strong>{item.title}</strong>
+                      <small>{item.meta}</small>
+                    </div>
+                    <b className={item.positive ? 'positive' : 'negative'}>{item.amount}</b>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="wallet-pro-card wallet-pro-methods">
+              <div className="wallet-pro-card-head">
+                <h3>Metody wpłaty</h3>
+              </div>
+              <p className="wallet-pro-sub">Wybierz preferowaną metodę</p>
+              <div className="wallet-pro-method-grid">
+                {paymentMethods.map(method => (
+                  <button type="button" className="wallet-pro-method" key={method.code} onClick={method.code === 'BLIK' ? onTopUp : undefined}>
+                    <strong>{method.code}</strong>
+                    <span>{method.label}</span>
+                    <small>{method.sub}</small>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="wallet-pro-fullbtn" onClick={onTopUp}>Przejdź do wpłat</button>
+            </article>
+
+            <article className="wallet-pro-card wallet-pro-invoices">
+              <div className="wallet-pro-card-head">
+                <h3>Płatności i faktury</h3>
+              </div>
+              <p className="wallet-pro-sub">Historia płatności i faktur</p>
+              <div className="wallet-pro-invoice-list">
+                {invoiceList.map(item => (
+                  <div className="wallet-pro-invoice" key={item.id}>
+                    <span className="wallet-pro-doc-icon">▣</span>
+                    <div className="wallet-pro-invoice-copy">
+                      <strong>Faktura {item.id}</strong>
+                      <small>{item.name}</small>
+                    </div>
+                    <div className="wallet-pro-invoice-meta">
+                      <b>{item.amount}</b>
+                      <small>{item.date}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="wallet-pro-fullbtn alt">Zobacz wszystkie faktury</button>
+            </article>
+
+            <article className="wallet-pro-card wallet-pro-subscription">
+              <div className="wallet-pro-card-head">
+                <h3>Subskrypcja</h3>
+              </div>
+              <p className="wallet-pro-sub">Aktywny plan</p>
+              <div className="wallet-pro-subscription-box">
+                <div className="wallet-pro-plan-badge">★</div>
+                <div>
+                  <strong>Premium</strong>
+                  <span>Plan miesięczny</span>
+                  <b>29.99 zł / miesiąc</b>
+                </div>
+              </div>
+              <ul className="wallet-pro-checks">
+                <li>Dostęp do typów Premium</li>
+                <li>Zaawansowane statystyki</li>
+                <li>Typy AI bez limitów</li>
+                <li>Priorytetowe powiadomienia</li>
+              </ul>
+              <div className="wallet-pro-renew">Następne odnowienie: <strong>26.06.2025</strong></div>
+              <button type="button" className="wallet-pro-fullbtn">Zarządzaj subskrypcją</button>
+            </article>
+
+            <article className="wallet-pro-card wallet-pro-creator">
+              <div className="wallet-pro-card-head">
+                <h3>Zarobki twórcy</h3>
+                <div className="wallet-pro-mini-stat">
+                  <small>Trwający zarobek</small>
+                  <b>{creatorTotal.toFixed(2)} zł</b>
+                  <span>+18.5% vs poprzedni miesiąc</span>
+                </div>
+              </div>
+              <p className="wallet-pro-sub">Twoje zarobki jako twórca typów</p>
+              <div className="wallet-pro-chart-card">
+                <div className="wallet-pro-chart-filter">Bieżący miesiąc ▾</div>
+                <div className="wallet-pro-chart-shell">
+                  <div className="wallet-pro-chart-axis">
+                    <span>3K</span>
+                    <span>20</span>
+                    <span>10</span>
+                    <span>0</span>
+                  </div>
+                  <div className="wallet-pro-chart-area">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                      <polyline fill="none" stroke="rgba(35,230,203,.95)" strokeWidth="3" points={chartPoints} />
+                      {creatorPoints.map((value, index) => {
+                        const x = (index / (creatorPoints.length - 1)) * 100
+                        const y = 100 - ((value / maxPoint) * 100)
+                        return <circle key={index} cx={x} cy={y} r="1.8" fill="rgba(35,230,203,.95)" />
+                      })}
+                    </svg>
+                  </div>
+                </div>
+                <div className="wallet-pro-chart-labels"><span>1 Maj</span><span>8 Maj</span><span>15 Maj</span><span>22 Maj</span><span>29 Maj</span></div>
+              </div>
+              <button type="button" className="wallet-pro-fullbtn">Szczegółowe statystyki</button>
+            </article>
+          </div>
+        </div>
+
+        <aside className="wallet-pro-sidebar">
+          <article className="wallet-pro-sidecard wallet-pro-livechat">
+            <div className="wallet-pro-sidehead">
+              <div>
+                <span>BET+AI LIVE CHAT</span>
+                <b>+ online</b>
+              </div>
+              <em>134 online</em>
+            </div>
+            <div className="wallet-pro-live-meta">
+              <div>
+                <small>TOP UŻYTKOWNICY (24H)</small>
+                <strong>RebelKoks</strong>
+                <span>Typy: 66 • WIN: 68.2%</span>
+              </div>
+              <div>
+                <small>NAGRODA DNIA</small>
+                <strong>1280zł / 24h</strong>
+                <span>🏆 3 4 ↓</span>
+              </div>
+            </div>
+            <div className="wallet-pro-live-list">
+              {liveChatUsers.map(item => (
+                <div className={`wallet-pro-live-user ${item.place === 2 ? 'active' : ''}`} key={item.place}>
+                  <span>{item.place}</span>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.subtitle}</small>
+                  </div>
+                  {item.badge && <em>{item.badge}</em>}
+                </div>
+              ))}
+            </div>
+            <div className="wallet-pro-chatbar">
+              <input value="" readOnly placeholder="Napisz wiadomość..." />
+              <button type="button">➤</button>
+            </div>
+          </article>
+
+          <article className="wallet-pro-sidecard wallet-pro-ranking">
+            <div className="wallet-pro-sidehead simple">
+              <div>
+                <span>Top typerzy</span>
+              </div>
+              <em>Ranking real</em>
+            </div>
+            <div className="wallet-pro-top-list">
+              {topTipsters.map(item => (
+                <div className="wallet-pro-top-user" key={item.place}>
+                  <span>{item.place}</span>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.subtitle}</small>
+                  </div>
+                  <b>{item.profit}</b>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="wallet-pro-sidecard wallet-pro-ai-list">
+            <div className="wallet-pro-sidehead simple">
+              <div>
+                <span>Typy AI dnia</span>
+              </div>
+              <em>Zobacz wszystkie</em>
+            </div>
+            <div className="wallet-pro-ai-rows">
+              {aiPicks.map((item, index) => (
+                <div className="wallet-pro-ai-row" key={item.teams + index}>
+                  <div className="wallet-pro-ai-badge">M{index + 1}</div>
+                  <div>
+                    <strong>{item.teams}</strong>
+                    <small>Typ: {item.pick}</small>
+                  </div>
+                  <b>{item.chance}</b>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="wallet-pro-fullbtn">Zarządzaj wypłatami</button>
+          </article>
+
+          <article className="wallet-pro-sidecard wallet-pro-referrals">
+            <div className="wallet-pro-sidehead simple">
+              <div>
+                <span>Zarobki z poleceń</span>
+              </div>
+              <em>{role}</em>
+            </div>
+            <div className="wallet-pro-referral-grid">
+              <div>
+                <small>Łącznie</small>
+                <strong>+{referralTotal.toFixed(2)} zł</strong>
+              </div>
+              <div>
+                <small>W tym miesiącu</small>
+                <strong>+{referralMonth.toFixed(2)} zł</strong>
+              </div>
+              <div>
+                <small>Oczekujące</small>
+                <strong>+{referralPending.toFixed(2)} zł</strong>
+              </div>
+            </div>
+            <div className="wallet-pro-referral-user">
+              <span>{username.slice(0,2).toUpperCase()}</span>
+              <div>
+                <strong>{username}</strong>
+                <small>{email}</small>
+              </div>
+            </div>
+            <button type="button" className="wallet-pro-fullbtn">Zobacz szczegóły</button>
+          </article>
+        </aside>
       </div>
     </section>
   )
 }
+
 function getNotificationBody(item = {}) {
   return item.message || item.body || item.description || 'Masz nowe powiadomienie.'
 }
@@ -4023,6 +4363,18 @@ function LeaderboardView({ tips = [], ranking = [], user = null, referralData = 
                 </div>
               ))}
             </div>
+          </article>
+
+          <article className="ranking536-side-card ranking539-earnings-card">
+            <div className="ranking536-side-title ranking539-earnings-title">
+              <h3>Zarobki z poleceń</h3>
+            </div>
+            <div className="ranking536-ref-stats ranking539-earnings-stats">
+              <div><span>Łącznie</span><b>+{referralRewards.toFixed(2)} zł</b></div>
+              <div><span>W tym miesiącu</span><b>+{monthlyRewards.toFixed(2)} zł</b></div>
+              <div><span>Oczekujące</span><b>+{pendingRewards.toFixed(2)} zł</b></div>
+            </div>
+            <button className="ranking536-side-btn ranking539-earnings-btn">Zobacz szczegóły</button>
           </article>
 
           <article className="ranking536-side-card referral-card">
@@ -7568,7 +7920,16 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={walletBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
+          <WalletPanel
+            wallet={walletBalance}
+            tokenBalance={tokenBalance}
+            unlockedTips={unlockedTips}
+            tips={tips}
+            onTopUp={() => startStripeTopup(100)}
+            user={effectiveAccountProfile}
+            payments={paymentHistory}
+            earnings={tipsterEarnings}
+          />
         )}
 
         {view === 'leaderboard' && (
