@@ -8198,3 +8198,37 @@ html,body,#root{
   .auth481-right-column{height:auto!important;}
   .auth481-right-image{height:auto!important;width:100%!important;}
 }
+
+
+/* =========================================================
+   WERSJA 483 — prawa kolumna pełna i stała, bez ucinania
+   Lewa kolumna bez zmian. Prawa pokazuje pełny obraz i nie dostaje
+   już sztucznej stałej wysokości, która ucinała dół ramki.
+   ========================================================= */
+.auth481-top-grid{
+  align-items:start!important;
+}
+.auth481-right-column{
+  align-self:start!important;
+  display:block!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+.auth481-right-image{
+  width:100%!important;
+  height:auto!important;
+  max-width:100%!important;
+  object-fit:contain!important;
+  object-position:center top!important;
+  display:block!important;
+  border-radius:0!important;
+}
+/* usunięcie wcześniejszych wymuszeń wysokości, które ucinały dół */
+@media (max-width:1360px){
+  .auth481-right-column{height:auto!important;}
+}
+@media (max-width:1100px){
+  .auth481-right-column{height:auto!important;}
+  .auth481-right-image{height:auto!important;width:100%!important;}
+}
