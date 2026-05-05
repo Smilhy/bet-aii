@@ -12598,3 +12598,45 @@ button.notify-btn b{
 .auth-pro-visual::after{
   inset:12px !important;
 }
+
+/* =========================================================
+   VERSION 474 — AUTH RIGHT PANEL CROPPING / CLEANUP FIX
+   - removes footer/text bleed under right showcase
+   - uses latest cleaned showcase asset
+   - gives right panel its own solid framed container
+   ========================================================= */
+.auth-pro-main{
+  height:min(76vh, 890px);
+}
+.auth-pro-visual{
+  position:relative;
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid rgba(35,220,255,.24);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(19,134,199,.14), transparent 32%),
+    linear-gradient(180deg, rgba(2,12,22,.985), rgba(1,8,16,.995));
+  box-shadow:0 0 0 1px rgba(13,207,243,.05) inset, 0 18px 44px rgba(0,0,0,.34);
+  isolation:isolate;
+}
+.auth-pro-visual-art{
+  position:absolute;
+  inset:0;
+  border-radius:28px;
+  background:
+    linear-gradient(180deg, rgba(1,8,16,.02), rgba(1,8,16,.08)),
+    url('/auth-showcase-473.webp') center center / cover no-repeat;
+}
+.auth-pro-footer{
+  position:relative;
+  z-index:1;
+}
+@media (max-width: 1280px){
+  .auth-pro-main{height:auto;}
+  .auth-pro-visual{min-height:520px;}
+  .auth-pro-visual-art{background-size:cover; background-position:center top;}
+}
+@media (max-width: 760px){
+  .auth-pro-visual{min-height:320px;}
+  .auth-pro-visual-art{background-position:center top;}
+}
