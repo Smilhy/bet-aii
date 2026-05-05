@@ -9299,3 +9299,47 @@ html,body,#root{
     min-height:auto!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 499 — dolne kafelki w rejestracji takie same jak w logowaniu
+   ========================================================= */
+.auth481-screen:has(.auth481-form-register) .auth481-features-grid{
+  margin-top:26px!important;
+  gap:22px!important;
+}
+.auth481-screen:has(.auth481-form-register) .auth481-feature-card{
+  min-height:114px!important;
+  padding:18px 20px!important;
+  border-radius:22px!important;
+  gap:18px!important;
+}
+.auth481-screen:has(.auth481-form-register) .auth481-feature-icon{
+  width:58px!important;
+  height:58px!important;
+  flex:0 0 58px!important;
+  border-radius:18px!important;
+}
+.auth481-screen:has(.auth481-form-register) .auth481-feature-card h3{
+  font-size:18px!important;
+  margin:0 0 6px!important;
+}
+.auth481-screen:has(.auth481-form-register) .auth481-feature-card p{
+  font-size:14px!important;
+  line-height:1.45!important;
+}
+@media (max-width:1360px){
+  .auth481-screen:has(.auth481-form-register) .auth481-features-grid{
+    margin-top:20px!important;
+    gap:18px!important;
+  }
+  .auth481-screen:has(.auth481-form-register) .auth481-feature-card{
+    min-height:102px!important;
+    padding:16px 18px!important;
+  }
+  .auth481-screen:has(.auth481-form-register) .auth481-feature-icon{
+    width:52px!important;
+    height:52px!important;
+    flex:0 0 52px!important;
+  }
+}

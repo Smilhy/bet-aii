@@ -1,0 +1,4 @@
+Wersja 499
+- Dolne kafelki w zakładce „Zarejestruj się” mają teraz taki sam rozmiar jak w zakładce „Zaloguj się”.
+- Skopiowano rozmiary kafelków, ikon, fontów i odstępów z trybu logowania.
+- Zachowano naprawę wpisywania w polach z wcześniejszej wersji.
