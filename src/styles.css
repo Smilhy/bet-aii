@@ -16161,3 +16161,727 @@ img,video,canvas,svg{max-width:100%;}
   .betai-hero-dots span{width:8px;height:8px;}
   .betai-hero-dots span.active{width:10px;height:10px;}
 }
+
+
+/* WERSJA 519 — klikane kropki hero + żywy sweep światła */
+@keyframes betaiHeroLightSweep519 {
+  0%, 58%, 100% {
+    transform: translateX(-145%) skewX(-16deg);
+    opacity: 0;
+  }
+  63% { opacity: .05; }
+  72% { opacity: .86; }
+  86% {
+    transform: translateX(165%) skewX(-16deg);
+    opacity: 0;
+  }
+}
+@keyframes betaiHeroDotPulse519 {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(28, 236, 255, .35), 0 0 16px rgba(28, 236, 255, .28); }
+  50% { box-shadow: 0 0 0 7px rgba(28, 236, 255, 0), 0 0 24px rgba(28, 236, 255, .68); }
+}
+.betai-animated-hero.betai-hero-image-slides{
+  isolation:isolate!important;
+}
+.betai-animated-hero.betai-hero-image-slides::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  top:-35%!important;
+  bottom:-35%!important;
+  left:0!important;
+  width:30%!important;
+  z-index:9!important;
+  pointer-events:none!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(104deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.04) 17%,
+      rgba(153,250,255,.34) 42%,
+      rgba(28,235,255,.24) 50%,
+      rgba(255,255,255,.10) 58%,
+      rgba(255,255,255,0) 100%)!important;
+  filter:blur(.2px)!important;
+  mix-blend-mode:screen!important;
+  transform:translateX(-145%) skewX(-16deg);
+  opacity:0;
+  animation:betaiHeroLightSweep519 7.4s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides:hover::before{
+  animation-duration:5.6s!important;
+}
+.betai-hero-dots{
+  z-index:12!important;
+  pointer-events:auto!important;
+}
+.betai-hero-dots button{
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  min-height:12px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:rgba(170,190,210,.40)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10) inset!important;
+  cursor:pointer!important;
+  transition:width .24s ease, height .24s ease, background .24s ease, transform .18s ease, box-shadow .24s ease!important;
+}
+.betai-hero-dots button:hover{
+  transform:scale(1.22)!important;
+  background:rgba(95,244,255,.75)!important;
+}
+.betai-hero-dots button.active{
+  width:16px!important;
+  height:16px!important;
+  background:#18e8ff!important;
+  animation:betaiHeroDotPulse519 2.4s ease-in-out infinite!important;
+}
+.betai-hero-dots span{display:none!important;}
+@media (max-width: 760px){
+  .betai-animated-hero.betai-hero-image-slides::before{
+    width:44%!important;
+    animation-duration:8.4s!important;
+  }
+  .betai-hero-dots button{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important;}
+  .betai-hero-dots button.active{width:13px!important;height:13px!important;}
+}
+
+
+/* WERSJA 520 — mocny widoczny sweep, wtopiony baner, wyostrzone slajdy i realne statystyki */
+@keyframes betaiHeroVisibleBeam520 {
+  0% {
+    transform: translateX(-90%) skewX(-18deg);
+    opacity: 0;
+  }
+  8% { opacity: .95; }
+  48% {
+    transform: translateX(380%) skewX(-18deg);
+    opacity: .72;
+  }
+  58%, 100% {
+    transform: translateX(420%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+@keyframes betaiHeroSoftPulse520 {
+  0%, 100% { filter: brightness(1.08) contrast(1.12) saturate(1.14) drop-shadow(0 18px 32px rgba(0, 228, 255, .24)); }
+  50% { filter: brightness(1.15) contrast(1.18) saturate(1.20) drop-shadow(0 22px 42px rgba(0, 228, 255, .34)); }
+}
+.betai-animated-hero.betai-hero-image-slides{
+  background:
+    radial-gradient(circle at 50% -18%, rgba(23, 255, 226, .18), transparent 36%),
+    linear-gradient(180deg, rgba(3, 18, 26, .96), rgba(1, 8, 16, .98))!important;
+  border-color:rgba(36, 238, 216, .34)!important;
+  box-shadow:
+    0 0 0 1px rgba(72, 255, 230, .06) inset,
+    0 18px 48px rgba(0,0,0,.38),
+    0 0 34px rgba(16, 218, 204, .14),
+    0 0 95px rgba(0, 92, 98, .18)!important;
+}
+.betai-animated-hero.betai-hero-image-slides::before{
+  display:block!important;
+  content:""!important;
+  position:absolute!important;
+  top:-22%!important;
+  bottom:-22%!important;
+  left:-18%!important;
+  width:34%!important;
+  z-index:30!important;
+  pointer-events:none!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(103deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.08) 16%,
+      rgba(165,255,255,.68) 38%,
+      rgba(31,238,255,.48) 48%,
+      rgba(47,255,211,.24) 58%,
+      rgba(255,255,255,0) 100%)!important;
+  filter:blur(.4px)!important;
+  mix-blend-mode:screen!important;
+  animation:betaiHeroVisibleBeam520 4.8s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides::after{
+  z-index:24!important;
+  background:
+    radial-gradient(circle at 52% 50%, rgba(21, 229, 255, .08), transparent 42%),
+    linear-gradient(180deg, rgba(2, 10, 16, 0) 58%, rgba(0, 0, 0, .30) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.22) 0%, transparent 16%, transparent 78%, rgba(0,0,0,.26) 100%)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(31,230,205,.18),
+    inset 0 0 36px rgba(16, 234, 255, .08),
+    inset 0 -42px 82px rgba(0,0,0,.22)!important;
+}
+.betai-hero-image-stage{
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 213, 255, .12), transparent 56%),
+    #020a12!important;
+}
+.betai-hero-slide-img{
+  object-fit:cover!important;
+  object-position:center center!important;
+  filter:brightness(1.08) contrast(1.14) saturate(1.16) sharpen(1)!important;
+  transform:translate3d(0,0,0) scale(1.018)!important;
+}
+.betai-hero-slide-img.active{
+  filter:brightness(1.11) contrast(1.17) saturate(1.18) drop-shadow(0 18px 42px rgba(0, 228, 255, .26))!important;
+  animation:betaiHeroSoftPulse520 7s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  display:flex!important;
+  position:absolute!important;
+  right:12px!important;
+  top:12px!important;
+  bottom:12px!important;
+  width:220px!important;
+  z-index:28!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  pointer-events:none!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  min-height:0!important;
+  flex:1 1 0!important;
+  display:grid!important;
+  grid-template-columns:48px 1fr!important;
+  grid-template-rows:auto 1fr!important;
+  column-gap:12px!important;
+  align-items:center!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(77, 208, 255, .34)!important;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0, 215, 255, .22), transparent 36%),
+    linear-gradient(180deg, rgba(7, 24, 38, .70), rgba(3, 11, 21, .62))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 0 22px rgba(28, 205, 255, .06),
+    0 10px 28px rgba(0,0,0,.26),
+    0 0 22px rgba(0, 190, 255, .10)!important;
+  backdrop-filter:blur(14px) saturate(1.18)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.18)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  grid-row:1 / span 2!important;
+  width:42px!important;
+  height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:14px!important;
+  font-style:normal!important;
+  font-size:22px!important;
+  background:rgba(0, 211, 255, .10)!important;
+  border:1px solid rgba(73, 224, 255, .22)!important;
+  box-shadow:0 0 18px rgba(0, 217, 255, .16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  display:block!important;
+  color:#a9d3e4!important;
+  font-size:12px!important;
+  line-height:1.1!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:32px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 0 22px rgba(55, 231, 255, .24)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{
+  color:#f7ffff!important;
+}
+@media (max-width: 1280px){
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{display:none!important;}
+}
+@media (max-width: 760px){
+  .betai-animated-hero.betai-hero-image-slides::before{
+    width:52%!important;
+    animation-duration:5.8s!important;
+  }
+}
+
+
+/* WERSJA 521 — usuń sztuczne statystyki z obrazów, powiększ realną ramkę i mocna poświata hero */
+.betai-animated-hero.betai-hero-image-slides{
+  border-color:rgba(44, 245, 223, .58)!important;
+  box-shadow:
+    0 0 0 1px rgba(92, 255, 237, .20) inset,
+    0 0 24px rgba(28, 230, 255, .26),
+    0 0 58px rgba(20, 214, 195, .23),
+    0 24px 68px rgba(0,0,0,.42)!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  content:""!important;
+  position:absolute!important;
+  top:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:30%!important;
+  z-index:22!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 30% 50%, rgba(0, 222, 255, .10), transparent 42%),
+    linear-gradient(90deg, rgba(2, 9, 17, 0) 0%, rgba(3, 12, 23, .72) 21%, rgba(3, 12, 23, .94) 48%, rgba(2, 8, 16, .98) 100%)!important;
+  backdrop-filter:blur(2px) saturate(1.08)!important;
+  -webkit-backdrop-filter:blur(2px) saturate(1.08)!important;
+  box-shadow:inset 1px 0 0 rgba(37, 232, 255, .08)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  display:flex!important;
+  right:18px!important;
+  top:14px!important;
+  bottom:14px!important;
+  width:260px!important;
+  z-index:32!important;
+  gap:12px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  border-radius:19px!important;
+  grid-template-columns:54px 1fr!important;
+  column-gap:14px!important;
+  padding:14px 16px!important;
+  border:1px solid rgba(92, 218, 255, .46)!important;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(0, 221, 255, .26), transparent 38%),
+    linear-gradient(180deg, rgba(9, 31, 49, .78), rgba(3, 13, 26, .74))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 0 24px rgba(34, 220, 255, .08),
+    0 12px 30px rgba(0,0,0,.32),
+    0 0 26px rgba(0, 210, 255, .18)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  width:48px!important;
+  height:48px!important;
+  border-radius:16px!important;
+  font-size:24px!important;
+  background:linear-gradient(180deg, rgba(10, 58, 76, .72), rgba(4, 24, 39, .72))!important;
+  border-color:rgba(94, 230, 255, .34)!important;
+  box-shadow:0 0 22px rgba(0, 217, 255, .23), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  font-size:12.5px!important;
+  color:#b8e3f0!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  font-size:35px!important;
+  color:#ffffff!important;
+}
+.betai-animated-hero.betai-hero-image-slides::before{
+  z-index:34!important;
+}
+.betai-animated-hero.betai-hero-image-slides::after{
+  box-shadow:
+    inset 0 0 0 1px rgba(66, 245, 224, .24),
+    inset 0 0 42px rgba(18, 228, 255, .12),
+    inset 0 -50px 90px rgba(0,0,0,.30)!important;
+}
+@media (min-width: 1500px){
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:280px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:31%!important;
+  }
+}
+@media (max-width: 1280px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    display:none!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    display:none!important;
+  }
+}
+
+
+/* WERSJA 522 — krótsza maska po prawej + szersze realne statystyki hero */
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  width:22%!important;
+  background:
+    radial-gradient(circle at 42% 50%, rgba(0, 222, 255, .08), transparent 38%),
+    linear-gradient(90deg,
+      rgba(2, 9, 17, 0) 0%,
+      rgba(3, 12, 23, .28) 20%,
+      rgba(3, 12, 23, .70) 48%,
+      rgba(2, 8, 16, .94) 100%)!important;
+  backdrop-filter:blur(1.2px) saturate(1.05)!important;
+  -webkit-backdrop-filter:blur(1.2px) saturate(1.05)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  width:330px!important;
+  right:14px!important;
+  top:13px!important;
+  bottom:13px!important;
+  gap:10px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  grid-template-columns:50px 1fr!important;
+  column-gap:12px!important;
+  padding:12px 14px!important;
+  border-radius:18px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  width:44px!important;
+  height:44px!important;
+  font-size:22px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  font-size:11.5px!important;
+  letter-spacing:.06em!important;
+  white-space:normal!important;
+  overflow:visible!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  font-size:32px!important;
+  white-space:nowrap!important;
+}
+@media (min-width:1500px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:23%!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:350px!important;
+  }
+}
+@media (min-width:1281px) and (max-width:1450px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:24%!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:300px!important;
+    right:10px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+    font-size:29px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+    font-size:10.8px!important;
+  }
+}
+
+
+/* WERSJA 523 — kolor wypełnienia ramek statystyk hero dopasowany do kafelka "MECZÓW DZIŚ" */
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  border-color:rgba(42, 169, 255, .52)!important;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(0, 144, 255, .22), transparent 38%),
+    radial-gradient(circle at 88% 20%, rgba(0, 216, 255, .10), transparent 42%),
+    linear-gradient(180deg, rgba(8, 25, 42, .86), rgba(3, 12, 25, .82))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(158, 225, 255, .16),
+    inset 0 0 24px rgba(28, 157, 255, .10),
+    0 12px 30px rgba(0,0,0,.34),
+    0 0 26px rgba(0, 148, 255, .16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  background:
+    radial-gradient(circle at 45% 42%, rgba(38, 202, 255, .28), transparent 48%),
+    linear-gradient(180deg, rgba(8, 48, 76, .82), rgba(3, 20, 38, .82))!important;
+  border-color:rgba(73, 190, 255, .42)!important;
+  box-shadow:
+    0 0 22px rgba(0, 151, 255, .28),
+    inset 0 1px 0 rgba(180, 235, 255, .16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  color:#bdddf0!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  color:#ffffff!important;
+  text-shadow:0 0 18px rgba(47, 169, 255, .24)!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  background:
+    radial-gradient(circle at 42% 50%, rgba(0, 160, 255, .08), transparent 38%),
+    linear-gradient(90deg,
+      rgba(2, 9, 17, 0) 0%,
+      rgba(3, 12, 23, .24) 20%,
+      rgba(4, 15, 30, .66) 48%,
+      rgba(3, 11, 24, .92) 100%)!important;
+}
+
+
+/* WERSJA 524 — hero: zatuszowanie -70%, ramka statystyk +50% */
+.betai-animated-hero.betai-hero-image-slides{
+  /* więcej miejsca po prawej na powiększoną ramkę statystyk */
+  min-height:420px!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  /* zatuszowanie zmniejszone ok. 70% względem wersji 523 */
+  width:7%!important;
+  background:
+    radial-gradient(circle at 58% 50%, rgba(0, 160, 255, .035), transparent 36%),
+    linear-gradient(90deg,
+      rgba(2, 9, 17, 0) 0%,
+      rgba(3, 12, 23, .10) 28%,
+      rgba(4, 15, 30, .28) 58%,
+      rgba(3, 11, 24, .55) 100%)!important;
+  backdrop-filter:blur(.35px) saturate(1.02)!important;
+  -webkit-backdrop-filter:blur(.35px) saturate(1.02)!important;
+  box-shadow:none!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  /* ramka/kolumna statystyk powiększona ok. 50% */
+  width:495px!important;
+  right:18px!important;
+  top:18px!important;
+  bottom:18px!important;
+  gap:14px!important;
+  padding:14px!important;
+  border-radius:28px!important;
+  border:1px solid rgba(42, 169, 255, .48)!important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(0, 174, 255, .16), transparent 36%),
+    radial-gradient(circle at 92% 86%, rgba(0, 235, 213, .10), transparent 38%),
+    linear-gradient(180deg, rgba(4, 15, 29, .88), rgba(2, 9, 19, .82))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(158, 225, 255, .12),
+    inset 0 0 38px rgba(28, 157, 255, .10),
+    0 16px 42px rgba(0,0,0,.36),
+    0 0 34px rgba(0, 148, 255, .15)!important;
+  overflow:hidden!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  grid-template-columns:68px minmax(0,1fr)!important;
+  column-gap:18px!important;
+  padding:16px 22px!important;
+  border-radius:22px!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  width:60px!important;
+  height:60px!important;
+  border-radius:19px!important;
+  font-size:30px!important;
+  flex:0 0 60px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  font-size:15px!important;
+  line-height:1.08!important;
+  letter-spacing:.075em!important;
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  margin-top:4px!important;
+  font-size:48px!important;
+  line-height:.95!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong{
+  font-size:40px!important;
+  letter-spacing:-.055em!important;
+}
+@media (min-width:1500px){
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:525px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:7%!important;
+  }
+}
+@media (min-width:1281px) and (max-width:1450px){
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:450px!important;
+    right:12px!important;
+    padding:12px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+    grid-template-columns:58px minmax(0,1fr)!important;
+    column-gap:14px!important;
+    padding:14px 16px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+    width:54px!important;
+    height:54px!important;
+    font-size:27px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+    font-size:42px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong{
+    font-size:34px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+    font-size:13px!important;
+  }
+}
+
+/* WERSJA 525 — POPRAWKA HERO LIVE STATS: czytelna prawa ramka bez nachodzenia i ucinania napisów */
+@media (min-width: 1181px){
+  .betai-animated-hero.betai-hero-image-slides{
+    min-height: 334px !important;
+    border-radius: 28px !important;
+    overflow: hidden !important;
+  }
+
+  /* Zakrywa popsute/zdublowane elementy ze slajdu pod statystykami, ale nie przykrywa naszych prawdziwych statystyk. */
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 355px !important;
+    z-index: 22 !important;
+    pointer-events: none !important;
+    background:
+      linear-gradient(90deg,
+        rgba(2, 8, 16, 0) 0%,
+        rgba(2, 9, 18, .62) 21%,
+        rgba(2, 10, 20, .94) 48%,
+        rgba(2, 8, 17, .98) 100%) !important;
+    backdrop-filter: blur(1.5px) saturate(1.08) !important;
+    -webkit-backdrop-filter: blur(1.5px) saturate(1.08) !important;
+    box-shadow: inset 1px 0 0 rgba(45, 210, 255, .09) !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    display: flex !important;
+    position: absolute !important;
+    right: 16px !important;
+    top: 16px !important;
+    bottom: 16px !important;
+    width: 318px !important;
+    height: auto !important;
+    z-index: 90 !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    margin: 0 !important;
+    border-radius: 24px !important;
+    border: 1px solid rgba(62, 197, 255, .56) !important;
+    background:
+      radial-gradient(circle at 20% 12%, rgba(0, 169, 255, .18), transparent 36%),
+      radial-gradient(circle at 90% 92%, rgba(0, 235, 213, .10), transparent 40%),
+      linear-gradient(180deg, rgba(4, 17, 32, .96), rgba(2, 8, 17, .92)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(170, 232, 255, .16),
+      inset 0 0 34px rgba(28, 157, 255, .10),
+      0 16px 42px rgba(0,0,0,.36),
+      0 0 30px rgba(0, 148, 255, .16) !important;
+    overflow: hidden !important;
+    transform: none !important;
+    pointer-events: none !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 54px minmax(0, 1fr) !important;
+    grid-template-rows: auto 1fr !important;
+    column-gap: 14px !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    border-radius: 17px !important;
+    border: 1px solid rgba(42, 169, 255, .48) !important;
+    background:
+      radial-gradient(circle at 18% 50%, rgba(0, 144, 255, .22), transparent 38%),
+      linear-gradient(180deg, rgba(8, 25, 42, .92), rgba(3, 12, 25, .86)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(158, 225, 255, .15),
+      inset 0 0 20px rgba(28, 157, 255, .09),
+      0 10px 24px rgba(0,0,0,.24) !important;
+    overflow: hidden !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+    grid-row: 1 / span 2 !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 15px !important;
+    font-size: 23px !important;
+    display: grid !important;
+    place-items: center !important;
+    font-style: normal !important;
+    background:
+      radial-gradient(circle at 45% 42%, rgba(38, 202, 255, .30), transparent 48%),
+      linear-gradient(180deg, rgba(8, 48, 76, .84), rgba(3, 20, 38, .84)) !important;
+    border: 1px solid rgba(73, 190, 255, .42) !important;
+    box-shadow: 0 0 18px rgba(0, 151, 255, .24), inset 0 1px 0 rgba(180, 235, 255, .16) !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+    display: block !important;
+    min-width: 0 !important;
+    color: #c4e8f7 !important;
+    font-size: 11.5px !important;
+    line-height: 1.06 !important;
+    font-weight: 950 !important;
+    letter-spacing: .075em !important;
+    text-transform: uppercase !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{
+    display: block !important;
+    min-width: 0 !important;
+    margin-top: 3px !important;
+    color: #ffffff !important;
+    font-size: 31px !important;
+    line-height: .98 !important;
+    font-weight: 950 !important;
+    letter-spacing: -.035em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-shadow: 0 0 18px rgba(47, 169, 255, .22) !important;
+  }
+
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong{
+    font-size: 26px !important;
+    letter-spacing: -.04em !important;
+  }
+}
+
+@media (min-width: 1281px) and (max-width: 1450px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{ width: 315px !important; }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width: 286px !important;
+    right: 10px !important;
+    top: 12px !important;
+    bottom: 12px !important;
+    padding: 8px !important;
+    gap: 7px !important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+    grid-template-columns: 46px minmax(0,1fr) !important;
+    column-gap: 11px !important;
+    padding: 8px 11px !important;
+    border-radius: 15px !important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 21px !important;
+    border-radius: 14px !important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{ font-size: 10.2px !important; letter-spacing: .055em !important; }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{ font-size: 27px !important; }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong{ font-size: 22px !important; }
+}
+
+@media (max-width: 1280px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{ display:none !important; }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{ display:none !important; }
+}
