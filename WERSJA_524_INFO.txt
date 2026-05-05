@@ -1,4 +1,1 @@
-WERSJA 524
-- Zatuszowano sztuczne statystyki zapisane w obrazkach/slajdach hero mocniejszą maską po prawej stronie.
-- Realna ramka statystyk hero (MECZÓW DZIŚ / pewność / ROI / premium / dzień) została powiększona około 100% na szerokość i rozszerzona w lewą stronę.
-- Loader i login bez zmian.
+Wersja 524: hero banner — zatuszowanie prawej części zmniejszone o około 70%, ramka/kolumna statystyk powiększona o około 50%, poprawione przycinanie tekstu i powiększone ikony/liczby statystyk.
