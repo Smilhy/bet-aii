@@ -3780,6 +3780,7 @@ function LeaderboardView({ tips = [], ranking = [], user = null, referralData = 
 
     const resolved = Array.from(merged.values()).map((row, index) => {
       const name = row.display_name || row.username || row.author_name || (row.email ? String(row.email).split('@')[0] : '') || 'Użytkownik'
+      const rowKey = row.tipster_id || row.id || row.user_id || row.email || row.username || name || `rank-${index}`
       const totalTips = Number(row.total_tips || row.tips_count || 0)
       const wins = Number(row.wins || 0)
       const losses = Number(row.losses || 0)
@@ -3801,7 +3802,7 @@ function LeaderboardView({ tips = [], ranking = [], user = null, referralData = 
       const score = roi * 4.2 + winRate * 3.1 + followers * 0.12 + totalTips * 0.35 + earnings * 0.003
       return {
         ...row,
-        key,
+        key: rowKey,
         name,
         avatar,
         winRate,
