@@ -3224,7 +3224,7 @@ function AuthView({ onAuth }) {
               oraz statystyk na żywo.
             </p>
 
-            <div className="auth481-tabs" role="tablist" aria-label="Wybierz tryb logowania">
+            <div className={`auth481-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Wybierz tryb logowania">
               <button
                 type="button"
                 className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
@@ -3335,7 +3335,7 @@ function AuthView({ onAuth }) {
             ) : null}
           </section>
 
-          <section className="auth481-right-column" aria-hidden="true">
+          <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`} aria-hidden="true">
             <img src="/auth-right-484.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
           </section>
         </div>

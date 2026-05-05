@@ -13436,3 +13436,76 @@ button.notify-btn b{
     max-width:100%!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 487 — subtelne korekty pozycji zakładek i prawej kolumny
+   - Zaloguj: aktywna ramka lekko wyżej
+   - Zarejestruj: aktywna ramka lekko niżej
+   - Prawa kolumna lekko wyżej
+   ========================================================= */
+.auth481-tab{
+  position:relative!important;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease!important;
+}
+.auth481-tabs.auth481-tabs-login .auth481-tab.is-active{
+  transform:translateY(-3px)!important;
+}
+.auth481-tabs.auth481-tabs-register .auth481-tab.is-active{
+  transform:translateY(3px)!important;
+}
+.auth481-right-column{
+  padding-top:28px!important;
+  margin-top:6px!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column{
+    padding-top:22px!important;
+    margin-top:4px!important;
+  }
+}
+@media (max-width:1100px){
+  .auth481-tabs.auth481-tabs-login .auth481-tab.is-active,
+  .auth481-tabs.auth481-tabs-register .auth481-tab.is-active{
+    transform:none!important;
+  }
+  .auth481-right-column{
+    padding-top:8px!important;
+    margin-top:6px!important;
+  }
+}
+
+
+/* =========================================================
+   WERSJA 488 — pozycja prawej kolumny zależna od zakładki
+   - login: prawa kolumna lekko wyżej
+   - rejestracja: prawa kolumna lekko niżej
+   ========================================================= */
+.auth481-right-column{
+  transition:padding-top .18s ease, margin-top .18s ease!important;
+}
+.auth481-right-column.auth481-right-login{
+  padding-top:20px!important;
+  margin-top:0!important;
+}
+.auth481-right-column.auth481-right-register{
+  padding-top:38px!important;
+  margin-top:14px!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column.auth481-right-login{
+    padding-top:16px!important;
+    margin-top:0!important;
+  }
+  .auth481-right-column.auth481-right-register{
+    padding-top:30px!important;
+    margin-top:10px!important;
+  }
+}
+@media (max-width:1100px){
+  .auth481-right-column.auth481-right-login,
+  .auth481-right-column.auth481-right-register{
+    padding-top:8px!important;
+    margin-top:6px!important;
+  }
+}
