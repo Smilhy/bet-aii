@@ -648,12 +648,19 @@ function getTipErrorToast(cleanMessage) {
 }
 
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
-  const heroPanels = ['slide1', 'slide2', 'slide3']
-  const [panel, setPanel] = useState('slide1')
+  const heroSlides = [
+    '/betai-hero-live-1.png',
+    '/betai-hero-live-2.png',
+    '/betai-hero-live-3.png',
+    '/betai-hero-live-4.png',
+    '/betai-hero-live-5.png',
+    '/betai-hero-live-6.png'
+  ]
+  const [panel, setPanel] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const panelTimer = setInterval(() => setPanel(prev => heroPanels[(heroPanels.indexOf(prev) + 1) % heroPanels.length] || 'slide1'), 8000)
+    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
     return () => { clearInterval(panelTimer) }
   }, [])
 
@@ -680,9 +687,18 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
     >
       <div className="betai-hero-image-stage" aria-hidden="true">
-        <img className={`betai-hero-slide-img slide-1 ${panel === 'slide1' ? 'active' : ''}`} src="/betai-hero-slide-1-logo.png" alt="" />
-        <img className={`betai-hero-slide-img slide-2 ${panel === 'slide2' ? 'active' : ''}`} src="/betai-hero-slide-2-coin.png" alt="" />
-        <img className={`betai-hero-slide-img slide-3 ${panel === 'slide3' ? 'active' : ''}`} src="/betai-hero-slide-3-typy.png" alt="" />
+        {heroSlides.map((src, index) => (
+          <img
+            key={src}
+            className={`betai-hero-slide-img slide-${index + 1} ${panel === index ? 'active' : ''}`}
+            src={src}
+            alt=""
+            draggable="false"
+          />
+        ))}
+      </div>
+      <div className="betai-hero-dots" aria-hidden="true">
+        {heroSlides.map((_, index) => <span key={index} className={panel === index ? 'active' : ''} />)}
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
@@ -5395,21 +5411,53 @@ function DashboardAutoTranslator({ lang }) {
 }
 
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
+  const [open, setOpen] = useState(false)
+  const currentLang = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
+  const chooseLanguage = (code) => {
+    onChange?.(code)
+    setOpen(false)
+  }
+
   return (
-    <div className={`betai-language-switch ${compact ? 'compact' : ''} ${floating ? 'floating' : ''}`} aria-label={ariaLabel}>
-      {BETAI_LANGUAGES.map(code => (
-        <button
-          type="button"
-          key={code}
-          className={lang === code ? 'is-active' : ''}
-          onClick={() => onChange?.(code)}
-          aria-pressed={lang === code}
-          aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
-          title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
-        >
-          <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
-        </button>
-      ))}
+    <div
+      className={`betai-language-switch betai-language-dropdown ${compact ? 'compact' : ''} ${floating ? 'floating' : ''} ${open ? 'is-open' : ''}`}
+      aria-label={ariaLabel}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false)
+      }}
+    >
+      <button
+        type="button"
+        className="betai-language-current is-active"
+        onClick={() => setOpen(prev => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${ariaLabel}: ${BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}`}
+        title={BETAI_LANG_NAMES?.[currentLang] || BETAI_LANG_LABELS[currentLang]}
+      >
+        <span className={`betai-language-flag betai-flag-${currentLang}`} aria-hidden="true" />
+        <span className="betai-language-chevron" aria-hidden="true">⌄</span>
+      </button>
+
+      {open ? (
+        <div className="betai-language-menu" role="listbox">
+          {BETAI_LANGUAGES.map(code => (
+            <button
+              type="button"
+              key={code}
+              className={currentLang === code ? 'is-active' : ''}
+              onClick={() => chooseLanguage(code)}
+              role="option"
+              aria-selected={currentLang === code}
+              aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
+              title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
+            >
+              <span className={`betai-language-flag betai-flag-${code}`} aria-hidden="true" />
+              <span className="betai-language-name">{BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

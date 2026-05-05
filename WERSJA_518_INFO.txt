@@ -1,0 +1,5 @@
+Wersja 518
+- Usunięto stary hero slider dashboardu.
+- Dodano nowe szerokie banery 1-6 jako zapętlony slider.
+- Slider automatycznie przełącza slajdy co 6.5 sekundy.
+- Dodano kropki aktywnego slajdu i zachowano responsywność.
