@@ -3210,7 +3210,7 @@ function AuthView({ onAuth }) {
       <div className="auth481-wrap">
         <div className="auth481-top-grid">
           <section className="auth481-left-card">
-            <img src="/auth-logo-481.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
+            <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
             <h1 className="auth481-title">
               Dołącz do
@@ -3336,7 +3336,7 @@ function AuthView({ onAuth }) {
           </section>
 
           <section className="auth481-right-column" aria-hidden="true">
-            <img src="/auth-right-481.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
+            <img src="/auth-right-482.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
           </section>
         </div>
 

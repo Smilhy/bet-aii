@@ -8149,3 +8149,52 @@ html,body,#root{
   .auth481-features-grid{grid-template-columns:1fr; gap:16px;}
   .auth481-feature-card{min-height:auto; padding:16px; border-radius:18px;}
 }
+
+
+/* =========================================================
+   WERSJA 482 — logo i prawa kolumna przywrócone/stabilne
+   ========================================================= */
+.auth481-logo{
+  width:min(100%, 430px)!important;
+  height:auto!important;
+  margin:2px auto 18px!important;
+  background:transparent!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 16px rgba(0,218,255,.18))!important;
+}
+.auth481-top-grid{
+  align-items:start!important;
+}
+.auth481-left-card{
+  align-self:start!important;
+}
+.auth481-right-column{
+  align-self:start!important;
+  height:clamp(620px, 62vh, 760px)!important;
+  min-height:0!important;
+  overflow:visible!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+}
+.auth481-right-image{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center top!important;
+  border-radius:0!important;
+  display:block!important;
+}
+/* prawa kolumna nie zmienia rozmiaru przy przełączaniu login/rejestracja */
+.auth481-left-card,
+.auth481-right-column{
+  transition:none!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column{height:clamp(560px, 58vh, 700px)!important;}
+  .auth481-logo{width:min(100%, 380px)!important;}
+}
+@media (max-width:1100px){
+  .auth481-right-column{height:auto!important;}
+  .auth481-right-image{height:auto!important;width:100%!important;}
+}

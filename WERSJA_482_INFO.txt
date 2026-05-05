@@ -1,0 +1,5 @@
+Wersja 482
+- Przywrócono logo Bet+AI w lewej kolumnie do wyglądu bez czarnego prostokątnego tła.
+- Prawa kolumna została przywrócona i wyświetla się w całości przez object-fit: contain.
+- Prawa kolumna ma stałą wysokość i nie zmienia rozmiaru przy przełączaniu Zaloguj się / Zarejestruj się.
+- Lewy panel może zmieniać zawartość, ale prawa część pozostaje stabilna.
