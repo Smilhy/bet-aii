@@ -8488,3 +8488,44 @@ html,body,#root{
     right:8%!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 491 — większa poświata ramki zakładki "Zaloguj się" do góry
+   ========================================================= */
+.auth481-tabs.auth481-tabs-login .auth481-tab.is-active{
+  transform:translateY(-3px)!important;
+  box-shadow:
+    0 -8px 20px rgba(22,218,255,.20),
+    0 0 18px rgba(22,218,255,.30),
+    inset 0 0 0 1px rgba(255,255,255,.18)!important;
+}
+
+
+/* =========================================================
+   WERSJA 492 — poświata prawej kolumny w trybie "Zaloguj się" bardziej do góry
+   Rozciągnięcie / podniesienie świecącej ramki tylko dla zakładki logowania,
+   aby nie nachodziła i miała więcej miejsca u góry.
+   ========================================================= */
+.auth481-right-column.auth481-right-login::before{
+  inset:8px 16px -10px 16px!important;
+}
+.auth481-right-column.auth481-right-login::after{
+  top:2px!important;
+  bottom:2px!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column.auth481-right-login::before{
+    inset:6px 14px -8px 14px!important;
+  }
+  .auth481-right-column.auth481-right-login::after{
+    top:0!important;
+    bottom:4px!important;
+  }
+}
+@media (max-width:1100px){
+  .auth481-right-column.auth481-right-login::before,
+  .auth481-right-column.auth481-right-login::after{
+    display:none!important;
+  }
+}
