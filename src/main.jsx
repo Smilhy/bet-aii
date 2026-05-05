@@ -6,8 +6,37 @@ const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988', 'buchajsonek1988', 'buchajson', 'buchajsonek'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
+
 var userPlan = 'free'; // global anti-crash fallback
 
+const BETAI_LANGUAGES = ['pl', 'en', 'de', 'es', 'ru']
+const BETAI_LANG_LABELS = { pl: 'PL', en: 'EN', de: 'DE', es: 'ES', ru: 'RU' }
+
+function getInitialBetaiLanguage() {
+  try {
+    const saved = localStorage.getItem('betai_language')
+    if (saved && BETAI_LANGUAGES.includes(saved)) return saved
+    const browserLang = String(navigator?.language || 'pl').slice(0, 2).toLowerCase()
+    return BETAI_LANGUAGES.includes(browserLang) ? browserLang : 'pl'
+  } catch (_) {
+    return 'pl'
+  }
+}
+
+const BETAI_DASHBOARD_TRANSLATIONS = {
+  en: {
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Doładuj konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj tipstera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować tipstera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+  },
+  de: {
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Doładuj konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj tipstera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top tipsterzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować tipstera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
+  },
+  es: {
+    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Doładuj konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj tipstera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować tipstera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
+  },
+  ru: {
+    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Doładuj konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj tipstera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top tipsterzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować tipstera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
+  }
+}
 const PLATFORM_COMMISSION_RATE = 0.20
 
 function getMonthlyCount(rows = []) {
@@ -3078,6 +3107,7 @@ function AuthView({ onAuth }) {
     if (!supportedAuthLanguages.includes(nextLang)) return
     setAuthLang(nextLang)
     try { localStorage.setItem('betai_language', nextLang) } catch (_) {}
+    window.dispatchEvent(new CustomEvent('betai-language-changed', { detail: nextLang }))
   }
 
   const t = authTranslations[authLang] || authTranslations.pl
@@ -4678,6 +4708,68 @@ function disabledTopUp(showToast) {
   })
 }
 
+
+function DashboardAutoTranslator({ lang }) {
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.lang = lang || 'pl'
+    const dictionary = BETAI_DASHBOARD_TRANSLATIONS[lang] || null
+    if (!dictionary) return
+    const skipTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'])
+    const translateText = (value) => {
+      const raw = String(value || '')
+      const trimmed = raw.trim()
+      if (!trimmed) return value
+      return dictionary[trimmed] || value
+    }
+    const translateNode = (node) => {
+      if (!node) return
+      if (node.nodeType === Node.TEXT_NODE) {
+        const next = translateText(node.nodeValue)
+        if (next !== node.nodeValue) node.nodeValue = next
+        return
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return
+      if (skipTags.has(node.tagName)) return
+      if (node.getAttribute?.('data-no-translate') === 'true') return
+      ;['placeholder', 'aria-label', 'title'].forEach(attr => {
+        if (node.hasAttribute?.(attr)) {
+          const next = translateText(node.getAttribute(attr))
+          if (next !== node.getAttribute(attr)) node.setAttribute(attr, next)
+        }
+      })
+      node.childNodes?.forEach(child => translateNode(child))
+    }
+    const translateRoot = () => {
+      const root = document.querySelector('.app-shell')
+      if (root) translateNode(root)
+    }
+    translateRoot()
+    const observer = new MutationObserver(() => translateRoot())
+    const root = document.querySelector('#root') || document.body
+    observer.observe(root, { childList: true, subtree: true, characterData: true })
+    return () => observer.disconnect()
+  }, [lang])
+  return null
+}
+
+function BetaiLanguageSwitch({ lang, onChange, compact = false }) {
+  return (
+    <div className={`betai-language-switch ${compact ? 'compact' : ''}`} aria-label="Language switcher">
+      {BETAI_LANGUAGES.map(code => (
+        <button
+          type="button"
+          key={code}
+          className={lang === code ? 'is-active' : ''}
+          onClick={() => onChange?.(code)}
+          aria-pressed={lang === code}
+        >
+          {BETAI_LANG_LABELS[code]}
+        </button>
+      ))}
+    </div>
+  )
+}
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -4733,6 +4825,27 @@ function App() {
     const match = window.location.pathname.match(/^\/tipster\/([^/?#]+)/)
     return match ? decodeURIComponent(match[1]) : null
   })
+  const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+
+  function changeAppLanguage(nextLang) {
+    if (!BETAI_LANGUAGES.includes(nextLang)) return
+    setAppLang(nextLang)
+    try { localStorage.setItem('betai_language', nextLang) } catch (_) {}
+    window.dispatchEvent(new CustomEvent('betai-language-changed', { detail: nextLang }))
+  }
+
+  useEffect(() => {
+    const syncLanguage = (event) => {
+      const nextLang = event?.detail || getInitialBetaiLanguage()
+      if (BETAI_LANGUAGES.includes(nextLang)) setAppLang(nextLang)
+    }
+    window.addEventListener('betai-language-changed', syncLanguage)
+    window.addEventListener('storage', syncLanguage)
+    return () => {
+      window.removeEventListener('betai-language-changed', syncLanguage)
+      window.removeEventListener('storage', syncLanguage)
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -6199,7 +6312,8 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+      <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
@@ -6219,6 +6333,7 @@ function App() {
             <input value={topSearch} onChange={e => setTopSearch(e.target.value)} placeholder="Szukaj meczów, lig, użytkowników..." />
           </label>
           <div className="top-actions">
+            <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
             <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>

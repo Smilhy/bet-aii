@@ -15101,3 +15101,76 @@ button.notify-btn b{
   .auth481-lang-switch{position:relative; top:auto; right:auto; justify-content:center; margin:0 auto 10px; width:max-content; max-width:100%;}
   .auth481-logo{margin-top:4px!important;}
 }
+
+/* WERSJA 508 — przełącznik języka działa także po zalogowaniu */
+.betai-language-switch{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px;
+  border-radius:999px;
+  border:1px solid rgba(39, 224, 255, .18);
+  background:linear-gradient(180deg, rgba(5, 24, 36, .92), rgba(4, 14, 26, .96));
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset, 0 0 18px rgba(0, 210, 255, .10);
+}
+.betai-language-switch button{
+  min-width:34px;
+  height:30px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:#a8c7d6;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.04em;
+  cursor:pointer;
+  transition:background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.betai-language-switch button:hover{
+  color:#f4feff;
+  transform:translateY(-1px);
+}
+.betai-language-switch button.is-active{
+  color:#06202a;
+  background:linear-gradient(180deg, #34f4e6, #17ceb9);
+  box-shadow:0 0 18px rgba(35, 232, 211, .28), inset 0 0 0 1px rgba(255,255,255,.26);
+}
+.betai-language-switch.compact{
+  margin-right:2px;
+}
+@media (max-width: 900px){
+  .betai-language-switch.compact{
+    order:10;
+    width:100%;
+    justify-content:center;
+  }
+}
+
+/* Live stats auth — kolorystyka mocniej dopasowana do dashboardu */
+.auth481-live-panel{
+  background:
+    linear-gradient(180deg, rgba(3, 19, 30, .98), rgba(3, 13, 24, .96)),
+    radial-gradient(circle at top left, rgba(24, 225, 202, .14), transparent 46%),
+    radial-gradient(circle at top right, rgba(21, 218, 255, .12), transparent 46%) !important;
+  border-color:rgba(35, 220, 197, .26) !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset, 0 18px 36px rgba(0,0,0,.34), 0 0 34px rgba(21, 210, 190, .13) !important;
+}
+.auth481-live-card{
+  background:linear-gradient(180deg, rgba(5, 22, 35, .96), rgba(4, 15, 27, .94)) !important;
+  border-color:rgba(34, 213, 185, .20) !important;
+}
+.auth481-live-card.is-users,
+.auth481-live-card.is-ai,
+.auth481-live-card.is-active,
+.auth481-live-card.is-tips{
+  border-color:rgba(35, 228, 203, .24) !important;
+  box-shadow:inset 0 1px 0 rgba(60, 245, 218, .12), 0 0 18px rgba(35, 228, 203, .09) !important;
+}
+.auth481-live-card.is-users .auth481-live-icon,
+.auth481-live-card.is-ai .auth481-live-icon,
+.auth481-live-card.is-active .auth481-live-icon,
+.auth481-live-card.is-tips .auth481-live-icon{
+  color:#36f1d2 !important;
+  border-color:rgba(49, 235, 213, .28) !important;
+  box-shadow:0 0 18px rgba(45, 229, 210, .16), inset 0 1px 0 rgba(97, 255, 234, .16) !important;
+}

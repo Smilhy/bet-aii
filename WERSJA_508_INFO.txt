@@ -1,0 +1,6 @@
+Wersja 508
+- Wybrany język z ekranu logowania działa także po zalogowaniu.
+- Dodano przełącznik języka PL/EN/DE/ES/RU w topbarze dashboardu.
+- Dashboard tłumaczy statyczne elementy interfejsu po zmianie języka.
+- Wybór języka zapisuje się w localStorage.
+- Poprawiono kolorystykę modułu realnych statystyk live, aby lepiej pasowała do dashboardu.
