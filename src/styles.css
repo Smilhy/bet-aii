@@ -14706,3 +14706,137 @@ button.notify-btn b{
     animation: none !important;
   }
 }
+
+/* =========================================================
+   WERSJA 505 — kolorystyka panelu logowania dopasowana do dashboardu
+   Dashboard używa ciemnego navy + turkus/emerald. Ten override spina
+   ekran auth z resztą aplikacji bez ruszania układu.
+   ========================================================= */
+:root{
+  --betai-main-bg:#020b12;
+  --betai-panel:#07141c;
+  --betai-panel-2:#0a1b25;
+  --betai-teal:#18e0c3;
+  --betai-teal-2:#22f0d0;
+  --betai-cyan:#18d7ff;
+  --betai-text:#f4fbff;
+  --betai-muted:#9eb7c8;
+}
+
+.auth481-screen{
+  background:
+    radial-gradient(circle at 18% 10%, rgba(24,224,195,.13), transparent 20%),
+    radial-gradient(circle at 78% 8%, rgba(24,215,255,.10), transparent 22%),
+    radial-gradient(circle at 50% 100%, rgba(12,124,116,.16), transparent 34%),
+    linear-gradient(180deg, #031018 0%, #04141c 52%, #020b12 100%) !important;
+}
+
+.auth481-left-card{
+  background:linear-gradient(180deg, rgba(7,20,28,.985), rgba(3,12,19,.99)) !important;
+  border-color:rgba(24,224,195,.28)!important;
+  box-shadow:
+    0 0 0 1px rgba(24,224,195,.08) inset,
+    0 0 34px rgba(24,224,195,.13),
+    0 0 74px rgba(24,215,255,.07),
+    0 30px 60px rgba(0,0,0,.34)!important;
+}
+
+.auth481-left-card::before{
+  background:radial-gradient(circle, rgba(24,224,195,.18), transparent 62%)!important;
+}
+
+.auth481-logo{
+  filter:drop-shadow(0 0 18px rgba(24,224,195,.20))!important;
+}
+
+.auth481-title span,
+.auth481-agree strong,
+.auth481-social-heading{
+  color:var(--betai-teal-2)!important;
+}
+
+.auth481-subtitle,
+.auth481-submit-note,
+.auth481-feature-card p{
+  color:#9fb8c7!important;
+}
+
+.auth481-tabs{
+  border-color:rgba(24,224,195,.28)!important;
+  background:linear-gradient(180deg, rgba(6,18,25,.94), rgba(3,12,19,.98))!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.035) inset, 0 0 22px rgba(24,224,195,.08)!important;
+}
+
+.auth481-tab.is-active{
+  background:linear-gradient(180deg, #25efd0, #14cdb7)!important;
+  color:#031317!important;
+  box-shadow:
+    0 0 22px rgba(24,224,195,.42),
+    0 0 48px rgba(24,215,255,.14),
+    inset 0 0 0 1px rgba(255,255,255,.24)!important;
+}
+
+.auth481-input{
+  background:linear-gradient(180deg, rgba(6,18,26,.98), rgba(4,13,20,.99))!important;
+  border-color:rgba(24,224,195,.22)!important;
+}
+
+.auth481-input:focus{
+  border-color:rgba(37,239,208,.64)!important;
+  box-shadow:0 0 0 2px rgba(24,224,195,.14), 0 0 30px rgba(24,224,195,.22), inset 0 0 0 1px rgba(255,255,255,.04)!important;
+}
+
+.auth481-field-icon,
+.auth481-field-right,
+.auth481-eye{
+  color:#5ff5e0!important;
+}
+
+.auth481-submit{
+  background:linear-gradient(180deg, #25efd0, #14cdb7)!important;
+  color:#031317!important;
+  box-shadow:
+    0 0 28px rgba(24,224,195,.30),
+    0 0 56px rgba(24,215,255,.12),
+    inset 0 0 0 1px rgba(255,255,255,.24)!important;
+}
+
+.auth481-checkmark{
+  border-color:rgba(24,224,195,.48)!important;
+}
+
+.auth481-agree input:checked + .auth481-checkmark{
+  background:linear-gradient(180deg, #25efd0, #14cdb7)!important;
+}
+
+.auth481-right-column::before{
+  border-color:rgba(24,224,195,.20)!important;
+  box-shadow:
+    0 0 0 1px rgba(24,224,195,.10) inset,
+    0 0 34px rgba(24,224,195,.13),
+    0 0 64px rgba(24,215,255,.10)!important;
+}
+
+.auth481-right-column::after{
+  background:
+    radial-gradient(circle at 50% 10%, rgba(24,224,195,.13), transparent 34%),
+    radial-gradient(circle at 50% 62%, rgba(24,215,255,.09), transparent 46%)!important;
+}
+
+.auth481-social-link,
+.auth481-feature-card{
+  background:linear-gradient(180deg, rgba(7,20,28,.96), rgba(3,12,19,.98))!important;
+  border-color:rgba(24,224,195,.16)!important;
+}
+
+.auth481-social-link:hover{
+  border-color:rgba(37,239,208,.34)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 24px rgba(24,224,195,.15)!important;
+}
+
+.auth481-feature-icon{
+  color:#6cf9e6!important;
+  background:radial-gradient(circle at 35% 25%, rgba(24,224,195,.24), rgba(7,20,28,.98) 60%)!important;
+  border-color:rgba(24,224,195,.30)!important;
+  box-shadow:0 0 18px rgba(24,224,195,.16), 0 0 34px rgba(24,215,255,.08)!important;
+}

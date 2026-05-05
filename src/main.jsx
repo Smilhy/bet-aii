@@ -3155,9 +3155,12 @@ function AuthView({ onAuth }) {
         }
       }
     } catch (error) {
-      showMessage('error', String(error?.message || '').includes('Database error saving new user')
+      const errorText = String(error?.message || '')
+      showMessage('error', errorText.includes('Database error saving new user')
         ? 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql w Supabase SQL Editor i spróbuj ponownie.'
-        : (error?.message || 'Nie udało się wykonać autoryzacji.'))
+        : errorText.toLowerCase().includes('email rate limit')
+          ? 'Limit wysyłki email został przekroczony. Do testów wyłącz Confirm email albo podłącz Custom SMTP i ustaw większy limit w Supabase.'
+          : (error?.message || 'Nie udało się wykonać autoryzacji.'))
     } finally {
       setSubmitting(false)
     }
