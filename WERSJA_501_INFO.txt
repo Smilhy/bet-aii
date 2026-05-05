@@ -1,0 +1,4 @@
+Wersja 501
+- Dodano poprawiony plik SQL: SUPABASE_RUN_ONCE_FIX_REGISTER_501.sql.
+- SQL naprawia błąd Database error saving new user i dodaje brakujące kolumny profiles przed utworzeniem triggera.
+- Kod aplikacji pozostaje jak w wersji 500.
