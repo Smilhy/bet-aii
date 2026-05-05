@@ -15981,3 +15981,183 @@ img,video,canvas,svg{max-width:100%;}
   .support510-fab,.reviews512-fab{width:56px!important;height:56px!important;}
   .reviews512-fab{padding:8px!important;}
 }
+
+/* WERSJA 517 — przełącznik języka: pokazuj tylko wybraną flagę, reszta po kliknięciu */
+.betai-language-dropdown{
+  position: relative !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 5px !important;
+  overflow: visible !important;
+  z-index: 80 !important;
+}
+.betai-language-dropdown .betai-language-current{
+  width: 46px !important;
+  height: 38px !important;
+  min-width: 46px !important;
+  padding: 0 7px 0 8px !important;
+  gap: 4px !important;
+}
+.betai-language-dropdown .betai-language-chevron{
+  font-size: 13px !important;
+  line-height: 1 !important;
+  color: rgba(202, 252, 255, .84) !important;
+  transform: translateY(-1px);
+  transition: transform .18s ease;
+}
+.betai-language-dropdown.is-open .betai-language-chevron{
+  transform: translateY(0) rotate(180deg);
+}
+.betai-language-menu{
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  display: grid !important;
+  gap: 6px !important;
+  width: 168px !important;
+  padding: 8px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(39, 224, 255, .18) !important;
+  background: linear-gradient(180deg, rgba(5, 24, 36, .98), rgba(4, 14, 26, .98)) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.035) inset,
+    0 18px 40px rgba(0,0,0,.45),
+    0 0 28px rgba(33,225,197,.16) !important;
+  backdrop-filter: blur(14px) !important;
+}
+.betai-language-menu::before{
+  content: '';
+  position: absolute;
+  right: 18px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid rgba(39, 224, 255, .18);
+  border-top: 1px solid rgba(39, 224, 255, .18);
+  background: rgba(5, 24, 36, .98);
+  transform: rotate(45deg);
+}
+.betai-language-menu button{
+  width: 100% !important;
+  height: 38px !important;
+  min-width: 0 !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  padding: 0 10px !important;
+  border-radius: 13px !important;
+  font-size: 13px !important;
+  color: #c7e8ee !important;
+}
+.betai-language-menu button:hover,
+.betai-language-menu button.is-active{
+  background: linear-gradient(180deg, rgba(52, 244, 230, .18), rgba(23, 206, 185, .14)) !important;
+  box-shadow: inset 0 0 0 1px rgba(84,255,239,.22), 0 0 14px rgba(35,232,211,.14) !important;
+  transform: none !important;
+}
+.betai-language-name{
+  display: inline-block !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  letter-spacing: .01em !important;
+  color: inherit !important;
+}
+.betai-language-switch.compact.betai-language-dropdown{
+  width: auto !important;
+  justify-content: flex-start !important;
+  order: 0 !important;
+}
+@media (max-width: 900px){
+  .betai-language-switch.compact.betai-language-dropdown{
+    width: auto !important;
+    justify-content: flex-start !important;
+    order: 0 !important;
+  }
+  .betai-language-menu{
+    right: auto !important;
+    left: 0 !important;
+  }
+  .betai-language-menu::before{
+    right: auto;
+    left: 20px;
+  }
+}
+@media (max-width: 520px){
+  .auth481-language-corner .betai-language-menu{
+    right: 50% !important;
+    left: auto !important;
+    transform: translateX(50%);
+  }
+}
+
+/* WERSJA 518 — nowy zapętlony hero slider dashboardu */
+.betai-animated-hero.betai-hero-image-slides{
+  min-height:330px!important;
+  border-radius:28px!important;
+  background:#020813!important;
+  border:1px solid rgba(31,230,255,.26)!important;
+  box-shadow:0 26px 70px rgba(0,0,0,.34),0 0 44px rgba(0,196,255,.10),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.betai-hero-image-stage{background:#020813!important;}
+.betai-hero-slide-img{
+  object-fit:cover!important;
+  object-position:center center!important;
+  transform:translate3d(0,0,0) scale(1.018)!important;
+  transition:opacity 1s ease, transform 1.35s ease, filter 1.2s ease!important;
+}
+.betai-hero-slide-img.active{
+  opacity:1!important;
+  transform:translate3d(calc(var(--mx,0) * -8px), calc(var(--my,0) * -5px), 0) scale(1.025)!important;
+  filter:brightness(1.05) contrast(1.045) saturate(1.07) drop-shadow(0 18px 34px rgba(0,225,255,.20))!important;
+  animation:betaiHeroImageGlow439 8s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides:after{
+  background:linear-gradient(110deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.03) 34%,rgba(35,226,255,.06) 48%,rgba(255,255,255,0) 67%)!important;
+  box-shadow:inset 0 0 0 1px rgba(31,230,205,.14),inset 0 -40px 75px rgba(0,0,0,.18)!important;
+}
+.betai-hero-dots{
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  z-index:10;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:7px 11px;
+  border-radius:999px;
+  background:rgba(3,10,18,.28);
+  border:1px solid rgba(64,226,255,.12);
+  backdrop-filter:blur(10px);
+}
+.betai-hero-dots span{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:rgba(170,190,210,.38);
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset;
+  transition:.25s ease;
+}
+.betai-hero-dots span.active{
+  width:14px;
+  height:14px;
+  background:#17e7ff;
+  box-shadow:0 0 18px rgba(23,231,255,.75),0 0 34px rgba(23,231,255,.30);
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  display:none!important;
+}
+@media (min-width:1600px){
+  .betai-animated-hero.betai-hero-image-slides{min-height:360px!important;}
+}
+@media (max-width:980px){
+  .betai-animated-hero.betai-hero-image-slides{min-height:260px!important;}
+  .betai-hero-slide-img{object-position:center center!important;}
+}
+@media (max-width:640px){
+  .betai-animated-hero.betai-hero-image-slides{min-height:210px!important;border-radius:20px!important;}
+  .betai-hero-image-stage,.betai-animated-hero.betai-hero-image-slides:after{border-radius:20px!important;}
+  .betai-hero-dots{bottom:10px;gap:7px;padding:5px 8px;}
+  .betai-hero-dots span{width:8px;height:8px;}
+  .betai-hero-dots span.active{width:10px;height:10px;}
+}
