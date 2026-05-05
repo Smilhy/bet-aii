@@ -7771,3 +7771,51 @@ html,body,#root{
   18%{filter:saturate(1.18) contrast(1.11) brightness(1.16);}
   36%{filter:saturate(1.04) contrast(1.04) brightness(1.01);}
 }
+
+
+/* =========================================================
+   WERSJA 480 — lewy panel dopasowany 1:1 do grafiki
+   Naprawa: stage ma rozmiar dokładnie taki jak widoczny obraz,
+   dzięki czemu klikalne obszary nie rozjeżdżają się względem ramek.
+   ========================================================= */
+.auth-live-screen{
+  text-align:center!important;
+}
+.auth-live-stage{
+  display:inline-block!important;
+  width:auto!important;
+  max-width:100%!important;
+  height:auto!important;
+  line-height:0!important;
+}
+.auth-live-image{
+  width:auto!important;
+  max-width:min(70vw,1792px)!important;
+  height:auto!important;
+  max-height:70vh!important;
+}
+.auth-overlay-form{
+  inset:0!important;
+}
+/* delikatne korekty lewego panelu względem obrazu */
+.auth-tab-outline.is-login{left:4.35%!important;width:15.15%!important;}
+.auth-tab-outline.is-register{left:19.72%!important;width:15.45%!important;}
+.auth-tab-hit-login{left:4.35%!important;top:35.82%!important;width:15.15%!important;height:4.76%!important;}
+.auth-tab-hit-register{left:19.72%!important;top:35.82%!important;width:15.45%!important;height:4.76%!important;}
+.auth-input-hit{left:4.72%!important;width:31.08%!important;height:4.55%!important;padding:0 52px 0 40px!important;}
+.auth-input-username{top:47.92%!important;}
+.auth-input-email{top:56.08%!important;}
+.auth-input-password{top:64.28%!important;}
+.auth-input-repeat{top:72.48%!important;}
+.auth-eye-hit{left:32.45%!important;width:2.05%!important;height:4.55%!important;}
+.auth-eye-password{top:64.28%!important;}
+.auth-eye-repeat{top:72.48%!important;}
+.auth-checkbox-hit{left:4.62%!important;top:80.72%!important;width:31.18%!important;height:3.45%!important;}
+.auth-checkbox-hit span{width:18px!important;height:18px!important;border-radius:6px!important;}
+.auth-checkbox-hit input:checked + span::after{width:5px!important;height:9px!important;transform:translate(6px,2px) rotate(45deg)!important;}
+.auth-submit-hit{left:4.72%!important;top:87.22%!important;width:31.08%!important;height:5.35%!important;border-radius:14px!important;}
+@media (max-width:900px){
+  .auth-live-image{max-width:min(90vw,1792px)!important;max-height:60vh!important;}
+  .auth-input-hit{padding:0 34px 0 28px!important;font-size:12px!important;}
+  .auth-checkbox-hit span{width:14px!important;height:14px!important;}
+}

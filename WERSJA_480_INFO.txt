@@ -1,0 +1,5 @@
+Wersja 480
+- Nie dotykano prawej kolumny.
+- Naprawiono lewy panel: klikalne obszary są dopasowane 1:1 do ramek na grafice.
+- Główna poprawka polega na tym, że warstwa interaktywna ma teraz dokładnie ten sam rozmiar co widoczny obraz, więc nic nie rozjeżdża się poziomo.
+- Skorygowano położenie zakładek, pól, checkboxa regulaminu i przycisku submit.
