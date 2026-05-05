@@ -4046,6 +4046,207 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   )
 }
 
+function DashboardFixedView({ user = null, wallet = 0, tokenBalance = 0, onNavigate = () => {}, onAddTip = () => {} }) {
+  const username = getProfileUsername(user) || 'smilitytv'
+  const heroTabs = ['Artykuły', 'News', 'TV / PPV', 'Wyniki live', 'Analizy AI']
+  const statCards = [
+    { icon: '◎', title: 'Typy AI dnia', value: '12', sub: 'Wysoka pewność', note: '7 nowych' },
+    { icon: '🛒', title: 'Marketplace premium', value: '243', sub: 'Typy dostępne', note: 'Sprawdź oferty →' },
+    { icon: '◔', title: 'Skuteczność AI', value: '87%', sub: 'ROI: +24.6%', note: 'Ostatnie 30 dni', progress: '87%' },
+    { icon: '★', title: 'Śledzone ligi', value: '12', sub: 'Nadchodzących meczów', note: 'Zobacz kalendarz →' }
+  ]
+  const articleRows = [
+    { tag: 'ANALIZA', title: 'Derby Mediolanu: Inter faworytem?', time: '2h temu', views: '24' },
+    { tag: 'AI TYP', title: '5 kuponów AI na weekend', time: '5h temu', views: '18' },
+    { tag: 'NEWS', title: 'Transfery, kontuzje, powroty', time: '1d temu', views: '32' }
+  ]
+  const liveScores = [
+    { league: 'PREMIER LEAGUE', minute: "82'", home: 'Tottenham', away: 'Liverpool', score: '2 : 1' },
+    { league: 'LALIGA', minute: "66'", home: 'Barcelona', away: 'Real Madryt', score: '2 : 2' },
+    { league: 'SERIE A', minute: "75'", home: 'Inter', away: 'Juventus', score: '1 : 0' }
+  ]
+  const aiRows = [
+    { league: 'LIGA MISTRZÓW • DZIŚ 21:00', match: 'Man City  vs  Arsenal', pick: 'Typ: Powyżej 2.5 gola', chance: '88%' },
+    { league: 'BUNDESLIGA • JUTRO 15:30', match: 'Bayern  vs  Dortmund', pick: 'Typ: Bayern wygra', chance: '82%' },
+    { league: 'LIGUE 1 • JUTRO 20:45', match: 'PSG  vs  Lyon', pick: 'Typ: Powyżej 2.5 gola', chance: '81%' },
+    { league: 'PREMIER LEAGUE • 25.05 17:30', match: 'Chelsea  vs  Newcastle', pick: 'Typ: Obie strzelą gola', chance: '79%' }
+  ]
+  const chatRows = [
+    { name: 'ZielonyKról', text: 'Dzisiaj grubo! 🔥', time: '2 min' },
+    { name: username, text: 'AI ma dzisiaj wysoką pewność 💪', time: '1 min', badge: 'ADMIN' },
+    { name: 'krystian_typer', text: 'Lech - Legia pewniak? 🤔', time: '1 min' },
+    { name: 'piotrek1987', text: 'Inter wygląda mocno dzisiaj!', time: '30 sek' },
+    { name: 'buchajsonek1988', text: 'Liczymy dziś! 🚀', time: '10 sek' }
+  ]
+  const topTipsters = [
+    { place: 1, avatar: username.slice(0,2).toUpperCase(), name: username, meta: 'ROI: +20.6% · WR: 60%', profit: '+125.40 zł' },
+    { place: 2, avatar: 'BU', name: 'buchajsonek1988', meta: 'ROI: +18.1% · WR: 57%', profit: '+98.20 zł' },
+    { place: 3, avatar: 'PM', name: 'krystian_typer', meta: 'ROI: +16.3% · WR: 55%', profit: '+76.80 zł' },
+    { place: 4, avatar: 'N4', name: 'piotrek1987', meta: 'ROI: +14.8% · WR: 52%', profit: '+64.30 zł' },
+    { place: 5, avatar: 'PK', name: 'PikstrskiGuru', meta: 'ROI: +13.2% · WR: 51%', profit: '+58.10 zł' }
+  ]
+  const dayRows = [
+    { match: 'Man City  vs  Arsenal', time: 'Dziś 21:00', chance: '88%' },
+    { match: 'Bayern  vs  Dortmund', time: 'Jutro 15:30', chance: '82%' },
+    { match: 'PSG  vs  Lyon', time: 'Jutro 20:45', chance: '81%' }
+  ]
+  const marketRows = [
+    { name: 'TopExpertPL', tag: 'TIPSTER', roi: 'ROI 22.4%', price: '49,00 zł', rate: '4.9' },
+    { name: 'BetKing', tag: 'VERIFIED', roi: 'ROI 18.7%', price: '39,00 zł', rate: '4.8' },
+    { name: 'AI Master', tag: 'TOP AI', roi: 'ROI 27.1%', price: '59,00 zł', rate: '5.0' },
+    { name: 'StatKing', tag: 'TIPSTER', roi: 'ROI 16.3%', price: '29,00 zł', rate: '4.7' }
+  ]
+
+  return (
+    <section className="dash543-page">
+      <div className="dash543-shell">
+        <div className="dash543-main">
+          <section className="dash543-hero">
+            <div className="dash543-hero-copy">
+              <small>WITAJ PONOWNIE, {String(username).toUpperCase()}!</small>
+              <h1>AI zmienia sposób,<br /> w jaki <span>typujesz.</span></h1>
+              <p>Zaawansowane analizy, trafne typy i społeczność, która wygrywa.</p>
+              <button type="button" onClick={() => onNavigate('aiPicks')}>Sprawdź typy AI dnia ✦</button>
+            </div>
+            <div className="dash543-hero-visual" aria-hidden="true"></div>
+          </section>
+
+          <div className="dash543-subnav">
+            {heroTabs.map((tab, index) => <button type="button" key={tab} className={index === 0 ? 'active' : ''}>{tab}</button>)}
+          </div>
+
+          <div className="dash543-stats-grid">
+            {statCards.map(card => (
+              <article className="dash543-stat-card" key={card.title}>
+                <div className="dash543-stat-head"><span>{card.icon}</span><strong>{card.title}</strong></div>
+                <div className={`dash543-stat-value ${card.progress ? 'with-progress' : ''}`}>
+                  <b>{card.value}</b>
+                  {card.progress ? <div className="dash543-progress-ring"><i style={{ '--progress': card.progress }}></i><em>{card.progress}</em></div> : null}
+                </div>
+                <div className="dash543-stat-meta"><span>{card.sub}</span><small>{card.note}</small></div>
+              </article>
+            ))}
+          </div>
+
+          <div className="dash543-content-grid">
+            <article className="dash543-panel">
+              <div className="dash543-panel-head"><h3>Najnowsze artykuły</h3><button type="button" onClick={() => onNavigate('articles')}>Zobacz wszystkie</button></div>
+              <div className="dash543-article-list">
+                {articleRows.map((row, idx) => (
+                  <div className="dash543-article-row" key={row.title}>
+                    <div className={`dash543-thumb thumb-${idx + 1}`}></div>
+                    <div className="dash543-article-copy">
+                      <span>{row.tag}</span>
+                      <strong>{row.title}</strong>
+                      <small>{row.time} · 👁 {row.views}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="dash543-panel">
+              <div className="dash543-panel-head"><h3>Wyniki live</h3><button type="button">Zobacz wszystkie</button></div>
+              <div className="dash543-score-list">
+                {liveScores.map(item => (
+                  <div className="dash543-score-row" key={item.home + item.away}>
+                    <div className="dash543-score-top"><span>{item.league}</span><em>LIVE</em><b>{item.minute}</b></div>
+                    <div className="dash543-score-main"><strong>{item.home}</strong><span>{item.score}</span><strong>{item.away}</strong></div>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="dash543-panel">
+              <div className="dash543-panel-head"><h3>Typy AI</h3><button type="button" onClick={() => onNavigate('aiPicks')}>Zobacz wszystkie</button></div>
+              <div className="dash543-ai-list">
+                {aiRows.map(item => (
+                  <div className="dash543-ai-row" key={item.match}>
+                    <div>
+                      <span>{item.league}</span>
+                      <strong>{item.match}</strong>
+                      <small>{item.pick}</small>
+                    </div>
+                    <b>{item.chance}</b>
+                    <button type="button">Zobacz</button>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </div>
+
+          <article className="dash543-market-panel">
+            <div className="dash543-panel-head"><h3>Marketplace premium</h3><button type="button">Zobacz wszystkie oferty</button></div>
+            <div className="dash543-market-grid">
+              {marketRows.map((item, idx) => (
+                <div className="dash543-market-card" key={item.name}>
+                  <div className={`dash543-market-avatar market-${idx + 1}`}>{idx === 2 ? 'AI' : item.name.slice(0,2).toUpperCase()}</div>
+                  <div className="dash543-market-copy">
+                    <strong>{item.name}</strong>
+                    <span>{item.tag}</span>
+                    <small>Skuteczność</small>
+                    <em>{item.roi}</em>
+                  </div>
+                  <div className="dash543-market-meta">
+                    <i>★ {item.rate}</i>
+                    <b>{item.price}</b>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+
+        <aside className="dash543-side">
+          <article className="dash543-side-card dash543-chat-card">
+            <div className="dash543-side-head"><h3>Czat na żywo</h3><span>● 248 online</span></div>
+            <div className="dash543-chat-list">
+              {chatRows.map((row, idx) => (
+                <div className="dash543-chat-row" key={row.name + idx}>
+                  <div className="dash543-chat-avatar">{row.name.slice(0,1).toUpperCase()}</div>
+                  <div className="dash543-chat-copy">
+                    <strong>{row.name}{row.badge ? <em>{row.badge}</em> : null}</strong>
+                    <small>{row.text}</small>
+                  </div>
+                  <span>{row.time}</span>
+                </div>
+              ))}
+            </div>
+            <div className="dash543-chat-input"><input placeholder="Napisz wiadomość..." readOnly /><button type="button">➤</button></div>
+          </article>
+
+          <article className="dash543-side-card">
+            <div className="dash543-side-head compact"><h3>🏆 Top typerzy</h3><button type="button" onClick={() => onNavigate('leaderboard')}>Ranking realny</button></div>
+            <div className="dash543-top-list">
+              {topTipsters.map(row => (
+                <div className="dash543-top-row" key={row.place}>
+                  <span className={`dash543-top-place place-${row.place}`}>{row.place}</span>
+                  <div className="dash543-top-avatar">{row.avatar}</div>
+                  <div className="dash543-top-copy"><strong>{row.name}</strong><small>{row.meta}</small></div>
+                  <b>{row.profit}</b>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dash543-side-card">
+            <div className="dash543-side-head compact"><h3>💡 Typy dnia</h3><button type="button" onClick={() => onNavigate('aiPicks')}>Zobacz wszystkie</button></div>
+            <div className="dash543-day-list">
+              {dayRows.map(row => (
+                <div className="dash543-day-row" key={row.match}>
+                  <div className="dash543-day-ball">⚽</div>
+                  <div className="dash543-day-copy"><strong>{row.match}</strong><small>{row.time}</small></div>
+                  <b>{row.chance}</b>
+                </div>
+              ))}
+            </div>
+          </article>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
 function LeaderboardView({ tips = [], ranking = [], user = null, referralData = {} }) {
   const [activeTab, setActiveTab] = useState('ranking')
   const [sideTab, setSideTab] = useState('top')
@@ -7772,7 +7973,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${((view !== 'dashboard' && view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${((view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
@@ -7913,14 +8114,17 @@ function App() {
         )}
 
         {view === 'dashboard' && !selectedTipsterId && (
-          <section className="feed-section">
-            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
-            <DashboardUpdatePreview />
-          </section>
+          <DashboardFixedView
+            user={effectiveAccountProfile}
+            wallet={walletBalance}
+            tokenBalance={tokenBalance}
+            onNavigate={setView}
+            onAddTip={() => setView('add')}
+          />
         )}
       </main>
 
-      {(view === 'dashboard' || view === 'articles') && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'articles' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
