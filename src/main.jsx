@@ -3009,10 +3009,10 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('register')
   const [submitting, setSubmitting] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const [authInfo, setAuthInfo] = useState('Kliknij w zakładkę i zaloguj się bez zmiany wyglądu panelu.')
+  const [authMessage, setAuthMessage] = useState('')
+  const [authMessageType, setAuthMessageType] = useState('info')
   const [showPassword, setShowPassword] = useState(false)
   const [showRepeatPassword, setShowRepeatPassword] = useState(false)
   const [form, setForm] = useState({
@@ -3027,20 +3027,22 @@ function AuthView({ onAuth }) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  function showMessage(type, message) {
+    setAuthMessageType(type)
+    setAuthMessage(message)
+  }
+
   function switchMode(nextMode) {
     setMode(nextMode)
-    setAuthError('')
-    setAuthInfo(nextMode === 'login'
-      ? 'Zaloguj się na swoim koncie Bet+AI.'
-      : 'Załóż konto bez zmiany ultra-pro wyglądu ekranu startowego.')
+    setAuthMessage('')
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setAuthError('')
+    setAuthMessage('')
 
     if (!isSupabaseConfigured || !supabase) {
-      setAuthError('Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.')
+      showMessage('error', 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.')
       return
     }
 
@@ -3049,16 +3051,17 @@ function AuthView({ onAuth }) {
     const username = String(form.username || '').trim()
 
     if (!email) {
-      setAuthError('Wpisz adres email.')
+      showMessage('error', 'Wpisz adres email.')
       return
     }
 
     if (!password) {
-      setAuthError('Wpisz hasło.')
+      showMessage('error', 'Wpisz hasło.')
       return
     }
 
     setSubmitting(true)
+    showMessage('info', 'Trwa autoryzacja...')
 
     try {
       if (mode === 'register') {
@@ -3090,9 +3093,9 @@ function AuthView({ onAuth }) {
 
         if (data?.session?.user) {
           onAuth?.(data.session.user)
-          setAuthInfo('Konto zostało utworzone i jesteś już zalogowany.')
+          showMessage('success', 'Konto zostało utworzone i jesteś już zalogowany.')
         } else {
-          setAuthInfo('Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.')
+          showMessage('success', 'Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.')
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -3103,11 +3106,11 @@ function AuthView({ onAuth }) {
         if (error) throw error
         if (data?.user) {
           onAuth?.(data.user)
-          setAuthInfo('Logowanie zakończone sukcesem.')
+          showMessage('success', 'Logowanie zakończone sukcesem.')
         }
       }
     } catch (error) {
-      setAuthError(error?.message || 'Nie udało się wykonać autoryzacji.')
+      showMessage('error', error?.message || 'Nie udało się wykonać autoryzacji.')
     } finally {
       setSubmitting(false)
     }
@@ -3116,11 +3119,6 @@ function AuthView({ onAuth }) {
   return (
     <div className="auth-live-screen" aria-label="Bet+AI panel logowania">
       <div className="auth-live-stage">
-        <div className="auth-live-ambient auth-live-ambient-left" aria-hidden="true" />
-        <div className="auth-live-ambient auth-live-ambient-right" aria-hidden="true" />
-        <div className="auth-live-scanline" aria-hidden="true" />
-        <div className="auth-live-grid" aria-hidden="true" />
-
         <img
           src="/auth-full-475.png"
           alt="Bet+AI AI Match Picks — panel logowania"
@@ -3128,25 +3126,35 @@ function AuthView({ onAuth }) {
           draggable="false"
         />
 
-        <form className="auth-overlay-form" onSubmit={handleSubmit}>
-          <div className="auth-overlay-left" aria-hidden="true">
-            <div className={`auth-tab-indicator ${mode === 'login' ? 'is-login' : 'is-register'}`} />
+        <div className="auth-live-shimmer" aria-hidden="true" />
+
+        {authMessage ? (
+          <div className={`auth-live-toast ${authMessageType}`} role="status" aria-live="polite">
+            {submitting ? 'Trwa autoryzacja...' : authMessage}
           </div>
+        ) : null}
+
+        <form className="auth-overlay-form" onSubmit={handleSubmit}>
+          <div className={`auth-tab-outline ${mode === 'login' ? 'is-login' : 'is-register'}`} aria-hidden="true" />
 
           <button
             type="button"
             className="auth-tab-hit auth-tab-hit-login"
             aria-label="Przełącz na logowanie"
             onClick={() => switchMode('login')}
-          />
+          >
+            <span className="sr-only">Zaloguj się</span>
+          </button>
           <button
             type="button"
             className="auth-tab-hit auth-tab-hit-register"
             aria-label="Przełącz na rejestrację"
             onClick={() => switchMode('register')}
-          />
+          >
+            <span className="sr-only">Zarejestruj się</span>
+          </button>
 
-          {mode === 'register' && (
+          {mode === 'register' ? (
             <input
               className="auth-input-hit auth-input-username"
               type="text"
@@ -3155,10 +3163,10 @@ function AuthView({ onAuth }) {
               onChange={(event) => updateField('username', event.target.value)}
               aria-label="Nazwa użytkownika"
             />
-          )}
+          ) : null}
 
           <input
-            className={`auth-input-hit ${mode === 'login' ? 'auth-input-login-email' : 'auth-input-email'}`}
+            className="auth-input-hit auth-input-email"
             type="email"
             autoComplete={mode === 'login' ? 'username' : 'email'}
             value={form.email}
@@ -3167,7 +3175,7 @@ function AuthView({ onAuth }) {
           />
 
           <input
-            className={`auth-input-hit ${mode === 'login' ? 'auth-input-login-password' : 'auth-input-password'}`}
+            className="auth-input-hit auth-input-password"
             type={showPassword ? 'text' : 'password'}
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             value={form.password}
@@ -3177,12 +3185,14 @@ function AuthView({ onAuth }) {
 
           <button
             type="button"
-            className={`auth-eye-hit ${mode === 'login' ? 'auth-eye-login-password' : 'auth-eye-password'}`}
+            className="auth-eye-hit auth-eye-password"
             aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
             onClick={() => setShowPassword(prev => !prev)}
-          />
+          >
+            <span className="sr-only">Pokaż lub ukryj hasło</span>
+          </button>
 
-          {mode === 'register' && (
+          {mode === 'register' ? (
             <>
               <input
                 className="auth-input-hit auth-input-repeat"
@@ -3197,7 +3207,9 @@ function AuthView({ onAuth }) {
                 className="auth-eye-hit auth-eye-repeat"
                 aria-label={showRepeatPassword ? 'Ukryj powtórzone hasło' : 'Pokaż powtórzone hasło'}
                 onClick={() => setShowRepeatPassword(prev => !prev)}
-              />
+              >
+                <span className="sr-only">Pokaż lub ukryj powtórzone hasło</span>
+              </button>
               <label className="auth-checkbox-hit" aria-label="Akceptuję regulamin i politykę prywatności">
                 <input
                   type="checkbox"
@@ -3207,16 +3219,17 @@ function AuthView({ onAuth }) {
                 <span />
               </label>
             </>
-          )}
+          ) : null}
 
-          <button type="submit" className="auth-submit-hit" disabled={submitting} aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}>
+          <button
+            type="submit"
+            className="auth-submit-hit"
+            disabled={submitting}
+            aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}
+          >
             <span className="sr-only">{submitting ? 'Przetwarzanie' : (mode === 'login' ? 'Zaloguj się' : 'Załóż konto')}</span>
           </button>
         </form>
-      </div>
-
-      <div className={`auth-live-status ${authError ? 'is-error' : 'is-info'}`}>
-        {submitting ? 'Trwa autoryzacja...' : (authError || authInfo)}
       </div>
     </div>
   )
