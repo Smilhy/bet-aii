@@ -11,6 +11,8 @@ var userPlan = 'free'; // global anti-crash fallback
 
 const BETAI_LANGUAGES = ['pl', 'en', 'de', 'es', 'ru']
 const BETAI_LANG_LABELS = { pl: 'PL', en: 'EN', de: 'DE', es: 'ES', ru: 'RU' }
+const BETAI_LANG_FLAGS = { pl: '🇵🇱', en: '🇬🇧', de: '🇩🇪', es: '🇪🇸', ru: '🇷🇺' }
+const BETAI_LANG_NAMES = { pl: 'Polski', en: 'English', de: 'Deutsch', es: 'Español', ru: 'Русский' }
 
 function getInitialBetaiLanguage() {
   try {
@@ -4141,26 +4143,12 @@ function AuthView({ onAuth }) {
 
   return (
     <div className="auth481-screen" aria-label="Bet+AI authentication panel">
+      <div className="auth481-language-corner">
+        <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
+      </div>
       <div className="auth481-wrap">
         <div className="auth481-top-grid">
           <section className="auth481-left-card">
-            <div className="auth481-lang-switch" aria-label={t.languageLabel}>
-              <span>{t.languageLabel}</span>
-              <div className="auth481-lang-options">
-                {supportedAuthLanguages.map(langCode => (
-                  <button
-                    type="button"
-                    key={langCode}
-                    className={`auth481-lang-button ${authLang === langCode ? 'is-active' : ''}`}
-                    onClick={() => setLanguage(langCode)}
-                    aria-pressed={authLang === langCode}
-                  >
-                    {langCode.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
             <h1 className="auth481-title">
@@ -5399,9 +5387,9 @@ function DashboardAutoTranslator({ lang }) {
   return null
 }
 
-function BetaiLanguageSwitch({ lang, onChange, compact = false }) {
+function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
   return (
-    <div className={`betai-language-switch ${compact ? 'compact' : ''}`} aria-label="Language switcher">
+    <div className={`betai-language-switch ${compact ? 'compact' : ''} ${floating ? 'floating' : ''}`} aria-label={ariaLabel}>
       {BETAI_LANGUAGES.map(code => (
         <button
           type="button"
@@ -5409,8 +5397,10 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false }) {
           className={lang === code ? 'is-active' : ''}
           onClick={() => onChange?.(code)}
           aria-pressed={lang === code}
+          aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
+          title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
         >
-          {BETAI_LANG_LABELS[code]}
+          <span className="betai-language-flag" aria-hidden="true">{BETAI_LANG_FLAGS?.[code] || BETAI_LANG_LABELS[code]}</span>
         </button>
       ))}
     </div>

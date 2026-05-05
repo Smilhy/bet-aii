@@ -15102,6 +15102,24 @@ button.notify-btn b{
   .auth481-logo{margin-top:4px!important;}
 }
 
+
+/* WERSJA 513 — język w prawym górnym rogu + flagi */
+.auth481-language-corner{
+  position:fixed;
+  top:20px;
+  right:22px;
+  z-index:30;
+  display:flex;
+  justify-content:flex-end;
+  pointer-events:none;
+}
+.auth481-language-corner .betai-language-switch{pointer-events:auto;}
+.auth481-logo{margin-top:10px!important;}
+@media(max-width:720px){
+  .auth481-language-corner{position:relative;top:auto;right:auto;justify-content:center;margin:0 auto 12px;width:100%;}
+  .auth481-logo{margin-top:4px!important;}
+}
+
 /* WERSJA 508 — przełącznik języka działa także po zalogowaniu */
 .betai-language-switch{
   display:inline-flex;
@@ -15661,3 +15679,11 @@ button.notify-btn b{
     grid-template-columns:1fr;
   }
 }
+
+/* WERSJA 513 — flagi w przełączniku języka */
+.betai-language-switch{gap:6px;padding:6px;backdrop-filter:blur(12px);}
+.betai-language-switch.floating{padding:7px;border-color:rgba(54,230,215,.26);box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 0 24px rgba(33,225,197,.12),0 10px 28px rgba(0,0,0,.24);}
+.betai-language-switch button{width:38px!important;height:38px!important;min-width:38px!important;display:inline-flex;align-items:center;justify-content:center;font-size:0!important;}
+.betai-language-switch button:hover{transform:translateY(-1px) scale(1.03);}
+.betai-language-switch button.is-active{background:linear-gradient(180deg,rgba(52,244,230,.20),rgba(23,206,185,.18));box-shadow:0 0 18px rgba(35,232,211,.28),inset 0 0 0 1px rgba(84,255,239,.34);}
+.betai-language-flag{font-size:19px;line-height:1;filter:drop-shadow(0 0 10px rgba(0,0,0,.2));}
