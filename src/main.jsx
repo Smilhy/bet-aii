@@ -3009,7 +3009,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
 
 function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('register')
+  const [mode, setMode] = useState('login')
   const [submitting, setSubmitting] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
   const [authMessageType, setAuthMessageType] = useState('info')
@@ -3211,6 +3211,41 @@ function AuthView({ onAuth }) {
     )
   }
 
+
+  function IconTelegram() {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M21.5 4.6 18.3 19c-.24 1.02-.88 1.28-1.79.8l-4.95-3.64-2.39 2.3c-.26.26-.49.49-.99.49l.36-5.1 9.29-8.39c.4-.36-.09-.57-.62-.21l-11.48 7.23-4.95-1.55c-1.07-.34-1.09-1.08.22-1.59L20.3 3.6c.88-.33 1.65.22 1.2 1Z"/>
+      </svg>
+    )
+  }
+
+  function IconDiscord() {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M20.32 4.37A17.43 17.43 0 0 0 16.02 3l-.21.43a15.2 15.2 0 0 1 3.7 1.77 12.74 12.74 0 0 0-4.54-1.39 14.6 14.6 0 0 0-5.94 0A12.73 12.73 0 0 0 4.49 5.2a15.1 15.1 0 0 1 3.7-1.77L7.98 3A17.32 17.32 0 0 0 3.68 4.37C.96 8.45.22 12.43.59 16.35a17.61 17.61 0 0 0 5.27 2.65l1.13-1.84c-.64-.24-1.24-.53-1.82-.87.15.11.3.22.46.32a12.45 12.45 0 0 0 10.74 0c.16-.1.31-.21.46-.32-.58.34-1.18.63-1.82.87L16.14 19a17.53 17.53 0 0 0 5.27-2.65c.44-4.55-.75-8.5-1.09-11.98ZM9.53 13.96c-1.03 0-1.88-.95-1.88-2.12s.83-2.12 1.88-2.12c1.06 0 1.9.96 1.88 2.12 0 1.17-.83 2.12-1.88 2.12Zm4.94 0c-1.03 0-1.88-.95-1.88-2.12s.83-2.12 1.88-2.12c1.06 0 1.9.96 1.88 2.12 0 1.17-.82 2.12-1.88 2.12Z"/>
+      </svg>
+    )
+  }
+
+  function IconInstagram() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  function IconX() {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.9 2H22l-6.77 7.73L23 22h-6.1l-4.78-6.9L6.1 22H3l7.25-8.28L1 2h6.25l4.32 6.26L18.9 2Zm-1.07 18h1.69L6.33 3.9H4.52L17.83 20Z"/>
+      </svg>
+    )
+  }
+
   function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
     return (
       <label className="auth481-field">
@@ -3370,6 +3405,28 @@ function AuthView({ onAuth }) {
               </button>
               <div className="auth481-submit-note">{submitNote}</div>
             </form>
+
+            <div className="auth481-social-block" aria-label="Social media Bet+AI">
+              <div className="auth481-social-heading">Śledź nas i dołącz do społeczności</div>
+              <div className="auth481-social-row">
+                <a className="auth481-social-link is-telegram" href="#" aria-label="Telegram Bet+AI" title="Telegram">
+                  <span className="auth481-social-icon"><IconTelegram /></span>
+                  <span>Telegram</span>
+                </a>
+                <a className="auth481-social-link is-discord" href="#" aria-label="Discord Bet+AI" title="Discord">
+                  <span className="auth481-social-icon"><IconDiscord /></span>
+                  <span>Discord</span>
+                </a>
+                <a className="auth481-social-link is-instagram" href="#" aria-label="Instagram Bet+AI" title="Instagram">
+                  <span className="auth481-social-icon"><IconInstagram /></span>
+                  <span>Instagram</span>
+                </a>
+                <a className="auth481-social-link is-x" href="#" aria-label="X Bet+AI" title="X">
+                  <span className="auth481-social-icon"><IconX /></span>
+                  <span>X</span>
+                </a>
+              </div>
+            </div>
 
             {authMessage ? (
               <div className={`auth481-message ${authMessageType}`} role="status" aria-live="polite">
