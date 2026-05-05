@@ -17983,3 +17983,242 @@ img,video,canvas,svg{max-width:100%;}
   .articles-page-pro .tv-live-pill{grid-column:3!important;justify-self:start!important;margin-top:8px!important;}
   .articles-page-pro .ppv-event-row{grid-template-columns:1fr!important;}
 }
+
+/* WERSJA 534 — Artykuły dopasowane do referencji 1:1: prawy sidebar + kompaktowe proporcje */
+.app-shell:not(.no-rightbar-page) .articles-page.articles-page-pro{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 0 24px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-tabs{
+  gap:22px!important;
+  margin:0 0 16px!important;
+  padding:0 0 12px!important;
+  border-bottom:1px solid rgba(55, 213, 230, .08)!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-tabs button{
+  min-width:128px!important;
+  padding:15px 24px!important;
+  font-size:17px!important;
+  border-radius:16px 16px 0 0!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-grid{
+  grid-template-columns:minmax(0, 1fr) 310px!important;
+  gap:16px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-showcase-card{
+  min-height:286px!important;
+  border-radius:18px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-main-link{
+  min-height:286px!important;
+  grid-template-columns:.62fr 1fr!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-copy{
+  padding:26px 24px 48px!important;
+  background:linear-gradient(90deg, rgba(5,14,24,.94) 0%, rgba(5,14,24,.82) 78%, rgba(5,14,24,.10) 100%)!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-copy h2{
+  font-size:29px!important;
+  line-height:1.08!important;
+  letter-spacing:-.045em!important;
+  margin-top:13px!important;
+  max-width:340px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-copy p{
+  font-size:13px!important;
+  line-height:1.45!important;
+  margin-top:12px!important;
+  max-width:320px!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-copy strong{
+  min-width:118px!important;
+  min-height:39px!important;
+  margin-top:16px!important;
+  padding:0 18px!important;
+  border-radius:10px!important;
+  font-size:12px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-badge{
+  padding:6px 12px!important;
+  font-size:10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-visual{
+  min-height:286px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-vs{
+  font-size:44px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-nav{
+  width:30px!important;
+  height:30px!important;
+  font-size:22px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-nav.left{left:10px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-nav.right{right:10px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-dots{bottom:8px!important;gap:7px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-dots button{width:8px!important;height:8px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-section-header{
+  margin-top:0!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-section-header h3,
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-side-header h3{
+  font-size:18px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-section-header a,
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-side-header a{
+  font-size:11px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-latest-pro-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-card{
+  min-height:284px!important;
+  border-radius:14px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-thumb{
+  height:126px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-thumb span{
+  left:10px!important;
+  top:10px!important;
+  padding:5px 8px!important;
+  font-size:9px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-body{
+  padding:12px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-body em{
+  font-size:10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-body h4{
+  font-size:13px!important;
+  line-height:1.2!important;
+  margin-top:9px!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:3!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-body p{
+  margin-top:8px!important;
+  font-size:10.5px!important;
+  line-height:1.4!important;
+  -webkit-line-clamp:3!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .article-pro-meta{
+  padding-top:9px!important;
+  gap:10px!important;
+  font-size:10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-side-card{
+  padding:13px!important;
+  border-radius:16px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-day-tabs{
+  gap:8px!important;
+  margin:12px 0 10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-day-tabs button,
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-sport-filters button{
+  min-height:30px!important;
+  padding:0 10px!important;
+  border-radius:10px!important;
+  font-size:10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-schedule-list{
+  gap:0!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-schedule-row{
+  grid-template-columns:42px 58px minmax(0,1fr) 58px!important;
+  gap:8px!important;
+  padding:8px 0!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-time{font-size:11px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-channel-badge{
+  min-height:25px!important;
+  padding:0 5px!important;
+  font-size:7px!important;
+  border-radius:7px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-match-copy strong{
+  font-size:11px!important;
+  line-height:1.12!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-match-copy em{
+  font-size:9px!important;
+  margin-top:2px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .tv-live-pill{
+  min-width:54px!important;
+  min-height:24px!important;
+  border-radius:8px!important;
+  font-size:8px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-event-row{
+  grid-template-columns:86px minmax(0,1fr)!important;
+  gap:10px!important;
+  padding:9px!important;
+  border-radius:13px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .fighter-thumb{
+  height:78px!important;
+  border-radius:10px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .fighter-thumb:before{
+  left:17px!important;top:12px!important;width:32px!important;height:32px!important;box-shadow:0 38px 0 9px #7a4d3e!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-copy em{font-size:9px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-copy strong{font-size:14px!important;margin-top:5px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-copy span{font-size:10px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-price-row{margin-top:8px!important;gap:8px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-price-row b{font-size:12px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .ppv-price-row small{min-width:36px!important;min-height:20px!important;font-size:8px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-pro-panel{
+  padding:14px!important;
+  border-radius:16px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-sport-filters{
+  gap:7px!important;
+  margin-bottom:12px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-cards-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-match-card{
+  padding:10px!important;
+  border-radius:14px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-card-top span{font-size:9px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-card-top em{font-size:12px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-score-row{gap:4px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-score-row strong{font-size:10px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-score-row b{font-size:26px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-info-row{font-size:9px!important;margin-top:8px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-odds-row{gap:5px!important;margin-top:8px!important;}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-odds-row span{
+  min-width:42px!important;min-height:24px!important;border-radius:8px!important;font-size:9px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-odds-row strong{
+  min-width:38px!important;min-height:24px!important;border-radius:8px!important;font-size:9px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .live-more-btn{
+  margin-top:12px!important;
+  font-size:13px!important;
+}
+.app-shell:not(.no-rightbar-page) .articles-page-pro .articles-updated-note{
+  font-size:9px!important;
+  margin-top:10px!important;
+}
+@media(max-width:1500px){
+  .app-shell:not(.no-rightbar-page) .articles-page-pro .articles-pro-grid{grid-template-columns:minmax(0,1fr) 294px!important;gap:14px!important;}
+  .app-shell:not(.no-rightbar-page) .articles-page-pro .showcase-copy h2{font-size:26px!important;}
+  .app-shell:not(.no-rightbar-page) .articles-page-pro .articles-latest-pro-grid{gap:10px!important;}
+}

@@ -1,0 +1,8 @@
+Wersja 534
+
+Poprawka zakładki Artykuły:
+- zakładka Artykuły działa teraz w pełnym układzie jak na referencji: lewy sidebar + środkowa sekcja + prawy panel live chat/ranking/AI typy,
+- przywrócony prawy sidebar na stronie Artykuły,
+- mocno poprawione proporcje: hero jest niższy i szerszy, karty są mniejsze i równe, TV/PPV jest ciaśniej dopasowane,
+- Wyniki live ustawione jako kompaktowe karty jak na referencji,
+- całość została dopasowana do widoku z dolnego zdjęcia.

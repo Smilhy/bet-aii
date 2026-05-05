@@ -7286,7 +7286,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${((view !== 'dashboard' && view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
@@ -7425,7 +7425,7 @@ function App() {
         )}
       </main>
 
-      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {(view === 'dashboard' || view === 'articles') && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
