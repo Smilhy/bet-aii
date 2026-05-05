@@ -1,1 +1,0 @@
-Wersja 544: poprawiona dolna ramka/przycisk w prawej kolumnie zakładki Ranking (sekcja Twoje polecenia), dopasowana 1:1 do referencyjnego układu.

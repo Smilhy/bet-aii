@@ -1,1 +1,0 @@
-Wersja 541: logowanie/rejestracja pozostaje w skali 80%, dashboard i wszystkie zakładki po zalogowaniu ustawione na skalę 95%.

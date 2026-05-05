@@ -1,1 +1,0 @@
-Wersja 545: przywrócony panel BETAI LIVE CHAT w zakładce Ranking — wklejony na górę prawej kolumny jak na dashboardzie.

@@ -4004,10 +4004,6 @@ function LeaderboardView({ tips = [], ranking = [], user = null, referralData = 
         </div>
 
         <aside className="ranking536-side">
-          <div className="ranking536-chat-wrap">
-            <LiveChatPanel user={user} />
-          </div>
-
           <article className="ranking536-side-card">
             <div className="ranking536-side-tabs">
               <button className="active">Top tipsterzy</button>
