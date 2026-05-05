@@ -1144,6 +1144,242 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
   )
 }
 
+
+function getBetaiGuestSessionId() {
+  try {
+    let id = localStorage.getItem('betai_guest_session_id')
+    if (!id) {
+      id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+      localStorage.setItem('betai_guest_session_id', id)
+    }
+    return id
+  } catch (_) {
+    return `guest_${Math.random().toString(36).slice(2, 10)}`
+  }
+}
+
+function SiteReviewsWidget({ user }) {
+  const [open, setOpen] = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [rating, setRating] = useState(5)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [status, setStatus] = useState('')
+  const [loading, setLoading] = useState(false)
+  const email = normalizeEmail(user?.email)
+  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : '')
+
+  const approvedReviews = useMemo(() => (reviews || []).filter(review => review.is_approved !== false), [reviews])
+  const averageRating = useMemo(() => {
+    if (!approvedReviews.length) return 0
+    const sum = approvedReviews.reduce((total, review) => total + (Number(review.rating) || 0), 0)
+    return Math.round((sum / approvedReviews.length) * 10) / 10
+  }, [approvedReviews])
+  const ratingCount = approvedReviews.length
+  const latestReviews = useMemo(() => approvedReviews.slice(0, 5), [approvedReviews])
+
+  useEffect(() => {
+    try {
+      setGuestName(localStorage.getItem('betai_review_guest_name') || '')
+      setGuestEmail(localStorage.getItem('betai_review_guest_email') || '')
+    } catch (_) {}
+  }, [])
+
+  async function loadReviews() {
+    if (!isSupabaseConfigured || !supabase) return
+    try {
+      const { data, error } = await supabase
+        .from('site_reviews')
+        .select('id,user_id,guest_session_id,user_email,user_name,rating,comment,is_approved,created_at')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(80)
+      if (error) throw error
+      setReviews(Array.isArray(data) ? data : [])
+      setStatus('')
+    } catch (error) {
+      console.warn('reviews load error', error)
+      setStatus('Opinie wymagają uruchomienia pliku SUPABASE_SITE_REVIEWS_512.sql.')
+    }
+  }
+
+  useEffect(() => {
+    loadReviews()
+    const timer = setInterval(loadReviews, 30000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    let channel
+    try {
+      channel = supabase
+        .channel('site_reviews_live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_reviews' }, () => loadReviews())
+        .subscribe()
+    } catch (error) {
+      console.warn('reviews realtime skipped', error)
+    }
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
+
+  async function submitReview() {
+    const cleanComment = comment.trim()
+    const selectedRating = Math.max(1, Math.min(5, Number(rating) || 5))
+    const cleanEmail = email || normalizeEmail(guestEmail)
+    const cleanName = userName || String(guestName || '').trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Gość')
+
+    if (!cleanComment || cleanComment.length < 3) {
+      setStatus('Napisz krótki komentarz do opinii.')
+      return
+    }
+    if (!email && (!cleanEmail || !cleanEmail.includes('@'))) {
+      setStatus('Wpisz email, żeby dodać opinię jako gość.')
+      return
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      setStatus('Supabase nie jest skonfigurowane.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setStatus('Zapisywanie opinii live...')
+      try {
+        if (!email) {
+          localStorage.setItem('betai_review_guest_name', cleanName)
+          localStorage.setItem('betai_review_guest_email', cleanEmail)
+        }
+      } catch (_) {}
+
+      const payload = {
+        user_id: user?.id || null,
+        guest_session_id: user?.id ? null : getBetaiGuestSessionId(),
+        user_email: cleanEmail,
+        user_name: cleanName,
+        rating: selectedRating,
+        comment: cleanComment.slice(0, 500),
+        is_approved: true
+      }
+
+      const { error } = await supabase.from('site_reviews').insert(payload)
+      if (error) throw error
+      setComment('')
+      setRating(5)
+      setStatus('Dziękujemy! Twoja opinia została dodana live.')
+      await loadReviews()
+    } catch (error) {
+      console.error('review submit error', error)
+      setStatus('Nie udało się zapisać opinii. Uruchom SUPABASE_SITE_REVIEWS_512.sql i spróbuj ponownie.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function Stars({ interactive = false, value = 5, small = false }) {
+    const currentValue = interactive ? (hoverRating || rating) : value
+    return (
+      <div className={`reviews512-stars ${small ? 'small' : ''}`}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <button
+            key={star}
+            type="button"
+            disabled={!interactive}
+            className={star <= currentValue ? 'active' : ''}
+            onClick={() => interactive && setRating(star)}
+            onMouseEnter={() => interactive && setHoverRating(star)}
+            onMouseLeave={() => interactive && setHoverRating(0)}
+            aria-label={`${star} gwiazdek`}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className={`reviews512 ${open ? 'is-open' : ''}`}>
+      {open ? (
+        <section className="reviews512-panel" aria-label="Opinie użytkowników Bet+AI">
+          <header className="reviews512-head">
+            <div>
+              <strong>Opinie Bet+AI</strong>
+              <span><i /> Live oceny użytkowników</span>
+            </div>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij opinie">×</button>
+          </header>
+
+          <div className="reviews512-summary">
+            <div className="reviews512-score">
+              <b>{averageRating ? averageRating.toFixed(1) : '0.0'}</b>
+              <Stars value={Math.round(averageRating || 0)} small />
+            </div>
+            <div>
+              <strong>{ratingCount}</strong>
+              <span>{ratingCount === 1 ? 'opinia live' : 'opinii live'}</span>
+            </div>
+          </div>
+
+          <div className="reviews512-form">
+            {!email ? (
+              <div className="reviews512-guest-fields">
+                <input value={guestName} onChange={event => setGuestName(event.target.value)} placeholder="Twoja nazwa" />
+                <input value={guestEmail} onChange={event => setGuestEmail(event.target.value)} placeholder="Twój email" type="email" />
+              </div>
+            ) : null}
+
+            <div className="reviews512-rate-row">
+              <span>Twoja ocena</span>
+              <Stars interactive />
+            </div>
+
+            <textarea
+              value={comment}
+              onChange={event => setComment(event.target.value)}
+              placeholder="Napisz swoją opinię..."
+              maxLength={500}
+            />
+            <button type="button" onClick={submitReview} disabled={loading || !comment.trim()}>
+              {loading ? 'Zapisywanie...' : 'Dodaj opinię'}
+            </button>
+          </div>
+
+          {status ? <div className="reviews512-status">{status}</div> : null}
+
+          <div className="reviews512-list">
+            {latestReviews.length ? latestReviews.map(review => (
+              <article key={review.id || review.created_at} className="reviews512-item">
+                <div>
+                  <strong>{review.user_name || (review.user_email ? String(review.user_email).split('@')[0] : 'Użytkownik')}</strong>
+                  <Stars value={Number(review.rating) || 5} small />
+                </div>
+                <p>{review.comment}</p>
+                <span>{review.created_at ? new Date(review.created_at).toLocaleString('pl-PL') : 'teraz'}</span>
+              </article>
+            )) : (
+              <div className="reviews512-empty">Bądź pierwszy — dodaj opinię i ocenę gwiazdkami.</div>
+            )}
+          </div>
+
+          <div className="reviews512-powered">Oceny zapisywane live w <b>BetAI Reviews</b></div>
+        </section>
+      ) : null}
+
+      <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz opinie">
+        <span className="reviews512-fab-stars">★★★★★</span>
+        <b>{averageRating ? averageRating.toFixed(1) : 'Oceń'}</b>
+        {!open ? <i /> : null}
+      </button>
+    </div>
+  )
+}
+
+
 function SupportChatWidget({ user }) {
   const adminEmail = 'smilhytv@gmail.com'
   const [open, setOpen] = useState(false)
@@ -4150,6 +4386,7 @@ function AuthView({ onAuth }) {
           </div>
         </div>
       </div>
+      <SiteReviewsWidget />
       <AuthSupportChatGuest />
     </div>
   )
@@ -6892,6 +7129,7 @@ function App() {
       </main>
 
       {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
   )
