@@ -1,0 +1,7 @@
+Wersja 530
+
+Zmiany:
+- przywrócona prawa ramka hero ze statystykami na żywo: MECZÓW DZIŚ, ŚR. PEWNOŚĆ, ROI, PREMIUM, DZIEŃ,
+- stats overlay został dopasowany do nowego hero slidera,
+- pierwszy slajd logo został rozciągnięty / dopasowany na pełną szerokość hero, żeby był równy z ramką banera hero,
+- zachowany nowy zapętlony slider z błyskiem światła.

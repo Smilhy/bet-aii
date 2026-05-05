@@ -17272,3 +17272,371 @@ img,video,canvas,svg{max-width:100%;}
   .betai-hero-dots button{width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;}
   .betai-hero-dots button.active{width:10px!important;height:10px!important;}
 }
+
+/* WERSJA 530 — przywrócenie ramki live statystyk w nowym hero + poprawa 1 slajdu */
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  right:10px!important;
+  top:10px!important;
+  bottom:10px!important;
+  width:236px!important;
+  border-radius:26px!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 84% 12%, rgba(0, 191, 255, .12), transparent 28%),
+    linear-gradient(180deg, rgba(5, 16, 28, .88), rgba(4, 13, 24, .82))!important;
+  border:1px solid rgba(60, 203, 255, .12)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 14px 30px rgba(0,0,0,.20)!important;
+  backdrop-filter:blur(5px) saturate(1.04)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(1.04)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  display:flex!important;
+  position:absolute!important;
+  right:18px!important;
+  top:18px!important;
+  bottom:18px!important;
+  width:216px!important;
+  z-index:6!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  pointer-events:auto!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  min-height:0!important;
+  flex:1 1 0!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(0,1fr)!important;
+  grid-template-rows:auto 1fr!important;
+  column-gap:12px!important;
+  align-items:center!important;
+  padding:12px 13px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(79, 213, 255, .32)!important;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(0, 205, 255, .14), transparent 36%),
+    linear-gradient(180deg, rgba(7, 22, 37, .74), rgba(3, 10, 19, .66))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 18px rgba(0, 210, 255, .04),
+    0 10px 22px rgba(0,0,0,.18)!important;
+  overflow:hidden!important;
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(79, 213, 255, .48)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 14px 28px rgba(0,0,0,.22),
+    0 0 20px rgba(0, 210, 255, .10)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  grid-row:1 / span 2!important;
+  width:40px!important;
+  height:40px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:13px!important;
+  font-style:normal!important;
+  font-size:20px!important;
+  color:#eaffff!important;
+  background:rgba(2, 30, 48, .82)!important;
+  border:1px solid rgba(88, 223, 255, .22)!important;
+  box-shadow:0 0 14px rgba(0, 214, 255, .12)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  display:block!important;
+  color:#c0e0ef!important;
+  font-size:11.5px!important;
+  line-height:1.08!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  white-space:normal!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong,
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{
+  display:block!important;
+  margin-top:3px!important;
+  color:#ffffff!important;
+  font-size:29px!important;
+  line-height:.98!important;
+  font-weight:950!important;
+  letter-spacing:-.03em!important;
+  white-space:nowrap!important;
+  text-shadow:0 0 12px rgba(63, 196, 255, .18)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong,
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong.green{
+  font-size:17px!important;
+  letter-spacing:-.01em!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{
+  color:#ffffff!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-slide-img.slide-1,
+.betai-animated-hero.betai-hero-image-slides .betai-hero-slide-img.slide-1.active{
+  object-fit:cover!important;
+  object-position:center center!important;
+  transform:scale(1.02)!important;
+}
+@media (max-width: 1280px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{display:none!important;}
+}
+
+/* WERSJA 531 — nowy hero od zera: szklisty, żywy, ultra-pro slider + prawa tabela live */
+.betai-animated-hero.betai-hero-image-slides{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:430px!important;
+  margin:0 0 22px!important;
+  padding:0!important;
+  border-radius:30px!important;
+  border:1px solid rgba(70, 226, 255, .24)!important;
+  background:
+    linear-gradient(135deg, rgba(3,10,18,.98), rgba(4,15,28,.98))!important;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.36),
+    0 0 0 1px rgba(128,238,255,.06) inset,
+    0 0 36px rgba(0, 200, 255, .10)!important;
+  isolation:isolate!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-bg,
+.betai-animated-hero.betai-hero-image-slides .betai-hero-orb,
+.betai-animated-hero.betai-hero-image-slides .betai-hero-player,
+.betai-animated-hero.betai-hero-image-slides .betai-hero-copy{
+  display:none!important;
+}
+.betai-animated-hero.betai-hero-image-slides::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-18% auto -18% -28%!important;
+  width:30%!important;
+  z-index:4!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(184,246,255,.03) 20%,
+    rgba(255,255,255,.16) 46%,
+    rgba(73,220,255,.20) 58%,
+    rgba(255,255,255,0) 100%)!important;
+  filter:blur(12px)!important;
+  mix-blend-mode:screen!important;
+  transform:translateX(-145%) rotate(11deg)!important;
+  animation:betaiHeroGlassSweep 6.4s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:3!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(0, 191, 255, .11), transparent 20%),
+    radial-gradient(circle at 76% 24%, rgba(0, 191, 255, .08), transparent 24%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01) 10%, rgba(255,255,255,0) 18%, rgba(0,0,0,0) 82%, rgba(0,0,0,.18) 100%)!important;
+  box-shadow:inset 0 0 0 1px rgba(130, 242, 255, .08), inset 0 -40px 70px rgba(0,0,0,.18)!important;
+}
+.betai-hero-image-stage{
+  position:absolute!important;
+  inset:0!important;
+  border-radius:inherit!important;
+  overflow:hidden!important;
+  cursor:pointer!important;
+}
+.betai-hero-image-stage::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  right:10px!important;
+  top:10px!important;
+  bottom:10px!important;
+  width:238px!important;
+  border-radius:26px!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 78% 10%, rgba(0,191,255,.13), transparent 24%),
+    linear-gradient(180deg, rgba(4, 16, 28, .84), rgba(5, 14, 23, .80))!important;
+  border:1px solid rgba(62, 208, 255, .16)!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05)!important;
+  backdrop-filter:blur(6px) saturate(1.05)!important;
+  -webkit-backdrop-filter:blur(6px) saturate(1.05)!important;
+}
+.betai-hero-slide-img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  opacity:0!important;
+  transform:scale(1.02)!important;
+  filter:brightness(1.05) contrast(1.15) saturate(1.08) drop-shadow(0 14px 34px rgba(0, 188, 255, .10))!important;
+  transition:opacity .7s ease, transform 6s ease, filter .55s ease!important;
+  image-rendering:-webkit-optimize-contrast!important;
+  backface-visibility:hidden!important;
+}
+.betai-hero-slide-img.active{
+  opacity:1!important;
+  transform:scale(1.035)!important;
+  filter:brightness(1.08) contrast(1.18) saturate(1.11) drop-shadow(0 18px 40px rgba(0, 210, 255, .14))!important;
+  z-index:1!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  display:flex!important;
+  position:absolute!important;
+  right:18px!important;
+  top:18px!important;
+  bottom:18px!important;
+  width:216px!important;
+  z-index:6!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  justify-content:space-between!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+  pointer-events:auto!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div,
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:first-child{
+  flex:1 1 0!important;
+  min-height:0!important;
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr)!important;
+  grid-template-rows:auto 1fr!important;
+  align-items:center!important;
+  column-gap:13px!important;
+  padding:12px 13px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(77, 214, 255, .34)!important;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(0, 205, 255, .15), transparent 36%),
+    linear-gradient(180deg, rgba(7, 22, 37, .78), rgba(3, 10, 19, .70))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 0 18px rgba(0,210,255,.04),
+    0 10px 22px rgba(0,0,0,.16)!important;
+  overflow:hidden!important;
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(77,214,255,.48)!important;
+  box-shadow:0 14px 26px rgba(0,0,0,.19), 0 0 18px rgba(0,205,255,.08)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  grid-row:1 / span 2!important;
+  width:42px!important;
+  height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:14px!important;
+  font-style:normal!important;
+  font-size:21px!important;
+  color:#efffff!important;
+  background:rgba(4, 28, 44, .82)!important;
+  border:1px solid rgba(95, 229, 255, .22)!important;
+  box-shadow:0 0 14px rgba(0,214,255,.12)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  display:block!important;
+  color:#c4e4ef!important;
+  font-size:11.5px!important;
+  line-height:1.08!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  white-space:normal!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong,
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{
+  display:block!important;
+  margin-top:3px!important;
+  color:#ffffff!important;
+  font-size:29px!important;
+  line-height:.98!important;
+  font-weight:950!important;
+  letter-spacing:-.03em!important;
+  white-space:nowrap!important;
+  text-shadow:0 0 12px rgba(63,196,255,.16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong,
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div:last-child strong.green{
+  font-size:17px!important;
+  letter-spacing:-.01em!important;
+}
+.betai-hero-dots{
+  position:absolute!important;
+  left:50%!important;
+  bottom:14px!important;
+  transform:translateX(-50%)!important;
+  z-index:7!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:8px 14px!important;
+  border-radius:999px!important;
+  background:rgba(5, 14, 25, .58)!important;
+  border:1px solid rgba(76, 221, 255, .18)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  backdrop-filter:blur(10px) saturate(1.1)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(1.1)!important;
+}
+.betai-hero-dots button{
+  width:10px!important;
+  height:10px!important;
+  min-width:10px!important;
+  min-height:10px!important;
+  border-radius:999px!important;
+  border:none!important;
+  padding:0!important;
+  background:rgba(164,203,220,.36)!important;
+  transition:all .22s ease!important;
+}
+.betai-hero-dots button:hover{background:rgba(204,245,255,.72)!important;}
+.betai-hero-dots button.active{
+  width:12px!important;
+  height:12px!important;
+  background:#20deff!important;
+  box-shadow:0 0 0 4px rgba(32,222,255,.13), 0 0 16px rgba(32,222,255,.52)!important;
+}
+@keyframes betaiHeroGlassSweep{
+  0%{transform:translateX(-145%) rotate(11deg)}
+  18%{transform:translateX(-145%) rotate(11deg)}
+  48%{transform:translateX(360%) rotate(11deg)}
+  100%{transform:translateX(360%) rotate(11deg)}
+}
+@media (max-width: 1360px){
+  .betai-animated-hero.betai-hero-image-slides{min-height:390px!important;}
+  .betai-hero-image-stage::after,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{width:204px!important;}
+  .betai-hero-image-stage::after{right:8px!important;top:8px!important;bottom:8px!important;}
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{right:14px!important;top:14px!important;bottom:14px!important;}
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong.green{font-size:26px!important;}
+}
+@media (max-width: 1180px){
+  .betai-hero-image-stage::after,
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{display:none!important;}
+  .betai-animated-hero.betai-hero-image-slides{min-height:320px!important;border-radius:22px!important;}
+}
+@media (max-width: 760px){
+  .betai-animated-hero.betai-hero-image-slides{min-height:240px!important;border-radius:18px!important;}
+  .betai-hero-dots{bottom:10px!important;gap:8px!important;padding:6px 10px!important;}
+  .betai-hero-dots button{width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;}
+  .betai-hero-dots button.active{width:10px!important;height:10px!important;}
+}

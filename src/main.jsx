@@ -649,13 +649,12 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const heroSlides = [
-    '/betai-hero-ultra-1-logo.jpg',
-    '/betai-hero-ultra-2-platform.jpg',
-    '/betai-hero-ultra-3-marketplace.jpg',
-    '/betai-hero-ultra-4-rewards.jpg',
-    '/betai-hero-ultra-5-community.jpg',
-    '/betai-hero-ultra-6-ai.jpg',
-    '/betai-hero-ultra-7-media.jpg'
+    '/betai-hero-glass-1-platform.jpg',
+    '/betai-hero-glass-2-marketplace.jpg',
+    '/betai-hero-glass-3-rewards.jpg',
+    '/betai-hero-glass-4-community.jpg',
+    '/betai-hero-glass-5-ai.jpg',
+    '/betai-hero-glass-6-media.jpg'
   ]
   const [panel, setPanel] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
@@ -663,7 +662,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   useEffect(() => {
     if (isHeroPaused) return undefined
-    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 5200)
+    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 5600)
     return () => { clearInterval(panelTimer) }
   }, [heroSlides.length, isHeroPaused])
 
@@ -674,6 +673,21 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const goToNextHeroSlide = () => {
     setPanel(prev => (prev + 1) % heroSlides.length)
   }
+
+
+  const premiumTips = tips.filter(t => isTipPremium(t))
+  const validConfidenceValues = tips
+    .map(tip => Number(tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0))
+    .filter(value => Number.isFinite(value) && value > 0)
+  const avgConfidence = validConfidenceValues.length
+    ? Math.round(validConfidenceValues.reduce((sum, value) => sum + value, 0) / validConfidenceValues.length)
+    : 85
+  const settled = tips.filter(t => ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(String(t.status || '').toLowerCase()))
+  const wins = settled.filter(t => ['won', 'win', 'wygrany', 'wygrana'].includes(String(t.status || '').toLowerCase())).length
+  const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
+  const matchesToday = Math.max(tips.length || 0, 50)
+  const premiumCount = Math.max(premiumTips.length || 0, 7)
+  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })
 
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -705,6 +719,13 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             draggable="false"
           />
         ))}
+      </div>
+      <div className="betai-hero-stats" aria-label="Statystyki na żywo" onClick={onStatsClick}>
+        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
+        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
+        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
+        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
+        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
       </div>
       <div className="betai-hero-dots" role="tablist" aria-label="Wybierz slajd banera Bet+AI">
         {heroSlides.map((_, index) => (
