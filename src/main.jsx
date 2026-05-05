@@ -3065,18 +3065,10 @@ function AuthView({ onAuth }) {
 
     try {
       if (mode === 'register') {
-        if (!username) {
-          throw new Error('Wpisz nazwę użytkownika.')
-        }
-        if (password.length < 8) {
-          throw new Error('Hasło musi mieć minimum 8 znaków.')
-        }
-        if (password !== form.repeatPassword) {
-          throw new Error('Hasła nie są identyczne.')
-        }
-        if (!form.agree) {
-          throw new Error('Zaakceptuj Regulamin oraz Politykę prywatności.')
-        }
+        if (!username) throw new Error('Wpisz nazwę użytkownika.')
+        if (password.length < 8) throw new Error('Hasło musi mieć minimum 8 znaków.')
+        if (password !== form.repeatPassword) throw new Error('Hasła nie są identyczne.')
+        if (!form.agree) throw new Error('Zaakceptuj Regulamin oraz Politykę prywatności.')
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -3116,120 +3108,268 @@ function AuthView({ onAuth }) {
     }
   }
 
+  function IconUser() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 21a8 8 0 0 0-16 0" />
+        <circle cx="12" cy="8" r="4" />
+      </svg>
+    )
+  }
+
+  function IconMail() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 6h16v12H4z" />
+        <path d="m4 8 8 6 8-6" />
+      </svg>
+    )
+  }
+
+  function IconLock() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="4" y="11" width="16" height="10" rx="2" />
+        <path d="M8 11V8a4 4 0 1 1 8 0v3" />
+      </svg>
+    )
+  }
+
+  function IconEye() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+        <circle cx="12" cy="12" r="2.8" />
+      </svg>
+    )
+  }
+
+  function IconShield() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3 5 6v6c0 5 3.5 7.8 7 9 3.5-1.2 7-4 7-9V6l-7-3Z" />
+      </svg>
+    )
+  }
+
+  function IconBolt() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M13 2 5 14h5l-1 8 8-12h-5l1-8Z" />
+      </svg>
+    )
+  }
+
+  function IconChart() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 19V5" />
+        <path d="M4 19h16" />
+        <path d="m7 15 4-4 3 2 4-6" />
+      </svg>
+    )
+  }
+
+  function IconUsers() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7" r="3.5" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    )
+  }
+
+  function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
+    return (
+      <label className="auth481-field">
+        <span className="auth481-label">{label}</span>
+        <div className="auth481-input-shell">
+          <span className="auth481-field-icon">{icon}</span>
+          <input
+            className="auth481-input"
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            autoComplete={autoComplete}
+            spellCheck="false"
+          />
+          {rightControl ? <span className="auth481-field-right">{rightControl}</span> : null}
+        </div>
+      </label>
+    )
+  }
+
+  const submitLabel = mode === 'login' ? 'Zaloguj się' : 'Załóż konto'
+
   return (
-    <div className="auth-live-screen" aria-label="Bet+AI panel logowania">
-      <div className="auth-live-stage">
-        <img
-          src="/auth-full-475.png"
-          alt="Bet+AI AI Match Picks — panel logowania"
-          className="auth-live-image"
-          draggable="false"
-        />
+    <div className="auth481-screen" aria-label="Bet+AI panel logowania">
+      <div className="auth481-wrap">
+        <div className="auth481-top-grid">
+          <section className="auth481-left-card">
+            <img src="/auth-logo-481.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
-        <div className="auth-live-shimmer" aria-hidden="true" />
+            <h1 className="auth481-title">
+              Dołącz do
+              <br />
+              platformy <span>AI</span>
+            </h1>
 
-        {authMessage ? (
-          <div className={`auth-live-toast ${authMessageType}`} role="status" aria-live="polite">
-            {submitting ? 'Trwa autoryzacja...' : authMessage}
-          </div>
-        ) : null}
+            <p className="auth481-subtitle">
+              Zarejestruj się i korzystaj z analityki AI, typów
+              <br />
+              oraz statystyk na żywo.
+            </p>
 
-        <form className="auth-overlay-form" onSubmit={handleSubmit}>
-          <div className={`auth-tab-outline ${mode === 'login' ? 'is-login' : 'is-register'}`} aria-hidden="true" />
-
-          <button
-            type="button"
-            className="auth-tab-hit auth-tab-hit-login"
-            aria-label="Przełącz na logowanie"
-            onClick={() => switchMode('login')}
-          >
-            <span className="sr-only">Zaloguj się</span>
-          </button>
-          <button
-            type="button"
-            className="auth-tab-hit auth-tab-hit-register"
-            aria-label="Przełącz na rejestrację"
-            onClick={() => switchMode('register')}
-          >
-            <span className="sr-only">Zarejestruj się</span>
-          </button>
-
-          {mode === 'register' ? (
-            <input
-              className="auth-input-hit auth-input-username"
-              type="text"
-              autoComplete="username"
-              value={form.username}
-              onChange={(event) => updateField('username', event.target.value)}
-              aria-label="Nazwa użytkownika"
-            />
-          ) : null}
-
-          <input
-            className="auth-input-hit auth-input-email"
-            type="email"
-            autoComplete={mode === 'login' ? 'username' : 'email'}
-            value={form.email}
-            onChange={(event) => updateField('email', event.target.value)}
-            aria-label="Email"
-          />
-
-          <input
-            className="auth-input-hit auth-input-password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            value={form.password}
-            onChange={(event) => updateField('password', event.target.value)}
-            aria-label="Hasło"
-          />
-
-          <button
-            type="button"
-            className="auth-eye-hit auth-eye-password"
-            aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
-            onClick={() => setShowPassword(prev => !prev)}
-          >
-            <span className="sr-only">Pokaż lub ukryj hasło</span>
-          </button>
-
-          {mode === 'register' ? (
-            <>
-              <input
-                className="auth-input-hit auth-input-repeat"
-                type={showRepeatPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={form.repeatPassword}
-                onChange={(event) => updateField('repeatPassword', event.target.value)}
-                aria-label="Powtórz hasło"
-              />
+            <div className="auth481-tabs" role="tablist" aria-label="Wybierz tryb logowania">
               <button
                 type="button"
-                className="auth-eye-hit auth-eye-repeat"
-                aria-label={showRepeatPassword ? 'Ukryj powtórzone hasło' : 'Pokaż powtórzone hasło'}
-                onClick={() => setShowRepeatPassword(prev => !prev)}
+                className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
+                onClick={() => switchMode('login')}
               >
-                <span className="sr-only">Pokaż lub ukryj powtórzone hasło</span>
+                Zaloguj się
               </button>
-              <label className="auth-checkbox-hit" aria-label="Akceptuję regulamin i politykę prywatności">
-                <input
-                  type="checkbox"
-                  checked={form.agree}
-                  onChange={(event) => updateField('agree', event.target.checked)}
-                />
-                <span />
-              </label>
-            </>
-          ) : null}
+              <button
+                type="button"
+                className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
+                onClick={() => switchMode('register')}
+              >
+                Zarejestruj się
+              </button>
+            </div>
 
-          <button
-            type="submit"
-            className="auth-submit-hit"
-            disabled={submitting}
-            aria-label={mode === 'login' ? 'Zaloguj się' : 'Załóż konto'}
-          >
-            <span className="sr-only">{submitting ? 'Przetwarzanie' : (mode === 'login' ? 'Zaloguj się' : 'Załóż konto')}</span>
-          </button>
-        </form>
+            <form className="auth481-form" onSubmit={handleSubmit} autoComplete="off">
+              {mode === 'register' ? (
+                <AuthField
+                  label="Nazwa użytkownika"
+                  value={form.username}
+                  onChange={(event) => updateField('username', event.target.value)}
+                  placeholder="Wybierz nazwę użytkownika"
+                  icon={<IconUser />}
+                  autoComplete="off"
+                  name="betai_username"
+                />
+              ) : null}
+
+              <AuthField
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField('email', event.target.value)}
+                placeholder="Wpisz swój adres email"
+                icon={<IconMail />}
+                autoComplete={mode === 'login' ? 'username' : 'email'}
+                name="betai_email"
+              />
+
+              <AuthField
+                label="Hasło"
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={(event) => updateField('password', event.target.value)}
+                placeholder="Minimum 8 znaków"
+                icon={<IconLock />}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                name="betai_password"
+                rightControl={
+                  <button
+                    type="button"
+                    className="auth481-eye"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                  >
+                    <IconEye />
+                  </button>
+                }
+              />
+
+              {mode === 'register' ? (
+                <AuthField
+                  label="Powtórz hasło"
+                  type={showRepeatPassword ? 'text' : 'password'}
+                  value={form.repeatPassword}
+                  onChange={(event) => updateField('repeatPassword', event.target.value)}
+                  placeholder="Powtórz swoje hasło"
+                  icon={<IconLock />}
+                  autoComplete="new-password"
+                  name="betai_repeat_password"
+                  rightControl={
+                    <button
+                      type="button"
+                      className="auth481-eye"
+                      onClick={() => setShowRepeatPassword(prev => !prev)}
+                      aria-label={showRepeatPassword ? 'Ukryj powtórzone hasło' : 'Pokaż powtórzone hasło'}
+                    >
+                      <IconEye />
+                    </button>
+                  }
+                />
+              ) : null}
+
+              {mode === 'register' ? (
+                <label className="auth481-agree">
+                  <input
+                    type="checkbox"
+                    checked={form.agree}
+                    onChange={(event) => updateField('agree', event.target.checked)}
+                  />
+                  <span className="auth481-checkmark" />
+                  <span>
+                    Akceptuję <strong>Regulamin</strong> oraz <strong>Politykę prywatności</strong>
+                  </span>
+                </label>
+              ) : null}
+
+              <button type="submit" className="auth481-submit" disabled={submitting}>
+                {submitting ? 'Trwa autoryzacja...' : `${submitLabel} →`}
+              </button>
+            </form>
+
+            {authMessage ? (
+              <div className={`auth481-message ${authMessageType}`} role="status" aria-live="polite">
+                {authMessage}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="auth481-right-column" aria-hidden="true">
+            <img src="/auth-right-481.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
+          </section>
+        </div>
+
+        <div className="auth481-features-grid">
+          <div className="auth481-feature-card">
+            <span className="auth481-feature-icon"><IconShield /></span>
+            <div>
+              <h3>Bezpieczne dane</h3>
+              <p>Twoje dane są u nas w pełni chronione.</p>
+            </div>
+          </div>
+          <div className="auth481-feature-card">
+            <span className="auth481-feature-icon"><IconBolt /></span>
+            <div>
+              <h3>Szybka rejestracja</h3>
+              <p>Załóż konto w mniej niż 30 sekund.</p>
+            </div>
+          </div>
+          <div className="auth481-feature-card">
+            <span className="auth481-feature-icon"><IconChart /></span>
+            <div>
+              <h3>Darmowe typy AI</h3>
+              <p>Codziennie nowe typy o wysokiej skuteczności.</p>
+            </div>
+          </div>
+          <div className="auth481-feature-card">
+            <span className="auth481-feature-icon"><IconUsers /></span>
+            <div>
+              <h3>Aktywna społeczność</h3>
+              <p>Tysiące typerów dzieli się wiedzą i wygrywa razem.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
