@@ -13314,3 +13314,125 @@ button.notify-btn b{
   .auth481-right-column{height:auto!important;}
   .auth481-right-image{height:auto!important;width:100%!important;}
 }
+
+
+/* =========================================================
+   WERSJA 485 — prawa kolumna wyśrodkowana i przesunięta w dół
+   Lewa kolumna bez zmian. Prawy panel jest teraz ustawiony centralnie
+   i lekko niżej, zgodnie ze wzorem użytkownika.
+   ========================================================= */
+.auth481-right-column{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  flex-direction:column!important;
+  padding-top:26px!important;
+  box-sizing:border-box!important;
+}
+.auth481-right-image{
+  width:min(100%, 97%)!important;
+  max-width:97%!important;
+  height:auto!important;
+  margin:0 auto!important;
+  object-fit:contain!important;
+  object-position:center top!important;
+  display:block!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column{padding-top:20px!important;}
+  .auth481-right-image{width:min(100%, 98%)!important;max-width:98%!important;}
+}
+@media (max-width:1100px){
+  .auth481-right-column{padding-top:0!important;align-items:center!important;}
+  .auth481-right-image{width:100%!important;max-width:100%!important;}
+}
+
+
+/* =========================================================
+   WERSJA 486 — prawa kolumna niżej, bardziej centralnie i z żywą poświatą
+   Lewa kolumna bez zmian. Prawa ma wyglądać bardziej jak element strony,
+   a nie wklejony czarny panel.
+   ========================================================= */
+.auth481-right-column{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-direction:column!important;
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:38px 14px 0 14px!important;
+  margin-top:18px!important;
+  box-sizing:border-box!important;
+  background:transparent!important;
+  overflow:visible!important;
+  isolation:isolate!important;
+}
+.auth481-right-column::before{
+  content:'';
+  position:absolute;
+  inset:28px 12px 2px 12px;
+  border-radius:34px;
+  border:1px solid rgba(39,214,255,.18);
+  box-shadow:
+    0 0 0 1px rgba(20,150,210,.08) inset,
+    0 0 28px rgba(0,195,255,.12),
+    0 0 56px rgba(0,130,255,.08);
+  pointer-events:none;
+  z-index:0;
+}
+.auth481-right-column::after{
+  content:'';
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:22px;
+  bottom:14px;
+  border-radius:42px;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(31,223,255,.10), transparent 34%),
+    radial-gradient(circle at 50% 55%, rgba(0,124,255,.08), transparent 46%);
+  filter:blur(28px);
+  opacity:.95;
+  pointer-events:none;
+  z-index:0;
+}
+.auth481-right-image{
+  position:relative!important;
+  z-index:1!important;
+  width:min(100%, 96.5%)!important;
+  max-width:96.5%!important;
+  height:auto!important;
+  margin:0 auto!important;
+  object-fit:contain!important;
+  object-position:center top!important;
+  display:block!important;
+  border-radius:18px!important;
+  background:transparent!important;
+  filter:drop-shadow(0 16px 30px rgba(0,0,0,.16));
+}
+@media (max-width:1360px){
+  .auth481-right-column{
+    padding:30px 10px 0 10px!important;
+    margin-top:14px!important;
+  }
+  .auth481-right-image{
+    width:min(100%, 97.5%)!important;
+    max-width:97.5%!important;
+  }
+}
+@media (max-width:1100px){
+  .auth481-right-column{
+    padding:8px 0 0 0!important;
+    margin-top:10px!important;
+  }
+  .auth481-right-column::before,
+  .auth481-right-column::after{
+    display:none!important;
+  }
+  .auth481-right-image{
+    width:100%!important;
+    max-width:100%!important;
+  }
+}
