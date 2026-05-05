@@ -13543,3 +13543,30 @@ button.notify-btn b{
     bottom:6px!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 490 — prawa poświata węższa po bokach
+   Zwężenie świecącej ramki / poświaty po lewej i prawej stronie,
+   aby była bardziej stykowa z prawym panelem.
+   ========================================================= */
+.auth481-right-column::before{
+  inset:20px 16px -10px 16px!important;
+  border-radius:36px!important;
+}
+.auth481-right-column::after{
+  left:8%!important;
+  right:8%!important;
+  top:14px!important;
+  bottom:4px!important;
+  border-radius:42px!important;
+}
+@media (max-width:1360px){
+  .auth481-right-column::before{
+    inset:18px 14px -8px 14px!important;
+  }
+  .auth481-right-column::after{
+    left:8%!important;
+    right:8%!important;
+  }
+}
