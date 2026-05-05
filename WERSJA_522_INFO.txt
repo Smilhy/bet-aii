@@ -1,0 +1,5 @@
+Wersja 522
+- skrócono maskę po prawej stronie hero, żeby nie zasłaniała za dużej części banera
+- poszerzono realne ramki statystyk w lewo
+- dopasowano teksty w statystykach, żeby nie ucinały napisów
+- zachowano mocną poświatę ramki hero i sweep światła

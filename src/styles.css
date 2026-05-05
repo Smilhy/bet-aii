@@ -16500,3 +16500,109 @@ img,video,canvas,svg{max-width:100%;}
     display:none!important;
   }
 }
+
+
+/* WERSJA 522 — krótsza maska po prawej + szersze realne statystyki hero */
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  width:22%!important;
+  background:
+    radial-gradient(circle at 42% 50%, rgba(0, 222, 255, .08), transparent 38%),
+    linear-gradient(90deg,
+      rgba(2, 9, 17, 0) 0%,
+      rgba(3, 12, 23, .28) 20%,
+      rgba(3, 12, 23, .70) 48%,
+      rgba(2, 8, 16, .94) 100%)!important;
+  backdrop-filter:blur(1.2px) saturate(1.05)!important;
+  -webkit-backdrop-filter:blur(1.2px) saturate(1.05)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+  width:330px!important;
+  right:14px!important;
+  top:13px!important;
+  bottom:13px!important;
+  gap:10px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  grid-template-columns:50px 1fr!important;
+  column-gap:12px!important;
+  padding:12px 14px!important;
+  border-radius:18px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  width:44px!important;
+  height:44px!important;
+  font-size:22px!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  font-size:11.5px!important;
+  letter-spacing:.06em!important;
+  white-space:normal!important;
+  overflow:visible!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  font-size:32px!important;
+  white-space:nowrap!important;
+}
+@media (min-width:1500px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:23%!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:350px!important;
+  }
+}
+@media (min-width:1281px) and (max-width:1450px){
+  .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+    width:24%!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{
+    width:300px!important;
+    right:10px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+    font-size:29px!important;
+  }
+  .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+    font-size:10.8px!important;
+  }
+}
+
+
+/* WERSJA 523 — kolor wypełnienia ramek statystyk hero dopasowany do kafelka "MECZÓW DZIŚ" */
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats div{
+  border-color:rgba(42, 169, 255, .52)!important;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(0, 144, 255, .22), transparent 38%),
+    radial-gradient(circle at 88% 20%, rgba(0, 216, 255, .10), transparent 42%),
+    linear-gradient(180deg, rgba(8, 25, 42, .86), rgba(3, 12, 25, .82))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(158, 225, 255, .16),
+    inset 0 0 24px rgba(28, 157, 255, .10),
+    0 12px 30px rgba(0,0,0,.34),
+    0 0 26px rgba(0, 148, 255, .16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats i{
+  background:
+    radial-gradient(circle at 45% 42%, rgba(38, 202, 255, .28), transparent 48%),
+    linear-gradient(180deg, rgba(8, 48, 76, .82), rgba(3, 20, 38, .82))!important;
+  border-color:rgba(73, 190, 255, .42)!important;
+  box-shadow:
+    0 0 22px rgba(0, 151, 255, .28),
+    inset 0 1px 0 rgba(180, 235, 255, .16)!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats span{
+  color:#bdddf0!important;
+}
+.betai-animated-hero.betai-hero-image-slides > .betai-hero-stats strong{
+  color:#ffffff!important;
+  text-shadow:0 0 18px rgba(47, 169, 255, .24)!important;
+}
+.betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{
+  background:
+    radial-gradient(circle at 42% 50%, rgba(0, 160, 255, .08), transparent 38%),
+    linear-gradient(90deg,
+      rgba(2, 9, 17, 0) 0%,
+      rgba(3, 12, 23, .24) 20%,
+      rgba(4, 15, 30, .66) 48%,
+      rgba(3, 11, 24, .92) 100%)!important;
+}
