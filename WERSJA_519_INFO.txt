@@ -1,0 +1,4 @@
+Wersja 519
+- kropki hero slidera są klikalne i realnie zmieniają slajd
+- slider pauzuje na hover/focus i wraca do automatycznej pętli
+- dodano przechodzący sweep światła przez baner hero jak na loginie/rejestracji

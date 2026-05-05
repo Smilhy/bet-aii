@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-518-hero-slider",
-  "version": "518.0.0",
+  "name": "betai-wersja-519",
+  "version": "519.0.0",
   "scripts": {
     "dev": "vite",
     "build": "node ./node_modules/vite/bin/vite.js build",

@@ -16161,3 +16161,89 @@ img,video,canvas,svg{max-width:100%;}
   .betai-hero-dots span{width:8px;height:8px;}
   .betai-hero-dots span.active{width:10px;height:10px;}
 }
+
+
+/* WERSJA 519 — klikane kropki hero + żywy sweep światła */
+@keyframes betaiHeroLightSweep519 {
+  0%, 58%, 100% {
+    transform: translateX(-145%) skewX(-16deg);
+    opacity: 0;
+  }
+  63% { opacity: .05; }
+  72% { opacity: .86; }
+  86% {
+    transform: translateX(165%) skewX(-16deg);
+    opacity: 0;
+  }
+}
+@keyframes betaiHeroDotPulse519 {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(28, 236, 255, .35), 0 0 16px rgba(28, 236, 255, .28); }
+  50% { box-shadow: 0 0 0 7px rgba(28, 236, 255, 0), 0 0 24px rgba(28, 236, 255, .68); }
+}
+.betai-animated-hero.betai-hero-image-slides{
+  isolation:isolate!important;
+}
+.betai-animated-hero.betai-hero-image-slides::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  top:-35%!important;
+  bottom:-35%!important;
+  left:0!important;
+  width:30%!important;
+  z-index:9!important;
+  pointer-events:none!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(104deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.04) 17%,
+      rgba(153,250,255,.34) 42%,
+      rgba(28,235,255,.24) 50%,
+      rgba(255,255,255,.10) 58%,
+      rgba(255,255,255,0) 100%)!important;
+  filter:blur(.2px)!important;
+  mix-blend-mode:screen!important;
+  transform:translateX(-145%) skewX(-16deg);
+  opacity:0;
+  animation:betaiHeroLightSweep519 7.4s ease-in-out infinite!important;
+}
+.betai-animated-hero.betai-hero-image-slides:hover::before{
+  animation-duration:5.6s!important;
+}
+.betai-hero-dots{
+  z-index:12!important;
+  pointer-events:auto!important;
+}
+.betai-hero-dots button{
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  min-height:12px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:rgba(170,190,210,.40)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10) inset!important;
+  cursor:pointer!important;
+  transition:width .24s ease, height .24s ease, background .24s ease, transform .18s ease, box-shadow .24s ease!important;
+}
+.betai-hero-dots button:hover{
+  transform:scale(1.22)!important;
+  background:rgba(95,244,255,.75)!important;
+}
+.betai-hero-dots button.active{
+  width:16px!important;
+  height:16px!important;
+  background:#18e8ff!important;
+  animation:betaiHeroDotPulse519 2.4s ease-in-out infinite!important;
+}
+.betai-hero-dots span{display:none!important;}
+@media (max-width: 760px){
+  .betai-animated-hero.betai-hero-image-slides::before{
+    width:44%!important;
+    animation-duration:8.4s!important;
+  }
+  .betai-hero-dots button{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important;}
+  .betai-hero-dots button.active{width:13px!important;height:13px!important;}
+}

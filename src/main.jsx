@@ -658,11 +658,17 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   ]
   const [panel, setPanel] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
+  const [isHeroPaused, setIsHeroPaused] = useState(false)
 
   useEffect(() => {
+    if (isHeroPaused) return undefined
     const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
     return () => { clearInterval(panelTimer) }
-  }, [])
+  }, [heroSlides.length, isHeroPaused])
+
+  const goToHeroSlide = (index) => {
+    setPanel(index)
+  }
 
   const premiumTips = tips.filter(t => isTipPremium(t))
   const avgConfidence = tips.length ? Math.round(tips.reduce((sum, tip) => sum + Number(tip.ai_probability || 0), 0) / tips.length) : 45
@@ -683,7 +689,11 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       className="betai-animated-hero betai-parallax-hero betai-hero-image-slides"
       aria-label="BetAI predictions hero"
       onMouseMove={handleHeroMove}
-      onMouseLeave={resetHeroMove}
+      onMouseEnter={() => setIsHeroPaused(true)}
+      onMouseLeave={() => {
+        resetHeroMove()
+        setIsHeroPaused(false)
+      }}
       style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
     >
       <div className="betai-hero-image-stage" aria-hidden="true">
@@ -697,8 +707,20 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
           />
         ))}
       </div>
-      <div className="betai-hero-dots" aria-hidden="true">
-        {heroSlides.map((_, index) => <span key={index} className={panel === index ? 'active' : ''} />)}
+      <div className="betai-hero-dots" role="tablist" aria-label="Wybierz slajd banera Bet+AI">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            className={panel === index ? 'active' : ''}
+            onClick={() => goToHeroSlide(index)}
+            onFocus={() => setIsHeroPaused(true)}
+            onBlur={() => setIsHeroPaused(false)}
+            aria-label={`Pokaż slajd ${index + 1}`}
+            aria-selected={panel === index}
+            role="tab"
+          />
+        ))}
       </div>
       <div className="betai-hero-stats">
         <div><span>MECZÓW DZIŚ</span><strong>{Math.max(tips.length, 25)}</strong></div>
