@@ -19029,3 +19029,33 @@ img,video,canvas,svg{max-width:100%;}
   35%{opacity:.18}
   100%{transform:translateX(210%) rotate(18deg);opacity:0}
 }
+
+/* WERSJA 539 — globalne dopasowanie jak przeglądarka ustawiona na 80% */
+html,
+body{
+  overflow-x:hidden!important;
+}
+#root{
+  width:125%!important;
+  min-width:125%!important;
+  min-height:125vh!important;
+  transform:scale(.8)!important;
+  transform-origin:top left!important;
+  will-change:transform!important;
+}
+@supports (zoom: 1){
+  body.betai-disable-transform-scale #root{
+    transform:none!important;
+    width:100%!important;
+    min-width:100%!important;
+    min-height:100vh!important;
+  }
+}
+@media (max-width: 900px){
+  #root{
+    width:100%!important;
+    min-width:100%!important;
+    min-height:100vh!important;
+    transform:none!important;
+  }
+}
