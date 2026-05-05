@@ -1,0 +1,5 @@
+Wersja 541
+- Portfel ustawiony na sztywno pod drugi screen referencyjny.
+- Dodany tryb wallet-shell-active tylko dla zakładki Portfel.
+- Dopasowane proporcje: sidebar, topbar, główna kolumna, prawa kolumna, wysokości kart, spacing i typografia.
+- Usunięta dodatkowa karta poleceń z prawej kolumny portfela, żeby układ odpowiadał screenowi.

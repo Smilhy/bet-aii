@@ -3221,37 +3221,6 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
             </div>
             <button type="button" className="wallet-pro-fullbtn">Zarządzaj wypłatami</button>
           </article>
-
-          <article className="wallet-pro-sidecard wallet-pro-referrals">
-            <div className="wallet-pro-sidehead simple">
-              <div>
-                <span>Zarobki z poleceń</span>
-              </div>
-              <em>{role}</em>
-            </div>
-            <div className="wallet-pro-referral-grid">
-              <div>
-                <small>Łącznie</small>
-                <strong>+{referralTotal.toFixed(2)} zł</strong>
-              </div>
-              <div>
-                <small>W tym miesiącu</small>
-                <strong>+{referralMonth.toFixed(2)} zł</strong>
-              </div>
-              <div>
-                <small>Oczekujące</small>
-                <strong>+{referralPending.toFixed(2)} zł</strong>
-              </div>
-            </div>
-            <div className="wallet-pro-referral-user">
-              <span>{username.slice(0,2).toUpperCase()}</span>
-              <div>
-                <strong>{username}</strong>
-                <small>{email}</small>
-              </div>
-            </div>
-            <button type="button" className="wallet-pro-fullbtn">Zobacz szczegóły</button>
-          </article>
         </aside>
       </div>
     </section>
@@ -7869,7 +7838,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${((view !== 'dashboard' && view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${((view !== 'dashboard' && view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
