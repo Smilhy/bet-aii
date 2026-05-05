@@ -11,8 +11,15 @@ var userPlan = 'free'; // global anti-crash fallback
 
 const BETAI_LANGUAGES = ['pl', 'en', 'de', 'es', 'ru']
 const BETAI_LANG_LABELS = { pl: 'PL', en: 'EN', de: 'DE', es: 'ES', ru: 'RU' }
-const BETAI_LANG_FLAGS = { pl: '🇵🇱', en: '🇬🇧', de: '🇩🇪', es: '🇪🇸', ru: '🇷🇺' }
 const BETAI_LANG_NAMES = { pl: 'Polski', en: 'English', de: 'Deutsch', es: 'Español', ru: 'Русский' }
+const svgToDataUri = (svg) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+const BETAI_LANG_FLAG_IMAGES = {
+  pl: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="32" fill="%23ffffff"/><rect y="32" width="64" height="32" fill="%23dc143c"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`),
+  en: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="64" fill="%23012169"/><path d="M0 0L64 64M64 0L0 64" stroke="%23fff" stroke-width="14"/><path d="M0 0L64 64M64 0L0 64" stroke="%23C8102E" stroke-width="8"/><rect x="25" width="14" height="64" fill="%23fff"/><rect y="25" width="64" height="14" fill="%23fff"/><rect x="28" width="8" height="64" fill="%23C8102E"/><rect y="28" width="64" height="8" fill="%23C8102E"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`),
+  de: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="21.34" fill="%23000"/><rect y="21.33" width="64" height="21.34" fill="%23dd0000"/><rect y="42.66" width="64" height="21.34" fill="%23ffce00"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`),
+  es: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="64" fill="%23c60b1e"/><rect y="16" width="64" height="32" fill="%23ffc400"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`),
+  ru: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="21.34" fill="%23ffffff"/><rect y="21.33" width="64" height="21.34" fill="%230039a6"/><rect y="42.66" width="64" height="21.34" fill="%23d52b1e"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`)
+}
 
 function getInitialBetaiLanguage() {
   try {
@@ -5400,7 +5407,9 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
           aria-label={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
           title={BETAI_LANG_NAMES?.[code] || BETAI_LANG_LABELS[code]}
         >
-          <span className="betai-language-flag" aria-hidden="true">{BETAI_LANG_FLAGS?.[code] || BETAI_LANG_LABELS[code]}</span>
+          <span className="betai-language-flag" aria-hidden="true">
+            <img src={BETAI_LANG_FLAG_IMAGES?.[code]} alt="" className="betai-language-flag-img" loading="lazy" />
+          </span>
         </button>
       ))}
     </div>

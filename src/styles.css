@@ -15687,3 +15687,7 @@ button.notify-btn b{
 .betai-language-switch button:hover{transform:translateY(-1px) scale(1.03);}
 .betai-language-switch button.is-active{background:linear-gradient(180deg,rgba(52,244,230,.20),rgba(23,206,185,.18));box-shadow:0 0 18px rgba(35,232,211,.28),inset 0 0 0 1px rgba(84,255,239,.34);}
 .betai-language-flag{font-size:19px;line-height:1;filter:drop-shadow(0 0 10px rgba(0,0,0,.2));}
+.betai-language-flag{display:flex;align-items:center;justify-content:center;width:22px;height:22px;}
+.betai-language-flag-img{display:block;width:22px;height:22px;border-radius:999px;box-shadow:0 0 0 1px rgba(255,255,255,.22),0 3px 10px rgba(0,0,0,.28);object-fit:cover;}
+.betai-language-switch button.is-active .betai-language-flag-img{box-shadow:0 0 0 1px rgba(255,255,255,.32),0 0 12px rgba(66,245,219,.34),0 3px 12px rgba(0,0,0,.3);}
+
