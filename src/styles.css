@@ -20387,3 +20387,77 @@ img,video,canvas,svg{max-width:100%;}
   border:1px solid rgba(255,255,255,.05)!important;
   color:#cfe7ef!important;
 }
+
+/* WERSJA 579 — profil w topbarze: wymuszony ciemny styl zamiast niebieskiego */
+.app-shell .topbar .top-actions button.top-user-chip.neutral-top-user-chip,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip,
+.topbar .top-user-chip.neutral-top-user-chip,
+.top-user-chip.neutral-top-user-chip{
+  background:#081c28!important;
+  background-image:linear-gradient(180deg,rgba(8,28,40,.99),rgba(5,20,31,.99))!important;
+  border:1px solid rgba(43,212,220,.16)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.03), 0 0 0 1px rgba(0,189,214,.05)!important;
+  color:#f3fcff!important;
+}
+
+.app-shell .topbar .top-actions button.top-user-chip.neutral-top-user-chip:hover,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip:hover,
+.topbar .top-user-chip.neutral-top-user-chip:hover,
+.top-user-chip.neutral-top-user-chip:hover{
+  background:#09212f!important;
+  background-image:linear-gradient(180deg,rgba(9,33,47,.99),rgba(6,22,33,.99))!important;
+  border-color:rgba(43,212,220,.22)!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04), 0 0 18px rgba(43,212,220,.08)!important;
+}
+
+.app-shell .topbar .top-actions button.top-user-chip.neutral-top-user-chip::before,
+.app-shell .topbar .top-actions button.top-user-chip.neutral-top-user-chip::after,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip::before,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip::after,
+.topbar .top-user-chip.neutral-top-user-chip::before,
+.topbar .top-user-chip.neutral-top-user-chip::after,
+.top-user-chip.neutral-top-user-chip::before,
+.top-user-chip.neutral-top-user-chip::after{
+  display:none!important;
+}
+
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-avatar,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-avatar,
+.top-user-chip.neutral-top-user-chip .top-user-avatar{
+  background:#0c3146!important;
+  background-image:linear-gradient(180deg,rgba(11,54,74,1),rgba(8,33,48,1))!important;
+  border:1px solid rgba(49,215,221,.18)!important;
+  color:#ebfbff!important;
+  box-shadow:none!important;
+}
+
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-info strong,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-info small,
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-chevron,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-info strong,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-info small,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-chevron,
+.top-user-chip.neutral-top-user-chip .top-user-info strong,
+.top-user-chip.neutral-top-user-chip .top-user-info small,
+.top-user-chip.neutral-top-user-chip .top-user-chevron{
+  color:#f3fcff!important;
+}
+
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-info small,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-info small,
+.top-user-chip.neutral-top-user-chip .top-user-info small{
+  background:#123746!important;
+  background-image:linear-gradient(180deg,rgba(17,55,71,.95),rgba(11,38,50,.95))!important;
+  border:1px solid rgba(43,212,220,.14)!important;
+  color:#d7f8ff!important;
+  box-shadow:none!important;
+}
+
+.app-shell .topbar .top-user-chip.neutral-top-user-chip .top-user-chevron,
+.topbar .top-user-chip.neutral-top-user-chip .top-user-chevron,
+.top-user-chip.neutral-top-user-chip .top-user-chevron{
+  background:#091a25!important;
+  background-image:linear-gradient(180deg,rgba(8,25,36,.96),rgba(6,18,28,.96))!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+  color:#d7f8ff!important;
+}

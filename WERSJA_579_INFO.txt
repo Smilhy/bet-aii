@@ -1,0 +1,1 @@
+WERSJA 579: topbar profil wymuszony na ciemny styl, bez niebieskiego tla.
