@@ -2600,6 +2600,7 @@ function ArticlesView() {
   const [lastLiveUpdate, setLastLiveUpdate] = useState(null)
   const [importantNews, setImportantNews] = useState([])
   const [articleHeroIndex, setArticleHeroIndex] = useState(0)
+  const [urgentTickerIndex, setUrgentTickerIndex] = useState(0)
   const articleHeroSwipeStart = useRef(null)
 
   useEffect(() => {
@@ -2719,6 +2720,14 @@ function ArticlesView() {
     return () => window.clearInterval(sliderTimer)
   }, [activeArticleTab, articleHeroSlides.length])
 
+  useEffect(() => {
+    if (importantNews.length <= 1) return
+    const urgentTimer = window.setInterval(() => {
+      setUrgentTickerIndex(prev => (prev + 1) % importantNews.length)
+    }, 4000)
+    return () => window.clearInterval(urgentTimer)
+  }, [importantNews.length])
+
   const moveArticleHero = (direction) => {
     if (!articleHeroSlides.length) return
     setArticleHeroIndex(prev => (prev + direction + articleHeroSlides.length) % articleHeroSlides.length)
@@ -2786,8 +2795,7 @@ function ArticlesView() {
       <div className="tvlive-layout-v8">
         <div className="tvlive-main-v8">
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
-            <button type="button" aria-pressed={activeArticleTab === 'articles'} className={activeArticleTab === 'articles' ? 'active' : ''} onClick={() => setActiveArticleTab('articles')}>Artykuły</button>
-            <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Żywa</button>
+            <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Na żywo</button>
             <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV / PPV</button>
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
@@ -2800,12 +2808,28 @@ function ArticlesView() {
             </div>
           ) : null}
 
+          {activeArticleTab === 'live' && importantNews.length ? (
+            <div className="glass-tvlive-v8 sportpl-urgent-ticker-v548" onClick={() => importantNews[urgentTickerIndex]?.url && window.open(importantNews[urgentTickerIndex].url, '_blank', 'noopener,noreferrer')}>
+              <div className="sportpl-urgent-badge-v548">PILNE</div>
+              <div className="sportpl-urgent-track-v548">
+                <div key={urgentTickerIndex} className="sportpl-urgent-item-v548">
+                  <strong>{importantNews[urgentTickerIndex]?.title}</strong>
+                  <span>{importantNews[urgentTickerIndex]?.excerpt || 'Kliknij, aby otworzyć pełny pilny artykuł na Sport.pl.'}</span>
+                </div>
+              </div>
+              <div className="sportpl-urgent-meta-v548">
+                <b>{urgentTickerIndex + 1}/{importantNews.length}</b>
+                <small>tylko pilne</small>
+              </div>
+            </div>
+          ) : null}
+
           {activeArticleTab === 'live' ? (
             <div className="glass-tvlive-v8 sportpl-live-panel-v538 sportpl-live-panel-v539">
               <div className="sportpl-live-head-v538">
                 <div>
                   <span>SPORT.PL LIVE FEED</span>
-                  <h2>Żywa zakładka wiadomości</h2>
+                  <h2>Zakładka Na żywo</h2>
                   <p>Pobiera najnowsze informacje ze Sport.pl i automatycznie sprawdza ważne wiadomości co 10 minut. Kafelki są klikalne i otwierają pełny artykuł.</p>
                 </div>
                 <div className="sportpl-live-status-v538">
@@ -2908,7 +2932,7 @@ function ArticlesView() {
           </div> : null}
 
           {activeArticleTab !== 'live' ? <>
-          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Żywą</button></div>
+          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Na żywo</button></div>
           <div className="article-grid-v8">
             {sportPlCards.map((item, idx) => (
               <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
