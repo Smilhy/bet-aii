@@ -531,18 +531,12 @@ return (
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
-        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>🤝 Polecenia</button>
-        <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? `(${notificationsCount})` : ''}</button>
-        <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
-        <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>🔐 Subskrypcja</button>
-        <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
-        <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
+        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
         {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
         {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
-        <button>♕ Top typerzy</button>
-        <button>▣ Moje subskrypcje</button>
-        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły</button>
+        <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
+        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
         <button>⚙ Ustawienia</button>
       </nav>
 
@@ -2305,357 +2299,704 @@ function FeedSkeleton() {
 
 
 function ReferralsView({ user, data, loading, onRefresh }) {
-  const [copied, setCopied] = useState('')
-  const referralCode = data?.referral_code || ''
-  const referralUrl = getReferralUrl(referralCode)
-  const shareUrl = getReferralProfileUrl(referralCode)
-  const rewards = Array.isArray(data?.rewards) ? data.rewards : []
-  const referrals = Array.isArray(data?.referrals) ? data.referrals : []
-
-  async function copy(text, label) {
-    if (!text) return
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(label)
-      setTimeout(() => setCopied(''), 1800)
-    } catch (e) {
-      setCopied('Nie udało się skopiować')
+  const liveUsers = ['KT', 'SM', 'PK', 'BJ', 'AM', 'GT', 'VR']
+  const feedPosts = [
+    {
+      author: 'krystian_typer',
+      badge: 'PREMIUM',
+      time: '2 min temu',
+      text: 'Świetna analiza od AI dzisiaj! Lecimy z greenem 💚',
+      pick: { match: 'PSG vs Lyon', tip: 'Typ: PSG wygra', odds: '1.62' },
+      likes: 18,
+      comments: 6,
+      accent: 'cyan'
+    },
+    {
+      author: 'pirotek1987',
+      badge: '',
+      time: '10 min temu',
+      text: 'Ktoś gra coś z ligi hiszpańskiej dziś?',
+      reply: { author: 'smilhytv', badge: 'ADMIN', time: '8 min temu', text: 'Ja gram Barcelona Over 1.5 gola!' },
+      likes: 6,
+      comments: 23,
+      accent: 'teal'
+    },
+    {
+      author: 'buchajsonek1988',
+      badge: 'NOWY TYP',
+      time: '25 min temu',
+      text: 'Real Madryt wygra z Getafe!',
+      pick: { match: 'Typ: Real Madryt wygra', tip: 'Kurs', odds: '1.44' },
+      likes: 14,
+      comments: 3,
+      accent: 'mint'
     }
-  }
+  ]
+  const weeklyLeaders = [
+    ['1', 'krystian_typer', '+125.40 zł'],
+    ['2', 'smilhytv', '+98.20 zł', 'ADMIN'],
+    ['3', 'pirotek1987', '+76.80 zł'],
+    ['4', 'buchajonek1988', '+64.30 zł'],
+    ['5', 'AI Master', '+58.10 zł', 'BOT']
+  ]
+  const suggestedUsers = [
+    ['AI Master', 'Ekspert AI', 'BOT'],
+    ['krystian_typer', 'Top typer', 'PREMIUM'],
+    ['Bet+AI', 'Oficjalne konto', 'ADMIN'],
+    ['smilhytv', 'Top społeczność', 'ADMIN']
+  ]
+  const liveEvents = [
+    ['Q&A z AI Master', 'Analizy i typy na żywo', '248 ogląda'],
+    ['Typer Talk: Premier League', 'Dyskusja społeczności', '156 ogląda'],
+    ['Misja specjalna', 'Zgarnij nagrody!', '97 ogląda']
+  ]
+  const weeklyCommunity = [
+    ['1', 'krystian_typer', '15 430 pkt'],
+    ['2', 'smilhytv', '12 870 pkt', 'ADMIN'],
+    ['3', 'pirotek1987', '10 560 pkt'],
+    ['4', 'buchajonek1988', '9 230 pkt'],
+    ['5', 'AI Master', '8 910 pkt']
+  ]
 
   return (
-    <section className="referrals-view pro-section">
-      <UltraPageBanner variant="referrals"><button type="button" onClick={onRefresh} disabled={loading}>{loading ? 'Odświeżanie...' : 'Odśwież'}</button></UltraPageBanner>
-      <div className="section-hero referral-hero">
+    <section className="community-static-v5">
+      <div className="community-v5-header glass-community-v5">
         <div>
-          <span className="eyebrow">GROWTH SYSTEM</span>
-          <h1>🤝 Program poleceń Bet+AI</h1>
-          <p>Udostępniaj swój link. Gdy polecony użytkownik kupi premium typ, dostęp do profilu lub Premium, system naliczy prowizję referral.</p>
+          <h1>Krok 9 / Społeczność</h1>
+          <p>Rozmawiaj, dziel się typami i zdobywaj nagrody z aktywną społecznością Bet+AI.</p>
         </div>
-        <button className="refresh-btn" onClick={onRefresh} disabled={loading}>{loading ? 'Odświeżanie...' : 'Odśwież'}</button>
-      </div>
-
-      <div className="referral-grid">
-        <div className="referral-link-card neon-card">
-          <span>Twój kod</span>
-          <strong>{referralCode || 'Generowanie...'}</strong>
-          <div className="referral-url">{referralUrl || 'Kod pojawi się po odświeżeniu.'}</div>
-          <div className="referral-actions">
-            <button onClick={() => copy(referralUrl, 'Link skopiowany')}>Kopiuj link /ref</button>
-            <button onClick={() => copy(shareUrl, 'Link share skopiowany')}>Kopiuj ?ref</button>
+        <div className="community-v5-online-wrap">
+          <div className="community-v5-online-copy">
+            <span className="live-dot-v5"></span>
+            <strong>Aktywnych teraz</strong>
+            <b>248 online</b>
           </div>
-          {copied && <em className="copy-state">{copied}</em>}
+          <div className="community-v5-avatars">
+            {liveUsers.map((item, index) => <i key={index}>{item}</i>)}
+            <em>+238</em>
+          </div>
         </div>
-
-        <div className="referral-stat-card"><span>Poleceni</span><b>{Number(data?.referrals_count || 0)}</b><small>zarejestrowani z Twojego linku</small></div>
-        <div className="referral-stat-card"><span>Aktywni kupujący</span><b>{Number(data?.buyers_count || 0)}</b><small>poleceni z zakupem</small></div>
-        <div className="referral-stat-card"><span>Prowizja</span><b>{Number(data?.reward_total || 0).toFixed(2)} zł</b><small>10% od kwalifikowanych zakupów</small></div>
       </div>
 
-      <div className="referral-columns">
-        <div className="panel-card">
-          <div className="panel-head"><h2>Ostatnie nagrody</h2><span>{rewards.length}</span></div>
-          {rewards.length ? rewards.slice(0, 8).map((reward) => (
-            <div className="referral-row" key={reward.id || reward.stripe_session_id || reward.created_at}>
-              <div><b>{reward.source || 'purchase'}</b><span>{new Date(reward.created_at || Date.now()).toLocaleDateString('pl-PL')}</span></div>
-              <strong>{Number(reward.reward_amount || 0).toFixed(2)} zł</strong>
+      <div className="community-v5-tabs glass-community-v5">
+        <button type="button" className="active">💬 Czat live</button>
+        <button type="button">⌘ Kanały</button>
+        <button type="button">📰 Posty</button>
+        <button type="button">🎁 Dropy</button>
+        <button type="button">🏆 Nagrody</button>
+      </div>
+
+      <div className="community-v5-layout">
+        <div className="community-v5-main">
+          <div className="glass-community-v5 composer-v5">
+            <div className="composer-v5-head">
+              <span className="composer-avatar-v5">SM</span>
+              <div>
+                <strong>Co nowego w społeczności?</strong>
+                <small>Napisz coś dla społeczności Bet+AI</small>
+              </div>
             </div>
-          )) : <div className="empty-state">Brak naliczonych prowizji. Skopiuj link i zacznij polecać.</div>}
+            <div className="composer-v5-row">
+              <input value="" readOnly placeholder="Napisz coś dla społeczności..." />
+              <button type="button">Opublikuj</button>
+            </div>
+          </div>
+
+          <div className="community-v5-feed">
+            {feedPosts.map((post, index) => (
+              <article className="glass-community-v5 feed-card-v5" key={index}>
+                <div className="feed-card-head-v5">
+                  <div className="feed-author-v5">
+                    <span className={`feed-avatar-v5 ${post.accent}`}>{post.author.slice(0,2).toUpperCase()}</span>
+                    <div>
+                      <strong>{post.author}</strong>
+                      <div className="feed-meta-v5">
+                        {post.badge ? <span className={`feed-badge-v5 ${post.badge.toLowerCase().replace(/\s+/g, '-')}`}>{post.badge}</span> : null}
+                        <small>{post.time}</small>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button">⋮</button>
+                </div>
+                <p className="feed-text-v5">{post.text}</p>
+
+                {post.pick ? (
+                  <div className="pick-preview-v5">
+                    <div>
+                      <strong>{post.pick.match}</strong>
+                      <small>{post.pick.tip}</small>
+                    </div>
+                    <b>{post.pick.odds}</b>
+                  </div>
+                ) : null}
+
+                {post.reply ? (
+                  <div className="reply-preview-v5">
+                    <span className="reply-avatar-v5">SM</span>
+                    <div>
+                      <div className="feed-meta-v5">
+                        <strong>{post.reply.author}</strong>
+                        <span className="feed-badge-v5 admin">{post.reply.badge}</span>
+                        <small>{post.reply.time}</small>
+                      </div>
+                      <p>{post.reply.text}</p>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="feed-actions-v5">
+                  <span>👍 {post.likes}</span>
+                  <span>💬 {post.comments}</span>
+                  <button type="button">Zobacz wszystkie komentarze ({post.comments})</button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="community-v5-bottom-grid">
+            <div className="glass-community-v5 bottom-card-v5">
+              <div className="bottom-card-head-v5"><h3>Dropy i nagrody</h3><button type="button">Zobacz wszystkie →</button></div>
+              <div className="drops-grid-v5">
+                <div className="drop-box-v5 warm">
+                  <span>DROP AKTYWNY</span>
+                  <strong>Zgarnij 100 żetonów!</strong>
+                  <p>Bądź aktywny na czacie przez 30 minut</p>
+                  <div className="drop-progress-v5"><i style={{width:'68%'}}></i></div>
+                  <div className="drop-footer-v5"><b>18/30</b><small>min</small></div>
+                  <button type="button">Weź udział</button>
+                </div>
+                <div className="drop-box-v5 cool">
+                  <span>Nagroda tygodnia</span>
+                  <strong>Karta podarunkowa 100 zł</strong>
+                  <p>Dla najbardziej aktywnego użytkownika</p>
+                  <div className="drop-progress-v5"><i style={{width:'72%'}}></i></div>
+                  <div className="drop-footer-v5"><b>72%</b><small>Do końca: 2 dni 14:32:10</small></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-community-v5 bottom-card-v5">
+              <div className="bottom-card-head-v5"><h3>Top społeczność tygodnia</h3><button type="button">Zobacz ranking →</button></div>
+              <div className="community-rank-v5">
+                {weeklyCommunity.map((item, index) => (
+                  <div className="community-rank-row-v5" key={index}>
+                    <span className={`mini-place-v5 p${item[0]}`}>{item[0]}</span>
+                    <div><strong>{item[1]}</strong>{item[3] ? <small>{item[3]}</small> : null}</div>
+                    <b>{item[2]}</b>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="glass-community-v5 bottom-card-v5 reward-card-v5">
+              <div className="bottom-card-head-v5"><h3>Twój progres nagród</h3><button type="button">Zobacz nagrody →</button></div>
+              <div className="reward-level-v5">
+                <div><span>Poziom 8</span><strong>Ekspert</strong></div>
+                <b>860 / 1200 XP</b>
+              </div>
+              <div className="reward-progress-v5"><i style={{width:'72%'}}></i></div>
+              <div className="reward-next-v5">
+                <div><span>Następna nagroda</span><strong>250 żetonów</strong><small>Odbierz przy poziomie 9</small></div>
+                <div className="coin-badge-v5">250</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="panel-card">
-          <div className="panel-head"><h2>Poleceni użytkownicy</h2><span>{referrals.length}</span></div>
-          {referrals.length ? referrals.slice(0, 8).map((ref) => (
-            <div className="referral-row" key={ref.id || ref.referred_user_id}>
-              <div><b>{ref.status || 'registered'}</b><span>{new Date(ref.created_at || Date.now()).toLocaleDateString('pl-PL')}</span></div>
-              <strong>{ref.first_purchase_at ? 'Kupujący' : 'Nowy'}</strong>
+        <aside className="community-v5-sidebar">
+          <div className="glass-community-v5 sidecard-v5">
+            <div className="sidecard-head-v5"><h3>🏆 Top typerzy <small>(tydzień)</small></h3></div>
+            <small className="sidecard-sub-v5">Ranking tygodniowy</small>
+            <div className="side-list-v5">
+              {weeklyLeaders.map((item, index) => (
+                <div className="side-leader-row-v5" key={index}>
+                  <span className={`leader-no-v5 n${item[0]}`}>{item[0]}</span>
+                  <div>
+                    <strong>{item[1]}</strong>
+                    <small>{item[3] || 'ROI: ' + (26 - index * 2.1).toFixed(1) + '%'}</small>
+                  </div>
+                  {item[3] && item[3] !== 'BOT' ? <em>{item[3]}</em> : null}
+                  {item[3] === 'BOT' ? <em>BOT</em> : null}
+                  <b>{item[2]}</b>
+                </div>
+              ))}
             </div>
-          )) : <div className="empty-state">Jeszcze nie masz poleconych użytkowników.</div>}
-        </div>
+            <button type="button" className="side-btn-v5">Zobacz pełny ranking</button>
+          </div>
+
+          <div className="glass-community-v5 sidecard-v5">
+            <div className="sidecard-head-v5"><h3>Polecani użytkownicy</h3><button type="button">Zobacz wszystkich</button></div>
+            <div className="suggested-list-v5">
+              {suggestedUsers.map((item, index) => (
+                <div className="suggested-row-v5" key={index}>
+                  <span className="suggested-avatar-v5">{item[0].slice(0,2).toUpperCase()}</span>
+                  <div>
+                    <strong>{item[0]}</strong>
+                    <small>{item[1]}</small>
+                  </div>
+                  <em>{item[2]}</em>
+                  <button type="button">Obserwuj</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-community-v5 sidecard-v5">
+            <div className="sidecard-head-v5"><h3>Wydarzenia live</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="events-list-v5">
+              {liveEvents.map((item, index) => (
+                <div className="event-row-v5" key={index}>
+                  <span className={`event-thumb-v5 e${index + 1}`}></span>
+                  <div>
+                    <strong>{item[0]}</strong>
+                    <small>{item[1]}</small>
+                    <em>{item[2]}</em>
+                  </div>
+                  <b>LIVE</b>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
   )
 }
 
 function ArticlesView() {
-  const [articles, setArticles] = useState([])
-  const [loadingArticles, setLoadingArticles] = useState(true)
-  const [articlesError, setArticlesError] = useState('')
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [articleQuery, setArticleQuery] = useState('')
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const articleCards = [
+    {
+      tag: 'ANALIZA',
+      title: 'Mbappé bohaterem! PSG z kolejnym krokiem w stronę tytułu',
+      body: 'Francuz poprowadził PSG do zwycięstwa 3:1 z Lyonem. Analiza meczu i statystyki.',
+      meta: '1h temu',
+      icon: 'KM'
+    },
+    {
+      tag: 'ZAPOWIEDŹ',
+      title: 'Derby Włoch: Inter – Juventus',
+      body: 'Kto wyjdzie górą w starciu gigantów Serie A? Sprawdzamy formę, składy i kursy.',
+      meta: '2h temu',
+      icon: 'IJ'
+    },
+    {
+      tag: 'TYPY AI',
+      title: 'AI typuje: Najlepsze kupony na weekend 17-19 maja',
+      body: 'Sprawdź kupony przygotowane przez sztuczną inteligencję z wysokim value.',
+      meta: '3h temu',
+      icon: 'AI'
+    },
+    {
+      tag: 'WYWIAD',
+      title: 'Klopp: "To nie koniec, to nowy początek"',
+      body: 'Szczere słowa trenera Liverpoolu przed ostatnią kolejką sezonu.',
+      meta: '5h temu',
+      icon: 'JK'
+    },
+  ]
 
-  async function loadArticles(silent = false) {
-    if (!silent) setLoadingArticles(true)
-    setArticlesError('')
-    try {
-      const response = await fetch('/.netlify/functions/sportpl-articles?limit=30&t=' + Date.now(), {
-        headers: { 'Accept': 'application/json' }
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać artykułów Sport.pl')
-      setArticles(Array.isArray(data.articles) ? data.articles : [])
-      setLastUpdated(data.updatedAt || new Date().toISOString())
-    } catch (error) {
-      setArticlesError(error.message || 'Nie udało się pobrać artykułów')
-    } finally {
-      if (!silent) setLoadingArticles(false)
-    }
-  }
+  const tvRows = [
+    ['18:30', 'CANAL+ SPORT', 'Manchester City – Arsenal', 'Premier League'],
+    ['20:45', 'ELEVEN SPORTS 2', 'Inter – Juventus', 'Serie A'],
+    ['21:00', 'polsat sport premium', 'Real Madryt – Betis', 'LaLiga'],
+    ['21:00', 'TVP SPORT', 'Lech – Legia', 'PKO BP Ekstraklasa'],
+    ['23:15', 'CANAL+ SPORT', 'NBA Lakers – Nuggets', 'Playoffs'],
+  ]
 
-  useEffect(() => {
-    loadArticles(false)
-    const timer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
-    return () => clearInterval(timer)
-  }, [])
+  const ppvRows = [
+    ['Usyk vs Fury', 'Walka o wszystkie pasy', '49.00 zł', 'PPV'],
+    ['UFC 302', 'Makhachev vs Poirier', '49.00 zł', 'PPV'],
+    ['KSW 94', 'Stadion Narodowy, Warszawa', '39.00 zł', 'PPV'],
+  ]
 
-  const categories = useMemo(() => {
-    const set = new Set((articles || []).map(item => item.category || 'Sport').filter(Boolean))
-    return ['all', ...Array.from(set).slice(0, 8)]
-  }, [articles])
+  const liveChatUsers = [
+    ['ZielonyKról', '2.860 zł / 2 dni', '+14.5%'],
+    ['PiłkarskiGuru', '1.340 zł / 2 dni', '+8.3%'],
+    ['Piłkarzytv', '2.340 zł / 2 dni', ''],
+    ['smilhytv', '1.120 zł / 3 dni', ''],
+  ]
 
-  const filteredArticles = useMemo(() => {
-    const q = articleQuery.trim().toLowerCase()
-    return (articles || []).filter(article => {
-      if (activeCategory !== 'all' && article.category !== activeCategory) return false
-      if (!q) return true
-      return [article.title, article.excerpt, article.category, article.author].filter(Boolean).join(' ').toLowerCase().includes(q)
-    })
-  }, [articles, activeCategory, articleQuery])
+  const chatRows = [
+    ['B', 'buchajsonek1988', 'czekam na wieczór!', '12:31', ''],
+    ['P', 'pirotek1987', 'idziemy dziś po zielone? 💪', '12:32', ''],
+    ['K', 'krystian_typer', 'Dzisiaj typy z AI mega! 😎', '12:32', ''],
+    ['S', 'smilhytv', '🔥 Liczymy dziś! 🚀', '12:34', 'ADMIN'],
+  ]
 
-  const mainArticle = filteredArticles[0]
-  const sideArticles = filteredArticles.slice(1, 4)
-  const listArticles = filteredArticles.slice(4)
+  const sideTipsters = [
+    ['1', 'smilhytv', 'ROI: +20.6% • WR: 0.0%', 'Typy: 72 • Wygrane: 0', '+0.00 zł'],
+    ['2', 'buchajson1988', 'ROI: +18.1% • WR: 0.0%', 'Typy: 50 • Wygrane: 0', '+0.00 zł'],
+    ['3', 'pirotek1987', 'ROI: +17.2% • WR: 0.0%', 'Typy: 61 • Wygrane: 0', '+0.00 zł'],
+    ['4', 'krystian_typer', 'ROI: +16.3% • WR: 0.0%', 'Typy: 49 • Wygrane: 0', '+0.00 zł'],
+    ['5', 'adrianbets', 'ROI: +15.0% • WR: 0.0%', 'Typy: 38 • Wygrane: 0', '+0.00 zł'],
+  ]
 
-  const formatArticleDate = (value) => {
-    if (!value) return 'Teraz'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return 'Teraz'
-    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-  }
+  const aiDayRows = [
+    ['MC', 'Manchester City vs Arsenal', 'Typ: Manchester City wygra', '68%'],
+    ['PSG', 'PSG vs Olympique Lyon', 'Typ: Powyżej 2.5 gola', '61%'],
+    ['INT', 'Inter vs Juventus', 'Typ: Inter wygra lub remis', '64%'],
+  ]
+
+  const liveScores = [
+    ['PREMIER LEAGUE', 'Tottenham', 'Liverpool', '2 : 1', '86′', ['23′ Son', '45+1′ Maddison'], ['17′ Salah'], ['2.45', '3.40', '2.80'], '+123'],
+    ['SERIE A', 'Inter', 'Juventus', '1 : 0', 'HT', ['15′ Lautaro (k)'], ['37′ Bremer'], ['1.90', '3.50', '4.20'], '+98'],
+    ['LALIGA', 'Barcelona', 'Real Sociedad', '3 : 2', '62′', ['12′ Lewandowski', '34′ Gündoğan', '58′ Yamal'], ['49′ Kubo'], ['1.90', '4.20', '5.20'], '+112'],
+    ['BUNDESLIGA', 'Leverkusen', 'Bayern', '1 : 1', '71′', ['18′ Wirtz'], ['45+2′ Kane'], ['2.10', '3.60', '2.40'], '+107'],
+  ]
 
   return (
-    <section className="articles-page">
-      <UltraPageBanner variant="articles"><button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button></UltraPageBanner>
-      <div className="articles-hero articles-hero-compact">
-        <div>
-          <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
-          <h1>Artykuły</h1>
-          <div className="articles-meta-row">
-            <em>Auto refresh: 10 min</em>
-            <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
+    <section className="tvlive-page-v8">
+      <div className="tvlive-layout-v8">
+        <div className="tvlive-main-v8">
+          <div className="tvlive-tabs-v8 glass-tvlive-v8">
+            <button type="button" className="active">Artykuły</button>
+            <button type="button">News</button>
+            <button type="button">TV / PPV</button>
+            <button type="button">Wyniki live</button>
           </div>
-        </div>
-        <button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button>
-      </div>
 
-      <div className="articles-toolbar">
-        <label className="articles-search">
-          <span>⌕</span>
-          <input value={articleQuery} onChange={event => setArticleQuery(event.target.value)} placeholder="Szukaj artykułów, drużyn, lig..." />
-        </label>
-        <div className="articles-categories">
-          {categories.map(category => (
-            <button key={category} className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)}>
-              {category === 'all' ? 'Wszystkie' : category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {articlesError && <div className="articles-error">⚠️ {articlesError}</div>}
-      {loadingArticles && !articles.length && <div className="articles-loading">Ładowanie artykułów Sport.pl...</div>}
-
-      {!loadingArticles && !filteredArticles.length && (
-        <div className="articles-empty">
-          <strong>Brak artykułów dla tego filtra</strong>
-          <span>Zmień kategorię albo wyczyść wyszukiwarkę.</span>
-        </div>
-      )}
-
-      {mainArticle && (
-        <div className="articles-featured-grid">
-          <a className="article-main-card" href={mainArticle.url} target="_blank" rel="noreferrer">
-            <div className="article-image-wrap">
-              {mainArticle.image ? <img src={mainArticle.image} alt="" loading="lazy" /> : <div className="article-image-placeholder">Sport.pl</div>}
-              <span>{mainArticle.category || 'Sport'}</span>
+          <div className="tvlive-top-grid-v8">
+            <div className="glass-tvlive-v8 tvlive-hero-v8">
+              <div className="hero-badge-v8">TRENDING</div>
+              <div className="hero-copy-v8">
+                <h1>Mecz na szczycie Premier League: City kontra Arsenal</h1>
+                <p>Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.</p>
+                <button type="button">Czytaj artykuł</button>
+              </div>
+              <div className="hero-vs-v8">VS</div>
+              <div className="hero-player-v8 left">MC</div>
+              <div className="hero-player-v8 right">ARS</div>
+              <div className="hero-nav-v8">
+                <span>‹</span>
+                <div className="hero-dots-v8"><i className="active"></i><i></i><i></i><i></i><i></i></div>
+                <span>›</span>
+              </div>
             </div>
-            <div className="article-main-content">
-              <em>{formatArticleDate(mainArticle.publishedAt)} • Sport.pl</em>
-              <h2>{mainArticle.title}</h2>
-              <p>{mainArticle.excerpt || 'Kliknij, aby przeczytać pełny artykuł w Sport.pl.'}</p>
-              <strong>Czytaj artykuł ↗</strong>
-            </div>
-          </a>
 
-          <div className="article-side-list">
-            {sideArticles.map(article => (
-              <a className="article-side-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
-                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-mini-placeholder">S</div>}
-                <div>
-                  <span>{article.category || 'Sport'} • {formatArticleDate(article.publishedAt)}</span>
-                  <h3>{article.title}</h3>
+            <div className="tvlive-side-stack-v8">
+              <div className="glass-tvlive-v8 schedule-card-v8">
+                <div className="card-head-v8"><h3>TV / Na żywo</h3><button type="button">Zobacz pełen program</button></div>
+                <div className="mini-tabs-v8"><button type="button" className="active">Dziś</button><button type="button">Jutro</button><button type="button">Śr 17.05</button></div>
+                <div className="schedule-list-v8">
+                  {tvRows.map((row, idx) => (
+                    <div className="schedule-row-v8" key={idx}>
+                      <span>{row[0]}</span>
+                      <div><strong>{row[2]}</strong><small>{row[3]}</small></div>
+                      <em>{row[1]}</em>
+                      <b>NA ŻYWO</b>
+                    </div>
+                  ))}
                 </div>
-              </a>
+              </div>
+
+              <div className="glass-tvlive-v8 ppv-card-v8">
+                <div className="card-head-v8"><h3>PPV / Wydarzenia premium</h3><button type="button">Zobacz wszystkie</button></div>
+                <div className="ppv-list-v8">
+                  {ppvRows.map((row, idx) => (
+                    <div className="ppv-row-v8" key={idx}>
+                      <div className={`ppv-thumb-v8 t${idx+1}`}></div>
+                      <div><strong>{row[0]}</strong><small>{row[1]}</small></div>
+                      <span>{row[2]}</span>
+                      <b>{row[3]}</b>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="section-head-v8"><h2>Najnowsze artykuły</h2><button type="button">Zobacz wszystkie</button></div>
+          <div className="article-grid-v8">
+            {articleCards.map((item, idx) => (
+              <article className="glass-tvlive-v8 article-card-v8" key={idx}>
+                <div className={`article-cover-v8 c${idx+1}`}><span>{item.tag}</span><small>{item.meta}</small><strong>{item.icon}</strong></div>
+                <div className="article-body-v8">
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                  <div className="article-foot-v8"><span>🔥 24</span><span>💬 Komentarze</span></div>
+                </div>
+              </article>
             ))}
           </div>
-        </div>
-      )}
 
-      <div className="articles-grid">
-        {listArticles.map(article => (
-          <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
-            <div className="article-card-image">
-              {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
-              <span>{article.category || 'Sport'}</span>
+          <div className="glass-tvlive-v8 livescore-wrap-v8">
+            <div className="card-head-v8"><h3>Wyniki live</h3><button type="button">⚙ Ustawienia</button></div>
+            <div className="scores-tabs-v8"><button type="button" className="active">Wszystkie</button><button type="button">⚽ Piłka nożna</button><button type="button">🎾 Tenis</button><button type="button">🏀 Koszykówka</button><button type="button">🏒 Hokej</button><button type="button">🏐 Siatkówka</button><button type="button">🎯 Dart</button></div>
+            <div className="livescore-grid-v8">
+              {liveScores.map((row, idx) => (
+                <div className="live-card-v8" key={idx}>
+                  <div className="live-card-head-v8"><span>{row[0]}</span><b>{row[4]}</b></div>
+                  <div className="live-teams-v8"><strong>{row[1]}</strong><b>{row[3]}</b><strong>{row[2]}</strong></div>
+                  <div className="live-events-v8"><span>{row[5].join(' • ')}</span><span>{row[6].join(' • ')}</span></div>
+                  <div className="odds-row-v8"><i>{row[7][0]}</i><i>{row[7][1]}</i><i>{row[7][2]}</i><em>{row[8]}</em></div>
+                </div>
+              ))}
             </div>
-            <div className="article-card-body">
-              <em>{formatArticleDate(article.publishedAt)}</em>
-              <h3>{article.title}</h3>
-              <p>{article.excerpt || 'Krótki opis artykułu pojawi się po pobraniu danych.'}</p>
+            <button type="button" className="more-live-v8">⌄ Pokaż więcej meczów na żywo</button>
+          </div>
+        </div>
+
+        <aside className="tvlive-sidebar-v8">
+          <div className="glass-tvlive-v8 livechat-card-v8">
+            <div className="livechat-head-v8"><h3>● BET+AI LIVE CHAT</h3><span>154 online</span></div>
+            <div className="top-users-v8">
+              {liveChatUsers.map((item, idx) => <div key={idx}><strong>{item[0]}</strong><small>{item[1]}</small><b>{item[2]}</b></div>)}
             </div>
-          </a>
-        ))}
+            <div className="chat-list-v8">
+              {chatRows.map((item, idx) => (
+                <div className="chat-row-v8" key={idx}>
+                  <span>{item[0]}</span>
+                  <div><strong>{item[1]} {item[4] ? <em>{item[4]}</em> : null}</strong><p>{item[2]}</p></div>
+                  <small>{item[3]}</small>
+                </div>
+              ))}
+            </div>
+            <div className="chat-input-v8"><input readOnly placeholder="Napisz wiadomość..." /><button type="button">TIP ⬇</button><button type="button" className="send">➤</button></div>
+          </div>
+
+          <div className="glass-tvlive-v8 side-ranking-v8">
+            <div className="card-head-v8"><h3>🏆 Top typerzy</h3><button type="button">Ranking realy</button></div>
+            <div className="side-list-v8">
+              {sideTipsters.map((row, idx) => (
+                <div className="side-rank-row-v8" key={idx}>
+                  <span className={`rank-v8 r${idx+1}`}>{row[0]}</span>
+                  <div><strong>{row[1]}</strong><small>{row[2]}</small><small>{row[3]}</small></div>
+                  <b>{row[4]}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-tvlive-v8 ai-day-card-v8">
+            <div className="card-head-v8"><h3>⚗ Typy AI dnia</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="ai-day-list-v8">
+              {aiDayRows.map((row, idx) => (
+                <div className="ai-day-row-v8" key={idx}>
+                  <span>{row[0]}</span>
+                  <div><strong>{row[1]}</strong><small>{row[2]}</small><i style={{width: row[3]}}></i></div>
+                  <b>{row[3]}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
   )
 }
 
 function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
-  const operationRows = [
-    ['23.05.2025, 21:37', '↻ Wypłata', 'Wypłata środków', 'Przelew bankowy', '-250.00 zł', 'W realizacji', 'pending'],
-    ['23.05.2025, 18:22', '↓ Wpłata', 'Doładowanie konta', 'BLIK', '+200.00 zł', 'Zakończono', 'done'],
-    ['22.05.2025, 19:10', '🎁 Bonus', 'Bonus powitalny 50%', 'System', '+75.00 zł', 'Zakończono', 'done'],
-    ['22.05.2025, 16:05', '◈ Zakup', 'Zakup 50 żetonów AI', 'Karta Visa', '-50.00 zł', 'Zakończono', 'done'],
-    ['21.05.2025, 22:41', '◆ Zakład', 'Wygrany zakład', '-', '+312.40 zł', 'Zakończono', 'done'],
-    ['21.05.2025, 20:15', '↓ Wpłata', 'Doładowanie konta', 'Przelew bankowy', '+500.00 zł', 'Zakończono', 'done']
+  const historyRows = [
+    { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
+    { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
+    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.99 zł', positive: false },
+    { icon: '✓', title: 'Wygrana kupon', time: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
+    { icon: 'AI', title: 'Zakup żetonów', time: '25.05.2025, 16:33', amount: '+50', positive: true }
+  ]
+  const invoiceRows = [
+    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.05.2025' },
+    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.04.2025' },
+    { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
+  ]
+  const topUsers = [
+    ['RebelKoks', 'Typy: 66 • WIN: 68.2%'],
+    ['smilhytv', 'Typy: 72 • WIN: 62.1%'],
+    ['buchajsonek1988', 'Typy: 67 • WIN: 59.8%'],
+    ['piotrek1987', 'Typy: 61 • WIN: 61.0%'],
+    ['krystian_typer', 'Typy: 54 • WIN: 57.2%']
+  ]
+  const topTipsters = [
+    ['smilhytv', 'Typy: 72 • WIN: 62.1%', '+1250.75 zł'],
+    ['buchajsonek1988', 'Typy: 67 • WIN: 59.8%', '+980.50 zł'],
+    ['piotrek1987', 'Typy: 61 • WIN: 61.0%', '+750.00 zł'],
+    ['krystian_typer', 'Typy: 54 • WIN: 57.2%', '+620.30 zł'],
+    ['adrianbets', 'Typy: 48 • WIN: 55.4%', '+410.25 zł']
+  ]
+  const aiPicks = [
+    ['Manchester City vs Inter Mediolan', 'Typ: Manchester City wygra', '68%'],
+    ['PSG vs Borussia Dortmund', 'Typ: Powyżej 2.5 gola', '63%'],
+    ['Liverpool vs Bayer Leverkusen', 'Typ: Liverpool wygra', '61%']
   ]
 
   return (
-    <section className="wallet-panel wallet-ultra-page wallet-static-ultra">
-      <div className="wallet-static-shell">
-        <div className="wallet-static-head">
-          <h1>Portfel</h1>
-        </div>
-
-        <div className="wallet-static-tabs glass-wallet-shell">
-          <button type="button" className="active">▣ Portfel</button>
-          <button type="button">☑ Płatności</button>
-          <button type="button">↓ Wpłaty</button>
-          <button type="button">↺ Wypłaty</button>
-          <button type="button">◔ Historia</button>
-        </div>
-
-        <div className="wallet-static-grid">
-          <div className="wallet-static-main">
-            <div className="wallet-stats-grid">
-              <div className="wallet-stat-card balance glass-wallet-card">
-                <div className="wallet-card-top"><span>Saldo</span><i>👛</i></div>
-                <strong>1,245.80 zł</strong>
-                <small>Zmienna (24h)</small>
-                <div className="wallet-change positive">↗ +112.40 zł (+9.94%)</div>
-                <div className="wallet-mini-chart green"></div>
-              </div>
-
-              <div className="wallet-stat-card tokens glass-wallet-card">
-                <div className="wallet-card-top"><span>Żetony (AI)</span><i>AI</i></div>
-                <strong>0.00</strong>
-                <small>Wartość <b>0.00 zł</b></small>
-                <button type="button" onClick={onTopUp}>Kup żetony</button>
-              </div>
-
-              <div className="wallet-stat-card locked glass-wallet-card">
-                <div className="wallet-card-top"><span>Środki zablokowane</span><i>🔒</i></div>
-                <strong>98.50 zł</strong>
-                <small>Oczekujące wypłaty <b>98.50 zł</b></small>
-                <div className="wallet-mini-chart orange"></div>
-              </div>
-
-              <div className="wallet-stat-card bonus glass-wallet-card">
-                <div className="wallet-card-top"><span>Bonus</span><i>🎁</i></div>
-                <strong>75.00 zł</strong>
-                <small>Aktywny bonus <b>Sportowy 50%</b></small>
-                <div className="wallet-mini-chart purple"></div>
-              </div>
+    <section className="wallet-panel wallet-ultra-page wallet-static-v2">
+      <div className="wallet-v2-layout">
+        <div className="wallet-v2-main">
+          <div className="wallet-v2-header">
+            <div>
+              <h1>Portfel</h1>
+              <p>Zarządzaj swoimi środkami i finansami</p>
             </div>
+            <div className="wallet-v2-update">Ostatnia aktualizacja: <b>Teraz</b> ⟳</div>
+          </div>
 
-            <div className="wallet-quick-actions glass-wallet-shell">
-              <button type="button" className="action-green">↓ Wpłać</button>
-              <button type="button" className="action-green secondary">↥ Wypłać</button>
-              <button type="button" className="action-blue">◎ Kup żetony</button>
-              <button type="button" className="action-dark">▣ Historia operacji</button>
+          <div className="wallet-v2-tabs glass-v2-panel">
+            <button type="button" className="active">Portfel</button>
+            <button type="button">Wpłaty</button>
+            <button type="button">Wypłaty</button>
+            <button type="button">Płatności</button>
+            <button type="button">Subskrypcja</button>
+            <button type="button">Zarobki</button>
+            <button type="button">Admin finanse</button>
+            <button type="button">Admin wypłaty</button>
+          </div>
+
+          <div className="wallet-v2-topstats">
+            <div className="glass-v2-panel wallet-v2-stat">
+              <div className="wallet-v2-stat-top"><span>Saldo główne</span><i>👛</i></div>
+              <strong>1,250.75 zł</strong>
+              <small>Dostępne środki</small>
             </div>
-
-            <div className="wallet-history glass-wallet-card">
-              <div className="wallet-section-head">
-                <h3>Ostatnie operacje</h3>
-                <button type="button" className="wallet-select-btn">Wszystkie operacje ⌄</button>
-              </div>
-              <div className="wallet-history-table">
-                <div className="wallet-history-row head">
-                  <span>Data</span>
-                  <span>Typ</span>
-                  <span>Opis</span>
-                  <span>Metoda</span>
-                  <span>Kwota</span>
-                  <span>Status</span>
-                </div>
-                {operationRows.map((row, index) => (
-                  <div className="wallet-history-row" key={index}>
-                    <span>{row[0]}</span>
-                    <span>{row[1]}</span>
-                    <span>{row[2]}</span>
-                    <span>{row[3]}</span>
-                    <span className={row[4].startsWith('+') ? 'amount-positive' : 'amount-negative'}>{row[4]}</span>
-                    <span className={row[6] === 'done' ? 'status-done' : 'status-pending'}>{row[5]}</span>
-                  </div>
-                ))}
-              </div>
-              <button type="button" className="wallet-history-more">Zobacz pełną historię operacji</button>
+            <div className="glass-v2-panel wallet-v2-stat">
+              <div className="wallet-v2-stat-top"><span>Saldo żetonów</span><i>◌</i></div>
+              <strong>86</strong>
+              <small>Dostępne żetony</small>
+            </div>
+            <div className="glass-v2-panel wallet-v2-stat">
+              <div className="wallet-v2-stat-top"><span>Wartość żetonów (PLN)</span><i>◍</i></div>
+              <strong>129.00 zł</strong>
+              <small>1 żeton = 1.50 zł</small>
             </div>
           </div>
 
-          <aside className="wallet-static-side">
-            <div className="wallet-methods glass-wallet-card">
-              <div className="wallet-section-head"><h3>Metody płatności</h3></div>
-              <div className="wallet-methods-grid">
-                <div className="pay-method"><b className="logo blik">blik</b><span><strong>BLIK</strong><small>Natychmiast</small></span></div>
-                <div className="pay-method"><b className="logo bank">🏦</b><span><strong>Przelew bankowy</strong><small>1-2 dni robocze</small></span></div>
-                <div className="pay-method"><b className="logo visa">VISA</b><span><strong>Karta płatnicza</strong><small>Natychmiast</small></span></div>
-                <div className="pay-method"><b className="logo skrill">Skrill</b><span><strong>Skrill</strong><small>Natychmiast</small></span></div>
-                <div className="pay-method"><b className="logo neteller">NETELLER</b><span><strong>Neteller</strong><small>Natychmiast</small></span></div>
-                <div className="pay-method"><b className="logo paypal">P</b><span><strong>PayPal</strong><small>Natychmiast</small></span></div>
+          <div className="wallet-v2-midgrid">
+            <div className="glass-v2-panel wallet-v2-card">
+              <div className="wallet-v2-card-head"><h3>Szybkie operacje</h3></div>
+              <div className="wallet-v2-action-grid">
+                <button type="button"><b>＋</b><span><strong>Wpłać środki</strong><small>Doładuj konto błyskawicznie</small></span></button>
+                <button type="button"><b>⇡</b><span><strong>Wypłać środki</strong><small>Wypłata na konto bankowe</small></span></button>
+                <button type="button"><b>◎</b><span><strong>Kup żetony</strong><small>Doładuj swoje żetony</small></span></button>
+                <button type="button"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
               </div>
             </div>
 
-            <div className="wallet-connected glass-wallet-card">
-              <div className="wallet-section-head">
-                <h3>Połączone konta i karty</h3>
-                <button type="button" className="manage-link">Zarządzaj</button>
-              </div>
-              <div className="linked-item">
-                <div className="linked-left"><span className="linked-logo visa">VISA</span><div><strong>Visa •••• 4242</strong><small>Domyślna</small></div></div>
-                <span className="linked-arrow">›</span>
-              </div>
-              <div className="linked-item">
-                <div className="linked-left"><span className="linked-logo bank">🏦</span><div><strong>PKO Bank Polski</strong><small>Konto: •••• 5678 1234 5678</small></div></div>
-                <span className="linked-arrow">›</span>
-              </div>
-              <div className="linked-item">
-                <div className="linked-left"><span className="linked-logo blik">b</span><div><strong>BLIK</strong><small>Telefon: +48 512 345 678</small></div></div>
-                <span className="linked-arrow">›</span>
+            <div className="glass-v2-panel wallet-v2-card">
+              <div className="wallet-v2-card-head"><h3>Historia transakcji</h3><button type="button">Zobacz wszystkie</button></div>
+              <div className="wallet-v2-history-list">
+                {historyRows.map((row, index) => (
+                  <div className="wallet-v2-history-item" key={index}>
+                    <span className="history-icon">{row.icon}</span>
+                    <div className="history-text"><strong>{row.title}</strong><small>{row.time}</small></div>
+                    <b className={row.positive ? 'positive' : 'negative'}>{row.amount}</b>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="wallet-safe-banner glass-wallet-card">
-              <div className="safe-icon">🛡</div>
-              <div>
-                <strong>Twoje środki są w pełni bezpieczne</strong>
-                <span>Stosujemy najwyższe standardy bezpieczeństwa i szyfrowanie danych.</span>
+            <div className="glass-v2-panel wallet-v2-card">
+              <div className="wallet-v2-card-head"><h3>Metody wpłaty</h3></div>
+              <p className="wallet-v2-sub">Wybierz preferowaną metodę</p>
+              <div className="wallet-v2-payment-grid">
+                <div><span className="pay-logo blik">blik</span><strong>BLIK</strong><small>Natychmiast</small></div>
+                <div><span className="pay-logo bank">🏛</span><strong>Przelew online</strong><small>Natychmiast</small></div>
+                <div><span className="pay-logo card">💳</span><strong>Karta płatnicza</strong><small>Natychmiast</small></div>
+                <div><span className="pay-logo paypal">P</span><strong>PayPal</strong><small>Natychmiast</small></div>
+                <div><span className="pay-logo gpay">G Pay</span><strong>Google Pay</strong><small>Natychmiast</small></div>
+                <div><span className="pay-logo apple"> Pay</span><strong>Apple Pay</strong><small>Natychmiast</small></div>
               </div>
+              <button type="button" className="wallet-v2-primary-btn" onClick={onTopUp}>Przejdź do wpłat</button>
             </div>
-          </aside>
+          </div>
+
+          <div className="wallet-v2-bottomgrid">
+            <div className="glass-v2-panel wallet-v2-card">
+              <div className="wallet-v2-card-head"><h3>Płatności i faktury</h3></div>
+              <p className="wallet-v2-sub">Historia płatności i faktur</p>
+              <div className="wallet-v2-invoice-list">
+                {invoiceRows.map((row, index) => (
+                  <div className="invoice-item" key={index}>
+                    <span className="invoice-icon">▤</span>
+                    <div className="invoice-info"><strong>{row.title}</strong><small>{row.sub} <em>{row.action}</em></small></div>
+                    <div className="invoice-meta"><b>{row.price}</b><small>{row.date}</small></div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="wallet-v2-primary-btn">Zobacz wszystkie faktury</button>
+            </div>
+
+            <div className="glass-v2-panel wallet-v2-card subscription-card-v2">
+              <div className="wallet-v2-card-head"><h3>Subskrypcja</h3></div>
+              <p className="wallet-v2-sub">Aktywny plan</p>
+              <div className="subscription-badge-v2">
+                <span className="premium-round">✦</span>
+                <div>
+                  <strong>Premium</strong>
+                  <small>Plan miesięczny</small>
+                  <b>29.99 zł / miesiąc</b>
+                </div>
+              </div>
+              <ul className="sub-feature-list">
+                <li>Dostęp do typów Premium</li>
+                <li>Zaawansowane statystyki</li>
+                <li>Typy AI bez limitu</li>
+                <li>Priorytetowe powiadomienia</li>
+              </ul>
+              <div className="renew-info">Następne odnowienie: <b>26.06.2025</b></div>
+              <button type="button" className="wallet-v2-primary-btn">Zarządzaj subskrypcją</button>
+            </div>
+
+            <div className="glass-v2-panel wallet-v2-card earnings-card-v2">
+              <div className="wallet-v2-card-head"><h3>Zarobki twórcy</h3><span>Twoje zarobki jako twórca typów</span></div>
+              <div className="earnings-topline">
+                <button type="button">Bieżący miesiąc ⌄</button>
+                <div><strong>2,450.75 zł</strong><small>+18.5% vs poprzedni miesiąc</small></div>
+              </div>
+              <div className="earnings-chart-v2">
+                <div className="y-labels"><span>30</span><span>20</span><span>10</span><span>0</span></div>
+                <div className="chart-area"><span></span></div>
+                <div className="x-labels"><small>1 Maj</small><small>8 Maj</small><small>15 Maj</small><small>22 Maj</small><small>29 Maj</small></div>
+              </div>
+              <button type="button" className="wallet-v2-primary-btn">Szczegółowe statystyki</button>
+            </div>
+          </div>
         </div>
+
+        <aside className="wallet-v2-sidebar">
+          <div className="glass-v2-panel wallet-v2-sidecard livechat-card">
+            <div className="side-head-line"><strong>BET+AI LIVE CHAT</strong><span>134 online</span></div>
+            <div className="top-users-head">
+              <div><span>TOP UŻYTKOWNICY (24H)</span></div>
+              <div><span>NAGRODA DNIA</span><b>1280zł / 24h</b><small>🪙 34 ↓</small></div>
+            </div>
+            <div className="top-users-list">
+              {topUsers.map((item, index) => (
+                <div className="top-user-row" key={index}>
+                  <span className="rank-badge">{index + 1}</span>
+                  <div><strong>{item[0]}</strong><small>{item[1]}</small></div>
+                  {index === 1 ? <em>[ADMIN]</em> : index === 2 ? <button type="button">TIP 1</button> : <span></span>}
+                </div>
+              ))}
+            </div>
+            <div className="chat-input-row"><input value="" readOnly placeholder="Napisz wiadomość..." /><span>😊</span><button type="button">➤</button></div>
+          </div>
+
+          <div className="glass-v2-panel wallet-v2-sidecard">
+            <div className="wallet-v2-card-head side-card-head"><h3>Top typerzy</h3><button type="button">Ranking real</button></div>
+            <div className="top-typer-list">
+              {topTipsters.map((item, index) => (
+                <div className="top-typer-row" key={index}>
+                  <span className="rank-number">{index + 1}</span>
+                  <div><strong>{item[0]}</strong><small>{item[1]}</small></div>
+                  <b>{item[2]}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-v2-panel wallet-v2-sidecard ai-day-card">
+            <div className="wallet-v2-card-head side-card-head"><h3>Typy AI dnia</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="ai-day-list">
+              {aiPicks.map((item, index) => (
+                <div className="ai-day-item" key={index}>
+                  <span className="ai-icon">AI</span>
+                  <div><strong>{item[0]}</strong><small>{item[1]}</small></div>
+                  <b>{item[2]}</b>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="wallet-v2-primary-btn">Zarządzaj wypłatami</button>
+          </div>
+        </aside>
       </div>
     </section>
   )
@@ -3068,553 +3409,468 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const [sport, setSport] = useState('all')
-  const [league, setLeague] = useState('all')
-  const [betType, setBetType] = useState('all')
-  const [timeRange, setTimeRange] = useState('all')
-  const [mode, setMode] = useState('topvalue')
-  const [minValue, setMinValue] = useState(5)
-  const [minOdds, setMinOdds] = useState(1.35)
-  const [minProbability, setMinProbability] = useState(60)
-  const [analysisTip, setAnalysisTip] = useState(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (liveGenerating || settleGenerating || loading) return
-      if (typeof onGenerateLive === 'function') {
-        onGenerateLive({ silent: true, auto: true })
-      } else if (typeof onRefresh === 'function') {
-        onRefresh()
-      }
-    }, 10 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [onGenerateLive, onRefresh, liveGenerating, settleGenerating, loading])
-
-  const aiTips = (tips || [])
-    .filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
-    .slice()
-    .sort((a, b) => new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at))
-
-  const normalizeSport = (value) => String(value || 'football').toLowerCase()
-  const normalizeLeague = (tip) => String(tip.league_name || tip.league || 'Unknown')
-  const normalizePick = (tip) => String(tip.pick || tip.selection || tip.bet_type || tip.prediction || tip.type || 'AI Pick')
-  const normalizeMarket = (tip) => String(tip.market || tip.bet_type || tip.type || 'AI')
-  const valueOf = (tip) => Number(tip.value_score ?? tip.value ?? 0) || 0
-  const probabilityOf = (tip) => Number(tip.model_probability ?? tip.probability ?? tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0) || 0
-  const qualityBadge = (tip) => {
-    const v = valueOf(tip)
-    const p = probabilityOf(tip)
-    const odds = Number(tip.odds || 0)
-    if (v >= 12 && p >= 68 && odds >= 1.55) return { icon: '💎', text: 'DIAMOND', cls: 'diamond' }
-    if (v >= 8 && p >= 64) return { icon: '🔥', text: 'HOT VALUE', cls: 'hot' }
-    if (v >= 5 && p >= 60) return { icon: '⭐', text: 'VALUE', cls: 'star' }
-    return { icon: '⚪', text: 'LOW', cls: 'low' }
-  }
-  const isStrongValue = (tip) => valueOf(tip) >= Number(minValue) && probabilityOf(tip) >= Number(minProbability) && Number(tip.odds || 0) >= Number(minOdds)
-  const stake = 100
-  const resultOf = (tip) => normalizeResult(tip.result || tip.status)
-  const profitOf = (tip) => {
-    const stored = Number(tip.profit)
-    if (Number.isFinite(stored) && stored !== 0) return stored
-    const res = resultOf(tip)
-    const odds = Number(tip.odds || 0)
-    if (res === 'win') return Math.round((odds - 1) * stake)
-    if (res === 'loss') return -stake
-    return 0
-  }
-  const isSettled = (tip) => ['win', 'loss', 'void'].includes(resultOf(tip))
-  const isLiveMatch = (tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && !['NS','NOT_STARTED','FT','AET','PEN','FINISHED','MATCH FINISHED'].includes(liveStatus) && (status === 'live' || ['LIVE','1H','2H','HT'].includes(liveStatus) || Number(tip.live_minute || 0) > 0)
-  }
-  const isUpcomingMatch = (tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && !isLiveMatch(tip) && (status === 'pending' || ['NS','NOT_STARTED',''].includes(liveStatus))
-  }
-  const scoreText = (tip) => {
-    const h = tip.live_score_home ?? tip.final_score_home ?? tip.home_score ?? null
-    const a = tip.live_score_away ?? tip.final_score_away ?? tip.away_score ?? null
-    if (h === null || a === null || h === undefined || a === undefined) return '-:-'
-    return h + ':' + a
-  }
-  const kickoffLabel = (tip) => {
-    const raw = tip.kickoff_time || tip.match_time || tip.event_time || tip.created_at
-    const d = new Date(raw)
-    if (Number.isNaN(d.getTime())) return 'czas nieznany'
-    return d.toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
-  }
-  const resultLabel = (tip) => {
-    const res = resultOf(tip)
-    if (res === 'win') return { text: 'WYGRANA', icon: '✅', cls: 'win' }
-    if (res === 'loss') return { text: 'PRZEGRANA', icon: '❌', cls: 'loss' }
-    if (res === 'void') return { text: 'ZWROT', icon: '↩️', cls: 'void' }
-    if (isLiveMatch(tip)) return { text: 'LIVE', icon: '🔴', cls: 'live' }
-    return { text: 'SOON', icon: '⏱', cls: 'pending' }
-  }
-  const inTimeRange = (tip) => {
-    if (timeRange === 'all') return true
-    const d = new Date(tip.kickoff_time || tip.match_time || tip.created_at)
-    if (Number.isNaN(d.getTime())) return true
-    const now = new Date()
-    const diffDays = (now - d) / (1000 * 60 * 60 * 24)
-    if (timeRange === 'week') return diffDays <= 7
-    if (timeRange === 'month') return diffDays <= 31
-    if (timeRange === 'year') return d.getFullYear() === now.getFullYear()
-    return true
-  }
-
-  const liveTips = aiTips.filter(isLiveMatch)
-  const upcomingTips = aiTips.filter(isUpcomingMatch).sort((a, b) => new Date(a.kickoff_time || a.match_time || a.created_at) - new Date(b.kickoff_time || b.match_time || b.created_at))
-  const settledTips = aiTips.filter(isSettled)
-  const topValueTips = aiTips.filter(t => !isSettled(t) && isStrongValue(t)).sort((a, b) => valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))
-
-  const filtered = aiTips.filter((tip) => {
-    if (mode === 'topvalue' && (!isStrongValue(tip) || isSettled(tip))) return false
-    if (mode === 'live' && (!isLiveMatch(tip) || !isStrongValue(tip))) return false
-    if (mode === 'upcoming' && (!isUpcomingMatch(tip) || !isStrongValue(tip))) return false
-    if (mode === 'settled' && !isSettled(tip)) return false
-    if (sport !== 'all' && normalizeSport(tip.sport) !== sport) return false
-    if (league !== 'all' && normalizeLeague(tip) !== league) return false
-    if (betType !== 'all' && normalizePick(tip) !== betType) return false
-    if (!inTimeRange(tip)) return false
-    return true
-  }).sort((a, b) => (mode === 'settled' ? new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at) : valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))).slice(0, mode === 'topvalue' ? 20 : 30)
-
-  const settled = settledTips
-  const wins = settled.filter(t => resultOf(t) === 'win').length
-  const losses = settled.filter(t => resultOf(t) === 'loss').length
-  const pushes = settled.filter(t => resultOf(t) === 'void').length
-  const totalProfit = Math.round(settled.reduce((sum, tip) => sum + profitOf(tip), 0))
-  const winrate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0
-  const roi = settled.length ? Math.round((totalProfit / (settled.length * stake)) * 100) : 0
-  const avgConfidence = filtered.length ? Math.round(filtered.reduce((sum, tip) => sum + getAiConfidence(tip), 0) / filtered.length) : 0
-
-  const sports = ['football', ...Array.from(new Set(aiTips.map(t => normalizeSport(t.sport)).filter(s => s && s !== 'football')))]
-  const leagues = Array.from(new Set(aiTips.map(normalizeLeague).filter(Boolean))).sort()
-  const betTypes = Array.from(new Set(aiTips.map(normalizePick).filter(Boolean))).sort()
-
-  const sportCards = [
-    { key: 'all', icon: '▦', title: 'All Sports', subtitle: `${aiTips.length} picks` },
-    { key: 'football', icon: '⚽', title: 'Football', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'football').length} picks` },
-    { key: 'basketball', icon: '🏀', title: 'Basketball', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'basketball').length} picks` },
-    { key: 'tennis', icon: '🎾', title: 'Tennis', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'tennis').length} picks` },
-    { key: 'hockey', icon: '🏒', title: 'Ice Hockey', subtitle: `${aiTips.filter(t => normalizeSport(t.sport).includes('hockey')).length} picks` },
-    { key: 'volleyball', icon: '🏐', title: 'Volleyball', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'volleyball').length} picks` },
+  const aiCards = [
+    {
+      leagueFlag: '🇬🇧',
+      league: 'Premier League',
+      country: 'Anglia',
+      home: 'Manchester City',
+      away: 'Arsenal',
+      homeShort: 'MCI',
+      awayShort: 'ARS',
+      date: '25.05.2025 • 17:30',
+      pickTitle: 'Manchester City wygra',
+      pickType: 'Wynik końcowy (1X2)',
+      odds: '1.85',
+      score: '87%',
+      confidence: 'WYSOKA',
+      ev: '+0.43',
+      evText: 'Wysoka wartość',
+      probabilityLabelA: '1',
+      probabilityLabelB: 'X',
+      probabilityLabelC: '2',
+      probA: '56%',
+      probB: '24%',
+      probC: '20%',
+      probWidthA: '56%',
+      probWidthB: '24%',
+      probWidthC: '20%',
+      explanation: 'Manchester City ma przewagę w formie, jakości składu i statystykach H2H. Arsenal traci kluczowych zawodników.'
+    },
+    {
+      leagueFlag: '🇪🇸',
+      league: 'La Liga',
+      country: 'Hiszpania',
+      home: 'Barcelona',
+      away: 'Real Sociedad',
+      homeShort: 'BAR',
+      awayShort: 'RSO',
+      date: '25.05.2025 • 21:00',
+      pickTitle: 'Powyżej 2.5 gola',
+      pickType: 'Suma goli',
+      odds: '1.72',
+      score: '82%',
+      confidence: 'WYSOKA',
+      ev: '+0.28',
+      evText: 'Dodatnia wartość',
+      probabilityLabelA: 'Poniżej 2.5',
+      probabilityLabelB: 'Powyżej 2.5',
+      probabilityLabelC: '',
+      probA: '37%',
+      probB: '63%',
+      probC: '',
+      probWidthA: '37%',
+      probWidthB: '63%',
+      probWidthC: '0%',
+      explanation: 'Obie drużyny notują wysoką skuteczność ofensywną. Średnia goli w ich ostatnich meczach to 3.1.'
+    },
+    {
+      leagueFlag: '🇮🇹',
+      league: 'ATP • Roland Garros',
+      country: 'Paryż',
+      home: 'Carlos Alcaraz',
+      away: 'Jannik Sinner',
+      homeShort: 'CA',
+      awayShort: 'JS',
+      date: '26.05.2025 • 15:00',
+      pickTitle: 'Carlos Alcaraz wygra',
+      pickType: 'Zwycięzca meczu',
+      odds: '1.68',
+      score: '79%',
+      confidence: 'WYSOKA',
+      ev: '+0.21',
+      evText: 'Dodatnia wartość',
+      probabilityLabelA: 'Alcaraz',
+      probabilityLabelB: 'Sinner',
+      probabilityLabelC: '',
+      probA: '59%',
+      probB: '41%',
+      probC: '',
+      probWidthA: '59%',
+      probWidthB: '41%',
+      probWidthC: '0%',
+      explanation: 'Alcaraz lepiej radzi sobie na mączce. Jego return i mobilność dają przewagę w długich wymianach.'
+    },
   ]
 
-  const leagueMap = settledTips.reduce((acc, tip) => {
-    const name = normalizeLeague(tip)
-    if (!acc[name]) acc[name] = { name, picks: 0, wins: 0, losses: 0, profit: 0 }
-    acc[name].picks += 1
-    const res = resultOf(tip)
-    if (res === 'win') acc[name].wins += 1
-    if (res === 'loss') acc[name].losses += 1
-    acc[name].profit += profitOf(tip)
-    return acc
-  }, {})
-  const leagueRows = Object.values(leagueMap).sort((a, b) => b.picks - a.picks).slice(0, 8)
+  const sourceRows = [
+    ['Statystyki meczowe', 'AKTYWNE'],
+    ['Forma drużyn', 'AKTYWNE'],
+    ['Bezpośrednie mecze (H2H)', 'AKTYWNE'],
+    ['Kontuzje i zawieszenia', 'AKTYWNE'],
+    ['Warunki pogodowe', 'AKTYWNE'],
+    ['Ruchy kursów', 'AKTYWNE'],
+  ]
 
-  const oddsRanges = [
-    { label: '1.01 - 1.50', test: o => o > 0 && o < 1.5 },
-    { label: '1.51 - 2.00', test: o => o >= 1.5 && o < 2 },
-    { label: '2.01 - 2.50', test: o => o >= 2 && o < 2.5 },
-    { label: '2.51 - 3.00', test: o => o >= 2.5 && o < 3 },
-    { label: '3.01+', test: o => o >= 3 },
-  ].map((range) => {
-    const rows = settledTips.filter(t => range.test(Number(t.odds || 0)))
-    const rWins = rows.filter(t => resultOf(t) === 'win').length
-    const rLosses = rows.filter(t => resultOf(t) === 'loss').length
-    const max = Math.max(1, rWins, rLosses)
-    return { ...range, wins: rWins, losses: rLosses, winH: Math.max(10, Math.round((rWins / max) * 100)), lossH: Math.max(10, Math.round((rLosses / max) * 100)) }
-  })
+  const formRows = [
+    { team: 'Manchester City', score: '7.8', chips: ['W', 'W', 'D', 'W', 'W'], tone: 'sky' },
+    { team: 'Arsenal', score: '6.4', chips: ['W', 'L', 'D', 'W', 'L'], tone: 'red' },
+  ]
 
-  const recent = settledTips.slice(0, 20)
-  const recentResults = recent.map(resultOf)
-  const current = recentResults[0] || 'pending'
-  let currentCount = 0
-  for (const r of recentResults) { if (r === current) currentCount += 1; else break }
-  const maxStreakFor = (type) => recentResults.reduce((acc, r) => {
-    if (r === type) { acc.cur += 1; acc.best = Math.max(acc.best, acc.cur) } else { acc.cur = 0 }
-    return acc
-  }, { cur: 0, best: 0 }).best
-
-  const donutWin = Math.max(0, Math.min(100, winrate))
-  const donutLoss = (wins + losses) ? Math.round((losses / (wins + losses)) * 100) : 0
-
-  const statNumber = (value, suffix = '') => {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return '—'
-    return `${Math.round(n * 10) / 10}${suffix}`
-  }
-  const pct = (value) => statNumber(value, '%')
-  const analysisVerdict = (tip) => {
-    if (!tip) return 'AI'
-    if (isLiveMatch(tip)) return 'LIVE VALUE'
-    if (isUpcomingMatch(tip)) return 'PRE VALUE'
-    return resultLabel(tip).text
-  }
+  const trends = [
+    ['Średnia goli (ostatnie 5)', '2.8'],
+    ['Posiadanie piłki (średnia)', '62%'],
+    ['Strzały na mecz', '15.2'],
+    ['Czyste konta', '3'],
+  ]
 
   return (
-    <section className="ai-premium-dashboard">
-      <UltraPageBanner variant="aiPicks"><button type="button" onClick={onRefresh} disabled={loading}>↻ Refresh</button><button type="button" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button><button type="button" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button></UltraPageBanner>
-      <header className="ai-premium-header">
-        <div className="ai-brand-title">
-          <span className="ai-logo-mark">▟</span>
-          <div>
-            <h1>AI Picks Dashboard</h1>
-            <p>TOP VALUE, LIVE, Zaraz startują oraz Zakończone/Rozliczone — słabe typy są ukryte</p>
-          </div>
-        </div>
-        <div className="ai-header-actions">
-          <span className="ai-live-dot">● Auto refresh co 10 min</span>
-          <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
-          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button>
-          <button className="ai-live-action settle" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button>
-        </div>
-      </header>
-
-      <div className="ai-control-row ai-mode-row">
-        <button className={mode === 'topvalue' ? 'active' : ''} onClick={() => setMode('topvalue')}>💎 TOP VALUE ({topValueTips.length})</button>
-        <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>🔴 LIVE teraz ({liveTips.filter(isStrongValue).length})</button>
-        <button className={mode === 'upcoming' ? 'active' : ''} onClick={() => setMode('upcoming')}>⏱ Zaraz startują ({upcomingTips.filter(isStrongValue).length})</button>
-        <button className={mode === 'settled' ? 'active' : ''} onClick={() => setMode('settled')}>✅ Zakończone / rozliczone ({settledTips.length})</button>
-      </div>
-
-      <div className="ai-value-filter-panel">
-        <label>Minimalny value <b>{minValue}+ pp</b><input type="range" min="0" max="20" value={minValue} onChange={e => setMinValue(Number(e.target.value))} /></label>
-        <label>Minimalny kurs <b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.00" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
-        <label>Minimalne prawdopodobieństwo <b>{minProbability}%</b><input type="range" min="45" max="85" value={minProbability} onChange={e => setMinProbability(Number(e.target.value))} /></label>
-        <div><strong>{filtered.length}</strong><span>mocnych typów po filtrze. Reszta jest ukryta.</span></div>
-      </div>
-
-      <div className="ai-sports-filter-bar">
-        {sportCards.map(card => (
-          <button key={card.key} className={sport === card.key ? 'active' : ''} onClick={() => setSport(card.key)}>
-            <span>{card.icon}</span>
-            <b>{card.title}</b>
-            <small>{card.subtitle}</small>
-          </button>
-        ))}
-        <button className="ai-more-sports"><span>＋</span><b>More</b><small>Other sports</small></button>
-      </div>
-
-      <div className="ai-control-row">
-        <select value={league} onChange={e => setLeague(e.target.value)}><option value="all">All Leagues</option>{leagues.map(l => <option key={l} value={l}>{l}</option>)}</select>
-        <select value={betType} onChange={e => setBetType(e.target.value)}><option value="all">All Bet Types</option>{betTypes.map(t => <option key={t} value={t}>{t}</option>)}</select>
-        <select value={timeRange} onChange={e => setTimeRange(e.target.value)}><option value="all">All Time</option><option value="year">This Year</option><option value="month">This Month</option><option value="week">This Week</option></select>
-      </div>
-
-      <div className="ai-kpi-grid">
-        <div className="ai-kpi-card profit"><span>Total Profit</span><b>{totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL')} PLN</b><small>{settled.length ? `${roi}% from total stake` : 'No settled AI picks yet'}</small><i /></div>
-        <div className="ai-kpi-card"><span>Win Rate</span><b>{winrate}%</b><small>{wins} wins / {settled.length || 0} total</small><i className="blue" /></div>
-        <div className="ai-kpi-card roi"><span>Rozliczone</span><b>{settledTips.length}</b><small>{pushes} zwrotów, {losses} przegranych</small><i className="purple" /></div>
-        <div className="ai-kpi-card picks"><span>Aktywne mecze</span><b>{liveTips.length + upcomingTips.length}</b><small>{liveTips.length} LIVE / {upcomingTips.length} zaraz startuje</small><i className="orange" /></div>
-      </div>
-
-      <div className="ai-analytics-grid">
-        <div className="ai-panel ai-donut-panel">
-          <h3>Win / Loss Distribution</h3>
-          <div className="ai-donut-wrap">
-            <div className="ai-donut" style={{ '--win': `${donutWin}%`, '--loss': `${donutLoss}%` }}><strong>{settled.length}</strong><span>Total</span></div>
-            <div className="ai-donut-legend">
-              <p><i className="green"/> Wins <b>{wins} ({winrate}%)</b></p>
-              <p><i className="red"/> Losses <b>{losses}</b></p>
-              <p><i className="gray"/> Pushes <b>{pushes}</b></p>
+    <section className="ai-static-v6">
+      <div className="ai-v6-layout">
+        <div className="ai-v6-main">
+          <div className="ai-v6-hero glass-ai-v6">
+            <div>
+              <h1>Typy AI</h1>
+              <p>Inteligentne typy oparte na zaawansowanej analizie danych i uczeniu maszynowym.</p>
+            </div>
+            <div className="ai-v6-hero-art" aria-hidden="true">
+              <span className="ring one"></span>
+              <span className="ring two"></span>
+              <span className="mark"></span>
             </div>
           </div>
-        </div>
-        <div className="ai-panel ai-odds-panel">
-          <h3>Performance by Odds Range <span><i className="green"/> Win Rate <i className="red"/> Loss Rate</span></h3>
-          <div className="ai-odds-chart">
-            {oddsRanges.map(r => <div className="ai-odds-col" key={r.label}><div><i className="green" style={{height:`${r.winH}%`}}/><i className="red" style={{height:`${r.lossH}%`}}/></div><small>{r.label}</small></div>)}
+
+          <div className="glass-ai-v6 ai-v6-tabs">
+            <button type="button" className="active">Wszystkie</button>
+            <button type="button">Piłka nożna</button>
+            <button type="button">Koszykówka</button>
+            <button type="button">Tenis</button>
+            <button type="button">Hokej</button>
+            <button type="button">Esport</button>
+            <button type="button">🇷🇺 Rosja typy</button>
+            <button type="button">👑 Premium</button>
+            <button type="button">Historia modeli</button>
           </div>
-        </div>
-      </div>
 
-      <div className="ai-lower-grid">
-        <div className="ai-panel ai-streak-panel">
-          <h3>Streak Analysis</h3>
-          <p><span>Current Streak</span><b className={current === 'loss' ? 'danger-text' : 'success-text'}>{currentCount || 0} {current === 'loss' ? 'Losses' : current === 'win' ? 'Wins' : 'Pending'}</b></p>
-          <p><span>Best Streak</span><b>{maxStreakFor('win')} Wins</b></p>
-          <p><span>Worst Streak</span><b className="danger-text">{maxStreakFor('loss')} Losses</b></p>
-          <p><span>Average Confidence</span><b>{avgConfidence}%</b></p>
-        </div>
-        <div className="ai-panel ai-form-panel">
-          <h3>Recent Form (Last 20)</h3>
-          <div className="ai-form-badges">
-            {recentResults.length ? recentResults.map((r, i) => <span key={i} className={r === 'win' ? 'w' : r === 'loss' ? 'l' : 'p'}>{r === 'win' ? 'W' : r === 'loss' ? 'L' : 'P'}</span>) : <em>No settled AI form yet</em>}
-          </div>
-        </div>
-        <div className="ai-panel ai-league-performance">
-          <h3>Performance by League</h3>
-          <div className="ai-league-table">
-            <div><b>League</b><b>Picks</b><b>Win Rate</b><b>Profit</b><b>ROI</b></div>
-            {leagueRows.length ? leagueRows.map(row => {
-              const settledCount = row.wins + row.losses
-              const wr = settledCount ? Math.round((row.wins / settledCount) * 100) : 0
-              const rowRoi = row.picks ? Math.round((row.profit / (row.picks * stake)) * 100) : 0
-              return <div key={row.name}><span>{row.name}</span><span>{row.picks}</span><span>{wr}%</span><span className={row.profit < 0 ? 'danger-text' : 'success-text'}>{row.profit >= 0 ? '+' : ''}{Math.round(row.profit)} PLN</span><span className={rowRoi < 0 ? 'danger-text' : 'success-text'}>{rowRoi >= 0 ? '+' : ''}{rowRoi}%</span></div>
-            }) : <div><span>No AI leagues yet</span><span>-</span><span>-</span><span>-</span><span>-</span></div>}
-          </div>
-        </div>
-      </div>
-
-      <div className="ai-panel ai-recent-picks-panel">
-        <h3>{mode === 'topvalue' ? 'TOP VALUE — najmocniejsze realne typy LIVE + PRE' : mode === 'live' ? 'LIVE teraz — tylko mecze trwające' : mode === 'upcoming' ? 'Zaraz startują — tylko mecze PRE' : 'Zakończone / rozliczone mecze'}</h3>
-        {filtered.length ? filtered.slice(0, 12).map(tip => {
-          const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
-          const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
-          const res = resultOf(tip)
-          const p = profitOf(tip)
-          const q = qualityBadge(tip)
-          return <div className="ai-recent-pick-row ai-value-row" key={tip.id}>
-            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{mode === 'settled' ? ' • FT • wynik ' + scoreText(tip) + ' • ' + kickoffLabel(tip) : isLiveMatch(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + scoreText(tip) : ' • PRE • start ' + kickoffLabel(tip)}</small></div>
-            <div><b>{normalizePick(tip)}</b><small>{normalizeMarket(tip)} • REAL AI PRO</small></div>
-            <div><b>{Number(tip.odds || 0).toFixed(2)}</b><small>Odds</small></div>
-            <div><b className="success-text">{probabilityOf(tip).toFixed(0)}%</b><small>Probability</small></div>
-            <div><b className={valueOf(tip) >= 5 ? 'success-text' : 'danger-text'}>{valueOf(tip).toFixed(1)} pp</b><small>Value</small></div>
-            <div><span className={`ai-quality-badge ${q.cls}`}>{q.icon} {q.text}</span></div>
-            <div><b className={p < 0 ? 'danger-text' : 'success-text'}>{p >= 0 ? '+' : ''}{Math.round(p)} PLN</b><small>Profit</small></div>
-            <div><span className={`ai-result-pill ${res} ${resultLabel(tip).cls}`}>{resultLabel(tip).icon} {resultLabel(tip).text}</span></div>
-            <div><button className="ai-analysis-button" onClick={() => setAnalysisTip(tip)}>Analiza</button></div>
-          </div>
-        }) : <div className="ai-empty-state"><strong>{mode === 'settled' ? 'Brak zakończonych/rozliczonych meczów' : 'Brak typów AI'}</strong><span>{mode === 'settled' ? 'Kliknij Rozlicz zakończone po meczach FT. Tutaj pojawi się wynik, profit i ikonka wygrana/przegrana/zwrot.' : 'Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj REAL AI PRO i sprawdź API_FOOTBALL_KEY w Netlify ENV.'}</span></div>}
-      </div>
-
-      {analysisTip && (() => {
-        const home = analysisTip.team_home || analysisTip.home_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[0] : 'Home')
-        const away = analysisTip.team_away || analysisTip.away_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[1] : 'Away')
-        const hdaHome = Math.max(0, Math.min(100, Math.round(probabilityOf(analysisTip))))
-        const hdaDraw = Math.max(0, Math.min(100, Math.round(100 - hdaHome - 20)))
-        const hdaAway = Math.max(0, Math.min(100, 100 - hdaHome - hdaDraw))
-        const rows = [
-          ['Forma gospodarzy', statNumber(analysisTip.form_home_score)],
-          ['Forma gości', statNumber(analysisTip.form_away_score)],
-          ['xG gospodarzy', statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)],
-          ['xG gości', statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)],
-          ['Strzały', `${statNumber(analysisTip.shots_home ?? analysisTip.shots_total_home)} : ${statNumber(analysisTip.shots_away ?? analysisTip.shots_total_away)}`],
-          ['Strzały celne', `${statNumber(analysisTip.shots_on_home)} : ${statNumber(analysisTip.shots_on_away)}`],
-          ['Posiadanie', `${pct(analysisTip.possession_home)} : ${pct(analysisTip.possession_away)}`],
-          ['Rzuty rożne', `${statNumber(analysisTip.corners_home)} : ${statNumber(analysisTip.corners_away)}`],
-          ['Groźne ataki', `${statNumber(analysisTip.dangerous_attacks_home)} : ${statNumber(analysisTip.dangerous_attacks_away)}`],
-          ['BTTS H2H', pct(analysisTip.h2h_btts_rate)],
-          ['Over 2.5 H2H', pct(analysisTip.h2h_over25_rate)],
-          ['Śr. gole H2H', statNumber(analysisTip.h2h_avg_goals)]
-        ]
-        return (
-          <div className="ai-analysis-overlay" onClick={() => setAnalysisTip(null)}>
-            <div className="ai-analysis-modal" onClick={e => e.stopPropagation()}>
-              <button className="ai-analysis-close" onClick={() => setAnalysisTip(null)}>×</button>
-              <h3>Analiza meczu</h3>
-              <div className="ai-analysis-match-card">
-                <h2>{home} vs {away}</h2>
-                <p>{normalizeLeague(analysisTip)} • {isLiveMatch(analysisTip) ? `LIVE ${analysisTip.live_minute || '-'}' • wynik ${scoreText(analysisTip)}` : `start ${kickoffLabel(analysisTip)}`}</p>
-                <div className="ai-analysis-tags"><span>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</span><span>{analysisVerdict(analysisTip)}</span><span>{normalizeMarket(analysisTip)}</span></div>
-                <div className="ai-analysis-top-grid">
-                  <div><small>Typ AI</small><b>{normalizePick(analysisTip)}</b></div>
-                  <div><small>Prawdopodobieństwo</small><b>{probabilityOf(analysisTip).toFixed(0)}%</b></div>
-                  <div><small>Kurs</small><b>{Number(analysisTip.odds || 0).toFixed(2)}</b></div>
-                  <div><small>Value</small><b>{valueOf(analysisTip).toFixed(1)} pp</b></div>
-                </div>
-              </div>
-              <div className="ai-analysis-card">
-                <h4>Rozkład H / D / A</h4>
-                {[['H', hdaHome], ['D', hdaDraw], ['A', hdaAway]].map(([label, value]) => <p key={label}><span>{label}</span><i><em style={{width:`${value}%`}} /></i><b>{value}%</b></p>)}
-              </div>
-              <div className="ai-analysis-card">
-                <h4>Statystyki modelu</h4>
-                <div className="ai-analysis-stats-grid">{rows.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div>
-              </div>
-              <div className="ai-analysis-card ai-analysis-story">
-                <h4>Pełna analiza AI</h4>
-                <div className="ai-analysis-pro-summary">
-                  <div>
-                    <span>Forma</span>
-                    <b>{home}</b>
-                    <p>{statNumber(analysisTip.form_home_score)} pkt/m • xG {statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)}</p>
-                  </div>
-                  <div>
-                    <span>Forma</span>
-                    <b>{away}</b>
-                    <p>{statNumber(analysisTip.form_away_score)} pkt/m • xG {statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)}</p>
-                  </div>
-                  <div>
-                    <span>Value</span>
-                    <b className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip).toFixed(1)} pp</b>
-                    <p>Implied {Number(analysisTip.odds || 0) > 0 ? (100 / Number(analysisTip.odds || 1)).toFixed(1) : '0.0'}% • Model {probabilityOf(analysisTip).toFixed(0)}%</p>
-                  </div>
-                </div>
-
-                <div className="ai-analysis-readable">
-                  <h5>Wniosek modelu</h5>
-                  <p>{analysisTip.model_reason || analysisTip.ai_analysis || analysisTip.analysis || getAiAnalysis(analysisTip)}</p>
-                </div>
-
-                <div className="ai-analysis-bullets">
-                  <div>
-                    <b>Dlaczego ten typ?</b>
-                    <ul>
-                      <li>Model porównuje formę, tempo meczu, H2H, xG/proxy, value score i kurs.</li>
-                      <li>Wybrany rynek: <strong>{normalizeMarket(analysisTip)}</strong>.</li>
-                      <li>Typ AI: <strong>{normalizePick(analysisTip)}</strong>.</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <b>Ocena jakości</b>
-                    <ul>
-                      <li>Badge jakości: <strong>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</strong>.</li>
-                      <li>Kolor value: <strong className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip) >= 0 ? 'zielony dodatni value' : 'czerwony ujemny value'}</strong>.</li>
-                      <li>To analiza modelu AI, nie porada inwestycyjna.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+          <div className="glass-ai-v6 ai-v6-filters">
+            <div className="filter-box-v6">Wszystkie ligi <span>⌄</span></div>
+            <div className="filter-box-v6">Sortuj: Najwyższy AI Score <span>⌄</span></div>
+            <div className="toggle-wrap-v6">
+              <span>Pokaż tylko wysokie AI Score</span>
+              <div className="toggle-v6"><i></i></div>
             </div>
           </div>
-        )
-      })()}
+
+          <div className="ai-v6-cards">
+            {aiCards.map((card, idx) => (
+              <article className="glass-ai-v6 ai-card-v6" key={idx}>
+                <div className="ai-card-v6-top">
+                  <div className="ai-card-v6-left">
+                    <div className="league-line-v6"><span>{card.leagueFlag}</span><strong>{card.league}</strong><small>• {card.country}</small></div>
+                    <div className="match-line-v6">
+                      <div className="team-v6"><i className={`team-badge-v6 t${idx + 1}`}>{card.homeShort}</i><b>{card.home}</b></div>
+                      <span className="versus-v6">vs</span>
+                      <div className="team-v6"><i className={`team-badge-v6 away a${idx + 1}`}>{card.awayShort}</i><b>{card.away}</b></div>
+                    </div>
+                    <div className="kickoff-v6">{card.date}</div>
+                  </div>
+                  <div className="ai-card-v6-mid">
+                    <small>Typ AI</small>
+                    <strong>{card.pickTitle}</strong>
+                    <span>{card.pickType}</span>
+                  </div>
+                  <div className="ai-card-v6-odds">
+                    <strong>{card.odds}</strong>
+                    <span>Kurs</span>
+                  </div>
+                  <div className="ai-card-v6-score">
+                    <small>AI SCORE</small>
+                    <div className="score-ring-v6"><b>{card.score}</b></div>
+                    <span>PEWNOŚĆ <em>{card.confidence}</em></span>
+                  </div>
+                  <button type="button" className="collapse-v6">⌃</button>
+                </div>
+
+                <div className="ai-card-v6-bottom">
+                  <div className="metric-block-v6 ev">
+                    <small>WARTOŚĆ OCZEKIWANA (EV)</small>
+                    <strong>{card.ev}</strong>
+                    <span>{card.evText}</span>
+                  </div>
+                  <div className="metric-block-v6 probability">
+                    <small>PRAWDOPODOBIEŃSTWO</small>
+                    <div className="prob-grid-v6">
+                      <div>
+                        <span>{card.probabilityLabelA}</span>
+                        <b>{card.probA}</b>
+                        <div className="prob-bar-v6"><i style={{ width: card.probWidthA }}></i></div>
+                      </div>
+                      <div>
+                        <span>{card.probabilityLabelB}</span>
+                        <b>{card.probB}</b>
+                        <div className="prob-bar-v6 alt"><i style={{ width: card.probWidthB }}></i></div>
+                      </div>
+                      {card.probabilityLabelC ? (
+                        <div>
+                          <span>{card.probabilityLabelC}</span>
+                          <b>{card.probC}</b>
+                          <div className="prob-bar-v6 muted"><i style={{ width: card.probWidthC }}></i></div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="metric-block-v6 explanation">
+                    <small>WYJAŚNIENIE AI</small>
+                    <p>{card.explanation}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="ai-v6-foot-row">
+            <span>Pokazano 1–3 z 24 typów</span>
+            <button type="button">⟳ Załaduj więcej</button>
+          </div>
+        </div>
+
+        <aside className="ai-v6-sidebar">
+          <div className="glass-ai-v6 ai-side-card-v6">
+            <div className="side-head-v6"><h3>Szczegóły modelu</h3><span>PODGLĄD</span></div>
+            <div className="model-copy-v6">
+              <strong>Model: Bet+AI v3.2</strong>
+              <small>Piłka nożna — Wynik końcowy</small>
+              <em>Ostatnia aktualizacja: 24.05.2025 • 12:30</em>
+            </div>
+            <div className="side-score-wrap-v6">
+              <div className="big-score-ring-v6"><b>87%</b></div>
+              <div className="score-stats-v6">
+                <div><span>PEWNOŚĆ</span><b>WYSOKA</b></div>
+                <div><span>STABILNOŚĆ MODELU</span><b>94%</b></div>
+                <div><span>DOKŁADNOŚĆ 30D</span><b>71%</b></div>
+              </div>
+            </div>
+            <p className="model-note-v6">Model wykazuje wysoką skuteczność w podobnych typach.</p>
+          </div>
+
+          <div className="glass-ai-v6 ai-side-card-v6">
+            <div className="side-section-title-v6">ŹRÓDŁA DANYCH</div>
+            <div className="source-list-v6">
+              {sourceRows.map((row, idx) => (
+                <div key={idx}><span>{row[0]}</span><b>{row[1]}</b></div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-ai-v6 ai-side-card-v6">
+            <div className="side-section-title-v6">ANALIZA FORMY</div>
+            <div className="form-list-v6">
+              {formRows.map((row, idx) => (
+                <div className="form-row-v6" key={idx}>
+                  <div className={`form-team-badge-v6 ${row.tone}`}>{row.team.slice(0,2).toUpperCase()}</div>
+                  <div className="form-team-copy-v6">
+                    <strong>{row.team}</strong>
+                    <div className="form-chips-v6">
+                      {row.chips.map((chip, i) => <i key={i} className={chip === 'L' ? 'loss' : chip === 'D' ? 'draw' : 'win'}>{chip}</i>)}
+                    </div>
+                  </div>
+                  <div className="form-score-v6"><b>{row.score}</b><span>forma</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-ai-v6 ai-side-card-v6">
+            <div className="side-section-title-v6">TRENDY</div>
+            <div className="trend-list-v6">
+              {trends.map((row, idx) => <div key={idx}><span>{row[0]}</span><b>{row[1]}</b></div>)}
+            </div>
+          </div>
+
+          <button type="button" className="report-btn-v6">Zobacz pełny raport modelu <span>📈</span></button>
+        </aside>
+      </div>
+
+      <div className="ai-v6-bottom-links">
+        <span>Regulamin</span>
+        <span>Polityka prywatności</span>
+        <span>O nas</span>
+        <span>Kontakt</span>
+        <span>FAQ</span>
+      </div>
     </section>
   )
 }
+
 
 function LeaderboardView({ tips = [], ranking = [] }) {
-  const realRows = Array.isArray(ranking) ? ranking : []
-
-  const fallbackDynamic = tips.reduce((acc, tip) => {
-    const key = tip.author_id || tip.author_email || tip.author_name || 'unknown'
-    const name = tip.author_name || tip.author_email || 'Tipster'
-    if (!acc[key]) {
-      acc[key] = {
-        tipster_id: key,
-        display_name: name,
-        email: tip.author_email || '',
-        roi: 0,
-        winrate: 0,
-        earnings: 0,
-        total_sales: 0,
-        buyers_count: 0,
-        total_tips: 0,
-        premium_tips: 0
-      }
-    }
-    acc[key].total_tips += 1
-    if (tip.access_type === 'premium' || tip.is_premium) acc[key].premium_tips += 1
-    return acc
-  }, {})
-
-  const rows = (realRows.length ? realRows : Object.values(fallbackDynamic))
-    .map((row) => {
-      const name = row.display_name || row.author_name || row.username || row.email || 'Tipster'
-      const totalTips = Number(row.total_tips || row.tips_count || 0)
-      const premiumTips = Number(row.premium_tips || 0)
-      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || 0)
-      const sales = Number(row.total_sales || row.sales_count || 0)
-      const buyers = Number(row.buyers_count || row.unique_buyers || 0)
-      const roi = Number(row.roi || row.roi_30d || 0)
-      const winrate = Number(row.winrate || 0)
-      return {
-        ...row,
-        name,
-        avatar: name.slice(0, 2).toUpperCase(),
-        roi,
-        winrate,
-        earnings,
-        totalSales: sales,
-        buyers,
-        totalTips,
-        premiumTips,
-        badge: sales >= 10 ? 'TOP SELLER' : roi > 0 ? 'ROI PRO' : 'LIVE'
-      }
-    })
-    .sort((a, b) => (b.roi - a.roi) || (b.earnings - a.earnings) || (b.winrate - a.winrate) || (b.totalTips - a.totalTips))
+  const leaderboardRows = [
+    ['1', 'AI Master', 'PRO', '92.4%', '+28.7%', '1,283', '27.4K', '+12,842.35 zł', ['◈','✦','🏅']],
+    ['2', 'BetWizard', 'VIP', '89.1%', '+24.3%', '987', '19.8K', '+9,652.20 zł', ['◈','✦','🏅']],
+    ['3', 'GreenStrike', 'PRO', '87.6%', '+21.9%', '853', '15.6K', '+7,231.44 zł', ['◈','✦','🏅']],
+    ['4', 'StatKing', 'PRO', '85.2%', '+19.6%', '741', '12.3K', '+5,882.11 zł', ['◈','✦','🏅']],
+    ['5', 'ValueHunter', 'VIP', '83.7%', '+18.2%', '689', '10.7K', '+4,993.32 zł', ['◈','✦','🏅']],
+    ['6', 'Over2Expert', 'PRO', '82.5%', '+16.8%', '612', '9.1K', '+3,842.77 zł', ['◈','✦','🏅']],
+    ['7', 'SoccerMind', 'VIP', '81.3%', '+15.3%', '544', '7.8K', '+3,127.09 zł', ['◈','✦','🏅']],
+    ['8', 'CornerLord', 'PRO', '79.8%', '+14.1%', '498', '6.3K', '+2,684.51 zł', ['◈','✦','🏅']],
+  ]
+  const topTipsters = [
+    ['1', 'smilhytv', 'Typy: 32 • Win: 76.0% • ROI: 17.2%', '+0.00 zł'],
+    ['2', 'buchajsonek1988', 'Typy: 15 • Win: 79.0% • ROI: 14.1%', '+0.00 zł'],
+    ['3', 'buchajson1988', 'Typy: 12 • Win: 68.0% • ROI: 11.8%', '+0.00 zł'],
+  ]
+  const challengeRows = [
+    ['Król trafień', 'Osiągnij 85% skuteczności w typach', '67%', '+100 AI Tokenów', '67%'],
+    ['Seria zwycięstw', 'Wygraj 10 typów z rzędu', '6/10', '+150 AI Tokenów', '60%'],
+    ['Value Hunter', 'Osiągnij ROI powyżej 20%', '15.2%', '+200 AI Tokenów', '15%'],
+  ]
+  const referralBonuses = [
+    ['10 poleceń', '+10 AI Tokenów', true],
+    ['50 poleceń', '+50 AI Tokenów', true],
+    ['150 poleceń', '+150 AI Tokenów', true],
+    ['300 poleceń', '+400 AI Tokenów', false],
+  ]
 
   return (
-    <section className="leaderboard-page">
-      <UltraPageBanner variant="leaderboard" />
-      <div className="leaderboard-hero ranking-colorloop-hero old-ranking-hero-hidden">
-        <div className="ranking-hero-copy">
-          <span className="ranking-kicker">ULTRA PRO RANKING</span>
-          <h1>Ranking tipsterów</h1>
-          <p>Rywalizuj z najlepszymi i wspinaj się na szczyt. Analizuj wyniki, poprawiaj strategię i dominuj w obstawianiu.</p>
-          <div className="ranking-hero-metrics">
-            <span>↗ ROI</span>
-            <span>🏆 Sprzedaż</span>
-            <span>🎯 Skuteczność</span>
-            <span>👥 Aktywność</span>
+    <section className="leaderboard-page ranking-static-v4">
+      <div className="ranking-v4-layout">
+        <div className="ranking-v4-main">
+          <div className="ranking-v4-header">
+            <div>
+              <h1>Ranking</h1>
+              <p>Rywalizuj z najlepszymi i wspinaj się na szczyt!</p>
+            </div>
+            <div className="ranking-v4-filters">
+              <button type="button">Wszystkie sporty ⌄</button>
+              <button type="button">🗓 Tydzień ⌄</button>
+            </div>
           </div>
-        </div>
-        <div className="ranking-hero-stage" aria-hidden="true">
-          <div className="ranking-podium">
-            <div className="ranking-step ranking-step-2">2</div>
-            <div className="ranking-step ranking-step-1"><span className="ranking-trophy">🏆</span><b>1</b></div>
-            <div className="ranking-step ranking-step-3">3</div>
+
+          <div className="glass-ranking-v4 ranking-v4-tabs">
+            <button type="button" className="active">Ranking</button>
+            <button type="button">Top tipsterzy</button>
+            <button type="button">Polecenia</button>
+            <button type="button">Liderzy miesiąca</button>
           </div>
-        </div>
-        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
-      </div>
 
-      <div className="leaderboard-stats">
-        <div><span>Najlepszy ROI</span><b>{rows.length ? `${Number(rows[0].roi || 0).toFixed(2)}%` : '0.00%'}</b></div>
-        <div><span>Top sprzedaż</span><b>{rows.length ? `${Number(rows[0].earnings || 0).toFixed(2)} zł` : '0.00 zł'}</b></div>
-        <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
-        <div><span>Typy w bazie</span><b>{tips.length}</b></div>
-      </div>
-
-      <div className="ai-ranking-strip">
-        {(tips || []).slice().sort((a,b) => getAiScore(b) - getAiScore(a)).slice(0,3).map((tip, i) => (
-          <div className="ai-ranking-card" key={tip.id || i}>
-            <span>#{i + 1} AI PICK</span>
-            <b>{tip.team_home || 'Team'} vs {tip.team_away || 'Team'}</b>
-            <em>AI {getAiConfidence(tip)}% · Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</em>
-          </div>
-        ))}
-      </div>
-
-      <div className="leaderboard-table">
-        <div className="leaderboard-row header">
-          <span>#</span>
-          <span>Tipster</span>
-          <span>ROI</span>
-          <span>Winrate</span>
-          <span>Sprzedaż</span>
-          <span>Typy</span>
-          <span>Premium</span>
-        </div>
-
-        {rows.length ? rows.map((row, index) => (
-          <div className="leaderboard-row" key={row.tipster_id || row.name}>
-            <span className={`place place-${index+1}`}>{index + 1}</span>
-            <span className="leader-user">
-              <div className={row.badge === 'TOP SELLER' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
-              <div>
-                <b>{row.name}</b>
-                <em>{row.badge} · {row.totalSales} sprzedaży · {row.buyers} kupujących</em>
+          <div className="glass-ranking-v4 ranking-v4-table-card">
+            <div className="ranking-v4-table">
+              <div className="ranking-v4-row head">
+                <span>#</span>
+                <span>TIPSTER</span>
+                <span>WIN RATE</span>
+                <span>ROI</span>
+                <span>TYPY</span>
+                <span>OBSERWUJĄCY</span>
+                <span>ZAROBKI</span>
+                <span>ODZNAKI</span>
+                <span></span>
               </div>
-            </span>
-            <span className="roi">{Number(row.roi || 0).toFixed(2)}%</span>
-            <span>{Number(row.winrate || 0).toFixed(2)}%</span>
-            <span className="profit">{Number(row.earnings || 0).toFixed(2)} zł</span>
-            <span>{row.totalTips}</span>
-            <span>{row.premiumTips}</span>
+              {leaderboardRows.map((row, idx) => (
+                <div className="ranking-v4-row" key={idx}>
+                  <span className={`place-badge-v4 p${row[0]}`}>{row[0]}</span>
+                  <span className="tipster-cell-v4">
+                    <i className={`tipster-photo-v4 ${idx < 3 ? 'top' : ''}`}>{row[1].slice(0,2).toUpperCase()}</i>
+                    <div>
+                      <b>{row[1]}</b>
+                      <small className={`status-tag-v4 ${row[2].toLowerCase()}`}>{row[2]}</small>
+                    </div>
+                  </span>
+                  <span className="win-v4">{row[3]} ↗</span>
+                  <span>{row[4]}</span>
+                  <span>{row[5]}</span>
+                  <span>{row[6]}</span>
+                  <span className="profit-v4">{row[7]}</span>
+                  <span className="badges-cell-v4">{row[8].map((b, i) => <i key={i}>{b}</i>)}</span>
+                  <span><button type="button" className="follow-btn-v4">Obserwuj</button></span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="full-ranking-btn-v4">Zobacz pełny ranking</button>
           </div>
-        )) : (
-          <div className="leaderboard-empty">Dodaj zakończone typy i pierwsze sprzedaże, aby ranking realny pojawił się tutaj.</div>
-        )}
-      </div>
 
-      <div className="tipster-cta">
-        <div>
-          <strong>Zostań tipsterem PRO</strong>
-          <span>Sprzedawaj typy premium, buduj ROI i awansuj w rankingu.</span>
+          <div className="ranking-v4-bottom-grid">
+            <div className="glass-ranking-v4 ranking-v4-card hall-card-v4">
+              <div className="ranking-v4-card-head"><h3>Galeria sławy</h3></div>
+              <div className="hall-stage-v4">
+                <div className="hall-copy-v4">
+                  <strong>Legendy Bet+AI</strong>
+                  <p>Najlepsi z najlepszych. Inspiracja dla wszystkich.</p>
+                  <div className="hall-laurels-v4">
+                    <span>AI Master<br/><small>Sezon 3 • ROI 42.1%</small></span>
+                    <span>BetWizard<br/><small>Sezon 2 • ROI 38.2%</small></span>
+                    <span>StatKing<br/><small>Sezon 1 • ROI 35.2%</small></span>
+                  </div>
+                </div>
+                <div className="trophy-wrap-v4">
+                  <div className="trophy-v4">🏆</div>
+                  <div className="ball-v4">⚽</div>
+                </div>
+              </div>
+              <button type="button" className="hall-btn-v4">Zobacz całą galerię</button>
+            </div>
+
+            <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
+              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nowe wyzwania za: <b>4d 12h 33m</b></span></div>
+              <div className="challenge-list-v4">
+                {challengeRows.map((row, idx) => (
+                  <div className="challenge-item-v4" key={idx}>
+                    <div className="challenge-icon-v4">{idx===0?'📈':idx===1?'🏆':'⭐'}</div>
+                    <div className="challenge-copy-v4"><strong>{row[0]}</strong><small>{row[1]}</small></div>
+                    <div className="challenge-progress-v4"><span>{row[2]}</span><div className="challenge-bar-v4"><i style={{width: row[4]}}></i></div></div>
+                    <div className="challenge-reward-v4">{row[3]}</div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="hall-btn-v4 alt">Zobacz wszystkie wyzwania</button>
+            </div>
+          </div>
         </div>
-        <button>Aktywuj profil sprzedawcy</button>
+
+        <aside className="ranking-v4-sidebar">
+          <div className="glass-ranking-v4 sidebar-card-v4">
+            <div className="sidebar-tabs-v4">
+              <button type="button" className="active">Top tipsterzy</button>
+              <button type="button">Polecenia</button>
+              <button type="button">Liderzy miesiąca</button>
+            </div>
+            <div className="sidebar-head-link-v4">Zobacz wszystkich</div>
+            <div className="top-tipsters-list-v4">
+              {topTipsters.map((row, idx) => (
+                <div className="top-tipster-row-v4" key={idx}>
+                  <span className={`mini-rank-v4 r${idx+1}`}>{row[0]}</span>
+                  <i className="mini-avatar-v4">{row[1].slice(0,2).toUpperCase()}</i>
+                  <div><strong>{row[1]}</strong><small>{row[2]}</small></div>
+                  <b>{row[3]}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4">
+            <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
+            <div className="referral-code-v4">
+              <span>Kod polecający</span>
+              <div><strong>SMILLHYTV</strong><button type="button">⧉</button></div>
+            </div>
+            <div className="referral-progress-v4">
+              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>78 / 150</b></div>
+              <div className="progress-bar-v4"><i style={{width:'52%'}}></i></div>
+            </div>
+            <div className="bonus-levels-v4">
+              {referralBonuses.map((row, idx) => (
+                <div className={`bonus-box-v4 ${row[2] ? 'done' : 'locked'}`} key={idx}>
+                  <span className="bonus-icon-v4">{row[2] ? '✓' : '🔒'}</span>
+                  <strong>{row[0]}</strong>
+                  <small>{row[1]}</small>
+                </div>
+              ))}
+            </div>
+            <div className="ref-earnings-v4">
+              <span>Zarobki z poleceń</span>
+              <div className="ref-earnings-grid-v4">
+                <div><small>Łącznie</small><b>+124.50 zł</b></div>
+                <div><small>W tym miesiącu</small><b>+28.30 zł</b></div>
+                <div><small>Oczekujące</small><b>+6.20 zł</b></div>
+              </div>
+            </div>
+            <button type="button" className="details-btn-v4">Zobacz szczegóły</button>
+          </div>
+        </aside>
       </div>
     </section>
   )
 }
-
 
 
 function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
@@ -4747,140 +5003,226 @@ function TipsterPricingSettings({ user, onToast }) {
 }
 
 function ProfileView({ user, tips = [] }) {
-  const profile = getUserProfileView(user)
-  const displayName = profile?.username || 'smilhytv'
-  const sampleTips = [
-    { icon: '⚽', match: 'Real Madryt vs Bayern Monachium', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Powyżej 2.5 gola', odds: '1.72', stake: '200 zł', status: 'WYGRANY', result: '+144.00 zł', tone: 'win' },
-    { icon: '⚽', match: 'Manchester City vs Inter Mediolan', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Obie drużyny strzelą', odds: '1.80', stake: '150 zł', status: 'AKTYWNY', result: '—', tone: 'active' },
-    { icon: '🎾', match: 'Iga Świątek vs Aryna Sabalenka', meta: 'Roland Garros  •  15.06.2025 15:30', type: 'Iga Świątek wygra', odds: '1.65', stake: '120 zł', status: 'WYGRANY', result: '+78.00 zł', tone: 'win' },
-    { icon: '🏀', match: 'Boston Celtics vs Miami Heat', meta: 'NBA  •  15.06.2025 02:30', type: 'Celtics -6.5 handicap', odds: '1.90', stake: '180 zł', status: 'PRZEGRANY', result: '-180.00 zł', tone: 'loss' },
-    { icon: '⚽', match: 'Juventus vs AC Milan', meta: 'Serie A  •  14.06.2025 20:45', type: 'AC Milan (0) DNB', odds: '2.05', stake: '100 zł', status: 'WYGRANY', result: '+105.00 zł', tone: 'win' },
-    { icon: '🎾', match: 'Carlos Alcaraz vs Novak Djokovic', meta: 'ATP 250 Queens  •  14.06.2025 16:00', type: 'Powyżej 21.5 gemy', odds: '1.88', stake: '130 zł', status: 'AKTYWNY', result: '—', tone: 'active' }
+  const displayName = 'smilhytv'
+  const premiumRows = [
+    ['Real Madryt', 'Bayern Monachium', 'Liga Mistrzów • Dzisiaj, 21:00', 'Powyżej 2.5 gola', '1.72', '85%', 'Premium', '12', '2 godz. temu'],
   ]
-  const realRows = Array.isArray(tips) && tips.length ? tips.slice(0, 6).map((tip, index) => {
-    const status = String(tip.status || 'active').toLowerCase()
-    const tone = ['won','win'].includes(status) ? 'win' : ['lost','loss'].includes(status) ? 'loss' : 'active'
-    const result = tone === 'win' ? `+${Number(tip.profit || tip.stake || 120).toFixed(2)} zł` : tone === 'loss' ? `-${Number(tip.stake || 100).toFixed(2)} zł` : '—'
-    return {
-      icon: index % 3 === 2 ? '🎾' : '⚽',
-      match: `${tip.team_home || 'Real Madryt'} vs ${tip.team_away || 'Bayern Monachium'}`,
-      meta: `${tip.league || 'Liga Mistrzów'}  •  ${tip.match_date ? new Date(tip.match_date).toLocaleString('pl-PL') : '15.06.2025 21:00'}`,
-      type: tip.bet_type || tip.pick || 'Powyżej 2.5 gola',
-      odds: Number(tip.odds || tip.course || 1.72).toFixed(2),
-      stake: `${Number(tip.stake || 100)} zł`,
-      status: tone === 'win' ? 'WYGRANY' : tone === 'loss' ? 'PRZEGRANY' : 'AKTYWNY',
-      result,
-      tone
-    }
-  }) : sampleTips
+  const freeRows = [
+    ['Arsenal', 'Aston Villa', 'Premier League • Jutro, 17:30', 'Arsenal wygra', '1.65', '78%', 'FREE', '8', '4 godz. temu'],
+  ]
+  const resultRows = [
+    ['Maj 2026', '142', '95', '42', '67%', '+16.3%', '+128.60 zł'],
+    ['Kwiecień 2026', '168', '112', '51', '67%', '+12.8%', '+96.40 zł'],
+    ['Marzec 2026', '155', '101', '47', '65%', '+10.7%', '+78.30 zł'],
+  ]
+  const analysisRows = [
+    ['AI analiza: Real Madryt vs Bayern', '20.05.2026 • Liga Mistrzów'],
+    ['5 value betów na nadchodzący weekend', '19.05.2026 • Premium'],
+    ['Statystyki nie kłamią – liga angielska', '18.05.2026 • Analiza'],
+  ]
+  const summaryRows = [
+    ['Użytkownik od', '12.02.2024'],
+    ['Ostatnia aktywność', 'Dzisiaj, 12:45'],
+    ['Poziom', 'Premium 7'],
+    ['Ranking globalny', '#1 (TOP 1%)'],
+    ['Preferowane dyscypliny', 'Piłka nożna ⚽'],
+  ]
+  const recentAchievements = [
+    ['TOP 1% RANKINGU', 'Osiągnięcie top 1% najlepszych typerów', '20.05.2026'],
+    ['1000+ TYPÓW', 'Opublikowałeś ponad 1000 typów', '14.05.2026'],
+    ['WIN RATE 60%+', 'Utrzymujesz skuteczność powyżej 60%', '07.05.2026'],
+  ]
+  const ratingBars = [
+    ['5 ★', '212'], ['4 ★', '18'], ['3 ★', '4'], ['2 ★', '1'], ['1 ★', '1']
+  ]
+  const rankingRows = [
+    ['1', 'smilhytv', '85% ROI', '2 541', '+128.60 zł'],
+    ['2', 'buchajsonek1988', '84% ROI', '1 872', '+96.20 zł'],
+    ['3', 'p.kucharski', '78% ROI', '1 523', '+74.30 zł'],
+  ]
 
   return (
-    <section className="profile-page profile-ultra-page my-profile-stats-page" aria-label="Mój profil">
-      <div className="my-profile-hero-shell">
-        <div>
-          <p className="my-profile-kicker">BETAI PROFILE ANALYTICS</p>
-          <h1>Moje typy i statystyki</h1>
-          <p>Śledź swoje typy, analizuj wyniki i rozwijaj skuteczność.</p>
-        </div>
-        <button className="my-profile-date-btn" type="button">📅 18 maj 2025 - 16 cze 2025 <span>⌄</span></button>
-      </div>
-
-      <div className="my-profile-metrics-grid">
-        <div className="my-profile-metric-card active">
-          <div className="my-profile-metric-icon">◎</div>
-          <div><span>Skuteczność ⓘ</span><strong>78%</strong><small><b>+6%</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">↗</div>
-          <div><span>ROI ⓘ</span><strong>+12.4%</strong><small><b>+2.1%</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">▱</div>
-          <div><span>Zysk ⓘ</span><strong>+1 248 zł</strong><small><b>+312 zł</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">🎟</div>
-          <div><span>Aktywne typy ⓘ</span><strong>14</strong><small>W grze</small></div>
-        </div>
-      </div>
-
-      <div className="my-profile-main-grid">
-        <div className="my-profile-card my-profile-tips-card">
-          <div className="my-profile-card-head">
-            <h2>Moje typy</h2>
-          </div>
-          <div className="my-profile-filter-row">
-            <button className="active" type="button">◎ Wszystkie</button>
-            <button type="button">💙 Premium</button>
-            <button type="button">🟢 Na żywo</button>
-            <button type="button">▣ Zakończone</button>
-          </div>
-          <div className="my-profile-table">
-            <div className="my-profile-table-head">
-              <span>Mecz</span><span>Typ</span><span>Kurs</span><span>Stawka</span><span>Status</span><span>Wynik</span>
-            </div>
-            {realRows.map((row, idx) => (
-              <div className="my-profile-table-row" key={`${row.match}-${idx}`}>
-                <div className="my-profile-match"><i>{row.icon}</i><div><b>{row.match}</b><small>{row.meta}</small></div></div>
-                <span>{row.type}</span>
-                <span>{row.odds}</span>
-                <span>{row.stake}</span>
-                <em className={`my-status ${row.tone}`}>{row.status}</em>
-                <strong className={`my-result ${row.tone}`}>{row.result}</strong>
+    <section className="profile-page profile-static-v3" aria-label="Mój profil">
+      <div className="profile-v3-layout">
+        <div className="profile-v3-main">
+          <div className="profile-v3-hero glass-profile-v3">
+            <div className="profile-v3-hero-overlay"></div>
+            <div className="profile-v3-user-row">
+              <div className="profile-v3-avatar">SM</div>
+              <div className="profile-v3-user-copy">
+                <div className="profile-v3-name-line">
+                  <h1>{displayName}</h1>
+                  <span className="verify-dot">✓</span>
+                </div>
+                <small>@smilhytv</small>
+                <div className="profile-v3-badges">
+                  <span>ADMIN</span>
+                  <span>TIPSTER</span>
+                  <span>TOP AKTYWNOŚĆ</span>
+                </div>
+                <p>AI typy sportowe oparte na danych i analizie statystycznej. Specjalizuje się w piłce nożnej i wartościowych kursowych. Gram odpowiedzialnie. Analizuję. Nie kopiuję. Wygrywaj. ✅</p>
+                <div className="profile-v3-actions">
+                  <button type="button" className="primary">+ Obserwuj</button>
+                  <button type="button">▢ Wyślij wiadomość</button>
+                  <button type="button">🏆 Wspieraj tipami</button>
+                </div>
               </div>
-            ))}
-          </div>
-          <button className="my-profile-more-btn" type="button">Zobacz wszystkie typy</button>
-        </div>
-
-        <div className="my-profile-card my-profile-chart-card">
-          <div className="my-profile-card-head">
-            <h2>Statystyki wyników</h2>
-            <button type="button">Ostatnie 30 dni ⌄</button>
-          </div>
-          <div className="my-profile-chart-grid">
-            <div className="my-profile-line-card">
-              <span>Wynik netto (zł)</span>
-              <strong>+1 248 zł</strong>
-              <svg viewBox="0 0 520 300" role="img" aria-label="Wykres wyniku netto">
-                <defs>
-                  <linearGradient id="myProfileLineFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#1fe2ae" stopOpacity=".42" />
-                    <stop offset="100%" stopColor="#1fe2ae" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <g className="grid-lines"><path d="M40 60H500M40 140H500M40 220H500" /></g>
-                <path className="area" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48 L492 242 L42 242 Z" />
-                <path className="line" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48" />
-                <g className="dots"><circle cx="72" cy="195" r="4"/><circle cx="126" cy="182" r="4"/><circle cx="244" cy="118" r="4"/><circle cx="330" cy="106" r="4"/><circle cx="456" cy="84" r="4"/><circle cx="492" cy="48" r="4"/></g>
-                <g className="axis"><text x="40" y="46">1.5k zł</text><text x="42" y="146">750 zł</text><text x="42" y="226">0 zł</text><text x="42" y="286">18 maj</text><text x="150" y="286">25 maj</text><text x="266" y="286">1 cze</text><text x="385" y="286">8 cze</text><text x="470" y="286">16 cze</text></g>
-              </svg>
             </div>
-            <div className="my-profile-donut-card">
-              <span>Udział typów</span>
-              <div className="my-profile-donut"><div><strong>78%</strong><small>Skuteczność</small></div></div>
-              <div className="my-profile-legend"><span><i className="win"/>Wygrane <b>78% (47)</b></span><span><i className="loss"/>Przegrane <b>16% (10)</b></span><span><i className="active"/>Aktywne <b>6% (4)</b></span></div>
+            <div className="profile-v3-stats-strip">
+              <div><small>ROI</small><strong>85%</strong></div>
+              <div><small>WIN RATE</small><strong>68%</strong></div>
+              <div><small>SKUTECZNOŚĆ</small><strong>1.72 <em>ŚR. KURS</em></strong></div>
+              <div><small>LICZBA TYPÓW</small><strong>1 248</strong></div>
+              <div><small>OBSERWUJĄCY</small><strong>2 541</strong></div>
+              <div><small>POZIOM</small><strong>Premium 7</strong></div>
+              <div><small>ŻETONY</small><strong>86</strong></div>
+              <div><small>SALDO</small><strong>0.00 zł</strong></div>
+              <div><small>RANKING</small><strong>#1 <em>TOP 1%</em></strong></div>
+              <div><small>ŚR. KURS</small><strong>1.72</strong></div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="my-profile-bottom-grid">
-        <div className="my-profile-card my-profile-mini-card">
-          <div className="mini-orb">⚽</div>
-          <div><h3>Najlepsza dyscyplina</h3><strong>Piłka nożna<br/><span>83%</span></strong><p>Skuteczność</p></div>
-          <button type="button">Zobacz szczegóły</button>
-        </div>
-        <div className="my-profile-card my-profile-mini-card blue">
-          <div className="mini-orb">〽</div>
-          <div><h3>Średni kurs</h3><strong>1.92</strong><p>Średni kurs<br/><b>+0.14 vs poprzednie 30 dni</b></p></div>
-          <button type="button">Zobacz analizę</button>
-        </div>
-      </div>
+          <div className="profile-v3-tabs glass-profile-v3">
+            <button type="button" className="active">▣ Przegląd</button>
+            <button type="button">◉ Typy</button>
+            <button type="button">↗ Wyniki</button>
+            <button type="button">⌁ Analizy</button>
+            <button type="button">◔ Historia</button>
+            <button type="button">💬 Opinie</button>
+          </div>
 
-      <div className="my-profile-ai-tip">
-        <div><span>💡</span><b>Wskazówka AI</b><p>Twoja skuteczność wzrasta o 14% w weekendy. Rozważ zwiększenie aktywności w tych dniach.</p></div>
-        <button type="button">Zobacz rekomendacje ↗</button>
+          <div className="profile-v3-content-grid">
+            <div className="profile-v3-left-col">
+              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
+                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button">Zobacz wszystkie</button></div>
+                {premiumRows.map((row, idx) => (
+                  <div className="tip-preview-v3" key={idx}>
+                    <div className="tip-preview-top"><span className="club-round">RM</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
+                    <div className="tip-preview-mid">
+                      <div><small>TYP</small><b>{row[3]}</b></div>
+                      <div><small>KURS</small><b>{row[4]}</b></div>
+                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
+                    </div>
+                    <div className="tip-progress"><span style={{width:'85%'}}></span></div>
+                    <div className="tip-preview-foot"><em className="premium-pill">♥ {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
+                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button">Zobacz wszystkie</button></div>
+                {freeRows.map((row, idx) => (
+                  <div className="tip-preview-v3 free" key={idx}>
+                    <div className="tip-preview-top"><span className="club-round arsenal">AR</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
+                    <div className="tip-preview-mid">
+                      <div><small>TYP</small><b>{row[3]}</b></div>
+                      <div><small>KURS</small><b>{row[4]}</b></div>
+                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
+                    </div>
+                    <div className="tip-progress"><span style={{width:'78%'}}></span></div>
+                    <div className="tip-preview-foot"><em className="free-pill">● {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="glass-profile-v3 profile-v3-card history-v3">
+                <div className="profile-v3-card-head"><h3>📊 Historia wyników</h3></div>
+                <div className="history-v3-table">
+                  <div className="history-v3-row head"><span>OKRES</span><span>TYPY</span><span>WYGRANE</span><span>PRZEGRANE</span><span>WIN RATE</span><span>ROI</span><span>ZYSK</span></div>
+                  {resultRows.map((row, idx) => (
+                    <div className="history-v3-row" key={idx}>{row.map((cell, i) => <span key={i}>{cell}</span>)}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-v3-right-col">
+              <div className="glass-profile-v3 profile-v3-card month-stats-v3">
+                <div className="profile-v3-card-head"><h3>📈 Statystyki miesiąca</h3><button type="button">Zobacz więcej</button></div>
+                <div className="month-metrics-v3">
+                  <div><small>ROI</small><strong>+16.3%</strong></div>
+                  <div><small>ZYSK</small><strong>+128.60 zł</strong></div>
+                  <div><small>TYPY</small><strong>142</strong></div>
+                  <div><small>WIN RATE</small><strong>67%</strong></div>
+                </div>
+                <div className="month-bars-v3">
+                  <div><span>Typy wygrane</span><div className="bar"><i style={{width:'67%'}}></i></div><b>95 (67%)</b></div>
+                  <div><span>Typy przegrane</span><div className="bar red"><i style={{width:'30%'}}></i></div><b>42 (30%)</b></div>
+                  <div><span>Anulowane</span><div className="bar gray"><i style={{width:'5%'}}></i></div><b>5 (3%)</b></div>
+                </div>
+              </div>
+
+              <div className="profile-v3-split-row">
+                <div className="glass-profile-v3 profile-v3-card about-v3">
+                  <div className="profile-v3-card-head"><h3>ⓘ O mnie</h3></div>
+                  <p>Nazywam się Smilhytv i od 6 lat analizuję sportowe dane, by znajdować wartościowe typy i przewagę statystyczną. Korzystam z historii meczów oraz AI do oceny ryzyka i value betów. Gram odpowiedzialnie i zachęcam do tego samego. ✅</p>
+                  <div className="about-tags"><span>AI ANALIZA</span><span>DANE</span><span>STATYSTYKI</span><span>VALUE BETS</span></div>
+                </div>
+                <div className="glass-profile-v3 profile-v3-card analysis-v3">
+                  <div className="profile-v3-card-head"><h3>Ostatnie analizy</h3><button type="button">Zobacz wszystkie</button></div>
+                  <div className="analysis-list-v3">
+                    {analysisRows.map((row, idx) => (
+                      <div className="analysis-item-v3" key={idx}><span>▣</span><div><strong>{row[0]}</strong><small>{row[1]}</small></div></div>
+                    ))}
+                  </div>
+                  <button type="button" className="link-btn-v3">Więcej analiz →</button>
+                </div>
+              </div>
+
+              <div className="glass-profile-v3 profile-v3-card badges-v3">
+                <div className="profile-v3-card-head"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button">Zobacz wszystkie</button></div>
+                <div className="badges-grid-v3">
+                  <div><span className="badge-orb orange">🏆</span><strong>TOP 1%</strong><small>Ranking</small></div>
+                  <div><span className="badge-orb gold">✦</span><strong>1000+</strong><small>Typów</small></div>
+                  <div><span className="badge-orb cyan">🛡</span><strong>WIN RATE+</strong><small>60%+</small></div>
+                  <div><span className="badge-orb teal">↗</span><strong>ROI+</strong><small>10%+</small></div>
+                  <div><span className="badge-orb yellow">⚡</span><strong>AKTYWNY</strong><small>30 dni</small></div>
+                  <div><span className="badge-orb purple">♛</span><strong>PREMIUM</strong><small>Poziom 7</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside className="profile-v3-sidebar">
+          <div className="glass-profile-v3 side-card-v3">
+            <div className="side-card-head-v3"><h3>Podsumowanie</h3><span>• ONLINE ●</span></div>
+            <div className="key-list-v3">
+              {summaryRows.map((row, idx) => <div key={idx}><span>{row[0]}</span><b>{row[1]}</b></div>)}
+            </div>
+          </div>
+
+          <div className="glass-profile-v3 side-card-v3">
+            <div className="side-card-head-v3"><h3>Społeczność</h3><button type="button">Zobacz wszystkich</button></div>
+            <div className="community-v3"><div><span>👥 Obserwujący</span><b>2 541</b></div><div><span>👤 Obserwowani</span><b>121</b></div></div>
+          </div>
+
+          <div className="glass-profile-v3 side-card-v3">
+            <div className="side-card-head-v3"><h3>🌀 Ostatnie osiągnięcia</h3></div>
+            <div className="recent-achievements-v3">
+              {recentAchievements.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
+            </div>
+            <button type="button" className="side-link-v3">Zobacz wszystkie odznaki →</button>
+          </div>
+
+          <div className="glass-profile-v3 side-card-v3">
+            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="ratings-v3">
+              <div className="rating-score"><strong>4.9</strong><span>★★★★★</span><small>Na podstawie 236 opinii</small></div>
+              <div className="rating-bars">
+                {ratingBars.map((row, idx) => <div key={idx}><span>{row[0]}</span><div className="rate-bar"><i style={{width: `${[100,42,18,8,6][idx]}%`}}></i></div><b>{row[1]}</b></div>)}
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-profile-v3 side-card-v3">
+            <div className="side-card-head-v3"><h3>Ranking typerów</h3><button type="button">Zobacz ranking</button></div>
+            <div className="ranking-v3">
+              {rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>)}
+            </div>
+            <button type="button" className="side-link-v3">Pełny ranking →</button>
+          </div>
+        </aside>
       </div>
     </section>
   )
@@ -5261,6 +5603,226 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
       <div className="stripe-connect-note stripe-connect-note-pro">
         <strong>System finalizacji wypłat</strong>
         <span>Manual approve wykonuje realny Stripe transfer. Cron może przetwarzać pending automatycznie, jeżeli ustawisz CRON_SECRET i harmonogram Netlify.</span>
+      </div>
+    </section>
+  )
+}
+
+
+function TopTipstersView() {
+  const categories = [
+    ['Wszystkie', '324', 'grid'],
+    ['Piłka nożna', '212', 'football'],
+    ['Tenis', '45', 'tennis'],
+    ['Koszykówka', '28', 'basketball'],
+    ['Hokej', '16', 'hockey'],
+    ['Esport', '23', 'esport'],
+  ]
+
+  const tipsters = [
+    {
+      rank: 1,
+      name: 'StatKing',
+      subtitle: 'Profesjonalny analityk',
+      rating: '4.92',
+      votes: '1248',
+      success: '87%',
+      roi: '+32.4%',
+      profit: '+3,240 zł',
+      picks: '284',
+      chart: '87%',
+      price: '49 zł',
+      followers: '1,248 obserwujących',
+      spec: ['⚽', '🎾', '🏒', '⚙', '+2'],
+      avatar: 'SK'
+    },
+    {
+      rank: 2,
+      name: 'BetMind',
+      subtitle: 'Ekspert od Value Betów',
+      rating: '4.78',
+      votes: '982',
+      success: '91%',
+      roi: '+41.7%',
+      profit: '+4,170 zł',
+      picks: '196',
+      chart: '91%',
+      price: '79 zł',
+      followers: '982 obserwujących',
+      spec: ['⚽', '🎾', '⚽', '⚙', '+3'],
+      avatar: 'BM'
+    },
+    {
+      rank: 3,
+      name: 'FootyLogic',
+      subtitle: 'Statystyka i analiza',
+      rating: '4.71',
+      votes: '756',
+      success: '84%',
+      roi: '+28.1%',
+      profit: '+2,980 zł',
+      picks: '241',
+      chart: '84%',
+      price: '59 zł',
+      followers: '756 obserwujących',
+      spec: ['⚽', '📊', '🏆', '⚙', '+1'],
+      avatar: 'FL'
+    },
+  ]
+
+  const marketStats = [
+    ['Tipsterzy', '248'],
+    ['Typy dziś', '1,248'],
+    ['Skuteczność', '85%'],
+    ['ROI rynku', '+18.7%'],
+  ]
+
+  const steps = [
+    ['1', 'Wybierz tipstera', 'Sprawdź statystyki i wybierz najlepszego.'],
+    ['2', 'Kup dostęp', 'Zyskaj dostęp do premium typów i analiz.'],
+    ['3', 'Wygrywaj więcej', 'Korzystaj z wiedzy i zwiększaj zyski!'],
+  ]
+
+  return (
+    <section className="market-static-v7">
+      <div className="market-v7-layout">
+        <div className="market-v7-main">
+          <div className="glass-market-v7 market-v7-hero">
+            <div className="market-hero-copy-v7">
+              <span>MARKETPLACE TYPÓW I ANALIZ</span>
+              <h1>Kupuj sprawdzone typy
+                <br />i analizy od <em>najlepszych</em></h1>
+              <p>Zweryfikowani tipsterzy, skuteczne analizy i typy, które dają przewagę.</p>
+            </div>
+            <div className="market-hero-art-v7" aria-hidden="true">
+              <div className="art-card-v7 chart"></div>
+              <div className="art-card-v7 cart"></div>
+              <div className="hero-ball-v7"></div>
+              <div className="hero-line-v7 one"></div>
+              <div className="hero-line-v7 two"></div>
+            </div>
+          </div>
+
+          <div className="market-v7-cats">
+            {categories.map((item, idx) => (
+              <div className={`glass-market-v7 cat-box-v7 ${idx === 0 ? 'active' : ''}`} key={idx}>
+                <i className={`cat-icon-v7 ${item[2]}`}></i>
+                <div><strong>{item[0]}</strong><span>{item[1]}</span></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="market-v7-filters">
+            <div className="glass-market-v7 filter-v7"><small>Sport</small><strong>Wszystkie</strong><span>⌄</span></div>
+            <div className="glass-market-v7 filter-v7"><small>Ligą</small><strong>Wszystkie</strong><span>⌄</span></div>
+            <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Popularne</strong><span>⌄</span></div>
+            <div className="glass-market-v7 filter-v7 accent"><b>⭐ Tylko Premium</b></div>
+            <div className="glass-market-v7 filter-v7 accent"><b>☰ Więcej filtrów</b></div>
+          </div>
+
+          <div className="market-v7-section-head">
+            <h2>NAJLEPSI TIPSTERZY</h2>
+            <button type="button">Zobacz wszystkich</button>
+          </div>
+
+          <div className="market-v7-list">
+            {tipsters.map((tipster, idx) => (
+              <article className="glass-market-v7 seller-card-v7" key={idx}>
+                <div className="seller-main-v7">
+                  <div className="seller-profile-v7">
+                    <div className={`seller-avatar-v7 a${idx + 1}`}>{tipster.avatar}</div>
+                    <div className="seller-copy-v7">
+                      <div className="seller-title-row-v7">
+                        <span className={`rank-pill-v7 r${tipster.rank}`}>{tipster.rank}</span>
+                        <h3>{tipster.name}</h3>
+                        <i>✓</i>
+                      </div>
+                      <p>{tipster.subtitle}</p>
+                      <div className="seller-rating-v7">⭐ {tipster.rating} <span>({tipster.votes})</span> <em>PREMIUM</em></div>
+                    </div>
+                  </div>
+
+                  <div className="seller-stats-row-v7">
+                    <div><small>Skuteczność</small><b>{tipster.success}</b></div>
+                    <div><small>ROI (30 dni)</small><b>{tipster.roi}</b></div>
+                    <div><small>Zysk (30 dni)</small><b>{tipster.profit}</b></div>
+                    <div><small>Typy</small><b>{tipster.picks}</b></div>
+                  </div>
+                </div>
+
+                <div className="seller-chart-v7">
+                  <small>Skuteczność (30 dni)</small>
+                  <div className="sparkline-v7">
+                    <svg viewBox="0 0 240 78" preserveAspectRatio="none">
+                      <path d={idx===0 ? 'M0,48 L18,54 L36,42 L54,58 L72,38 L90,33 L108,22 L126,35 L144,18 L162,30 L180,20 L198,25 L216,14 L240,8' : idx===1 ? 'M0,44 L18,46 L36,41 L54,43 L72,29 L90,38 L108,24 L126,30 L144,20 L162,26 L180,19 L198,21 L216,16 L240,10' : 'M0,50 L18,42 L36,48 L54,31 L72,40 L90,26 L108,35 L126,30 L144,33 L162,18 L180,27 L198,23 L216,16 L240,9'} />
+                    </svg>
+                  </div>
+                  <div className="chart-meta-v7">
+                    <b>{tipster.chart}</b>
+                    <span>Specjalizacja</span>
+                  </div>
+                  <div className="spec-list-v7">
+                    {tipster.spec.map((s, i) => <i key={i}>{s}</i>)}
+                  </div>
+                </div>
+
+                <div className="seller-cta-v7">
+                  <div className="price-v7"><strong>{tipster.price}</strong><span>/ 30 dni</span></div>
+                  <button type="button" className="buy-btn-v7">Kup tip</button>
+                  <div className="cta-bottom-v7">
+                    <button type="button" className="follow-btn-v7">Obserwuj</button>
+                    <span>{tipster.followers}</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="market-v7-sidebar">
+          <div className="glass-market-v7 side-market-card-v7">
+            <div className="side-title-v7">PODSUMOWANIE RYNKU <i>ⓘ</i></div>
+            <div className="market-summary-grid-v7">
+              {marketStats.map((item, idx) => (
+                <div key={idx}>
+                  <small>{item[0]}</small>
+                  <b>{item[1]}</b>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="outline-wide-v7">📈 Zobacz statystyki rynku</button>
+          </div>
+
+          <div className="glass-market-v7 side-market-card-v7">
+            <div className="side-head-line-v7"><h3>AI ANALIZA MECZU</h3><span>AI</span></div>
+            <div className="match-side-v7">
+              <div className="mini-team-v7"><i className="team-logo-v7 rm">RM</i><strong>Real Madryt</strong></div>
+              <span>vs</span>
+              <div className="mini-team-v7"><i className="team-logo-v7 bm">BM</i><strong>Bayern Monachium</strong></div>
+            </div>
+            <div className="match-meta-v7">Liga Mistrzów • Dzisiaj, 21:00</div>
+            <div className="ai-prediction-v7">
+              <small>AI przewiduje:</small>
+              <strong>Powyżej 2.5 gola</strong>
+              <div className="prediction-meter-v7"><span>Pewność: 81%</span><b>81%</b><i style={{width:'81%'}}></i></div>
+            </div>
+            <button type="button" className="outline-wide-v7">Zobacz pełną analizę →</button>
+          </div>
+
+          <div className="glass-market-v7 side-market-card-v7">
+            <div className="side-title-v7">JAK TO DZIAŁA?</div>
+            <div className="steps-list-v7">
+              {steps.map((step, idx) => (
+                <div className="step-row-v7" key={idx}>
+                  <span>{step[0]}</span>
+                  <div><strong>{step[1]}</strong><small>{step[2]}</small></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button type="button" className="sell-analysis-v7">☁ Sprzedaj swoją analizę</button>
+        </aside>
       </div>
     </section>
   )
@@ -6820,6 +7382,12 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
+    if (['notifications', 'payments', 'subscriptions', 'earnings', 'payouts'].includes(view)) {
+      setView('dashboard')
+    }
+  }, [view])
+
+  useEffect(() => {
     const refreshTokens = () => fetchNotifications(sessionUser?.id)
     window.addEventListener('betai-token-balance-changed', refreshTokens)
     return () => window.removeEventListener('betai-token-balance-changed', refreshTokens)
@@ -6982,6 +7550,10 @@ function App() {
 
         {view === 'aiPicks' && (
           <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} settleGenerating={aiSettleGenerating} onGenerateLive={runLiveAiEngine} onSettle={runAiSettlement} onRefresh={() => fetchTips(sessionUser?.id)} />
+        )}
+
+        {view === 'topTipsters' && (
+          <TopTipstersView />
         )}
 
         {view === 'notifications' && (
