@@ -1718,10 +1718,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const aiScore = getAiScore(tip)
   const aiAnalysis = getAiAnalysis(tip)
   const aiBadges = getAiBadges(tip)
-  const analysisTitle = author === 'AI Tip' ? 'AI Analiza' : 'Analiza użytkownika'
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
+  const analysisTitle = author === 'AI Tip' ? 'AI Analiza' : 'Analiza użytkownika'
   const authorId = getTipAuthorId(tip)
   const currentUsername = (currentUser?.email || '').split('@')[0]
   const isOwnTip = Boolean(
