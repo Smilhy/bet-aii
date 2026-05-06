@@ -1,0 +1,5 @@
+Wersja 550
+- Zakładka Marketplace została przebudowana na sztywno według nowego screena.
+- Usunięto stary widok marketplace i wstawiono nowy układ ultra pro pixel-to-pixel.
+- Dodano nowy hero, kategorie, filtry, listę top tipsterów oraz prawy panel: podsumowanie rynku, AI analiza meczu, sekcja Jak to działa i CTA sprzedaży analizy.
+- Sidebar dla Marketplace został dopasowany do screena: panel użytkownika, rozwinięte menu Marketplace i sekcja Zarabiaj z wiedzy.

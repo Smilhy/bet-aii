@@ -1,0 +1,5 @@
+Wersja 549
+- Zakładka Typy AI została przebudowana na sztywno według screena.
+- Usunięto poprzedni dynamiczny widok AI i dodano nowy układ pixel-to-pixel w stylu ultra pro.
+- Dodano: hero Typy AI, statystyki modeli, filtry, listę typów AI, paginację oraz prawy panel z Model dnia, Najwyższą pewnością, Trendami AI i sekcją informacyjną.
+- Ukryto pływające widgety na tej zakładce dla czystego wyglądu.

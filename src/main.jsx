@@ -509,47 +509,92 @@ const staticTips = []
 function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
   const premiumUntil = '24.06.2025'
+  const isMarketplace = view === 'marketplace'
+  const marketplaceItems = [
+    ['Kup Typy', 'marketplace'],
+    ['Sprzedaj Analizę', 'marketplace'],
+    ['Moje Analizy', 'marketplace'],
+    ['Obserwowane', 'marketplace'],
+    ['Rankingi', 'leaderboard'],
+    ['Powiadomienia', 'notifications'],
+    ['Płatności', 'payments'],
+    ['Ustawienia', 'dashboard']
+  ]
+  const mainMenuItems = [
+    ['🏠 Dashboard', 'dashboard'],
+    ['🛍 Marketplace', 'marketplace'],
+    ['➕ Dodaj typ', 'add'],
+    ['💼 Portfel', 'wallet'],
+    ['📋 Moje typy', 'profile'],
+    ['🏆 Ranking', 'leaderboard'],
+    ['👥 Społeczność', 'referrals'],
+    ['🔔 Powiadomienia', 'notifications'],
+    ['💳 Płatności', 'payments'],
+    ['👑 Subskrypcja', 'subscriptions'],
+    ['✈️ Wypłaty', 'payouts'],
+    ['🔮 Typy AI', 'aiPicks'],
+    ['⭐ Top typerzy', 'leaderboard']
+  ]
+
   return (
-    <aside className="sidebar sidebar544-fixed">
+    <aside className={`sidebar sidebar544-fixed ${isMarketplace ? 'sidebar550-market' : ''}`}>
       <div className="brand brand-logo-pro" aria-label="Bet+AI"><img src="/betai-sidebar-logo-new.png" alt="Bet+AI" /></div>
 
-      <div className="user-card user-card544-fixed">
+      <div className={`user-card user-card544-fixed ${isMarketplace ? 'user-card550-market' : ''}`}>
         <div className="avatar">{profile.initials}</div>
         <div className="user-card544-name">
           <strong>{profile.username}</strong>
-          <span className="pill">{getDisplayRole(user, userPlan)}</span>
+          <span className="pill">{isMarketplace ? 'PRO' : getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row wallet-row-tokens"><span>Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
-        <button className="outline-btn add-tip544" onClick={() => setView('add')}>+ Dodaj typ</button>
+        <div className="wallet-row wallet-row-tokens"><span>{isMarketplace ? 'Obserwowane' : 'Żetony'}</span><b>{isMarketplace ? '12' : Number(tokenBalance || 0)}</b></div>
+        {isMarketplace ? (
+          <button className="outline-btn market-user-panel" onClick={() => setView('dashboard')}>Panel użytkownika</button>
+        ) : (
+          <button className="outline-btn add-tip544" onClick={() => setView('add')}>+ Dodaj typ</button>
+        )}
       </div>
 
-      <nav className="menu menu544-fixed">
-        <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>🏠 Dashboard</button>
-        <button className={view === 'marketplace' ? 'active' : ''} onClick={() => setView('marketplace')}>🛍 Marketplace</button>
-        <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>➕ Dodaj typ</button>
-        <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
-        <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>📋 Moje typy</button>
-        <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
-        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
-        <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? <span className="menu544-badge">{notificationsCount}</span> : null}</button>
-        <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
-        <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>👑 Subskrypcja</button>
-        <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>✈️ Wypłaty</button>
-        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🔮 Typy AI</button>
-        <button type="button" onClick={() => setView('leaderboard')}>⭐ Top typerzy</button>
-      </nav>
+      {!isMarketplace ? (
+        <nav className="menu menu544-fixed">
+          {mainMenuItems.map(([label, target], index) => (
+            <button key={label + index} className={target === view && (label.includes('Marketplace') || !label.includes('Top typerzy')) ? 'active' : ''} onClick={() => setView(target)}>
+              {label}
+              {target === 'notifications' && notificationsCount > 0 && label.includes('Powiadomienia') ? <span className="menu544-badge">{notificationsCount}</span> : null}
+            </button>
+          ))}
+        </nav>
+      ) : (
+        <nav className="menu menu544-fixed menu550-market">
+          <button onClick={() => setView('dashboard')}>🏠 Dashboard</button>
+          <button className="active" onClick={() => setView('marketplace')}>🛍 Marketplace <span className="market-premium-badge">PREMIUM</span></button>
+          <div className="market550-submenu">
+            {marketplaceItems.map(([label, target], idx) => (
+              <button type="button" key={label + idx} className={idx === 0 ? 'active' : ''} onClick={() => setView(target)}>{label}</button>
+            ))}
+          </div>
+        </nav>
+      )}
 
-      <div className="premium-box premium544-plan">
-        <span>Twój plan</span>
-        <h3>PREMIUM</h3>
-        <p>Ważny do: {premiumUntil}</p>
-        <div className="premium544-progress"><i></i></div>
-        <button onClick={() => setView('subscriptions')}>▣ Zarządzaj planem</button>
-      </div>
+      {isMarketplace ? (
+        <div className="premium-box market550-cta-box">
+          <span>Zarabiaj z wiedzy!</span>
+          <h3>Sprzedawaj swoje analizy i dotrzyj do tysięcy graczy.</h3>
+          <button onClick={() => setView('marketplace')}>Sprzedaj analizę</button>
+        </div>
+      ) : (
+        <div className="premium-box premium544-plan">
+          <span>Twój plan</span>
+          <h3>PREMIUM</h3>
+          <p>Ważny do: {premiumUntil}</p>
+          <div className="premium544-progress"><i></i></div>
+          <button onClick={() => setView('subscriptions')}>▣ Zarządzaj planem</button>
+        </div>
+      )}
     </aside>
   )
 }
+
 
 function formatRankingName(row) {
   const email = row?.email || row?.username || 'Tipster'
@@ -2068,17 +2113,22 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [form, setForm] = useState({
-    team_home: 'Real Madryt',
-    team_away: 'Bayern Monachium',
-    league: 'Liga Mistrzów',
-    match_time: '',
-    bet_type: 'Powyżej 2.5 gola',
+    sport: 'Piłka nożna',
+    team_home: 'Manchester City',
+    team_away: 'Arsenal',
+    league: 'Premier League',
+    match_time: '2025-05-25T17:30',
+    bet_type: 'Wynik końcowy',
+    pick_label: 'Manchester City wygra',
     odds: '1.72',
-    analysis: 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.',
-    ai_probability: 72,
-    access_type: 'free',
-    price: '0',
-    tagsText: 'Real Madryt, Bayern',
+    stake: '100',
+    analysis: `Manchester City u siebie prezentuje świetną formę, wygrywając 7 z ostatnich 8 spotkań.
+Arsenal ma problemy w defensywie i traci średnio 1.6 gola na wyjazdach.
+Typ oparty na statystykach, formie i analizie AI.`,
+    ai_probability: 84,
+    access_type: 'premium',
+    price: '29.99',
+    tagsText: '#PremierLeague, #ManchesterCity, #Statystyki, #AI',
     notify_followers: true
   })
   const [saving, setSaving] = useState(false)
@@ -2192,7 +2242,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     team_home: form.team_home,
     team_away: form.team_away,
     match_time: form.match_time ? new Date(form.match_time).toISOString() : null,
-    bet_type: form.bet_type,
+    bet_type: form.pick_label || form.bet_type,
     odds: Number(form.odds),
     analysis: form.analysis,
     ai_probability: Number(form.ai_probability),
@@ -2203,15 +2253,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     is_premium: isPremium,
     price: isPremium ? Number(form.price || 0) : 0,
     tags: form.tagsText.split(',').map(t => t.trim()).filter(Boolean),
-    notify_followers: form.notify_followers
-  }), [form, isPremium])
+    notify_followers: form.notify_followers !== false
+  }), [form, isPremium, user])
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
 
   const submitTip = async () => {
     setMessage('')
     if (!payload.team_home || !payload.team_away || !payload.league || !payload.bet_type || !payload.odds) {
-      saveTipDebug('BŁĄD FORMULARZA', 'Uzupełnij: liga, drużyny, typ i kurs.'); setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
+      saveTipDebug('BŁĄD FORMULARZA', 'Uzupełnij: liga, drużyny, typ i kurs.')
+      setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
       onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
       return
     }
@@ -2221,7 +2272,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
     if (!isSupabaseConfigured || !supabase) {
-      saveTipDebug('BŁĄD SUPABASE', 'Brak konfiguracji ENV w Netlify.'); setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
+      saveTipDebug('BŁĄD SUPABASE', 'Brak konfiguracji ENV w Netlify.')
+      setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
       onToast?.({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji ENV w Netlify.' })
       return
     }
@@ -2273,7 +2325,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       saveTipDebug('PRÓBA ZAPISU', `${fullPayload.match} / ${fullPayload.bet_type} / user_id=${uid}`)
       const firstAttempt = await supabase.from('tips').insert(fullPayload).select('*').single()
       if (!firstAttempt.error) return firstAttempt
-      if (String(firstAttempt.error.message || '').includes('non-DEFAULT value into column \"is_premium\"')) {
+      if (String(firstAttempt.error.message || '').includes('non-DEFAULT value into column "is_premium"')) {
         const noGeneratedPayload = { ...fullPayload }
         delete noGeneratedPayload.is_premium
         const retryWithoutGenerated = await supabase.from('tips').insert(noGeneratedPayload).select('*').single()
@@ -2351,127 +2403,250 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (saveError) {
       const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
       console.error('ADD TIP SAVE ERROR:', saveError)
-      saveTipDebug('NIE DODANO TYPU', cleanMessage); setMessage('❌ ' + cleanMessage)
+      saveTipDebug('NIE DODANO TYPU', cleanMessage)
+      setMessage('❌ ' + cleanMessage)
       onToast?.(getTipErrorToast(cleanMessage))
       return
     }
-    saveTipDebug('DODANO TYP OK', savedTip?.id ? 'id=' + savedTip.id : 'zapis zakończony'); setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
+    saveTipDebug('DODANO TYP OK', savedTip?.id ? 'id=' + savedTip.id : 'zapis zakończony')
+    setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
     if (!premiumAllowed) setDailyTipCount(prev => prev + 1)
     onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
     onTipSaved(savedTip)
   }
 
+  const tagList = form.tagsText.split(',').map(tag => tag.trim()).filter(Boolean)
+  const probabilityDots = Array.from({ length: 14 }, (_, index) => index)
+  const previewDate = (() => {
+    try {
+      const date = form.match_time ? new Date(form.match_time) : new Date('2025-05-25T17:30')
+      return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}, ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    } catch {
+      return '25.05.2025, 17:30'
+    }
+  })()
+  const descriptionLength = form.analysis.length
+  const profile = getUserProfileView(user)
+
   return (
-    <section className="add-page">
-      <UltraPageBanner variant="add" />
-      <div className="page-title">
-        <h1>Dodaj nowy typ</h1>
-        <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
-        <div className={`plan-limit-card ${premiumAllowed ? 'premium' : freeLimitBlocked ? 'blocked' : 'free'}`}>
-          <div className="plan-limit-head">
-            <span>{premiumAllowed ? '👑 Premium/Admin' : freeLimitBlocked ? '🚫 Limit FREE osiągnięty' : '💧 Konto FREE'}</span>
-            <strong>{premiumAllowed ? 'Bez limitu' : `${freeTipsLeft}/5 zostało`}</strong>
+    <section className="add548-page">
+      <div className="add548-shell">
+        <div className="add548-main add548-card">
+          <div className="add548-header">
+            <div>
+              <div className="add548-title-row"><i>◫</i><h1>Dodaj nowy typ</h1></div>
+              <p>Stwórz i opublikuj swój typ bukmacherski. Wykorzystaj AI, statystyki i swoją wiedzę.</p>
+            </div>
+            <button type="button">💡 Wskazówki</button>
           </div>
-          <div className="plan-limit-bar"><i style={{ width: `${premiumAllowed ? 100 : freeLimitPercent}%` }} /></div>
-          <p>{premiumAllowed
-            ? 'Możesz dodawać typy bez limitu i publikować typy premium.'
-            : freeLimitBlocked
-              ? 'Masz maksymalny limit 5 typów dziennie. Przejdź na Premium, aby dodawać dalej.'
-              : `Możesz dodać jeszcze ${freeTipsLeft} typów dzisiaj. Typy premium wymagają konta Premium.`}</p>
-          {!premiumAllowed && <button type="button" className="mini-premium-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Odblokuj Premium</button>}
+
+          <form className="add548-form" onSubmit={(e) => e.preventDefault()}>
+            <div className="add548-grid-two">
+              <div className="add548-field">
+                <label>1. Wybór sportu</label>
+                <select value={form.sport} onChange={e => update('sport', e.target.value)}>
+                  <option>Piłka nożna</option>
+                  <option>Koszykówka</option>
+                  <option>Tenis</option>
+                  <option>Hokej</option>
+                </select>
+              </div>
+              <div className="add548-field">
+                <label>2. Liga</label>
+                <select value={form.league} onChange={e => update('league', e.target.value)}>
+                  <option>Premier League</option>
+                  <option>Liga Mistrzów</option>
+                  <option>La Liga</option>
+                  <option>Serie A</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="add548-grid-two">
+              <div className="add548-field">
+                <label>3. Mecz</label>
+                <div className="add548-match-select">
+                  <div className="add548-team-line"><span className="badge-team">⚽</span><input value={form.team_home} onChange={e => update('team_home', e.target.value)} /><span>vs</span><input value={form.team_away} onChange={e => update('team_away', e.target.value)} /><span className="badge-team red">🛡</span></div>
+                  <small>{previewDate}</small>
+                </div>
+              </div>
+              <div className="add548-field">
+                <label>4. Typ zakładu</label>
+                <select value={form.bet_type} onChange={e => update('bet_type', e.target.value)}>
+                  <option>Wynik końcowy</option>
+                  <option>Podwójna szansa</option>
+                  <option>Powyżej 2.5 gola</option>
+                  <option>Obie drużyny strzelą</option>
+                </select>
+                <select value={form.pick_label} onChange={e => update('pick_label', e.target.value)}>
+                  <option>Manchester City wygra</option>
+                  <option>Arsenal wygra</option>
+                  <option>Remis</option>
+                  <option>Powyżej 2.5 gola</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="add548-grid-two add548-mid-grid">
+              <div className="add548-field">
+                <label>5. Kurs <span>(średni)</span></label>
+                <div className="add548-inline-box add548-odds-row">
+                  <input type="number" step="0.01" value={form.odds} onChange={e => update('odds', e.target.value)} />
+                  <div className="add548-auto-chip"><i>◈</i> Automatycznie <span>✓</span></div>
+                </div>
+              </div>
+              <div className="add548-field">
+                <label>6. Stawka</label>
+                <div className="add548-inline-box add548-stake-row">
+                  <input type="number" step="0.01" value={form.stake} onChange={e => update('stake', e.target.value)} />
+                  <select className="currency"><option>zł</option></select>
+                </div>
+                <div className="add548-chip-row">
+                  {['10 zł', '50 zł', '100 zł', '200 zł', '500 zł'].map(value => (
+                    <button type="button" key={value} className={form.stake === value.replace(' zł', '') ? 'active' : ''} onClick={() => update('stake', value.replace(' zł', ''))}>{value}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="add548-grid-two add548-bottom-top">
+              <div className="add548-field">
+                <label>7. Data i godzina</label>
+                <div className="add548-date-row">
+                  <input type="date" value={form.match_time ? form.match_time.slice(0, 10) : ''} onChange={e => update('match_time', `${e.target.value}T${(form.match_time || '2025-05-25T17:30').slice(11,16)}`)} />
+                  <input type="time" value={form.match_time ? form.match_time.slice(11, 16) : '17:30'} onChange={e => update('match_time', `${(form.match_time || '2025-05-25T17:30').slice(0,10)}T${e.target.value}`)} />
+                </div>
+              </div>
+              <div className="add548-field">
+                <label>8. Opis typu</label>
+                <div className="add548-textarea-wrap">
+                  <textarea value={form.analysis} maxLength="500" onChange={e => update('analysis', e.target.value)} />
+                  <em>{descriptionLength} / 500</em>
+                </div>
+              </div>
+            </div>
+
+            <div className="add548-grid-two add548-panels-row">
+              <div className="add548-field">
+                <label>9. Analiza AI</label>
+                <div className="add548-ai-panel">
+                  <div className="add548-ai-label"><span>AI</span><b>Analiza wygenerowana przez AI</b></div>
+                  <p>Model AI ocenia ten typ jako wartościowy. {form.team_home} ma {Math.max(68, Number(form.ai_probability) - 16)}% szans na wygraną. Kluczowe przewagi w formie, posiadaniu piłki i skuteczności.</p>
+                  <button type="button">Generuj ponownie</button>
+                </div>
+              </div>
+              <div className="add548-field">
+                <label>10. Poziom pewności</label>
+                <div className="add548-confidence-panel">
+                  <div className="add548-confidence-head"><strong>Wysoki</strong><b>{form.ai_probability}%</b></div>
+                  <div className="add548-dot-row">
+                    {probabilityDots.map(dot => <i key={dot} className={dot < Math.round(Number(form.ai_probability) / 8.2) ? 'active' : ''} />)}
+                  </div>
+                  <div className="add548-confidence-scale"><span>Niski</span><span>Bardzo wysoki</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="add548-field add548-full-field">
+              <label>11. Tagi</label>
+              <div className="add548-tags-box">
+                {tagList.map(tag => (
+                  <button type="button" key={tag}>{tag}</button>
+                ))}
+                <button type="button" className="add">+ Dodaj tag</button>
+              </div>
+            </div>
+
+            <div className="add548-footer-row">
+              <div className="add548-field add548-access-field">
+                <label>12. Darmowy / Premium</label>
+                <p>Wybierz widoczność typu dla użytkowników</p>
+                <div className="add548-access-toggle">
+                  <button type="button" className={form.access_type === 'free' ? 'active' : ''} onClick={() => chooseAccessType('free')}>Darmowy</button>
+                  <button type="button" className={form.access_type === 'premium' ? 'active premium' : 'premium'} onClick={() => chooseAccessType('premium')}>Premium 👑</button>
+                </div>
+              </div>
+              <div className="add548-submit-wrap">
+                <button className={`add548-submit ${freeLimitBlocked ? 'limit' : ''}`} type="button" onClick={submitTip} disabled={saving}>
+                  {saving ? 'Zapisywanie...' : freeLimitBlocked ? '🚫 Limit 5/5 — przejdź na Premium' : 'Opublikuj typ ✈'}
+                </button>
+                <small>Twój typ zostanie opublikowany i będzie widoczny dla społeczności.</small>
+              </div>
+            </div>
+
+            <div className="add548-helper-row">
+              <div className={`plan-limit-card ${premiumAllowed ? 'premium' : freeLimitBlocked ? 'blocked' : 'free'}`}>
+                <div className="plan-limit-head">
+                  <span>{premiumAllowed ? '👑 Premium/Admin' : freeLimitBlocked ? '🚫 Limit FREE osiągnięty' : '💧 Konto FREE'}</span>
+                  <strong>{premiumAllowed ? 'Bez limitu' : `${freeTipsLeft}/5 zostało`}</strong>
+                </div>
+                <div className="plan-limit-bar"><i style={{ width: `${premiumAllowed ? 100 : freeLimitPercent}%` }} /></div>
+                <p>{premiumAllowed
+                  ? 'Możesz dodawać typy bez limitu i publikować typy premium.'
+                  : freeLimitBlocked
+                    ? 'Masz maksymalny limit 5 typów dziennie. Przejdź na Premium, aby dodawać dalej.'
+                    : `Możesz dodać jeszcze ${freeTipsLeft} typów dzisiaj. Typy premium wymagają konta Premium.`}</p>
+                {!premiumAllowed && <button type="button" className="mini-premium-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Odblokuj Premium</button>}
+              </div>
+              {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
+            </div>
+          </form>
         </div>
+
+        <aside className="add548-sidebar">
+          <div className="add548-card add548-side-card">
+            <div className="add548-side-head"><h3>Podgląd typu</h3><p>Zobacz jak Twój typ będzie wyglądał po publikacji.</p></div>
+            <div className="add548-preview-card">
+              <div className="add548-preview-top"><span>⚽ PIŁKA NOŻNA &nbsp; • &nbsp; {form.league.toUpperCase()}</span><b>👑 PREMIUM</b></div>
+              <div className="add548-preview-match">
+                <div><i>MC</i><span>{form.team_home}</span></div>
+                <strong>VS</strong>
+                <div><i>ARS</i><span>{form.team_away}</span></div>
+              </div>
+              <div className="add548-preview-date">{previewDate}</div>
+              <div className="add548-preview-metrics">
+                <div><span>TYP</span><b>{form.pick_label}</b></div>
+                <div><span>KURS</span><b>{form.odds}</b></div>
+                <div><span>PEWNOŚĆ</span><b>{form.ai_probability}%</b><i className="ring"><em style={{ '--value': `${form.ai_probability}` }} /></i></div>
+                <div><span>STAWKA</span><b>{Number(form.stake || 0).toFixed(2)} zł</b></div>
+                <div><span>ANALIZA AI</span><b className="ai">AI Wysoka</b></div>
+                <div><span>DATA DODANIA</span><b>24.05.2025, 14:32</b></div>
+              </div>
+            </div>
+            <small className="add548-disclaimer">* To tylko podgląd. Rzeczywisty wygląd może się nieznacznie różnić.</small>
+          </div>
+
+          <div className="add548-card add548-suggestion-card">
+            <div className="add548-suggestion-copy">
+              <div className="add548-sug-title"><strong>Sugestia AI</strong><span>Inteligentna rekomendacja <i>New</i></span></div>
+              <p>AI sugeruje, że to wartościowy typ do publikacji. Podobne typy w tej lidze miały 61% skuteczności. Rozważ dodanie statystyk H2H dla lepszego zasięgu.</p>
+              <button type="button">Zobacz szczegóły analizy</button>
+            </div>
+            <div className="add548-circle-score">{form.ai_probability - 2}%</div>
+          </div>
+
+          <div className="add548-card add548-history-card">
+            <div className="add548-mini-head"><h3>Historia skuteczności</h3><small>Twoje statystyki w wybranej lidze</small><button type="button">Premier League ▾</button></div>
+            <div className="add548-history-grid">
+              <div><b>62%</b><span>Skuteczność</span></div>
+              <div><b>+24.6%</b><span>ROI</span></div>
+              <div><b>18</b><span>Typów</span></div>
+              <div><b>11</b><span>Wygrane</span></div>
+              <div className="chart"><svg viewBox="0 0 140 58"><path d="M6 42L20 46L34 23L48 12L62 37L76 42L90 28L104 18L118 31L134 9" /><path d="M6 42L20 46L34 23L48 12L62 37L76 42L90 28L104 18L118 31L134 9" className="glow" /></svg></div>
+            </div>
+          </div>
+
+          <div className="add548-card add548-reach-card">
+            <div className="add548-mini-head"><h3>Przewidywany zasięg</h3><small>Szacunkowy zasięg Twojego typu <b>Premium boost</b></small></div>
+            <div className="add548-reach-grid">
+              <div><b>2.4K – 3.1K</b><span>Wyświetlenia</span></div>
+              <div><b>180 – 280</b><span>Interakcje</span></div>
+              <div><b>35 – 60</b><span>Polubienia</span></div>
+              <div className="horn">📣</div>
+            </div>
+          </div>
+        </aside>
       </div>
-
-      <form className="tip-form" onSubmit={(e) => e.preventDefault()}>
-        <label>Mecz</label>
-        <div className="match-inputs">
-          <input value={form.team_home} onChange={e => update('team_home', e.target.value)} placeholder="Drużyna 1" />
-          <span>vs</span>
-          <input value={form.team_away} onChange={e => update('team_away', e.target.value)} placeholder="Drużyna 2" />
-        </div>
-
-        <label>Typ</label>
-        <select value={form.bet_type} onChange={e => update('bet_type', e.target.value)}>
-          <option>Powyżej 2.5 gola</option>
-          <option>Obie drużyny strzelą</option>
-          <option>Gospodarze wygrają</option>
-          <option>Goście wygrają</option>
-          <option>Remis</option>
-          <option>1X</option>
-          <option>X2</option>
-        </select>
-
-        <label>Kurs</label>
-        <input type="number" step="0.01" value={form.odds} onChange={e => update('odds', e.target.value)} />
-
-        <div className="two-cols">
-          <div>
-            <label>Liga</label>
-            <input value={form.league} onChange={e => update('league', e.target.value)} />
-          </div>
-          <div>
-            <label>Data i godzina</label>
-            <input type="datetime-local" value={form.match_time} onChange={e => update('match_time', e.target.value)} />
-          </div>
-        </div>
-
-        <label>Opis typu <span>(opcjonalnie)</span></label>
-        <textarea value={form.analysis} onChange={e => update('analysis', e.target.value)} maxLength="300"></textarea>
-        <div className="counter">{form.analysis.length}/300</div>
-
-        <label>Dostęp</label>
-        <div className="access-grid">
-          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => chooseAccessType('free')}>
-            <strong>💧 Darmowy</strong>
-            <span>Twój typ będzie widoczny dla wszystkich</span>
-          </button>
-          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''} ${!premiumAllowed ? 'locked' : ''}`} onClick={() => chooseAccessType('premium')}>
-            <strong>🔒 Premium</strong>
-            <span>Możesz publikować płatne typy premium.</span>
-          </button>
-        </div>
-
-        {!premiumAllowed && (
-          <div className="premium-lock-info warning">
-            🔒 Nie posiadasz konta Premium — publikowanie płatnych typów jest zablokowane.
-            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Aktywuj Premium</button>
-          </div>
-        )}
-
-        {isPremium && premiumAllowed && (
-          <div className="premium-lock-info success">
-            Tryb premium — możesz publikować płatny typ.
-          </div>
-        )}
-
-        {isPremium && (
-          <>
-            <label>Cena pojedynczego typu <span>Ty ustalasz cenę. Platforma pobiera zawsze 20%, Ty dostajesz 80%.</span></label>
-            <input type="number" step="0.01" value={form.price} onChange={e => update('price', e.target.value)} placeholder="np. 29" />
-          </>
-        )}
-
-        <div className="ai-score">
-          <div><span>Szacowane prawdopodobieństwo (AI)</span><b>{form.ai_probability}%</b></div>
-          <input className="range" type="range" min="0" max="100" value={form.ai_probability} onChange={e => update('ai_probability', e.target.value)} />
-          <div className="progress"><i style={{width:`${form.ai_probability}%`}}></i></div>
-          <p>{form.ai_probability >= 70 ? 'Wysokie prawdopodobieństwo powodzenia' : 'Średnie prawdopodobieństwo — warto sprawdzić dane'}</p>
-        </div>
-
-        <label>Tagi <span>(opcjonalnie)</span></label>
-        <input value={form.tagsText} onChange={e => update('tagsText', e.target.value)} placeholder="np. Real Madryt, Bayern, Champions League" />
-
-        <div className="notify-row">
-          <span>Powiadom obserwujących o nowym typie</span>
-          <label className="switch"><input type="checkbox" checked={form.notify_followers} onChange={e => update('notify_followers', e.target.checked)} /><i></i></label>
-        </div>
-
-        {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-
-        <button className={`submit-btn ${freeLimitBlocked ? 'limit-blocked' : ''}`} type="button" onClick={submitTip} disabled={saving}>
-          {saving ? 'Zapisywanie...' : freeLimitBlocked ? '🚫 Limit 5/5 — przejdź na Premium' : '✈ Dodaj typ'}
-        </button>
-      </form>
     </section>
   )
 }
@@ -3627,416 +3802,200 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const [sport, setSport] = useState('all')
-  const [league, setLeague] = useState('all')
-  const [betType, setBetType] = useState('all')
-  const [timeRange, setTimeRange] = useState('all')
-  const [mode, setMode] = useState('topvalue')
-  const [minValue, setMinValue] = useState(5)
-  const [minOdds, setMinOdds] = useState(1.35)
-  const [minProbability, setMinProbability] = useState(60)
-  const [analysisTip, setAnalysisTip] = useState(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (liveGenerating || settleGenerating || loading) return
-      if (typeof onGenerateLive === 'function') {
-        onGenerateLive({ silent: true, auto: true })
-      } else if (typeof onRefresh === 'function') {
-        onRefresh()
-      }
-    }, 10 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [onGenerateLive, onRefresh, liveGenerating, settleGenerating, loading])
-
-  const aiTips = (tips || [])
-    .filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
-    .slice()
-    .sort((a, b) => new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at))
-
-  const normalizeSport = (value) => String(value || 'football').toLowerCase()
-  const normalizeLeague = (tip) => String(tip.league_name || tip.league || 'Unknown')
-  const normalizePick = (tip) => String(tip.pick || tip.selection || tip.bet_type || tip.prediction || tip.type || 'AI Pick')
-  const normalizeMarket = (tip) => String(tip.market || tip.bet_type || tip.type || 'AI')
-  const valueOf = (tip) => Number(tip.value_score ?? tip.value ?? 0) || 0
-  const probabilityOf = (tip) => Number(tip.model_probability ?? tip.probability ?? tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0) || 0
-  const qualityBadge = (tip) => {
-    const v = valueOf(tip)
-    const p = probabilityOf(tip)
-    const odds = Number(tip.odds || 0)
-    if (v >= 12 && p >= 68 && odds >= 1.55) return { icon: '💎', text: 'DIAMOND', cls: 'diamond' }
-    if (v >= 8 && p >= 64) return { icon: '🔥', text: 'HOT VALUE', cls: 'hot' }
-    if (v >= 5 && p >= 60) return { icon: '⭐', text: 'VALUE', cls: 'star' }
-    return { icon: '⚪', text: 'LOW', cls: 'low' }
-  }
-  const isStrongValue = (tip) => valueOf(tip) >= Number(minValue) && probabilityOf(tip) >= Number(minProbability) && Number(tip.odds || 0) >= Number(minOdds)
-  const stake = 100
-  const resultOf = (tip) => normalizeResult(tip.result || tip.status)
-  const profitOf = (tip) => {
-    const stored = Number(tip.profit)
-    if (Number.isFinite(stored) && stored !== 0) return stored
-    const res = resultOf(tip)
-    const odds = Number(tip.odds || 0)
-    if (res === 'win') return Math.round((odds - 1) * stake)
-    if (res === 'loss') return -stake
-    return 0
-  }
-  const isSettled = (tip) => ['win', 'loss', 'void'].includes(resultOf(tip))
-  const isLiveMatch = (tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && !['NS','NOT_STARTED','FT','AET','PEN','FINISHED','MATCH FINISHED'].includes(liveStatus) && (status === 'live' || ['LIVE','1H','2H','HT'].includes(liveStatus) || Number(tip.live_minute || 0) > 0)
-  }
-  const isUpcomingMatch = (tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    const liveStatus = String(tip.live_status || '').toUpperCase()
-    return !isSettled(tip) && !isLiveMatch(tip) && (status === 'pending' || ['NS','NOT_STARTED',''].includes(liveStatus))
-  }
-  const scoreText = (tip) => {
-    const h = tip.live_score_home ?? tip.final_score_home ?? tip.home_score ?? null
-    const a = tip.live_score_away ?? tip.final_score_away ?? tip.away_score ?? null
-    if (h === null || a === null || h === undefined || a === undefined) return '-:-'
-    return h + ':' + a
-  }
-  const kickoffLabel = (tip) => {
-    const raw = tip.kickoff_time || tip.match_time || tip.event_time || tip.created_at
-    const d = new Date(raw)
-    if (Number.isNaN(d.getTime())) return 'czas nieznany'
-    return d.toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
-  }
-  const resultLabel = (tip) => {
-    const res = resultOf(tip)
-    if (res === 'win') return { text: 'WYGRANA', icon: '✅', cls: 'win' }
-    if (res === 'loss') return { text: 'PRZEGRANA', icon: '❌', cls: 'loss' }
-    if (res === 'void') return { text: 'ZWROT', icon: '↩️', cls: 'void' }
-    if (isLiveMatch(tip)) return { text: 'LIVE', icon: '🔴', cls: 'live' }
-    return { text: 'SOON', icon: '⏱', cls: 'pending' }
-  }
-  const inTimeRange = (tip) => {
-    if (timeRange === 'all') return true
-    const d = new Date(tip.kickoff_time || tip.match_time || tip.created_at)
-    if (Number.isNaN(d.getTime())) return true
-    const now = new Date()
-    const diffDays = (now - d) / (1000 * 60 * 60 * 24)
-    if (timeRange === 'week') return diffDays <= 7
-    if (timeRange === 'month') return diffDays <= 31
-    if (timeRange === 'year') return d.getFullYear() === now.getFullYear()
-    return true
-  }
-
-  const liveTips = aiTips.filter(isLiveMatch)
-  const upcomingTips = aiTips.filter(isUpcomingMatch).sort((a, b) => new Date(a.kickoff_time || a.match_time || a.created_at) - new Date(b.kickoff_time || b.match_time || b.created_at))
-  const settledTips = aiTips.filter(isSettled)
-  const topValueTips = aiTips.filter(t => !isSettled(t) && isStrongValue(t)).sort((a, b) => valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))
-
-  const filtered = aiTips.filter((tip) => {
-    if (mode === 'topvalue' && (!isStrongValue(tip) || isSettled(tip))) return false
-    if (mode === 'live' && (!isLiveMatch(tip) || !isStrongValue(tip))) return false
-    if (mode === 'upcoming' && (!isUpcomingMatch(tip) || !isStrongValue(tip))) return false
-    if (mode === 'settled' && !isSettled(tip)) return false
-    if (sport !== 'all' && normalizeSport(tip.sport) !== sport) return false
-    if (league !== 'all' && normalizeLeague(tip) !== league) return false
-    if (betType !== 'all' && normalizePick(tip) !== betType) return false
-    if (!inTimeRange(tip)) return false
-    return true
-  }).sort((a, b) => (mode === 'settled' ? new Date(b.kickoff_time || b.match_time || b.created_at) - new Date(a.kickoff_time || a.match_time || a.created_at) : valueOf(b) - valueOf(a) || probabilityOf(b) - probabilityOf(a))).slice(0, mode === 'topvalue' ? 20 : 30)
-
-  const settled = settledTips
-  const wins = settled.filter(t => resultOf(t) === 'win').length
-  const losses = settled.filter(t => resultOf(t) === 'loss').length
-  const pushes = settled.filter(t => resultOf(t) === 'void').length
-  const totalProfit = Math.round(settled.reduce((sum, tip) => sum + profitOf(tip), 0))
-  const winrate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0
-  const roi = settled.length ? Math.round((totalProfit / (settled.length * stake)) * 100) : 0
-  const avgConfidence = filtered.length ? Math.round(filtered.reduce((sum, tip) => sum + getAiConfidence(tip), 0) / filtered.length) : 0
-
-  const sports = ['football', ...Array.from(new Set(aiTips.map(t => normalizeSport(t.sport)).filter(s => s && s !== 'football')))]
-  const leagues = Array.from(new Set(aiTips.map(normalizeLeague).filter(Boolean))).sort()
-  const betTypes = Array.from(new Set(aiTips.map(normalizePick).filter(Boolean))).sort()
-
-  const sportCards = [
-    { key: 'all', icon: '▦', title: 'All Sports', subtitle: `${aiTips.length} picks` },
-    { key: 'football', icon: '⚽', title: 'Football', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'football').length} picks` },
-    { key: 'basketball', icon: '🏀', title: 'Basketball', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'basketball').length} picks` },
-    { key: 'tennis', icon: '🎾', title: 'Tennis', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'tennis').length} picks` },
-    { key: 'hockey', icon: '🏒', title: 'Ice Hockey', subtitle: `${aiTips.filter(t => normalizeSport(t.sport).includes('hockey')).length} picks` },
-    { key: 'volleyball', icon: '🏐', title: 'Volleyball', subtitle: `${aiTips.filter(t => normalizeSport(t.sport) === 'volleyball').length} picks` },
+  const heroStats = [
+    ['96.3%', 'Skuteczność modeli'],
+    ['+18.7%', 'Śr. ROI (30 dni)'],
+    ['12,847', 'Typów wygenerowanych'],
+    ['7', 'Aktywnych modeli']
   ]
 
-  const leagueMap = settledTips.reduce((acc, tip) => {
-    const name = normalizeLeague(tip)
-    if (!acc[name]) acc[name] = { name, picks: 0, wins: 0, losses: 0, profit: 0 }
-    acc[name].picks += 1
-    const res = resultOf(tip)
-    if (res === 'win') acc[name].wins += 1
-    if (res === 'loss') acc[name].losses += 1
-    acc[name].profit += profitOf(tip)
-    return acc
-  }, {})
-  const leagueRows = Object.values(leagueMap).sort((a, b) => b.picks - a.picks).slice(0, 8)
+  const filterPills = [
+    ['Wszystkie', '32', true],
+    ['⚽ Piłka nożna', '', false],
+    ['🎾 Tenis', '', false],
+    ['🏀 Koszykówka', '', false],
+    ['🔴 Na żywo', '', false],
+    ['💎 Value', '', false],
+    ['👑 Premium', '', false],
+  ]
 
-  const oddsRanges = [
-    { label: '1.01 - 1.50', test: o => o > 0 && o < 1.5 },
-    { label: '1.51 - 2.00', test: o => o >= 1.5 && o < 2 },
-    { label: '2.01 - 2.50', test: o => o >= 2 && o < 2.5 },
-    { label: '2.51 - 3.00', test: o => o >= 2.5 && o < 3 },
-    { label: '3.01+', test: o => o >= 3 },
-  ].map((range) => {
-    const rows = settledTips.filter(t => range.test(Number(t.odds || 0)))
-    const rWins = rows.filter(t => resultOf(t) === 'win').length
-    const rLosses = rows.filter(t => resultOf(t) === 'loss').length
-    const max = Math.max(1, rWins, rLosses)
-    return { ...range, wins: rWins, losses: rLosses, winH: Math.max(10, Math.round((rWins / max) * 100)), lossH: Math.max(10, Math.round((rLosses / max) * 100)) }
-  })
+  const aiRows = [
+    {
+      league: 'Liga Mistrzów', time: 'Dziś, 21:00', home: 'Real Madryt', away: 'Bayern Monachium',
+      pickTitle: 'Powyżej 2.5 gola', market: 'Suma goli', odds: '1.72', confidence: 85, roi: '+14.2%',
+      homeBadge: 'RM', awayBadge: 'BM', color: 'gold'
+    },
+    {
+      league: 'Premier League', time: 'Jutro, 16:00', home: 'Manchester City', away: 'Arsenal',
+      pickTitle: 'Manchester City', market: 'Wygra mecz', odds: '1.58', confidence: 78, roi: '+9.6%',
+      homeBadge: 'MCI', awayBadge: 'ARS', color: 'sky'
+    },
+    {
+      league: 'ATP Rzym', time: 'Jutro, 13:30', home: 'Jannik Sinner', away: 'Daniil Medvedev',
+      pickTitle: 'Jannik Sinner', market: 'Wygra mecz', odds: '1.44', confidence: 74, roi: '+8.3%',
+      homeBadge: 'JS', awayBadge: 'DM', color: 'green'
+    },
+    {
+      league: 'NBA', time: 'Dziś, 02:30', home: 'Boston Celtics', away: 'Miami Heat',
+      pickTitle: 'Powyżej 218.5', market: 'Suma punktów', odds: '1.90', confidence: 70, roi: '+11.1%',
+      homeBadge: 'BOS', awayBadge: 'MIA', color: 'red'
+    }
+  ]
 
-  const recent = settledTips.slice(0, 20)
-  const recentResults = recent.map(resultOf)
-  const current = recentResults[0] || 'pending'
-  let currentCount = 0
-  for (const r of recentResults) { if (r === current) currentCount += 1; else break }
-  const maxStreakFor = (type) => recentResults.reduce((acc, r) => {
-    if (r === type) { acc.cur += 1; acc.best = Math.max(acc.best, acc.cur) } else { acc.cur = 0 }
-    return acc
-  }, { cur: 0, best: 0 }).best
+  const trends = [
+    ['Powyżej 2.5 gola', '+24.3%'],
+    ['Obie drużyny strzelą', '+18.7%'],
+    ['Zwycięzca meczu (1)', '+13.9%'],
+    ['Handicap +1.5', '+9.8%']
+  ]
 
-  const donutWin = Math.max(0, Math.min(100, winrate))
-  const donutLoss = (wins + losses) ? Math.round((losses / (wins + losses)) * 100) : 0
-
-  const statNumber = (value, suffix = '') => {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return '—'
-    return `${Math.round(n * 10) / 10}${suffix}`
-  }
-  const pct = (value) => statNumber(value, '%')
-  const analysisVerdict = (tip) => {
-    if (!tip) return 'AI'
-    if (isLiveMatch(tip)) return 'LIVE VALUE'
-    if (isUpcomingMatch(tip)) return 'PRE VALUE'
-    return resultLabel(tip).text
-  }
+  const ringStyle = (value) => ({ background: `conic-gradient(#12dfc8 0 ${value}%, rgba(255,255,255,.08) ${value}% 100%)` })
 
   return (
-    <section className="ai-premium-dashboard">
-      <UltraPageBanner variant="aiPicks"><button type="button" onClick={onRefresh} disabled={loading}>↻ Refresh</button><button type="button" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button><button type="button" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button></UltraPageBanner>
-      <header className="ai-premium-header">
-        <div className="ai-brand-title">
-          <span className="ai-logo-mark">▟</span>
-          <div>
-            <h1>AI Picks Dashboard</h1>
-            <p>TOP VALUE, LIVE, Zaraz startują oraz Zakończone/Rozliczone — słabe typy są ukryte</p>
-          </div>
-        </div>
-        <div className="ai-header-actions">
-          <span className="ai-live-dot">● Auto refresh co 10 min</span>
-          <button onClick={onRefresh} disabled={loading}>↻ Refresh</button>
-          <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button>
-          <button className="ai-live-action settle" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button>
-        </div>
-      </header>
-
-      <div className="ai-control-row ai-mode-row">
-        <button className={mode === 'topvalue' ? 'active' : ''} onClick={() => setMode('topvalue')}>💎 TOP VALUE ({topValueTips.length})</button>
-        <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>🔴 LIVE teraz ({liveTips.filter(isStrongValue).length})</button>
-        <button className={mode === 'upcoming' ? 'active' : ''} onClick={() => setMode('upcoming')}>⏱ Zaraz startują ({upcomingTips.filter(isStrongValue).length})</button>
-        <button className={mode === 'settled' ? 'active' : ''} onClick={() => setMode('settled')}>✅ Zakończone / rozliczone ({settledTips.length})</button>
-      </div>
-
-      <div className="ai-value-filter-panel">
-        <label>Minimalny value <b>{minValue}+ pp</b><input type="range" min="0" max="20" value={minValue} onChange={e => setMinValue(Number(e.target.value))} /></label>
-        <label>Minimalny kurs <b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.00" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
-        <label>Minimalne prawdopodobieństwo <b>{minProbability}%</b><input type="range" min="45" max="85" value={minProbability} onChange={e => setMinProbability(Number(e.target.value))} /></label>
-        <div><strong>{filtered.length}</strong><span>mocnych typów po filtrze. Reszta jest ukryta.</span></div>
-      </div>
-
-      <div className="ai-sports-filter-bar">
-        {sportCards.map(card => (
-          <button key={card.key} className={sport === card.key ? 'active' : ''} onClick={() => setSport(card.key)}>
-            <span>{card.icon}</span>
-            <b>{card.title}</b>
-            <small>{card.subtitle}</small>
-          </button>
-        ))}
-        <button className="ai-more-sports"><span>＋</span><b>More</b><small>Other sports</small></button>
-      </div>
-
-      <div className="ai-control-row">
-        <select value={league} onChange={e => setLeague(e.target.value)}><option value="all">All Leagues</option>{leagues.map(l => <option key={l} value={l}>{l}</option>)}</select>
-        <select value={betType} onChange={e => setBetType(e.target.value)}><option value="all">All Bet Types</option>{betTypes.map(t => <option key={t} value={t}>{t}</option>)}</select>
-        <select value={timeRange} onChange={e => setTimeRange(e.target.value)}><option value="all">All Time</option><option value="year">This Year</option><option value="month">This Month</option><option value="week">This Week</option></select>
-      </div>
-
-      <div className="ai-kpi-grid">
-        <div className="ai-kpi-card profit"><span>Total Profit</span><b>{totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pl-PL')} PLN</b><small>{settled.length ? `${roi}% from total stake` : 'No settled AI picks yet'}</small><i /></div>
-        <div className="ai-kpi-card"><span>Win Rate</span><b>{winrate}%</b><small>{wins} wins / {settled.length || 0} total</small><i className="blue" /></div>
-        <div className="ai-kpi-card roi"><span>Rozliczone</span><b>{settledTips.length}</b><small>{pushes} zwrotów, {losses} przegranych</small><i className="purple" /></div>
-        <div className="ai-kpi-card picks"><span>Aktywne mecze</span><b>{liveTips.length + upcomingTips.length}</b><small>{liveTips.length} LIVE / {upcomingTips.length} zaraz startuje</small><i className="orange" /></div>
-      </div>
-
-      <div className="ai-analytics-grid">
-        <div className="ai-panel ai-donut-panel">
-          <h3>Win / Loss Distribution</h3>
-          <div className="ai-donut-wrap">
-            <div className="ai-donut" style={{ '--win': `${donutWin}%`, '--loss': `${donutLoss}%` }}><strong>{settled.length}</strong><span>Total</span></div>
-            <div className="ai-donut-legend">
-              <p><i className="green"/> Wins <b>{wins} ({winrate}%)</b></p>
-              <p><i className="red"/> Losses <b>{losses}</b></p>
-              <p><i className="gray"/> Pushes <b>{pushes}</b></p>
-            </div>
-          </div>
-        </div>
-        <div className="ai-panel ai-odds-panel">
-          <h3>Performance by Odds Range <span><i className="green"/> Win Rate <i className="red"/> Loss Rate</span></h3>
-          <div className="ai-odds-chart">
-            {oddsRanges.map(r => <div className="ai-odds-col" key={r.label}><div><i className="green" style={{height:`${r.winH}%`}}/><i className="red" style={{height:`${r.lossH}%`}}/></div><small>{r.label}</small></div>)}
-          </div>
-        </div>
-      </div>
-
-      <div className="ai-lower-grid">
-        <div className="ai-panel ai-streak-panel">
-          <h3>Streak Analysis</h3>
-          <p><span>Current Streak</span><b className={current === 'loss' ? 'danger-text' : 'success-text'}>{currentCount || 0} {current === 'loss' ? 'Losses' : current === 'win' ? 'Wins' : 'Pending'}</b></p>
-          <p><span>Best Streak</span><b>{maxStreakFor('win')} Wins</b></p>
-          <p><span>Worst Streak</span><b className="danger-text">{maxStreakFor('loss')} Losses</b></p>
-          <p><span>Average Confidence</span><b>{avgConfidence}%</b></p>
-        </div>
-        <div className="ai-panel ai-form-panel">
-          <h3>Recent Form (Last 20)</h3>
-          <div className="ai-form-badges">
-            {recentResults.length ? recentResults.map((r, i) => <span key={i} className={r === 'win' ? 'w' : r === 'loss' ? 'l' : 'p'}>{r === 'win' ? 'W' : r === 'loss' ? 'L' : 'P'}</span>) : <em>No settled AI form yet</em>}
-          </div>
-        </div>
-        <div className="ai-panel ai-league-performance">
-          <h3>Performance by League</h3>
-          <div className="ai-league-table">
-            <div><b>League</b><b>Picks</b><b>Win Rate</b><b>Profit</b><b>ROI</b></div>
-            {leagueRows.length ? leagueRows.map(row => {
-              const settledCount = row.wins + row.losses
-              const wr = settledCount ? Math.round((row.wins / settledCount) * 100) : 0
-              const rowRoi = row.picks ? Math.round((row.profit / (row.picks * stake)) * 100) : 0
-              return <div key={row.name}><span>{row.name}</span><span>{row.picks}</span><span>{wr}%</span><span className={row.profit < 0 ? 'danger-text' : 'success-text'}>{row.profit >= 0 ? '+' : ''}{Math.round(row.profit)} PLN</span><span className={rowRoi < 0 ? 'danger-text' : 'success-text'}>{rowRoi >= 0 ? '+' : ''}{rowRoi}%</span></div>
-            }) : <div><span>No AI leagues yet</span><span>-</span><span>-</span><span>-</span><span>-</span></div>}
-          </div>
-        </div>
-      </div>
-
-      <div className="ai-panel ai-recent-picks-panel">
-        <h3>{mode === 'topvalue' ? 'TOP VALUE — najmocniejsze realne typy LIVE + PRE' : mode === 'live' ? 'LIVE teraz — tylko mecze trwające' : mode === 'upcoming' ? 'Zaraz startują — tylko mecze PRE' : 'Zakończone / rozliczone mecze'}</h3>
-        {filtered.length ? filtered.slice(0, 12).map(tip => {
-          const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Home')
-          const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Away')
-          const res = resultOf(tip)
-          const p = profitOf(tip)
-          const q = qualityBadge(tip)
-          return <div className="ai-recent-pick-row ai-value-row" key={tip.id}>
-            <div><b>{home} vs {away}</b><small>{normalizeLeague(tip)}{mode === 'settled' ? ' • FT • wynik ' + scoreText(tip) + ' • ' + kickoffLabel(tip) : isLiveMatch(tip) ? ' • LIVE ' + (tip.live_minute || '-') + "'" + ' • ' + scoreText(tip) : ' • PRE • start ' + kickoffLabel(tip)}</small></div>
-            <div><b>{normalizePick(tip)}</b><small>{normalizeMarket(tip)} • REAL AI PRO</small></div>
-            <div><b>{Number(tip.odds || 0).toFixed(2)}</b><small>Odds</small></div>
-            <div><b className="success-text">{probabilityOf(tip).toFixed(0)}%</b><small>Probability</small></div>
-            <div><b className={valueOf(tip) >= 5 ? 'success-text' : 'danger-text'}>{valueOf(tip).toFixed(1)} pp</b><small>Value</small></div>
-            <div><span className={`ai-quality-badge ${q.cls}`}>{q.icon} {q.text}</span></div>
-            <div><b className={p < 0 ? 'danger-text' : 'success-text'}>{p >= 0 ? '+' : ''}{Math.round(p)} PLN</b><small>Profit</small></div>
-            <div><span className={`ai-result-pill ${res} ${resultLabel(tip).cls}`}>{resultLabel(tip).icon} {resultLabel(tip).text}</span></div>
-            <div><button className="ai-analysis-button" onClick={() => setAnalysisTip(tip)}>Analiza</button></div>
-          </div>
-        }) : <div className="ai-empty-state"><strong>{mode === 'settled' ? 'Brak zakończonych/rozliczonych meczów' : 'Brak typów AI'}</strong><span>{mode === 'settled' ? 'Kliknij Rozlicz zakończone po meczach FT. Tutaj pojawi się wynik, profit i ikonka wygrana/przegrana/zwrot.' : 'Pokazujemy tylko realne mecze z API-Football: LIVE teraz albo startujące w najbliższych godzinach. Kliknij Skanuj REAL AI PRO i sprawdź API_FOOTBALL_KEY w Netlify ENV.'}</span></div>}
-      </div>
-
-      {analysisTip && (() => {
-        const home = analysisTip.team_home || analysisTip.home_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[0] : 'Home')
-        const away = analysisTip.team_away || analysisTip.away_team || (analysisTip.match_name ? String(analysisTip.match_name).split(' vs ')[1] : 'Away')
-        const hdaHome = Math.max(0, Math.min(100, Math.round(probabilityOf(analysisTip))))
-        const hdaDraw = Math.max(0, Math.min(100, Math.round(100 - hdaHome - 20)))
-        const hdaAway = Math.max(0, Math.min(100, 100 - hdaHome - hdaDraw))
-        const rows = [
-          ['Forma gospodarzy', statNumber(analysisTip.form_home_score)],
-          ['Forma gości', statNumber(analysisTip.form_away_score)],
-          ['xG gospodarzy', statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)],
-          ['xG gości', statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)],
-          ['Strzały', `${statNumber(analysisTip.shots_home ?? analysisTip.shots_total_home)} : ${statNumber(analysisTip.shots_away ?? analysisTip.shots_total_away)}`],
-          ['Strzały celne', `${statNumber(analysisTip.shots_on_home)} : ${statNumber(analysisTip.shots_on_away)}`],
-          ['Posiadanie', `${pct(analysisTip.possession_home)} : ${pct(analysisTip.possession_away)}`],
-          ['Rzuty rożne', `${statNumber(analysisTip.corners_home)} : ${statNumber(analysisTip.corners_away)}`],
-          ['Groźne ataki', `${statNumber(analysisTip.dangerous_attacks_home)} : ${statNumber(analysisTip.dangerous_attacks_away)}`],
-          ['BTTS H2H', pct(analysisTip.h2h_btts_rate)],
-          ['Over 2.5 H2H', pct(analysisTip.h2h_over25_rate)],
-          ['Śr. gole H2H', statNumber(analysisTip.h2h_avg_goals)]
-        ]
-        return (
-          <div className="ai-analysis-overlay" onClick={() => setAnalysisTip(null)}>
-            <div className="ai-analysis-modal" onClick={e => e.stopPropagation()}>
-              <button className="ai-analysis-close" onClick={() => setAnalysisTip(null)}>×</button>
-              <h3>Analiza meczu</h3>
-              <div className="ai-analysis-match-card">
-                <h2>{home} vs {away}</h2>
-                <p>{normalizeLeague(analysisTip)} • {isLiveMatch(analysisTip) ? `LIVE ${analysisTip.live_minute || '-'}' • wynik ${scoreText(analysisTip)}` : `start ${kickoffLabel(analysisTip)}`}</p>
-                <div className="ai-analysis-tags"><span>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</span><span>{analysisVerdict(analysisTip)}</span><span>{normalizeMarket(analysisTip)}</span></div>
-                <div className="ai-analysis-top-grid">
-                  <div><small>Typ AI</small><b>{normalizePick(analysisTip)}</b></div>
-                  <div><small>Prawdopodobieństwo</small><b>{probabilityOf(analysisTip).toFixed(0)}%</b></div>
-                  <div><small>Kurs</small><b>{Number(analysisTip.odds || 0).toFixed(2)}</b></div>
-                  <div><small>Value</small><b>{valueOf(analysisTip).toFixed(1)} pp</b></div>
-                </div>
-              </div>
-              <div className="ai-analysis-card">
-                <h4>Rozkład H / D / A</h4>
-                {[['H', hdaHome], ['D', hdaDraw], ['A', hdaAway]].map(([label, value]) => <p key={label}><span>{label}</span><i><em style={{width:`${value}%`}} /></i><b>{value}%</b></p>)}
-              </div>
-              <div className="ai-analysis-card">
-                <h4>Statystyki modelu</h4>
-                <div className="ai-analysis-stats-grid">{rows.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div>
-              </div>
-              <div className="ai-analysis-card ai-analysis-story">
-                <h4>Pełna analiza AI</h4>
-                <div className="ai-analysis-pro-summary">
-                  <div>
-                    <span>Forma</span>
-                    <b>{home}</b>
-                    <p>{statNumber(analysisTip.form_home_score)} pkt/m • xG {statNumber(analysisTip.xg_home ?? analysisTip.xg_home_proxy)}</p>
+    <section className="ai549-page">
+      <div className="ai549-shell">
+        <div className="ai549-main">
+          <div className="ai549-hero">
+            <div className="ai549-hero-copy">
+              <h1>Typy <span>AI</span></h1>
+              <h2>Inteligentne typy oparte na uczeniu maszynowym.</h2>
+              <p>Modele AI analizują tysiące danych, aby wskazać najlepsze okazje.</p>
+              <div className="ai549-hero-stats">
+                {heroStats.map(([value, label]) => (
+                  <div className="ai549-stat-card" key={label}>
+                    <strong>{value}</strong>
+                    <span>{label}</span>
                   </div>
-                  <div>
-                    <span>Forma</span>
-                    <b>{away}</b>
-                    <p>{statNumber(analysisTip.form_away_score)} pkt/m • xG {statNumber(analysisTip.xg_away ?? analysisTip.xg_away_proxy)}</p>
-                  </div>
-                  <div>
-                    <span>Value</span>
-                    <b className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip).toFixed(1)} pp</b>
-                    <p>Implied {Number(analysisTip.odds || 0) > 0 ? (100 / Number(analysisTip.odds || 1)).toFixed(1) : '0.0'}% • Model {probabilityOf(analysisTip).toFixed(0)}%</p>
-                  </div>
-                </div>
-
-                <div className="ai-analysis-readable">
-                  <h5>Wniosek modelu</h5>
-                  <p>{analysisTip.model_reason || analysisTip.ai_analysis || analysisTip.analysis || getAiAnalysis(analysisTip)}</p>
-                </div>
-
-                <div className="ai-analysis-bullets">
-                  <div>
-                    <b>Dlaczego ten typ?</b>
-                    <ul>
-                      <li>Model porównuje formę, tempo meczu, H2H, xG/proxy, value score i kurs.</li>
-                      <li>Wybrany rynek: <strong>{normalizeMarket(analysisTip)}</strong>.</li>
-                      <li>Typ AI: <strong>{normalizePick(analysisTip)}</strong>.</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <b>Ocena jakości</b>
-                    <ul>
-                      <li>Badge jakości: <strong>{qualityBadge(analysisTip).icon} {qualityBadge(analysisTip).text}</strong>.</li>
-                      <li>Kolor value: <strong className={valueOf(analysisTip) >= 0 ? 'success-text' : 'danger-text'}>{valueOf(analysisTip) >= 0 ? 'zielony dodatni value' : 'czerwony ujemny value'}</strong>.</li>
-                      <li>To analiza modelu AI, nie porada inwestycyjna.</li>
-                    </ul>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
+            <div className="ai549-hero-art" aria-hidden="true">
+              <div className="ai549-art-brain">🧠</div>
+              <div className="ai549-art-arrow">↗</div>
+              <div className="ai549-art-bars">
+                <i /><i /><i /><i />
+              </div>
+              <div className="ai549-art-glow" />
+            </div>
           </div>
-        )
-      })()}
+
+          <div className="ai549-filter-bar">
+            <div className="ai549-pill-group">
+              {filterPills.map(([label, count, active]) => (
+                <button type="button" className={active ? 'active' : ''} key={label}>
+                  <span>{label}</span>
+                  {count ? <b>{count}</b> : null}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="ai549-sort-btn">Sortuj: Najlepsze ▾</button>
+          </div>
+
+          <div className="ai549-list">
+            {aiRows.map((item) => (
+              <article className="ai549-row-card" key={item.home + item.away}>
+                <div className="ai549-match-col">
+                  <div className="ai549-meta">⚽ {item.league} • {item.time}</div>
+                  <div className="ai549-team"><i className={`badge ${item.color}`}>{item.homeBadge}</i><span>{item.home}</span></div>
+                  <div className="ai549-vs">vs</div>
+                  <div className="ai549-team"><i className={`badge ${item.color} away`}>{item.awayBadge}</i><span>{item.away}</span></div>
+                </div>
+
+                <div className="ai549-pick-col">
+                  <label>Typ AI</label>
+                  <strong>{item.pickTitle}</strong>
+                  <span>{item.market}</span>
+                  <label>Kurs</label>
+                  <b>{item.odds}</b>
+                </div>
+
+                <div className="ai549-confidence-col">
+                  <div className="ai549-conf-ring" style={ringStyle(item.confidence)}>
+                    <div>
+                      <strong>{item.confidence}%</strong>
+                      <span>Pewność AI</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ai549-level-col">
+                  <label>Poziom pewności</label>
+                  <div className="ai549-bar"><i style={{ width: `${item.confidence}%` }} /></div>
+                  <strong>{item.confidence}%</strong>
+                  <label>Przewidywane ROI</label>
+                  <b>{item.roi}</b>
+                </div>
+
+                <div className="ai549-actions-col">
+                  <button type="button" className="ghost">Zobacz analizę</button>
+                  <button type="button" className="primary">🛒 Dodaj do kuponu</button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="ai549-pagination">
+            <button type="button">‹</button>
+            <button type="button" className="active">1</button>
+            <button type="button">2</button>
+            <button type="button">3</button>
+            <button type="button">…</button>
+            <button type="button">8</button>
+            <button type="button">›</button>
+          </div>
+        </div>
+
+        <aside className="ai549-side">
+          <article className="ai549-side-card ai549-model-card">
+            <div className="ai549-side-title"><h3>⭐ Model dnia</h3></div>
+            <div className="ai549-model-body">
+              <div className="ai549-model-icon">🧠</div>
+              <div>
+                <div className="ai549-model-name">AI Pro 2.0 <span>PREMIUM</span></div>
+                <p>Najlepszy model na dziś</p>
+                <div className="ai549-model-score"><span>Skuteczność (30 dni)</span><b>97.2%</b></div>
+              </div>
+            </div>
+            <button type="button">Zobacz szczegóły modelu</button>
+          </article>
+
+          <article className="ai549-side-card">
+            <div className="ai549-side-title"><h3>⚡ Najwyższa pewność</h3></div>
+            <div className="ai549-high-card">
+              <div className="ai549-high-match"><span>Real Madryt</span><b>vs</b><span>Bayern</span></div>
+              <div className="ai549-high-stats">
+                <div><label>Pewność</label><strong>85%</strong></div>
+                <div><label>Kurs</label><strong>1.72</strong></div>
+              </div>
+              <button type="button">Zobacz analizę</button>
+            </div>
+          </article>
+
+          <article className="ai549-side-card">
+            <div className="ai549-side-title"><h3>📊 Trendy AI <span>(30 dni)</span></h3></div>
+            <div className="ai549-trend-list">
+              {trends.map(([name, value]) => (
+                <div className="ai549-trend-row" key={name}>
+                  <div className="ai549-trend-dot" />
+                  <span>{name}</span>
+                  <b>{value}</b>
+                </div>
+              ))}
+            </div>
+            <button type="button">Zobacz wszystkie trendy</button>
+          </article>
+
+          <article className="ai549-side-card ai549-info-card">
+            <div className="ai549-side-title"><h3>🤖 Jak działają Typy AI?</h3></div>
+            <p>Nasze modele analizują statystyki, formę drużyn, kontuzje, warunki meczowe i tysiące innych czynników, aby wskazać typy z najwyższą wartością oczekiwaną.</p>
+            <button type="button">Dowiedz się więcej</button>
+          </article>
+        </aside>
+      </div>
     </section>
   )
 }
+
 
 function DashboardFixedView({ user = null, wallet = 0, tokenBalance = 0, onNavigate = () => {}, onAddTip = () => {} }) {
   const username = getProfileUsername(user) || 'smilitytv'
@@ -5643,168 +5602,136 @@ function TipsterPricingSettings({ user, onToast }) {
 }
 
 function MarketplaceView({ user = null, onNavigate = () => {} }) {
-  const profile = getUserProfileView(user)
-  const username = profile?.username || 'smilitytv'
+  const categories = [
+    ['Wszystkie', '324', '▦', true],
+    ['Piłka nożna', '212', '⚽', false],
+    ['Tenis', '45', '🎾', false],
+    ['Koszykówka', '28', '🏀', false],
+    ['Hokej', '16', '🏒', false],
+    ['Esport', '23', '🎮', false]
+  ]
   const sellers = [
-    { name: 'GoalHunter', followers: '381 obserwujących', rating: '4.9', roi: '15.6%', win: '67%', badge: 'PREMIUM', avatar: '⚽' },
-    { name: 'StatKing', followers: '512 obserwujących', rating: '5.0', roi: '18.2%', win: '71%', badge: 'PREMIUM', avatar: '👑' },
-    { name: 'ValueBetPro', followers: '267 obserwujących', rating: '4.7', roi: '12.7%', win: '64%', badge: '', avatar: '📊' },
-    { name: 'AI Predictor', followers: '1.2k obserwujących', rating: '5.0', roi: '20.3%', win: '74%', badge: 'PREMIUM', avatar: '✦' }
-  ]
-  const offers = [
-    { seller: 'GoalHunter', title: 'Pakiet Weekendowy', qty: '5 typów', roi: '16.4%', win: '68%', price: '19.99 zł', tokens: '199 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] },
-    { seller: 'StatKing', title: 'Pakiet Value+', qty: '10 typów', roi: '18.9%', win: '71%', price: '34.99 zł', tokens: '299 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] },
-    { seller: 'ValueBetPro', title: 'Single Daily', qty: '1 typ', roi: '12.7%', win: '64%', price: '4.99 zł', tokens: '49 żetonów', badge: '', sports: ['⚽','🏀','⚽'] },
-    { seller: 'AI Predictor', title: 'AI Combo Pack', qty: '7 typów', roi: '21.3%', win: '75%', price: '29.99 zł', tokens: '249 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] }
-  ]
-  const analyses = [
-    { title: 'Analiza: Finał Ligi Mistrzów', author: 'FootyAnalyst', desc: 'Dogłębna analiza taktyczna, statystyki, kontuzje, forma i typy...', price: '14.99 zł', tag: 'PREMIUM', pages: '10 stron', avatar: '⚽' },
-    { title: 'NBA Finals Breakdown', author: 'BasketMind', desc: 'Analiza matchupów, pace, defensive rating i kluczowych...', price: '19.99 zł', tag: 'PREMIUM', pages: '15 stron', avatar: '🏀' },
-    { title: 'Roland Garros 2024', author: 'TennisPro', desc: 'Analiza drabinki, nawierzchni, formy zawodników i value betów...', price: '12.99 zł', tag: 'PREMIUM', pages: '8 stron', avatar: '🎾' },
-    { title: 'Ekstraklasa: Kto spadnie?', author: 'StatsPL', desc: 'Analiza walki o utrzymanie, forma, terminarz, typy na ostatnie kolejki...', price: '9.99 zł', tag: 'PREMIUM', pages: '8 stron', avatar: '🇵🇱' }
-  ]
-  const chat = [
-    { name: username, text: 'Powodzenia wszystkim! 🔥', time: '12:33', admin: true },
-    { name: 'buchajsenek1988', text: 'czekam na valueb! ', time: '12:31' },
-    { name: 'piotrek1987', text: 'idziemy dziś po zielone! 💪', time: '12:30' },
-    { name: 'krystian_typer', text: 'Dzięki za typy AI, miazga! 😎', time: '12:29' },
-    { name: username, text: 'Lecimy dalej! 🚀', time: '12:34', admin: true }
-  ]
-  const topTipsters = [
-    ['1', username, 'ROI: +26.4% • W/R: 0.0%', '+0.00 zł'],
-    ['2', 'buchajsenek1988', 'ROI: +20.1% • W/R: 0.0%', '+0.00 zł'],
-    ['3', 'piotrek1987', 'ROI: +18.7% • W/R: 0.0%', '+0.00 zł'],
-    ['4', 'krystian_typer', 'ROI: +16.9% • W/R: 0.0%', '+0.00 zł'],
-    ['5', 'adrianbets', 'ROI: +16.0% • W/R: 0.0%', '+0.00 zł']
-  ]
-  const aiRows = [
-    ['Manchester City  vs  Inter Mediolan', 'Typ: Manchester City wygra', '68%'],
-    ['PSG  vs  Borussia Dortmund', 'Typ: Powyżej 2.5 gola', '61%'],
-    ['Liverpool  vs  Bayer Leverkusen', 'Typ: Liverpool wygra', '61%'],
-    ['adrianbets', 'ROI: +16.0% • W/R: 0.0%', '61%']
+    { rank: '1', name: 'StatKing', subtitle: 'Profesjonalny analityk', premium: true, rating: '4.92 (1248)', stats: ['87%', '+32.4%', '+3,240 zł', '284'], chart: '87%', price: '49 zł', followers: '1,248 obserwujących' },
+    { rank: '2', name: 'BetMind', subtitle: 'Ekspert od Value Betów', premium: true, rating: '4.78 (982)', stats: ['91%', '+41.7%', '+4,170 zł', '196'], chart: '91%', price: '79 zł', followers: '982 obserwujących' },
+    { rank: '3', name: 'FootyLogic', subtitle: 'Statystyka i analiza', premium: true, rating: '4.71 (756)', stats: ['84%', '+27.8%', '+2,940 zł', '172'], chart: '84%', price: '59 zł', followers: '756 obserwujących' }
   ]
 
   return (
-    <section className="market547-page" aria-label="Marketplace">
-      <div className="market547-shell">
-        <div className="market547-main">
-          <div className="market547-hero">
-            <div>
-              <h1>MARKETPLACE</h1>
-              <p>Kupuj i sprzedawaj typy oraz analizy od najlepszych graczy</p>
+    <section className="market550-page" aria-label="Marketplace">
+      <div className="market550-shell">
+        <div className="market550-main">
+          <section className="market550-hero">
+            <div className="market550-hero-copy">
+              <span>MARKETPLACE TYPÓW I ANALIZ</span>
+              <h1>Kupuj sprawdzone typy i analizy od <em>najlepszych</em></h1>
+              <p>Zweryfikowani tipsterzy, skuteczne analizy i typy, które dają przewagę.</p>
             </div>
-            <button type="button">Wystaw ofertę</button>
-          </div>
+            <div className="market550-hero-art" aria-hidden="true">
+              <div className="cart">🛒</div>
+              <div className="chart">📈</div>
+              <div className="ball">⚽</div>
+              <div className="arrow">↗</div>
+            </div>
+          </section>
 
-          <div className="market547-tabs">
-            <button type="button" className="active">⚽ Kup typy</button>
-            <button type="button">⚓ Sprzedaj typy</button>
-            <button type="button">◫ Analizy</button>
-            <button type="button">♛ Premium</button>
-            <button type="button">☷ Moje oferty</button>
-          </div>
+          <section className="market550-categories">
+            {categories.map(([label, count, icon, active]) => (
+              <button type="button" key={label} className={active ? 'active' : ''}>
+                <i>{icon}</i>
+                <div><strong>{label}</strong><span>{count}</span></div>
+              </button>
+            ))}
+          </section>
 
-          <section className="market547-section">
-            <div className="market547-head"><h2>Polecani sprzedawcy</h2><button type="button">Zobacz wszystkich</button></div>
-            <div className="market547-sellers-grid">
+          <section className="market550-filter-row">
+            <div className="market550-select"><label>Sport</label><button type="button">Wszystkie ▾</button></div>
+            <div className="market550-select"><label>Liga</label><button type="button">Wszystkie ▾</button></div>
+            <div className="market550-select"><label>Sortuj</label><button type="button">Popularne ▾</button></div>
+            <button type="button" className="market550-filter-pill">⭐ Tylko Premium</button>
+            <button type="button" className="market550-filter-pill ghost">☰ Więcej filtrów</button>
+          </section>
+
+          <section className="market550-tipsters">
+            <div className="market550-section-head"><h2>NAJLEPSI TIPSTERZY</h2><button type="button">Zobacz wszystkich</button></div>
+            <div className="market550-tipster-list">
               {sellers.map((seller, index) => (
-                <article className="market547-seller-card" key={seller.name}>
-                  <div className="market547-seller-top">
-                    <div className={`market547-avatar seller-${index + 1}`}>{seller.avatar}</div>
-                    <div>
-                      <div className="market547-name-line"><strong>{seller.name}</strong>{seller.badge ? <span>{seller.badge}</span> : null}</div>
-                      <small>{seller.followers}</small>
+                <article className="market550-tipster-card" key={seller.name}>
+                  <div className="market550-tipster-left">
+                    <div className={`market550-photo p${index+1}`}></div>
+                    <div className="market550-person">
+                      <div className="name-line"><span className="rank">{seller.rank}</span><strong>{seller.name}</strong><i>✓</i>{seller.premium ? <em>PREMIUM</em> : null}</div>
+                      <p>{seller.subtitle}</p>
+                      <small>⭐ {seller.rating}</small>
                     </div>
                   </div>
-                  <div className="market547-rating">★ {seller.rating}</div>
-                  <div className="market547-seller-stats"><div><span>ROI</span><b>{seller.roi}</b></div><div><span>Skuteczność</span><b>{seller.win}</b></div></div>
-                  <button type="button">Obserwuj</button>
-                </article>
-              ))}
-            </div>
-          </section>
 
-          <section className="market547-section">
-            <div className="market547-head market547-head-filters">
-              <h2>Najlepsze typy dnia</h2>
-              <div className="market547-filters">
-                <span className="active">Wszystkie</span><span>⚽ Piłka nożna</span><span>🏀 Koszykówka</span><span>🎾 Tenis</span><span>🏒 Hokej</span><span>🏐 Siatkówka</span>
-              </div>
-              <button type="button" className="sort">Sortuj: Popularne ▾</button>
-            </div>
-            <div className="market547-offers-grid">
-              {offers.map((offer, idx) => (
-                <article className="market547-offer-card" key={offer.title}>
-                  <div className="market547-offer-top"><div className={`market547-avatar tiny seller-${idx + 1}`}>{offer.sports[0]}</div><div><div className="market547-name-line"><strong>{offer.seller}</strong>{offer.badge ? <span>{offer.badge}</span> : null}</div></div></div>
-                  <h3>{offer.title}</h3>
-                  <small>{offer.qty}</small>
-                  <div className="market547-offer-metrics"><span>ROI: <b>{offer.roi}</b></span><span>Skuteczność: <b>{offer.win}</b></span></div>
-                  <div className="market547-sports-row">{offer.sports.map((sport, i) => <i key={i}>{sport}</i>)}</div>
-                  <div className="market547-price-row"><strong>{offer.price}</strong><span>lub <b>{offer.tokens}</b></span></div>
-                  <small className="market547-includes">Zawiera typy na:</small>
-                  <div className="market547-actions-row"><button type="button" className="ghost">Podgląd</button><button type="button" className="buy">Kup</button></div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="market547-section">
-            <div className="market547-head"><h2>Najnowsze analizy</h2><button type="button">Zobacz wszystkie</button></div>
-            <div className="market547-analysis-grid">
-              {analyses.map((item, idx) => (
-                <article className="market547-analysis-card" key={item.title}>
-                  <div className={`market547-avatar analysis-${idx + 1}`}>{item.avatar}</div>
-                  <div className="market547-analysis-copy">
-                    <strong>{item.title}</strong>
-                    <span>{item.author}</span>
-                    <p>{item.desc}</p>
-                    <div className="market547-analysis-meta"><b>{item.price}</b><small>{item.tag}</small><em>{item.pages}</em></div>
+                  <div className="market550-tipster-stats">
+                    <div><span>Skuteczność</span><b>{seller.stats[0]}</b></div>
+                    <div><span>ROI (30 dni)</span><b>{seller.stats[1]}</b></div>
+                    <div><span>Zysk (30 dni)</span><b>{seller.stats[2]}</b></div>
+                    <div><span>Typy</span><b>{seller.stats[3]}</b></div>
                   </div>
-                  <button type="button">Podgląd</button>
+
+                  <div className="market550-chart-box">
+                    <div className="head"><span>Skuteczność (30 dni)</span><b>{seller.chart}</b></div>
+                    <svg viewBox="0 0 240 78" role="img" aria-label="chart"><path d="M4 58L22 60L40 70L58 55L76 58L94 36L112 42L130 28L148 48L166 30L184 36L202 18L220 24L236 12" /><path className="glow" d="M4 58L22 60L40 70L58 55L76 58L94 36L112 42L130 28L148 48L166 30L184 36L202 18L220 24L236 12" /></svg>
+                    <div className="specials"><span>Specjalizacja</span><div><i>⚽</i><i>🎾</i><i>🏀</i><i>⚙</i><em>+2</em></div></div>
+                  </div>
+
+                  <div className="market550-purchase-box">
+                    <div className="price"><strong>{seller.price}</strong><span>/ 30 dni</span></div>
+                    <button type="button" className="buy">Kup tip</button>
+                    <div className="bottom"><button type="button" className="ghost">Obserwuj</button><small>{seller.followers}</small></div>
+                  </div>
                 </article>
               ))}
             </div>
           </section>
         </div>
 
-        <aside className="market547-side">
-          <article className="market547-side-card market547-chat-card">
-            <div className="market547-side-top"><h3>BET+AI LIVE CHAT <span>+ online</span></h3><small>134 online</small></div>
-            <div className="market547-chat-stats"><span><b>TOP UŻYTKOWNICY (24H)</b><strong>StatKing</strong><small>↑ 1260 typów / 24h</small></span><span><b>NAGRODA DNIA</b><strong>AI Predictor</strong><small>→ 986 typów / 18h</small></span><span><b>AKTYWNI TERAZ</b><strong>134</strong></span></div>
-            <div className="market547-chat-list">
-              {chat.map((row, idx) => (
-                <div className="market547-chat-row" key={row.name + idx}>
-                  <div className="market547-chat-avatar">{row.name.slice(0,1).toUpperCase()}</div>
-                  <div className="market547-chat-copy"><strong>{row.name}{row.admin ? <em>ADMIN</em> : null}</strong><p>{row.text}</p></div>
-                  <span>{row.time}</span>
-                </div>
-              ))}
+        <aside className="market550-side">
+          <article className="market550-side-card summary">
+            <div className="title-row"><h3>PODSUMOWANIE RYNKU</h3><span>ⓘ</span></div>
+            <div className="summary-grid">
+              <div><span>Tipsterzy</span><b>248</b></div>
+              <div><span>Typy dziś</span><b>1,248</b></div>
+              <div><span>Skuteczność</span><b>85%</b></div>
+              <div><span>ROI rynku</span><b>+18.7%</b></div>
             </div>
-            <div className="market547-chat-input"><input readOnly placeholder="Napisz wiadomość..." /><button type="button">✨ TIP !</button><button type="button">➤</button></div>
+            <button type="button">📊 Zobacz statystyki rynku</button>
           </article>
 
-          <article className="market547-side-card">
-            <div className="market547-side-head"><h3>🏆 Top typerzy</h3><button type="button" onClick={() => onNavigate('leaderboard')}>Ranking real</button></div>
-            <div className="market547-top-list">
-              {topTipsters.map(([place, name, meta, profit]) => (
-                <div className="market547-top-row" key={place + name}><i className={`place place-${place}`}>{place}</i><div className="market547-top-avatar">{name.slice(0,2).toUpperCase()}</div><div><strong>{name}</strong><small>{meta}</small></div><b>{profit}</b></div>
-              ))}
+          <article className="market550-side-card analysis">
+            <div className="title-row"><h3>AI ANALIZA MECZU</h3><span className="ai-badge">AI</span></div>
+            <div className="analysis-head"><strong>Real Madryt</strong><span>vs</span><strong>Bayern Monachium</strong></div>
+            <small>Liga Mistrzów • Dzisiaj, 21:00</small>
+            <div className="analysis-box">
+              <span>AI przewiduje:</span>
+              <b>Powyżej 2.5 gola</b>
+              <div className="analysis-bar"><i style={{ width: '81%' }} /></div>
+              <div className="analysis-foot"><span>Pewność: 81%</span><strong>81%</strong></div>
             </div>
+            <button type="button">Zobacz pełną analizę →</button>
           </article>
 
-          <article className="market547-side-card">
-            <div className="market547-side-head"><h3>⚗ Typy AI dnia</h3><button type="button" onClick={() => onNavigate('aiPicks')}>Zobacz wszystkie</button></div>
-            <div className="market547-ai-list">
-              {aiRows.map(([match, desc, val]) => (
-                <div className="market547-ai-row" key={match}><div className="market547-ai-ball">{match.slice(0,2).toUpperCase()}</div><div><strong>{match}</strong><small>{desc}</small><div className="market547-ai-bar"><i style={{ width: val }} /></div></div><b>{val}</b></div>
-              ))}
-            </div>
+          <article className="market550-side-card how">
+            <div className="title-row"><h3>JAK TO DZIAŁA?</h3></div>
+            <ol>
+              <li><b>1</b><div><strong>Wybierz tipstera</strong><span>Sprawdź statystyki i wybierz najlepszego.</span></div></li>
+              <li><b>2</b><div><strong>Kup dostęp</strong><span>Zyskaj dostęp do premium typów i analiz.</span></div></li>
+              <li><b>3</b><div><strong>Wygrywaj więcej</strong><span>Korzystaj z wiedzy i zwiększaj zyski!</span></div></li>
+            </ol>
+          </article>
+
+          <article className="market550-side-card cta">
+            <button type="button">☁ Sprzedaj swoją analizę</button>
           </article>
         </aside>
       </div>
     </section>
   )
 }
+
 
 function ProfileView({ user, tips = [] }) {
   const profile = getUserProfileView(user)
@@ -8209,7 +8136,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell no-rightbar-page all-tabs-fullscreen ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''} ${view === 'marketplace' ? 'marketplace547-shell-active' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell no-rightbar-page all-tabs-fullscreen ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''} ${view === 'marketplace' ? 'marketplace547-shell-active market550-shell-active' : ''} ${view === 'add' ? 'add548-shell-active' : ''} ${view === 'aiPicks' ? 'ai549-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />

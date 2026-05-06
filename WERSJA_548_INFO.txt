@@ -1,0 +1,5 @@
+Wersja 548
+- Zakładka Dodaj typ została przebudowana na sztywno według screena.
+- Usunięto poprzedni układ i dodano nowy ultra-pro layout pixel-style.
+- Dodano: formularz główny, panel podglądu typu, sugestię AI, historię skuteczności i przewidywany zasięg.
+- Widok full screen i dopasowany do ciemnego stylu Bet+AI.
