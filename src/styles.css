@@ -19292,3 +19292,130 @@ img,video,canvas,svg{max-width:100%;}
   .app-shell .topbar{grid-template-columns:1fr!important;min-height:auto!important}
   .app-shell .topbar .top-search-field,.app-shell .topbar .search{max-width:none!important}
 }
+
+/* WERSJA 560 — ujednolicony ciemny kolor przycisków i ikon */
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown{
+  min-height:50px!important;
+  padding:4px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(53,233,228,.18)!important;
+  background:linear-gradient(180deg,rgba(7,25,36,.98),rgba(5,18,28,.98))!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04), 0 0 14px rgba(53,233,228,.06)!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current{
+  width:46px!important;
+  min-width:46px!important;
+  height:40px!important;
+  border-radius:14px!important;
+  background:transparent!important;
+  border:none!important;
+  color:#eefcff!important;
+  box-shadow:none!important;
+}
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+.app-shell .topbar .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current{
+  background:linear-gradient(180deg,rgba(53,233,228,.12),rgba(53,233,228,.06))!important;
+}
+
+.app-shell .topbar .top-user-chip{
+  background:linear-gradient(180deg,rgba(7,25,36,.98),rgba(5,18,28,.98))!important;
+  border:1px solid rgba(53,233,228,.18)!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04), 0 0 14px rgba(53,233,228,.06)!important;
+}
+.app-shell .topbar .top-user-avatar{
+  background:linear-gradient(180deg,rgba(18,53,68,.98),rgba(8,31,43,.98))!important;
+  border:1px solid rgba(53,233,228,.18)!important;
+  box-shadow:none!important;
+}
+.app-shell .topbar .top-user-info small{
+  background:rgba(53,233,228,.10)!important;
+  color:#bdf7f3!important;
+  box-shadow:none!important;
+}
+.app-shell .topbar .top-user-chevron{
+  background:rgba(255,255,255,.03)!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+}
+
+.support510-fab,
+.reviews512-fab{
+  border:1px solid rgba(53,233,228,.18)!important;
+  background:linear-gradient(180deg,rgba(7,25,36,.98),rgba(5,18,28,.98))!important;
+  color:#eefcff!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04), 0 0 14px rgba(53,233,228,.08)!important;
+}
+.support510-fab:hover,
+.reviews512-fab:hover{
+  box-shadow:0 18px 36px rgba(0,0,0,.34), 0 0 18px rgba(53,233,228,.12)!important;
+}
+.support510-fab-pulse{
+  border:1px solid rgba(53,233,228,.18)!important;
+}
+.reviews512-fab::before{
+  background:linear-gradient(115deg, transparent, rgba(255,255,255,.16), transparent)!important;
+}
+.reviews512-fab-stars{
+  color:#36f0c7!important;
+  text-shadow:0 0 10px rgba(54,240,199,.28)!important;
+}
+.reviews512-fab i{
+  background:#36f0c7!important;
+}
+
+/* WERSJA 561 — liczniki wiadomości/czatu widoczne globalnie na każdej zakładce */
+.app-shell .topbar .notice.notice-button,
+.app-shell .topbar .notify-btn,
+.app-shell .topbar .mail-btn,
+.support510-fab{
+  overflow:visible!important;
+}
+
+.app-shell .topbar .notify-btn b,
+.app-shell .topbar .mail-btn b{
+  position:absolute!important;
+  top:-7px!important;
+  right:-7px!important;
+  min-width:20px!important;
+  height:20px!important;
+  padding:0 6px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(180deg,#30ece4,#17d8d7)!important;
+  color:#06202a!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  box-shadow:0 0 0 2px rgba(6,24,35,.92), 0 0 14px rgba(53,233,228,.18)!important;
+  z-index:12!important;
+}
+
+.support510-fab-badge{
+  position:absolute!important;
+  top:-6px!important;
+  right:-6px!important;
+  min-width:22px!important;
+  height:22px!important;
+  padding:0 6px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(180deg,#30ece4,#17d8d7)!important;
+  color:#06202a!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  box-shadow:0 0 0 2px rgba(6,24,35,.92), 0 0 14px rgba(53,233,228,.18)!important;
+  z-index:14!important;
+}
+
+@media(max-width:760px){
+  .app-shell .topbar .notify-btn b,
+  .app-shell .topbar .mail-btn b,
+  .support510-fab-badge{
+    top:-5px!important;
+    right:-5px!important;
+  }
+}

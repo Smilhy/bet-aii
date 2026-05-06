@@ -1432,6 +1432,9 @@ function SupportChatWidget({ user }) {
   }, [messages, adminMode, selectedKey, conversations])
 
   const selectedConversation = adminMode ? conversations.find(item => item.key === (selectedKey || conversations[0]?.key)) || conversations[0] : null
+  const supportUnreadCount = adminMode
+    ? conversations.reduce((sum, item) => sum + Number(item.unread || 0), 0)
+    : (messages || []).filter(message => message.sender_role === 'admin' && !message.is_read).length
 
   async function loadSupportMessages() {
     if (!isSupabaseConfigured || !supabase || !user?.id) return
@@ -1465,9 +1468,9 @@ function SupportChatWidget({ user }) {
   }
 
   useEffect(() => {
-    if (!open || !user?.id) return
+    if (!user?.id) return
     loadSupportMessages()
-    const timer = setInterval(loadSupportMessages, 10000)
+    const timer = setInterval(loadSupportMessages, open ? 10000 : 20000)
     return () => clearInterval(timer)
   }, [open, user?.id, adminMode, selectedKey])
 
@@ -1589,6 +1592,7 @@ function SupportChatWidget({ user }) {
 
       <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
         {open ? '×' : '💬'}
+        <span className="support510-fab-badge">{Number(supportUnreadCount || 0)}</span>
         {!open ? <span className="support510-fab-pulse" /> : null}
       </button>
     </div>
@@ -1701,6 +1705,7 @@ function AuthSupportChatGuest() {
 
       <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
         {open ? '×' : '💬'}
+        <span className="support510-fab-badge">0</span>
         {!open ? <span className="support510-fab-pulse" /> : null}
       </button>
     </div>
@@ -7740,7 +7745,7 @@ function App() {
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
-            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
+            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
               <span className="wallet-split-segment wallet-split-balance">
                 <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>

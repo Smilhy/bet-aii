@@ -1,0 +1,8 @@
+WERSJA 560
+
+Zmiany:
+- ujednolicony ciemny kolor górnych przycisków i ikon (jak Saldo i Żetony)
+- przycisk języka ma teraz ten sam ciemny styl
+- przycisk profilu po prawej ma teraz ten sam ciemny styl
+- dolna ikonka czatu ma teraz ten sam ciemny styl
+- przycisk opinii w lewym dolnym rogu ma teraz ten sam ciemny styl
