@@ -17668,3 +17668,17 @@ img,video,canvas,svg{max-width:100%;}
 @keyframes sportplPanelIn539{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes sportplCardIn539{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:760px){.sportpl-live-status-v538{align-items:flex-start!important}.sportpl-refresh-v539{width:100%!important}}
+
+
+/* VERSION 540 — Sport.pl live banners/images */
+.sportpl-live-item-v538{overflow:hidden!important;min-height:330px!important;display:flex!important;flex-direction:column!important;}
+.sportpl-live-media-v540{position:relative!important;width:calc(100% + 4px)!important;height:148px!important;margin:-2px -2px 14px!important;border-radius:22px!important;overflow:hidden!important;background:radial-gradient(circle at 30% 15%,rgba(31,226,174,.34),transparent 38%),linear-gradient(135deg,rgba(18,42,62,.95),rgba(4,13,22,.98))!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.22)!important;}
+.sportpl-live-media-v540:after{content:""!important;position:absolute!important;inset:0!important;background:linear-gradient(180deg,transparent 46%,rgba(2,8,14,.62))!important;pointer-events:none!important;}
+.sportpl-live-media-v540 img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;object-position:center!important;transform:scale(1.01)!important;transition:transform .45s ease,filter .45s ease!important;}
+.sportpl-live-item-v538:hover .sportpl-live-media-v540 img{transform:scale(1.08)!important;filter:saturate(1.16) contrast(1.06)!important;}
+.sportpl-live-media-v540 span{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;color:#dffcff!important;font-size:36px!important;font-weight:1000!important;letter-spacing:-.06em!important;text-shadow:0 12px 34px rgba(0,0,0,.5)!important;}
+.sportpl-live-item-v538.image-error-v540 .sportpl-live-media-v540:before{content:"SPORT.PL"!important;position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;color:#dffcff!important;font-weight:1000!important;letter-spacing:.08em!important;}
+.sportpl-live-item-v538 h3{margin-top:2px!important;}
+.sportpl-refresh-v539{position:relative!important;overflow:hidden!important;}
+.sportpl-refresh-v539:after{content:""!important;position:absolute!important;inset:-40% auto -40% -70%!important;width:55%!important;background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent)!important;transform:skewX(-20deg)!important;animation:sportplButtonSweep540 2.8s ease-in-out infinite!important;}
+@keyframes sportplButtonSweep540{0%,55%{left:-70%;}100%{left:130%;}}

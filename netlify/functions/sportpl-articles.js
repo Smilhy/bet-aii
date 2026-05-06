@@ -1,172 +1,28 @@
 const SPORTPL_URLS = [
   'https://www.sport.pl/sport-hp/0,0.html',
   'https://www.sport.pl/sport/0,148121.html',
-  'https://www.sport.pl/pilka/0,0.html'
+  'https://www.sport.pl/pilka/0,0.html',
+  'https://www.sport.pl/tenis/0,0.html'
 ]
-
-const fallbackArticles = [
-  {
-    id: 'fallback-1',
-    title: 'Sport.pl — najnowsze wiadomości sportowe',
-    excerpt: 'Nie udało się pobrać świeżych danych w tej chwili. Kliknij, aby otworzyć Sport.pl i sprawdzić aktualności.',
-    url: 'https://www.sport.pl/sport-hp/0,0.html',
-    image: '',
-    category: 'Sport',
-    publishedAt: new Date().toISOString(),
-    author: 'Sport.pl'
-  }
+const SPORTPL_RSS_URLS = [
+  'https://www.sport.pl/pub/rss/sport.xml',
+  'https://www.sport.pl/rss/sport.xml',
+  'https://www.sport.pl/rss/0,0.xml'
 ]
-
-function decodeHtml(value = '') {
-  return String(value)
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#34;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function absoluteUrl(url = '') {
-  if (!url) return ''
-  if (url.startsWith('//')) return 'https:' + url
-  if (url.startsWith('/')) return 'https://www.sport.pl' + url
-  return url
-}
-
-function cleanText(value = '') {
-  return decodeHtml(String(value).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim()
-}
-
-function inferCategory(url = '', title = '') {
-  const value = (url + ' ' + title).toLowerCase()
-  if (value.includes('/pilka') || value.includes('ekstraklasa') || value.includes('liga') || value.includes('legia') || value.includes('reprezentacja')) return 'Piłka nożna'
-  if (value.includes('tenis') || value.includes('świątek') || value.includes('wimbledon')) return 'Tenis'
-  if (value.includes('siat')) return 'Siatkówka'
-  if (value.includes('kosz') || value.includes('nba')) return 'Koszykówka'
-  if (value.includes('mma') || value.includes('boks') || value.includes('ksw')) return 'Sporty walki'
-  return 'Sport'
-}
-
-function parseJsonLd(html) {
-  const items = []
-  const scripts = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi) || []
-  for (const script of scripts) {
-    const raw = script.replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, '').trim()
-    try {
-      const json = JSON.parse(raw)
-      const stack = Array.isArray(json) ? [...json] : [json]
-      while (stack.length) {
-        const item = stack.shift()
-        if (!item || typeof item !== 'object') continue
-        if (Array.isArray(item['@graph'])) stack.push(...item['@graph'])
-        const type = Array.isArray(item['@type']) ? item['@type'].join(' ') : String(item['@type'] || '')
-        if (/NewsArticle|Article|Reportage/i.test(type) && item.headline && item.url) {
-          const image = Array.isArray(item.image) ? item.image[0] : item.image
-          items.push({
-            title: cleanText(item.headline),
-            excerpt: cleanText(item.description || ''),
-            url: absoluteUrl(item.url),
-            image: typeof image === 'string' ? absoluteUrl(image) : absoluteUrl(image?.url || ''),
-            publishedAt: item.datePublished || item.dateModified || new Date().toISOString(),
-            author: cleanText(Array.isArray(item.author) ? item.author[0]?.name : item.author?.name || 'Sport.pl')
-          })
-        }
-      }
-    } catch (_) {}
-  }
-  return items
-}
-
-function parseLinks(html) {
-  const items = []
-  const articleRegex = /<a\b[^>]*href=["']([^"']*sport\.pl[^"']*\/7,[^"']+|\/[^"']*\/7,[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
-  let match
-  while ((match = articleRegex.exec(html)) && items.length < 80) {
-    const url = absoluteUrl(decodeHtml(match[1]))
-    const inner = match[2]
-    const title = cleanText(inner)
-      .replace(/^REKLAMA\s*/i, '')
-      .replace(/Zobacz też.*$/i, '')
-      .trim()
-    if (!title || title.length < 18 || title.length > 180) continue
-    const imageMatch = inner.match(/<img[^>]+(?:src|data-src|data-original)=["']([^"']+)["']/i)
-    items.push({
-      title,
-      excerpt: '',
-      url,
-      image: imageMatch ? absoluteUrl(decodeHtml(imageMatch[1])) : '',
-      publishedAt: new Date().toISOString(),
-      author: 'Sport.pl'
-    })
-  }
-  return items
-}
-
-async function fetchHtml(url) {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 BetAI Articles Bot',
-      'Accept': 'text/html,application/xhtml+xml'
-    }
-  })
-  if (!response.ok) throw new Error('Sport.pl HTTP ' + response.status)
-  return response.text()
-}
-
-exports.handler = async (event) => {
-  const limit = Math.min(50, Math.max(6, Number(event.queryStringParameters?.limit || 30)))
-  try {
-    const results = []
-    for (const url of SPORTPL_URLS) {
-      try {
-        const html = await fetchHtml(url)
-        results.push(...parseJsonLd(html), ...parseLinks(html))
-      } catch (error) {
-        console.warn('sportpl source skipped:', url, error.message)
-      }
-    }
-
-    const seen = new Set()
-    const articles = results
-      .filter(item => item.title && item.url)
-      .map(item => ({
-        ...item,
-        id: Buffer.from(item.url).toString('base64').slice(0, 24),
-        title: item.title.slice(0, 170),
-        excerpt: (item.excerpt || '').slice(0, 220),
-        url: absoluteUrl(item.url),
-        image: absoluteUrl(item.image || ''),
-        category: inferCategory(item.url, item.title),
-        publishedAt: item.publishedAt || new Date().toISOString(),
-        source: 'Sport.pl'
-      }))
-      .filter(item => {
-        const key = item.url.replace(/[?#].*$/, '')
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-      .slice(0, limit)
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'public, max-age=600, s-maxage=600',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: articles.length, articles: articles.length ? articles : fallbackArticles })
-    }
-  } catch (error) {
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ updatedAt: new Date().toISOString(), count: fallbackArticles.length, articles: fallbackArticles, error: error.message })
-    }
-  }
-}
+const fallbackArticles = [{ id:'fallback-1', title:'Sport.pl — najnowsze wiadomości sportowe', excerpt:'Nie udało się pobrać świeżych danych w tej chwili. Kliknij, aby otworzyć Sport.pl i sprawdzić aktualności.', url:'https://www.sport.pl/sport-hp/0,0.html', image:'', imageProxy:'', category:'Sport', publishedAt:new Date().toISOString(), author:'Sport.pl', source:'Sport.pl' }]
+function decodeHtml(v=''){return String(v).replace(/&amp;/g,'&').replace(/&quot;|&#34;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim()}
+function absoluteUrl(u=''){const x=decodeHtml(String(u||'').trim()); if(!x) return ''; if(x.startsWith('//')) return 'https:'+x; if(x.startsWith('/')) return 'https://www.sport.pl'+x; return x}
+function cleanText(v=''){return decodeHtml(String(v).replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim()}
+function inferCategory(url='',title=''){const v=(url+' '+title).toLowerCase(); if(v.includes('/pilka')||v.includes('ekstraklasa')||v.includes('liga')||v.includes('legia')||v.includes('reprezentacja'))return 'Piłka nożna'; if(v.includes('tenis')||v.includes('świątek')||v.includes('wimbledon'))return 'Tenis'; if(v.includes('siat'))return 'Siatkówka'; if(v.includes('kosz')||v.includes('nba'))return 'Koszykówka'; if(v.includes('mma')||v.includes('boks')||v.includes('ksw'))return 'Sporty walki'; return 'Sport'}
+function firstSrcset(v=''){return absoluteUrl(String(v||'').split(',')[0]?.trim()?.split(/\s+/)[0]||'')}
+function normalizeImage(u=''){const img=absoluteUrl(u); if(!img||img.startsWith('data:')) return ''; return img}
+function getJsonImage(v){if(!v)return ''; if(typeof v==='string')return normalizeImage(v); if(Array.isArray(v)){for(const x of v){const img=getJsonImage(x); if(img)return img}} if(typeof v==='object')return normalizeImage(v.url||v.contentUrl||v.thumbnailUrl||''); return ''}
+function extractImageFromHtml(h=''){const patterns=[/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i,/<img[^>]+(?:data-original|data-src|data-lazy-src|src)=["']([^"']+)["']/i,/<source[^>]+srcset=["']([^"']+)["']/i,/<img[^>]+srcset=["']([^"']+)["']/i]; for(const re of patterns){const m=h.match(re); if(m?.[1]){const val=String(re).includes('srcset')?firstSrcset(m[1]):normalizeImage(m[1]); if(val)return val}} return ''}
+function parseJsonLd(html){const out=[]; const scripts=html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi)||[]; for(const script of scripts){const raw=script.replace(/^<script[^>]*>/i,'').replace(/<\/script>$/i,'').trim(); try{const json=JSON.parse(raw); const stack=Array.isArray(json)?[...json]:[json]; while(stack.length){const item=stack.shift(); if(!item||typeof item!=='object')continue; if(Array.isArray(item['@graph']))stack.push(...item['@graph']); if(Array.isArray(item.itemListElement))stack.push(...item.itemListElement.map(x=>x?.item||x)); const type=Array.isArray(item['@type'])?item['@type'].join(' '):String(item['@type']||''); const url=item.url||item.mainEntityOfPage?.['@id']||item.mainEntityOfPage?.url||''; const title=item.headline||item.name||''; if(/NewsArticle|Article|Reportage|ListItem/i.test(type)&&title&&url){out.push({title:cleanText(title),excerpt:cleanText(item.description||item.alternativeHeadline||''),url:absoluteUrl(url),image:getJsonImage(item.image||item.thumbnailUrl||item.primaryImageOfPage),publishedAt:item.datePublished||item.dateModified||new Date().toISOString(),author:cleanText(Array.isArray(item.author)?item.author[0]?.name:item.author?.name||'Sport.pl')})}}}catch(_){}} return out}
+function parseLinks(html){const out=[]; const re=/<a\b[^>]*href=["']([^"']*(?:sport\.pl)?[^"']*\/7,[^"']+|\/[^"']*\/7,[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi; let m; while((m=re.exec(html))&&out.length<100){const url=absoluteUrl(m[1]); const block=html.slice(Math.max(0,m.index-1800),Math.min(html.length,re.lastIndex+1800)); const title=cleanText(m[2]).replace(/^REKLAMA\s*/i,'').replace(/Zobacz też.*$/i,'').trim(); if(!title||title.length<18||title.length>190)continue; const im=m[2].match(/<img[^>]+(?:data-original|data-src|data-lazy-src|src)=["']([^"']+)["']/i)||block.match(/<img[^>]+(?:data-original|data-src|data-lazy-src|src)=["']([^"']+)["']/i); const ss=m[2].match(/<(?:source|img)[^>]+srcset=["']([^"']+)["']/i)||block.match(/<(?:source|img)[^>]+srcset=["']([^"']+)["']/i); out.push({title,excerpt:'',url,image:im?normalizeImage(im[1]):(ss?firstSrcset(ss[1]):''),publishedAt:new Date().toISOString(),author:'Sport.pl'})} return out}
+function tagValue(xml='',tag=''){const m=xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`,'i')); return m?cleanText(m[1].replace(/^<!\[CDATA\[/,'').replace(/\]\]>$/,'')):''}
+function attrValue(text='',attr=''){const m=text.match(new RegExp(`${attr}=["']([^"']+)["']`,'i')); return m?decodeHtml(m[1]):''}
+function parseRss(xml=''){const out=[]; const entries=xml.match(/<item[\s\S]*?<\/item>/gi)||[]; for(const e of entries){const title=tagValue(e,'title'); const url=tagValue(e,'link')||tagValue(e,'guid'); const image=attrValue(e.match(/<media:content[^>]*>/i)?.[0]||'','url')||attrValue(e.match(/<media:thumbnail[^>]*>/i)?.[0]||'','url')||attrValue(e.match(/<enclosure[^>]*>/i)?.[0]||'','url')||extractImageFromHtml(e); if(title&&url)out.push({title,excerpt:cleanText(tagValue(e,'description')).slice(0,220),url:absoluteUrl(url),image:normalizeImage(image),publishedAt:tagValue(e,'pubDate')||new Date().toISOString(),author:tagValue(e,'dc:creator')||'Sport.pl'})} return out}
+async function fetchText(url,accept='text/html,application/xhtml+xml'){const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0 (compatible; BetAI-Live/540)','Accept':accept,'Referer':'https://www.sport.pl/'}}); if(!r.ok)throw new Error('Sport.pl HTTP '+r.status); return r.text()}
+async function proxyImage(imageUrl=''){const url=absoluteUrl(imageUrl); if(!/^https?:\/\//i.test(url)||!/sport\.pl|bi\.im-g\.pl|ocdn\.eu|agora/i.test(url))return {statusCode:400,body:'Bad image url'}; const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0 (compatible; BetAI-Live/540)','Accept':'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8','Referer':'https://www.sport.pl/'}}); if(!r.ok)return {statusCode:404,body:'Image not found'}; const buf=Buffer.from(await r.arrayBuffer()); return {statusCode:200,headers:{'Content-Type':r.headers.get('content-type')||'image/jpeg','Cache-Control':'public, max-age=3600, s-maxage=3600','Access-Control-Allow-Origin':'*'},body:buf.toString('base64'),isBase64Encoded:true}}
+exports.handler=async(event)=>{if(event.queryStringParameters?.image)return proxyImage(event.queryStringParameters.image); const limit=Math.min(60,Math.max(6,Number(event.queryStringParameters?.limit||30))); try{const results=[]; for(const url of SPORTPL_RSS_URLS){try{results.push(...parseRss(await fetchText(url,'application/rss+xml,application/xml,text/xml,*/*')))}catch(e){console.warn('sportpl rss skipped:',url,e.message)}} for(const url of SPORTPL_URLS){try{const html=await fetchText(url); results.push(...parseJsonLd(html),...parseLinks(html))}catch(e){console.warn('sportpl source skipped:',url,e.message)}} const seen=new Set(); const articles=results.filter(x=>x.title&&x.url).map(x=>{const image=normalizeImage(x.image||''); return {...x,id:Buffer.from(x.url).toString('base64').slice(0,24),title:x.title.slice(0,170),excerpt:(x.excerpt||'').slice(0,220),url:absoluteUrl(x.url),image,imageProxy:image?`/.netlify/functions/sportpl-articles?image=${encodeURIComponent(image)}`:'',category:inferCategory(x.url,x.title),publishedAt:x.publishedAt||new Date().toISOString(),source:'Sport.pl'}}).filter(x=>{const k=x.url.replace(/[?#].*$/,''); if(seen.has(k))return false; seen.add(k); return true}).slice(0,limit); return {statusCode:200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'public, max-age=600, s-maxage=600','Access-Control-Allow-Origin':'*'},body:JSON.stringify({updatedAt:new Date().toISOString(),count:articles.length,articles:articles.length?articles:fallbackArticles})}}catch(error){return {statusCode:200,headers:{'Content-Type':'application/json; charset=utf-8','Access-Control-Allow-Origin':'*'},body:JSON.stringify({updatedAt:new Date().toISOString(),count:fallbackArticles.length,articles:fallbackArticles,error:error.message})}}}

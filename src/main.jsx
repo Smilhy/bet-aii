@@ -2580,6 +2580,13 @@ function getSportPlInitials(title = '') {
   return (words[0]?.[0] || 'S').toUpperCase() + (words[1]?.[0] || 'P').toUpperCase()
 }
 
+function getSportPlImageSrc(item = {}) {
+  const raw = item.imageProxy || item.image || ''
+  if (!raw) return ''
+  if (String(raw).startsWith('/.netlify/functions/')) return raw
+  return `/.netlify/functions/sportpl-articles?image=${encodeURIComponent(raw)}`
+}
+
 function isImportantSportPlNews(item = {}) {
   const text = `${item.title || ''} ${item.excerpt || ''} ${item.category || ''}`.toLowerCase()
   return ['pilne', 'oficjalnie', 'kontuzja', 'transfer', 'zwolniony', 'zmarł', 'afera', 'sensacja', 'skandal', 'polska', 'reprezentacja', 'świątek', 'lewandowski', 'liga mistrzów', 'finał'].some(word => text.includes(word))
@@ -2671,6 +2678,7 @@ function ArticlesView() {
     meta: getSportPlRelativeTime(item.publishedAt),
     icon: getSportPlInitials(item.title),
     url: item.url,
+    image: getSportPlImageSrc(item),
     isImportant: isImportantSportPlNews(item),
     index
   })) : articleCards
@@ -2769,10 +2777,14 @@ function ArticlesView() {
                   meta: getSportPlRelativeTime(item.publishedAt),
                   icon: getSportPlInitials(item.title),
                   url: item.url,
+                  image: getSportPlImageSrc(item),
                   isImportant: isImportantSportPlNews(item),
                   index: index + 4
                 }))).slice(0, 12).map((item, idx) => (
-                  <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
+                  <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''} ${item.image ? 'has-image-v540' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
+                    <div className="sportpl-live-media-v540">
+                      {item.image ? <img src={item.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); event.currentTarget.remove() }} /> : <span>{item.icon}</span>}
+                    </div>
                     <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
                     <h3>{item.title}</h3>
                     <p>{item.body}</p>
