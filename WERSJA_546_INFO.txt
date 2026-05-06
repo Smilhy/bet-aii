@@ -1,0 +1,4 @@
+Wersja 546
+- Zakładka Moje typy / Profil typera przebudowana na sztywno według screena.
+- Usunięto poprzednią zawartość zakładki i zastąpiono nowym layoutem pixel-style.
+- Dodano sekcje: hero profilu, subskrypcja, statystyki, wykres wyników, rozkład typów, najlepsze ligi, ostatnie typy, osiągnięcia, opinie użytkowników i historia wyników.

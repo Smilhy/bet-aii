@@ -5644,138 +5644,218 @@ function TipsterPricingSettings({ user, onToast }) {
 function ProfileView({ user, tips = [] }) {
   const profile = getUserProfileView(user)
   const displayName = profile?.username || 'smilhytv'
-  const sampleTips = [
-    { icon: '⚽', match: 'Real Madryt vs Bayern Monachium', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Powyżej 2.5 gola', odds: '1.72', stake: '200 zł', status: 'WYGRANY', result: '+144.00 zł', tone: 'win' },
-    { icon: '⚽', match: 'Manchester City vs Inter Mediolan', meta: 'Liga Mistrzów  •  15.06.2025 21:00', type: 'Obie drużyny strzelą', odds: '1.80', stake: '150 zł', status: 'AKTYWNY', result: '—', tone: 'active' },
-    { icon: '🎾', match: 'Iga Świątek vs Aryna Sabalenka', meta: 'Roland Garros  •  15.06.2025 15:30', type: 'Iga Świątek wygra', odds: '1.65', stake: '120 zł', status: 'WYGRANY', result: '+78.00 zł', tone: 'win' },
-    { icon: '🏀', match: 'Boston Celtics vs Miami Heat', meta: 'NBA  •  15.06.2025 02:30', type: 'Celtics -6.5 handicap', odds: '1.90', stake: '180 zł', status: 'PRZEGRANY', result: '-180.00 zł', tone: 'loss' },
-    { icon: '⚽', match: 'Juventus vs AC Milan', meta: 'Serie A  •  14.06.2025 20:45', type: 'AC Milan (0) DNB', odds: '2.05', stake: '100 zł', status: 'WYGRANY', result: '+105.00 zł', tone: 'win' },
-    { icon: '🎾', match: 'Carlos Alcaraz vs Novak Djokovic', meta: 'ATP 250 Queens  •  14.06.2025 16:00', type: 'Powyżej 21.5 gemy', odds: '1.88', stake: '130 zł', status: 'AKTYWNY', result: '—', tone: 'active' }
+  const usernameInitials = String(displayName || 'SM').slice(0, 2).toUpperCase()
+  const joinedLabel = 'marzec 2022'
+  const statTiles = [
+    ['ROI', '+125.40%'],
+    ['WIN RATE', '60.2%'],
+    ['LICZBA TYPÓW', '1 728'],
+    ['SKUTECZNOŚĆ 7D', '65.8%'],
+    ['SKUTECZNOŚĆ 30D', '61.3%'],
+    ['ŚREDNI KURS', '2.18'],
+    ['WYGRANE KUPONY', '312'],
+    ['OBSERWUJĄCY', '5 842'],
+    ['SUBSKRYBENCI', '1 257'],
+    ['ZYSK CAŁKOWITY', '+18 752,30 zł'],
+    ['NAJLEPSZA SERIA', '18'],
+    ['AKTYWNYCH DNI', '486']
   ]
-  const realRows = Array.isArray(tips) && tips.length ? tips.slice(0, 6).map((tip, index) => {
-    const status = String(tip.status || 'active').toLowerCase()
-    const tone = ['won','win'].includes(status) ? 'win' : ['lost','loss'].includes(status) ? 'loss' : 'active'
-    const result = tone === 'win' ? `+${Number(tip.profit || tip.stake || 120).toFixed(2)} zł` : tone === 'loss' ? `-${Number(tip.stake || 100).toFixed(2)} zł` : '—'
-    return {
-      icon: index % 3 === 2 ? '🎾' : '⚽',
-      match: `${tip.team_home || 'Real Madryt'} vs ${tip.team_away || 'Bayern Monachium'}`,
-      meta: `${tip.league || 'Liga Mistrzów'}  •  ${tip.match_date ? new Date(tip.match_date).toLocaleString('pl-PL') : '15.06.2025 21:00'}`,
-      type: tip.bet_type || tip.pick || 'Powyżej 2.5 gola',
-      odds: Number(tip.odds || tip.course || 1.72).toFixed(2),
-      stake: `${Number(tip.stake || 100)} zł`,
-      status: tone === 'win' ? 'WYGRANY' : tone === 'loss' ? 'PRZEGRANY' : 'AKTYWNY',
-      result,
-      tone
-    }
-  }) : sampleTips
+
+  const leagues = [
+    ['Premier League', '+135.2%', '62%'],
+    ['La Liga', '+118.7%', '59%'],
+    ['Serie A', '+128.1%', '61%'],
+    ['Bundesliga', '+121.3%', '60%'],
+    ['Ligue 1', '+110.4%', '58%']
+  ]
+
+  const reviews = [
+    ['Mateusz92', 'Niesamowita skuteczność i analiza. Od kiedy obserwuję smilhytv moje wyniki poszybowały w górę!', '2 dni temu'],
+    ['GoalHunter', 'Konkret, statystyki i świetne podejście do typu. Zasłużone nr 1!', '4 dni temu'],
+    ['BetMaster', 'Najlepszy typer na platformie. Transparentność i mega kontakt!', '1 tydzień temu']
+  ]
+
+  const history = [
+    ['Maj 2025', '+1 850,20 zł', '+98.2%', '124'],
+    ['Kwi 2025', '+2 320,45 zł', '+112.4%', '132'],
+    ['Mar 2025', '+1 980,10 zł', '+109.7%', '128'],
+    ['Lut 2025', '+1 520,60 zł', '+95.1%', '108'],
+    ['Sty 2025', '+1 430,30 zł', '+90.3%', '96'],
+    ['Gru 2024', '+1 680,80 zł', '+101.6%', '118']
+  ]
+
+  const tipsRows = [
+    ['Manchester City – Arsenal', '1X', '1.62', '100 zł', 'WYGRANY', '+62,00 zł', 'Premier League • 11.05, 17:30'],
+    ['Real Madrid – Sevilla', '1', '1.48', '120 zł', 'WYGRANY', '+57,60 zł', 'La Liga • 11.05, 16:15'],
+    ['Inter – Juventus', 'Powyżej 2.5', '1.85', '100 zł', 'PRZEGRANY', '-100,00 zł', 'Serie A • 10.05, 20:45'],
+    ['Boston Celtics – NY Knicks', 'Celtics -5.5', '1.90', '80 zł', 'OCZEKUJĄCY', '—', 'NBA • 10.05, 01:00']
+  ]
 
   return (
-    <section className="profile-page profile-ultra-page my-profile-stats-page" aria-label="Mój profil">
-      <div className="my-profile-hero-shell">
-        <div>
-          <p className="my-profile-kicker">BETAI PROFILE ANALYTICS</p>
-          <h1>Moje typy i statystyki</h1>
-          <p>Śledź swoje typy, analizuj wyniki i rozwijaj skuteczność.</p>
-        </div>
-        <button className="my-profile-date-btn" type="button">📅 18 maj 2025 - 16 cze 2025 <span>⌄</span></button>
-      </div>
+    <section className="profile546-page" aria-label="Moje typy">
+      <div className="profile546-breadcrumbs">Strona główna <span>›</span> Profil typera</div>
 
-      <div className="my-profile-metrics-grid">
-        <div className="my-profile-metric-card active">
-          <div className="my-profile-metric-icon">◎</div>
-          <div><span>Skuteczność ⓘ</span><strong>78%</strong><small><b>+6%</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">↗</div>
-          <div><span>ROI ⓘ</span><strong>+12.4%</strong><small><b>+2.1%</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">▱</div>
-          <div><span>Zysk ⓘ</span><strong>+1 248 zł</strong><small><b>+312 zł</b> vs poprzednie 30 dni</small></div>
-        </div>
-        <div className="my-profile-metric-card">
-          <div className="my-profile-metric-icon">🎟</div>
-          <div><span>Aktywne typy ⓘ</span><strong>14</strong><small>W grze</small></div>
-        </div>
-      </div>
-
-      <div className="my-profile-main-grid">
-        <div className="my-profile-card my-profile-tips-card">
-          <div className="my-profile-card-head">
-            <h2>Moje typy</h2>
-          </div>
-          <div className="my-profile-filter-row">
-            <button className="active" type="button">◎ Wszystkie</button>
-            <button type="button">💙 Premium</button>
-            <button type="button">🟢 Na żywo</button>
-            <button type="button">▣ Zakończone</button>
-          </div>
-          <div className="my-profile-table">
-            <div className="my-profile-table-head">
-              <span>Mecz</span><span>Typ</span><span>Kurs</span><span>Stawka</span><span>Status</span><span>Wynik</span>
+      <div className="profile546-top-grid">
+        <div className="profile546-main-card profile546-hero-card">
+          <div className="profile546-hero-left">
+            <div className="profile546-avatar-shell">
+              <div className="profile546-avatar-glow"></div>
+              <div className="profile546-avatar">{usernameInitials}</div>
+              <div className="profile546-avatar-badge">★</div>
             </div>
-            {realRows.map((row, idx) => (
-              <div className="my-profile-table-row" key={`${row.match}-${idx}`}>
-                <div className="my-profile-match"><i>{row.icon}</i><div><b>{row.match}</b><small>{row.meta}</small></div></div>
-                <span>{row.type}</span>
-                <span>{row.odds}</span>
-                <span>{row.stake}</span>
-                <em className={`my-status ${row.tone}`}>{row.status}</em>
-                <strong className={`my-result ${row.tone}`}>{row.result}</strong>
+            <div className="profile546-title-copy">
+              <div className="profile546-name-line">
+                <h1>{displayName}</h1>
+                <span className="profile546-verified">✓</span>
+                <span className="profile546-plan-badge">PREMIUM</span>
+              </div>
+              <div className="profile546-rank-line">🏆 #1 w rankingu typerów <span>TOP AKTYWNOŚĆ</span></div>
+              <p>Pasja do sportu i statystyk. Liczą się liczby, nie emocje. Gram mądrze, nie dużo. Jakość ponad ilość.</p>
+              <div className="profile546-meta-row">
+                <span>◔ Dołączył: {joinedLabel}</span>
+                <span>○ Ostatnio online: <b>• online</b></span>
+              </div>
+            </div>
+          </div>
+          <div className="profile546-actions">
+            <button type="button" className="primary">Obserwuj</button>
+            <button type="button">Napisz wiadomość</button>
+            <button type="button" className="gold">Kup subskrypcję</button>
+          </div>
+        </div>
+
+        <aside className="profile546-main-card profile546-sub-card">
+          <div className="profile546-side-title">SUBSKRYPCJA</div>
+          <span>Aktywny plan</span>
+          <strong>PREMIUM TIPSTER</strong>
+          <small>Ważna do: 15.06.2025 (pozostało 32 dni)</small>
+          <div className="profile546-progress"><i style={{ width: '78%' }} /></div>
+          <ul>
+            <li>Dostęp do wszystkich typów PREMIUM</li>
+            <li>Powiadomienia push & e-mail</li>
+            <li>Priorytetowe odpowiedzi</li>
+            <li>Dostęp do statystyk zaawansowanych</li>
+          </ul>
+          <button type="button">Zarządzaj subskrypcją</button>
+        </aside>
+      </div>
+
+      <div className="profile546-stats-grid">
+        {statTiles.map(([label, value]) => (
+          <div className="profile546-stat" key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="profile546-middle-grid">
+        <article className="profile546-main-card profile546-chart-card">
+          <div className="profile546-card-head">
+            <h3>WYKRES WYNIKÓW</h3>
+            <div className="profile546-chip-row"><button type="button">Zysk</button><div><span>7D</span><span>30D</span><span>90D</span><span>1R</span><span className="active">Wszystkie</span></div></div>
+          </div>
+          <svg className="profile546-linechart" viewBox="0 0 860 290" role="img" aria-label="Wykres wyników">
+            <defs>
+              <linearGradient id="profile546Area" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#1fe2cc" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#1fe2cc" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g className="grid">
+              <path d="M72 34H820M72 86H820M72 138H820M72 190H820M72 242H820" />
+              <path d="M72 24V242M160 24V242M248 24V242M336 24V242M424 24V242M512 24V242M600 24V242M688 24V242M776 24V242" />
+            </g>
+            <path className="area" d="M72 214L108 197L144 185L180 190L216 172L252 155L288 142L324 146L360 130L396 118L432 104L468 96L504 112L540 86L576 94L612 72L648 82L684 66L720 74L756 54L792 68L820 60L820 242L72 242Z" />
+            <path className="line" d="M72 214L108 197L144 185L180 190L216 172L252 155L288 142L324 146L360 130L396 118L432 104L468 96L504 112L540 86L576 94L612 72L648 82L684 66L720 74L756 54L792 68L820 60" />
+            <g className="dots"><circle cx="252" cy="155" r="4" /><circle cx="432" cy="104" r="4" /><circle cx="540" cy="86" r="4" /><circle cx="684" cy="66" r="4" /><circle cx="820" cy="60" r="4" /></g>
+            <g className="labels"><text x="18" y="38">+20k zł</text><text x="18" y="90">+15k zł</text><text x="18" y="142">+10k zł</text><text x="28" y="194">+5k zł</text><text x="42" y="246">0 zł</text><text x="72" y="278">mar 22</text><text x="170" y="278">cze 22</text><text x="268" y="278">wrz 22</text><text x="366" y="278">gru 22</text><text x="464" y="278">mar 23</text><text x="562" y="278">cze 23</text><text x="660" y="278">gru 23</text><text x="758" y="278">cze 24</text><text x="798" y="278">maj 25</text></g>
+            <g className="callout"><rect x="674" y="36" width="106" height="44" rx="10" /><text x="688" y="55">24 kwi 2024</text><text x="688" y="72">+ 16 250,45 zł</text></g>
+          </svg>
+        </article>
+
+        <article className="profile546-main-card profile546-donut-card">
+          <div className="profile546-card-head"><h3>ROZKŁAD TYPÓW WG SPORTU</h3></div>
+          <div className="profile546-donut-wrap">
+            <div className="profile546-donut-chart"><div></div></div>
+            <div className="profile546-sport-list">
+              <span><i className="c1"></i>Piłka nożna <b>78.6%</b></span>
+              <span><i className="c2"></i>Tenis <b>11.4%</b></span>
+              <span><i className="c3"></i>Koszykówka <b>5.7%</b></span>
+              <span><i className="c4"></i>Hokej <b>2.4%</b></span>
+              <span><i className="c5"></i>Siatkówka <b>1.2%</b></span>
+              <span><i className="c6"></i>Inne <b>0.7%</b></span>
+            </div>
+          </div>
+          <button type="button" className="profile546-link-btn">Zobacz pełną analizę →</button>
+        </article>
+
+        <article className="profile546-main-card profile546-leagues-card">
+          <div className="profile546-card-head"><h3>NAJLEPSZE LIGI</h3></div>
+          <div className="profile546-table slim">
+            <div className="profile546-table-head slim"><span>LIGA</span><span>ROI</span><span>WIN RATE</span></div>
+            {leagues.map(([name, roi, win]) => (
+              <div className="profile546-table-row slim" key={name}><span>{name}</span><strong>{roi}</strong><em>{win}</em></div>
+            ))}
+          </div>
+          <button type="button" className="profile546-link-btn">Zobacz wszystkie ligi →</button>
+        </article>
+      </div>
+
+      <div className="profile546-bottom-grid">
+        <article className="profile546-main-card profile546-recent-card">
+          <div className="profile546-card-head"><h3>OSTATNIE TYPY</h3></div>
+          <div className="profile546-table recent">
+            <div className="profile546-table-head recent"><span>MECZ</span><span>TYP</span><span>KURS</span><span>STAKE</span><span>WYNIK</span><span>ZYSK</span></div>
+            {tipsRows.map(([match, pick, odds, stake, status, result, meta]) => (
+              <div className="profile546-table-row recent" key={match}>
+                <div><b>{match}</b><small>{meta}</small></div>
+                <span>{pick}</span>
+                <span>{odds}</span>
+                <span>{stake}</span>
+                <em className={status === 'WYGRANY' ? 'win' : status === 'PRZEGRANY' ? 'loss' : 'pending'}>{status}</em>
+                <strong className={result.startsWith('+') ? 'profit' : result.startsWith('-') ? 'loss' : ''}>{result}</strong>
               </div>
             ))}
           </div>
-          <button className="my-profile-more-btn" type="button">Zobacz wszystkie typy</button>
-        </div>
+          <button type="button" className="profile546-link-btn">Zobacz wszystkie typy →</button>
+        </article>
 
-        <div className="my-profile-card my-profile-chart-card">
-          <div className="my-profile-card-head">
-            <h2>Statystyki wyników</h2>
-            <button type="button">Ostatnie 30 dni ⌄</button>
+        <article className="profile546-main-card profile546-achievements-card">
+          <div className="profile546-card-head"><h3>OSIĄGNIĘCIA</h3></div>
+          <div className="profile546-achievements-grid">
+            <div><i>🏅</i><b>Złoty Typer</b><span>Top 1% rankingu</span></div>
+            <div><i>⭐</i><b>Król ROI</b><span>ROI powyżej 100%</span></div>
+            <div><i>📈</i><b>Seria Mistrza</b><span>15+ wygranych z rzędu</span></div>
+            <div><i>🌙</i><b>Nocny Marek</b><span>Najlepsze typy nocą</span></div>
           </div>
-          <div className="my-profile-chart-grid">
-            <div className="my-profile-line-card">
-              <span>Wynik netto (zł)</span>
-              <strong>+1 248 zł</strong>
-              <svg viewBox="0 0 520 300" role="img" aria-label="Wykres wyniku netto">
-                <defs>
-                  <linearGradient id="myProfileLineFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#1fe2ae" stopOpacity=".42" />
-                    <stop offset="100%" stopColor="#1fe2ae" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <g className="grid-lines"><path d="M40 60H500M40 140H500M40 220H500" /></g>
-                <path className="area" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48 L492 242 L42 242 Z" />
-                <path className="line" d="M42 220 L72 195 L98 214 L126 182 L160 168 L188 205 L214 190 L244 118 L272 92 L302 140 L330 106 L358 158 L390 125 L420 142 L456 84 L492 48" />
-                <g className="dots"><circle cx="72" cy="195" r="4"/><circle cx="126" cy="182" r="4"/><circle cx="244" cy="118" r="4"/><circle cx="330" cy="106" r="4"/><circle cx="456" cy="84" r="4"/><circle cx="492" cy="48" r="4"/></g>
-                <g className="axis"><text x="40" y="46">1.5k zł</text><text x="42" y="146">750 zł</text><text x="42" y="226">0 zł</text><text x="42" y="286">18 maj</text><text x="150" y="286">25 maj</text><text x="266" y="286">1 cze</text><text x="385" y="286">8 cze</text><text x="470" y="286">16 cze</text></g>
-              </svg>
-            </div>
-            <div className="my-profile-donut-card">
-              <span>Udział typów</span>
-              <div className="my-profile-donut"><div><strong>78%</strong><small>Skuteczność</small></div></div>
-              <div className="my-profile-legend"><span><i className="win"/>Wygrane <b>78% (47)</b></span><span><i className="loss"/>Przegrane <b>16% (10)</b></span><span><i className="active"/>Aktywne <b>6% (4)</b></span></div>
-            </div>
+          <button type="button" className="profile546-link-btn">Zobacz wszystkie odznaki →</button>
+        </article>
+
+        <article className="profile546-main-card profile546-reviews-card">
+          <div className="profile546-card-head"><h3>OPINIE UŻYTKOWNIKÓW</h3></div>
+          <div className="profile546-review-list">
+            {reviews.map(([name, text, time]) => (
+              <div className="profile546-review" key={name + time}>
+                <div className="profile546-review-avatar">{name.slice(0,1)}</div>
+                <div><b>{name}</b><span>★★★★★</span><p>{text}</p></div>
+                <small>{time}</small>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
+          <button type="button" className="profile546-link-btn">Zobacz wszystkie opinie →</button>
+        </article>
 
-      <div className="my-profile-bottom-grid">
-        <div className="my-profile-card my-profile-mini-card">
-          <div className="mini-orb">⚽</div>
-          <div><h3>Najlepsza dyscyplina</h3><strong>Piłka nożna<br/><span>83%</span></strong><p>Skuteczność</p></div>
-          <button type="button">Zobacz szczegóły</button>
-        </div>
-        <div className="my-profile-card my-profile-mini-card blue">
-          <div className="mini-orb">〽</div>
-          <div><h3>Średni kurs</h3><strong>1.92</strong><p>Średni kurs<br/><b>+0.14 vs poprzednie 30 dni</b></p></div>
-          <button type="button">Zobacz analizę</button>
-        </div>
-      </div>
-
-      <div className="my-profile-ai-tip">
-        <div><span>💡</span><b>Wskazówka AI</b><p>Twoja skuteczność wzrasta o 14% w weekendy. Rozważ zwiększenie aktywności w tych dniach.</p></div>
-        <button type="button">Zobacz rekomendacje ↗</button>
+        <article className="profile546-main-card profile546-history-card">
+          <div className="profile546-card-head"><h3>HISTORIA WYNIKÓW (MIESIĄC PO MIESIĄCU)</h3></div>
+          <div className="profile546-table history">
+            <div className="profile546-table-head history"><span>MIESIĄC</span><span>ZYSK</span><span>ROI</span><span>TYPY</span></div>
+            {history.map(([month, profit, roi, count]) => (
+              <div className="profile546-table-row history" key={month}><span>{month}</span><strong>{profit}</strong><em>{roi}</em><b>{count}</b></div>
+            ))}
+          </div>
+          <button type="button" className="profile546-link-btn">Zobacz pełną historię →</button>
+        </article>
       </div>
     </section>
   )
