@@ -16885,3 +16885,110 @@ img,video,canvas,svg{max-width:100%;}
   .betai-animated-hero.betai-hero-image-slides .betai-hero-image-stage::after{ display:none !important; }
   .betai-animated-hero.betai-hero-image-slides > .betai-hero-stats{ display:none !important; }
 }
+
+/* =========================================================
+   WERSJA 526 — auth panel 80% + pełny ekran dashboardu i zakładek
+   - tylko ekran logowania/rejestracji jest wizualnie skalowany do 80%
+   - po wejściu do aplikacji dashboard i wszystkie zakładki używają pełnej szerokości ekranu
+   - układ prawego panelu / tabeli "Mecze dziś" w hero dashboardu zostaje zachowany
+   ========================================================= */
+@media (min-width: 1101px){
+  .auth481-screen .auth481-wrap{
+    transform:scale(.80)!important;
+    transform-origin:center center!important;
+  }
+}
+
+@media (min-width: 901px){
+  html,
+  body,
+  #root{
+    width:100%!important;
+    max-width:none!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  .app-shell{
+    width:100vw!important;
+    max-width:none!important;
+    min-height:100vh!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    padding:22px 24px!important;
+    gap:22px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 1fr) 360px!important;
+  }
+
+  .app-shell.no-rightbar-page{
+    width:100vw!important;
+    max-width:none!important;
+    grid-template-columns:270px minmax(0, 1fr)!important;
+  }
+
+  .app-shell .main{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  .app-shell .topbar{
+    width:100%!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+  }
+
+  .app-shell .feed-section{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  .app-shell.no-rightbar-page .main > section,
+  .app-shell.no-rightbar-page .main > div:not(.topbar),
+  .app-shell.no-rightbar-page .add-page,
+  .app-shell.no-rightbar-page .wallet-panel,
+  .app-shell.no-rightbar-page .wallet-ultra-page,
+  .app-shell.no-rightbar-page .profile-page,
+  .app-shell.no-rightbar-page .profile-ultra-page,
+  .app-shell.no-rightbar-page .leaderboard-page,
+  .app-shell.no-rightbar-page .articles-page,
+  .app-shell.no-rightbar-page .referrals-view,
+  .app-shell.no-rightbar-page .notifications-page,
+  .app-shell.no-rightbar-page .payments-page,
+  .app-shell.no-rightbar-page .subscription-page,
+  .app-shell.no-rightbar-page .subscription-ultra-page,
+  .app-shell.no-rightbar-page .earnings-page,
+  .app-shell.no-rightbar-page .payout-page,
+  .app-shell.no-rightbar-page .admin-finance-page,
+  .app-shell.no-rightbar-page .admin-payout-page,
+  .app-shell.no-rightbar-page .admin-payout-page-pro,
+  .app-shell.no-rightbar-page .ai-premium-dashboard{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
+  }
+
+  .app-shell.no-rightbar-page .ultra-page-banner,
+  .app-shell.no-rightbar-page .add-page .ultra-page-banner,
+  .app-shell.no-rightbar-page .ai-premium-dashboard .ultra-page-banner{
+    width:100%!important;
+    max-width:none!important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1360px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:240px minmax(0, 1fr) 320px!important;
+  }
+  .app-shell.no-rightbar-page{
+    grid-template-columns:240px minmax(0, 1fr)!important;
+  }
+}
