@@ -345,6 +345,7 @@ function normalizeTipRow(row = {}) {
     ai_confidence: Number(row.ai_confidence ?? row.ai_probability ?? row.confidence ?? 0),
     access_type: premium ? 'premium' : 'free',
     is_premium: premium,
+    price: Math.max(0, Number(row.price ?? row.single_price ?? row.tip_price ?? (premium ? 29 : 0)) || 0),
     status: row.status || 'pending',
     created_at: row.created_at || new Date().toISOString()
   }
@@ -1742,7 +1743,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const actorLabel = currentUsername || author || 'Gość'
   const baseLikes = Number(tip?.likes ?? 128) || 128
   const baseDislikes = Number(tip?.dislikes ?? 0) || 0
-  const baseCommentCount = Number(tip?.comments ?? 45) || 45
+  const baseCommentCount = 0
   const interactionStorageKey = useMemo(
     () => `betai_tip_interactions_v3_${tip?.id || `${tip?.team_home || 'home'}_${tip?.team_away || 'away'}_${tip?.created_at || 'now'}`}`,
     [tip?.id, tip?.team_home, tip?.team_away, tip?.created_at]
@@ -1763,7 +1764,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       setFeedback({
         likes: Number(parsed?.likes ?? baseLikes) || 0,
         dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
-        comments: Array.isArray(parsed?.comments) ? parsed.comments : [],
+        comments: [],
         votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {}
       })
     } catch (_) {
@@ -1888,8 +1889,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
         {isLocked ? (
           <>
-            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
-            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup dostęp do profilu</button>
+            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup singiel za {Number(tip.price || 29).toFixed(2)} zł</button>
+            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup subskrypcję profilu</button>
           </>
         ) : (
           <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
@@ -1902,10 +1903,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <strong>Komentarze</strong>
             <span>{commentCount} łącznie</span>
           </div>
-
-          {baseCommentCount > 0 && feedback.comments.length === 0 && (
-            <div className="tip-comments-note">Komentarze historyczne nie są jeszcze pobrane z bazy. Możesz dodać nowy komentarz poniżej.</div>
-          )}
 
           <div className="tip-comment-form">
             <input
@@ -2289,9 +2286,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             </div>
 
+            <div className="static-add-card static-span-two tip-single-price-card">
+              <span className="static-add-label">12. Cena singla premium</span>
+              <div className="tip-price-config">
+                <div>
+                  <strong>Ustal cenę pojedynczego typu</strong>
+                  <p>Każdy tipster sam decyduje, za ile sprzedaje pojedynczy typ premium.</p>
+                </div>
+                <div className="tip-price-box">
+                  <span>Cena singla</span>
+                  <b>29.00 zł</b>
+                  <small>Ty: 23.20 zł • Platforma: 5.80 zł</small>
+                </div>
+              </div>
+            </div>
+
             <div className="static-add-card static-span-two publish-card">
               <div>
-                <span className="static-add-label">12. Darmowy / Premium</span>
+                <span className="static-add-label">13. Darmowy / Premium</span>
                 <p>Wybierz widoczność typu dla użytkowników</p>
               </div>
               <div className="publish-actions">
@@ -2325,7 +2337,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <div><small>PEWNOŚĆ</small><strong className="accent">84%</strong></div>
                 <div><small>STAWKA</small><strong>100.00 zł</strong></div>
                 <div><small>ANALIZA AI</small><strong className="accent">AI Wysoka</strong></div>
-                <div><small>DATA DODANIA</small><strong>24.05.2025, 14:32</strong></div>
+                <div><small>CENA SINGLA</small><strong>29.00 zł</strong></div>
               </div>
               <div className="preview-ring">↗</div>
             </div>
@@ -5004,8 +5016,8 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
     <div className="payment-backdrop">
       <div className="payment-modal">
         <div className="payment-icon">💳</div>
-        <h2>Odblokuj typ premium</h2>
-        <p>Stripe Checkout jest gotowy. Dodaj STRIPE_SECRET_KEY w Netlify, aby uruchomić realne płatności.</p>
+        <h2>Kup singiel premium</h2>
+        <p>Kupujesz pojedynczy typ premium. Cenę singla ustala tipster przy publikacji typu.</p>
 
         <div className="payment-summary">
           <span>Mecz</span>
@@ -5097,15 +5109,15 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
     <div className="payment-backdrop">
       <div className="payment-modal profile-sub-modal">
         <div className="payment-icon">👤</div>
-        <h2>Dostęp do profilu tipstera</h2>
-        <p>Kup dostęp do wszystkich typów premium użytkownika <b>{tipsterName}</b>. Platforma zawsze pobiera 20% marży.</p>
+        <h2>Subskrypcja profilu tipstera</h2>
+        <p>Kup subskrypcję profilu użytkownika <b>{tipsterName}</b>. Tipster sam ustala ceny pakietów: tydzień, miesiąc, pół roku i rok. Platforma pobiera 20% marży.</p>
         <div className="profile-sub-grid">
           {plans.map(plan => (
             <button key={plan.key} className="profile-sub-option" type="button" onClick={() => buy(plan)} disabled={Boolean(loadingKey)}>
               <strong>{plan.label}</strong>
               <b>{Number(plan.price || 0).toFixed(2)} zł</b>
               <span>Tipster: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
-              <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup dostęp'}</em>
+              <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup subskrypcję'}</em>
             </button>
           ))}
         </div>
@@ -5371,7 +5383,7 @@ function TipsterPricingSettings({ user, onToast }) {
 
   return (
     <div className="profile-panel tipster-pricing-panel">
-      <div className="profile-panel-head"><h3>Ceny dostępu do profilu</h3><span>20% marży</span></div>
+      <div className="profile-panel-head"><h3>Ceny subskrypcji profilu</h3><span>Tipster ustala ceny</span></div>
       <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
       <div className="pricing-settings-grid">
         {TIPSTER_PLAN_OPTIONS.map(plan => (
@@ -5383,7 +5395,7 @@ function TipsterPricingSettings({ user, onToast }) {
         ))}
       </div>
       {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny dostępu'}</button>
+      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny subskrypcji'}</button>
     </div>
   )
 }
@@ -5476,6 +5488,8 @@ function ProfileView({ user, tips = [] }) {
             <button type="button">◔ Historia</button>
             <button type="button">💬 Opinie</button>
           </div>
+
+          <TipsterPricingSettings user={user} onToast={null} />
 
           <div className="profile-v3-content-grid">
             <div className="profile-v3-left-col">

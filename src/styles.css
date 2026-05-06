@@ -20644,3 +20644,85 @@ img,video,canvas,svg{max-width:100%;}
     align-items:stretch!important;
   }
 }
+
+/* WERSJA 586 — ceny singla premium i pakietów subskrypcji profilu */
+.tip-single-price-card .tip-price-config{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+}
+.tip-single-price-card .tip-price-config strong{
+  display:block!important;
+  color:#eefcff!important;
+  font-size:16px!important;
+  margin-bottom:6px!important;
+}
+.tip-single-price-card .tip-price-config p{
+  margin:0!important;
+  color:#9db3c0!important;
+  font-weight:700!important;
+}
+.tip-single-price-card .tip-price-box{
+  min-width:230px!important;
+  padding:14px 16px!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(6,24,36,.96),rgba(4,15,24,.98))!important;
+  border:1px solid rgba(35,213,222,.16)!important;
+  box-shadow:0 14px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.tip-single-price-card .tip-price-box span,
+.tip-single-price-card .tip-price-box small{
+  display:block!important;
+  color:#91a8b6!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.tip-single-price-card .tip-price-box b{
+  display:block!important;
+  color:#22eee2!important;
+  font-size:24px!important;
+  line-height:1.1!important;
+  margin:5px 0!important;
+}
+.profile-v3-main > .tipster-pricing-panel{
+  margin:16px 0!important;
+  border-radius:22px!important;
+  padding:18px!important;
+}
+.profile-v3-main > .tipster-pricing-panel .profile-panel-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:8px!important;
+}
+.profile-v3-main > .tipster-pricing-panel .profile-panel-head h3{
+  margin:0!important;
+  color:#eefcff!important;
+}
+.profile-v3-main > .tipster-pricing-panel .profile-panel-head span{
+  display:inline-flex!important;
+  align-items:center!important;
+  border-radius:999px!important;
+  padding:6px 10px!important;
+  background:rgba(35,213,222,.10)!important;
+  border:1px solid rgba(35,213,222,.18)!important;
+  color:#26e8e4!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+}
+.profile-v3-main > .tipster-pricing-panel .pricing-settings-grid input{
+  height:42px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  background:rgba(4,15,24,.9)!important;
+  color:#eefcff!important;
+  padding:0 12px!important;
+  font-weight:900!important;
+}
+@media (max-width:760px){
+  .tip-single-price-card .tip-price-config{flex-direction:column!important;align-items:stretch!important}
+  .tip-single-price-card .tip-price-box{min-width:0!important;width:100%!important}
+}
