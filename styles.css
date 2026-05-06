@@ -17822,3 +17822,25 @@ img,video,canvas,svg{max-width:100%;}
     max-width:600px!important;
   }
 }
+
+
+/* WERSJA 576 — tylko prawa kolumna: obniżona i wyrównana wysokością względem lewej kolumny / wyszukiwarki */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    margin-top:18px!important;
+    padding-top:0!important;
+    top:24px!important;
+    height:calc(100vh - 66px)!important;
+    max-height:calc(100vh - 66px)!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    margin-top:18px!important;
+    padding-top:0!important;
+    top:24px!important;
+    height:calc(100vh - 66px)!important;
+    max-height:calc(100vh - 66px)!important;
+  }
+}
