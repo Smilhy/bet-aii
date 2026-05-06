@@ -2563,7 +2563,76 @@ function ReferralsView({ user, data, loading, onRefresh }) {
   )
 }
 
+function getSportPlRelativeTime(value) {
+  const time = value ? new Date(value).getTime() : Date.now()
+  if (!Number.isFinite(time)) return 'Teraz'
+  const diff = Math.max(0, Date.now() - time)
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'Teraz'
+  if (minutes < 60) return `${minutes} min temu`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h temu`
+  return new Date(time).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function getSportPlInitials(title = '') {
+  const words = String(title).replace(/[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
+  return (words[0]?.[0] || 'S').toUpperCase() + (words[1]?.[0] || 'P').toUpperCase()
+}
+
+function isImportantSportPlNews(item = {}) {
+  const text = `${item.title || ''} ${item.excerpt || ''} ${item.category || ''}`.toLowerCase()
+  return ['pilne', 'oficjalnie', 'kontuzja', 'transfer', 'zwolniony', 'zmarł', 'afera', 'sensacja', 'skandal', 'polska', 'reprezentacja', 'świątek', 'lewandowski', 'liga mistrzów', 'finał'].some(word => text.includes(word))
+}
+
 function ArticlesView() {
+  const [activeArticleTab, setActiveArticleTab] = useState('articles')
+  const [liveArticles, setLiveArticles] = useState([])
+  const [liveLoading, setLiveLoading] = useState(true)
+  const [liveError, setLiveError] = useState('')
+  const [lastLiveUpdate, setLastLiveUpdate] = useState(null)
+  const [importantNews, setImportantNews] = useState([])
+
+  useEffect(() => {
+    let isMounted = true
+    let intervalId = null
+
+    const loadSportPlArticles = async () => {
+      try {
+        setLiveError('')
+        const response = await fetch(`/.netlify/functions/sportpl-articles?limit=24&t=${Date.now()}`, { cache: 'no-store' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const payload = await response.json()
+        const articles = Array.isArray(payload?.articles) ? payload.articles : []
+        if (!isMounted) return
+        setLiveArticles(articles)
+        setLastLiveUpdate(payload?.updatedAt || new Date().toISOString())
+        const hot = articles.filter(isImportantSportPlNews).slice(0, 5)
+        setImportantNews(hot)
+        try {
+          const newestId = articles[0]?.id || articles[0]?.url || ''
+          const previousId = localStorage.getItem('betai_sportpl_live_newest') || ''
+          if (newestId && previousId && newestId !== previousId && hot.length) {
+            setActiveArticleTab('live')
+          }
+          if (newestId) localStorage.setItem('betai_sportpl_live_newest', newestId)
+        } catch (_) {}
+      } catch (error) {
+        if (!isMounted) return
+        setLiveError('Nie udało się odświeżyć Sport.pl. Spróbujemy ponownie automatycznie za 10 minut.')
+      } finally {
+        if (isMounted) setLiveLoading(false)
+      }
+    }
+
+    loadSportPlArticles()
+    intervalId = window.setInterval(loadSportPlArticles, 10 * 60 * 1000)
+    return () => {
+      isMounted = false
+      if (intervalId) window.clearInterval(intervalId)
+    }
+  }, [])
+
   const articleCards = [
     {
       tag: 'ANALIZA',
@@ -2594,6 +2663,19 @@ function ArticlesView() {
       icon: 'JK'
     },
   ]
+
+  const sportPlCards = liveArticles.length ? liveArticles.slice(0, 4).map((item, index) => ({
+    tag: item.category || 'SPORT.PL',
+    title: item.title || 'Sport.pl — wiadomość sportowa',
+    body: item.excerpt || 'Kliknij, aby przejść do pełnej wiadomości na Sport.pl.',
+    meta: getSportPlRelativeTime(item.publishedAt),
+    icon: getSportPlInitials(item.title),
+    url: item.url,
+    isImportant: isImportantSportPlNews(item),
+    index
+  })) : articleCards
+
+  const heroArticle = liveArticles[0]
 
   const tvRows = [
     ['18:30', 'CANAL+ SPORT', 'Manchester City – Arsenal', 'Premier League'],
@@ -2649,19 +2731,65 @@ function ArticlesView() {
       <div className="tvlive-layout-v8">
         <div className="tvlive-main-v8">
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
-            <button type="button" className="active">Artykuły</button>
-            <button type="button">News</button>
-            <button type="button">TV / PPV</button>
-            <button type="button">Wyniki live</button>
+            <button type="button" className={activeArticleTab === 'articles' ? 'active' : ''} onClick={() => setActiveArticleTab('articles')}>Artykuły</button>
+            <button type="button" className={activeArticleTab === 'live' ? 'active live-tab-pulse-v538' : 'live-tab-pulse-v538'} onClick={() => setActiveArticleTab('live')}>🔴 Żywa</button>
+            <button type="button" className={activeArticleTab === 'news' ? 'active' : ''} onClick={() => setActiveArticleTab('news')}>News</button>
+            <button type="button" className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV / PPV</button>
+            <button type="button" className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
 
-          <div className="tvlive-top-grid-v8">
+          {importantNews.length ? (
+            <div className="glass-tvlive-v8 sportpl-alert-v538" onClick={() => setActiveArticleTab('live')}>
+              <span>WAŻNE ZE SPORT.PL</span>
+              <strong>{importantNews[0].title}</strong>
+              <small>Auto-sprawdzanie co 10 min • {lastLiveUpdate ? getSportPlRelativeTime(lastLiveUpdate) : 'Teraz'}</small>
+            </div>
+          ) : null}
+
+          {activeArticleTab === 'live' ? (
+            <div className="glass-tvlive-v8 sportpl-live-panel-v538">
+              <div className="sportpl-live-head-v538">
+                <div>
+                  <span>SPORT.PL LIVE FEED</span>
+                  <h2>Żywa zakładka wiadomości</h2>
+                  <p>Pobiera najnowsze informacje ze Sport.pl i automatycznie sprawdza ważne wiadomości co 10 minut.</p>
+                </div>
+                <div className="sportpl-live-status-v538">
+                  <b>{liveLoading ? 'ŁADOWANIE' : 'LIVE'}</b>
+                  <small>Ostatnio: {lastLiveUpdate ? getSportPlRelativeTime(lastLiveUpdate) : 'start'}</small>
+                </div>
+              </div>
+              {liveError ? <div className="sportpl-error-v538">{liveError}</div> : null}
+              <div className="sportpl-live-grid-v538">
+                {sportPlCards.concat(liveArticles.slice(4, 12).map((item, index) => ({
+                  tag: item.category || 'SPORT.PL',
+                  title: item.title || 'Sport.pl — wiadomość sportowa',
+                  body: item.excerpt || 'Kliknij, aby przejść do pełnej wiadomości na Sport.pl.',
+                  meta: getSportPlRelativeTime(item.publishedAt),
+                  icon: getSportPlInitials(item.title),
+                  url: item.url,
+                  isImportant: isImportantSportPlNews(item),
+                  index: index + 4
+                }))).slice(0, 12).map((item, idx) => (
+                  <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
+                    <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                    <div className="sportpl-live-item-foot-v538"><b>{item.icon}</b><em>Sport.pl ↗</em></div>
+                  </article>
+                ))}
+              </div>
+              {!liveArticles.length && liveLoading ? <div className="sportpl-loading-v538">Pobieram wiadomości ze Sport.pl...</div> : null}
+            </div>
+          ) : null}
+
+          {activeArticleTab !== 'live' ? <div className="tvlive-top-grid-v8">
             <div className="glass-tvlive-v8 tvlive-hero-v8">
               <div className="hero-badge-v8">TRENDING</div>
               <div className="hero-copy-v8">
-                <h1>Mecz na szczycie Premier League: City kontra Arsenal</h1>
-                <p>Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.</p>
-                <button type="button">Czytaj artykuł</button>
+                <h1>{heroArticle?.title || 'Mecz na szczycie Premier League: City kontra Arsenal'}</h1>
+                <p>{heroArticle?.excerpt || 'Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.'}</p>
+                <button type="button" onClick={() => heroArticle?.url && window.open(heroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
               </div>
               <div className="hero-vs-v8">VS</div>
               <div className="hero-player-v8 left">MC</div>
@@ -2703,21 +2831,24 @@ function ArticlesView() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> : null}
 
+          {activeArticleTab !== 'live' ? <>
           <div className="section-head-v8"><h2>Najnowsze artykuły</h2><button type="button">Zobacz wszystkie</button></div>
           <div className="article-grid-v8">
-            {articleCards.map((item, idx) => (
-              <article className="glass-tvlive-v8 article-card-v8" key={idx}>
-                <div className={`article-cover-v8 c${idx+1}`}><span>{item.tag}</span><small>{item.meta}</small><strong>{item.icon}</strong></div>
+            {sportPlCards.map((item, idx) => (
+              <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
+                <div className={`article-cover-v8 c${(idx % 4)+1}`}><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small><strong>{item.icon}</strong></div>
                 <div className="article-body-v8">
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
-                  <div className="article-foot-v8"><span>🔥 24</span><span>💬 Komentarze</span></div>
+                  <div className="article-foot-v8"><span>{item.isImportant ? '🚨 Ważne' : '🔥 Sport.pl'}</span><span>↗ Czytaj</span></div>
                 </div>
               </article>
             ))}
           </div>
+
+          </> : null}
 
           <div className="glass-tvlive-v8 livescore-wrap-v8">
             <div className="card-head-v8"><h3>Wyniki live</h3><button type="button">⚙ Ustawienia</button></div>
