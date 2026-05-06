@@ -20726,3 +20726,146 @@ img,video,canvas,svg{max-width:100%;}
   .tip-single-price-card .tip-price-config{flex-direction:column!important;align-items:stretch!important}
   .tip-single-price-card .tip-price-box{min-width:0!important;width:100%!important}
 }
+
+/* WERSJA 587 — ciemny wygląd modali zakupu zgodny z resztą dashboardu */
+.payment-backdrop{
+  background:rgba(2,10,18,.68)!important;
+  backdrop-filter:blur(10px)!important;
+}
+
+.payment-modal,
+.payment-modal.profile-sub-modal{
+  background:linear-gradient(180deg,rgba(7,19,30,.98),rgba(3,10,17,.99))!important;
+  border:1px solid rgba(49,216,223,.16)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(15,155,170,.05)!important;
+  color:#eefcff!important;
+}
+
+.payment-modal.profile-sub-modal{
+  max-width:720px!important;
+}
+
+.payment-modal h2,
+.payment-modal.profile-sub-modal h2{
+  color:#eefcff!important;
+}
+
+.payment-modal p,
+.payment-modal.profile-sub-modal p{
+  color:#9fb2c1!important;
+}
+
+.payment-modal p b,
+.payment-modal.profile-sub-modal p b{
+  color:#eefcff!important;
+}
+
+.payment-icon{
+  background:linear-gradient(180deg,rgba(22,226,197,.16),rgba(13,112,120,.20))!important;
+  border:1px solid rgba(39,219,220,.16)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.22)!important;
+}
+
+.payment-summary{
+  background:linear-gradient(180deg,rgba(8,22,34,.96),rgba(5,15,24,.98))!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+}
+
+.payment-summary span{
+  color:#8ea6b6!important;
+}
+
+.payment-summary strong{
+  color:#edfaff!important;
+}
+
+.payment-price{
+  background:linear-gradient(135deg,rgba(10,70,74,.98),rgba(15,145,131,.96))!important;
+  border:1px solid rgba(38,218,213,.20)!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.24), 0 0 18px rgba(38,218,213,.08)!important;
+}
+
+.payment-price span{
+  color:rgba(239,252,255,.76)!important;
+}
+
+.payment-price b{
+  color:#ffffff!important;
+}
+
+.payment-primary,
+.payment-demo,
+.payment-secondary,
+.profile-sub-option{
+  font-family:inherit!important;
+}
+
+.payment-primary{
+  background:linear-gradient(135deg,#1fe2ae 0%,#18c9c3 55%,#0b7a72 100%)!important;
+  color:#041314!important;
+  border:1px solid rgba(31,226,174,.26)!important;
+  box-shadow:0 16px 36px rgba(31,226,174,.16)!important;
+}
+
+.payment-primary:hover,
+.profile-sub-option:hover{
+  transform:translateY(-1px)!important;
+}
+
+.payment-demo{
+  background:rgba(8,28,41,.98)!important;
+  color:#c7e8ff!important;
+  border:1px solid rgba(102,174,255,.24)!important;
+  box-shadow:none!important;
+}
+
+.payment-secondary{
+  background:rgba(255,255,255,.03)!important;
+  color:#dce8ef!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+
+.payment-error{
+  background:rgba(127,29,29,.22)!important;
+  border:1px solid rgba(248,113,113,.26)!important;
+  color:#fecaca!important;
+}
+
+.profile-sub-grid{
+  gap:14px!important;
+}
+
+.profile-sub-option{
+  background:linear-gradient(180deg,rgba(8,22,34,.96),rgba(5,15,24,.99))!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#eefcff!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.16)!important;
+}
+
+.profile-sub-option:hover{
+  border-color:rgba(38,218,213,.30)!important;
+  background:linear-gradient(180deg,rgba(10,29,43,.98),rgba(7,18,29,.99))!important;
+}
+
+.profile-sub-option strong{
+  color:#eefcff!important;
+}
+
+.profile-sub-option b{
+  color:#37ebe0!important;
+}
+
+.profile-sub-option span{
+  color:#97adbc!important;
+}
+
+.profile-sub-option em{
+  color:#d8fbf6!important;
+  background:linear-gradient(135deg,rgba(31,226,174,.14),rgba(24,201,195,.09))!important;
+  border:1px solid rgba(31,226,174,.16)!important;
+  border-radius:12px!important;
+  padding:10px 12px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}

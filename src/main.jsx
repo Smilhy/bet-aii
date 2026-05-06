@@ -411,7 +411,7 @@ function isGuaranteedPremiumIdentity(user) {
 function isAdminUser(user) {
   const email = getProfileEmail(user)
   const username = getProfileUsername(user)
-  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv' || Boolean(user?.is_admin)
+  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv'
 }
 
 function isPremiumAccount(plan) {
@@ -423,10 +423,10 @@ function isPremiumProfile(profile) {
   if (!profile) return false
   return isGuaranteedPremiumIdentity(profile) ||
     Boolean(profile.is_premium) ||
-    Boolean(profile.is_admin) ||
+    isAdminUser(profile) ||
     isPremiumAccount(profile.plan) ||
     ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
-    ['admin', 'premium'].includes(String(profile.status || '').toLowerCase())
+    (String(profile.status || '').toLowerCase() === 'premium' || isAdminUser(profile))
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
@@ -5192,7 +5192,7 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
       <div className="paywall-rules-card subscription-rules-card">
         <div>
           <strong>Paywall aktywny</strong>
-          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
+          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży. Premium: brak limitu typów, sprzedaż singli i subskrypcji profilu, 3 wypłaty/miesiąc. Premium nigdy nie daje admina — admin tylko smilhytv.</span>
         </div>
       </div>
     </section>
