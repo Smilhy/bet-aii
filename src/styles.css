@@ -20095,3 +20095,28 @@ img,video,canvas,svg{max-width:100%;}
     max-width:400px!important;
   }
 }
+
+/* WERSJA 569 — tylko poszerzenie prawej kolumny, bez ruszania lewej i środka */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.94fr) 410px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:410px!important;
+    min-width:410px!important;
+    max-width:410px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.93fr) 430px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:430px!important;
+    min-width:430px!important;
+    max-width:430px!important;
+  }
+}
