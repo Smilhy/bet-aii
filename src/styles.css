@@ -20120,3 +20120,28 @@ img,video,canvas,svg{max-width:100%;}
     max-width:430px!important;
   }
 }
+
+/* WERSJA 570 — dodatkowe rozciągnięcie całej prawej kolumny o ok. 5% */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.94fr) 431px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:431px!important;
+    min-width:431px!important;
+    max-width:431px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.93fr) 452px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:452px!important;
+    min-width:452px!important;
+    max-width:452px!important;
+  }
+}
