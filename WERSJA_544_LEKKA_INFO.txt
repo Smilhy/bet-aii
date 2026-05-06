@@ -1,0 +1,1 @@
+Wersja 544 lekka: ta sama funkcjonalność co 543, ale usunięto node_modules i dist z paczki, żeby ZIP był dużo mniejszy. Netlify sam zainstaluje zależności i wykona npm run build.

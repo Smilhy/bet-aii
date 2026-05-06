@@ -2599,6 +2599,8 @@ function ArticlesView() {
   const [liveError, setLiveError] = useState('')
   const [lastLiveUpdate, setLastLiveUpdate] = useState(null)
   const [importantNews, setImportantNews] = useState([])
+  const [articleHeroIndex, setArticleHeroIndex] = useState(0)
+  const articleHeroSwipeStart = useRef(null)
 
   useEffect(() => {
     let isMounted = true
@@ -2679,11 +2681,56 @@ function ArticlesView() {
     icon: getSportPlInitials(item.title),
     url: item.url,
     image: getSportPlImageSrc(item),
+    rawImage: item.image || '',
     isImportant: isImportantSportPlNews(item),
     index
   })) : articleCards
 
-  const heroArticle = liveArticles[0]
+  const articleHeroSlides = liveArticles.length ? liveArticles.slice(0, 6).map((item, index) => ({
+    tag: item.category || 'TRENDING',
+    title: item.title || 'Sport.pl — wiadomość sportowa',
+    excerpt: item.excerpt || 'Kliknij, aby przeczytać pełny artykuł na Sport.pl.',
+    meta: getSportPlRelativeTime(item.publishedAt),
+    icon: getSportPlInitials(item.title),
+    url: item.url,
+    image: getSportPlImageSrc(item),
+    rawImage: item.image || '',
+    isImportant: isImportantSportPlNews(item),
+    index
+  })) : articleCards.map((item, index) => ({
+    ...item,
+    excerpt: item.body,
+    image: '',
+    rawImage: '',
+    index
+  }))
+
+  const heroArticle = articleHeroSlides[articleHeroIndex % Math.max(articleHeroSlides.length, 1)] || articleHeroSlides[0]
+
+  useEffect(() => {
+    if (articleHeroIndex >= articleHeroSlides.length) setArticleHeroIndex(0)
+  }, [articleHeroSlides.length, articleHeroIndex])
+
+  useEffect(() => {
+    if (activeArticleTab !== 'articles' || articleHeroSlides.length <= 1) return
+    const sliderTimer = window.setInterval(() => {
+      setArticleHeroIndex(prev => (prev + 1) % articleHeroSlides.length)
+    }, 5500)
+    return () => window.clearInterval(sliderTimer)
+  }, [activeArticleTab, articleHeroSlides.length])
+
+  const moveArticleHero = (direction) => {
+    if (!articleHeroSlides.length) return
+    setArticleHeroIndex(prev => (prev + direction + articleHeroSlides.length) % articleHeroSlides.length)
+  }
+
+  const handleArticleHeroPointerUp = (event) => {
+    const startX = articleHeroSwipeStart.current
+    articleHeroSwipeStart.current = null
+    if (startX == null) return
+    const diff = event.clientX - startX
+    if (Math.abs(diff) > 45) moveArticleHero(diff < 0 ? 1 : -1)
+  }
 
   const tvRows = [
     ['18:30', 'CANAL+ SPORT', 'Manchester City – Arsenal', 'Premier League'],
@@ -2741,7 +2788,6 @@ function ArticlesView() {
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
             <button type="button" aria-pressed={activeArticleTab === 'articles'} className={activeArticleTab === 'articles' ? 'active' : ''} onClick={() => setActiveArticleTab('articles')}>Artykuły</button>
             <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Żywa</button>
-            <button type="button" aria-pressed={activeArticleTab === 'news'} className={activeArticleTab === 'news' ? 'active' : ''} onClick={() => setActiveArticleTab('news')}>News</button>
             <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV / PPV</button>
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
@@ -2778,12 +2824,13 @@ function ArticlesView() {
                   icon: getSportPlInitials(item.title),
                   url: item.url,
                   image: getSportPlImageSrc(item),
+                  rawImage: item.image || '',
                   isImportant: isImportantSportPlNews(item),
                   index: index + 4
                 }))).slice(0, 12).map((item, idx) => (
                   <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''} ${item.image ? 'has-image-v540' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
                     <div className="sportpl-live-media-v540">
-                      {item.image ? <img src={item.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); event.currentTarget.remove() }} /> : <span>{item.icon}</span>}
+                      {item.image ? <img src={item.image} data-original-src={item.rawImage || ''} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); event.currentTarget.remove() }} /> : <span>{item.icon}</span>}
                     </div>
                     <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
                     <h3>{item.title}</h3>
@@ -2797,20 +2844,34 @@ function ArticlesView() {
           ) : null}
 
           {activeArticleTab !== 'live' ? <div className="tvlive-top-grid-v8">
-            <div className="glass-tvlive-v8 tvlive-hero-v8">
-              <div className="hero-badge-v8">TRENDING</div>
+            <div
+              className={`glass-tvlive-v8 tvlive-hero-v8 article-hero-slider-v543 ${heroArticle?.image ? 'has-sportpl-hero-image-v543' : ''}`}
+              onPointerDown={(event) => { articleHeroSwipeStart.current = event.clientX }}
+              onPointerUp={handleArticleHeroPointerUp}
+            >
+              {heroArticle?.image ? (
+                <div className="article-hero-bg-v543">
+                  <img src={heroArticle.image} data-original-src={heroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.article-hero-slider-v543')?.classList.add('image-error-v543'); event.currentTarget.remove() }} />
+                </div>
+              ) : null}
+              <div className="article-hero-live-strip-v543"><span>LIVE SPORT.PL</span><b>{articleHeroIndex + 1}/{articleHeroSlides.length || 1}</b><em>auto co 5,5 s</em></div>
+              <div className="hero-badge-v8">{heroArticle?.isImportant ? 'PILNE' : heroArticle?.tag || 'TRENDING'}</div>
               <div className="hero-copy-v8">
-                <h1>{heroArticle?.title || 'Mecz na szczycie Premier League: City kontra Arsenal'}</h1>
+                <h1 key={heroArticle?.title}>{heroArticle?.title || 'Mecz na szczycie Premier League: City kontra Arsenal'}</h1>
                 <p>{heroArticle?.excerpt || 'Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.'}</p>
                 <button type="button" onClick={() => heroArticle?.url && window.open(heroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
               </div>
-              <div className="hero-vs-v8">VS</div>
-              <div className="hero-player-v8 left">MC</div>
-              <div className="hero-player-v8 right">ARS</div>
+              <div className="hero-vs-v8 article-hero-logo-v543">{heroArticle?.image ? 'SPORT.PL' : 'VS'}</div>
+              <div className="hero-player-v8 left">{heroArticle?.icon || 'SP'}</div>
+              <div className="hero-player-v8 right">LIVE</div>
               <div className="hero-nav-v8">
-                <span>‹</span>
-                <div className="hero-dots-v8"><i className="active"></i><i></i><i></i><i></i><i></i></div>
-                <span>›</span>
+                <button type="button" aria-label="Poprzednia wiadomość" onClick={() => moveArticleHero(-1)}>‹</button>
+                <div className="hero-dots-v8">
+                  {articleHeroSlides.map((_, index) => (
+                    <button type="button" aria-label={`Wiadomość ${index + 1}`} className={articleHeroIndex === index ? 'active' : ''} key={index} onClick={() => setArticleHeroIndex(index)} />
+                  ))}
+                </div>
+                <button type="button" aria-label="Następna wiadomość" onClick={() => moveArticleHero(1)}>›</button>
               </div>
             </div>
 
@@ -2847,11 +2908,11 @@ function ArticlesView() {
           </div> : null}
 
           {activeArticleTab !== 'live' ? <>
-          <div className="section-head-v8"><h2>{activeArticleTab === 'news' ? 'News ze Sport.pl' : activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Żywą</button></div>
+          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Żywą</button></div>
           <div className="article-grid-v8">
             {sportPlCards.map((item, idx) => (
               <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
-                <div className={`article-cover-v8 c${(idx % 4)+1}`}><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small><strong>{item.icon}</strong></div>
+                <div className={`article-cover-v8 c${(idx % 4)+1} ${item.image ? 'has-sportpl-image-v541' : ''}`} style={item.image ? { backgroundImage: `linear-gradient(180deg, rgba(2,8,14,.12), rgba(2,8,14,.72)), url(${item.image})` } : undefined}><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small><strong>{item.image ? 'SPORT.PL' : item.icon}</strong></div>
                 <div className="article-body-v8">
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>

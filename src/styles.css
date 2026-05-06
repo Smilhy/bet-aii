@@ -17682,3 +17682,195 @@ img,video,canvas,svg{max-width:100%;}
 .sportpl-refresh-v539{position:relative!important;overflow:hidden!important;}
 .sportpl-refresh-v539:after{content:""!important;position:absolute!important;inset:-40% auto -40% -70%!important;width:55%!important;background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent)!important;transform:skewX(-20deg)!important;animation:sportplButtonSweep540 2.8s ease-in-out infinite!important;}
 @keyframes sportplButtonSweep540{0%,55%{left:-70%;}100%{left:130%;}}
+
+/* WERSJA 541 — realne banery Sport.pl w kafelkach artykułów */
+.article-cover-v8.has-sportpl-image-v541{
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  min-height:154px!important;
+  position:relative!important;
+  overflow:hidden!important;
+}
+.article-cover-v8.has-sportpl-image-v541:after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  background:linear-gradient(180deg,rgba(2,8,14,0) 35%,rgba(2,8,14,.78) 100%)!important;
+  pointer-events:none!important;
+}
+.article-cover-v8.has-sportpl-image-v541 span,
+.article-cover-v8.has-sportpl-image-v541 small,
+.article-cover-v8.has-sportpl-image-v541 strong{
+  position:relative!important;
+  z-index:2!important;
+  text-shadow:0 8px 26px rgba(0,0,0,.65)!important;
+}
+.article-cover-v8.has-sportpl-image-v541 strong{
+  font-size:22px!important;
+  letter-spacing:.04em!important;
+}
+
+/* WERSJA 543 — ożywiony duży baner w zakładce Artykuły */
+.article-hero-slider-v543{position:relative!important;overflow:hidden!important;cursor:grab!important;isolation:isolate!important;user-select:none!important;background:radial-gradient(circle at 72% 32%,rgba(25,234,216,.18),transparent 28%),linear-gradient(180deg,rgba(3,16,26,.98),rgba(1,7,13,.995))!important;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease!important}
+.article-hero-slider-v543:active{cursor:grabbing!important;transform:scale(.997)!important}
+.article-hero-slider-v543:hover{border-color:rgba(24,234,216,.35)!important;box-shadow:0 18px 60px rgba(0,0,0,.35),0 0 26px rgba(24,234,216,.10)!important}
+.article-hero-slider-v543::after{content:""!important;position:absolute!important;inset:-40%!important;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.09) 48%,transparent 60%)!important;transform:translateX(-65%) rotate(7deg)!important;animation:articleHeroSweep543 4.8s ease-in-out infinite!important;z-index:1!important;pointer-events:none!important}
+.article-hero-bg-v543{position:absolute!important;inset:0!important;z-index:0!important;opacity:.62!important;background:#020b12!important}
+.article-hero-bg-v543 img{width:100%!important;height:100%!important;object-fit:cover!important;filter:saturate(1.15) contrast(1.06)!important;transform:scale(1.035)!important;animation:articleHeroKenBurns543 6s ease-in-out infinite alternate!important}
+.article-hero-bg-v543::after{content:""!important;position:absolute!important;inset:0!important;background:linear-gradient(90deg,rgba(1,8,14,.94) 0%,rgba(2,10,18,.78) 42%,rgba(2,10,18,.34) 70%,rgba(2,10,18,.72) 100%),linear-gradient(180deg,rgba(1,8,14,.20),rgba(1,8,14,.92))!important}
+.article-hero-slider-v543 .hero-badge-v8,.article-hero-slider-v543 .hero-copy-v8,.article-hero-slider-v543 .hero-vs-v8,.article-hero-slider-v543 .hero-player-v8,.article-hero-slider-v543 .hero-nav-v8,.article-hero-live-strip-v543{position:relative!important;z-index:2!important}
+.article-hero-live-strip-v543{position:absolute!important;top:16px!important;right:18px!important;height:34px!important;padding:0 12px!important;border-radius:999px!important;border:1px solid rgba(24,234,216,.28)!important;background:rgba(2,14,22,.72)!important;backdrop-filter:blur(10px)!important;color:#b9fef8!important;display:flex!important;gap:10px!important;align-items:center!important;font-size:11px!important;font-weight:1000!important;letter-spacing:.02em!important;text-transform:uppercase!important;box-shadow:0 0 18px rgba(24,234,216,.10)!important}
+.article-hero-live-strip-v543 span{color:#19ead8!important}.article-hero-live-strip-v543 b{color:#fff!important}.article-hero-live-strip-v543 em{font-style:normal!important;color:#8fb4c0!important}
+.article-hero-slider-v543 .hero-copy-v8 h1{animation:articleHeroTextIn543 .42s ease both!important;text-shadow:0 10px 30px rgba(0,0,0,.42)!important}
+.article-hero-slider-v543 .hero-copy-v8 button{cursor:pointer!important;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease!important}
+.article-hero-slider-v543 .hero-copy-v8 button:hover{transform:translateY(-2px)!important;box-shadow:0 16px 30px rgba(26,233,218,.24)!important;filter:brightness(1.08)!important}
+.article-hero-slider-v543 .hero-copy-v8 button:active{transform:translateY(1px) scale(.98)!important}
+.article-hero-slider-v543 .hero-player-v8{height:180px!important;opacity:.82!important;backdrop-filter:blur(8px)!important;animation:articleHeroFloat543 3.4s ease-in-out infinite!important}
+.article-hero-slider-v543 .hero-player-v8.right{animation-delay:.45s!important;background:radial-gradient(circle at 30% 20%,#ffe0e0,#f04c64 54%,#48131c)!important;font-size:26px!important}
+.article-hero-slider-v543 .hero-player-v8.left{font-size:34px!important}
+.article-hero-slider-v543.has-sportpl-hero-image-v543 .hero-player-v8{display:none!important}
+.article-hero-logo-v543{font-size:34px!important;letter-spacing:-.04em!important;color:#eefdff!important;text-shadow:0 0 24px rgba(24,234,216,.22)!important}
+.article-hero-slider-v543 .hero-nav-v8 button{width:42px!important;height:42px!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.11)!important;background:rgba(3,17,27,.76)!important;color:#dff8ff!important;font-size:28px!important;font-weight:900!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;transition:transform .16s ease,background .16s ease,border-color .16s ease!important;backdrop-filter:blur(8px)!important}
+.article-hero-slider-v543 .hero-nav-v8 button:hover{transform:translateY(-2px)!important;background:rgba(24,234,216,.16)!important;border-color:rgba(24,234,216,.45)!important}
+.article-hero-slider-v543 .hero-nav-v8 button:active{transform:scale(.94)!important}
+.article-hero-slider-v543 .hero-dots-v8 button{width:10px!important;height:10px!important;min-width:10px!important;padding:0!important;border-radius:50%!important;border:0!important;background:rgba(255,255,255,.28)!important;display:block!important;cursor:pointer!important;transition:width .2s ease,background .2s ease,box-shadow .2s ease!important}
+.article-hero-slider-v543 .hero-dots-v8 button.active{width:28px!important;border-radius:999px!important;background:#18ead8!important;box-shadow:0 0 14px rgba(24,234,216,.50)!important}
+.article-hero-slider-v543.image-error-v543 .article-hero-bg-v543{display:none!important}
+@keyframes articleHeroSweep543{0%,45%{transform:translateX(-65%) rotate(7deg)}70%,100%{transform:translateX(65%) rotate(7deg)}}
+@keyframes articleHeroKenBurns543{from{transform:scale(1.035) translate3d(0,0,0)}to{transform:scale(1.085) translate3d(-1.5%,.8%,0)}}
+@keyframes articleHeroTextIn543{from{opacity:.25;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes articleHeroFloat543{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media(max-width:1100px){.article-hero-live-strip-v543{position:relative!important;top:auto!important;right:auto!important;align-self:start!important;margin-bottom:10px!important}.article-hero-slider-v543.has-sportpl-hero-image-v543 .hero-vs-v8{display:none!important}}
+
+/* WERSJA 545 — usunięta prawa kolumna w Artykuły/TV Live + szersze i czytelniejsze newsy */
+.tvlive-page-v8 .tvlive-layout-v8{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.tvlive-page-v8 .tvlive-sidebar-v8{
+  display:none!important;
+}
+.tvlive-page-v8 .tvlive-main-v8{
+  width:100%!important;
+}
+.tvlive-page-v8 .tvlive-top-grid-v8{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:18px!important;
+}
+.tvlive-page-v8 .tvlive-side-stack-v8{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+.tvlive-page-v8 .tvlive-hero-v8{
+  min-height:420px!important;
+}
+.tvlive-page-v8 .hero-copy-v8{
+  max-width:640px!important;
+}
+.tvlive-page-v8 .hero-copy-v8 h1{
+  font-size:58px!important;
+  line-height:1.02!important;
+}
+.tvlive-page-v8 .hero-copy-v8 p{
+  font-size:18px!important;
+  line-height:1.6!important;
+  max-width:60ch!important;
+}
+.tvlive-page-v8 .article-grid-v8{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+.tvlive-page-v8 .article-card-v8{
+  border-radius:22px!important;
+}
+.tvlive-page-v8 .article-cover-v8{
+  height:228px!important;
+  padding:16px!important;
+}
+.tvlive-page-v8 .article-cover-v8 span{
+  font-size:11px!important;
+}
+.tvlive-page-v8 .article-cover-v8 small{
+  font-size:12px!important;
+}
+.tvlive-page-v8 .article-cover-v8 strong{
+  font-size:64px!important;
+}
+.tvlive-page-v8 .article-body-v8{
+  padding:18px!important;
+}
+.tvlive-page-v8 .article-body-v8 h3{
+  font-size:21px!important;
+  line-height:1.34!important;
+  margin-bottom:12px!important;
+}
+.tvlive-page-v8 .article-body-v8 p{
+  font-size:14.5px!important;
+  line-height:1.7!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:4!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.tvlive-page-v8 .article-foot-v8{
+  font-size:13px!important;
+}
+.tvlive-page-v8 .section-head-v8 h2{
+  font-size:34px!important;
+}
+.tvlive-page-v8 .sportpl-live-panel-v538{
+  padding:24px!important;
+}
+.tvlive-page-v8 .sportpl-live-grid-v538{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:16px!important;
+}
+.tvlive-page-v8 .sportpl-live-item-v538{
+  min-height:360px!important;
+  padding:18px!important;
+}
+.tvlive-page-v8 .sportpl-live-media-v540{
+  height:176px!important;
+  margin:-2px -2px 16px!important;
+}
+.tvlive-page-v8 .sportpl-live-item-v538 h3{
+  font-size:20px!important;
+  line-height:1.34!important;
+}
+.tvlive-page-v8 .sportpl-live-item-v538 p{
+  font-size:14px!important;
+  line-height:1.62!important;
+  -webkit-line-clamp:4!important;
+}
+.tvlive-page-v8 .livescore-wrap-v8{
+  margin-top:4px!important;
+}
+@media(max-width:1500px){
+  .tvlive-page-v8 .sportpl-live-grid-v538,
+  .tvlive-page-v8 .article-grid-v8{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:1180px){
+  .tvlive-page-v8 .tvlive-side-stack-v8{
+    grid-template-columns:1fr!important;
+  }
+  .tvlive-page-v8 .tvlive-hero-v8{
+    min-height:auto!important;
+  }
+  .tvlive-page-v8 .hero-copy-v8 h1{
+    font-size:44px!important;
+  }
+}
+@media(max-width:760px){
+  .tvlive-page-v8 .article-grid-v8,
+  .tvlive-page-v8 .sportpl-live-grid-v538{
+    grid-template-columns:1fr!important;
+  }
+  .tvlive-page-v8 .hero-copy-v8 h1{
+    font-size:34px!important;
+  }
+  .tvlive-page-v8 .section-head-v8 h2{
+    font-size:28px!important;
+  }
+}
