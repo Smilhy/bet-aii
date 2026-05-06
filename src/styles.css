@@ -20145,3 +20145,28 @@ img,video,canvas,svg{max-width:100%;}
     max-width:452px!important;
   }
 }
+
+/* WERSJA 571 — kolejne poszerzenie całej prawej kolumny o około 5% */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.94fr) 453px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:453px!important;
+    min-width:453px!important;
+    max-width:453px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.93fr) 475px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:475px!important;
+    min-width:475px!important;
+    max-width:475px!important;
+  }
+}
