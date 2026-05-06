@@ -7964,7 +7964,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${((view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell no-rightbar-page all-tabs-fullscreen ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
@@ -8115,7 +8115,7 @@ function App() {
         )}
       </main>
 
-      {view === 'articles' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {false && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>

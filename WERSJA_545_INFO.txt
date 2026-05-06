@@ -1,0 +1,6 @@
+Wersja 545
+- Wszystkie zakładki ustawione na pełną szerokość/full screen.
+- Dashboard działa full screen bez zewnętrznego rightbara.
+- Usunięte globalne ograniczenie max-width 1540px dla zakładek.
+- Sidebar + main rozciągają się na całą szerokość okna.
+- Tabele, gridy i panele w zakładkach mają max-width: none.

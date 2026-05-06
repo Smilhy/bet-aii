@@ -19858,3 +19858,187 @@ url('/betai-hero-live-1.png') center center/cover no-repeat!important;border:1px
 .dashboard544-shell-active .dash543-day-row{grid-template-columns:32px minmax(0,1fr) auto!important;gap:8px!important;padding:12px 0!important}.dashboard544-shell-active .dash543-day-row b{font-size:25px!important}
 @media(max-width:1400px){.dashboard544-shell-active{grid-template-columns:218px minmax(0,1fr)!important;gap:16px!important}.dashboard544-shell-active .sidebar{width:218px!important;min-width:218px!important}.dashboard544-shell-active .dash543-shell{grid-template-columns:minmax(0,1fr) 326px!important}.dashboard544-shell-active .dash543-hero-copy h1{font-size:39px!important}.dashboard544-shell-active .dash543-market-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dashboard544-shell-active .dash543-market-panel{height:auto!important}}
 @media(max-width:1100px){.dashboard544-shell-active{display:block!important}.dashboard544-shell-active .sidebar{position:relative!important;width:auto!important;min-width:0!important;height:auto!important}.dashboard544-shell-active .premium544-plan{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;margin-top:16px!important}.dashboard544-shell-active .dash543-shell{grid-template-columns:1fr!important}.dashboard544-shell-active .dash543-stats-grid,.dashboard544-shell-active .dash543-content-grid,.dashboard544-shell-active .dash543-market-grid{grid-template-columns:1fr!important}.dashboard544-shell-active .dash543-panel,.dashboard544-shell-active .dash543-market-panel{height:auto!important}.dashboard544-shell-active .dash543-side-card{height:auto!important}}
+
+/* Wersja 545 — FULL SCREEN dla wszystkich zakładek i dashboardu */
+html,body,#root{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  overflow-x:hidden!important;
+  background:#020812!important;
+}
+.app-shell.all-tabs-fullscreen,
+.app-shell.all-tabs-fullscreen.no-rightbar-page,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active,
+.app-shell.all-tabs-fullscreen.wallet-shell-active{
+  width:100vw!important;
+  max-width:none!important;
+  min-height:100vh!important;
+  margin:0!important;
+  padding:0 18px 0 0!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:270px minmax(0,1fr)!important;
+  gap:22px!important;
+  background:radial-gradient(circle at 55% 0%,rgba(24,227,204,.10),transparent 30%),linear-gradient(135deg,#020812,#030b14 45%,#01050b)!important;
+}
+.app-shell.all-tabs-fullscreen .sidebar{
+  width:270px!important;
+  min-width:270px!important;
+  max-width:270px!important;
+  height:100vh!important;
+  position:sticky!important;
+  top:0!important;
+  left:0!important;
+  flex-shrink:0!important;
+  overflow-y:auto!important;
+}
+.app-shell.all-tabs-fullscreen .main{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  padding:18px 0 34px!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+.app-shell.all-tabs-fullscreen .topbar{
+  width:100%!important;
+  max-width:none!important;
+  margin:0 0 18px!important;
+}
+.app-shell.all-tabs-fullscreen .top-search-field,
+.app-shell.all-tabs-fullscreen .search{
+  max-width:none!important;
+}
+.app-shell.all-tabs-fullscreen .rightbar{
+  display:none!important;
+}
+.app-shell.all-tabs-fullscreen .feed-section,
+.app-shell.all-tabs-fullscreen .add-page,
+.app-shell.all-tabs-fullscreen .profile-page,
+.app-shell.all-tabs-fullscreen .payout-page,
+.app-shell.all-tabs-fullscreen .payments-page,
+.app-shell.all-tabs-fullscreen .subscription-page,
+.app-shell.all-tabs-fullscreen .earnings-page,
+.app-shell.all-tabs-fullscreen .admin-finance-page,
+.app-shell.all-tabs-fullscreen .admin-payout-page,
+.app-shell.all-tabs-fullscreen .leaderboard-page,
+.app-shell.all-tabs-fullscreen .ranking-page-536,
+.app-shell.all-tabs-fullscreen .ranking542-page,
+.app-shell.all-tabs-fullscreen .wallet-page,
+.app-shell.all-tabs-fullscreen .wallet-view,
+.app-shell.all-tabs-fullscreen .wallet-panel,
+.app-shell.all-tabs-fullscreen .wallet-pro-page,
+.app-shell.all-tabs-fullscreen .notifications-page,
+.app-shell.all-tabs-fullscreen .articles-view,
+.app-shell.all-tabs-fullscreen .articles-pro-page,
+.app-shell.all-tabs-fullscreen .ai-picks-page,
+.app-shell.all-tabs-fullscreen .ai-premium-page,
+.app-shell.all-tabs-fullscreen .tipster-profile-page,
+.app-shell.all-tabs-fullscreen .public-profile-shell{
+  width:100%!important;
+  max-width:none!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+.app-shell.all-tabs-fullscreen .dash543-page,
+.app-shell.all-tabs-fullscreen .dash543-shell,
+.app-shell.all-tabs-fullscreen .ranking542-shell,
+.app-shell.all-tabs-fullscreen .wallet-pro-shell{
+  width:100%!important;
+  max-width:none!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active{
+  grid-template-columns:270px minmax(0,1fr)!important;
+  gap:22px!important;
+  max-width:none!important;
+  margin:0!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .sidebar{
+  width:270px!important;
+  min-width:270px!important;
+  max-width:270px!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-shell{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 360px!important;
+  gap:16px!important;
+  width:100%!important;
+  max-width:none!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-main,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-side{
+  min-width:0!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-hero{
+  width:100%!important;
+  max-width:none!important;
+}
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-stats-grid,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-content-grid,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-market-grid{
+  width:100%!important;
+}
+/* Pełna szerokość dla tabel i gridów we wszystkich zakładkach */
+.app-shell.all-tabs-fullscreen .payments-table,
+.app-shell.all-tabs-fullscreen .earnings-table-card,
+.app-shell.all-tabs-fullscreen .admin-payout-table,
+.app-shell.all-tabs-fullscreen .ranking542-table-card,
+.app-shell.all-tabs-fullscreen .wallet-pro-main,
+.app-shell.all-tabs-fullscreen .articles-pro-shell,
+.app-shell.all-tabs-fullscreen .ai-premium-shell{
+  width:100%!important;
+  max-width:none!important;
+}
+.app-shell.all-tabs-fullscreen .ultra-page-banner{
+  width:100%!important;
+  max-width:none!important;
+}
+/* ukryj pływające widgety, żeby full screen był czysty */
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active ~ .site-reviews-widget,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active ~ .support-chat-widget,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active + .site-reviews-widget,
+.app-shell.all-tabs-fullscreen.dashboard544-shell-active + .support-chat-widget,
+body:has(.dashboard544-shell-active) .site-reviews-widget,
+body:has(.dashboard544-shell-active) .support-chat-widget{
+  display:none!important;
+}
+@media(max-width:1500px){
+  .app-shell.all-tabs-fullscreen,
+  .app-shell.all-tabs-fullscreen.no-rightbar-page,
+  .app-shell.all-tabs-fullscreen.dashboard544-shell-active{
+    grid-template-columns:248px minmax(0,1fr)!important;
+    gap:18px!important;
+  }
+  .app-shell.all-tabs-fullscreen .sidebar,
+  .app-shell.all-tabs-fullscreen.dashboard544-shell-active .sidebar{
+    width:248px!important;min-width:248px!important;max-width:248px!important;
+  }
+}
+@media(max-width:1200px){
+  .app-shell.all-tabs-fullscreen.dashboard544-shell-active .dash543-shell,
+  .app-shell.all-tabs-fullscreen .ranking542-shell,
+  .app-shell.all-tabs-fullscreen .wallet-pro-shell{
+    grid-template-columns:1fr!important;
+  }
+}
+@media(max-width:900px){
+  .app-shell.all-tabs-fullscreen,
+  .app-shell.all-tabs-fullscreen.no-rightbar-page,
+  .app-shell.all-tabs-fullscreen.dashboard544-shell-active{
+    display:block!important;
+    width:100%!important;
+    padding:0!important;
+  }
+  .app-shell.all-tabs-fullscreen .sidebar,
+  .app-shell.all-tabs-fullscreen.dashboard544-shell-active .sidebar{
+    position:relative!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    height:auto!important;
+  }
+  .app-shell.all-tabs-fullscreen .main{
+    padding:16px!important;
+  }
+}
