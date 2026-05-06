@@ -2522,46 +2522,140 @@ function ArticlesView() {
 }
 
 function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
-  const unlockedList = tips.filter(tip => unlockedTips.has(tip.id))
-  const spent = unlockedList.reduce((sum, tip) => sum + Number(tip.price || 0), 0)
+  const operationRows = [
+    ['23.05.2025, 21:37', '↻ Wypłata', 'Wypłata środków', 'Przelew bankowy', '-250.00 zł', 'W realizacji', 'pending'],
+    ['23.05.2025, 18:22', '↓ Wpłata', 'Doładowanie konta', 'BLIK', '+200.00 zł', 'Zakończono', 'done'],
+    ['22.05.2025, 19:10', '🎁 Bonus', 'Bonus powitalny 50%', 'System', '+75.00 zł', 'Zakończono', 'done'],
+    ['22.05.2025, 16:05', '◈ Zakup', 'Zakup 50 żetonów AI', 'Karta Visa', '-50.00 zł', 'Zakończono', 'done'],
+    ['21.05.2025, 22:41', '◆ Zakład', 'Wygrany zakład', '-', '+312.40 zł', 'Zakończono', 'done'],
+    ['21.05.2025, 20:15', '↓ Wpłata', 'Doładowanie konta', 'Przelew bankowy', '+500.00 zł', 'Zakończono', 'done']
+  ]
 
   return (
-    <section className="wallet-panel wallet-ultra-page">
-      <UltraPageBanner variant="wallet"><button type="button" onClick={onTopUp}>+ Doładuj 100 zł</button></UltraPageBanner>
-      <div className="wallet-ultra-hero">
-        <div>
-          <span className="wallet-kicker">Portfel BetAI</span>
+    <section className="wallet-panel wallet-ultra-page wallet-static-ultra">
+      <div className="wallet-static-shell">
+        <div className="wallet-static-head">
           <h1>Portfel</h1>
-          <p>Zarządzaj saldem, doładowaniami i odblokowanymi typami premium w jednym, dopracowanym panelu.</p>
         </div>
-        <button onClick={onTopUp}>+ Doładuj 100 zł</button>
-      </div>
 
-      <div className="wallet-main-card">
-        <div>
-          <span>Saldo konta</span>
-          <strong>{Number(wallet || 0).toFixed(2)} zł</strong>
-          <p>Saldo używane do odblokowania typów premium.</p>
+        <div className="wallet-static-tabs glass-wallet-shell">
+          <button type="button" className="active">▣ Portfel</button>
+          <button type="button">☑ Płatności</button>
+          <button type="button">↓ Wpłaty</button>
+          <button type="button">↺ Wypłaty</button>
+          <button type="button">◔ Historia</button>
         </div>
-        <div className="wallet-balance-pill">Aktywne saldo</div>
-      </div>
 
-      <div className="wallet-grid">
-        <div className="wallet-stat"><span>Odblokowane typy</span><b>{unlockedList.length}</b></div>
-        <div className="wallet-stat"><span>Wydano</span><b>{spent.toFixed(2)} zł</b></div>
-        <div className="wallet-stat"><span>Status</span><b>VIP</b></div>
-      </div>
+        <div className="wallet-static-grid">
+          <div className="wallet-static-main">
+            <div className="wallet-stats-grid">
+              <div className="wallet-stat-card balance glass-wallet-card">
+                <div className="wallet-card-top"><span>Saldo</span><i>👛</i></div>
+                <strong>1,245.80 zł</strong>
+                <small>Zmienna (24h)</small>
+                <div className="wallet-change positive">↗ +112.40 zł (+9.94%)</div>
+                <div className="wallet-mini-chart green"></div>
+              </div>
 
-      <div className="unlocked-list wallet-ultra-list">
-        <div className="unlocked-head"><h3>Odblokowane typy</h3><span>{unlockedList.length} zakupów</span></div>
-        {unlockedList.length ? unlockedList.map(tip => (
-          <div className="unlocked-item" key={tip.id}>
-            <div><strong>{tip.team_home} vs {tip.team_away}</strong><span>{tip.bet_type} • kurs {tip.odds}</span></div>
-            <b>{Number(tip.price || 0).toFixed(2)} zł</b>
+              <div className="wallet-stat-card tokens glass-wallet-card">
+                <div className="wallet-card-top"><span>Żetony (AI)</span><i>AI</i></div>
+                <strong>0.00</strong>
+                <small>Wartość <b>0.00 zł</b></small>
+                <button type="button" onClick={onTopUp}>Kup żetony</button>
+              </div>
+
+              <div className="wallet-stat-card locked glass-wallet-card">
+                <div className="wallet-card-top"><span>Środki zablokowane</span><i>🔒</i></div>
+                <strong>98.50 zł</strong>
+                <small>Oczekujące wypłaty <b>98.50 zł</b></small>
+                <div className="wallet-mini-chart orange"></div>
+              </div>
+
+              <div className="wallet-stat-card bonus glass-wallet-card">
+                <div className="wallet-card-top"><span>Bonus</span><i>🎁</i></div>
+                <strong>75.00 zł</strong>
+                <small>Aktywny bonus <b>Sportowy 50%</b></small>
+                <div className="wallet-mini-chart purple"></div>
+              </div>
+            </div>
+
+            <div className="wallet-quick-actions glass-wallet-shell">
+              <button type="button" className="action-green">↓ Wpłać</button>
+              <button type="button" className="action-green secondary">↥ Wypłać</button>
+              <button type="button" className="action-blue">◎ Kup żetony</button>
+              <button type="button" className="action-dark">▣ Historia operacji</button>
+            </div>
+
+            <div className="wallet-history glass-wallet-card">
+              <div className="wallet-section-head">
+                <h3>Ostatnie operacje</h3>
+                <button type="button" className="wallet-select-btn">Wszystkie operacje ⌄</button>
+              </div>
+              <div className="wallet-history-table">
+                <div className="wallet-history-row head">
+                  <span>Data</span>
+                  <span>Typ</span>
+                  <span>Opis</span>
+                  <span>Metoda</span>
+                  <span>Kwota</span>
+                  <span>Status</span>
+                </div>
+                {operationRows.map((row, index) => (
+                  <div className="wallet-history-row" key={index}>
+                    <span>{row[0]}</span>
+                    <span>{row[1]}</span>
+                    <span>{row[2]}</span>
+                    <span>{row[3]}</span>
+                    <span className={row[4].startsWith('+') ? 'amount-positive' : 'amount-negative'}>{row[4]}</span>
+                    <span className={row[6] === 'done' ? 'status-done' : 'status-pending'}>{row[5]}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="wallet-history-more">Zobacz pełną historię operacji</button>
+            </div>
           </div>
-        )) : (
-          <div className="empty-wallet"><strong>Nie masz jeszcze odblokowanych typów</strong><span>Kliknij “Odblokuj” przy typie premium, aby pojawił się tutaj.</span></div>
-        )}
+
+          <aside className="wallet-static-side">
+            <div className="wallet-methods glass-wallet-card">
+              <div className="wallet-section-head"><h3>Metody płatności</h3></div>
+              <div className="wallet-methods-grid">
+                <div className="pay-method"><b className="logo blik">blik</b><span><strong>BLIK</strong><small>Natychmiast</small></span></div>
+                <div className="pay-method"><b className="logo bank">🏦</b><span><strong>Przelew bankowy</strong><small>1-2 dni robocze</small></span></div>
+                <div className="pay-method"><b className="logo visa">VISA</b><span><strong>Karta płatnicza</strong><small>Natychmiast</small></span></div>
+                <div className="pay-method"><b className="logo skrill">Skrill</b><span><strong>Skrill</strong><small>Natychmiast</small></span></div>
+                <div className="pay-method"><b className="logo neteller">NETELLER</b><span><strong>Neteller</strong><small>Natychmiast</small></span></div>
+                <div className="pay-method"><b className="logo paypal">P</b><span><strong>PayPal</strong><small>Natychmiast</small></span></div>
+              </div>
+            </div>
+
+            <div className="wallet-connected glass-wallet-card">
+              <div className="wallet-section-head">
+                <h3>Połączone konta i karty</h3>
+                <button type="button" className="manage-link">Zarządzaj</button>
+              </div>
+              <div className="linked-item">
+                <div className="linked-left"><span className="linked-logo visa">VISA</span><div><strong>Visa •••• 4242</strong><small>Domyślna</small></div></div>
+                <span className="linked-arrow">›</span>
+              </div>
+              <div className="linked-item">
+                <div className="linked-left"><span className="linked-logo bank">🏦</span><div><strong>PKO Bank Polski</strong><small>Konto: •••• 5678 1234 5678</small></div></div>
+                <span className="linked-arrow">›</span>
+              </div>
+              <div className="linked-item">
+                <div className="linked-left"><span className="linked-logo blik">b</span><div><strong>BLIK</strong><small>Telefon: +48 512 345 678</small></div></div>
+                <span className="linked-arrow">›</span>
+              </div>
+            </div>
+
+            <div className="wallet-safe-banner glass-wallet-card">
+              <div className="safe-icon">🛡</div>
+              <div>
+                <strong>Twoje środki są w pełni bezpieczne</strong>
+                <span>Stosujemy najwyższe standardy bezpieczeństwa i szyfrowanie danych.</span>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   )
