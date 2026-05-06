@@ -20010,191 +20010,40 @@ img,video,canvas,svg{max-width:100%;}
   .rewards-ultra-streak-rewards{grid-template-columns:1fr 1fr!important}
 }
 
-/* WERSJA 565 — poprawa balansu dashboardu: szerszy środek, spokojniejsza prawa kolumna, lepszy topbar */
+/* WERSJA 566 — tylko przesunięcie prawej kolumny do prawej krawędzi, bez zmiany kolorów */
 @media (min-width: 1001px){
   .app-shell:not(.no-rightbar-page){
-    width:min(1800px, calc(100vw - 32px))!important;
-    max-width:1800px!important;
-    margin:0 auto!important;
-    padding:14px 16px 18px!important;
-    gap:18px!important;
-    align-items:start!important;
-    grid-template-columns:220px minmax(0, 1fr) 350px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .sidebar{
-    padding:14px 12px 16px!important;
-    border-radius:24px!important;
-    top:14px!important;
-    height:calc(100vh - 28px)!important;
-    max-height:calc(100vh - 28px)!important;
-    overflow:auto!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .sidebar .user-card{
-    margin-top:0!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .main{
-    padding-top:0!important;
-    min-width:0!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .topbar{
-    margin-bottom:16px!important;
-    padding:10px 14px!important;
-    gap:12px!important;
-    align-items:center!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .topbar .top-search-field,
-  .app-shell:not(.no-rightbar-page) .topbar .search{
-    flex:1 1 460px!important;
-    min-width:320px!important;
+    width:100vw!important;
     max-width:none!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .topbar .top-actions{
-    margin-left:auto!important;
-    gap:10px!important;
-    flex-wrap:wrap!important;
-    justify-content:flex-end!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn.wallet-stack-top,
-  .app-shell:not(.no-rightbar-page) .topbar .top-user-chip,
-  .app-shell:not(.no-rightbar-page) .topbar .betai-language-menu,
-  .app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn,
-  .app-shell:not(.no-rightbar-page) .topbar .icon-btn,
-  .app-shell:not(.no-rightbar-page) .topbar .topbar-icon-btn{
-    box-shadow:0 8px 18px rgba(16, 200, 214, .18)!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .feed-section,
-  .app-shell:not(.no-rightbar-page) .feed,
-  .app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card,
-  .app-shell:not(.no-rightbar-page) .monetization-panel,
-  .app-shell:not(.no-rightbar-page) .betai-animated-hero{
-    min-width:0!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .betai-animated-hero{
-    min-height:395px!important;
-    padding:28px 210px 28px 28px!important;
+    margin:0!important;
+    padding-top:22px!important;
+    padding-bottom:22px!important;
+    padding-left:24px!important;
+    padding-right:0!important;
+    grid-template-columns:270px minmax(0, 1fr) 360px!important;
+    gap:22px!important;
   }
 
   .app-shell:not(.no-rightbar-page) .rightbar{
-    width:100%!important;
-    min-width:0!important;
-    max-width:none!important;
-    padding:0!important;
-    gap:14px!important;
-    position:sticky!important;
-    top:14px!important;
+    justify-self:end!important;
     align-self:start!important;
-    max-height:calc(100vh - 28px)!important;
-    overflow:auto!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar > *{
-    width:100%!important;
-    min-width:0!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-card,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
-  .app-shell:not(.no-rightbar-page) .livechat226-card.betai-right-chat-final{
-    height:470px!important;
-    min-height:470px!important;
-    max-height:470px!important;
-    padding:14px!important;
-    gap:10px!important;
-    border-radius:22px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-live-head-final{
-    margin-bottom:2px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stats-final{
-    gap:8px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-stat,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stat-final{
-    min-height:60px!important;
-    padding:9px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-messages,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-chat-messages-final{
-    flex:1 1 auto!important;
-    min-height:0!important;
-    padding-right:4px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-bubble,
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-msg{
-    max-width:88%!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-composer-final{
-    margin-top:2px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
-  .app-shell:not(.no-rightbar-page) .rightbar .panel{
-    border-radius:22px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .top-tipster-row-v4,
-  .app-shell:not(.no-rightbar-page) .rightbar .rank,
-  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick,
-  .app-shell:not(.no-rightbar-page) .rightbar .result{
-    min-width:0!important;
-  }
-}
-
-@media (min-width: 1281px){
-  .app-shell:not(.no-rightbar-page){
-    grid-template-columns:225px minmax(0, 1fr) 355px!important;
+    width:360px!important;
+    min-width:360px!important;
+    max-width:360px!important;
+    margin-right:0!important;
+    padding-right:0!important;
+    padding-left:0!important;
   }
 }
 
 @media (min-width: 1500px){
   .app-shell:not(.no-rightbar-page){
-    width:min(1840px, calc(100vw - 40px))!important;
-    grid-template-columns:228px minmax(0, 1fr) 365px!important;
-    gap:20px!important;
+    grid-template-columns:270px minmax(0, 1fr) 380px!important;
   }
 
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-card,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
-  .app-shell:not(.no-rightbar-page) .livechat226-card.betai-right-chat-final{
-    height:485px!important;
-    min-height:485px!important;
-    max-height:485px!important;
-  }
-}
-
-@media (min-width: 1001px) and (max-width: 1220px){
-  .app-shell:not(.no-rightbar-page){
-    grid-template-columns:210px minmax(0, 1fr) 320px!important;
-    gap:14px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .topbar .top-search-field,
-  .app-shell:not(.no-rightbar-page) .topbar .search{
-    flex-basis:320px!important;
-    min-width:240px!important;
-  }
-
-  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-card,
-  .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
-  .app-shell:not(.no-rightbar-page) .livechat226-card.betai-right-chat-final{
-    height:445px!important;
-    min-height:445px!important;
-    max-height:445px!important;
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:380px!important;
+    min-width:380px!important;
+    max-width:380px!important;
   }
 }
