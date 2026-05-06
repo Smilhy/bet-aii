@@ -17874,3 +17874,325 @@ img,video,canvas,svg{max-width:100%;}
     font-size:28px!important;
   }
 }
+
+/* WERSJA 546 — Dashboard: sztywna kolorystyka wg screenu (ciemny navy + cyan/turkus) */
+.app-shell:not(.no-rightbar-page){
+  background:
+    radial-gradient(circle at 18% 8%, rgba(40, 219, 215, .09), transparent 20%),
+    radial-gradient(circle at 82% 12%, rgba(46, 201, 255, .08), transparent 18%),
+    linear-gradient(180deg, #03101a 0%, #020b13 52%, #020910 100%)!important;
+}
+.app-shell:not(.no-rightbar-page) .main{
+  background:transparent!important;
+}
+.app-shell:not(.no-rightbar-page) .sidebar{
+  background:linear-gradient(180deg, rgba(4,17,28,.98), rgba(3,12,21,.98))!important;
+  border-right:1px solid rgba(35, 212, 222, .12)!important;
+  box-shadow:inset -1px 0 0 rgba(80,250,255,.04), 0 12px 40px rgba(0,0,0,.22)!important;
+}
+.app-shell:not(.no-rightbar-page) .topbar{
+  background:linear-gradient(180deg, rgba(3,13,22,.96), rgba(3,11,19,.94))!important;
+  border:1px solid rgba(41, 216, 224, .12)!important;
+  border-radius:22px!important;
+  padding:12px 16px!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.app-shell:not(.no-rightbar-page) .top-search-field,
+.app-shell:not(.no-rightbar-page) .search{
+  background:linear-gradient(180deg, rgba(2,10,18,.96), rgba(3,13,22,.95))!important;
+  border:1px solid rgba(40, 214, 223, .10)!important;
+  border-radius:18px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 0 0 1px rgba(17, 198, 215, .04)!important;
+}
+.app-shell:not(.no-rightbar-page) .top-search-field:focus-within,
+.app-shell:not(.no-rightbar-page) .search:focus-within{
+  border-color:rgba(50, 237, 242, .28)!important;
+  box-shadow:0 0 0 3px rgba(42, 219, 226, .08)!important;
+}
+.app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn.wallet-stack-top,
+.app-shell:not(.no-rightbar-page) .topbar .top-user-chip,
+.app-shell:not(.no-rightbar-page) .topbar .betai-language-menu,
+.app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn,
+.app-shell:not(.no-rightbar-page) .topbar .icon-btn,
+.app-shell:not(.no-rightbar-page) .topbar .topbar-icon-btn{
+  background:linear-gradient(180deg, #1dd7dd 0%, #10c8d6 100%)!important;
+  color:#042330!important;
+  border:0!important;
+  box-shadow:0 10px 24px rgba(16, 200, 214, .24)!important;
+}
+.app-shell:not(.no-rightbar-page) .topbar .top-user-chip small,
+.app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn.wallet-stack-top small,
+.app-shell:not(.no-rightbar-page) .topbar .top-user-info small{
+  color:rgba(4,35,48,.78)!important;
+}
+.app-shell:not(.no-rightbar-page) .topbar .top-user-chip strong,
+.app-shell:not(.no-rightbar-page) .topbar .wallet-top-btn.wallet-stack-top strong,
+.app-shell:not(.no-rightbar-page) .topbar .top-user-info strong,
+.app-shell:not(.no-rightbar-page) .topbar .top-user-chevron{
+  color:#041d29!important;
+}
+.app-shell:not(.no-rightbar-page) .menu button,
+.app-shell:not(.no-rightbar-page) .menu a{
+  border-radius:14px!important;
+  color:#d7edf4!important;
+}
+.app-shell:not(.no-rightbar-page) .menu button.active,
+.app-shell:not(.no-rightbar-page) .menu a.active{
+  background:linear-gradient(90deg, rgba(24,215,223,.18), rgba(24,215,223,.07))!important;
+  border-color:rgba(40, 219, 226, .16)!important;
+  box-shadow:inset 3px 0 0 #1de0dd, 0 0 28px rgba(23, 215, 222, .12)!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-section{
+  max-width:none!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-animated-hero{
+  min-height:430px!important;
+  padding:34px 250px 34px 34px!important;
+  border-radius:26px!important;
+  border:1px solid rgba(34, 214, 222, .14)!important;
+  background:
+    radial-gradient(circle at 72% 22%, rgba(21, 221, 219, .18), transparent 16%),
+    radial-gradient(circle at 84% 12%, rgba(112, 242, 255, .12), transparent 14%),
+    linear-gradient(120deg, rgba(3,11,19,.99) 0%, rgba(2,11,19,.98) 56%, rgba(4,19,30,.97) 100%)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(26, 217, 227, .04)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-animated-hero::before{
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,.03), transparent),
+    radial-gradient(circle at 75% 32%, rgba(14, 212, 218, .12), transparent 30%)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-panel h1{
+  color:#eefaff!important;
+  text-shadow:0 14px 34px rgba(0,0,0,.34)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-panel h1 .accent,
+.app-shell:not(.no-rightbar-page) .betai-hero-panel h1 strong,
+.app-shell:not(.no-rightbar-page) .betai-hero-panel h1 b,
+.app-shell:not(.no-rightbar-page) .betai-hero-kicker,
+.app-shell:not(.no-rightbar-page) .betai-hero-copy .accent{
+  color:#22e5e1!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-copy p,
+.app-shell:not(.no-rightbar-page) .betai-hero-panel p{
+  color:#a8c0ca!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-dots button{
+  background:rgba(255,255,255,.18)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-dots button.active{
+  background:#25e9e5!important;
+  box-shadow:0 0 0 4px rgba(37,233,229,.12), 0 0 18px rgba(37,233,229,.30)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-stats{
+  gap:12px!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-stats div{
+  background:linear-gradient(180deg, rgba(7,23,35,.96), rgba(4,15,25,.96))!important;
+  border:1px solid rgba(38, 215, 223, .12)!important;
+  border-radius:18px!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-stats span{
+  color:#89a7b2!important;
+}
+.app-shell:not(.no-rightbar-page) .betai-hero-stats strong,
+.app-shell:not(.no-rightbar-page) .betai-hero-stats strong.green{
+  color:#25ece8!important;
+}
+.app-shell:not(.no-rightbar-page) .monetization-panel{
+  border-radius:22px!important;
+  border:1px solid rgba(35, 212, 221, .14)!important;
+  background:
+    radial-gradient(circle at 82% 30%, rgba(36, 224, 227, .13), transparent 24%),
+    linear-gradient(135deg, rgba(6,20,31,.96), rgba(4,15,24,.98))!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.app-shell:not(.no-rightbar-page) .monetization-panel strong,
+.app-shell:not(.no-rightbar-page) .monetization-panel b{
+  color:#f0fbff!important;
+}
+.app-shell:not(.no-rightbar-page) .monetization-panel span,
+.app-shell:not(.no-rightbar-page) .monetization-panel small{
+  color:#9bb5bf!important;
+}
+.app-shell:not(.no-rightbar-page) .premium-banner-cta,
+.app-shell:not(.no-rightbar-page) .feed-add-tip-btn,
+.app-shell:not(.no-rightbar-page) .tip-footer > button:not(.unlock-btn.secondary),
+.app-shell:not(.no-rightbar-page) .unlock-btn,
+.app-shell:not(.no-rightbar-page) .livechat226-send,
+.app-shell:not(.no-rightbar-page) .betai-send-final{
+  background:linear-gradient(180deg, #27dce0 0%, #13cdda 100%)!important;
+  color:#042330!important;
+  border:0!important;
+  border-radius:14px!important;
+  box-shadow:0 12px 26px rgba(19,205,218,.24)!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-filters{
+  background:transparent!important;
+  border:0!important;
+  padding:0!important;
+  gap:12px!important;
+  margin:18px 0 14px!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-filters button{
+  min-height:56px!important;
+  padding:12px 18px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(40, 214, 222, .12)!important;
+  background:linear-gradient(180deg, rgba(6,20,32,.96), rgba(4,13,22,.98))!important;
+  color:#e9f9fd!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.14)!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-filters button span{
+  color:#dff2f7!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-filters button b{
+  color:#25e7e3!important;
+}
+.app-shell:not(.no-rightbar-page) .feed-filters button.active{
+  background:linear-gradient(180deg, rgba(17, 212, 220, .20), rgba(8,40,48,.92))!important;
+  border-color:rgba(34, 224, 228, .24)!important;
+  box-shadow:0 0 0 1px rgba(34,224,228,.10) inset, 0 14px 28px rgba(17,212,220,.12)!important;
+}
+.app-shell:not(.no-rightbar-page) .feed{
+  gap:18px!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card{
+  background:linear-gradient(180deg, rgba(6,20,31,.98), rgba(4,13,22,.98))!important;
+  border:1px solid rgba(35, 213, 222, .12)!important;
+  border-radius:24px!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04)!important;
+  padding:22px!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tipster strong,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .league,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .teams b,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .bet-row b,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .ai-title,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-footer span,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-footer button,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tipster-name-link{
+  color:#eefaff!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tipster span,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .league,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .bet-row span,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .ai-box p{
+  color:#98b3be!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .photo{
+  background:linear-gradient(180deg, #35e6e0, #1299d6)!important;
+  color:#082a35!important;
+  box-shadow:0 10px 24px rgba(19,205,218,.20)!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .follow-btn,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .follow-footer-btn,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .unlock-btn.secondary{
+  background:rgba(7,22,35,.94)!important;
+  border:1px solid rgba(35, 213, 222, .16)!important;
+  color:#dff7fb!important;
+  border-radius:13px!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .follow-btn.active,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .follow-footer-btn.active{
+  background:rgba(19, 205, 218, .14)!important;
+  color:#26eae6!important;
+  border-color:rgba(35, 213, 222, .24)!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .premium-tag,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .free-tag,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .ai-badge,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .ai-score-badge,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card em{
+  background:rgba(8, 29, 43, .88)!important;
+  border:1px solid rgba(35, 213, 222, .14)!important;
+  color:#25eae6!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .match-box,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .ai-box,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .bet-row{
+  background:linear-gradient(180deg, rgba(4,16,26,.86), rgba(4,13,21,.96))!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+  border-radius:18px!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .progress{
+  background:rgba(255,255,255,.08)!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .progress i,
+.app-shell:not(.no-rightbar-page) .tiny-progress i{
+  background:linear-gradient(90deg, #23ece6 0%, #1cd8dd 52%, #3ad0ff 100%)!important;
+}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .won{color:#20edd4!important;}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .lost{color:#ff7d93!important;}
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .pending{color:#b5c6cf!important;}
+.app-shell:not(.no-rightbar-page) .rightbar{
+  width:420px!important;
+  min-width:420px!important;
+  padding:78px 10px 30px 0!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
+.app-shell:not(.no-rightbar-page) .rightbar .panel,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel{
+  background:linear-gradient(180deg, rgba(6,20,31,.98), rgba(4,13,21,.99))!important;
+  border:1px solid rgba(35, 213, 222, .12)!important;
+  border-radius:22px!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head h2,
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head a,
+.app-shell:not(.no-rightbar-page) .rightbar .rank b,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick b,
+.app-shell:not(.no-rightbar-page) .rightbar .result b,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-live-head-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-name,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-text,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stat-final strong{
+  color:#eefaff!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head a,
+.app-shell:not(.no-rightbar-page) .rightbar .rank strong,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick strong,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-online-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-tipmeta,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stat-final b,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-badge.admin{
+  color:#24ebe6!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .rank,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick,
+.app-shell:not(.no-rightbar-page) .rightbar .result,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-stat,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stat-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-bubble{
+  background:linear-gradient(180deg, rgba(7,22,34,.92), rgba(4,14,22,.98))!important;
+  border:1px solid rgba(255,255,255,.04)!important;
+  border-radius:16px!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .rank span,
+.app-shell:not(.no-rightbar-page) .rightbar .club,
+.app-shell:not(.no-rightbar-page) .rightbar .mini-avatar,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-avatar{
+  background:linear-gradient(180deg, #28dfe2 0%, #1298d5 100%)!important;
+  color:#072b37!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input-wrap,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-input-wrap-final{
+  background:rgba(4,13,22,.96)!important;
+  border:1px solid rgba(35,213,222,.12)!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-tipbtn,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-tip-main-final,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final{
+  background:rgba(8,29,43,.94)!important;
+  border:1px solid rgba(35,213,222,.15)!important;
+  color:#dff8fb!important;
+}
+@media(max-width:1380px){
+  .app-shell:not(.no-rightbar-page) .rightbar{width:390px!important;min-width:390px!important;}
+  .app-shell:not(.no-rightbar-page) .betai-animated-hero{padding-right:220px!important;}
+}
+@media(max-width:1180px){
+  .app-shell:not(.no-rightbar-page) .betai-animated-hero{padding:24px!important;min-height:auto!important;}
+}
