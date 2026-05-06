@@ -1718,6 +1718,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const aiScore = getAiScore(tip)
   const aiAnalysis = getAiAnalysis(tip)
   const aiBadges = getAiBadges(tip)
+  const analysisTitle = author === 'AI Tip' ? 'AI Analiza' : 'Analiza użytkownika'
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
@@ -1767,7 +1768,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         </div>
 
         <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
-          <div className="ai-title">✦ AI Analiza <strong>{isLocked ? '🔒' : `${probability}%`}</strong></div>
+          <div className="ai-title">✦ {analysisTitle} <strong>{isLocked ? '🔒' : `${probability}%`}</strong></div>
           <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
           <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
           {!isLocked && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
@@ -1778,15 +1779,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className="tip-footer">
         <span className={statusClass}>{statusLabel}</span>
         <span>♡ 128</span><span>▢ 45</span><span>↗</span>
-        {!isOwnTip && author !== 'AI Tip' && (
-          <button
-            type="button"
-            className={isFollowing ? 'follow-footer-btn active' : 'follow-footer-btn'}
-            onClick={() => onToggleFollow?.(authorId, author)}
-          >
-            {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}
-          </button>
-        )}
         {isLocked ? (
           <>
             <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>

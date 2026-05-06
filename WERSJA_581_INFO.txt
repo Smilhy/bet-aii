@@ -1,0 +1,1 @@
+WERSJA 581: usuniety dolny przycisk obserwowania z karty typu; zostaje tylko obserwuj u gory.
