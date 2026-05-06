@@ -2069,411 +2069,199 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
-  const [form, setForm] = useState({
-    team_home: 'Real Madryt',
-    team_away: 'Bayern Monachium',
-    league: 'Liga Mistrzów',
-    match_time: '',
-    bet_type: 'Powyżej 2.5 gola',
-    odds: '1.72',
-    analysis: 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.',
-    ai_probability: 72,
-    access_type: 'free',
-    price: '0',
-    tagsText: 'Real Madryt, Bayern',
-    notify_followers: true
-  })
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [dailyTipCount, setDailyTipCount] = useState(0)
-  const [livePremiumAccess, setLivePremiumAccess] = useState(false)
-
-  const isPremium = form.access_type === 'premium'
-  const premiumAllowed = hasUnlimitedTipAccess(user, userPlan) || isGuaranteedPremiumIdentity(user) || livePremiumAccess
-  const freeDailyLimit = 5
-  const freeTipsLeft = premiumAllowed ? Infinity : Math.max(0, freeDailyLimit - dailyTipCount)
-  const freeLimitPercent = premiumAllowed ? 100 : Math.min(100, Math.max(0, (dailyTipCount / freeDailyLimit) * 100))
-  const freeLimitBlocked = !premiumAllowed && freeTipsLeft <= 0
-
-  const showPremiumRequired = () => {
-    const premiumMessage = 'Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.'
-    saveTipDebug('BLOKADA PREMIUM', premiumMessage)
-    setMessage('🔒 ' + premiumMessage)
-    onToast?.({ type: 'premium', title: 'Wymagane konto Premium', message: premiumMessage, cta: 'Aktywuj Premium', event: 'betai:start-premium-checkout' })
-  }
-
-  const showFreeLimitReached = () => {
-    const limitMessage = 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Premium odblokowuje dodawanie bez limitu.'
-    saveTipDebug('LIMIT FREE', limitMessage)
-    setMessage('❌ ' + limitMessage)
-    onToast?.({ type: 'limit', title: 'Limit konta FREE', message: 'Masz maksymalny limit 5 typów dziennie. Premium odblokowuje dodawanie bez limitu.', cta: 'Przejdź na Premium', event: 'betai:start-premium-checkout' })
-  }
-
-  const chooseAccessType = (accessType) => {
-    if (accessType === 'premium' && !premiumAllowed) {
-      showPremiumRequired()
-      return
-    }
-    update('access_type', accessType)
-  }
-
-  useEffect(() => {
-    let active = true
-    async function loadLivePremiumAccess() {
-      const email = normalizeEmail(user?.email)
-      if (!user?.id) {
-        if (active) setLivePremiumAccess(false)
-        return
-      }
-      if (isGuaranteedPremiumIdentity(user) || isAdminUser(user) || isPremiumProfile(user) || isPremiumAccount(userPlan)) {
-        if (active) setLivePremiumAccess(true)
-        return
-      }
-      if (!isSupabaseConfigured || !supabase) {
-        if (active) setLivePremiumAccess(false)
-        return
-      }
-      let profilePremium = false
-      let subscriptionPremium = false
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin,is_premium,plan,subscription_status,email,username')
-          .eq('id', user.id)
-          .maybeSingle()
-        profilePremium = isPremiumProfile({ ...(profile || {}), email: profile?.email || email, username: profile?.username || user?.username })
-      } catch (error) {
-        console.warn('Premium profile check skipped:', error)
-      }
-      try {
-        const { data: subscription } = await supabase
-          .from('user_subscriptions')
-          .select('plan,status,current_period_end')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        const subStatus = String(subscription?.status || '').toLowerCase()
-        const subPlan = String(subscription?.plan || '').toLowerCase()
-        const notExpired = !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() > Date.now()
-        subscriptionPremium = notExpired && (subPlan === 'premium' || ['active', 'trialing', 'premium'].includes(subStatus))
-      } catch (error) {
-        console.warn('Premium subscription check skipped:', error)
-      }
-      if (active) setLivePremiumAccess(Boolean(profilePremium || subscriptionPremium))
-    }
-    loadLivePremiumAccess()
-    return () => { active = false }
-  }, [user?.id, user?.email, userPlan])
-
-  useEffect(() => {
-    let active = true
-    async function loadDailyTipCount() {
-      if (!user?.id || !isSupabaseConfigured || !supabase || premiumAllowed) {
-        if (active) setDailyTipCount(0)
-        return
-      }
-
-      const startOfDay = new Date()
-      startOfDay.setHours(0, 0, 0, 0)
-      const { count, error } = await supabase
-        .from('tips')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .gte('created_at', startOfDay.toISOString())
-
-      if (!error && active) setDailyTipCount(Number(count || 0))
-    }
-
-    loadDailyTipCount()
-    return () => { active = false }
-  }, [user?.id, premiumAllowed])
-
-  const payload = useMemo(() => ({
-    author_name: user?.email?.split('@')[0] || 'Użytkownik',
-    author_id: user?.id || null,
-    league: form.league,
-    team_home: form.team_home,
-    team_away: form.team_away,
-    match_time: form.match_time ? new Date(form.match_time).toISOString() : null,
-    bet_type: form.bet_type,
-    odds: Number(form.odds),
-    analysis: form.analysis,
-    ai_probability: Number(form.ai_probability),
-    ai_confidence: Number(form.ai_probability),
-    ai_score: Math.min(100, Math.round((Number(form.ai_probability) / 100) * Number(form.odds || 0) * 100)),
-    ai_analysis: form.analysis,
-    access_type: form.access_type,
-    is_premium: isPremium,
-    price: isPremium ? Number(form.price || 0) : 0,
-    tags: form.tagsText.split(',').map(t => t.trim()).filter(Boolean),
-    notify_followers: form.notify_followers
-  }), [form, isPremium])
-
-  const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
-
-  const submitTip = async () => {
-    setMessage('')
-    if (!payload.team_home || !payload.team_away || !payload.league || !payload.bet_type || !payload.odds) {
-      saveTipDebug('BŁĄD FORMULARZA', 'Uzupełnij: liga, drużyny, typ i kurs.'); setMessage('Uzupełnij: liga, drużyny, typ i kurs.')
-      onToast?.({ type: 'error', title: 'Brakuje danych', message: 'Uzupełnij wymagane pola formularza.' })
-      return
-    }
-    if (payload.access_type === 'premium' && Number(payload.price || 0) < 0) {
-      setMessage('Cena premium nie może być ujemna.')
-      onToast?.({ type: 'error', title: 'Cena premium', message: 'Podaj poprawną cenę typu premium.' })
-      return
-    }
-    if (!isSupabaseConfigured || !supabase) {
-      saveTipDebug('BŁĄD SUPABASE', 'Brak konfiguracji ENV w Netlify.'); setMessage('Supabase nie jest skonfigurowany. Sprawdź ENV w Netlify.')
-      onToast?.({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji ENV w Netlify.' })
-      return
-    }
-    if (payload.access_type === 'premium' && !premiumAllowed) {
-      showPremiumRequired()
-      return
-    }
-    if (freeLimitBlocked) {
-      showFreeLimitReached()
-      return
-    }
-    saveTipDebug('KLIK DODAJ TYP', 'formularz wysłany')
-    setSaving(true)
-    let savedTip = null
-    let saveError = null
-
-    const insertDirectTip = async (currentUserId) => {
-      const uid = currentUserId || user?.id || null
-      if (!uid) {
-        return { data: null, error: new Error('Brak aktywnej sesji użytkownika. Zaloguj się ponownie.') }
-      }
-
-      const fullPayload = {
-        author_id: uid,
-        user_id: uid,
-        author_email: user?.email || null,
-        author_name: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        username: payload.author_name || user?.email?.split('@')[0] || 'Użytkownik',
-        league: payload.league,
-        team_home: payload.team_home,
-        team_away: payload.team_away,
-        match: `${payload.team_home} vs ${payload.team_away}`,
-        match_time: payload.match_time || null,
-        bet_type: payload.bet_type,
-        prediction: payload.bet_type,
-        odds: Number(payload.odds),
-        analysis: payload.analysis || '',
-        ai_probability: Number(payload.ai_probability || 0),
-        ai_score: Number(payload.ai_score || 0),
-        ai_analysis: payload.ai_analysis || payload.analysis || '',
-        access_type: payload.access_type === 'premium' ? 'premium' : 'free',
-        is_premium: payload.access_type === 'premium',
-        price: payload.access_type === 'premium' ? Number(payload.price || 0) : 0,
-        status: 'pending',
-        tags: payload.tags || [],
-        notify_followers: payload.notify_followers !== false
-      }
-
-      saveTipDebug('PRÓBA ZAPISU', `${fullPayload.match} / ${fullPayload.bet_type} / user_id=${uid}`)
-      const firstAttempt = await supabase.from('tips').insert(fullPayload).select('*').single()
-      if (!firstAttempt.error) return firstAttempt
-      if (String(firstAttempt.error.message || '').includes('non-DEFAULT value into column \"is_premium\"')) {
-        const noGeneratedPayload = { ...fullPayload }
-        delete noGeneratedPayload.is_premium
-        const retryWithoutGenerated = await supabase.from('tips').insert(noGeneratedPayload).select('*').single()
-        if (!retryWithoutGenerated.error) return retryWithoutGenerated
-      }
-
-      console.warn('tips full insert failed, trying schema-compatible payload:', firstAttempt.error)
-      saveTipDebug('PEŁNY ZAPIS NIE PRZESZEDŁ', firstAttempt.error.message || String(firstAttempt.error))
-
-      const compatiblePayload = { ...fullPayload }
-      let lastError = firstAttempt.error
-      for (let i = 0; i < 10; i += 1) {
-        const missingColumn = String(lastError?.message || '').match(/'([^']+)' column of 'tips'/)?.[1]
-        if (!missingColumn || !(missingColumn in compatiblePayload)) break
-        delete compatiblePayload[missingColumn]
-        saveTipDebug('USUNIĘTO BRAKUJĄCĄ KOLUMNĘ', missingColumn)
-        const retry = await supabase.from('tips').insert(compatiblePayload).select('*').single()
-        if (!retry.error) return retry
-        lastError = retry.error
-      }
-
-      const safePayload = {
-        user_id: uid,
-        author_id: uid,
-        author_name: fullPayload.author_name,
-        username: fullPayload.author_name,
-        league: fullPayload.league,
-        team_home: fullPayload.team_home,
-        team_away: fullPayload.team_away,
-        match: fullPayload.match,
-        bet_type: fullPayload.bet_type,
-        prediction: fullPayload.bet_type,
-        odds: fullPayload.odds,
-        access_type: fullPayload.access_type,
-        price: fullPayload.price,
-        status: 'pending'
-      }
-
-      const safeAttempt = await supabase.from('tips').insert(safePayload).select('*').single()
-      if (safeAttempt.error) saveTipDebug('ZAPIS AWARYJNY BŁĄD', safeAttempt.error.message || String(safeAttempt.error))
-      return safeAttempt
-    }
-
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      const currentUserId = sessionData?.session?.user?.id || user?.id || null
-
-      const { data: directData, error: directError } = await insertDirectTip(currentUserId)
-      if (!directError) {
-        savedTip = normalizeTipRow(directData)
-        saveError = null
-      } else {
-        saveError = directError
-        if (token) {
-          const response = await fetch('/.netlify/functions/add-user-tip', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + token
-            },
-            body: JSON.stringify({ tip: payload })
-          })
-          const result = await response.json().catch(() => ({}))
-          if (!response.ok) { saveTipDebug('NETLIFY FUNCTION BŁĄD', result.error || 'Nie udało się zapisać typu'); throw new Error((result.error || 'Nie udało się zapisać typu') + ' | Supabase: ' + (directError.message || directError)) }
-          savedTip = normalizeTipRow(result.tip || {})
-          saveError = null
-        }
-      }
-    } catch (error) {
-      saveError = error
-    }
-
-    setSaving(false)
-    if (saveError) {
-      const cleanMessage = formatAppErrorMessage(saveError.message || String(saveError))
-      console.error('ADD TIP SAVE ERROR:', saveError)
-      saveTipDebug('NIE DODANO TYPU', cleanMessage); setMessage('❌ ' + cleanMessage)
-      onToast?.(getTipErrorToast(cleanMessage))
-      return
-    }
-    saveTipDebug('DODANO TYP OK', savedTip?.id ? 'id=' + savedTip.id : 'zapis zakończony'); setMessage('✅ Typ dodany i zapisany w bazie Supabase.')
-    if (!premiumAllowed) setDailyTipCount(prev => prev + 1)
-    onToast?.({ type: 'success', title: 'Typ dodany', message: 'Nowy typ pojawił się w dashboardzie.' })
-    onTipSaved(savedTip)
-  }
+  const confidenceDots = Array.from({ length: 15 }, (_, index) => index)
 
   return (
-    <section className="add-page">
-      <UltraPageBanner variant="add" />
-      <div className="page-title">
-        <h1>Dodaj nowy typ</h1>
-        <p>Podziel się swoim typem z innymi. Po zapisie typ pojawi się niżej w feedzie.</p>
-        <div className={`plan-limit-card ${premiumAllowed ? 'premium' : freeLimitBlocked ? 'blocked' : 'free'}`}>
-          <div className="plan-limit-head">
-            <span>{premiumAllowed ? '👑 Premium/Admin' : freeLimitBlocked ? '🚫 Limit FREE osiągnięty' : '💧 Konto FREE'}</span>
-            <strong>{premiumAllowed ? 'Bez limitu' : `${freeTipsLeft}/5 zostało`}</strong>
+    <section className="add-page add-tip-ultra-static">
+      <div className="static-add-layout">
+        <div className="static-add-main glass-ultra-panel">
+          <div className="static-add-header">
+            <div>
+              <div className="static-add-title-row">
+                <span className="static-add-title-icon">⬡</span>
+                <h1>Dodaj nowy typ</h1>
+              </div>
+              <p>Stwórz i opublikuj swój typ bukmacherski. Wykorzystaj AI, statystyki i swoją wiedzę.</p>
+            </div>
+            <button type="button" className="static-add-hints">💡 Wskazówki</button>
           </div>
-          <div className="plan-limit-bar"><i style={{ width: `${premiumAllowed ? 100 : freeLimitPercent}%` }} /></div>
-          <p>{premiumAllowed
-            ? 'Możesz dodawać typy bez limitu i publikować typy premium.'
-            : freeLimitBlocked
-              ? 'Masz maksymalny limit 5 typów dziennie. Przejdź na Premium, aby dodawać dalej.'
-              : `Możesz dodać jeszcze ${freeTipsLeft} typów dzisiaj. Typy premium wymagają konta Premium.`}</p>
-          {!premiumAllowed && <button type="button" className="mini-premium-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Odblokuj Premium</button>}
+
+          <div className="static-add-form-grid">
+            <div className="static-add-card">
+              <span className="static-add-label">1. Wybór sportu</span>
+              <div className="static-add-display"><span>⚽ Piłka nożna</span><b>⌄</b></div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">2. Liga</span>
+              <div className="static-add-display"><span>⚽ Premier League</span><b>⌄</b></div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">3. Mecz</span>
+              <div className="static-add-display static-add-display-double">
+                <div className="match-line"><span className="club-badge city">MCI</span><span>Manchester City</span><span className="versus">vs</span><span>Arsenal</span><span className="club-badge arsenal">ARS</span></div>
+                <small>25.05.2025, 17:30</small>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">4. Typ zakładu</span>
+              <div className="static-add-stack">
+                <div className="static-add-display"><span>Wynik końcowy</span><b>⌄</b></div>
+                <div className="static-add-display"><span>Manchester City wygra</span><b>⌄</b></div>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">5. Kurs (średni)</span>
+              <div className="static-add-inline-row">
+                <div className="static-add-display odds-display"><span>1.72</span></div>
+                <div className="auto-pill">✦ Automatycznie <i>●</i></div>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">6. Stawka</span>
+              <div className="stake-row">
+                <div className="static-add-display stake-value"><span>100.00</span></div>
+                <div className="static-add-display stake-currency"><span>zł</span><b>⌄</b></div>
+              </div>
+              <div className="stake-pills">
+                <span>10 zł</span>
+                <span>50 zł</span>
+                <span className="active">100 zł</span>
+                <span>200 zł</span>
+                <span>500 zł</span>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">7. Data i godzina</span>
+              <div className="date-time-row">
+                <div className="static-add-display"><span>25.05.2025</span><b>🗓</b></div>
+                <div className="static-add-display"><span>17:30</span><b>◷</b></div>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">8. Opis typu</span>
+              <div className="static-add-textarea">
+                Manchester City u siebie prezentuje świetną formę, wygrywając 7 z ostatnich 8 spotkań.<br />
+                Arsenal ma problemy w defensywie i traci średnio 1.6 gola na wyjazdach.<br />
+                Typ oparty na statystykach, formie i analizie AI.
+                <small>160 / 500</small>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">9. Analiza AI</span>
+              <div className="ai-analysis-box">
+                <div className="ai-analysis-head"><span className="ai-badge">AI</span><strong>Analiza wygenerowana przez AI</strong></div>
+                <p>Model AI ocenia ten typ jako wartościowy.<br />Manchester City ma <b>68% szans</b> na wygraną.<br />Kluczowe przewagi w formie, posiadaniu piłki i skuteczności.</p>
+                <button type="button">Generuj ponownie</button>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">10. Poziom pewności</span>
+              <div className="confidence-head"><strong>Wysoki</strong><b>84%</b></div>
+              <div className="confidence-dots">
+                {confidenceDots.map((dot) => <i key={dot} className={dot < 10 ? 'active' : ''}></i>)}
+              </div>
+              <div className="confidence-scale"><span>Niski</span><span>Bardzo wysoki</span></div>
+            </div>
+
+            <div className="static-add-card static-span-two">
+              <span className="static-add-label">11. Tagi</span>
+              <div className="tag-row">
+                <span>#PremierLeague</span>
+                <span>#ManchesterCity</span>
+                <span>#Statystyki</span>
+                <span>#AI</span>
+                <button type="button">+ Dodaj tag</button>
+              </div>
+            </div>
+
+            <div className="static-add-card static-span-two publish-card">
+              <div>
+                <span className="static-add-label">12. Darmowy / Premium</span>
+                <p>Wybierz widoczność typu dla użytkowników</p>
+              </div>
+              <div className="publish-actions">
+                <div className="publish-toggle">
+                  <button type="button">Darmowy</button>
+                  <button type="button" className="active">Premium 👑</button>
+                </div>
+                <button type="button" className="publish-btn">Opublikuj typ ✈</button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <aside className="static-add-side">
+          <div className="glass-ultra-panel static-side-card preview-card">
+            <div className="side-card-head">
+              <h3>Podgląd typu</h3>
+              <p>Zobacz jak Twój typ będzie wyglądał po publikacji.</p>
+            </div>
+            <div className="preview-match-card">
+              <div className="preview-topline"><span>⚽ PIŁKA NOŻNA ・ PREMIER LEAGUE</span><strong>👑 PREMIUM</strong></div>
+              <div className="preview-teams-row">
+                <div className="preview-team"><span className="preview-logo city">MCI</span><b>Manchester City</b></div>
+                <span className="preview-vs">VS</span>
+                <div className="preview-team right"><span className="preview-logo arsenal">ARS</span><b>Arsenal</b></div>
+              </div>
+              <div className="preview-time">25.05.2025, 17:30</div>
+              <div className="preview-stats-grid">
+                <div><small>TYP</small><strong>Manchester City wygra</strong></div>
+                <div><small>KURS</small><strong>1.72</strong></div>
+                <div><small>PEWNOŚĆ</small><strong className="accent">84%</strong></div>
+                <div><small>STAWKA</small><strong>100.00 zł</strong></div>
+                <div><small>ANALIZA AI</small><strong className="accent">AI Wysoka</strong></div>
+                <div><small>DATA DODANIA</small><strong>24.05.2025, 14:32</strong></div>
+              </div>
+              <div className="preview-ring">↗</div>
+            </div>
+            <span className="preview-note">* To tylko podgląd. Rzeczywisty wygląd może się nieznacznie różnić.</span>
+          </div>
+
+          <div className="glass-ultra-panel static-side-card suggestion-card">
+            <div className="small-card-head"><span>🏠 Sugestia AI</span><em>Inteligentna rekomendacja <b>New</b></em></div>
+            <div className="suggestion-content">
+              <div>
+                <p>AI sugeruje, że to wartościowy typ do publikacji.</p>
+                <small>Podobne typy w tej lidze miały 61% skuteczności. Rozważ dodanie statystyk H2H dla lepszego zasięgu.</small>
+                <button type="button">Zobacz szczegóły analizy</button>
+              </div>
+              <div className="big-percent">82%</div>
+            </div>
+          </div>
+
+          <div className="glass-ultra-panel static-side-card history-card">
+            <div className="small-card-head"><span>✦ Historia skuteczności</span><select><option>Premier League</option></select></div>
+            <p>Twoje statystyki w wybranej lidze</p>
+            <div className="history-grid">
+              <div><strong>62%</strong><small>Skuteczność</small></div>
+              <div><strong>+24.6%</strong><small>ROI</small></div>
+              <div><strong>18</strong><small>Typów</small></div>
+              <div><strong>11</strong><small>Wygrane</small></div>
+            </div>
+            <div className="history-chart"><span></span></div>
+          </div>
+
+          <div className="glass-ultra-panel static-side-card reach-card">
+            <div className="small-card-head"><span>📣 Przewidywany zasięg</span><em>Premium boost</em></div>
+            <p>Szacunkowy zasięg Twojego typu</p>
+            <div className="reach-grid">
+              <div><strong>2.4K – 3.1K</strong><small>Wyświetlenia</small></div>
+              <div><strong>180 – 280</strong><small>Interakcje</small></div>
+              <div><strong>35 – 60</strong><small>Polubienia</small></div>
+            </div>
+            <div className="reach-megaphone">📣</div>
+          </div>
+        </aside>
       </div>
-
-      <form className="tip-form" onSubmit={(e) => e.preventDefault()}>
-        <label>Mecz</label>
-        <div className="match-inputs">
-          <input value={form.team_home} onChange={e => update('team_home', e.target.value)} placeholder="Drużyna 1" />
-          <span>vs</span>
-          <input value={form.team_away} onChange={e => update('team_away', e.target.value)} placeholder="Drużyna 2" />
-        </div>
-
-        <label>Typ</label>
-        <select value={form.bet_type} onChange={e => update('bet_type', e.target.value)}>
-          <option>Powyżej 2.5 gola</option>
-          <option>Obie drużyny strzelą</option>
-          <option>Gospodarze wygrają</option>
-          <option>Goście wygrają</option>
-          <option>Remis</option>
-          <option>1X</option>
-          <option>X2</option>
-        </select>
-
-        <label>Kurs</label>
-        <input type="number" step="0.01" value={form.odds} onChange={e => update('odds', e.target.value)} />
-
-        <div className="two-cols">
-          <div>
-            <label>Liga</label>
-            <input value={form.league} onChange={e => update('league', e.target.value)} />
-          </div>
-          <div>
-            <label>Data i godzina</label>
-            <input type="datetime-local" value={form.match_time} onChange={e => update('match_time', e.target.value)} />
-          </div>
-        </div>
-
-        <label>Opis typu <span>(opcjonalnie)</span></label>
-        <textarea value={form.analysis} onChange={e => update('analysis', e.target.value)} maxLength="300"></textarea>
-        <div className="counter">{form.analysis.length}/300</div>
-
-        <label>Dostęp</label>
-        <div className="access-grid">
-          <button type="button" className={`access ${form.access_type === 'free' ? 'active' : ''}`} onClick={() => chooseAccessType('free')}>
-            <strong>💧 Darmowy</strong>
-            <span>Twój typ będzie widoczny dla wszystkich</span>
-          </button>
-          <button type="button" className={`access ${form.access_type === 'premium' ? 'active' : ''} ${!premiumAllowed ? 'locked' : ''}`} onClick={() => chooseAccessType('premium')}>
-            <strong>🔒 Premium</strong>
-            <span>Możesz publikować płatne typy premium.</span>
-          </button>
-        </div>
-
-        {!premiumAllowed && (
-          <div className="premium-lock-info warning">
-            🔒 Nie posiadasz konta Premium — publikowanie płatnych typów jest zablokowane.
-            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Aktywuj Premium</button>
-          </div>
-        )}
-
-        {isPremium && premiumAllowed && (
-          <div className="premium-lock-info success">
-            Tryb premium — możesz publikować płatny typ.
-          </div>
-        )}
-
-        {isPremium && (
-          <>
-            <label>Cena pojedynczego typu <span>Ty ustalasz cenę. Platforma pobiera zawsze 20%, Ty dostajesz 80%.</span></label>
-            <input type="number" step="0.01" value={form.price} onChange={e => update('price', e.target.value)} placeholder="np. 29" />
-          </>
-        )}
-
-        <div className="ai-score">
-          <div><span>Szacowane prawdopodobieństwo (AI)</span><b>{form.ai_probability}%</b></div>
-          <input className="range" type="range" min="0" max="100" value={form.ai_probability} onChange={e => update('ai_probability', e.target.value)} />
-          <div className="progress"><i style={{width:`${form.ai_probability}%`}}></i></div>
-          <p>{form.ai_probability >= 70 ? 'Wysokie prawdopodobieństwo powodzenia' : 'Średnie prawdopodobieństwo — warto sprawdzić dane'}</p>
-        </div>
-
-        <label>Tagi <span>(opcjonalnie)</span></label>
-        <input value={form.tagsText} onChange={e => update('tagsText', e.target.value)} placeholder="np. Real Madryt, Bayern, Champions League" />
-
-        <div className="notify-row">
-          <span>Powiadom obserwujących o nowym typie</span>
-          <label className="switch"><input type="checkbox" checked={form.notify_followers} onChange={e => update('notify_followers', e.target.checked)} /><i></i></label>
-        </div>
-
-        {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-
-        <button className={`submit-btn ${freeLimitBlocked ? 'limit-blocked' : ''}`} type="button" onClick={submitTip} disabled={saving}>
-          {saving ? 'Zapisywanie...' : freeLimitBlocked ? '🚫 Limit 5/5 — przejdź na Premium' : '✈ Dodaj typ'}
-        </button>
-      </form>
     </section>
   )
 }
