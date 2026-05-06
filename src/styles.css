@@ -20047,3 +20047,29 @@ img,video,canvas,svg{max-width:100%;}
     max-width:380px!important;
   }
 }
+
+/* WERSJA 567 — delikatnie zwężona środkowa kolumna, bez zmiany kolorów */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page) .main{
+    width:min(100%, 980px)!important;
+    max-width:980px!important;
+    justify-self:start!important;
+    min-width:0!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .topbar,
+  .app-shell:not(.no-rightbar-page) .feed-section,
+  .app-shell:not(.no-rightbar-page) .feed,
+  .app-shell:not(.no-rightbar-page) .betai-animated-hero,
+  .app-shell:not(.no-rightbar-page) .dashboard-hero{
+    width:100%!important;
+    max-width:100%!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page) .main{
+    width:min(100%, 1040px)!important;
+    max-width:1040px!important;
+  }
+}

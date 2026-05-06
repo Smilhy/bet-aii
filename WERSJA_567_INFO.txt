@@ -1,0 +1,6 @@
+WERSJA 567
+
+Zmiany:
+- delikatnie zwężono środkową kolumnę dashboardu
+- zachowano kolory bez zmian
+- prawa kolumna pozostaje przesunięta do prawej strony
