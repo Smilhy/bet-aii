@@ -20048,11 +20048,15 @@ img,video,canvas,svg{max-width:100%;}
   }
 }
 
-/* WERSJA 567 — delikatnie zwężona środkowa kolumna, bez zmiany kolorów */
+/* WERSJA 568 — powrót do 566 + lekkie zwężenie środka (z bannerem i wyszukiwaniem) + prawa kolumna +5% */
 @media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.94fr) 378px!important;
+  }
+
   .app-shell:not(.no-rightbar-page) .main{
-    width:min(100%, 980px)!important;
-    max-width:980px!important;
+    width:96%!important;
+    max-width:96%!important;
     justify-self:start!important;
     min-width:0!important;
   }
@@ -20060,16 +20064,34 @@ img,video,canvas,svg{max-width:100%;}
   .app-shell:not(.no-rightbar-page) .topbar,
   .app-shell:not(.no-rightbar-page) .feed-section,
   .app-shell:not(.no-rightbar-page) .feed,
+  .app-shell:not(.no-rightbar-page) .dashboard-hero,
   .app-shell:not(.no-rightbar-page) .betai-animated-hero,
-  .app-shell:not(.no-rightbar-page) .dashboard-hero{
+  .app-shell:not(.no-rightbar-page) .search,
+  .app-shell:not(.no-rightbar-page) .top-search-field{
     width:100%!important;
     max-width:100%!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:378px!important;
+    min-width:378px!important;
+    max-width:378px!important;
   }
 }
 
 @media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.93fr) 400px!important;
+  }
+
   .app-shell:not(.no-rightbar-page) .main{
-    width:min(100%, 1040px)!important;
-    max-width:1040px!important;
+    width:95%!important;
+    max-width:95%!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:400px!important;
+    min-width:400px!important;
+    max-width:400px!important;
   }
 }
