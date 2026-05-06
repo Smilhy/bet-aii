@@ -7741,7 +7741,21 @@ function App() {
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
-            <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
+            <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
+              <span className="wallet-split-segment wallet-split-balance">
+                <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
+                <small>Saldo</small>
+              </span>
+              <span className="wallet-split-divider" aria-hidden="true" />
+              <span className="wallet-split-segment wallet-split-tokens">
+                <span className="wallet-split-coin" aria-hidden="true">◉</span>
+                <span className="wallet-split-token-copy">
+                  <strong>{Number(tokenBalance || 0)}</strong>
+                  <small>Żetony</small>
+                </span>
+                <span className="wallet-split-chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
             <button type="button" className={`top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
               <span className="top-user-avatar">{(getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}</span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>

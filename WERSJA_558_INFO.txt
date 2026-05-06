@@ -1,0 +1,6 @@
+WERSJA 558
+
+Zmiana wykonana:
+- podmieniono poprzednie logo w lewym górnym rogu sidebaru
+- dodano nowe logo z przesłanego obrazka
+- przygotowano kolejną wersję paczki do pobrania
