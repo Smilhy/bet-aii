@@ -1,1 +1,0 @@
-Wersja 528: sekcja pod hero poprawiona 1:1 według zdjęcia użytkownika. Usunięto stary Marketplace premium/banner oraz filtry/feed. Dodano klikalne kafelki, rozwijane artykuły, wyniki live, typy AI i oferty marketplace premium.

@@ -1,7 +1,0 @@
-Wersja 532
-
-Poprawka:
-- poszerzona prawa ramka ze statystykami hero w LEWO,
-- poszerzone tło / szklista osłona pod statystykami,
-- całość została wyrównana wizualnie do niższej ramki / kart poniżej,
-- zachowane nowe slajdy hero i live tabela po prawej.

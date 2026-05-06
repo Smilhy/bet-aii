@@ -1,1 +1,0 @@
-Wersja 538: naprawa błędu wejścia do zakładki Ranking (ReferenceError: key is not defined). Poprawiono generowanie klucza w widoku rankingu i przygotowano gotową paczkę.

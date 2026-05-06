@@ -649,12 +649,12 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const heroSlides = [
-    '/betai-hero-glass-1-platform.jpg',
-    '/betai-hero-glass-2-marketplace.jpg',
-    '/betai-hero-glass-3-rewards.jpg',
-    '/betai-hero-glass-4-community.jpg',
-    '/betai-hero-glass-5-ai.jpg',
-    '/betai-hero-glass-6-media.jpg'
+    '/betai-hero-live-1.png',
+    '/betai-hero-live-2.png',
+    '/betai-hero-live-3.png',
+    '/betai-hero-live-4.png',
+    '/betai-hero-live-5.png',
+    '/betai-hero-live-6.png'
   ]
   const [panel, setPanel] = useState(0)
   const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
@@ -662,18 +662,13 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
 
   useEffect(() => {
     if (isHeroPaused) return undefined
-    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 5600)
+    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
     return () => { clearInterval(panelTimer) }
   }, [heroSlides.length, isHeroPaused])
 
   const goToHeroSlide = (index) => {
     setPanel(index)
   }
-
-  const goToNextHeroSlide = () => {
-    setPanel(prev => (prev + 1) % heroSlides.length)
-  }
-
 
   const premiumTips = tips.filter(t => isTipPremium(t))
   const validConfidenceValues = tips
@@ -687,8 +682,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
   const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
   const matchesToday = Math.max(tips.length || 0, 50)
   const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })
-
+  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
   const handleHeroMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
@@ -709,7 +703,7 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
       }}
       style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
     >
-      <div className="betai-hero-image-stage" aria-hidden="true" onClick={goToNextHeroSlide}>
+      <div className="betai-hero-image-stage" aria-hidden="true">
         {heroSlides.map((src, index) => (
           <img
             key={src}
@@ -719,13 +713,6 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             draggable="false"
           />
         ))}
-      </div>
-      <div className="betai-hero-stats" aria-label="Statystyki na żywo" onClick={onStatsClick}>
-        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
-        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
-        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
-        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
-        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
       </div>
       <div className="betai-hero-dots" role="tablist" aria-label="Wybierz slajd banera Bet+AI">
         {heroSlides.map((_, index) => (
@@ -741,6 +728,13 @@ function AnimatedDashboardHero({ tips = [], onStatsClick }) {
             role="tab"
           />
         ))}
+      </div>
+      <div className="betai-hero-stats" aria-label="Realne statystyki hero">
+        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
+        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
+        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
+        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
+        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
       </div>
     </section>
   )
@@ -2599,25 +2593,21 @@ function ArticlesView() {
   const [articles, setArticles] = useState([])
   const [loadingArticles, setLoadingArticles] = useState(true)
   const [articlesError, setArticlesError] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [articleQuery, setArticleQuery] = useState('')
   const [lastUpdated, setLastUpdated] = useState(null)
-  const [topTab, setTopTab] = useState('Artykuły')
-  const [featureIndex, setFeatureIndex] = useState(0)
-  const [tvDay, setTvDay] = useState('Dziś')
-  const [liveSport, setLiveSport] = useState('Wszystkie')
 
   async function loadArticles(silent = false) {
     if (!silent) setLoadingArticles(true)
     setArticlesError('')
     try {
-      const response = await fetch('/.netlify/functions/sportpl-articles?limit=24&t=' + Date.now(), {
+      const response = await fetch('/.netlify/functions/sportpl-articles?limit=30&t=' + Date.now(), {
         headers: { 'Accept': 'application/json' }
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać artykułów Sport.pl')
-      const list = Array.isArray(data.articles) ? data.articles : []
-      setArticles(list)
+      setArticles(Array.isArray(data.articles) ? data.articles : [])
       setLastUpdated(data.updatedAt || new Date().toISOString())
-      setFeatureIndex(prev => (list.length ? Math.min(prev, Math.max(0, list.length - 1)) : 0))
     } catch (error) {
       setArticlesError(error.message || 'Nie udało się pobrać artykułów')
     } finally {
@@ -2627,248 +2617,118 @@ function ArticlesView() {
 
   useEffect(() => {
     loadArticles(false)
-    const refreshTimer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
-    return () => clearInterval(refreshTimer)
+    const timer = setInterval(() => loadArticles(true), 10 * 60 * 1000)
+    return () => clearInterval(timer)
   }, [])
 
-  const normalizedArticles = useMemo(() => {
-    return (articles || []).map((article, index) => ({
-      ...article,
-      id: article.id || article.url || String(index),
-      image: article.image || '',
-      category: article.category || 'Sport',
-      excerpt: article.excerpt || 'Kliknij, aby przejść do pełnego materiału w Sport.pl.',
-      badge: index === 0 ? 'TRENDING' : (article.category || 'NEWS').toUpperCase()
-    }))
+  const categories = useMemo(() => {
+    const set = new Set((articles || []).map(item => item.category || 'Sport').filter(Boolean))
+    return ['all', ...Array.from(set).slice(0, 8)]
   }, [articles])
 
-  const featureSlides = normalizedArticles.slice(0, 5)
-  const latestArticles = normalizedArticles.slice(1, 5)
+  const filteredArticles = useMemo(() => {
+    const q = articleQuery.trim().toLowerCase()
+    return (articles || []).filter(article => {
+      if (activeCategory !== 'all' && article.category !== activeCategory) return false
+      if (!q) return true
+      return [article.title, article.excerpt, article.category, article.author].filter(Boolean).join(' ').toLowerCase().includes(q)
+    })
+  }, [articles, activeCategory, articleQuery])
 
-  useEffect(() => {
-    if (featureSlides.length <= 1) return
-    const slider = setInterval(() => setFeatureIndex(prev => (prev + 1) % featureSlides.length), 5500)
-    return () => clearInterval(slider)
-  }, [featureSlides.length])
+  const mainArticle = filteredArticles[0]
+  const sideArticles = filteredArticles.slice(1, 4)
+  const listArticles = filteredArticles.slice(4)
 
-  useEffect(() => {
-    setFeatureIndex(0)
-  }, [topTab])
-
-  const activeSlide = featureSlides[featureIndex] || normalizedArticles[0] || {
-    title: 'Sport.pl — najnowsze wiadomości sportowe',
-    excerpt: 'Połączony moduł artykułów oczekuje na pobranie danych RSS.',
-    url: 'https://www.sport.pl/',
-    image: '',
-    category: 'Sport',
-    badge: 'TRENDING'
-  }
-
-  const sectionCopy = {
-    'Artykuły': 'Artykuły',
-    'News': 'News',
-    'TV / PPV': 'TV / PPV',
-    'Wyniki live': 'Wyniki live'
-  }
-
-  const tvSchedule = {
-    'Dziś': [
-      { time: '18:30', channel: 'CANAL+ SPORT', match: 'Manchester City – Arsenal', league: 'Premier League', live: true },
-      { time: '20:45', channel: 'ELEVEN SPORTS', match: 'Inter – Juventus', league: 'Serie A', live: true },
-      { time: '21:00', channel: 'polsat sport premium', match: 'Real Madryt – Betis', league: 'LaLiga', live: true },
-      { time: '21:00', channel: 'TVP SPORT', match: 'Lech – Legia', league: 'PKO BP Ekstraklasa', live: true },
-      { time: '23:15', channel: 'CANAL+ SPORT', match: 'NBA: Lakers – Nuggets', league: 'Playoffs', live: true }
-    ],
-    'Jutro': [
-      { time: '17:30', channel: 'CANAL+ SPORT', match: 'Tottenham – Liverpool', league: 'Premier League', live: false },
-      { time: '19:00', channel: 'ELEVEN SPORTS', match: 'Barcelona – Real Sociedad', league: 'LaLiga', live: false },
-      { time: '20:30', channel: 'TVP SPORT', match: 'Raków – Jagiellonia', league: 'Ekstraklasa', live: false },
-      { time: '21:00', channel: 'polsat sport premium', match: 'PSG – Lyon', league: 'Ligue 1', live: false },
-      { time: '22:15', channel: 'CANAL+ SPORT', match: 'Roma – Milan', league: 'Serie A', live: false }
-    ],
-    'Śr 17.05': [
-      { time: '18:45', channel: 'CANAL+ SPORT', match: 'Bayern – Dortmund', league: 'Bundesliga', live: false },
-      { time: '20:00', channel: 'ELEVEN SPORTS', match: 'Chelsea – Newcastle', league: 'Premier League', live: false },
-      { time: '20:45', channel: 'TVP SPORT', match: 'Polska – Niemcy', league: 'Towarzyski', live: false },
-      { time: '21:00', channel: 'polsat sport premium', match: 'Atletico – Sevilla', league: 'LaLiga', live: false },
-      { time: '22:00', channel: 'CANAL+ SPORT', match: 'Monaco – Marseille', league: 'Ligue 1', live: false }
-    ]
-  }
-
-  const ppvEvents = [
-    { time: '20.05.2024 • 22:00', title: 'Usyk vs Fury', subtitle: 'Walka o wszystkie pasy', price: '49.00 zł', tag: 'PPV' },
-    { time: '02.06.2024 • 04:00', title: 'UFC 302', subtitle: 'Makhachev vs Poirier', price: '49.00 zł', tag: 'PPV' },
-    { time: '08.06.2024 • 19:00', title: 'KSW 94', subtitle: 'Stadion Narodowy, Warszawa', price: '39.00 zł', tag: 'PPV' }
-  ]
-
-  const liveSports = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'Siatkówka', 'Dart']
-  const liveMatches = [
-    { sport: 'Piłka nożna', league: 'PREMIER LEAGUE', minute: '86′', home: 'Tottenham', away: 'Liverpool', homeScore: 2, awayScore: 1, homeInfo: '23′ Son', awayInfo: '17′ Salah', odds: ['1 2.45', 'X 3.40', '2 2.80'], delta: '+123' },
-    { sport: 'Piłka nożna', league: 'SERIE A', minute: 'HT', home: 'Inter', away: 'Juventus', homeScore: 1, awayScore: 0, homeInfo: '15′ Lautaro (k.)', awayInfo: '37′ Bremer', odds: ['1 1.90', 'X 3.50', '2 4.20'], delta: '+98' },
-    { sport: 'Piłka nożna', league: 'LALIGA', minute: '62′', home: 'Barcelona', away: 'Real Sociedad', homeScore: 3, awayScore: 2, homeInfo: '9′ Lewandowski', awayInfo: '49′ Oyarzabal', odds: ['1 1.90', 'X 4.20', '2 5.20'], delta: '+112' },
-    { sport: 'Piłka nożna', league: 'BUNDESLIGA', minute: '71′', home: 'Leverkusen', away: 'Bayern', homeScore: 1, awayScore: 1, homeInfo: '16′ Wirtz', awayInfo: '45+2′ Kane', odds: ['1 2.10', 'X 3.60', '2 3.40'], delta: '+107' }
-  ]
-
-  const visibleLiveMatches = liveSport === 'Wszystkie' ? liveMatches : liveMatches.filter(match => match.sport === liveSport)
-
-  const formatRelative = (value) => {
+  const formatArticleDate = (value) => {
     if (!value) return 'Teraz'
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return 'Teraz'
-    const diff = Math.max(0, Date.now() - date.getTime())
-    const minutes = Math.round(diff / 60000)
-    if (minutes < 60) return `${Math.max(1, minutes)} min temu`
-    const hours = Math.round(minutes / 60)
-    if (hours < 24) return `${hours}h temu`
-    const days = Math.round(hours / 24)
-    return `${days}d temu`
+    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
   }
 
-  const nextSlide = () => setFeatureIndex(prev => (prev + 1) % Math.max(1, featureSlides.length))
-  const prevSlide = () => setFeatureIndex(prev => (prev - 1 + Math.max(1, featureSlides.length)) % Math.max(1, featureSlides.length))
-
   return (
-    <section className="articles-page articles-page-pro">
-      <div className="articles-pro-tabs">
-        {Object.keys(sectionCopy).map(tab => (
-          <button key={tab} type="button" className={topTab === tab ? 'active' : ''} onClick={() => setTopTab(tab)}>
-            {tab}
-          </button>
-        ))}
+    <section className="articles-page">
+      <UltraPageBanner variant="articles"><button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button></UltraPageBanner>
+      <div className="articles-hero articles-hero-compact">
+        <div>
+          <span className="articles-kicker">SPORT.PL LIVE NEWS</span>
+          <h1>Artykuły</h1>
+          <div className="articles-meta-row">
+            <em>Auto refresh: 10 min</em>
+            <em>{lastUpdated ? 'Ostatnia aktualizacja: ' + formatArticleDate(lastUpdated) : 'Ładowanie aktualizacji...'}</em>
+          </div>
+        </div>
+        <button type="button" onClick={() => loadArticles(false)} disabled={loadingArticles}>{loadingArticles ? 'Odświeżam...' : 'Odśwież teraz'}</button>
+      </div>
+
+      <div className="articles-toolbar">
+        <label className="articles-search">
+          <span>⌕</span>
+          <input value={articleQuery} onChange={event => setArticleQuery(event.target.value)} placeholder="Szukaj artykułów, drużyn, lig..." />
+        </label>
+        <div className="articles-categories">
+          {categories.map(category => (
+            <button key={category} className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)}>
+              {category === 'all' ? 'Wszystkie' : category}
+            </button>
+          ))}
+        </div>
       </div>
 
       {articlesError && <div className="articles-error">⚠️ {articlesError}</div>}
       {loadingArticles && !articles.length && <div className="articles-loading">Ładowanie artykułów Sport.pl...</div>}
 
-      <div className="articles-pro-grid">
-        <div className="articles-pro-main">
-          <div className="articles-showcase-card">
-            <button type="button" className="showcase-nav left" onClick={prevSlide} aria-label="Poprzedni slajd">‹</button>
-            <a className="showcase-main-link" href={activeSlide.url} target="_blank" rel="noreferrer">
-              <div className="showcase-copy">
-                <span className="showcase-badge">{activeSlide.badge || 'TRENDING'}</span>
-                <h2>{activeSlide.title}</h2>
-                <p>{activeSlide.excerpt || 'Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.'}</p>
-                <strong>Czytaj artykuł</strong>
-              </div>
-              <div className="showcase-visual">
-                {activeSlide.image ? <img src={activeSlide.image} alt="" loading="lazy" /> : <div className="showcase-placeholder">Sport.pl</div>}
-                <div className="showcase-vs">VS</div>
-              </div>
-            </a>
-            <button type="button" className="showcase-nav right" onClick={nextSlide} aria-label="Następny slajd">›</button>
-            <div className="showcase-dots">
-              {featureSlides.map((slide, index) => (
-                <button key={slide.id || index} type="button" className={featureIndex === index ? 'active' : ''} onClick={() => setFeatureIndex(index)} aria-label={`Slajd ${index + 1}`}></button>
-              ))}
+      {!loadingArticles && !filteredArticles.length && (
+        <div className="articles-empty">
+          <strong>Brak artykułów dla tego filtra</strong>
+          <span>Zmień kategorię albo wyczyść wyszukiwarkę.</span>
+        </div>
+      )}
+
+      {mainArticle && (
+        <div className="articles-featured-grid">
+          <a className="article-main-card" href={mainArticle.url} target="_blank" rel="noreferrer">
+            <div className="article-image-wrap">
+              {mainArticle.image ? <img src={mainArticle.image} alt="" loading="lazy" /> : <div className="article-image-placeholder">Sport.pl</div>}
+              <span>{mainArticle.category || 'Sport'}</span>
             </div>
-          </div>
+            <div className="article-main-content">
+              <em>{formatArticleDate(mainArticle.publishedAt)} • Sport.pl</em>
+              <h2>{mainArticle.title}</h2>
+              <p>{mainArticle.excerpt || 'Kliknij, aby przeczytać pełny artykuł w Sport.pl.'}</p>
+              <strong>Czytaj artykuł ↗</strong>
+            </div>
+          </a>
 
-          <div className="articles-pro-section-header">
-            <h3>Najnowsze artykuły</h3>
-            <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz wszystkie</a>
-          </div>
-
-          <div className="articles-latest-pro-grid">
-            {latestArticles.map((article, index) => (
-              <a key={article.id || article.url || index} className="article-pro-card" href={article.url} target="_blank" rel="noreferrer">
-                <div className="article-pro-thumb">
-                  {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
-                  <span>{index === 0 ? 'ANALIZA' : index === 1 ? 'ZAPOWIEDŹ' : index === 2 ? 'TYPY AI' : 'WYWIAD'}</span>
-                </div>
-                <div className="article-pro-body">
-                  <em>{formatRelative(article.publishedAt)}</em>
-                  <h4>{article.title}</h4>
-                  <p>{article.excerpt}</p>
-                  <div className="article-pro-meta"><span>◔ {Math.max(15, 24 - index * 3)}</span><span>◌ Komentarze</span></div>
+          <div className="article-side-list">
+            {sideArticles.map(article => (
+              <a className="article-side-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+                {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-mini-placeholder">S</div>}
+                <div>
+                  <span>{article.category || 'Sport'} • {formatArticleDate(article.publishedAt)}</span>
+                  <h3>{article.title}</h3>
                 </div>
               </a>
             ))}
           </div>
-
-          <div className="live-pro-panel">
-            <div className="articles-pro-section-header with-action">
-              <h3>Wyniki live</h3>
-              <button type="button">⚙ Ustawienia</button>
-            </div>
-            <div className="live-sport-filters">
-              {liveSports.map(label => (
-                <button key={label} type="button" className={liveSport === label ? 'active' : ''} onClick={() => setLiveSport(label)}>{label}</button>
-              ))}
-            </div>
-            <div className="live-cards-grid">
-              {visibleLiveMatches.map((match, index) => (
-                <div className="live-match-card" key={match.home + match.away + index}>
-                  <div className="live-card-top"><span>{match.league}</span><em>{match.minute}</em></div>
-                  <div className="live-score-row">
-                    <div><strong>{match.home}</strong></div>
-                    <b>{match.homeScore} : {match.awayScore}</b>
-                    <div><strong>{match.away}</strong></div>
-                  </div>
-                  <div className="live-info-row"><span>{match.homeInfo}</span><span>{match.awayInfo}</span></div>
-                  <div className="live-odds-row">
-                    {match.odds.map(value => <span key={value}>{value}</span>)}
-                    <strong>{match.delta}</strong>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button type="button" className="live-more-btn">↻ Pokaż więcej meczów na żywo</button>
-          </div>
         </div>
+      )}
 
-        <aside className="articles-pro-side">
-          <div className="articles-side-card tv-live-card">
-            <div className="articles-side-header">
-              <h3>TV / Na żywo</h3>
-              <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz pełen program</a>
+      <div className="articles-grid">
+        {listArticles.map(article => (
+          <a className="article-card" href={article.url} target="_blank" rel="noreferrer" key={article.id || article.url}>
+            <div className="article-card-image">
+              {article.image ? <img src={article.image} alt="" loading="lazy" /> : <div className="article-image-placeholder small">Sport.pl</div>}
+              <span>{article.category || 'Sport'}</span>
             </div>
-            <div className="tv-day-tabs">
-              {Object.keys(tvSchedule).map(day => (
-                <button key={day} type="button" className={tvDay === day ? 'active' : ''} onClick={() => setTvDay(day)}>{day}</button>
-              ))}
+            <div className="article-card-body">
+              <em>{formatArticleDate(article.publishedAt)}</em>
+              <h3>{article.title}</h3>
+              <p>{article.excerpt || 'Krótki opis artykułu pojawi się po pobraniu danych.'}</p>
             </div>
-            <div className="tv-schedule-list">
-              {(tvSchedule[tvDay] || []).map((item, index) => (
-                <div className="tv-schedule-row" key={item.time + item.match + index}>
-                  <span className="tv-time">{item.time}</span>
-                  <div className="tv-channel-badge">{item.channel}</div>
-                  <div className="tv-match-copy">
-                    <strong>{item.match}</strong>
-                    <em>{item.league}</em>
-                  </div>
-                  <span className="tv-live-pill">{item.live ? 'NA ŻYWO' : 'WKRÓTCE'}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="articles-side-card ppv-card">
-            <div className="articles-side-header">
-              <h3>PPV / Wydarzenia premium</h3>
-              <a href="https://www.sport.pl/" target="_blank" rel="noreferrer">Zobacz wszystkie</a>
-            </div>
-            <div className="ppv-event-list">
-              {ppvEvents.map((event, index) => (
-                <div className="ppv-event-row" key={event.title + index}>
-                  <div className="ppv-fighters">
-                    <div className="fighter-thumb"></div>
-                    <div className="fighter-thumb alt"></div>
-                  </div>
-                  <div className="ppv-copy">
-                    <em>{event.time}</em>
-                    <strong>{event.title}</strong>
-                    <span>{event.subtitle}</span>
-                    <div className="ppv-price-row"><b>{event.price}</b><small>{event.tag}</small></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
+          </a>
+        ))}
       </div>
-
-      {lastUpdated && <div className="articles-updated-note">Źródło: Sport.pl RSS • Ostatnia aktualizacja: {new Date(lastUpdated).toLocaleString('pl-PL')}</div>}
     </section>
   )
 }
@@ -3737,332 +3597,142 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   )
 }
 
-function LeaderboardView({ tips = [], ranking = [], user = null, referralData = {} }) {
-  const [sportFilter, setSportFilter] = useState('Wszystkie sporty')
-  const [timeFilter, setTimeFilter] = useState('Tydzień')
-  const [activeTab, setActiveTab] = useState('ranking')
+function LeaderboardView({ tips = [], ranking = [] }) {
+  const realRows = Array.isArray(ranking) ? ranking : []
 
-  const rankingRows = useMemo(() => {
-    const rawRows = Array.isArray(ranking) ? ranking : []
-    const fallbackMap = new Map()
-
-    ;(tips || []).forEach((tip) => {
-      const normalized = normalizeTipRow(tip)
-      const key = normalized.author_id || normalized.user_id || normalized.author_email || normalized.author_name || 'unknown'
-      const current = fallbackMap.get(key) || {
+  const fallbackDynamic = tips.reduce((acc, tip) => {
+    const key = tip.author_id || tip.author_email || tip.author_name || 'unknown'
+    const name = tip.author_name || tip.author_email || 'Tipster'
+    if (!acc[key]) {
+      acc[key] = {
         tipster_id: key,
-        display_name: normalized.author_name || normalized.author_email || 'Użytkownik',
-        email: normalized.author_email || '',
-        total_tips: 0,
-        wins: 0,
-        losses: 0,
-        premium_tips: 0,
+        display_name: name,
+        email: tip.author_email || '',
+        roi: 0,
+        winrate: 0,
         earnings: 0,
-        followers_count: 0,
-        sales_count: 0,
-        plan: isPremiumAccount({ email: normalized.author_email, username: normalized.author_name }) ? 'premium' : 'free'
+        total_sales: 0,
+        buyers_count: 0,
+        total_tips: 0,
+        premium_tips: 0
       }
-      current.total_tips += 1
-      if (normalized.access_type === 'premium' || normalized.is_premium) current.premium_tips += 1
-      const status = String(normalized.status || '').toLowerCase()
-      if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) current.wins += 1
-      if (['lost', 'loss', 'lose', 'przegrany', 'przegrana'].includes(status)) current.losses += 1
-      fallbackMap.set(key, current)
-    })
+    }
+    acc[key].total_tips += 1
+    if (tip.access_type === 'premium' || tip.is_premium) acc[key].premium_tips += 1
+    return acc
+  }, {})
 
-    const merged = new Map()
-    ;[...rawRows, ...Array.from(fallbackMap.values())].forEach((row) => {
-      const key = row.tipster_id || row.id || row.user_id || row.email || row.username || row.display_name
-      if (!key) return
-      const current = merged.get(key) || {}
-      merged.set(key, { ...current, ...row })
-    })
-
-    const resolved = Array.from(merged.values()).map((row, index) => {
-      const name = row.display_name || row.username || row.author_name || (row.email ? String(row.email).split('@')[0] : '') || 'Użytkownik'
-      const rowKey = row.tipster_id || row.id || row.user_id || row.email || row.username || name || `rank-${index}`
+  const rows = (realRows.length ? realRows : Object.values(fallbackDynamic))
+    .map((row) => {
+      const name = row.display_name || row.author_name || row.username || row.email || 'Tipster'
       const totalTips = Number(row.total_tips || row.tips_count || 0)
-      const wins = Number(row.wins || 0)
-      const losses = Number(row.losses || 0)
-      const settled = wins + losses
-      const winRate = Number(row.winrate || row.win_rate || (settled ? (wins / settled) * 100 : totalTips ? Math.min(98, 52 + totalTips * 1.8) : 0))
-      const roi = Number(row.roi || row.roi_30d || row.roi_month || (winRate ? (winRate - 58) * 0.82 : 0))
-      const followers = Number(row.followers_count || row.followers || row.buyers_count || row.unique_buyers || Math.max(0, Math.round(totalTips * 11 + Math.max(roi, 0) * 7 + index * 6)))
-      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || Math.max(0, followers * 4.15 + totalTips * 12.5))
-      const premiumTips = Number(row.premium_tips || Math.max(0, Math.round(totalTips * 0.24)))
-      const sales = Number(row.total_sales || row.sales_count || Math.max(0, Math.round(premiumTips * 1.35)))
-      const isPremium = isPremiumAccount({ email: row.email, username: row.username || row.display_name || name }) || String(row.plan || row.subscription_status || '').toLowerCase().includes('premium')
-      const level = index === 0 ? 'PRO' : index < 3 ? 'VIP' : isPremium ? 'PRO' : 'USER'
-      const avatar = String(name).slice(0, 2).toUpperCase()
-      const badgeSet = [
-        index === 0 ? '✦' : index === 1 ? '⬢' : '◈',
-        roi >= 15 ? '✪' : '⬡',
-        followers >= 150 ? '✶' : '◎'
-      ]
-      const score = roi * 4.2 + winRate * 3.1 + followers * 0.12 + totalTips * 0.35 + earnings * 0.003
+      const premiumTips = Number(row.premium_tips || 0)
+      const earnings = Number(row.earnings || row.total_earnings || row.tipster_amount || 0)
+      const sales = Number(row.total_sales || row.sales_count || 0)
+      const buyers = Number(row.buyers_count || row.unique_buyers || 0)
+      const roi = Number(row.roi || row.roi_30d || 0)
+      const winrate = Number(row.winrate || 0)
       return {
         ...row,
-        key: rowKey,
         name,
-        avatar,
-        winRate,
+        avatar: name.slice(0, 2).toUpperCase(),
         roi,
-        followers,
+        winrate,
         earnings,
-        premiumTips,
-        sales,
+        totalSales: sales,
+        buyers,
         totalTips,
-        level,
-        badgeSet,
-        score,
-        active: index < 4
+        premiumTips,
+        badge: sales >= 10 ? 'TOP SELLER' : roi > 0 ? 'ROI PRO' : 'LIVE'
       }
-    }).sort((a, b) => (b.score - a.score) || (b.earnings - a.earnings) || (b.roi - a.roi) || (b.winRate - a.winRate))
-
-    return resolved.map((row, index) => ({ ...row, place: index + 1 }))
-  }, [ranking, tips])
-
-  const filteredRows = useMemo(() => {
-    let rows = rankingRows
-    if (sportFilter !== 'Wszystkie sporty') {
-      rows = rows.filter((row) => String(row.favorite_sport || row.sport || 'Piłka nożna') === sportFilter)
-    }
-    return rows
-  }, [rankingRows, sportFilter])
-
-  const shownRows = filteredRows.slice(0, 8)
-  const podiumRows = filteredRows.slice(0, 3)
-  const currentReferralCode = String(referralData?.referral_code || user?.username || user?.email || 'BETAI').replace(/@.*$/, '').toUpperCase()
-  const referralsCount = Number(referralData?.referrals_count || 78)
-  const referralTarget = 150
-  const referralProgress = Math.max(0, Math.min(100, (referralsCount / referralTarget) * 100))
-  const referralRewards = Number(referralData?.reward_total || 124.5)
-  const monthlyRewards = Number((referralRewards * 0.228).toFixed(2))
-  const pendingRewards = Number(Math.max(0, referralRewards * 0.05).toFixed(2))
-  const hallOfFame = podiumRows.length ? podiumRows : rankingRows.slice(0, 3)
-  const challengeRows = [
-    {
-      icon: '📈',
-      title: hallOfFame[0] ? `${hallOfFame[0].name}` : 'Król trafień',
-      subtitle: hallOfFame[0] ? `Osiągnij ${Math.max(60, Math.round(hallOfFame[0].winRate))}% skuteczności w typach` : 'Osiągnij 85% skuteczności w typach',
-      progress: Math.max(12, Math.min(100, Math.round(hallOfFame[0]?.winRate || 67))),
-      reward: '+100 AI Tokenów'
-    },
-    {
-      icon: '🏆',
-      title: hallOfFame[1] ? `${hallOfFame[1].name}` : 'Seria zwycięstw',
-      subtitle: 'Wygraj 10 typów z rzędu',
-      progress: hallOfFame[1] ? Math.max(10, Math.min(100, Math.round((hallOfFame[1].totalTips / 10) * 100))) : 60,
-      reward: '+150 AI Tokenów'
-    },
-    {
-      icon: '⭐',
-      title: hallOfFame[2] ? `${hallOfFame[2].name}` : 'Value Hunter',
-      subtitle: 'Osiągnij ROI powyżej 20%',
-      progress: hallOfFame[2] ? Math.max(10, Math.min(100, Math.round((hallOfFame[2].roi / 20) * 100))) : 42,
-      reward: '+200 AI Tokenów'
-    }
-  ]
+    })
+    .sort((a, b) => (b.roi - a.roi) || (b.earnings - a.earnings) || (b.winrate - a.winrate) || (b.totalTips - a.totalTips))
 
   return (
-    <section className="leaderboard-page ranking-page-536">
-      <div className="ranking536-shell">
-        <div className="ranking536-main">
-          <header className="ranking536-header">
-            <div>
-              <h1>Ranking</h1>
-              <p>Rywalizuj z najlepszymi i wspinaj się na szczyt!</p>
-            </div>
-            <div className="ranking536-actions">
-              <label className="ranking536-select">
-                <select value={sportFilter} onChange={(e) => setSportFilter(e.target.value)}>
-                  <option>Wszystkie sporty</option>
-                  <option>Piłka nożna</option>
-                  <option>Tenis</option>
-                  <option>Koszykówka</option>
-                  <option>Hokej</option>
-                </select>
-              </label>
-              <label className="ranking536-select small">
-                <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)}>
-                  <option>Tydzień</option>
-                  <option>Miesiąc</option>
-                  <option>90 dni</option>
-                  <option>Cały czas</option>
-                </select>
-              </label>
-            </div>
-          </header>
-
-          <div className="ranking536-tabs">
-            {[
-              ['ranking', 'Ranking'],
-              ['top', 'Top tipsterzy'],
-              ['referrals', 'Polecenia'],
-              ['monthly', 'Liderzy miesiąca']
-            ].map(([key, label]) => (
-              <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}>{label}</button>
-            ))}
-          </div>
-
-          <div className="ranking536-table-card">
-            <div className="ranking536-table-head">
-              <span>#</span>
-              <span>TIPSTER</span>
-              <span>WIN RATE</span>
-              <span>ROI</span>
-              <span>TYPY</span>
-              <span>OBSERWUJĄCY</span>
-              <span>ZAROBKI</span>
-              <span>ODZNAKI</span>
-              <span></span>
-            </div>
-
-            <div className="ranking536-table-body">
-              {shownRows.length ? shownRows.map((row) => (
-                <div className="ranking536-row" key={row.tipster_id || row.id || row.name}>
-                  <div className={`ranking536-place place-${Math.min(row.place, 4)}`}>
-                    {row.place <= 3 ? <span>{row.place}</span> : <strong>{row.place}</strong>}
-                  </div>
-
-                  <div className="ranking536-usercell">
-                    <div className="ranking536-avatar">{row.avatar}</div>
-                    <div className="ranking536-usercopy">
-                      <strong>{row.name}</strong>
-                      <span className={`ranking536-level ${row.level.toLowerCase()}`}>{row.level}</span>
-                    </div>
-                  </div>
-
-                  <div className="ranking536-metric positive">{row.winRate.toFixed(1)}% <em>⌃</em></div>
-                  <div className="ranking536-metric roi">+{row.roi.toFixed(1)}%</div>
-                  <div className="ranking536-metric muted">{row.totalTips.toLocaleString('pl-PL')}</div>
-                  <div className="ranking536-metric muted">{row.followers >= 1000 ? `${(row.followers / 1000).toFixed(1)}K` : row.followers}</div>
-                  <div className="ranking536-metric profit">+{row.earnings.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł</div>
-                  <div className="ranking536-badges">
-                    {row.badgeSet.map((badge, badgeIndex) => <i key={badgeIndex}>{badge}</i>)}
-                  </div>
-                  <button className="ranking536-follow-btn">Obserwuj</button>
-                </div>
-              )) : (
-                <div className="leaderboard-empty">Brak danych rankingowych. Nowi użytkownicy pojawią się automatycznie po rejestracji.</div>
-              )}
-            </div>
-
-            <button className="ranking536-full-btn">Zobacz pełny ranking</button>
-          </div>
-
-          <div className="ranking536-bottom-grid">
-            <article className="ranking536-hall-card">
-              <div className="ranking536-card-head gold">
-                <h3>Galeria sławy</h3>
-              </div>
-              <div className="ranking536-hall-body">
-                <div className="ranking536-hall-copy">
-                  <strong>Legendy Bet+AI</strong>
-                  <span>Najlepsi z najlepszych. Inspiracja dla wszystkich.</span>
-                  <div className="ranking536-legends">
-                    {hallOfFame.map((row, index) => (
-                      <div key={row.tipster_id || row.name}>
-                        <b>{row.name}</b>
-                        <small>Sezon {index + 1} • ROI {row.roi.toFixed(1)}%</small>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="ranking536-trophy-wrap" aria-hidden="true">
-                  <div className="ranking536-trophy"></div>
-                  <div className="ranking536-ball"></div>
-                </div>
-              </div>
-              <button className="ranking536-card-btn gold">Zobacz całą galerię</button>
-            </article>
-
-            <article className="ranking536-challenges-card">
-              <div className="ranking536-card-head">
-                <h3>Wyzwania tygodniowe</h3>
-                <span>⏱ Nowe wyzwania za: 4d 12h 33m</span>
-              </div>
-              <div className="ranking536-challenges-list">
-                {challengeRows.map((item, index) => (
-                  <div className="ranking536-challenge-row" key={index}>
-                    <div className="ranking536-challenge-icon">{item.icon}</div>
-                    <div className="ranking536-challenge-copy">
-                      <strong>{item.title}</strong>
-                      <span>{item.subtitle}</span>
-                    </div>
-                    <div className="ranking536-challenge-progress">
-                      <b>{item.progress}%</b>
-                      <div><i style={{ width: `${item.progress}%` }}></i></div>
-                    </div>
-                    <em>{item.reward}</em>
-                  </div>
-                ))}
-              </div>
-              <button className="ranking536-card-btn">Zobacz wszystkie wyzwania</button>
-            </article>
+    <section className="leaderboard-page">
+      <UltraPageBanner variant="leaderboard" />
+      <div className="leaderboard-hero ranking-colorloop-hero old-ranking-hero-hidden">
+        <div className="ranking-hero-copy">
+          <span className="ranking-kicker">ULTRA PRO RANKING</span>
+          <h1>Ranking tipsterów</h1>
+          <p>Rywalizuj z najlepszymi i wspinaj się na szczyt. Analizuj wyniki, poprawiaj strategię i dominuj w obstawianiu.</p>
+          <div className="ranking-hero-metrics">
+            <span>↗ ROI</span>
+            <span>🏆 Sprzedaż</span>
+            <span>🎯 Skuteczność</span>
+            <span>👥 Aktywność</span>
           </div>
         </div>
+        <div className="ranking-hero-stage" aria-hidden="true">
+          <div className="ranking-podium">
+            <div className="ranking-step ranking-step-2">2</div>
+            <div className="ranking-step ranking-step-1"><span className="ranking-trophy">🏆</span><b>1</b></div>
+            <div className="ranking-step ranking-step-3">3</div>
+          </div>
+        </div>
+        <div className="leaderboard-badge"><strong>LIVE</strong><span>REAL STATS</span></div>
+      </div>
 
-        <aside className="ranking536-side">
-          <article className="ranking536-side-card">
-            <div className="ranking536-side-tabs">
-              <button className="active">Top tipsterzy</button>
-              <button>Polecenia</button>
-              <button>Liderzy miesiąca</button>
-            </div>
-            <div className="ranking536-mini-list">
-              {filteredRows.slice(0, 3).map((row) => (
-                <div className="ranking536-mini-item" key={`mini-${row.tipster_id || row.name}`}>
-                  <span className={`ranking536-mini-place mini-${row.place}`}>{row.place}</span>
-                  <div className="ranking536-mini-avatar">{row.avatar}</div>
-                  <div className="ranking536-mini-copy">
-                    <strong>{row.name}</strong>
-                    <small>Typy: {row.totalTips} · Win: {row.winRate.toFixed(1)}% · ROI: {row.roi.toFixed(1)}%</small>
-                  </div>
-                  <b>+{Number(row.earnings || 0).toFixed(2)} zł</b>
-                </div>
-              ))}
-            </div>
-          </article>
+      <div className="leaderboard-stats">
+        <div><span>Najlepszy ROI</span><b>{rows.length ? `${Number(rows[0].roi || 0).toFixed(2)}%` : '0.00%'}</b></div>
+        <div><span>Top sprzedaż</span><b>{rows.length ? `${Number(rows[0].earnings || 0).toFixed(2)} zł` : '0.00 zł'}</b></div>
+        <div><span>Aktywni tipsterzy</span><b>{rows.length}</b></div>
+        <div><span>Typy w bazie</span><b>{tips.length}</b></div>
+      </div>
 
-          <article className="ranking536-side-card referral-card">
-            <div className="ranking536-side-title">
-              <h3>Twoje polecenia</h3>
-            </div>
-            <div className="ranking536-ref-code">
-              <span>Kod polecający</span>
-              <strong>{currentReferralCode}</strong>
-              <button title="Kopiuj">⧉</button>
-            </div>
+      <div className="ai-ranking-strip">
+        {(tips || []).slice().sort((a,b) => getAiScore(b) - getAiScore(a)).slice(0,3).map((tip, i) => (
+          <div className="ai-ranking-card" key={tip.id || i}>
+            <span>#{i + 1} AI PICK</span>
+            <b>{tip.team_home || 'Team'} vs {tip.team_away || 'Team'}</b>
+            <em>AI {getAiConfidence(tip)}% · Score {getAiScore(tip)} · Kurs {tip.odds || '-'}</em>
+          </div>
+        ))}
+      </div>
 
-            <div className="ranking536-ref-progress">
+      <div className="leaderboard-table">
+        <div className="leaderboard-row header">
+          <span>#</span>
+          <span>Tipster</span>
+          <span>ROI</span>
+          <span>Winrate</span>
+          <span>Sprzedaż</span>
+          <span>Typy</span>
+          <span>Premium</span>
+        </div>
+
+        {rows.length ? rows.map((row, index) => (
+          <div className="leaderboard-row" key={row.tipster_id || row.name}>
+            <span className={`place place-${index+1}`}>{index + 1}</span>
+            <span className="leader-user">
+              <div className={row.badge === 'TOP SELLER' ? 'leader-avatar ai' : 'leader-avatar'}>{row.avatar}</div>
               <div>
-                <span>Postęp do kolejnego bonusu</span>
-                <b>{referralsCount} / {referralTarget}</b>
+                <b>{row.name}</b>
+                <em>{row.badge} · {row.totalSales} sprzedaży · {row.buyers} kupujących</em>
               </div>
-              <div className="ranking536-progress"><i style={{ width: `${referralProgress}%` }}></i></div>
-            </div>
+            </span>
+            <span className="roi">{Number(row.roi || 0).toFixed(2)}%</span>
+            <span>{Number(row.winrate || 0).toFixed(2)}%</span>
+            <span className="profit">{Number(row.earnings || 0).toFixed(2)} zł</span>
+            <span>{row.totalTips}</span>
+            <span>{row.premiumTips}</span>
+          </div>
+        )) : (
+          <div className="leaderboard-empty">Dodaj zakończone typy i pierwsze sprzedaże, aby ranking realny pojawił się tutaj.</div>
+        )}
+      </div>
 
-            <div className="ranking536-bonus-grid">
-              <div className="active"><strong>10 poleceń</strong><span>+10 AI Tokenów</span></div>
-              <div className="active"><strong>50 poleceń</strong><span>+50 AI Tokenów</span></div>
-              <div className="active"><strong>150 poleceń</strong><span>+150 AI Tokenów</span></div>
-              <div><strong>300 poleceń</strong><span>+400 AI Tokenów</span></div>
-            </div>
-
-            <div className="ranking536-ref-stats">
-              <div><span>Łącznie</span><b>+{referralRewards.toFixed(2)} zł</b></div>
-              <div><span>W tym miesiącu</span><b>+{monthlyRewards.toFixed(2)} zł</b></div>
-              <div><span>Oczekujące</span><b>+{pendingRewards.toFixed(2)} zł</b></div>
-            </div>
-
-            <button className="ranking536-side-btn">Zobacz szczegóły</button>
-          </article>
-        </aside>
+      <div className="tipster-cta">
+        <div>
+          <strong>Zostań tipsterem PRO</strong>
+          <span>Sprzedawaj typy premium, buduj ROI i awansuj w rankingu.</span>
+        </div>
+        <button>Aktywuj profil sprzedawcy</button>
       </div>
     </section>
   )
 }
+
 
 
 function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
@@ -5820,120 +5490,6 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
     </div>
   )
 }
-
-function DashboardUpdatePreview() {
-  const [activeBox, setActiveBox] = useState('Typy AI dnia')
-  const [expandedRow, setExpandedRow] = useState('')
-  const [liveTick, setLiveTick] = useState(0)
-
-  useEffect(() => {
-    const timer = setInterval(() => setLiveTick(prev => (prev + 1) % 4), 3500)
-    return () => clearInterval(timer)
-  }, [])
-
-  const articles = [
-    { tag: 'ANALIZA', title: 'Derby Mediolanu: Inter faworytem?', time: '2h temu', comments: 24, cls: 'one' },
-    { tag: 'AI TYP', title: '5 kuponów AI na weekend', time: '5h temu', comments: 18, cls: 'two' },
-    { tag: 'NEWS', title: 'Transfery, kontuzje, powroty', time: '1d temu', comments: 32, cls: 'three' }
-  ]
-  const liveRows = [
-    { league: 'PREMIER LEAGUE', minute: `${82 + (liveTick % 2)}'`, home: 'Tottenham', away: 'Liverpool', score: '2 : 1', homeLogo: 'TOT', awayLogo: 'LIV' },
-    { league: 'LALIGA', minute: `${68 + (liveTick % 3)}'`, home: 'Barcelona', away: 'Real Madryt', score: '2 : 2', homeLogo: 'BAR', awayLogo: 'RMA' },
-    { league: 'SERIE A', minute: `${75 + (liveTick % 2)}'`, home: 'Inter', away: 'Juventus', score: '1 : 0', homeLogo: 'INT', awayLogo: 'JUV' }
-  ]
-  const aiTips = [
-    { logo: 'MC', league: 'LIGA MISTRZÓW · DZIŚ 21:00', match: 'Man City vs Arsenal', pick: 'Typ: Powyżej 2.5 gola', confidence: '88%' },
-    { logo: 'BAY', league: 'BUNDESLIGA · JUTRO 15:30', match: 'Bayern vs Dortmund', pick: 'Typ: Bayern wygra', confidence: '82%' },
-    { logo: 'PSG', league: 'LIGUE 1 · JUTRO 20:45', match: 'PSG vs Lyon', pick: 'Typ: Powyżej 2.5 gola', confidence: '81%' },
-    { logo: 'CHE', league: 'PREMIER LEAGUE · 25.05 17:30', match: 'Chelsea vs Newcastle', pick: 'Typ: Obie strzelą gola', confidence: '79%' }
-  ]
-  const sellers = [
-    { name: 'TopExpertPL', badge: 'TIPSTER', roi: 'ROI 22.4%', price: '49,00 zł', rate: '4.9', mark: 'TE' },
-    { name: 'BetKing', badge: 'VERIFIED', roi: 'ROI 18.7%', price: '39,00 zł', rate: '4.8', mark: 'BK' },
-    { name: 'AI Master', badge: 'TOP AI', roi: 'ROI 27.1%', price: '59,00 zł', rate: '5.0', mark: 'AI' },
-    { name: 'StatKing', badge: 'TIPSTER', roi: 'ROI 16.3%', price: '29,00 zł', rate: '4.7', mark: 'SK' }
-  ]
-  const cards = [
-    { title: 'Typy AI dnia', value: '12', sub: 'Wysoka pewność', link: '7 nowych', icon: '🧠' },
-    { title: 'Marketplace premium', value: '243', sub: 'Typy dostępne', link: 'Sprawdź oferty →', icon: '🛒' },
-    { title: 'Skuteczność AI', value: '87%', sub: 'ROI: +24.6%', link: 'Ostatnie 30 dni', icon: 'ring' },
-    { title: 'Śledzone ligi', value: '12', sub: 'Nadchodzących meczów', link: 'Zobacz kalendarz →', icon: '★' }
-  ]
-
-  const showMore = (name) => setActiveBox(prev => prev === name ? '' : name)
-
-  return (
-    <section className="dashboard-update-preview du-exact" aria-label="Dashboard 1 do 1">
-      <div className="du-metric-grid" aria-label="Szybkie kafelki">
-        {cards.map(card => (
-          <button type="button" key={card.title} className={`du-metric-card ${activeBox === card.title ? 'is-active' : ''}`} onClick={() => showMore(card.title)}>
-            {card.icon === 'ring' ? <div className="du-ring"><span>87%</span></div> : <div className="du-icon">{card.icon}</div>}
-            <div>
-              <span>{card.title}</span>
-              {card.icon !== 'ring' && <strong>{card.value}</strong>}
-              <small>{card.sub}</small>
-              <b>{card.link}</b>
-            </div>
-            {card.icon !== 'ring' && <em>➜</em>}
-          </button>
-        ))}
-      </div>
-
-      {activeBox ? <div className="du-inline-status">Aktywny moduł: <strong>{activeBox}</strong> — kliknij elementy niżej, żeby rozwinąć szczegóły.</div> : null}
-
-      <div className="du-content-grid">
-        <article className="du-panel du-articles">
-          <header><h3>Najnowsze artykuły</h3><button type="button" onClick={() => showMore('Najnowsze artykuły')}>Zobacz wszystkie</button></header>
-          {articles.map(article => (
-            <button type="button" className={`du-article-row ${expandedRow === article.title ? 'open' : ''}`} key={article.title} onClick={() => setExpandedRow(expandedRow === article.title ? '' : article.title)}>
-              <div className={`du-thumb du-thumb-${article.cls}`}><span /></div>
-              <div><b>{article.tag}</b><strong>{article.title}</strong><small>{article.time} <span>♡ {article.comments}</span></small>{expandedRow === article.title && <p>Krótki podgląd artykułu oraz miejsce na późniejszą treść po aktualizacji.</p>}</div>
-            </button>
-          ))}
-        </article>
-
-        <article className="du-panel du-live">
-          <header><h3>Wyniki live</h3><button type="button" onClick={() => showMore('Wyniki live')}>Zobacz wszystkie</button></header>
-          {liveRows.map(row => (
-            <button type="button" className={`du-live-row ${expandedRow === row.home ? 'open' : ''}`} key={row.home} onClick={() => setExpandedRow(expandedRow === row.home ? '' : row.home)}>
-              <div><span>{row.league}</span><b>{row.minute}</b></div>
-              <div className="du-match"><strong><span className="du-team-logo">{row.homeLogo}</span>{row.home}</strong><em>{row.score}</em><strong><span className="du-team-logo away">{row.awayLogo}</span>{row.away}</strong></div>
-              <i>LIVE</i>
-              {expandedRow === row.home && <p>Statystyki meczu: posiadanie, strzały i xG będą podpięte pod live API.</p>}
-            </button>
-          ))}
-        </article>
-
-        <article className="du-panel du-ai-tips">
-          <header><h3>Typy AI</h3><button type="button" onClick={() => showMore('Typy AI')}>Zobacz wszystkie</button></header>
-          {aiTips.map(tip => (
-            <div className={`du-tip-row ${expandedRow === tip.match ? 'open' : ''}`} key={tip.match}>
-              <span>{tip.logo}</span>
-              <div><small>{tip.league}</small><strong>{tip.match}</strong><small>{tip.pick}</small>{expandedRow === tip.match && <p>AI analiza: wysoka pewność, value kursowe i stabilny trend formy.</p>}</div>
-              <b>{tip.confidence}</b>
-              <button type="button" onClick={() => setExpandedRow(expandedRow === tip.match ? '' : tip.match)}>Zobacz</button>
-            </div>
-          ))}
-        </article>
-      </div>
-
-      <article className="du-panel du-marketplace">
-        <header><h3>Marketplace premium</h3><button type="button" onClick={() => showMore('Marketplace premium')}>Zobacz wszystkie oferty →</button></header>
-        <div className="du-seller-grid">
-          {sellers.map(seller => (
-            <button type="button" className={`du-seller-card ${expandedRow === seller.name ? 'open' : ''}`} key={seller.name} onClick={() => setExpandedRow(expandedRow === seller.name ? '' : seller.name)}>
-              <div className="du-avatar">{seller.mark}</div>
-              <div><strong>{seller.name}</strong><b>{seller.badge}</b><small>Skuteczność<br />{seller.roi}</small></div>
-              <footer><span>★ {seller.rate}</span><em>{seller.price}</em></footer>
-              {expandedRow === seller.name && <p>Otwierany podgląd oferty premium — tutaj później podepniesz zakup/subskrypcję.</p>}
-            </button>
-          ))}
-        </div>
-      </article>
-    </section>
-  )
-}
-
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -6056,60 +5612,19 @@ function App() {
     }
 
     try {
-      const [rankingResponse, profilesResponse] = await Promise.all([
-        supabase
-          .from('tipster_ranking')
-          .select('*')
-          .order('earnings', { ascending: false })
-          .limit(250),
-        supabase
-          .from('profiles')
-          .select('id,email,username,display_name,plan,subscription_status,created_at')
-          .order('created_at', { ascending: true })
-          .limit(1000)
-      ])
+      const { data, error } = await supabase
+        .from('tipster_ranking')
+        .select('*')
+        .order('earnings', { ascending: false })
+        .limit(5)
 
-      if (rankingResponse.error) {
-        console.error('fetchRealRanking error', rankingResponse.error)
-      }
-      if (profilesResponse.error) {
-        console.error('fetchRealRanking profiles error', profilesResponse.error)
+      if (error) {
+        console.error('fetchRealRanking error', error)
+        setRealRanking([])
+        return
       }
 
-      const rankingRows = rankingResponse.data || []
-      const profileRows = profilesResponse.data || []
-      const merged = new Map()
-
-      rankingRows.forEach((row) => {
-        const key = row.tipster_id || row.id || row.email || row.username || row.display_name
-        if (!key) return
-        merged.set(key, { ...row })
-      })
-
-      profileRows.forEach((profile) => {
-        const key = profile.id || profile.email || profile.username || profile.display_name
-        if (!key) return
-        const current = merged.get(key)
-        merged.set(key, {
-          ...current,
-          tipster_id: current?.tipster_id || profile.id,
-          id: current?.id || profile.id,
-          email: current?.email || profile.email,
-          username: current?.username || profile.username,
-          display_name: current?.display_name || profile.display_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
-          plan: current?.plan || profile.plan,
-          subscription_status: current?.subscription_status || profile.subscription_status,
-          total_tips: current?.total_tips || current?.tips_count || 0,
-          premium_tips: current?.premium_tips || 0,
-          buyers_count: current?.buyers_count || 0,
-          total_sales: current?.total_sales || current?.sales_count || 0,
-          earnings: current?.earnings || current?.total_earnings || 0,
-          roi: current?.roi || current?.roi_30d || 0,
-          winrate: current?.winrate || 0
-        })
-      })
-
-      setRealRanking(Array.from(merged.values()))
+      setRealRanking(data || [])
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking([])
@@ -7517,7 +7032,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${((view !== 'dashboard' && view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
@@ -7572,7 +7087,7 @@ function App() {
         )}
 
         {view === 'leaderboard' && (
-          <LeaderboardView tips={tips} ranking={realRanking} user={sessionUser} referralData={referralData} />
+          <LeaderboardView tips={tips} ranking={realRanking} />
         )}
 
         {view === 'articles' && (
@@ -7651,12 +7166,43 @@ function App() {
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
             <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
-            <DashboardUpdatePreview />
+            <div className="monetization-panel">
+              <div>
+                <strong>💰 Marketplace premium</strong>
+                <span>Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.</span>
+                <button type="button" className="premium-banner-cta" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
+              </div>
+              <div className="monetization-stats">
+                <b>{feedCounts.premium}</b>
+                <small>typów premium</small>
+              </div>
+            </div>
+
+            <div className="feed-filters">
+              {filterItems.map(([key, label]) => (
+                <button
+                  key={key}
+                  className={activeFilter === key ? 'active' : ''}
+                  onClick={() => setActiveFilter(key)}
+                >
+                  <span>{label}</span>
+                  <b>{feedCounts[key]}</b>
+                </button>
+              ))}
+              <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
+            </div>
+
+
+            <div className="feed">
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
+                <div className="empty-state">Brak typów w tym filtrze.</div>
+              )}
+            </div>
           </section>
         )}
       </main>
 
-      {(view === 'dashboard' || view === 'articles') && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>

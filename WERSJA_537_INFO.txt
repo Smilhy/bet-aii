@@ -1,1 +1,0 @@
-Wersja 537: dokręcenie pixel-perfect ekranu Ranking — ciaśniejsze proporcje, bardziej zgodna typografia, lepiej wyrównane ramki i sidebar, subtelny szklisty/live efekt.

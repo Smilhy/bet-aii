@@ -1,1 +1,0 @@
-Wersja 536: nowy ekran Rankingu w stylu ultra-pro 1:1 ze screenem, odświeżona typografia/layout, żywe animacje oraz automatyczne dopisywanie zarejestrowanych użytkowników do rankingu.

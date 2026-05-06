@@ -4,12 +4,6 @@ const SPORTPL_URLS = [
   'https://www.sport.pl/pilka/0,0.html'
 ]
 
-const SPORTPL_RSS_URLS = [
-  'https://www.sport.pl/rss/0,0.xml',
-  'https://www.sport.pl/rss/0,111398.xml',
-  'https://www.sport.pl/rss/0,111410.xml'
-]
-
 const fallbackArticles = [
   {
     id: 'fallback-1',
@@ -19,14 +13,12 @@ const fallbackArticles = [
     image: '',
     category: 'Sport',
     publishedAt: new Date().toISOString(),
-    author: 'Sport.pl',
-    source: 'Sport.pl'
+    author: 'Sport.pl'
   }
 ]
 
 function decodeHtml(value = '') {
   return String(value)
-    .replace(/<!\[CDATA\[|\]\]>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#34;/g, '"')
@@ -52,42 +44,12 @@ function cleanText(value = '') {
 
 function inferCategory(url = '', title = '') {
   const value = (url + ' ' + title).toLowerCase()
-  if (value.includes('/pilka') || value.includes('ekstraklasa') || value.includes('liga') || value.includes('legia') || value.includes('arsenal') || value.includes('manchester') || value.includes('reprezentacja')) return 'Piłka nożna'
+  if (value.includes('/pilka') || value.includes('ekstraklasa') || value.includes('liga') || value.includes('legia') || value.includes('reprezentacja')) return 'Piłka nożna'
   if (value.includes('tenis') || value.includes('świątek') || value.includes('wimbledon')) return 'Tenis'
   if (value.includes('siat')) return 'Siatkówka'
   if (value.includes('kosz') || value.includes('nba')) return 'Koszykówka'
-  if (value.includes('mma') || value.includes('boks') || value.includes('ksw') || value.includes('ufc')) return 'Sporty walki'
+  if (value.includes('mma') || value.includes('boks') || value.includes('ksw')) return 'Sporty walki'
   return 'Sport'
-}
-
-function capture(xml = '', pattern) {
-  const match = xml.match(pattern)
-  return match ? cleanText(match[1]) : ''
-}
-
-function parseRss(xml) {
-  const items = []
-  const rawItems = xml.match(/<item\b[\s\S]*?<\/item>/gi) || []
-  for (const raw of rawItems) {
-    const title = capture(raw, /<title>([\s\S]*?)<\/title>/i)
-    const url = absoluteUrl(capture(raw, /<link>([\s\S]*?)<\/link>/i))
-    const excerpt = capture(raw, /<description>([\s\S]*?)<\/description>/i)
-    const publishedAt = capture(raw, /<pubDate>([\s\S]*?)<\/pubDate>/i) || new Date().toISOString()
-    const category = capture(raw, /<category>([\s\S]*?)<\/category>/i)
-    const mediaUrl = absoluteUrl(capture(raw, /<media:content[^>]+url=["']([^"']+)["']/i) || capture(raw, /<enclosure[^>]+url=["']([^"']+)["']/i))
-    if (!title || !url) continue
-    items.push({
-      title,
-      excerpt,
-      url,
-      image: mediaUrl,
-      category: category || inferCategory(url, title),
-      publishedAt,
-      author: 'Sport.pl',
-      source: 'Sport.pl'
-    })
-  }
-  return items
 }
 
 function parseJsonLd(html) {
@@ -111,8 +73,7 @@ function parseJsonLd(html) {
             url: absoluteUrl(item.url),
             image: typeof image === 'string' ? absoluteUrl(image) : absoluteUrl(image?.url || ''),
             publishedAt: item.datePublished || item.dateModified || new Date().toISOString(),
-            author: cleanText(Array.isArray(item.author) ? item.author[0]?.name : item.author?.name || 'Sport.pl'),
-            source: 'Sport.pl'
+            author: cleanText(Array.isArray(item.author) ? item.author[0]?.name : item.author?.name || 'Sport.pl')
           })
         }
       }
@@ -140,18 +101,17 @@ function parseLinks(html) {
       url,
       image: imageMatch ? absoluteUrl(decodeHtml(imageMatch[1])) : '',
       publishedAt: new Date().toISOString(),
-      author: 'Sport.pl',
-      source: 'Sport.pl'
+      author: 'Sport.pl'
     })
   }
   return items
 }
 
-async function fetchText(url) {
+async function fetchHtml(url) {
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 BetAI Articles Bot',
-      'Accept': 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8'
+      'Accept': 'text/html,application/xhtml+xml'
     }
   })
   if (!response.ok) throw new Error('Sport.pl HTTP ' + response.status)
@@ -159,27 +119,15 @@ async function fetchText(url) {
 }
 
 exports.handler = async (event) => {
-  const limit = Math.min(50, Math.max(8, Number(event.queryStringParameters?.limit || 24)))
+  const limit = Math.min(50, Math.max(6, Number(event.queryStringParameters?.limit || 30)))
   try {
     const results = []
-
-    for (const url of SPORTPL_RSS_URLS) {
+    for (const url of SPORTPL_URLS) {
       try {
-        const xml = await fetchText(url)
-        results.push(...parseRss(xml))
+        const html = await fetchHtml(url)
+        results.push(...parseJsonLd(html), ...parseLinks(html))
       } catch (error) {
-        console.warn('sportpl rss skipped:', url, error.message)
-      }
-    }
-
-    if (!results.length) {
-      for (const url of SPORTPL_URLS) {
-        try {
-          const html = await fetchText(url)
-          results.push(...parseJsonLd(html), ...parseLinks(html))
-        } catch (error) {
-          console.warn('sportpl source skipped:', url, error.message)
-        }
+        console.warn('sportpl source skipped:', url, error.message)
       }
     }
 
@@ -190,10 +138,10 @@ exports.handler = async (event) => {
         ...item,
         id: Buffer.from(item.url).toString('base64').slice(0, 24),
         title: item.title.slice(0, 170),
-        excerpt: (item.excerpt || '').slice(0, 240),
+        excerpt: (item.excerpt || '').slice(0, 220),
         url: absoluteUrl(item.url),
         image: absoluteUrl(item.image || ''),
-        category: item.category || inferCategory(item.url, item.title),
+        category: inferCategory(item.url, item.title),
         publishedAt: item.publishedAt || new Date().toISOString(),
         source: 'Sport.pl'
       }))
