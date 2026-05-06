@@ -660,7 +660,6 @@ function AnimatedDashboardHero() {
     return () => window.clearInterval(panelTimer)
   }, [heroSlides.length, isHeroPaused])
 
-  const goToHeroSlide = (index) => setPanel(index)
   const moveHeroSlide = (direction) => setPanel(prev => (prev + direction + heroSlides.length) % heroSlides.length)
   const handleHeroPointerUp = (event) => {
     const startX = heroSwipeStart.current
@@ -687,28 +686,10 @@ function AnimatedDashboardHero() {
         ))}
       </div>
 
-      <div className="betai-dashboard-topbar-v551">
-        <span>BET+AI DASHBOARD</span>
-        <b>{panel + 1}/{heroSlides.length}</b>
-        <small>{isHeroPaused ? 'pauza' : 'auto 6 s'}</small>
-      </div>
 
       <div className="betai-dashboard-nav-v551">
-        <button type="button" aria-label="Poprzedni slajd" onClick={() => moveHeroSlide(-1)}>‹</button>
-        <div className="betai-dashboard-dots-v551" role="tablist" aria-label="Wybierz slajd hero dashboardu">
-          {heroSlides.map((slide, index) => (
-            <button
-              key={slide.src}
-              type="button"
-              className={panel === index ? 'active' : ''}
-              onClick={() => goToHeroSlide(index)}
-              aria-label={`Pokaż slajd ${index + 1}`}
-              aria-selected={panel === index}
-              role="tab"
-            />
-          ))}
-        </div>
-        <button type="button" aria-label="Następny slajd" onClick={() => moveHeroSlide(1)}>›</button>
+        <button type="button" className="hero-arrow-v553 hero-arrow-left-v553" aria-label="Poprzedni slajd" onClick={() => moveHeroSlide(-1)}>‹</button>
+        <button type="button" className="hero-arrow-v553 hero-arrow-right-v553" aria-label="Następny slajd" onClick={() => moveHeroSlide(1)}>›</button>
       </div>
     </section>
   )
