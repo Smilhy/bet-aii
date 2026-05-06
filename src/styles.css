@@ -18266,3 +18266,56 @@ img,video,canvas,svg{max-width:100%;}
   .sportpl-urgent-ticker-v548{grid-template-columns:1fr!important;gap:10px!important}
   .sportpl-urgent-meta-v548{align-items:flex-start!important;min-width:0!important}
 }
+
+
+/* WERSJA 549 — pilna ramka dokładnie pod czerwonym alertem i nad głównym artykułem */
+.sportpl-urgent-ticker-v548{
+  margin:10px 0 14px!important;
+  border:1px solid rgba(32,232,219,.16)!important;
+  background:linear-gradient(180deg,rgba(5,17,27,.98),rgba(5,20,30,.96))!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.sportpl-urgent-track-v548{
+  min-height:64px!important;
+  align-items:flex-start!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:6px!important;
+}
+.sportpl-urgent-headline-v549{
+  color:#23e6df!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  letter-spacing:.12em!important;
+  text-transform:uppercase!important;
+}
+.sportpl-urgent-item-v548 strong{
+  font-size:16px!important;
+}
+.sportpl-urgent-item-v548 span{
+  white-space:normal!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:1!important;
+  -webkit-box-orient:vertical!important;
+}
+.sportpl-urgent-dots-v549{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin-top:4px!important;
+}
+.sportpl-urgent-dots-v549 i{
+  width:8px!important;
+  height:8px!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.22)!important;
+  display:block!important;
+}
+.sportpl-urgent-dots-v549 i.active{
+  width:24px!important;
+  background:linear-gradient(90deg,#25ece8,#1fd7de)!important;
+  box-shadow:0 0 18px rgba(37,236,232,.25)!important;
+}
+@media(max-width:900px){
+  .sportpl-urgent-item-v548 span{-webkit-line-clamp:2!important}
+}

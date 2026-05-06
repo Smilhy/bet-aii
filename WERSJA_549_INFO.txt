@@ -1,0 +1,5 @@
+WERSJA 549
+- Ramka z pilnymi wiadomościami została przeniesiona dokładnie pod czerwony alert.
+- Ramka pokazuje tylko ważniejsze/pilne newsy i auto-slajduje między nimi.
+- Dodane kropki wskaźnika slajdów dla pilnych newsów.
+- Paczka lekka: bez node_modules i bez dist.

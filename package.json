@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-548-lekka",
-  "version": "548.0.0",
+  "name": "betai-wersja-549-lekka",
+  "version": "549.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

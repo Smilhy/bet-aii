@@ -2808,13 +2808,19 @@ function ArticlesView() {
             </div>
           ) : null}
 
-          {activeArticleTab === 'live' && importantNews.length ? (
+          {importantNews.length ? (
             <div className="glass-tvlive-v8 sportpl-urgent-ticker-v548" onClick={() => importantNews[urgentTickerIndex]?.url && window.open(importantNews[urgentTickerIndex].url, '_blank', 'noopener,noreferrer')}>
               <div className="sportpl-urgent-badge-v548">PILNE</div>
               <div className="sportpl-urgent-track-v548">
+                <div className="sportpl-urgent-headline-v549">Najważniejsze pilne wiadomości • auto slide</div>
                 <div key={urgentTickerIndex} className="sportpl-urgent-item-v548">
                   <strong>{importantNews[urgentTickerIndex]?.title}</strong>
                   <span>{importantNews[urgentTickerIndex]?.excerpt || 'Kliknij, aby otworzyć pełny pilny artykuł na Sport.pl.'}</span>
+                </div>
+                <div className="sportpl-urgent-dots-v549">
+                  {importantNews.map((_, index) => (
+                    <i key={index} className={urgentTickerIndex === index ? 'active' : ''} />
+                  ))}
                 </div>
               </div>
               <div className="sportpl-urgent-meta-v548">
