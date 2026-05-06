@@ -526,6 +526,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 
       <nav className="menu menu544-fixed">
         <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>🏠 Dashboard</button>
+        <button className={view === 'marketplace' ? 'active' : ''} onClick={() => setView('marketplace')}>🛍 Marketplace</button>
         <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>➕ Dodaj typ</button>
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
         <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>📋 Moje typy</button>
@@ -5641,6 +5642,170 @@ function TipsterPricingSettings({ user, onToast }) {
   )
 }
 
+function MarketplaceView({ user = null, onNavigate = () => {} }) {
+  const profile = getUserProfileView(user)
+  const username = profile?.username || 'smilitytv'
+  const sellers = [
+    { name: 'GoalHunter', followers: '381 obserwujących', rating: '4.9', roi: '15.6%', win: '67%', badge: 'PREMIUM', avatar: '⚽' },
+    { name: 'StatKing', followers: '512 obserwujących', rating: '5.0', roi: '18.2%', win: '71%', badge: 'PREMIUM', avatar: '👑' },
+    { name: 'ValueBetPro', followers: '267 obserwujących', rating: '4.7', roi: '12.7%', win: '64%', badge: '', avatar: '📊' },
+    { name: 'AI Predictor', followers: '1.2k obserwujących', rating: '5.0', roi: '20.3%', win: '74%', badge: 'PREMIUM', avatar: '✦' }
+  ]
+  const offers = [
+    { seller: 'GoalHunter', title: 'Pakiet Weekendowy', qty: '5 typów', roi: '16.4%', win: '68%', price: '19.99 zł', tokens: '199 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] },
+    { seller: 'StatKing', title: 'Pakiet Value+', qty: '10 typów', roi: '18.9%', win: '71%', price: '34.99 zł', tokens: '299 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] },
+    { seller: 'ValueBetPro', title: 'Single Daily', qty: '1 typ', roi: '12.7%', win: '64%', price: '4.99 zł', tokens: '49 żetonów', badge: '', sports: ['⚽','🏀','⚽'] },
+    { seller: 'AI Predictor', title: 'AI Combo Pack', qty: '7 typów', roi: '21.3%', win: '75%', price: '29.99 zł', tokens: '249 żetonów', badge: 'PREMIUM', sports: ['⚽','⚽','🏀'] }
+  ]
+  const analyses = [
+    { title: 'Analiza: Finał Ligi Mistrzów', author: 'FootyAnalyst', desc: 'Dogłębna analiza taktyczna, statystyki, kontuzje, forma i typy...', price: '14.99 zł', tag: 'PREMIUM', pages: '10 stron', avatar: '⚽' },
+    { title: 'NBA Finals Breakdown', author: 'BasketMind', desc: 'Analiza matchupów, pace, defensive rating i kluczowych...', price: '19.99 zł', tag: 'PREMIUM', pages: '15 stron', avatar: '🏀' },
+    { title: 'Roland Garros 2024', author: 'TennisPro', desc: 'Analiza drabinki, nawierzchni, formy zawodników i value betów...', price: '12.99 zł', tag: 'PREMIUM', pages: '8 stron', avatar: '🎾' },
+    { title: 'Ekstraklasa: Kto spadnie?', author: 'StatsPL', desc: 'Analiza walki o utrzymanie, forma, terminarz, typy na ostatnie kolejki...', price: '9.99 zł', tag: 'PREMIUM', pages: '8 stron', avatar: '🇵🇱' }
+  ]
+  const chat = [
+    { name: username, text: 'Powodzenia wszystkim! 🔥', time: '12:33', admin: true },
+    { name: 'buchajsenek1988', text: 'czekam na valueb! ', time: '12:31' },
+    { name: 'piotrek1987', text: 'idziemy dziś po zielone! 💪', time: '12:30' },
+    { name: 'krystian_typer', text: 'Dzięki za typy AI, miazga! 😎', time: '12:29' },
+    { name: username, text: 'Lecimy dalej! 🚀', time: '12:34', admin: true }
+  ]
+  const topTipsters = [
+    ['1', username, 'ROI: +26.4% • W/R: 0.0%', '+0.00 zł'],
+    ['2', 'buchajsenek1988', 'ROI: +20.1% • W/R: 0.0%', '+0.00 zł'],
+    ['3', 'piotrek1987', 'ROI: +18.7% • W/R: 0.0%', '+0.00 zł'],
+    ['4', 'krystian_typer', 'ROI: +16.9% • W/R: 0.0%', '+0.00 zł'],
+    ['5', 'adrianbets', 'ROI: +16.0% • W/R: 0.0%', '+0.00 zł']
+  ]
+  const aiRows = [
+    ['Manchester City  vs  Inter Mediolan', 'Typ: Manchester City wygra', '68%'],
+    ['PSG  vs  Borussia Dortmund', 'Typ: Powyżej 2.5 gola', '61%'],
+    ['Liverpool  vs  Bayer Leverkusen', 'Typ: Liverpool wygra', '61%'],
+    ['adrianbets', 'ROI: +16.0% • W/R: 0.0%', '61%']
+  ]
+
+  return (
+    <section className="market547-page" aria-label="Marketplace">
+      <div className="market547-shell">
+        <div className="market547-main">
+          <div className="market547-hero">
+            <div>
+              <h1>MARKETPLACE</h1>
+              <p>Kupuj i sprzedawaj typy oraz analizy od najlepszych graczy</p>
+            </div>
+            <button type="button">Wystaw ofertę</button>
+          </div>
+
+          <div className="market547-tabs">
+            <button type="button" className="active">⚽ Kup typy</button>
+            <button type="button">⚓ Sprzedaj typy</button>
+            <button type="button">◫ Analizy</button>
+            <button type="button">♛ Premium</button>
+            <button type="button">☷ Moje oferty</button>
+          </div>
+
+          <section className="market547-section">
+            <div className="market547-head"><h2>Polecani sprzedawcy</h2><button type="button">Zobacz wszystkich</button></div>
+            <div className="market547-sellers-grid">
+              {sellers.map((seller, index) => (
+                <article className="market547-seller-card" key={seller.name}>
+                  <div className="market547-seller-top">
+                    <div className={`market547-avatar seller-${index + 1}`}>{seller.avatar}</div>
+                    <div>
+                      <div className="market547-name-line"><strong>{seller.name}</strong>{seller.badge ? <span>{seller.badge}</span> : null}</div>
+                      <small>{seller.followers}</small>
+                    </div>
+                  </div>
+                  <div className="market547-rating">★ {seller.rating}</div>
+                  <div className="market547-seller-stats"><div><span>ROI</span><b>{seller.roi}</b></div><div><span>Skuteczność</span><b>{seller.win}</b></div></div>
+                  <button type="button">Obserwuj</button>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="market547-section">
+            <div className="market547-head market547-head-filters">
+              <h2>Najlepsze typy dnia</h2>
+              <div className="market547-filters">
+                <span className="active">Wszystkie</span><span>⚽ Piłka nożna</span><span>🏀 Koszykówka</span><span>🎾 Tenis</span><span>🏒 Hokej</span><span>🏐 Siatkówka</span>
+              </div>
+              <button type="button" className="sort">Sortuj: Popularne ▾</button>
+            </div>
+            <div className="market547-offers-grid">
+              {offers.map((offer, idx) => (
+                <article className="market547-offer-card" key={offer.title}>
+                  <div className="market547-offer-top"><div className={`market547-avatar tiny seller-${idx + 1}`}>{offer.sports[0]}</div><div><div className="market547-name-line"><strong>{offer.seller}</strong>{offer.badge ? <span>{offer.badge}</span> : null}</div></div></div>
+                  <h3>{offer.title}</h3>
+                  <small>{offer.qty}</small>
+                  <div className="market547-offer-metrics"><span>ROI: <b>{offer.roi}</b></span><span>Skuteczność: <b>{offer.win}</b></span></div>
+                  <div className="market547-sports-row">{offer.sports.map((sport, i) => <i key={i}>{sport}</i>)}</div>
+                  <div className="market547-price-row"><strong>{offer.price}</strong><span>lub <b>{offer.tokens}</b></span></div>
+                  <small className="market547-includes">Zawiera typy na:</small>
+                  <div className="market547-actions-row"><button type="button" className="ghost">Podgląd</button><button type="button" className="buy">Kup</button></div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="market547-section">
+            <div className="market547-head"><h2>Najnowsze analizy</h2><button type="button">Zobacz wszystkie</button></div>
+            <div className="market547-analysis-grid">
+              {analyses.map((item, idx) => (
+                <article className="market547-analysis-card" key={item.title}>
+                  <div className={`market547-avatar analysis-${idx + 1}`}>{item.avatar}</div>
+                  <div className="market547-analysis-copy">
+                    <strong>{item.title}</strong>
+                    <span>{item.author}</span>
+                    <p>{item.desc}</p>
+                    <div className="market547-analysis-meta"><b>{item.price}</b><small>{item.tag}</small><em>{item.pages}</em></div>
+                  </div>
+                  <button type="button">Podgląd</button>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="market547-side">
+          <article className="market547-side-card market547-chat-card">
+            <div className="market547-side-top"><h3>BET+AI LIVE CHAT <span>+ online</span></h3><small>134 online</small></div>
+            <div className="market547-chat-stats"><span><b>TOP UŻYTKOWNICY (24H)</b><strong>StatKing</strong><small>↑ 1260 typów / 24h</small></span><span><b>NAGRODA DNIA</b><strong>AI Predictor</strong><small>→ 986 typów / 18h</small></span><span><b>AKTYWNI TERAZ</b><strong>134</strong></span></div>
+            <div className="market547-chat-list">
+              {chat.map((row, idx) => (
+                <div className="market547-chat-row" key={row.name + idx}>
+                  <div className="market547-chat-avatar">{row.name.slice(0,1).toUpperCase()}</div>
+                  <div className="market547-chat-copy"><strong>{row.name}{row.admin ? <em>ADMIN</em> : null}</strong><p>{row.text}</p></div>
+                  <span>{row.time}</span>
+                </div>
+              ))}
+            </div>
+            <div className="market547-chat-input"><input readOnly placeholder="Napisz wiadomość..." /><button type="button">✨ TIP !</button><button type="button">➤</button></div>
+          </article>
+
+          <article className="market547-side-card">
+            <div className="market547-side-head"><h3>🏆 Top typerzy</h3><button type="button" onClick={() => onNavigate('leaderboard')}>Ranking real</button></div>
+            <div className="market547-top-list">
+              {topTipsters.map(([place, name, meta, profit]) => (
+                <div className="market547-top-row" key={place + name}><i className={`place place-${place}`}>{place}</i><div className="market547-top-avatar">{name.slice(0,2).toUpperCase()}</div><div><strong>{name}</strong><small>{meta}</small></div><b>{profit}</b></div>
+              ))}
+            </div>
+          </article>
+
+          <article className="market547-side-card">
+            <div className="market547-side-head"><h3>⚗ Typy AI dnia</h3><button type="button" onClick={() => onNavigate('aiPicks')}>Zobacz wszystkie</button></div>
+            <div className="market547-ai-list">
+              {aiRows.map(([match, desc, val]) => (
+                <div className="market547-ai-row" key={match}><div className="market547-ai-ball">{match.slice(0,2).toUpperCase()}</div><div><strong>{match}</strong><small>{desc}</small><div className="market547-ai-bar"><i style={{ width: val }} /></div></div><b>{val}</b></div>
+              ))}
+            </div>
+          </article>
+        </aside>
+      </div>
+    </section>
+  )
+}
+
 function ProfileView({ user, tips = [] }) {
   const profile = getUserProfileView(user)
   const displayName = profile?.username || 'smilhytv'
@@ -8044,7 +8209,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell no-rightbar-page all-tabs-fullscreen ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell no-rightbar-page all-tabs-fullscreen ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''} ${view === 'marketplace' ? 'marketplace547-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
@@ -8105,6 +8270,10 @@ function App() {
             payments={paymentHistory}
             earnings={tipsterEarnings}
           />
+        )}
+
+        {view === 'marketplace' && (
+          <MarketplaceView user={effectiveAccountProfile} onNavigate={setView} />
         )}
 
         {view === 'leaderboard' && (
