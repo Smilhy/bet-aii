@@ -508,52 +508,43 @@ const staticTips = []
 
 function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
-return (
-    <aside className="sidebar">
+  const premiumUntil = '24.06.2025'
+  return (
+    <aside className="sidebar sidebar544-fixed">
       <div className="brand brand-logo-pro" aria-label="Bet+AI"><img src="/betai-sidebar-logo-new.png" alt="Bet+AI" /></div>
 
-      <div className="user-card">
+      <div className="user-card user-card544-fixed">
         <div className="avatar">{profile.initials}</div>
-        <div>
+        <div className="user-card544-name">
           <strong>{profile.username}</strong>
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row wallet-row-tokens"><span>Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
-        <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
-        <button className="outline-btn" onClick={onTopUp || (() => {})}>Doładuj konto</button>
-        <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
+        <button className="outline-btn add-tip544" onClick={() => setView('add')}>+ Dodaj typ</button>
       </div>
 
-      <nav className="menu">
-        <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
-        <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
+      <nav className="menu menu544-fixed">
+        <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>🏠 Dashboard</button>
+        <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>➕ Dodaj typ</button>
         <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
-        <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
+        <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>📋 Moje typy</button>
         <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
-        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>🤝 Polecenia</button>
-        <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? `(${notificationsCount})` : ''}</button>
+        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
+        <button className={view === 'notifications' ? 'active' : ''} onClick={() => setView('notifications')}>🔔 Powiadomienia {notificationsCount > 0 ? <span className="menu544-badge">{notificationsCount}</span> : null}</button>
         <button className={view === 'payments' ? 'active' : ''} onClick={() => setView('payments')}>💳 Płatności</button>
-        <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>🔐 Subskrypcja</button>
-        <button className={view === 'earnings' ? 'active' : ''} onClick={() => setView('earnings')}>💰 Zarobki</button>
-        <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>💸 Wypłaty</button>
-        {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
-        {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
-        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
-        <button>♕ Top typerzy</button>
-        <button>▣ Moje subskrypcje</button>
-        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły</button>
-        <button>⚙ Ustawienia</button>
+        <button className={view === 'subscriptions' ? 'active' : ''} onClick={() => setView('subscriptions')}>👑 Subskrypcja</button>
+        <button className={view === 'payouts' ? 'active' : ''} onClick={() => setView('payouts')}>✈️ Wypłaty</button>
+        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🔮 Typy AI</button>
+        <button type="button" onClick={() => setView('leaderboard')}>⭐ Top typerzy</button>
       </nav>
 
-      <div className="premium-box">
-        <h3>✦ Bet+AI Premium</h3>
-        <p>✓ AI Typy bez limitu</p>
-        <p>✓ Szczegółowe analizy</p>
-        <p>✓ Statystyki premium</p>
-        <p>✓ Typy premium</p>
-        <p>✓ Brak reklam</p>
-        {isPremiumAccount(userPlan) ? <button onClick={() => setView('subscriptions')}>Zarządzaj Premium</button> : <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>}
+      <div className="premium-box premium544-plan">
+        <span>Twój plan</span>
+        <h3>PREMIUM</h3>
+        <p>Ważny do: {premiumUntil}</p>
+        <div className="premium544-progress"><i></i></div>
+        <button onClick={() => setView('subscriptions')}>▣ Zarządzaj planem</button>
       </div>
     </aside>
   )
@@ -7973,7 +7964,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${((view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${((view !== 'articles') || selectedTipsterId) ? 'no-rightbar-page' : ''} ${view === 'wallet' ? 'wallet-shell-active' : ''} ${view === 'dashboard' && !selectedTipsterId ? 'dashboard544-shell-active' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
