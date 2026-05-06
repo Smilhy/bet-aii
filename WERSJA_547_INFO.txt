@@ -1,5 +1,0 @@
-Wersja 547
-- Dodano nową zakładkę Marketplace w sidebarze.
-- Utworzono widok Marketplace na sztywno według screena.
-- Zawartość: hero MARKETPLACE, zakładki, polecani sprzedawcy, najlepsze typy dnia, najnowsze analizy, prawy panel live chat, top typerzy i typy AI dnia.
-- Układ full screen, ultra pro, pixel-style.

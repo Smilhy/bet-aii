@@ -1,5 +1,0 @@
-Wersja 544
-- Dashboard poprawiony pod screen użytkownika w trybie pixel-to-pixel.
-- Przepisany sidebar pod układ ze screena: menu, karta użytkownika i plan Premium na dole.
-- Dashboard dostał sztywny układ: hero z piłkarzem/tłem, taby, kafle, sekcje artykułów, wyników, typów AI, marketplace i prawa kolumna.
-- Ukryte na dashboardzie elementy psujące screen: toast, widget ocen i chat floating.

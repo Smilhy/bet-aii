@@ -1,4 +1,0 @@
-Wersja 543
-- Dashboard przebudowany na sztywno według screena.
-- Dodany nowy layout hero, statystyk, artykułów, wyników live, typów AI, marketplace oraz prawej kolumny.
-- Układ dashboardu działa teraz jako własna pełna strona bez starego globalnego rightbara.

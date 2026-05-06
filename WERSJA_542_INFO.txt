@@ -1,4 +1,0 @@
-Wersja 542
-- Zakładka Ranking przebudowana na sztywno według screena użytkownika.
-- Usunięty poprzedni layout rankingu i zastąpiony nowym układem 1:1 wizualnie względem wzoru.
-- Dodane statyczne sekcje: tabela rankingowa, galeria sławy, wyzwania tygodniowe, top tipsterzy, twoje polecenia, zarobki z poleceń.

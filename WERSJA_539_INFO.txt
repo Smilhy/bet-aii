@@ -1,1 +1,0 @@
-Wersja 539: zakładka Ranking powiększona szerzej jak Artykuły oraz dodana osobna karta „Zarobki z poleceń” w prawej kolumnie ze statystykami i przyciskiem szczegółów.

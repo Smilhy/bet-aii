@@ -1,5 +1,0 @@
-Wersja 540
-- Przebudowana zakładka Portfel na ultra PRO layout inspirowany screenem referencyjnym.
-- Zastąpiona cała zawartość widoku Portfel nowym układem 1:1 stylistycznie z zachowaniem kolorystyki BetAI.
-- Dodane prawe panele: live chat, top typerzy, typy AI dnia, zarobki z poleceń.
-- Dodane sekcje: saldo, szybkie operacje, historia transakcji, metody wpłaty, faktury, subskrypcja, zarobki twórcy.
