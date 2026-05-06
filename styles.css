@@ -17742,3 +17742,56 @@ img,video,canvas,svg{max-width:100%;}
 @keyframes articleHeroTextIn543{from{opacity:.25;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes articleHeroFloat543{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @media(max-width:1100px){.article-hero-live-strip-v543{position:relative!important;top:auto!important;right:auto!important;align-self:start!important;margin-bottom:10px!important}.article-hero-slider-v543.has-sportpl-hero-image-v543 .hero-vs-v8{display:none!important}}
+
+
+/* WERSJA 574 — od nowa: rozciągnięty tylko środek/hero/wyszukiwanie, lewa i prawa kolumna bez zmian z 573 */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 1fr) 598px!important;
+    gap:22px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .main{
+    width:100%!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    min-width:0!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .topbar,
+  .app-shell:not(.no-rightbar-page) .feed-section,
+  .app-shell:not(.no-rightbar-page) .feed,
+  .app-shell:not(.no-rightbar-page) .dashboard-hero,
+  .app-shell:not(.no-rightbar-page) .betai-animated-hero,
+  .app-shell:not(.no-rightbar-page) .search,
+  .app-shell:not(.no-rightbar-page) .top-search-field{
+    width:100%!important;
+    max-width:100%!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:598px!important;
+    min-width:598px!important;
+    max-width:598px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 1fr) 628px!important;
+    gap:22px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .main{
+    width:100%!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+    min-width:0!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:628px!important;
+    min-width:628px!important;
+    max-width:628px!important;
+  }
+}

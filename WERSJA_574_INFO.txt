@@ -1,0 +1,1 @@
+Wersja 574: od nowa rozciągnięto wyłącznie środkową kolumnę, hero/baner i wyszukiwanie, aby odstęp środka do prawej kolumny był taki sam jak między lewą a środkiem. Lewa i prawa kolumna oraz kolory bez zmian względem wersji 573.
