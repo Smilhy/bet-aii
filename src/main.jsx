@@ -510,8 +510,6 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
-      <div className="brand brand-logo-pro" aria-label="Bet+AI"><img src="/betai-sidebar-logo-new.png" alt="Bet+AI" /></div>
-
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
         <div>
@@ -537,7 +535,7 @@ return (
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
         <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
         <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
-        <button>⚙ Ustawienia</button>
+        <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
       </nav>
 
       <div className="premium-box">
@@ -6123,6 +6121,224 @@ function DashboardAutoTranslator({ lang }) {
   return null
 }
 
+
+function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
+  const missions = [
+    { icon: '🎟', title: 'Wygraj 2 kupony', progress: 0, total: 2, reward: '+100 AI' },
+    { icon: '🧠', title: 'Postaw 3 typy', progress: 2, total: 3, reward: '+75 AI' },
+    { icon: '🎯', title: 'Traf kurs powyżej 2.00', progress: 1, total: 1, reward: '+50 AI' },
+    { icon: '⏱', title: 'Aktywność przez 20 min', progress: 12, total: 20, reward: '+30 AI' }
+  ]
+  const streakDays = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Dziś']
+  const streakRewards = [
+    { days: '3 dni', reward: '+100 AI', tone: 'cyan' },
+    { days: '7 dni', reward: '+250 AI', tone: 'blue' },
+    { days: '14 dni', reward: '+500 AI', tone: 'violet' },
+    { days: '30 dni', reward: '+1000 AI', tone: 'gold' }
+  ]
+  const drops = [
+    { title: 'DROP FREE', sub: 'Co 60 min', icon: '🧰', progress: 100, cost: '0 AI', cta: 'Odbierz', tone: 'cyan' },
+    { title: 'DROP SILVER', sub: '100 AI', icon: '🪙', progress: 100, cost: '100 / 100 AI', cta: 'Odbierz', tone: 'silver' },
+    { title: 'DROP GOLD', sub: '500 AI', icon: '👑', progress: 64, cost: '320 / 500 AI', cta: 'Zobacz', tone: 'gold' },
+    { title: 'DROP PLATINUM', sub: '1000 AI', icon: '💎', progress: 32, cost: '320 / 1000 AI', cta: 'Zobacz', tone: 'violet' },
+    { title: 'DROP LEGEND', sub: '2500 AI', icon: '🏆', progress: 13, cost: '320 / 2500 AI', cta: 'Zobacz', tone: 'legend' }
+  ]
+  const ranking = [
+    { name: 'smilhytv', score: '2 450 AI', badge: 'ADMIN', initials: 'SM' },
+    { name: 'buchajsonek1988', score: '1 980 AI', initials: 'BU' },
+    { name: 'pkucharski', score: '1 250 AI', initials: 'P' },
+    { name: 'smokeybet', score: '980 AI', initials: 'MS' },
+    { name: 'AI_Master', score: '870 AI', initials: 'AI' }
+  ]
+  const achievements = [
+    { icon: '🛡', title: 'Pierwszy krok', desc: 'Postaw swój pierwszy typ', status: 'Odblokowano', tone: 'cyan' },
+    { icon: '🔥', title: 'Seria zwycięstw', desc: 'Wygraj 5 kuponów z rzędu', status: 'Odblokowano', tone: 'orange' },
+    { icon: '👑', title: 'AI Typer', desc: 'Postaw 100 typów', status: 'Odblokowano', tone: 'gold' }
+  ]
+  const tokenRewards = [
+    { title: 'Freebet 10 zł', price: '100 AI', status: 'Dostępne' },
+    { title: 'Freebet 25 zł', price: '250 AI', status: 'Dostępne' },
+    { title: 'Premium 7 dni', price: '500 AI', status: 'Dostępne' },
+    { title: 'Premium 30 dni', price: '1200 AI', status: 'Dostępne' }
+  ]
+  const premiumBonuses = [
+    { title: 'Wyższe dropy', desc: '+50% więcej tokenów z dropów', state: 'Aktywny' },
+    { title: 'Szybszy progres', desc: '+25% do wszystkich misji', state: 'Aktywny' },
+    { title: 'Ekskluzywne nagrody', desc: 'Dostęp do nagród Premium', state: 'Aktywny' }
+  ]
+
+  return (
+    <div className="rewards-ultra-page">
+      <section className="rewards-ultra-card rewards-ultra-hero">
+        <div className="rewards-ultra-hero-copy">
+          <h1>Nagrody / Dropy / Misje / Bonusy</h1>
+          <p>Zdobywaj tokeny AI, odbieraj dropy i rywalizuj o najlepsze nagrody.</p>
+        </div>
+        <div className="rewards-ultra-hero-stats">
+          <div className="rewards-ultra-topmini tone-blue">
+            <span>Tokeny AI</span>
+            <strong>{Number(tokenBalance || 2450).toLocaleString('pl-PL')}</strong>
+            <small>+250 dzisiaj</small>
+          </div>
+          <button type="button" className="rewards-ultra-claim-btn">🎁 Odbierz nagrodę</button>
+          <div className="rewards-ultra-topmini tone-green">
+            <span>Poziom</span>
+            <strong>AI Legend</strong>
+            <small>1000+ typów</small>
+          </div>
+        </div>
+      </section>
+
+      <div className="rewards-ultra-content">
+        <div className="rewards-ultra-main">
+          <div className="rewards-ultra-topgrid">
+            <section className="rewards-ultra-card rewards-ultra-missions">
+              <div className="rewards-ultra-head"><h3>MISJE DZIENNE</h3><small>Reset za: 10:24:37</small></div>
+              <div className="rewards-ultra-mission-list">
+                {missions.map((mission, index) => (
+                  <div className="rewards-ultra-mission" key={index}>
+                    <div className="rewards-ultra-mission-icon">{mission.icon}</div>
+                    <div className="rewards-ultra-mission-copy">
+                      <strong>{mission.title}</strong>
+                      <div className="rewards-ultra-progress"><i style={{ width: `${Math.max(8, (mission.progress / mission.total) * 100)}%` }} /></div>
+                    </div>
+                    <b>{mission.progress}/{mission.total}</b>
+                    <span>{mission.reward}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-streak">
+              <div className="rewards-ultra-head"><h3>STREAK AKTYWNOŚCI</h3></div>
+              <div className="rewards-ultra-streak-main">
+                <div className="rewards-ultra-streak-value"><strong>7</strong><span>dni z rzędu</span></div>
+                <div className="rewards-ultra-streak-days">
+                  {streakDays.map((day, idx) => (
+                    <div className={`rewards-ultra-day ${idx < 5 ? 'done' : idx === 5 ? 'soon' : 'today'}`} key={day}>
+                      <i>{idx < 5 ? '✓' : idx === 5 ? '○' : '🔥'}</i>
+                      <span>{day}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rewards-ultra-sub">Następne nagrody za streak:</div>
+              <div className="rewards-ultra-streak-rewards">
+                {streakRewards.map((item) => (
+                  <div className={`rewards-ultra-streak-box ${item.tone}`} key={item.days}>
+                    <i>{item.tone === 'gold' ? '🏆' : item.tone === 'violet' ? '✦' : item.tone === 'blue' ? '⬢' : '✪'}</i>
+                    <div><strong>{item.days}</strong><small>{item.reward}</small></div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-progress-card">
+              <div className="rewards-ultra-head"><h3>PROGRES AKTYWNOŚCI</h3></div>
+              <div className="rewards-ultra-ring" style={{ '--ring': '72%' }}>
+                <div><strong>72%</strong><span>Aktywny</span></div>
+              </div>
+              <p>Cel tygodniowy: 1000 AI</p>
+              <b>Zdobyte: 720 AI / 1000 AI</b>
+            </section>
+          </div>
+
+          <section className="rewards-ultra-card rewards-ultra-drops-panel">
+            <div className="rewards-ultra-head stacked"><h3>DROPY TYPERÓW</h3><small>Zbieraj tokeny i odbieraj dropy za swoją aktywność.</small></div>
+            <div className="rewards-ultra-drops-grid">
+              {drops.map((drop) => (
+                <div className={`rewards-ultra-drop ${drop.tone}`} key={drop.title}>
+                  <h4>{drop.title}</h4>
+                  <span>{drop.sub}</span>
+                  <div className="rewards-ultra-drop-art">{drop.icon}</div>
+                  <div className="rewards-ultra-progress"><i style={{ width: `${drop.progress}%` }} /></div>
+                  <small>{drop.cost}</small>
+                  <button type="button">{drop.cta}</button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="rewards-ultra-bottomgrid">
+            <section className="rewards-ultra-card rewards-ultra-achievements">
+              <div className="rewards-ultra-head stacked"><h3>OSIĄGNIĘCIA</h3><small>Twoje odblokowane achievementy</small></div>
+              <div className="rewards-ultra-achievement-list">
+                {achievements.map((item) => (
+                  <div className="rewards-ultra-achievement" key={item.title}>
+                    <div className={`rewards-ultra-achievement-icon ${item.tone}`}>{item.icon}</div>
+                    <div className="rewards-ultra-achievement-copy"><strong>{item.title}</strong><small>{item.desc}</small></div>
+                    <span>{item.status}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zobacz wszystkie</button>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-token-store">
+              <div className="rewards-ultra-head stacked"><h3>NAGRODY TOKENOWE</h3><small>Wymieniaj tokeny AI na nagrody</small></div>
+              <div className="rewards-ultra-store-grid">
+                {tokenRewards.map((item) => (
+                  <div className="rewards-ultra-store-item" key={item.title}>
+                    <strong>{item.title}</strong>
+                    <span>{item.price}</span>
+                    <small>{item.status}</small>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zobacz wszystkie nagrody</button>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-premium-bonus">
+              <div className="rewards-ultra-head stacked"><h3>BONUSY PREMIUM</h3><small>Aktywne bonusy dla użytkowników Premium</small></div>
+              <div className="rewards-ultra-premium-list">
+                {premiumBonuses.map((item) => (
+                  <div className="rewards-ultra-premium-row" key={item.title}>
+                    <div className="rewards-ultra-premium-icon">✦</div>
+                    <div><strong>{item.title}</strong><small>{item.desc}</small></div>
+                    <span>{item.state}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zarządzaj Premium</button>
+            </section>
+          </div>
+        </div>
+
+        <aside className="rewards-ultra-sidebar">
+          <section className="rewards-ultra-card rewards-ultra-ranking">
+            <div className="rewards-ultra-head"><h3>TOP AKTYWNOŚCI</h3><div className="rewards-ultra-tabs"><b>24H</b><span>7D</span><span>30D</span></div></div>
+            <div className="rewards-ultra-ranking-list">
+              {ranking.map((item, index) => (
+                <div className="rewards-ultra-rank-row" key={item.name}>
+                  <em>{index + 1}</em>
+                  <div className="rewards-ultra-rank-avatar">{item.initials}</div>
+                  <div className="rewards-ultra-rank-copy"><strong>{item.name}</strong>{item.badge ? <small>{item.badge}</small> : null}</div>
+                  <span>{item.score}</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="rewards-ultra-muted-btn">Zobacz pełny ranking</button>
+          </section>
+
+          <section className="rewards-ultra-card rewards-ultra-claim-card">
+            <div className="rewards-ultra-head stacked"><h3>ODBIERZ NAGRODĘ</h3><small>Masz dostępne nagrody do odebrania!</small></div>
+            <div className="rewards-ultra-claim-visual">
+              <div className="coin big">AI</div>
+              <div className="coin mid">⚡</div>
+              <div className="coin small">AI</div>
+            </div>
+            <div className="rewards-ultra-claim-copy">
+              <strong>+250 AI</strong>
+              <span>Tokeny AI</span>
+            </div>
+            <button type="button" className="rewards-ultra-claim-main">Odbierz teraz</button>
+          </section>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
   const [open, setOpen] = useState(false)
   const currentLang = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
@@ -7800,6 +8016,10 @@ function App() {
 
         {view === 'referrals' && (
           <ReferralsView user={sessionUser} data={referralData} loading={referralLoading} onRefresh={() => fetchReferralData(sessionUser?.id)} />
+        )}
+
+        {view === 'rewardsBonuses' && (
+          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} />
         )}
 
         {view === 'aiPicks' && (
