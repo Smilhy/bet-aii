@@ -17844,3 +17844,28 @@ img,video,canvas,svg{max-width:100%;}
     max-height:calc(100vh - 66px)!important;
   }
 }
+
+/* WERSJA 577 — poprawka: tylko prawa kolumna obniżona w dół, żeby zaczynała jak lewa względem wyszukiwarki; szerokości, środek i kolory bez zmian */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page) > .rightbar,
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    margin-top:30px!important;
+    transform:none!important;
+    align-self:start!important;
+    top:30px!important;
+    padding-top:14px!important;
+    height:calc(100vh - 52px)!important;
+    max-height:calc(100vh - 52px)!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page) > .rightbar,
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    margin-top:30px!important;
+    top:30px!important;
+    padding-top:14px!important;
+    height:calc(100vh - 52px)!important;
+    max-height:calc(100vh - 52px)!important;
+  }
+}
