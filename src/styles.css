@@ -20170,3 +20170,28 @@ img,video,canvas,svg{max-width:100%;}
     max-width:475px!important;
   }
 }
+
+/* WERSJA 572 — prawa kolumna +10%, bez zmian lewej kolumny, środka, hero, wyszukiwania i kolorów */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.94fr) 498px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:498px!important;
+    min-width:498px!important;
+    max-width:498px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 0.93fr) 523px!important;
+  }
+
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    width:523px!important;
+    min-width:523px!important;
+    max-width:523px!important;
+  }
+}
