@@ -20461,3 +20461,186 @@ img,video,canvas,svg{max-width:100%;}
   border:1px solid rgba(255,255,255,.06)!important;
   color:#d7f8ff!important;
 }
+
+/* WERSJA 584 — aktywne reakcje i komentarze w kartach typów */
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-feedback-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn{
+  margin-left:0!important;
+  padding:0 12px!important;
+  min-height:38px!important;
+  border-radius:12px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  background:rgba(7,24,36,.88)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#dcecf3!important;
+  box-shadow:none!important;
+  font-weight:900!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn span{
+  font-size:14px!important;
+  line-height:1!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn b{
+  font-size:14px!important;
+  color:inherit!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(31,226,174,.24)!important;
+  background:rgba(10,34,47,.94)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn.like.active{
+  background:linear-gradient(135deg,rgba(43,230,180,.18),rgba(14,117,96,.24))!important;
+  border-color:rgba(31,226,174,.34)!important;
+  color:#9ff7dc!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn.dislike.active{
+  background:linear-gradient(135deg,rgba(255,111,145,.18),rgba(104,21,44,.24))!important;
+  border-color:rgba(255,125,147,.34)!important;
+  color:#ffc0cb!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-react-btn.comment.active{
+  background:linear-gradient(135deg,rgba(66,180,255,.16),rgba(19,79,148,.26))!important;
+  border-color:rgba(91,193,255,.34)!important;
+  color:#c6e7ff!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-panel{
+  margin-top:14px!important;
+  padding:16px!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg, rgba(5,18,28,.94), rgba(4,14,22,.98))!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-head strong{
+  color:#eefcff!important;
+  font-size:15px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-head span,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-note,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-empty,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-meta span{
+  color:#97a9b7!important;
+  font-size:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-note,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comments-empty{
+  padding:10px 12px!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.03)!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+  margin-bottom:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-form{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  margin-bottom:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-form input{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  height:44px!important;
+  border-radius:12px!important;
+  background:rgba(8,24,36,.94)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#f1fbff!important;
+  padding:0 14px!important;
+  outline:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-form input::placeholder{
+  color:#89a0af!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-submit{
+  margin-left:0!important;
+  white-space:nowrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-list{
+  display:grid!important;
+  gap:10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-item{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:10px!important;
+  padding:12px!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.03)!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-avatar{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(180deg,rgba(34,205,242,.30),rgba(10,92,128,.32))!important;
+  border:1px solid rgba(52,209,240,.18)!important;
+  color:#eefdff!important;
+  font-weight:900!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-body{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-meta{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin-bottom:4px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-meta strong,
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-body p{
+  color:#eefcff!important;
+}
+
+.app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-body p{
+  margin:0!important;
+  line-height:1.45!important;
+}
+
+@media (max-width:900px){
+  .app-shell:not(.no-rightbar-page) .tip-card.pro-tip-card .tip-comment-form{
+    flex-direction:column!important;
+    align-items:stretch!important;
+  }
+}

@@ -1,2 +1,0 @@
-WERSJA 582: naprawiony blad startu/logowania Cannot access before initialization po zmianie etykiety analizy.
-Dolny przycisk obserwowania nadal usuniety; Analiza uzytkownika dziala dla typow od uzytkownikow.
