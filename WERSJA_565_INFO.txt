@@ -1,0 +1,9 @@
+WERSJA 565
+
+Zmiany dashboardu:
+- poprawiono balans całego dashboardu
+- środkowa kolumna została poszerzona
+- prawa kolumna została uspokojona i lepiej dopasowana
+- live chat nie jest już tak dominujący i ściśnięty
+- poprawiono spacing topbara i układu bocznego
+- całość ma bardziej estetyczny i przejrzysty układ desktop
