@@ -20273,3 +20273,30 @@ img,video,canvas,svg{max-width:100%;}
     max-width:628px!important;
   }
 }
+
+/* WERSJA 575 — tylko prawa kolumna: zwężona z lekką przerwą od prawego scrolla; lewa i środek bez zmian */
+@media (min-width: 1001px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 1fr) 598px!important;
+    gap:22px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    justify-self:start!important;
+    width:570px!important;
+    min-width:570px!important;
+    max-width:570px!important;
+  }
+}
+
+@media (min-width: 1500px){
+  .app-shell:not(.no-rightbar-page){
+    grid-template-columns:270px minmax(0, 1fr) 628px!important;
+    gap:22px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    justify-self:start!important;
+    width:600px!important;
+    min-width:600px!important;
+    max-width:600px!important;
+  }
+}
