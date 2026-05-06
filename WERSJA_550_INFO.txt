@@ -1,0 +1,7 @@
+WERSJA 550
+- Usunięta czerwona ramka/pasek nad hero w zakładce Na żywo.
+- Dodany duży baner hero z najważniejszymi wiadomościami Sport.pl.
+- Hero automatycznie zmienia ważniejsze wiadomości.
+- Dodane strzałki, kropki i przycisk Czytaj artykuł.
+- Pod hero zostawiona sekcja Na żywo z kafelkami.
+- Paczka lekka: bez node_modules i bez dist.

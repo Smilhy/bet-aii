@@ -641,94 +641,74 @@ function getTipErrorToast(cleanMessage) {
   return { type: 'error', title: 'Nie dodano typu', message: cleanMessage }
 }
 
-function AnimatedDashboardHero({ tips = [], onStatsClick }) {
+function AnimatedDashboardHero() {
   const heroSlides = [
-    '/betai-hero-live-1.png',
-    '/betai-hero-live-2.png',
-    '/betai-hero-live-3.png',
-    '/betai-hero-live-4.png',
-    '/betai-hero-live-5.png',
-    '/betai-hero-live-6.png'
+    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
-  const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
   const [isHeroPaused, setIsHeroPaused] = useState(false)
+  const heroSwipeStart = useRef(null)
 
   useEffect(() => {
-    if (isHeroPaused) return undefined
-    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
-    return () => { clearInterval(panelTimer) }
+    if (isHeroPaused || heroSlides.length <= 1) return undefined
+    const panelTimer = window.setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6000)
+    return () => window.clearInterval(panelTimer)
   }, [heroSlides.length, isHeroPaused])
 
-  const goToHeroSlide = (index) => {
-    setPanel(index)
+  const goToHeroSlide = (index) => setPanel(index)
+  const moveHeroSlide = (direction) => setPanel(prev => (prev + direction + heroSlides.length) % heroSlides.length)
+  const handleHeroPointerUp = (event) => {
+    const startX = heroSwipeStart.current
+    heroSwipeStart.current = null
+    if (startX == null) return
+    const diff = event.clientX - startX
+    if (Math.abs(diff) > 40) moveHeroSlide(diff < 0 ? 1 : -1)
   }
-
-  const premiumTips = tips.filter(t => isTipPremium(t))
-  const validConfidenceValues = tips
-    .map(tip => Number(tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0))
-    .filter(value => Number.isFinite(value) && value > 0)
-  const avgConfidence = validConfidenceValues.length
-    ? Math.round(validConfidenceValues.reduce((sum, value) => sum + value, 0) / validConfidenceValues.length)
-    : 85
-  const settled = tips.filter(t => ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(String(t.status || '').toLowerCase()))
-  const wins = settled.filter(t => ['won', 'win', 'wygrany', 'wygrana'].includes(String(t.status || '').toLowerCase())).length
-  const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
-  const matchesToday = Math.max(tips.length || 0, 50)
-  const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
-  const handleHeroMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
-    setHeroTilt({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) })
-  }
-  const resetHeroMove = () => setHeroTilt({ x: 0, y: 0 })
 
   return (
     <section
-      className="betai-animated-hero betai-parallax-hero betai-hero-image-slides"
-      aria-label="BetAI predictions hero"
-      onMouseMove={handleHeroMove}
+      className="betai-dashboard-hero-v551"
+      aria-label="Nowy hero dashboardu Bet+AI"
       onMouseEnter={() => setIsHeroPaused(true)}
-      onMouseLeave={() => {
-        resetHeroMove()
-        setIsHeroPaused(false)
-      }}
-      style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
+      onMouseLeave={() => setIsHeroPaused(false)}
+      onPointerDown={(event) => { heroSwipeStart.current = event.clientX }}
+      onPointerUp={handleHeroPointerUp}
     >
-      <div className="betai-hero-image-stage" aria-hidden="true">
-        {heroSlides.map((src, index) => (
-          <img
-            key={src}
-            className={`betai-hero-slide-img slide-${index + 1} ${panel === index ? 'active' : ''}`}
-            src={src}
-            alt=""
-            draggable="false"
-          />
+      <div className="betai-dashboard-stage-v551" aria-hidden="true">
+        {heroSlides.map((slide, index) => (
+          <div key={slide.src} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''}`}>
+            <img src={slide.src} alt="" draggable="false" />
+          </div>
         ))}
       </div>
-      <div className="betai-hero-dots" role="tablist" aria-label="Wybierz slajd banera Bet+AI">
-        {heroSlides.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            className={panel === index ? 'active' : ''}
-            onClick={() => goToHeroSlide(index)}
-            onFocus={() => setIsHeroPaused(true)}
-            onBlur={() => setIsHeroPaused(false)}
-            aria-label={`Pokaż slajd ${index + 1}`}
-            aria-selected={panel === index}
-            role="tab"
-          />
-        ))}
+
+      <div className="betai-dashboard-topbar-v551">
+        <span>BET+AI DASHBOARD</span>
+        <b>{panel + 1}/{heroSlides.length}</b>
+        <small>{isHeroPaused ? 'pauza' : 'auto 6 s'}</small>
       </div>
-      <div className="betai-hero-stats" aria-label="Realne statystyki hero">
-        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
-        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
-        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
-        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
-        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
+
+      <div className="betai-dashboard-nav-v551">
+        <button type="button" aria-label="Poprzedni slajd" onClick={() => moveHeroSlide(-1)}>‹</button>
+        <div className="betai-dashboard-dots-v551" role="tablist" aria-label="Wybierz slajd hero dashboardu">
+          {heroSlides.map((slide, index) => (
+            <button
+              key={slide.src}
+              type="button"
+              className={panel === index ? 'active' : ''}
+              onClick={() => goToHeroSlide(index)}
+              aria-label={`Pokaż slajd ${index + 1}`}
+              aria-selected={panel === index}
+              role="tab"
+            />
+          ))}
+        </div>
+        <button type="button" aria-label="Następny slajd" onClick={() => moveHeroSlide(1)}>›</button>
       </div>
     </section>
   )
@@ -2602,6 +2582,7 @@ function ArticlesView() {
   const [articleHeroIndex, setArticleHeroIndex] = useState(0)
   const [urgentTickerIndex, setUrgentTickerIndex] = useState(0)
   const articleHeroSwipeStart = useRef(null)
+  const urgentHeroSwipeStart = useRef(null)
 
   useEffect(() => {
     let isMounted = true
@@ -2708,6 +2689,21 @@ function ArticlesView() {
 
   const heroArticle = articleHeroSlides[articleHeroIndex % Math.max(articleHeroSlides.length, 1)] || articleHeroSlides[0]
 
+  const urgentHeroSlides = (importantNews.length ? importantNews : liveArticles.slice(0, 5)).map((item, index) => ({
+    tag: item.category || 'PILNE',
+    title: item.title || 'Sport.pl — ważna wiadomość',
+    excerpt: item.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.',
+    meta: getSportPlRelativeTime(item.publishedAt),
+    icon: getSportPlInitials(item.title),
+    url: item.url,
+    image: getSportPlImageSrc(item),
+    rawImage: item.image || '',
+    isImportant: true,
+    index
+  }))
+
+  const urgentHeroArticle = urgentHeroSlides[urgentTickerIndex % Math.max(urgentHeroSlides.length, 1)] || urgentHeroSlides[0]
+
   useEffect(() => {
     if (articleHeroIndex >= articleHeroSlides.length) setArticleHeroIndex(0)
   }, [articleHeroSlides.length, articleHeroIndex])
@@ -2721,16 +2717,25 @@ function ArticlesView() {
   }, [activeArticleTab, articleHeroSlides.length])
 
   useEffect(() => {
-    if (importantNews.length <= 1) return
+    if (urgentTickerIndex >= urgentHeroSlides.length) setUrgentTickerIndex(0)
+  }, [urgentHeroSlides.length, urgentTickerIndex])
+
+  useEffect(() => {
+    if (activeArticleTab !== 'live' || urgentHeroSlides.length <= 1) return
     const urgentTimer = window.setInterval(() => {
-      setUrgentTickerIndex(prev => (prev + 1) % importantNews.length)
-    }, 4000)
+      setUrgentTickerIndex(prev => (prev + 1) % urgentHeroSlides.length)
+    }, 5500)
     return () => window.clearInterval(urgentTimer)
-  }, [importantNews.length])
+  }, [activeArticleTab, urgentHeroSlides.length])
 
   const moveArticleHero = (direction) => {
     if (!articleHeroSlides.length) return
     setArticleHeroIndex(prev => (prev + direction + articleHeroSlides.length) % articleHeroSlides.length)
+  }
+
+  const moveUrgentHero = (direction) => {
+    if (!urgentHeroSlides.length) return
+    setUrgentTickerIndex(prev => (prev + direction + urgentHeroSlides.length) % urgentHeroSlides.length)
   }
 
   const handleArticleHeroPointerUp = (event) => {
@@ -2739,6 +2744,14 @@ function ArticlesView() {
     if (startX == null) return
     const diff = event.clientX - startX
     if (Math.abs(diff) > 45) moveArticleHero(diff < 0 ? 1 : -1)
+  }
+
+  const handleUrgentHeroPointerUp = (event) => {
+    const startX = urgentHeroSwipeStart.current
+    urgentHeroSwipeStart.current = null
+    if (startX == null) return
+    const diff = event.clientX - startX
+    if (Math.abs(diff) > 45) moveUrgentHero(diff < 0 ? 1 : -1)
   }
 
   const tvRows = [
@@ -2800,37 +2813,42 @@ function ArticlesView() {
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
 
-          {importantNews.length ? (
-            <div className="glass-tvlive-v8 sportpl-alert-v538" onClick={() => setActiveArticleTab('live')}>
-              <span>WAŻNE ZE SPORT.PL</span>
-              <strong>{importantNews[0].title}</strong>
-              <small>Auto-sprawdzanie co 10 min • {lastLiveUpdate ? getSportPlRelativeTime(lastLiveUpdate) : 'Teraz'}</small>
-            </div>
-          ) : null}
-
-          {importantNews.length ? (
-            <div className="glass-tvlive-v8 sportpl-urgent-ticker-v548" onClick={() => importantNews[urgentTickerIndex]?.url && window.open(importantNews[urgentTickerIndex].url, '_blank', 'noopener,noreferrer')}>
-              <div className="sportpl-urgent-badge-v548">PILNE</div>
-              <div className="sportpl-urgent-track-v548">
-                <div className="sportpl-urgent-headline-v549">Najważniejsze pilne wiadomości • auto slide</div>
-                <div key={urgentTickerIndex} className="sportpl-urgent-item-v548">
-                  <strong>{importantNews[urgentTickerIndex]?.title}</strong>
-                  <span>{importantNews[urgentTickerIndex]?.excerpt || 'Kliknij, aby otworzyć pełny pilny artykuł na Sport.pl.'}</span>
-                </div>
-                <div className="sportpl-urgent-dots-v549">
-                  {importantNews.map((_, index) => (
-                    <i key={index} className={urgentTickerIndex === index ? 'active' : ''} />
-                  ))}
-                </div>
-              </div>
-              <div className="sportpl-urgent-meta-v548">
-                <b>{urgentTickerIndex + 1}/{importantNews.length}</b>
-                <small>tylko pilne</small>
-              </div>
-            </div>
-          ) : null}
-
           {activeArticleTab === 'live' ? (
+            <>
+            {urgentHeroArticle ? (
+              <div
+                className={`glass-tvlive-v8 sportpl-important-hero-v550 ${urgentHeroArticle?.image ? 'has-image-v550' : ''}`}
+                onPointerDown={(event) => { urgentHeroSwipeStart.current = event.clientX }}
+                onPointerUp={handleUrgentHeroPointerUp}
+              >
+                {urgentHeroArticle?.image ? (
+                  <div className="sportpl-important-hero-bg-v550">
+                    <img src={urgentHeroArticle.image} data-original-src={urgentHeroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-important-hero-v550')?.classList.add('image-error-v550'); event.currentTarget.remove() }} />
+                  </div>
+                ) : null}
+                <div className="sportpl-important-strip-v550"><span>NAJWAŻNIEJSZE WIADOMOŚCI</span><b>{urgentTickerIndex + 1}/{urgentHeroSlides.length || 1}</b><em>tylko pilne • auto co 5,5 s</em></div>
+                <div className="sportpl-important-copy-v550">
+                  <div className="sportpl-important-badge-v550">PILNE</div>
+                  <small>{urgentHeroArticle?.tag || 'SPORT.PL'}</small>
+                  <h1>{urgentHeroArticle?.title || 'Ważna wiadomość sportowa'}</h1>
+                  <p>{urgentHeroArticle?.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.'}</p>
+                  <div className="sportpl-important-actions-v550">
+                    <button type="button" onClick={() => urgentHeroArticle?.url && window.open(urgentHeroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
+                    <button type="button" className="ghost-v550" onClick={() => moveUrgentHero(1)}>Następna wiadomość</button>
+                  </div>
+                </div>
+                <div className="sportpl-important-logo-v550">SPORT.PL</div>
+                <div className="sportpl-important-nav-v550">
+                  <button type="button" aria-label="Poprzednia pilna wiadomość" onClick={() => moveUrgentHero(-1)}>‹</button>
+                  <div className="sportpl-important-dots-v550">
+                    {urgentHeroSlides.map((_, index) => (
+                      <button type="button" key={index} aria-label={`Pilna wiadomość ${index + 1}`} className={urgentTickerIndex === index ? 'active' : ''} onClick={() => setUrgentTickerIndex(index)} />
+                    ))}
+                  </div>
+                  <button type="button" aria-label="Następna pilna wiadomość" onClick={() => moveUrgentHero(1)}>›</button>
+                </div>
+              </div>
+            ) : null}
             <div className="glass-tvlive-v8 sportpl-live-panel-v538 sportpl-live-panel-v539">
               <div className="sportpl-live-head-v538">
                 <div>
@@ -2871,6 +2889,7 @@ function ArticlesView() {
               </div>
               {!liveArticles.length && liveLoading ? <div className="sportpl-loading-v538">Pobieram wiadomości ze Sport.pl...</div> : null}
             </div>
+            </>
           ) : null}
 
           {activeArticleTab !== 'live' ? <div className="tvlive-top-grid-v8">
@@ -7854,7 +7873,7 @@ function App() {
 
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
-            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
+            <AnimatedDashboardHero />
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>
