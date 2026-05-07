@@ -4889,6 +4889,9 @@ function AuthView({ onAuth }) {
 
   return (
     <div className="auth609-screen" aria-label="Bet+AI authentication panel">
+      <div className="auth620-language-corner">
+        <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
+      </div>
       <div className="auth609-artboard">
         <img
           src="/auth-frame-reference-609.png"
@@ -4904,9 +4907,8 @@ function AuthView({ onAuth }) {
                 <div className="auth609-top-spacer" />
 
                 <div className="auth609-heading-copy auth609-heading-center">
-                  <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo" draggable="false" />
-                  <h1 className="auth609-welcome auth619-welcome">Witaj w Bet<span>+AI</span></h1>
-                  <p className="auth609-subtitle-main">Zaloguj się do swojego konta</p>
+                  <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
+                  <p className="auth609-subtitle-main auth620-subtitle-main">Zaloguj się do swojego konta</p>
                 </div>
 
                 <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
@@ -5035,6 +5037,8 @@ function AuthView({ onAuth }) {
           </div>
         </div>
       </div>
+      <SiteReviewsWidget />
+      <AuthSupportChatGuest />
     </div>
   )
 }
