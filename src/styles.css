@@ -23162,3 +23162,43 @@ img,video,canvas,svg{max-width:100%;}
     display:none;
   }
 }
+
+
+/* =========================================================
+   WERSJA 624 — panel statystyk logowania maksymalnie po prawej, bez nagłówka opisowego
+   ========================================================= */
+.auth623-side-live.auth624-side-live{
+  right:-12px !important;
+  top:15.8% !important;
+  width:300px !important;
+  padding:14px !important;
+}
+.auth624-side-head{
+  justify-content:flex-end !important;
+  margin-bottom:12px !important;
+  min-height:0 !important;
+}
+.auth624-side-head > div,
+.auth624-side-head span,
+.auth624-side-head strong{
+  display:none !important;
+}
+.auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:72px !important;
+  padding:13px 14px !important;
+}
+.auth623-side-live.auth624-side-live .auth623-side-card b{
+  font-size:26px !important;
+}
+@media (max-width: 1380px){
+  .auth623-side-live.auth624-side-live{
+    right:-8px !important;
+    width:274px !important;
+  }
+}
+@media (max-width: 1100px){
+  .auth623-side-live.auth624-side-live{
+    right:auto !important;
+    width:min(100%, 540px) !important;
+  }
+}

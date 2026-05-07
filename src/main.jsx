@@ -5007,12 +5007,8 @@ function AuthView({ onAuth }) {
           </section>
 
 
-          <aside className="auth623-side-live" aria-label={t.liveKicker}>
-            <div className="auth623-side-head">
-              <div>
-                <span>{t.liveKicker}</span>
-                <strong>{t.liveTitle}</strong>
-              </div>
+          <aside className="auth623-side-live auth624-side-live" aria-label={t.liveBadge}>
+            <div className="auth623-side-head auth624-side-head">
               <em><i />{t.liveBadge}</em>
             </div>
 

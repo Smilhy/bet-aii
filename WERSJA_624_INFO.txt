@@ -1,0 +1,1 @@
+Wersja 624: pionowy panel statystyk w logowaniu przesunięty maksymalnie w prawo; usunięto tekst nagłówka REALNE STATYSTYKI LIVE / Platforma żyje.
