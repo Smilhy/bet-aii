@@ -4904,7 +4904,8 @@ function AuthView({ onAuth }) {
                 <div className="auth609-top-spacer" />
 
                 <div className="auth609-heading-copy auth609-heading-center">
-                  <h1 className="auth609-welcome">Witaj w Bet<span>AI</span></h1>
+                  <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo" draggable="false" />
+                  <h1 className="auth609-welcome auth619-welcome">Witaj w Bet<span>+AI</span></h1>
                   <p className="auth609-subtitle-main">Zaloguj się do swojego konta</p>
                 </div>
 
