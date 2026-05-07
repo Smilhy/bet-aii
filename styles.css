@@ -23366,6 +23366,7 @@ font[style*="border"]{
   }
 }
 
+/* mocniejsze ukrycie ramek/narzędzi Google Translate, bez blokowania własnych tłumaczonych grafik */
 .goog-te-banner-frame,
 .goog-te-balloon-frame,
 .goog-te-menu-frame,
@@ -23403,4 +23404,168 @@ font[style*="border"]{
   box-shadow:none !important;
   border:0 !important;
   outline:0 !important;
+}
+
+
+/* =========================================================
+   WERSJA 627 — social pionowo po prawej, ocena obok czatu,
+   statystyki w miejscu starej oceny + tłumaczenia bez ramek
+   ========================================================= */
+.auth627-social-dock{
+  position:fixed!important;
+  right:0!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  z-index:80!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  pointer-events:auto!important;
+}
+.auth627-social-link{
+  width:112px!important;
+  min-height:58px!important;
+  padding:8px 10px 8px 12px!important;
+  border-radius:18px 0 0 18px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  text-decoration:none!important;
+  color:#dff7ff!important;
+  background:linear-gradient(180deg,rgba(5,18,31,.96),rgba(2,10,19,.98))!important;
+  border:1px solid rgba(39,201,255,.20)!important;
+  border-right:0!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.035) inset,0 12px 30px rgba(0,0,0,.30),0 0 16px rgba(0,220,255,.09)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.auth627-social-link:hover{
+  transform:translateX(-3px)!important;
+  border-color:rgba(46,238,218,.36)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 14px 34px rgba(0,0,0,.35),0 0 20px rgba(37,239,210,.14)!important;
+}
+.auth627-social-icon,
+.auth627-social-icon svg{
+  width:21px!important;
+  height:21px!important;
+  display:block!important;
+}
+.auth627-social-link b{
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+}
+.auth627-social-link.is-telegram{color:#2bd2ff!important;}
+.auth627-social-link.is-discord{color:#9a97ff!important;}
+.auth627-social-link.is-instagram{color:#ff72bd!important;}
+.auth627-social-link.is-x{color:#f2fbff!important;}
+
+.auth609-screen .reviews512{
+  left:auto!important;
+  right:104px!important;
+  bottom:24px!important;
+  z-index:9998!important;
+}
+.auth609-screen .reviews512-panel{
+  left:auto!important;
+  right:0!important;
+  bottom:78px!important;
+}
+.auth609-screen .support510{
+  right:24px!important;
+  bottom:24px!important;
+  z-index:9999!important;
+}
+
+.auth623-side-live.auth624-side-live{
+  position:fixed!important;
+  left:0!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:22px!important;
+  transform:none!important;
+  width:218px!important;
+  max-width:218px!important;
+  padding:10px!important;
+  border-top-left-radius:0!important;
+  border-bottom-left-radius:0!important;
+  border-top-right-radius:22px!important;
+  border-bottom-right-radius:22px!important;
+  z-index:60!important;
+}
+.auth623-side-live.auth624-side-live .auth623-side-list{gap:8px!important;}
+.auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:56px!important;
+  padding:9px 10px!important;
+  gap:9px!important;
+  border-radius:14px!important;
+}
+.auth623-side-live.auth624-side-live .auth623-side-card b{font-size:20px!important;}
+.auth623-side-live.auth624-side-live .auth623-side-card small{font-size:9.5px!important;}
+.auth623-side-live.auth624-side-live .auth623-side-icon{width:29px!important;height:29px!important;flex:0 0 29px!important;}
+.auth623-side-live.auth624-side-live .auth623-side-icon svg{width:17px!important;height:17px!important;}
+.auth623-side-live.auth624-side-live .auth623-side-foot{font-size:8px!important;}
+
+/* Google Translate: zostaw tłumaczenie, ukryj tylko ramki/banery/podświetlenia */
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+.goog-te-menu-frame,
+.goog-tooltip,
+.goog-tooltip:hover,
+#goog-gt-tt,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-yAWNEb-L7lbkb,
+.VIpgJd-yAWNEb-hvhgNd,
+body > iframe[src*="translate.google"],
+body > iframe[id*="goog"],
+body > .skiptranslate{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  width:0!important;
+  height:0!important;
+}
+html.translated-ltr body,
+html.translated-rtl body,
+body{top:0!important;}
+.goog-text-highlight,
+font[style*="background"],
+font[style*="box-shadow"],
+font[style*="border"]{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  outline:0!important;
+  text-decoration:none!important;
+}
+
+@media(max-width:1100px){
+  .auth627-social-dock{display:none!important;}
+  .auth609-screen .reviews512{right:92px!important;bottom:18px!important;}
+  .auth609-screen .support510{right:18px!important;bottom:18px!important;}
+  .auth623-side-live.auth624-side-live{display:none!important;}
+}
+@media(max-width:640px){
+  .auth609-screen .reviews512{display:none!important;}
+}
+
+/* WERSJA 627 — Zapamiętaj mnie realnie działa i pokazuje stan */
+.auth609-remember-toggle .auth609-remember-box{
+  background:rgba(4,18,31,.92)!important;
+  border:1px solid rgba(39,201,255,.32)!important;
+  color:transparent!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.025) inset!important;
+  transition:background .18s ease, color .18s ease, box-shadow .18s ease, border-color .18s ease!important;
+}
+.auth609-remember-toggle input:checked + .auth609-remember-box,
+.auth609-remember-toggle.is-checked .auth609-remember-box{
+  background:linear-gradient(180deg,#20efcc,#20d8e1)!important;
+  border-color:rgba(32,239,204,.78)!important;
+  color:#06262d!important;
+  box-shadow:0 0 14px rgba(32,239,204,.28)!important;
 }

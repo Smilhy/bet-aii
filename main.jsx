@@ -4458,12 +4458,26 @@ function AuthView({ onAuth }) {
   const [authMessageType, setAuthMessageType] = useState('info')
   const [showPassword, setShowPassword] = useState(false)
   const [showRepeatPassword, setShowRepeatPassword] = useState(false)
-  const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    repeatPassword: '',
-    agree: true
+  const [form, setForm] = useState(() => {
+    try {
+      const rememberLogin = localStorage.getItem('betai_remember_login') === '1'
+      const rememberedEmail = rememberLogin ? (localStorage.getItem('betai_remember_email') || '') : ''
+      return {
+        username: '',
+        email: rememberedEmail,
+        password: '',
+        repeatPassword: '',
+        agree: rememberLogin
+      }
+    } catch (_) {
+      return {
+        username: '',
+        email: '',
+        password: '',
+        repeatPassword: '',
+        agree: false
+      }
+    }
   })
   const [liveStats, setLiveStats] = useState({
     registeredUsers: 0,
@@ -4625,6 +4639,19 @@ function AuthView({ onAuth }) {
     }
   }, [])
 
+  useEffect(() => {
+    try {
+      if (form.agree) {
+        localStorage.setItem('betai_remember_login', '1')
+        const cleanEmail = String(form.email || '').trim().toLowerCase()
+        if (cleanEmail) localStorage.setItem('betai_remember_email', cleanEmail)
+      } else {
+        localStorage.removeItem('betai_remember_login')
+        localStorage.removeItem('betai_remember_email')
+      }
+    } catch (_) {}
+  }, [form.agree, form.email])
+
   function updateField(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
@@ -4680,6 +4707,16 @@ function AuthView({ onAuth }) {
 
     const email = String(form.email || '').trim().toLowerCase()
     const password = String(form.password || '')
+
+    try {
+      if (form.agree) {
+        localStorage.setItem('betai_remember_login', '1')
+        localStorage.setItem('betai_remember_email', email)
+      } else {
+        localStorage.removeItem('betai_remember_login')
+        localStorage.removeItem('betai_remember_email')
+      }
+    } catch (_) {}
     const username = String(form.username || '').trim()
     const derivedUsername = username || (email.split('@')[0] || '').replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 24) || `user${Date.now().toString().slice(-6)}`
     const repeatPassword = String(form.repeatPassword || password)
@@ -4890,11 +4927,35 @@ function AuthView({ onAuth }) {
     }
   ]), [liveStats, authLang])
 
+
+  const auth627SocialLinks = useMemo(() => ([
+    { key: 'telegram', label: 'Telegram', href: 'https://t.me/', icon: <IconTelegram />, className: 'is-telegram' },
+    { key: 'discord', label: 'Discord', href: 'https://discord.com/', icon: <IconDiscord />, className: 'is-discord' },
+    { key: 'instagram', label: 'Instagram', href: 'https://instagram.com/', icon: <IconInstagram />, className: 'is-instagram' },
+    { key: 'x', label: 'X', href: 'https://x.com/', icon: <IconX />, className: 'is-x' }
+  ]), [])
+
   return (
     <div className="auth609-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
+      <nav className="auth627-social-dock" aria-label="Social media Bet+AI">
+        {auth627SocialLinks.map(link => (
+          <a
+            key={link.key}
+            className={`auth627-social-link ${link.className}`}
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={link.label}
+            title={link.label}
+          >
+            <span className="auth627-social-icon">{link.icon}</span>
+            <b>{link.label}</b>
+          </a>
+        ))}
+      </nav>
       <div className="auth609-artboard">
         <img
           src={localizedAuthFrameSrc}
@@ -4931,7 +4992,7 @@ function AuthView({ onAuth }) {
                   </button>
                 </div>
 
-                <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete="off">
+                <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete={form.agree ? 'on' : 'off'}>
                   <AuthField
                     label={t.email}
                     type="email"
@@ -4968,11 +5029,12 @@ function AuthView({ onAuth }) {
                   />
 
                   <div className="auth609-remember-row">
-                    <label className="auth609-remember-toggle">
+                    <label className={`auth609-remember-toggle ${form.agree ? 'is-checked' : ''}`}>
                       <input
                         type="checkbox"
                         checked={form.agree}
                         onChange={(event) => updateField('agree', event.target.checked)}
+                        aria-label={t.rememberMe}
                       />
                       <span className="auth609-remember-box">✓</span>
                       <span>{t.rememberMe}</span>
@@ -5009,12 +5071,8 @@ function AuthView({ onAuth }) {
           </section>
 
 
-          <aside className="auth623-side-live" aria-label={t.liveKicker}>
-            <div className="auth623-side-head">
-              <div>
-                <span>{t.liveKicker}</span>
-                <strong>{t.liveTitle}</strong>
-              </div>
+          <aside className="auth623-side-live auth624-side-live" aria-label={t.liveBadge}>
+            <div className="auth623-side-head auth624-side-head">
               <em><i />{t.liveBadge}</em>
             </div>
 

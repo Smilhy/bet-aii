@@ -1,0 +1,7 @@
+WERSJA 627
+- Przyciski społecznościowe ustawione pionowo po prawej stronie, przyklejone do krawędzi i wyśrodkowane.
+- Przycisk oceny strony przeniesiony na prawą stronę obok czatu.
+- Panel statystyk przeniesiony w miejsce starej oceny po lewej na dole.
+- Tłumaczenie zostaje aktywne, ale ramki/overlay Google Translate są ukryte.
+- Przycisk „Zapamiętaj mnie” ma wzmocniony obszar kliknięcia i zapisuje email po zaznaczeniu.
+- Build lokalny wykonany poprawnie.
