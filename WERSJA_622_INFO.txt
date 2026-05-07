@@ -1,0 +1,12 @@
+WERSJA 622 — pełna naprawa języków na ekranie logowania/rejestracji
+
+Zmiany:
+- Naprawiono przełącznik języka na ekranie logowania/rejestracji.
+- Wszystkie widoczne teksty formularza logowania/rejestracji reagują na wybór języka PL/EN/DE/ES/RU.
+- Przetłumaczono zakładki, subtitle, etykiety pól, placeholdery, checkbox, link resetu hasła, status, przyciski, komunikaty bezpieczeństwa i kafelki korzyści.
+- Dodano lokalizowane wersje obrazu/banera podglądu platformy dla EN/DE/ES/RU, żeby po zmianie języka również grafika z tekstami nie zostawała po polsku.
+- Wybór języka dalej zapisuje się w localStorage i wysyła event betai-language-changed.
+- Loader, układ panelu logowania i dashboard pozostawione bez zmian.
+
+Build:
+- npm run build wykonany poprawnie.

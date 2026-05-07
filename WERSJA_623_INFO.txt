@@ -1,0 +1,1 @@
+Wersja 623: dodano pionowy panel realnych statystyk LIVE po prawej stronie panelu logowania/rejestracji.
