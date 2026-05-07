@@ -1,0 +1,5 @@
+Wersja 626:
+- Panel statystyk w ekranie logowania/rejestracji przeniesiony całkowicie na lewą krawędź.
+- Panel pozostaje pionowo na środku ekranu i zachowuje zwężenie z wersji 625.
+- Poprawiono wybór tłumaczonych grafik/banerów: PL/EN/DE/ES/RU używają własnych plików obrazu.
+- Ukryto ramki/narzędzia Google Translate bez wyłączania własnych tłumaczonych grafik.
