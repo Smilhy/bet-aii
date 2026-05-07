@@ -4859,7 +4859,7 @@ function AuthView({ onAuth }) {
       <div className="auth481-wrap">
         <div className="auth481-top-grid">
           <section className="auth481-left-card">
-            <img src="/auth-brand-470-transparent.webp" alt="Bet+AI" className="auth481-logo" draggable="false" />
+            <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
             <h1 className="auth481-title">
               {t.heroLine1}
