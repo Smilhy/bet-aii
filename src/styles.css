@@ -20936,3 +20936,279 @@ img,video,canvas,svg{max-width:100%;}
 .app-shell .topbar .wallet-split-coin img{
   transform:scale(1.1)!important;
 }
+
+/* WERSJA 594 — medalowe miejsca 1/2/3 jak na screenie użytkownika */
+.rightbar .real-ranking-panel .rank-position-badge,
+.place-badge-v4,
+.mini-rank-v4{
+  position:relative!important;
+  overflow:hidden!important;
+  border:none!important;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.55),
+    inset 0 -6px 10px rgba(0,0,0,.18),
+    0 8px 16px rgba(0,0,0,.22)!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge::before,
+.place-badge-v4::before,
+.mini-rank-v4::before{
+  content:''!important;
+  position:absolute!important;
+  top:10%!important;
+  left:16%!important;
+  width:42%!important;
+  height:26%!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.35)!important;
+  filter:blur(1px)!important;
+  transform:rotate(-22deg)!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge.gold,
+.place-badge-v4.p1,
+.mini-rank-v4.r1{
+  background:radial-gradient(circle at 32% 28%, #fff4b8 0%, #ffd65a 22%, #f1bd24 56%, #cf8d07 100%)!important;
+  color:#6c4a00!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge.silver,
+.place-badge-v4.p2,
+.mini-rank-v4.r2{
+  background:radial-gradient(circle at 32% 28%, #ffffff 0%, #edf2fb 22%, #c7d1df 56%, #92a0b3 100%)!important;
+  color:#627388!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge.bronze,
+.place-badge-v4.p3,
+.mini-rank-v4.r3{
+  background:radial-gradient(circle at 32% 28%, #ffe2c5 0%, #ffbb79 22%, #ea8f3d 56%, #b85d13 100%)!important;
+  color:#7a3f07!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge:not(.gold):not(.silver):not(.bronze){
+  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06))!important;
+  color:#dce8f1!important;
+}
+
+.rightbar .real-ranking-panel .rank-position-badge,
+.place-badge-v4,
+.mini-rank-v4{
+  font-weight:1000!important;
+  letter-spacing:-.02em!important;
+}
+
+/* WERSJA 596 — Premium CTA i ocena 5.0 w kolorze jak Wyloguj */
+.sidebar .premium-box button,
+.premium-box button{
+  background:linear-gradient(135deg,#18f0c8,#10bce8)!important;
+  border:1px solid rgba(24,240,200,.32)!important;
+  color:#04121a!important;
+  box-shadow:0 10px 22px rgba(20,224,201,.20)!important;
+  border-radius:13px!important;
+  font-weight:1000!important;
+}
+.sidebar .premium-box button:hover,
+.premium-box button:hover{
+  filter:brightness(1.05)!important;
+  transform:translateY(-1px)!important;
+  box-shadow:0 14px 28px rgba(16,188,232,.24)!important;
+}
+.reviews512-fab,
+.support510-fab.reviews512-fab{
+  border-color:rgba(16,188,232,.28)!important;
+  box-shadow:0 14px 30px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04), 0 0 18px rgba(16,188,232,.13)!important;
+}
+.reviews512-fab-stars,
+.reviews512-stars button.active{
+  color:#10bce8!important;
+  text-shadow:0 0 10px rgba(16,188,232,.45)!important;
+}
+.reviews512-fab b{
+  color:#f2fbff!important;
+}
+.reviews512-fab i{
+  background:#10bce8!important;
+  box-shadow:0 0 0 0 rgba(16,188,232,.55)!important;
+}
+.reviews512-stars button{
+  color:rgba(148,190,205,.45)!important;
+}
+
+/* WERSJA 597 — Stripe Connect w zakładce Mój profil */
+.profile-stripe-connect-card{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  margin:16px 0!important;
+  padding:18px!important;
+  border-radius:24px!important;
+  background:radial-gradient(circle at 0% 0%,rgba(32,219,255,.12),transparent 30%),linear-gradient(180deg,rgba(7,24,36,.96),rgba(4,14,22,.98))!important;
+  border:1px solid rgba(53,219,255,.18)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.profile-stripe-connect-main{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:14px!important;
+  min-width:0!important;
+}
+.profile-stripe-connect-icon{
+  width:50px!important;
+  height:50px!important;
+  border-radius:17px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(135deg,rgba(37,206,255,.20),rgba(31,226,174,.15))!important;
+  border:1px solid rgba(53,219,255,.18)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.20)!important;
+  flex:0 0 50px!important;
+}
+.profile-stripe-connect-card p{
+  margin:7px 0 5px!important;
+  color:#c7d8e4!important;
+  line-height:1.5!important;
+}
+.profile-stripe-connect-card p b{
+  color:#37e7ff!important;
+}
+.profile-stripe-connect-card small{
+  display:block!important;
+  color:#8fa6b6!important;
+  line-height:1.4!important;
+}
+.stripe-head-inline{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  justify-content:flex-start!important;
+  margin:0!important;
+}
+.stripe-head-inline h3{
+  margin:0!important;
+  color:#eefcff!important;
+}
+.stripe-status-pill{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:7px 10px!important;
+  border-radius:999px!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.04em!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+.stripe-status-pill.ready{
+  background:rgba(31,226,174,.14)!important;
+  color:#81f8df!important;
+  border-color:rgba(31,226,174,.28)!important;
+}
+.stripe-status-pill.pending{
+  background:rgba(255,209,102,.13)!important;
+  color:#ffe0a3!important;
+  border-color:rgba(255,209,102,.24)!important;
+}
+.stripe-status-pill.empty{
+  background:rgba(66,184,255,.12)!important;
+  color:#bfeaff!important;
+  border-color:rgba(66,184,255,.24)!important;
+}
+.profile-connect-stripe-btn{
+  min-width:180px!important;
+  height:46px!important;
+  border:0!important;
+  border-radius:15px!important;
+  background:linear-gradient(135deg,#24ccff 0%,#1a8dff 52%,#0c5fd1 100%)!important;
+  color:#ffffff!important;
+  font-weight:1000!important;
+  box-shadow:0 16px 34px rgba(24,141,255,.24), inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+.profile-connect-stripe-btn:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 20px 42px rgba(24,141,255,.30)!important;
+}
+@media (max-width:900px){
+  .profile-stripe-connect-card{flex-direction:column!important;align-items:stretch!important}
+  .profile-connect-stripe-btn{width:100%!important}
+}
+
+/* WERSJA 598 — poprawa kolorów modala opinii */
+.reviews512-head span{
+  color:#03131c !important;
+  opacity:1 !important;
+}
+.reviews512-head span i{
+  background:#03131c !important;
+  box-shadow:0 0 0 0 rgba(3,19,28,.32) !important;
+}
+.reviews512-stars button{
+  color:#29566f !important;
+}
+.reviews512-stars button.active,
+.reviews512-fab-stars{
+  color:#31d7ff !important;
+  text-shadow:0 0 12px rgba(49,215,255,.45) !important;
+}
+.reviews512-form > button{
+  background:linear-gradient(180deg, #10283b, #081825) !important;
+  color:#e9f7ff !important;
+  border:1px solid rgba(60,196,255,.22) !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.28) !important;
+}
+.reviews512-form > button:hover:not(:disabled){
+  background:linear-gradient(180deg, #13314a, #0a1f31) !important;
+}
+
+
+/* WERSJA 599 — poprawa wyglądu okna wsparcia */
+.support510-head{
+  color:#041019 !important;
+}
+.support510-head strong,
+.support510-head span,
+.support510-head span i{
+  color:#041019 !important;
+}
+.support510-head span{
+  opacity:1 !important;
+}
+.support510-head i{
+  background:#041019 !important;
+  box-shadow:0 0 0 5px rgba(4,16,25,.16), 0 0 12px rgba(4,16,25,.20) !important;
+}
+.support510-head button{
+  width:42px !important;
+  height:42px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(46, 222, 214, .26) !important;
+  background:linear-gradient(180deg, #2decd9, #18cfd4) !important;
+  color:#03141b !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.16) inset, 0 10px 24px rgba(25,217,216,.20) !important;
+}
+.support510-welcome{
+  background:linear-gradient(135deg, rgba(56,220,214,.96), rgba(92,223,226,.94)) !important;
+  color:#041019 !important;
+}
+.support510-welcome strong,
+.support510-welcome span{
+  color:#041019 !important;
+}
+.support510-compose button{
+  border:1px solid rgba(46, 222, 214, .26) !important;
+  background:linear-gradient(180deg, #2decd9, #18cfd4) !important;
+  color:#03141b !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 10px 24px rgba(25,217,216,.20) !important;
+}
+.support510-compose button:hover:not(:disabled),
+.support510-head button:hover{
+  filter:brightness(1.04) !important;
+}
+.support510-status{
+  background:rgba(7,25,38,.92) !important;
+  border:1px solid rgba(46, 222, 214, .16) !important;
+  color:#d8eff8 !important;
+}

@@ -1,0 +1,4 @@
+WERSJA 597
+Dodano w Mój profil sekcję Moje konto Stripe z przyciskiem Podłącz Stripe/Dokończ Stripe/Zarządzaj Stripe dla każdego użytkownika.
+Backend marketplace używa Stripe Connect destination charge: 80% dla typera, 20% application_fee dla platformy.
+Dodano SQL: supabase/version_597_stripe_connect_profiles.sql

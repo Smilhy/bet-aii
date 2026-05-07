@@ -64,10 +64,27 @@ exports.handler = async function(event) {
     const tipsterAmount = roundMoney(price - platformFee);
     const matchName = `${tip.team_home || ''} vs ${tip.team_away || ''}`.trim() || body.matchName || 'Typ premium';
 
+    const { data: sellerStripe, error: sellerStripeError } = await supabase
+      .from('user_stripe_accounts')
+      .select('stripe_account_id,payouts_enabled,charges_enabled')
+      .eq('user_id', tip.author_id)
+      .maybeSingle();
+
+    if (sellerStripeError) throw sellerStripeError;
+    if (!sellerStripe?.stripe_account_id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Ten typer nie podłączył jeszcze Stripe Connect. Nie można kupić płatnego typu.' }) };
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: buyerEmail || undefined,
+      payment_intent_data: {
+        application_fee_amount: Math.round(platformFee * 100),
+        transfer_data: {
+          destination: sellerStripe.stripe_account_id
+        }
+      },
       line_items: [{
         price_data: {
           currency: 'pln',
@@ -90,6 +107,7 @@ exports.handler = async function(event) {
         amount_pln: String(price),
         platform_fee: String(platformFee),
         tipster_amount: String(tipsterAmount),
+        seller_stripe_account_id: sellerStripe.stripe_account_id,
         referral_code: referralCode
       },
       success_url: `${siteUrl}/?payment=success&stripe=1&tip=${encodeURIComponent(tip.id)}`,

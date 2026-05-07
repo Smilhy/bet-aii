@@ -1783,7 +1783,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <div className="tipster">
           <div className={`photo ${isAiTip ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
           <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
-          <em>{isAiTip ? 'AI' : 'TIPSTER'}</em>
+          <em>{isAiTip ? 'AI' : 'TYPER'}</em>
           {!isOwnTip && !isAiTip && (
             <button
               type="button"
@@ -4026,7 +4026,7 @@ function SupportChatWidget({ user }) {
       setStatus('')
     } catch (error) {
       console.warn('support chat load error', error)
-      setStatus('Czat pomocy wymaga uruchomienia pliku SUPABASE_SUPPORT_CHAT_510.sql w Supabase.')
+      setStatus('')
     } finally {
       setLoading(false)
     }
@@ -4091,7 +4091,7 @@ function SupportChatWidget({ user }) {
       await loadSupportMessages()
     } catch (error) {
       console.error('support chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości. Uruchom SUPABASE_SUPPORT_CHAT_510.sql i spróbuj ponownie.')
+      setStatus('Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.')
     } finally {
       setLoading(false)
     }
@@ -5021,7 +5021,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
       <div className="payment-modal">
         <div className="payment-icon">💳</div>
         <h2>Kup singiel premium</h2>
-        <p>Kupujesz pojedynczy typ premium. Cenę singla ustala tipster przy publikacji typu.</p>
+        <p>Kupujesz pojedynczy typ premium. Cenę singla ustala typer przy publikacji typu.</p>
 
         <div className="payment-summary">
           <span>Mecz</span>
@@ -5029,7 +5029,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
         </div>
 
         <div className="payment-summary">
-          <span>Tipster</span>
+          <span>Typer</span>
           <strong>{tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'}</strong>
         </div>
 
@@ -5078,7 +5078,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
 
   if (!tip) return null
   const tipsterId = getTipAuthorId(tip)
-  const tipsterName = tip.author_name || 'Tipster'
+  const tipsterName = tip.author_name || 'Typer'
 
   async function buy(plan) {
     setError('')
@@ -5111,14 +5111,14 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
     <div className="payment-backdrop">
       <div className="payment-modal profile-sub-modal">
         <div className="payment-icon">👤</div>
-        <h2>Subskrypcja profilu tipstera</h2>
-        <p>Kup subskrypcję profilu użytkownika <b>{tipsterName}</b>. Tipster sam ustala ceny pakietów: tydzień, miesiąc, pół roku i rok. Platforma pobiera 20% marży.</p>
+        <h2>Subskrypcja profilu typera</h2>
+        <p>Kup subskrypcję profilu użytkownika <b>{tipsterName}</b>. Typer sam ustala ceny pakietów: tydzień, miesiąc, pół roku i rok. Platforma pobiera 20% marży.</p>
         <div className="profile-sub-grid">
           {plans.map(plan => (
             <button key={plan.key} className="profile-sub-option" type="button" onClick={() => buy(plan)} disabled={Boolean(loadingKey)}>
               <strong>{plan.label}</strong>
               <b>{Number(plan.price || 0).toFixed(2)} zł</b>
-              <span>Tipster: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
+              <span>Typer: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
               <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup subskrypcję'}</em>
             </button>
           ))}
@@ -5258,7 +5258,7 @@ function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onC
     <section className="earnings-page">
       <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
       <div className="page-title">
-        <h1>Zarobki tipstera</h1>
+        <h1>Zarobki typera</h1>
         <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
       </div>
 
@@ -5380,7 +5380,7 @@ function TipsterPricingSettings({ user, onToast }) {
 
   return (
     <div className="profile-panel tipster-pricing-panel">
-      <div className="profile-panel-head"><h3>Ceny subskrypcji profilu</h3><span>Tipster ustala ceny</span></div>
+      <div className="profile-panel-head"><h3>Ceny subskrypcji profilu</h3><span>Typer ustala ceny</span></div>
       <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
       <div className="pricing-settings-grid">
         {TIPSTER_PLAN_OPTIONS.map(plan => (
@@ -5397,7 +5397,7 @@ function TipsterPricingSettings({ user, onToast }) {
   )
 }
 
-function ProfileView({ user, tips = [] }) {
+function ProfileView({ user, tips = [], stripeConnectStatus = null, onConnectStripe = null }) {
   const displayName = 'smilhytv'
   const premiumRows = [
     ['Real Madryt', 'Bayern Monachium', 'Liga Mistrzów • Dzisiaj, 21:00', 'Powyżej 2.5 gola', '1.72', '85%', 'Premium', '12', '2 godz. temu'],
@@ -5487,6 +5487,27 @@ function ProfileView({ user, tips = [] }) {
           </div>
 
           <TipsterPricingSettings user={user} onToast={null} />
+
+          <div className="glass-profile-v3 profile-stripe-connect-card">
+            <div className="profile-stripe-connect-main">
+              <div className="profile-stripe-connect-icon">💳</div>
+              <div>
+                <div className="profile-v3-card-head stripe-head-inline">
+                  <h3>Moje konto Stripe</h3>
+                  <span className={stripeConnectStatus?.payouts_enabled ? 'stripe-status-pill ready' : stripeConnectStatus?.stripe_account_id ? 'stripe-status-pill pending' : 'stripe-status-pill empty'}>
+                    {stripeConnectStatus?.payouts_enabled ? 'Stripe aktywny' : stripeConnectStatus?.stripe_account_id ? 'Dokończ konfigurację' : 'Niepodłączone'}
+                  </span>
+                </div>
+                <p>
+                  Podłącz swoje konto Stripe Connect, żeby sprzedawać single i subskrypcje profilu. Kupujący płaci na stronie, Stripe automatycznie kieruje <b>80%</b> do Ciebie, a <b>20%</b> marży zostaje dla platformy.
+                </p>
+                <small>Kupujący nie wpisuje konta bankowego sprzedawcy. Dane bankowe podajesz tylko bezpiecznie w Stripe.</small>
+              </div>
+            </div>
+            <button type="button" className="profile-connect-stripe-btn" onClick={() => onConnectStripe?.()}>
+              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+            </button>
+          </div>
 
           <div className="profile-v3-content-grid">
             <div className="profile-v3-left-col">
@@ -8212,6 +8233,8 @@ function App() {
             payments={paymentHistory}
             unlockedTips={unlockedTips}
             userPlan={effectiveAccountPlan}
+            stripeConnectStatus={stripeConnectStatus}
+            onConnectStripe={connectStripeAccount}
           />
         )}
 

@@ -1,169 +1,134 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
-const MAX_BATCH = Number(process.env.PAYOUT_CRON_BATCH_SIZE || 10);
-
-exports.config = {
-  schedule: process.env.PAYOUT_CRON_SCHEDULE || '0 * * * *'
-};
-
-function supabaseAdmin() {
+function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
+  if (!url || !key) throw new Error('Brak SUPABASE_URL albo SUPABASE_SERVICE_ROLE_KEY w Netlify ENV.');
   return createClient(url, key);
 }
 
-function response(code, body) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+function roundMoney(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
 }
 
-function isAuthorized(event) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
-  const auth = event.headers.authorization || event.headers.Authorization || '';
-  const token = auth.replace(/^Bearer\s+/i, '') || event.queryStringParameters?.secret;
-  return token === cronSecret;
-}
-
-async function markFailed(supabase, payout, message) {
-  const now = new Date().toISOString();
-  await supabase
-    .from('payout_requests')
-    .update({ status: 'failed', stripe_status: 'failed', stripe_error: String(message || '').slice(0, 500), processed_at: now, updated_at: now })
-    .eq('id', payout.id);
-
-  await supabase.from('admin_logs').insert({
-    admin_user_id: null,
-    action: 'auto_payout_failed',
-    target_table: 'payout_requests',
-    target_id: payout.id,
-    metadata: { error: message, user_id: payout.user_id, amount: payout.amount }
-  });
-}
-
-async function processSinglePayout(supabase, payout) {
-  const amount = Number(payout.amount || 0);
-  if (amount < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
-
-  const processingTime = new Date().toISOString();
-  const { data: lockedRows, error: lockError } = await supabase
-    .from('payout_requests')
-    .update({ status: 'processing', stripe_status: 'processing', updated_at: processingTime })
-    .eq('id', payout.id)
-    .eq('status', 'pending')
-    .select('id');
-
-  if (lockError) throw lockError;
-  if (!lockedRows?.length) throw new Error('PAYOUT_ALREADY_LOCKED_OR_PROCESSED');
-
-  const { data: accountRow, error: accountError } = await supabase
-    .from('user_stripe_accounts')
-    .select('*')
-    .eq('user_id', payout.user_id)
-    .maybeSingle();
-
-  if (accountError) throw accountError;
-  if (!accountRow?.stripe_account_id) throw new Error('STRIPE_CONNECT_NOT_CONNECTED');
-
-  const account = await stripe.accounts.retrieve(accountRow.stripe_account_id);
-
-  await supabase.from('user_stripe_accounts').upsert({
-    user_id: payout.user_id,
-    stripe_account_id: account.id,
-    charges_enabled: !!account.charges_enabled,
-    payouts_enabled: !!account.payouts_enabled,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id' });
-
-  if (!account.payouts_enabled) throw new Error('STRIPE_PAYOUTS_NOT_ENABLED');
-
-  const amountMinor = Math.round(amount * 100);
-  const transfer = await stripe.transfers.create({
-    amount: amountMinor,
-    currency: (payout.currency || 'pln').toLowerCase(),
-    destination: account.id,
-    metadata: {
-      payout_request_id: payout.id,
-      user_id: payout.user_id,
-      source: 'betai_auto_payout_cron'
-    }
-  }, { idempotencyKey: `betai_auto_payout_${payout.id}` });
-
-  const now = new Date().toISOString();
-
-  const { error: updateError } = await supabase
-    .from('payout_requests')
-    .update({
-      status: 'paid',
-      stripe_transfer_id: transfer.id,
-      stripe_status: 'transferred',
-      processed_at: now,
-      updated_at: now
-    })
-    .eq('id', payout.id)
-    .eq('status', 'processing');
-
-  if (updateError) throw updateError;
-
-  await supabase.from('wallet_transactions').insert({
-    user_id: payout.user_id,
-    amount: -amount,
-    type: 'payout',
-    status: 'completed',
-    provider: 'stripe',
-    provider_session_id: transfer.id
-  });
-
-  await supabase.from('admin_logs').insert({
-    admin_user_id: null,
-    action: 'auto_approve_payout_stripe_transfer',
-    target_table: 'payout_requests',
-    target_id: payout.id,
-    metadata: {
-      amount,
-      user_id: payout.user_id,
-      stripe_transfer_id: transfer.id,
-      stripe_account_id: account.id
-    }
-  });
-
-  return { id: payout.id, ok: true, transfer_id: transfer.id };
-}
-
-exports.handler = async (event) => {
-  if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { error: 'Method not allowed' });
-  if (!isAuthorized(event)) return response(401, { error: 'Unauthorized' });
-
-  const supabase = supabaseAdmin();
+exports.handler = async function(event) {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
 
   try {
-    const { data: pending, error } = await supabase
-      .from('payout_requests')
-      .select('*')
-      .eq('status', 'pending')
-      .gte('amount', MIN_PAYOUT_AMOUNT)
-      .order('created_at', { ascending: true })
-      .limit(MAX_BATCH);
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'http://localhost:8888';
 
-    if (error) throw error;
-
-    const results = [];
-    for (const payout of pending || []) {
-      try {
-        results.push(await processSinglePayout(supabase, payout));
-      } catch (err) {
-        const message = err.message || 'AUTO_PAYOUT_FAILED';
-        await markFailed(supabase, payout, message);
-        results.push({ id: payout.id, ok: false, error: message });
-      }
+    if (!stripeSecretKey) {
+      return { statusCode: 500, body: JSON.stringify({ error: 'Brak STRIPE_SECRET_KEY w Netlify Environment variables.' }) };
     }
 
-    return response(200, { ok: true, processed: results.length, results });
+    const stripe = new Stripe(stripeSecretKey);
+    const supabase = getSupabase();
+    const body = JSON.parse(event.body || '{}');
+
+    const buyerId = body.userId || body.buyerId || '';
+    const buyerEmail = body.userEmail || '';
+    const referralCode = body.referralCode || '';
+    const tipsterId = body.tipsterId || '';
+    const planKey = body.planKey || body.key || '';
+    const durationDaysFromBody = Number(body.durationDays || 0);
+
+    if (!buyerId || !tipsterId) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Brak buyerId albo tipsterId.' }) };
+    }
+    if (String(buyerId) === String(tipsterId)) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Nie możesz kupić dostępu do własnego profilu.' }) };
+    }
+
+    const { data: tipster } = await supabase
+      .from('profiles')
+      .select('id,email,display_name,username')
+      .eq('id', tipsterId)
+      .maybeSingle();
+
+    let plan = null;
+    if (planKey) {
+      const { data } = await supabase
+        .from('tipster_plans')
+        .select('plan_key,label,duration_days,price,active')
+        .eq('tipster_id', tipsterId)
+        .eq('plan_key', planKey)
+        .eq('active', true)
+        .maybeSingle();
+      plan = data || null;
+    }
+
+    const durationDays = Number(plan?.duration_days || durationDaysFromBody || 30);
+    const label = plan?.label || body.label || `${durationDays} dni`;
+    const rawPrice = plan?.price ?? body.price ?? 10;
+    const price = roundMoney(rawPrice);
+
+    if (durationDays <= 0) return { statusCode: 400, body: JSON.stringify({ error: 'Niepoprawny czas dostępu.' }) };
+    if (price < 1) return { statusCode: 400, body: JSON.stringify({ error: 'Minimalna cena dostępu to 1 zł.' }) };
+
+    const platformFee = roundMoney(price * 0.2);
+    const tipsterAmount = roundMoney(price - platformFee);
+    const tipsterName = body.tipsterName || tipster?.display_name || tipster?.username || tipster?.email || 'Typer';
+
+    const { data: sellerStripe, error: sellerStripeError } = await supabase
+      .from('user_stripe_accounts')
+      .select('stripe_account_id,payouts_enabled,charges_enabled')
+      .eq('user_id', tipsterId)
+      .maybeSingle();
+
+    if (sellerStripeError) throw sellerStripeError;
+    if (!sellerStripe?.stripe_account_id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Ten typer nie podłączył jeszcze Stripe Connect. Nie można kupić subskrypcji profilu.' }) };
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: buyerEmail || undefined,
+      payment_intent_data: {
+        application_fee_amount: Math.round(platformFee * 100),
+        transfer_data: {
+          destination: sellerStripe.stripe_account_id
+        }
+      },
+      line_items: [{
+        price_data: {
+          currency: 'pln',
+          product_data: {
+            name: `BetAI: dostęp do profilu ${tipsterName}`,
+            description: `Dostęp do typów premium: ${label}`
+          },
+          unit_amount: Math.round(price * 100)
+        },
+        quantity: 1
+      }],
+      client_reference_id: buyerId,
+      metadata: {
+        kind: 'tipster_profile_subscription',
+        buyer_id: buyerId,
+        user_id: buyerId,
+        buyer_email: buyerEmail,
+        tipster_id: tipsterId,
+        tipster_name: tipsterName,
+        plan_key: planKey || '',
+        duration_days: String(durationDays),
+        amount_pln: String(price),
+        platform_fee: String(platformFee),
+        tipster_amount: String(tipsterAmount),
+        seller_stripe_account_id: sellerStripe.stripe_account_id,
+        label,
+        referral_code: referralCode
+      },
+      success_url: `${siteUrl}/?profile_sub=success&stripe=1&tipster=${encodeURIComponent(tipsterId)}`,
+      cancel_url: `${siteUrl}/?profile_sub=cancel`
+    });
+
+    return { statusCode: 200, body: JSON.stringify({ url: session.url, id: session.id }) };
   } catch (error) {
-    console.error('process-payouts error:', error);
-    return response(500, { error: error.message || 'PROCESS_PAYOUTS_FAILED' });
+    console.error('create-tipster-subscription-checkout error:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Checkout error' }) };
   }
 };
