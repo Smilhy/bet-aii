@@ -21475,3 +21475,120 @@ img,video,canvas,svg{max-width:100%;}
   letter-spacing:-.04em!important;
   box-shadow:0 0 18px rgba(45,212,255,.18)!important;
 }
+
+/* WERSJA 607 — dashboard polish bez zmiany layoutu */
+:root{
+  --betai-action-blue:#2dd4ff;
+  --betai-action-blue-2:#22e6d7;
+}
+
+.feed-visible-counter{
+  width:100%!important;
+  margin:14px 0 0!important;
+  text-align:center!important;
+  color:#9eb6c4!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar{
+  gap:16px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .panel,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card{
+  border-radius:24px!important;
+  border-color:rgba(45,212,255,.12)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head{
+  margin-bottom:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head h2{
+  font-size:18px!important;
+  letter-spacing:-.035em!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .panel-head a{
+  color:var(--betai-action-blue)!important;
+  background:rgba(45,212,255,.08)!important;
+  border:1px solid rgba(45,212,255,.16)!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-right .ai-day-title-accent,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-right .panel-head h2 span,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-right .panel-head h2 .ai-day-title-accent{
+  color:var(--betai-action-blue)!important;
+  -webkit-text-fill-color:var(--betai-action-blue)!important;
+  text-shadow:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-right .ai-club,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick .club.ai-club{
+  background:linear-gradient(135deg,var(--betai-action-blue),var(--betai-action-blue-2))!important;
+  color:#06202d!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:0 8px 20px rgba(45,212,255,.14)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick,
+.app-shell:not(.no-rightbar-page) .rightbar .rank,
+.app-shell:not(.no-rightbar-page) .rightbar .result{
+  border-radius:18px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick b,
+.app-shell:not(.no-rightbar-page) .rightbar .rank b,
+.app-shell:not(.no-rightbar-page) .rightbar .result b{
+  line-height:1.25!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick small,
+.app-shell:not(.no-rightbar-page) .rightbar .rank small{
+  line-height:1.35!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .tiny-progress{
+  height:7px!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  background:rgba(255,255,255,.07)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .tiny-progress i{
+  background:linear-gradient(90deg,var(--betai-action-blue),var(--betai-action-blue-2))!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-live-head-final{
+  gap:10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-messages,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-chat-messages-final{
+  border-color:rgba(45,212,255,.10)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-send,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-send-final,
+.feed-load-more-btn{
+  background:linear-gradient(135deg,var(--betai-action-blue),var(--betai-action-blue-2))!important;
+  color:#06202d!important;
+}
+
+.feed-load-less-btn{
+  border-color:rgba(45,212,255,.22)!important;
+}
+
+.feed-filters button.active,
+.feed-add-tip-btn,
+.premium-banner-cta{
+  border-color:rgba(45,212,255,.28)!important;
+}

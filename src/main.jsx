@@ -8437,6 +8437,10 @@ function App() {
               )}
             </div>
 
+            {filteredTips.length ? (
+              <div className="feed-visible-counter">Pokazano {Math.min(dashboardVisibleTips, filteredTips.length)} z {filteredTips.length} typów</div>
+            ) : null}
+
             {filteredTips.length > 5 ? (
               <div className="feed-load-more-wrap">
                 <button
