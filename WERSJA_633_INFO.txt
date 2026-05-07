@@ -1,0 +1,4 @@
+Wersja 633:
+- Ramka statystyk przesunięta całkowicie do lewej krawędzi strony.
+- Panel nie nachodzi już na kartę logowania; jest przyklejony jak social media po prawej.
+- Reszta zmian z wersji 632 pozostaje bez zmian.

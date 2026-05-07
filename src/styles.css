@@ -24181,3 +24181,35 @@ font[style*="border"]{
     left:-2px!important;
   }
 }
+
+/* =========================================================
+   WERSJA 633 — statystyki przyklejone do lewej krawędzi strony
+   Panel wychodzi poza artboard o jego margines, tak jak social media
+   przylegają po prawej stronie.
+   ========================================================= */
+@media (min-width: 641px){
+  .auth609-screen .auth623-side-live.auth624-side-live{
+    position:fixed!important;
+    left:-255px!important;
+    right:auto!important;
+    top:50%!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    margin-left:0!important;
+    width:205px!important;
+    max-width:205px!important;
+    border-left:0!important;
+    border-radius:0 22px 22px 0!important;
+    z-index:10080!important;
+  }
+}
+@media (max-width:2300px) and (min-width:641px){
+  .auth609-screen .auth623-side-live.auth624-side-live{
+    left:-255px!important;
+  }
+}
+@media (max-width:640px){
+  .auth609-screen .auth623-side-live.auth624-side-live{
+    left:0!important;
+  }
+}
