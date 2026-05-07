@@ -22860,3 +22860,10 @@ img,video,canvas,svg{max-width:100%;}
 @media (max-width: 640px){
   .auth617-feature-strip{display:none;}
 }
+
+/* =========================================================
+   WERSJA 618 — dolny pasek benefitów niżej, prawie na samym dole
+   ========================================================= */
+.auth617-feature-strip{
+  bottom:-110px !important;
+}
