@@ -1662,6 +1662,239 @@ function FeedSkeleton() {
 }
 
 
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
+  const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
+  const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
+  const probability = getAiConfidence(tip)
+  const aiScore = getAiScore(tip)
+  const aiAnalysis = getAiAnalysis(tip)
+  const aiBadges = getAiBadges(tip)
+  const isPremium = tip.access_type === 'premium'
+  const isLocked = isPremium && !unlocked && !profileSubscriptionActive
+  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
+  const isAiTip = author === 'AI Tip'
+  const analysisTitle = isAiTip ? 'AI Analiza' : 'Analiza użytkownika'
+  const analysisTopBadge = isAiTip
+    ? (isLocked ? 'AI 🔒' : `AI ${probability}%`)
+    : (isLocked ? 'ANALIZA UŻ. 🔒' : 'ANALIZA UŻ.')
+  const analysisStrongLabel = isAiTip
+    ? (isLocked ? '🔒' : `${probability}%`)
+    : (isLocked ? '🔒' : '')
+  const authorId = getTipAuthorId(tip)
+  const currentUsername = (currentUser?.email || '').split('@')[0]
+  const isOwnTip = Boolean(
+    (currentUser?.id && authorId && String(currentUser.id) === String(authorId)) ||
+    (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
+  )
+  const followKey = authorId ? String(authorId) : String(author).toLowerCase()
+  const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
+
+  const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
+  const actorLabel = currentUsername || author || 'Gość'
+  const baseLikes = Number(tip?.likes ?? 128) || 128
+  const baseDislikes = Number(tip?.dislikes ?? 0) || 0
+  const baseCommentCount = 0
+  const interactionStorageKey = useMemo(
+    () => `betai_tip_interactions_v3_${tip?.id || `${tip?.team_home || 'home'}_${tip?.team_away || 'away'}_${tip?.created_at || 'now'}`}`,
+    [tip?.id, tip?.team_home, tip?.team_away, tip?.created_at]
+  )
+
+  const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [commentDraft, setCommentDraft] = useState('')
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(interactionStorageKey)
+      if (!raw) {
+        setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+        return
+      }
+      const parsed = JSON.parse(raw)
+      setFeedback({
+        likes: Number(parsed?.likes ?? baseLikes) || 0,
+        dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
+        comments: [],
+        votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {}
+      })
+    } catch (_) {
+      setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+    }
+  }, [interactionStorageKey, baseLikes, baseDislikes])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(interactionStorageKey, JSON.stringify(feedback))
+    } catch (_) {}
+  }, [interactionStorageKey, feedback])
+
+  const activeVote = feedback?.votes?.[actorKey] || null
+  const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+
+  function handleVote(nextVote) {
+    const previousVote = activeVote
+    setFeedback((prev) => {
+      const votes = { ...(prev?.votes || {}) }
+      let likes = Number(prev?.likes || 0)
+      let dislikes = Number(prev?.dislikes || 0)
+
+      if (previousVote === nextVote) {
+        if (nextVote === 'like') likes = Math.max(0, likes - 1)
+        if (nextVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        delete votes[actorKey]
+      } else {
+        if (previousVote === 'like') likes = Math.max(0, likes - 1)
+        if (previousVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        if (nextVote === 'like') likes += 1
+        if (nextVote === 'dislike') dislikes += 1
+        votes[actorKey] = nextVote
+      }
+
+      return { ...prev, likes, dislikes, votes }
+    })
+
+    if (previousVote === nextVote) {
+      onToast?.({ type: 'info', title: 'Reakcja usunięta', message: 'Usunęliśmy Twoją reakcję z tego typu.' })
+    } else if (nextVote === 'like') {
+      onToast?.({ type: 'success', title: 'Typ polubiony', message: 'Dziękujemy za pozytywną reakcję.' })
+    } else {
+      onToast?.({ type: 'info', title: 'Zapisano opinię', message: 'Twoja negatywna reakcja została zapisana.' })
+    }
+  }
+
+  function submitComment() {
+    const clean = commentDraft.trim()
+    if (!clean) return
+    const newComment = {
+      id: `comment_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      author: actorLabel || 'Gość',
+      text: clean.slice(0, 280),
+      created_at: new Date().toISOString()
+    }
+    setFeedback((prev) => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
+    setCommentDraft('')
+    setCommentsOpen(true)
+    onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
+  }
+
+  return (
+    <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
+      <div className="tip-header">
+        <div className="tipster">
+          <div className={`photo ${isAiTip ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
+          <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
+          <em>{isAiTip ? 'AI' : 'TIPSTER'}</em>
+          {!isOwnTip && !isAiTip && (
+            <button
+              type="button"
+              className={isFollowing ? 'follow-btn active' : 'follow-btn'}
+              onClick={() => onToggleFollow?.(authorId, author)}
+              title="Obserwuj tego tipstera i dostawaj powiadomienia o nowych typach"
+            >
+              {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
+            </button>
+          )}
+        </div>
+        <div className="card-badges">
+          <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
+          <span className="ai-badge">{analysisTopBadge}</span>
+          {!isLocked && isAiTip && aiScore >= 75 && <span className="ai-score-badge">Score {aiScore}</span>}
+        </div>
+      </div>
+
+      <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
+
+      <div className="tip-grid">
+        <div className="match-box">
+          <div className="teams"><b>{tip.team_home}</b><span>vs</span><b>{tip.team_away}</b></div>
+          <div className="bet-row">
+            <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
+            <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
+          </div>
+        </div>
+
+        <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
+          <div className="ai-title">✦ {analysisTitle}{analysisStrongLabel ? <strong>{analysisStrongLabel}</strong> : null}</div>
+          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
+          <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
+          {!isLocked && isAiTip && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
+          {isLocked && <div className="lock-overlay">🔒 Premium</div>}
+        </div>
+      </div>
+
+      <div className="tip-footer">
+        <span className={statusClass}>{statusLabel}</span>
+
+        <div className="tip-feedback-actions">
+          <button type="button" className={`tip-react-btn like ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')} title="Polub typ">
+            <span>♡</span><b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`tip-react-btn dislike ${activeVote === 'dislike' ? 'active' : ''}`} onClick={() => handleVote('dislike')} title="Nie podoba mi się">
+            <span>👎</span><b>{feedback.dislikes}</b>
+          </button>
+          <button type="button" className={`tip-react-btn comment ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen((prev) => !prev)} title="Komentarze">
+            <span>💬</span><b>{commentCount}</b>
+          </button>
+        </div>
+
+        {isLocked ? (
+          <>
+            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup singiel za {Number(tip.price || 29).toFixed(2)} zł</button>
+            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup subskrypcję profilu</button>
+          </>
+        ) : (
+          <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
+        )}
+      </div>
+
+      {commentsOpen && (
+        <div className="tip-comments-panel">
+          <div className="tip-comments-head">
+            <strong>Komentarze</strong>
+            <span>{commentCount} łącznie</span>
+          </div>
+
+          <div className="tip-comment-form">
+            <input
+              type="text"
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  submitComment()
+                }
+              }}
+              placeholder="Dodaj komentarz do tego typu..."
+              maxLength={280}
+            />
+            <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
+          </div>
+
+          {feedback.comments.length > 0 ? (
+            <div className="tip-comment-list">
+              {feedback.comments.map((comment) => (
+                <div key={comment.id} className="tip-comment-item">
+                  <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
+                  <div className="tip-comment-body">
+                    <div className="tip-comment-meta">
+                      <strong>{comment.author}</strong>
+                      <span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span>
+                    </div>
+                    <p>{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="tip-comments-empty">Brak nowych komentarzy. Dodaj pierwszy komentarz.</div>
+          )}
+        </div>
+      )}
+    </article>
+  )
+}
+
 function ReferralsView({ user, data, loading, onRefresh }) {
   const liveUsers = ['KT', 'SM', 'PK', 'BJ', 'AM', 'GT', 'VR']
   const feedPosts = [
