@@ -1,0 +1,5 @@
+Wersja 509
+- Rozszerzono tłumaczenie dashboardu po wyborze języka PL/EN/DE/ES/RU.
+- Dodano automatyczny translator renderowanego interfejsu, który tłumaczy także elementy dynamicznie pojawiające się po zalogowaniu.
+- Translator obsługuje teksty z menu, topbara, marketplace, live chat, rankingów, kart typów, alertów, przycisków i placeholderów.
+- Poprawka zachowuje wybór języka z localStorage i działa po przejściu z logowania do dashboardu.

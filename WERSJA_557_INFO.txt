@@ -1,0 +1,5 @@
+WERSJA 557
+- Topbar przerobiony na bardziej premium/glass/LED.
+- Mocniejsze podświetlenia, głębszy granat, lepsze hover efekty i bardziej luksusowe przyciski.
+- Zachowany zmniejszony search i przestrzeń dla przycisków.
+- Paczka lekka: bez node_modules i bez dist.

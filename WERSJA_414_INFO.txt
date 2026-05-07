@@ -1,0 +1,6 @@
+Wersja 414
+- Bet+AI Coin ustawiony jako pełna warstwa całego section.betai-animated-hero, nie jako obrazek w środku betai-hero-copy
+- dodano img.betai-hero-full-coin-bg bezpośrednio w sekcji hero
+- przy aktywnym slajdzie coin ukryty jest stary rotator/copy, a statystyki MECZÓW DZIŚ pozostają na wierzchu po prawej
+- górny przycisk saldo/żetony niebieski jak Wyloguj
+- Żetony w lewej kolumnie niebieskie

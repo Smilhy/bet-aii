@@ -1,0 +1,6 @@
+Wersja 479
+- Poprawiono żywy ekran logowania tak, żeby nie zasłaniał grafiki ciemnymi polami.
+- Przywrócono czysty wygląd zdjęcia z wersji 476: bez ucinania, bez przesuniętych czarnych ramek i bez dodatkowego dolnego paska statusu.
+- Klikalne obszary Zaloguj się / Zarejestruj się oraz pola formularza zostały dopasowane do oryginalnych ramek z obrazu.
+- Pola są aktywne, ale nie zmieniają wyglądu grafiki; widoczny jest tylko wpisywany tekst i delikatna ramka podczas focusu.
+- Dashboard i reszta aplikacji bez zmian.

@@ -1,0 +1,1 @@
+WERSJA 578: topbar profil zmieniony na styl jak inne przyciski / bez niebieskiego tła.

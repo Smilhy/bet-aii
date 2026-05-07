@@ -1,0 +1,7 @@
+Wersja 467
+- poprawione dopasowanie prawej strony, żeby cała grafika mieściła się lepiej w ramce
+- podmienione logo na poprawniejszy crop z aktualnej referencji
+- dodane i ustawione fonty Inter + Montserrat, bliższe referencji
+- poprawione proporcje i spacing auth layoutu
+- zachowana żywa logika panelu logowania/rejestracji
+- nowy dist produkcyjny

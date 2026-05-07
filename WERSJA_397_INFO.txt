@@ -1,0 +1,5 @@
+Wersja 397
+- naprawa deploy Netlify: usunięto node_modules z paczki, żeby Netlify sam zainstalował zależności
+- usuwa błąd: esbuild EACCES podczas budowania
+- zachowany nowy biały Bet+AI Coin w slajdzie hero dashboardu
+- nie ruszono tabeli "MECZÓW DZIŚ" w hero — zostaje po prawej stronie

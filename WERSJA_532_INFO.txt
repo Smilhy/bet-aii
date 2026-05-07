@@ -1,0 +1,4 @@
+Wersja 532
+- Zmieniono nazwę zakładki Polecenia na Społeczność.
+- Zakładka Społeczność została zastąpiona statycznym widokiem ultra-pro inspirowanym screenshotem.
+- Odtworzono środkową i prawą kolumnę w układzie na sztywno.

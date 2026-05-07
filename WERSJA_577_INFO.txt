@@ -1,0 +1,1 @@
+Wersja 577: poprawka tylko prawej kolumny — obniżona w dół względem wyszukiwarki/lewej kolumny. Bez zmian lewej kolumny, środka, szerokości i kolorów.

@@ -1,0 +1,3 @@
+Wersja 513
+- przeniesiono przełącznik języka do prawego górnego rogu
+- dodano realne flagi krajów zamiast skrótów PL/EN/DE/ES/RU

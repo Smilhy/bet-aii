@@ -1,0 +1,6 @@
+Wersja 478
+- Przywrócony został wygląd ekranu startowego bez ucinania i bez dodatkowych czarnych pasków / ramek zasłaniających obraz.
+- Zachowano oryginalne proporcje grafiki jak w poprzedniej poprawnej wersji.
+- Dodano żywy panel logowania/rejestracji poprzez niewidoczne, dopasowane klikalne obszary na obrazie.
+- Przyciski „Zaloguj się” i „Zarejestruj się” działają, pola formularza są aktywne i dopasowane do oryginalnego layoutu grafiki.
+- Zostawiono subtelne animacje premium bez zmiany ogólnego wyglądu ekranu.

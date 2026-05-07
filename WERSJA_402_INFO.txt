@@ -1,0 +1,5 @@
+Wersja 402
+- przerobiony slajd Bet+AI Coin tak, aby wtapiał się w środkową ramkę hero
+- nowy PNG z miękkimi transparentnymi krawędziami i lepszym kadrem pod hero
+- CSS hero dopasowany tak, aby banner wyglądał jak natywny slajd hero, bez twardej ramki
+- nie ruszono układu MECZÓW DZIŚ po prawej stronie

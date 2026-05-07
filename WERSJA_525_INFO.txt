@@ -1,0 +1,5 @@
+Wersja 525:
+- Poprawiony baner hero: prawa ramka live statystyk dopasowana do hero.
+- Usunięty efekt nachodzenia/ucięcia napisów w czerwonym obszarze ze screena.
+- Dodana mocniejsza maska pod prawą ramką, żeby stare elementy slajdu nie prześwitywały.
+- Statystyki są mniejsze, czytelne i mieszczą się w ramce: Mecze dziś, Skuteczność, ROI, Premium, Dzisiejsza data.

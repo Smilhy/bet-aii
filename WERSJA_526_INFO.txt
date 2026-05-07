@@ -1,0 +1,5 @@
+WERSJA 526
+- Panel logowania/rejestracji (logo + formularz + prawa grafika) ma wizualnie 80% skali jak na przesłanym zrzucie; skalowanie dotyczy tylko ekranu auth.
+- Po zalogowaniu aplikacja używa pełnej szerokości ekranu.
+- Dashboard oraz wszystkie zakładki z menu (Dodaj typ, Typy AI, Portfel, Profil, Ranking, Powiadomienia, Płatności, Subskrypcja, Zarobki, Wypłaty, Admin) mają układ full screen.
+- Układ prawego panelu/tabeli „Mecze dziś” w hero dashboardu został zachowany.

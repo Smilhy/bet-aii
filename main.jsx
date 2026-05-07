@@ -612,20 +612,20 @@ function formatMoney(value) {
 
 const ULTRA_PAGE_BANNERS = {
   dashboard: '/ultra-dashboard-banner.png',
-  articles: '/ultra-articles-banner.webp',
-  add: '/ultra-add-banner.webp',
-  wallet: '/ultra-wallet-banner.webp',
-  profile: '/ultra-profile-banner.webp',
-  leaderboard: '/ultra-ranking-banner.webp',
-  referrals: '/ultra-referrals-banner.webp',
-  notifications: '/ultra-notifications-banner.webp',
-  payments: '/ultra-payments-banner.webp',
-  subscriptions: '/ultra-subscription-banner.webp',
-  earnings: '/ultra-earnings-banner.webp',
-  payouts: '/ultra-payouts-banner.webp',
-  adminFinance: '/ultra-admin-finance-banner.webp',
-  adminPayouts: '/ultra-admin-payouts-banner.webp',
-  aiPicks: '/ultra-ai-banner.webp'
+  articles: '/ultra-articles-banner.png',
+  add: '/ultra-add-banner.png',
+  wallet: '/ultra-wallet-banner.png',
+  profile: '/ultra-profile-banner.png',
+  leaderboard: '/ultra-ranking-banner.png',
+  referrals: '/ultra-referrals-banner.png',
+  notifications: '/ultra-notifications-banner.png',
+  payments: '/ultra-payments-banner.png',
+  subscriptions: '/ultra-subscription-banner.png',
+  earnings: '/ultra-earnings-banner.png',
+  payouts: '/ultra-payouts-banner.png',
+  adminFinance: '/ultra-admin-finance-banner.png',
+  adminPayouts: '/ultra-admin-payouts-banner.png',
+  aiPicks: '/ultra-ai-banner.png'
 }
 
 function UltraPageBanner({ variant = 'dashboard', children = null }) {
@@ -690,12 +690,12 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero() {
   const heroSlides = [
-    { src: '/dashboard-hero-v551/slide-1.webp', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
-    { src: '/dashboard-hero-v551/slide-2.webp', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: '/dashboard-hero-v551/slide-3.webp', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
-    { src: '/dashboard-hero-v551/slide-4.webp', alt: 'Bet+AI community — społeczność typerów i live chat' },
-    { src: '/dashboard-hero-v551/slide-5.webp', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
-    { src: '/dashboard-hero-v551/slide-6.webp', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
+    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
   const [isHeroPaused, setIsHeroPaused] = useState(false)

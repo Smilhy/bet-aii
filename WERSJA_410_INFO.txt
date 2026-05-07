@@ -1,0 +1,7 @@
+Wersja 410
+- nowy szeroki asset hero coin przygotowany specjalnie pod pełną lewą/środkową ramkę hero
+- coin slide wypełnia całą zaznaczoną ramkę do samego dołu, bez pustego pasa
+- obraz ustawiony z object-position:left center, żeby pełny napis Bet+AI Coin był widoczny
+- górny przycisk saldo/żetony ma niebieski styl jak Wyloguj
+- Żetony w lewej kolumnie mają niebieski kolor
+- prawa kolumna MECZÓW DZIŚ pozostaje bez zmian

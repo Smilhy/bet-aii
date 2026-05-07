@@ -1,0 +1,8 @@
+WERSJA 562
+
+Zmiany dashboardu:
+- zmniejszono lekko środkową kolumnę
+- powiększono prawą kolumnę, żeby nic nie było ucinane
+- poprawiono estetykę i czytelność prawej kolumny
+- live chat ma więcej miejsca i nie jest już tak ściśnięty
+- poprawka dotyczy układu dashboardu desktop

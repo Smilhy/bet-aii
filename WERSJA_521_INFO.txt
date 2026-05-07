@@ -1,0 +1,5 @@
+Wersja 521
+- zasłonięto sztuczne statystyki wbudowane w obrazy hero na każdym slajdzie
+- powiększono i dopasowano realną ramkę statystyk po prawej stronie hero
+- dodano mocniejszą poświatę ramki banera hero
+- zachowano klikane kropki i sweep światła

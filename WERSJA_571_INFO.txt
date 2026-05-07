@@ -1,0 +1,7 @@
+WERSJA 571
+
+Zmiany:
+- prawa kolumna została poszerzona o kolejne około 5%
+- lewa kolumna bez zmian
+- środkowa kolumna, hero i wyszukiwanie bez zmian
+- kolory bez zmian

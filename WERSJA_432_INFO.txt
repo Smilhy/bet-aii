@@ -1,0 +1,6 @@
+Wersja 432
+- dodano do zakładki Mój profil widok "Moje typy i statystyki" na podstawie przesłanego projektu
+- dodane karty skuteczności, ROI, zysku i aktywnych typów
+- dodana tabela Moje typy, filtry, wykres wyników, donut skuteczności, karty Najlepsza dyscyplina / Średni kurs i pasek Wskazówka AI
+- nie ruszano dashboardu, hero, tabeli MECZÓW DZIŚ ani czatu
+- zachowany bezpieczny build Netlify/esbuild

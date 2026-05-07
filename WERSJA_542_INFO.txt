@@ -1,0 +1,4 @@
+Wersja 542
+- Usunięto zakładkę "News" z górnych zakładek sekcji Artykuły/TV Live.
+- Zostawiono: Artykuły, Żywa, TV / PPV, Wyniki live.
+- Build produkcyjny wykonany poprawnie: npm run build.

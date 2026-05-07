@@ -1,0 +1,4 @@
+Wersja 405
+- baner Bet+AI Coin dopasowany do całej środkowej ramki hero
+- nowy szeroki crop grafiki, żeby wypełniał centralny obszar jak na podglądzie
+- prawa kolumna MECZÓW DZIŚ nie została ruszona
