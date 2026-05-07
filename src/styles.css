@@ -24161,3 +24161,23 @@ font[style*="border"]{
   .auth609-artboard::before,
   .auth609-artboard::after{display:none!important;}
 }
+
+/* =========================================================
+   WERSJA 632 — statystyki znowu maksymalnie do lewej krawędzi
+   Cofnięcie bocznej ramki statystyk bliżej lewej strony jak wcześniej.
+   ========================================================= */
+.auth609-screen .auth623-side-live.auth624-side-live{
+  left:-1px!important;
+  right:auto!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  margin-left:0!important;
+  border-left:0!important;
+  border-radius:0 22px 22px 0!important;
+  z-index:10050!important;
+}
+@media(min-width:1101px){
+  .auth609-screen .auth623-side-live.auth624-side-live{
+    left:-2px!important;
+  }
+}
