@@ -22963,3 +22963,39 @@ img,video,canvas,svg{max-width:100%;}
     transform:translateX(-8px) !important;
   }
 }
+
+/* =========================================================
+   WERSJA 621 — logo większe i lekko wyżej / w lewo
+   ========================================================= */
+.auth620-fused-logo,
+.auth619-fused-logo.auth620-fused-logo{
+  width:505px !important;
+  max-width:505px !important;
+  margin:0 auto 10px !important;
+  transform:translate(-30px, -20px) !important;
+  opacity:.86 !important;
+  filter:drop-shadow(0 0 26px rgba(0,229,255,.26)) saturate(1.1) brightness(1.04) !important;
+}
+.auth620-subtitle-main,
+.auth609-subtitle-main.auth620-subtitle-main{
+  margin-top:-10px !important;
+}
+.auth609-heading-center{
+  margin-bottom:30px !important;
+}
+@media (max-width:1100px){
+  .auth620-fused-logo,
+  .auth619-fused-logo.auth620-fused-logo{
+    width:455px !important;
+    max-width:455px !important;
+    transform:translate(-22px, -16px) !important;
+  }
+}
+@media (max-width:640px){
+  .auth620-fused-logo,
+  .auth619-fused-logo.auth620-fused-logo{
+    width:320px !important;
+    max-width:320px !important;
+    transform:translate(-10px, -10px) !important;
+  }
+}
