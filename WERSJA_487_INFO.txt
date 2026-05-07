@@ -1,5 +1,0 @@
-Wersja 487
-- Lewa kolumna pozostawiona bez zmian funkcjonalnych.
-- Skorygowano położenie aktywnej zakładki: „Zaloguj się” lekko wyżej, „Zarejestruj się” lekko niżej.
-- Prawą kolumnę przesunięto delikatnie wyżej.
-- Zachowano wcześniejszą poświatę i brak efektu wklejonego panelu.

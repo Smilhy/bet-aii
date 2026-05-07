@@ -1,6 +1,0 @@
-Wersja 465
-- panel auth przebudowany jako żywy panel 1:1 na bazie referencyjnego wyglądu
-- zachowany wygląd referencji: logo, lewa kolumna, zakładki, pola, checkbox, przycisk, prawa sekcja i dolne boksy
-- lewa strona to prawdziwy HTML/CSS z żywymi polami i przyciskami
-- logika logowania/rejestracji została zachowana
-- zbudowany nowy dist produkcyjny

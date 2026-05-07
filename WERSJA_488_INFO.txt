@@ -1,5 +1,0 @@
-Wersja 488
-- Dostosowano pozycję prawej kolumny zależnie od aktywnej zakładki.
-- Dla „Zaloguj się” prawa kolumna jest lekko wyżej.
-- Dla „Zarejestruj się” prawa kolumna jest lekko niżej.
-- Pozostały wygląd został zachowany.

@@ -1,5 +1,0 @@
-Wersja 481
-- Zamiast samego wklejenia obrazu, lewy panel został odtworzony jako prawdziwy interfejs logowania/rejestracji na podstawie grafiki referencyjnej.
-- Prawa kolumna została zachowana na bazie poprawnego wyglądu referencyjnego i nie była ruszana funkcjonalnie.
-- Dodano nowy, realny formularz z przyciskami Zaloguj się / Zarejestruj się, polami input, checkboxem regulaminu i przyciskiem submit.
-- Układ został wyrównany tak, aby wyglądał jak realny banner, a nie klikane nakładki na zdjęciu.

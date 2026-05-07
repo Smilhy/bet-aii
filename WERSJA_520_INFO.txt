@@ -1,5 +1,0 @@
-Wersja 520
-- mocniejszy widoczny sweep światła przez hero baner
-- banery bardziej wtopione w tło: dodatkowe cienie, vignette i glow
-- wyostrzone slajdy przez filtr brightness/contrast/saturation
-- przywrócone realne statystyki jako szklane karty na prawym boku hero na większych ekranach

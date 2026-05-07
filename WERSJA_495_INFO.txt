@@ -1,4 +1,0 @@
-Wersja 495
-- Zmniejszono wysokość zakładki „Zarejestruj się”, aby nie powodowała scrollowania.
-- Skondensowano odstępy, wysokości pól, checkbox, przycisk i sekcję social tylko dla rejestracji.
-- Delikatnie zmniejszono dolne kafelki informacyjne, aby całość lepiej mieściła się na ekranie.

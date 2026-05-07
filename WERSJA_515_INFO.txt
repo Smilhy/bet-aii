@@ -1,4 +1,0 @@
-Wersja 515
-- naprawiono flagi języków: zamiast niewidocznych obrazków są realnie rysowane okrągłe flagi CSS
-- przełącznik języka zostaje w prawym górnym rogu
-- nie wymaga żadnego SQL

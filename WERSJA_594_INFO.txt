@@ -1,2 +1,0 @@
-WERSJA 594
-Poprawione medalowe kolory miejsc 1/2/3 w prawej ramce rankingu oraz spójny wygląd odznak w tabeli rankingu.

@@ -1,1 +1,0 @@
-Wersja 384: poprawiony realny błysk banerów. Dodana osobna warstwa <span> w komponencie UltraPageBanner, więc efekt będzie widoczny na stronie co 3 sekundy.

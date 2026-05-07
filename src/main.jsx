@@ -560,7 +560,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 return (
     <aside className="sidebar">
       <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
-        <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
+        <img src="/betai-sidebar-logo-new.webp" alt="Bet+AI" className="sidebar-logo-image" />
       </div>
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
@@ -615,20 +615,20 @@ function formatMoney(value) {
 
 const ULTRA_PAGE_BANNERS = {
   dashboard: '/ultra-dashboard-banner.png',
-  articles: '/ultra-articles-banner.png',
-  add: '/ultra-add-banner.png',
-  wallet: '/ultra-wallet-banner.png',
-  profile: '/ultra-profile-banner.png',
-  leaderboard: '/ultra-ranking-banner.png',
-  referrals: '/ultra-referrals-banner.png',
-  notifications: '/ultra-notifications-banner.png',
-  payments: '/ultra-payments-banner.png',
-  subscriptions: '/ultra-subscription-banner.png',
-  earnings: '/ultra-earnings-banner.png',
-  payouts: '/ultra-payouts-banner.png',
-  adminFinance: '/ultra-admin-finance-banner.png',
-  adminPayouts: '/ultra-admin-payouts-banner.png',
-  aiPicks: '/ultra-ai-banner.png'
+  articles: '/ultra-articles-banner.webp',
+  add: '/ultra-add-banner.webp',
+  wallet: '/ultra-wallet-banner.webp',
+  profile: '/ultra-profile-banner.webp',
+  leaderboard: '/ultra-ranking-banner.webp',
+  referrals: '/ultra-referrals-banner.webp',
+  notifications: '/ultra-notifications-banner.webp',
+  payments: '/ultra-payments-banner.webp',
+  subscriptions: '/ultra-subscription-banner.webp',
+  earnings: '/ultra-earnings-banner.webp',
+  payouts: '/ultra-payouts-banner.webp',
+  adminFinance: '/ultra-admin-finance-banner.webp',
+  adminPayouts: '/ultra-admin-payouts-banner.webp',
+  aiPicks: '/ultra-ai-banner.webp'
 }
 
 function UltraPageBanner({ variant = 'dashboard', children = null }) {
@@ -693,12 +693,12 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero() {
   const heroSlides = [
-    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
-    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
-    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
-    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
-    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
+    { src: '/dashboard-hero-v551/slide-1.webp', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.webp', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.webp', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.webp', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.webp', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.webp', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
   const [isHeroPaused, setIsHeroPaused] = useState(false)
@@ -1659,42 +1659,6 @@ function Toast({ toast, onClose }) {
         {toast.cta && <button type="button" className="toast-cta" onClick={runAction}>{toast.cta}</button>}
       </div>
       <button className="toast-close" onClick={onClose}>×</button>
-    </div>
-  )
-}
-
-
-function LiveTipCenterPopup({ popup, open, onClose }) {
-  if (!popup) return null
-
-  const author = popup.author_name || 'Użytkownik'
-  const league = popup.league || 'Liga'
-  const matchLine = `${popup.team_home || 'Drużyna 1'} vs ${popup.team_away || 'Drużyna 2'}`
-  const tipLabel = popup.bet_type || 'Nowy typ'
-  const oddsLabel = Number(popup.odds || 0) > 0 ? `Kurs ${Number(popup.odds).toFixed(2)}` : 'Nowy typ'
-
-  return (
-    <div className={`live-tip-center-overlay ${open ? 'is-visible' : 'is-hiding'}`}>
-      <div className={`live-tip-center-card ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
-        <button type="button" className="live-tip-center-close" onClick={onClose} aria-label="Zamknij powiadomienie">×</button>
-        <div className="live-tip-center-kicker">NOWY TIP</div>
-        <div className="live-tip-center-content">
-          <div className="live-tip-center-icon" aria-hidden="true">
-            <img src="/betai-topbar-coin.png" alt="" />
-          </div>
-          <div className="live-tip-center-copy">
-            <strong>{author} dodał typ</strong>
-            <span>{matchLine}</span>
-          </div>
-        </div>
-        <div className="live-tip-center-pills">
-          <span>{league}</span>
-          <span>{tipLabel}</span>
-          <span>{oddsLabel}</span>
-        </div>
-        <div className="live-tip-center-subline">Powiadomienie znika automatycznie po 5 sekundach</div>
-        <div className={`live-tip-center-progress ${open ? 'run' : ''}`} />
-      </div>
     </div>
   )
 }
@@ -4895,7 +4859,7 @@ function AuthView({ onAuth }) {
       <div className="auth481-wrap">
         <div className="auth481-top-grid">
           <section className="auth481-left-card">
-            <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
+            <img src="/auth-brand-470-transparent.webp" alt="Bet+AI" className="auth481-logo" draggable="false" />
 
             <h1 className="auth481-title">
               {t.heroLine1}
@@ -5053,7 +5017,7 @@ function AuthView({ onAuth }) {
           </section>
 
           <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`}>
-            <img src="/auth-right-484.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
+            <img src="/auth-side-bg-615.webp" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
 
             <div className="auth481-live-panel" aria-label="Realne statystyki live Bet+AI">
               <div className="auth481-live-panel-head">
@@ -6780,42 +6744,6 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
-  const [liveTipPopup, setLiveTipPopup] = useState(null)
-  const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
-  const liveTipPopupTimerRef = useRef(null)
-  const liveTipPopupHideTimerRef = useRef(null)
-  const lastLiveTipIdRef = useRef('')
-
-  function hideLiveTipPopup() {
-    setLiveTipPopupVisible(false)
-    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
-    liveTipPopupHideTimerRef.current = setTimeout(() => setLiveTipPopup(null), 320)
-  }
-
-  function showLiveTipPopup(rawTip) {
-    const incomingTip = normalizeTipRow(rawTip || {})
-    const nextId = String(incomingTip?.id || '')
-    if (!nextId) return
-    if (lastLiveTipIdRef.current === nextId) return
-    if (String(getTipAuthorId(incomingTip) || '') === String(sessionUser?.id || '')) return
-
-    lastLiveTipIdRef.current = nextId
-
-    if (liveTipPopupTimerRef.current) clearTimeout(liveTipPopupTimerRef.current)
-    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
-
-    setLiveTipPopup(incomingTip)
-    setLiveTipPopupVisible(true)
-
-    liveTipPopupTimerRef.current = setTimeout(() => {
-      setLiveTipPopupVisible(false)
-    }, 4700)
-
-    liveTipPopupHideTimerRef.current = setTimeout(() => {
-      setLiveTipPopup(null)
-    }, 5200)
-  }
-
 
   function changeAppLanguage(nextLang) {
     if (!BETAI_LANGUAGES.includes(nextLang)) return
@@ -7009,26 +6937,6 @@ function App() {
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
   }
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase || !sessionUser?.id) return undefined
-
-    const channel = supabase
-      .channel(`betai-live-tip-center-${sessionUser.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
-        const incomingTip = normalizeTipRow(payload?.new || {})
-        if (!incomingTip?.id) return
-
-        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
-        showLiveTipPopup(incomingTip)
-        fetchRealRanking()
-      })
-      .subscribe()
-
-    return () => {
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [sessionUser?.id])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) {
@@ -8341,7 +8249,6 @@ function App() {
     <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
-      <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
         tip={selectedPayment}
@@ -8370,7 +8277,7 @@ function App() {
               </span>
               <span className="wallet-split-divider" aria-hidden="true" />
               <span className="wallet-split-segment wallet-split-tokens">
-                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.png" alt="" /></span>
+                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.webp" alt="" /></span>
                 <span className="wallet-split-token-copy">
                   <strong>{Number(tokenBalance || 0)}</strong>
                   <small>Żetony</small>

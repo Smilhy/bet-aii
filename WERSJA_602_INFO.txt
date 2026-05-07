@@ -1,2 +1,0 @@
-WERSJA 602
-Poprawione: Toptyperzy po prawej miejsca 1/2/3 wymuszone jako złoto/srebro/brąz; tekst wysłanych wiadomości w support chat ustawiony na czarny.

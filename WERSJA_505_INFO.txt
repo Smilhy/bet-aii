@@ -1,5 +1,0 @@
-Wersja 505
-- Dopasowano kolorystykę ekranu logowania/rejestracji do głównego dashboardu: ciemny navy + teal/emerald/cyan.
-- Zachowano efekt żywego błysku / sweep z wersji 504.
-- Poprawiono komunikat dla email rate limit exceeded.
-- Dodano instrukcję SUPABASE_RATE_LIMIT_505_INFO.txt: limit 200/500 ustawia się w Supabase Auth po podłączeniu Custom SMTP, nie w kodzie aplikacji.

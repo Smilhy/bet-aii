@@ -1,3 +1,0 @@
-Wersja 534
-- Zakładka Typy AI została zastąpiona statycznym widokiem inspirowanym screenshotem.
-- Odtworzono środkową i prawą kolumnę na sztywno, w stylu ultra-pro / glass / sharpen.

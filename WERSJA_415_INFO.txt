@@ -1,6 +1,0 @@
-Wersja 415
-- coin hero poprawiony jako całe section hero, ale z mniejszym przybliżeniem (już nie cover)
-- obraz wypełnia środkową kolumnę po szerokości, a nie jest sztucznie zzoomowany
-- statystyki po prawej mają bardziej przezroczyste tło
-- górny przycisk saldo/żetony pozostaje niebieski jak Wyloguj
-- Żetony w lewej kolumnie pozostają niebieskie

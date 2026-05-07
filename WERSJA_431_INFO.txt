@@ -1,5 +1,0 @@
-Wersja 431
-- bazą jest wrzucona paczka wersja_422_coin_hero_ramki_stykaja_sie.zip
-- zakładka Mój profil została wyczyszczona do zera pod nową zawartość
-- nie ruszano dashboardu, hero, tabeli Mecze dziś, czatu ani pozostałych zakładek
-- dodany bezpieczniejszy build command dla Netlify/esbuild

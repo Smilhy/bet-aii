@@ -1,1 +1,0 @@
-Wersja 380: bannery wgrane do projektu i wymuszone identyczne proporcje 1916x821 jak Ranking. Bez cropowania/rozmazywania. Build OK.

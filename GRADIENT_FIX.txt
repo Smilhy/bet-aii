@@ -1,1 +1,0 @@
-Fixed smooth gradient animation (moving gradient instead of full color switch).

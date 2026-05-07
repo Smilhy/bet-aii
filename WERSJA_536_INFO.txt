@@ -1,2 +1,0 @@
-Wersja 536
-- Usunięto całkowicie z menu bocznego zakładkę Moje subskrypcje.

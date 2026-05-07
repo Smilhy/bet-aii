@@ -1,1 +1,0 @@
-Wersja 540: poprawiono zakładkę Żywa — pobiera i wyświetla banery/miniatury Sport.pl, dodano proxy obrazów Netlify, RSS jako zapasowe źródło i mocniejsze kafelki LIVE. SQL Supabase nie jest wymagany do samego pobierania wiadomości.

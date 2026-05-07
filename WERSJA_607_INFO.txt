@@ -1,2 +1,0 @@
-WERSJA 607
-Dashboard polish bez zmiany układu: spójniejszy niebiesko-turkusowy akcent, lepsze odstępy i hierarchia w prawej kolumnie, licznik Pokazano X z Y typów pod feedem.

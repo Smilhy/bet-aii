@@ -1,5 +1,0 @@
-Wersja 500
-- Dodano naprawę błędu Supabase: Database error saving new user.
-- Dodano plik SUPABASE_RUN_ONCE_FIX_REGISTER_500.sql do uruchomienia w Supabase SQL Editor.
-- Nowy trigger tworzenia profilu jest odporny na błędy i nie blokuje rejestracji.
-- Zachowano wszystkie poprawki z wersji 499.

@@ -1,5 +1,0 @@
-Wersja 445:
-- Poprawiony 2. slajd hero (Bet+AI Coin).
-- Zmniejszony zoom slajdu.
-- Przesunięte kadrowanie tak, żeby lewa strona nie była zjadana.
-- Reszta zmian z wersji 444 zostaje bez zmian.

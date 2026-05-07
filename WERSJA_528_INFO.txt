@@ -1,4 +1,0 @@
-Wersja 528
-- Zakładka Portfel została zastąpiona statycznym widokiem ultra-pro na podstawie screena.
-- Skopiowane wizualnie środkowa i prawa kolumna.
-- Widok jest na sztywno (bez dynamicznej logiki portfela).

@@ -1,1 +1,0 @@
-WERSJA 580: AI Analiza zmieniona na Analiza użytkownika dla typów dodanych przez użytkowników.

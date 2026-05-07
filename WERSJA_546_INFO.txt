@@ -1,6 +1,0 @@
-WERSJA 546
-- Dashboard otrzymał nową, sztywną kolorystykę wg przesłanego screena.
-- Motyw: ciemny navy + neonowy cyan/turkus.
-- Zmienione: topbar, search, hero, statystyki, filtry, karty tipów, prawa kolumna i live chat.
-- Loader i login pozostawione bez zmian.
-- Paczka lekka: bez node_modules i bez dist.

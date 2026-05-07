@@ -1,9 +1,0 @@
-WERSJA 388 — przeniesione powiadomienia BetAI z paczki referencyjnej.
-
-Zmiany:
-- dzwonek w topbarze otwiera popup „Wiadomości BetAI” zamiast przełączać widok,
-- popup pokazuje Twoje żetony, liczbę nowych wiadomości, komunikaty admina/BetAI oraz nagrody w żetonach,
-- pobieranie powiadomień działa z tabeli betai_system_notifications oraz dotychczasowej tabeli notifications,
-- przycisk ✓ oznacza jako przeczytane w obu systemach,
-- dodany pasek ŻETONY przy portfelu w topbarze,
-- zachowany aktualny live chat i cała wersja 387 jako baza.

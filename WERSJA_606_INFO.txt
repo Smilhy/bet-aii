@@ -1,2 +1,0 @@
-WERSJA 606
-Bonusy live chatu: pierwsza wiadomość dnia +1 żeton i powiadomienie. Lider czatu: funkcja SQL do uruchomienia o 00:00 za poprzednią dobę, FREE +1, PREMIUM +2, z antyspamem i powiadomieniem.
