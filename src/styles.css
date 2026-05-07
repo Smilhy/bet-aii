@@ -22541,3 +22541,96 @@ img,video,canvas,svg{max-width:100%;}
 @media (max-width: 640px){
   .auth609-center-wrap{width:100%; padding:24px 14px 18px;}
 }
+
+/* =========================================================
+   WERSJA 612 — poprawa: cały content dokładnie po środku
+   ========================================================= */
+.auth609-left-panel{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.auth609-panel-shell-fixed{
+  width:100% !important;
+  height:100% !important;
+  padding:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.auth609-center-wrap{
+  width:512px !important;
+  max-width:512px !important;
+  margin:0 auto !important;
+  padding:0 !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  align-items:stretch !important;
+  transform:translateY(-2px) !important;
+}
+.auth609-top-spacer{
+  display:none !important;
+}
+.auth609-heading-center{
+  width:512px !important;
+  margin:0 auto 34px !important;
+}
+.auth609-welcome{
+  font-size:62px !important;
+  line-height:.98 !important;
+  white-space:nowrap !important;
+}
+.auth609-subtitle-main{
+  margin-top:16px !important;
+}
+.auth609-tabs-fixed{
+  width:512px !important;
+  max-width:512px !important;
+  margin:0 auto 34px !important;
+}
+.auth609-form-fixed{
+  width:512px !important;
+  max-width:512px !important;
+  margin:0 auto !important;
+  padding:0 !important;
+}
+.auth609-submit-fixed,
+.auth609-secure-note,
+.auth609-message{
+  width:512px !important;
+  max-width:512px !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+.auth609-submit-fixed{
+  margin-top:40px !important;
+}
+.auth609-secure-note{
+  margin-top:50px !important;
+}
+@media (max-width: 1100px){
+  .auth609-center-wrap,
+  .auth609-heading-center,
+  .auth609-tabs-fixed,
+  .auth609-form-fixed,
+  .auth609-submit-fixed,
+  .auth609-secure-note,
+  .auth609-message{
+    width:512px !important;
+    max-width:512px !important;
+  }
+}
+@media (max-width: 640px){
+  .auth609-center-wrap,
+  .auth609-heading-center,
+  .auth609-tabs-fixed,
+  .auth609-form-fixed,
+  .auth609-submit-fixed,
+  .auth609-secure-note,
+  .auth609-message{
+    width:100% !important;
+    max-width:100% !important;
+  }
+}
