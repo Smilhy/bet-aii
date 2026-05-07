@@ -1,0 +1,1 @@
+WERSJA 628 - szklisty układ widgetów bocznych, poprawione ukrycie ramek tłumaczenia przy zachowaniu tłumaczonych grafik.

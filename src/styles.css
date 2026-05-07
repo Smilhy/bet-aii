@@ -23592,3 +23592,190 @@ font[style*="border"]{
   position:relative!important;
   z-index:1!important;
 }
+
+/* =========================================================
+   WERSJA 628 — szklisty spójny układ bocznych widgetów
+   + tłumaczone grafiki bez widocznych ramek translatora
+   ========================================================= */
+.auth609-screen .auth627-social-dock{
+  right:0!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  gap:8px!important;
+  z-index:85!important;
+}
+.auth609-screen .auth627-social-link{
+  width:88px!important;
+  min-height:50px!important;
+  padding:7px 8px 7px 10px!important;
+  border-radius:18px 0 0 18px!important;
+  background:
+    radial-gradient(circle at 20% 12%,rgba(61,242,225,.18),transparent 34%),
+    linear-gradient(180deg,rgba(7,24,39,.70),rgba(2,9,18,.78))!important;
+  border:1px solid rgba(63,232,255,.24)!important;
+  border-right:0!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -10px 26px rgba(0,0,0,.20),
+    0 14px 34px rgba(0,0,0,.36),
+    0 0 22px rgba(24,220,226,.12)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(132%)!important;
+  backdrop-filter:blur(16px) saturate(132%)!important;
+}
+.auth609-screen .auth627-social-link:hover{
+  transform:translateX(-4px)!important;
+  background:
+    radial-gradient(circle at 20% 12%,rgba(61,242,225,.26),transparent 38%),
+    linear-gradient(180deg,rgba(8,31,49,.82),rgba(2,12,23,.88))!important;
+  border-color:rgba(50,239,217,.42)!important;
+}
+.auth609-screen .auth627-social-icon,
+.auth609-screen .auth627-social-icon svg{
+  width:19px!important;
+  height:19px!important;
+}
+.auth609-screen .auth627-social-link b{
+  font-size:8.5px!important;
+  letter-spacing:-.01em!important;
+}
+
+.auth609-screen .reviews512{
+  left:auto!important;
+  right:82px!important;
+  bottom:19px!important;
+  z-index:9998!important;
+}
+.auth609-screen .reviews512-fab,
+.auth609-screen .support510-fab{
+  background:
+    radial-gradient(circle at 25% 12%,rgba(67,241,226,.20),transparent 38%),
+    linear-gradient(180deg,rgba(7,25,39,.72),rgba(2,10,20,.82))!important;
+  border:1px solid rgba(55,224,255,.25)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 14px 34px rgba(0,0,0,.38),
+    0 0 24px rgba(24,220,226,.13)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(128%)!important;
+  backdrop-filter:blur(16px) saturate(128%)!important;
+}
+.auth609-screen .support510{
+  right:18px!important;
+  bottom:19px!important;
+  z-index:9999!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live{
+  position:fixed!important;
+  left:0!important;
+  right:auto!important;
+  top:50%!important;
+  bottom:auto!important;
+  transform:translateY(-50%)!important;
+  width:205px!important;
+  max-width:205px!important;
+  padding:9px!important;
+  border-radius:0 22px 22px 0!important;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(50,239,217,.18),transparent 38%),
+    linear-gradient(180deg,rgba(5,22,36,.72),rgba(2,9,18,.82))!important;
+  border:1px solid rgba(58,225,255,.25)!important;
+  border-left:0!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -16px 32px rgba(0,0,0,.22),
+    0 18px 42px rgba(0,0,0,.38),
+    0 0 30px rgba(24,220,226,.14)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(132%)!important;
+  backdrop-filter:blur(16px) saturate(132%)!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head{
+  justify-content:flex-end!important;
+  margin-bottom:7px!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head em{
+  background:rgba(31,226,174,.14)!important;
+  border-color:rgba(67,245,226,.32)!important;
+  box-shadow:0 0 18px rgba(31,226,174,.13)!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-list{
+  gap:7px!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:52px!important;
+  padding:8px 9px!important;
+  gap:8px!important;
+  border-radius:14px!important;
+  background:
+    linear-gradient(180deg,rgba(6,24,39,.66),rgba(2,11,21,.76))!important;
+  border:1px solid rgba(55,224,255,.18)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 0 18px rgba(0,213,255,.07)!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon{
+  width:27px!important;
+  height:27px!important;
+  flex:0 0 27px!important;
+  border-radius:10px!important;
+  background:radial-gradient(circle at 34% 25%,rgba(44,239,217,.24),rgba(5,24,39,.74) 64%)!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon svg{
+  width:15px!important;
+  height:15px!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b{
+  font-size:18px!important;
+  line-height:.95!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small{
+  font-size:8.4px!important;
+  line-height:1.12!important;
+  margin-top:3px!important;
+}
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-foot{
+  font-size:7.2px!important;
+  line-height:1.22!important;
+  margin-top:7px!important;
+}
+
+/* Schowanie realnych ramek Google Translate oraz podświetleń tekstu — tłumaczenie zostaje aktywne */
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+.goog-te-menu-frame,
+.goog-tooltip,
+.goog-tooltip:hover,
+#goog-gt-tt,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-yAWNEb-L7lbkb,
+.VIpgJd-yAWNEb-hvhgNd,
+body > iframe[src*="translate.google"],
+body > iframe[id*="goog"],
+body > .skiptranslate{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  width:0!important;
+  height:0!important;
+}
+html.translated-ltr body,
+html.translated-rtl body,
+body{top:0!important;}
+.goog-text-highlight,
+font[style*="background"],
+font[style*="box-shadow"],
+font[style*="border"]{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  outline:0!important;
+  text-decoration:none!important;
+}
+
+@media(max-width:1100px){
+  .auth609-screen .auth627-social-dock{display:none!important;}
+  .auth609-screen .auth623-side-live.auth624-side-live{display:none!important;}
+  .auth609-screen .reviews512{right:78px!important;bottom:18px!important;}
+  .auth609-screen .support510{right:18px!important;bottom:18px!important;}
+}
