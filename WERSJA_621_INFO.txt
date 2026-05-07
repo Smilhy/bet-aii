@@ -1,0 +1,4 @@
+Wersja 621 — lekkie przesunięcie logo w panelu logowania.
+
+- Logo Bet+AI w panelu logowania przesunięte lekko w lewo i lekko do góry.
+- Nie zmieniano pól logowania, przycisków, dashboardu ani pozostałego układu.
