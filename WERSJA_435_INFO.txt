@@ -1,0 +1,6 @@
+Wersja 435
+- logo w sidebarze powiększone
+- logo lekko przesunięte w lewo
+- skrócona ramka/linia nad logo
+- dodany premium glow, oddychanie światłem i rozbłysk/sweep co kilka sekund
+- nie ruszano dashboardu, hero, czatu ani tabeli MECZÓW DZIŚ

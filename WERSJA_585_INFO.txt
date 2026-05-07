@@ -1,0 +1,1 @@
+WERSJA 585: usuniety komunikat o komentarzach historycznych, licznik komentarzy wyzerowany dla wszystkich kart, komentarze zresetowane.

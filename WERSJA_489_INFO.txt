@@ -1,0 +1,5 @@
+Wersja 489
+- Lewa kolumna bez zmian.
+- Powiększono świecącą ramkę / poświatę wokół prawej kolumny.
+- Ramka nie jest już tak ciasna i lepiej obejmuje środek prawego panelu.
+- Zachowano wcześniejsze ustawienie pozycji zależne od zakładki.

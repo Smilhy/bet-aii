@@ -1,0 +1,4 @@
+Wersja 497
+- Naprawiono błąd inputów w panelu logowania/rejestracji.
+- Można teraz normalnie wpisywać pełny email, login i hasło bez klikania po każdej literze.
+- Problem wynikał z odświeżania/remontowania komponentu pola po każdym znaku; pole formularza zostało przeniesione do stabilnego komponentu.

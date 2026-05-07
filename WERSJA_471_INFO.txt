@@ -1,0 +1,7 @@
+Wersja 471
+- Poprawiony panel logowania/rejestracji według ostatniego zaakceptowanego widoku.
+- Logo bez czarnego tła, z żywym glow i wtopieniem w panel.
+- Napis AI w kolorze niebiesko-turkusowym.
+- Przycisk Załóż konto / Zaloguj się ustawiony na cyan/turkus jak w referencji.
+- Dodane ultra-pro wyostrzenie, saturacja, glow i subtelne animacje.
+- Dashboard i pozostałe funkcje bez zmian.

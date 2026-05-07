@@ -1,0 +1,7 @@
+WERSJA 564
+
+Zmiany:
+- zmieniono nazwę zakładki „Ustawienia” na „Nagrody/Bonusy” w lewej kolumnie dashboardu
+- dodano nowy panel Nagrody/Bonusy inspirowany przesłanym screenem
+- wykonano nowy ultra-pro układ: misje, streak, progres, top aktywności, dropy, osiągnięcia, nagrody tokenowe i bonusy premium
+- zachowano estetykę ciemnego, neonowego panelu w stylu BetAI

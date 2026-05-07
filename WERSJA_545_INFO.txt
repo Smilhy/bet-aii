@@ -1,0 +1,5 @@
+WERSJA 545
+- Usunięta prawa kolumna w sekcji Artykuły/TV Live.
+- Główna treść rozciągnięta na całą szerokość.
+- Newsy i kafelki powiększone oraz bardziej czytelne.
+- Paczka lekka: bez node_modules i bez dist.

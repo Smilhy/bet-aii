@@ -1,0 +1,5 @@
+Wersja 496
+- Mocniej zmniejszono lewą kolumnę tylko w zakładce „Zarejestruj się”.
+- Zmniejszono logo, tytuł, odstępy, pola, checkbox, przycisk, social icons i dolne kafelki w trybie rejestracji.
+- Celem jest pełna widoczność bez pionowego scrollowania.
+- Tryb „Zaloguj się” pozostaje bez zmian.

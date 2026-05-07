@@ -1,0 +1,5 @@
+Wersja 475
+- Usunięty stary aktywny ekran logowania/rejestracji z panelami HTML.
+- W jego miejscu dodano nowe zdjęcie użytkownika jako pełny ekran startowy.
+- Zdjęcie zostało przygotowane w 2560x1440 16:9 i wyostrzone do użycia w aplikacji.
+- Loader, dashboard i pozostałe sekcje aplikacji pozostawione bez zmian.

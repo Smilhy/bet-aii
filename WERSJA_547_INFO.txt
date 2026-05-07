@@ -1,0 +1,5 @@
+WERSJA 547
+- W sekcji Artykuły/TV Live usunięto górną zakładkę Artykuły.
+- Zostają: Żywa, TV / PPV, Wyniki live.
+- Loader i login bez zmian.
+- Paczka lekka: bez node_modules i bez dist.

@@ -1,0 +1,8 @@
+Wersja 420
+- wygenerowany nowy hero banner Bet+AI Coin w szerokiej proporcji 8:3
+- lepsza ostrość i naturalniejszy premium wygląd
+- lepsza jakość niż wcześniejsze banery ze screena / mocno przybliżone wersje
+- zachowany efekt lekkiego ruchu / życia bannera
+- statystyki przy tym slajdzie pozostają bardzo przezroczyste
+- górny przycisk saldo/żetony nadal niebieski jak Wyloguj
+- Żetony w lewej kolumnie nadal niebieskie

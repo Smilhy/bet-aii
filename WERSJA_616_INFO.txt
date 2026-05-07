@@ -1,9 +1,0 @@
-Wersja 616 — powiększony panel auth + transparentne logo
-
-Zmiany:
-- powiększony cały panel logowania/rejestracji oraz prawa sekcja wizualna,
-- większe logo, tytuł, pola, przyciski i kafelki,
-- usunięte czarne tło / ramka wokół logo,
-- logo zapisane jako transparentne PNG i wpięte do panelu,
-- funkcje logowania, rejestracji i resetu hasła zachowane,
-- dashboard po zalogowaniu bez zmian.

@@ -1,0 +1,5 @@
+WERSJA 449
+- Wszystkie ramki statystyk w hero są zwężone tak samo jak „MECZÓW DZIŚ” i przesunięte maksymalnie w prawo.
+- Usunięta biała skośna kreska/błysk przy „+ Dodaj typ”.
+- Przycisk „+ Dodaj typ” ma kolor jak „Wyloguj” i nadal pulsuje.
+- 3. slajd jest rozciągnięty góra/dół do ramki.

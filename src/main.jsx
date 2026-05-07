@@ -560,7 +560,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 return (
     <aside className="sidebar">
       <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
-        <img src="/betai-sidebar-logo-new.webp" alt="Bet+AI" className="sidebar-logo-image" />
+        <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
       </div>
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
@@ -615,20 +615,20 @@ function formatMoney(value) {
 
 const ULTRA_PAGE_BANNERS = {
   dashboard: '/ultra-dashboard-banner.png',
-  articles: '/ultra-articles-banner.webp',
-  add: '/ultra-add-banner.webp',
-  wallet: '/ultra-wallet-banner.webp',
-  profile: '/ultra-profile-banner.webp',
-  leaderboard: '/ultra-ranking-banner.webp',
-  referrals: '/ultra-referrals-banner.webp',
-  notifications: '/ultra-notifications-banner.webp',
-  payments: '/ultra-payments-banner.webp',
-  subscriptions: '/ultra-subscription-banner.webp',
-  earnings: '/ultra-earnings-banner.webp',
-  payouts: '/ultra-payouts-banner.webp',
-  adminFinance: '/ultra-admin-finance-banner.webp',
-  adminPayouts: '/ultra-admin-payouts-banner.webp',
-  aiPicks: '/ultra-ai-banner.webp'
+  articles: '/ultra-articles-banner.png',
+  add: '/ultra-add-banner.png',
+  wallet: '/ultra-wallet-banner.png',
+  profile: '/ultra-profile-banner.png',
+  leaderboard: '/ultra-ranking-banner.png',
+  referrals: '/ultra-referrals-banner.png',
+  notifications: '/ultra-notifications-banner.png',
+  payments: '/ultra-payments-banner.png',
+  subscriptions: '/ultra-subscription-banner.png',
+  earnings: '/ultra-earnings-banner.png',
+  payouts: '/ultra-payouts-banner.png',
+  adminFinance: '/ultra-admin-finance-banner.png',
+  adminPayouts: '/ultra-admin-payouts-banner.png',
+  aiPicks: '/ultra-ai-banner.png'
 }
 
 function UltraPageBanner({ variant = 'dashboard', children = null }) {
@@ -693,12 +693,12 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero() {
   const heroSlides = [
-    { src: '/dashboard-hero-v551/slide-1.webp', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
-    { src: '/dashboard-hero-v551/slide-2.webp', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: '/dashboard-hero-v551/slide-3.webp', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
-    { src: '/dashboard-hero-v551/slide-4.webp', alt: 'Bet+AI community — społeczność typerów i live chat' },
-    { src: '/dashboard-hero-v551/slide-5.webp', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
-    { src: '/dashboard-hero-v551/slide-6.webp', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
+    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
   const [isHeroPaused, setIsHeroPaused] = useState(false)
@@ -1659,6 +1659,42 @@ function Toast({ toast, onClose }) {
         {toast.cta && <button type="button" className="toast-cta" onClick={runAction}>{toast.cta}</button>}
       </div>
       <button className="toast-close" onClick={onClose}>×</button>
+    </div>
+  )
+}
+
+
+function LiveTipCenterPopup({ popup, open, onClose }) {
+  if (!popup) return null
+
+  const author = popup.author_name || 'Użytkownik'
+  const league = popup.league || 'Liga'
+  const matchLine = `${popup.team_home || 'Drużyna 1'} vs ${popup.team_away || 'Drużyna 2'}`
+  const tipLabel = popup.bet_type || 'Nowy typ'
+  const oddsLabel = Number(popup.odds || 0) > 0 ? `Kurs ${Number(popup.odds).toFixed(2)}` : 'Nowy typ'
+
+  return (
+    <div className={`live-tip-center-overlay ${open ? 'is-visible' : 'is-hiding'}`}>
+      <div className={`live-tip-center-card ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
+        <button type="button" className="live-tip-center-close" onClick={onClose} aria-label="Zamknij powiadomienie">×</button>
+        <div className="live-tip-center-kicker">NOWY TIP</div>
+        <div className="live-tip-center-content">
+          <div className="live-tip-center-icon" aria-hidden="true">
+            <img src="/betai-topbar-coin.png" alt="" />
+          </div>
+          <div className="live-tip-center-copy">
+            <strong>{author} dodał typ</strong>
+            <span>{matchLine}</span>
+          </div>
+        </div>
+        <div className="live-tip-center-pills">
+          <span>{league}</span>
+          <span>{tipLabel}</span>
+          <span>{oddsLabel}</span>
+        </div>
+        <div className="live-tip-center-subline">Powiadomienie znika automatycznie po 5 sekundach</div>
+        <div className={`live-tip-center-progress ${open ? 'run' : ''}`} />
+      </div>
     </div>
   )
 }
@@ -4642,6 +4678,8 @@ function AuthView({ onAuth }) {
     const email = String(form.email || '').trim().toLowerCase()
     const password = String(form.password || '')
     const username = String(form.username || '').trim()
+    const derivedUsername = username || (email.split('@')[0] || '').replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 24) || `user${Date.now().toString().slice(-6)}`
+    const repeatPassword = String(form.repeatPassword || password)
 
     if (!email) {
       showMessage('error', t.enterEmail)
@@ -4658,18 +4696,16 @@ function AuthView({ onAuth }) {
 
     try {
       if (mode === 'register') {
-        if (!username) throw new Error(t.enterUsername)
         if (password.length < 8) throw new Error(t.shortPassword)
-        if (password !== form.repeatPassword) throw new Error(t.passwordMismatch)
-        if (!form.agree) throw new Error(t.acceptTermsError)
+        if (password !== repeatPassword) throw new Error(t.passwordMismatch)
 
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
-              username,
-              display_name: username
+              username: derivedUsername,
+              display_name: derivedUsername
             }
           }
         })
@@ -4852,240 +4888,119 @@ function AuthView({ onAuth }) {
   ]), [liveStats, authLang])
 
   return (
-    <div className="auth481-screen" aria-label="Bet+AI authentication panel">
-      <div className="auth481-language-corner">
-        <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
-      </div>
-      <div className="auth481-wrap">
-        <div className="auth481-top-grid">
-          <section className="auth481-left-card">
-            <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
+    <div className="auth609-screen" aria-label="Bet+AI authentication panel">
+      <div className="auth609-artboard">
+        <img
+          src="/auth-frame-reference-609.png"
+          alt="Bet+AI screen reference"
+          className="auth609-reference"
+          draggable="false"
+        />
 
-            <h1 className="auth481-title">
-              {t.heroLine1}
-              <br />
-              {t.heroLine2} <span>AI</span>
-            </h1>
+        <div className="auth609-overlay">
+          <section className="auth609-left-panel">
+            <div className="auth609-panel-shell auth609-panel-shell-fixed">
+              <div className="auth609-top-spacer" />
 
-            <p className="auth481-subtitle">
-              {t.subtitle1}
-              <br />
-              {t.subtitle2}
-            </p>
+              <div className="auth609-heading-copy auth609-heading-center">
+                <h1 className="auth609-welcome">Witaj w Bet<span>AI</span></h1>
+                <p className="auth609-subtitle-main">Zaloguj się do swojego konta</p>
+              </div>
 
-            <div className={`auth481-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
-                onClick={() => switchMode('login')}
-              >
-                {t.login}
-              </button>
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
-                onClick={() => switchMode('register')}
-              >
-                {t.register}
-              </button>
-            </div>
+              <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
+                <button
+                  type="button"
+                  className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
+                  onClick={() => switchMode('login')}
+                >
+                  Logowanie
+                </button>
+                <button
+                  type="button"
+                  className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
+                  onClick={() => switchMode('register')}
+                >
+                  Rejestracja
+                </button>
+              </div>
 
-            <form className={`auth481-form auth481-form-${mode}`} onSubmit={handleSubmit} autoComplete="off">
-              {mode === 'register' ? (
+              <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete="off">
                 <AuthField
-                  label={t.username}
-                  value={form.username}
-                  onChange={(event) => updateField('username', event.target.value)}
-                  placeholder={t.usernamePlaceholder}
-                  icon={<IconUser />}
-                  autoComplete="off"
-                  name="betai_username"
+                  label="Email"
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="Wpisz swój email"
+                  icon={<IconMail />}
+                  autoComplete={mode === 'login' ? 'username' : 'email'}
+                  name="betai_email"
                 />
-              ) : null}
 
-              <AuthField
-                label={t.email}
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField('email', event.target.value)}
-                placeholder={t.emailPlaceholder}
-                icon={<IconMail />}
-                autoComplete={mode === 'login' ? 'username' : 'email'}
-                name="betai_email"
-              />
-
-              <AuthField
-                label={t.password}
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={(event) => updateField('password', event.target.value)}
-                placeholder={t.passwordPlaceholder}
-                icon={<IconLock />}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                name="betai_password"
-                rightControl={
-                  <button
-                    type="button"
-                    className="auth481-eye"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    aria-label={showPassword ? t.hidePassword : t.showPassword}
-                  >
-                    <IconEye />
-                  </button>
-                }
-              />
-
-              {mode === 'login' ? (
-                <div className="auth481-login-tools">
-                  <button type="button" className="auth481-link-button" onClick={handleForgotPassword}>
-                    {t.forgot}
-                  </button>
-                  <span className="auth481-login-badge">{t.encrypted}</span>
-                </div>
-              ) : null}
-
-              {mode === 'register' ? (
                 <AuthField
-                  label={t.repeatPassword}
-                  type={showRepeatPassword ? 'text' : 'password'}
-                  value={form.repeatPassword}
-                  onChange={(event) => updateField('repeatPassword', event.target.value)}
-                  placeholder={t.repeatPasswordPlaceholder}
+                  label="Hasło"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(event) => {
+                    updateField('password', event.target.value)
+                    if (mode === 'register') updateField('repeatPassword', event.target.value)
+                  }}
+                  placeholder="Wpisz swoje hasło"
                   icon={<IconLock />}
-                  autoComplete="new-password"
-                  name="betai_repeat_password"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  name="betai_password"
                   rightControl={
                     <button
                       type="button"
                       className="auth481-eye"
-                      onClick={() => setShowRepeatPassword(prev => !prev)}
-                      aria-label={showRepeatPassword ? t.hideRepeat : t.showRepeat}
+                      onClick={() => setShowPassword(prev => !prev)}
+                      aria-label={showPassword ? t.hidePassword : t.showPassword}
                     >
                       <IconEye />
                     </button>
                   }
                 />
-              ) : null}
 
-              {mode === 'register' ? (
-                <label className="auth481-agree">
-                  <input
-                    type="checkbox"
-                    checked={form.agree}
-                    onChange={(event) => updateField('agree', event.target.checked)}
-                  />
-                  <span className="auth481-checkmark" />
-                  <span>
-                    {t.accept1} <strong>{t.terms}</strong> {t.accept2} <strong>{t.privacy}</strong>
-                  </span>
-                </label>
-              ) : null}
-
-              <button type="submit" className="auth481-submit" disabled={submitting}>
-                {submitting ? 'Trwa autoryzacja...' : `${submitLabel} →`}
-              </button>
-              <div className="auth481-submit-note">{submitNote}</div>
-            </form>
-
-            <div className="auth481-social-block" aria-label="Social media Bet+AI">
-              <div className="auth481-social-heading">{t.socialHeading}</div>
-              <div className="auth481-social-row">
-                <a className="auth481-social-link is-telegram" href="#" aria-label="Telegram Bet+AI" title="Telegram">
-                  <span className="auth481-social-icon"><IconTelegram /></span>
-                  <span>Telegram</span>
-                </a>
-                <a className="auth481-social-link is-discord" href="#" aria-label="Discord Bet+AI" title="Discord">
-                  <span className="auth481-social-icon"><IconDiscord /></span>
-                  <span>Discord</span>
-                </a>
-                <a className="auth481-social-link is-instagram" href="#" aria-label="Instagram Bet+AI" title="Instagram">
-                  <span className="auth481-social-icon"><IconInstagram /></span>
-                  <span>Instagram</span>
-                </a>
-                <a className="auth481-social-link is-x" href="#" aria-label="X Bet+AI" title="X">
-                  <span className="auth481-social-icon"><IconX /></span>
-                  <span>X</span>
-                </a>
-              </div>
-            </div>
-
-            {authMessage ? (
-              <div className={`auth481-message ${authMessageType}`} role="status" aria-live="polite">
-                {authMessage}
-              </div>
-            ) : null}
-          </section>
-
-          <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`}>
-            <img src="/auth-side-bg-615.webp" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
-
-            <div className="auth481-live-panel" aria-label="Realne statystyki live Bet+AI">
-              <div className="auth481-live-panel-head">
-                <div>
-                  <span className="auth481-live-kicker">{t.liveKicker}</span>
-                  <strong>{t.liveTitle}</strong>
+                <div className="auth609-remember-row">
+                  <label className="auth609-remember-toggle">
+                    <input
+                      type="checkbox"
+                      checked={form.agree}
+                      onChange={(event) => updateField('agree', event.target.checked)}
+                    />
+                    <span className="auth609-remember-box">✓</span>
+                    <span>Zapamiętaj mnie</span>
+                  </label>
+                  <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
+                    Zapomniałeś hasła?
+                  </button>
                 </div>
-                <span className="auth481-live-badge">
-                  <span className="auth481-live-dot" />
-                  {t.liveBadge}
-                </span>
+
+                <div className="auth609-status-line">
+                  <span>
+                    {mode === 'login' ? 'Gotowy do logowania.' : 'Wpisz email i hasło, aby założyć konto.'}
+                  </span>
+                  <span className="auth609-status-shield"><IconShield /></span>
+                </div>
+
+                <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed" disabled={submitting}>
+                  {submitting ? t.authorizing : mode === 'login' ? 'Zaloguj się' : 'Utwórz konto'}
+                </button>
+              </form>
+
+              <div className="auth609-secure-note">
+                <span className="auth609-secure-icon"><IconShield /></span>
+                <span>Twoje dane są w pełni zabezpieczone</span>
               </div>
 
-              <div className="auth481-live-grid">
-                {liveStatsCards.map(card => (
-                  <div className={`auth481-live-card ${card.accentClass}`} key={card.key}>
-                    <span className="auth481-live-icon">{card.icon}</span>
-                    <div className="auth481-live-copy">
-                      <strong>{card.value}</strong>
-                      <span>{card.label}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="auth481-live-footnote">
-                <span className="auth481-live-footnote-dot" />
-                {liveStats.loading
-                  ? t.liveLoading
-                  : `${t.liveRefresh}${liveStats.updatedAt ? ' • ' + t.lastUpdate + ' ' + new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang === 'de' ? 'de-DE' : authLang === 'es' ? 'es-ES' : authLang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : ''}`}
-              </div>
+              {authMessage ? (
+                <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
+                  {authMessage}
+                </div>
+              ) : null}
             </div>
           </section>
-        </div>
-
-        <div className="auth481-features-grid">
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconShield /></span>
-            <div>
-              <h3>{t.safeData}</h3>
-              <p>{t.safeDataText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconBolt /></span>
-            <div>
-              <h3>{t.fastRegister}</h3>
-              <p>{t.fastRegisterText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconChart /></span>
-            <div>
-              <h3>{t.freeAi}</h3>
-              <p>{t.freeAiText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconUsers /></span>
-            <div>
-              <h3>{t.community}</h3>
-              <p>{t.communityText}</p>
-            </div>
-          </div>
         </div>
       </div>
-      <SiteReviewsWidget />
-      <AuthSupportChatGuest />
     </div>
   )
 }
@@ -6744,6 +6659,42 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+  const [liveTipPopup, setLiveTipPopup] = useState(null)
+  const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
+  const liveTipPopupTimerRef = useRef(null)
+  const liveTipPopupHideTimerRef = useRef(null)
+  const lastLiveTipIdRef = useRef('')
+
+  function hideLiveTipPopup() {
+    setLiveTipPopupVisible(false)
+    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
+    liveTipPopupHideTimerRef.current = setTimeout(() => setLiveTipPopup(null), 320)
+  }
+
+  function showLiveTipPopup(rawTip) {
+    const incomingTip = normalizeTipRow(rawTip || {})
+    const nextId = String(incomingTip?.id || '')
+    if (!nextId) return
+    if (lastLiveTipIdRef.current === nextId) return
+    if (String(getTipAuthorId(incomingTip) || '') === String(sessionUser?.id || '')) return
+
+    lastLiveTipIdRef.current = nextId
+
+    if (liveTipPopupTimerRef.current) clearTimeout(liveTipPopupTimerRef.current)
+    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
+
+    setLiveTipPopup(incomingTip)
+    setLiveTipPopupVisible(true)
+
+    liveTipPopupTimerRef.current = setTimeout(() => {
+      setLiveTipPopupVisible(false)
+    }, 4700)
+
+    liveTipPopupHideTimerRef.current = setTimeout(() => {
+      setLiveTipPopup(null)
+    }, 5200)
+  }
+
 
   function changeAppLanguage(nextLang) {
     if (!BETAI_LANGUAGES.includes(nextLang)) return
@@ -6937,6 +6888,26 @@ function App() {
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
   }
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !sessionUser?.id) return undefined
+
+    const channel = supabase
+      .channel(`betai-live-tip-center-${sessionUser.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
+        const incomingTip = normalizeTipRow(payload?.new || {})
+        if (!incomingTip?.id) return
+
+        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
+        showLiveTipPopup(incomingTip)
+        fetchRealRanking()
+      })
+      .subscribe()
+
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [sessionUser?.id])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) {
@@ -8249,6 +8220,7 @@ function App() {
     <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
+      <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
         tip={selectedPayment}
@@ -8277,7 +8249,7 @@ function App() {
               </span>
               <span className="wallet-split-divider" aria-hidden="true" />
               <span className="wallet-split-segment wallet-split-tokens">
-                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.webp" alt="" /></span>
+                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.png" alt="" /></span>
                 <span className="wallet-split-token-copy">
                   <strong>{Number(tokenBalance || 0)}</strong>
                   <small>Żetony</small>

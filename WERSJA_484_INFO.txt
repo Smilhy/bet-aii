@@ -1,0 +1,5 @@
+Wersja 484
+- Lewa kolumna pozostawiona bez zmian.
+- Prawa kolumna została podmieniona na nowe, dostarczone przez użytkownika zdjęcie referencyjne.
+- Dzięki temu prawa strona wygląda dokładnie jak na przesłanym wzorze.
+- Zachowano stabilny układ, bez rozciągania przy przełączaniu Zaloguj się / Zarejestruj się.

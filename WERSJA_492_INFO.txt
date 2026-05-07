@@ -1,0 +1,4 @@
+Wersja 492
+- Lewa kolumna bez zmian.
+- Dla zakładki „Zaloguj się” podniesiono i lekko rozciągnięto do góry poświatę / ramkę prawej kolumny.
+- Korekta działa tylko dla trybu logowania, aby poświata nie nachodziła i miała więcej miejsca u góry.

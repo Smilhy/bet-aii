@@ -1,0 +1,1 @@
+WERSJA 584: aktywne like/dislike/komentarze w kartach typow.

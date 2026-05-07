@@ -1,0 +1,5 @@
+Wersja 459
+- panel auth ustawiony na obraz 2K
+- nowe assety: auth-final-459-2k.png / auth-final-459-2k.webp
+- preload ustawiony na wersję 2K WEBP
+- zachowane poprawki dopasowania ramek, pól i checkboxa

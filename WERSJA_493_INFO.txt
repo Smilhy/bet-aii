@@ -1,0 +1,6 @@
+Wersja 493
+- Dodano płynniejsze przejścia między trybem logowania i rejestracji.
+- W trybie logowania dodano link „Nie pamiętasz hasła?” z wysyłką resetu przez Supabase.
+- Wzmocniono neon glow pól formularza po focusie.
+- Poprawiono spacing checkboxa i dodano notatkę pod przyciskiem submit.
+- Subtelnie dopracowano pozycjonowanie i wtopienie prawej kolumny.

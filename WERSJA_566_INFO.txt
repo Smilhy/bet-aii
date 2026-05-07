@@ -1,0 +1,7 @@
+WERSJA 566
+
+Zmiany:
+- wrócono do układu z wersji 564
+- bez zmiany kolorów
+- przesunięto prawą kolumnę dashboardu maksymalnie do prawej strony ekranu
+- lewa i środkowa część zostały bez zmian

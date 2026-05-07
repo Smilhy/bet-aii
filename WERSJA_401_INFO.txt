@@ -1,0 +1,4 @@
+Wersja 401
+- usunięty dolny komunikat z live chatu: "Live chat połączony — wiadomości odświeżają się automatycznie."
+- ukryty cały dolny wiersz statusu w prawym panelu live chat
+- nie ruszono tabeli MECZÓW DZIŚ

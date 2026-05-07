@@ -1,0 +1,7 @@
+WERSJA 609
+
+- tymczasowo usunięto z widoku panel logowania i rejestracji
+- logika logowania/rejestracji została zachowana w kodzie (AuthView)
+- w miejsce panelu wstawiono dostarczony obraz: public/auth-login-placeholder-609.png
+- pozostawiono SiteReviewsWidget oraz AuthSupportChatGuest
+- gotowe pod dalszy etap z późniejszym nałożeniem panelu logowania

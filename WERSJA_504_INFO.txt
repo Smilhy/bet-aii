@@ -1,0 +1,5 @@
+Wersja 504
+- Dodano żywy efekt premium glow / okresowego błysku na ekranie logowania i rejestracji.
+- Dopasowano kolorystykę auth do głównego dashboardu Bet+AI (cyan / teal / neon premium).
+- Dodano subtelny sweep/blink na zakładkach Zaloguj / Zarejestruj, przycisku CTA i ikonach social.
+- Wzmocniono poświaty lewej i prawej kolumny, bez zmiany układu strony.

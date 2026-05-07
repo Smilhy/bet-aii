@@ -1,0 +1,5 @@
+WERSJA 552
+- Z hero dashboardu usunięty górny overlay/ramka z napisem 6/6.
+- Baner hero został oczyszczony z tego paska.
+- Kropki i strzałki slajdera pozostają aktywne.
+- Paczka lekka: bez node_modules i bez dist.

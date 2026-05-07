@@ -1,0 +1,4 @@
+Wersja 443:
+- „MECZÓW DZIŚ” i statystyki hero jeszcze bardziej przezroczyste, żeby mocniej było widać slajd pod spodem.
+- Przycisk „Dodaj typ” ma teraz kolor jak „Wyloguj” i mocniejsze pulsowanie / podświetlenie.
+- Drugi slajd hero został dodatkowo dopasowany do ramki góra/dół.

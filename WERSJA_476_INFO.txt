@@ -1,0 +1,5 @@
+Wersja 476
+- Zdjęcie ekranu startowego zostało pomniejszone o około 30%.
+- Zamiast pełnego wypełnienia ekranu obraz jest teraz wyśrodkowany i wyświetlany mniejszy.
+- Zachowano ciemne tło wokół grafiki dla bardziej premium wyglądu.
+- Loader, dashboard i pozostałe sekcje aplikacji pozostawione bez zmian.

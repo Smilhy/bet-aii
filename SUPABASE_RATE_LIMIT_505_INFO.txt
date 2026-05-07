@@ -1,0 +1,15 @@
+WAŻNE — LIMIT REJESTRACJI / EMAILI SUPABASE
+
+Tego limitu nie da się ustawić na 200/500 kont przez plik aplikacji ani zwykły SQL.
+To jest ustawienie Supabase Auth i zależy od mailera.
+
+Do testów:
+1. Supabase → Authentication → Providers → Email
+2. Wyłącz Confirm email
+
+Na produkcję:
+1. Podłącz Custom SMTP, np. Resend / Brevo / SendGrid / Postmark / Amazon SES
+2. Supabase → Authentication → Rate Limits
+3. Ustaw większy limit, np. 200–500 emaili/h albo więcej, zgodnie z planem SMTP
+
+Aplikacja w wersji 505 ma już czytelniejszy komunikat, jeśli limit maili zostanie przekroczony.

@@ -1,0 +1,8 @@
+Wersja 422
+- poprawione ramki hero coin, żeby stykały się z obramowaniem sekcji dookoła
+- usunięty wewnętrzny odstęp wokół bannera coin
+- banner coin wypełnia całą ramkę hero od krawędzi do krawędzi
+- statystyki nadal bardzo przezroczyste przy slajdzie coin
+- zachowany final polish jakości i subtelny ruch bannera
+- górny przycisk saldo/żetony nadal niebieski jak Wyloguj
+- Żetony w lewej kolumnie nadal niebieskie

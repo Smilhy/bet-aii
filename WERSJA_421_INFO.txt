@@ -1,0 +1,8 @@
+Wersja 421
+- final polish hero coin
+- lepsza ostrość i delikatnie dopracowana jakość bannera bez sztucznego wyglądu
+- subtelniejszy, bardziej premium ruch / alive effect
+- statystyki jeszcze bardziej przezroczyste na slajdzie coin
+- coin hero dalej rozciągnięty do boków środkowej ramki hero
+- górny przycisk saldo/żetony nadal niebieski jak Wyloguj
+- Żetony w lewej kolumnie nadal niebieskie

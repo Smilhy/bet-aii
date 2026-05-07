@@ -1,0 +1,2 @@
+WERSJA 600
+Czat wsparcia admin: profesjonalna lista nadawców (avatar, nazwa, email, badge), wygląd jak na referencji użytkownika.

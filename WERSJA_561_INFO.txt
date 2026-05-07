@@ -1,0 +1,8 @@
+WERSJA 561
+
+Zmiany:
+- poprawiono widoczność liczników przy ikonach wiadomości i czatu
+- licznik wiadomości jest teraz zawsze widoczny (także gdy ma wartość 0)
+- dodano licznik do ikonki czatu
+- ustawiono pozycjonowanie i overflow globalnie, żeby liczniki nie były ucinane
+- poprawka działa globalnie na całej stronie i na każdej zakładce

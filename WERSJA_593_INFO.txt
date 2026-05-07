@@ -1,0 +1,3 @@
+WERSJA 593
+Naprawa: przywrócony brakujący komponent TipCard, który powodował błąd po logowaniu: TipCard is not defined.
+Zachowany firmowy żeton Bet+AI przy Żetonach z wersji 592.

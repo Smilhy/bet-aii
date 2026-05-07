@@ -1,6 +1,0 @@
-Wersja 615 — zostawiony działający panel logowania/rejestracji z aktualnej wersji 608.
-Z prawej strony wstawione przesłane zdjęcie jako tło/obraz.
-Usunięto poprzedni problem z nakładaniem pól: zakładki i pola pozostają normalne, równe i klikalne.
-Dashboard po zalogowaniu nie był ruszany.
-Paczka jest pełna pod Netlify, ale odchudzona: bez node_modules i dist.
-Build lokalny: npm run build OK.
