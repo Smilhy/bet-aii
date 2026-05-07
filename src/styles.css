@@ -22766,3 +22766,24 @@ img,video,canvas,svg{max-width:100%;}
 @media (max-width:640px){
   .auth609-artboard{margin-left:0 !important;margin-right:0 !important;}
 }
+
+/* =========================================================
+   WERSJA 616 — cofnięcie całości o ok. 3% w lewo względem 615
+   ========================================================= */
+.auth609-screen{
+  justify-content:flex-start !important;
+}
+.auth609-artboard{
+  margin-left:255px !important;
+  margin-right:0 !important;
+}
+@media (max-width:2300px){
+  .auth609-artboard{margin-left:255px !important;}
+}
+@media (max-width:1100px){
+  .auth609-screen{justify-content:flex-start !important;}
+  .auth609-artboard{margin-left:255px !important;margin-right:0 !important;}
+}
+@media (max-width:640px){
+  .auth609-artboard{margin-left:0 !important;margin-right:0 !important;}
+}
