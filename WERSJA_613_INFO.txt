@@ -1,0 +1,7 @@
+Wersja 613 MINI FULL NETLIFY
+
+Pełna paczka źródłowa do Netlify, ale bez ciężkich zbędnych katalogów.
+Zawiera: src, public, netlify/functions, supabase, package.json, package-lock.json, netlify.toml, index.html i pliki root wymagane przez projekt.
+Nie zawiera: node_modules, dist, starych ZIP-ów i historii wersji.
+Naprawia problem z brakiem src/supabaseClient.js z poprzedniej zbyt lekkiej paczki.
+Panel auth pozostaje z wersji 611.

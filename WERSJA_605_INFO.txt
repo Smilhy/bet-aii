@@ -1,2 +1,0 @@
-WERSJA 605
-AI Typy dnia: wszystkie okrągłe oznaczenia przy typach AI mają teraz napis AI zamiast MC/PSG/L.

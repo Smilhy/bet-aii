@@ -1,1 +1,0 @@
-Wersja 541: poprawiono realne banery Sport.pl. Funkcja Netlify mocniej wyciąga obrazy z RSS, HTML, JSON-LD oraz meta og:image z samych artykułów; dodano dekodowanie znaków HTML i fallback z proxy obrazu na oryginalny URL. Kafelki Najnowsze artykuły pokazują teraz zdjęcia jako tło.

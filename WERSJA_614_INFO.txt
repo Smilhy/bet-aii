@@ -1,0 +1,8 @@
+Wersja 614 MINI FULL NETLIFY OPT
+
+Pełna paczka źródłowa do Netlify, zmniejszona tak, żeby dało się ją pobrać/wgrać.
+Zawiera komplet wymagany do buildu: src, public, netlify/functions, supabase, package.json, package-lock.json, netlify.toml, index.html i pliki root projektu.
+Nie zawiera: node_modules, dist, starych ZIP-ów, historii wersji ani nieużywanych ciężkich obrazów.
+Duże obrazy zostały przekonwertowane do WebP i referencje w kodzie zostały zaktualizowane.
+Panel auth pozostaje na sztywno ze screena z wersji 611.
+Build lokalny: npm run build OK.

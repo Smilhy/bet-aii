@@ -1,4 +1,0 @@
-Wersja 400
-- usunięty czerwony badge LIVE z prawego górnego rogu panelu BETAI LIVE CHAT
-- pozostawiono licznik online i ikonę ustawień
-- nie ruszono tabeli MECZÓW DZIŚ

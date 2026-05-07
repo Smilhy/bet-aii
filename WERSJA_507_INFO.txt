@@ -1,5 +1,0 @@
-Wersja 507
-- Poprawiono kolorystykę modułu live stats pod prawa kolumną, aby pasowała do dashboardu Bet+AI: navy/teal/cyan/emerald.
-- Dodano przełącznik języków na ekranie logowania/rejestracji: PL, EN, DE, ES, RU.
-- Przełącznik zapamiętuje wybór języka w localStorage i automatycznie wykrywa język przeglądarki.
-- Przetłumaczono ekran logowania/rejestracji, live stats, social section, dolne kafelki i komunikaty auth.

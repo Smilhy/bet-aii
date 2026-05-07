@@ -1,5 +1,0 @@
-Wersja 498
-- Zakładka „Zarejestruj się” została powiększona względem wersji 496/497.
-- Przywrócono większe fonty i pola bliższe zakładce „Zaloguj się”.
-- Układ nadal jest skondensowany tak, aby mieścił się bez scrollowania.
-- Nie ruszano naprawy wpisywania w inputach z wersji 497.

@@ -1,4 +1,0 @@
-Wersja 491
-- Lewa i prawa kolumna bez zmian.
-- Powiększono poświatę aktywnej ramki zakładki „Zaloguj się” do góry.
-- Zachowano dotychczasowy układ i pozostałe poprawki.

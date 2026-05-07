@@ -1,1 +1,0 @@
-Wersja 526 LEKKA: ten sam kod i poprawki, bez folderu dist oraz bez nieużywanych dużych grafik w public. Po wrzuceniu do Netlify projekt zbuduje się z package.json.

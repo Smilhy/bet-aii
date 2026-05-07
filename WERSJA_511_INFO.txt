@@ -1,5 +1,0 @@
-Wersja 511
-- Naprawiono brak przycisku czatu na ekranie logowania/rejestracji.
-- Czat pomocy jest teraz widoczny także przed zalogowaniem.
-- Gość może podać nazwę/email i wysłać wiadomość do admina smilhytv@gmail.com.
-- Dodano SQL SUPABASE_SUPPORT_CHAT_511.sql z polityką anon insert tylko do admina.

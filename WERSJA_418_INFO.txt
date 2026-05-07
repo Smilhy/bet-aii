@@ -1,7 +1,0 @@
-Wersja 418
-- coin hero rozciągnięty do boków całej środkowej ramki hero (inner frame)
-- zostawiona poprawiona jakość ultra-pro z wersji 417
-- banner nadal lekko żyje / pływa
-- statystyki po prawej są bardziej przezroczyste dla slajdu coin
-- górny przycisk saldo/żetony nadal niebieski jak Wyloguj
-- Żetony w lewej kolumnie nadal niebieskie

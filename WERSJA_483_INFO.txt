@@ -1,5 +1,0 @@
-Wersja 483
-- Lewa kolumna pozostawiona bez zmian.
-- Naprawiona prawa kolumna: przywrócony pełny wygląd bez ucinania dolnej ramki.
-- Usunięto wymuszoną wysokość prawej kolumny, która powodowała rozciąganie i obcinanie przy zmianie Zaloguj się / Zarejestruj się.
-- Prawa kolumna zachowuje stałą szerokość i naturalną wysokość obrazu.

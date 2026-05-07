@@ -1,6 +1,0 @@
-Wersja 486
-- Lewa kolumna została pozostawiona bez zmian.
-- Prawa kolumna została przesunięta niżej i bardziej wyśrodkowana.
-- Dodano subtelną świecącą poświatę / ramkę wokół prawego panelu dla bardziej żywego premium wyglądu.
-- Usunięto efekt „wklejonego czarnego panelu” przez lepsze wtopienie prawej strony w tło.
-- Zachowano brak rozciągania prawej kolumny przy przełączaniu Zaloguj się / Zarejestruj się.

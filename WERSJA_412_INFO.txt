@@ -1,6 +1,0 @@
-Wersja 412
-- banner Bet+AI Coin przygotowany z wycięcia ze screena zaakceptowanego przez użytkownika (tak ma być)
-- coin slide dopasowany do tej samej środkowej ramki hero co pozostałe slajdy
-- górny przycisk saldo/żetony pozostaje niebieski jak Wyloguj
-- Żetony w lewej kolumnie pozostają niebieskie
-- MECZÓW DZIŚ nie ruszono

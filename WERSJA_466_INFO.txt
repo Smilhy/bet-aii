@@ -1,6 +1,0 @@
-Wersja 466
-- przebudowany układ auth według dokładnej siatki 16:9
-- nowy layout dopasowany bliżej referencji 1:1: szerokość lewej kolumny, prawa sekcja, wysokości i spacing
-- zaktualizowane assety logo i prawego showcase z nowej referencji
-- lewa kolumna pozostaje żywym panelem HTML/CSS z zachowaną logiką logowania/rejestracji
-- nowy dist produkcyjny

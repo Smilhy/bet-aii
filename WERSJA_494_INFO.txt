@@ -1,5 +1,0 @@
-Wersja 494
-- Ekran startowy otwiera się teraz od zakładki logowania.
-- Dodano sekcję social media w stylu premium (Telegram, Discord, Instagram, X).
-- Wzmocniono premium glow / poświaty paneli i przycisku.
-- Dolne ikonki feature cards zostały ożywione kolorystycznie i wyglądają bardziej premium / ultra.

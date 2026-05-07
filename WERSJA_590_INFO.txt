@@ -1,5 +1,0 @@
-WERSJA 590
-- ranking po prawej i strona rankingu są teraz żywe
-- miejsca 1/2/3 mają kolory: złoto / srebro / brąz
-- tabela zmienia kolejność wg profit + yield
-- zmieniono widoczne nazwy TIPSTER -> TYPER

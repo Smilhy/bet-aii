@@ -1,7 +1,0 @@
-WERSJA 569
-
-Zmiany:
-- lewa kolumna bez zmian
-- środkowa kolumna, baner hero i wyszukiwanie bez zmian
-- poszerzono tylko prawą kolumnę dashboardu
-- zachowano dotychczasowe kolory

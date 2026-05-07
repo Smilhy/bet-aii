@@ -1,6 +1,0 @@
-WERSJA 563
-
-Zmiany:
-- usunięto logo po lewej w sidebarze
-- poprawiono wygląd przycisku/profilu w prawym górnym rogu dashboardu
-- styl przycisku dopasowany do przesłanego screena: ciemny, sztywny, bardziej elegancki

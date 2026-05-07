@@ -1,6 +1,0 @@
-Wersja 477
-- Ożywiono zdjęcie ekranu startowego subtelnymi animacjami premium.
-- Z dotychczasowego obrazu utworzono aktywny panel logowania/rejestracji bez zmiany jego głównego wyglądu.
-- Dodano klikalne zakładki logowania i rejestracji oraz aktywne pola formularza osadzone na obrazie.
-- Dodano obsługę logowania, rejestracji, pokazywania/ukrywania hasła i komunikatów autoryzacji.
-- Dashboard, loader i pozostałe sekcje aplikacji pozostawiono bez zmian.

@@ -1,4 +1,0 @@
-Wersja 490
-- Lewa kolumna bez zmian.
-- Zwężono poświatę / ramkę prawej kolumny po lewej i prawej stronie.
-- Ramka jest teraz bardziej stykowa z prawym panelem i mniej szeroka na bokach.
