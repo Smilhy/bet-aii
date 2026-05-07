@@ -20869,3 +20869,38 @@ img,video,canvas,svg{max-width:100%;}
   align-items:center!important;
   justify-content:center!important;
 }
+
+/* WERSJA 590 — żywy ranking typerów + medalowe miejsca */
+.real-ranking-panel .rank-position-badge{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  border-radius:50%!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-weight:1000!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.20)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+.real-ranking-panel .rank-position-badge.gold{
+  background:radial-gradient(circle at 30% 20%,#ffe58f,#f4ba1b 60%,#785300 100%)!important;
+  color:#4b3300!important;
+}
+.real-ranking-panel .rank-position-badge.silver{
+  background:radial-gradient(circle at 30% 20%,#f3f6ff,#adb9cf 62%,#3f4d61 100%)!important;
+  color:#223245!important;
+}
+.real-ranking-panel .rank-position-badge.bronze{
+  background:radial-gradient(circle at 30% 20%,#ffd9bb,#f1953a 60%,#7a3900 100%)!important;
+  color:#4d2400!important;
+}
+.real-ranking-panel .rank:not(.first):not(.second):not(.third) .rank-position-badge{
+  background:rgba(255,255,255,.08)!important;
+  color:#dce8f1!important;
+}
+.real-ranking-panel .rank.first,
+.real-ranking-panel .rank.second,
+.real-ranking-panel .rank.third{
+  border-color:rgba(255,255,255,.07)!important;
+}

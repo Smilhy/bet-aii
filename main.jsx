@@ -34,16 +34,16 @@ function getInitialBetaiLanguage() {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Doładuj konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj tipstera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować tipstera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Doładuj konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   },
   de: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Doładuj konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj tipstera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top tipsterzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować tipstera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Doładuj konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
   },
   es: {
-    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Doładuj konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj tipstera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować tipstera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
+    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Doładuj konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
   },
   ru: {
-    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Doładuj konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj tipstera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top tipsterzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować tipstera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
+    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Doładuj konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
   }
 }
 
@@ -53,8 +53,8 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
     'Realne statystyki live': 'Real live statistics', 'Platforma żyje i odświeża dane na bieżąco': 'The platform is live and refreshes data in real time', 'Zarejestrowanych użytkowników': 'Registered users', 'Skuteczność AI': 'AI accuracy', 'Typów dzisiaj': 'Picks today', 'Auto-odświeżanie co 30 s': 'Auto-refresh every 30s', 'ostatnia aktualizacja': 'last update',
     'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP USER (24H)', 'NAGRODA DNIA': 'DAILY REWARD', 'AKTYWNI TERAZ': 'ACTIVE NOW', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'No leader', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.',
     'Marketplace premium': 'Premium marketplace', 'Typy premium': 'Premium picks', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publishing paid picks is available only for Premium users.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Upgrade to Premium to monetize your analyses.', 'Kup Premium': 'Buy Premium',
-    'Wszystkie': 'All', 'Darmowe': 'Free', 'Moje': 'Mine', 'Dodaj typ': 'Add pick', 'Zobacz typ': 'View pick', 'Zobacz prognozę': 'View pick', 'Obserwuj tipstera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Today', 'Prognoz': 'Pick', 'Prognoza': 'Pick', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Ponad 2.5 gola': 'Over 2.5 goals', 'Kurs': 'Odds', 'Koef.': 'Odds', 'AI Analiza': 'AI analysis', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real is in excellent home form. Bayern has had defensive problems in recent matches.',
-    'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Brak danych': 'No data', 'Brak typów': 'No picks', 'Ładowanie...': 'Loading...', 'Łączenie...': 'Connecting...', 'Kup dostęp': 'Buy access', 'Szczegóły': 'Details',
+    'Wszystkie': 'All', 'Darmowe': 'Free', 'Moje': 'Mine', 'Dodaj typ': 'Add pick', 'Zobacz typ': 'View pick', 'Zobacz prognozę': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Today', 'Prognoz': 'Pick', 'Prognoza': 'Pick', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Ponad 2.5 gola': 'Over 2.5 goals', 'Kurs': 'Odds', 'Koef.': 'Odds', 'AI Analiza': 'AI analysis', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real is in excellent home form. Bayern has had defensive problems in recent matches.',
+    'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Brak danych': 'No data', 'Brak typów': 'No picks', 'Ładowanie...': 'Loading...', 'Łączenie...': 'Connecting...', 'Kup dostęp': 'Buy access', 'Szczegóły': 'Details',
     'Bezpieczne dane': 'Secure data', 'Twoje dane są u nas w pełni chronione.': 'Your data is fully protected.', 'Szybka rejestracja': 'Fast registration', 'Załóż konto w mniej niż 30 sekund.': 'Create an account in under 30 seconds.', 'Darmowe typy AI': 'Free AI picks', 'Codziennie nowe typy o wysokiej skuteczności.': 'New high-accuracy picks every day.', 'Aktywna społeczność': 'Active community', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Thousands of bettors share knowledge and win together.',
     'Bilans': 'Balance', 'Balans': 'Balance', 'Odblokowano': 'Unlocked', 'Popолнить счет': 'Top up account', 'Пополни́ть счет': 'Top up account', 'Witaj': 'Welcome', 'Meczów dziś': 'Matches today', 'Śr. pewność': 'Avg. confidence', 'Dostęp do inteligentnych typów': 'Access to intelligent picks', 'Sport': 'Sport'
   },
@@ -63,8 +63,8 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
     'Realne statystyki live': 'Echte Live-Statistiken', 'Platforma żyje i odświeża dane na bieżąco': 'Die Plattform ist live und aktualisiert Daten laufend', 'Zarejestrowanych użytkowników': 'Registrierte Nutzer', 'Skuteczność AI': 'KI-Trefferquote', 'Typów dzisiaj': 'Tipps heute', 'Auto-odświeżanie co 30 s': 'Auto-Aktualisierung alle 30 s', 'ostatnia aktualizacja': 'letzte Aktualisierung',
     'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP-NUTZER (24H)', 'NAGRODA DNIA': 'TAGESPREIS', 'AKTYWNI TERAZ': 'JETZT AKTIV', '1 żeton / 24h': '1 Token / 24h', 'Brak lidera': 'Kein Leader', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.',
     'Marketplace premium': 'Premium-Marktplatz', 'Typy premium': 'Premium-Tipps', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen',
-    'Wszystkie': 'Alle', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'Dodaj typ': 'Tipp hinzufügen', 'Zobacz typ': 'Tipp ansehen', 'Zobacz prognozę': 'Prognose ansehen', 'Obserwuj tipstera': 'Tipster folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Heute', 'Prognoz': 'Tipp', 'Prognoza': 'Tipp', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Ponad 2.5 gola': 'Über 2,5 Tore', 'Kurs': 'Quote', 'Koef.': 'Quote', 'AI Analiza': 'KI-Analyse', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real ist zu Hause in sehr guter Form. Bayern hatte zuletzt Defensivprobleme.',
-    'Top tipsterzy': 'Top-Tipster', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Brak danych': 'Keine Daten', 'Brak typów': 'Keine Tipps', 'Ładowanie...': 'Laden...', 'Łączenie...': 'Verbinden...', 'Kup dostęp': 'Zugang kaufen', 'Szczegóły': 'Details',
+    'Wszystkie': 'Alle', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'Dodaj typ': 'Tipp hinzufügen', 'Zobacz typ': 'Tipp ansehen', 'Zobacz prognozę': 'Prognose ansehen', 'Obserwuj typera': 'Tipster folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Heute', 'Prognoz': 'Tipp', 'Prognoza': 'Tipp', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Ponad 2.5 gola': 'Über 2,5 Tore', 'Kurs': 'Quote', 'Koef.': 'Quote', 'AI Analiza': 'KI-Analyse', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real ist zu Hause in sehr guter Form. Bayern hatte zuletzt Defensivprobleme.',
+    'Top typerzy': 'Top-Tipster', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Brak danych': 'Keine Daten', 'Brak typów': 'Keine Tipps', 'Ładowanie...': 'Laden...', 'Łączenie...': 'Verbinden...', 'Kup dostęp': 'Zugang kaufen', 'Szczegóły': 'Details',
     'Bezpieczne dane': 'Sichere Daten', 'Twoje dane są u nas w pełni chronione.': 'Deine Daten sind vollständig geschützt.', 'Szybka rejestracja': 'Schnelle Registrierung', 'Załóż konto w mniej niż 30 sekund.': 'Erstelle ein Konto in weniger als 30 Sekunden.', 'Darmowe typy AI': 'Kostenlose KI-Tipps', 'Codziennie nowe typy o wysokiej skuteczności.': 'Täglich neue Tipps mit hoher Trefferquote.', 'Aktywna społeczność': 'Aktive Community', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Tausende Tipper teilen Wissen und gewinnen gemeinsam.',
     'Bilans': 'Guthaben', 'Balans': 'Guthaben', 'Odblokowano': 'Freigeschaltet', 'Witaj': 'Willkommen', 'Meczów dziś': 'Spiele heute', 'Śr. pewność': 'Ø Sicherheit', 'Dostęp do inteligentnych typów': 'Zugang zu intelligenten Tipps', 'Sport': 'Sport'
   },
@@ -73,8 +73,8 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
     'Realne statystyki live': 'Estadísticas live reales', 'Platforma żyje i odświeża dane na bieżąco': 'La plataforma está viva y actualiza datos en directo', 'Zarejestrowanych użytkowników': 'Usuarios registrados', 'Skuteczność AI': 'Precisión IA', 'Typów dzisiaj': 'Picks hoy', 'Auto-odświeżanie co 30 s': 'Auto-actualización cada 30 s', 'ostatnia aktualizacja': 'última actualización',
     'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'USUARIO TOP (24H)', 'NAGRODA DNIA': 'PREMIO DEL DÍA', 'AKTYWNI TERAZ': 'ACTIVOS AHORA', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'Sin líder', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.',
     'Marketplace premium': 'Marketplace premium', 'Typy premium': 'Picks premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publicar picks de pago solo está disponible para usuarios Premium.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium',
-    'Wszystkie': 'Todos', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'Dodaj typ': 'Añadir pick', 'Zobacz typ': 'Ver pick', 'Zobacz prognozę': 'Ver pronóstico', 'Obserwuj tipstera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Hoy', 'Prognoz': 'Pronóstico', 'Prognoza': 'Pronóstico', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Ponad 2.5 gola': 'Más de 2.5 goles', 'Kurs': 'Cuota', 'Koef.': 'Cuota', 'AI Analiza': 'Análisis IA', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real está muy fuerte en casa. Bayern tuvo problemas defensivos en los últimos partidos.',
-    'Top tipsterzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Brak danych': 'Sin datos', 'Brak typów': 'Sin picks', 'Ładowanie...': 'Cargando...', 'Łączenie...': 'Conectando...', 'Kup dostęp': 'Comprar acceso', 'Szczegóły': 'Detalles',
+    'Wszystkie': 'Todos', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'Dodaj typ': 'Añadir pick', 'Zobacz typ': 'Ver pick', 'Zobacz prognozę': 'Ver pronóstico', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Hoy', 'Prognoz': 'Pronóstico', 'Prognoza': 'Pronóstico', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Ponad 2.5 gola': 'Más de 2.5 goles', 'Kurs': 'Cuota', 'Koef.': 'Cuota', 'AI Analiza': 'Análisis IA', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real está muy fuerte en casa. Bayern tuvo problemas defensivos en los últimos partidos.',
+    'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Brak danych': 'Sin datos', 'Brak typów': 'Sin picks', 'Ładowanie...': 'Cargando...', 'Łączenie...': 'Conectando...', 'Kup dostęp': 'Comprar acceso', 'Szczegóły': 'Detalles',
     'Bezpieczne dane': 'Datos seguros', 'Twoje dane są u nas w pełni chronione.': 'Tus datos están totalmente protegidos.', 'Szybka rejestracja': 'Registro rápido', 'Załóż konto w mniej niż 30 sekund.': 'Crea una cuenta en menos de 30 segundos.', 'Darmowe typy AI': 'Picks IA gratis', 'Codziennie nowe typy o wysokiej skuteczności.': 'Nuevos picks diarios de alta precisión.', 'Aktywna społeczność': 'Comunidad activa', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Miles de usuarios comparten conocimiento y ganan juntos.',
     'Bilans': 'Saldo', 'Balans': 'Saldo', 'Odblokowano': 'Desbloqueado', 'Witaj': 'Bienvenido', 'Meczów dziś': 'Partidos hoy', 'Śr. pewność': 'Confianza media', 'Dostęp do inteligentnych typów': 'Acceso a picks inteligentes', 'Sport': 'Deporte'
   },
@@ -83,8 +83,8 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
     'Realne statystyki live': 'Реальная live-статистика', 'Platforma żyje i odświeża dane na bieżąco': 'Платформа живая и обновляет данные онлайн', 'Zarejestrowanych użytkowników': 'Зарегистрированных пользователей', 'Skuteczność AI': 'Точность AI', 'Typów dzisiaj': 'Прогнозов сегодня', 'Auto-odświeżanie co 30 s': 'Автообновление каждые 30 с', 'ostatnia aktualizacja': 'последнее обновление',
     'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'онлайн', 'TOP UŻYTKOWNIK (24H)': 'ТОП ПОЛЬЗОВАТЕЛЬ (24Ч)', 'NAGRODA DNIA': 'НАГРАДА ДНЯ', 'AKTYWNI TERAZ': 'АКТИВНЫ СЕЙЧАС', '1 żeton / 24h': '1 жетон / 24ч', 'Brak lidera': 'Лидера нет', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.',
     'Marketplace premium': 'Premium маркетплейс', 'Typy premium': 'Premium прогнозы', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Платные прогнозы доступны только Premium пользователям.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium',
-    'Wszystkie': 'Все', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'Dodaj typ': 'Добавить прогноз', 'Zobacz typ': 'Смотреть прогноз', 'Zobacz prognozę': 'Смотреть прогноз', 'Obserwuj tipstera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Liga Mistrzów': 'Лига чемпионов', 'Dzisiaj': 'Сегодня', 'Prognoz': 'Прогноз', 'Prognoza': 'Прогноз', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Ponad 2.5 gola': 'Тотал больше 2.5', 'Kurs': 'Коэф.', 'Koef.': 'Коэф.', 'AI Analiza': 'AI анализ', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real в отличной форме дома. У Bayern были проблемы в защите в последних матчах.',
-    'Top tipsterzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Brak danych': 'Нет данных', 'Brak typów': 'Нет прогнозов', 'Ładowanie...': 'Загрузка...', 'Łączenie...': 'Подключение...', 'Kup dostęp': 'Купить доступ', 'Szczegóły': 'Детали',
+    'Wszystkie': 'Все', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'Dodaj typ': 'Добавить прогноз', 'Zobacz typ': 'Смотреть прогноз', 'Zobacz prognozę': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Liga Mistrzów': 'Лига чемпионов', 'Dzisiaj': 'Сегодня', 'Prognoz': 'Прогноз', 'Prognoza': 'Прогноз', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Ponad 2.5 gola': 'Тотал больше 2.5', 'Kurs': 'Коэф.', 'Koef.': 'Коэф.', 'AI Analiza': 'AI анализ', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real в отличной форме дома. У Bayern были проблемы в защите в последних матчах.',
+    'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Brak danych': 'Нет данных', 'Brak typów': 'Нет прогнозов', 'Ładowanie...': 'Загрузка...', 'Łączenie...': 'Подключение...', 'Kup dostęp': 'Купить доступ', 'Szczegóły': 'Детали',
     'Bezpieczne dane': 'Безопасные данные', 'Twoje dane są u nas w pełni chronione.': 'Ваши данные полностью защищены.', 'Szybka rejestracja': 'Быстрая регистрация', 'Załóż konto w mniej niż 30 sekund.': 'Создайте аккаунт меньше чем за 30 секунд.', 'Darmowe typy AI': 'Бесплатные AI-прогнозы', 'Codziennie nowe typy o wysokiej skuteczności.': 'Новые точные прогнозы каждый день.', 'Aktywna społeczność': 'Активное сообщество', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Тысячи игроков делятся знаниями и выигрывают вместе.',
     'Bilans': 'Баланс', 'Balans': 'Баланс', 'Odblokowano': 'Разблокировано', 'Witaj': 'Добро пожаловать', 'Meczów dziś': 'Матчей сегодня', 'Śr. pewność': 'Ср. уверенность', 'Dostęp do inteligentnych typów': 'Доступ к интеллектуальным прогнозам', 'Sport': 'Спорт'
   }
@@ -308,16 +308,64 @@ function buildRankingFromTips(tips = []) {
   const map = new Map()
   ;(tips || []).forEach(tip => {
     const normalized = normalizeTipRow(tip)
+    const authorName = normalized.author_name || 'Użytkownik'
+    if (String(authorName).toLowerCase() === 'ai tip') return
     const id = normalized.author_id || normalized.user_id || normalized.author_email || normalized.author_name || 'unknown'
-    const current = map.get(id) || { tipster_id: id, username: normalized.author_name || 'Użytkownik', email: normalized.author_email || '', total_tips: 0, wins: 0, losses: 0, roi: 0, winrate: 0, earnings: 0 }
+    const current = map.get(id) || { tipster_id: id, username: authorName, email: normalized.author_email || '', total_tips: 0, wins: 0, losses: 0, roi: 0, winrate: 0, earnings: 0 }
     current.total_tips += 1
+    const odds = Number(normalized.odds || 0)
     const st = String(normalized.status || normalized.result || '').toLowerCase()
-    if (['won','win','wygrany','wygrana'].includes(st)) current.wins += 1
-    if (['lost','loss','lose','przegrany','przegrana'].includes(st)) current.losses += 1
+    if (['won','win','wygrany','wygrana'].includes(st)) {
+      current.wins += 1
+      current.earnings += odds > 1 ? (odds - 1) * 10 : 10
+    }
+    if (['lost','loss','lose','przegrany','przegrana'].includes(st)) {
+      current.losses += 1
+      current.earnings -= 10
+    }
     current.winrate = current.total_tips ? (current.wins / current.total_tips) * 100 : 0
+    const exposure = current.total_tips * 10
+    current.roi = exposure ? (current.earnings / exposure) * 100 : 0
     map.set(id, current)
   })
-  return Array.from(map.values()).sort((a,b) => (b.total_tips || 0) - (a.total_tips || 0)).slice(0, 10)
+  return sortRankingRows(Array.from(map.values())).slice(0, 10)
+}
+
+function getRankingNumber(row, candidates = [], fallback = 0) {
+  for (const key of candidates) {
+    const raw = row?.[key]
+    const value = Number(raw)
+    if (Number.isFinite(value)) return value
+  }
+  return fallback
+}
+
+function sortRankingRows(rows = []) {
+  return [...(rows || [])].sort((a, b) => {
+    const profitDiff = getRankingNumber(b, ['earnings', 'total_earnings', 'profit']) - getRankingNumber(a, ['earnings', 'total_earnings', 'profit'])
+    if (profitDiff !== 0) return profitDiff
+    const roiDiff = getRankingNumber(b, ['roi', 'yield']) - getRankingNumber(a, ['roi', 'yield'])
+    if (roiDiff !== 0) return roiDiff
+    const winrateDiff = getRankingNumber(b, ['winrate', 'wr']) - getRankingNumber(a, ['winrate', 'wr'])
+    if (winrateDiff !== 0) return winrateDiff
+    const winsDiff = getRankingNumber(b, ['wins']) - getRankingNumber(a, ['wins'])
+    if (winsDiff !== 0) return winsDiff
+    return getRankingNumber(b, ['total_tips', 'tips_count']) - getRankingNumber(a, ['total_tips', 'tips_count'])
+  })
+}
+
+function buildLiveLeaderboardRows(ranking = [], tips = []) {
+  const rows = Array.isArray(ranking) && ranking.length ? ranking : buildRankingFromTips(tips)
+  return sortRankingRows(rows).map((row, index) => ({
+    ...row,
+    liveRank: index + 1,
+    totalTips: getRankingNumber(row, ['total_tips', 'tips_count']),
+    wins: getRankingNumber(row, ['wins']),
+    winrate: getRankingNumber(row, ['winrate', 'wr']),
+    roi: getRankingNumber(row, ['roi', 'yield']),
+    earnings: getRankingNumber(row, ['earnings', 'total_earnings', 'profit']),
+    followers: getRankingNumber(row, ['followers_count', 'followers'])
+  }))
 }
 
 function isSchemaError(error) {
@@ -345,6 +393,7 @@ function normalizeTipRow(row = {}) {
     ai_confidence: Number(row.ai_confidence ?? row.ai_probability ?? row.confidence ?? 0),
     access_type: premium ? 'premium' : 'free',
     is_premium: premium,
+    price: Math.max(0, Number(row.price ?? row.single_price ?? row.tip_price ?? (premium ? 29 : 0)) || 0),
     status: row.status || 'pending',
     created_at: row.created_at || new Date().toISOString()
   }
@@ -410,7 +459,7 @@ function isGuaranteedPremiumIdentity(user) {
 function isAdminUser(user) {
   const email = getProfileEmail(user)
   const username = getProfileUsername(user)
-  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv' || Boolean(user?.is_admin)
+  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv'
 }
 
 function isPremiumAccount(plan) {
@@ -422,10 +471,10 @@ function isPremiumProfile(profile) {
   if (!profile) return false
   return isGuaranteedPremiumIdentity(profile) ||
     Boolean(profile.is_premium) ||
-    Boolean(profile.is_admin) ||
+    isAdminUser(profile) ||
     isPremiumAccount(profile.plan) ||
     ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
-    ['admin', 'premium'].includes(String(profile.status || '').toLowerCase())
+    (String(profile.status || '').toLowerCase() === 'premium' || isAdminUser(profile))
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
@@ -510,8 +559,6 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
-      <div className="brand brand-logo-pro" aria-label="Bet+AI"><img src="/betai-sidebar-logo-new.png" alt="Bet+AI" /></div>
-
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
         <div>
@@ -537,7 +584,7 @@ return (
         <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
         <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
         <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
-        <button>⚙ Ustawienia</button>
+        <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
       </nav>
 
       <div className="premium-box">
@@ -554,7 +601,7 @@ return (
 }
 
 function formatRankingName(row) {
-  const email = row?.email || row?.username || 'Tipster'
+  const email = row?.email || row?.username || 'Typer'
   return String(email).includes('@') ? String(email).split('@')[0] : String(email)
 }
 
@@ -641,94 +688,55 @@ function getTipErrorToast(cleanMessage) {
   return { type: 'error', title: 'Nie dodano typu', message: cleanMessage }
 }
 
-function AnimatedDashboardHero({ tips = [], onStatsClick }) {
+function AnimatedDashboardHero() {
   const heroSlides = [
-    '/betai-hero-live-1.png',
-    '/betai-hero-live-2.png',
-    '/betai-hero-live-3.png',
-    '/betai-hero-live-4.png',
-    '/betai-hero-live-5.png',
-    '/betai-hero-live-6.png'
+    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
-  const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
   const [isHeroPaused, setIsHeroPaused] = useState(false)
+  const heroSwipeStart = useRef(null)
 
   useEffect(() => {
-    if (isHeroPaused) return undefined
-    const panelTimer = setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6500)
-    return () => { clearInterval(panelTimer) }
+    if (isHeroPaused || heroSlides.length <= 1) return undefined
+    const panelTimer = window.setInterval(() => setPanel(prev => (prev + 1) % heroSlides.length), 6000)
+    return () => window.clearInterval(panelTimer)
   }, [heroSlides.length, isHeroPaused])
 
-  const goToHeroSlide = (index) => {
-    setPanel(index)
+  const moveHeroSlide = (direction) => setPanel(prev => (prev + direction + heroSlides.length) % heroSlides.length)
+  const handleHeroPointerUp = (event) => {
+    const startX = heroSwipeStart.current
+    heroSwipeStart.current = null
+    if (startX == null) return
+    const diff = event.clientX - startX
+    if (Math.abs(diff) > 40) moveHeroSlide(diff < 0 ? 1 : -1)
   }
-
-  const premiumTips = tips.filter(t => isTipPremium(t))
-  const validConfidenceValues = tips
-    .map(tip => Number(tip.ai_probability ?? tip.ai_confidence ?? tip.confidence ?? 0))
-    .filter(value => Number.isFinite(value) && value > 0)
-  const avgConfidence = validConfidenceValues.length
-    ? Math.round(validConfidenceValues.reduce((sum, value) => sum + value, 0) / validConfidenceValues.length)
-    : 85
-  const settled = tips.filter(t => ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(String(t.status || '').toLowerCase()))
-  const wins = settled.filter(t => ['won', 'win', 'wygrany', 'wygrana'].includes(String(t.status || '').toLowerCase())).length
-  const roi = settled.length ? Math.round(((wins / settled.length) * 100) - 52) : 7
-  const matchesToday = Math.max(tips.length || 0, 50)
-  const premiumCount = Math.max(premiumTips.length || 0, 7)
-  const today = new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
-  const handleHeroMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2
-    setHeroTilt({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) })
-  }
-  const resetHeroMove = () => setHeroTilt({ x: 0, y: 0 })
 
   return (
     <section
-      className="betai-animated-hero betai-parallax-hero betai-hero-image-slides"
-      aria-label="BetAI predictions hero"
-      onMouseMove={handleHeroMove}
+      className="betai-dashboard-hero-v551"
+      aria-label="Nowy hero dashboardu Bet+AI"
       onMouseEnter={() => setIsHeroPaused(true)}
-      onMouseLeave={() => {
-        resetHeroMove()
-        setIsHeroPaused(false)
-      }}
-      style={{ '--mx': heroTilt.x, '--my': heroTilt.y }}
+      onMouseLeave={() => setIsHeroPaused(false)}
+      onPointerDown={(event) => { heroSwipeStart.current = event.clientX }}
+      onPointerUp={handleHeroPointerUp}
     >
-      <div className="betai-hero-image-stage" aria-hidden="true">
-        {heroSlides.map((src, index) => (
-          <img
-            key={src}
-            className={`betai-hero-slide-img slide-${index + 1} ${panel === index ? 'active' : ''}`}
-            src={src}
-            alt=""
-            draggable="false"
-          />
+      <div className="betai-dashboard-stage-v551" aria-hidden="true">
+        {heroSlides.map((slide, index) => (
+          <div key={slide.src} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''}`}>
+            <img src={slide.src} alt="" draggable="false" />
+          </div>
         ))}
       </div>
-      <div className="betai-hero-dots" role="tablist" aria-label="Wybierz slajd banera Bet+AI">
-        {heroSlides.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            className={panel === index ? 'active' : ''}
-            onClick={() => goToHeroSlide(index)}
-            onFocus={() => setIsHeroPaused(true)}
-            onBlur={() => setIsHeroPaused(false)}
-            aria-label={`Pokaż slajd ${index + 1}`}
-            aria-selected={panel === index}
-            role="tab"
-          />
-        ))}
-      </div>
-      <div className="betai-hero-stats" aria-label="Realne statystyki hero">
-        <div><i>⚽</i><span>MECZÓW DZIŚ</span><strong>{matchesToday}</strong></div>
-        <div><i>🛡️</i><span>ŚR. PEWNOŚĆ</span><strong className="green">{Math.max(avgConfidence, 85)}%</strong></div>
-        <div><i>📈</i><span>ROI</span><strong className="green">{roi > 0 ? '+' : ''}{roi}%</strong></div>
-        <div><i>👑</i><span>PREMIUM</span><strong>{premiumCount}</strong></div>
-        <div><i>📅</i><span>DZIEŃ</span><strong>{today}</strong></div>
+
+
+      <div className="betai-dashboard-nav-v551">
+        <button type="button" className="hero-arrow-v553 hero-arrow-left-v553" aria-label="Poprzedni slajd" onClick={() => moveHeroSlide(-1)}>‹</button>
+        <button type="button" className="hero-arrow-v553 hero-arrow-right-v553" aria-label="Następny slajd" onClick={() => moveHeroSlide(1)}>›</button>
       </div>
     </section>
   )
@@ -1149,22 +1157,21 @@ function LiveChatPanel({ user }) {
 
 
 function Rightbar({ ranking = [], tips = [], user = null }) {
-  const fallbackRanking = buildRankingFromTips(tips)
-  const realRanking = Array.isArray(ranking) && ranking.length ? ranking : fallbackRanking
+  const realRanking = buildLiveLeaderboardRows(ranking, tips)
 
   return (
     <aside className="rightbar">
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
-        <div className="panel-head"><h2>🏆 Top tipsterzy</h2><a>Ranking real</a></div>
+        <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
           <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
-            <span>{index + 1}</span>
+            <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
             <div className="mini-avatar">{formatRankingName(row).slice(0, 2).toUpperCase()}</div>
             <div>
               <b>{formatRankingName(row)}</b>
-              <small>ROI: {Number(row.roi || 0).toFixed(2)} zł • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
-              <small>Typy: {Number(row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)}</small>
+              <small>Yield: {Number(row.roi || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
+              <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)}</small>
             </div>
             <strong>+{formatMoney(row.earnings || row.total_earnings || 0)}</strong>
           </div>
@@ -1178,672 +1185,14 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
         <div className="ai-pick"><div className="club">MC</div><div><b>Manchester City <span>vs</span> Inter Mediolan</b><small>Typ: Manchester City wygra</small><div className="tiny-progress"><i style={{width:'68%'}}></i></div></div><strong>68%</strong></div>
         <div className="ai-pick"><div className="club psg">PSG</div><div><b>PSG <span>vs</span> Borussia Dortmund</b><small>Typ: Powyżej 2.5 gola</small><div className="tiny-progress"><i style={{width:'63%'}}></i></div></div><strong>63%</strong></div>
         <div className="ai-pick"><div className="club lfc">L</div><div><b>Liverpool <span>vs</span> Bayer Leverkusen</b><small>Typ: Liverpool wygra</small><div className="tiny-progress"><i style={{width:'61%'}}></i></div></div><strong>61%</strong></div>
+        <button className="show-more">Zobacz wszystkie</button>
       </section>
 
-      <section className="panel">
-        <div className="panel-head"><h2>Najnowsze wyniki</h2><a>Zobacz wszystkie</a></div>
-        <div className="result"><span>PSG</span><b>2:1</b><span>Dortmund</span><em>Wygrany</em></div>
-        <div className="result"><span>Liverpool</span><b>3:0</b><span>Leverkusen</span><em>Wygrany</em></div>
-        <div className="result"><span>AC Milan</span><b>1:1</b><span>Roma</span><em className="neutral">Zwrot</em></div>
-        <div className="result"><span>Juventus</span><b>2:0</b><span>Lazio</span><em>Wygrany</em></div>
-        <div className="result"><span>Barcelona</span><b>3:1</b><span>Betis</span><em>Wygrany</em></div>
-      </section>
+      <section className="panel"><div className="panel-head"><h2>Wyniki live</h2><a>Dzisiaj</a></div><div className="result"><span>Premier League</span><b>Man City <i>2:1</i> Liverpool</b></div><div className="result"><span>La Liga</span><b>Barcelona <i>1:0</i> Real Madryt</b></div><div className="result"><span>Serie A</span><b>Inter <i>3:0</i> Milan</b></div></section>
     </aside>
   )
 }
 
-
-function getBetaiGuestSessionId() {
-  try {
-    let id = localStorage.getItem('betai_guest_session_id')
-    if (!id) {
-      id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-      localStorage.setItem('betai_guest_session_id', id)
-    }
-    return id
-  } catch (_) {
-    return `guest_${Math.random().toString(36).slice(2, 10)}`
-  }
-}
-
-function SiteReviewsWidget({ user }) {
-  const [open, setOpen] = useState(false)
-  const [reviews, setReviews] = useState([])
-  const [rating, setRating] = useState(5)
-  const [hoverRating, setHoverRating] = useState(0)
-  const [comment, setComment] = useState('')
-  const [guestName, setGuestName] = useState('')
-  const [guestEmail, setGuestEmail] = useState('')
-  const [status, setStatus] = useState('')
-  const [loading, setLoading] = useState(false)
-  const email = normalizeEmail(user?.email)
-  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : '')
-
-  const approvedReviews = useMemo(() => (reviews || []).filter(review => review.is_approved !== false), [reviews])
-  const averageRating = useMemo(() => {
-    if (!approvedReviews.length) return 0
-    const sum = approvedReviews.reduce((total, review) => total + (Number(review.rating) || 0), 0)
-    return Math.round((sum / approvedReviews.length) * 10) / 10
-  }, [approvedReviews])
-  const ratingCount = approvedReviews.length
-  const latestReviews = useMemo(() => approvedReviews.slice(0, 5), [approvedReviews])
-
-  useEffect(() => {
-    try {
-      setGuestName(localStorage.getItem('betai_review_guest_name') || '')
-      setGuestEmail(localStorage.getItem('betai_review_guest_email') || '')
-    } catch (_) {}
-  }, [])
-
-  async function loadReviews() {
-    if (!isSupabaseConfigured || !supabase) return
-    try {
-      const { data, error } = await supabase
-        .from('site_reviews')
-        .select('id,user_id,guest_session_id,user_email,user_name,rating,comment,is_approved,created_at')
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false })
-        .limit(80)
-      if (error) throw error
-      setReviews(Array.isArray(data) ? data : [])
-      setStatus('')
-    } catch (error) {
-      console.warn('reviews load error', error)
-      setStatus('Opinie wymagają uruchomienia pliku SUPABASE_SITE_REVIEWS_512.sql.')
-    }
-  }
-
-  useEffect(() => {
-    loadReviews()
-    const timer = setInterval(loadReviews, 30000)
-    return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) return
-    let channel
-    try {
-      channel = supabase
-        .channel('site_reviews_live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_reviews' }, () => loadReviews())
-        .subscribe()
-    } catch (error) {
-      console.warn('reviews realtime skipped', error)
-    }
-    return () => {
-      if (channel) supabase.removeChannel(channel)
-    }
-  }, [])
-
-  async function submitReview() {
-    const cleanComment = comment.trim()
-    const selectedRating = Math.max(1, Math.min(5, Number(rating) || 5))
-    const cleanEmail = email || normalizeEmail(guestEmail)
-    const cleanName = userName || String(guestName || '').trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Gość')
-
-    if (!cleanComment || cleanComment.length < 3) {
-      setStatus('Napisz krótki komentarz do opinii.')
-      return
-    }
-    if (!email && (!cleanEmail || !cleanEmail.includes('@'))) {
-      setStatus('Wpisz email, żeby dodać opinię jako gość.')
-      return
-    }
-    if (!isSupabaseConfigured || !supabase) {
-      setStatus('Supabase nie jest skonfigurowane.')
-      return
-    }
-
-    try {
-      setLoading(true)
-      setStatus('Zapisywanie opinii live...')
-      try {
-        if (!email) {
-          localStorage.setItem('betai_review_guest_name', cleanName)
-          localStorage.setItem('betai_review_guest_email', cleanEmail)
-        }
-      } catch (_) {}
-
-      const payload = {
-        user_id: user?.id || null,
-        guest_session_id: user?.id ? null : getBetaiGuestSessionId(),
-        user_email: cleanEmail,
-        user_name: cleanName,
-        rating: selectedRating,
-        comment: cleanComment.slice(0, 500),
-        is_approved: true
-      }
-
-      const { error } = await supabase.from('site_reviews').insert(payload)
-      if (error) throw error
-      setComment('')
-      setRating(5)
-      setStatus('Dziękujemy! Twoja opinia została dodana live.')
-      await loadReviews()
-    } catch (error) {
-      console.error('review submit error', error)
-      setStatus('Nie udało się zapisać opinii. Uruchom SUPABASE_SITE_REVIEWS_512.sql i spróbuj ponownie.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function Stars({ interactive = false, value = 5, small = false }) {
-    const currentValue = interactive ? (hoverRating || rating) : value
-    return (
-      <div className={`reviews512-stars ${small ? 'small' : ''}`}>
-        {[1, 2, 3, 4, 5].map(star => (
-          <button
-            key={star}
-            type="button"
-            disabled={!interactive}
-            className={star <= currentValue ? 'active' : ''}
-            onClick={() => interactive && setRating(star)}
-            onMouseEnter={() => interactive && setHoverRating(star)}
-            onMouseLeave={() => interactive && setHoverRating(0)}
-            aria-label={`${star} gwiazdek`}
-          >
-            ★
-          </button>
-        ))}
-      </div>
-    )
-  }
-
-  return (
-    <div className={`reviews512 ${open ? 'is-open' : ''}`}>
-      {open ? (
-        <section className="reviews512-panel" aria-label="Opinie użytkowników Bet+AI">
-          <header className="reviews512-head">
-            <div>
-              <strong>Opinie Bet+AI</strong>
-              <span><i /> Live oceny użytkowników</span>
-            </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij opinie">×</button>
-          </header>
-
-          <div className="reviews512-summary">
-            <div className="reviews512-score">
-              <b>{averageRating ? averageRating.toFixed(1) : '0.0'}</b>
-              <Stars value={Math.round(averageRating || 0)} small />
-            </div>
-            <div>
-              <strong>{ratingCount}</strong>
-              <span>{ratingCount === 1 ? 'opinia live' : 'opinii live'}</span>
-            </div>
-          </div>
-
-          <div className="reviews512-form">
-            {!email ? (
-              <div className="reviews512-guest-fields">
-                <input value={guestName} onChange={event => setGuestName(event.target.value)} placeholder="Twoja nazwa" />
-                <input value={guestEmail} onChange={event => setGuestEmail(event.target.value)} placeholder="Twój email" type="email" />
-              </div>
-            ) : null}
-
-            <div className="reviews512-rate-row">
-              <span>Twoja ocena</span>
-              <Stars interactive />
-            </div>
-
-            <textarea
-              value={comment}
-              onChange={event => setComment(event.target.value)}
-              placeholder="Napisz swoją opinię..."
-              maxLength={500}
-            />
-            <button type="button" onClick={submitReview} disabled={loading || !comment.trim()}>
-              {loading ? 'Zapisywanie...' : 'Dodaj opinię'}
-            </button>
-          </div>
-
-          {status ? <div className="reviews512-status">{status}</div> : null}
-
-          <div className="reviews512-list">
-            {latestReviews.length ? latestReviews.map(review => (
-              <article key={review.id || review.created_at} className="reviews512-item">
-                <div>
-                  <strong>{review.user_name || (review.user_email ? String(review.user_email).split('@')[0] : 'Użytkownik')}</strong>
-                  <Stars value={Number(review.rating) || 5} small />
-                </div>
-                <p>{review.comment}</p>
-                <span>{review.created_at ? new Date(review.created_at).toLocaleString('pl-PL') : 'teraz'}</span>
-              </article>
-            )) : (
-              <div className="reviews512-empty">Bądź pierwszy — dodaj opinię i ocenę gwiazdkami.</div>
-            )}
-          </div>
-
-          <div className="reviews512-powered">Oceny zapisywane live w <b>BetAI Reviews</b></div>
-        </section>
-      ) : null}
-
-      <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz opinie">
-        <span className="reviews512-fab-stars">★★★★★</span>
-        <b>{averageRating ? averageRating.toFixed(1) : 'Oceń'}</b>
-        {!open ? <i /> : null}
-      </button>
-    </div>
-  )
-}
-
-
-function SupportChatWidget({ user }) {
-  const adminEmail = 'smilhytv@gmail.com'
-  const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState('')
-  const [status, setStatus] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [selectedKey, setSelectedKey] = useState('')
-  const email = normalizeEmail(user?.email)
-  const adminMode = isAdminUser(user) || email === adminEmail
-  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
-
-  const conversationKey = (message) => normalizeEmail(message?.user_email || message?.sender_email || '') || String(message?.user_id || message?.sender_id || '')
-  const conversations = useMemo(() => {
-    const map = new Map()
-    ;(messages || []).forEach(message => {
-      const key = conversationKey(message)
-      if (!key) return
-      const current = map.get(key) || {
-        key,
-        email: normalizeEmail(message.user_email || message.sender_email),
-        name: message.user_name || message.sender_name || key.split('@')[0] || 'Użytkownik',
-        last: message.created_at,
-        unread: 0,
-        messages: []
-      }
-      current.messages.push(message)
-      current.last = message.created_at || current.last
-      if (message.sender_role !== 'admin' && !message.is_read) current.unread += 1
-      map.set(key, current)
-    })
-    return Array.from(map.values()).sort((a,b) => new Date(b.last || 0) - new Date(a.last || 0))
-  }, [messages])
-
-  const visibleMessages = useMemo(() => {
-    if (!adminMode) return messages.slice().sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
-    const key = selectedKey || conversations[0]?.key || ''
-    return messages
-      .filter(message => conversationKey(message) === key)
-      .sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
-  }, [messages, adminMode, selectedKey, conversations])
-
-  const selectedConversation = adminMode ? conversations.find(item => item.key === (selectedKey || conversations[0]?.key)) || conversations[0] : null
-
-  async function loadSupportMessages() {
-    if (!isSupabaseConfigured || !supabase || !user?.id) return
-    try {
-      setLoading(true)
-      let query = supabase
-        .from('support_messages')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(adminMode ? 120 : 80)
-
-      if (!adminMode) {
-        query = query.or(`user_id.eq.${user.id},user_email.eq.${email}`)
-      }
-
-      const { data, error } = await query
-      if (error) throw error
-      const rows = Array.isArray(data) ? data : []
-      setMessages(rows)
-      if (adminMode && !selectedKey && rows.length) {
-        const firstKey = conversationKey(rows[0])
-        if (firstKey) setSelectedKey(firstKey)
-      }
-      setStatus('')
-    } catch (error) {
-      console.warn('support chat load error', error)
-      setStatus('Czat pomocy wymaga uruchomienia pliku SUPABASE_SUPPORT_CHAT_510.sql w Supabase.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!open || !user?.id) return
-    loadSupportMessages()
-    const timer = setInterval(loadSupportMessages, 10000)
-    return () => clearInterval(timer)
-  }, [open, user?.id, adminMode, selectedKey])
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase || !open || !user?.id) return
-    let channel
-    try {
-      channel = supabase
-        .channel('support_messages_live_' + user.id)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'support_messages' }, () => loadSupportMessages())
-        .subscribe()
-    } catch (error) {
-      console.warn('support realtime skipped', error)
-    }
-    return () => {
-      if (channel) supabase.removeChannel(channel)
-    }
-  }, [open, user?.id])
-
-  async function sendSupportMessage() {
-    const clean = text.trim()
-    if (!clean || !user?.id || !isSupabaseConfigured || !supabase) return
-    try {
-      setLoading(true)
-      const target = selectedConversation
-      const payload = adminMode ? {
-        user_id: target?.messages?.[0]?.user_id || null,
-        user_email: target?.email || target?.key || '',
-        user_name: target?.name || target?.email || 'Użytkownik',
-        admin_email: adminEmail,
-        sender_id: user.id,
-        sender_email: email,
-        sender_name: userName || 'Admin',
-        sender_role: 'admin',
-        message: clean,
-        is_read: false
-      } : {
-        user_id: user.id,
-        user_email: email,
-        user_name: userName,
-        admin_email: adminEmail,
-        sender_id: user.id,
-        sender_email: email,
-        sender_name: userName,
-        sender_role: 'user',
-        message: clean,
-        is_read: false
-      }
-      const { error } = await supabase.from('support_messages').insert(payload)
-      if (error) throw error
-      setText('')
-      setStatus(adminMode ? 'Odpowiedź wysłana do użytkownika.' : 'Wiadomość wysłana do admina. Odpowiedź pojawi się tutaj live.')
-      await loadSupportMessages()
-    } catch (error) {
-      console.error('support chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości. Uruchom SUPABASE_SUPPORT_CHAT_510.sql i spróbuj ponownie.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (!user?.id) return null
-
-  return (
-    <div className={`support510 ${open ? 'is-open' : ''}`}>
-      {open ? (
-        <section className="support510-panel" aria-label="Wsparcie TypyAI.pl live">
-          <header className="support510-head">
-            <div>
-              <strong>{adminMode ? 'Centrum wsparcia' : 'Wsparcie TypyAI.pl'}</strong>
-              <span><i /> {adminMode ? 'Panel admina live' : 'Natychmiastowa odpowiedź live'}</span>
-            </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
-          </header>
-
-          {adminMode ? (
-            <div className="support510-admin-tabs">
-              {conversations.length ? conversations.slice(0, 5).map(item => (
-                <button key={item.key} type="button" className={(selectedKey || conversations[0]?.key) === item.key ? 'active' : ''} onClick={() => setSelectedKey(item.key)}>
-                  <b>{item.name}</b>
-                  <span>{item.unread ? `${item.unread} nowe` : item.email}</span>
-                </button>
-              )) : <span className="support510-empty-mini">Brak rozmów</span>}
-            </div>
-          ) : null}
-
-          <div className="support510-body">
-            {!visibleMessages.length ? (
-              <div className="support510-welcome">
-                <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
-                <span>Wiadomość trafia tylko do admina: smilhytv / smilhytv@gmail.com</span>
-              </div>
-            ) : visibleMessages.map(message => {
-              const mine = normalizeEmail(message.sender_email) === email
-              const isAdminMessage = message.sender_role === 'admin'
-              return (
-                <div className={`support510-msg ${mine ? 'mine' : ''} ${isAdminMessage ? 'admin' : ''}`} key={message.id || message.created_at}>
-                  <p>{message.message}</p>
-                  <span>{isAdminMessage ? 'Admin' : (message.sender_name || message.user_name || 'Użytkownik')} · {message.created_at ? new Date(message.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : 'teraz'}</span>
-                </div>
-              )
-            })}
-          </div>
-
-          {status ? <div className="support510-status">{status}</div> : null}
-
-          <footer className="support510-compose">
-            <textarea value={text} onChange={event => setText(event.target.value)} placeholder={adminMode ? 'Napisz odpowiedź...' : 'Wpisz swoją wiadomość...'} onKeyDown={event => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                sendSupportMessage()
-              }
-            }} />
-            <button type="button" onClick={sendSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
-          </footer>
-          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
-        </section>
-      ) : null}
-
-      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
-        {open ? '×' : '💬'}
-        {!open ? <span className="support510-fab-pulse" /> : null}
-      </button>
-    </div>
-  )
-}
-
-
-function AuthSupportChatGuest() {
-  const [open, setOpen] = useState(false)
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [text, setText] = useState('')
-  const [status, setStatus] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    try {
-      setEmail(localStorage.getItem('betai_support_guest_email') || '')
-      setName(localStorage.getItem('betai_support_guest_name') || '')
-    } catch (_) {}
-  }, [])
-
-  async function sendGuestSupportMessage() {
-    const clean = text.trim()
-    const cleanEmail = normalizeEmail(email)
-    const cleanName = String(name || '').trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Gość')
-
-    if (!clean) {
-      setStatus('Wpisz wiadomość do supportu.')
-      return
-    }
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setStatus('Wpisz email, żeby admin mógł Ci odpisać.')
-      return
-    }
-    if (!isSupabaseConfigured || !supabase) {
-      setStatus('Supabase nie jest skonfigurowane.')
-      return
-    }
-
-    try {
-      setLoading(true)
-      setStatus('Wysyłanie wiadomości do admina...')
-      try {
-        localStorage.setItem('betai_support_guest_email', cleanEmail)
-        localStorage.setItem('betai_support_guest_name', cleanName)
-      } catch (_) {}
-
-      const { error } = await supabase.from('support_messages').insert({
-        user_id: null,
-        user_email: cleanEmail,
-        user_name: cleanName,
-        admin_email: 'smilhytv@gmail.com',
-        sender_id: null,
-        sender_email: cleanEmail,
-        sender_name: cleanName,
-        sender_role: 'guest',
-        message: clean,
-        is_read: false
-      })
-      if (error) throw error
-      setText('')
-      setStatus('Wiadomość wysłana do admina smilhytv. Odpowiedź dostaniesz po zalogowaniu albo mailowo.')
-    } catch (error) {
-      console.error('guest support send error', error)
-      setStatus('Nie udało się wysłać. Uruchom SUPABASE_SUPPORT_CHAT_511.sql w Supabase i spróbuj ponownie.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className={`support510 support510-guest ${open ? 'is-open' : ''}`}>
-      {open ? (
-        <section className="support510-panel support510-guest-panel" aria-label="Wsparcie BetAI live">
-          <header className="support510-head">
-            <div>
-              <strong>Wsparcie BetAI</strong>
-              <span><i /> Live pomoc — wiadomość trafia do admina</span>
-            </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
-          </header>
-
-          <div className="support510-body">
-            <div className="support510-welcome">
-              <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
-              <span>Twoja wiadomość trafi tylko do: smilhytv / smilhytv@gmail.com</span>
-            </div>
-          </div>
-
-          <div className="support510-guest-fields">
-            <input value={name} onChange={event => setName(event.target.value)} placeholder="Twoja nazwa" />
-            <input value={email} onChange={event => setEmail(event.target.value)} placeholder="Twój email" type="email" />
-          </div>
-
-          {status ? <div className="support510-status">{status}</div> : null}
-
-          <footer className="support510-compose">
-            <textarea value={text} onChange={event => setText(event.target.value)} placeholder="Wpisz swoją wiadomość..." onKeyDown={event => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                sendGuestSupportMessage()
-              }
-            }} />
-            <button type="button" onClick={sendGuestSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
-          </footer>
-          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
-        </section>
-      ) : null}
-
-      <button type="button" className="support510-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz czat pomocy">
-        {open ? '×' : '💬'}
-        {!open ? <span className="support510-fab-pulse" /> : null}
-      </button>
-    </div>
-  )
-}
-
-
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster }) {
-  const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
-  const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
-  const probability = getAiConfidence(tip)
-  const aiScore = getAiScore(tip)
-  const aiAnalysis = getAiAnalysis(tip)
-  const aiBadges = getAiBadges(tip)
-  const isPremium = tip.access_type === 'premium'
-  const isLocked = isPremium && !unlocked && !profileSubscriptionActive
-  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
-  const authorId = getTipAuthorId(tip)
-  const currentUsername = (currentUser?.email || '').split('@')[0]
-  const isOwnTip = Boolean(
-    (currentUser?.id && authorId && String(currentUser.id) === String(authorId)) ||
-    (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
-  )
-  const followKey = authorId ? String(authorId) : String(author).toLowerCase()
-  const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
-
-  return (
-    <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
-      <div className="tip-header">
-        <div className="tipster">
-          <div className={`photo ${author === 'AI Tip' ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
-          <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
-          <em>{author === 'AI Tip' ? 'AI' : 'TIPSTER'}</em>
-          {!isOwnTip && author !== 'AI Tip' && (
-            <button
-              type="button"
-              className={isFollowing ? 'follow-btn active' : 'follow-btn'}
-              onClick={() => onToggleFollow?.(authorId, author)}
-              title="Obserwuj tego tipstera i dostawaj powiadomienia o nowych typach"
-            >
-              {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
-            </button>
-          )}
-        </div>
-        <div className="card-badges">
-          <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
-          <span className="ai-badge">{isLocked ? 'AI 🔒' : `AI ${probability}%`}</span>
-          {!isLocked && aiScore >= 75 && <span className="ai-score-badge">Score {aiScore}</span>}
-        </div>
-      </div>
-
-      <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
-
-      <div className="tip-grid">
-        <div className="match-box">
-          <div className="teams"><b>{tip.team_home}</b><span>vs</span><b>{tip.team_away}</b></div>
-          <div className="bet-row">
-            <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
-            <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
-          </div>
-        </div>
-
-        <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
-          <div className="ai-title">✦ AI Analiza <strong>{isLocked ? '🔒' : `${probability}%`}</strong></div>
-          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
-          <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
-          {!isLocked && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
-          {isLocked && <div className="lock-overlay">🔒 Premium</div>}
-        </div>
-      </div>
-
-      <div className="tip-footer">
-        <span className={statusClass}>{statusLabel}</span>
-        <span>♡ 128</span><span>▢ 45</span><span>↗</span>
-        {!isOwnTip && author !== 'AI Tip' && (
-          <button
-            type="button"
-            className={isFollowing ? 'follow-footer-btn active' : 'follow-footer-btn'}
-            onClick={() => onToggleFollow?.(authorId, author)}
-          >
-            {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}
-          </button>
-        )}
-        {isLocked ? (
-          <>
-            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup typ za {tip.price || 29} zł</button>
-            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup dostęp do profilu</button>
-          </>
-        ) : (
-          <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
-        )}
-      </div>
-    </article>
-  )
-}
-
-
-function normalizeResult(value) {
-  const v = String(value || '').toLowerCase()
-  if (['win','won','wygrany'].includes(v)) return 'win'
-  if (['loss','lose','lost','przegrany'].includes(v)) return 'loss'
-  if (['void','push','zwrot'].includes(v)) return 'void'
-  return 'pending'
-}
 
 function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
   const [profile, setProfile] = useState(null)
@@ -1930,7 +1279,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         <div className="tipster-profile-main">
           <div className="profile-big-avatar">{initials}</div>
           <div>
-            <p className="eyebrow">PROFIL TIPSTERA</p>
+            <p className="eyebrow">PROFIL TYPERA</p>
             <h1>{username}</h1>
             <span>{profile?.email || 'Profil publiczny'}</span>
             <div className="tipster-profile-actions">
@@ -1952,18 +1301,18 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         </div>
       </div>
 
-      {loading ? <div className="empty-state">Ładowanie profilu tipstera...</div> : (
+      {loading ? <div className="empty-state">Ładowanie profilu typera...</div> : (
         <>
           <div className="tipster-sales-strip">
             <div className="sales-copy">
-              <span className="sales-eyebrow">TIPSTER PROFILE PRO</span>
+              <span className="sales-eyebrow">TYPER PROFILE PRO</span>
               <h2>{isTopSeller ? '🔥 TOP SELLER — sprawdzony profil premium' : 'Profil premium gotowy do sprzedaży'}</h2>
               <p>Ostatnie wyniki, statystyki i social proof w jednym miejscu. Kup dostęp do profilu albo odblokuj pojedynczy typ.</p>
             </div>
             {!isOwn && (
               <div className="sales-actions">
                 <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
-                <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj tipstera'}</button>
+                <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj typera'}</button>
                 <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>Kopiuj link</button>
               </div>
             )}
@@ -1999,7 +1348,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
               </div>
             </div>
             <div className="featured-card">
-              <div className="feed-title compact"><div><h2>Ostatnie 10 typów</h2><p>Transparentna forma tipstera.</p></div></div>
+              <div className="feed-title compact"><div><h2>Ostatnie 10 typów</h2><p>Transparentna forma typera.</p></div></div>
               <div className="last-results-list">
                 {lastTenTips.length ? lastTenTips.map(tip => {
                   const res = normalizeResult(tip.result || tip.status)
@@ -2050,9 +1399,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
           </div>
 
           <div className="tipster-profile-tips">
-            <div className="feed-title"><div><h2>Typy tipstera</h2><p>Publiczny feed tego użytkownika.</p></div></div>
+            <div className="feed-title"><div><h2>Typy typera</h2><p>Publiczny feed tego użytkownika.</p></div></div>
             <div className="feed">
-              {tipsterTips.length ? tipsterTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={onUnlock} onSubscribeToTipster={onSubscribeToTipster} currentUser={currentUser} followingTipsters={followingTipsters} onToggleFollow={onToggleFollow} onOpenTipster={() => {}} />) : <div className="empty-state">Ten tipster nie dodał jeszcze typów.</div>}
+              {tipsterTips.length ? tipsterTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={onUnlock} onSubscribeToTipster={onSubscribeToTipster} currentUser={currentUser} followingTipsters={followingTipsters} onToggleFollow={onToggleFollow} onOpenTipster={() => {}} onToast={null} />) : <div className="empty-state">Ten tipster nie dodał jeszcze typów.</div>}
             </div>
           </div>
         </>
@@ -2177,9 +1526,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             </div>
 
+            <div className="static-add-card static-span-two tip-single-price-card">
+              <span className="static-add-label">12. Cena singla premium</span>
+              <div className="tip-price-config">
+                <div>
+                  <strong>Ustal cenę pojedynczego typu</strong>
+                  <p>Każdy tipster sam decyduje, za ile sprzedaje pojedynczy typ premium.</p>
+                </div>
+                <div className="tip-price-box">
+                  <span>Cena singla</span>
+                  <b>29.00 zł</b>
+                  <small>Ty: 23.20 zł • Platforma: 5.80 zł</small>
+                </div>
+              </div>
+            </div>
+
             <div className="static-add-card static-span-two publish-card">
               <div>
-                <span className="static-add-label">12. Darmowy / Premium</span>
+                <span className="static-add-label">13. Darmowy / Premium</span>
                 <p>Wybierz widoczność typu dla użytkowników</p>
               </div>
               <div className="publish-actions">
@@ -2213,7 +1577,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <div><small>PEWNOŚĆ</small><strong className="accent">84%</strong></div>
                 <div><small>STAWKA</small><strong>100.00 zł</strong></div>
                 <div><small>ANALIZA AI</small><strong className="accent">AI Wysoka</strong></div>
-                <div><small>DATA DODANIA</small><strong>24.05.2025, 14:32</strong></div>
+                <div><small>CENA SINGLA</small><strong>29.00 zł</strong></div>
               </div>
               <div className="preview-ring">↗</div>
             </div>
@@ -2600,7 +1964,9 @@ function ArticlesView() {
   const [lastLiveUpdate, setLastLiveUpdate] = useState(null)
   const [importantNews, setImportantNews] = useState([])
   const [articleHeroIndex, setArticleHeroIndex] = useState(0)
+  const [urgentTickerIndex, setUrgentTickerIndex] = useState(0)
   const articleHeroSwipeStart = useRef(null)
+  const urgentHeroSwipeStart = useRef(null)
 
   useEffect(() => {
     let isMounted = true
@@ -2707,6 +2073,21 @@ function ArticlesView() {
 
   const heroArticle = articleHeroSlides[articleHeroIndex % Math.max(articleHeroSlides.length, 1)] || articleHeroSlides[0]
 
+  const urgentHeroSlides = (importantNews.length ? importantNews : liveArticles.slice(0, 5)).map((item, index) => ({
+    tag: item.category || 'PILNE',
+    title: item.title || 'Sport.pl — ważna wiadomość',
+    excerpt: item.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.',
+    meta: getSportPlRelativeTime(item.publishedAt),
+    icon: getSportPlInitials(item.title),
+    url: item.url,
+    image: getSportPlImageSrc(item),
+    rawImage: item.image || '',
+    isImportant: true,
+    index
+  }))
+
+  const urgentHeroArticle = urgentHeroSlides[urgentTickerIndex % Math.max(urgentHeroSlides.length, 1)] || urgentHeroSlides[0]
+
   useEffect(() => {
     if (articleHeroIndex >= articleHeroSlides.length) setArticleHeroIndex(0)
   }, [articleHeroSlides.length, articleHeroIndex])
@@ -2719,9 +2100,26 @@ function ArticlesView() {
     return () => window.clearInterval(sliderTimer)
   }, [activeArticleTab, articleHeroSlides.length])
 
+  useEffect(() => {
+    if (urgentTickerIndex >= urgentHeroSlides.length) setUrgentTickerIndex(0)
+  }, [urgentHeroSlides.length, urgentTickerIndex])
+
+  useEffect(() => {
+    if (activeArticleTab !== 'live' || urgentHeroSlides.length <= 1) return
+    const urgentTimer = window.setInterval(() => {
+      setUrgentTickerIndex(prev => (prev + 1) % urgentHeroSlides.length)
+    }, 5500)
+    return () => window.clearInterval(urgentTimer)
+  }, [activeArticleTab, urgentHeroSlides.length])
+
   const moveArticleHero = (direction) => {
     if (!articleHeroSlides.length) return
     setArticleHeroIndex(prev => (prev + direction + articleHeroSlides.length) % articleHeroSlides.length)
+  }
+
+  const moveUrgentHero = (direction) => {
+    if (!urgentHeroSlides.length) return
+    setUrgentTickerIndex(prev => (prev + direction + urgentHeroSlides.length) % urgentHeroSlides.length)
   }
 
   const handleArticleHeroPointerUp = (event) => {
@@ -2730,6 +2128,14 @@ function ArticlesView() {
     if (startX == null) return
     const diff = event.clientX - startX
     if (Math.abs(diff) > 45) moveArticleHero(diff < 0 ? 1 : -1)
+  }
+
+  const handleUrgentHeroPointerUp = (event) => {
+    const startX = urgentHeroSwipeStart.current
+    urgentHeroSwipeStart.current = null
+    if (startX == null) return
+    const diff = event.clientX - startX
+    if (Math.abs(diff) > 45) moveUrgentHero(diff < 0 ? 1 : -1)
   }
 
   const tvRows = [
@@ -2786,26 +2192,52 @@ function ArticlesView() {
       <div className="tvlive-layout-v8">
         <div className="tvlive-main-v8">
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
-            <button type="button" aria-pressed={activeArticleTab === 'articles'} className={activeArticleTab === 'articles' ? 'active' : ''} onClick={() => setActiveArticleTab('articles')}>Artykuły</button>
-            <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Żywa</button>
+            <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Na żywo</button>
             <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV / PPV</button>
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
 
-          {importantNews.length ? (
-            <div className="glass-tvlive-v8 sportpl-alert-v538" onClick={() => setActiveArticleTab('live')}>
-              <span>WAŻNE ZE SPORT.PL</span>
-              <strong>{importantNews[0].title}</strong>
-              <small>Auto-sprawdzanie co 10 min • {lastLiveUpdate ? getSportPlRelativeTime(lastLiveUpdate) : 'Teraz'}</small>
-            </div>
-          ) : null}
-
           {activeArticleTab === 'live' ? (
+            <>
+            {urgentHeroArticle ? (
+              <div
+                className={`glass-tvlive-v8 sportpl-important-hero-v550 ${urgentHeroArticle?.image ? 'has-image-v550' : ''}`}
+                onPointerDown={(event) => { urgentHeroSwipeStart.current = event.clientX }}
+                onPointerUp={handleUrgentHeroPointerUp}
+              >
+                {urgentHeroArticle?.image ? (
+                  <div className="sportpl-important-hero-bg-v550">
+                    <img src={urgentHeroArticle.image} data-original-src={urgentHeroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-important-hero-v550')?.classList.add('image-error-v550'); event.currentTarget.remove() }} />
+                  </div>
+                ) : null}
+                <div className="sportpl-important-strip-v550"><span>NAJWAŻNIEJSZE WIADOMOŚCI</span><b>{urgentTickerIndex + 1}/{urgentHeroSlides.length || 1}</b><em>tylko pilne • auto co 5,5 s</em></div>
+                <div className="sportpl-important-copy-v550">
+                  <div className="sportpl-important-badge-v550">PILNE</div>
+                  <small>{urgentHeroArticle?.tag || 'SPORT.PL'}</small>
+                  <h1>{urgentHeroArticle?.title || 'Ważna wiadomość sportowa'}</h1>
+                  <p>{urgentHeroArticle?.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.'}</p>
+                  <div className="sportpl-important-actions-v550">
+                    <button type="button" onClick={() => urgentHeroArticle?.url && window.open(urgentHeroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
+                    <button type="button" className="ghost-v550" onClick={() => moveUrgentHero(1)}>Następna wiadomość</button>
+                  </div>
+                </div>
+                <div className="sportpl-important-logo-v550">SPORT.PL</div>
+                <div className="sportpl-important-nav-v550">
+                  <button type="button" aria-label="Poprzednia pilna wiadomość" onClick={() => moveUrgentHero(-1)}>‹</button>
+                  <div className="sportpl-important-dots-v550">
+                    {urgentHeroSlides.map((_, index) => (
+                      <button type="button" key={index} aria-label={`Pilna wiadomość ${index + 1}`} className={urgentTickerIndex === index ? 'active' : ''} onClick={() => setUrgentTickerIndex(index)} />
+                    ))}
+                  </div>
+                  <button type="button" aria-label="Następna pilna wiadomość" onClick={() => moveUrgentHero(1)}>›</button>
+                </div>
+              </div>
+            ) : null}
             <div className="glass-tvlive-v8 sportpl-live-panel-v538 sportpl-live-panel-v539">
               <div className="sportpl-live-head-v538">
                 <div>
                   <span>SPORT.PL LIVE FEED</span>
-                  <h2>Żywa zakładka wiadomości</h2>
+                  <h2>Zakładka Na żywo</h2>
                   <p>Pobiera najnowsze informacje ze Sport.pl i automatycznie sprawdza ważne wiadomości co 10 minut. Kafelki są klikalne i otwierają pełny artykuł.</p>
                 </div>
                 <div className="sportpl-live-status-v538">
@@ -2841,6 +2273,7 @@ function ArticlesView() {
               </div>
               {!liveArticles.length && liveLoading ? <div className="sportpl-loading-v538">Pobieram wiadomości ze Sport.pl...</div> : null}
             </div>
+            </>
           ) : null}
 
           {activeArticleTab !== 'live' ? <div className="tvlive-top-grid-v8">
@@ -2908,7 +2341,7 @@ function ArticlesView() {
           </div> : null}
 
           {activeArticleTab !== 'live' ? <>
-          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Żywą</button></div>
+          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Na żywo</button></div>
           <div className="article-grid-v8">
             {sportPlCards.map((item, idx) => (
               <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
@@ -3223,7 +2656,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
       <div className="leaderboard-hero">
         <div>
           <h1>Powiadomienia</h1>
-          <p>Nowe typy od obserwowanych tipsterów oraz ważne komunikaty systemowe.</p>
+          <p>Nowe typy od obserwowanych typerów oraz ważne komunikaty systemowe.</p>
         </div>
         <div className="leaderboard-badge">{unread} NOWE</div>
       </div>
@@ -3246,7 +2679,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
         )) : (
           <div className="empty-wallet">
             <strong>Brak powiadomień</strong>
-            <span>Zaobserwuj tipstera, a po dodaniu przez niego nowego typu zobaczysz tutaj alert.</span>
+            <span>Zaobserwuj typera, a po dodaniu przez niego nowego typu zobaczysz tutaj alert.</span>
           </div>
         )}
       </div>
@@ -3899,21 +3332,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
 function LeaderboardView({ tips = [], ranking = [] }) {
-  const leaderboardRows = [
-    ['1', 'AI Master', 'PRO', '92.4%', '+28.7%', '1,283', '27.4K', '+12,842.35 zł', ['◈','✦','🏅']],
-    ['2', 'BetWizard', 'VIP', '89.1%', '+24.3%', '987', '19.8K', '+9,652.20 zł', ['◈','✦','🏅']],
-    ['3', 'GreenStrike', 'PRO', '87.6%', '+21.9%', '853', '15.6K', '+7,231.44 zł', ['◈','✦','🏅']],
-    ['4', 'StatKing', 'PRO', '85.2%', '+19.6%', '741', '12.3K', '+5,882.11 zł', ['◈','✦','🏅']],
-    ['5', 'ValueHunter', 'VIP', '83.7%', '+18.2%', '689', '10.7K', '+4,993.32 zł', ['◈','✦','🏅']],
-    ['6', 'Over2Expert', 'PRO', '82.5%', '+16.8%', '612', '9.1K', '+3,842.77 zł', ['◈','✦','🏅']],
-    ['7', 'SoccerMind', 'VIP', '81.3%', '+15.3%', '544', '7.8K', '+3,127.09 zł', ['◈','✦','🏅']],
-    ['8', 'CornerLord', 'PRO', '79.8%', '+14.1%', '498', '6.3K', '+2,684.51 zł', ['◈','✦','🏅']],
-  ]
-  const topTipsters = [
-    ['1', 'smilhytv', 'Typy: 32 • Win: 76.0% • ROI: 17.2%', '+0.00 zł'],
-    ['2', 'buchajsonek1988', 'Typy: 15 • Win: 79.0% • ROI: 14.1%', '+0.00 zł'],
-    ['3', 'buchajson1988', 'Typy: 12 • Win: 68.0% • ROI: 11.8%', '+0.00 zł'],
-  ]
+  const leaderboardRows = buildLiveLeaderboardRows(ranking, tips)
+  const topTyperRows = leaderboardRows.slice(0, 3)
   const challengeRows = [
     ['Król trafień', 'Osiągnij 85% skuteczności w typach', '67%', '+100 AI Tokenów', '67%'],
     ['Seria zwycięstw', 'Wygraj 10 typów z rzędu', '6/10', '+150 AI Tokenów', '60%'],
@@ -3933,7 +3353,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
           <div className="ranking-v4-header">
             <div>
               <h1>Ranking</h1>
-              <p>Rywalizuj z najlepszymi i wspinaj się na szczyt!</p>
+              <p>Żywa tabela typerów — miejsca aktualizują się automatycznie według profitu i yield.</p>
             </div>
             <div className="ranking-v4-filters">
               <button type="button">Wszystkie sporty ⌄</button>
@@ -3943,7 +3363,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
 
           <div className="glass-ranking-v4 ranking-v4-tabs">
             <button type="button" className="active">Ranking</button>
-            <button type="button">Top tipsterzy</button>
+            <button type="button">Top typerzy</button>
             <button type="button">Polecenia</button>
             <button type="button">Liderzy miesiąca</button>
           </div>
@@ -3952,34 +3372,35 @@ function LeaderboardView({ tips = [], ranking = [] }) {
             <div className="ranking-v4-table">
               <div className="ranking-v4-row head">
                 <span>#</span>
-                <span>TIPSTER</span>
+                <span>Typer</span>
                 <span>WIN RATE</span>
-                <span>ROI</span>
+                <span>YIELD</span>
                 <span>TYPY</span>
                 <span>OBSERWUJĄCY</span>
-                <span>ZAROBKI</span>
+                <span>PROFIT</span>
                 <span>ODZNAKI</span>
                 <span></span>
               </div>
               {leaderboardRows.map((row, idx) => (
-                <div className="ranking-v4-row" key={idx}>
-                  <span className={`place-badge-v4 p${row[0]}`}>{row[0]}</span>
+                <div className="ranking-v4-row" key={row.tipster_id || row.id || idx}>
+                  <span className={`place-badge-v4 p${row.liveRank}`}>{row.liveRank}</span>
                   <span className="tipster-cell-v4">
-                    <i className={`tipster-photo-v4 ${idx < 3 ? 'top' : ''}`}>{row[1].slice(0,2).toUpperCase()}</i>
+                    <i className={`tipster-photo-v4 ${idx < 3 ? 'top' : ''}`}>{formatRankingName(row).slice(0,2).toUpperCase()}</i>
                     <div>
-                      <b>{row[1]}</b>
-                      <small className={`status-tag-v4 ${row[2].toLowerCase()}`}>{row[2]}</small>
+                      <b>{formatRankingName(row)}</b>
+                      <small className={`status-tag-v4 ${isPremiumAccount(row.plan || row.subscription_status) ? 'pro' : 'vip'}`}>{isPremiumAccount(row.plan || row.subscription_status) ? 'PREMIUM' : 'TYPER'}</small>
                     </div>
                   </span>
-                  <span className="win-v4">{row[3]} ↗</span>
-                  <span>{row[4]}</span>
-                  <span>{row[5]}</span>
-                  <span>{row[6]}</span>
-                  <span className="profit-v4">{row[7]}</span>
-                  <span className="badges-cell-v4">{row[8].map((b, i) => <i key={i}>{b}</i>)}</span>
+                  <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
+                  <span>{Number(row.roi || 0).toFixed(2)}%</span>
+                  <span>{Number(row.totalTips || row.total_tips || 0)}</span>
+                  <span>{Number(row.followers || 0)}</span>
+                  <span className="profit-v4">+{formatMoney(row.earnings || row.total_earnings || 0)}</span>
+                  <span className="badges-cell-v4">{row.liveRank === 1 ? <><i>🥇</i><i>🏆</i><i>⭐</i></> : row.liveRank === 2 ? <><i>🥈</i><i>⭐</i><i>📈</i></> : row.liveRank === 3 ? <><i>🥉</i><i>⭐</i><i>📊</i></> : <><i>📊</i><i>⚡</i><i>✓</i></>}</span>
                   <span><button type="button" className="follow-btn-v4">Obserwuj</button></span>
                 </div>
               ))}
+              {!leaderboardRows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00 zł</span><span>-</span><span></span></div>}
             </div>
             <button type="button" className="full-ranking-btn-v4">Zobacz pełny ranking</button>
           </div>
@@ -3990,11 +3411,11 @@ function LeaderboardView({ tips = [], ranking = [] }) {
               <div className="hall-stage-v4">
                 <div className="hall-copy-v4">
                   <strong>Legendy Bet+AI</strong>
-                  <p>Najlepsi z najlepszych. Inspiracja dla wszystkich.</p>
+                  <p>Najlepsi typerzy i najwyższy profit.</p>
                   <div className="hall-laurels-v4">
-                    <span>AI Master<br/><small>Sezon 3 • ROI 42.1%</small></span>
-                    <span>BetWizard<br/><small>Sezon 2 • ROI 38.2%</small></span>
-                    <span>StatKing<br/><small>Sezon 1 • ROI 35.2%</small></span>
+                    {leaderboardRows.slice(0, 3).map((row) => (
+                      <span key={row.tipster_id || row.liveRank}>{formatRankingName(row)}<br/><small>Yield {Number(row.roi || 0).toFixed(2)}% • Profit +{formatMoney(row.earnings || row.total_earnings || 0)}</small></span>
+                    ))}
                   </div>
                 </div>
                 <div className="trophy-wrap-v4">
@@ -4025,18 +3446,18 @@ function LeaderboardView({ tips = [], ranking = [] }) {
         <aside className="ranking-v4-sidebar">
           <div className="glass-ranking-v4 sidebar-card-v4">
             <div className="sidebar-tabs-v4">
-              <button type="button" className="active">Top tipsterzy</button>
+              <button type="button" className="active">Top typerzy</button>
               <button type="button">Polecenia</button>
               <button type="button">Liderzy miesiąca</button>
             </div>
             <div className="sidebar-head-link-v4">Zobacz wszystkich</div>
             <div className="top-tipsters-list-v4">
-              {topTipsters.map((row, idx) => (
-                <div className="top-tipster-row-v4" key={idx}>
-                  <span className={`mini-rank-v4 r${idx+1}`}>{row[0]}</span>
-                  <i className="mini-avatar-v4">{row[1].slice(0,2).toUpperCase()}</i>
-                  <div><strong>{row[1]}</strong><small>{row[2]}</small></div>
-                  <b>{row[3]}</b>
+              {topTyperRows.map((row, idx) => (
+                <div className="top-tipster-row-v4" key={row.tipster_id || row.id || idx}>
+                  <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
+                  <i className="mini-avatar-v4">{formatRankingName(row).slice(0,2).toUpperCase()}</i>
+                  <div><strong>{formatRankingName(row)}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || 0).toFixed(2)}%</small></div>
+                  <b>+{formatMoney(row.earnings || row.total_earnings || 0)}</b>
                 </div>
               ))}
             </div>
@@ -4052,24 +3473,12 @@ function LeaderboardView({ tips = [], ranking = [] }) {
               <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>78 / 150</b></div>
               <div className="progress-bar-v4"><i style={{width:'52%'}}></i></div>
             </div>
-            <div className="bonus-levels-v4">
-              {referralBonuses.map((row, idx) => (
-                <div className={`bonus-box-v4 ${row[2] ? 'done' : 'locked'}`} key={idx}>
-                  <span className="bonus-icon-v4">{row[2] ? '✓' : '🔒'}</span>
-                  <strong>{row[0]}</strong>
-                  <small>{row[1]}</small>
-                </div>
+            <div className="referral-bonuses-v4">
+              {referralBonuses.map((item, idx) => (
+                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b><i>{item[2] ? '✓' : '○'}</i></div>
               ))}
             </div>
-            <div className="ref-earnings-v4">
-              <span>Zarobki z poleceń</span>
-              <div className="ref-earnings-grid-v4">
-                <div><small>Łącznie</small><b>+124.50 zł</b></div>
-                <div><small>W tym miesiącu</small><b>+28.30 zł</b></div>
-                <div><small>Oczekujące</small><b>+6.20 zł</b></div>
-              </div>
-            </div>
-            <button type="button" className="details-btn-v4">Zobacz szczegóły</button>
+            <button type="button" className="hall-btn-v4 alt">Pobierz link polecający</button>
           </div>
         </aside>
       </div>
@@ -4077,1135 +3486,6 @@ function LeaderboardView({ tips = [], ranking = [] }) {
   )
 }
 
-
-function AuthField({ label, type = 'text', value, onChange, placeholder, icon, autoComplete, name, rightControl }) {
-  return (
-    <label className="auth481-field">
-      <span className="auth481-label">{label}</span>
-      <div className="auth481-input-shell">
-        <span className="auth481-field-icon">{icon}</span>
-        <input
-          className="auth481-input"
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          spellCheck="false"
-        />
-        {rightControl ? <span className="auth481-field-right">{rightControl}</span> : null}
-      </div>
-    </label>
-  )
-}
-
-function AuthView({ onAuth }) {
-  const [mode, setMode] = useState('login')
-  const [submitting, setSubmitting] = useState(false)
-  const [authMessage, setAuthMessage] = useState('')
-  const [authMessageType, setAuthMessageType] = useState('info')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showRepeatPassword, setShowRepeatPassword] = useState(false)
-  const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    repeatPassword: '',
-    agree: true
-  })
-  const [liveStats, setLiveStats] = useState({
-    registeredUsers: 0,
-    aiAccuracy: 76,
-    activeNow: 1,
-    tipsToday: 0,
-    updatedAt: null,
-    loading: true
-  })
-  const supportedAuthLanguages = ['pl', 'en', 'de', 'es', 'ru']
-  const [authLang, setAuthLang] = useState(() => {
-    try {
-      const saved = localStorage.getItem('betai_language')
-      if (saved && supportedAuthLanguages.includes(saved)) return saved
-      const browserLang = String(navigator?.language || 'pl').slice(0, 2).toLowerCase()
-      return supportedAuthLanguages.includes(browserLang) ? browserLang : 'pl'
-    } catch (_) {
-      return 'pl'
-    }
-  })
-
-  const authTranslations = {
-    pl: {
-      languageLabel: 'Język', login: 'Zaloguj się', register: 'Zarejestruj się', heroLine1: 'Dołącz do', heroLine2: 'platformy', subtitle1: 'Zarejestruj się i korzystaj z analityki AI, typów', subtitle2: 'oraz statystyk na żywo.', username: 'Nazwa użytkownika', usernamePlaceholder: 'Wybierz nazwę użytkownika', email: 'Email', emailPlaceholder: 'Wpisz swój adres email', password: 'Hasło', passwordPlaceholder: 'Minimum 8 znaków', repeatPassword: 'Powtórz hasło', repeatPasswordPlaceholder: 'Powtórz swoje hasło', forgot: 'Nie pamiętasz hasła?', encrypted: 'Szyfrowane logowanie', accept1: 'Akceptuję', terms: 'Regulamin', accept2: 'oraz', privacy: 'Politykę prywatności', submitLogin: 'Zaloguj się', submitRegister: 'Załóż konto', authorizing: 'Trwa autoryzacja...', submitNoteLogin: 'Bezpieczne logowanie • szyfrowana autoryzacja Supabase', submitNoteRegister: 'Rejestracja zajmuje mniej niż 30 sekund i aktywuje dostęp do platformy.', socialHeading: 'Śledź nas i dołącz do społeczności', liveKicker: 'REALNE STATYSTYKI LIVE', liveTitle: 'Platforma żyje i odświeża dane na bieżąco', liveBadge: 'LIVE', registeredUsers: 'Zarejestrowanych użytkowników', aiAccuracy: 'Skuteczność AI', activeNow: 'Aktywni teraz', tipsToday: 'Typów dzisiaj', liveLoading: 'Ładowanie statystyk live...', liveRefresh: 'Auto-odświeżanie co 30 s', lastUpdate: 'ostatnia aktualizacja', safeData: 'Bezpieczne dane', safeDataText: 'Twoje dane są u nas w pełni chronione.', fastRegister: 'Szybka rejestracja', fastRegisterText: 'Załóż konto w mniej niż 30 sekund.', freeAi: 'Darmowe typy AI', freeAiText: 'Codziennie nowe typy o wysokiej skuteczności.', community: 'Aktywna społeczność', communityText: 'Tysiące typerów dzieli się wiedzą i wygrywa razem.', showPassword: 'Pokaż hasło', hidePassword: 'Ukryj hasło', showRepeat: 'Pokaż powtórzone hasło', hideRepeat: 'Ukryj powtórzone hasło', resetMissingEmail: 'Wpisz adres email, aby zresetować hasło.', resetSending: 'Wysyłanie linku do resetu hasła...', resetSuccess: 'Link do resetu hasła został wysłany na Twój adres email.', notConfiguredReset: 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć reset hasła.', notConfiguredLogin: 'Supabase nie jest skonfigurowane. Uzupełnij klucze, aby włączyć logowanie.', enterEmail: 'Wpisz adres email.', enterPassword: 'Wpisz hasło.', enterUsername: 'Wpisz nazwę użytkownika.', shortPassword: 'Hasło musi mieć minimum 8 znaków.', passwordMismatch: 'Hasła nie są identyczne.', acceptTermsError: 'Zaakceptuj Regulamin oraz Politykę prywatności.', accountCreatedLogged: 'Konto zostało utworzone i jesteś już zalogowany.', accountCreatedConfirm: 'Konto zostało utworzone. Sprawdź skrzynkę email, aby potwierdzić rejestrację.', loginSuccess: 'Logowanie zakończone sukcesem.', dbError: 'Błąd bazy przy rejestracji: uruchom raz plik SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql w Supabase SQL Editor i spróbuj ponownie.', emailLimit: 'Limit wysyłki email został przekroczony. Do testów wyłącz Confirm email albo podłącz Custom SMTP i ustaw większy limit w Supabase.', authFailed: 'Nie udało się wykonać autoryzacji.' },
-    en: { languageLabel: 'Language', login: 'Log in', register: 'Register', heroLine1: 'Join the', heroLine2: 'platform', subtitle1: 'Sign up and use AI analytics, picks', subtitle2: 'and live statistics.', username: 'Username', usernamePlaceholder: 'Choose a username', email: 'Email', emailPlaceholder: 'Enter your email address', password: 'Password', passwordPlaceholder: 'Minimum 8 characters', repeatPassword: 'Repeat password', repeatPasswordPlaceholder: 'Repeat your password', forgot: 'Forgot password?', encrypted: 'Encrypted login', accept1: 'I accept the', terms: 'Terms', accept2: 'and', privacy: 'Privacy Policy', submitLogin: 'Log in', submitRegister: 'Create account', authorizing: 'Authorizing...', submitNoteLogin: 'Secure login • encrypted Supabase authorization', submitNoteRegister: 'Registration takes less than 30 seconds and activates platform access.', socialHeading: 'Follow us and join the community', liveKicker: 'REAL LIVE STATS', liveTitle: 'The platform is alive and refreshes data live', liveBadge: 'LIVE', registeredUsers: 'Registered users', aiAccuracy: 'AI accuracy', activeNow: 'Active now', tipsToday: 'Picks today', liveLoading: 'Loading live stats...', liveRefresh: 'Auto-refresh every 30 s', lastUpdate: 'last update', safeData: 'Secure data', safeDataText: 'Your data is fully protected with us.', fastRegister: 'Fast registration', fastRegisterText: 'Create an account in less than 30 seconds.', freeAi: 'Free AI picks', freeAiText: 'New high-accuracy picks every day.', community: 'Active community', communityText: 'Thousands of bettors share knowledge and win together.', showPassword: 'Show password', hidePassword: 'Hide password', showRepeat: 'Show repeated password', hideRepeat: 'Hide repeated password', resetMissingEmail: 'Enter your email to reset the password.', resetSending: 'Sending password reset link...', resetSuccess: 'Password reset link has been sent to your email.', notConfiguredReset: 'Supabase is not configured. Add keys to enable password reset.', notConfiguredLogin: 'Supabase is not configured. Add keys to enable login.', enterEmail: 'Enter your email address.', enterPassword: 'Enter your password.', enterUsername: 'Enter your username.', shortPassword: 'Password must be at least 8 characters.', passwordMismatch: 'Passwords do not match.', acceptTermsError: 'Accept the Terms and Privacy Policy.', accountCreatedLogged: 'Account created and you are already logged in.', accountCreatedConfirm: 'Account created. Check your email to confirm registration.', loginSuccess: 'Login successful.', dbError: 'Database registration error: run SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql once in Supabase SQL Editor and try again.', emailLimit: 'Email sending limit exceeded. For tests disable Confirm email or connect Custom SMTP and set a higher Supabase limit.', authFailed: 'Authorization failed.' },
-    de: { languageLabel: 'Sprache', login: 'Einloggen', register: 'Registrieren', heroLine1: 'Tritt der', heroLine2: 'Plattform', subtitle1: 'Registriere dich und nutze KI-Analysen, Tipps', subtitle2: 'und Live-Statistiken.', username: 'Benutzername', usernamePlaceholder: 'Benutzernamen wählen', email: 'E-Mail', emailPlaceholder: 'E-Mail-Adresse eingeben', password: 'Passwort', passwordPlaceholder: 'Mindestens 8 Zeichen', repeatPassword: 'Passwort wiederholen', repeatPasswordPlaceholder: 'Passwort wiederholen', forgot: 'Passwort vergessen?', encrypted: 'Verschlüsselter Login', accept1: 'Ich akzeptiere die', terms: 'AGB', accept2: 'und die', privacy: 'Datenschutzerklärung', submitLogin: 'Einloggen', submitRegister: 'Konto erstellen', authorizing: 'Autorisierung...', submitNoteLogin: 'Sicherer Login • verschlüsselte Supabase-Autorisierung', submitNoteRegister: 'Die Registrierung dauert weniger als 30 Sekunden und aktiviert den Zugang.', socialHeading: 'Folge uns und tritt der Community bei', liveKicker: 'ECHTE LIVE-STATISTIKEN', liveTitle: 'Die Plattform lebt und aktualisiert Daten live', liveBadge: 'LIVE', registeredUsers: 'Registrierte Nutzer', aiAccuracy: 'KI-Trefferquote', activeNow: 'Jetzt aktiv', tipsToday: 'Tipps heute', liveLoading: 'Live-Statistiken werden geladen...', liveRefresh: 'Auto-Aktualisierung alle 30 s', lastUpdate: 'letzte Aktualisierung', safeData: 'Sichere Daten', safeDataText: 'Deine Daten sind vollständig geschützt.', fastRegister: 'Schnelle Registrierung', fastRegisterText: 'Erstelle ein Konto in weniger als 30 Sekunden.', freeAi: 'Kostenlose KI-Tipps', freeAiText: 'Täglich neue Tipps mit hoher Trefferquote.', community: 'Aktive Community', communityText: 'Tausende Tipper teilen Wissen und gewinnen zusammen.', showPassword: 'Passwort anzeigen', hidePassword: 'Passwort verbergen', showRepeat: 'Wiederholtes Passwort anzeigen', hideRepeat: 'Wiederholtes Passwort verbergen', resetMissingEmail: 'Gib deine E-Mail ein, um das Passwort zurückzusetzen.', resetSending: 'Reset-Link wird gesendet...', resetSuccess: 'Der Reset-Link wurde an deine E-Mail gesendet.', notConfiguredReset: 'Supabase ist nicht konfiguriert. Füge Schlüssel hinzu, um den Reset zu aktivieren.', notConfiguredLogin: 'Supabase ist nicht konfiguriert. Füge Schlüssel hinzu, um Login zu aktivieren.', enterEmail: 'E-Mail-Adresse eingeben.', enterPassword: 'Passwort eingeben.', enterUsername: 'Benutzernamen eingeben.', shortPassword: 'Das Passwort muss mindestens 8 Zeichen haben.', passwordMismatch: 'Passwörter stimmen nicht überein.', acceptTermsError: 'Akzeptiere AGB und Datenschutzerklärung.', accountCreatedLogged: 'Konto wurde erstellt und du bist bereits eingeloggt.', accountCreatedConfirm: 'Konto wurde erstellt. Prüfe deine E-Mail zur Bestätigung.', loginSuccess: 'Login erfolgreich.', dbError: 'Datenbankfehler bei Registrierung: führe SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql einmal im Supabase SQL Editor aus.', emailLimit: 'E-Mail-Limit überschritten. Für Tests Confirm email deaktivieren oder Custom SMTP verbinden.', authFailed: 'Autorisierung fehlgeschlagen.' },
-    es: { languageLabel: 'Idioma', login: 'Iniciar sesión', register: 'Registrarse', heroLine1: 'Únete a la', heroLine2: 'plataforma', subtitle1: 'Regístrate y usa análisis de IA, pronósticos', subtitle2: 'y estadísticas en vivo.', username: 'Usuario', usernamePlaceholder: 'Elige un usuario', email: 'Email', emailPlaceholder: 'Introduce tu email', password: 'Contraseña', passwordPlaceholder: 'Mínimo 8 caracteres', repeatPassword: 'Repetir contraseña', repeatPasswordPlaceholder: 'Repite tu contraseña', forgot: '¿Olvidaste tu contraseña?', encrypted: 'Login cifrado', accept1: 'Acepto los', terms: 'Términos', accept2: 'y la', privacy: 'Política de privacidad', submitLogin: 'Iniciar sesión', submitRegister: 'Crear cuenta', authorizing: 'Autorizando...', submitNoteLogin: 'Login seguro • autorización cifrada de Supabase', submitNoteRegister: 'El registro tarda menos de 30 segundos y activa el acceso.', socialHeading: 'Síguenos y únete a la comunidad', liveKicker: 'ESTADÍSTICAS LIVE REALES', liveTitle: 'La plataforma vive y actualiza datos en directo', liveBadge: 'LIVE', registeredUsers: 'Usuarios registrados', aiAccuracy: 'Precisión IA', activeNow: 'Activos ahora', tipsToday: 'Pronósticos hoy', liveLoading: 'Cargando estadísticas live...', liveRefresh: 'Auto-actualización cada 30 s', lastUpdate: 'última actualización', safeData: 'Datos seguros', safeDataText: 'Tus datos están totalmente protegidos.', fastRegister: 'Registro rápido', fastRegisterText: 'Crea una cuenta en menos de 30 segundos.', freeAi: 'Pronósticos IA gratis', freeAiText: 'Nuevos pronósticos diarios de alta precisión.', community: 'Comunidad activa', communityText: 'Miles de usuarios comparten conocimiento y ganan juntos.', showPassword: 'Mostrar contraseña', hidePassword: 'Ocultar contraseña', showRepeat: 'Mostrar contraseña repetida', hideRepeat: 'Ocultar contraseña repetida', resetMissingEmail: 'Introduce tu email para restablecer la contraseña.', resetSending: 'Enviando enlace de restablecimiento...', resetSuccess: 'El enlace fue enviado a tu email.', notConfiguredReset: 'Supabase no está configurado. Añade claves para activar el reset.', notConfiguredLogin: 'Supabase no está configurado. Añade claves para activar login.', enterEmail: 'Introduce tu email.', enterPassword: 'Introduce tu contraseña.', enterUsername: 'Introduce tu usuario.', shortPassword: 'La contraseña debe tener al menos 8 caracteres.', passwordMismatch: 'Las contraseñas no coinciden.', acceptTermsError: 'Acepta los Términos y la Política de privacidad.', accountCreatedLogged: 'Cuenta creada y ya has iniciado sesión.', accountCreatedConfirm: 'Cuenta creada. Revisa tu email para confirmar el registro.', loginSuccess: 'Inicio de sesión correcto.', dbError: 'Error de base de datos en registro: ejecuta SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql en Supabase SQL Editor.', emailLimit: 'Límite de envío de email superado. Para pruebas desactiva Confirm email o conecta Custom SMTP.', authFailed: 'No se pudo autorizar.' },
-    ru: { languageLabel: 'Язык', login: 'Войти', register: 'Регистрация', heroLine1: 'Присоединяйся к', heroLine2: 'платформе', subtitle1: 'Зарегистрируйся и используй AI-аналитику, прогнозы', subtitle2: 'и live-статистику.', username: 'Имя пользователя', usernamePlaceholder: 'Выберите имя пользователя', email: 'Email', emailPlaceholder: 'Введите email', password: 'Пароль', passwordPlaceholder: 'Минимум 8 символов', repeatPassword: 'Повторите пароль', repeatPasswordPlaceholder: 'Повторите пароль', forgot: 'Забыли пароль?', encrypted: 'Защищенный вход', accept1: 'Я принимаю', terms: 'Условия', accept2: 'и', privacy: 'Политику конфиденциальности', submitLogin: 'Войти', submitRegister: 'Создать аккаунт', authorizing: 'Авторизация...', submitNoteLogin: 'Безопасный вход • шифрованная авторизация Supabase', submitNoteRegister: 'Регистрация занимает меньше 30 секунд и открывает доступ.', socialHeading: 'Подписывайся и вступай в сообщество', liveKicker: 'РЕАЛЬНАЯ LIVE-СТАТИСТИКА', liveTitle: 'Платформа живая и обновляет данные онлайн', liveBadge: 'LIVE', registeredUsers: 'Зарегистрированных пользователей', aiAccuracy: 'Точность AI', activeNow: 'Активны сейчас', tipsToday: 'Прогнозов сегодня', liveLoading: 'Загрузка live-статистики...', liveRefresh: 'Автообновление каждые 30 сек', lastUpdate: 'последнее обновление', safeData: 'Безопасные данные', safeDataText: 'Ваши данные полностью защищены.', fastRegister: 'Быстрая регистрация', fastRegisterText: 'Создайте аккаунт меньше чем за 30 секунд.', freeAi: 'Бесплатные AI-прогнозы', freeAiText: 'Новые точные прогнозы каждый день.', community: 'Активное сообщество', communityText: 'Тысячи игроков делятся знаниями и выигрывают вместе.', showPassword: 'Показать пароль', hidePassword: 'Скрыть пароль', showRepeat: 'Показать повтор пароля', hideRepeat: 'Скрыть повтор пароля', resetMissingEmail: 'Введите email для сброса пароля.', resetSending: 'Отправка ссылки сброса...', resetSuccess: 'Ссылка сброса отправлена на email.', notConfiguredReset: 'Supabase не настроен. Добавьте ключи для сброса пароля.', notConfiguredLogin: 'Supabase не настроен. Добавьте ключи для входа.', enterEmail: 'Введите email.', enterPassword: 'Введите пароль.', enterUsername: 'Введите имя пользователя.', shortPassword: 'Пароль должен быть минимум 8 символов.', passwordMismatch: 'Пароли не совпадают.', acceptTermsError: 'Примите Условия и Политику конфиденциальности.', accountCreatedLogged: 'Аккаунт создан, вы уже вошли.', accountCreatedConfirm: 'Аккаунт создан. Проверьте email для подтверждения.', loginSuccess: 'Вход выполнен успешно.', dbError: 'Ошибка базы при регистрации: один раз запустите SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql в Supabase SQL Editor.', emailLimit: 'Превышен лимит отправки email. Для тестов отключите Confirm email или подключите Custom SMTP.', authFailed: 'Авторизация не выполнена.' }
-  }
-
-  function setLanguage(nextLang) {
-    if (!supportedAuthLanguages.includes(nextLang)) return
-    setAuthLang(nextLang)
-    try { localStorage.setItem('betai_language', nextLang) } catch (_) {}
-    window.dispatchEvent(new CustomEvent('betai-language-changed', { detail: nextLang }))
-  }
-
-  const t = authTranslations[authLang] || authTranslations.pl
-
-  function normalizeLiveCount(value, fallback = 0) {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : fallback
-  }
-
-  function formatCompactNumber(value) {
-    const parsed = normalizeLiveCount(value, 0)
-    if (parsed >= 1000000) return `${(parsed / 1000000).toFixed(parsed >= 10000000 ? 0 : 1)} mln`
-    if (parsed >= 1000) return `${(parsed / 1000).toFixed(parsed >= 10000 ? 0 : 1)}k`
-    return String(parsed)
-  }
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadAuthLiveStats() {
-      if (!isSupabaseConfigured || !supabase) {
-        if (!cancelled) {
-          setLiveStats(prev => ({ ...prev, loading: false }))
-        }
-        return
-      }
-
-      try {
-        let nextStats = null
-        const rpcResponse = await supabase.rpc('get_auth_live_stats')
-
-        if (!rpcResponse.error && rpcResponse.data) {
-          const row = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data
-          if (row) {
-            nextStats = {
-              registeredUsers: normalizeLiveCount(row.registered_users ?? row.registeredUsers),
-              aiAccuracy: normalizeLiveCount(row.ai_accuracy ?? row.aiAccuracy, 76),
-              activeNow: normalizeLiveCount(row.active_now ?? row.activeNow, 1),
-              tipsToday: normalizeLiveCount(row.tips_today ?? row.tipsToday),
-              updatedAt: new Date().toISOString(),
-              loading: false
-            }
-          }
-        }
-
-        if (!nextStats) {
-          const now = new Date()
-          const startOfDay = new Date(now)
-          startOfDay.setHours(0, 0, 0, 0)
-          const activeCutoff = new Date(now.getTime() - 10 * 60 * 1000).toISOString()
-          const aiRangeCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          const settledStatuses = ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana']
-          const wonStatuses = ['won', 'win', 'wygrany', 'wygrana']
-
-          const [profilesResult, activeResult, tipsTodayResult, aiSettledResult, aiWonResult, aiAvgResult] = await Promise.allSettled([
-            supabase.from('profiles').select('id', { count: 'exact', head: true }),
-            supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('last_seen', activeCutoff),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', settledStatuses),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', wonStatuses),
-            supabase.from('tips').select('ai_confidence, ai_probability, confidence').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
-          ])
-
-          const exactCount = (result, fallback = 0) => {
-            if (result.status !== 'fulfilled') return fallback
-            return normalizeLiveCount(result.value?.count, fallback)
-          }
-
-          const profilesCount = exactCount(profilesResult)
-          const activeCount = exactCount(activeResult, 1)
-          const tipsTodayCount = exactCount(tipsTodayResult)
-          const aiSettledCount = exactCount(aiSettledResult)
-          const aiWonCount = exactCount(aiWonResult)
-          const avgConfidence = aiAvgResult.status === 'fulfilled'
-            ? (() => {
-                const rows = Array.isArray(aiAvgResult.value?.data) ? aiAvgResult.value.data : []
-                const values = rows
-                  .map(row => Number(row?.ai_confidence ?? row?.ai_probability ?? row?.confidence ?? 0))
-                  .filter(value => Number.isFinite(value) && value > 0)
-                if (!values.length) return 76
-                return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
-              })()
-            : 76
-
-          nextStats = {
-            registeredUsers: profilesCount,
-            aiAccuracy: aiSettledCount > 0 ? Math.round((aiWonCount / aiSettledCount) * 100) : avgConfidence,
-            activeNow: activeCount,
-            tipsToday: tipsTodayCount,
-            updatedAt: new Date().toISOString(),
-            loading: false
-          }
-        }
-
-        if (!cancelled && nextStats) {
-          setLiveStats(prev => ({
-            ...prev,
-            ...nextStats,
-            registeredUsers: nextStats.registeredUsers || prev.registeredUsers || 0,
-            activeNow: nextStats.activeNow || prev.activeNow || 1,
-            aiAccuracy: nextStats.aiAccuracy || prev.aiAccuracy || 76,
-            tipsToday: nextStats.tipsToday || prev.tipsToday || 0
-          }))
-        }
-      } catch (error) {
-        console.warn('Auth live stats unavailable', error)
-        if (!cancelled) {
-          setLiveStats(prev => ({ ...prev, loading: false }))
-        }
-      }
-    }
-
-    loadAuthLiveStats()
-    const timer = window.setInterval(loadAuthLiveStats, 30000)
-    window.addEventListener('focus', loadAuthLiveStats)
-
-    return () => {
-      cancelled = true
-      window.clearInterval(timer)
-      window.removeEventListener('focus', loadAuthLiveStats)
-    }
-  }, [])
-
-  function updateField(field, value) {
-    setForm(prev => ({ ...prev, [field]: value }))
-  }
-
-  function showMessage(type, message) {
-    setAuthMessageType(type)
-    setAuthMessage(message)
-  }
-
-  function switchMode(nextMode) {
-    setMode(nextMode)
-    setAuthMessage('')
-  }
-
-  async function handleForgotPassword() {
-    if (!isSupabaseConfigured || !supabase) {
-      showMessage('error', t.notConfiguredReset)
-      return
-    }
-
-    const email = String(form.email || '').trim().toLowerCase()
-    if (!email) {
-      showMessage('error', t.resetMissingEmail)
-      return
-    }
-
-    setSubmitting(true)
-    showMessage('info', t.resetSending)
-
-    try {
-      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email,
-        redirectTo ? { redirectTo } : undefined
-      )
-      if (error) throw error
-      showMessage('success', t.resetSuccess)
-    } catch (error) {
-      showMessage('error', error?.message || t.authFailed)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setAuthMessage('')
-
-    if (!isSupabaseConfigured || !supabase) {
-      showMessage('error', t.notConfiguredLogin)
-      return
-    }
-
-    const email = String(form.email || '').trim().toLowerCase()
-    const password = String(form.password || '')
-    const username = String(form.username || '').trim()
-
-    if (!email) {
-      showMessage('error', t.enterEmail)
-      return
-    }
-
-    if (!password) {
-      showMessage('error', t.enterPassword)
-      return
-    }
-
-    setSubmitting(true)
-    showMessage('info', t.authorizing)
-
-    try {
-      if (mode === 'register') {
-        if (!username) throw new Error(t.enterUsername)
-        if (password.length < 8) throw new Error(t.shortPassword)
-        if (password !== form.repeatPassword) throw new Error(t.passwordMismatch)
-        if (!form.agree) throw new Error(t.acceptTermsError)
-
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username,
-              display_name: username
-            }
-          }
-        })
-
-        if (error) throw error
-
-        if (data?.session?.user) {
-          onAuth?.(data.session.user)
-          showMessage('success', t.accountCreatedLogged)
-        } else {
-          showMessage('success', t.accountCreatedConfirm)
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        })
-
-        if (error) throw error
-        if (data?.user) {
-          onAuth?.(data.user)
-          showMessage('success', t.loginSuccess)
-        }
-      }
-    } catch (error) {
-      const errorText = String(error?.message || '')
-      showMessage('error', errorText.includes('Database error saving new user')
-        ? t.dbError
-        : errorText.toLowerCase().includes('email rate limit')
-          ? t.emailLimit
-          : (error?.message || t.authFailed))
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  function IconUser() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M20 21a8 8 0 0 0-16 0" />
-        <circle cx="12" cy="8" r="4" />
-      </svg>
-    )
-  }
-
-  function IconMail() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M4 6h16v12H4z" />
-        <path d="m4 8 8 6 8-6" />
-      </svg>
-    )
-  }
-
-  function IconLock() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="4" y="11" width="16" height="10" rx="2" />
-        <path d="M8 11V8a4 4 0 1 1 8 0v3" />
-      </svg>
-    )
-  }
-
-  function IconEye() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
-        <circle cx="12" cy="12" r="2.8" />
-      </svg>
-    )
-  }
-
-  function IconShield() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M12 3 5 6v6c0 5 3.5 7.8 7 9 3.5-1.2 7-4 7-9V6l-7-3Z" />
-      </svg>
-    )
-  }
-
-  function IconBolt() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M13 2 5 14h5l-1 8 8-12h-5l1-8Z" />
-      </svg>
-    )
-  }
-
-  function IconChart() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M4 19V5" />
-        <path d="M4 19h16" />
-        <path d="m7 15 4-4 3 2 4-6" />
-      </svg>
-    )
-  }
-
-  function IconUsers() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
-        <circle cx="9.5" cy="7" r="3.5" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    )
-  }
-
-
-  function IconTelegram() {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M21.5 4.6 18.3 19c-.24 1.02-.88 1.28-1.79.8l-4.95-3.64-2.39 2.3c-.26.26-.49.49-.99.49l.36-5.1 9.29-8.39c.4-.36-.09-.57-.62-.21l-11.48 7.23-4.95-1.55c-1.07-.34-1.09-1.08.22-1.59L20.3 3.6c.88-.33 1.65.22 1.2 1Z"/>
-      </svg>
-    )
-  }
-
-  function IconDiscord() {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M20.32 4.37A17.43 17.43 0 0 0 16.02 3l-.21.43a15.2 15.2 0 0 1 3.7 1.77 12.74 12.74 0 0 0-4.54-1.39 14.6 14.6 0 0 0-5.94 0A12.73 12.73 0 0 0 4.49 5.2a15.1 15.1 0 0 1 3.7-1.77L7.98 3A17.32 17.32 0 0 0 3.68 4.37C.96 8.45.22 12.43.59 16.35a17.61 17.61 0 0 0 5.27 2.65l1.13-1.84c-.64-.24-1.24-.53-1.82-.87.15.11.3.22.46.32a12.45 12.45 0 0 0 10.74 0c.16-.1.31-.21.46-.32-.58.34-1.18.63-1.82.87L16.14 19a17.53 17.53 0 0 0 5.27-2.65c.44-4.55-.75-8.5-1.09-11.98ZM9.53 13.96c-1.03 0-1.88-.95-1.88-2.12s.83-2.12 1.88-2.12c1.06 0 1.9.96 1.88 2.12 0 1.17-.83 2.12-1.88 2.12Zm4.94 0c-1.03 0-1.88-.95-1.88-2.12s.83-2.12 1.88-2.12c1.06 0 1.9.96 1.88 2.12 0 1.17-.82 2.12-1.88 2.12Z"/>
-      </svg>
-    )
-  }
-
-  function IconInstagram() {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none" />
-      </svg>
-    )
-  }
-
-  function IconX() {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M18.9 2H22l-6.77 7.73L23 22h-6.1l-4.78-6.9L6.1 22H3l7.25-8.28L1 2h6.25l4.32 6.26L18.9 2Zm-1.07 18h1.69L6.33 3.9H4.52L17.83 20Z"/>
-      </svg>
-    )
-  }
-
-
-
-  const submitLabel = mode === 'login' ? t.submitLogin : t.submitRegister
-  const submitNote = mode === 'login'
-    ? t.submitNoteLogin
-    : t.submitNoteRegister
-  const liveStatsCards = useMemo(() => ([
-    {
-      key: 'users',
-      label: t.registeredUsers,
-      value: formatCompactNumber(liveStats.registeredUsers),
-      icon: <IconUsers />,
-      accentClass: 'is-users'
-    },
-    {
-      key: 'ai',
-      label: t.aiAccuracy,
-      value: `${normalizeLiveCount(liveStats.aiAccuracy, 76)}%`,
-      icon: <IconChart />,
-      accentClass: 'is-ai'
-    },
-    {
-      key: 'active',
-      label: t.activeNow,
-      value: formatCompactNumber(liveStats.activeNow),
-      icon: <IconBolt />,
-      accentClass: 'is-active'
-    },
-    {
-      key: 'tips',
-      label: t.tipsToday,
-      value: formatCompactNumber(liveStats.tipsToday),
-      icon: <IconShield />,
-      accentClass: 'is-tips'
-    }
-  ]), [liveStats, authLang])
-
-  return (
-    <div className="auth481-screen" aria-label="Bet+AI authentication panel">
-      <div className="auth481-language-corner">
-        <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
-      </div>
-      <div className="auth481-wrap">
-        <div className="auth481-top-grid">
-          <section className="auth481-left-card">
-            <img src="/auth-brand-470-transparent.png" alt="Bet+AI" className="auth481-logo" draggable="false" />
-
-            <h1 className="auth481-title">
-              {t.heroLine1}
-              <br />
-              {t.heroLine2} <span>AI</span>
-            </h1>
-
-            <p className="auth481-subtitle">
-              {t.subtitle1}
-              <br />
-              {t.subtitle2}
-            </p>
-
-            <div className={`auth481-tabs ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
-                onClick={() => switchMode('login')}
-              >
-                {t.login}
-              </button>
-              <button
-                type="button"
-                className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
-                onClick={() => switchMode('register')}
-              >
-                {t.register}
-              </button>
-            </div>
-
-            <form className={`auth481-form auth481-form-${mode}`} onSubmit={handleSubmit} autoComplete="off">
-              {mode === 'register' ? (
-                <AuthField
-                  label={t.username}
-                  value={form.username}
-                  onChange={(event) => updateField('username', event.target.value)}
-                  placeholder={t.usernamePlaceholder}
-                  icon={<IconUser />}
-                  autoComplete="off"
-                  name="betai_username"
-                />
-              ) : null}
-
-              <AuthField
-                label={t.email}
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField('email', event.target.value)}
-                placeholder={t.emailPlaceholder}
-                icon={<IconMail />}
-                autoComplete={mode === 'login' ? 'username' : 'email'}
-                name="betai_email"
-              />
-
-              <AuthField
-                label={t.password}
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={(event) => updateField('password', event.target.value)}
-                placeholder={t.passwordPlaceholder}
-                icon={<IconLock />}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                name="betai_password"
-                rightControl={
-                  <button
-                    type="button"
-                    className="auth481-eye"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    aria-label={showPassword ? t.hidePassword : t.showPassword}
-                  >
-                    <IconEye />
-                  </button>
-                }
-              />
-
-              {mode === 'login' ? (
-                <div className="auth481-login-tools">
-                  <button type="button" className="auth481-link-button" onClick={handleForgotPassword}>
-                    {t.forgot}
-                  </button>
-                  <span className="auth481-login-badge">{t.encrypted}</span>
-                </div>
-              ) : null}
-
-              {mode === 'register' ? (
-                <AuthField
-                  label={t.repeatPassword}
-                  type={showRepeatPassword ? 'text' : 'password'}
-                  value={form.repeatPassword}
-                  onChange={(event) => updateField('repeatPassword', event.target.value)}
-                  placeholder={t.repeatPasswordPlaceholder}
-                  icon={<IconLock />}
-                  autoComplete="new-password"
-                  name="betai_repeat_password"
-                  rightControl={
-                    <button
-                      type="button"
-                      className="auth481-eye"
-                      onClick={() => setShowRepeatPassword(prev => !prev)}
-                      aria-label={showRepeatPassword ? t.hideRepeat : t.showRepeat}
-                    >
-                      <IconEye />
-                    </button>
-                  }
-                />
-              ) : null}
-
-              {mode === 'register' ? (
-                <label className="auth481-agree">
-                  <input
-                    type="checkbox"
-                    checked={form.agree}
-                    onChange={(event) => updateField('agree', event.target.checked)}
-                  />
-                  <span className="auth481-checkmark" />
-                  <span>
-                    {t.accept1} <strong>{t.terms}</strong> {t.accept2} <strong>{t.privacy}</strong>
-                  </span>
-                </label>
-              ) : null}
-
-              <button type="submit" className="auth481-submit" disabled={submitting}>
-                {submitting ? 'Trwa autoryzacja...' : `${submitLabel} →`}
-              </button>
-              <div className="auth481-submit-note">{submitNote}</div>
-            </form>
-
-            <div className="auth481-social-block" aria-label="Social media Bet+AI">
-              <div className="auth481-social-heading">{t.socialHeading}</div>
-              <div className="auth481-social-row">
-                <a className="auth481-social-link is-telegram" href="#" aria-label="Telegram Bet+AI" title="Telegram">
-                  <span className="auth481-social-icon"><IconTelegram /></span>
-                  <span>Telegram</span>
-                </a>
-                <a className="auth481-social-link is-discord" href="#" aria-label="Discord Bet+AI" title="Discord">
-                  <span className="auth481-social-icon"><IconDiscord /></span>
-                  <span>Discord</span>
-                </a>
-                <a className="auth481-social-link is-instagram" href="#" aria-label="Instagram Bet+AI" title="Instagram">
-                  <span className="auth481-social-icon"><IconInstagram /></span>
-                  <span>Instagram</span>
-                </a>
-                <a className="auth481-social-link is-x" href="#" aria-label="X Bet+AI" title="X">
-                  <span className="auth481-social-icon"><IconX /></span>
-                  <span>X</span>
-                </a>
-              </div>
-            </div>
-
-            {authMessage ? (
-              <div className={`auth481-message ${authMessageType}`} role="status" aria-live="polite">
-                {authMessage}
-              </div>
-            ) : null}
-          </section>
-
-          <section className={`auth481-right-column ${mode === 'login' ? 'auth481-right-login' : 'auth481-right-register'}`}>
-            <img src="/auth-right-484.png" alt="Bet+AI dashboard preview" className="auth481-right-image" draggable="false" />
-
-            <div className="auth481-live-panel" aria-label="Realne statystyki live Bet+AI">
-              <div className="auth481-live-panel-head">
-                <div>
-                  <span className="auth481-live-kicker">{t.liveKicker}</span>
-                  <strong>{t.liveTitle}</strong>
-                </div>
-                <span className="auth481-live-badge">
-                  <span className="auth481-live-dot" />
-                  {t.liveBadge}
-                </span>
-              </div>
-
-              <div className="auth481-live-grid">
-                {liveStatsCards.map(card => (
-                  <div className={`auth481-live-card ${card.accentClass}`} key={card.key}>
-                    <span className="auth481-live-icon">{card.icon}</span>
-                    <div className="auth481-live-copy">
-                      <strong>{card.value}</strong>
-                      <span>{card.label}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="auth481-live-footnote">
-                <span className="auth481-live-footnote-dot" />
-                {liveStats.loading
-                  ? t.liveLoading
-                  : `${t.liveRefresh}${liveStats.updatedAt ? ' • ' + t.lastUpdate + ' ' + new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang === 'de' ? 'de-DE' : authLang === 'es' ? 'es-ES' : authLang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' }) : ''}`}
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div className="auth481-features-grid">
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconShield /></span>
-            <div>
-              <h3>{t.safeData}</h3>
-              <p>{t.safeDataText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconBolt /></span>
-            <div>
-              <h3>{t.fastRegister}</h3>
-              <p>{t.fastRegisterText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconChart /></span>
-            <div>
-              <h3>{t.freeAi}</h3>
-              <p>{t.freeAiText}</p>
-            </div>
-          </div>
-          <div className="auth481-feature-card">
-            <span className="auth481-feature-icon"><IconUsers /></span>
-            <div>
-              <h3>{t.community}</h3>
-              <p>{t.communityText}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <SiteReviewsWidget />
-      <AuthSupportChatGuest />
-    </div>
-  )
-}
-
-
-function PaymentModal({ tip, user, onClose, onSuccess }) {
-  const [loading, setLoading] = useState(false)
-  const [paymentError, setPaymentError] = useState('')
-
-  if (!tip) return null
-
-  const price = Number(tip.price || 29)
-
-  async function startCheckout() {
-    setPaymentError('')
-    setLoading(true)
-
-    try {
-      const response = await fetch('/.netlify/functions/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipId: tip.id,
-          userId: user?.id || null,
-          userEmail: user?.email || '',
-          matchName: `${tip.team_home} vs ${tip.team_away}`,
-          price,
-          referralCode: getStoredReferralCode()
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || 'Nie udało się utworzyć płatności Stripe.')
-      }
-
-      window.location.href = data.url
-    } catch (error) {
-      setPaymentError(error.message)
-      setLoading(false)
-    }
-  }
-
-  function demoUnlock() {
-    onSuccess(tip)
-  }
-
-  return (
-    <div className="payment-backdrop">
-      <div className="payment-modal">
-        <div className="payment-icon">💳</div>
-        <h2>Odblokuj typ premium</h2>
-        <p>Stripe Checkout jest gotowy. Dodaj STRIPE_SECRET_KEY w Netlify, aby uruchomić realne płatności.</p>
-
-        <div className="payment-summary">
-          <span>Mecz</span>
-          <strong>{tip.team_home} vs {tip.team_away}</strong>
-        </div>
-
-        <div className="payment-summary">
-          <span>Tipster</span>
-          <strong>{tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'}</strong>
-        </div>
-
-        <div className="payment-price">
-          <span>Do zapłaty</span>
-          <b>{price.toFixed(2)} zł</b>
-        </div>
-
-        {paymentError && <div className="payment-error">{paymentError}</div>}
-
-        <button className="payment-primary" onClick={startCheckout} disabled={loading}>
-          {loading ? 'Łączenie ze Stripe...' : 'Zapłać przez Stripe'}
-        </button>
-
-        <button className="payment-demo" onClick={demoUnlock}>
-          Odblokuj testowo
-        </button>
-
-        <button className="payment-secondary" onClick={onClose}>
-          Anuluj
-        </button>
-      </div>
-    </div>
-  )
-}
-
-
-
-function ProfileSubscriptionModal({ tip, user, onClose }) {
-  const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
-  const [loadingKey, setLoadingKey] = useState('')
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadPlans() {
-      const tipsterId = getTipAuthorId(tip)
-      if (!tipsterId || !isSupabaseConfigured || !supabase) return
-      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', tipsterId).eq('active', true)
-      if (Array.isArray(data) && data.length) {
-        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
-          const row = data.find(item => item.plan_key === option.key)
-          return row ? { ...option, label: row.label || option.label, durationDays: Number(row.duration_days || option.durationDays), price: Number(row.price || option.defaultPrice) } : { ...option, price: option.defaultPrice }
-        }))
-      }
-    }
-    loadPlans()
-  }, [tip?.id])
-
-  if (!tip) return null
-  const tipsterId = getTipAuthorId(tip)
-  const tipsterName = tip.author_name || 'Tipster'
-
-  async function buy(plan) {
-    setError('')
-    setLoadingKey(plan.key)
-    try {
-      const response = await fetch('/.netlify/functions/create-tipster-subscription-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          userEmail: user?.email || '',
-          tipsterId,
-          tipsterName,
-          durationDays: plan.durationDays,
-          label: plan.label,
-          price: plan.price,
-          referralCode: getStoredReferralCode()
-        })
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok || !data.url) throw new Error(data.error || 'Nie udało się utworzyć płatności za dostęp do profilu.')
-      window.location.href = data.url
-    } catch (e) {
-      setError(e.message)
-      setLoadingKey('')
-    }
-  }
-
-  return (
-    <div className="payment-backdrop">
-      <div className="payment-modal profile-sub-modal">
-        <div className="payment-icon">👤</div>
-        <h2>Dostęp do profilu tipstera</h2>
-        <p>Kup dostęp do wszystkich typów premium użytkownika <b>{tipsterName}</b>. Platforma zawsze pobiera 20% marży.</p>
-        <div className="profile-sub-grid">
-          {plans.map(plan => (
-            <button key={plan.key} className="profile-sub-option" type="button" onClick={() => buy(plan)} disabled={Boolean(loadingKey)}>
-              <strong>{plan.label}</strong>
-              <b>{Number(plan.price || 0).toFixed(2)} zł</b>
-              <span>Tipster: {(Number(plan.price || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(plan.price || 0) * 0.2).toFixed(2)} zł</span>
-              <em>{loadingKey === plan.key ? 'Łączenie...' : 'Kup dostęp'}</em>
-            </button>
-          ))}
-        </div>
-        {error && <div className="payment-error">{error}</div>}
-        <button className="payment-secondary" onClick={onClose}>Anuluj</button>
-      </div>
-    </div>
-  )
-}
-
-
-function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
-  const isPremium = isPremiumAccount(userPlan)
-  return (
-    <section className="subscription-page subscription-ultra-page">
-      <UltraPageBanner variant="subscriptions">{isPremium ? <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button> : <button type="button" onClick={onUpgrade}>Aktywuj Premium</button>}</UltraPageBanner>
-      <div className="subscription-hero subscription-ultra-hero">
-        <div className="subscription-hero-copy">
-          <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
-          <h1>Subskrypcja BetAI</h1>
-          <p>Ultra profesjonalny panel Premium: paywall, sprzedaż typów, AI, statystyki PRO i pełna kontrola subskrypcji przez Stripe.</p>
-          <div className="subscription-hero-pills">
-            <em>Stripe Billing</em>
-            <em>Marketplace PRO</em>
-            <em>AI + Statystyki</em>
-          </div>
-        </div>
-        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>
-          <small>Aktualny plan</small>
-          <b>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</b>
-        </div>
-      </div>
-
-      <div className="pricing-grid subscription-pricing-grid">
-        <div className="pricing-card subscription-plan-card free-plan-card">
-          <div className="plan-topline">
-            <span>FREE</span>
-            <em>Start</em>
-          </div>
-          <strong>0 zł</strong>
-          <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
-          <ul>
-            <li><b>✓</b> 5 darmowych typów dziennie</li>
-            <li><b>✓</b> 1 wypłata miesięcznie</li>
-            <li><i>✕</i> Sprzedaż typów premium</li>
-            <li><i>✕</i> Avatar, bonusy i dropy</li>
-          </ul>
-        </div>
-
-        <div className="pricing-card featured subscription-plan-card premium-plan-card">
-          <div className="plan-topline">
-            <span>PREMIUM</span>
-            <em>Najlepszy wybór</em>
-          </div>
-          <strong>29 zł <small>/ miesiąc</small></strong>
-          <p>Pełny SaaS plan z paywallem, marketplace premium i narzędziami dla aktywnych tipsterów.</p>
-          <ul>
-            <li><b>✓</b> Sprzedaż typów premium</li>
-            <li><b>✓</b> Brak limitu dodawania typów</li>
-            <li><b>✓</b> 3 wypłaty miesięcznie</li>
-            <li><b>✓</b> Avatar, AI, statystyki, bonusy i dropy</li>
-            <li><b>✓</b> Stripe Billing Portal</li>
-          </ul>
-          {isPremium ? (
-            <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
-          ) : (
-            <button type="button" onClick={onUpgrade}>Aktywuj Premium przez Stripe</button>
-          )}
-        </div>
-      </div>
-
-      <div className="paywall-rules-card subscription-rules-card">
-        <div>
-          <strong>Paywall aktywny</strong>
-          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży i bonusów. Premium: bez limitu typów, sprzedaż premium, 3 wypłaty/miesiąc, avatar, bonusy, dropy, AI i statystyki PRO.</span>
-        </div>
-      </div>
-    </section>
-  )
-}
-function PaymentsView({ payments }) {
-  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-
-  return (
-    <section className="payments-page">
-      <UltraPageBanner variant="payments" />
-      <div className="payments-hero">
-        <div>
-          <h1>Historia płatności</h1>
-          <p>Panel zakupów premium i przychodów marketplace.</p>
-        </div>
-        <div className="payments-total">
-          <span>Razem</span>
-          <b>{total.toFixed(2)} zł</b>
-        </div>
-      </div>
-
-      <div className="payments-table">
-        <div className="payments-row header">
-          <span>Data</span>
-          <span>Tip ID</span>
-          <span>Status</span>
-          <span>Kwota</span>
-        </div>
-
-        {payments.length ? payments.map(payment => (
-          <div className="payments-row" key={payment.id}>
-            <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
-            <span>{payment.tip_id || '—'}</span>
-            <span className="paid-status">{payment.status || 'paid'}</span>
-            <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
-          </div>
-        )) : (
-          <div className="payments-empty">
-            <strong>Brak płatności</strong>
-            <span>Po pierwszym zakupie premium transakcja pojawi się tutaj.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-
-
-
-function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onConnectStripe }) {
-  const total = Number(earnings?.total || 0)
-  const sales = Number(earnings?.sales || 0)
-  const history = Array.isArray(earnings?.history) ? earnings.history : []
-  const average = sales ? total / sales : 0
-  const thisMonth = history.filter(row => {
-    const d = new Date(row.created_at)
-    const now = new Date()
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  }).reduce((sum, row) => sum + Number(row.amount || 0), 0)
-
-  return (
-    <section className="earnings-page">
-      <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
-      <div className="page-title">
-        <h1>Zarobki tipstera</h1>
-        <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
-      </div>
-
-      <div className="stripe-connect-card">
-        <div>
-          <strong>🏦 Stripe Connect</strong>
-          <span>
-            {stripeConnectStatus?.payouts_enabled
-              ? 'Konto Stripe jest połączone i gotowe do wypłat.'
-              : stripeConnectStatus?.stripe_account_id
-                ? 'Konto Stripe jest utworzone. Dokończ onboarding, aby odbierać wypłaty.'
-                : 'Połącz konto Stripe, aby admin mógł wypłacać Ci realne zarobki.'}
-          </span>
-        </div>
-        <button type="button" onClick={onConnectStripe}>
-          {stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}
-        </button>
-      </div>
-
-      <div className="earnings-hero">
-        <div>
-          <span>💰 Zarobiłeś łącznie</span>
-          <strong>{total.toFixed(2)} zł</strong>
-          <p>Kwota po prowizji platformy.</p>
-        </div>
-        <div>
-          <span>📊 Liczba sprzedaży</span>
-          <strong>{sales}</strong>
-          <p>Kupione premium typy.</p>
-        </div>
-        <div>
-          <span>📅 Ten miesiąc</span>
-          <strong>{thisMonth.toFixed(2)} zł</strong>
-          <p>Historia bieżącego miesiąca.</p>
-        </div>
-        <div>
-          <span>Średnio / sprzedaż</span>
-          <strong>{average.toFixed(2)} zł</strong>
-          <p>Po prowizji 20%.</p>
-        </div>
-      </div>
-
-      <div className="earnings-table-card">
-        <div className="earnings-table-head">
-          <h2>Historia zarobków</h2>
-          <span>{history.length} transakcji</span>
-        </div>
-
-        {history.length ? (
-          <table className="earnings-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Kwota dla Ciebie</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((row, idx) => (
-                <tr key={row.id || idx}>
-                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
-                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
-                  <td><span className="status-pill success">completed</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-wallet">
-            <strong>Brak sprzedaży premium</strong>
-            <span>Gdy ktoś kupi Twój premium typ, tutaj pojawi się zarobek 80% ceny.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-
-
-function TipsterPricingSettings({ user, onToast }) {
-  const [prices, setPrices] = useState(() => Object.fromEntries(TIPSTER_PLAN_OPTIONS.map(p => [p.key, p.defaultPrice])))
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    async function load() {
-      if (!isSupabaseConfigured || !supabase || !user?.id) return
-      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', user.id)
-      if (Array.isArray(data) && data.length) {
-        setPrices(prev => {
-          const next = { ...prev }
-          data.forEach(row => { if (row.plan_key) next[row.plan_key] = Number(row.price || 0) })
-          return next
-        })
-      }
-    }
-    load()
-  }, [user?.id])
-
-  async function save() {
-    if (!user?.id || !supabase) return
-    setSaving(true)
-    setMessage('')
-    const rows = TIPSTER_PLAN_OPTIONS.map(plan => ({
-      tipster_id: user.id,
-      plan_key: plan.key,
-      label: plan.label,
-      duration_days: plan.durationDays,
-      price: Math.max(1, Number(prices[plan.key] || plan.defaultPrice)),
-      active: true
-    }))
-    const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
-    setSaving(false)
-    if (error) {
-      setMessage('Błąd zapisu cen: ' + formatAppErrorMessage(error.message))
-      return
-    }
-    setMessage('✅ Ceny subskrypcji profilu zapisane.')
-  }
-
-  return (
-    <div className="profile-panel tipster-pricing-panel">
-      <div className="profile-panel-head"><h3>Ceny dostępu do profilu</h3><span>20% marży</span></div>
-      <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
-      <div className="pricing-settings-grid">
-        {TIPSTER_PLAN_OPTIONS.map(plan => (
-          <label key={plan.key}>
-            <span>{plan.label}</span>
-            <input type="number" step="0.01" min="1" value={prices[plan.key]} onChange={e => setPrices(prev => ({ ...prev, [plan.key]: e.target.value }))} />
-            <small>Ty: {(Number(prices[plan.key] || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(prices[plan.key] || 0) * 0.2).toFixed(2)} zł</small>
-          </label>
-        ))}
-      </div>
-      {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny dostępu'}</button>
-    </div>
-  )
-}
 
 function ProfileView({ user, tips = [] }) {
   const displayName = 'smilhytv'
@@ -5262,7 +3542,7 @@ function ProfileView({ user, tips = [] }) {
                 <small>@smilhytv</small>
                 <div className="profile-v3-badges">
                   <span>ADMIN</span>
-                  <span>TIPSTER</span>
+                  <span>TYPER</span>
                   <span>TOP AKTYWNOŚĆ</span>
                 </div>
                 <p>AI typy sportowe oparte na danych i analizie statystycznej. Specjalizuje się w piłce nożnej i wartościowych kursowych. Gram odpowiedzialnie. Analizuję. Nie kopiuję. Wygrywaj. ✅</p>
@@ -5295,6 +3575,8 @@ function ProfileView({ user, tips = [] }) {
             <button type="button">◔ Historia</button>
             <button type="button">💬 Opinie</button>
           </div>
+
+          <TipsterPricingSettings user={user} onToast={null} />
 
           <div className="profile-v3-content-grid">
             <div className="profile-v3-left-col">
@@ -5467,7 +3749,7 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
       <UltraPageBanner variant="payouts" />
       <div className="payout-hero">
         <div>
-          <h1>Wypłaty tipstera</h1>
+          <h1>Wypłaty typera</h1>
           <p>{profile.username} — zgłaszaj wypłaty z zarobków premium.</p>
         </div>
         <div className="payout-available">
@@ -5534,7 +3816,7 @@ function AdminFinanceView({ report, onRefresh }) {
       <div className="page-title admin-finance-title">
         <div>
           <h1>Admin — raport platformy</h1>
-          <p>Kontrola finansów marketplace: sprzedaż, prowizja 20%, zarobki tipsterów i wypłaty.</p>
+          <p>Kontrola finansów marketplace: sprzedaż, prowizja 20%, zarobki typerów i wypłaty.</p>
         </div>
         <button type="button" onClick={onRefresh}>Odśwież raport</button>
       </div>
@@ -5556,14 +3838,14 @@ function AdminFinanceView({ report, onRefresh }) {
           <p>100% ceny premium typów.</p>
         </div>
         <div className="finance-card">
-          <span>👥 Zarobki tipsterów</span>
+          <span>👥 Zarobki typerów</span>
           <strong>{Number(report?.tipster_earnings || 0).toFixed(2)} zł</strong>
           <p>80% sprzedaży dla autorów.</p>
         </div>
         <div className="finance-card">
           <span>✅ Wypłacono</span>
           <strong>{Number(report?.total_payouts || 0).toFixed(2)} zł</strong>
-          <p>Zatwierdzone wypłaty tipsterów.</p>
+          <p>Zatwierdzone wypłaty typerów.</p>
         </div>
         <div className="finance-card warning">
           <span>⏳ Pending wypłaty</span>
@@ -5883,7 +4165,7 @@ function TopTipstersView() {
   ]
 
   const steps = [
-    ['1', 'Wybierz tipstera', 'Sprawdź statystyki i wybierz najlepszego.'],
+    ['1', 'Wybierz typera', 'Sprawdź statystyki i wybierz najlepszego typera.'],
     ['2', 'Kup dostęp', 'Zyskaj dostęp do premium typów i analiz.'],
     ['3', 'Wygrywaj więcej', 'Korzystaj z wiedzy i zwiększaj zyski!'],
   ]
@@ -5897,7 +4179,7 @@ function TopTipstersView() {
               <span>MARKETPLACE TYPÓW I ANALIZ</span>
               <h1>Kupuj sprawdzone typy
                 <br />i analizy od <em>najlepszych</em></h1>
-              <p>Zweryfikowani tipsterzy, skuteczne analizy i typy, które dają przewagę.</p>
+              <p>Zweryfikowani typerzy, skuteczne analizy i typy, które dają przewagę.</p>
             </div>
             <div className="market-hero-art-v7" aria-hidden="true">
               <div className="art-card-v7 chart"></div>
@@ -5926,7 +4208,7 @@ function TopTipstersView() {
           </div>
 
           <div className="market-v7-section-head">
-            <h2>NAJLEPSI TIPSTERZY</h2>
+            <h2>NAJLEPSI TYPERZY</h2>
             <button type="button">Zobacz wszystkich</button>
           </div>
 
@@ -6086,6 +4368,224 @@ function DashboardAutoTranslator({ lang }) {
     }
   }, [lang])
   return null
+}
+
+
+function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
+  const missions = [
+    { icon: '🎟', title: 'Wygraj 2 kupony', progress: 0, total: 2, reward: '+100 AI' },
+    { icon: '🧠', title: 'Postaw 3 typy', progress: 2, total: 3, reward: '+75 AI' },
+    { icon: '🎯', title: 'Traf kurs powyżej 2.00', progress: 1, total: 1, reward: '+50 AI' },
+    { icon: '⏱', title: 'Aktywność przez 20 min', progress: 12, total: 20, reward: '+30 AI' }
+  ]
+  const streakDays = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Dziś']
+  const streakRewards = [
+    { days: '3 dni', reward: '+100 AI', tone: 'cyan' },
+    { days: '7 dni', reward: '+250 AI', tone: 'blue' },
+    { days: '14 dni', reward: '+500 AI', tone: 'violet' },
+    { days: '30 dni', reward: '+1000 AI', tone: 'gold' }
+  ]
+  const drops = [
+    { title: 'DROP FREE', sub: 'Co 60 min', icon: '🧰', progress: 100, cost: '0 AI', cta: 'Odbierz', tone: 'cyan' },
+    { title: 'DROP SILVER', sub: '100 AI', icon: '🪙', progress: 100, cost: '100 / 100 AI', cta: 'Odbierz', tone: 'silver' },
+    { title: 'DROP GOLD', sub: '500 AI', icon: '👑', progress: 64, cost: '320 / 500 AI', cta: 'Zobacz', tone: 'gold' },
+    { title: 'DROP PLATINUM', sub: '1000 AI', icon: '💎', progress: 32, cost: '320 / 1000 AI', cta: 'Zobacz', tone: 'violet' },
+    { title: 'DROP LEGEND', sub: '2500 AI', icon: '🏆', progress: 13, cost: '320 / 2500 AI', cta: 'Zobacz', tone: 'legend' }
+  ]
+  const ranking = [
+    { name: 'smilhytv', score: '2 450 AI', badge: 'ADMIN', initials: 'SM' },
+    { name: 'buchajsonek1988', score: '1 980 AI', initials: 'BU' },
+    { name: 'pkucharski', score: '1 250 AI', initials: 'P' },
+    { name: 'smokeybet', score: '980 AI', initials: 'MS' },
+    { name: 'AI_Master', score: '870 AI', initials: 'AI' }
+  ]
+  const achievements = [
+    { icon: '🛡', title: 'Pierwszy krok', desc: 'Postaw swój pierwszy typ', status: 'Odblokowano', tone: 'cyan' },
+    { icon: '🔥', title: 'Seria zwycięstw', desc: 'Wygraj 5 kuponów z rzędu', status: 'Odblokowano', tone: 'orange' },
+    { icon: '👑', title: 'AI Typer', desc: 'Postaw 100 typów', status: 'Odblokowano', tone: 'gold' }
+  ]
+  const tokenRewards = [
+    { title: 'Freebet 10 zł', price: '100 AI', status: 'Dostępne' },
+    { title: 'Freebet 25 zł', price: '250 AI', status: 'Dostępne' },
+    { title: 'Premium 7 dni', price: '500 AI', status: 'Dostępne' },
+    { title: 'Premium 30 dni', price: '1200 AI', status: 'Dostępne' }
+  ]
+  const premiumBonuses = [
+    { title: 'Wyższe dropy', desc: '+50% więcej tokenów z dropów', state: 'Aktywny' },
+    { title: 'Szybszy progres', desc: '+25% do wszystkich misji', state: 'Aktywny' },
+    { title: 'Ekskluzywne nagrody', desc: 'Dostęp do nagród Premium', state: 'Aktywny' }
+  ]
+
+  return (
+    <div className="rewards-ultra-page">
+      <section className="rewards-ultra-card rewards-ultra-hero">
+        <div className="rewards-ultra-hero-copy">
+          <h1>Nagrody / Dropy / Misje / Bonusy</h1>
+          <p>Zdobywaj tokeny AI, odbieraj dropy i rywalizuj o najlepsze nagrody.</p>
+        </div>
+        <div className="rewards-ultra-hero-stats">
+          <div className="rewards-ultra-topmini tone-blue">
+            <span>Tokeny AI</span>
+            <strong>{Number(tokenBalance || 2450).toLocaleString('pl-PL')}</strong>
+            <small>+250 dzisiaj</small>
+          </div>
+          <button type="button" className="rewards-ultra-claim-btn">🎁 Odbierz nagrodę</button>
+          <div className="rewards-ultra-topmini tone-green">
+            <span>Poziom</span>
+            <strong>AI Legend</strong>
+            <small>1000+ typów</small>
+          </div>
+        </div>
+      </section>
+
+      <div className="rewards-ultra-content">
+        <div className="rewards-ultra-main">
+          <div className="rewards-ultra-topgrid">
+            <section className="rewards-ultra-card rewards-ultra-missions">
+              <div className="rewards-ultra-head"><h3>MISJE DZIENNE</h3><small>Reset za: 10:24:37</small></div>
+              <div className="rewards-ultra-mission-list">
+                {missions.map((mission, index) => (
+                  <div className="rewards-ultra-mission" key={index}>
+                    <div className="rewards-ultra-mission-icon">{mission.icon}</div>
+                    <div className="rewards-ultra-mission-copy">
+                      <strong>{mission.title}</strong>
+                      <div className="rewards-ultra-progress"><i style={{ width: `${Math.max(8, (mission.progress / mission.total) * 100)}%` }} /></div>
+                    </div>
+                    <b>{mission.progress}/{mission.total}</b>
+                    <span>{mission.reward}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-streak">
+              <div className="rewards-ultra-head"><h3>STREAK AKTYWNOŚCI</h3></div>
+              <div className="rewards-ultra-streak-main">
+                <div className="rewards-ultra-streak-value"><strong>7</strong><span>dni z rzędu</span></div>
+                <div className="rewards-ultra-streak-days">
+                  {streakDays.map((day, idx) => (
+                    <div className={`rewards-ultra-day ${idx < 5 ? 'done' : idx === 5 ? 'soon' : 'today'}`} key={day}>
+                      <i>{idx < 5 ? '✓' : idx === 5 ? '○' : '🔥'}</i>
+                      <span>{day}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rewards-ultra-sub">Następne nagrody za streak:</div>
+              <div className="rewards-ultra-streak-rewards">
+                {streakRewards.map((item) => (
+                  <div className={`rewards-ultra-streak-box ${item.tone}`} key={item.days}>
+                    <i>{item.tone === 'gold' ? '🏆' : item.tone === 'violet' ? '✦' : item.tone === 'blue' ? '⬢' : '✪'}</i>
+                    <div><strong>{item.days}</strong><small>{item.reward}</small></div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-progress-card">
+              <div className="rewards-ultra-head"><h3>PROGRES AKTYWNOŚCI</h3></div>
+              <div className="rewards-ultra-ring" style={{ '--ring': '72%' }}>
+                <div><strong>72%</strong><span>Aktywny</span></div>
+              </div>
+              <p>Cel tygodniowy: 1000 AI</p>
+              <b>Zdobyte: 720 AI / 1000 AI</b>
+            </section>
+          </div>
+
+          <section className="rewards-ultra-card rewards-ultra-drops-panel">
+            <div className="rewards-ultra-head stacked"><h3>DROPY TYPERÓW</h3><small>Zbieraj tokeny i odbieraj dropy za swoją aktywność.</small></div>
+            <div className="rewards-ultra-drops-grid">
+              {drops.map((drop) => (
+                <div className={`rewards-ultra-drop ${drop.tone}`} key={drop.title}>
+                  <h4>{drop.title}</h4>
+                  <span>{drop.sub}</span>
+                  <div className="rewards-ultra-drop-art">{drop.icon}</div>
+                  <div className="rewards-ultra-progress"><i style={{ width: `${drop.progress}%` }} /></div>
+                  <small>{drop.cost}</small>
+                  <button type="button">{drop.cta}</button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="rewards-ultra-bottomgrid">
+            <section className="rewards-ultra-card rewards-ultra-achievements">
+              <div className="rewards-ultra-head stacked"><h3>OSIĄGNIĘCIA</h3><small>Twoje odblokowane achievementy</small></div>
+              <div className="rewards-ultra-achievement-list">
+                {achievements.map((item) => (
+                  <div className="rewards-ultra-achievement" key={item.title}>
+                    <div className={`rewards-ultra-achievement-icon ${item.tone}`}>{item.icon}</div>
+                    <div className="rewards-ultra-achievement-copy"><strong>{item.title}</strong><small>{item.desc}</small></div>
+                    <span>{item.status}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zobacz wszystkie</button>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-token-store">
+              <div className="rewards-ultra-head stacked"><h3>NAGRODY TOKENOWE</h3><small>Wymieniaj tokeny AI na nagrody</small></div>
+              <div className="rewards-ultra-store-grid">
+                {tokenRewards.map((item) => (
+                  <div className="rewards-ultra-store-item" key={item.title}>
+                    <strong>{item.title}</strong>
+                    <span>{item.price}</span>
+                    <small>{item.status}</small>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zobacz wszystkie nagrody</button>
+            </section>
+
+            <section className="rewards-ultra-card rewards-ultra-premium-bonus">
+              <div className="rewards-ultra-head stacked"><h3>BONUSY PREMIUM</h3><small>Aktywne bonusy dla użytkowników Premium</small></div>
+              <div className="rewards-ultra-premium-list">
+                {premiumBonuses.map((item) => (
+                  <div className="rewards-ultra-premium-row" key={item.title}>
+                    <div className="rewards-ultra-premium-icon">✦</div>
+                    <div><strong>{item.title}</strong><small>{item.desc}</small></div>
+                    <span>{item.state}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="rewards-ultra-muted-btn">Zarządzaj Premium</button>
+            </section>
+          </div>
+        </div>
+
+        <aside className="rewards-ultra-sidebar">
+          <section className="rewards-ultra-card rewards-ultra-ranking">
+            <div className="rewards-ultra-head"><h3>TOP AKTYWNOŚCI</h3><div className="rewards-ultra-tabs"><b>24H</b><span>7D</span><span>30D</span></div></div>
+            <div className="rewards-ultra-ranking-list">
+              {ranking.map((item, index) => (
+                <div className="rewards-ultra-rank-row" key={item.name}>
+                  <em>{index + 1}</em>
+                  <div className="rewards-ultra-rank-avatar">{item.initials}</div>
+                  <div className="rewards-ultra-rank-copy"><strong>{item.name}</strong>{item.badge ? <small>{item.badge}</small> : null}</div>
+                  <span>{item.score}</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="rewards-ultra-muted-btn">Zobacz pełny ranking</button>
+          </section>
+
+          <section className="rewards-ultra-card rewards-ultra-claim-card">
+            <div className="rewards-ultra-head stacked"><h3>ODBIERZ NAGRODĘ</h3><small>Masz dostępne nagrody do odebrania!</small></div>
+            <div className="rewards-ultra-claim-visual">
+              <div className="coin big">AI</div>
+              <div className="coin mid">⚡</div>
+              <div className="coin small">AI</div>
+            </div>
+            <div className="rewards-ultra-claim-copy">
+              <strong>+250 AI</strong>
+              <span>Tokeny AI</span>
+            </div>
+            <button type="button" className="rewards-ultra-claim-main">Odbierz teraz</button>
+          </section>
+        </aside>
+      </div>
+    </div>
+  )
 }
 
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
@@ -6273,7 +4773,7 @@ function App() {
         return
       }
 
-      setRealRanking(data || [])
+      setRealRanking(sortRankingRows(data || []))
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking([])
@@ -6558,7 +5058,7 @@ function App() {
 
   async function toggleFollowTipster(tipsterId, authorName) {
     if (!sessionUser?.id) {
-      showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować tipstera.' })
+      showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować typera.' })
       return
     }
 
@@ -6570,7 +5070,7 @@ function App() {
     const resolvedId = await resolveTipsterId(tipsterId, authorName)
     const id = resolvedId ? String(resolvedId) : null
     if (!id || id === String(sessionUser.id)) {
-      showToast({ type: 'info', title: 'Follow', message: 'Nie można obserwować własnego konta albo nie znaleziono tipstera w profiles.' })
+      showToast({ type: 'info', title: 'Follow', message: 'Nie można obserwować własnego konta albo nie znaleziono typera w profiles.' })
       return
     }
 
@@ -6594,7 +5094,7 @@ function App() {
         next.delete(id)
         return next
       })
-      showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować tipstera.' })
+      showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować typera.' })
       return
     }
 
@@ -6613,7 +5113,7 @@ function App() {
       if (authorName) next.add(String(authorName).toLowerCase())
       return next
     })
-    showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz tipstera. Powiadomienia pojawią się po nowych typach.' })
+    showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz typera. Powiadomienia pojawią się po nowych typach.' })
   }
 
   async function markAllNotificationsRead() {
@@ -6684,7 +5184,7 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('profile_sub') === 'success') {
-      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów tipstera zostanie odświeżony.' })
+      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera zostanie odświeżony.' })
       if (sessionUser?.id) {
         fetchTips(sessionUser.id)
         fetchPaymentHistory(sessionUser.id)
@@ -7710,9 +6210,23 @@ function App() {
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
-            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉{dmUnreadCount > 0 && <b>{dmUnreadCount}</b>}</button>
-            <button className="wallet-top-btn wallet-stack-top" onClick={() => setView('wallet')}><strong>{Number(walletBalance || 0).toFixed(2)} zł</strong><small>ŻETONY: {Number(tokenBalance || 0)}</small></button>
-            <button type="button" className={`top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
+            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
+            <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
+              <span className="wallet-split-segment wallet-split-balance">
+                <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
+                <small>Saldo</small>
+              </span>
+              <span className="wallet-split-divider" aria-hidden="true" />
+              <span className="wallet-split-segment wallet-split-tokens">
+                <span className="wallet-split-coin" aria-hidden="true">◉</span>
+                <span className="wallet-split-token-copy">
+                  <strong>{Number(tokenBalance || 0)}</strong>
+                  <small>Żetony</small>
+                </span>
+                <span className="wallet-split-chevron" aria-hidden="true">⌄</span>
+              </span>
+            </button>
+            <button type="button" className={`top-user-chip neutral-top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
               <span className="top-user-avatar">{(getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}</span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
               <span className="top-user-chevron">⌄</span>
@@ -7751,6 +6265,10 @@ function App() {
 
         {view === 'referrals' && (
           <ReferralsView user={sessionUser} data={referralData} loading={referralLoading} onRefresh={() => fetchReferralData(sessionUser?.id)} />
+        )}
+
+        {view === 'rewardsBonuses' && (
+          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} />
         )}
 
         {view === 'aiPicks' && (
@@ -7824,7 +6342,7 @@ function App() {
 
         {view === 'dashboard' && !selectedTipsterId && (
           <section className="feed-section">
-            <AnimatedDashboardHero tips={tips} onStatsClick={() => setView('leaderboard')} />
+            <AnimatedDashboardHero />
             <div className="monetization-panel">
               <div>
                 <strong>💰 Marketplace premium</strong>
@@ -7853,7 +6371,7 @@ function App() {
 
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} />) : (
+              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} onToast={showToast} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
