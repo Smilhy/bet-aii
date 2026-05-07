@@ -1,7 +1,0 @@
-WERSJA 636 UPDATE
-- zmieniono przycisk na "Ulepsz konto"
-- dodano przygotowanie pod Stripe Premium 29 zł / 30 dni
-- dodano obsługę badge premium
-- dodano asset nowego powiadomienia "NOWY TIP"
-- gotowe pod wyświetlanie: Tip od {username}
-- zachowany żeton z górnego UI
