@@ -921,7 +921,7 @@ function LiveChatPanel({ user }) {
       const nextMessages = (data || []).reverse()
       setMessages(nextMessages)
       setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
-      awardDailyLeaderIfNeeded(nextMessages)
+      // Wersja 606: lider czatu jest nagradzany funkcją SQL o 00:00, nie podczas odświeżania UI.
     } catch (error) {
       console.error('live chat load error', error)
       setStatus('Live chat: reconnect z Supabase...')
@@ -998,8 +998,25 @@ function LiveChatPanel({ user }) {
         created_at: new Date().toISOString()
       })
       if (error) throw error
+
+      try {
+        const { data: bonusResult, error: bonusError } = await supabase.rpc('award_live_chat_first_message_bonus_v606', {
+          p_email: email,
+          p_user_id: user?.id || null,
+          p_user_name: userName
+        })
+        if (!bonusError && bonusResult?.awarded) {
+          window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+          setStatus(`Wiadomość wysłana. Bonus dzienny: +${Number(bonusResult.tokens_awarded || 1)} żeton za pierwszą wiadomość dnia.`)
+        } else {
+          setStatus('Wiadomość wysłana na live chat.')
+        }
+      } catch (bonusError) {
+        console.warn('daily chat message bonus skipped', bonusError)
+        setStatus('Wiadomość wysłana na live chat.')
+      }
+
       setText('')
-      setStatus('Wiadomość wysłana na live chat.')
       await loadMessages()
     } catch (error) {
       console.error('live chat send error', error)
@@ -1092,7 +1109,7 @@ function LiveChatPanel({ user }) {
           <span>TOP UŻYTKOWNIK (24H)</span>
           <div className="betai-stat-user-final"><b className="betai-trophy-final">🏆</b><div><strong>{leader?.name || 'Brak lidera'}</strong><small>{leader ? `${leader.count} wiadomości` : `${todayCount} wiadomości dziś`}</small></div></div>
         </div>
-        <div className="livechat226-stat betai-chat-stat-final"><span>NAGRODA DNIA</span><strong>🪙 1 żeton / 24h</strong><small>dla najbardziej aktywnych</small></div>
+        <div className="livechat226-stat betai-chat-stat-final"><span>NAGRODA DNIA</span><strong>🪙 FREE +1 / PREMIUM +2</strong><small>lider czatu o 00:00</small></div>
         <div className="livechat226-stat betai-chat-stat-final"><span>AKTYWNI TERAZ</span><strong>👥 {onlineCount}</strong></div>
       </div>
 
