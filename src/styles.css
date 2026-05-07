@@ -22714,3 +22714,34 @@ img,video,canvas,svg{max-width:100%;}
     max-width:100% !important;
   }
 }
+
+/* =========================================================
+   WERSJA 614 — przesunięcie całego ekranu w prawo wg zaznaczenia
+   ========================================================= */
+.auth609-screen{
+  justify-content:flex-start !important;
+}
+.auth609-artboard{
+  margin-left:150px !important;
+  margin-right:0 !important;
+}
+@media (max-width: 2300px){
+  .auth609-artboard{
+    margin-left:150px !important;
+  }
+}
+@media (max-width: 1100px){
+  .auth609-screen{
+    justify-content:flex-start !important;
+  }
+  .auth609-artboard{
+    margin-left:150px !important;
+    margin-right:0 !important;
+  }
+}
+@media (max-width: 640px){
+  .auth609-artboard{
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+}
