@@ -1,0 +1,5 @@
+WERSJA 630
+- Chat support i panel opinii/oceny dostały niebieski glass zamiast zielono-turkusowego koloru.
+- Licznik 0 wiadomości przy czacie wymuszony na niebieski kolor jak gwiazdki.
+- Pola boczne na ekranie logowania/rejestracji ujednolicone w szklistym stylu jak przyciski social media.
+- Poprawiono ramki, tła, poświaty i aktywne elementy, żeby całość była spójna wizualnie.
