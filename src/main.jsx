@@ -4900,103 +4900,105 @@ function AuthView({ onAuth }) {
         <div className="auth609-overlay">
           <section className="auth609-left-panel">
             <div className="auth609-panel-shell auth609-panel-shell-fixed">
-              <div className="auth609-top-spacer" />
+              <div className="auth609-center-wrap">
+                <div className="auth609-top-spacer" />
 
-              <div className="auth609-heading-copy auth609-heading-center">
-                <h1 className="auth609-welcome">Witaj w Bet<span>AI</span></h1>
-                <p className="auth609-subtitle-main">Zaloguj się do swojego konta</p>
-              </div>
+                <div className="auth609-heading-copy auth609-heading-center">
+                  <h1 className="auth609-welcome">Witaj w Bet<span>AI</span></h1>
+                  <p className="auth609-subtitle-main">Zaloguj się do swojego konta</p>
+                </div>
 
-              <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
-                <button
-                  type="button"
-                  className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
-                  onClick={() => switchMode('login')}
-                >
-                  Logowanie
-                </button>
-                <button
-                  type="button"
-                  className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
-                  onClick={() => switchMode('register')}
-                >
-                  Rejestracja
-                </button>
-              </div>
-
-              <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete="off">
-                <AuthField
-                  label="Email"
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => updateField('email', event.target.value)}
-                  placeholder="Wpisz swój email"
-                  icon={<IconMail />}
-                  autoComplete={mode === 'login' ? 'username' : 'email'}
-                  name="betai_email"
-                />
-
-                <AuthField
-                  label="Hasło"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={(event) => {
-                    updateField('password', event.target.value)
-                    if (mode === 'register') updateField('repeatPassword', event.target.value)
-                  }}
-                  placeholder="Wpisz swoje hasło"
-                  icon={<IconLock />}
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  name="betai_password"
-                  rightControl={
-                    <button
-                      type="button"
-                      className="auth481-eye"
-                      onClick={() => setShowPassword(prev => !prev)}
-                      aria-label={showPassword ? t.hidePassword : t.showPassword}
-                    >
-                      <IconEye />
-                    </button>
-                  }
-                />
-
-                <div className="auth609-remember-row">
-                  <label className="auth609-remember-toggle">
-                    <input
-                      type="checkbox"
-                      checked={form.agree}
-                      onChange={(event) => updateField('agree', event.target.checked)}
-                    />
-                    <span className="auth609-remember-box">✓</span>
-                    <span>Zapamiętaj mnie</span>
-                  </label>
-                  <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
-                    Zapomniałeś hasła?
+                <div className={`auth481-tabs auth609-tabs auth609-tabs-fixed ${mode === 'login' ? 'auth481-tabs-login' : 'auth481-tabs-register'}`} role="tablist" aria-label="Choose authentication mode">
+                  <button
+                    type="button"
+                    className={`auth481-tab ${mode === 'login' ? 'is-active' : ''}`}
+                    onClick={() => switchMode('login')}
+                  >
+                    Logowanie
+                  </button>
+                  <button
+                    type="button"
+                    className={`auth481-tab ${mode === 'register' ? 'is-active' : ''}`}
+                    onClick={() => switchMode('register')}
+                  >
+                    Rejestracja
                   </button>
                 </div>
 
-                <div className="auth609-status-line">
-                  <span>
-                    {mode === 'login' ? 'Gotowy do logowania.' : 'Wpisz email i hasło, aby założyć konto.'}
-                  </span>
-                  <span className="auth609-status-shield"><IconShield /></span>
+                <form className="auth481-form auth609-form auth609-form-fixed" onSubmit={handleSubmit} autoComplete="off">
+                  <AuthField
+                    label="Email"
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => updateField('email', event.target.value)}
+                    placeholder="Wpisz swój email"
+                    icon={<IconMail />}
+                    autoComplete={mode === 'login' ? 'username' : 'email'}
+                    name="betai_email"
+                  />
+
+                  <AuthField
+                    label="Hasło"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(event) => {
+                      updateField('password', event.target.value)
+                      if (mode === 'register') updateField('repeatPassword', event.target.value)
+                    }}
+                    placeholder="Wpisz swoje hasło"
+                    icon={<IconLock />}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    name="betai_password"
+                    rightControl={
+                      <button
+                        type="button"
+                        className="auth481-eye"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        aria-label={showPassword ? t.hidePassword : t.showPassword}
+                      >
+                        <IconEye />
+                      </button>
+                    }
+                  />
+
+                  <div className="auth609-remember-row">
+                    <label className="auth609-remember-toggle">
+                      <input
+                        type="checkbox"
+                        checked={form.agree}
+                        onChange={(event) => updateField('agree', event.target.checked)}
+                      />
+                      <span className="auth609-remember-box">✓</span>
+                      <span>Zapamiętaj mnie</span>
+                    </label>
+                    <button type="button" className="auth609-forgot-link" onClick={handleForgotPassword}>
+                      Zapomniałeś hasła?
+                    </button>
+                  </div>
+
+                  <div className="auth609-status-line">
+                    <span>
+                      {mode === 'login' ? 'Gotowy do logowania.' : 'Wpisz email i hasło, aby założyć konto.'}
+                    </span>
+                    <span className="auth609-status-shield"><IconShield /></span>
+                  </div>
+
+                  <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed" disabled={submitting}>
+                    {submitting ? t.authorizing : mode === 'login' ? 'Zaloguj się' : 'Utwórz konto'}
+                  </button>
+                </form>
+
+                <div className="auth609-secure-note">
+                  <span className="auth609-secure-icon"><IconShield /></span>
+                  <span>Twoje dane są w pełni zabezpieczone</span>
                 </div>
 
-                <button type="submit" className="auth481-submit auth609-submit auth609-submit-fixed" disabled={submitting}>
-                  {submitting ? t.authorizing : mode === 'login' ? 'Zaloguj się' : 'Utwórz konto'}
-                </button>
-              </form>
-
-              <div className="auth609-secure-note">
-                <span className="auth609-secure-icon"><IconShield /></span>
-                <span>Twoje dane są w pełni zabezpieczone</span>
+                {authMessage ? (
+                  <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
+                    {authMessage}
+                  </div>
+                ) : null}
               </div>
-
-              {authMessage ? (
-                <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
-                  {authMessage}
-                </div>
-              ) : null}
             </div>
           </section>
         </div>

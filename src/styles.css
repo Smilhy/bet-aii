@@ -22493,3 +22493,51 @@ img,video,canvas,svg{max-width:100%;}
   .auth609-left-panel{position:absolute!important;left:25px!important;top:18px!important;width:619px!important;height:1084px!important;margin:0!important;}
   .auth609-panel-shell-fixed{width:619px!important;height:1084px!important;padding:58px 54px 42px!important;border:0!important;box-shadow:none!important;background:transparent!important;}
 }
+
+/* =========================================================
+   WERSJA 611 — wyśrodkowanie całego panelu w lewej ramce
+   ========================================================= */
+.auth609-left-panel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.auth609-panel-shell-fixed{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 !important;
+}
+.auth609-center-wrap{
+  width:min(100%, 404px);
+  margin:0 auto;
+  padding:34px 20px 26px;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.auth609-heading-center,
+.auth609-secure-note,
+.auth609-message{
+  width:100%;
+}
+.auth609-tabs-fixed{
+  margin:0 0 26px !important;
+}
+.auth609-form-fixed{
+  padding:0 !important;
+}
+.auth609-message{
+  margin:18px 0 0 !important;
+}
+@media (max-width: 1380px){
+  .auth609-center-wrap{width:min(100%, 388px); padding:30px 18px 24px;}
+}
+@media (max-width: 1100px){
+  .auth609-panel-shell-fixed{padding:0 !important;}
+  .auth609-center-wrap{width:min(100%, 420px);}
+}
+@media (max-width: 640px){
+  .auth609-center-wrap{width:100%; padding:24px 14px 18px;}
+}
