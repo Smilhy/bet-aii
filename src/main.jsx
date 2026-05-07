@@ -4113,12 +4113,22 @@ function SupportChatWidget({ user }) {
 
           {adminMode ? (
             <div className="support510-admin-tabs">
-              {conversations.length ? conversations.slice(0, 5).map(item => (
-                <button key={item.key} type="button" className={(selectedKey || conversations[0]?.key) === item.key ? 'active' : ''} onClick={() => setSelectedKey(item.key)}>
-                  <b>{item.name}</b>
-                  <span>{item.unread ? `${item.unread} nowe` : item.email}</span>
-                </button>
-              )) : <span className="support510-empty-mini">Brak rozmów</span>}
+              {conversations.length ? conversations.slice(0, 8).map(item => {
+                const label = item.name || item.email || 'Użytkownik'
+                const mail = item.email || 'brak e-mail'
+                const avatar = String(label).trim().slice(0, 1).toUpperCase()
+                const isActive = (selectedKey || conversations[0]?.key) === item.key
+                return (
+                  <button key={item.key} type="button" className={`support510-thread-card ${isActive ? 'active' : ''}`} onClick={() => setSelectedKey(item.key)}>
+                    <span className="support510-thread-avatar">{avatar}</span>
+                    <span className="support510-thread-copy">
+                      <b>{label}</b>
+                      <small>{mail}</small>
+                    </span>
+                    {item.unread ? <span className="support510-thread-badge">{item.unread}</span> : null}
+                  </button>
+                )
+              }) : <span className="support510-empty-mini">Brak rozmów</span>}
             </div>
           ) : null}
 
