@@ -1,0 +1,1 @@
+Wersja 631: dodano cienka szklana ramke i subtelna poswiate dookola glownego obszaru ekranu logowania, aby zniwelowac ostre przejscie kolorow miedzy tlem a panelem.

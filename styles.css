@@ -24107,3 +24107,57 @@ font[style*="border"]{
   70%{box-shadow:0 0 0 11px rgba(64,216,255,0)}
   100%{box-shadow:0 0 0 0 rgba(64,216,255,0)}
 }
+
+/* =========================================================
+   WERSJA 631 — cienka szklana ramka dookoła głównego podglądu
+   Zamyka krawędzie grafiki i niweluje odcięcie kolorów tła.
+   ========================================================= */
+.auth609-screen{
+  background:
+    radial-gradient(circle at 9% 50%, rgba(64,216,255,.055), transparent 30%),
+    radial-gradient(circle at 92% 50%, rgba(64,216,255,.055), transparent 28%),
+    linear-gradient(180deg,#020914 0%,#010712 100%)!important;
+}
+.auth609-artboard{
+  border-radius:28px!important;
+  isolation:isolate;
+  filter:drop-shadow(0 24px 62px rgba(0,0,0,.46));
+}
+.auth609-artboard::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:28px;
+  pointer-events:none;
+  z-index:8;
+  border:1px solid rgba(83,222,255,.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(9,38,65,.34),
+    inset 0 0 42px rgba(64,216,255,.055),
+    0 0 0 1px rgba(0,0,0,.28),
+    0 0 34px rgba(64,216,255,.13);
+}
+.auth609-artboard::after{
+  content:"";
+  position:absolute;
+  inset:-18px;
+  border-radius:36px;
+  pointer-events:none;
+  z-index:7;
+  background:
+    linear-gradient(90deg,rgba(64,216,255,.12),transparent 8%,transparent 92%,rgba(64,216,255,.12)),
+    linear-gradient(180deg,rgba(64,216,255,.09),transparent 8%,transparent 92%,rgba(64,216,255,.07));
+  filter:blur(10px);
+  opacity:.62;
+}
+.auth609-reference{
+  border-radius:26px!important;
+}
+.auth609-overlay{
+  z-index:9;
+}
+@media(max-width:1100px){
+  .auth609-artboard::before,
+  .auth609-artboard::after{display:none!important;}
+}
