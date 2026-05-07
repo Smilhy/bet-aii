@@ -1663,6 +1663,42 @@ function Toast({ toast, onClose }) {
   )
 }
 
+
+function LiveTipCenterPopup({ popup, open, onClose }) {
+  if (!popup) return null
+
+  const author = popup.author_name || 'Użytkownik'
+  const league = popup.league || 'Liga'
+  const matchLine = `${popup.team_home || 'Drużyna 1'} vs ${popup.team_away || 'Drużyna 2'}`
+  const tipLabel = popup.bet_type || 'Nowy typ'
+  const oddsLabel = Number(popup.odds || 0) > 0 ? `Kurs ${Number(popup.odds).toFixed(2)}` : 'Nowy typ'
+
+  return (
+    <div className={`live-tip-center-overlay ${open ? 'is-visible' : 'is-hiding'}`}>
+      <div className={`live-tip-center-card ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
+        <button type="button" className="live-tip-center-close" onClick={onClose} aria-label="Zamknij powiadomienie">×</button>
+        <div className="live-tip-center-kicker">NOWY TIP</div>
+        <div className="live-tip-center-content">
+          <div className="live-tip-center-icon" aria-hidden="true">
+            <img src="/betai-topbar-coin.png" alt="" />
+          </div>
+          <div className="live-tip-center-copy">
+            <strong>{author} dodał typ</strong>
+            <span>{matchLine}</span>
+          </div>
+        </div>
+        <div className="live-tip-center-pills">
+          <span>{league}</span>
+          <span>{tipLabel}</span>
+          <span>{oddsLabel}</span>
+        </div>
+        <div className="live-tip-center-subline">Powiadomienie znika automatycznie po 5 sekundach</div>
+        <div className={`live-tip-center-progress ${open ? 'run' : ''}`} />
+      </div>
+    </div>
+  )
+}
+
 function FeedSkeleton() {
   return (
     <div className="skeleton-list">
@@ -6744,6 +6780,42 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+  const [liveTipPopup, setLiveTipPopup] = useState(null)
+  const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
+  const liveTipPopupTimerRef = useRef(null)
+  const liveTipPopupHideTimerRef = useRef(null)
+  const lastLiveTipIdRef = useRef('')
+
+  function hideLiveTipPopup() {
+    setLiveTipPopupVisible(false)
+    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
+    liveTipPopupHideTimerRef.current = setTimeout(() => setLiveTipPopup(null), 320)
+  }
+
+  function showLiveTipPopup(rawTip) {
+    const incomingTip = normalizeTipRow(rawTip || {})
+    const nextId = String(incomingTip?.id || '')
+    if (!nextId) return
+    if (lastLiveTipIdRef.current === nextId) return
+    if (String(getTipAuthorId(incomingTip) || '') === String(sessionUser?.id || '')) return
+
+    lastLiveTipIdRef.current = nextId
+
+    if (liveTipPopupTimerRef.current) clearTimeout(liveTipPopupTimerRef.current)
+    if (liveTipPopupHideTimerRef.current) clearTimeout(liveTipPopupHideTimerRef.current)
+
+    setLiveTipPopup(incomingTip)
+    setLiveTipPopupVisible(true)
+
+    liveTipPopupTimerRef.current = setTimeout(() => {
+      setLiveTipPopupVisible(false)
+    }, 4700)
+
+    liveTipPopupHideTimerRef.current = setTimeout(() => {
+      setLiveTipPopup(null)
+    }, 5200)
+  }
+
 
   function changeAppLanguage(nextLang) {
     if (!BETAI_LANGUAGES.includes(nextLang)) return
@@ -6937,6 +7009,26 @@ function App() {
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
   }
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !sessionUser?.id) return undefined
+
+    const channel = supabase
+      .channel(`betai-live-tip-center-${sessionUser.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
+        const incomingTip = normalizeTipRow(payload?.new || {})
+        if (!incomingTip?.id) return
+
+        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
+        showLiveTipPopup(incomingTip)
+        fetchRealRanking()
+      })
+      .subscribe()
+
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [sessionUser?.id])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase || !userId) {
@@ -8249,6 +8341,7 @@ function App() {
     <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
+      <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
         tip={selectedPayment}
