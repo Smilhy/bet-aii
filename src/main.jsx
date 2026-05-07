@@ -4502,7 +4502,7 @@ function AuthView({ onAuth }) {
   }
 
   const t = authTranslations[authLang] || authTranslations.pl
-  const localizedAuthFrameSrc = authLang === 'pl' ? '/auth-frame-reference-609.png' : `/auth-frame-reference-609-${authLang}.png`
+  const localizedAuthFrameSrc = '/auth-frame-reference-609.png'
 
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)

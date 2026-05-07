@@ -1,0 +1,6 @@
+Wersja 625:
+- Pionowy panel statystyk na ekranie logowania/rejestracji przyklejony całkiem do prawej krawędzi ekranu.
+- Panel ustawiony pionowo na środku wysokości ekranu.
+- Cały panel statystyk zwężony o ok. 20%.
+- Ukryte ramki/banery Google Translate, które pojawiały się przy tłumaczeniu strony/obrazu.
+- Podgląd obrazu auth używa czystej wersji bez dodatkowych ramek tłumaczenia.
