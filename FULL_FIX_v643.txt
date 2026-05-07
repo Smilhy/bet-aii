@@ -1,0 +1,10 @@
+BETAI v643 FULL FIX
+
+NAPRAWIONE:
+- usunięto podwójny nagłówek wiadomości
+- poprawiono nickname zamiast 'user'
+- dodano ikonę 💰 przy saldzie
+- dodano ikonę 🪙 przy żetonach
+- dodano ikonę 🔓 przy odblokowanych
+- zachowany system TIP ALERT
+- zachowany Premium Stripe 29 zł
