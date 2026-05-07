@@ -1,8 +1,0 @@
-Wersja 609 — poprawa panelu logowania/rejestracji
-
-Zakres zmian:
-- zmieniony wyłącznie panel auth (logowanie / rejestracja),
-- dodany i dopracowany stały przełącznik: Zaloguj się / Zarejestruj się,
-- ten sam układ i rozmiar panelu po przełączaniu,
-- odświeżone kolory, ramki, odstępy i neonowe akcenty,
-- dashboard po zalogowaniu bez zmian.
