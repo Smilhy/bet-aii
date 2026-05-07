@@ -559,6 +559,9 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   const profile = getUserProfileView(user)
 return (
     <aside className="sidebar">
+      <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
+        <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
+      </div>
       <div className="user-card">
         <div className="avatar">{profile.initials}</div>
         <div>
@@ -1180,12 +1183,11 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
         )}
       </section>
 
-      <section className="panel">
-        <div className="panel-head"><h2><span>AI</span> Typy dnia</h2><a>Zobacz wszystkie</a></div>
-        <div className="ai-pick"><div className="club">MC</div><div><b>Manchester City <span>vs</span> Inter Mediolan</b><small>Typ: Manchester City wygra</small><div className="tiny-progress"><i style={{width:'68%'}}></i></div></div><strong>68%</strong></div>
-        <div className="ai-pick"><div className="club psg">PSG</div><div><b>PSG <span>vs</span> Borussia Dortmund</b><small>Typ: Powyżej 2.5 gola</small><div className="tiny-progress"><i style={{width:'63%'}}></i></div></div><strong>63%</strong></div>
-        <div className="ai-pick"><div className="club lfc">L</div><div><b>Liverpool <span>vs</span> Bayer Leverkusen</b><small>Typ: Liverpool wygra</small><div className="tiny-progress"><i style={{width:'61%'}}></i></div></div><strong>61%</strong></div>
-        <button className="show-more">Zobacz wszystkie</button>
+      <section className="panel ai-day-panel-right">
+        <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>Zobacz wszystkie</a></div>
+        <div className="ai-pick"><div className="club ai-club">AI</div><div><b>Manchester City <span>vs</span> Inter Mediolan</b><small>Typ: Manchester City wygra</small><div className="tiny-progress"><i style={{width:'68%'}}></i></div></div><strong>68%</strong></div>
+        <div className="ai-pick"><div className="club psg ai-club">AI</div><div><b>PSG <span>vs</span> Borussia Dortmund</b><small>Typ: Powyżej 2.5 gola</small><div className="tiny-progress"><i style={{width:'63%'}}></i></div></div><strong>63%</strong></div>
+        <div className="ai-pick"><div className="club lfc ai-club">AI</div><div><b>Liverpool <span>vs</span> Bayer Leverkusen</b><small>Typ: Liverpool wygra</small><div className="tiny-progress"><i style={{width:'61%'}}></i></div></div><strong>61%</strong></div>
       </section>
 
       <section className="panel"><div className="panel-head"><h2>Wyniki live</h2><a>Dzisiaj</a></div><div className="result"><span>Premier League</span><b>Man City <i>2:1</i> Liverpool</b></div><div className="result"><span>La Liga</span><b>Barcelona <i>1:0</i> Real Madryt</b></div><div className="result"><span>Serie A</span><b>Inter <i>3:0</i> Milan</b></div></section>
@@ -2929,6 +2931,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const [unreadMap, setUnreadMap] = useState({})
   const [status, setStatus] = useState('Kliknij użytkownika po lewej i napisz prywatną wiadomość.')
   const [sending, setSending] = useState(false)
+  const [directoryMeta, setDirectoryMeta] = useState({})
 
   const myId = user?.id || ''
   const myEmail = normalizeEmail(user?.email || '')
@@ -2937,29 +2940,107 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     const clean = normalizeEmail(email)
     if (username) return String(username)
     if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    return clean ? clean.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Użytkownik'
+    return clean ? clean.split('@')[0].replace(/[._-]+/g, ' ').replace(/\w/g, c => c.toUpperCase()) : 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
+  const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
 
   const loadUsers = async () => {
-    if (!isSupabaseConfigured || !supabase || !myEmail) return
+    if (!isSupabaseConfigured || !supabase || !myId) return
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id,email,username,created_at')
-        .order('created_at', { ascending: false })
-        .limit(120)
-      if (error) throw error
-      const rows = (Array.isArray(data) ? data : [])
-        .filter(row => normalizeEmail(row?.email) && normalizeEmail(row?.email) !== myEmail)
-        .map(row => ({
-          id: row.id,
-          email: normalizeEmail(row.email),
-          name: displayName(row.email, row.username),
-          initials: initials(displayName(row.email, row.username))
-        }))
+      const profileRows = []
+      let from = 0
+      const pageSize = 200
+      for (let guard = 0; guard < 5; guard += 1) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id,email,username,created_at')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1)
+        if (error) throw error
+        const batch = Array.isArray(data) ? data : []
+        profileRows.push(...batch)
+        if (batch.length < pageSize) break
+        from += pageSize
+      }
+
+      let dmRows = []
+      try {
+        const { data: dmData, error: dmError } = await supabase
+          .from('direct_messages')
+          .select('sender_id,receiver_id,created_at')
+          .or(`sender_id.eq.${myId},receiver_id.eq.${myId}`)
+          .order('created_at', { ascending: false })
+          .limit(500)
+        if (dmError) throw dmError
+        dmRows = Array.isArray(dmData) ? dmData : []
+      } catch (dmError) {
+        console.warn('user messages directory meta skipped', dmError)
+      }
+
+      const meta = {}
+      dmRows.forEach(row => {
+        const senderId = String(row?.sender_id || '')
+        const receiverId = String(row?.receiver_id || '')
+        const otherId = senderId === String(myId) ? receiverId : senderId
+        if (!otherId || otherId === String(myId)) return
+        const createdAt = row?.created_at || ''
+        if (!meta[otherId] || String(createdAt) > String(meta[otherId].lastAt || '')) {
+          meta[otherId] = { lastAt: createdAt }
+        }
+      })
+      setDirectoryMeta(meta)
+
+      const byId = new Map()
+      ;(Array.isArray(profileRows) ? profileRows : []).forEach(row => {
+        const id = String(row?.id || '')
+        const email = normalizeEmail(row?.email || '')
+        if (!id || id === String(myId) || email === myEmail) return
+        const name = displayName(row?.email, row?.username)
+        byId.set(id, {
+          id,
+          email,
+          username: row?.username || '',
+          name,
+          initials: initials(name),
+          created_at: row?.created_at || '',
+          lastAt: meta[id]?.lastAt || ''
+        })
+      })
+
+      Object.keys(meta).forEach(id => {
+        if (id === String(myId) || byId.has(id)) return
+        const name = 'Użytkownik'
+        byId.set(id, {
+          id,
+          email: '',
+          username: '',
+          name,
+          initials: initials(name),
+          created_at: '',
+          lastAt: meta[id]?.lastAt || ''
+        })
+      })
+
+      const rows = Array.from(byId.values()).sort((a, b) => {
+        const unreadDiff = Number(unreadMap[b.id] || 0) - Number(unreadMap[a.id] || 0)
+        if (unreadDiff) return unreadDiff
+        const aLast = String(a.lastAt || a.created_at || '')
+        const bLast = String(b.lastAt || b.created_at || '')
+        if (aLast !== bLast) return bLast.localeCompare(aLast)
+        return String(a.name || '').localeCompare(String(b.name || ''), 'pl', { sensitivity: 'base' })
+      })
+
       setUsers(rows)
-      setActiveUser(prev => prev && rows.some(row => String(row.id) === String(prev.id)) ? prev : (rows[0] || null))
+      setActiveUser(prev => {
+        if (prev && rows.some(row => String(row.id) === String(prev.id))) {
+          return rows.find(row => String(row.id) === String(prev.id)) || prev
+        }
+        const unreadFirst = rows.find(row => Number(unreadMap[row.id] || 0) > 0)
+        const recentFirst = rows.find(row => row.lastAt)
+        return unreadFirst || recentFirst || rows[0] || null
+      })
+      setStatus(rows.length ? 'Kliknij użytkownika po lewej i napisz prywatną wiadomość.' : 'Brak użytkowników do pokazania. Jeśli problem zostanie, uruchom SQL dla profiles/direct_messages.')
     } catch (error) {
       console.warn('user messages load users skipped', error)
       setStatus('Nie udało się wczytać listy użytkowników. Sprawdź tabelę profiles/RLS.')
@@ -3031,6 +3112,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
       setText('')
       setStatus('Wiadomość wysłana.')
       await loadConversation(activeUser)
+      await loadUsers()
     } catch (error) {
       console.warn('user messages send failed', error)
       setStatus('Wysyłka nie powiodła się. Sprawdź SQL/RLS direct_messages.')
@@ -3041,22 +3123,30 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
   useEffect(() => {
     if (!visible || !myId) return undefined
-    loadUsers()
     loadUnread()
+    loadUsers()
     const timer = setInterval(() => {
       loadUnread()
+      loadUsers()
       loadConversation(activeUser)
     }, 4000)
     return () => clearInterval(timer)
-  }, [visible, myId, activeUser?.id])
+  }, [visible, myId])
 
   useEffect(() => {
     if (visible && activeUser?.id) loadConversation(activeUser)
   }, [visible, activeUser?.id])
 
+  useEffect(() => {
+    if (!visible) return
+    loadUsers()
+  }, [visible, JSON.stringify(unreadMap)])
+
   const filteredUsers = users.filter(item => {
-    const q = normalizeEmail(search)
-    return !q || normalizeEmail(item.email).includes(q) || normalizeEmail(item.name).includes(q)
+    const q = normalizeSearch(search)
+    if (!q) return true
+    const haystack = [item.email, item.name, item.username, item.id, item.initials].map(normalizeSearch).join(' | ')
+    return haystack.includes(q)
   })
   const activeUnread = Object.values(unreadMap).reduce((sum, value) => sum + Number(value || 0), 0)
 
@@ -3076,10 +3166,10 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
             {filteredUsers.length ? filteredUsers.map(item => (
               <button type="button" className={activeUser?.id === item.id ? 'betai-dm-user active' : 'betai-dm-user'} key={item.id || item.email} onClick={() => setActiveUser(item)}>
                 <span className="betai-dm-avatar">{item.initials}</span>
-                <span><strong>{item.name}</strong><small>{item.email}</small></span>
+                <span><strong>{item.name}</strong><small>{item.email || 'Brak e-mail w profilu'}</small></span>
                 {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
               </button>
-            )) : <div className="betai-dm-empty">Brak użytkowników.</div>}
+            )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania.</div>}
           </div>
         </aside>
         <section className="betai-dm-conversation">
@@ -6586,6 +6676,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [topSearch, setTopSearch] = useState('')
+  const [dashboardVisibleTips, setDashboardVisibleTips] = useState(5)
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
@@ -8119,6 +8210,16 @@ function App() {
     ['mine', 'Moje']
   ]
 
+  const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
+  const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
+  const hasExpandedDashboardTips = dashboardVisibleTips > 5
+
+  useEffect(() => {
+    if (view === 'dashboard') {
+      setDashboardVisibleTips(5)
+    }
+  }, [activeFilter, topSearch, view])
+
   if (authLoading) {
     return <div className="auth-screen"><div className="auth-card"><div className="auth-brand">Bet<span>+AI</span></div><p>Ładowanie sesji...</p></div></div>
   }
@@ -8314,10 +8415,32 @@ function App() {
 
 
             <div className="feed">
-              {filteredTips.length ? filteredTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} onToast={showToast} />) : (
+              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} onToast={showToast} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
+
+            {filteredTips.length > 5 ? (
+              <div className="feed-load-more-wrap">
+                <button
+                  type="button"
+                  className="feed-load-more-btn"
+                  onClick={() => setDashboardVisibleTips(prev => prev + 5)}
+                  disabled={!hasMoreDashboardTips}
+                >
+                  {hasMoreDashboardTips ? `Pokaż kolejne 5 typów (${Math.max(filteredTips.length - dashboardVisibleTips, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                </button>
+                {hasExpandedDashboardTips ? (
+                  <button
+                    type="button"
+                    className="feed-load-less-btn"
+                    onClick={() => setDashboardVisibleTips(5)}
+                  >
+                    Zwiń do 5 typów
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </section>
         )}
       </main>

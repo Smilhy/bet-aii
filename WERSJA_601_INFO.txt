@@ -1,0 +1,2 @@
+WERSJA 601
+Naprawa prywatnych wiadomości: lepsze ładowanie katalogu użytkowników, pełniejsze wyszukiwanie, sortowanie po nowych wiadomościach i ostatniej aktywności. Dodany SQL: supabase/version_601_user_messages_profiles_search_fix.sql.

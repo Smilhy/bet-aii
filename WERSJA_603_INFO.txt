@@ -1,0 +1,2 @@
+WERSJA 603
+Dodano logo Bet+AI nad lewą kolumną (bez poświaty). Usunięto biały przycisk "Zobacz wszystkie" w panelu AI Typy dnia po prawej. Kolor akcentu "AI" zmieniony na niebieski jak Wyloguj.
