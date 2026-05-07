@@ -5001,6 +5001,37 @@ function AuthView({ onAuth }) {
               </div>
             </div>
           </section>
+
+          <div className="auth617-feature-strip" aria-label="Korzyści BetAI">
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconShield /></span>
+              <div>
+                <strong>Bezpieczne dane</strong>
+                <p>Twoje dane są u nas w pełni chronione.</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconBolt /></span>
+              <div>
+                <strong>Szybka rejestracja</strong>
+                <p>Załóż konto w mniej niż 30 sekund.</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconChart /></span>
+              <div>
+                <strong>Darmowe typy AI</strong>
+                <p>Codziennie nowe typy o wysokiej skuteczności.</p>
+              </div>
+            </div>
+            <div className="auth617-feature-card">
+              <span className="auth617-feature-icon"><IconUsers /></span>
+              <div>
+                <strong>Aktywna społeczność</strong>
+                <p>Tysiące typerów dzieli się wiedzą i wygrywa razem.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
