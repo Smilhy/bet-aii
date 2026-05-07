@@ -23779,3 +23779,143 @@ font[style*="border"]{
   .auth609-screen .reviews512{right:78px!important;bottom:18px!important;}
   .auth609-screen .support510{right:18px!important;bottom:18px!important;}
 }
+
+/* =========================================================
+   WERSJA 629 — szklisty kolor z sociali na cały panel logowania
+   + niebieski licznik wiadomości czatu
+   ========================================================= */
+.auth609-screen{
+  --glass629-border: rgba(63,232,255,.24);
+  --glass629-border-strong: rgba(80,236,255,.36);
+  --glass629-bg-a: rgba(7,24,39,.70);
+  --glass629-bg-b: rgba(2,9,18,.82);
+  --glass629-glow: rgba(24,220,226,.14);
+  --glass629-blue: #40d8ff;
+  --glass629-blue-2: #168cff;
+}
+.auth609-screen .auth609-panel-shell,
+.auth609-screen .auth609-panel-shell-fixed,
+.auth609-screen .auth609-left-panel{
+  background:
+    radial-gradient(circle at 18% 8%,rgba(61,242,225,.18),transparent 34%),
+    radial-gradient(circle at 92% 16%,rgba(64,216,255,.10),transparent 40%),
+    linear-gradient(180deg,var(--glass629-bg-a),var(--glass629-bg-b))!important;
+  border:1px solid var(--glass629-border)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -22px 44px rgba(0,0,0,.24),
+    0 18px 46px rgba(0,0,0,.42),
+    0 0 28px var(--glass629-glow)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(135%)!important;
+  backdrop-filter:blur(18px) saturate(135%)!important;
+}
+.auth609-screen .auth609-tabs-fixed,
+.auth609-screen .auth609-left-panel .auth481-input,
+.auth609-screen .auth609-status-line,
+.auth609-screen .auth609-message,
+.auth609-screen .auth609-language .betai-language-switch.compact.betai-language-dropdown,
+.auth609-screen .auth481-login-badge,
+.auth609-screen .auth609-remember-toggle .auth609-remember-box,
+.auth609-screen .auth623-side-card,
+.auth609-screen .auth623-side-live,
+.auth609-screen .reviews512-fab,
+.auth609-screen .support510-fab{
+  background:
+    radial-gradient(circle at 22% 12%,rgba(61,242,225,.16),transparent 34%),
+    linear-gradient(180deg,rgba(7,24,39,.68),rgba(2,9,18,.82))!important;
+  border-color:var(--glass629-border)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 12px 30px rgba(0,0,0,.30),
+    0 0 18px rgba(24,220,226,.10)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(132%)!important;
+  backdrop-filter:blur(16px) saturate(132%)!important;
+}
+.auth609-screen .auth609-left-panel .auth481-input:focus-within,
+.auth609-screen .auth609-left-panel .auth481-input:focus,
+.auth609-screen .auth609-tabs-fixed:hover,
+.auth609-screen .auth609-status-line:hover{
+  border-color:var(--glass629-border-strong)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 14px 32px rgba(0,0,0,.34),
+    0 0 26px rgba(64,216,255,.16)!important;
+}
+.auth609-screen .auth609-tabs-fixed .auth481-tab.is-active,
+.auth609-screen .auth609-submit-fixed,
+.auth609-screen .auth609-submit{
+  background:
+    radial-gradient(circle at 20% 10%,rgba(255,255,255,.36),transparent 28%),
+    linear-gradient(135deg,#28f0d3 0%,#40d8ff 58%,#168cff 125%)!important;
+  color:#041923!important;
+  border:1px solid rgba(122,246,255,.42)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.32),
+    0 14px 34px rgba(0,0,0,.30),
+    0 0 26px rgba(64,216,255,.22)!important;
+}
+.auth609-screen .auth609-logo{
+  filter:drop-shadow(0 0 16px rgba(64,216,255,.24)) drop-shadow(0 0 28px rgba(40,240,211,.10))!important;
+}
+.auth609-screen .auth481-label,
+.auth609-screen .auth609-secure-note,
+.auth609-screen .auth609-remember-toggle,
+.auth609-screen .auth609-status-line,
+.auth609-screen .auth609-left-panel .auth481-input input{
+  color:#eaffff!important;
+}
+.auth609-screen .auth481-input input::placeholder{
+  color:rgba(211,239,255,.58)!important;
+}
+.auth609-screen .auth609-forgot-link,
+.auth609-screen .auth609-secure-note svg,
+.auth609-screen .auth481-field-icon,
+.auth609-screen .auth481-eye{
+  color:#40d8ff!important;
+}
+
+/* licznik 0 przy czacie — niebieski jak akcent gwiazdek, nie zielony */
+.support510-fab-badge,
+.auth609-screen .support510-fab-badge{
+  background:linear-gradient(180deg,#40d8ff,#168cff)!important;
+  color:#eafaff!important;
+  border:1px solid rgba(159,235,255,.58)!important;
+  box-shadow:0 0 0 2px rgba(4,15,25,.94),0 0 16px rgba(64,216,255,.40)!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.18)!important;
+}
+.support510-fab-pulse,
+.auth609-screen .support510-fab-pulse{
+  border-color:rgba(64,216,255,.34)!important;
+  box-shadow:0 0 18px rgba(64,216,255,.22)!important;
+}
+
+/* mocniejsze ukrycie podświetleń Google Translate bez wyłączania tłumaczenia */
+.goog-te-gadget,
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-yAWNEb-L7lbkb,
+.VIpgJd-yAWNEb-hvhgNd,
+body > .skiptranslate,
+body > iframe[src*="translate.google"],
+body > iframe[id*="goog"]{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  width:0!important;
+  height:0!important;
+  pointer-events:none!important;
+}
+.goog-text-highlight,
+font[style*="background-color"],
+font[style*="background"],
+font[style*="box-shadow"],
+font[style*="border"]{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  outline:0!important;
+  text-decoration:none!important;
+}
