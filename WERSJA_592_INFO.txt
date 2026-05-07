@@ -1,0 +1,2 @@
+WERSJA 592
+Naprawa: przywrócone brakujące komponenty AuthView/AuthField oraz powiązane widoki (SiteReviewsWidget, SupportChatWidget, modale płatności i ustawienia), co usuwa błąd logowania "AuthView is not defined".
