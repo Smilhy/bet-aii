@@ -24213,3 +24213,21 @@ font[style*="border"]{
     left:0!important;
   }
 }
+
+
+/* WERSJA 634 — live counters: niebieski kolor jak gwiazdki oceny + realtime badge polish */
+.app-shell .topbar .notify-btn b,
+.app-shell .topbar .mail-btn b,
+.support510-fab-badge{
+  background:linear-gradient(135deg,#38bdf8 0%,#1d8fff 48%,#2563eb 100%)!important;
+  color:#eaf7ff!important;
+  border:1px solid rgba(125,211,252,.82)!important;
+  box-shadow:0 0 0 2px rgba(5,15,28,.94),0 0 16px rgba(56,189,248,.52),0 8px 18px rgba(37,99,235,.28)!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.28)!important;
+}
+.app-shell .topbar .notify-btn:hover b,
+.app-shell .topbar .mail-btn:hover b,
+.support510-fab:hover .support510-fab-badge{
+  filter:brightness(1.08) saturate(1.12)!important;
+  box-shadow:0 0 0 2px rgba(5,15,28,.94),0 0 22px rgba(96,165,250,.68),0 10px 22px rgba(37,99,235,.34)!important;
+}

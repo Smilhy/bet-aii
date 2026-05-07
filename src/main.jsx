@@ -34,16 +34,16 @@ function getInitialBetaiLanguage() {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Doładuj konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Upgrade account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Ulepsz konto': 'Upgrade account', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   },
   de: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Doładuj konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Ulepsz konto': 'Konto upgraden', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
   },
   es: {
-    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Doładuj konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
+    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Ulepsz konto': 'Mejorar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
   },
   ru: {
-    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Doładuj konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
+    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Ulepsz konto': 'Улучшить аккаунт', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
   }
 }
 
@@ -2991,9 +2991,9 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
   const displayName = (email = '', username = '') => {
     const clean = normalizeEmail(email)
-    if (username) return String(username)
+    if (username && String(username).trim()) return String(username).trim()
     if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    return clean ? clean.split('@')[0].replace(/[._-]+/g, ' ').replace(/\w/g, c => c.toUpperCase()) : 'Użytkownik'
+    return clean || 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -3155,15 +3155,19 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     }
     setSending(true)
     try {
-      const { error } = await supabase.from('direct_messages').insert({
+      const { data, error } = await supabase.from('direct_messages').insert({
         sender_id: myId,
         receiver_id: activeUser.id,
         message_text: clean,
         is_read: false
-      })
+      }).select('id,sender_id,receiver_id,message_text,created_at,is_read').single()
       if (error) throw error
+      if (data?.id) {
+        setMessages(prev => [...prev.filter(item => String(item.id) !== String(data.id)), data])
+      }
+      window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
       setText('')
-      setStatus('Wiadomość wysłana.')
+      setStatus('Wiadomość wysłana — odbiorca zobaczy ją na żywo bez odświeżania.')
       await loadConversation(activeUser)
       await loadUsers()
     } catch (error) {
@@ -3187,6 +3191,30 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   }, [visible, myId])
 
   useEffect(() => {
+    if (!visible || !isSupabaseConfigured || !supabase || !myId) return undefined
+    let refreshTimer = null
+    const refreshRealtime = () => {
+      if (refreshTimer) clearTimeout(refreshTimer)
+      refreshTimer = setTimeout(() => {
+        loadUnread()
+        loadUsers()
+        loadConversation(activeUser)
+      }, 120)
+    }
+    window.addEventListener('betai-direct-messages-changed', refreshRealtime)
+    const channel = supabase
+      .channel(`betai-direct-messages-live-${myId}-${activeUser?.id || 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${myId}` }, refreshRealtime)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `sender_id=eq.${myId}` }, refreshRealtime)
+      .subscribe()
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer)
+      window.removeEventListener('betai-direct-messages-changed', refreshRealtime)
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [visible, myId, activeUser?.id])
+
+  useEffect(() => {
     if (visible && activeUser?.id) loadConversation(activeUser)
   }, [visible, activeUser?.id])
 
@@ -3198,7 +3226,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const filteredUsers = users.filter(item => {
     const q = normalizeSearch(search)
     if (!q) return true
-    const haystack = [item.email, item.name, item.username, item.id, item.initials].map(normalizeSearch).join(' | ')
+    const haystack = [item.email, item.name, item.username, item.id, item.initials, (item.email || '').split('@')[0]].map(normalizeSearch).join(' | ')
     return haystack.includes(q)
   })
   const activeUnread = Object.values(unreadMap).reduce((sum, value) => sum + Number(value || 0), 0)
@@ -3219,7 +3247,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
             {filteredUsers.length ? filteredUsers.map(item => (
               <button type="button" className={activeUser?.id === item.id ? 'betai-dm-user active' : 'betai-dm-user'} key={item.id || item.email} onClick={() => setActiveUser(item)}>
                 <span className="betai-dm-avatar">{item.initials}</span>
-                <span><strong>{item.name}</strong><small>{item.email || 'Brak e-mail w profilu'}</small></span>
+                <span><strong>{item.name}</strong>{item.email && item.email !== item.name ? <small>{item.email}</small> : null}</span>
                 {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
               </button>
             )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania.</div>}
@@ -3228,7 +3256,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
         <section className="betai-dm-conversation">
           <div className="betai-dm-active">
             <span className="betai-dm-avatar big">{activeUser?.initials || 'BU'}</span>
-            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email || 'Prywatny czat user → user'}</small></div>
+            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email && activeUser?.email !== activeUser?.name ? activeUser.email : 'Prywatny czat user → user'}</small></div>
           </div>
           <div className="betai-dm-messages">
             {activeUser ? (messages.length ? messages.map(msg => {
@@ -7061,6 +7089,7 @@ function App() {
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
       setTokenBalance(0)
+      setDmUnreadCount(0)
       return
     }
 
@@ -7112,6 +7141,24 @@ function App() {
 
     combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     setNotifications(combined)
+  }
+
+  async function fetchDmUnreadCount(userId = sessionUser?.id) {
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setDmUnreadCount(0)
+      return
+    }
+    try {
+      const { count, error } = await supabase
+        .from('direct_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('is_read', false)
+      if (error) throw error
+      setDmUnreadCount(Number(count || 0))
+    } catch (error) {
+      console.warn('fetch dm unread count skipped', error)
+    }
   }
 
   async function ensureUserWalletAndWelcome(user = sessionUser) {
@@ -7319,6 +7366,7 @@ function App() {
       fetchPaymentHistory(sessionUser.id)
       fetchFollowingTipsters(sessionUser.id)
       fetchNotifications(sessionUser.id)
+      fetchDmUnreadCount(sessionUser.id)
     } else {
       setUnlockedTips(new Set())
       setFollowingTipsters(new Set())
@@ -8244,6 +8292,45 @@ function App() {
     window.addEventListener('betai-token-balance-changed', refreshTokens)
     return () => window.removeEventListener('betai-token-balance-changed', refreshTokens)
   }, [sessionUser?.id])
+
+  useEffect(() => {
+    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    if (!isSupabaseConfigured || !supabase || (!sessionUser?.id && !email)) return undefined
+
+    const refreshAllLive = () => {
+      fetchNotifications(sessionUser?.id)
+      fetchDmUnreadCount(sessionUser?.id)
+    }
+
+    refreshAllLive()
+    const timer = setInterval(refreshAllLive, 6000)
+    window.addEventListener('betai-direct-messages-changed', refreshAllLive)
+
+    const channel = supabase.channel(`betai-user-live-center-${sessionUser?.id || email}`)
+    if (sessionUser?.id) {
+      channel
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${sessionUser.id}` }, () => {
+          fetchDmUnreadCount(sessionUser.id)
+          window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `sender_id=eq.${sessionUser.id}` }, () => {
+          window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${sessionUser.id}` }, () => fetchNotifications(sessionUser.id))
+    }
+    if (email) {
+      channel
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${email}` }, () => fetchNotifications(sessionUser?.id))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_token_wallets', filter: `email=eq.${email}` }, () => fetchNotifications(sessionUser?.id))
+    }
+    channel.subscribe()
+
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('betai-direct-messages-changed', refreshAllLive)
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
   useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
