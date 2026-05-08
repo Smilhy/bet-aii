@@ -1,0 +1,7 @@
+WERSJA 678:
+Nie trzeba dodawać nowego SQL.
+Zmiany są tylko w frontendzie:
+- nazwa żetonu zmieniona na Coin,
+- przywrócone ikony 💰 Saldo i 🔓 Odblokowane,
+- dodany Coin jako grafika z Twojego zdjęcia,
+- Coin w profilu i w górnym pasku.

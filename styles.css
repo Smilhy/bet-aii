@@ -24342,3 +24342,39 @@ font[style*="border"]{
   background:rgba(255,255,255,.94)!important;box-shadow:0 0 0 4px rgba(0,0,0,.08)!important;
 }
 .app-shell .topbar .wallet-split-coin-core{display:none!important;}
+
+
+/* WERSJA 678 — Coin icon from user image + restored icons */
+.wallet-token-white-coin,
+.wallet-split-coin{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.wallet-token-white-coin::before,
+.wallet-split-coin::before{
+  content:''!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  background-image:url('/betai-coin-icon.png')!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.38)) drop-shadow(0 0 10px rgba(0,229,255,.18))!important;
+}
+.wallet-token-white-coin{
+  width:18px!important;
+  height:18px!important;
+  margin-right:7px!important;
+  vertical-align:-4px!important;
+}
+.wallet-split-coin{
+  width:28px!important;
+  height:28px!important;
+  flex:0 0 28px!important;
+}
+.wallet-split-coin-core{display:none!important;}
+.app-shell .sidebar .wallet-row span{display:inline-flex!important;align-items:center!important;gap:6px!important;}
