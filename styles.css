@@ -24378,3 +24378,54 @@ font[style*="border"]{
 }
 .wallet-split-coin-core{display:none!important;}
 .app-shell .sidebar .wallet-row span{display:inline-flex!important;align-items:center!important;gap:6px!important;}
+
+/* WERSJA 679 — FINAL COIN ICON: dokładny coin z przesłanego obrazu w sidebarze i topbarze */
+.wallet-token-white-coin,
+.wallet-split-coin{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  color:transparent!important;
+  text-shadow:none!important;
+}
+.wallet-token-white-coin img,
+.wallet-split-coin img,
+.wallet-split-coin-core{display:none!important;}
+.wallet-token-white-coin::before,
+.wallet-split-coin::before{
+  content:''!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:50%!important;
+  background-image:url('/betai-coin-icon.png')!important;
+  background-size:contain!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  filter:drop-shadow(0 0 7px rgba(34,211,238,.34)) drop-shadow(0 0 5px rgba(255,255,255,.22))!important;
+}
+.wallet-token-white-coin{
+  width:18px!important;
+  height:18px!important;
+  flex:0 0 18px!important;
+  margin-right:7px!important;
+  vertical-align:-4px!important;
+}
+.wallet-split-coin,
+.app-shell .topbar .wallet-split-coin,
+.app-shell .topbar .wallet-top-btn.wallet-split-top-btn .wallet-split-coin{
+  width:30px!important;
+  height:30px!important;
+  flex:0 0 30px!important;
+}
+.app-shell .sidebar .wallet-row span,
+.app-shell .sidebar .wallet-row.wallet-row-tokens span{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+}

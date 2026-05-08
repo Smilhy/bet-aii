@@ -1,0 +1,15 @@
+WERSJA 679 — FINAL COIN ICON
+
+Zmiany:
+- Podmieniono betai-coin-icon.png na pełny coin z przesłanego obrazu.
+- Coin jest wstawiony w dwóch wskazanych miejscach: lewy sidebar przy „Coin” oraz topbar przy liczniku Coin.
+- Dodano finalny CSS dla ikon .wallet-token-white-coin i .wallet-split-coin.
+- Skopiowano ikonę do root, src, public i dist, żeby działała lokalnie i po deployu.
+
+Pliki kluczowe:
+- betai-coin-icon.png
+- public/betai-coin-icon.png
+- dist/betai-coin-icon.png
+- src/styles.css
+- styles.css
+- dist/assets/index-CyAQjA1T.css
