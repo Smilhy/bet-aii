@@ -7040,7 +7040,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [topSearch, setTopSearch] = useState('')
-  const [dashboardVisibleTips, setDashboardVisibleTips] = useState(5)
+  const [dashboardVisibleTips, setDashboardVisibleTips] = useState(3)
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
@@ -8917,11 +8917,11 @@ function App() {
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
-  const hasExpandedDashboardTips = dashboardVisibleTips > 5
+  const hasExpandedDashboardTips = dashboardVisibleTips > 3
 
   useEffect(() => {
     if (view === 'dashboard') {
-      setDashboardVisibleTips(5)
+      setDashboardVisibleTips(3)
     }
   }, [activeFilter, topSearch, view])
 
@@ -9131,23 +9131,23 @@ function App() {
               <div className="feed-visible-counter">Pokazano {Math.min(dashboardVisibleTips, filteredTips.length)} z {filteredTips.length} typów</div>
             ) : null}
 
-            {filteredTips.length > 5 ? (
+            {filteredTips.length > 3 ? (
               <div className="feed-load-more-wrap">
                 <button
                   type="button"
                   className="feed-load-more-btn"
-                  onClick={() => setDashboardVisibleTips(prev => prev + 5)}
+                  onClick={() => setDashboardVisibleTips(prev => prev + 3)}
                   disabled={!hasMoreDashboardTips}
                 >
-                  {hasMoreDashboardTips ? `Pokaż kolejne 5 typów (${Math.max(filteredTips.length - dashboardVisibleTips, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                  {hasMoreDashboardTips ? `Pokaż kolejne 3 typy (${Math.max(filteredTips.length - dashboardVisibleTips, 0)} pozostało)` : 'Pokazano wszystkie typy'}
                 </button>
                 {hasExpandedDashboardTips ? (
                   <button
                     type="button"
                     className="feed-load-less-btn"
-                    onClick={() => setDashboardVisibleTips(5)}
+                    onClick={() => setDashboardVisibleTips(3)}
                   >
-                    Zwiń do 5 typów
+                    Zwiń do 3 typów
                   </button>
                 ) : null}
               </div>
