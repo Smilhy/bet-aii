@@ -272,6 +272,18 @@ exports.handler = async function(event) {
       'soccer_uefa_champs_league',
       'soccer_uefa_europa_league',
       'soccer_uefa_europa_conference_league',
+      'soccer_fifa_world_cup',
+      'soccer_fifa_world_cup_womens',
+      'soccer_uefa_european_championship',
+      'soccer_conmebol_copa_america',
+      'soccer_brazil_campeonato',
+      'soccer_argentina_primera_division',
+      'soccer_japan_j_league',
+      'soccer_korea_kleague1',
+      'soccer_mexico_ligamx',
+      'soccer_turkey_super_league',
+      'soccer_belgium_first_div',
+      'soccer_scotland_premiership',
     ]
 
     if (s.includes('pilka') || s.includes('football') || s.includes('soccer')) {
@@ -329,6 +341,15 @@ exports.handler = async function(event) {
     return false
   }
 
+  const matchesRequestedSportByText = (sportKey, sportTitle = '') => {
+    return matchesRequestedSport({
+      key: sportKey,
+      group: sportTitle,
+      title: sportTitle,
+      description: sportTitle
+    })
+  }
+
   const getDynamicSportKeys = async (oddsKey) => {
     const fallback = staticSportKeys()
     if (!allLeagues) return fallback
@@ -369,7 +390,7 @@ exports.handler = async function(event) {
         const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
         const url = new URL(endpoint)
         url.searchParams.set('apiKey', oddsKey)
-        url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk')
+        url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
         url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads'))
         url.searchParams.set('oddsFormat', 'decimal')
         url.searchParams.set('dateFormat', 'iso')
@@ -415,6 +436,58 @@ exports.handler = async function(event) {
           })
 
         collected.push(...fixturesForKey)
+      }
+
+      if (!collected.length && allLeagues) {
+        try {
+          const upcomingUrl = new URL('https://api.the-odds-api.com/v4/sports/upcoming/odds')
+          upcomingUrl.searchParams.set('apiKey', oddsKey)
+          upcomingUrl.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
+          upcomingUrl.searchParams.set('markets', countOnly ? 'h2h' : 'h2h,spreads,totals')
+          upcomingUrl.searchParams.set('oddsFormat', 'decimal')
+          upcomingUrl.searchParams.set('dateFormat', 'iso')
+
+          const upcomingResponse = await fetch(upcomingUrl.toString())
+          const upcomingData = await upcomingResponse.json().catch(() => [])
+
+          if (upcomingResponse.ok && Array.isArray(upcomingData)) {
+            const fallbackFixtures = upcomingData
+              .filter(item => {
+                const sportKey = String(item.sport_key || item.sportKey || '')
+                const sportTitle = String(item.sport_title || item.sportTitle || '')
+                if (!matchesRequestedSportByText(sportKey, sportTitle)) return false
+
+                const commence = String(item.commence_time || '')
+                const kickMs = Date.parse(commence)
+                if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
+                return !requestedDay || isLocalDateInRange(commence, requestedDay, daysAhead)
+              })
+              .map((item, index) => {
+                const home = item.home_team || item.teams?.[0] || 'Gospodarze'
+                const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
+                const parts = toDateParts(item.commence_time)
+                return {
+                  id: item.id || `upcoming-${index}`,
+                  sport: item.sport_title || sport,
+                  sportKey: item.sport_key || 'upcoming',
+                  country,
+                  league: item.sport_title || league || sport,
+                  home,
+                  away,
+                  date: parts.date,
+                  time: parts.time,
+                  commence_time: item.commence_time,
+                  markets: countOnly ? [] : buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
+                }
+              })
+
+            collected.push(...fallbackFixtures)
+          } else {
+            console.warn('The Odds API upcoming fallback failed', upcomingData?.message || upcomingResponse.status)
+          }
+        } catch (error) {
+          console.warn('The Odds API upcoming fallback error', error)
+        }
       }
 
       const seen = new Set()

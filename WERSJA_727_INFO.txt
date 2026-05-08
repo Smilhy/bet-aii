@@ -1,0 +1,16 @@
+BET+AI — WERSJA 727 UPCOMING API FALLBACK FIX
+
+Poprawka:
+1. Jeśli sportowe endpointy The Odds API zwracają 0 wydarzeń, backend odpala dodatkowy fallback:
+   /v4/sports/upcoming/odds
+2. Ten fallback nadal pokazuje tylko realne dane z API.
+3. Dalej zero demo / zero fake meczów.
+4. Fallback filtruje wydarzenia po sporcie i zakresie:
+   od teraz + 2 dni.
+5. Rozszerzono regiony API:
+   eu, uk, us, au
+6. Dodano więcej statycznych kluczy dla piłki nożnej.
+7. Auto refresh co 1 minutę zostaje.
+
+SQL:
+- brak nowego SQL.

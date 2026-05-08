@@ -6388,7 +6388,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-top-sports-note">
-            Live radar: realne mecze od teraz + 2 dni do przodu z aktywnych lig The Odds API. Liczniki i lista odświeżają się co 1 minutę.
+            Live radar: realne mecze od teraz + 2 dni z aktywnych lig + globalnego endpointu upcoming. Liczniki i lista odświeżają się co 1 minutę.
           </div>
 
           <div className="betfolio-events-head">
@@ -6437,7 +6437,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             }) : (
               <div className="betfolio-empty-state no-fake-empty">
                 <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę i pobierz realne mecze'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Sprawdzam od teraz + 2 dni. Jeśli dalej pusto, sprawdź limit The Odds API, klucz API albo dostępne ligi w API.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Sprawdzam od teraz + 2 dni przez aktywne ligi oraz globalny endpoint upcoming. Jeśli dalej pusto, sprawdź limit The Odds API albo klucz API.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
               </div>
             )}
           </div>
