@@ -1,6 +1,7 @@
 
 exports.handler = async function(event) {
-  const apiKey = process.env.ODDS_API_KEY || '53d18e4b61ca17f380c995dd19067053';
+  const apiKey = process.env.ODDS_API_KEY;
+  if (!apiKey) return { statusCode: 200, body: JSON.stringify({ ok:false, error:'Missing ODDS_API_KEY in Netlify environment variables' }) };
   const stake = 100;
   const APP_TIMEZONE = 'Europe/Warsaw';
 
