@@ -25577,3 +25577,104 @@ font[style*="border"]{
 @media(max-width:760px){
   .betfolio-event-odds{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* ===== WERSJA 712 — zwijanie/rozwijanie sportów w lewej kolumnie ===== */
+.betai-sportsbook-nav{
+  overflow-y:auto!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(34,242,255,.75) rgba(255,255,255,.04)!important;
+}
+.betai-sportsbook-nav::-webkit-scrollbar{width:6px!important}
+.betai-sportsbook-nav::-webkit-scrollbar-track{background:rgba(255,255,255,.035)!important;border-radius:20px!important}
+.betai-sportsbook-nav::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#22f2ff,#0aa4b7)!important;border-radius:20px!important}
+.sport-accordion-head b{
+  display:inline-flex!important;
+  width:22px!important;
+  height:22px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.04)!important;
+  transition:transform .16s ease, background .16s ease, color .16s ease!important;
+}
+.sport-accordion-item.is-open > .sport-accordion-head b{
+  background:rgba(255,196,38,.10)!important;
+  color:#ffca38!important;
+  transform:rotate(0deg)!important;
+}
+.sport-accordion-children{
+  animation:betaiAccordionOpen .16s ease-out both!important;
+}
+@keyframes betaiAccordionOpen{
+  from{opacity:0;transform:translateY(-4px);max-height:0}
+  to{opacity:1;transform:translateY(0);max-height:900px}
+}
+.sport-accordion-head:after{
+  content:'kliknij, aby rozwinąć / zwinąć';
+  display:none;
+}
+.sports-accordion-list .sport-accordion-item.is-open{
+  margin-bottom:4px!important;
+}
+
+
+/* ===== WERSJA 713 — pełna lista krajów dla Piłki nożnej ===== */
+.football-country-tree{
+  max-height:560px!important;
+  overflow-y:auto!important;
+  padding-right:3px!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(34,242,255,.72) rgba(255,255,255,.035)!important;
+}
+.football-country-tree::-webkit-scrollbar{width:6px!important}
+.football-country-tree::-webkit-scrollbar-track{background:rgba(255,255,255,.035)!important;border-radius:20px!important}
+.football-country-tree::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#22f2ff,#0aa4b7)!important;border-radius:20px!important}
+.football-country-node{
+  display:grid!important;
+  gap:6px!important;
+}
+.football-country-node > button{
+  min-height:38px!important;
+}
+.football-country-node > button span{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.football-country-node > button b{
+  font-size:12px!important;
+  color:#9fb2cf!important;
+}
+.football-country-node > button.country-active{
+  color:#ffca38!important;
+  border-color:rgba(255,202,56,.24)!important;
+  background:linear-gradient(180deg,#2c3a58,#24334f)!important;
+}
+.football-leagues-list{
+  padding-left:18px!important;
+  border-left:1px solid rgba(34,242,255,.16)!important;
+  margin-left:9px!important;
+}
+.football-leagues-list button{
+  min-height:34px!important;
+  font-size:12.5px!important;
+}
+.country-all-btn{
+  margin-bottom:3px!important;
+}
+
+
+/* WERSJA 714 — więcej popularnych rynków */
+.betfolio-market-tabs{
+  overflow-x:auto!important;
+  scrollbar-width:thin!important;
+}
+.betfolio-market-tabs button{
+  white-space:nowrap!important;
+}
+.betfolio-market-group-title strong::before{
+  content:'▸ ';
+  color:#ffca38!important;
+}

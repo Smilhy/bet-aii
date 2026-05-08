@@ -1,0 +1,18 @@
+BET+AI — WERSJA 712 SPORT ACCORDION COLLAPSE
+
+Poprawka lewej kolumny sportów.
+
+Co dodano:
+1. Możliwość zwijania rozwiniętego sportu.
+2. Klikasz aktywny sport drugi raz — sekcja się zwija.
+3. Klikasz inny sport — poprzedni się chowa, nowy się rozwija.
+4. Strzałka zmienia kierunek przy rozwinięciu/zamknięciu.
+5. Poprawiony scroll lewej kolumny, żeby lista sportów się nie rozjeżdżała.
+6. Zachowany styl z wersji 711.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5.

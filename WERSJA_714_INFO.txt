@@ -1,0 +1,43 @@
+BET+AI — WERSJA 714 POPULAR MARKETS
+
+Dodano popularne rynki typów do zakładki Dodaj typ.
+
+Nowe / rozszerzone rynki:
+1. 1X2:
+   - gospodarz wygra
+   - remis
+   - gość wygra
+2. Podwójna szansa:
+   - 1X
+   - X2
+   - 12
+3. DNB / Remis nie ma zakładu:
+   - gospodarz DNB
+   - gość DNB
+4. Gole:
+   - powyżej / poniżej 0.5
+   - powyżej / poniżej 1.5
+   - powyżej / poniżej 2.5
+   - powyżej / poniżej 3.5
+5. BTTS:
+   - obie drużyny strzelą TAK/NIE
+6. Handicap:
+   - gospodarz -1.5 / +1.5
+   - gość -1.5 / +1.5
+7. Kartki:
+   - powyżej / poniżej 2.5
+   - powyżej / poniżej 3.5
+   - powyżej / poniżej 4.5
+   - więcej kartek gospodarz/gość
+8. Rogi:
+   - powyżej / poniżej 7.5
+   - powyżej / poniżej 8.5
+   - powyżej / poniżej 9.5
+9. Połowy:
+   - 1. połowa 1/X/2
+   - powyżej / poniżej 0.5 gola w 1. połowie
+
+Rynki są dodawane też jako fallback, jeśli API nie zwróci wszystkiego.
+
+SQL:
+- brak nowego SQL.

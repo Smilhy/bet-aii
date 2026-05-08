@@ -4332,6 +4332,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [sidebarSearch, setSidebarSearch] = useState('')
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
+  const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -4340,6 +4341,414 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const activeLeagues = countryMap ? (countryMap[currentCountry] || {}) : (sportData.leagues || {})
   const leagueOptions = Object.keys(activeLeagues || {})
   const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
+  const footballCountryOptions = [
+    "Afryka",
+    "Albania",
+    "Algieria",
+    "Anglia",
+    "Arabia Saudyjska",
+    "Argentyna",
+    "Armenia",
+    "Aruba",
+    "Australia",
+    "Austria",
+    "Azerbejdżan",
+    "Azja",
+    "Belgia",
+    "Białoruś",
+    "Boliwia",
+    "Bośnia",
+    "Brazylia",
+    "Bułgaria",
+    "Chile",
+    "Chiny",
+    "Chińsko-Tajpej",
+    "Chorwacja",
+    "Cypr",
+    "Czarnogóra",
+    "Czechy",
+    "Dania",
+    "Dominikana-Republika",
+    "Egipt",
+    "Ekwador",
+    "Estonia",
+    "Etiopia",
+    "Finlandia",
+    "Francja",
+    "Grecja",
+    "Gruzja",
+    "Gwatemala",
+    "Hiszpania",
+    "Holandia",
+    "Honduras",
+    "Hongkong",
+    "Indie",
+    "Indonezja",
+    "Irlandia",
+    "Irlandia Północna",
+    "Islandia",
+    "Izrael",
+    "Japonia",
+    "Kamerun",
+    "Kanada",
+    "Kazachstan",
+    "Kenia",
+    "Kolumbia",
+    "Korea Południowa",
+    "Kosowa",
+    "Kostaryka",
+    "Litwa",
+    "Macedonia",
+    "Malezja",
+    "Malta",
+    "Maroko",
+    "Meksyk",
+    "Mongolia",
+    "Niemcy",
+    "Norwegia",
+    "Panama",
+    "Paragwaj",
+    "Peru",
+    "Polska",
+    "Portugalia",
+    "Republika Południowej Afryki",
+    "Rosja",
+    "Rumunia",
+    "San-Marino",
+    "Serbia",
+    "Singapur",
+    "Szkocja",
+    "Szwajcaria",
+    "Szwecja",
+    "Słowacja",
+    "Słowenia",
+    "Tajlandia",
+    "Turcja",
+    "USA",
+    "Ukraina",
+    "Urugwaj",
+    "Wenezuela",
+    "Wietnam",
+    "Wyspy Owcze",
+    "Węgry",
+    "Włochy",
+    "Łotwa",
+    "Świat"
+]
+  const footballCountryIcons = {
+    "Afryka": "🌍",
+    "Albania": "🏳️",
+    "Algieria": "🏳️",
+    "Anglia": "🏴",
+    "Arabia Saudyjska": "🇸🇦",
+    "Argentyna": "🇦🇷",
+    "Armenia": "🏳️",
+    "Aruba": "🏳️",
+    "Australia": "🇦🇺",
+    "Austria": "🇦🇹",
+    "Azerbejdżan": "🏳️",
+    "Azja": "🌏",
+    "Belgia": "🇧🇪",
+    "Białoruś": "🏳️",
+    "Boliwia": "🏳️",
+    "Bośnia": "🏳️",
+    "Brazylia": "🇧🇷",
+    "Bułgaria": "🏳️",
+    "Chile": "🇨🇱",
+    "Chiny": "🇨🇳",
+    "Chińsko-Tajpej": "🏳️",
+    "Chorwacja": "🇭🇷",
+    "Cypr": "🏳️",
+    "Czarnogóra": "🏳️",
+    "Czechy": "🇨🇿",
+    "Dania": "🇩🇰",
+    "Dominikana-Republika": "🏳️",
+    "Egipt": "🇪🇬",
+    "Ekwador": "🏳️",
+    "Estonia": "🇪🇪",
+    "Etiopia": "🏳️",
+    "Finlandia": "🇫🇮",
+    "Francja": "🇫🇷",
+    "Grecja": "🇬🇷",
+    "Gruzja": "🏳️",
+    "Gwatemala": "🏳️",
+    "Hiszpania": "🇪🇸",
+    "Holandia": "🇳🇱",
+    "Honduras": "🏳️",
+    "Hongkong": "🏳️",
+    "Indie": "🏳️",
+    "Indonezja": "🏳️",
+    "Irlandia": "🇮🇪",
+    "Irlandia Północna": "🏳️",
+    "Islandia": "🇮🇸",
+    "Izrael": "🇮🇱",
+    "Japonia": "🇯🇵",
+    "Kamerun": "🏳️",
+    "Kanada": "🇨🇦",
+    "Kazachstan": "🏳️",
+    "Kenia": "🏳️",
+    "Kolumbia": "🇨🇴",
+    "Korea Południowa": "🇰🇷",
+    "Kosowa": "🏳️",
+    "Kostaryka": "🏳️",
+    "Litwa": "🇱🇹",
+    "Macedonia": "🏳️",
+    "Malezja": "🏳️",
+    "Malta": "🏳️",
+    "Maroko": "🇲🇦",
+    "Meksyk": "🇲🇽",
+    "Mongolia": "🏳️",
+    "Niemcy": "🇩🇪",
+    "Norwegia": "🇳🇴",
+    "Panama": "🏳️",
+    "Paragwaj": "🏳️",
+    "Peru": "🇵🇪",
+    "Polska": "🇵🇱",
+    "Portugalia": "🇵🇹",
+    "Republika Południowej Afryki": "🏳️",
+    "Rosja": "🏳️",
+    "Rumunia": "🇷🇴",
+    "San-Marino": "🏳️",
+    "Serbia": "🇷🇸",
+    "Singapur": "🏳️",
+    "Szkocja": "🏴",
+    "Szwajcaria": "🇨🇭",
+    "Szwecja": "🇸🇪",
+    "Słowacja": "🇸🇰",
+    "Słowenia": "🇸🇮",
+    "Tajlandia": "🏳️",
+    "Turcja": "🇹🇷",
+    "USA": "🇺🇸",
+    "Ukraina": "🇺🇦",
+    "Urugwaj": "🇺🇾",
+    "Wenezuela": "🏳️",
+    "Wietnam": "🏳️",
+    "Wyspy Owcze": "🏳️",
+    "Węgry": "🇭🇺",
+    "Włochy": "🇮🇹",
+    "Łotwa": "🇱🇻",
+    "Świat": "🌐"
+}
+  const footballLeagueMap = {
+    "Anglia": [
+        "Premier League",
+        "Championship",
+        "League One",
+        "League Two",
+        "National League",
+        "FA Cup",
+        "EFL Cup",
+        "Women Super League"
+    ],
+    "Hiszpania": [
+        "La Liga",
+        "Segunda División",
+        "Primera División Femenina",
+        "Primera División RFEF",
+        "Segunda División RFEF",
+        "Copa del Rey"
+    ],
+    "Polska": [
+        "Ekstraklasa",
+        "1 Liga",
+        "2 Liga",
+        "3 Liga",
+        "Puchar Polski",
+        "Ekstraliga kobiet"
+    ],
+    "Włochy": [
+        "Serie A",
+        "Serie B",
+        "Serie C",
+        "Coppa Italia",
+        "Serie A Kobiet"
+    ],
+    "Niemcy": [
+        "Bundesliga",
+        "2. Bundesliga",
+        "3. Liga",
+        "DFB Pokal",
+        "Frauen Bundesliga"
+    ],
+    "Francja": [
+        "Ligue 1",
+        "Ligue 2",
+        "National",
+        "Coupe de France",
+        "Division 1 Féminine"
+    ],
+    "Holandia": [
+        "Eredivisie",
+        "Eerste Divisie",
+        "KNVB Beker",
+        "Vrouwen Eredivisie"
+    ],
+    "Portugalia": [
+        "Primeira Liga",
+        "Liga Portugal 2",
+        "Taça de Portugal"
+    ],
+    "Belgia": [
+        "Jupiler Pro League",
+        "Challenger Pro League",
+        "Puchar Belgii"
+    ],
+    "Szkocja": [
+        "Premiership",
+        "Championship",
+        "League One",
+        "League Two",
+        "Scottish Cup"
+    ],
+    "Turcja": [
+        "Süper Lig",
+        "1. Lig",
+        "Puchar Turcji"
+    ],
+    "Grecja": [
+        "Super League",
+        "Super League 2",
+        "Puchar Grecji"
+    ],
+    "Szwecja": [
+        "Allsvenskan",
+        "Superettan",
+        "Svenska Cupen"
+    ],
+    "Norwegia": [
+        "Eliteserien",
+        "OBOS-ligaen",
+        "NM Cup"
+    ],
+    "Dania": [
+        "Superliga",
+        "1. Division",
+        "DBU Pokalen"
+    ],
+    "Szwajcaria": [
+        "Super League",
+        "Challenge League",
+        "Puchar Szwajcarii"
+    ],
+    "Austria": [
+        "Bundesliga",
+        "2. Liga",
+        "ÖFB Cup"
+    ],
+    "Czechy": [
+        "Fortuna Liga",
+        "FNL",
+        "Puchar Czech"
+    ],
+    "Słowacja": [
+        "Nike Liga",
+        "2. Liga",
+        "Puchar Słowacji"
+    ],
+    "Ukraina": [
+        "Premier League",
+        "Persha Liga",
+        "Puchar Ukrainy"
+    ],
+    "Rumunia": [
+        "Liga I",
+        "Liga II",
+        "Cupa României"
+    ],
+    "Chorwacja": [
+        "HNL",
+        "Prva NL",
+        "Puchar Chorwacji"
+    ],
+    "Serbia": [
+        "SuperLiga",
+        "Prva Liga",
+        "Puchar Serbii"
+    ],
+    "USA": [
+        "MLS",
+        "USL Championship",
+        "NWSL",
+        "US Open Cup"
+    ],
+    "Brazylia": [
+        "Serie A",
+        "Serie B",
+        "Copa do Brasil",
+        "Paulista",
+        "Carioca"
+    ],
+    "Argentyna": [
+        "Liga Profesional",
+        "Primera Nacional",
+        "Copa Argentina"
+    ],
+    "Meksyk": [
+        "Liga MX",
+        "Liga de Expansión",
+        "Copa MX"
+    ],
+    "Japonia": [
+        "J1 League",
+        "J2 League",
+        "J3 League",
+        "Emperor Cup"
+    ],
+    "Korea Południowa": [
+        "K League 1",
+        "K League 2",
+        "Korean FA Cup"
+    ],
+    "Arabia Saudyjska": [
+        "Saudi Pro League",
+        "Division 1",
+        "King Cup"
+    ],
+    "Świat": [
+        "Mistrzostwa Świata",
+        "Towarzyskie międzynarodowe",
+        "Klubowe MŚ"
+    ],
+    "Afryka": [
+        "CAF Champions League",
+        "CAF Confederation Cup",
+        "Puchar Narodów Afryki"
+    ],
+    "Azja": [
+        "AFC Champions League",
+        "AFC Cup",
+        "Puchar Azji"
+    ]
+}
+  const getFootballLeaguesForCountry = (country) => {
+    if (countryMap?.[country]) return Object.keys(countryMap[country])
+    return footballLeagueMap[country] || ['1 Liga', '2 Liga', 'Puchar kraju', 'Liga kobiet']
+  }
+
+  function selectSidebarCountry(nextCountry) {
+    setOpenSidebarSport('Piłka nożna')
+    const nextLeagues = getFootballLeaguesForCountry(nextCountry)
+    const nextLeague = nextLeagues[0] || ''
+    const nextLeagueSource = countryMap?.[nextCountry] || {}
+    const nextMatch = nextLeagueSource?.[nextLeague]?.[0]
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+
+    setLiveFixtures([])
+    setLiveFixturesStatus('Wybierz ligę i kliknij „Dodaj inne wydarzenie”, aby pobrać mecze/kursy z API.')
+    updateForm({
+      sport: 'Piłka nożna',
+      country: nextCountry,
+      league: nextLeague,
+      matchId: nextMatch?.id || form.matchId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+    })
+  }
+
   function matchStartsAfterBuffer(match) {
     const dateText = String(match?.date || '').trim()
     const timeText = String(match?.time || '').trim()
@@ -4359,7 +4768,70 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   const matchOptions = (liveFixtures.length ? liveFixtures.filter(matchStartsAfterBuffer) : (activeLeagues?.[currentLeague] || []))
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || (liveFixtures.length ? null : defaultMatch)
-  const marketOptions = selectedMatch?.markets || [defaultMarket]
+
+  function enrichPopularMarkets(match, sourceMarkets = []) {
+    const home = match?.home || 'Gospodarze'
+    const away = match?.away || 'Goście'
+    const base = Array.isArray(sourceMarkets) ? [...sourceMarkets] : []
+    const add = (market, pick, odds, confidence = 62) => {
+      const exists = base.some(item => String(item.market) === market && String(item.pick) === pick)
+      if (!exists) base.push({ market, pick, odds, confidence })
+    }
+
+    add('1X2', `${home} wygra`, 1.72, 72)
+    add('1X2', 'Remis', 3.35, 56)
+    add('1X2', `${away} wygra`, 2.10, 64)
+
+    add('Podwójna szansa', '1X', 1.28, 76)
+    add('Podwójna szansa', 'X2', 1.58, 66)
+    add('Podwójna szansa', '12', 1.25, 70)
+
+    add('DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
+    add('DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
+
+    add('Gole', 'Powyżej 0.5 gola', 1.12, 85)
+    add('Gole', 'Poniżej 0.5 gola', 7.20, 35)
+    add('Gole', 'Powyżej 1.5 gola', 1.34, 78)
+    add('Gole', 'Poniżej 1.5 gola', 3.10, 48)
+    add('Gole', 'Powyżej 2.5 gola', 1.82, 68)
+    add('Gole', 'Poniżej 2.5 gola', 1.95, 62)
+    add('Gole', 'Powyżej 3.5 gola', 2.65, 52)
+    add('Gole', 'Poniżej 3.5 gola', 1.44, 70)
+
+    add('BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
+    add('BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
+
+    add('Handicap', `${home} -1.5`, 2.35, 58)
+    add('Handicap', `${home} +1.5`, 1.32, 72)
+    add('Handicap', `${away} -1.5`, 3.10, 45)
+    add('Handicap', `${away} +1.5`, 1.57, 67)
+
+    add('Kartki', 'Powyżej 2.5 kartek', 1.52, 69)
+    add('Kartki', 'Poniżej 2.5 kartek', 2.35, 53)
+    add('Kartki', 'Powyżej 3.5 kartek', 1.78, 64)
+    add('Kartki', 'Poniżej 3.5 kartek', 2.00, 58)
+    add('Kartki', 'Powyżej 4.5 kartek', 2.20, 51)
+    add('Kartki', 'Poniżej 4.5 kartek', 1.61, 66)
+    add('Kartki', `${home} więcej kartek`, 1.88, 56)
+    add('Kartki', `${away} więcej kartek`, 1.88, 56)
+
+    add('Rogi', 'Powyżej 7.5 rożnych', 1.55, 68)
+    add('Rogi', 'Poniżej 7.5 rożnych', 2.30, 54)
+    add('Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
+    add('Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
+    add('Rogi', 'Powyżej 9.5 rożnych', 2.10, 57)
+    add('Rogi', 'Poniżej 9.5 rożnych', 1.68, 65)
+
+    add('Połowy', `${home} wygra 1. połowę`, 2.45, 56)
+    add('Połowy', 'Remis do przerwy', 2.05, 61)
+    add('Połowy', `${away} wygra 1. połowę`, 3.20, 48)
+    add('Połowy', 'Powyżej 0.5 gola 1. połowa', 1.40, 72)
+    add('Połowy', 'Poniżej 0.5 gola 1. połowa', 2.75, 47)
+
+    return base
+  }
+
+  const marketOptions = enrichPopularMarkets(selectedMatch, selectedMatch?.markets || [defaultMarket])
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
   const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
     const label = String(item.market || 'Inne')
@@ -4367,7 +4839,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
-  const marketGroupOrder = ['Wynik końcowy', '1X2', 'Over/Under', 'Gole', 'Gole/Punkty', 'BTTS', 'Handicap', 'Draw No Bet', 'Podwójna szansa', 'Rogi', 'Kartki', 'Połowa', 'Rynek']
+  const marketGroupOrder = ['Wynik końcowy', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Over/Under', 'Gole', 'Gole/Punkty', 'BTTS', 'Handicap', 'Kartki', 'Rogi', 'Połowy', 'Połowa', 'Draw No Bet', 'Rynek']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
@@ -4376,7 +4848,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const marketTabs = ['Wszystkie', 'Popularne', ...orderedMarketGroups.map(([label]) => label)]
   const visibleMarketGroups = orderedMarketGroups.filter(([label]) => {
     if (activeMarketTab === 'Wszystkie') return true
-    if (activeMarketTab === 'Popularne') return ['Wynik końcowy', '1X2', 'Over/Under', 'BTTS', 'Handicap', 'Podwójna szansa', 'Rogi', 'Kartki'].includes(label)
+    if (activeMarketTab === 'Popularne') return ['Wynik końcowy', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'BTTS', 'Handicap', 'Kartki', 'Rogi'].includes(label)
     return label === activeMarketTab
   })
   const normalizedSearch = String(sidebarSearch || '')
@@ -4536,11 +5008,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
 
   function selectSidebarSport(nextSport) {
-    if (nextSport === form.sport) return
-    chooseSport(nextSport)
+    if (openSidebarSport === nextSport) {
+      setOpenSidebarSport('')
+      return
+    }
+
+    setOpenSidebarSport(nextSport)
+    if (nextSport !== form.sport) {
+      chooseSport(nextSport)
+    }
   }
 
   function selectSidebarLeague(nextSport, nextCountry, nextLeague) {
+    setOpenSidebarSport(nextSport)
     const nextSportData = sportsbook[nextSport] || { leagues: {}, countries: {} }
     const nextCountryMap = nextSportData.countries || null
     const nextLeagueSource = nextCountryMap ? (nextCountryMap[nextCountry] || {}) : (nextSportData.leagues || {})
@@ -4954,33 +5434,53 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           <div className="sports-accordion-title">SPORT</div>
 
           <div className="sports-accordion-list">
-            <div className={`sport-accordion-item ${form.sport === 'Piłka nożna' ? 'is-open' : ''}`}>
+            <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
               <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Piłka nożna')}>
-                <span>⚽ Piłka nożna</span><b>⌄</b>
+                <span>⚽ Piłka nożna</span><b>{openSidebarSport === 'Piłka nożna' ? '⌃' : '⌄'}</b>
               </button>
-              {form.sport === 'Piłka nożna' && (
-                <div className="sport-accordion-children">
-                  <button type="button" className={currentCountry === 'Anglia' ? 'is-active' : ''} onClick={() => chooseCountry('Anglia')}>🏴 Anglia</button>
-                  {currentCountry === 'Anglia' && (
-                    <div className="sport-accordion-children level-two">
-                      {['Premier League', 'Championship', 'League One', 'League Two'].map(label => (
-                        <button type="button" key={label} className={currentLeague === label ? 'is-active league-active' : ''} onClick={() => selectSidebarLeague('Piłka nożna', 'Anglia', label)}>{label}</button>
-                      ))}
-                    </div>
-                  )}
-                  <button type="button" className={currentCountry === 'Hiszpania' ? 'is-active' : ''} onClick={() => chooseCountry('Hiszpania')}>🇪🇸 Hiszpania</button>
-                  <button type="button" className={currentCountry === 'Włochy' ? 'is-active' : ''} onClick={() => chooseCountry('Włochy')}>🇮🇹 Włochy</button>
-                  <button type="button" className={currentCountry === 'Niemcy' ? 'is-active' : ''} onClick={() => chooseCountry('Niemcy')}>🇩🇪 Niemcy</button>
-                  <button type="button" className={currentCountry === 'Francja' ? 'is-active' : ''} onClick={() => chooseCountry('Francja')}>🇫🇷 Francja</button>
+              {openSidebarSport === 'Piłka nożna' && (
+                <div className="sport-accordion-children football-country-tree">
+                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
+                  {footballCountryOptions.map(country => {
+                    const isCountryActive = currentCountry === country
+                    const countryLeagues = getFootballLeaguesForCountry(country)
+                    return (
+                      <div className="football-country-node" key={country}>
+                        <button
+                          type="button"
+                          className={isCountryActive ? 'is-active country-active' : ''}
+                          onClick={() => selectSidebarCountry(country)}
+                        >
+                          <span>{footballCountryIcons[country] || '🏳️'} {country}</span>
+                          <b>{isCountryActive ? '⌃' : '⌄'}</b>
+                        </button>
+
+                        {isCountryActive && (
+                          <div className="sport-accordion-children level-two football-leagues-list">
+                            {countryLeagues.map(label => (
+                              <button
+                                type="button"
+                                key={`${country}-${label}`}
+                                className={currentLeague === label ? 'is-active league-active' : ''}
+                                onClick={() => selectSidebarLeague('Piłka nożna', country, label)}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
 
-            <div className={`sport-accordion-item ${form.sport === 'Tenis' ? 'is-open' : ''}`}>
+            <div className={`sport-accordion-item ${openSidebarSport === 'Tenis' ? 'is-open' : ''}`}>
               <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Tenis')}>
-                <span>🎾 Tenis</span><b>⌃</b>
+                <span>🎾 Tenis</span><b>{openSidebarSport === 'Tenis' ? '⌃' : '⌄'}</b>
               </button>
-              {form.sport === 'Tenis' && (
+              {openSidebarSport === 'Tenis' && (
                 <div className="sport-accordion-children">
                   <button type="button" className="is-muted">Wszystkie</button>
                   <button type="button">Challenger</button>
@@ -5010,9 +5510,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               ['Baseball', '⚾'],
               ['Dart', '🎯'],
             ].map(([name, icon]) => (
-              <div key={name} className={`sport-accordion-item ${form.sport === name ? 'is-open' : ''}`}>
+              <div key={name} className={`sport-accordion-item ${openSidebarSport === name ? 'is-open' : ''}`}>
                 <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport(name)}>
-                  <span>{icon} {name}</span><b>⌄</b>
+                  <span>{icon} {name}</span><b>{openSidebarSport === name ? '⌃' : '⌄'}</b>
                 </button>
               </div>
             ))}
