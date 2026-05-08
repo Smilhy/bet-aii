@@ -27,9 +27,20 @@ exports.handler = async function(event) {
     const h2h = bookmakerMarkets.find(m => m.key === 'h2h' || String(m.market || '').toLowerCase().includes('match'))
     if (Array.isArray(h2h?.outcomes)) {
       h2h.outcomes.slice(0, 3).forEach(outcome => {
+        const outcomeName = String(outcome.name || '')
+        const lower = outcomeName.toLowerCase()
+        const homeLower = String(home || '').toLowerCase()
+        const awayLower = String(away || '').toLowerCase()
+        const pick = lower.includes('draw') || lower.includes('remis')
+          ? 'Remis'
+          : lower.includes(awayLower)
+            ? `${away} wygra`
+            : lower.includes(homeLower)
+              ? `${home} wygra`
+              : outcomeName
         markets.push({
           market: 'Wynik końcowy',
-          pick: String(outcome.name || '').toLowerCase().includes(String(away).toLowerCase()) ? `${away} wygra` : String(outcome.name || '').toLowerCase().includes('draw') ? 'Remis' : `${home} wygra`,
+          pick,
           odds: Number(outcome.price || 0) || 1.7,
           confidence: 65
         })
@@ -65,7 +76,7 @@ exports.handler = async function(event) {
     const selected = new Date(`${date}T00:00:00`)
     const now = new Date()
     const isToday = date === now.toISOString().slice(0, 10)
-    const baseDate = isToday ? new Date(now.getTime() + 60 * 60 * 1000) : selected
+    const baseDate = isToday ? new Date(now.getTime() + 10 * 60 * 1000) : selected
     const baseLeague = league || (sport === 'Piłka nożna' ? 'Premier League' : sport)
     const teams = [
       ['Manchester City', 'Arsenal'],
@@ -104,7 +115,7 @@ exports.handler = async function(event) {
       if (!response.ok) throw new Error(data?.message || 'The Odds API error')
 
       const requestedDay = date
-      const nowMs = Date.now()
+      const nowMs = Date.now() + 5 * 60 * 1000
       const fixtures = (Array.isArray(data) ? data : [])
         .filter(item => {
           const commence = String(item.commence_time || '')

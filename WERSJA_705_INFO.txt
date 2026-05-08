@@ -1,0 +1,21 @@
+BET+AI — WERSJA 705
+
+Poprawka wyboru rynku i kursu.
+
+Co poprawiono:
+1. Po zmianie opcji w polu "Typ zakładu" kurs aktualizuje się automatycznie.
+2. W opcjach rynku widoczny jest teraz kurs, np.:
+   Wynik końcowy • Real wygra • kurs 1.80
+   Wynik końcowy • Remis • kurs 3.10
+   Wynik końcowy • Barcelona wygra • kurs 3.20
+3. Pole "Kurs" pokazuje aktualny kurs dla wybranej opcji.
+4. Poprawiono mapowanie rynku 1/X/2 w Netlify Function.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5,
+- Pobierz mecze i kursy,
+- zmień opcję w "Typ zakładu" i sprawdź, czy kurs się zmienia.

@@ -24949,3 +24949,15 @@ font[style*="border"]{
   .live-fixtures-controls{grid-template-columns:1fr!important}
   .fetch-fixtures-btn,.clear-fixtures-btn{width:100%!important}
 }
+
+
+/* WERSJA 705 — kurs zmienia się razem z wybraną opcją rynku */
+.auto-pill i{
+  font-size:13px!important;
+  padding:3px 8px!important;
+  border-radius:999px!important;
+  background:rgba(31,231,255,.10)!important;
+  border:1px solid rgba(31,231,255,.18)!important;
+  color:#7ff7ff!important;
+  font-weight:900!important;
+}

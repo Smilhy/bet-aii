@@ -4338,7 +4338,25 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const activeLeagues = countryMap ? (countryMap[currentCountry] || {}) : (sportData.leagues || {})
   const leagueOptions = Object.keys(activeLeagues || {})
   const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
-  const matchOptions = liveFixtures.length ? liveFixtures : (activeLeagues?.[currentLeague] || [])
+  function matchStartsAfterBuffer(match) {
+    if (!liveFixtures.length) return true
+    const dateText = String(match?.date || '').trim()
+    const timeText = String(match?.time || '').trim()
+    let kick = null
+    const isoCandidate = match?.commence_time || match?.start_time || match?.match_time
+    if (isoCandidate) {
+      const parsed = new Date(isoCandidate)
+      if (!Number.isNaN(parsed.getTime())) kick = parsed
+    }
+    if (!kick && /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateText)) {
+      const [day, month, year] = dateText.split('.')
+      kick = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timeText || '00:00'}:00`)
+    }
+    if (!kick || Number.isNaN(kick.getTime())) return true
+    return kick.getTime() > Date.now() + 5 * 60 * 1000
+  }
+
+  const matchOptions = (liveFixtures.length ? liveFixtures.filter(matchStartsAfterBuffer) : (activeLeagues?.[currentLeague] || []))
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || defaultMatch
   const marketOptions = selectedMatch?.markets || [defaultMarket]
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
@@ -4480,10 +4498,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveFixtures(fixtures)
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
-        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
+        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}. Mecze startujące za mniej niż 5 minut są ukryte${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
         onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} wydarzeń dla wybranego dnia.` })
       } else {
-        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Wybierz późniejszą datę albo inną ligę.')
+        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Mecze startujące za mniej niż 5 minut są ukryte.')
         onToast?.({ type: 'info', title: 'Brak meczów', message: 'API nie zwróciło wydarzeń dla tych filtrów.' })
       }
     } catch (error) {
@@ -4609,12 +4627,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseMarket(value) {
-    const nextMarket = marketOptions.find(item => `${item.market}|||${item.pick}` === value) || selectedMarket
+    const [marketName, pickName, oddsValue, confidenceValue] = String(value || '').split('|||')
+    const nextMarket = marketOptions.find(item =>
+      String(item.market) === marketName &&
+      String(item.pick) === pickName &&
+      String(item.odds) === String(oddsValue)
+    ) || marketOptions.find(item =>
+      String(item.market) === marketName &&
+      String(item.pick) === pickName
+    ) || selectedMarket
+
+    const nextOdds = Number(nextMarket?.odds ?? oddsValue ?? form.odds)
+    const nextConfidence = Number(nextMarket?.confidence ?? confidenceValue ?? form.confidence)
+
     updateForm({
       market: nextMarket.market,
       betType: nextMarket.pick,
-      odds: String(nextMarket.odds),
-      confidence: nextMarket.confidence || form.confidence,
+      odds: String(Number.isFinite(nextOdds) ? nextOdds : form.odds),
+      confidence: Number.isFinite(nextConfidence) ? nextConfidence : form.confidence,
     })
   }
 
@@ -4920,8 +4950,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span className="static-add-label">5. Typ zakładu</span>
               <div className="static-add-stack">
                 <div className="static-add-display form-field-display">
-                  <select className="static-add-select" value={`${form.market}|||${form.betType}`} onChange={(e) => chooseMarket(e.target.value)}>
-                    {marketOptions.map(item => <option key={`${item.market}-${item.pick}`} value={`${item.market}|||${item.pick}`}>{item.market} • {item.pick}</option>)}
+                  <select className="static-add-select" value={`${form.market}|||${form.betType}|||${form.odds}|||${confidencePercent}`} onChange={(e) => chooseMarket(e.target.value)}>
+                    {marketOptions.map((item, index) => (
+                      <option
+                        key={`${item.market}-${item.pick}-${item.odds}-${index}`}
+                        value={`${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`}
+                      >
+                        {item.market} • {item.pick} • kurs {item.odds}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="field-help">Wybrany typ: <b>{form.betType}</b></div>
@@ -4932,7 +4969,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span className="static-add-label">6. Kurs (średni)</span>
               <div className="static-add-inline-row">
                 <div className="static-add-display odds-display form-field-display"><input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} /></div>
-                <div className="auto-pill">✦ Rynek sugeruje <i>{selectedMarket?.odds || form.odds}</i></div>
+                <div className="auto-pill">✦ Kurs aktualny dla wybranej opcji: <i>{form.odds}</i></div>
               </div>
             </div>
 

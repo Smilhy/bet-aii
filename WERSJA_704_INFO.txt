@@ -1,0 +1,20 @@
+BET+AI — WERSJA 704
+
+Poprawka pobierania meczów i kursów.
+
+Co poprawiono:
+1. Mecze, które zaczynają się za mniej niż 5 minut, nie są już pokazywane.
+2. Mecze rozpoczęte wcześniej są ukrywane.
+3. Filtr działa podwójnie:
+   - w Netlify Function get-sports-events.js,
+   - dodatkowo po stronie frontendu, żeby lista wyboru nie pokazała starych meczów.
+4. Tryb demo generuje mecze minimum 10 minut do przodu.
+5. Komunikat na stronie informuje, że mecze startujące za mniej niż 5 minut są ukryte.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5,
+- Pobierz mecze i kursy.
