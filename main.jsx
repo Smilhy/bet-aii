@@ -4359,6 +4359,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || (liveFixtures.length ? null : defaultMatch)
   const marketOptions = selectedMatch?.markets || [defaultMarket]
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
+  const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
+    const label = String(item.market || 'Inne')
+    if (!groups[label]) groups[label] = []
+    groups[label].push({ ...item, __index: index })
+    return groups
+  }, {})
+  const marketGroupOrder = ['Wynik końcowy', '1X2', 'Over/Under', 'Gole', 'Gole/Punkty', 'BTTS', 'Handicap', 'Draw No Bet', 'Podwójna szansa', 'Rogi', 'Kartki', 'Połowa', 'Rynek']
+  const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
+    const ai = marketGroupOrder.indexOf(a)
+    const bi = marketGroupOrder.indexOf(b)
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+  })
 
   useEffect(() => {
     if (!leagueOptions.includes(form.league)) {
@@ -4947,22 +4959,59 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             </div>
 
-            <div className="static-add-card">
+            <div className="static-add-card static-span-two market-tiles-card">
               <span className="static-add-label">5. Typ zakładu</span>
               <div className="static-add-stack">
-                <div className="static-add-display form-field-display">
-                  <select className="static-add-select" value={`${form.market}|||${form.betType}|||${form.odds}|||${confidencePercent}`} onChange={(e) => chooseMarket(e.target.value)}>
-                    {marketOptions.map((item, index) => (
-                      <option
-                        key={`${item.market}-${item.pick}-${item.odds}-${index}`}
-                        value={`${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`}
-                      >
-                        {item.market} • {item.pick} • kurs {item.odds}
-                      </option>
-                    ))}
-                  </select>
+                <div className="market-tiles-head">
+                  <div>
+                    <strong>Wybierz rynek jak u bukmachera</strong>
+                    <small>Kliknij kurs — typ i kurs uzupełnią się automatycznie.</small>
+                  </div>
+                  <em>{marketOptions.length} opcji</em>
                 </div>
-                <div className="field-help">Wybrany typ: <b>{form.betType}</b></div>
+
+                <div className="market-groups-grid">
+                  {orderedMarketGroups.map(([groupName, groupItems]) => (
+                    <div className="market-group-box" key={groupName}>
+                      <div className="market-group-title">{groupName}</div>
+                      <div className="market-odds-grid">
+                        {groupItems.map((item) => {
+                          const active = String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
+                          const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
+                          return (
+                            <button
+                              type="button"
+                              key={`${item.market}-${item.pick}-${item.odds}-${item.__index}`}
+                              className={active ? 'market-odd-tile active' : 'market-odd-tile'}
+                              onClick={() => chooseMarket(value)}
+                            >
+                              <span>{item.pick}</span>
+                              <b>{Number(item.odds || 0).toFixed(2)}</b>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <details className="market-select-fallback">
+                  <summary>Lista awaryjna</summary>
+                  <div className="static-add-display form-field-display">
+                    <select className="static-add-select" value={`${form.market}|||${form.betType}|||${form.odds}|||${confidencePercent}`} onChange={(e) => chooseMarket(e.target.value)}>
+                      {marketOptions.map((item, index) => (
+                        <option
+                          key={`${item.market}-${item.pick}-${item.odds}-${index}`}
+                          value={`${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`}
+                        >
+                          {item.market} • {item.pick} • kurs {item.odds}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </details>
+
+                <div className="field-help">Wybrano: <b>{form.market}</b> · <b>{form.betType}</b> · kurs <b>{form.odds}</b></div>
               </div>
             </div>
 

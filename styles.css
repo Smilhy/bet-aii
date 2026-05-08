@@ -24961,3 +24961,138 @@ font[style*="border"]{
   color:#7ff7ff!important;
   font-weight:900!important;
 }
+
+
+/* WERSJA 708 — bogatsze rynki bukmacherskie */
+.static-add-stack small b{
+  color:#73f8ff!important;
+}
+
+
+/* WERSJA 709 — kafelki kursów jak u bukmachera */
+.market-tiles-card{
+  border-color:rgba(31,231,255,.20)!important;
+  background:
+    radial-gradient(circle at 10% 12%,rgba(31,231,255,.12),transparent 28%),
+    linear-gradient(180deg,rgba(7,18,29,.98),rgba(4,12,20,.99))!important;
+}
+.market-tiles-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  margin-bottom:14px!important;
+}
+.market-tiles-head strong{
+  color:#eaf8ff!important;
+  font-size:16px!important;
+  display:block!important;
+  margin-bottom:3px!important;
+}
+.market-tiles-head small{
+  color:#93aabb!important;
+  font-size:12.5px!important;
+}
+.market-tiles-head em{
+  flex:0 0 auto!important;
+  padding:7px 10px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(31,231,255,.18)!important;
+  background:rgba(31,231,255,.07)!important;
+  color:#82f6ff!important;
+  font-size:12px!important;
+  font-style:normal!important;
+  font-weight:900!important;
+}
+.market-groups-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+.market-group-box{
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-radius:18px!important;
+  padding:12px!important;
+  background:rgba(1,8,14,.45)!important;
+}
+.market-group-title{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  margin-bottom:10px!important;
+  color:#e4f5ff!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+  letter-spacing:.06em!important;
+}
+.market-odds-grid{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(132px,1fr))!important;
+  gap:9px!important;
+}
+.market-odd-tile{
+  min-height:58px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding:10px 12px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(45,212,255,.12)!important;
+  background:linear-gradient(180deg,rgba(10,22,34,.96),rgba(5,13,22,.98))!important;
+  color:#dcecf6!important;
+  cursor:pointer!important;
+  transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease!important;
+  text-align:left!important;
+}
+.market-odd-tile:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(45,212,255,.35)!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.22)!important;
+}
+.market-odd-tile.active{
+  background:linear-gradient(180deg,#20eadf,#0fb7ff)!important;
+  border-color:transparent!important;
+  color:#06141f!important;
+  box-shadow:0 14px 30px rgba(12,221,255,.28), inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+.market-odd-tile span{
+  min-width:0!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  line-height:1.22!important;
+  overflow-wrap:anywhere!important;
+}
+.market-odd-tile b{
+  flex:0 0 auto!important;
+  min-width:52px!important;
+  text-align:center!important;
+  padding:7px 8px!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.08)!important;
+  font-size:16px!important;
+  font-weight:1000!important;
+  color:inherit!important;
+}
+.market-odd-tile.active b{
+  background:rgba(4,15,24,.16)!important;
+}
+.market-select-fallback{
+  margin-top:14px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  padding:10px!important;
+  background:rgba(255,255,255,.025)!important;
+}
+.market-select-fallback summary{
+  cursor:pointer!important;
+  color:#9eb4c4!important;
+  font-size:12.5px!important;
+  font-weight:800!important;
+  margin-bottom:8px!important;
+}
+@media(max-width:900px){
+  .market-groups-grid{grid-template-columns:1fr!important}
+  .market-tiles-head{flex-direction:column!important}
+}
