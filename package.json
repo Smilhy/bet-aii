@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-686-rightbar-chat-frame-fix",
-  "version": "686.0.0",
+  "name": "betai-wersja-687-sidebar-premium-detach-fix",
+  "version": "687.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

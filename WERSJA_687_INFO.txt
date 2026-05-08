@@ -1,0 +1,12 @@
+BET+AI — WERSJA 687
+
+Poprawka lewej kolumny.
+
+Co poprawiono:
+1. Box Premium został odłączony od głównej ramki lewej kolumny.
+2. Główna ramka kończy się teraz zaraz po pozycji Nagrody/Bonusy.
+3. Premium box jest teraz osobnym boxem pod spodem.
+4. Przycisk zmieniony z „Zarządzaj Premium” na „Kup Premium”.
+5. Przycisk korzysta z tego samego checkout linku/zdarzenia co środkowy przycisk Kup Premium.
+
+SQL: brak nowego SQL.

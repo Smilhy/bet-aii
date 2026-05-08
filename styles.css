@@ -24633,3 +24633,76 @@ font[style*="border"]{
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel{
   margin-top:0!important;
 }
+
+
+/* WERSJA 687 — lewa kolumna: odłączony box Premium pod ramką menu */
+.app-shell .sidebar-stack,
+.app-shell:not(.no-rightbar-page) .sidebar-stack{
+  width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:14px!important;
+  align-self:start!important;
+  position:sticky!important;
+  top:0!important;
+  max-height:100vh!important;
+  overflow:auto!important;
+  padding:18px 0 24px!important;
+  scrollbar-width:thin!important;
+}
+
+.app-shell .sidebar-stack .sidebar,
+.app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar,
+.app-shell .sidebar.sidebar-main-box{
+  position:relative!important;
+  top:auto!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin:0!important;
+  padding:18px 16px 16px!important;
+  border-radius:26px!important;
+}
+
+.app-shell .sidebar-stack .sidebar .menu,
+.app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar .menu{
+  margin-bottom:0!important;
+}
+
+.app-shell .sidebar-stack .sidebar-premium-detached,
+.app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar-premium-detached{
+  margin:0!important;
+  width:100%!important;
+  border-radius:22px!important;
+  padding:16px!important;
+  border:1px solid rgba(31,226,174,.18)!important;
+  background:radial-gradient(circle at 12% 18%,rgba(31,226,174,.18),transparent 26%),radial-gradient(circle at 82% 6%,rgba(87,166,255,.10),transparent 30%),linear-gradient(135deg,#08131d 0%,#07111b 55%,#0b1724 100%)!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.22)!important;
+}
+
+.app-shell .sidebar-stack .sidebar-premium-detached h3,
+.app-shell .sidebar-stack .sidebar-premium-detached p{
+  margin-left:0!important;
+}
+
+.app-shell .sidebar-stack .sidebar-premium-detached button,
+.app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar-premium-detached button{
+  width:100%!important;
+}
+
+.app-shell .sidebar > .premium-box,
+.app-shell:not(.no-rightbar-page) .sidebar > .premium-box{
+  display:none!important;
+}
+
+@media(max-width:900px){
+  .app-shell .sidebar-stack,
+  .app-shell:not(.no-rightbar-page) .sidebar-stack{
+    position:relative!important;
+    top:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding:0!important;
+  }
+}

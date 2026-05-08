@@ -557,49 +557,53 @@ const staticTips = []
 
 function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
-return (
-    <aside className="sidebar">
-      <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
-        <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
-      </div>
-      <div className="user-card">
-        <div className="avatar">{profile.initials}</div>
-        <div>
-          <strong>{profile.username}</strong>
-          <span className="pill">{getDisplayRole(user, userPlan)}</span>
+  const openPremiumCheckout = () => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))
+
+  return (
+    <div className="sidebar-stack">
+      <aside className="sidebar sidebar-main-box">
+        <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
+          <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
         </div>
-        <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
-        <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
-        <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
-        <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
-      </div>
+        <div className="user-card">
+          <div className="avatar">{profile.initials}</div>
+          <div>
+            <strong>{profile.username}</strong>
+            <span className="pill">{getDisplayRole(user, userPlan)}</span>
+          </div>
+          <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+          <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
+          <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
+          <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
+          <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
+        </div>
 
-      <nav className="menu">
-        <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
-        <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
-        <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
-        <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
-        <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
-        <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
-        {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
-        {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
-        <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
-        <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
-        <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
-        <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
-      </nav>
+        <nav className="menu">
+          <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
+          <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
+          <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
+          <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
+          <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
+          <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
+          {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
+          {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
+          <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
+          <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
+          <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
+          <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
+        </nav>
+      </aside>
 
-      <div className="premium-box">
+      <div className="premium-box sidebar-premium-detached">
         <h3>✦ Bet+AI Premium</h3>
         <p>✓ AI Typy bez limitu</p>
         <p>✓ Szczegółowe analizy</p>
         <p>✓ Statystyki premium</p>
         <p>✓ Typy premium</p>
         <p>✓ Brak reklam</p>
-        {isPremiumAccount(userPlan) ? <button onClick={() => setView('subscriptions')}>Zarządzaj Premium</button> : <button onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Przejdź na Premium</button>}
+        <button onClick={openPremiumCheckout}>Kup Premium</button>
       </div>
-    </aside>
+    </div>
   )
 }
 
