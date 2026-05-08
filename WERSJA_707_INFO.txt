@@ -1,0 +1,20 @@
+BET+AI — WERSJA 707
+
+Zmiana filtra czasu meczów.
+
+Co zmieniono:
+1. Mecze są ukrywane dopiero 1 minutę przed startem.
+2. Wcześniej było 5 minut.
+3. Filtr nadal działa:
+   - w Netlify Function,
+   - dodatkowo na froncie.
+4. Godziny dalej są pokazywane w czasie Polski Europe/Warsaw.
+5. Zostaje poprawka kursów z wersji 705/706.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5,
+- Pobierz mecze i kursy.

@@ -4339,7 +4339,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const leagueOptions = Object.keys(activeLeagues || {})
   const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
   function matchStartsAfterBuffer(match) {
-    if (!liveFixtures.length) return true
     const dateText = String(match?.date || '').trim()
     const timeText = String(match?.time || '').trim()
     let kick = null
@@ -4353,11 +4352,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       kick = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timeText || '00:00'}:00`)
     }
     if (!kick || Number.isNaN(kick.getTime())) return true
-    return kick.getTime() > Date.now() + 5 * 60 * 1000
+    return kick.getTime() > Date.now() + 1 * 60 * 1000
   }
 
   const matchOptions = (liveFixtures.length ? liveFixtures.filter(matchStartsAfterBuffer) : (activeLeagues?.[currentLeague] || []))
-  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || defaultMatch
+  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || (liveFixtures.length ? null : defaultMatch)
   const marketOptions = selectedMatch?.markets || [defaultMarket]
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
 
@@ -4494,15 +4493,17 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
-      const fixtures = Array.isArray(data.fixtures) ? data.fixtures : []
+      const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
+      const fixtures = rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
-        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}. Mecze startujące za mniej niż 5 minut są ukryte${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
-        onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} wydarzeń dla wybranego dnia.` })
+        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
+        onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranego dnia.` })
       } else {
-        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Mecze startujące za mniej niż 5 minut są ukryte.')
-        onToast?.({ type: 'info', title: 'Brak meczów', message: 'API nie zwróciło wydarzeń dla tych filtrów.' })
+        setLiveFixtures([])
+        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Mecze rozpoczęte i startujące za mniej niż 1 minutę są ukryte.')
+        onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
       }
     } catch (error) {
       console.warn('fetch live fixtures error', error)
@@ -4941,7 +4942,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span className="static-add-label">5. Mecz</span>
               <div className="static-add-display form-field-display">
                 <select className="static-add-select" value={selectedMatch?.id || ''} onChange={(e) => chooseMatch(e.target.value)}>
-                  {matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>)}
+                  {matchOptions.length ? matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>) : <option value="">Brak przyszłych meczów do wyboru</option>}
                 </select>
               </div>
             </div>

@@ -1,0 +1,22 @@
+BET+AI — WERSJA 706
+
+Poprawka godzin meczów i pustej listy.
+
+Co poprawiono:
+1. Godziny meczów z API są teraz przeliczane na czas Polski:
+   Europe/Warsaw.
+2. Mecze rozpoczęte i mecze startujące za mniej niż 5 minut są ukrywane.
+3. Filtr działa w Netlify Function i dodatkowo na froncie.
+4. Jeśli po filtrze nie ma żadnych meczów, lista nie będzie pusta/biała — pokaże:
+   "Brak przyszłych meczów do wyboru".
+5. Po pobraniu API formularz wybiera pierwszy poprawny przyszły mecz.
+6. Komunikat mówi, że godziny są pokazane dla Polski.
+7. Zostaje poprawka z wersji 705: kurs zmienia się po zmianie typu zakładu.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5,
+- Pobierz mecze i kursy.

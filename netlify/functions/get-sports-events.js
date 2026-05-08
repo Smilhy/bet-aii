@@ -10,13 +10,27 @@ exports.handler = async function(event) {
     'Access-Control-Allow-Origin': '*'
   }
 
+  const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Europe/Warsaw'
+
   const toDateParts = (iso) => {
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return { date: '25.05.2025', time: '17:30' }
-    return {
-      date: d.toLocaleDateString('pl-PL'),
-      time: d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-    }
+
+    const dateParts = new Intl.DateTimeFormat('pl-PL', {
+      timeZone: APP_TIMEZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(d)
+
+    const timeParts = new Intl.DateTimeFormat('pl-PL', {
+      timeZone: APP_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(d)
+
+    return { date: dateParts, time: timeParts }
   }
 
   const buildMarkets = (home, away, bookmakers = []) => {
@@ -115,7 +129,7 @@ exports.handler = async function(event) {
       if (!response.ok) throw new Error(data?.message || 'The Odds API error')
 
       const requestedDay = date
-      const nowMs = Date.now() + 5 * 60 * 1000
+      const nowMs = Date.now() + 1 * 60 * 1000
       const fixtures = (Array.isArray(data) ? data : [])
         .filter(item => {
           const commence = String(item.commence_time || '')
