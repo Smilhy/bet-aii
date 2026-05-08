@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-728-upcoming-first-fix",
-  "version": "728.0.0",
+  "name": "betai-wersja-729-live-ai-picks",
+  "version": "729.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

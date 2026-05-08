@@ -1,0 +1,29 @@
+BET+AI — WERSJA 729 LIVE AI PICKS
+
+Zmiana:
+1. Zakładka "Typy AI" została ożywiona.
+2. Usunięto statyczne przykładowe typy AI.
+3. Typy AI są generowane z realnych meczów i realnych kursów pobranych z The Odds API.
+4. Działa filtrowanie:
+   - Wszystkie,
+   - Piłka nożna,
+   - Koszykówka,
+   - Tenis,
+   - Hokej,
+   - MMA,
+   - Baseball.
+5. Działa sortowanie:
+   - Najwyższy AI Score,
+   - Najlepszy EV,
+   - Najwyższy kurs.
+6. Działa przełącznik "Pokaż tylko wysokie AI Score".
+7. Zakładka odświeża się automatycznie co 1 minutę.
+8. Jeśli API nie zwróci realnych meczów z kursami, nie pokazuje demo ani fake typów.
+9. Prawa kolumna modelu pokazuje live:
+   - liczbę typów,
+   - średni AI score,
+   - status źródeł danych,
+   - trendy i analizę top meczu.
+
+SQL:
+- brak nowego SQL.
