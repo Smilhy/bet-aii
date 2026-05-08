@@ -6882,6 +6882,8 @@ function App() {
   const receivedTipTimerRef = useRef(null)
   const receivedTipHideTimerRef = useRef(null)
   const lastReceivedTipRef = useRef('')
+  const receivedTipPollReadyRef = useRef(false)
+  const lastReceivedTipPollKeyRef = useRef('')
 
   function hideReceivedTipPopup() {
     setReceivedTipPopupVisible(false)
@@ -6896,6 +6898,35 @@ function App() {
     setReceivedTipPopupVisible(true)
     receivedTipTimerRef.current = setTimeout(() => setReceivedTipPopupVisible(false), 4200)
     receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 4550)
+  }
+
+  async function fetchCurrentTokenBalance() {
+    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    if (!email) return 0
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase
+          .from('betai_token_wallets')
+          .select('balance')
+          .eq('email', email)
+          .maybeSingle()
+        if (!error && data) {
+          const nextBalance = Number(data.balance || 0) || 0
+          setTokenBalance(nextBalance)
+          try { localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+          return nextBalance
+        }
+      }
+    } catch (error) {
+      console.warn('token balance realtime refresh skipped', error)
+    }
+    try {
+      const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+      setTokenBalance(localTokens)
+      return localTokens
+    } catch (_) {
+      return 0
+    }
   }
 
   function hideLiveTipPopup() {
@@ -8346,10 +8377,50 @@ function App() {
   }, [view])
 
   useEffect(() => {
-    const refreshTokens = () => fetchNotifications(sessionUser?.id)
+    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    if (!currentEmail) return undefined
+
+    let stopped = false
+    const refreshTokens = async () => {
+      if (stopped) return
+      await fetchCurrentTokenBalance()
+      await fetchNotifications(sessionUser?.id)
+    }
+
     window.addEventListener('betai-token-balance-changed', refreshTokens)
-    return () => window.removeEventListener('betai-token-balance-changed', refreshTokens)
-  }, [sessionUser?.id])
+    const quickRefresh = setTimeout(refreshTokens, 350)
+    const interval = setInterval(refreshTokens, 3000)
+
+    let walletChannel = null
+    if (isSupabaseConfigured && supabase) {
+      try {
+        walletChannel = supabase
+          .channel(`betai-token-wallet-live-${currentEmail}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_token_wallets', filter: `email=eq.${currentEmail}` }, payload => {
+            const nextBalance = Number(payload?.new?.balance || 0) || 0
+            setTokenBalance(nextBalance)
+            try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
+            fetchNotifications(sessionUser?.id)
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, () => {
+            refreshTokens()
+          })
+          .subscribe()
+      } catch (error) {
+        console.warn('token wallet realtime channel skipped', error)
+      }
+    }
+
+    return () => {
+      stopped = true
+      clearTimeout(quickRefresh)
+      clearInterval(interval)
+      window.removeEventListener('betai-token-balance-changed', refreshTokens)
+      if (walletChannel) {
+        try { supabase.removeChannel(walletChannel) } catch (_) {}
+      }
+    }
+  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
   useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
@@ -8436,18 +8507,85 @@ function App() {
     const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if ((!currentUserId && !currentEmail) || !isSupabaseConfigured || !supabase) return undefined
 
-    const handleTipTransferInsert = (payload) => {
-      const row = payload?.new || {}
+    receivedTipPollReadyRef.current = false
+    lastReceivedTipPollKeyRef.current = ''
+
+    const showTipTransferRow = (row, silent = false) => {
+      if (!row) return
       const matchesUserId = currentUserId && String(row.receiver_id || '') === String(currentUserId)
       const matchesEmail = currentEmail && normalizeEmail(row.receiver_email || '') === currentEmail
       if (!matchesUserId && !matchesEmail) return
-      const key = String(row.id || `${row.created_at || ''}_${row.sender_username || ''}_${row.amount || 1}`)
-      if (lastReceivedTipRef.current === key) return
+
+      const key = String(row.id || `${row.created_at || ''}_${row.sender_username || ''}_${row.sender_email || ''}_${row.amount || 1}`)
+      if (!key || lastReceivedTipRef.current === key) return
       lastReceivedTipRef.current = key
-      const senderName = row.sender_username || 'Użytkownik'
-      const amount = Math.max(1, Number(row.amount || 1) || 1)
-      showReceivedTipPopup(senderName, amount)
+
+      if (!silent) {
+        const senderName = row.sender_username || nameFromEmail(row.sender_email || '') || 'Użytkownik'
+        const amount = Math.max(1, Number(row.amount || 1) || 1)
+        showReceivedTipPopup(senderName, amount)
+      }
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      fetchCurrentTokenBalance()
+    }
+
+    const handleTipTransferInsert = (payload) => {
+      showTipTransferRow(payload?.new || {}, false)
+    }
+
+    const pollTipTransfers = async () => {
+      try {
+        let rows = []
+
+        if (currentUserId) {
+          const { data, error } = await supabase
+            .from('tip_transfers')
+            .select('*')
+            .eq('receiver_id', currentUserId)
+            .order('created_at', { ascending: false })
+            .limit(5)
+          if (!error && Array.isArray(data)) rows.push(...data)
+        }
+
+        if (currentEmail) {
+          try {
+            const { data, error } = await supabase
+              .from('tip_transfers')
+              .select('*')
+              .eq('receiver_email', currentEmail)
+              .order('created_at', { ascending: false })
+              .limit(5)
+            if (!error && Array.isArray(data)) rows.push(...data)
+          } catch (emailPollError) {
+            console.warn('tip transfer email polling skipped', emailPollError)
+          }
+        }
+
+        rows = rows
+          .filter(Boolean)
+          .sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+
+        const newest = rows[0]
+        const newestKey = newest ? String(newest.id || `${newest.created_at || ''}_${newest.sender_username || ''}_${newest.sender_email || ''}_${newest.amount || 1}`) : ''
+
+        if (!receivedTipPollReadyRef.current) {
+          receivedTipPollReadyRef.current = true
+          if (newestKey) {
+            lastReceivedTipPollKeyRef.current = newestKey
+            lastReceivedTipRef.current = newestKey
+          }
+          return
+        }
+
+        if (!newestKey) return
+
+        if (newestKey !== lastReceivedTipPollKeyRef.current) {
+          lastReceivedTipPollKeyRef.current = newestKey
+          showTipTransferRow(newest, false)
+        }
+      } catch (error) {
+        console.warn('tip transfer polling skipped', error)
+      }
     }
 
     const channels = []
@@ -8460,20 +8598,30 @@ function App() {
       )
     }
     if (currentEmail) {
-      channels.push(
-        supabase
-          .channel(`betai-tip-transfers-popup-email-${currentEmail}`)
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_email=eq.${currentEmail}` }, handleTipTransferInsert)
-          .subscribe()
-      )
+      try {
+        channels.push(
+          supabase
+            .channel(`betai-tip-transfers-popup-email-${currentEmail}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_email=eq.${currentEmail}` }, handleTipTransferInsert)
+            .subscribe()
+        )
+      } catch (error) {
+        console.warn('tip transfer email realtime skipped', error)
+      }
     }
 
+    const initialPoll = setTimeout(pollTipTransfers, 700)
+    const pollInterval = setInterval(pollTipTransfers, 2200)
+
     return () => {
+      clearTimeout(initialPoll)
+      clearInterval(pollInterval)
       channels.forEach(channel => {
         try { supabase.removeChannel(channel) } catch (_) {}
       })
     }
   }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
+
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips

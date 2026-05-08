@@ -1,0 +1,36 @@
+BET+AI — WERSJA 682
+
+Naprawione problemy:
+1. Popup TIP na środku ekranu nie opiera się już tylko na Supabase Realtime.
+   Dodałem podwójne zabezpieczenie:
+   - realtime po receiver_id,
+   - realtime po receiver_email,
+   - polling co ok. 2.2 sekundy jako fallback.
+
+2. Saldo żetonów odświeża się automatycznie.
+   Dodałem:
+   - realtime na tabeli betai_token_wallets,
+   - odświeżanie po system_notifications,
+   - polling salda co 3 sekundy,
+   - natychmiastowe odświeżenie po evencie betai-token-balance-changed.
+
+3. Jeżeli Realtime w Supabase nie zadziała albo tabela nie jest dodana do replication,
+   aplikacja nadal sprawdzi bazę i pokaże nowy stan/popup bez ręcznego odświeżania strony.
+
+4. Popup dalej pokazuje:
+   - świecący biały coin,
+   - napis "Dostałeś Tip!",
+   - nazwę użytkownika,
+   - ilość otrzymanych żetonów.
+
+WAŻNE DLA SUPABASE:
+- Najlepiej mieć odpalone SQL:
+  1) SUPABASE_SQL_WERSJA_676_TIP_TRANSFERS.sql
+  2) SUPABASE_SQL_WERSJA_677_TIP_TRANSFERS_EMAIL_FIX.sql
+
+- W Supabase najlepiej włączyć Realtime/Replication dla:
+  - tip_transfers
+  - betai_token_wallets
+  - betai_system_notifications
+
+Nawet jeżeli Realtime nie jest włączony, wersja 682 ma polling fallback i powinna aktualizować stan bez ręcznego odświeżania.
