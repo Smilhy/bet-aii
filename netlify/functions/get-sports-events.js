@@ -36,6 +36,23 @@ exports.handler = async function(event) {
     return { date: dateParts, time: timeParts }
   }
 
+  const toLocalDateKey = (iso) => {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ''
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: APP_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(d)
+
+    const year = parts.find(part => part.type === 'year')?.value
+    const month = parts.find(part => part.type === 'month')?.value
+    const day = parts.find(part => part.type === 'day')?.value
+    return year && month && day ? `${year}-${month}-${day}` : ''
+  }
+
+
   const marketNameMap = {
     h2h: 'Wynik końcowy',
     h2h_3_way: '1X2',
@@ -217,12 +234,10 @@ exports.handler = async function(event) {
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-  const selectedSportKeys = () => {
+  const staticSportKeys = () => {
     const s = normalizeText(sport)
     const l = normalizeText(league)
     const c = normalizeText(country)
-
-    const unique = (items) => [...new Set(items.filter(Boolean))]
 
     const footballKeys = [
       'soccer_epl',
@@ -264,18 +279,9 @@ exports.handler = async function(event) {
       return allLeagues ? ['basketball_nba', 'basketball_ncaab', 'basketball_wnba'] : [l.includes('ncaa') ? 'basketball_ncaab' : 'basketball_nba']
     }
 
-    if (s.includes('baseball')) {
-      return allLeagues ? ['baseball_mlb', 'baseball_ncaa'] : ['baseball_mlb']
-    }
-
-    if (s.includes('hokej') || s.includes('hockey')) {
-      return allLeagues ? ['icehockey_nhl', 'icehockey_sweden_hockey_league', 'icehockey_sweden_allsvenskan'] : ['icehockey_nhl']
-    }
-
-    if (s.includes('tenis') || s.includes('tennis')) {
-      return allLeagues ? ['tennis_atp', 'tennis_wta'] : [l.includes('wta') ? 'tennis_wta' : 'tennis_atp']
-    }
-
+    if (s.includes('baseball')) return allLeagues ? ['baseball_mlb', 'baseball_ncaa'] : ['baseball_mlb']
+    if (s.includes('hokej') || s.includes('hockey')) return allLeagues ? ['icehockey_nhl', 'icehockey_sweden_hockey_league', 'icehockey_sweden_allsvenskan'] : ['icehockey_nhl']
+    if (s.includes('tenis') || s.includes('tennis')) return allLeagues ? ['tennis_atp', 'tennis_wta'] : [l.includes('wta') ? 'tennis_wta' : 'tennis_atp']
     if (s.includes('mma') || s.includes('ufc')) return ['mma_mixed_martial_arts']
     if (s.includes('rugby league')) return ['rugbyleague_nrl']
     if (s.includes('rugby')) return ['rugbyunion_six_nations']
@@ -283,10 +289,56 @@ exports.handler = async function(event) {
     return []
   }
 
+  const matchesRequestedSport = (item) => {
+    const s = normalizeText(sport)
+    const key = normalizeText(item?.key)
+    const group = normalizeText(item?.group)
+    const title = normalizeText(item?.title)
+    const description = normalizeText(item?.description)
+    const combined = `${key} ${group} ${title} ${description}`
+
+    if (s.includes('pilka') || s.includes('football') || s.includes('soccer')) {
+      return group.includes('soccer') || key.startsWith('soccer') || combined.includes('soccer')
+    }
+    if (s.includes('tenis') || s.includes('tennis')) return group.includes('tennis') || key.startsWith('tennis')
+    if (s.includes('koszyk') || s.includes('basketball')) return group.includes('basketball') || key.startsWith('basketball')
+    if (s.includes('baseball')) return group.includes('baseball') || key.startsWith('baseball')
+    if (s.includes('hokej') || s.includes('hockey')) return group.includes('ice hockey') || group.includes('hockey') || key.includes('icehockey')
+    if (s.includes('mma') || s.includes('ufc')) return group.includes('mma') || key.includes('mma') || key.includes('ufc')
+    if (s.includes('rugby league')) return group.includes('rugby league') || key.includes('rugbyleague')
+    if (s.includes('rugby')) return group.includes('rugby') || key.includes('rugby')
+    if (s.includes('krykiet') || s.includes('cricket')) return group.includes('cricket') || key.includes('cricket')
+    return false
+  }
+
+  const getDynamicSportKeys = async (oddsKey) => {
+    const fallback = staticSportKeys()
+    if (!allLeagues) return fallback
+
+    try {
+      const sportsUrl = new URL('https://api.the-odds-api.com/v4/sports/')
+      sportsUrl.searchParams.set('apiKey', oddsKey)
+      const response = await fetch(sportsUrl.toString())
+      const data = await response.json().catch(() => [])
+
+      if (!response.ok || !Array.isArray(data)) return fallback
+
+      const dynamic = data
+        .filter(item => item && item.active !== false && matchesRequestedSport(item))
+        .map(item => item.key)
+        .filter(Boolean)
+
+      return [...new Set(dynamic.length ? dynamic : fallback)]
+    } catch (error) {
+      console.warn('The Odds API sports list failed', error)
+      return fallback
+    }
+  }
+
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     if (oddsKey) {
-      const sportKeys = selectedSportKeys()
+      const sportKeys = await getDynamicSportKeys(oddsKey)
       if (!sportKeys.length) {
         return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
       }
@@ -323,7 +375,7 @@ exports.handler = async function(event) {
             const commence = String(item.commence_time || '')
             const kickMs = Date.parse(commence)
             if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-            return !requestedDay || commence.slice(0, 10) === requestedDay
+            return !requestedDay || toLocalDateKey(commence) === requestedDay
           })
           .map((item, index) => {
             const home = item.home_team || item.teams?.[0] || 'Gospodarze'
@@ -356,13 +408,13 @@ exports.handler = async function(event) {
           seen.add(key)
           return true
         })
-        .slice(0, countOnly ? 500 : 80)
+        .slice(0, countOnly ? 1000 : 160)
 
       if (countOnly) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, futureOnly: true, count: fixtures.length, fixtures: [] }) }
       }
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, futureOnly: true, fixtures }) }
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, futureOnly: true, fixtures }) }
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
