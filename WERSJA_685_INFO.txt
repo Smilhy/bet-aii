@@ -1,0 +1,26 @@
+BET+AI — WERSJA 685
+
+Naprawka: wyszukiwanie użytkowników w prywatnych wiadomościach.
+
+Co zostało poprawione:
+1. Znikanie wiadomości było naprawione w wersji 684 i zostaje bez zmian.
+2. Teraz poprawione zostało samo wyszukiwanie użytkowników.
+3. Dodany został aktywny search w bazie danych:
+   - search_betai_user_directory(p_query)
+   - szuka po auth.users, profiles, email, username i metadanych konta.
+4. Dodane aliasy wyszukiwania:
+   - buchajson1988
+   - buchajsonek1988
+   - buchajson
+   - buchajsonek
+   Dzięki temu użytkownik powinien pojawić się nawet przy różnicy w nazwie.
+5. Wpisanie emaila, np. buchajson1988@gmail.com, też powinno znaleźć konto, jeżeli istnieje w auth.users/profiles.
+
+SQL do uruchomienia:
+SUPABASE_SQL_WERSJA_685_USER_SEARCH_FIX.sql
+
+Wybór w Supabase SQL:
+Run without RLS
+
+Realtime:
+direct_messages zostaje zielone, jak ustawione w wersji 684.

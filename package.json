@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-684-dm-users-messages-fix",
-  "version": "684.0.0",
+  "name": "betai-wersja-685-dm-user-search-alias-fix",
+  "version": "685.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

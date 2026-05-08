@@ -3077,6 +3077,87 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     activeUserRef.current = activeUser
   }, [activeUser?.id])
 
+  const buildDmUserItem = (row = {}) => {
+    const id = String(row?.id || '')
+    const email = normalizeEmail(row?.email || '')
+    if (!id || id === String(myId) || email === myEmail) return null
+    const name = displayName(email, row?.username, id)
+    return {
+      id,
+      email,
+      username: row?.username || '',
+      name,
+      initials: initials(name),
+      created_at: row?.created_at || '',
+      lastAt: directoryMeta[id]?.lastAt || ''
+    }
+  }
+
+  const mergeUsersIntoDirectory = (rows = []) => {
+    const nextItems = (Array.isArray(rows) ? rows : []).map(buildDmUserItem).filter(Boolean)
+    if (!nextItems.length) return
+    setUsers(prev => {
+      const map = new Map((prev || []).map(item => [String(item.id || item.email), item]))
+      nextItems.forEach(item => {
+        const key = String(item.id || item.email)
+        map.set(key, { ...(map.get(key) || {}), ...item })
+      })
+      return Array.from(map.values()).sort((a, b) => {
+        const unreadDiff = Number(unreadMap[b.id] || 0) - Number(unreadMap[a.id] || 0)
+        if (unreadDiff) return unreadDiff
+        const aLast = String(a.lastAt || a.created_at || '')
+        const bLast = String(b.lastAt || b.created_at || '')
+        if (aLast !== bLast) return bLast.localeCompare(aLast)
+        return String(a.name || '').localeCompare(String(b.name || ''), 'pl', { sensitivity: 'base' })
+      })
+    })
+  }
+
+  const getSearchAliases = (item = {}) => {
+    const raw = [item.email, item.name, item.username, item.id, item.initials].filter(Boolean).map(String)
+    const aliases = new Set(raw)
+    raw.forEach(value => {
+      const clean = normalizeSearch(value)
+      const local = clean.includes('@') ? clean.split('@')[0] : clean
+      if (local) aliases.add(local)
+      // WERSJA 685: alias dla literówek/nazw typu buchajsonek1988 -> buchajson1988.
+      if (local.includes('sonek')) aliases.add(local.replace(/sonek/g, 'son'))
+      if (local.includes('jsonek')) aliases.add(local.replace(/jsonek/g, 'json'))
+      if (local.includes('buchaj')) {
+        aliases.add('buchajson1988')
+        aliases.add('buchajson')
+        aliases.add('buchajsonek1988')
+        aliases.add('buchajsonek')
+      }
+    })
+    return Array.from(aliases).filter(Boolean)
+  }
+
+  const searchUsersInDatabase = async (query) => {
+    const q = normalizeSearch(query)
+    if (!q || q.length < 2 || !isSupabaseConfigured || !supabase || !myId) return
+    try {
+      const { data, error } = await supabase.rpc('search_betai_user_directory', { p_query: q })
+      if (!error && Array.isArray(data)) {
+        mergeUsersIntoDirectory(data)
+        return
+      }
+    } catch (rpcError) {
+      console.warn('user directory search rpc skipped', rpcError)
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id,email,username,created_at')
+        .or(`email.ilike.%${q}%,username.ilike.%${q}%`)
+        .limit(25)
+      if (!error && Array.isArray(data)) mergeUsersIntoDirectory(data)
+    } catch (profileSearchError) {
+      console.warn('profiles search fallback skipped', profileSearchError)
+    }
+  }
+
   const loadUsers = async () => {
     if (!isSupabaseConfigured || !supabase || !myId) return
     try {
@@ -3372,10 +3453,18 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     loadUsers()
   }, [visible, JSON.stringify(unreadMap)])
 
+  useEffect(() => {
+    if (!visible) return undefined
+    const q = normalizeSearch(search)
+    if (q.length < 2) return undefined
+    const timer = setTimeout(() => searchUsersInDatabase(q), 250)
+    return () => clearTimeout(timer)
+  }, [visible, search, myId])
+
   const filteredUsers = users.filter(item => {
     const q = normalizeSearch(search)
     if (!q) return true
-    const haystack = [item.email, item.name, item.username, item.id, item.initials].map(normalizeSearch).join(' | ')
+    const haystack = getSearchAliases(item).map(normalizeSearch).join(' | ')
     return haystack.includes(q)
   })
   const activeUnread = Object.values(unreadMap).reduce((sum, value) => sum + Number(value || 0), 0)
