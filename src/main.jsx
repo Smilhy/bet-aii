@@ -1673,6 +1673,52 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setForm(prev => ({ ...prev, ...patch }))
   }
 
+  function clampStakeValue(value) {
+    const raw = String(value ?? '').replace(',', '.').replace(/[^0-9.]/g, '')
+    const numeric = Math.min(1000, Math.max(0, Number(raw || 0) || 0))
+    return numeric ? String(numeric) : ''
+  }
+
+  function getSelectedMatchKey(match = selectedMatch) {
+    return `${currentLeague}|${match?.home || ''}|${match?.away || ''}|${form.date || ''}|${form.time || ''}`.toLowerCase().replace(/\s+/g, ' ').trim()
+  }
+
+  async function hasDuplicateMatchToday() {
+    if (!isSupabaseConfigured || !supabase || !user?.id || !selectedMatch) return false
+
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+    const matchText = `${selectedMatch.home} vs ${selectedMatch.away}`
+    const currentKey = getSelectedMatchKey()
+
+    try {
+      const { data, error } = await supabase
+        .from('tips')
+        .select('id,match,team_home,team_away,league,match_time,created_at,author_id,user_id')
+        .or(`author_id.eq.${user.id},user_id.eq.${user.id}`)
+        .gte('created_at', startOfDay.toISOString())
+        .limit(100)
+
+      if (error) {
+        if (!isSchemaError(error)) throw error
+        return false
+      }
+
+      return (data || []).some(row => {
+        const rowMatch = String(row.match || '').toLowerCase().trim()
+        const sameTextMatch = rowMatch && rowMatch === matchText.toLowerCase()
+        const rowDate = row.match_time ? new Date(row.match_time) : null
+        const rowDateLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleDateString('pl-PL') : ''
+        const rowTimeLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : ''
+        const rowKey = `${row.league || ''}|${row.team_home || ''}|${row.team_away || ''}|${rowDateLabel}|${rowTimeLabel}`.toLowerCase().replace(/\s+/g, ' ').trim()
+        return sameTextMatch || (rowKey && rowKey === currentKey)
+      })
+    } catch (error) {
+      console.warn('duplicate match check skipped', error)
+      return false
+    }
+  }
+
   function chooseSport(nextSport) {
     const nextLeague = Object.keys(sportsbook[nextSport]?.leagues || {})[0] || ''
     const nextMatch = (sportsbook[nextSport]?.leagues?.[nextLeague] || [])[0]
@@ -1792,6 +1838,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
 
+    const stakeValue = Number(form.stake || 0) || 0
+    if (stakeValue > 1000) {
+      updateForm({ stake: '1000' })
+      onToast?.({ type: 'error', title: 'Maksymalna stawka', message: 'Maksymalna stawka dla typu to 1000 zł. Większa kwota została zablokowana.' })
+      return
+    }
+    if (stakeValue <= 0) {
+      onToast?.({ type: 'error', title: 'Brak stawki', message: 'Podaj stawkę większą niż 0 zł.' })
+      return
+    }
+
+    const duplicateMatch = await hasDuplicateMatchToday()
+    if (duplicateMatch) {
+      onToast?.({
+        type: 'limit',
+        title: 'Ten mecz został już dodany',
+        message: 'Nie można spamować tym samym meczem. Jeden użytkownik może dodać dany mecz tylko raz na dobę.'
+      })
+      return
+    }
+
     setSaving(true)
     const combinedIso = (() => {
       try {
@@ -1819,7 +1886,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       prediction: form.betType,
       odds: Number(form.odds || 0),
       course: Number(form.odds || 0),
-      stake: Number(form.stake || 0),
+      stake: stakeValue,
       description: form.description,
       analysis: form.description,
       ai_analysis: form.aiAnalysis,
@@ -2007,11 +2074,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <div className="static-add-card">
               <span className="static-add-label">6. Stawka</span>
               <div className="stake-row">
-                <div className="static-add-display stake-value form-field-display"><input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: e.target.value.replace(/[^0-9.]/g, '') })} /></div>
+                <div className="static-add-display stake-value form-field-display"><input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: clampStakeValue(e.target.value) })} onBlur={() => updateForm({ stake: clampStakeValue(form.stake || 0) })} /></div>
                 <div className="static-add-display stake-currency"><span>zł</span></div>
               </div>
               <div className="stake-pills">
-                {[10, 50, 100, 200, 500].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value} zł</span>)}
+                {[10, 50, 100, 500, 1000].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value} zł</span>)}
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-691-add-tip-schema-fix",
-  "version": "691.0.0",
+  "name": "betai-wersja-692-add-tip-stake-duplicate-limit",
+  "version": "692.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

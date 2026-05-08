@@ -1,0 +1,18 @@
+BET+AI — WERSJA 692
+
+Poprawka zakładki Dodaj typ.
+
+Co dodano:
+1. Maksymalna stawka typu to 1000 zł.
+2. Pole stawki automatycznie blokuje większe wartości.
+3. Dodany przycisk szybkiej stawki 1000 zł.
+4. Nie można dodać stawki 0 zł.
+5. Antyspam meczów:
+   - jeden użytkownik nie może dodać tego samego meczu więcej niż raz na dobę,
+   - sprawdzane jest po aktualnie zalogowanym koncie i tabeli tips.
+6. Jeśli użytkownik próbuje dodać ten sam mecz ponownie, pokaże się komunikat:
+   "Ten mecz został już dodany".
+
+SQL:
+- Brak nowego SQL.
+- Wystarczy wgrać wersję 692.
