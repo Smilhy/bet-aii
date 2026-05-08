@@ -24584,3 +24584,52 @@ font[style*="border"]{
   align-items:center!important;
   gap:6px!important;
 }
+
+
+/* WERSJA 686 — prawa kolumna: usunięcie zbędnej górnej ramki nad live chat + równe sklejenie kart */
+.app-shell:not(.no-rightbar-page) .rightbar{
+  gap:12px!important;
+  align-items:stretch!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar > *{
+  width:100%!important;
+  margin:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar > :first-child{
+  margin-top:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card,
+.app-shell:not(.no-rightbar-page) .livechat226-card.betai-right-chat-final{
+  position:relative!important;
+  border-radius:24px!important;
+  padding:14px!important;
+  border:1px solid rgba(45,212,255,.12)!important;
+  background:linear-gradient(180deg,rgba(7,18,29,.98),rgba(3,9,16,.985))!important;
+  box-shadow:0 20px 56px rgba(0,0,0,.28)!important;
+  overflow:hidden!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final::before,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final::after,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card::before,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-card::after{
+  display:none!important;
+  content:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-live-head-final{
+  margin:0 0 10px!important;
+  padding:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-chat-stats-final{
+  margin:0 0 10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel{
+  margin-top:0!important;
+}

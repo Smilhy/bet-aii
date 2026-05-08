@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-685-dm-user-search-alias-fix",
-  "version": "685.0.0",
+  "name": "betai-wersja-686-rightbar-chat-frame-fix",
+  "version": "686.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

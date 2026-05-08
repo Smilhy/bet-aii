@@ -1,0 +1,13 @@
+BET+AI — WERSJA 686
+
+Poprawka wizualna prawej kolumny dashboardu.
+
+Co poprawiono:
+1. Usunięta zbędna dodatkowa górna ramka / obrys nad panelem BETAI LIVE CHAT.
+2. Live chat ma teraz jedną czystą, główną ramkę.
+3. Karty w prawej kolumnie są wyrównane i sklejone równo jedna pod drugą.
+4. Poprawiony został shell live chatu: usunięte dodatkowe klasy card/widget, które mogły dodawać drugi obrys.
+5. Zachowane zostały wszystkie poprzednie funkcje z wersji 685.
+
+SQL: brak nowego SQL.
+Wystarczy wgrać wersję 686.

@@ -1131,7 +1131,7 @@ function LiveChatPanel({ user }) {
   const chatEmojis = ['🔥', '🎯', '💎', '👏', '😂', '😮', '🎉', '🚀', '👀', '🙂', '👍', '❤️']
 
   return (
-    <section className="card widget livechat226-card betai-right-chat-final" id="betaiChatWidget">
+    <section className="livechat226-card betai-right-chat-final" id="betaiChatWidget">
       <div className="betai-live-head-final">
         <div className="betai-live-title-wrap-final">
           <span className="livechat226-title-dot"></span>
