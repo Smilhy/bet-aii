@@ -1,0 +1,26 @@
+BET+AI — WERSJA 711 BETFOLIO FINAL STYLE
+
+Zastosowany wygląd jak z zaakceptowanego mockupu, ale w kolorystyce Bet+AI.
+
+Co zmieniono:
+1. Usunięto napis "Betfolio style".
+2. Lewa kolumna ma teraz sztywny wygląd jak na screenie:
+   - wyszukiwarka,
+   - przycisk "Dodaj inne wydarzenie",
+   - lista sportów,
+   - rozwijany sport,
+   - podpoziomy/kategorie,
+   - przykładowo Tenis -> WTA -> WTA Rome.
+3. Kliknięcie sportu zmienia aktywny sport.
+4. Kliknięcie ligi/kategorii ustawia aktywną ligę i przygotowuje pobieranie meczów.
+5. Centralna lista meczów ma gęsty sportsbookowy wygląd.
+6. Szczegóły meczu i rynki są w stylu zaakceptowanego mockupu.
+7. Prawa kolumna została dostosowana kolorystycznie do strony.
+8. Kolorystyka: ciemny Bet+AI + cyan/teal + żółte CTA.
+
+SQL:
+- brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5.

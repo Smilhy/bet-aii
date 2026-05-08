@@ -25232,3 +25232,348 @@ font[style*="border"]{
   .betfolio-market-options{grid-template-columns:1fr!important}
   .betfolio-inline-two{grid-template-columns:1fr!important}
 }
+
+
+/* ===== WERSJA 711 — finalny wygląd jak na zaakceptowanym mockupie, w kolorach Bet+AI ===== */
+:root{
+  --betai-bg:#040b16;
+  --betai-panel:#0b1729;
+  --betai-panel-2:#111d34;
+  --betai-panel-3:#172541;
+  --betai-line:rgba(48,226,255,.16);
+  --betai-line-soft:rgba(145,169,216,.15);
+  --betai-cyan:#17d8e5;
+  --betai-cyan-2:#22f2ff;
+  --betai-yellow:#f6b400;
+  --betai-yellow-2:#ffca38;
+  --betai-text:#edf6ff;
+  --betai-muted:#94a8c7;
+}
+.add-tip-betfolio-page{
+  background:
+    radial-gradient(circle at 20% 8%,rgba(16,219,230,.10),transparent 26%),
+    radial-gradient(circle at 78% 10%,rgba(19,133,255,.08),transparent 26%),
+    linear-gradient(180deg,#06111e 0%,#030914 100%)!important;
+  min-height:100vh!important;
+  padding:18px 12px 26px!important;
+}
+.betfolio-add-shell{
+  grid-template-columns:300px minmax(0,1fr) 345px!important;
+  gap:14px!important;
+}
+.betfolio-left,.betfolio-center,.betfolio-right{
+  background:linear-gradient(180deg,rgba(15,27,49,.98),rgba(8,16,31,.99))!important;
+  border:1px solid rgba(29,220,235,.18)!important;
+  box-shadow:0 22px 75px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.betfolio-center{
+  padding:18px!important;
+}
+.betfolio-right{
+  background:linear-gradient(180deg,rgba(12,22,43,.99),rgba(8,14,30,.99))!important;
+}
+.betfolio-search-wrap{
+  background:#111c32!important;
+  border:1px solid rgba(122,151,205,.20)!important;
+  border-radius:9px!important;
+}
+.betfolio-search-input{
+  padding:13px 14px!important;
+  font-size:13px!important;
+}
+.betfolio-fetch-btn,
+.betfolio-publish-btn{
+  background:linear-gradient(180deg,var(--betai-yellow-2),var(--betai-yellow))!important;
+  border:0!important;
+  color:#fff!important;
+  box-shadow:0 10px 24px rgba(246,180,0,.22)!important;
+  border-radius:8px!important;
+  font-weight:900!important;
+}
+.sports-accordion-title{
+  color:#cfd8ea!important;
+  font-size:20px!important;
+  font-weight:800!important;
+  margin:8px 0 8px!important;
+  letter-spacing:.02em!important;
+}
+.sports-accordion-list{
+  display:grid!important;
+  gap:7px!important;
+}
+.sport-accordion-item{
+  display:grid!important;
+  gap:6px!important;
+}
+.sport-accordion-head,
+.sport-accordion-children button{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  min-height:44px!important;
+  padding:10px 14px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(255,255,255,.035)!important;
+  background:#202d49!important;
+  color:#c6d0e3!important;
+  font-size:15px!important;
+  font-weight:750!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease!important;
+}
+.sport-accordion-head:hover,
+.sport-accordion-children button:hover{
+  border-color:rgba(29,220,235,.30)!important;
+  color:#f5fbff!important;
+}
+.sport-accordion-item.is-open>.sport-accordion-head{
+  color:var(--betai-yellow)!important;
+  border-color:rgba(29,220,235,.55)!important;
+  background:linear-gradient(180deg,#172844,#13233e)!important;
+  box-shadow:0 0 0 1px rgba(29,220,235,.13)!important;
+}
+.sport-accordion-head b{
+  color:#a9bad1!important;
+  font-size:13px!important;
+}
+.sport-accordion-children{
+  display:grid!important;
+  gap:6px!important;
+  padding-left:14px!important;
+}
+.sport-accordion-children.level-two{
+  padding-left:14px!important;
+  margin-top:0!important;
+}
+.sport-accordion-children button{
+  min-height:39px!important;
+  padding:9px 13px!important;
+  background:#263450!important;
+  border-radius:12px!important;
+  font-size:14px!important;
+  color:#c8d2e2!important;
+}
+.sport-accordion-children button.is-muted{
+  color:#a5b1c6!important;
+}
+.sport-accordion-children button.is-active{
+  color:var(--betai-yellow)!important;
+  background:#273753!important;
+}
+.sport-accordion-children button.league-active{
+  color:#bbffff!important;
+  border-color:rgba(29,220,235,.55)!important;
+  background:linear-gradient(180deg,#19334c,#152b43)!important;
+  box-shadow:inset 0 0 0 1px rgba(29,220,235,.14)!important;
+}
+.betfolio-left-stats .tip-add-plan-pill,
+.betfolio-left-stats .tip-add-usage-pill,
+.betfolio-side-note{
+  background:linear-gradient(180deg,rgba(10,22,42,.95),rgba(7,14,28,.98))!important;
+  border:1px solid rgba(29,220,235,.14)!important;
+  border-radius:14px!important;
+}
+.betfolio-side-note{
+  color:#a5b7cd!important;
+  font-size:12px!important;
+}
+.betfolio-center-header{
+  align-items:flex-start!important;
+  padding-bottom:6px!important;
+}
+.betfolio-center-header h1{
+  font-size:30px!important;
+  color:#f4f8ff!important;
+  text-shadow:0 0 22px rgba(23,216,229,.12)!important;
+}
+.betfolio-center-header p{
+  color:#c0cbdb!important;
+}
+.betfolio-center-badges span{
+  background:#13233d!important;
+  border:1px solid rgba(29,220,235,.13)!important;
+  color:#9fb4d0!important;
+}
+.betfolio-events-head{
+  display:none!important;
+}
+.betfolio-events-list{
+  max-height:430px!important;
+  gap:8px!important;
+  padding-right:4px!important;
+}
+.betfolio-event-row{
+  min-height:58px!important;
+  border-radius:9px!important;
+  padding:8px 10px!important;
+  grid-template-columns:minmax(0,1fr) minmax(430px,auto)!important;
+  background:linear-gradient(180deg,#111d33,#0d182b)!important;
+  border:1px solid rgba(122,151,205,.09)!important;
+}
+.betfolio-event-row.active{
+  border-color:rgba(29,220,235,.88)!important;
+  box-shadow:0 0 0 1px rgba(29,220,235,.25),0 0 24px rgba(29,220,235,.10)!important;
+}
+.betfolio-event-teamline strong,
+.betfolio-event-teamline span{
+  font-size:16px!important;
+  font-weight:900!important;
+  color:#e9f1ff!important;
+}
+.betfolio-event-meta span{
+  font-size:11px!important;
+  color:#97a8bf!important;
+}
+.betfolio-event-odds{
+  display:grid!important;
+  grid-template-columns:104px 104px 104px 78px!important;
+  gap:8px!important;
+}
+.betfolio-odd-box{
+  min-width:0!important;
+  width:100%!important;
+  min-height:36px!important;
+  padding:7px 10px!important;
+  grid-template-columns:20px 1fr!important;
+  background:#172849!important;
+  border-radius:7px!important;
+  border:1px solid rgba(96,132,205,.16)!important;
+}
+.betfolio-odd-box b{
+  color:#f2f6ff!important;
+  font-size:13px!important;
+}
+.betfolio-odd-box span{
+  color:#d8e5ff!important;
+  font-size:12px!important;
+}
+.betfolio-odd-box.active{
+  background:linear-gradient(180deg,var(--betai-yellow-2),var(--betai-yellow))!important;
+  color:#fff!important;
+  border-color:transparent!important;
+}
+.betfolio-more-btn{
+  min-height:36px!important;
+  padding:7px 9px!important;
+  border-radius:7px!important;
+  background:#15223b!important;
+  color:#f4f7ff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+.betfolio-details-wrap{
+  margin-top:18px!important;
+  background:linear-gradient(180deg,#10213a,#0c172b)!important;
+  border:1px solid rgba(29,220,235,.16)!important;
+  border-radius:11px!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.betfolio-details-top{
+  min-height:64px!important;
+  padding:14px 18px!important;
+  border-bottom:1px solid rgba(122,151,205,.13)!important;
+}
+.betfolio-details-top strong{
+  color:#edf6ff!important;
+  font-size:20px!important;
+}
+.betfolio-market-tabs{
+  padding:0 16px!important;
+  border-bottom:1px solid rgba(122,151,205,.10)!important;
+  gap:0!important;
+}
+.betfolio-market-tabs button{
+  background:transparent!important;
+  border:0!important;
+  color:#b7c5d8!important;
+  border-radius:0!important;
+  padding:14px 16px!important;
+  font-size:14px!important;
+}
+.betfolio-market-tabs button.active{
+  color:#fff!important;
+  background:transparent!important;
+  box-shadow:inset 0 -3px 0 var(--betai-yellow)!important;
+}
+.betfolio-market-groups{
+  padding:12px 14px 14px!important;
+  gap:12px!important;
+  max-height:390px!important;
+}
+.betfolio-market-group{
+  background:#101b31!important;
+  border:1px solid rgba(122,151,205,.12)!important;
+  border-radius:9px!important;
+}
+.betfolio-market-group-title strong{
+  color:#dce8f7!important;
+  font-size:12px!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+.betfolio-market-options{
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr))!important;
+}
+.betfolio-market-option{
+  background:#162745!important;
+  border-radius:7px!important;
+  min-height:42px!important;
+}
+.betfolio-market-option.active{
+  background:linear-gradient(180deg,var(--betai-yellow-2),var(--betai-yellow))!important;
+  border-color:transparent!important;
+}
+.betfolio-ticket-tabs button{
+  background:#0f1b31!important;
+  border:1px solid rgba(122,151,205,.14)!important;
+  color:#f0f6ff!important;
+}
+.betfolio-ticket-tabs button.active{
+  background:linear-gradient(180deg,var(--betai-yellow-2),var(--betai-yellow))!important;
+  color:#fff!important;
+}
+.betfolio-ticket-card,
+.betfolio-ticket-row,
+.betfolio-total-box{
+  background:#0d172b!important;
+  border:1px solid rgba(122,151,205,.13)!important;
+  border-radius:11px!important;
+}
+.betfolio-ticket-card{
+  padding:12px!important;
+}
+.betfolio-ticket-card strong{
+  color:#f0f6ff!important;
+}
+.betfolio-ticket-row label{
+  color:#8da0bd!important;
+}
+.betfolio-ticket-profit,
+.betfolio-ticket-summary small{
+  color:#95a8c5!important;
+}
+.betfolio-total-box b,
+.betfolio-ticket-profit b{
+  color:var(--betai-cyan-2)!important;
+}
+.stake-pills span.active{
+  background:var(--betai-cyan)!important;
+  color:#04101d!important;
+  border-color:transparent!important;
+}
+.confidence-head b,
+.betfolio-total-box b{
+  color:var(--betai-cyan-2)!important;
+}
+@media(max-width:1180px){
+  .betfolio-add-shell{grid-template-columns:1fr!important}
+  .betfolio-event-row{grid-template-columns:1fr!important}
+  .betfolio-event-odds{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .betfolio-event-odds{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

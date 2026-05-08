@@ -4534,6 +4534,35 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
   }
 
+
+  function selectSidebarSport(nextSport) {
+    if (nextSport === form.sport) return
+    chooseSport(nextSport)
+  }
+
+  function selectSidebarLeague(nextSport, nextCountry, nextLeague) {
+    const nextSportData = sportsbook[nextSport] || { leagues: {}, countries: {} }
+    const nextCountryMap = nextSportData.countries || null
+    const nextLeagueSource = nextCountryMap ? (nextCountryMap[nextCountry] || {}) : (nextSportData.leagues || {})
+    const nextMatch = (nextLeagueSource?.[nextLeague] || [])[0]
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+
+    setLiveFixtures([])
+    setLiveFixturesStatus('Kliknij „Pobierz mecze”, aby załadować kursy dla wybranej ligi.')
+    updateForm({
+      sport: nextSport,
+      country: nextCountry || 'Wszystkie',
+      league: nextLeague,
+      matchId: nextMatch?.id || form.matchId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+    })
+  }
+
   async function fetchLiveFixturesForDay() {
     setLiveFixturesLoading(true)
     setLiveFixturesStatus('Pobieram mecze i kursy...')
@@ -4908,45 +4937,85 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   return (
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
       <div className="betfolio-add-shell">
-        <aside className="betfolio-left glass-ultra-panel">
-          <div className="betfolio-side-top">
-            <div className="betfolio-mini-brand">betfolio style</div>
-            <button type="button" className="static-add-hints betfolio-side-hints" onClick={() => setShowHints(prev => !prev)}>{showHints ? 'Ukryj' : 'Wskazówki'}</button>
-          </div>
-
+        <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
           <div className="betfolio-search-wrap">
             <input
               className="betfolio-search-input"
-              placeholder="Wyszukaj mecz lub drużynę"
+              placeholder="Wyszukaj mecz lub zawody"
               value={sidebarSearch}
               onChange={(e) => setSidebarSearch(e.target.value)}
             />
           </div>
 
           <button type="button" className="betfolio-fetch-btn" onClick={fetchLiveFixturesForDay} disabled={liveFixturesLoading}>
-            {liveFixturesLoading ? 'Pobieram mecze…' : 'Dodaj / pobierz wydarzenia'}
+            {liveFixturesLoading ? 'Pobieram mecze…' : 'Dodaj inne wydarzenie'}
           </button>
 
-          <div className="betfolio-sidebar-block">
-            <div className="betfolio-side-caption">SPORT</div>
-            <div className="betfolio-side-field">
-              <select className="static-add-select" value={form.sport} onChange={(e) => chooseSport(e.target.value)}>
-                {sportKeys.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
+          <div className="sports-accordion-title">SPORT</div>
+
+          <div className="sports-accordion-list">
+            <div className={`sport-accordion-item ${form.sport === 'Piłka nożna' ? 'is-open' : ''}`}>
+              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Piłka nożna')}>
+                <span>⚽ Piłka nożna</span><b>⌄</b>
+              </button>
+              {form.sport === 'Piłka nożna' && (
+                <div className="sport-accordion-children">
+                  <button type="button" className={currentCountry === 'Anglia' ? 'is-active' : ''} onClick={() => chooseCountry('Anglia')}>🏴 Anglia</button>
+                  {currentCountry === 'Anglia' && (
+                    <div className="sport-accordion-children level-two">
+                      {['Premier League', 'Championship', 'League One', 'League Two'].map(label => (
+                        <button type="button" key={label} className={currentLeague === label ? 'is-active league-active' : ''} onClick={() => selectSidebarLeague('Piłka nożna', 'Anglia', label)}>{label}</button>
+                      ))}
+                    </div>
+                  )}
+                  <button type="button" className={currentCountry === 'Hiszpania' ? 'is-active' : ''} onClick={() => chooseCountry('Hiszpania')}>🇪🇸 Hiszpania</button>
+                  <button type="button" className={currentCountry === 'Włochy' ? 'is-active' : ''} onClick={() => chooseCountry('Włochy')}>🇮🇹 Włochy</button>
+                  <button type="button" className={currentCountry === 'Niemcy' ? 'is-active' : ''} onClick={() => chooseCountry('Niemcy')}>🇩🇪 Niemcy</button>
+                  <button type="button" className={currentCountry === 'Francja' ? 'is-active' : ''} onClick={() => chooseCountry('Francja')}>🇫🇷 Francja</button>
+                </div>
+              )}
             </div>
-            <div className="betfolio-side-field">
-              <select className="static-add-select" value={currentCountry} onChange={(e) => chooseCountry(e.target.value)}>
-                {countryOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
+
+            <div className={`sport-accordion-item ${form.sport === 'Tenis' ? 'is-open' : ''}`}>
+              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Tenis')}>
+                <span>🎾 Tenis</span><b>⌃</b>
+              </button>
+              {form.sport === 'Tenis' && (
+                <div className="sport-accordion-children">
+                  <button type="button" className="is-muted">Wszystkie</button>
+                  <button type="button">Challenger</button>
+                  <button type="button" className="is-active">WTA</button>
+                  <div className="sport-accordion-children level-two">
+                    {['WTA Rome', 'WTA Madryt', 'WTA Paryż', 'WTA Berlin'].map(label => (
+                      <button type="button" key={label} className={currentLeague === label ? 'is-active league-active' : ''} onClick={() => selectSidebarLeague('Tenis', 'Wszystkie', label)}>{label}</button>
+                    ))}
+                  </div>
+                  <button type="button">ITF</button>
+                  <button type="button">ATP</button>
+                </div>
+              )}
             </div>
-            <div className="betfolio-side-field">
-              <select className="static-add-select" value={currentLeague} onChange={(e) => chooseLeague(e.target.value)}>
-                {leagueOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
-            <div className="betfolio-side-field">
-              <input type="date" className="static-add-input" value={liveDate} onChange={(e) => setLiveDate(e.target.value)} />
-            </div>
+
+            {[
+              ['Koszykówka', '🏀'],
+              ['Hokej', '🏒'],
+              ['MMA', '🥊'],
+              ['E-sport', '🎮'],
+              ['Siatkówka', '🏐'],
+              ['Boks', '🥊'],
+              ['Piłka ręczna', '🤾'],
+              ['Krykiet', '🏏'],
+              ['Rugby', '🏉'],
+              ['Rugby League', '🏉'],
+              ['Baseball', '⚾'],
+              ['Dart', '🎯'],
+            ].map(([name, icon]) => (
+              <div key={name} className={`sport-accordion-item ${form.sport === name ? 'is-open' : ''}`}>
+                <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport(name)}>
+                  <span>{icon} {name}</span><b>⌄</b>
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className="betfolio-left-stats">
@@ -4961,19 +5030,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-side-note">
-            {liveFixturesStatus || 'Układ inspirowany Betfolio. Najpierw wybierz sport / kraj / ligę, potem kliknij kurs albo przycisk „Więcej”.'}
+            {liveFixturesStatus || 'Kliknij sport → kategorię/państwo → ligę, a potem pobierz mecze i kursy.'}
           </div>
-
-          {showHints && (
-            <div className="tip-hints-box betfolio-hints-box">
-              <ul>
-                <li>Kliknięcie kursu 1 / X / 2 automatycznie ustawia typ i kurs.</li>
-                <li>Przycisk „Więcej” otwiera niżej pełne rynki meczu.</li>
-                <li>Prawa kolumna służy do publikacji typu, a nie do realnego kuponu bukmacherskiego.</li>
-                <li>Mecze startujące za mniej niż 1 minutę są ukryte.</li>
-              </ul>
-            </div>
-          )}
         </aside>
 
         <div className="betfolio-center glass-ultra-panel">
@@ -4983,7 +5041,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <span className="static-add-title-icon">⬡</span>
                 <h1>Dodaj nowy typ</h1>
               </div>
-              <p>Wybierz wydarzenie jak w Betfolio: lista meczów + szybkie kursy + szczegóły rynku, a po prawej od razu publikacja typu.</p>
+              <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
             </div>
             <div className="betfolio-center-badges">
               <span>{form.sport}</span>
