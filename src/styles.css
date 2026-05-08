@@ -24789,3 +24789,102 @@ font[style*="border"]{
 
 /* WERSJA 695 — usunięcie napisu nad analizą AI */
 .ai-analysis-simple{gap:0!important}
+
+
+/* WERSJA 696 — usunięto sekcję Analiza AI z Dodaj typ */
+
+
+/* WERSJA 697 — mocniejsze podkreślenie wyboru Darmowy / Premium */
+.publish-card{
+  position:relative!important;
+  padding:20px 22px!important;
+  border:1px solid rgba(40,225,255,.28)!important;
+  background:linear-gradient(135deg,rgba(7,18,28,.96),rgba(6,24,36,.98))!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.03), 0 0 0 1px rgba(24,218,255,.05)!important;
+}
+.publish-card::before{
+  content:"WYBÓR WIDOCZNOŚCI TYPU";
+  position:absolute!important;
+  right:20px!important;
+  top:14px!important;
+  padding:7px 12px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(40,225,255,.18)!important;
+  background:rgba(19,224,255,.08)!important;
+  color:#7ff7ff!important;
+  font-size:10px!important;
+  letter-spacing:.14em!important;
+  font-weight:900!important;
+}
+.publish-card p{font-size:13px!important;color:#b0c1cf!important;font-weight:600!important}
+.publish-actions{align-items:stretch!important;gap:18px!important}
+.publish-choice-zone{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  min-width:min(100%,360px)!important;
+}
+.publish-toggle{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:12px!important;
+  padding:10px!important;
+  border-radius:20px!important;
+  border:1px solid rgba(45,212,255,.14)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.publish-toggle button{
+  min-height:56px!important;
+  padding:0 18px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(45,212,255,.16)!important;
+  background:rgba(7,18,28,.92)!important;
+  color:#d6e6f0!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease!important;
+}
+.publish-toggle button:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(45,212,255,.35)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.22)!important;
+}
+.publish-toggle button.active{
+  background:linear-gradient(180deg,#1ce6dd,#0fb7ff)!important;
+  color:#06141f!important;
+  border-color:transparent!important;
+  box-shadow:0 12px 26px rgba(12,221,255,.30), inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+.publish-choice-summary{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-height:40px!important;
+  padding:0 14px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(45,212,255,.14)!important;
+  background:rgba(45,212,255,.05)!important;
+  color:#9db3c2!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+.publish-choice-summary b{color:#7ff7ff!important;font-size:14px!important}
+.publish-btn{
+  min-width:260px!important;
+  min-height:72px!important;
+  align-self:stretch!important;
+  font-size:22px!important;
+  font-weight:900!important;
+  border-radius:22px!important;
+  box-shadow:0 18px 34px rgba(25,209,255,.24)!important;
+}
+@media(max-width:900px){
+  .publish-card::before{position:static!important;display:inline-flex!important;margin-bottom:10px!important}
+  .publish-actions{width:100%!important}
+  .publish-choice-zone{min-width:100%!important;width:100%!important}
+  .publish-toggle{grid-template-columns:1fr!important}
+  .publish-toggle button{min-height:52px!important}
+  .publish-btn{width:100%!important;min-width:0!important;min-height:62px!important;font-size:19px!important}
+}

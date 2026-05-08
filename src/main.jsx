@@ -2097,16 +2097,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <small>{String(form.description || '').length} / 500</small>
               </div>
             </div>
-
             <div className="static-add-card">
-              <span className="static-add-label">9. Analiza AI</span>
-              <div className="ai-analysis-simple">
-                <textarea className="static-add-textarea-input ai-analysis-textarea" maxLength={500} value={form.aiAnalysis} onChange={(e) => updateForm({ aiAnalysis: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">10. Poziom pewności</span>
+              <span className="static-add-label">9. Poziom pewności</span>
               <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
               <div className="confidence-adjuster">
                 <button type="button" onClick={() => updateForm({ confidence: Math.max(15, confidencePercent - 1) })}>−</button>
@@ -2120,7 +2112,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card static-span-two tip-single-price-card">
-              <span className="static-add-label">11. Cena singla premium</span>
+              <span className="static-add-label">10. Cena singla premium</span>
               <div className="tip-price-config">
                 <div>
                   <strong>Ustal cenę pojedynczego typu</strong>
@@ -2140,13 +2132,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
             <div className="static-add-card static-span-two publish-card">
               <div>
-                <span className="static-add-label">12. Darmowy / Premium</span>
+                <span className="static-add-label">11. Darmowy / Premium</span>
                 <p>Wybierz widoczność typu dla użytkowników</p>
               </div>
               <div className="publish-actions">
-                <div className="publish-toggle">
-                  <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
-                  <button type="button" className={form.accessType === 'premium' ? 'active' : ''} onClick={() => toggleAccess('premium')}>Premium 👑</button>
+                <div className="publish-choice-zone">
+                  <div className="publish-toggle">
+                    <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
+                    <button type="button" className={form.accessType === 'premium' ? 'active' : ''} onClick={() => toggleAccess('premium')}>Premium 👑</button>
+                  </div>
+                  <div className="publish-choice-summary">Wybrano: <b>{form.accessType === 'premium' ? 'Premium 👑' : 'Darmowy'}</b></div>
                 </div>
                 <button type="button" className="publish-btn" disabled={saving || limitReached} onClick={handlePublish}>{saving ? 'Publikowanie...' : 'Opublikuj typ ✈'}</button>
               </div>
