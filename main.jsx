@@ -1507,7 +1507,2651 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             { market: 'BTTS', pick: 'Obie strzelą', odds: 1.65, confidence: 74 },
           ]}
         ]
+      },
+      countries: {
+      "Anglia": {
+            "Premier League": [
+                  {
+                        "id": "eng-pl-mci-ars",
+                        "home": "Manchester City",
+                        "away": "Arsenal",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Manchester City wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Championship": [
+                  {
+                        "id": "eng-ch-lee-sou",
+                        "home": "Leeds United",
+                        "away": "Southampton",
+                        "date": "25.05.2025",
+                        "time": "19:45",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Leeds United wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "League One": [
+                  {
+                        "id": "eng-l1-der-bol",
+                        "home": "Derby County",
+                        "away": "Bolton",
+                        "date": "26.05.2025",
+                        "time": "16:00",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Derby County wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "League Two": [
+                  {
+                        "id": "eng-l2-wre-mkd",
+                        "home": "Wrexham",
+                        "away": "MK Dons",
+                        "date": "26.05.2025",
+                        "time": "18:00",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Wrexham wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "National League": [
+                  {
+                        "id": "eng-nl-chf-old",
+                        "home": "Chesterfield",
+                        "away": "Oldham",
+                        "date": "27.05.2025",
+                        "time": "20:00",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Chesterfield wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Polska": {
+            "Ekstraklasa": [
+                  {
+                        "id": "pol-ek-leg-lech",
+                        "home": "Legia Warszawa",
+                        "away": "Lech Poznań",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Legia Warszawa wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "1 Liga": [
+                  {
+                        "id": "pol-1-wis-ark",
+                        "home": "Wisła Kraków",
+                        "away": "Arka Gdynia",
+                        "date": "25.05.2025",
+                        "time": "20:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Wisła Kraków wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2 Liga": [
+                  {
+                        "id": "pol-2-kks-pol",
+                        "home": "KKS Kalisz",
+                        "away": "Polonia Bytom",
+                        "date": "26.05.2025",
+                        "time": "18:00",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "KKS Kalisz wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "3 Liga": [
+                  {
+                        "id": "pol-3-wie-leg2",
+                        "home": "Wieczysta Kraków",
+                        "away": "Legia II",
+                        "date": "26.05.2025",
+                        "time": "17:00",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Wieczysta Kraków wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "4 Liga": [
+                  {
+                        "id": "pol-4-lok-vic",
+                        "home": "Lokomotiv Warszawa",
+                        "away": "Victoria Sulejówek",
+                        "date": "27.05.2025",
+                        "time": "18:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Lokomotiv Warszawa wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Hiszpania": {
+            "La Liga": [
+                  {
+                        "id": "esp-ll-rma-bar",
+                        "home": "Real Madryt",
+                        "away": "Barcelona",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Real Madryt wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "La Liga 2": [
+                  {
+                        "id": "esp-l2-eib-lev",
+                        "home": "Eibar",
+                        "away": "Levante",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Eibar wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Primera RFEF": [
+                  {
+                        "id": "esp-rf1-dep-cel",
+                        "home": "Deportivo",
+                        "away": "Celta B",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Deportivo wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Segunda RFEF": [
+                  {
+                        "id": "esp-rf2-her-mur",
+                        "home": "Hercules",
+                        "away": "Real Murcia",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Hercules wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Niemcy": {
+            "Bundesliga": [
+                  {
+                        "id": "ger-bun-bay-bvb",
+                        "home": "Bayern Monachium",
+                        "away": "Borussia Dortmund",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Bayern Monachium wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2. Bundesliga": [
+                  {
+                        "id": "ger-2-hsv-fcn",
+                        "home": "Hamburger SV",
+                        "away": "Nurnberg",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Hamburger SV wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "3. Liga": [
+                  {
+                        "id": "ger-3-dre-1860",
+                        "home": "Dynamo Dresden",
+                        "away": "1860 Munich",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Dynamo Dresden wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Regionalliga": [
+                  {
+                        "id": "ger-reg-rot-aac",
+                        "home": "Rot-Weiss Essen",
+                        "away": "Alemannia Aachen",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Rot-Weiss Essen wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Włochy": {
+            "Serie A": [
+                  {
+                        "id": "ita-sa-int-mil",
+                        "home": "Inter Mediolan",
+                        "away": "AC Milan",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Inter Mediolan wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Serie B": [
+                  {
+                        "id": "ita-sb-par-pal",
+                        "home": "Parma",
+                        "away": "Palermo",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Parma wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Serie C": [
+                  {
+                        "id": "ita-sc-pad-cat",
+                        "home": "Padova",
+                        "away": "Catania",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Padova wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Serie D": [
+                  {
+                        "id": "ita-sd-luc-pis",
+                        "home": "Lucchese",
+                        "away": "Pistoiese",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Lucchese wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Francja": {
+            "Ligue 1": [
+                  {
+                        "id": "fra-l1-psg-om",
+                        "home": "PSG",
+                        "away": "Marsylia",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "PSG wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Ligue 2": [
+                  {
+                        "id": "fra-l2-bor-sai",
+                        "home": "Bordeaux",
+                        "away": "Saint-Etienne",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Bordeaux wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "National": [
+                  {
+                        "id": "fra-nat-red-nan",
+                        "home": "Red Star",
+                        "away": "Nancy",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Red Star wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "National 2": [
+                  {
+                        "id": "fra-n2-rou-cha",
+                        "home": "Rouen",
+                        "away": "Chambly",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Rouen wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Holandia": {
+            "Eredivisie": [
+                  {
+                        "id": "ned-ere-ajax-psv",
+                        "home": "Ajax",
+                        "away": "PSV",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Ajax wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Eerste Divisie": [
+                  {
+                        "id": "ned-eer-gra-cam",
+                        "home": "De Graafschap",
+                        "away": "Cambuur",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "De Graafschap wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Tweede Divisie": [
+                  {
+                        "id": "ned-twe-kat-spa",
+                        "home": "Katwijk",
+                        "away": "Spakenburg",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Katwijk wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Portugalia": {
+            "Primeira Liga": [
+                  {
+                        "id": "por-pri-ben-por",
+                        "home": "Benfica",
+                        "away": "Porto",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Benfica wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Liga Portugal 2": [
+                  {
+                        "id": "por-l2-lei-mar",
+                        "home": "Leiria",
+                        "away": "Maritimo",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Leiria wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Liga 3": [
+                  {
+                        "id": "por-l3-bra2-spo2",
+                        "home": "Braga B",
+                        "away": "Sporting B",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Braga B wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Belgia": {
+            "Jupiler Pro League": [
+                  {
+                        "id": "bel-jpl-bru-and",
+                        "home": "Club Brugge",
+                        "away": "Anderlecht",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Club Brugge wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Challenger Pro League": [
+                  {
+                        "id": "bel-cpl-bee-lie",
+                        "home": "Beerschot",
+                        "away": "Liege",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Beerschot wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "1st National": [
+                  {
+                        "id": "bel-nat-lok-den",
+                        "home": "Lokeren",
+                        "away": "Dender",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Lokeren wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Szkocja": {
+            "Premiership": [
+                  {
+                        "id": "sco-pre-cel-ran",
+                        "home": "Celtic",
+                        "away": "Rangers",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Celtic wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Championship": [
+                  {
+                        "id": "sco-ch-duu-rai",
+                        "home": "Dundee United",
+                        "away": "Raith Rovers",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Dundee United wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "League One": [
+                  {
+                        "id": "sco-l1-fal-ham",
+                        "home": "Falkirk",
+                        "away": "Hamilton",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Falkirk wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "League Two": [
+                  {
+                        "id": "sco-l2-spa-dum",
+                        "home": "Spartans",
+                        "away": "Dumbarton",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Spartans wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Turcja": {
+            "Süper Lig": [
+                  {
+                        "id": "tur-sup-gal-fen",
+                        "home": "Galatasaray",
+                        "away": "Fenerbahce",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Galatasaray wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "1. Lig": [
+                  {
+                        "id": "tur-1-eyu-goz",
+                        "home": "Eyupspor",
+                        "away": "Goztepe",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Eyupspor wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2. Lig": [
+                  {
+                        "id": "tur-2-ank-adi",
+                        "home": "Ankaraspor",
+                        "away": "Adiyaman",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Ankaraspor wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Grecja": {
+            "Super League": [
+                  {
+                        "id": "gre-sl-oly-pan",
+                        "home": "Olympiakos",
+                        "away": "Panathinaikos",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Olympiakos wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Super League 2": [
+                  {
+                        "id": "gre-sl2-aek2-paok2",
+                        "home": "AEK B",
+                        "away": "PAOK B",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "AEK B wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Szwecja": {
+            "Allsvenskan": [
+                  {
+                        "id": "swe-all-mal-aik",
+                        "home": "Malmo FF",
+                        "away": "AIK",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Malmo FF wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Superettan": [
+                  {
+                        "id": "swe-sup-ore-ost",
+                        "home": "Orebro",
+                        "away": "Osters",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Orebro wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Division 1": [
+                  {
+                        "id": "swe-d1-ume-sand",
+                        "home": "Umea",
+                        "away": "Sandviken",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Umea wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Norwegia": {
+            "Eliteserien": [
+                  {
+                        "id": "nor-eli-bod-mol",
+                        "home": "Bodo/Glimt",
+                        "away": "Molde",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Bodo/Glimt wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "OBOS-ligaen": [
+                  {
+                        "id": "nor-obos-start-ran",
+                        "home": "Start",
+                        "away": "Ranheim",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Start wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "PostNord-ligaen": [
+                  {
+                        "id": "nor-post-eid-kvi",
+                        "home": "Eidsvold",
+                        "away": "Kvik Halden",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Eidsvold wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Dania": {
+            "Superliga": [
+                  {
+                        "id": "den-sup-fck-bro",
+                        "home": "FC Kopenhaga",
+                        "away": "Brondby",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "FC Kopenhaga wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "1st Division": [
+                  {
+                        "id": "den-1-son-hob",
+                        "home": "Sonderjyske",
+                        "away": "Hobro",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Sonderjyske wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2nd Division": [
+                  {
+                        "id": "den-2-ros-ab",
+                        "home": "Roskilde",
+                        "away": "AB Copenhagen",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Roskilde wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Szwajcaria": {
+            "Super League": [
+                  {
+                        "id": "sui-sl-you-bas",
+                        "home": "Young Boys",
+                        "away": "Basel",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Young Boys wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Challenge League": [
+                  {
+                        "id": "sui-cl-sio-thu",
+                        "home": "Sion",
+                        "away": "Thun",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Sion wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Promotion League": [
+                  {
+                        "id": "sui-pl-bav-bie",
+                        "home": "Bavois",
+                        "away": "Biel",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Bavois wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Austria": {
+            "Bundesliga": [
+                  {
+                        "id": "aut-bun-sal-rap",
+                        "home": "RB Salzburg",
+                        "away": "Rapid Wien",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "RB Salzburg wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2. Liga": [
+                  {
+                        "id": "aut-2-gak-rie",
+                        "home": "GAK",
+                        "away": "Ried",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "GAK wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Regionalliga": [
+                  {
+                        "id": "aut-reg-vie-leo",
+                        "home": "Vienna",
+                        "away": "Leoben",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Vienna wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Czechy": {
+            "1. Liga": [
+                  {
+                        "id": "cze-1-spa-sla",
+                        "home": "Sparta Praga",
+                        "away": "Slavia Praga",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Sparta Praga wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2. Liga": [
+                  {
+                        "id": "cze-2-brn-duk",
+                        "home": "Zbrojovka Brno",
+                        "away": "Dukla Praga",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Zbrojovka Brno wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "ČFL/MSFL": [
+                  {
+                        "id": "cze-3-vik-zli2",
+                        "home": "Viktoria Zizkov",
+                        "away": "Zlin B",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Viktoria Zizkov wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Słowacja": {
+            "Nike Liga": [
+                  {
+                        "id": "svk-nike-slo-zil",
+                        "home": "Slovan Bratysława",
+                        "away": "Zilina",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Slovan Bratysława wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "2. Liga": [
+                  {
+                        "id": "svk-2-kos-pre",
+                        "home": "Kosice",
+                        "away": "Presov",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Kosice wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Ukraina": {
+            "Premier League": [
+                  {
+                        "id": "ukr-pl-sha-dyn",
+                        "home": "Shakhtar Donetsk",
+                        "away": "Dynamo Kijów",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Shakhtar Donetsk wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Persha Liga": [
+                  {
+                        "id": "ukr-1-kar-met",
+                        "home": "Karpaty Lwów",
+                        "away": "Metalist",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Karpaty Lwów wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Rumunia": {
+            "Liga I": [
+                  {
+                        "id": "rou-l1-fcs-cfr",
+                        "home": "FCSB",
+                        "away": "CFR Cluj",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "FCSB wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Liga II": [
+                  {
+                        "id": "rou-l2-ste-csa",
+                        "home": "Steaua Bucuresti",
+                        "away": "CSM Resita",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Steaua Bucuresti wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Chorwacja": {
+            "HNL": [
+                  {
+                        "id": "cro-hnl-din-haj",
+                        "home": "Dinamo Zagrzeb",
+                        "away": "Hajduk Split",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Dinamo Zagrzeb wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Prva NL": [
+                  {
+                        "id": "cro-2-var-dug",
+                        "home": "Varazdin",
+                        "away": "Dugopolje",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Varazdin wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Serbia": {
+            "SuperLiga": [
+                  {
+                        "id": "srb-sl-crv-par",
+                        "home": "Crvena Zvezda",
+                        "away": "Partizan",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Crvena Zvezda wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Prva Liga": [
+                  {
+                        "id": "srb-1-rad-gra",
+                        "home": "Radnicki",
+                        "away": "Graficar",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Radnicki wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "USA": {
+            "MLS": [
+                  {
+                        "id": "usa-mls-mia-lafc",
+                        "home": "Inter Miami",
+                        "away": "LAFC",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Inter Miami wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "USL Championship": [
+                  {
+                        "id": "usa-usl-lou-phx",
+                        "home": "Louisville City",
+                        "away": "Phoenix Rising",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Louisville City wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "USL League One": [
+                  {
+                        "id": "usa-usl1-gre-omaha",
+                        "home": "Greenville",
+                        "away": "Union Omaha",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Greenville wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Brazylia": {
+            "Serie A": [
+                  {
+                        "id": "bra-a-fla-pal",
+                        "home": "Flamengo",
+                        "away": "Palmeiras",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Flamengo wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Serie B": [
+                  {
+                        "id": "bra-b-san-spo",
+                        "home": "Santos",
+                        "away": "Sport Recife",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Santos wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Serie C": [
+                  {
+                        "id": "bra-c-rem-naut",
+                        "home": "Remo",
+                        "away": "Nautico",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Remo wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Argentyna": {
+            "Primera División": [
+                  {
+                        "id": "arg-pd-boc-riv",
+                        "home": "Boca Juniors",
+                        "away": "River Plate",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Boca Juniors wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Primera Nacional": [
+                  {
+                        "id": "arg-pn-cha-qui",
+                        "home": "Chacarita",
+                        "away": "Quilmes",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Chacarita wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Meksyk": {
+            "Liga MX": [
+                  {
+                        "id": "mex-lmx-ame-tig",
+                        "home": "Club America",
+                        "away": "Tigres",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Club America wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Liga de Expansión": [
+                  {
+                        "id": "mex-exp-atl-leo",
+                        "home": "Atlante",
+                        "away": "Leones Negros",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Atlante wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Japonia": {
+            "J1 League": [
+                  {
+                        "id": "jpn-j1-mar-ura",
+                        "home": "Yokohama F. Marinos",
+                        "away": "Urawa Reds",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Yokohama F. Marinos wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "J2 League": [
+                  {
+                        "id": "jpn-j2-veg-jef",
+                        "home": "Vegalta Sendai",
+                        "away": "JEF United",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Vegalta Sendai wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "J3 League": [
+                  {
+                        "id": "jpn-j3-gif-nar",
+                        "home": "Gifu",
+                        "away": "Nara Club",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Gifu wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Korea Południowa": {
+            "K League 1": [
+                  {
+                        "id": "kor-k1-uls-seo",
+                        "home": "Ulsan Hyundai",
+                        "away": "FC Seoul",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Ulsan Hyundai wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "K League 2": [
+                  {
+                        "id": "kor-k2-bus-jeo",
+                        "home": "Busan IPark",
+                        "away": "Jeonnam Dragons",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Busan IPark wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
+      },
+      "Arabia Saudyjska": {
+            "Saudi Pro League": [
+                  {
+                        "id": "sau-spl-hil-nas",
+                        "home": "Al Hilal",
+                        "away": "Al Nassr",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Al Hilal wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ],
+            "Division 1": [
+                  {
+                        "id": "sau-d1-qad-oro",
+                        "home": "Al Qadsiah",
+                        "away": "Al Orobah",
+                        "date": "25.05.2025",
+                        "time": "17:30",
+                        "markets": [
+                              {
+                                    "market": "Wynik końcowy",
+                                    "pick": "Al Qadsiah wygra",
+                                    "odds": 1.72,
+                                    "confidence": 72
+                              },
+                              {
+                                    "market": "Gole",
+                                    "pick": "Powyżej 2.5 gola",
+                                    "odds": 1.8,
+                                    "confidence": 70
+                              },
+                              {
+                                    "market": "BTTS",
+                                    "pick": "Obie strzelą",
+                                    "odds": 1.68,
+                                    "confidence": 66
+                              }
+                        ]
+                  }
+            ]
       }
+}
+
     },
     'Koszykówka': {
       leagues: {
@@ -1662,6 +4306,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   const [form, setForm] = useState({
     sport: defaultSport,
+    country: 'Anglia',
     league: defaultLeague,
     matchId: defaultMatch?.id || 'mci-ars',
     market: defaultMarket.market,
@@ -1683,9 +4328,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [showHints, setShowHints] = useState(false)
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
-  const leagueOptions = Object.keys(sportData.leagues || {})
+  const countryMap = sportData.countries || null
+  const countryOptions = countryMap ? Object.keys(countryMap) : ['Wszystkie']
+  const currentCountry = countryMap ? (countryOptions.includes(form.country) ? form.country : countryOptions[0]) : 'Wszystkie'
+  const activeLeagues = countryMap ? (countryMap[currentCountry] || {}) : (sportData.leagues || {})
+  const leagueOptions = Object.keys(activeLeagues || {})
   const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
-  const matchOptions = sportData.leagues?.[currentLeague] || []
+  const matchOptions = activeLeagues?.[currentLeague] || []
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || defaultMatch
   const marketOptions = selectedMatch?.markets || [defaultMarket]
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
@@ -1693,7 +4342,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   useEffect(() => {
     if (!leagueOptions.includes(form.league)) {
       const nextLeague = leagueOptions[0] || ''
-      const nextMatch = (sportData.leagues?.[nextLeague] || [])[0]
+      const nextMatch = (activeLeagues?.[nextLeague] || [])[0]
       const nextMarket = nextMatch?.markets?.[0] || defaultMarket
       setForm(prev => ({
         ...prev,
@@ -1841,11 +4490,34 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseSport(nextSport) {
-    const nextLeague = Object.keys(sportsbook[nextSport]?.leagues || {})[0] || ''
-    const nextMatch = (sportsbook[nextSport]?.leagues?.[nextLeague] || [])[0]
+    const nextSportData = sportsbook[nextSport] || { leagues: {} }
+    const nextCountryMap = nextSportData.countries || null
+    const nextCountry = nextCountryMap ? Object.keys(nextCountryMap)[0] : 'Wszystkie'
+    const nextLeagueSource = nextCountryMap ? (nextCountryMap[nextCountry] || {}) : (nextSportData.leagues || {})
+    const nextLeague = Object.keys(nextLeagueSource || {})[0] || ''
+    const nextMatch = (nextLeagueSource?.[nextLeague] || [])[0]
     const nextMarket = nextMatch?.markets?.[0] || defaultMarket
     updateForm({
       sport: nextSport,
+      country: nextCountry,
+      league: nextLeague,
+      matchId: nextMatch?.id || form.matchId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+    })
+  }
+
+  function chooseCountry(nextCountry) {
+    const nextLeagueSource = countryMap ? (countryMap[nextCountry] || {}) : (sportData.leagues || {})
+    const nextLeague = Object.keys(nextLeagueSource || {})[0] || ''
+    const nextMatch = (nextLeagueSource?.[nextLeague] || [])[0]
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+    updateForm({
+      country: nextCountry,
       league: nextLeague,
       matchId: nextMatch?.id || form.matchId,
       market: nextMarket.market,
@@ -1858,7 +4530,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseLeague(nextLeague) {
-    const nextMatch = (sportData.leagues?.[nextLeague] || [])[0]
+    const nextMatch = (activeLeagues?.[nextLeague] || [])[0]
     const nextMarket = nextMatch?.markets?.[0] || defaultMarket
     updateForm({
       league: nextLeague,
@@ -2155,7 +4827,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">2. Liga</span>
+              <span className="static-add-label">2. Państwo</span>
+              <div className="static-add-display form-field-display">
+                <select className="static-add-select" value={currentCountry} onChange={(e) => chooseCountry(e.target.value)}>
+                  {countryOptions.map(option => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="static-add-card">
+              <span className="static-add-label">3. Liga</span>
               <div className="static-add-display form-field-display">
                 <select className="static-add-select" value={currentLeague} onChange={(e) => chooseLeague(e.target.value)}>
                   {leagueOptions.map(option => <option key={option} value={option}>{option}</option>)}
@@ -2164,7 +4845,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">3. Mecz</span>
+              <span className="static-add-label">4. Mecz</span>
               <div className="static-add-display form-field-display">
                 <select className="static-add-select" value={selectedMatch?.id || ''} onChange={(e) => chooseMatch(e.target.value)}>
                   {matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>)}
@@ -2173,7 +4854,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">4. Typ zakładu</span>
+              <span className="static-add-label">5. Typ zakładu</span>
               <div className="static-add-stack">
                 <div className="static-add-display form-field-display">
                   <select className="static-add-select" value={`${form.market}|||${form.betType}`} onChange={(e) => chooseMarket(e.target.value)}>
@@ -2185,7 +4866,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">5. Kurs (średni)</span>
+              <span className="static-add-label">6. Kurs (średni)</span>
               <div className="static-add-inline-row">
                 <div className="static-add-display odds-display form-field-display"><input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} /></div>
                 <div className="auto-pill">✦ Rynek sugeruje <i>{selectedMarket?.odds || form.odds}</i></div>
@@ -2193,7 +4874,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">6. Stawka</span>
+              <span className="static-add-label">7. Stawka</span>
               <div className="stake-row">
                 <div className="static-add-display stake-value form-field-display"><input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: clampStakeValue(e.target.value) })} onBlur={() => updateForm({ stake: clampStakeValue(form.stake || 0) })} /></div>
                 <div className="static-add-display stake-currency"><span>zł</span></div>
@@ -2204,7 +4885,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">7. Data i godzina</span>
+              <span className="static-add-label">8. Data i godzina</span>
               <div className="date-time-row">
                 <div className="static-add-display form-field-display"><input className="static-add-input" value={form.date} onChange={(e) => updateForm({ date: e.target.value })} /></div>
                 <div className="static-add-display form-field-display"><input className="static-add-input" value={form.time} onChange={(e) => updateForm({ time: e.target.value })} /></div>
@@ -2212,14 +4893,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card">
-              <span className="static-add-label">8. Opis typu</span>
+              <span className="static-add-label">9. Opis typu</span>
               <div className="static-add-textarea-wrapper">
                 <textarea className="static-add-textarea-input" maxLength={500} value={form.description} onChange={(e) => updateForm({ description: e.target.value })} />
                 <small>{String(form.description || '').length} / 500</small>
               </div>
             </div>
             <div className="static-add-card">
-              <span className="static-add-label">9. Poziom pewności</span>
+              <span className="static-add-label">10. Poziom pewności</span>
               <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
               <div className="confidence-adjuster">
                 <button type="button" onClick={() => updateForm({ confidence: Math.max(15, confidencePercent - 1) })}>−</button>
@@ -2233,7 +4914,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="static-add-card static-span-two tip-single-price-card">
-              <span className="static-add-label">10. Cena singla premium</span>
+              <span className="static-add-label">11. Cena singla premium</span>
               <div className="tip-price-config">
                 <div>
                   <strong>Ustal cenę pojedynczego typu</strong>
@@ -2253,7 +4934,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
             <div className="static-add-card static-span-two publish-card">
               <div>
-                <span className="static-add-label">11. Darmowy / Premium</span>
+                <span className="static-add-label">12. Darmowy / Premium</span>
                 <p>Wybierz widoczność typu dla użytkowników</p>
               </div>
               <div className="publish-actions">

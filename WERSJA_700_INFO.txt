@@ -1,0 +1,20 @@
+BET+AI — WERSJA 700
+
+Dodane państwa i ligi do zakładki Dodaj typ.
+
+Co dodano:
+1. Nowe pole: Państwo.
+2. Dla piłki nożnej dodano wybór kraju -> ligi.
+3. Dodane przykładowe kraje i ligi:
+   Anglia, Polska, Hiszpania, Niemcy, Włochy, Francja, Holandia, Portugalia,
+   Belgia, Szkocja, Turcja, Grecja, Szwecja, Norwegia, Dania, Szwajcaria,
+   Austria, Czechy, Słowacja, Ukraina, Rumunia, Chorwacja, Serbia, USA,
+   Brazylia, Argentyna, Meksyk, Japonia, Korea Południowa, Arabia Saudyjska.
+4. Dla Anglii dodano: Premier League, Championship, League One, League Two, National League.
+5. Dla Polski dodano: Ekstraklasa, 1 Liga, 2 Liga, 3 Liga, 4 Liga.
+6. Każda liga ma przykładowy mecz i rynki.
+7. Dla pełnej listy wszystkich państw i wszystkich lig świata trzeba będzie potem podpiąć API sportowe.
+
+SQL:
+- brak nowego SQL.
+- wystarczy wgrać wersję 700.

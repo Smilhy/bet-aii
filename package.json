@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-699-add-more-sports",
-  "version": "699.0.0",
+  "name": "betai-wersja-700-countries-leagues-selector",
+  "version": "700.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
