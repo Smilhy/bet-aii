@@ -1866,11 +1866,21 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       description: form.description,
       created_at: new Date().toISOString(),
     }
+    const tipPayloadLegacy = {
+      user_id: user.id,
+      username,
+      league: currentLeague,
+      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      prediction: form.betType,
+      odds: Number(form.odds || 0),
+      description: form.description,
+      created_at: new Date().toISOString(),
+    }
 
     try {
       let savedRow = null
       let lastError = null
-      for (const candidate of [tipPayloadRich, tipPayloadBasic, tipPayloadMinimal]) {
+      for (const candidate of [tipPayloadRich, tipPayloadBasic, tipPayloadMinimal, tipPayloadLegacy]) {
         const { data, error } = await supabase.from('tips').insert(candidate).select('*').single()
         if (!error && data) {
           savedRow = data
@@ -1895,7 +1905,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     } catch (error) {
       console.error('publish tip error', error)
       saveTipDebug('ERROR', error?.message || String(error))
-      onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') })
+      onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') + ' Jeśli widzisz błąd column author_id, uruchom SQL WERSJA 691.' })
     } finally {
       setSaving(false)
     }

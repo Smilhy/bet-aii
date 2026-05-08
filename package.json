@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-690-add-tip-logic-real",
-  "version": "690.0.0",
+  "name": "betai-wersja-691-add-tip-schema-fix",
+  "version": "691.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

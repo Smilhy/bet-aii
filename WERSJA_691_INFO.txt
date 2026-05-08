@@ -1,0 +1,23 @@
+BET+AI — WERSJA 691
+
+Naprawka błędu przy dodawaniu typu.
+
+Błąd:
+Could not find the 'author_id' column of 'tips' in the schema cache.
+
+Co zrobiono:
+1. Dodany SQL, który uzupełnia tabelę public.tips o kolumny potrzebne formularzowi Dodaj typ.
+2. Dodane kolumny author_id, user_id, author_name, author_email, access_type, is_premium, price, single_price, ai_analysis itd.
+3. Dodane RLS policies:
+   - zalogowani mogą czytać typy,
+   - użytkownik może dodać własny typ,
+   - użytkownik może edytować własny typ.
+4. Dodany dodatkowy fallback w kodzie, ale prawidłowe rozwiązanie to uruchomić SQL 691.
+5. Po dodaniu typ zapisuje się dla zalogowanego konta i trafia na dashboard/profil.
+
+Co zrobić:
+1. Wgraj paczkę 691.
+2. W Supabase SQL Editor uruchom:
+   SUPABASE_SQL_WERSJA_691_TIPS_ADD_FORM_COLUMNS.sql
+3. W Supabase -> Database -> Publications -> supabase_realtime
+   sprawdź, czy tabela tips jest zielona.
