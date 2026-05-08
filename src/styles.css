@@ -26548,3 +26548,11 @@ button.betfolio-fetch-btn{
   color:#ffc21a!important;
   font-weight:900!important;
 }
+
+
+/* WERSJA 728 — upcoming first */
+.betfolio-top-sports-note::after{
+  content:'  •  upcoming-first fix';
+  color:#22f2ff!important;
+  font-weight:900!important;
+}

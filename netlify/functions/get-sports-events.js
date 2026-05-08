@@ -350,6 +350,66 @@ exports.handler = async function(event) {
     })
   }
 
+  const mapOddsItemToFixture = (item, index, sourceKey = '') => {
+    const home = item.home_team || item.teams?.[0] || 'Gospodarze'
+    const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
+    const parts = toDateParts(item.commence_time)
+    return {
+      id: item.id || `${sourceKey || item.sport_key || 'event'}-${index}`,
+      sport: item.sport_title || sport,
+      sportKey: item.sport_key || sourceKey || '',
+      country,
+      league: item.sport_title || league || sport,
+      home,
+      away,
+      date: parts.date,
+      time: parts.time,
+      commence_time: item.commence_time,
+      markets: countOnly ? [] : buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
+    }
+  }
+
+  const filterUpcomingItems = (items, rangeDays) => {
+    const nowMs = Date.now() + 1 * 60 * 1000
+    return (Array.isArray(items) ? items : [])
+      .filter(item => {
+        const sportKey = String(item.sport_key || item.sportKey || '')
+        const sportTitle = String(item.sport_title || item.sportTitle || '')
+        if (!matchesRequestedSportByText(sportKey, sportTitle)) return false
+
+        const commence = String(item.commence_time || '')
+        const kickMs = Date.parse(commence)
+        if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
+        return !date || isLocalDateInRange(commence, date, rangeDays)
+      })
+  }
+
+  const fetchUpcomingForRequestedSport = async (oddsKey, rangeDays) => {
+    const upcomingUrl = new URL('https://api.the-odds-api.com/v4/sports/upcoming/odds')
+    upcomingUrl.searchParams.set('apiKey', oddsKey)
+    upcomingUrl.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
+    upcomingUrl.searchParams.set('markets', countOnly ? 'h2h' : 'h2h,spreads,totals')
+    upcomingUrl.searchParams.set('oddsFormat', 'decimal')
+    upcomingUrl.searchParams.set('dateFormat', 'iso')
+
+    const response = await fetch(upcomingUrl.toString())
+    const data = await response.json().catch(() => [])
+
+    if (!response.ok) {
+      const message = data?.message || data?.error || `HTTP ${response.status}`
+      return { ok: false, message, items: [] }
+    }
+
+    let filtered = filterUpcomingItems(data, rangeDays)
+
+    // Jeżeli w zakresie 2 dni nic nie ma, szukamy szerzej, ale nadal tylko realne upcoming z API.
+    if (!filtered.length && rangeDays < 14) {
+      filtered = filterUpcomingItems(data, 14)
+    }
+
+    return { ok: true, message: '', items: filtered }
+  }
+
   const getDynamicSportKeys = async (oddsKey) => {
     const fallback = staticSportKeys()
     if (!allLeagues) return fallback
@@ -377,6 +437,70 @@ exports.handler = async function(event) {
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     if (oddsKey) {
+      if (allLeagues) {
+        const upcomingResult = await fetchUpcomingForRequestedSport(oddsKey, daysAhead)
+
+        if (!upcomingResult.ok) {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+              ok: true,
+              demo: false,
+              source: 'api-error',
+              allLeagues,
+              daysAhead,
+              count: 0,
+              fixtures: [],
+              message: `The Odds API upcoming error: ${upcomingResult.message}. Sprawdź klucz, limit albo plan API.`
+            })
+          }
+        }
+
+        const seenUpcoming = new Set()
+        const fixtures = upcomingResult.items
+          .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+          .map((item, index) => mapOddsItemToFixture(item, index, 'upcoming'))
+          .filter(item => {
+            const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
+            if (seenUpcoming.has(key)) return false
+            seenUpcoming.add(key)
+            return true
+          })
+          .slice(0, countOnly ? 1000 : 160)
+
+        if (countOnly) {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+              ok: true,
+              demo: false,
+              source: 'odds-api-upcoming-first',
+              allLeagues,
+              daysAhead,
+              count: fixtures.length,
+              fixtures: [],
+              message: fixtures.length ? '' : 'Brak realnych upcoming meczów dla tego sportu w The Odds API.'
+            })
+          }
+        }
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            demo: false,
+            source: 'odds-api-upcoming-first',
+            allLeagues,
+            daysAhead,
+            fixtures,
+            message: fixtures.length ? '' : 'Brak realnych upcoming meczów dla tego sportu w The Odds API.'
+          })
+        }
+      }
+
       const sportKeys = await getDynamicSportKeys(oddsKey)
       if (!sportKeys.length) {
         return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', daysAhead, futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
