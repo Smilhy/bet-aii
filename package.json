@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-687-sidebar-premium-detach-fix",
-  "version": "687.0.0",
+  "name": "betai-wersja-688-own-profile-per-user-fix",
+  "version": "688.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

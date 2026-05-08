@@ -1,0 +1,29 @@
+BET+AI — WERSJA 688
+
+Naprawka: Mój profil / profil po kliknięciu nicku u góry.
+
+Problem:
+- Po zalogowaniu jako inny użytkownik, np. buchajson1988, po wejściu w Mój profil pokazywał się profil smilhytv.
+- Widok profilu był statyczny i miał na sztywno wpisane smilhytv.
+
+Co naprawiono:
+1. Profil jest teraz dynamiczny dla aktualnie zalogowanego konta.
+2. Kliknięcie „Mój profil” albo nicku u góry pokazuje konto zalogowanego użytkownika.
+3. Przykłady:
+   - smilhytv -> profil smilhytv
+   - buchajson1988 -> profil buchajson1988
+   - p.kucharski@aol.co.uk -> profil p.kucharski
+4. Zmienione zostały:
+   - nazwa profilu,
+   - @username,
+   - avatar/inicjały,
+   - rola ADMIN/PREMIUM/FREE,
+   - bio/opis,
+   - statystyki typu: liczba typów, win rate, ROI, średni kurs,
+   - podsumowanie po prawej stronie,
+   - społeczność i ranking w profilu.
+5. Zachowane wszystkie poprawki z wersji 687.
+
+SQL:
+- Brak nowego SQL.
+- Wystarczy wgrać wersję 688.

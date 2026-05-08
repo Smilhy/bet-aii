@@ -5819,43 +5819,85 @@ function TipsterPricingSettings({ user, onToast }) {
   )
 }
 
-function ProfileView({ user, tips = [], stripeConnectStatus = null, onConnectStripe = null }) {
-  const displayName = 'smilhytv'
-  const premiumRows = [
-    ['Real Madryt', 'Bayern Monachium', 'Liga Mistrzów • Dzisiaj, 21:00', 'Powyżej 2.5 gola', '1.72', '85%', 'Premium', '12', '2 godz. temu'],
-  ]
-  const freeRows = [
-    ['Arsenal', 'Aston Villa', 'Premier League • Jutro, 17:30', 'Arsenal wygra', '1.65', '78%', 'FREE', '8', '4 godz. temu'],
-  ]
+function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null }) {
+  const profile = getUserProfileView(user)
+  const email = normalizeEmail(profile.email || user?.email || '')
+  const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
+  const displayName = username
+  const handleName = username.startsWith('@') ? username : `@${username}`
+  const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
+  const profileCreatedAt = user?.created_at || user?.createdAt || user?.updated_at || ''
+  const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Nowy użytkownik'
+  const admin = isAdminUser(user)
+  const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
+  const userTips = (Array.isArray(tips) ? tips : []).map(normalizeTipRow).filter(tip => {
+    const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
+    const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
+    const authorName = normalizeEmail(tip.author_name || tip.username || '')
+    return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
+  })
+  const totalTips = userTips.length
+  const wonTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'won').length
+  const lostTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'lost').length
+  const settledTips = wonTips + lostTips
+  const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
+  const avgOddsNumber = userTips.length ? (userTips.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / userTips.length) : 0
+  const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
+  const roi = settledTips ? Math.max(0, Math.round((winRate - 50) * 1.7)) : 0
+  const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
+  const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
+  const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
+  const profileBio = user?.bio || user?.description || user?.about || `${displayName} — prywatny profil użytkownika Bet+AI. Każdy zalogowany użytkownik widzi tutaj własne konto, własne statystyki i własne ustawienia profilu.`
+  const preferredSport = user?.preferred_sport || user?.sport || 'Piłka nożna ⚽'
+
+  const toTipRow = (tip, fallbackPremium = false) => {
+    const normalized = normalizeTipRow(tip)
+    const home = normalized.home_team || normalized.team_home || 'Gospodarze'
+    const away = normalized.away_team || normalized.team_away || 'Goście'
+    const league = normalized.league || 'Liga'
+    const time = normalized.match_time || normalized.created_at || ''
+    const timeLabel = time ? new Date(time).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'Brak daty'
+    const pick = normalized.pick || normalized.type || normalized.bet_type || 'Typ'
+    const odds = Number(normalized.odds || 0) ? Number(normalized.odds || 0).toFixed(2) : '—'
+    const confidence = `${getAiConfidence(normalized) || 0}%`
+    const access = isTipPremium(normalized) || fallbackPremium ? 'Premium' : 'FREE'
+    return [home, away, `${league} • ${timeLabel}`, pick, odds, confidence, access, String(Number(normalized.likes || normalized.hearts || 0) || 0), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Teraz']
+  }
+
+  const premiumRows = userTips.filter(isTipPremium).slice(0, 3).map(tip => toTipRow(tip, true))
+  if (!premiumRows.length) premiumRows.push(['Brak typów', 'Premium', 'Dodaj pierwszy typ premium', '—', '—', '0%', 'Premium', '0', '—'])
+
+  const freeRows = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(tip => toTipRow(tip, false))
+  if (!freeRows.length) freeRows.push(['Brak typów', 'FREE', 'Dodaj pierwszy darmowy typ', '—', '—', '0%', 'FREE', '0', '—'])
+
   const resultRows = [
-    ['Maj 2026', '142', '95', '42', '67%', '+16.3%', '+128.60 zł'],
-    ['Kwiecień 2026', '168', '112', '51', '67%', '+12.8%', '+96.40 zł'],
-    ['Marzec 2026', '155', '101', '47', '65%', '+10.7%', '+78.30 zł'],
+    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
+    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
   ]
-  const analysisRows = [
-    ['AI analiza: Real Madryt vs Bayern', '20.05.2026 • Liga Mistrzów'],
-    ['5 value betów na nadchodzący weekend', '19.05.2026 • Premium'],
-    ['Statystyki nie kłamią – liga angielska', '18.05.2026 • Analiza'],
-  ]
+  const analysisRows = userTips.slice(0, 3).map(tip => {
+    const normalized = normalizeTipRow(tip)
+    return [normalized.analysis || normalized.description || `Analiza: ${normalized.home_team || 'Mecz'} vs ${normalized.away_team || ''}`.trim(), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Bet+AI']
+  })
+  if (!analysisRows.length) analysisRows.push(['Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.', 'Bet+AI'])
+
   const summaryRows = [
-    ['Użytkownik od', '12.02.2024'],
-    ['Ostatnia aktywność', 'Dzisiaj, 12:45'],
-    ['Poziom', 'Premium 7'],
-    ['Ranking globalny', '#1 (TOP 1%)'],
-    ['Preferowane dyscypliny', 'Piłka nożna ⚽'],
+    ['Użytkownik od', createdLabel],
+    ['Ostatnia aktywność', 'Dzisiaj'],
+    ['Poziom', roleLabel],
+    ['Ranking globalny', totalTips ? '# aktywny typer' : 'Nowy użytkownik'],
+    ['Preferowane dyscypliny', preferredSport],
   ]
   const recentAchievements = [
-    ['TOP 1% RANKINGU', 'Osiągnięcie top 1% najlepszych typerów', '20.05.2026'],
-    ['1000+ TYPÓW', 'Opublikowałeś ponad 1000 typów', '14.05.2026'],
-    ['WIN RATE 60%+', 'Utrzymujesz skuteczność powyżej 60%', '07.05.2026'],
+    [premium ? 'PREMIUM' : 'START', premium ? 'Konto premium aktywne' : 'Profil gotowy do działania', createdLabel],
+    [`${totalTips} TYPÓW`, totalTips ? 'Opublikowane typy na koncie' : 'Dodaj pierwszy typ', 'Dzisiaj'],
+    [`${winRate}% WIN RATE`, settledTips ? 'Skuteczność z rozliczonych typów' : 'Brak rozliczonych typów', 'Dzisiaj'],
   ]
   const ratingBars = [
-    ['5 ★', '212'], ['4 ★', '18'], ['3 ★', '4'], ['2 ★', '1'], ['1 ★', '1']
+    ['5 ★', '0'], ['4 ★', '0'], ['3 ★', '0'], ['2 ★', '0'], ['1 ★', '0']
   ]
   const rankingRows = [
-    ['1', 'smilhytv', '85% ROI', '2 541', '+128.60 zł'],
-    ['2', 'buchajsonek1988', '84% ROI', '1 872', '+96.20 zł'],
-    ['3', 'p.kucharski', '78% ROI', '1 523', '+74.30 zł'],
+    ['1', displayName, `${roi}% ROI`, String(followersCount), `+${walletAmount.toFixed(2)} zł`],
   ]
 
   return (
@@ -5865,37 +5907,37 @@ function ProfileView({ user, tips = [], stripeConnectStatus = null, onConnectStr
           <div className="profile-v3-hero glass-profile-v3">
             <div className="profile-v3-hero-overlay"></div>
             <div className="profile-v3-user-row">
-              <div className="profile-v3-avatar">SM</div>
+              <div className="profile-v3-avatar">{initials}</div>
               <div className="profile-v3-user-copy">
                 <div className="profile-v3-name-line">
                   <h1>{displayName}</h1>
                   <span className="verify-dot">✓</span>
                 </div>
-                <small>@smilhytv</small>
+                <small>{handleName}</small>
                 <div className="profile-v3-badges">
-                  <span>ADMIN</span>
+                  <span>{roleLabel}</span>
                   <span>TYPER</span>
-                  <span>TOP AKTYWNOŚĆ</span>
+                  {totalTips > 0 && <span>AKTYWNY</span>}
                 </div>
-                <p>AI typy sportowe oparte na danych i analizie statystycznej. Specjalizuje się w piłce nożnej i wartościowych kursowych. Gram odpowiedzialnie. Analizuję. Nie kopiuję. Wygrywaj. ✅</p>
+                <p>{profileBio}</p>
                 <div className="profile-v3-actions">
-                  <button type="button" className="primary">+ Obserwuj</button>
-                  <button type="button">▢ Wyślij wiadomość</button>
-                  <button type="button">🏆 Wspieraj tipami</button>
+                  <button type="button" className="primary">Mój profil</button>
+                  <button type="button">▢ Wiadomości</button>
+                  <button type="button">🏆 Wsparcie tipami</button>
                 </div>
               </div>
             </div>
             <div className="profile-v3-stats-strip">
-              <div><small>ROI</small><strong>85%</strong></div>
-              <div><small>WIN RATE</small><strong>68%</strong></div>
-              <div><small>SKUTECZNOŚĆ</small><strong>1.72 <em>ŚR. KURS</em></strong></div>
-              <div><small>LICZBA TYPÓW</small><strong>1 248</strong></div>
-              <div><small>OBSERWUJĄCY</small><strong>2 541</strong></div>
-              <div><small>POZIOM</small><strong>Premium 7</strong></div>
-              <div><small>ŻETONY</small><strong>86</strong></div>
-              <div><small>SALDO</small><strong>0.00 zł</strong></div>
-              <div><small>RANKING</small><strong>#1 <em>TOP 1%</em></strong></div>
-              <div><small>ŚR. KURS</small><strong>1.72</strong></div>
+              <div><small>ROI</small><strong>{roi}%</strong></div>
+              <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
+              <div><small>SKUTECZNOŚĆ</small><strong>{avgOdds} <em>ŚR. KURS</em></strong></div>
+              <div><small>LICZBA TYPÓW</small><strong>{totalTips}</strong></div>
+              <div><small>OBSERWUJĄCY</small><strong>{followersCount}</strong></div>
+              <div><small>POZIOM</small><strong>{roleLabel}</strong></div>
+              <div><small>ŻETONY</small><strong>{tokenCount}</strong></div>
+              <div><small>SALDO</small><strong>{walletAmount.toFixed(2)} zł</strong></div>
+              <div><small>RANKING</small><strong>{totalTips ? '# aktywny' : '—'} <em>{roleLabel}</em></strong></div>
+              <div><small>ŚR. KURS</small><strong>{avgOdds}</strong></div>
             </div>
           </div>
 
@@ -5980,22 +6022,22 @@ function ProfileView({ user, tips = [], stripeConnectStatus = null, onConnectStr
               <div className="glass-profile-v3 profile-v3-card month-stats-v3">
                 <div className="profile-v3-card-head"><h3>📈 Statystyki miesiąca</h3><button type="button">Zobacz więcej</button></div>
                 <div className="month-metrics-v3">
-                  <div><small>ROI</small><strong>+16.3%</strong></div>
-                  <div><small>ZYSK</small><strong>+128.60 zł</strong></div>
-                  <div><small>TYPY</small><strong>142</strong></div>
-                  <div><small>WIN RATE</small><strong>67%</strong></div>
+                  <div><small>ROI</small><strong>+{roi}%</strong></div>
+                  <div><small>ZYSK</small><strong>+{walletAmount.toFixed(2)} zł</strong></div>
+                  <div><small>TYPY</small><strong>{totalTips}</strong></div>
+                  <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
                 </div>
                 <div className="month-bars-v3">
-                  <div><span>Typy wygrane</span><div className="bar"><i style={{width:'67%'}}></i></div><b>95 (67%)</b></div>
-                  <div><span>Typy przegrane</span><div className="bar red"><i style={{width:'30%'}}></i></div><b>42 (30%)</b></div>
-                  <div><span>Anulowane</span><div className="bar gray"><i style={{width:'5%'}}></i></div><b>5 (3%)</b></div>
+                  <div><span>Typy wygrane</span><div className="bar"><i style={{width:`${winRate}%`}}></i></div><b>{wonTips} ({winRate}%)</b></div>
+                  <div><span>Typy przegrane</span><div className="bar red"><i style={{width:`${settledTips ? Math.round((lostTips / settledTips) * 100) : 0}%`}}></i></div><b>{lostTips}</b></div>
+                  <div><span>Wszystkie</span><div className="bar gray"><i style={{width:'100%'}}></i></div><b>{totalTips}</b></div>
                 </div>
               </div>
 
               <div className="profile-v3-split-row">
                 <div className="glass-profile-v3 profile-v3-card about-v3">
                   <div className="profile-v3-card-head"><h3>ⓘ O mnie</h3></div>
-                  <p>Nazywam się Smilhytv i od 6 lat analizuję sportowe dane, by znajdować wartościowe typy i przewagę statystyczną. Korzystam z historii meczów oraz AI do oceny ryzyka i value betów. Gram odpowiedzialnie i zachęcam do tego samego. ✅</p>
+                  <p>{profileBio}</p>
                   <div className="about-tags"><span>AI ANALIZA</span><span>DANE</span><span>STATYSTYKI</span><span>VALUE BETS</span></div>
                 </div>
                 <div className="glass-profile-v3 profile-v3-card analysis-v3">
@@ -6034,7 +6076,7 @@ function ProfileView({ user, tips = [], stripeConnectStatus = null, onConnectStr
 
           <div className="glass-profile-v3 side-card-v3">
             <div className="side-card-head-v3"><h3>Społeczność</h3><button type="button">Zobacz wszystkich</button></div>
-            <div className="community-v3"><div><span>👥 Obserwujący</span><b>2 541</b></div><div><span>👤 Obserwowani</span><b>121</b></div></div>
+            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{Number(user?.following_count || user?.following || 0) || 0}</b></div></div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
