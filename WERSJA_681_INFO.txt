@@ -1,0 +1,26 @@
+BET+AI — WERSJA 681
+
+Co zostało dodane:
+1. NOWY popup po otrzymaniu TIP-a na live chacie.
+2. Popup pokazuje się na środku ekranu.
+3. Zamiast starego GIF-a używany jest biały coin użytkownika (betai-coin-icon.png).
+4. Coin ma efekt świecenia / pulsowania jak drugi ciemny coin z przykładu.
+5. Pod coinem pojawia się napis: "Dostałeś Tip!" oraz nazwa użytkownika, który wysłał tip.
+6. Dodany został także badge z ilością otrzymanych żetonów (np. +1 żeton).
+7. Poprawiona została obsługa realtime tip_transfers:
+   - zapis sender_email / receiver_email (z fallbackiem do starego schematu bazy),
+   - nasłuch popupu po receiver_id i po receiver_email,
+   dzięki czemu popup jest pewniejszy nawet gdy receiver_id w bazie jest pusty.
+
+Ważne:
+- Jeżeli w Supabase masz już SQL z wersji 677, wszystko będzie działało także po emailu.
+- Jeżeli nie masz jeszcze kolumn sender_email / receiver_email w tip_transfers,
+  frontend ma fallback i nadal zapisze transfer po starym schemacie.
+
+Pliki główne zmienione:
+- src/main.jsx
+- src/styles.css
+- main.jsx
+- styles.css
+
+Wersja paczki: 681

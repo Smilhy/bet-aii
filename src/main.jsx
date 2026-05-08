@@ -1080,15 +1080,33 @@ function LiveChatPanel({ user }) {
         amount: 1
       })
 
-      // WERSJA 676: osobna tabela do realtime popupu TIP.
-      // To NIE jest tabela `tips` z typami bukmacherskimi.
-      await supabase.from('tip_transfers').insert({
+      // WERSJA 681: zapis TIP popupu z fallbackiem pod stare schematy bazy.
+      // Wysyłamy także sender_email / receiver_email, żeby popup działał nawet gdy receiver_id jest pusty.
+      const tipTransferPayload = {
         sender_id: user?.id || senderWallet.user_id || null,
         receiver_id: receiverUserId,
         sender_username: userName || email.split('@')[0] || 'Użytkownik',
         receiver_username: msg.user_name || nameFromEmail(targetEmail),
+        sender_email: email,
+        receiver_email: targetEmail,
         amount: 1
-      })
+      }
+      {
+        const { error: tipTransferError } = await supabase.from('tip_transfers').insert(tipTransferPayload)
+        if (tipTransferError) {
+          const message = String(tipTransferError?.message || tipTransferError || '')
+          const maybeLegacySchema = /sender_email|receiver_email|column|schema cache/i.test(message)
+          if (!maybeLegacySchema) throw tipTransferError
+          const { error: legacyTipTransferError } = await supabase.from('tip_transfers').insert({
+            sender_id: tipTransferPayload.sender_id,
+            receiver_id: tipTransferPayload.receiver_id,
+            sender_username: tipTransferPayload.sender_username,
+            receiver_username: tipTransferPayload.receiver_username,
+            amount: tipTransferPayload.amount
+          })
+          if (legacyTipTransferError) throw legacyTipTransferError
+        }
+      }
       await addTokenTransaction(email, -1, 'live_chat_tip_sent', 'live_chat_tips', { message_id: String(msg.id), to_email: targetEmail })
       await addTokenTransaction(targetEmail, 1, 'live_chat_tip_received', 'live_chat_tips', { message_id: String(msg.id), from_email: email })
       await safeInsertSystemNotification(targetEmail, 'Dostałeś tip na czacie', `${userName} wysłał Ci 1 żeton za wiadomość na BetAI Live Chat.`, 1)
@@ -1724,12 +1742,20 @@ function LiveTipCenterPopup({ popup, open, onClose }) {
 function ReceivedTipPopup({ popup, open, onClose }) {
   if (!popup) return null
   const sender = popup.senderName || 'Użytkownik'
+  const amount = Math.max(1, Number(popup.amount || 1) || 1)
+  const amountLabel = amount === 1 ? '1 żeton' : `${amount} żetony`
   return (
     <div className={`betai-received-tip-overlay ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
       <div className={`betai-received-tip-card ${open ? 'is-visible' : 'is-hiding'}`}>
         <button type="button" className="betai-received-tip-close" onClick={onClose} aria-label="Zamknij powiadomienie">×</button>
-        <img src="/bet_ai_ultra_pro_nowy_tip.gif" alt="Nowy TIP" className="betai-received-tip-img" />
-        <div className="betai-received-tip-text">Otrzymałeś TIP od: <strong>{sender}</strong></div>
+        <div className="betai-received-tip-kicker">BET+AI LIVE CHAT</div>
+        <div className="betai-received-tip-coin-wrap" aria-hidden="true">
+          <div className="betai-received-tip-coin-glow" />
+          <img src="/betai-coin-icon.png" alt="" className="betai-received-tip-img" />
+        </div>
+        <div className="betai-received-tip-title">Dostałeś Tip!</div>
+        <div className="betai-received-tip-sender">Od użytkownika <strong>{sender}</strong></div>
+        <div className="betai-received-tip-amount">+{amountLabel}</div>
       </div>
     </div>
   )
@@ -6863,13 +6889,13 @@ function App() {
     receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 260)
   }
 
-  function showReceivedTipPopup(senderName = 'Użytkownik') {
+  function showReceivedTipPopup(senderName = 'Użytkownik', amount = 1) {
     if (receivedTipTimerRef.current) clearTimeout(receivedTipTimerRef.current)
     if (receivedTipHideTimerRef.current) clearTimeout(receivedTipHideTimerRef.current)
-    setReceivedTipPopup({ senderName })
+    setReceivedTipPopup({ senderName, amount })
     setReceivedTipPopupVisible(true)
-    receivedTipTimerRef.current = setTimeout(() => setReceivedTipPopupVisible(false), 4000)
-    receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 4300)
+    receivedTipTimerRef.current = setTimeout(() => setReceivedTipPopupVisible(false), 4200)
+    receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 4550)
   }
 
   function hideLiveTipPopup() {
@@ -8407,21 +8433,47 @@ function App() {
 
   useEffect(() => {
     const currentUserId = sessionUser?.id || ''
-    if (!currentUserId || !isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel(`betai-tip-transfers-popup-${currentUserId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_id=eq.${currentUserId}` }, payload => {
-        const row = payload?.new || {}
-        const key = String(row.id || row.created_at || Math.random())
-        if (lastReceivedTipRef.current === key) return
-        lastReceivedTipRef.current = key
-        const senderName = row.sender_username || 'Użytkownik'
-        showReceivedTipPopup(senderName)
-        window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+    const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    if ((!currentUserId && !currentEmail) || !isSupabaseConfigured || !supabase) return undefined
+
+    const handleTipTransferInsert = (payload) => {
+      const row = payload?.new || {}
+      const matchesUserId = currentUserId && String(row.receiver_id || '') === String(currentUserId)
+      const matchesEmail = currentEmail && normalizeEmail(row.receiver_email || '') === currentEmail
+      if (!matchesUserId && !matchesEmail) return
+      const key = String(row.id || `${row.created_at || ''}_${row.sender_username || ''}_${row.amount || 1}`)
+      if (lastReceivedTipRef.current === key) return
+      lastReceivedTipRef.current = key
+      const senderName = row.sender_username || 'Użytkownik'
+      const amount = Math.max(1, Number(row.amount || 1) || 1)
+      showReceivedTipPopup(senderName, amount)
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+    }
+
+    const channels = []
+    if (currentUserId) {
+      channels.push(
+        supabase
+          .channel(`betai-tip-transfers-popup-id-${currentUserId}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_id=eq.${currentUserId}` }, handleTipTransferInsert)
+          .subscribe()
+      )
+    }
+    if (currentEmail) {
+      channels.push(
+        supabase
+          .channel(`betai-tip-transfers-popup-email-${currentEmail}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_email=eq.${currentEmail}` }, handleTipTransferInsert)
+          .subscribe()
+      )
+    }
+
+    return () => {
+      channels.forEach(channel => {
+        try { supabase.removeChannel(channel) } catch (_) {}
       })
-      .subscribe()
-    return () => { try { supabase.removeChannel(channel) } catch (_) {} }
-  }, [sessionUser?.id])
+    }
+  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
