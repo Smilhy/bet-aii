@@ -24748,3 +24748,29 @@ font[style*="border"]{
   font-weight:900!important;
   white-space:nowrap!important;
 }
+
+
+/* WERSJA 693 — Dodaj typ: usunięcie prawej kolumny */
+.add-tip-ultra-static .static-add-layout{
+  grid-template-columns:1fr!important;
+  max-width:1280px!important;
+  margin:0 auto!important;
+}
+
+.add-tip-ultra-static .static-add-main{
+  width:100%!important;
+}
+
+.add-tip-ultra-static .static-add-side{
+  display:none!important;
+}
+
+.add-tip-ultra-static .static-add-form-grid{
+  grid-template-columns:1fr 1fr!important;
+}
+
+@media(max-width:900px){
+  .add-tip-ultra-static .static-add-form-grid{
+    grid-template-columns:1fr!important;
+  }
+}

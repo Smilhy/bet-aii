@@ -2159,68 +2159,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
         </div>
 
-        <aside className="static-add-side">
-          <div className="glass-ultra-panel static-side-card preview-card">
-            <div className="side-card-head">
-              <h3>Podgląd typu</h3>
-              <p>Zobacz jak Twój typ będzie wyglądał po publikacji.</p>
-            </div>
-            <div className="preview-match-card">
-              <div className="preview-topline"><span>{form.sport.toUpperCase()} ・ {currentLeague.toUpperCase()}</span><strong>{form.accessType === 'premium' ? '👑 PREMIUM' : '○ FREE'}</strong></div>
-              <div className="preview-teams-row">
-                <div className="preview-team"><span className="preview-logo city">{(selectedMatch?.home || 'HM').slice(0,3).toUpperCase()}</span><b>{selectedMatch?.home || 'Gospodarze'}</b></div>
-                <span className="preview-vs">VS</span>
-                <div className="preview-team right"><span className="preview-logo arsenal">{(selectedMatch?.away || 'AW').slice(0,3).toUpperCase()}</span><b>{selectedMatch?.away || 'Goście'}</b></div>
-              </div>
-              <div className="preview-time">{form.date}, {form.time}</div>
-              <div className="preview-stats-grid">
-                <div><small>TYP</small><strong>{form.betType}</strong></div>
-                <div><small>KURS</small><strong>{form.odds}</strong></div>
-                <div><small>PEWNOŚĆ</small><strong className="accent">{confidencePercent}%</strong></div>
-                <div><small>STAWKA</small><strong>{Number(form.stake || 0).toFixed(2)} zł</strong></div>
-                <div><small>ANALIZA AI</small><strong className="accent">{confidenceLabel}</strong></div>
-                <div><small>{form.accessType === 'premium' ? 'CENA SINGLA' : 'WIDOCZNOŚĆ'}</small><strong>{form.accessType === 'premium' ? `${previewPrice.toFixed(2)} zł` : 'Darmowy'}</strong></div>
-              </div>
-              <div className="preview-ring">↗</div>
-            </div>
-            <span className="preview-note">Po publikacji tip pojawi się na dashboardzie głównym i w Twoim profilu: <b>{username}</b>.</span>
-          </div>
-
-          <div className="glass-ultra-panel static-side-card suggestion-card">
-            <div className="small-card-head"><span>🏠 Sugestia AI</span><em>Inteligentna rekomendacja <b>New</b></em></div>
-            <div className="suggestion-content">
-              <div>
-                <p>{confidencePercent >= 75 ? 'AI sugeruje, że to wartościowy typ do publikacji.' : 'AI sugeruje zachować ostrożność i dopracować opis przed publikacją.'}</p>
-                <small>{form.accessType === 'premium' ? 'Dla tipów premium warto dodać konkretną przewagę i statystyki H2H, aby zwiększyć konwersję zakupu.' : 'Dla darmowych tipów dodaj krótki, konkretny opis — to zwiększa zasięg i wiarygodność profilu.'}</small>
-                <button type="button" onClick={regenerateAi}>Zobacz szczegóły analizy</button>
-              </div>
-              <div className="big-percent">{Math.max(51, Math.min(95, confidencePercent - 2))}%</div>
-            </div>
-          </div>
-
-          <div className="glass-ultra-panel static-side-card history-card">
-            <div className="small-card-head"><span>✦ Historia skuteczności</span><select><option>{currentLeague}</option></select></div>
-            <p>Twoje statystyki w wybranej lidze</p>
-            <div className="history-grid">
-              <div><strong>{Math.max(44, confidencePercent - 18)}%</strong><small>Skuteczność</small></div>
-              <div><strong>+{Math.max(8, Math.round(confidencePercent / 2.5))}%</strong><small>ROI</small></div>
-              <div><strong>{Math.max(3, dailyCount + 7)}</strong><small>Typów</small></div>
-              <div><strong>{Math.max(2, Math.round((dailyCount + 7) * 0.6))}</strong><small>Wygrane</small></div>
-            </div>
-            <div className="history-chart"><span></span></div>
-          </div>
-
-          <div className="glass-ultra-panel static-side-card reach-card">
-            <div className="small-card-head"><span>📣 Przewidywany zasięg</span><em>{form.accessType === 'premium' ? 'Premium boost' : 'Organic reach'}</em></div>
-            <p>Szacunkowy zasięg Twojego typu</p>
-            <div className="reach-grid">
-              <div><strong>{(previewReachMin/1000).toFixed(1)}K – {(previewReachMax/1000).toFixed(1)}K</strong><small>Wyświetlenia</small></div>
-              <div><strong>{Math.round(previewReachMin * 0.08)} – {Math.round(previewReachMax * 0.09)}</strong><small>Interakcje</small></div>
-              <div><strong>{Math.round(previewReachMin * 0.02)} – {Math.round(previewReachMax * 0.025)}</strong><small>Polubienia</small></div>
-            </div>
-            <div className="reach-megaphone">📣</div>
-          </div>
-        </aside>
       </div>
     </section>
   )
