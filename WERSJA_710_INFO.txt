@@ -1,0 +1,13 @@
+WERSJA 710 — BETFOLIO STYLE LAYOUT
+
+Zmiany:
+- Przebudowana strona "Dodaj typ" na układ inspirowany Betfolio.
+- Lewa kolumna: wyszukiwarka, sport, kraj, liga, data i pobieranie wydarzeń.
+- Środkowa kolumna: lista meczów z szybkimi kursami 1 / X / 2 oraz przyciskiem "Więcej".
+- Niżej pełne rynki meczu w zakładkach i sekcjach.
+- Prawa kolumna: panel publikacji typu (kurs, stawka, opis, premium/free, publikacja).
+- Kliknięcie kursu z listy od razu ustawia wybrany typ i kurs.
+- Zachowana integracja z istniejącą logiką publikacji typu.
+
+Plik startowy: src/main.jsx
+Style: src/styles.css

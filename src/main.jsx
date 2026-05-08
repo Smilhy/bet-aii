@@ -4330,6 +4330,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [liveFixturesLoading, setLiveFixturesLoading] = useState(false)
   const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
   const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [sidebarSearch, setSidebarSearch] = useState('')
+  const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -4371,6 +4373,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const bi = marketGroupOrder.indexOf(b)
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
   })
+  const marketTabs = ['Wszystkie', 'Popularne', ...orderedMarketGroups.map(([label]) => label)]
+  const visibleMarketGroups = orderedMarketGroups.filter(([label]) => {
+    if (activeMarketTab === 'Wszystkie') return true
+    if (activeMarketTab === 'Popularne') return ['Wynik końcowy', '1X2', 'Over/Under', 'BTTS', 'Handicap', 'Podwójna szansa', 'Rogi', 'Kartki'].includes(label)
+    return label === activeMarketTab
+  })
+  const normalizedSearch = String(sidebarSearch || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim()
+  const visibleMatchOptions = normalizedSearch
+    ? matchOptions.filter((item) => (`${item.home || ''} ${item.away || ''} ${item.league || currentLeague} ${item.country || currentCountry}`).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizedSearch))
+    : matchOptions
 
   useEffect(() => {
     if (!leagueOptions.includes(form.league)) {
@@ -4490,6 +4505,33 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       time: match.time || form.time,
       description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Typ wybrany z listy aktualnych meczów/kursów dnia. Uzupełnij własną analizę przed publikacją.`
     })
+  }
+
+
+  function getPrimaryOdds(match) {
+    const home = String(match?.home || '')
+    const away = String(match?.away || '')
+    const allMarkets = Array.isArray(match?.markets) ? match.markets : []
+    const base = allMarkets.filter(item => ['Wynik końcowy', '1X2'].includes(String(item.market || '')))
+    const findBy = (predicate) => base.find(predicate) || null
+    const homePick = findBy(item => String(item.pick || '').includes(home) && String(item.pick || '').toLowerCase().includes('wygra'))
+    const drawPick = findBy(item => String(item.pick || '').toLowerCase().includes('remis'))
+    const awayPick = findBy(item => String(item.pick || '').includes(away) && String(item.pick || '').toLowerCase().includes('wygra'))
+    return [
+      { short: '1', item: homePick },
+      { short: 'X', item: drawPick },
+      { short: '2', item: awayPick },
+    ]
+  }
+
+  function selectMatchAndMaybeMarket(match, marketItem = null) {
+    if (!match) return
+    applyMatchToForm(match)
+    if (marketItem) {
+      requestAnimationFrame(() => {
+        chooseMarket(`${marketItem.market}|||${marketItem.pick}|||${marketItem.odds}|||${marketItem.confidence || confidencePercent}`)
+      })
+    }
   }
 
   async function fetchLiveFixturesForDay() {
@@ -4864,21 +4906,50 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   return (
-    <section className="add-page add-tip-ultra-static">
-      <div className="static-add-layout">
-        <div className="static-add-main glass-ultra-panel">
-          <div className="static-add-header">
-            <div>
-              <div className="static-add-title-row">
-                <span className="static-add-title-icon">⬡</span>
-                <h1>Dodaj nowy typ</h1>
-              </div>
-              <p>Twórz realne typy dla swojego profilu. Konto FREE: do 5 typów na dobę. Konto PREMIUM: bez limitu + tipy premium i płatne single.</p>
-            </div>
-            <button type="button" className="static-add-hints" onClick={() => setShowHints(prev => !prev)}>{showHints ? '✕ Zamknij' : '💡 Wskazówki'}</button>
+    <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
+      <div className="betfolio-add-shell">
+        <aside className="betfolio-left glass-ultra-panel">
+          <div className="betfolio-side-top">
+            <div className="betfolio-mini-brand">betfolio style</div>
+            <button type="button" className="static-add-hints betfolio-side-hints" onClick={() => setShowHints(prev => !prev)}>{showHints ? 'Ukryj' : 'Wskazówki'}</button>
           </div>
 
-          <div className="tip-add-topbar">
+          <div className="betfolio-search-wrap">
+            <input
+              className="betfolio-search-input"
+              placeholder="Wyszukaj mecz lub drużynę"
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+            />
+          </div>
+
+          <button type="button" className="betfolio-fetch-btn" onClick={fetchLiveFixturesForDay} disabled={liveFixturesLoading}>
+            {liveFixturesLoading ? 'Pobieram mecze…' : 'Dodaj / pobierz wydarzenia'}
+          </button>
+
+          <div className="betfolio-sidebar-block">
+            <div className="betfolio-side-caption">SPORT</div>
+            <div className="betfolio-side-field">
+              <select className="static-add-select" value={form.sport} onChange={(e) => chooseSport(e.target.value)}>
+                {sportKeys.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+            <div className="betfolio-side-field">
+              <select className="static-add-select" value={currentCountry} onChange={(e) => chooseCountry(e.target.value)}>
+                {countryOptions.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+            <div className="betfolio-side-field">
+              <select className="static-add-select" value={currentLeague} onChange={(e) => chooseLeague(e.target.value)}>
+                {leagueOptions.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+            <div className="betfolio-side-field">
+              <input type="date" className="static-add-input" value={liveDate} onChange={(e) => setLiveDate(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="betfolio-left-stats">
             <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
               <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
               <span>{isPremiumUser ? 'Publikujesz bez limitu' : 'Maks. 5 tipów / doba'}</span>
@@ -4889,218 +4960,223 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
           </div>
 
-          {limitReached && (
-            <div className="tip-limit-banner">
-              <strong>Limit darmowych typów został wykorzystany.</strong>
-              <span>Dodałeś już 5 z 5 typów w dniu {todayLabel}. Aktywuj Premium, aby publikować bez limitu i uruchomić tipy premium.</span>
-              <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
-            </div>
-          )}
+          <div className="betfolio-side-note">
+            {liveFixturesStatus || 'Układ inspirowany Betfolio. Najpierw wybierz sport / kraj / ligę, potem kliknij kurs albo przycisk „Więcej”.'}
+          </div>
 
           {showHints && (
-            <div className="tip-hints-box">
+            <div className="tip-hints-box betfolio-hints-box">
               <ul>
-                <li>Darmowe konto publikuje maksymalnie 5 typów na dobę.</li>
-                <li>Konto Premium może publikować bez limitu i ustawiać typ jako premium.</li>
-                <li>Typ premium może mieć własną cenę singla i jest widoczny dopiero po zakupie / subskrypcji.</li>
-                <li>Każdy opublikowany typ trafia na dashboard i do Twojego profilu.</li>
+                <li>Kliknięcie kursu 1 / X / 2 automatycznie ustawia typ i kurs.</li>
+                <li>Przycisk „Więcej” otwiera niżej pełne rynki meczu.</li>
+                <li>Prawa kolumna służy do publikacji typu, a nie do realnego kuponu bukmacherskiego.</li>
+                <li>Mecze startujące za mniej niż 1 minutę są ukryte.</li>
               </ul>
             </div>
           )}
+        </aside>
 
-          <div className="static-add-form-grid">
-            <div className="static-add-card">
-              <span className="static-add-label">1. Wybór sportu</span>
-              <div className="static-add-display form-field-display">
-                <select className="static-add-select" value={form.sport} onChange={(e) => chooseSport(e.target.value)}>
-                  {sportKeys.map(option => <option key={option} value={option}>{option}</option>)}
-                </select>
+        <div className="betfolio-center glass-ultra-panel">
+          <div className="betfolio-center-header">
+            <div>
+              <div className="static-add-title-row">
+                <span className="static-add-title-icon">⬡</span>
+                <h1>Dodaj nowy typ</h1>
               </div>
+              <p>Wybierz wydarzenie jak w Betfolio: lista meczów + szybkie kursy + szczegóły rynku, a po prawej od razu publikacja typu.</p>
             </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">2. Państwo</span>
-              <div className="static-add-display form-field-display">
-                <select className="static-add-select" value={currentCountry} onChange={(e) => chooseCountry(e.target.value)}>
-                  {countryOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                </select>
-              </div>
+            <div className="betfolio-center-badges">
+              <span>{form.sport}</span>
+              <span>{currentCountry}</span>
+              <span>{currentLeague}</span>
             </div>
+          </div>
 
-            <div className="static-add-card">
-              <span className="static-add-label">3. Liga</span>
-              <div className="static-add-display form-field-display">
-                <select className="static-add-select" value={currentLeague} onChange={(e) => chooseLeague(e.target.value)}>
-                  {leagueOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                </select>
-              </div>
-            </div>
+          <div className="betfolio-events-head">
+            <strong>Mecze / kursy</strong>
+            <span>{visibleMatchOptions.length} wydarzeń</span>
+          </div>
 
-            <div className="static-add-card static-span-two live-fixtures-card">
-              <span className="static-add-label">4. Mecze i kursy dnia</span>
-              <div className="live-fixtures-controls">
-                <div className="static-add-display form-field-display">
-                  <input className="static-add-input" type="date" value={liveDate} onChange={(e) => setLiveDate(e.target.value)} />
-                </div>
-                <button type="button" className="fetch-fixtures-btn" onClick={fetchLiveFixturesForDay} disabled={liveFixturesLoading}>
-                  {liveFixturesLoading ? 'Pobieram...' : 'Pobierz mecze i kursy'}
-                </button>
-                {liveFixtures.length ? <button type="button" className="clear-fixtures-btn" onClick={() => { setLiveFixtures([]); setLiveFixturesStatus('Lista live wyczyszczona — używasz listy statycznej.') }}>Wyczyść live</button> : null}
-              </div>
-              <small className="live-fixtures-status">{liveFixturesStatus || 'Po podpięciu API lista meczów i kursów będzie pobierana automatycznie z backendu. Bez klucza działa tryb demo.'}</small>
-            </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">5. Mecz</span>
-              <div className="static-add-display form-field-display">
-                <select className="static-add-select" value={selectedMatch?.id || ''} onChange={(e) => chooseMatch(e.target.value)}>
-                  {matchOptions.length ? matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>) : <option value="">Brak przyszłych meczów do wyboru</option>}
-                </select>
-              </div>
-            </div>
-
-            <div className="static-add-card static-span-two market-tiles-card">
-              <span className="static-add-label">5. Typ zakładu</span>
-              <div className="static-add-stack">
-                <div className="market-tiles-head">
-                  <div>
-                    <strong>Wybierz rynek jak u bukmachera</strong>
-                    <small>Kliknij kurs — typ i kurs uzupełnią się automatycznie.</small>
-                  </div>
-                  <em>{marketOptions.length} opcji</em>
-                </div>
-
-                <div className="market-groups-grid">
-                  {orderedMarketGroups.map(([groupName, groupItems]) => (
-                    <div className="market-group-box" key={groupName}>
-                      <div className="market-group-title">{groupName}</div>
-                      <div className="market-odds-grid">
-                        {groupItems.map((item) => {
-                          const active = String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
-                          const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
-                          return (
-                            <button
-                              type="button"
-                              key={`${item.market}-${item.pick}-${item.odds}-${item.__index}`}
-                              className={active ? 'market-odd-tile active' : 'market-odd-tile'}
-                              onClick={() => chooseMarket(value)}
-                            >
-                              <span>{item.pick}</span>
-                              <b>{Number(item.odds || 0).toFixed(2)}</b>
-                            </button>
-                          )
-                        })}
-                      </div>
+          <div className="betfolio-events-list">
+            {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
+              const active = selectedMatch?.id === match.id
+              const primaryOdds = getPrimaryOdds(match)
+              return (
+                <div key={match.id} className={`betfolio-event-row ${active ? 'active' : ''}`}>
+                  <button type="button" className="betfolio-event-main" onClick={() => selectMatchAndMaybeMarket(match)}>
+                    <div className="betfolio-event-teamline">
+                      <strong>{match.home}</strong>
+                      <span>{match.away}</span>
                     </div>
-                  ))}
-                </div>
-
-                <details className="market-select-fallback">
-                  <summary>Lista awaryjna</summary>
-                  <div className="static-add-display form-field-display">
-                    <select className="static-add-select" value={`${form.market}|||${form.betType}|||${form.odds}|||${confidencePercent}`} onChange={(e) => chooseMarket(e.target.value)}>
-                      {marketOptions.map((item, index) => (
-                        <option
-                          key={`${item.market}-${item.pick}-${item.odds}-${index}`}
-                          value={`${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`}
+                    <div className="betfolio-event-meta">
+                      <span>{match.date}</span>
+                      <span>{match.time}</span>
+                      <span>{match.league || currentLeague}</span>
+                    </div>
+                  </button>
+                  <div className="betfolio-event-odds">
+                    {primaryOdds.map((entry) => {
+                      const oddsItem = entry.item
+                      const isSelectedOdd = oddsItem && String(form.market) === String(oddsItem.market) && String(form.betType) === String(oddsItem.pick) && selectedMatch?.id === match.id
+                      return (
+                        <button
+                          type="button"
+                          key={`${match.id}-${entry.short}`}
+                          className={`betfolio-odd-box ${isSelectedOdd ? 'active' : ''}`}
+                          disabled={!oddsItem}
+                          onClick={() => oddsItem && selectMatchAndMaybeMarket(match, oddsItem)}
                         >
-                          {item.market} • {item.pick} • kurs {item.odds}
-                        </option>
-                      ))}
-                    </select>
+                          <span>{entry.short}</span>
+                          <b>{oddsItem ? Number(oddsItem.odds || 0).toFixed(2) : '—'}</b>
+                        </button>
+                      )
+                    })}
+                    <button type="button" className="betfolio-more-btn" onClick={() => selectMatchAndMaybeMarket(match)}>Więcej</button>
                   </div>
-                </details>
+                </div>
+              )
+            }) : (
+              <div className="betfolio-empty-state">
+                <strong>Brak meczów do wyświetlenia</strong>
+                <span>Zmodyfikuj filtry albo pobierz wydarzenia z API.</span>
+              </div>
+            )}
+          </div>
 
-                <div className="field-help">Wybrano: <b>{form.market}</b> · <b>{form.betType}</b> · kurs <b>{form.odds}</b></div>
+          <div className="betfolio-details-wrap">
+            <div className="betfolio-details-top">
+              <div>
+                <strong>{selectedMatch ? `${selectedMatch.home} vs ${selectedMatch.away}` : 'Brak wybranego meczu'}</strong>
+                <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy powyżej'}</span>
+              </div>
+              <button type="button" className="betfolio-small-outline" onClick={() => selectedMatch && applyMatchToForm(selectedMatch)}>Dodaj własny typ</button>
+            </div>
+
+            <div className="betfolio-market-tabs">
+              {marketTabs.map((tab) => (
+                <button
+                  type="button"
+                  key={tab}
+                  className={activeMarketTab === tab ? 'active' : ''}
+                  onClick={() => setActiveMarketTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="betfolio-market-groups">
+              {visibleMarketGroups.map(([groupLabel, items]) => (
+                <div key={groupLabel} className="betfolio-market-group">
+                  <div className="betfolio-market-group-title">
+                    <strong>{groupLabel}</strong>
+                    <span>{items.length} opcji</span>
+                  </div>
+                  <div className="betfolio-market-options">
+                    {items.map((item, index) => {
+                      const active = String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
+                      const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
+                      return (
+                        <button
+                          type="button"
+                          key={`${groupLabel}-${item.pick}-${item.odds}-${index}`}
+                          className={`betfolio-market-option ${active ? 'active' : ''}`}
+                          onClick={() => chooseMarket(value)}
+                        >
+                          <span>{item.pick}</span>
+                          <b>{Number(item.odds || 0).toFixed(2)}</b>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <aside className="betfolio-right glass-ultra-panel">
+          <div className="betfolio-ticket-top">
+            <div className="betfolio-ticket-tabs">
+              <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
+              <button type="button" className={form.accessType === 'premium' ? 'active' : ''} onClick={() => toggleAccess('premium')}>Premium 👑</button>
+            </div>
+            <div className="betfolio-ticket-summary">
+              <small>Wybrano</small>
+              <strong>{form.accessType === 'premium' ? 'Typ premium' : 'Typ darmowy'}</strong>
+            </div>
+          </div>
+
+          <div className="betfolio-ticket-card">
+            <small>Dodaj analizę</small>
+            <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Wybierz mecz'}</strong>
+            <span>{form.market} • {form.betType}</span>
+            <div className="betfolio-ticket-row">
+              <label>Kurs</label>
+              <input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} />
+            </div>
+            <div className="betfolio-ticket-row">
+              <label>Data meczu</label>
+              <div className="betfolio-inline-two">
+                <input className="static-add-input" value={form.date} onChange={(e) => updateForm({ date: e.target.value })} />
+                <input className="static-add-input" value={form.time} onChange={(e) => updateForm({ time: e.target.value })} />
+              </div>
+            </div>
+            <div className="betfolio-ticket-row">
+              <label>Stawka</label>
+              <input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: clampStakeValue(e.target.value) })} onBlur={() => updateForm({ stake: clampStakeValue(form.stake || 0) })} />
+            </div>
+            <div className="stake-pills betfolio-mini-stakes">
+              {[10, 50, 100, 500, 1000].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value.toFixed ? value : value} zł</span>)}
+            </div>
+
+            <div className="betfolio-ticket-row">
+              <label>Pewność</label>
+              <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
+              <div className="confidence-adjuster compact">
+                <button type="button" onClick={() => updateForm({ confidence: Math.max(15, confidencePercent - 1) })}>−</button>
+                <input type="range" min="15" max="99" step="1" value={confidencePercent} onChange={(e) => updateForm({ confidence: Number(e.target.value) || 50 })} />
+                <button type="button" onClick={() => updateForm({ confidence: Math.min(99, confidencePercent + 1) })}>+</button>
               </div>
             </div>
 
-            <div className="static-add-card">
-              <span className="static-add-label">6. Kurs (średni)</span>
-              <div className="static-add-inline-row">
-                <div className="static-add-display odds-display form-field-display"><input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} /></div>
-                <div className="auto-pill">✦ Kurs aktualny dla wybranej opcji: <i>{form.odds}</i></div>
-              </div>
-            </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">7. Stawka</span>
-              <div className="stake-row">
-                <div className="static-add-display stake-value form-field-display"><input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: clampStakeValue(e.target.value) })} onBlur={() => updateForm({ stake: clampStakeValue(form.stake || 0) })} /></div>
-                <div className="static-add-display stake-currency"><span>zł</span></div>
-              </div>
-              <div className="stake-pills">
-                {[10, 50, 100, 500, 1000].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value} zł</span>)}
-              </div>
-            </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">8. Data i godzina</span>
-              <div className="date-time-row">
-                <div className="static-add-display form-field-display"><input className="static-add-input" value={form.date} onChange={(e) => updateForm({ date: e.target.value })} /></div>
-                <div className="static-add-display form-field-display"><input className="static-add-input" value={form.time} onChange={(e) => updateForm({ time: e.target.value })} /></div>
-              </div>
-            </div>
-
-            <div className="static-add-card">
-              <span className="static-add-label">9. Opis typu</span>
+            <div className="betfolio-ticket-row">
+              <label>Opis typu</label>
               <div className="static-add-textarea-wrapper">
                 <textarea className="static-add-textarea-input" maxLength={500} value={form.description} onChange={(e) => updateForm({ description: e.target.value })} />
                 <small>{String(form.description || '').length} / 500</small>
               </div>
             </div>
-            <div className="static-add-card">
-              <span className="static-add-label">10. Poziom pewności</span>
-              <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
-              <div className="confidence-adjuster">
-                <button type="button" onClick={() => updateForm({ confidence: Math.max(15, confidencePercent - 1) })}>−</button>
-                <input type="range" min="15" max="99" step="1" value={confidencePercent} onChange={(e) => updateForm({ confidence: Number(e.target.value) || 50 })} />
-                <button type="button" onClick={() => updateForm({ confidence: Math.min(99, confidencePercent + 1) })}>+</button>
-              </div>
-              <div className="confidence-dots confidence-dots-clickable">
-                {confidenceDots.map((dot) => <i key={dot} className={dot < confidenceFilled ? 'active' : ''} onClick={() => updateForm({ confidence: Math.round(((dot + 1) / 15) * 100) })}></i>)}
-              </div>
-              <div className="confidence-scale"><span>Niski</span><span>Bardzo wysoki</span></div>
-            </div>
 
-            <div className="static-add-card static-span-two tip-single-price-card">
-              <span className="static-add-label">11. Cena singla premium</span>
-              <div className="tip-price-config">
-                <div>
-                  <strong>Ustal cenę pojedynczego typu</strong>
-                  <p>{isPremiumUser ? 'Jako konto Premium możesz ustawić własną cenę za pojedynczy tip premium.' : 'Płatne single są dostępne tylko dla konta Premium. Na koncie FREE publikujesz darmowe tipy.'}</p>
-                </div>
-                <div className={`tip-price-box ${!isPremiumUser ? 'locked' : ''}`}>
-                  <span>Cena singla</span>
-                  {isPremiumUser ? (
-                    <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
-                  ) : (
-                    <b>Premium only</b>
-                  )}
-                  <small>{isPremiumUser ? `Ty: ${(previewPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)} zł • Platforma: ${(previewPrice * PLATFORM_COMMISSION_RATE).toFixed(2)} zł` : 'Odblokuj Premium, aby sprzedawać single i subskrypcje.'}</small>
-                </div>
-              </div>
+            <div className="betfolio-ticket-row">
+              <label>Cena singla</label>
+              {isPremiumUser ? (
+                <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
+              ) : (
+                <div className="betfolio-premium-lock">Premium only</div>
+              )}
             </div>
-
-            <div className="static-add-card static-span-two publish-card">
-              <div>
-                <span className="static-add-label">12. Darmowy / Premium</span>
-                <p>Wybierz widoczność typu dla użytkowników</p>
-              </div>
-              <div className="publish-actions">
-                <div className="publish-choice-zone">
-                  <div className="publish-toggle">
-                    <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
-                    <button type="button" className={form.accessType === 'premium' ? 'active' : ''} onClick={() => toggleAccess('premium')}>Premium 👑</button>
-                  </div>
-                  <div className="publish-choice-summary">Wybrano: <b>{form.accessType === 'premium' ? 'Premium 👑' : 'Darmowy'}</b></div>
-                </div>
-                <button type="button" className="publish-btn" disabled={saving || limitReached} onClick={handlePublish}>{saving ? 'Publikowanie...' : 'Opublikuj typ ✈'}</button>
-              </div>
+            <div className="betfolio-ticket-profit">
+              {form.accessType === 'premium'
+                ? `Ty: ${(previewPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)} zł • Platforma: ${(previewPrice * PLATFORM_COMMISSION_RATE).toFixed(2)} zł`
+                : 'Typ darmowy — bez ceny singla.'}
             </div>
           </div>
-        </div>
 
+          <div className="betfolio-publish-footer">
+            <div className="betfolio-total-box">
+              <span>Kurs całkowity</span>
+              <b>{Number(form.odds || 0).toFixed(2)}</b>
+            </div>
+            <div className="betfolio-total-box">
+              <span>Potencjalny zasięg</span>
+              <b>{previewReachMin}–{previewReachMax}</b>
+            </div>
+            <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !selectedMatch} onClick={handlePublish}>
+              {saving ? 'Publikowanie…' : 'Opublikuj typ'}
+            </button>
+          </div>
+        </aside>
       </div>
     </section>
   )
