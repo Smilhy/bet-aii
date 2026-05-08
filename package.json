@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-698-publish-badge-spacing-fix",
-  "version": "698.0.0",
+  "name": "betai-wersja-699-add-more-sports",
+  "version": "699.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

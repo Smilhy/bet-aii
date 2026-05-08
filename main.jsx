@@ -1530,6 +1530,127 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           ]}
         ]
       }
+    },
+    'Hokej': {
+      leagues: {
+        'NHL': [
+          { id: 'rangers-bruins', home: 'NY Rangers', away: 'Boston Bruins', date: '25.05.2025', time: '01:00', markets: [
+            { market: 'Zwycięzca', pick: 'NY Rangers wygra', odds: 1.89, confidence: 68 },
+            { market: 'Gole', pick: 'Powyżej 5.5 gola', odds: 1.84, confidence: 72 },
+            { market: 'Handicap', pick: 'Boston +1.5', odds: 1.58, confidence: 63 },
+          ]}
+        ]
+      }
+    },
+    'MMA': {
+      leagues: {
+        'UFC': [
+          { id: 'pereira-ankalaev', home: 'A. Pereira', away: 'M. Ankalaev', date: '25.05.2025', time: '23:30', markets: [
+            { market: 'Zwycięzca', pick: 'Pereira wygra', odds: 1.78, confidence: 69 },
+            { market: 'Rundy', pick: 'Powyżej 2.5 rundy', odds: 1.70, confidence: 65 },
+            { market: 'Metoda', pick: 'Pereira przez KO/TKO', odds: 2.25, confidence: 61 },
+          ]}
+        ]
+      }
+    },
+    'E-sport': {
+      leagues: {
+        'CS2': [
+          { id: 'navi-faze', home: 'NAVI', away: 'FaZe', date: '25.05.2025', time: '18:00', markets: [
+            { market: 'Zwycięzca', pick: 'NAVI wygra', odds: 1.87, confidence: 70 },
+            { market: 'Mapy', pick: 'Powyżej 2.5 mapy', odds: 1.96, confidence: 66 },
+            { market: 'Handicap map', pick: 'FaZe +1.5 mapy', odds: 1.55, confidence: 64 },
+          ]}
+        ]
+      }
+    },
+    'Siatkówka': {
+      leagues: {
+        'Liga Narodów': [
+          { id: 'pol-bra-vnl', home: 'Polska', away: 'Brazylia', date: '26.05.2025', time: '19:30', markets: [
+            { market: 'Zwycięzca', pick: 'Polska wygra', odds: 1.92, confidence: 71 },
+            { market: 'Sety', pick: 'Powyżej 3.5 seta', odds: 1.66, confidence: 74 },
+            { market: 'Handicap sety', pick: 'Polska -1.5 seta', odds: 2.08, confidence: 63 },
+          ]}
+        ]
+      }
+    },
+    'Boks': {
+      leagues: {
+        'Main Event': [
+          { id: 'usyk-fury', home: 'O. Usyk', away: 'T. Fury', date: '26.05.2025', time: '22:00', markets: [
+            { market: 'Zwycięzca', pick: 'Usyk wygra', odds: 1.97, confidence: 67 },
+            { market: 'Rundy', pick: 'Powyżej 10.5 rundy', odds: 1.72, confidence: 73 },
+            { market: 'Metoda', pick: 'Wygrana na punkty', odds: 2.30, confidence: 60 },
+          ]}
+        ]
+      }
+    },
+    'Piłka ręczna': {
+      leagues: {
+        'Liga Mistrzów': [
+          { id: 'barca-kiel-handball', home: 'Barcelona', away: 'Kiel', date: '25.05.2025', time: '17:45', markets: [
+            { market: 'Zwycięzca', pick: 'Barcelona wygra', odds: 1.69, confidence: 75 },
+            { market: 'Bramki', pick: 'Powyżej 57.5', odds: 1.81, confidence: 70 },
+            { market: 'Handicap', pick: 'Kiel +3.5', odds: 1.77, confidence: 65 },
+          ]}
+        ]
+      }
+    },
+    'Krykiet': {
+      leagues: {
+        'T20': [
+          { id: 'india-aus-t20', home: 'Indie', away: 'Australia', date: '25.05.2025', time: '13:00', markets: [
+            { market: 'Zwycięzca', pick: 'Indie wygrają', odds: 1.84, confidence: 69 },
+            { market: 'Runy', pick: 'Powyżej 169.5 runów', odds: 1.79, confidence: 67 },
+            { market: 'Handicap', pick: 'Australia +8.5', odds: 1.73, confidence: 62 },
+          ]}
+        ]
+      }
+    },
+    'Rugby': {
+      leagues: {
+        'Six Nations': [
+          { id: 'eng-fra-rugby', home: 'Anglia', away: 'Francja', date: '26.05.2025', time: '16:00', markets: [
+            { market: 'Zwycięzca', pick: 'Anglia wygra', odds: 2.02, confidence: 61 },
+            { market: 'Punkty', pick: 'Powyżej 42.5 pkt', odds: 1.76, confidence: 68 },
+            { market: 'Handicap', pick: 'Francja +4.5', odds: 1.71, confidence: 66 },
+          ]}
+        ]
+      }
+    },
+    'Rugby League': {
+      leagues: {
+        'Super League': [
+          { id: 'wigan-sthelens', home: 'Wigan', away: 'St Helens', date: '26.05.2025', time: '20:00', markets: [
+            { market: 'Zwycięzca', pick: 'Wigan wygra', odds: 1.74, confidence: 72 },
+            { market: 'Punkty', pick: 'Powyżej 38.5 pkt', odds: 1.80, confidence: 67 },
+            { market: 'Handicap', pick: 'St Helens +6.5', odds: 1.68, confidence: 64 },
+          ]}
+        ]
+      }
+    },
+    'Baseball': {
+      leagues: {
+        'MLB': [
+          { id: 'yankees-dodgers', home: 'Yankees', away: 'Dodgers', date: '25.05.2025', time: '19:10', markets: [
+            { market: 'Zwycięzca', pick: 'Yankees wygrają', odds: 1.86, confidence: 68 },
+            { market: 'Runy', pick: 'Powyżej 8.5 runów', odds: 1.83, confidence: 70 },
+            { market: 'Handicap', pick: 'Dodgers +1.5', odds: 1.61, confidence: 65 },
+          ]}
+        ]
+      }
+    },
+    'Dart': {
+      leagues: {
+        'Premier League Darts': [
+          { id: 'humphries-littler', home: 'L. Humphries', away: 'L. Littler', date: '25.05.2025', time: '20:15', markets: [
+            { market: 'Zwycięzca', pick: 'Humphries wygra', odds: 1.90, confidence: 66 },
+            { market: 'Legi', pick: 'Powyżej 9.5 lega', odds: 1.71, confidence: 72 },
+            { market: 'Handicap', pick: 'Littler +1.5 lega', odds: 1.67, confidence: 63 },
+          ]}
+        ]
+      }
     }
   }), [])
 
@@ -6967,6 +7088,9 @@ function TopTipstersView() {
     ['Koszykówka', '28', 'basketball'],
     ['Hokej', '16', 'hockey'],
     ['Esport', '23', 'esport'],
+    ['Siatkówka', '18', 'volleyball'],
+    ['Baseball', '12', 'baseball'],
+    ['Dart', '9', 'dart'],
   ]
 
   const tipsters = [
