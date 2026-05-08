@@ -1,0 +1,43 @@
+BET+AI — WERSJA 718 SPORT SPECIFIC MARKETS
+
+Poprawka:
+1. Rynki są teraz dopasowane do sportu.
+2. Baseball nie pokazuje już:
+   - BTTS,
+   - kartek,
+   - rożnych,
+   - podwójnej szansy,
+   - DNB,
+   - goli piłkarskich.
+3. Baseball pokazuje:
+   - Moneyline,
+   - Run Line,
+   - Suma runów,
+   - 5 inningów,
+   - Team Total.
+4. Tenis pokazuje:
+   - zwycięzca meczu,
+   - sety,
+   - gemy,
+   - handicap gemów.
+5. Koszykówka pokazuje:
+   - zwycięzca,
+   - spread,
+   - suma punktów,
+   - kwarty.
+6. Hokej pokazuje:
+   - zwycięzca,
+   - suma bramek,
+   - Puck Line.
+7. Piłka nożna nadal ma:
+   - 1X2,
+   - BTTS,
+   - gole,
+   - kartki,
+   - rogi,
+   - DNB,
+   - podwójną szansę,
+   - handicap.
+
+SQL:
+- brak nowego SQL.

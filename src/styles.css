@@ -25774,3 +25774,11 @@ font[style*="border"]{
 .decision-score-box{
   display:none!important;
 }
+
+
+/* WERSJA 718 — rynki dopasowane do sportu */
+.betfolio-market-group-title strong{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}

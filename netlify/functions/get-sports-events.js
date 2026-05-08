@@ -89,6 +89,13 @@ exports.handler = async function(event) {
     const firstBook = Array.isArray(bookmakers) ? bookmakers[0] : null
     const bookmakerMarkets = Array.isArray(firstBook?.markets) ? firstBook.markets : []
 
+    const sportText = String(sportName || sport || '').toLowerCase()
+    const isFootball = sportText.includes('soccer') || sportText.includes('piłka') || sportText.includes('football') || sportText.includes('premier league') || sportText.includes('la liga') || sportText.includes('serie a') || sportText.includes('bundesliga') || sportText.includes('ligue')
+    const isBaseball = sportText.includes('baseball') || sportText.includes('mlb') || sportText.includes('milb')
+    const isTennis = sportText.includes('tennis') || sportText.includes('tenis') || sportText.includes('atp') || sportText.includes('wta')
+    const isBasketball = sportText.includes('basketball') || sportText.includes('koszyk') || sportText.includes('nba')
+    const isHockey = sportText.includes('hockey') || sportText.includes('hokej') || sportText.includes('nhl')
+
     bookmakerMarkets.forEach(bookMarket => {
       const key = String(bookMarket.key || bookMarket.market || '').toLowerCase()
       const label = marketNameMap[key] || String(bookMarket.title || bookMarket.key || 'Rynek')
@@ -104,70 +111,70 @@ exports.handler = async function(event) {
       })
     })
 
-    // Podstawowe rynki, gdy API nie zwróci wszystkiego dla danego bukmachera.
-    addMarketIfMissing(markets, 'Wynik końcowy', `${home} wygra`, 1.80, 70)
-    if (String(sportName).toLowerCase().includes('soccer') || String(sportName).toLowerCase().includes('piłka') || String(sportName).toLowerCase().includes('football')) {
-      addMarketIfMissing(markets, 'Wynik końcowy', 'Remis', 3.25, 55)
-    }
-    addMarketIfMissing(markets, 'Wynik końcowy', `${away} wygra`, 2.10, 64)
-    addMarketIfMissing(markets, 'Over/Under', 'Powyżej 2.5', 1.82, 68)
-    addMarketIfMissing(markets, 'Over/Under', 'Poniżej 2.5', 1.95, 62)
-    addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.35, 58)
-    addMarketIfMissing(markets, 'Handicap', `${away} +1.5`, 1.57, 67)
+    addMarketIfMissing(markets, isBaseball ? 'Moneyline' : 'Zwycięzca meczu', `${home} wygra`, 1.80, 70)
+    if (isFootball) addMarketIfMissing(markets, '1X2', 'Remis', 3.25, 55)
+    addMarketIfMissing(markets, isBaseball ? 'Moneyline' : 'Zwycięzca meczu', `${away} wygra`, 2.10, 64)
 
-    // Rynki typowo piłkarskie.
-    const isFootball = String(sportName).toLowerCase().includes('soccer') || String(sportName).toLowerCase().includes('piłka') || String(sportName).toLowerCase().includes('football')
     if (isFootball) {
       addMarketIfMissing(markets, '1X2', `${home} wygra`, 1.72, 72)
       addMarketIfMissing(markets, '1X2', 'Remis', 3.35, 56)
       addMarketIfMissing(markets, '1X2', `${away} wygra`, 2.10, 64)
-
       addMarketIfMissing(markets, 'Podwójna szansa', '1X', 1.28, 76)
       addMarketIfMissing(markets, 'Podwójna szansa', 'X2', 1.58, 66)
       addMarketIfMissing(markets, 'Podwójna szansa', '12', 1.25, 70)
-
       addMarketIfMissing(markets, 'DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
       addMarketIfMissing(markets, 'DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
-
       addMarketIfMissing(markets, 'Gole', 'Powyżej 0.5 gola', 1.12, 85)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 0.5 gola', 7.20, 35)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 1.5 gola', 1.34, 78)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 1.5 gola', 3.10, 48)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 2.5 gola', 1.82, 68)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 2.5 gola', 1.95, 62)
-      addMarketIfMissing(markets, 'Gole', 'Powyżej 3.5 gola', 2.65, 52)
-      addMarketIfMissing(markets, 'Gole', 'Poniżej 3.5 gola', 1.44, 70)
-
       addMarketIfMissing(markets, 'BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
       addMarketIfMissing(markets, 'BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
-
-      addMarketIfMissing(markets, 'Rogi', 'Powyżej 7.5 rożnych', 1.55, 68)
-      addMarketIfMissing(markets, 'Rogi', 'Poniżej 7.5 rożnych', 2.30, 54)
-      addMarketIfMissing(markets, 'Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
-      addMarketIfMissing(markets, 'Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
-      addMarketIfMissing(markets, 'Rogi', 'Powyżej 9.5 rożnych', 2.10, 57)
-      addMarketIfMissing(markets, 'Rogi', 'Poniżej 9.5 rożnych', 1.68, 65)
-      addMarketIfMissing(markets, 'Rogi', `${home} więcej rożnych`, 1.95, 58)
-
-      addMarketIfMissing(markets, 'Kartki', 'Powyżej 2.5 kartek', 1.52, 69)
-      addMarketIfMissing(markets, 'Kartki', 'Poniżej 2.5 kartek', 2.35, 53)
+      addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.35, 58)
+      addMarketIfMissing(markets, 'Handicap', `${away} +1.5`, 1.57, 67)
       addMarketIfMissing(markets, 'Kartki', 'Powyżej 3.5 kartek', 1.78, 64)
       addMarketIfMissing(markets, 'Kartki', 'Poniżej 3.5 kartek', 2.00, 58)
-      addMarketIfMissing(markets, 'Kartki', 'Powyżej 4.5 kartek', 2.20, 51)
-      addMarketIfMissing(markets, 'Kartki', 'Poniżej 4.5 kartek', 1.61, 66)
-      addMarketIfMissing(markets, 'Kartki', `${home} więcej kartek`, 1.88, 57)
-      addMarketIfMissing(markets, 'Kartki', `${away} więcej kartek`, 1.88, 57)
-
-      addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.35, 58)
-      addMarketIfMissing(markets, 'Handicap', `${home} +1.5`, 1.32, 72)
-      addMarketIfMissing(markets, 'Handicap', `${away} -1.5`, 3.10, 45)
-      addMarketIfMissing(markets, 'Handicap', `${away} +1.5`, 1.57, 67)
-
+      addMarketIfMissing(markets, 'Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
+      addMarketIfMissing(markets, 'Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
       addMarketIfMissing(markets, 'Połowy', `${home} wygra 1. połowę`, 2.45, 56)
       addMarketIfMissing(markets, 'Połowy', 'Remis do przerwy', 2.05, 61)
-      addMarketIfMissing(markets, 'Połowy', `${away} wygra 1. połowę`, 3.20, 48)
-      addMarketIfMissing(markets, 'Połowy', 'Powyżej 0.5 gola 1. połowa', 1.40, 72)
-      addMarketIfMissing(markets, 'Połowy', 'Poniżej 0.5 gola 1. połowa', 2.75, 47)
+    } else if (isBaseball) {
+      addMarketIfMissing(markets, 'Run Line', `${home} -1.5`, 2.15, 56)
+      addMarketIfMissing(markets, 'Run Line', `${home} +1.5`, 1.55, 69)
+      addMarketIfMissing(markets, 'Run Line', `${away} -1.5`, 2.25, 54)
+      addMarketIfMissing(markets, 'Run Line', `${away} +1.5`, 1.50, 70)
+      addMarketIfMissing(markets, 'Suma runów', 'Powyżej 7.5 runów', 1.86, 62)
+      addMarketIfMissing(markets, 'Suma runów', 'Poniżej 7.5 runów', 1.90, 60)
+      addMarketIfMissing(markets, 'Suma runów', 'Powyżej 8.5 runów', 1.92, 60)
+      addMarketIfMissing(markets, 'Suma runów', 'Poniżej 8.5 runów', 1.84, 62)
+      addMarketIfMissing(markets, '1. połowa / 5 inningów', `${home} wygra po 5 inningach`, 1.82, 60)
+      addMarketIfMissing(markets, '1. połowa / 5 inningów', `${away} wygra po 5 inningach`, 1.92, 58)
+      addMarketIfMissing(markets, 'Team Total', `${home} powyżej 3.5 runów`, 1.78, 61)
+      addMarketIfMissing(markets, 'Team Total', `${away} powyżej 3.5 runów`, 1.84, 59)
+    } else if (isTennis) {
+      addMarketIfMissing(markets, 'Sety', `${home} 2:0`, 2.25, 55)
+      addMarketIfMissing(markets, 'Sety', `${away} 2:0`, 3.20, 45)
+      addMarketIfMissing(markets, 'Gemy', 'Powyżej 19.5 gemów', 1.82, 60)
+      addMarketIfMissing(markets, 'Gemy', 'Poniżej 19.5 gemów', 1.92, 58)
+      addMarketIfMissing(markets, 'Handicap gemów', `${home} -3.5`, 1.90, 56)
+      addMarketIfMissing(markets, 'Handicap gemów', `${away} +3.5`, 1.80, 61)
+    } else if (isBasketball) {
+      addMarketIfMissing(markets, 'Spread', `${home} -4.5`, 1.90, 58)
+      addMarketIfMissing(markets, 'Spread', `${away} +4.5`, 1.90, 58)
+      addMarketIfMissing(markets, 'Suma punktów', 'Powyżej 210.5 punktów', 1.88, 60)
+      addMarketIfMissing(markets, 'Suma punktów', 'Poniżej 210.5 punktów', 1.88, 60)
+    } else if (isHockey) {
+      addMarketIfMissing(markets, 'Suma bramek', 'Powyżej 5.5 bramek', 1.90, 58)
+      addMarketIfMissing(markets, 'Suma bramek', 'Poniżej 5.5 bramek', 1.90, 58)
+      addMarketIfMissing(markets, 'Puck Line', `${home} -1.5`, 2.40, 52)
+      addMarketIfMissing(markets, 'Puck Line', `${away} +1.5`, 1.48, 70)
+    } else {
+      addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.10, 55)
+      addMarketIfMissing(markets, 'Handicap', `${away} +1.5`, 1.65, 65)
+      addMarketIfMissing(markets, 'Suma punktów', 'Powyżej', 1.88, 60)
+      addMarketIfMissing(markets, 'Suma punktów', 'Poniżej', 1.88, 60)
     }
 
     return markets

@@ -5307,61 +5307,129 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
     const away = match?.away || 'Goście'
-    const base = Array.isArray(sourceMarkets) ? [...sourceMarkets] : []
+    const sportLabel = `${match?.sport || ''} ${match?.league || ''} ${form.sport || ''}`.toLowerCase()
+    const isFootball = sportLabel.includes('piłka') || sportLabel.includes('soccer') || sportLabel.includes('football') || sportLabel.includes('premier league') || sportLabel.includes('la liga') || sportLabel.includes('serie a') || sportLabel.includes('bundesliga') || sportLabel.includes('ligue')
+    const isBaseball = sportLabel.includes('baseball') || sportLabel.includes('mlb') || sportLabel.includes('milb') || sportLabel.includes('ncaa baseball')
+    const isTennis = sportLabel.includes('tenis') || sportLabel.includes('tennis') || sportLabel.includes('wta') || sportLabel.includes('atp') || sportLabel.includes('itf')
+    const isBasketball = sportLabel.includes('koszyk') || sportLabel.includes('basketball') || sportLabel.includes('nba') || sportLabel.includes('ncaa basketball')
+    const isHockey = sportLabel.includes('hokej') || sportLabel.includes('hockey') || sportLabel.includes('nhl')
+
+    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Połowy', 'Połowa']
+    const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
+      .filter(item => {
+        if (isFootball) return true
+        return !footballOnlyMarkets.includes(String(item.market || ''))
+      })
+      .map(item => ({ ...item }))
+
     const add = (market, pick, odds, confidence = 62) => {
       const exists = base.some(item => String(item.market) === market && String(item.pick) === pick)
       if (!exists) base.push({ market, pick, odds, confidence })
     }
 
-    add('1X2', `${home} wygra`, 1.72, 72)
-    add('1X2', 'Remis', 3.35, 56)
-    add('1X2', `${away} wygra`, 2.10, 64)
+    const hasDraw = isFootball
+    add('Zwycięzca meczu', `${home} wygra`, 1.72, 70)
+    if (hasDraw) add('1X2', 'Remis', 3.35, 56)
+    add('Zwycięzca meczu', `${away} wygra`, 2.10, 64)
 
-    add('Podwójna szansa', '1X', 1.28, 76)
-    add('Podwójna szansa', 'X2', 1.58, 66)
-    add('Podwójna szansa', '12', 1.25, 70)
+    if (isFootball) {
+      add('1X2', `${home} wygra`, 1.72, 72)
+      add('1X2', 'Remis', 3.35, 56)
+      add('1X2', `${away} wygra`, 2.10, 64)
 
-    add('DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
-    add('DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
+      add('Podwójna szansa', '1X', 1.28, 76)
+      add('Podwójna szansa', 'X2', 1.58, 66)
+      add('Podwójna szansa', '12', 1.25, 70)
 
-    add('Gole', 'Powyżej 0.5 gola', 1.12, 85)
-    add('Gole', 'Poniżej 0.5 gola', 7.20, 35)
-    add('Gole', 'Powyżej 1.5 gola', 1.34, 78)
-    add('Gole', 'Poniżej 1.5 gola', 3.10, 48)
-    add('Gole', 'Powyżej 2.5 gola', 1.82, 68)
-    add('Gole', 'Poniżej 2.5 gola', 1.95, 62)
-    add('Gole', 'Powyżej 3.5 gola', 2.65, 52)
-    add('Gole', 'Poniżej 3.5 gola', 1.44, 70)
+      add('DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
+      add('DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
 
-    add('BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
-    add('BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
+      add('Gole', 'Powyżej 0.5 gola', 1.12, 85)
+      add('Gole', 'Poniżej 0.5 gola', 7.20, 35)
+      add('Gole', 'Powyżej 1.5 gola', 1.34, 78)
+      add('Gole', 'Poniżej 1.5 gola', 3.10, 48)
+      add('Gole', 'Powyżej 2.5 gola', 1.82, 68)
+      add('Gole', 'Poniżej 2.5 gola', 1.95, 62)
+      add('Gole', 'Powyżej 3.5 gola', 2.65, 52)
+      add('Gole', 'Poniżej 3.5 gola', 1.44, 70)
 
-    add('Handicap', `${home} -1.5`, 2.35, 58)
-    add('Handicap', `${home} +1.5`, 1.32, 72)
-    add('Handicap', `${away} -1.5`, 3.10, 45)
-    add('Handicap', `${away} +1.5`, 1.57, 67)
+      add('BTTS', 'Obie drużyny strzelą: TAK', 1.72, 66)
+      add('BTTS', 'Obie drużyny strzelą: NIE', 2.02, 59)
 
-    add('Kartki', 'Powyżej 2.5 kartek', 1.52, 69)
-    add('Kartki', 'Poniżej 2.5 kartek', 2.35, 53)
-    add('Kartki', 'Powyżej 3.5 kartek', 1.78, 64)
-    add('Kartki', 'Poniżej 3.5 kartek', 2.00, 58)
-    add('Kartki', 'Powyżej 4.5 kartek', 2.20, 51)
-    add('Kartki', 'Poniżej 4.5 kartek', 1.61, 66)
-    add('Kartki', `${home} więcej kartek`, 1.88, 56)
-    add('Kartki', `${away} więcej kartek`, 1.88, 56)
+      add('Handicap', `${home} -1.5`, 2.35, 58)
+      add('Handicap', `${home} +1.5`, 1.32, 72)
+      add('Handicap', `${away} -1.5`, 3.10, 45)
+      add('Handicap', `${away} +1.5`, 1.57, 67)
 
-    add('Rogi', 'Powyżej 7.5 rożnych', 1.55, 68)
-    add('Rogi', 'Poniżej 7.5 rożnych', 2.30, 54)
-    add('Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
-    add('Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
-    add('Rogi', 'Powyżej 9.5 rożnych', 2.10, 57)
-    add('Rogi', 'Poniżej 9.5 rożnych', 1.68, 65)
+      add('Kartki', 'Powyżej 2.5 kartek', 1.52, 69)
+      add('Kartki', 'Poniżej 2.5 kartek', 2.35, 53)
+      add('Kartki', 'Powyżej 3.5 kartek', 1.78, 64)
+      add('Kartki', 'Poniżej 3.5 kartek', 2.00, 58)
+      add('Kartki', 'Powyżej 4.5 kartek', 2.20, 51)
+      add('Kartki', 'Poniżej 4.5 kartek', 1.61, 66)
 
-    add('Połowy', `${home} wygra 1. połowę`, 2.45, 56)
-    add('Połowy', 'Remis do przerwy', 2.05, 61)
-    add('Połowy', `${away} wygra 1. połowę`, 3.20, 48)
-    add('Połowy', 'Powyżej 0.5 gola 1. połowa', 1.40, 72)
-    add('Połowy', 'Poniżej 0.5 gola 1. połowa', 2.75, 47)
+      add('Rogi', 'Powyżej 7.5 rożnych', 1.55, 68)
+      add('Rogi', 'Poniżej 7.5 rożnych', 2.30, 54)
+      add('Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
+      add('Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
+      add('Rogi', 'Powyżej 9.5 rożnych', 2.10, 57)
+      add('Rogi', 'Poniżej 9.5 rożnych', 1.68, 65)
+
+      add('Połowy', `${home} wygra 1. połowę`, 2.45, 56)
+      add('Połowy', 'Remis do przerwy', 2.05, 61)
+      add('Połowy', `${away} wygra 1. połowę`, 3.20, 48)
+      add('Połowy', 'Powyżej 0.5 gola 1. połowa', 1.40, 72)
+      add('Połowy', 'Poniżej 0.5 gola 1. połowa', 2.75, 47)
+    } else if (isBaseball) {
+      add('Moneyline', `${home} wygra`, 1.76, 66)
+      add('Moneyline', `${away} wygra`, 1.97, 64)
+      add('Run Line', `${home} -1.5`, 2.15, 56)
+      add('Run Line', `${home} +1.5`, 1.55, 69)
+      add('Run Line', `${away} -1.5`, 2.25, 54)
+      add('Run Line', `${away} +1.5`, 1.50, 70)
+      add('Suma runów', 'Powyżej 7.5 runów', 1.86, 62)
+      add('Suma runów', 'Poniżej 7.5 runów', 1.90, 60)
+      add('Suma runów', 'Powyżej 8.5 runów', 1.92, 60)
+      add('Suma runów', 'Poniżej 8.5 runów', 1.84, 62)
+      add('Suma runów', 'Powyżej 9.5 runów', 2.05, 55)
+      add('Suma runów', 'Poniżej 9.5 runów', 1.72, 65)
+      add('1. połowa / 5 inningów', `${home} wygra po 5 inningach`, 1.82, 60)
+      add('1. połowa / 5 inningów', `${away} wygra po 5 inningach`, 1.92, 58)
+      add('Team Total', `${home} powyżej 3.5 runów`, 1.78, 61)
+      add('Team Total', `${away} powyżej 3.5 runów`, 1.84, 59)
+    } else if (isTennis) {
+      add('Zwycięzca meczu', `${home} wygra`, 1.55, 70)
+      add('Zwycięzca meczu', `${away} wygra`, 2.35, 58)
+      add('Sety', `${home} 2:0`, 2.25, 55)
+      add('Sety', `${away} 2:0`, 3.20, 45)
+      add('Gemy', 'Powyżej 19.5 gemów', 1.82, 60)
+      add('Gemy', 'Poniżej 19.5 gemów', 1.92, 58)
+      add('Handicap gemów', `${home} -3.5`, 1.90, 56)
+      add('Handicap gemów', `${away} +3.5`, 1.80, 61)
+    } else if (isBasketball) {
+      add('Zwycięzca meczu', `${home} wygra`, 1.72, 68)
+      add('Zwycięzca meczu', `${away} wygra`, 2.05, 62)
+      add('Spread', `${home} -4.5`, 1.90, 58)
+      add('Spread', `${away} +4.5`, 1.90, 58)
+      add('Suma punktów', 'Powyżej 210.5 punktów', 1.88, 60)
+      add('Suma punktów', 'Poniżej 210.5 punktów', 1.88, 60)
+      add('Kwarty', `${home} wygra 1. kwartę`, 1.95, 57)
+      add('Kwarty', `${away} wygra 1. kwartę`, 2.05, 54)
+    } else if (isHockey) {
+      add('Zwycięzca meczu', `${home} wygra`, 1.85, 63)
+      add('Zwycięzca meczu', `${away} wygra`, 2.05, 60)
+      add('Suma bramek', 'Powyżej 5.5 bramek', 1.90, 58)
+      add('Suma bramek', 'Poniżej 5.5 bramek', 1.90, 58)
+      add('Puck Line', `${home} -1.5`, 2.40, 52)
+      add('Puck Line', `${away} +1.5`, 1.48, 70)
+    } else {
+      add('Zwycięzca meczu', `${home} wygra`, 1.75, 65)
+      add('Zwycięzca meczu', `${away} wygra`, 2.00, 62)
+      add('Handicap', `${home} -1.5`, 2.10, 55)
+      add('Handicap', `${away} +1.5`, 1.65, 65)
+      add('Suma punktów', 'Powyżej', 1.88, 60)
+      add('Suma punktów', 'Poniżej', 1.88, 60)
+    }
 
     return base
   }
@@ -5374,7 +5442,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
-  const marketGroupOrder = ['Wynik końcowy', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Over/Under', 'Gole', 'Gole/Punkty', 'BTTS', 'Handicap', 'Kartki', 'Rogi', 'Połowy', 'Połowa', 'Draw No Bet', 'Rynek']
+  const marketGroupOrder = ['Zwycięzca meczu', 'Wynik końcowy', 'Moneyline', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Over/Under', 'Gole', 'Gole/Punkty', 'Suma runów', 'Suma punktów', 'Suma bramek', 'BTTS', 'Handicap', 'Run Line', 'Puck Line', 'Spread', 'Kartki', 'Rogi', 'Połowy', 'Połowa', '1. połowa / 5 inningów', 'Sety', 'Gemy', 'Handicap gemów', 'Team Total', 'Kwarty', 'Draw No Bet', 'Rynek']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
@@ -5383,7 +5451,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const marketTabs = ['Wszystkie', 'Popularne', ...orderedMarketGroups.map(([label]) => label)]
   const visibleMarketGroups = orderedMarketGroups.filter(([label]) => {
     if (activeMarketTab === 'Wszystkie') return true
-    if (activeMarketTab === 'Popularne') return ['Wynik końcowy', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'BTTS', 'Handicap', 'Kartki', 'Rogi'].includes(label)
+    if (activeMarketTab === 'Popularne') return ['Zwycięzca meczu', 'Wynik końcowy', 'Moneyline', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Suma runów', 'Suma punktów', 'BTTS', 'Handicap', 'Run Line', 'Spread', 'Kartki', 'Rogi'].includes(label)
     return label === activeMarketTab
   })
   const normalizedSearch = String(sidebarSearch || '')
