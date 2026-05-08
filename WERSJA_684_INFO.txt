@@ -1,0 +1,31 @@
+BET+AI — WERSJA 684
+
+Naprawka: Wiadomości użytkowników / prywatny czat.
+
+Co poprawiono:
+1. Lista użytkowników w prywatnych wiadomościach nie opiera się już tylko na profiles.
+   Dodany jest nowy katalog użytkowników przez funkcję SQL get_betai_user_directory().
+   Dzięki temu panel powinien widzieć wszystkich zarejestrowanych użytkowników, np. buchajson1988.
+
+2. Dodane fallbacki do listy użytkowników:
+   - profiles,
+   - direct_messages,
+   - live_chat_messages,
+   - lookup profilu po emailu.
+
+3. Naprawione znikanie wiadomości po kilku sekundach.
+   Problem powodował timer, który odświeżał rozmowę ze starym activeUser/null i czyścił wiadomości.
+   Teraz aktywny użytkownik trzymany jest w ref i rozmowa nie znika.
+
+4. Dodany SQL:
+   SUPABASE_SQL_WERSJA_684_USER_MESSAGES_DIRECTORY.sql
+
+Co zrobić po wgraniu:
+1. Wgraj wersję 684 na stronę.
+2. W Supabase SQL Editor uruchom:
+   SUPABASE_SQL_WERSJA_684_USER_MESSAGES_DIRECTORY.sql
+3. W Supabase -> Database -> Publications -> supabase_realtime
+   włącz tabelę:
+   direct_messages
+
+Nowego SQL dla TIP-ów nie trzeba uruchamiać ponownie.

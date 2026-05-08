@@ -3047,6 +3047,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const [status, setStatus] = useState('Kliknij użytkownika po lewej i napisz prywatną wiadomość.')
   const [sending, setSending] = useState(false)
   const [directoryMeta, setDirectoryMeta] = useState({})
+  const activeUserRef = useRef(null)
 
   const myId = user?.id || ''
   const myEmail = normalizeEmail(user?.email || '')
@@ -3072,23 +3073,105 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
 
+  useEffect(() => {
+    activeUserRef.current = activeUser
+  }, [activeUser?.id])
+
   const loadUsers = async () => {
     if (!isSupabaseConfigured || !supabase || !myId) return
     try {
       const profileRows = []
-      let from = 0
-      const pageSize = 200
-      for (let guard = 0; guard < 5; guard += 1) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id,email,username,created_at')
+      const existingProfileIds = new Set()
+      const existingProfileEmails = new Set()
+
+      const addProfileRow = (row = {}) => {
+        const id = String(row?.id || '')
+        const email = normalizeEmail(row?.email || '')
+        if (!id && !email) return
+        const key = id || `email:${email}`
+        if (id && existingProfileIds.has(id)) return
+        if (!id && email && existingProfileEmails.has(email)) return
+        if (id) existingProfileIds.add(id)
+        if (email) existingProfileEmails.add(email)
+        profileRows.push(row)
+      }
+
+      // WERSJA 684: główne źródło listy użytkowników.
+      // Funkcja SQL działa jako security definer i widzi wszystkich zarejestrowanych użytkowników.
+      try {
+        const { data: directoryRows, error: directoryError } = await supabase.rpc('get_betai_user_directory')
+        if (!directoryError && Array.isArray(directoryRows)) {
+          directoryRows.forEach(addProfileRow)
+        }
+      } catch (directoryError) {
+        console.warn('user directory rpc skipped', directoryError)
+      }
+
+      // Fallback: standardowa tabela profiles, jeżeli RLS pozwala ją czytać.
+      try {
+        let from = 0
+        const pageSize = 200
+        for (let guard = 0; guard < 8; guard += 1) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id,email,username,created_at')
+            .order('created_at', { ascending: false })
+            .range(from, from + pageSize - 1)
+          if (error) throw error
+          const batch = Array.isArray(data) ? data : []
+          batch.forEach(addProfileRow)
+          if (batch.length < pageSize) break
+          from += pageSize
+        }
+      } catch (profilesError) {
+        console.warn('profiles directory fallback skipped', profilesError)
+      }
+
+      // Fallback z live chatu: użytkownik może być aktywny na czacie, ale nie pojawiać się w profiles przez RLS.
+      // Po emailu próbujemy dociągnąć jego profil/id.
+      try {
+        const { data: chatUsers, error: chatUsersError } = await supabase
+          .from('live_chat_messages')
+          .select('user_email,user_name,user_id,created_at')
           .order('created_at', { ascending: false })
-          .range(from, from + pageSize - 1)
-        if (error) throw error
-        const batch = Array.isArray(data) ? data : []
-        profileRows.push(...batch)
-        if (batch.length < pageSize) break
-        from += pageSize
+          .limit(1000)
+        if (!chatUsersError && Array.isArray(chatUsers)) {
+          const chatEmails = Array.from(new Set(chatUsers.map(row => normalizeEmail(row.user_email || '')).filter(Boolean)))
+          const chatByEmail = new Map()
+          chatUsers.forEach(row => {
+            const email = normalizeEmail(row.user_email || '')
+            if (!email || email === myEmail) return
+            if (!chatByEmail.has(email)) chatByEmail.set(email, row)
+          })
+
+          if (chatEmails.length) {
+            try {
+              const { data: chatProfiles, error: chatProfilesError } = await supabase
+                .from('profiles')
+                .select('id,email,username,created_at')
+                .in('email', chatEmails)
+              if (!chatProfilesError && Array.isArray(chatProfiles)) {
+                chatProfiles.forEach(addProfileRow)
+              }
+            } catch (chatProfilesError) {
+              console.warn('live chat profile lookup skipped', chatProfilesError)
+            }
+          }
+
+          chatByEmail.forEach((row, email) => {
+            if (existingProfileEmails.has(email) || email === myEmail) return
+            const id = String(row?.user_id || '')
+            if (!id) return
+            addProfileRow({
+              id,
+              email,
+              username: row?.user_name || '',
+              created_at: row?.created_at || ''
+            })
+          })
+        }
+      } catch (chatUsersError) {
+        console.warn('live chat users fallback skipped', chatUsersError)
       }
 
       let dmRows = []
@@ -3274,7 +3357,8 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     const timer = setInterval(() => {
       loadUnread()
       loadUsers()
-      loadConversation(activeUser)
+      const target = activeUserRef.current
+      if (target?.id) loadConversation(target)
     }, 4000)
     return () => clearInterval(timer)
   }, [visible, myId])
@@ -3308,7 +3392,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
                 <span><strong>{item.name}</strong><small>{item.email || 'Brak e-mail w profilu'}</small></span>
                 {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
               </button>
-            )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania.</div>}
+            )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania. Jeśli kogoś brakuje, uruchom SQL 684 dla katalogu użytkowników.</div>}
           </div>
         </aside>
         <section className="betai-dm-conversation">
