@@ -2101,7 +2101,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <div className="static-add-card">
               <span className="static-add-label">9. Analiza AI</span>
               <div className="ai-analysis-simple">
-                <small>Analiza wygenerowana przez AI</small>
                 <textarea className="static-add-textarea-input ai-analysis-textarea" maxLength={500} value={form.aiAnalysis} onChange={(e) => updateForm({ aiAnalysis: e.target.value })} />
               </div>
             </div>
