@@ -1,1 +1,0 @@
-Wersja 469: auth logo bez czarnego tła, zielono-turkusowy przycisk Załóż konto, wyostrzenie i ultra-pro polish panelu auth. Dashboard bez zmian.

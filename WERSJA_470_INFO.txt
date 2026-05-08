@@ -1,7 +1,0 @@
-Wersja 470 — auth logo + green button ultra polish
-- bazuje na wersji 469
-- logo w panelu auth wymienione na wersję bez czarnego prostokątnego tła
-- przycisk Załóż konto/Zaloguj się ma zielono-turkusowy kolor strony
-- napis AI ma mocniejszy niebieski/turkusowy akcent
-- dodane wyostrzenie/showcase polish i subtelne żywe efekty
-- dashboard i reszta funkcji bez zmian

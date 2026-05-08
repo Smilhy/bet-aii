@@ -1,1 +1,0 @@
-VERSION 474 — poprawka prawego panelu auth: usunięte przebijające elementy podglądu po prawej stronie, showcase osadzony w zamkniętej ramce, użyty czystszy asset auth-showcase-473.webp.

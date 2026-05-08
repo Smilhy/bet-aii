@@ -1,3 +1,0 @@
-Wersja 444:
-- Górny przycisk profilu (smilhytv / ADMIN) ma teraz czarny tekst.
-- Dodatkowo dopasowane tło, avatar i chevron, żeby wyglądało spójnie i czytelnie premium.

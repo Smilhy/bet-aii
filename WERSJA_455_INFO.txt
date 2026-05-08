@@ -1,5 +1,0 @@
-Wersja 455
-- panel auth ustawiony na pełny ekran (fullscreen)
-- dopasowane overlaye pól wpisywania do ramek
-- poprawione ustawienie checkboxa "Akceptuję regulamin"
-- delikatne wyostrzenie / podbicie kontrastu i efekt ultra-pro

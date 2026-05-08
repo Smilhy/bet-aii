@@ -1,6 +1,0 @@
-Wersja 398
-- poprawka wyglądu slajdu Bet+AI Coin w hero dashboardu
-- biały żeton jest teraz pełnym szerokim bannerem w środkowej ramce hero, a nie małą miniaturą
-- slajd nadal jest kolejnym slajdem animacji hero
-- tabela "MECZÓW DZIŚ" nie została ruszona i zostaje po prawej stronie
-- node_modules nie jest pakowane do ZIP, żeby Netlify nie łapał błędu esbuild EACCES

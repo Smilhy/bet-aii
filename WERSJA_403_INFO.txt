@@ -1,4 +1,0 @@
-Wersja 403
-- przywrócone Żetony w lewej kolumnie pod Saldo, podpięte pod tokenBalance
-- górny przycisk portfel/saldo/żetony przywrócony na niebieski gradient jak Wyloguj
-- nie ruszono tabeli MECZÓW DZIŚ

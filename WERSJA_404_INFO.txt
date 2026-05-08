@@ -1,4 +1,0 @@
-Wersja 404
-- górny przycisk portfel/saldo/żetony ustawiony na ten sam niebieski gradient co Wyloguj
-- Żetony w lewej kolumnie mają niebieski kolor jak Wyloguj
-- nie ruszono tabeli MECZÓW DZIŚ

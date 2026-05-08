@@ -1,6 +1,0 @@
-Wersja 463
-- poprawiona lewa kolumna auth zgodnie z nowym zdjęciem referencyjnym
-- dopracowany układ lewego panelu: logo box, nagłówek, zakładki, pola i przycisk
-- domyślnie otwiera się tryb logowania jak na referencji
-- zachowana realna logika logowania/rejestracji
-- zbudowany nowy dist produkcyjny

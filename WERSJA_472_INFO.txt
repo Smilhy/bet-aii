@@ -1,8 +1,0 @@
-Wersja 472
-- powiększony i dopracowany panel auth
-- poprawione spacingi i brak obcięcia dolnego switchera
-- jaśniejszy oraz ostrzejszy prawy panel wizualny
-- mocniejszy kontrast przycisku Załóż konto
-- lepsze full-screen proportions i ultra-pro glow
-
-Gotowa paczka z poprawionym ekranem auth.

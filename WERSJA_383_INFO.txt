@@ -1,5 +1,0 @@
-Wersja 383:
-- dodany ultra-pro błysk/smuga światła na wszystkich bannerach zakładek
-- animacja przechodzi co 3 sekundy
-- zachowany ten sam rozmiar i ostrość bannerów z wersji 382
-- efekt działa także po zwykłym wrzuceniu gotowej paczki

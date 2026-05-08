@@ -1,1 +1,0 @@
-Wersja 378: wszystkie zakładki poza dashboardem mają teraz ten sam rozmiar banera co Ranking. Banery są niższe, mniej rozciągnięte i ostrzejsze.

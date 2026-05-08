@@ -1,6 +1,0 @@
-Wersja 413
-- zastosowane inne rozwiązanie: finalny hero banner przygotowany bezpośrednio z zaakceptowanego screena użytkownika
-- banner Bet+AI Coin dopasowany do środkowej ramki hero jak na wzorze użytkownika
-- układ MECZÓW DZIŚ po prawej pozostaje bez zmian
-- górny przycisk saldo/żetony pozostaje niebieski jak Wyloguj
-- Żetony w lewej kolumnie pozostają niebieskie

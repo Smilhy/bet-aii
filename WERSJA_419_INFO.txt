@@ -1,3 +1,0 @@
-Wersja 419
-- przepakowana paczka po błędzie archiwum
-- zawartość taka sama jak wersja 418

@@ -1,7 +1,0 @@
-Wersja 417
-- poprawiona jakość obrazu hero coin: użyty oryginalny banner high-res po wyostrzeniu i lekkim upscalu
-- banner jest mniej przybliżony i osadzony jako pełna warstwa środkowej kolumny hero
-- dodany subtelny efekt float / żyjącego ruchu dla bannera coin
-- statystyki są bardzo przezroczyste tylko wtedy, gdy aktywny jest coin banner
-- górny przycisk saldo/żetony nadal niebieski jak Wyloguj
-- Żetony w lewej kolumnie nadal niebieskie

@@ -1,4 +1,0 @@
-Wersja 437
-- licznik/kropka z liczbą na dzwonku zmieniona z zielonej na niebieską jak przycisk Wyloguj
-- dodany lekki niebieski glow dla licznika
-- nie ruszano dashboardu, hero, czatu, logo ani MECZÓW DZIŚ

@@ -1,4 +1,0 @@
-Wersja 407
-- slajd Bet+AI Coin ma teraz osobny tryb aktywny i wypełnia całą środkową ramkę hero
-- ukryty zewnętrzny kicker podczas slajdu coin, żeby obraz był pełny jak w podglądzie
-- prawa kolumna MECZÓW DZIŚ pozostaje po prawej bez zmiany pozycji

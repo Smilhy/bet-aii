@@ -1,7 +1,0 @@
-WERSJA 441
-- prawa kolumna statystyk hero (MECZÓW DZIŚ / ŚR. PEWNOŚĆ / ROI / PREMIUM / DZIEŃ) została mocno utransparentniona,
-  tak aby bardziej było widać slajd pod spodem
-- dolny przycisk "+ Dodaj typ" przy filtrach został zmieniony na niebieski
-- przycisk "+ Dodaj typ" dostał mocniejsze podświetlenie, pulsujący glow i animowany błysk,
-  żeby bardziej przyciągał uwagę
-- układ hero, slajdy, czat, logo i topbar pozostają bez zmiany

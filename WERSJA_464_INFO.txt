@@ -1,6 +1,0 @@
-Wersja 464
-- poprawiona prawa ramka showcase
-- wyrównana widoczność prawej kolumny
-- ustawione lepsze dopasowanie grafiki w prawej ramce (contain zamiast zjadania przez cover)
-- lekko poprawione proporcje kolumn, aby prawa strona nie była ucinana
-- nowy dist produkcyjny
