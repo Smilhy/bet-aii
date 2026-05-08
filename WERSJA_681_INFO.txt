@@ -1,0 +1,16 @@
+WERSJA 681 — COIN WIDOCZNY FINAL
+
+Zmiany:
+- Nic więcej nie zmieniano w layoucie.
+- Coin został zachowany tylko w 2 miejscach:
+  1) sidebar przy pozycji „Coin”,
+  2) topbar przy liczniku Coin.
+- Ikona coina została osadzona bezpośrednio w CSS jako data URI, żeby była widoczna niezależnie od ścieżek plików.
+- Dopisano dodatkowe wymiary min-width/min-height dla pewnego renderowania.
+
+Zmienione pliki:
+- styles.css
+- src/styles.css
+- index-dj5lcoc1.css
+- dist/assets/index-CyAQjA1T.css
+- package.json
