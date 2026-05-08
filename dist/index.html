@@ -16,5 +16,32 @@
   </head>
 <body>
   <div id="root"></div>
+
+<script>
+(function(){
+  function showTipPopup(sender){
+    var old=document.getElementById('betai-tip-popup'); if(old) old.remove();
+    var wrap=document.createElement('div');
+    wrap.id='betai-tip-popup';
+    wrap.style.cssText='position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);opacity:0;transition:opacity .22s ease;pointer-events:none;';
+    wrap.innerHTML='<div style="background:rgba(4,8,22,.94);border:1px solid rgba(255,255,255,.16);border-radius:26px;padding:18px 18px 20px;box-shadow:0 0 55px rgba(0,229,255,.45),0 0 90px rgba(255,215,0,.18);text-align:center;transform:scale(.96);transition:transform .22s ease;"><img src="/bet_ai_ultra_pro_nowy_tip.gif" style="width:min(360px,82vw);border-radius:18px;display:block;"/><div style="color:#fff;font-size:clamp(20px,4vw,28px);line-height:1.2;font-weight:900;margin-top:16px;text-shadow:0 0 14px rgba(0,229,255,.55);">Otrzymałeś TIP od: '+String(sender||'Użytkownik').replace(/[<>]/g,'')+'</div></div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function(){ wrap.style.opacity='1'; if(wrap.firstElementChild) wrap.firstElementChild.style.transform='scale(1)'; });
+    setTimeout(function(){ wrap.style.opacity='0'; setTimeout(function(){wrap.remove()},260); },4000);
+  }
+  window.addEventListener('betai-tip', function(e){ showTipPopup(e.detail && e.detail.from); });
+  var seen=new Set();
+  function scan(){
+    var text=document.body ? document.body.innerText||'' : '';
+    if(!text.includes('Dostałeś tip na czacie') && !text.includes('wysłał Ci 1 żeton')) return;
+    var m=text.match(/([A-Za-z0-9_.@ąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]{3,40})\s+wysłał Ci 1 żeton/);
+    var sender=m && m[1] ? m[1] : 'Użytkownik';
+    var key=sender+'|'+Math.floor(Date.now()/5000);
+    if(seen.has(key)) return;
+    seen.add(key); showTipPopup(sender);
+  }
+  new MutationObserver(function(){ scan(); }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+})();
+</script>
 </body>
 </html>
