@@ -6884,6 +6884,8 @@ function App() {
   const lastReceivedTipRef = useRef('')
   const receivedTipPollReadyRef = useRef(false)
   const lastReceivedTipPollKeyRef = useRef('')
+  const receivedTipNotificationPollReadyRef = useRef(false)
+  const lastReceivedTipNotificationKeyRef = useRef('')
 
   function hideReceivedTipPopup() {
     setReceivedTipPopupVisible(false)
@@ -6927,6 +6929,40 @@ function App() {
     } catch (_) {
       return 0
     }
+  }
+
+  function getTipSenderFromNotification(row = {}) {
+    const body = String(row.body || row.message || '')
+    const title = String(row.title || '')
+    const sentBy = String(row.sender_username || row.from_username || row.sent_by || '').trim()
+    const match = body.match(/^(.+?)\s+wysłał\s+Ci/i) || body.match(/^(.+?)\s+wyslal\s+Ci/i)
+    if (match?.[1]) return match[1].trim()
+    if (sentBy && sentBy.toLowerCase() !== 'betai') return sentBy
+    const titleMatch = title.match(/od\s+(.+)$/i)
+    if (titleMatch?.[1]) return titleMatch[1].trim()
+    return 'Użytkownik'
+  }
+
+  function isTipNotification(row = {}) {
+    const title = String(row.title || '').toLowerCase()
+    const body = String(row.body || row.message || '').toLowerCase()
+    const reward = Number(row.reward_tokens || 0) || 0
+    return reward > 0 && (title.includes('tip') || body.includes('wysłał ci') || body.includes('wyslal ci') || body.includes('żeton') || body.includes('zeton'))
+  }
+
+  function showReceivedTipFromNotification(row = {}, silent = false) {
+    if (!row || !isTipNotification(row)) return false
+    const key = String(row.id || `${row.created_at || ''}_${row.title || ''}_${row.body || row.message || ''}_${row.reward_tokens || 1}`)
+    if (!key || lastReceivedTipNotificationKeyRef.current === key) return false
+    lastReceivedTipNotificationKeyRef.current = key
+    if (!silent) {
+      const senderName = getTipSenderFromNotification(row)
+      const amount = Math.max(1, Number(row.reward_tokens || 1) || 1)
+      showReceivedTipPopup(senderName, amount)
+    }
+    window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+    fetchCurrentTokenBalance()
+    return true
   }
 
   function hideLiveTipPopup() {
@@ -8381,15 +8417,48 @@ function App() {
     if (!currentEmail) return undefined
 
     let stopped = false
+    receivedTipNotificationPollReadyRef.current = false
+    lastReceivedTipNotificationKeyRef.current = ''
+
     const refreshTokens = async () => {
       if (stopped) return
       await fetchCurrentTokenBalance()
       await fetchNotifications(sessionUser?.id)
     }
 
+    const pollTipNotifications = async () => {
+      if (stopped || !isSupabaseConfigured || !supabase || !currentEmail) return
+      try {
+        const { data, error } = await supabase
+          .from('betai_system_notifications')
+          .select('*')
+          .eq('recipient_email', currentEmail)
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        if (error || !Array.isArray(data)) return
+        const newestTipNotification = data.find(row => isTipNotification(row))
+        const newestKey = newestTipNotification ? String(newestTipNotification.id || `${newestTipNotification.created_at || ''}_${newestTipNotification.title || ''}_${newestTipNotification.body || newestTipNotification.message || ''}`) : ''
+
+        if (!receivedTipNotificationPollReadyRef.current) {
+          receivedTipNotificationPollReadyRef.current = true
+          if (newestKey) lastReceivedTipNotificationKeyRef.current = newestKey
+          return
+        }
+
+        if (newestTipNotification && newestKey !== lastReceivedTipNotificationKeyRef.current) {
+          showReceivedTipFromNotification(newestTipNotification, false)
+        }
+      } catch (error) {
+        console.warn('tip notification popup polling skipped', error)
+      }
+    }
+
     window.addEventListener('betai-token-balance-changed', refreshTokens)
     const quickRefresh = setTimeout(refreshTokens, 350)
+    const quickNotificationPoll = setTimeout(pollTipNotifications, 900)
     const interval = setInterval(refreshTokens, 3000)
+    const notificationInterval = setInterval(pollTipNotifications, 2200)
 
     let walletChannel = null
     if (isSupabaseConfigured && supabase) {
@@ -8402,7 +8471,9 @@ function App() {
             try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
             fetchNotifications(sessionUser?.id)
           })
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, () => {
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, payload => {
+            const row = payload?.new || {}
+            if (isTipNotification(row)) showReceivedTipFromNotification(row, false)
             refreshTokens()
           })
           .subscribe()
@@ -8414,7 +8485,9 @@ function App() {
     return () => {
       stopped = true
       clearTimeout(quickRefresh)
+      clearTimeout(quickNotificationPoll)
       clearInterval(interval)
+      clearInterval(notificationInterval)
       window.removeEventListener('betai-token-balance-changed', refreshTokens)
       if (walletChannel) {
         try { supabase.removeChannel(walletChannel) } catch (_) {}

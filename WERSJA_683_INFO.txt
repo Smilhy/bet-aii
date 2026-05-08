@@ -1,0 +1,32 @@
+BET+AI — WERSJA 683
+
+Naprawka do TIP popupu w obie strony.
+
+Problem:
+- smilhytv -> buchajson1988 działało: żeton dochodził, saldo odświeżało się i popup był widoczny.
+- buchajson1988 -> smilhytv: żeton dochodził i saldo się zmieniało, ale popup na środku nie zawsze się pokazywał.
+
+Co naprawiono:
+1. Popup TIP ma teraz dodatkowy fallback przez betai_system_notifications.
+2. Jeżeli tip_transfers nie odpali popupu u odbiorcy, aplikacja łapie powiadomienie systemowe:
+   - title/body z TIP-em,
+   - reward_tokens > 0,
+   i pokazuje ten sam popup na środku.
+3. Dodany polling powiadomień systemowych co ok. 2.2 sekundy.
+4. Realtime dla betai_system_notifications teraz nie tylko odświeża saldo, ale też uruchamia popup TIP.
+5. Działa w obie strony: zwykły użytkownik -> admin oraz admin -> zwykły użytkownik.
+
+SQL:
+- Nie dodano nowego SQL.
+- Wystarczy mieć odpalone wcześniejsze:
+  SUPABASE_SQL_WERSJA_676_TIP_TRANSFERS.sql
+  SUPABASE_SQL_WERSJA_677_TIP_TRANSFERS_EMAIL_FIX.sql
+
+Realtime/Publications:
+- tip_transfers
+- betai_token_wallets
+- betai_system_notifications
+
+Pliki zmienione:
+- src/main.jsx
+- main.jsx
