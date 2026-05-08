@@ -304,14 +304,8 @@ exports.handler = async function(event) {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey: sportKey || 'upcoming', futureOnly: true, fixtures }) }
     }
 
-    if (realOnly) {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję danych demo jako realnych.', fixtures: [] }) }
-    }
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo', futureOnly: true, fixtures: demoFixtures() }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
   } catch (error) {
-    if (realOnly) {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, message: `LIVE API: ${error.message}`, fixtures: [] }) }
-    }
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo-fallback', futureOnly: true, warning: error.message, fixtures: demoFixtures() }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
   }
 }

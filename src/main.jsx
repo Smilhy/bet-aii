@@ -4330,6 +4330,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [liveFixturesLoading, setLiveFixturesLoading] = useState(false)
   const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
   const [liveDataSource, setLiveDataSource] = useState('manual')
+  const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [sidebarSearch, setSidebarSearch] = useState('')
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
@@ -4439,98 +4440,98 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 ]
   const footballCountryIcons = {
     "Afryka": "🌍",
-    "Albania": "🏳️",
-    "Algieria": "🏳️",
+    "Albania": "🇦🇱",
+    "Algieria": "🇩🇿",
     "Anglia": "🏴",
     "Arabia Saudyjska": "🇸🇦",
     "Argentyna": "🇦🇷",
-    "Armenia": "🏳️",
-    "Aruba": "🏳️",
+    "Armenia": "🇦🇲",
+    "Aruba": "🇦🇼",
     "Australia": "🇦🇺",
     "Austria": "🇦🇹",
-    "Azerbejdżan": "🏳️",
+    "Azerbejdżan": "🇦🇿",
     "Azja": "🌏",
     "Belgia": "🇧🇪",
-    "Białoruś": "🏳️",
-    "Boliwia": "🏳️",
-    "Bośnia": "🏳️",
+    "Białoruś": "🇧🇾",
+    "Boliwia": "🇧🇴",
+    "Bośnia": "🇧🇦",
     "Brazylia": "🇧🇷",
-    "Bułgaria": "🏳️",
+    "Bułgaria": "🇧🇬",
     "Chile": "🇨🇱",
     "Chiny": "🇨🇳",
-    "Chińsko-Tajpej": "🏳️",
+    "Chińsko-Tajpej": "🇹🇼",
     "Chorwacja": "🇭🇷",
-    "Cypr": "🏳️",
-    "Czarnogóra": "🏳️",
+    "Cypr": "🇨🇾",
+    "Czarnogóra": "🇲🇪",
     "Czechy": "🇨🇿",
     "Dania": "🇩🇰",
-    "Dominikana-Republika": "🏳️",
+    "Dominikana-Republika": "🇩🇴",
     "Egipt": "🇪🇬",
-    "Ekwador": "🏳️",
+    "Ekwador": "🇪🇨",
     "Estonia": "🇪🇪",
-    "Etiopia": "🏳️",
+    "Etiopia": "🇪🇹",
     "Finlandia": "🇫🇮",
     "Francja": "🇫🇷",
     "Grecja": "🇬🇷",
-    "Gruzja": "🏳️",
-    "Gwatemala": "🏳️",
+    "Gruzja": "🇬🇪",
+    "Gwatemala": "🇬🇹",
     "Hiszpania": "🇪🇸",
     "Holandia": "🇳🇱",
-    "Honduras": "🏳️",
-    "Hongkong": "🏳️",
-    "Indie": "🏳️",
-    "Indonezja": "🏳️",
+    "Honduras": "🇭🇳",
+    "Hongkong": "🇭🇰",
+    "Indie": "🇮🇳",
+    "Indonezja": "🇮🇩",
     "Irlandia": "🇮🇪",
-    "Irlandia Północna": "🏳️",
+    "Irlandia Północna": "🏴",
     "Islandia": "🇮🇸",
     "Izrael": "🇮🇱",
     "Japonia": "🇯🇵",
-    "Kamerun": "🏳️",
+    "Kamerun": "🇨🇲",
     "Kanada": "🇨🇦",
-    "Kazachstan": "🏳️",
-    "Kenia": "🏳️",
+    "Kazachstan": "🇰🇿",
+    "Kenia": "🇰🇪",
     "Kolumbia": "🇨🇴",
     "Korea Południowa": "🇰🇷",
-    "Kosowa": "🏳️",
-    "Kostaryka": "🏳️",
+    "Kosowa": "🇽🇰",
+    "Kostaryka": "🇨🇷",
     "Litwa": "🇱🇹",
-    "Macedonia": "🏳️",
-    "Malezja": "🏳️",
-    "Malta": "🏳️",
+    "Macedonia": "🇲🇰",
+    "Malezja": "🇲🇾",
+    "Malta": "🇲🇹",
     "Maroko": "🇲🇦",
     "Meksyk": "🇲🇽",
-    "Mongolia": "🏳️",
+    "Mongolia": "🇲🇳",
     "Niemcy": "🇩🇪",
     "Norwegia": "🇳🇴",
-    "Panama": "🏳️",
-    "Paragwaj": "🏳️",
+    "Panama": "🇵🇦",
+    "Paragwaj": "🇵🇾",
     "Peru": "🇵🇪",
     "Polska": "🇵🇱",
     "Portugalia": "🇵🇹",
-    "Republika Południowej Afryki": "🏳️",
-    "Rosja": "🏳️",
+    "Republika Południowej Afryki": "🇿🇦",
+    "Rosja": "🇷🇺",
     "Rumunia": "🇷🇴",
-    "San-Marino": "🏳️",
+    "San-Marino": "🇸🇲",
     "Serbia": "🇷🇸",
-    "Singapur": "🏳️",
+    "Singapur": "🇸🇬",
     "Szkocja": "🏴",
     "Szwajcaria": "🇨🇭",
     "Szwecja": "🇸🇪",
     "Słowacja": "🇸🇰",
     "Słowenia": "🇸🇮",
-    "Tajlandia": "🏳️",
+    "Tajlandia": "🇹🇭",
     "Turcja": "🇹🇷",
     "USA": "🇺🇸",
     "Ukraina": "🇺🇦",
     "Urugwaj": "🇺🇾",
-    "Wenezuela": "🏳️",
-    "Wietnam": "🏳️",
-    "Wyspy Owcze": "🏳️",
+    "Wenezuela": "🇻🇪",
+    "Wietnam": "🇻🇳",
+    "Wyspy Owcze": "🇫🇴",
     "Węgry": "🇭🇺",
     "Włochy": "🇮🇹",
     "Łotwa": "🇱🇻",
     "Świat": "🌐"
-}
+  }
   const footballLeagueMap = {
     "Afryka": [
         "CAF Champions League",
@@ -5263,24 +5264,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setOpenFootballCountry(nextCountry)
     const nextLeagues = getFootballLeaguesForCountry(nextCountry)
     const nextLeague = nextLeagues[0] || ''
-    const nextLeagueSource = countryMap?.[nextCountry] || {}
-    const nextMatch = nextLeagueSource?.[nextLeague]?.[0]
-    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
 
     setLiveFixtures([])
+    setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
-    setLiveFixturesStatus('Wybierz ligę i kliknij „Dodaj inne wydarzenie”, aby pobrać mecze/kursy z API.')
+    setLiveFixturesStatus('Wybierz ligę i kliknij „Dodaj inne wydarzenie”, aby pobrać prawdziwe mecze/kursy z API.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
       league: nextLeague,
-      matchId: nextMatch?.id || form.matchId,
-      market: nextMarket.market,
-      betType: nextMarket.pick,
-      odds: String(nextMarket.odds),
-      confidence: nextMarket.confidence || form.confidence,
-      date: nextMatch?.date || form.date,
-      time: nextMatch?.time || form.time,
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
     })
   }
 
@@ -5301,8 +5297,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return kick.getTime() > Date.now() + 1 * 60 * 1000
   }
 
-  const matchOptions = (liveFixtures.length ? liveFixtures.filter(matchStartsAfterBuffer) : (activeLeagues?.[currentLeague] || []))
-  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || (liveFixtures.length ? null : defaultMatch)
+  const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
+  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
 
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
@@ -5434,7 +5430,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return base
   }
 
-  const marketOptions = enrichPopularMarkets(selectedMatch, selectedMatch?.markets || [defaultMarket])
+  const marketOptions = selectedMatch ? enrichPopularMarkets(selectedMatch, selectedMatch?.markets || []) : []
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
   const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
     const label = String(item.market || 'Inne')
@@ -5627,11 +5623,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   function selectSidebarLeague(nextSport, nextCountry, nextLeague) {
     setOpenSidebarSport(nextSport)
     if (nextSport === 'Piłka nożna') setOpenFootballCountry(nextCountry)
-    const nextSportData = sportsbook[nextSport] || { leagues: {}, countries: {} }
-    const nextCountryMap = nextSportData.countries || null
-    const nextLeagueSource = nextCountryMap ? (nextCountryMap[nextCountry] || {}) : (nextSportData.leagues || {})
-    const nextMatch = (nextLeagueSource?.[nextLeague] || [])[0]
-    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
 
     setLiveFixtures([])
     setLiveDataSource('loading')
@@ -5640,13 +5631,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
       league: nextLeague,
-      matchId: nextMatch?.id || form.matchId,
-      market: nextMarket.market,
-      betType: nextMarket.pick,
-      odds: String(nextMarket.odds),
-      confidence: nextMarket.confidence || form.confidence,
-      date: nextMatch?.date || form.date,
-      time: nextMatch?.time || form.time,
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
     })
 
     window.setTimeout(() => {
@@ -5656,6 +5644,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   async function fetchLiveFixturesForDay(overrides = {}) {
     setLiveFixturesLoading(true)
+    setHasTriedLiveLoad(true)
     setLiveDataSource('loading')
     setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy...')
     try {
@@ -5676,12 +5665,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : 'LIVE API'
-        setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} przyszłych meczów/kursów pobrano dla ${overrides.date || liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
+        setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych przyszłych meczów/kursów pobrano dla ${overrides.date || liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
         onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
       } else {
         setLiveFixtures([])
         setLiveDataSource(data.source || 'empty')
-        setLiveFixturesStatus(data.message || 'LIVE API: brak przyszłych meczów dla wybranych filtrów. Wybierz inną datę albo ligę.')
+        setLiveFixturesStatus(data.message || 'LIVE API: brak realnych przyszłych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.')
         onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
       }
     } catch (error) {
@@ -6215,9 +6204,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
               )
             }) : (
-              <div className="betfolio-empty-state">
-                <strong>Brak meczów do wyświetlenia</strong>
-                <span>Zmodyfikuj filtry albo pobierz wydarzenia z API.</span>
+              <div className="betfolio-empty-state no-fake-empty">
+                <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę i pobierz realne mecze'}</strong>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Sprawdź API key, limit The Odds API, datę albo inną ligę.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
               </div>
             )}
           </div>
@@ -6245,7 +6234,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="betfolio-market-groups">
-              {visibleMarketGroups.map(([groupLabel, items]) => (
+              {!selectedMatch && (
+                <div className="betfolio-empty-state no-fake-empty">
+                  <strong>Brak realnego wydarzenia</strong>
+                  <span>Rynki pojawią się dopiero po pobraniu prawdziwego meczu z API.</span>
+                </div>
+              )}
+              {selectedMatch && visibleMarketGroups.map(([groupLabel, items]) => (
                 <div key={groupLabel} className="betfolio-market-group">
                   <div className="betfolio-market-group-title">
                     <strong>{groupLabel}</strong>
@@ -6288,7 +6283,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
           <div className="betfolio-ticket-card">
             <small>Dodaj analizę</small>
-            <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Wybierz mecz'}</strong>
+            <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Brak realnego meczu'}</strong>
             <span>{form.market} • {form.betType}</span>
             <div className="betfolio-ticket-row">
               <label>Kurs</label>

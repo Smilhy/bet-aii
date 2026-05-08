@@ -1,0 +1,12 @@
+BET+AI — WERSJA 719 NO FAKE DEMO ONLY REAL API
+
+Poprawka:
+1. Usunięto pokazywanie fake/demo meczów na stronie Dodaj typ.
+2. Jeśli The Odds API nie zwróci realnych wydarzeń, lista jest pusta.
+3. Jeśli brakuje ODDS_API_KEY albo API zwraca błąd, system pokazuje komunikat i nie podstawia meczów demo.
+4. Statyczne fallback mecze nie są już używane jako widoczne wydarzenia.
+5. Rynki pojawiają się dopiero po pobraniu prawdziwego meczu z API.
+6. Przycisk publikacji pozostaje zablokowany, gdy nie ma realnego meczu.
+
+SQL:
+- brak nowego SQL.

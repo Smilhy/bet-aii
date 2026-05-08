@@ -1,0 +1,9 @@
+BET+AI — WERSJA 720 COUNTRY FLAGS ALL
+
+Zmiana:
+- dodałem flagi do wszystkich krajów w lewej kolumnie SPORT > Piłka nożna,
+- flagi są widoczne obok nazw krajów,
+- zachowany został poprzedni fix: brak demo/fake meczów.
+
+SQL:
+- brak nowego SQL.

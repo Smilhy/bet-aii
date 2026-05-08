@@ -25782,3 +25782,22 @@ font[style*="border"]{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+
+
+/* WERSJA 719 — zero demo / zero fake meczów */
+.no-fake-empty{
+  border-color:rgba(255,202,56,.30)!important;
+  background:rgba(255,202,56,.055)!important;
+}
+.no-fake-empty strong{
+  color:#ffca38!important;
+}
+.no-fake-empty span{
+  color:#b7c5dc!important;
+}
+.live-real-badge.error,
+.live-real-badge.empty{
+  color:#ffca38!important;
+  border-color:rgba(255,202,56,.35)!important;
+  background:rgba(255,202,56,.08)!important;
+}
