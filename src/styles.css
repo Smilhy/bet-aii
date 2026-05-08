@@ -25886,3 +25886,651 @@ font[style*="border"]{
     font-size:14px!important;
   }
 }
+
+
+/* WERSJA 722 — liczniki sportów ze wszystkich lig */
+.betfolio-top-sports-note{
+  border-left:3px solid rgba(29,220,235,.55)!important;
+  padding-left:10px!important;
+}
+.betfolio-top-sport-pill b{
+  min-width:38px!important;
+}
+
+
+/* WERSJA 723 — auto refresh co 1 minutę */
+.betfolio-top-sports-note::after{
+  content:'  •  auto refresh 1 min';
+  color:#22f2ff!important;
+  font-weight:900!important;
+}
+
+
+/* =========================================================
+   WERSJA 724 — MODERN WOW UI
+   Tylko styling: logika API i brak demo/fake zostają bez zmian.
+   ========================================================= */
+
+:root{
+  --wow-bg-0:#020814;
+  --wow-bg-1:#06111f;
+  --wow-card:#0a1528;
+  --wow-card-2:#101d35;
+  --wow-card-3:#162844;
+  --wow-border:rgba(38,240,255,.22);
+  --wow-border-soft:rgba(124,164,218,.14);
+  --wow-cyan:#22f2ff;
+  --wow-cyan-2:#0bc7dc;
+  --wow-teal:#00d9c8;
+  --wow-yellow:#ffc21a;
+  --wow-yellow-2:#ffad00;
+  --wow-text:#f3f8ff;
+  --wow-muted:#9eb2cf;
+  --wow-good:#4cffb2;
+  --wow-danger:#ff6f8d;
+}
+
+/* Global premium background */
+.add-tip-betfolio-page{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 10% 4%,rgba(34,242,255,.16),transparent 28%),
+    radial-gradient(circle at 88% 8%,rgba(0,217,200,.11),transparent 26%),
+    radial-gradient(circle at 50% 110%,rgba(255,194,26,.07),transparent 30%),
+    linear-gradient(180deg,var(--wow-bg-1),var(--wow-bg-0) 62%,#02060f)!important;
+}
+
+.add-tip-betfolio-page::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(rgba(34,242,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,242,255,.026) 1px,transparent 1px)!important;
+  background-size:54px 54px!important;
+  mask-image:linear-gradient(180deg,rgba(0,0,0,.72),transparent 82%)!important;
+}
+
+.add-tip-betfolio-page::after{
+  content:''!important;
+  position:absolute!important;
+  left:-10%!important;
+  right:-10%!important;
+  top:0!important;
+  height:1px!important;
+  background:linear-gradient(90deg,transparent,var(--wow-cyan),var(--wow-yellow),transparent)!important;
+  box-shadow:0 0 28px rgba(34,242,255,.7)!important;
+  pointer-events:none!important;
+}
+
+/* Shell + panels */
+.betfolio-add-shell{
+  position:relative!important;
+  z-index:1!important;
+  gap:18px!important;
+}
+
+.betfolio-left,
+.betfolio-center,
+.betfolio-right{
+  position:relative!important;
+  background:
+    linear-gradient(180deg,rgba(13,27,50,.92),rgba(5,12,25,.96))!important;
+  border:1px solid rgba(34,242,255,.18)!important;
+  box-shadow:
+    0 28px 90px rgba(0,0,0,.48),
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 0 42px rgba(34,242,255,.035)!important;
+  backdrop-filter:blur(18px)!important;
+}
+
+.betfolio-left::before,
+.betfolio-center::before,
+.betfolio-right::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  border-radius:inherit!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(135deg,rgba(34,242,255,.18),transparent 26%),
+    linear-gradient(315deg,rgba(255,194,26,.08),transparent 25%)!important;
+  opacity:.75!important;
+  mask-image:linear-gradient(#000,transparent 92%)!important;
+}
+
+/* Search + left nav */
+.betfolio-search-wrap{
+  background:linear-gradient(180deg,rgba(7,15,30,.96),rgba(6,12,24,.98))!important;
+  border:1px solid rgba(34,242,255,.18)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 10px 28px rgba(0,0,0,.25)!important;
+}
+
+.betfolio-search-input{
+  color:var(--wow-text)!important;
+  font-weight:750!important;
+}
+
+.betfolio-search-input::placeholder{
+  color:rgba(174,197,228,.72)!important;
+}
+
+.betfolio-fetch-btn,
+.betfolio-publish-btn,
+.betfolio-ticket-submit,
+button.betfolio-fetch-btn{
+  background:
+    linear-gradient(180deg,#ffe071 0%,var(--wow-yellow) 42%,var(--wow-yellow-2) 100%)!important;
+  color:#07111f!important;
+  border:1px solid rgba(255,219,91,.65)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,194,26,.18),
+    0 10px 30px rgba(255,174,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.42)!important;
+  text-shadow:none!important;
+  letter-spacing:.01em!important;
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease!important;
+}
+
+.betfolio-fetch-btn:hover,
+.betfolio-publish-btn:hover,
+.betfolio-ticket-submit:hover{
+  transform:translateY(-1px)!important;
+  filter:saturate(1.12) brightness(1.03)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,194,26,.28),
+    0 16px 42px rgba(255,174,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.48)!important;
+}
+
+/* Sports accordion */
+.sports-accordion-title{
+  color:#dbe8ff!important;
+  text-shadow:0 0 22px rgba(34,242,255,.16)!important;
+}
+
+.sport-accordion-head,
+.sport-accordion-children button{
+  background:linear-gradient(180deg,rgba(31,47,78,.96),rgba(25,39,66,.97))!important;
+  border:1px solid rgba(139,170,218,.13)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+.sport-accordion-head:hover,
+.sport-accordion-children button:hover{
+  background:linear-gradient(180deg,rgba(35,57,93,.98),rgba(26,45,77,.98))!important;
+  border-color:rgba(34,242,255,.32)!important;
+  transform:translateX(2px)!important;
+}
+
+.sport-accordion-item.is-open>.sport-accordion-head{
+  background:
+    radial-gradient(circle at 94% 50%,rgba(34,242,255,.16),transparent 32%),
+    linear-gradient(180deg,rgba(19,47,76,.98),rgba(16,35,62,.98))!important;
+  border-color:rgba(34,242,255,.58)!important;
+  color:var(--wow-cyan)!important;
+  box-shadow:
+    0 0 0 1px rgba(34,242,255,.16),
+    0 0 26px rgba(34,242,255,.12),
+    inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+.sport-accordion-children button.is-active,
+.football-country-node > button.country-active{
+  background:
+    linear-gradient(180deg,rgba(45,62,96,.98),rgba(30,47,80,.98))!important;
+  color:var(--wow-yellow)!important;
+  border-color:rgba(255,194,26,.28)!important;
+}
+
+.sport-accordion-children button.league-active{
+  background:
+    radial-gradient(circle at 100% 50%,rgba(34,242,255,.22),transparent 38%),
+    linear-gradient(180deg,rgba(18,55,82,.98),rgba(13,39,64,.98))!important;
+  color:#eaffff!important;
+  border-color:rgba(34,242,255,.62)!important;
+  box-shadow:0 0 24px rgba(34,242,255,.13)!important;
+}
+
+/* Top sport pills WOW */
+.betfolio-top-sports-row{
+  gap:16px!important;
+  padding:8px 2px 18px!important;
+}
+
+.betfolio-top-sport-pill{
+  min-width:168px!important;
+  min-height:62px!important;
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background:
+    radial-gradient(circle at 90% 10%,rgba(34,242,255,.11),transparent 35%),
+    linear-gradient(180deg,rgba(10,24,45,.98),rgba(5,13,27,.99))!important;
+  border:1px solid rgba(34,242,255,.18)!important;
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+.betfolio-top-sport-pill::before{
+  content:''!important;
+  position:absolute!important;
+  inset:-1px!important;
+  z-index:-1!important;
+  background:linear-gradient(120deg,transparent,rgba(34,242,255,.14),transparent)!important;
+  transform:translateX(-120%)!important;
+  transition:transform .48s ease!important;
+}
+
+.betfolio-top-sport-pill:hover::before{
+  transform:translateX(120%)!important;
+}
+
+.betfolio-top-sport-pill:hover{
+  transform:translateY(-3px)!important;
+  border-color:rgba(34,242,255,.44)!important;
+  box-shadow:
+    0 24px 50px rgba(0,0,0,.34),
+    0 0 34px rgba(34,242,255,.10),
+    inset 0 1px 0 rgba(255,255,255,.065)!important;
+}
+
+.betfolio-top-sport-pill.active{
+  background:
+    radial-gradient(circle at 90% 50%,rgba(34,242,255,.28),transparent 38%),
+    linear-gradient(180deg,rgba(12,52,78,.98),rgba(7,27,48,.99))!important;
+  border-color:rgba(34,242,255,.72)!important;
+  box-shadow:
+    0 0 0 1px rgba(34,242,255,.18),
+    0 0 42px rgba(34,242,255,.18),
+    0 22px 54px rgba(0,0,0,.35)!important;
+}
+
+.betfolio-top-sport-pill span{
+  color:#edf8ff!important;
+  text-shadow:0 0 18px rgba(255,255,255,.08)!important;
+}
+
+.betfolio-top-sport-pill b{
+  background:
+    linear-gradient(180deg,rgba(34,242,255,.22),rgba(34,242,255,.11))!important;
+  color:var(--wow-cyan)!important;
+  border:1px solid rgba(34,242,255,.30)!important;
+  box-shadow:0 0 18px rgba(34,242,255,.12)!important;
+}
+
+.betfolio-top-sport-pill.active b{
+  background:linear-gradient(180deg,var(--wow-cyan),var(--wow-teal))!important;
+  color:#02101d!important;
+  border-color:transparent!important;
+  box-shadow:0 0 22px rgba(34,242,255,.34)!important;
+}
+
+.betfolio-top-sport-pill b:empty,
+.betfolio-top-sport-pill b[data-count="0"]{
+  opacity:.6!important;
+}
+
+.betfolio-top-sports-note{
+  color:#9eb6d6!important;
+  background:rgba(34,242,255,.045)!important;
+  border:1px solid rgba(34,242,255,.10)!important;
+  border-left:3px solid rgba(34,242,255,.75)!important;
+  border-radius:12px!important;
+  padding:10px 12px!important;
+}
+
+/* Center header */
+.betfolio-center-header{
+  margin-bottom:14px!important;
+}
+
+.static-add-title-row h1,
+.betfolio-center-header h1{
+  font-size:34px!important;
+  color:var(--wow-text)!important;
+  letter-spacing:-.035em!important;
+  text-shadow:0 0 28px rgba(34,242,255,.15)!important;
+}
+
+.static-add-title-icon{
+  background:rgba(34,242,255,.10)!important;
+  color:var(--wow-cyan)!important;
+  border-color:rgba(34,242,255,.35)!important;
+  box-shadow:0 0 22px rgba(34,242,255,.10)!important;
+}
+
+.live-real-badge{
+  border-radius:999px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 22px rgba(34,242,255,.10)!important;
+}
+
+.live-real-badge.odds-api{
+  color:var(--wow-good)!important;
+  border-color:rgba(76,255,178,.38)!important;
+  background:rgba(76,255,178,.075)!important;
+}
+
+/* Event list */
+.betfolio-events-list{
+  gap:10px!important;
+}
+
+.betfolio-event-row{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(180deg,rgba(15,31,56,.98),rgba(9,19,36,.98))!important;
+  border:1px solid rgba(124,164,218,.13)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease!important;
+}
+
+.betfolio-event-row::before{
+  content:''!important;
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:3px!important;
+  background:linear-gradient(180deg,transparent,var(--wow-cyan),transparent)!important;
+  opacity:0!important;
+  transition:opacity .16s ease!important;
+}
+
+.betfolio-event-row:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(34,242,255,.35)!important;
+  background:
+    radial-gradient(circle at 98% 50%,rgba(34,242,255,.10),transparent 36%),
+    linear-gradient(180deg,rgba(18,37,66,.98),rgba(10,23,43,.98))!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.24),0 0 26px rgba(34,242,255,.07)!important;
+}
+
+.betfolio-event-row:hover::before,
+.betfolio-event-row.active::before{
+  opacity:1!important;
+}
+
+.betfolio-event-row.active{
+  border-color:rgba(34,242,255,.82)!important;
+  box-shadow:
+    0 0 0 1px rgba(34,242,255,.22),
+    0 0 34px rgba(34,242,255,.14),
+    0 18px 45px rgba(0,0,0,.30)!important;
+}
+
+.betfolio-event-teamline strong,
+.betfolio-event-teamline span{
+  color:#f2f7ff!important;
+}
+
+.betfolio-event-meta span{
+  color:#9eb4d1!important;
+}
+
+.betfolio-odd-box{
+  background:linear-gradient(180deg,rgba(23,41,73,.98),rgba(16,31,58,.98))!important;
+  border:1px solid rgba(111,150,214,.18)!important;
+  transition:transform .15s ease,filter .15s ease,box-shadow .15s ease!important;
+}
+
+.betfolio-odd-box:hover:not(:disabled){
+  transform:translateY(-1px)!important;
+  border-color:rgba(34,242,255,.35)!important;
+  box-shadow:0 0 22px rgba(34,242,255,.08)!important;
+}
+
+.betfolio-odd-box.active,
+.betfolio-market-option.active{
+  background:linear-gradient(180deg,#ffe078,var(--wow-yellow) 52%,var(--wow-yellow-2))!important;
+  color:#05101d!important;
+  border-color:rgba(255,219,91,.68)!important;
+  box-shadow:0 10px 28px rgba(255,174,0,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;
+}
+
+.betfolio-odd-box.active b,
+.betfolio-odd-box.active span,
+.betfolio-market-option.active strong,
+.betfolio-market-option.active span{
+  color:#05101d!important;
+}
+
+/* Details/markets */
+.betfolio-details-wrap{
+  background:
+    linear-gradient(180deg,rgba(13,30,55,.98),rgba(6,16,32,.99))!important;
+  border:1px solid rgba(34,242,255,.20)!important;
+  box-shadow:0 22px 70px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+.betfolio-details-top{
+  background:
+    radial-gradient(circle at 92% 0%,rgba(34,242,255,.12),transparent 35%),
+    linear-gradient(180deg,rgba(16,36,65,.82),rgba(10,23,44,.7))!important;
+}
+
+.betfolio-market-tabs{
+  background:rgba(7,15,30,.38)!important;
+}
+
+.betfolio-market-tabs button{
+  position:relative!important;
+  color:#aebfd6!important;
+  transition:color .15s ease,background .15s ease!important;
+}
+
+.betfolio-market-tabs button:hover{
+  color:#f4fbff!important;
+  background:rgba(34,242,255,.045)!important;
+}
+
+.betfolio-market-tabs button.active{
+  color:#fff!important;
+  text-shadow:0 0 18px rgba(255,255,255,.12)!important;
+  box-shadow:inset 0 -3px 0 var(--wow-yellow)!important;
+}
+
+.betfolio-market-group{
+  background:
+    linear-gradient(180deg,rgba(12,25,48,.98),rgba(8,18,36,.98))!important;
+  border:1px solid rgba(124,164,218,.13)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.032)!important;
+}
+
+.betfolio-market-group-title strong{
+  color:#f0f5ff!important;
+}
+
+.betfolio-market-option{
+  background:linear-gradient(180deg,rgba(23,42,73,.98),rgba(16,31,58,.98))!important;
+  border:1px solid rgba(124,164,218,.15)!important;
+}
+
+.betfolio-market-option:hover{
+  border-color:rgba(34,242,255,.34)!important;
+  box-shadow:0 0 22px rgba(34,242,255,.08)!important;
+}
+
+/* Right ticket panel */
+.betfolio-right{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(34,242,255,.10),transparent 34%),
+    linear-gradient(180deg,rgba(12,24,45,.98),rgba(5,12,25,.99))!important;
+}
+
+.betfolio-ticket-tabs{
+  padding:4px!important;
+  border-radius:16px!important;
+  background:rgba(5,12,25,.72)!important;
+  border:1px solid rgba(34,242,255,.14)!important;
+}
+
+.betfolio-ticket-tabs button{
+  border-radius:12px!important;
+  transition:transform .15s ease,box-shadow .15s ease!important;
+}
+
+.betfolio-ticket-tabs button.active{
+  background:linear-gradient(180deg,#ffe071,var(--wow-yellow))!important;
+  color:#06111f!important;
+  box-shadow:0 10px 28px rgba(255,174,0,.24)!important;
+}
+
+.betfolio-ticket-card,
+.betfolio-ticket-row,
+.betfolio-total-box{
+  background:
+    linear-gradient(180deg,rgba(10,22,42,.98),rgba(7,15,31,.98))!important;
+  border:1px solid rgba(124,164,218,.14)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.032)!important;
+}
+
+.betfolio-ticket-card strong{
+  color:#f4f8ff!important;
+}
+
+.betfolio-ticket-row label{
+  color:#91a8c8!important;
+  letter-spacing:.055em!important;
+}
+
+.betfolio-ticket-row input,
+.betfolio-ticket-row textarea{
+  background:rgba(6,13,27,.74)!important;
+  border:1px solid rgba(124,164,218,.13)!important;
+  color:#f4f8ff!important;
+}
+
+.betfolio-ticket-row input:focus,
+.betfolio-ticket-row textarea:focus{
+  border-color:rgba(34,242,255,.46)!important;
+  box-shadow:0 0 0 3px rgba(34,242,255,.08)!important;
+}
+
+.stake-pills span{
+  background:rgba(17,32,58,.96)!important;
+  border:1px solid rgba(124,164,218,.18)!important;
+}
+
+.stake-pills span.active{
+  background:linear-gradient(180deg,var(--wow-cyan),var(--wow-teal))!important;
+  color:#02101d!important;
+  box-shadow:0 0 22px rgba(34,242,255,.24)!important;
+}
+
+.confidence-control button{
+  background:rgba(34,242,255,.08)!important;
+  color:var(--wow-cyan)!important;
+  border-color:rgba(34,242,255,.22)!important;
+}
+
+.confidence-control button:hover{
+  background:rgba(34,242,255,.16)!important;
+  box-shadow:0 0 20px rgba(34,242,255,.13)!important;
+}
+
+.confidence-head strong,
+.confidence-head b,
+.betfolio-total-box b{
+  color:var(--wow-cyan)!important;
+  text-shadow:0 0 18px rgba(34,242,255,.18)!important;
+}
+
+/* Empty/fake protection card */
+.no-fake-empty{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,194,26,.11),transparent 34%),
+    rgba(255,194,26,.045)!important;
+  border-color:rgba(255,194,26,.32)!important;
+  box-shadow:0 0 30px rgba(255,194,26,.05)!important;
+}
+
+/* Scrollbars */
+.betfolio-left,
+.betfolio-events-list,
+.betfolio-market-groups,
+.football-country-tree,
+.football-leagues-list{
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(34,242,255,.72) rgba(255,255,255,.035)!important;
+}
+
+.betfolio-left::-webkit-scrollbar,
+.betfolio-events-list::-webkit-scrollbar,
+.betfolio-market-groups::-webkit-scrollbar,
+.football-country-tree::-webkit-scrollbar,
+.football-leagues-list::-webkit-scrollbar{
+  width:7px!important;
+  height:7px!important;
+}
+
+.betfolio-left::-webkit-scrollbar-thumb,
+.betfolio-events-list::-webkit-scrollbar-thumb,
+.betfolio-market-groups::-webkit-scrollbar-thumb,
+.football-country-tree::-webkit-scrollbar-thumb,
+.football-leagues-list::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,var(--wow-cyan),var(--wow-teal))!important;
+  border-radius:999px!important;
+}
+
+.betfolio-left::-webkit-scrollbar-track,
+.betfolio-events-list::-webkit-scrollbar-track,
+.betfolio-market-groups::-webkit-scrollbar-track,
+.football-country-tree::-webkit-scrollbar-track,
+.football-leagues-list::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.035)!important;
+  border-radius:999px!important;
+}
+
+/* Micro animations */
+@media (prefers-reduced-motion:no-preference){
+  .betfolio-center{
+    animation:wowFadeUp .32s ease-out both!important;
+  }
+  .betfolio-left{
+    animation:wowFadeLeft .34s ease-out both!important;
+  }
+  .betfolio-right{
+    animation:wowFadeRight .34s ease-out both!important;
+  }
+  .betfolio-event-row{
+    animation:wowFadeUp .18s ease-out both!important;
+  }
+}
+
+@keyframes wowFadeUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@keyframes wowFadeLeft{
+  from{opacity:0;transform:translateX(-10px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+@keyframes wowFadeRight{
+  from{opacity:0;transform:translateX(10px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* Responsive polish */
+@media(max-width:1180px){
+  .betfolio-top-sport-pill{
+    min-width:148px!important;
+  }
+}
+
+@media(max-width:760px){
+  .static-add-title-row h1,
+  .betfolio-center-header h1{
+    font-size:28px!important;
+  }
+  .betfolio-top-sport-pill{
+    min-width:136px!important;
+    min-height:56px!important;
+  }
+}

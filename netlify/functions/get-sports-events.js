@@ -6,6 +6,7 @@ exports.handler = async function(event) {
   const date = String(qs.date || new Date().toISOString().slice(0, 10))
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
+  const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -216,99 +217,152 @@ exports.handler = async function(event) {
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-  const selectedSportKey = () => {
+  const selectedSportKeys = () => {
     const s = normalizeText(sport)
     const l = normalizeText(league)
     const c = normalizeText(country)
 
+    const unique = (items) => [...new Set(items.filter(Boolean))]
+
+    const footballKeys = [
+      'soccer_epl',
+      'soccer_efl_champ',
+      'soccer_england_league1',
+      'soccer_england_league2',
+      'soccer_spain_la_liga',
+      'soccer_germany_bundesliga',
+      'soccer_italy_serie_a',
+      'soccer_france_ligue_one',
+      'soccer_netherlands_eredivisie',
+      'soccer_portugal_primeira_liga',
+      'soccer_usa_mls',
+      'soccer_uefa_champs_league',
+      'soccer_uefa_europa_league',
+      'soccer_uefa_europa_conference_league',
+    ]
+
     if (s.includes('pilka') || s.includes('football') || s.includes('soccer')) {
+      if (allLeagues) return footballKeys
       if (c.includes('anglia')) {
-        if (l.includes('premier')) return 'soccer_epl'
-        if (l.includes('championship')) return 'soccer_efl_champ'
-        if (l.includes('league one')) return 'soccer_england_league1'
-        if (l.includes('league two')) return 'soccer_england_league2'
+        if (l.includes('premier')) return ['soccer_epl']
+        if (l.includes('championship')) return ['soccer_efl_champ']
+        if (l.includes('league one')) return ['soccer_england_league1']
+        if (l.includes('league two')) return ['soccer_england_league2']
       }
-      if (c.includes('hiszpania') || l.includes('la liga')) return 'soccer_spain_la_liga'
-      if (c.includes('niemcy') || l.includes('bundesliga')) return 'soccer_germany_bundesliga'
-      if (c.includes('wlochy') || l.includes('serie a')) return 'soccer_italy_serie_a'
-      if (c.includes('francja') || l.includes('ligue 1')) return 'soccer_france_ligue_one'
-      if (c.includes('holandia') || l.includes('eredivisie')) return 'soccer_netherlands_eredivisie'
-      if (c.includes('portugalia')) return 'soccer_portugal_primeira_liga'
-      if (c.includes('usa') || l.includes('mls')) return 'soccer_usa_mls'
-      if (l.includes('liga mistrz') || l.includes('champions')) return 'soccer_uefa_champs_league'
-      return 'soccer_epl'
+      if (c.includes('hiszpania') || l.includes('la liga')) return ['soccer_spain_la_liga']
+      if (c.includes('niemcy') || l.includes('bundesliga')) return ['soccer_germany_bundesliga']
+      if (c.includes('wlochy') || l.includes('serie a')) return ['soccer_italy_serie_a']
+      if (c.includes('francja') || l.includes('ligue 1')) return ['soccer_france_ligue_one']
+      if (c.includes('holandia') || l.includes('eredivisie')) return ['soccer_netherlands_eredivisie']
+      if (c.includes('portugalia')) return ['soccer_portugal_primeira_liga']
+      if (c.includes('usa') || l.includes('mls')) return ['soccer_usa_mls']
+      if (l.includes('liga mistrz') || l.includes('champions')) return ['soccer_uefa_champs_league']
+      return ['soccer_epl']
     }
-    if (s.includes('koszyk')) return l.includes('ncaa') ? 'basketball_ncaab' : 'basketball_nba'
-    if (s.includes('baseball')) return 'baseball_mlb'
-    if (s.includes('hokej') || s.includes('hockey')) return 'icehockey_nhl'
-    if (s.includes('tenis') || s.includes('tennis')) return l.includes('wta') ? 'tennis_wta' : 'tennis_atp'
-    if (s.includes('mma') || s.includes('ufc')) return 'mma_mixed_martial_arts'
-    if (s.includes('rugby league')) return 'rugbyleague_nrl'
-    if (s.includes('rugby')) return 'rugbyunion_six_nations'
-    if (s.includes('krykiet') || s.includes('cricket')) return 'cricket_international_t20'
-    return ''
+
+    if (s.includes('koszyk') || s.includes('basketball')) {
+      return allLeagues ? ['basketball_nba', 'basketball_ncaab', 'basketball_wnba'] : [l.includes('ncaa') ? 'basketball_ncaab' : 'basketball_nba']
+    }
+
+    if (s.includes('baseball')) {
+      return allLeagues ? ['baseball_mlb', 'baseball_ncaa'] : ['baseball_mlb']
+    }
+
+    if (s.includes('hokej') || s.includes('hockey')) {
+      return allLeagues ? ['icehockey_nhl', 'icehockey_sweden_hockey_league', 'icehockey_sweden_allsvenskan'] : ['icehockey_nhl']
+    }
+
+    if (s.includes('tenis') || s.includes('tennis')) {
+      return allLeagues ? ['tennis_atp', 'tennis_wta'] : [l.includes('wta') ? 'tennis_wta' : 'tennis_atp']
+    }
+
+    if (s.includes('mma') || s.includes('ufc')) return ['mma_mixed_martial_arts']
+    if (s.includes('rugby league')) return ['rugbyleague_nrl']
+    if (s.includes('rugby')) return ['rugbyunion_six_nations']
+    if (s.includes('krykiet') || s.includes('cricket')) return ['cricket_international_t20']
+    return []
   }
 
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     if (oddsKey) {
-      const sportKey = selectedSportKey()
-      if (!sportKey) {
+      const sportKeys = selectedSportKeys()
+      if (!sportKeys.length) {
         return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
       }
 
-      const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
-      const url = new URL(endpoint)
-      url.searchParams.set('apiKey', oddsKey)
-      url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk')
-      url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads'))
-      url.searchParams.set('oddsFormat', 'decimal')
-      url.searchParams.set('dateFormat', 'iso')
-      let response = await fetch(url.toString())
-      let data = await response.json().catch(() => [])
-
-      // Niektóre plany/API nie obsługują wszystkich rynków naraz.
-      // Jeśli API odrzuci bogate rynki, robimy drugi strzał na podstawowe h2h/spreads/totals.
-      if (!response.ok) {
-        url.searchParams.set('markets', 'h2h,spreads,totals')
-        response = await fetch(url.toString())
-        data = await response.json().catch(() => [])
-      }
-
-      if (!response.ok) throw new Error(data?.message || 'The Odds API error')
-
       const requestedDay = date
       const nowMs = Date.now() + 1 * 60 * 1000
-      const fixtures = (Array.isArray(data) ? data : [])
-        .filter(item => {
-          const commence = String(item.commence_time || '')
-          const kickMs = Date.parse(commence)
-          if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-          return !requestedDay || commence.slice(0, 10) === requestedDay
-        })
-        .slice(0, 50)
-        .map((item, index) => {
-          const home = item.home_team || item.teams?.[0] || 'Gospodarze'
-          const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
-          const parts = toDateParts(item.commence_time)
-          return {
-            id: item.id || `odds-${index}`,
-            sport: item.sport_title || sport,
-            country,
-            league: item.sport_title || league || sport,
-            home,
-            away,
-            date: parts.date,
-            time: parts.time,
-            markets: buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
-          }
-        })
+      const collected = []
 
-      if (countOnly) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+      for (const sportKey of sportKeys) {
+        const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
+        const url = new URL(endpoint)
+        url.searchParams.set('apiKey', oddsKey)
+        url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk')
+        url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads'))
+        url.searchParams.set('oddsFormat', 'decimal')
+        url.searchParams.set('dateFormat', 'iso')
+
+        let response = await fetch(url.toString())
+        let data = await response.json().catch(() => [])
+
+        if (!response.ok && !countOnly) {
+          url.searchParams.set('markets', 'h2h,spreads,totals')
+          response = await fetch(url.toString())
+          data = await response.json().catch(() => [])
+        }
+
+        if (!response.ok) {
+          console.warn('The Odds API sport key failed', sportKey, data?.message || response.status)
+          continue
+        }
+
+        const fixturesForKey = (Array.isArray(data) ? data : [])
+          .filter(item => {
+            const commence = String(item.commence_time || '')
+            const kickMs = Date.parse(commence)
+            if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
+            return !requestedDay || commence.slice(0, 10) === requestedDay
+          })
+          .map((item, index) => {
+            const home = item.home_team || item.teams?.[0] || 'Gospodarze'
+            const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
+            const parts = toDateParts(item.commence_time)
+            return {
+              id: item.id || `${sportKey}-${index}`,
+              sport: item.sport_title || sport,
+              sportKey,
+              country,
+              league: item.sport_title || league || sport,
+              home,
+              away,
+              date: parts.date,
+              time: parts.time,
+              commence_time: item.commence_time,
+              markets: countOnly ? [] : buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
+            }
+          })
+
+        collected.push(...fixturesForKey)
       }
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey, futureOnly: true, fixtures }) }
+      const seen = new Set()
+      const fixtures = collected
+        .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+        .filter(item => {
+          const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        .slice(0, countOnly ? 500 : 80)
+
+      if (countOnly) {
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+      }
+
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, futureOnly: true, fixtures }) }
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }

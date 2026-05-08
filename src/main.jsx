@@ -5342,10 +5342,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       {
         name: 'Piłka nożna',
         icon: sportIconMap['Piłka nożna'] || '⚽',
-        country: 'Anglia',
-        league: 'Premier League',
+        country: 'Wszystkie',
+        league: 'Wszystkie ligi',
+        allLeagues: true,
       },
-      ...otherSports,
+      ...otherSports.map(item => ({ ...item, league: 'Wszystkie ligi', allLeagues: true })),
     ]
   }, [sportsbook])
 
@@ -5588,7 +5589,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             league: item.league || item.name,
             date: todayKey,
             realOnly: '1',
-            countOnly: '1'
+            countOnly: '1',
+            allLeagues: item.allLeagues ? '1' : ''
           })
           const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
           const data = await response.json().catch(() => ({}))
@@ -5617,11 +5619,29 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function handleTopSportButtonClick(item) {
     if (!item?.name) return
-    if (item.name === 'Piłka nożna') {
-      selectSidebarLeague('Piłka nożna', item.country || 'Anglia', item.league || 'Premier League')
-      return
-    }
-    selectSidebarLeague(item.name, item.country || 'Wszystkie', item.league || item.name)
+    setOpenSidebarSport(item.name)
+    if (item.name === 'Piłka nożna') setOpenFootballCountry('')
+    setLiveFixtures([])
+    setLiveDataSource('loading')
+    setLiveFixturesStatus(`LIVE: pobieram dzisiejsze mecze ze wszystkich lig — ${item.name}...`)
+    updateForm({
+      sport: item.name,
+      country: item.country || 'Wszystkie',
+      league: 'Wszystkie ligi',
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
+    })
+    window.setTimeout(() => {
+      fetchLiveFixturesForDay({
+        sport: item.name,
+        country: item.country || 'Wszystkie',
+        league: 'Wszystkie ligi',
+        date: getTodayLocalKey(),
+        allLeagues: true,
+      })
+    }, 60)
   }
 
   async function fetchDailyCount() {
@@ -5677,12 +5697,33 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource('manual')
         setLiveFixturesStatus('Nowy dzień. Liczniki sportów i lista meczów zostały odświeżone dla dzisiejszej daty.')
         fetchSportDayCounts(true)
-        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey })
+        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, allLeagues: form.league === 'Wszystkie ligi' })
       }
     }, 30000)
 
     return () => window.clearInterval(timer)
   }, [sportCountsDate, topSportButtons, form.sport, form.country, form.league])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const todayKey = getTodayLocalKey()
+      setLiveDate(todayKey)
+      fetchSportDayCounts(true)
+
+      if (form.sport) {
+        fetchLiveFixturesForDay({
+          sport: form.sport,
+          country: form.country || 'Wszystkie',
+          league: form.league || 'Wszystkie ligi',
+          date: todayKey,
+          allLeagues: form.league === 'Wszystkie ligi',
+          silent: true,
+        })
+      }
+    }, 60000)
+
+    return () => window.clearInterval(timer)
+  }, [form.sport, form.country, form.league])
 
   const dailyLimit = isPremiumUser ? Infinity : 5
   const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)
@@ -5780,17 +5821,21 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   async function fetchLiveFixturesForDay(overrides = {}) {
-    setLiveFixturesLoading(true)
+    const isSilentRefresh = Boolean(overrides.silent)
+    if (!isSilentRefresh) setLiveFixturesLoading(true)
     setHasTriedLiveLoad(true)
-    setLiveDataSource('loading')
-    setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy...')
+    if (!isSilentRefresh) {
+      setLiveDataSource('loading')
+      setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy...')
+    }
     try {
       const params = new URLSearchParams({
         sport: overrides.sport || form.sport || '',
         country: overrides.country || currentCountry || '',
         league: overrides.league || currentLeague || '',
-        date: overrides.date || liveDate || new Date().toISOString().slice(0, 10),
-        realOnly: '1'
+        date: overrides.date || liveDate || getTodayLocalKey(),
+        realOnly: '1',
+        allLeagues: overrides.allLeagues ? '1' : ''
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
       const data = await response.json().catch(() => ({}))
@@ -5802,22 +5847,34 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : 'LIVE API'
-        setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych przyszłych meczów/kursów pobrano dla ${overrides.date || liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
-        onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
+        if (!isSilentRefresh) {
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych przyszłych meczów/kursów pobrano dla ${overrides.date || liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
+          onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
+        } else {
+          setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów na dziś.`)
+        }
       } else {
         setLiveFixtures([])
         setLiveDataSource(data.source || 'empty')
-        setLiveFixturesStatus(data.message || 'LIVE API: brak realnych przyszłych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.')
-        onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
+        if (!isSilentRefresh) {
+          setLiveFixturesStatus(data.message || 'LIVE API: brak realnych przyszłych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.')
+          onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
+        } else {
+          setLiveFixturesStatus(data.message || 'LIVE API: automatyczne odświeżenie — brak realnych meczów na dziś.')
+        }
       }
     } catch (error) {
       console.warn('fetch live fixtures error', error)
       setLiveFixtures([])
       setLiveDataSource('error')
-      setLiveFixturesStatus('LIVE API: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY w Netlify albo wybierz inną ligę.')
-      onToast?.({ type: 'error', title: 'Nie pobrano realnych kursów', message: error?.message || 'Sprawdź konfigurację API.' })
+      if (!isSilentRefresh) {
+        setLiveFixturesStatus('LIVE API: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY w Netlify albo wybierz inną ligę.')
+        onToast?.({ type: 'error', title: 'Nie pobrano realnych kursów', message: error?.message || 'Sprawdź konfigurację API.' })
+      } else {
+        setLiveFixturesStatus('LIVE API: automatyczne odświeżenie nie powiodło się. Spróbuję ponownie za 1 minutę.')
+      }
     } finally {
-      setLiveFixturesLoading(false)
+      if (!isSilentRefresh) setLiveFixturesLoading(false)
     }
   }
 
@@ -6309,14 +6366,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   onClick={() => handleTopSportButtonClick(item)}
                 >
                   <span>{item.icon} {item.name}</span>
-                  <b>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
+                  <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
                 </button>
               )
             })}
           </div>
 
           <div className="betfolio-top-sports-note">
-            Pokazuję tylko dzisiejsze realne mecze dla każdego sportu. Liczniki odświeżają się codziennie o 00:00.
+            Live radar: dzisiejsze realne mecze ze wszystkich obsługiwanych lig. Liczniki i lista odświeżają się automatycznie co 1 minutę.
           </div>
 
           <div className="betfolio-events-head">
