@@ -24325,3 +24325,20 @@ font[style*="border"]{
 }
 .betai-received-tip-overlay{z-index:999999!important;}
 .betai-received-tip-text{font-size:26px!important;font-weight:900!important;color:#fff!important;text-shadow:0 0 18px rgba(0,229,255,.75)!important;}
+
+/* WERSJA 677 - przywrócone ikonki Saldo/Odblokowane + biały żeton w topbarze */
+.app-shell .sidebar .wallet-row span{display:inline-flex!important;align-items:center!important;gap:6px!important;}
+.app-shell .topbar .wallet-split-coin,
+.app-shell .topbar .wallet-top-btn.wallet-split-top-btn .wallet-split-coin{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:28px!important;height:28px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 30%, #ffffff 0%, #f8fafc 38%, #d8dee8 66%, #7b8797 100%)!important;
+  border:1px solid rgba(255,255,255,.8)!important;
+  box-shadow:inset 0 2px 5px rgba(255,255,255,.88), inset 0 -3px 6px rgba(0,0,0,.36), 0 0 14px rgba(255,255,255,.38)!important;
+  color:#fff!important;text-shadow:none!important;overflow:hidden!important;
+}
+.app-shell .topbar .wallet-split-coin::before{
+  content:''!important;width:12px!important;height:12px!important;border-radius:50%!important;
+  background:rgba(255,255,255,.94)!important;box-shadow:0 0 0 4px rgba(0,0,0,.08)!important;
+}
+.app-shell .topbar .wallet-split-coin-core{display:none!important;}

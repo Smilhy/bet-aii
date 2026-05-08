@@ -568,9 +568,9 @@ return (
           <strong>{profile.username}</strong>
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
-        <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+        <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
         <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true" /> Biały żeton</span><b>{Number(tokenBalance || 0)}</b></div>
-        <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
+        <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
       </div>
@@ -1082,9 +1082,13 @@ function LiveChatPanel({ user }) {
 
       // WERSJA 676: osobna tabela do realtime popupu TIP.
       // To NIE jest tabela `tips` z typami bukmacherskimi.
+      // WERSJA 677: zapisujemy także e-maile, bo receiver_id może być pusty
+      // u użytkowników, którzy mają wiadomości/czat po emailu, ale nie mają wpisu id w profiles.
       await supabase.from('tip_transfers').insert({
         sender_id: user?.id || senderWallet.user_id || null,
-        receiver_id: receiverUserId,
+        receiver_id: receiverUserId || receiverWallet.user_id || null,
+        sender_email: email,
+        receiver_email: targetEmail,
         sender_username: userName || email.split('@')[0] || 'Użytkownik',
         receiver_username: msg.user_name || nameFromEmail(targetEmail),
         amount: 1
@@ -8407,21 +8411,28 @@ function App() {
 
   useEffect(() => {
     const currentUserId = sessionUser?.id || ''
-    if (!currentUserId || !isSupabaseConfigured || !supabase) return undefined
+    const currentUserEmail = normalizeEmail(sessionUser?.email || effectiveAccountProfile?.email || '')
+    if ((!currentUserId && !currentUserEmail) || !isSupabaseConfigured || !supabase) return undefined
     const channel = supabase
-      .channel(`betai-tip-transfers-popup-${currentUserId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_id=eq.${currentUserId}` }, payload => {
+      .channel(`betai-tip-transfers-popup-677-${currentUserId || currentUserEmail}`)
+      // Nie dajemy filtra receiver_id, bo część starych kont ma tylko email w czacie.
+      // Filtr robimy po stronie klienta: receiver_id LUB receiver_email.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers' }, payload => {
         const row = payload?.new || {}
+        const rowReceiverId = String(row.receiver_id || '')
+        const rowReceiverEmail = normalizeEmail(row.receiver_email || '')
+        const isMine = (currentUserId && rowReceiverId === String(currentUserId)) || (currentUserEmail && rowReceiverEmail === currentUserEmail)
+        if (!isMine) return
         const key = String(row.id || row.created_at || Math.random())
         if (lastReceivedTipRef.current === key) return
         lastReceivedTipRef.current = key
-        const senderName = row.sender_username || 'Użytkownik'
+        const senderName = row.sender_username || nameFromEmail(row.sender_email) || 'Użytkownik'
         showReceivedTipPopup(senderName)
         window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
       })
       .subscribe()
     return () => { try { supabase.removeChannel(channel) } catch (_) {} }
-  }, [sessionUser?.id])
+  }, [sessionUser?.id, sessionUser?.email, effectiveAccountProfile?.email])
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips

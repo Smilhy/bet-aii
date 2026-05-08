@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-676-real-tip-transfers-fix",
-  "version": "676.0.0",
+  "name": "betai-wersja-677-tip-popup-everyone-fix",
+  "version": "677.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
