@@ -1,0 +1,22 @@
+BET+AI — WERSJA 715 COUNTRY COLLAPSE + ALL LEAGUES
+
+Co poprawiono:
+1. Kraje w Piłce nożnej można teraz zwijać.
+2. Klikasz aktywne państwo drugi raz — liga pod nim się chowa.
+3. Klikasz kolejne państwo — poprzednie się zwija, nowe się rozwija.
+4. Dodano rozszerzone listy lig dla wszystkich państw/regionów z wersji 713.
+5. Dla każdego kraju jest teraz kilka lig/rozgrywek:
+   - liga główna,
+   - niższe ligi,
+   - puchar,
+   - superpuchar lub liga kobiet tam, gdzie pasuje.
+6. Hiszpania dalej ma:
+   - La Liga
+   - Segunda División
+   - Primera División Femenina
+   - Primera División RFEF
+   - Segunda División RFEF
+   - Copa del Rey
+
+SQL:
+- brak nowego SQL.

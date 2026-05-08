@@ -4,6 +4,7 @@ exports.handler = async function(event) {
   const country = String(qs.country || '')
   const league = String(qs.league || '')
   const date = String(qs.date || new Date().toISOString().slice(0, 10))
+  const realOnly = String(qs.realOnly || '') === '1'
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -296,8 +297,14 @@ exports.handler = async function(event) {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey: sportKey || 'upcoming', futureOnly: true, fixtures }) }
     }
 
+    if (realOnly) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję danych demo jako realnych.', fixtures: [] }) }
+    }
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo', futureOnly: true, fixtures: demoFixtures() }) }
   } catch (error) {
+    if (realOnly) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, message: `LIVE API: ${error.message}`, fixtures: [] }) }
+    }
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo-fallback', futureOnly: true, warning: error.message, fixtures: demoFixtures() }) }
   }
 }

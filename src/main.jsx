@@ -4329,10 +4329,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [liveFixtures, setLiveFixtures] = useState([])
   const [liveFixturesLoading, setLiveFixturesLoading] = useState(false)
   const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
+  const [liveDataSource, setLiveDataSource] = useState('manual')
   const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [sidebarSearch, setSidebarSearch] = useState('')
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
+  const [openFootballCountry, setOpenFootballCountry] = useState('Anglia')
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -4530,6 +4532,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     "Świat": "🌐"
 }
   const footballLeagueMap = {
+    "Afryka": [
+        "CAF Champions League",
+        "CAF Confederation Cup",
+        "African Football League",
+        "Puchar Narodów Afryki",
+        "Kwalifikacje CAF"
+    ],
+    "Albania": [
+        "Kategoria Superiore",
+        "Kategoria e Parë",
+        "Puchar Albanii",
+        "Superpuchar Albanii",
+        "Liga kobiet"
+    ],
+    "Algieria": [
+        "Ligue 1",
+        "Ligue 2",
+        "Puchar Algierii",
+        "Superpuchar Algierii",
+        "Liga kobiet"
+    ],
     "Anglia": [
         "Premier League",
         "Championship",
@@ -4538,7 +4561,254 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         "National League",
         "FA Cup",
         "EFL Cup",
+        "Community Shield",
+        "Women Super League",
+        "Women Championship"
+    ],
+    "Arabia Saudyjska": [
+        "Saudi Pro League",
+        "Division 1",
+        "Division 2",
+        "King Cup",
+        "Saudi Super Cup",
+        "Liga kobiet"
+    ],
+    "Argentyna": [
+        "Liga Profesional",
+        "Primera Nacional",
+        "Primera B Metropolitana",
+        "Primera C",
+        "Copa Argentina",
+        "Copa de la Liga"
+    ],
+    "Armenia": [
+        "Premier League",
+        "First League",
+        "Puchar Armenii",
+        "Superpuchar Armenii",
+        "Liga kobiet"
+    ],
+    "Aruba": [
+        "Division di Honor",
+        "Division Uno",
+        "Puchar Aruba",
+        "Liga kobiet"
+    ],
+    "Australia": [
+        "A-League Men",
+        "A-League Women",
+        "Australia Cup",
+        "NPL NSW",
+        "NPL Victoria",
+        "NPL Queensland"
+    ],
+    "Austria": [
+        "Bundesliga",
+        "2. Liga",
+        "Regionalliga Ost",
+        "Regionalliga Mitte",
+        "Regionalliga West",
+        "ÖFB Cup",
+        "Frauen Bundesliga"
+    ],
+    "Azerbejdżan": [
+        "Premier League",
+        "First Division",
+        "Puchar Azerbejdżanu",
+        "Superpuchar Azerbejdżanu",
+        "Liga kobiet"
+    ],
+    "Azja": [
+        "AFC Champions League Elite",
+        "AFC Champions League Two",
+        "AFC Challenge League",
+        "Puchar Azji",
+        "Kwalifikacje AFC"
+    ],
+    "Belgia": [
+        "Jupiler Pro League",
+        "Challenger Pro League",
+        "National Division 1",
+        "Puchar Belgii",
+        "Superpuchar Belgii",
+        "Super League Women"
+    ],
+    "Białoruś": [
+        "Premier League",
+        "First League",
+        "Second League",
+        "Puchar Białorusi",
+        "Superpuchar Białorusi",
+        "Liga kobiet"
+    ],
+    "Boliwia": [
+        "División Profesional",
+        "Copa Bolivia",
+        "Nacional B",
+        "Liga kobiet"
+    ],
+    "Bośnia": [
+        "Premijer Liga",
+        "Prva Liga FBiH",
+        "Prva Liga RS",
+        "Puchar Bośni i Hercegowiny",
+        "Liga kobiet"
+    ],
+    "Brazylia": [
+        "Serie A",
+        "Serie B",
+        "Serie C",
+        "Serie D",
+        "Copa do Brasil",
+        "Paulista",
+        "Carioca",
+        "Mineiro",
+        "Gaúcho",
+        "Brasileirão Feminino"
+    ],
+    "Bułgaria": [
+        "First League",
+        "Second League",
+        "Third League",
+        "Puchar Bułgarii",
+        "Superpuchar Bułgarii",
+        "Liga kobiet"
+    ],
+    "Chile": [
+        "Primera División",
+        "Primera B",
+        "Segunda División",
+        "Copa Chile",
+        "Supercopa Chile",
+        "Liga kobiet"
+    ],
+    "Chiny": [
+        "Chinese Super League",
+        "China League One",
+        "China League Two",
+        "FA Cup",
+        "Super Cup",
         "Women Super League"
+    ],
+    "Chińsko-Tajpej": [
+        "Taiwan Football Premier League",
+        "Enterprise Football League",
+        "Intercity League",
+        "Puchar Tajwanu",
+        "Liga kobiet"
+    ],
+    "Chorwacja": [
+        "HNL",
+        "Prva NL",
+        "Druga NL",
+        "Puchar Chorwacji",
+        "Superpuchar Chorwacji",
+        "1. HNLŽ"
+    ],
+    "Cypr": [
+        "First Division",
+        "Second Division",
+        "Third Division",
+        "Puchar Cypru",
+        "Superpuchar Cypru",
+        "Liga kobiet"
+    ],
+    "Czarnogóra": [
+        "First League",
+        "Second League",
+        "Puchar Czarnogóry",
+        "Superpuchar Czarnogóry",
+        "Liga kobiet"
+    ],
+    "Czechy": [
+        "Fortuna Liga",
+        "FNL",
+        "ČFL",
+        "MSFL",
+        "Puchar Czech",
+        "1. liga kobiet"
+    ],
+    "Dania": [
+        "Superliga",
+        "1. Division",
+        "2. Division",
+        "3. Division",
+        "DBU Pokalen",
+        "Kvindeliga"
+    ],
+    "Dominikana-Republika": [
+        "Liga Dominicana de Fútbol",
+        "LDF Expansión",
+        "Puchar Dominikany",
+        "Liga kobiet"
+    ],
+    "Egipt": [
+        "Premier League",
+        "Second Division A",
+        "Egypt Cup",
+        "Super Cup",
+        "League Cup",
+        "Liga kobiet"
+    ],
+    "Ekwador": [
+        "LigaPro Serie A",
+        "LigaPro Serie B",
+        "Copa Ecuador",
+        "Supercopa Ecuador",
+        "Liga kobiet"
+    ],
+    "Estonia": [
+        "Meistriliiga",
+        "Esiliiga",
+        "Esiliiga B",
+        "Puchar Estonii",
+        "Superpuchar Estonii",
+        "Naiste Meistriliiga"
+    ],
+    "Etiopia": [
+        "Premier League",
+        "Higher League",
+        "Puchar Etiopii",
+        "Liga kobiet"
+    ],
+    "Finlandia": [
+        "Veikkausliiga",
+        "Ykkösliiga",
+        "Ykkönen",
+        "Kakkonen",
+        "Puchar Finlandii",
+        "Kansallinen Liiga"
+    ],
+    "Francja": [
+        "Ligue 1",
+        "Ligue 2",
+        "National",
+        "National 2",
+        "Coupe de France",
+        "Trophée des Champions",
+        "Division 1 Féminine"
+    ],
+    "Grecja": [
+        "Super League",
+        "Super League 2",
+        "Gamma Ethniki",
+        "Puchar Grecji",
+        "Superpuchar Grecji",
+        "Liga kobiet"
+    ],
+    "Gruzja": [
+        "Erovnuli Liga",
+        "Erovnuli Liga 2",
+        "Liga 3",
+        "Puchar Gruzji",
+        "Superpuchar Gruzji",
+        "Liga kobiet"
+    ],
+    "Gwatemala": [
+        "Liga Nacional",
+        "Primera División",
+        "Copa Guatemala",
+        "Liga kobiet"
     ],
     "Hiszpania": [
         "La Liga",
@@ -4546,7 +4816,238 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         "Primera División Femenina",
         "Primera División RFEF",
         "Segunda División RFEF",
-        "Copa del Rey"
+        "Copa del Rey",
+        "Supercopa de España",
+        "Copa de la Reina"
+    ],
+    "Holandia": [
+        "Eredivisie",
+        "Eerste Divisie",
+        "Tweede Divisie",
+        "Derde Divisie",
+        "KNVB Beker",
+        "Johan Cruyff Shield",
+        "Vrouwen Eredivisie"
+    ],
+    "Honduras": [
+        "Liga Nacional",
+        "Liga de Ascenso",
+        "Copa Presidente",
+        "Liga kobiet"
+    ],
+    "Hongkong": [
+        "Hong Kong Premier League",
+        "First Division",
+        "FA Cup",
+        "Senior Shield",
+        "Sapling Cup",
+        "Liga kobiet"
+    ],
+    "Indie": [
+        "Indian Super League",
+        "I-League",
+        "I-League 2",
+        "Durand Cup",
+        "Super Cup",
+        "Indian Women's League"
+    ],
+    "Indonezja": [
+        "Liga 1",
+        "Liga 2",
+        "Liga 3",
+        "Piala Indonesia",
+        "Liga kobiet"
+    ],
+    "Irlandia": [
+        "Premier Division",
+        "First Division",
+        "FAI Cup",
+        "League Cup",
+        "President's Cup",
+        "Women’s Premier Division"
+    ],
+    "Irlandia Północna": [
+        "NIFL Premiership",
+        "NIFL Championship",
+        "Premier Intermediate League",
+        "Irish Cup",
+        "League Cup",
+        "Women’s Premiership"
+    ],
+    "Islandia": [
+        "Besta deild karla",
+        "1. deild karla",
+        "2. deild karla",
+        "Puchar Islandii",
+        "Superpuchar Islandii",
+        "Besta deild kvenna"
+    ],
+    "Izrael": [
+        "Ligat ha'Al",
+        "Liga Leumit",
+        "Liga Alef",
+        "State Cup",
+        "Toto Cup",
+        "Liga kobiet"
+    ],
+    "Japonia": [
+        "J1 League",
+        "J2 League",
+        "J3 League",
+        "Emperor Cup",
+        "J.League Cup",
+        "WE League"
+    ],
+    "Kamerun": [
+        "Elite One",
+        "Elite Two",
+        "Puchar Kamerunu",
+        "Superpuchar Kamerunu",
+        "Liga kobiet"
+    ],
+    "Kanada": [
+        "Canadian Premier League",
+        "Canadian Championship",
+        "League1 Ontario",
+        "Première Ligue de soccer du Québec",
+        "League1 BC",
+        "Northern Super League"
+    ],
+    "Kazachstan": [
+        "Premier League",
+        "First Division",
+        "Second Division",
+        "Puchar Kazachstanu",
+        "Superpuchar Kazachstanu",
+        "Liga kobiet"
+    ],
+    "Kenia": [
+        "Premier League",
+        "National Super League",
+        "FKF Cup",
+        "Super Cup",
+        "Women Premier League"
+    ],
+    "Kolumbia": [
+        "Primera A",
+        "Primera B",
+        "Copa Colombia",
+        "Superliga Colombiana",
+        "Liga Femenina"
+    ],
+    "Korea Południowa": [
+        "K League 1",
+        "K League 2",
+        "K3 League",
+        "K4 League",
+        "Korean FA Cup",
+        "WK League"
+    ],
+    "Kosowa": [
+        "Superliga",
+        "Liga e Parë",
+        "Liga e Dytë",
+        "Puchar Kosowa",
+        "Superpuchar Kosowa",
+        "Liga kobiet"
+    ],
+    "Kostaryka": [
+        "Primera División",
+        "Liga de Ascenso",
+        "Copa Costa Rica",
+        "Supercopa",
+        "Liga kobiet"
+    ],
+    "Litwa": [
+        "A Lyga",
+        "I Lyga",
+        "II Lyga",
+        "Puchar Litwy",
+        "Superpuchar Litwy",
+        "A Lyga kobiet"
+    ],
+    "Macedonia": [
+        "First League",
+        "Second League",
+        "Puchar Macedonii",
+        "Superpuchar Macedonii",
+        "Liga kobiet"
+    ],
+    "Malezja": [
+        "Super League",
+        "MFL Cup",
+        "Malaysia Cup",
+        "FA Cup",
+        "Liga kobiet"
+    ],
+    "Malta": [
+        "Premier League",
+        "Challenge League",
+        "National Amateur League",
+        "FA Trophy",
+        "Super Cup",
+        "Liga kobiet"
+    ],
+    "Maroko": [
+        "Botola Pro",
+        "Botola 2",
+        "Coupe du Trône",
+        "Superpuchar Maroka",
+        "Liga kobiet"
+    ],
+    "Meksyk": [
+        "Liga MX",
+        "Liga de Expansión",
+        "Liga Premier Serie A",
+        "Copa MX",
+        "Campeón de Campeones",
+        "Liga MX Femenil"
+    ],
+    "Mongolia": [
+        "National Premier League",
+        "First League",
+        "Puchar Mongolii",
+        "Superpuchar Mongolii",
+        "Liga kobiet"
+    ],
+    "Niemcy": [
+        "Bundesliga",
+        "2. Bundesliga",
+        "3. Liga",
+        "Regionalliga",
+        "DFB Pokal",
+        "DFL Supercup",
+        "Frauen Bundesliga"
+    ],
+    "Norwegia": [
+        "Eliteserien",
+        "OBOS-ligaen",
+        "PostNord-ligaen",
+        "Norsk Tipping-ligaen",
+        "NM Cup",
+        "Toppserien"
+    ],
+    "Panama": [
+        "Liga Panameña de Fútbol",
+        "Liga Prom",
+        "Copa Panamá",
+        "Supercopa",
+        "Liga kobiet"
+    ],
+    "Paragwaj": [
+        "Primera División",
+        "División Intermedia",
+        "Primera B",
+        "Copa Paraguay",
+        "Supercopa Paraguay",
+        "Liga kobiet"
+    ],
+    "Peru": [
+        "Liga 1",
+        "Liga 2",
+        "Copa Perú",
+        "Copa Bicentenario",
+        "Liga Femenina"
     ],
     "Polska": [
         "Ekstraklasa",
@@ -4554,170 +5055,196 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         "2 Liga",
         "3 Liga",
         "Puchar Polski",
+        "Superpuchar Polski",
         "Ekstraliga kobiet"
-    ],
-    "Włochy": [
-        "Serie A",
-        "Serie B",
-        "Serie C",
-        "Coppa Italia",
-        "Serie A Kobiet"
-    ],
-    "Niemcy": [
-        "Bundesliga",
-        "2. Bundesliga",
-        "3. Liga",
-        "DFB Pokal",
-        "Frauen Bundesliga"
-    ],
-    "Francja": [
-        "Ligue 1",
-        "Ligue 2",
-        "National",
-        "Coupe de France",
-        "Division 1 Féminine"
-    ],
-    "Holandia": [
-        "Eredivisie",
-        "Eerste Divisie",
-        "KNVB Beker",
-        "Vrouwen Eredivisie"
     ],
     "Portugalia": [
         "Primeira Liga",
         "Liga Portugal 2",
-        "Taça de Portugal"
+        "Liga 3",
+        "Campeonato de Portugal",
+        "Taça de Portugal",
+        "Taça da Liga",
+        "Liga BPI"
     ],
-    "Belgia": [
-        "Jupiler Pro League",
-        "Challenger Pro League",
-        "Puchar Belgii"
+    "Republika Południowej Afryki": [
+        "Premier Division",
+        "First Division",
+        "Nedbank Cup",
+        "MTN 8",
+        "Carling Knockout",
+        "Hollywoodbets Super League"
+    ],
+    "Rosja": [
+        "Premier League",
+        "First League",
+        "Second League",
+        "Russian Cup",
+        "Super Cup",
+        "Women Championship"
+    ],
+    "Rumunia": [
+        "Liga I",
+        "Liga II",
+        "Liga III",
+        "Cupa României",
+        "Supercupa României",
+        "Liga 1 Feminin"
+    ],
+    "San-Marino": [
+        "Campionato Sammarinese",
+        "Coppa Titano",
+        "Super Coppa Sammarinese",
+        "Liga kobiet"
+    ],
+    "Serbia": [
+        "SuperLiga",
+        "Prva Liga",
+        "Srpska Liga",
+        "Puchar Serbii",
+        "Superpuchar Serbii",
+        "Superliga kobiet"
+    ],
+    "Singapur": [
+        "Singapore Premier League",
+        "Singapore Cup",
+        "Community Shield",
+        "Liga kobiet"
     ],
     "Szkocja": [
         "Premiership",
         "Championship",
         "League One",
         "League Two",
-        "Scottish Cup"
-    ],
-    "Turcja": [
-        "Süper Lig",
-        "1. Lig",
-        "Puchar Turcji"
-    ],
-    "Grecja": [
-        "Super League",
-        "Super League 2",
-        "Puchar Grecji"
-    ],
-    "Szwecja": [
-        "Allsvenskan",
-        "Superettan",
-        "Svenska Cupen"
-    ],
-    "Norwegia": [
-        "Eliteserien",
-        "OBOS-ligaen",
-        "NM Cup"
-    ],
-    "Dania": [
-        "Superliga",
-        "1. Division",
-        "DBU Pokalen"
+        "Scottish Cup",
+        "League Cup",
+        "SWPL 1"
     ],
     "Szwajcaria": [
         "Super League",
         "Challenge League",
-        "Puchar Szwajcarii"
+        "Promotion League",
+        "Swiss Cup",
+        "Superpuchar Szwajcarii",
+        "Women’s Super League"
     ],
-    "Austria": [
-        "Bundesliga",
-        "2. Liga",
-        "ÖFB Cup"
-    ],
-    "Czechy": [
-        "Fortuna Liga",
-        "FNL",
-        "Puchar Czech"
+    "Szwecja": [
+        "Allsvenskan",
+        "Superettan",
+        "Ettan Norra",
+        "Ettan Södra",
+        "Svenska Cupen",
+        "Damallsvenskan"
     ],
     "Słowacja": [
         "Nike Liga",
         "2. Liga",
-        "Puchar Słowacji"
+        "3. Liga",
+        "Puchar Słowacji",
+        "Superpuchar Słowacji",
+        "I. liga kobiet"
     ],
-    "Ukraina": [
-        "Premier League",
-        "Persha Liga",
-        "Puchar Ukrainy"
+    "Słowenia": [
+        "PrvaLiga",
+        "2. SNL",
+        "3. SNL",
+        "Puchar Słowenii",
+        "Superpuchar Słowenii",
+        "Ženska liga"
     ],
-    "Rumunia": [
-        "Liga I",
-        "Liga II",
-        "Cupa României"
+    "Tajlandia": [
+        "Thai League 1",
+        "Thai League 2",
+        "Thai League 3",
+        "FA Cup",
+        "League Cup",
+        "Liga kobiet"
     ],
-    "Chorwacja": [
-        "HNL",
-        "Prva NL",
-        "Puchar Chorwacji"
-    ],
-    "Serbia": [
-        "SuperLiga",
-        "Prva Liga",
-        "Puchar Serbii"
+    "Turcja": [
+        "Süper Lig",
+        "1. Lig",
+        "2. Lig",
+        "3. Lig",
+        "Puchar Turcji",
+        "Superpuchar Turcji",
+        "Kadınlar Süper Ligi"
     ],
     "USA": [
         "MLS",
         "USL Championship",
+        "USL League One",
         "NWSL",
-        "US Open Cup"
+        "US Open Cup",
+        "MLS Next Pro"
     ],
-    "Brazylia": [
+    "Ukraina": [
+        "Premier League",
+        "Persha Liga",
+        "Druha Liga",
+        "Puchar Ukrainy",
+        "Superpuchar Ukrainy",
+        "Liga kobiet"
+    ],
+    "Urugwaj": [
+        "Primera División",
+        "Segunda División",
+        "Primera Amateur",
+        "Copa Uruguay",
+        "Supercopa Uruguaya",
+        "Liga kobiet"
+    ],
+    "Wenezuela": [
+        "Primera División",
+        "Segunda División",
+        "Copa Venezuela",
+        "Liga kobiet"
+    ],
+    "Wietnam": [
+        "V.League 1",
+        "V.League 2",
+        "Vietnamese Cup",
+        "Super Cup",
+        "Liga kobiet"
+    ],
+    "Wyspy Owcze": [
+        "Premier League",
+        "1. deild",
+        "2. deild",
+        "Puchar Wysp Owczych",
+        "Superpuchar Wysp Owczych",
+        "1. deild kvinnur"
+    ],
+    "Węgry": [
+        "NB I",
+        "NB II",
+        "NB III",
+        "Magyar Kupa",
+        "Superpuchar Węgier",
+        "Női NB I"
+    ],
+    "Włochy": [
         "Serie A",
         "Serie B",
-        "Copa do Brasil",
-        "Paulista",
-        "Carioca"
+        "Serie C",
+        "Coppa Italia",
+        "Supercoppa Italiana",
+        "Serie A Kobiet"
     ],
-    "Argentyna": [
-        "Liga Profesional",
-        "Primera Nacional",
-        "Copa Argentina"
-    ],
-    "Meksyk": [
-        "Liga MX",
-        "Liga de Expansión",
-        "Copa MX"
-    ],
-    "Japonia": [
-        "J1 League",
-        "J2 League",
-        "J3 League",
-        "Emperor Cup"
-    ],
-    "Korea Południowa": [
-        "K League 1",
-        "K League 2",
-        "Korean FA Cup"
-    ],
-    "Arabia Saudyjska": [
-        "Saudi Pro League",
-        "Division 1",
-        "King Cup"
+    "Łotwa": [
+        "Virsliga",
+        "1. Liga",
+        "2. Liga",
+        "Puchar Łotwy",
+        "Superpuchar Łotwy",
+        "Liga kobiet"
     ],
     "Świat": [
         "Mistrzostwa Świata",
         "Towarzyskie międzynarodowe",
-        "Klubowe MŚ"
-    ],
-    "Afryka": [
-        "CAF Champions League",
-        "CAF Confederation Cup",
-        "Puchar Narodów Afryki"
-    ],
-    "Azja": [
-        "AFC Champions League",
-        "AFC Cup",
-        "Puchar Azji"
+        "Klubowe MŚ",
+        "Liga Narodów",
+        "Kwalifikacje MŚ",
+        "Igrzyska Olimpijskie"
     ]
 }
   const getFootballLeaguesForCountry = (country) => {
@@ -4727,6 +5254,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function selectSidebarCountry(nextCountry) {
     setOpenSidebarSport('Piłka nożna')
+
+    if (openFootballCountry === nextCountry) {
+      setOpenFootballCountry('')
+      return
+    }
+
+    setOpenFootballCountry(nextCountry)
     const nextLeagues = getFootballLeaguesForCountry(nextCountry)
     const nextLeague = nextLeagues[0] || ''
     const nextLeagueSource = countryMap?.[nextCountry] || {}
@@ -4734,6 +5268,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const nextMarket = nextMatch?.markets?.[0] || defaultMarket
 
     setLiveFixtures([])
+    setLiveDataSource('manual')
     setLiveFixturesStatus('Wybierz ligę i kliknij „Dodaj inne wydarzenie”, aby pobrać mecze/kursy z API.')
     updateForm({
       sport: 'Piłka nożna',
@@ -4958,8 +5493,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const confidenceFilled = Math.max(1, Math.min(15, Math.round((confidencePercent / 100) * 15)))
   const previewReachMin = form.accessType === 'premium' ? Math.round(confidencePercent * 28) : Math.round(confidencePercent * 18)
   const previewReachMax = form.accessType === 'premium' ? previewReachMin + 700 : previewReachMin + 400
-
-  function updateForm(patch) {
+    function updateForm(patch) {
     setForm(prev => ({ ...prev, ...patch }))
   }
 
@@ -5014,6 +5548,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
 
     setOpenSidebarSport(nextSport)
+    if (nextSport === 'Piłka nożna') {
+      setOpenFootballCountry(form.country || 'Anglia')
+    }
     if (nextSport !== form.sport) {
       chooseSport(nextSport)
     }
@@ -5021,6 +5558,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function selectSidebarLeague(nextSport, nextCountry, nextLeague) {
     setOpenSidebarSport(nextSport)
+    if (nextSport === 'Piłka nożna') setOpenFootballCountry(nextCountry)
     const nextSportData = sportsbook[nextSport] || { leagues: {}, countries: {} }
     const nextCountryMap = nextSportData.countries || null
     const nextLeagueSource = nextCountryMap ? (nextCountryMap[nextCountry] || {}) : (nextSportData.leagues || {})
@@ -5028,7 +5566,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const nextMarket = nextMatch?.markets?.[0] || defaultMarket
 
     setLiveFixtures([])
-    setLiveFixturesStatus('Kliknij „Pobierz mecze”, aby załadować kursy dla wybranej ligi.')
+    setLiveDataSource('loading')
+    setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy dla wybranej ligi...')
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -5041,17 +5580,23 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       date: nextMatch?.date || form.date,
       time: nextMatch?.time || form.time,
     })
+
+    window.setTimeout(() => {
+      fetchLiveFixturesForDay({ sport: nextSport, country: nextCountry || 'Wszystkie', league: nextLeague })
+    }, 60)
   }
 
-  async function fetchLiveFixturesForDay() {
+  async function fetchLiveFixturesForDay(overrides = {}) {
     setLiveFixturesLoading(true)
-    setLiveFixturesStatus('Pobieram mecze i kursy...')
+    setLiveDataSource('loading')
+    setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy...')
     try {
       const params = new URLSearchParams({
-        sport: form.sport || '',
-        country: currentCountry || '',
-        league: currentLeague || '',
-        date: liveDate || new Date().toISOString().slice(0, 10)
+        sport: overrides.sport || form.sport || '',
+        country: overrides.country || currentCountry || '',
+        league: overrides.league || currentLeague || '',
+        date: overrides.date || liveDate || new Date().toISOString().slice(0, 10),
+        realOnly: '1'
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
       const data = await response.json().catch(() => ({}))
@@ -5059,20 +5604,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
       const fixtures = rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
+      setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
-        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
-        onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranego dnia.` })
+        const sourceLabel = data.demo ? 'TRYB DEMO' : 'LIVE API'
+        setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} przyszłych meczów/kursów pobrano dla ${overrides.date || liveDate}. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
+        onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
       } else {
         setLiveFixtures([])
-        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Mecze rozpoczęte i startujące za mniej niż 1 minutę są ukryte.')
+        setLiveDataSource(data.source || 'empty')
+        setLiveFixturesStatus(data.message || 'LIVE API: brak przyszłych meczów dla wybranych filtrów. Wybierz inną datę albo ligę.')
         onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
       }
     } catch (error) {
       console.warn('fetch live fixtures error', error)
       setLiveFixtures([])
-      setLiveFixturesStatus('Nie udało się pobrać live danych. Sprawdź Netlify ENV albo użyj listy statycznej.')
-      onToast?.({ type: 'error', title: 'Nie pobrano meczów', message: error?.message || 'Sprawdź konfigurację API.' })
+      setLiveDataSource('error')
+      setLiveFixturesStatus('LIVE API: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY w Netlify albo wybierz inną ligę.')
+      onToast?.({ type: 'error', title: 'Nie pobrano realnych kursów', message: error?.message || 'Sprawdź konfigurację API.' })
     } finally {
       setLiveFixturesLoading(false)
     }
@@ -5443,6 +5992,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
                   {footballCountryOptions.map(country => {
                     const isCountryActive = currentCountry === country
+                    const isCountryOpen = openFootballCountry === country
                     const countryLeagues = getFootballLeaguesForCountry(country)
                     return (
                       <div className="football-country-node" key={country}>
@@ -5452,10 +6002,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           onClick={() => selectSidebarCountry(country)}
                         >
                           <span>{footballCountryIcons[country] || '🏳️'} {country}</span>
-                          <b>{isCountryActive ? '⌃' : '⌄'}</b>
+                          <b>{isCountryOpen ? '⌃' : '⌄'}</b>
                         </button>
 
-                        {isCountryActive && (
+                        {isCountryOpen && (
                           <div className="sport-accordion-children level-two football-leagues-list">
                             {countryLeagues.map(label => (
                               <button
@@ -5542,6 +6092,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <h1>Dodaj nowy typ</h1>
               </div>
               <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
+              <div className={`live-real-badge ${liveDataSource}`}>
+                {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+              </div>
             </div>
             <div className="betfolio-center-badges">
               <span>{form.sport}</span>

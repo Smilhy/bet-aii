@@ -1,0 +1,31 @@
+BET+AI — WERSJA 716 LIVE REAL + OCENA DECYZJI
+
+Co dodano:
+1. Kliknięcie ligi automatycznie pobiera realne mecze i kursy z The Odds API.
+2. Front wysyła realOnly=1, więc jeśli nie ma API albo jest błąd, nie udaje danych demo jako realnych.
+3. Na stronie pojawia się status:
+   - LIVE API — realne kursy
+   - Pobieram live
+   - Brak live meczów
+   - Błąd live API
+4. Prawa kolumna ma nową sekcję:
+   Ocena decyzji AI 1/10 do 10/10.
+5. Ocena aktualizuje się na żywo po każdej zmianie:
+   - kursu,
+   - rynku,
+   - poziomu pewności,
+   - opisu,
+   - źródła danych.
+6. Ocena bierze pod uwagę:
+   - czy dane są realne z API,
+   - poziom pewności,
+   - zakres kursu,
+   - długość/opis analizy,
+   - popularność rynku.
+7. Brak nowego SQL.
+
+Po wgraniu:
+- deploy without cache,
+- Ctrl+F5,
+- kliknij sport -> kraj -> liga,
+- system sam pobierze live dane.

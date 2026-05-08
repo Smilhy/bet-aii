@@ -1,0 +1,12 @@
+BET+AI — WERSJA 717 REMOVE PUBLIC DECISION SCORE
+
+Poprawka:
+1. Usunięto widoczną na stronie sekcję "Ocena decyzji AI 1/10 — 10/10".
+2. Ocena nie pokazuje się użytkownikowi w prawej kolumnie.
+3. Zostawiono funkcje LIVE:
+   - automatyczne pobieranie realnych kursów po kliknięciu ligi,
+   - status LIVE API,
+   - realOnly=1 bez udawania demo jako realnych danych.
+
+SQL:
+- brak nowego SQL.

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-714-popular-markets",
-  "version": "714.0.0",
+  "name": "betai-wersja-717-remove-public-decision-score",
+  "version": "717.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
