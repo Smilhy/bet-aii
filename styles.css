@@ -24774,3 +24774,14 @@ font[style*="border"]{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* WERSJA 694 — prostsza analiza AI i żywy wskaźnik pewności */
+.ai-analysis-simple{display:flex!important;flex-direction:column!important;gap:12px!important}
+.ai-analysis-simple small{color:#8ea6c0!important;font-size:12px!important;font-weight:800!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.ai-analysis-textarea{min-height:150px!important}
+.confidence-adjuster{display:grid!important;grid-template-columns:56px 1fr 56px!important;gap:12px!important;align-items:center!important;margin:14px 0 12px!important}
+.confidence-adjuster button{height:44px!important;border-radius:14px!important;border:1px solid rgba(45,212,255,.22)!important;background:rgba(45,212,255,.08)!important;color:#6ff8ff!important;font-size:26px!important;font-weight:900!important;cursor:pointer!important}
+.confidence-adjuster input[type=range]{width:100%!important;accent-color:#20e7ff!important;cursor:pointer!important}
+.confidence-dots-clickable i{cursor:pointer!important}
+.confidence-dots-clickable i:hover{box-shadow:0 0 14px rgba(25,244,234,.22)!important;transform:translateY(-1px)}

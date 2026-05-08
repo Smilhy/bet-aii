@@ -2100,32 +2100,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
             <div className="static-add-card">
               <span className="static-add-label">9. Analiza AI</span>
-              <div className="ai-analysis-box">
-                <div className="ai-analysis-head"><span className="ai-badge">AI</span><strong>Analiza wygenerowana przez AI</strong></div>
-                <p>{form.aiAnalysis}</p>
-                <button type="button" onClick={regenerateAi}>Generuj ponownie</button>
+              <div className="ai-analysis-simple">
+                <small>Analiza wygenerowana przez AI</small>
+                <textarea className="static-add-textarea-input ai-analysis-textarea" maxLength={500} value={form.aiAnalysis} onChange={(e) => updateForm({ aiAnalysis: e.target.value })} />
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">10. Poziom pewności</span>
               <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
-              <div className="confidence-dots">
-                {confidenceDots.map((dot) => <i key={dot} className={dot < confidenceFilled ? 'active' : ''}></i>)}
+              <div className="confidence-adjuster">
+                <button type="button" onClick={() => updateForm({ confidence: Math.max(15, confidencePercent - 1) })}>−</button>
+                <input type="range" min="15" max="99" step="1" value={confidencePercent} onChange={(e) => updateForm({ confidence: Number(e.target.value) || 50 })} />
+                <button type="button" onClick={() => updateForm({ confidence: Math.min(99, confidencePercent + 1) })}>+</button>
+              </div>
+              <div className="confidence-dots confidence-dots-clickable">
+                {confidenceDots.map((dot) => <i key={dot} className={dot < confidenceFilled ? 'active' : ''} onClick={() => updateForm({ confidence: Math.round(((dot + 1) / 15) * 100) })}></i>)}
               </div>
               <div className="confidence-scale"><span>Niski</span><span>Bardzo wysoki</span></div>
             </div>
 
-            <div className="static-add-card static-span-two">
-              <span className="static-add-label">11. Tagi</span>
-              <div className="tag-row">
-                {(form.tags || []).map(tag => <span key={tag} onClick={() => removeTag(tag)} title="Usuń tag">{tag}</span>)}
-                <button type="button" onClick={addTag}>+ Dodaj tag</button>
-              </div>
-            </div>
-
             <div className="static-add-card static-span-two tip-single-price-card">
-              <span className="static-add-label">12. Cena singla premium</span>
+              <span className="static-add-label">11. Cena singla premium</span>
               <div className="tip-price-config">
                 <div>
                   <strong>Ustal cenę pojedynczego typu</strong>
@@ -2145,7 +2141,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
             <div className="static-add-card static-span-two publish-card">
               <div>
-                <span className="static-add-label">13. Darmowy / Premium</span>
+                <span className="static-add-label">12. Darmowy / Premium</span>
                 <p>Wybierz widoczność typu dla użytkowników</p>
               </div>
               <div className="publish-actions">
