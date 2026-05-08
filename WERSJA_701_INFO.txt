@@ -1,0 +1,38 @@
+BET+AI — WERSJA 701
+
+Kolejny krok: pobieranie meczów i kursów dnia.
+
+Co dodano:
+1. W zakładce Dodaj typ pojawiła się sekcja:
+   4. Mecze i kursy dnia
+2. Możesz wybrać datę i kliknąć:
+   Pobierz mecze i kursy
+3. Dodana została funkcja Netlify:
+   netlify/functions/get-sports-events.js
+4. Frontend pobiera dane z:
+   /.netlify/functions/get-sports-events
+5. Jeśli masz klucz API w Netlify ENV, funkcja pobiera realne kursy.
+6. Jeśli nie masz klucza API, działa tryb demo/fallback, żeby strona się nie wywalała.
+7. Po pobraniu meczu pierwszy mecz automatycznie uzupełnia formularz.
+8. Po wyborze meczu formularz uzupełnia:
+   - mecz
+   - liga
+   - data
+   - godzina
+   - rynek
+   - typ
+   - kurs
+
+Netlify ENV:
+- dla The Odds API dodaj:
+  ODDS_API_KEY=twoj_klucz
+  albo
+  THE_ODDS_API_KEY=twoj_klucz
+
+SQL:
+- brak nowego SQL.
+- Wystarczy wgrać wersję 701.
+
+Uwaga:
+- To jest pierwszy krok API.
+- Pełne mapowanie każdej ligi i każdego kraju pod konkretne API zrobimy w następnym kroku, kiedy wybierzemy docelowe API.

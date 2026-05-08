@@ -24906,3 +24906,46 @@ font[style*="border"]{
   .publish-card::before{margin-bottom:8px!important}
   .publish-choice-zone{padding-top:0!important}
 }
+
+
+/* WERSJA 701 — mecze i kursy dnia z API/demo fallback */
+.live-fixtures-card{
+  border-color:rgba(32,231,255,.22)!important;
+  background:radial-gradient(circle at 8% 18%,rgba(32,231,255,.12),transparent 28%),linear-gradient(180deg,rgba(7,18,29,.98),rgba(4,12,20,.99))!important;
+}
+.live-fixtures-controls{
+  display:grid!important;
+  grid-template-columns:minmax(180px,240px) auto auto!important;
+  gap:12px!important;
+  align-items:center!important;
+}
+.fetch-fixtures-btn,.clear-fixtures-btn{
+  min-height:46px!important;
+  border:0!important;
+  border-radius:14px!important;
+  padding:0 16px!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+.fetch-fixtures-btn{
+  background:linear-gradient(180deg,#1ce6dd,#0fb7ff)!important;
+  color:#06141f!important;
+  box-shadow:0 12px 24px rgba(12,221,255,.22)!important;
+}
+.fetch-fixtures-btn[disabled]{opacity:.6!important;cursor:not-allowed!important}
+.clear-fixtures-btn{
+  background:rgba(255,255,255,.06)!important;
+  color:#d8e9f5!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+}
+.live-fixtures-status{
+  display:block!important;
+  margin-top:10px!important;
+  color:#9eb4c4!important;
+  font-size:12.5px!important;
+  line-height:1.45!important;
+}
+@media(max-width:900px){
+  .live-fixtures-controls{grid-template-columns:1fr!important}
+  .fetch-fixtures-btn,.clear-fixtures-btn{width:100%!important}
+}

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-700-countries-leagues-selector",
-  "version": "700.0.0",
+  "name": "betai-wersja-701-live-matches-odds-step1",
+  "version": "701.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -4326,6 +4326,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [dailyCount, setDailyCount] = useState(0)
   const [countLoading, setCountLoading] = useState(false)
   const [showHints, setShowHints] = useState(false)
+  const [liveFixtures, setLiveFixtures] = useState([])
+  const [liveFixturesLoading, setLiveFixturesLoading] = useState(false)
+  const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
+  const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -4334,7 +4338,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const activeLeagues = countryMap ? (countryMap[currentCountry] || {}) : (sportData.leagues || {})
   const leagueOptions = Object.keys(activeLeagues || {})
   const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
-  const matchOptions = activeLeagues?.[currentLeague] || []
+  const matchOptions = liveFixtures.length ? liveFixtures : (activeLeagues?.[currentLeague] || [])
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || defaultMatch
   const marketOptions = selectedMatch?.markets || [defaultMarket]
   const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
@@ -4443,6 +4447,55 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setForm(prev => ({ ...prev, ...patch }))
   }
 
+  function applyMatchToForm(match) {
+    const nextMarket = match?.markets?.[0] || defaultMarket
+    if (!match) return
+    updateForm({
+      matchId: match.id || `${match.home}-${match.away}`,
+      league: match.league || currentLeague,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds || form.odds || 1.7),
+      confidence: nextMarket.confidence || form.confidence,
+      date: match.date || form.date,
+      time: match.time || form.time,
+      description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Typ wybrany z listy aktualnych meczów/kursów dnia. Uzupełnij własną analizę przed publikacją.`
+    })
+  }
+
+  async function fetchLiveFixturesForDay() {
+    setLiveFixturesLoading(true)
+    setLiveFixturesStatus('Pobieram mecze i kursy...')
+    try {
+      const params = new URLSearchParams({
+        sport: form.sport || '',
+        country: currentCountry || '',
+        league: currentLeague || '',
+        date: liveDate || new Date().toISOString().slice(0, 10)
+      })
+      const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
+      const fixtures = Array.isArray(data.fixtures) ? data.fixtures : []
+      setLiveFixtures(fixtures)
+      if (fixtures.length) {
+        applyMatchToForm(fixtures[0])
+        setLiveFixturesStatus(`${fixtures.length} meczów/kursów pobrano dla ${liveDate}${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
+        onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} wydarzeń dla wybranego dnia.` })
+      } else {
+        setLiveFixturesStatus('Brak meczów dla wybranych filtrów. Możesz użyć listy demo/statycznej.')
+        onToast?.({ type: 'info', title: 'Brak meczów', message: 'API nie zwróciło wydarzeń dla tych filtrów.' })
+      }
+    } catch (error) {
+      console.warn('fetch live fixtures error', error)
+      setLiveFixtures([])
+      setLiveFixturesStatus('Nie udało się pobrać live danych. Sprawdź Netlify ENV albo użyj listy statycznej.')
+      onToast?.({ type: 'error', title: 'Nie pobrano meczów', message: error?.message || 'Sprawdź konfigurację API.' })
+    } finally {
+      setLiveFixturesLoading(false)
+    }
+  }
+
   function clampStakeValue(value) {
     const raw = String(value ?? '').replace(',', '.').replace(/[^0-9.]/g, '')
     const numeric = Math.min(1000, Math.max(0, Number(raw || 0) || 0))
@@ -4490,6 +4543,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseSport(nextSport) {
+    setLiveFixtures([])
+    setLiveFixturesStatus('')
     const nextSportData = sportsbook[nextSport] || { leagues: {} }
     const nextCountryMap = nextSportData.countries || null
     const nextCountry = nextCountryMap ? Object.keys(nextCountryMap)[0] : 'Wszystkie'
@@ -4512,6 +4567,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseCountry(nextCountry) {
+    setLiveFixtures([])
+    setLiveFixturesStatus('')
     const nextLeagueSource = countryMap ? (countryMap[nextCountry] || {}) : (sportData.leagues || {})
     const nextLeague = Object.keys(nextLeagueSource || {})[0] || ''
     const nextMatch = (nextLeagueSource?.[nextLeague] || [])[0]
@@ -4530,6 +4587,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseLeague(nextLeague) {
+    setLiveFixtures([])
+    setLiveFixturesStatus('')
     const nextMatch = (activeLeagues?.[nextLeague] || [])[0]
     const nextMarket = nextMatch?.markets?.[0] || defaultMarket
     updateForm({
@@ -4546,17 +4605,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function chooseMatch(nextId) {
     const nextMatch = matchOptions.find(item => item.id === nextId) || selectedMatch
-    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
-    updateForm({
-      matchId: nextId,
-      market: nextMarket.market,
-      betType: nextMarket.pick,
-      odds: String(nextMarket.odds),
-      confidence: nextMarket.confidence || form.confidence,
-      date: nextMatch?.date || form.date,
-      time: nextMatch?.time || form.time,
-      description: `${nextMatch?.home || 'Gospodarze'} prezentuje solidną formę, ale ${nextMatch?.away || 'goście'} mają swoje argumenty. Typ oparty na aktualnej formie, statystykach i analizie AI.`,
-    })
+    applyMatchToForm(nextMatch)
   }
 
   function chooseMarket(value) {
@@ -4844,8 +4893,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             </div>
 
+            <div className="static-add-card static-span-two live-fixtures-card">
+              <span className="static-add-label">4. Mecze i kursy dnia</span>
+              <div className="live-fixtures-controls">
+                <div className="static-add-display form-field-display">
+                  <input className="static-add-input" type="date" value={liveDate} onChange={(e) => setLiveDate(e.target.value)} />
+                </div>
+                <button type="button" className="fetch-fixtures-btn" onClick={fetchLiveFixturesForDay} disabled={liveFixturesLoading}>
+                  {liveFixturesLoading ? 'Pobieram...' : 'Pobierz mecze i kursy'}
+                </button>
+                {liveFixtures.length ? <button type="button" className="clear-fixtures-btn" onClick={() => { setLiveFixtures([]); setLiveFixturesStatus('Lista live wyczyszczona — używasz listy statycznej.') }}>Wyczyść live</button> : null}
+              </div>
+              <small className="live-fixtures-status">{liveFixturesStatus || 'Po podpięciu API lista meczów i kursów będzie pobierana automatycznie z backendu. Bez klucza działa tryb demo.'}</small>
+            </div>
+
             <div className="static-add-card">
-              <span className="static-add-label">4. Mecz</span>
+              <span className="static-add-label">5. Mecz</span>
               <div className="static-add-display form-field-display">
                 <select className="static-add-select" value={selectedMatch?.id || ''} onChange={(e) => chooseMatch(e.target.value)}>
                   {matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>)}
