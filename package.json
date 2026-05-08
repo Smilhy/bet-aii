@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-702-remove-hardcoded-odds-secret",
-  "version": "702.0.0",
+  "name": "betai-wersja-703-only-future-matches",
+  "version": "703.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

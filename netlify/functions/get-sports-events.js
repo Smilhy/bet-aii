@@ -62,25 +62,32 @@ exports.handler = async function(event) {
   }
 
   const demoFixtures = () => {
-    const day = date.split('-').reverse().join('.')
+    const selected = new Date(`${date}T00:00:00`)
+    const now = new Date()
+    const isToday = date === now.toISOString().slice(0, 10)
+    const baseDate = isToday ? new Date(now.getTime() + 60 * 60 * 1000) : selected
     const baseLeague = league || (sport === 'Piłka nożna' ? 'Premier League' : sport)
-    const items = [
-      ['Manchester City', 'Arsenal', '17:30'],
-      ['Liverpool', 'Chelsea', '20:45'],
-      ['Real Madryt', 'Bayern Monachium', '21:00'],
-      ['Barcelona', 'Inter Mediolan', '22:00']
+    const teams = [
+      ['Manchester City', 'Arsenal'],
+      ['Liverpool', 'Chelsea'],
+      ['Real Madryt', 'Bayern Monachium'],
+      ['Barcelona', 'Inter Mediolan']
     ]
-    return items.map((row, index) => ({
-      id: `demo-${sport}-${country}-${baseLeague}-${index}`.replace(/\s+/g, '-').toLowerCase(),
-      sport,
-      country,
-      league: baseLeague,
-      home: row[0],
-      away: row[1],
-      date: day,
-      time: row[2],
-      markets: buildMarkets(row[0], row[1], [])
-    }))
+    return teams.map((row, index) => {
+      const kick = new Date(baseDate.getTime() + index * 90 * 60 * 1000)
+      const parts = toDateParts(kick.toISOString())
+      return {
+        id: `demo-${sport}-${country}-${baseLeague}-${index}`.replace(/\s+/g, '-').toLowerCase(),
+        sport,
+        country,
+        league: baseLeague,
+        home: row[0],
+        away: row[1],
+        date: parts.date,
+        time: parts.time,
+        markets: buildMarkets(row[0], row[1], [])
+      }
+    })
   }
 
   try {
@@ -97,9 +104,12 @@ exports.handler = async function(event) {
       if (!response.ok) throw new Error(data?.message || 'The Odds API error')
 
       const requestedDay = date
+      const nowMs = Date.now()
       const fixtures = (Array.isArray(data) ? data : [])
         .filter(item => {
           const commence = String(item.commence_time || '')
+          const kickMs = Date.parse(commence)
+          if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
           return !requestedDay || commence.slice(0, 10) === requestedDay
         })
         .slice(0, 50)
@@ -120,11 +130,11 @@ exports.handler = async function(event) {
           }
         })
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', fixtures }) }
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', futureOnly: true, fixtures }) }
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo', fixtures: demoFixtures() }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo', futureOnly: true, fixtures: demoFixtures() }) }
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo-fallback', warning: error.message, fixtures: demoFixtures() }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo-fallback', futureOnly: true, warning: error.message, fixtures: demoFixtures() }) }
   }
 }

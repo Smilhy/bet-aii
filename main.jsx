@@ -4480,10 +4480,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveFixtures(fixtures)
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
-        setLiveFixturesStatus(`${fixtures.length} meczów/kursów pobrano dla ${liveDate}${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
+        setLiveFixturesStatus(`${fixtures.length} przyszłych meczów/kursów pobrano dla ${liveDate}${data.demo ? ' (tryb demo — dodaj API key w Netlify)' : ''}.`)
         onToast?.({ type: 'success', title: 'Mecze pobrane', message: `Załadowano ${fixtures.length} wydarzeń dla wybranego dnia.` })
       } else {
-        setLiveFixturesStatus('Brak meczów dla wybranych filtrów. Możesz użyć listy demo/statycznej.')
+        setLiveFixturesStatus('Brak przyszłych meczów dla wybranych filtrów. Wybierz późniejszą datę albo inną ligę.')
         onToast?.({ type: 'info', title: 'Brak meczów', message: 'API nie zwróciło wydarzeń dla tych filtrów.' })
       }
     } catch (error) {
