@@ -5,6 +5,7 @@ exports.handler = async function(event) {
   const league = String(qs.league || '')
   const date = String(qs.date || new Date().toISOString().slice(0, 10))
   const realOnly = String(qs.realOnly || '') === '1'
+  const countOnly = String(qs.countOnly || '') === '1'
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -252,13 +253,15 @@ exports.handler = async function(event) {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     if (oddsKey) {
       const sportKey = selectedSportKey()
-      const endpoint = sportKey
-        ? `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
-        : 'https://api.the-odds-api.com/v4/sports/upcoming/odds'
+      if (!sportKey) {
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
+      }
+
+      const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
       const url = new URL(endpoint)
       url.searchParams.set('apiKey', oddsKey)
       url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk')
-      url.searchParams.set('markets', process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads')
+      url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads'))
       url.searchParams.set('oddsFormat', 'decimal')
       url.searchParams.set('dateFormat', 'iso')
       let response = await fetch(url.toString())
@@ -301,11 +304,15 @@ exports.handler = async function(event) {
           }
         })
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey: sportKey || 'upcoming', futureOnly: true, fixtures }) }
+      if (countOnly) {
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+      }
+
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKey, futureOnly: true, fixtures }) }
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
   }
 }

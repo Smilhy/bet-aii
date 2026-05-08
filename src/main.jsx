@@ -4304,6 +4304,31 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const defaultMatch = (sportsbook[defaultSport]?.leagues?.[defaultLeague] || [])[0] || null
   const defaultMarket = defaultMatch?.markets?.[0] || { market: 'Wynik końcowy', pick: 'Manchester City wygra', odds: 1.72, confidence: 84 }
 
+  const getTodayLocalKey = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const sportIconMap = {
+    'Piłka nożna': '⚽',
+    'Tenis': '🎾',
+    'Koszykówka': '🏀',
+    'Hokej': '🏒',
+    'MMA': '🥊',
+    'E-sport': '🎮',
+    'Siatkówka': '🏐',
+    'Boks': '🥊',
+    'Piłka ręczna': '🤾',
+    'Krykiet': '🏏',
+    'Rugby': '🏉',
+    'Rugby League': '🏉',
+    'Baseball': '⚾',
+    'Dart': '🎯',
+  }
+
   const [form, setForm] = useState({
     sport: defaultSport,
     country: 'Anglia',
@@ -4331,11 +4356,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
   const [liveDataSource, setLiveDataSource] = useState('manual')
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
-  const [liveDate, setLiveDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('Anglia')
+  const [sportDayCounts, setSportDayCounts] = useState({})
+  const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
+  const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -5300,6 +5328,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
 
+  const topSportButtons = useMemo(() => {
+    const otherSports = Object.keys(sportsbook)
+      .filter(name => name !== 'Piłka nożna')
+      .map(name => ({
+        name,
+        icon: sportIconMap[name] || '🏟️',
+        country: 'Wszystkie',
+        league: Object.keys(sportsbook[name]?.leagues || {})[0] || name,
+      }))
+
+    return [
+      {
+        name: 'Piłka nożna',
+        icon: sportIconMap['Piłka nożna'] || '⚽',
+        country: 'Anglia',
+        league: 'Premier League',
+      },
+      ...otherSports,
+    ]
+  }, [sportsbook])
+
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
     const away = match?.away || 'Goście'
@@ -5509,6 +5558,72 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
   }, [form.matchId])
 
+  async function fetchSportDayCounts(force = false) {
+    const todayKey = getTodayLocalKey()
+    const cacheKey = `betai_sport_day_counts_${todayKey}`
+
+    if (!force) {
+      try {
+        const cachedRaw = localStorage.getItem(cacheKey)
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw)
+          if (cached && typeof cached === 'object') {
+            setSportDayCounts(cached)
+            setSportCountsDate(todayKey)
+            return cached
+          }
+        }
+      } catch (error) {
+        console.warn('sport count cache read error', error)
+      }
+    }
+
+    setSportDayCountsLoading(true)
+    try {
+      const requests = topSportButtons.map(async (item) => {
+        try {
+          const params = new URLSearchParams({
+            sport: item.name,
+            country: item.country || 'Wszystkie',
+            league: item.league || item.name,
+            date: todayKey,
+            realOnly: '1',
+            countOnly: '1'
+          })
+          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || 'Count fetch failed')
+          return [item.name, Number(data.count || 0)]
+        } catch (error) {
+          console.warn('sport count fetch error', item.name, error)
+          return [item.name, 0]
+        }
+      })
+
+      const entries = await Promise.all(requests)
+      const nextCounts = Object.fromEntries(entries)
+      setSportDayCounts(nextCounts)
+      setSportCountsDate(todayKey)
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(nextCounts))
+      } catch (error) {
+        console.warn('sport count cache write error', error)
+      }
+      return nextCounts
+    } finally {
+      setSportDayCountsLoading(false)
+    }
+  }
+
+  function handleTopSportButtonClick(item) {
+    if (!item?.name) return
+    if (item.name === 'Piłka nożna') {
+      selectSidebarLeague('Piłka nożna', item.country || 'Anglia', item.league || 'Premier League')
+      return
+    }
+    selectSidebarLeague(item.name, item.country || 'Wszystkie', item.league || item.name)
+  }
+
   async function fetchDailyCount() {
     if (!isSupabaseConfigured || !supabase || !user?.id) {
       setDailyCount(0)
@@ -5546,6 +5661,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   useEffect(() => {
     fetchDailyCount()
   }, [user?.id, userPlan])
+
+  useEffect(() => {
+    fetchSportDayCounts()
+  }, [topSportButtons])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const todayKey = getTodayLocalKey()
+      if (todayKey !== sportCountsDate) {
+        setSportCountsDate(todayKey)
+        setLiveDate(todayKey)
+        setLiveFixtures([])
+        setHasTriedLiveLoad(false)
+        setLiveDataSource('manual')
+        setLiveFixturesStatus('Nowy dzień. Liczniki sportów i lista meczów zostały odświeżone dla dzisiejszej daty.')
+        fetchSportDayCounts(true)
+        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey })
+      }
+    }, 30000)
+
+    return () => window.clearInterval(timer)
+  }, [sportCountsDate, topSportButtons, form.sport, form.country, form.league])
 
   const dailyLimit = isPremiumUser ? Infinity : 5
   const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)
@@ -6158,6 +6295,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span>{currentCountry}</span>
               <span>{currentLeague}</span>
             </div>
+          </div>
+
+          <div className="betfolio-top-sports-row">
+            {topSportButtons.map((item) => {
+              const active = form.sport === item.name
+              const count = Number(sportDayCounts[item.name] || 0)
+              return (
+                <button
+                  type="button"
+                  key={`top-sport-${item.name}`}
+                  className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
+                  onClick={() => handleTopSportButtonClick(item)}
+                >
+                  <span>{item.icon} {item.name}</span>
+                  <b>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="betfolio-top-sports-note">
+            Pokazuję tylko dzisiejsze realne mecze dla każdego sportu. Liczniki odświeżają się codziennie o 00:00.
           </div>
 
           <div className="betfolio-events-head">

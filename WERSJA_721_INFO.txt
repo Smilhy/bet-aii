@@ -1,0 +1,16 @@
+BET+AI — WERSJA 721 TOP SPORT COUNTS TODAY
+
+Zmiany:
+- dodałem u góry klikalne kafelki/wskaźniki sportów w stylu z Twojego screena,
+- dla każdego sportu pokazuje licznik realnych meczów na DZISIAJ,
+- kliknięcie kafelka od razu przełącza sport i pobiera realne mecze dla tego sportu,
+- liczniki są cache’owane na dany dzień, żeby nie męczyć API,
+- o zmianie dnia aplikacja odświeża liczniki i ustawia nową datę dnia,
+- nadal nie pokazuję demo ani fake meczów,
+- backend dostał tryb countOnly=1 do pobierania samych liczników.
+
+Ocena pomysłu:
+- 9/10
+
+SQL:
+- brak nowego SQL.

@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-720-country-flags-all",
-  "version": "720.0.0",
+  "name": "betai-wersja-721-top-sport-counts-today",
+  "version": "721.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -25801,3 +25801,88 @@ font[style*="border"]{
   border-color:rgba(255,202,56,.35)!important;
   background:rgba(255,202,56,.08)!important;
 }
+
+.betfolio-top-sports-row{
+  display:flex!important;
+  gap:14px!important;
+  overflow-x:auto!important;
+  padding:6px 2px 14px!important;
+  margin:0 0 8px!important;
+  scrollbar-width:thin!important;
+}
+.betfolio-top-sports-row::-webkit-scrollbar{
+  height:8px!important;
+}
+.betfolio-top-sports-row::-webkit-scrollbar-thumb{
+  background:rgba(29,220,235,.18)!important;
+  border-radius:999px!important;
+}
+.betfolio-top-sport-pill{
+  flex:0 0 auto!important;
+  min-width:150px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:16px 18px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(29,220,235,.18)!important;
+  background:linear-gradient(180deg,rgba(8,18,34,.95),rgba(5,12,25,.98))!important;
+  color:#eef7ff!important;
+  box-shadow:inset 0 0 0 1px rgba(16,75,120,.10), 0 8px 20px rgba(0,0,0,.18)!important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease!important;
+}
+.betfolio-top-sport-pill:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(29,220,235,.38)!important;
+  box-shadow:0 0 0 1px rgba(29,220,235,.12), 0 12px 24px rgba(0,0,0,.22)!important;
+}
+.betfolio-top-sport-pill span{
+  font-size:18px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+.betfolio-top-sport-pill b{
+  min-width:34px!important;
+  height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  background:rgba(29,220,235,.13)!important;
+  color:#26efff!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  box-shadow:inset 0 0 0 1px rgba(29,220,235,.20)!important;
+}
+.betfolio-top-sport-pill.active{
+  border-color:rgba(29,220,235,.62)!important;
+  background:linear-gradient(180deg,rgba(9,29,52,.98),rgba(6,18,35,.98))!important;
+  box-shadow:0 0 0 1px rgba(29,220,235,.22), 0 0 30px rgba(29,220,235,.10)!important;
+}
+.betfolio-top-sport-pill.active b{
+  background:linear-gradient(180deg,#14d8eb,#0ec0d8)!important;
+  color:#082034!important;
+  box-shadow:none!important;
+}
+.betfolio-top-sports-note{
+  margin:-4px 0 14px!important;
+  color:#8ea4c3!important;
+  font-size:12px!important;
+}
+@media (max-width: 900px){
+  .betfolio-top-sport-pill{
+    min-width:128px!important;
+    padding:14px 15px!important;
+    border-radius:18px!important;
+  }
+  .betfolio-top-sport-pill span{
+    font-size:15px!important;
+  }
+  .betfolio-top-sport-pill b{
+    min-width:30px!important;
+    height:30px!important;
+    font-size:14px!important;
+  }
+}
