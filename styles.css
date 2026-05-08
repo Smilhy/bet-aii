@@ -24213,3 +24213,91 @@ font[style*="border"]{
     left:0!important;
   }
 }
+
+
+/* FIX 675: one white token icon, no duplicate yellow token emoji */
+.wallet-row.wallet-row-tokens span{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+}
+.wallet-row.wallet-row-tokens span:before,
+.wallet-row.wallet-row-tokens span:after{
+  content:none!important;
+  display:none!important;
+}
+.wallet-token-white-coin{
+  width:17px!important;
+  height:17px!important;
+  object-fit:contain!important;
+  border-radius:50%!important;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.28));
+}
+
+/* FIX 675: DM has only the modal header, not duplicated title inside the red-marked area */
+.betai-notify-panel-with-dm .betai-dm-toolbar{
+  display:none!important;
+}
+.betai-notify-panel-with-dm .betai-dm-box{
+  padding-top:0!important;
+}
+
+/* FIX 675: received live-chat tip popup */
+.betai-received-tip-overlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:999999!important;
+  display:grid!important;
+  place-items:center!important;
+  pointer-events:none!important;
+  background:rgba(0,0,0,.18)!important;
+  opacity:0!important;
+  transition:opacity .25s ease!important;
+}
+.betai-received-tip-overlay.is-visible{opacity:1!important;}
+.betai-received-tip-card{
+  width:min(520px,86vw)!important;
+  border-radius:30px!important;
+  padding:10px 10px 18px!important;
+  background:linear-gradient(180deg,rgba(4,17,29,.96),rgba(1,7,15,.98))!important;
+  border:1px solid rgba(34,211,238,.46)!important;
+  box-shadow:0 0 55px rgba(34,211,238,.45),0 28px 80px rgba(0,0,0,.75)!important;
+  transform:scale(.92) translateY(18px)!important;
+  transition:transform .25s ease,opacity .25s ease!important;
+  opacity:0!important;
+  pointer-events:auto!important;
+  position:relative!important;
+  overflow:hidden!important;
+}
+.betai-received-tip-card.is-visible{opacity:1!important;transform:scale(1) translateY(0)!important;}
+.betai-received-tip-close{
+  position:absolute!important;
+  right:14px!important;
+  top:14px!important;
+  z-index:2!important;
+  width:34px!important;
+  height:34px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  background:rgba(4,14,25,.72)!important;
+  color:#fff!important;
+  font-size:22px!important;
+  cursor:pointer!important;
+}
+.betai-received-tip-img{
+  width:100%!important;
+  display:block!important;
+  border-radius:24px!important;
+  object-fit:cover!important;
+}
+.betai-received-tip-text{
+  margin:14px auto 0!important;
+  width:calc(100% - 28px)!important;
+  text-align:center!important;
+  color:#e8fbff!important;
+  font-weight:900!important;
+  font-size:clamp(18px,2.4vw,25px)!important;
+  letter-spacing:.2px!important;
+  text-shadow:0 0 18px rgba(34,211,238,.65)!important;
+}
+.betai-received-tip-text strong{color:#22d3ee!important;}

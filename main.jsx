@@ -1,58 +1,3 @@
-
-window.addEventListener('betai-tip', (e) => {
-  const existing = document.getElementById('betai-tip-popup')
-  if (existing) existing.remove()
-
-  const sender = e.detail?.from || 'Użytkownik'
-  const wrap = document.createElement('div')
-  wrap.id = 'betai-tip-popup'
-  wrap.style.position = 'fixed'
-  wrap.style.inset = '0'
-  wrap.style.zIndex = '999999'
-  wrap.style.display = 'flex'
-  wrap.style.alignItems = 'center'
-  wrap.style.justifyContent = 'center'
-  wrap.style.background = 'rgba(0,0,0,0.42)'
-  wrap.style.opacity = '0'
-  wrap.style.transition = 'opacity 220ms ease'
-  wrap.style.pointerEvents = 'none'
-
-  wrap.innerHTML = `
-    <div style="
-      background: rgba(4,8,22,0.94);
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 26px;
-      padding: 18px 18px 20px;
-      box-shadow: 0 0 55px rgba(0,229,255,0.45), 0 0 90px rgba(255,215,0,0.18);
-      text-align: center;
-      transform: scale(.96);
-      transition: transform 220ms ease;
-    ">
-      <img src="/bet_ai_ultra_pro_nowy_tip.gif" style="width:min(360px,82vw);border-radius:18px;display:block;" />
-      <div style="
-        color:#fff;
-        font-size:clamp(20px,4vw,28px);
-        line-height:1.2;
-        font-weight:900;
-        margin-top:16px;
-        text-shadow:0 0 14px rgba(0,229,255,.55);
-      ">Otrzymałeś TIP od: ${sender}</div>
-    </div>
-  `
-
-  document.body.appendChild(wrap)
-  requestAnimationFrame(() => {
-    wrap.style.opacity = '1'
-    const card = wrap.firstElementChild
-    if (card) card.style.transform = 'scale(1)'
-  })
-
-  setTimeout(() => {
-    wrap.style.opacity = '0'
-    setTimeout(() => wrap.remove(), 260)
-  }, 4000)
-});
-
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
@@ -89,16 +34,16 @@ function getInitialBetaiLanguage() {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', '💰 Saldo': 'Balance', '🪙 🪙 Żetony': 'Tokens', '🔓 Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Tokens', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   },
   de: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Ulepsz konto': 'Konto aufladen', '💰 Saldo': 'Guthaben', '🪙 🪙 Żetony': 'Tokens', '🔓 Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Ulepsz konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Tokens', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
   },
   es: {
-    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Ulepsz konto': 'Recargar cuenta', '💰 Saldo': '💰 Saldo', '🪙 🪙 Żetony': 'Tokens', '🔓 Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
+    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Ulepsz konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Tokens', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
   },
   ru: {
-    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Ulepsz konto': 'Пополнить счет', '💰 Saldo': 'Баланс', '🪙 🪙 Żetony': 'Токены', '🔓 Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
+    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Ulepsz konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Токены', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
   }
 }
 
@@ -131,7 +76,7 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
     'Wszystkie': 'Todos', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'Dodaj typ': 'Añadir pick', 'Zobacz typ': 'Ver pick', 'Zobacz prognozę': 'Ver pronóstico', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Hoy', 'Prognoz': 'Pronóstico', 'Prognoza': 'Pronóstico', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Ponad 2.5 gola': 'Más de 2.5 goles', 'Kurs': 'Cuota', 'Koef.': 'Cuota', 'AI Analiza': 'Análisis IA', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real está muy fuerte en casa. Bayern tuvo problemas defensivos en los últimos partidos.',
     'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Brak danych': 'Sin datos', 'Brak typów': 'Sin picks', 'Ładowanie...': 'Cargando...', 'Łączenie...': 'Conectando...', 'Kup dostęp': 'Comprar acceso', 'Szczegóły': 'Detalles',
     'Bezpieczne dane': 'Datos seguros', 'Twoje dane są u nas w pełni chronione.': 'Tus datos están totalmente protegidos.', 'Szybka rejestracja': 'Registro rápido', 'Załóż konto w mniej niż 30 sekund.': 'Crea una cuenta en menos de 30 segundos.', 'Darmowe typy AI': 'Picks IA gratis', 'Codziennie nowe typy o wysokiej skuteczności.': 'Nuevos picks diarios de alta precisión.', 'Aktywna społeczność': 'Comunidad activa', 'Tysiące typerów dzieli się wiedzą i wygrywa razem.': 'Miles de usuarios comparten conocimiento y ganan juntos.',
-    'Bilans': '💰 Saldo', 'Balans': '💰 Saldo', 'Odblokowano': 'Desbloqueado', 'Witaj': 'Bienvenido', 'Meczów dziś': 'Partidos hoy', 'Śr. pewność': 'Confianza media', 'Dostęp do inteligentnych typów': 'Acceso a picks inteligentes', 'Sport': 'Deporte'
+    'Bilans': 'Saldo', 'Balans': 'Saldo', 'Odblokowano': 'Desbloqueado', 'Witaj': 'Bienvenido', 'Meczów dziś': 'Partidos hoy', 'Śr. pewność': 'Confianza media', 'Dostęp do inteligentnych typów': 'Acceso a picks inteligentes', 'Sport': 'Deporte'
   },
   ru: {
     'Zaloguj się': 'Войти', 'Zarejestruj się': 'Регистрация', 'Załóż konto': 'Создать аккаунт', 'Nazwa użytkownika': 'Имя пользователя', 'Hasło': 'Пароль', 'Powtórz hasło': 'Повторите пароль', 'Regulamin': 'Условия', 'Politykę prywatności': 'Политику конфиденциальности', 'Nie pamiętasz hasła?': 'Забыли пароль?', 'Szyfrowane logowanie': 'Защищенный вход',
@@ -623,9 +568,9 @@ return (
           <strong>{profile.username}</strong>
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
-        <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row wallet-row-tokens"><span>🪙 🪙 Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
-        <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
+        <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+        <div className="wallet-row wallet-row-tokens"><span><img src="/betai-topbar-coin.png" alt="" className="wallet-token-white-coin" /> Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
+        <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
       </div>
@@ -1004,22 +949,6 @@ function LiveChatPanel({ user }) {
     const host = document.querySelector('.betai-chat-messages-final')
     if (host) host.scrollTop = host.scrollHeight
   }, [messages.length])
-
-
-  useEffect(() => {
-    if (!email || !isSupabaseConfigured || !supabase) return undefined
-    const tipChannel = supabase
-      .channel(`betai-live-chat-tip-popup-${email}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_tips', filter: `to_email=eq.${email}` }, (payload) => {
-        const fromEmail = normalizeEmail(payload?.new?.from_email || '')
-        const senderName = messages.find(m => normalizeEmail(m.user_email) === fromEmail)?.user_name || nameFromEmail(fromEmail) || 'Użytkownik'
-        window.dispatchEvent(new CustomEvent('betai-tip', { detail: { from: senderName } }))
-      })
-      .subscribe()
-    return () => {
-      try { supabase.removeChannel(tipChannel) } catch (_) {}
-    }
-  }, [email, messages])
 
   useEffect(() => {
     loadOnlineCount()
@@ -1765,6 +1694,21 @@ function LiveTipCenterPopup({ popup, open, onClose }) {
         </div>
         <div className="live-tip-center-subline">Powiadomienie znika automatycznie po 5 sekundach</div>
         <div className={`live-tip-center-progress ${open ? 'run' : ''}`} />
+      </div>
+    </div>
+  )
+}
+
+
+function ReceivedTipPopup({ popup, open, onClose }) {
+  if (!popup) return null
+  const sender = popup.senderName || 'Użytkownik'
+  return (
+    <div className={`betai-received-tip-overlay ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
+      <div className={`betai-received-tip-card ${open ? 'is-visible' : 'is-hiding'}`}>
+        <button type="button" className="betai-received-tip-close" onClick={onClose} aria-label="Zamknij powiadomienie">×</button>
+        <img src="/bet_ai_ultra_pro_nowy_tip.gif" alt="Nowy TIP" className="betai-received-tip-img" />
+        <div className="betai-received-tip-text">Otrzymałeś TIP od: <strong>{sender}</strong></div>
       </div>
     </div>
   )
@@ -2793,7 +2737,7 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
   const invoiceRows = [
     { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.05.2025' },
     { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.04.2025' },
-    { title: 'Faktura F/2025/03/067', sub: '🪙 🪙 Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
+    { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
   ]
   const topUsers = [
     ['RebelKoks', 'Typy: 66 • WIN: 68.2%'],
@@ -2840,12 +2784,12 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
 
           <div className="wallet-v2-topstats">
             <div className="glass-v2-panel wallet-v2-stat">
-              <div className="wallet-v2-stat-top"><span>💰 Saldo główne</span><i>👛</i></div>
+              <div className="wallet-v2-stat-top"><span>Saldo główne</span><i>👛</i></div>
               <strong>1,250.75 zł</strong>
               <small>Dostępne środki</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
-              <div className="wallet-v2-stat-top"><span>💰 Saldo żetonów</span><i>◌</i></div>
+              <div className="wallet-v2-stat-top"><span>Saldo żetonów</span><i>◌</i></div>
               <strong>86</strong>
               <small>Dostępne żetony</small>
             </div>
@@ -3060,12 +3004,23 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const myId = user?.id || ''
   const myEmail = normalizeEmail(user?.email || '')
 
-  const displayName = (email = '', username = '') => {
+  const displayName = (email = '', username = '', id = '') => {
     const clean = normalizeEmail(email)
-    const rawName = String(username || '').trim()
-    if (rawName && !['user', 'uzytkownik', 'użytkownik'].includes(rawName.toLowerCase())) return rawName
+    const rawUsername = String(username || '').trim()
+    const genericNames = ['user', 'uzytkownik', 'użytkownik', 'guest', 'gość', 'gosc']
+    const isGeneric = !rawUsername || genericNames.includes(rawUsername.toLowerCase())
+    if (!isGeneric) return rawUsername
     if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    return clean ? clean.split('@')[0] : 'Użytkownik'
+    if (clean) {
+      return clean.split('@')[0]
+        .replace(/[._-]+/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    }
+    const shortId = String(id || '').replace(/-/g, '').slice(0, 6).toUpperCase()
+    return shortId ? `Użytkownik ${shortId}` : 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -3103,6 +3058,25 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
         console.warn('user messages directory meta skipped', dmError)
       }
 
+      const dmUserIds = Array.from(new Set((dmRows || []).flatMap(row => [String(row?.sender_id || ''), String(row?.receiver_id || '')]).filter(id => id && id !== String(myId))))
+      if (dmUserIds.length) {
+        try {
+          const { data: dmProfiles, error: dmProfilesError } = await supabase
+            .from('profiles')
+            .select('id,email,username,created_at')
+            .in('id', dmUserIds)
+          if (!dmProfilesError && Array.isArray(dmProfiles)) {
+            const existing = new Set(profileRows.map(row => String(row?.id || '')).filter(Boolean))
+            dmProfiles.forEach(row => {
+              const id = String(row?.id || '')
+              if (id && !existing.has(id)) profileRows.push(row)
+            })
+          }
+        } catch (profileLookupError) {
+          console.warn('user messages dm profile lookup skipped', profileLookupError)
+        }
+      }
+
       const meta = {}
       dmRows.forEach(row => {
         const senderId = String(row?.sender_id || '')
@@ -3121,7 +3095,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
         const id = String(row?.id || '')
         const email = normalizeEmail(row?.email || '')
         if (!id || id === String(myId) || email === myEmail) return
-        const name = displayName(row?.email, row?.username)
+        const name = displayName(row?.email, row?.username, id)
         byId.set(id, {
           id,
           email,
@@ -3135,7 +3109,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       Object.keys(meta).forEach(id => {
         if (id === String(myId) || byId.has(id)) return
-        const name = `Użytkownik ${String(id).slice(0, 6)}`
+        const name = displayName('', '', id)
         byId.set(id, {
           id,
           email: '',
@@ -3227,19 +3201,15 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     }
     setSending(true)
     try {
-      const { data, error } = await supabase.from('direct_messages').insert({
+      const { error } = await supabase.from('direct_messages').insert({
         sender_id: myId,
         receiver_id: activeUser.id,
         message_text: clean,
         is_read: false
-      }).select('id,sender_id,receiver_id,message_text,created_at,is_read').single()
+      })
       if (error) throw error
-      if (data?.id) {
-        setMessages(prev => [...prev.filter(item => String(item.id) !== String(data.id)), data])
-      }
-      window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
       setText('')
-      setStatus('Wiadomość wysłana — odbiorca zobaczy ją na żywo bez odświeżania.')
+      setStatus('Wiadomość wysłana.')
       await loadConversation(activeUser)
       await loadUsers()
     } catch (error) {
@@ -3263,30 +3233,6 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   }, [visible, myId])
 
   useEffect(() => {
-    if (!visible || !isSupabaseConfigured || !supabase || !myId) return undefined
-    let refreshTimer = null
-    const refreshRealtime = () => {
-      if (refreshTimer) clearTimeout(refreshTimer)
-      refreshTimer = setTimeout(() => {
-        loadUnread()
-        loadUsers()
-        loadConversation(activeUser)
-      }, 120)
-    }
-    window.addEventListener('betai-direct-messages-changed', refreshRealtime)
-    const channel = supabase
-      .channel(`betai-direct-messages-live-${myId}-${activeUser?.id || 'all'}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${myId}` }, refreshRealtime)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `sender_id=eq.${myId}` }, refreshRealtime)
-      .subscribe()
-    return () => {
-      if (refreshTimer) clearTimeout(refreshTimer)
-      window.removeEventListener('betai-direct-messages-changed', refreshRealtime)
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [visible, myId, activeUser?.id])
-
-  useEffect(() => {
     if (visible && activeUser?.id) loadConversation(activeUser)
   }, [visible, activeUser?.id])
 
@@ -3298,17 +3244,13 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   const filteredUsers = users.filter(item => {
     const q = normalizeSearch(search)
     if (!q) return true
-    const haystack = [item.email, item.name, item.username, item.id, item.initials, (item.email || '').split('@')[0]].map(normalizeSearch).join(' | ')
+    const haystack = [item.email, item.name, item.username, item.id, item.initials].map(normalizeSearch).join(' | ')
     return haystack.includes(q)
   })
   const activeUnread = Object.values(unreadMap).reduce((sum, value) => sum + Number(value || 0), 0)
 
   return (
     <div className="betai-dm-box">
-      <div className="betai-dm-toolbar betai-dm-toolbar-compact">
-        <span className="betai-notify-kicker">CZAT PRYWATNY</span>
-        <span className="betai-dm-unread">{activeUnread} nowe</span>
-      </div>
       <div className="betai-dm-layout">
         <aside className="betai-dm-users">
           <input className="betai-dm-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj użytkownika..." />
@@ -3316,7 +3258,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
             {filteredUsers.length ? filteredUsers.map(item => (
               <button type="button" className={activeUser?.id === item.id ? 'betai-dm-user active' : 'betai-dm-user'} key={item.id || item.email} onClick={() => setActiveUser(item)}>
                 <span className="betai-dm-avatar">{item.initials}</span>
-                <span><strong>{item.name}</strong>{item.email && item.email !== item.name ? <small>{item.email}</small> : null}</span>
+                <span><strong>{item.name}</strong><small>{item.email || 'Brak e-mail w profilu'}</small></span>
                 {Number(unreadMap[item.id] || 0) > 0 && <b>{Number(unreadMap[item.id] || 0)}</b>}
               </button>
             )) : <div className="betai-dm-empty">Brak użytkowników dla tego wyszukiwania.</div>}
@@ -3325,7 +3267,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
         <section className="betai-dm-conversation">
           <div className="betai-dm-active">
             <span className="betai-dm-avatar big">{activeUser?.initials || 'BU'}</span>
-            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email && activeUser?.email !== activeUser?.name ? activeUser.email : 'Prywatny czat prywatny czat użytkowników'}</small></div>
+            <div><strong>{activeUser?.name || 'Wybierz użytkownika'}</strong><small>{activeUser?.email || 'Prywatny czat prywatny czat użytkowników'}</small></div>
           </div>
           <div className="betai-dm-messages">
             {activeUser ? (messages.length ? messages.map(msg => {
@@ -3400,9 +3342,9 @@ function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadCha
       <div className="betai-notify-panel betai-notify-panel-with-dm betai-notify-users-only" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości użytkowników">
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-kicker">WIADOMOŚCI</div>
+            <div className="betai-notify-kicker">USER MESSAGES</div>
             <div className="betai-notify-title">Wiadomości użytkowników</div>
-            <div className="betai-notify-sub">Prywatny czat prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.</div>
+            <div className="betai-notify-sub">Prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.</div>
           </div>
           <div className="betai-notify-actions">
             <span className="betai-dm-unread">{Number(dmUnreadCount || 0)} nowe</span>
@@ -6507,7 +6449,7 @@ function disabledTopUp(showToast) {
   showToast?.({
     type: 'info',
     title: 'Doładowanie przez Stripe',
-    message: 'Fake doładowanie zostało wyłączone. 💰 Saldo zwiększy się dopiero po prawdziwej płatności Stripe.'
+    message: 'Fake doładowanie zostało wyłączone. Saldo zwiększy się dopiero po prawdziwej płatności Stripe.'
   })
 }
 
@@ -6888,6 +6830,26 @@ function App() {
   const liveTipPopupTimerRef = useRef(null)
   const liveTipPopupHideTimerRef = useRef(null)
   const lastLiveTipIdRef = useRef('')
+  const [receivedTipPopup, setReceivedTipPopup] = useState(null)
+  const [receivedTipPopupVisible, setReceivedTipPopupVisible] = useState(false)
+  const receivedTipTimerRef = useRef(null)
+  const receivedTipHideTimerRef = useRef(null)
+  const lastReceivedTipRef = useRef('')
+
+  function hideReceivedTipPopup() {
+    setReceivedTipPopupVisible(false)
+    if (receivedTipHideTimerRef.current) clearTimeout(receivedTipHideTimerRef.current)
+    receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 260)
+  }
+
+  function showReceivedTipPopup(senderName = 'Użytkownik') {
+    if (receivedTipTimerRef.current) clearTimeout(receivedTipTimerRef.current)
+    if (receivedTipHideTimerRef.current) clearTimeout(receivedTipHideTimerRef.current)
+    setReceivedTipPopup({ senderName })
+    setReceivedTipPopupVisible(true)
+    receivedTipTimerRef.current = setTimeout(() => setReceivedTipPopupVisible(false), 4000)
+    receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 4300)
+  }
 
   function hideLiveTipPopup() {
     setLiveTipPopupVisible(false)
@@ -7158,7 +7120,6 @@ function App() {
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
       setTokenBalance(0)
-      setDmUnreadCount(0)
       return
     }
 
@@ -7210,24 +7171,6 @@ function App() {
 
     combined.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     setNotifications(combined)
-  }
-
-  async function fetchDmUnreadCount(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
-      setDmUnreadCount(0)
-      return
-    }
-    try {
-      const { count, error } = await supabase
-        .from('direct_messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('receiver_id', userId)
-        .eq('is_read', false)
-      if (error) throw error
-      setDmUnreadCount(Number(count || 0))
-    } catch (error) {
-      console.warn('fetch dm unread count skipped', error)
-    }
   }
 
   async function ensureUserWalletAndWelcome(user = sessionUser) {
@@ -7435,7 +7378,6 @@ function App() {
       fetchPaymentHistory(sessionUser.id)
       fetchFollowingTipsters(sessionUser.id)
       fetchNotifications(sessionUser.id)
-      fetchDmUnreadCount(sessionUser.id)
     } else {
       setUnlockedTips(new Set())
       setFollowingTipsters(new Set())
@@ -8363,45 +8305,6 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
-    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
-    if (!isSupabaseConfigured || !supabase || (!sessionUser?.id && !email)) return undefined
-
-    const refreshAllLive = () => {
-      fetchNotifications(sessionUser?.id)
-      fetchDmUnreadCount(sessionUser?.id)
-    }
-
-    refreshAllLive()
-    const timer = setInterval(refreshAllLive, 6000)
-    window.addEventListener('betai-direct-messages-changed', refreshAllLive)
-
-    const channel = supabase.channel(`betai-user-live-center-${sessionUser?.id || email}`)
-    if (sessionUser?.id) {
-      channel
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${sessionUser.id}` }, () => {
-          fetchDmUnreadCount(sessionUser.id)
-          window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `sender_id=eq.${sessionUser.id}` }, () => {
-          window.dispatchEvent(new CustomEvent('betai-direct-messages-changed'))
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${sessionUser.id}` }, () => fetchNotifications(sessionUser.id))
-    }
-    if (email) {
-      channel
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${email}` }, () => fetchNotifications(sessionUser?.id))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'betai_token_wallets', filter: `email=eq.${email}` }, () => fetchNotifications(sessionUser?.id))
-    }
-    channel.subscribe()
-
-    return () => {
-      clearInterval(timer)
-      window.removeEventListener('betai-direct-messages-changed', refreshAllLive)
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
-
-  useEffect(() => {
     if (view === 'notifications' && sessionUser?.id) {
       fetchNotifications(sessionUser.id)
     }
@@ -8481,6 +8384,27 @@ function App() {
     ['mine', 'Moje']
   ]
 
+  useEffect(() => {
+    const currentEmail = normalizeEmail(sessionUser?.email || '')
+    if (!currentEmail || !isSupabaseConfigured || !supabase) return undefined
+    const channel = supabase
+      .channel(`betai-tip-popup-${currentEmail}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_token_transactions', filter: `email=eq.${currentEmail}` }, payload => {
+        const row = payload?.new || {}
+        if (String(row.reason || '') !== 'live_chat_tip_received') return
+        const key = String(row.id || row.created_at || Math.random())
+        if (lastReceivedTipRef.current === key) return
+        lastReceivedTipRef.current = key
+        const ref = row.ref_data || {}
+        const senderEmail = normalizeEmail(ref.from_email || ref.sender_email || '')
+        const senderName = senderEmail ? senderEmail.split('@')[0].replace(/[._-]+/g, ' ') : 'Użytkownik'
+        showReceivedTipPopup(senderName)
+        window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      })
+      .subscribe()
+    return () => { try { supabase.removeChannel(channel) } catch (_) {} }
+  }, [sessionUser?.email])
+
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
   const hasExpandedDashboardTips = dashboardVisibleTips > 5
@@ -8504,6 +8428,7 @@ function App() {
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
+      <ReceivedTipPopup popup={receivedTipPopup} open={receivedTipPopupVisible} onClose={hideReceivedTipPopup} />
       <ProfileSubscriptionModal tip={selectedProfileSub} user={sessionUser} onClose={() => setSelectedProfileSub(null)} />
       <PaymentModal
         tip={selectedPayment}
@@ -8528,14 +8453,14 @@ function App() {
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
               <span className="wallet-split-segment wallet-split-balance">
                 <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
-                <small>💰 Saldo</small>
+                <small>Saldo</small>
               </span>
               <span className="wallet-split-divider" aria-hidden="true" />
               <span className="wallet-split-segment wallet-split-tokens">
                 <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.png" alt="" /></span>
                 <span className="wallet-split-token-copy">
                   <strong>{Number(tokenBalance || 0)}</strong>
-                  <small>🪙 🪙 Żetony</small>
+                  <small>Biały żeton</small>
                 </span>
                 <span className="wallet-split-chevron" aria-hidden="true">⌄</span>
               </span>
@@ -8731,8 +8656,53 @@ function App() {
 createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>)
 
 
-// PREMIUM CONFIG
-const STRIPE_PREMIUM_PRICE_PLN = 29
-const PREMIUM_DURATION_DAYS = 30
-const PREMIUM_STATUS_ACTIVE = "premium"
-const PREMIUM_STATUS_FREE = "free"
+// BETAI TIP ALERT SYSTEM
+window.showBetAITipAlert = function(username) {
+  const old = document.getElementById('betai-tip-alert');
+  if (old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'betai-tip-alert';
+  wrap.style.position = 'fixed';
+  wrap.style.left = '50%';
+  wrap.style.top = '50%';
+  wrap.style.transform = 'translate(-50%, -50%)';
+  wrap.style.zIndex = '999999';
+  wrap.style.background = 'rgba(0,0,0,0.92)';
+  wrap.style.border = '2px solid #00d5ff';
+  wrap.style.borderRadius = '24px';
+  wrap.style.padding = '18px';
+  wrap.style.boxShadow = '0 0 40px #00d5ff';
+  wrap.style.textAlign = 'center';
+  wrap.style.animation = 'betaiFade 0.4s ease';
+
+  const img = document.createElement('img');
+  img.src = '/bet_ai_ultra_pro_nowy_tip.gif';
+  img.style.width = '260px';
+  img.style.borderRadius = '18px';
+
+  const txt = document.createElement('div');
+  txt.innerHTML = 'TIP OD:<br><strong>' + username + '</strong>';
+  txt.style.color = 'white';
+  txt.style.fontSize = '28px';
+  txt.style.fontWeight = '800';
+  txt.style.marginTop = '16px';
+
+  wrap.appendChild(img);
+  wrap.appendChild(txt);
+  document.body.appendChild(wrap);
+
+  setTimeout(() => {
+    wrap.style.opacity = '0';
+    wrap.style.transition = '0.5s';
+  }, 4500);
+
+  setTimeout(() => {
+    wrap.remove();
+  }, 5200);
+}
+
+window.addEventListener('betai-tip-received', (e) => {
+  const username = e?.detail?.from || 'Użytkownik';
+  window.showBetAITipAlert(username);
+});

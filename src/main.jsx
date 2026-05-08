@@ -1,56 +1,44 @@
 
 window.addEventListener('betai-tip', (e) => {
-  const existing = document.getElementById('betai-tip-popup')
-  if (existing) existing.remove()
+  const existing = document.getElementById('betai-tip-popup');
+  if(existing) existing.remove();
 
-  const sender = e.detail?.from || 'Użytkownik'
-  const wrap = document.createElement('div')
-  wrap.id = 'betai-tip-popup'
-  wrap.style.position = 'fixed'
-  wrap.style.inset = '0'
-  wrap.style.zIndex = '999999'
-  wrap.style.display = 'flex'
-  wrap.style.alignItems = 'center'
-  wrap.style.justifyContent = 'center'
-  wrap.style.background = 'rgba(0,0,0,0.42)'
-  wrap.style.opacity = '0'
-  wrap.style.transition = 'opacity 220ms ease'
-  wrap.style.pointerEvents = 'none'
+  const wrap = document.createElement('div');
+  wrap.id = 'betai-tip-popup';
+  wrap.style.position = 'fixed';
+  wrap.style.left = '50%';
+  wrap.style.top = '50%';
+  wrap.style.transform = 'translate(-50%, -50%)';
+  wrap.style.zIndex = '999999';
+  wrap.style.textAlign = 'center';
 
   wrap.innerHTML = `
     <div style="
-      background: rgba(4,8,22,0.94);
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 26px;
-      padding: 18px 18px 20px;
-      box-shadow: 0 0 55px rgba(0,229,255,0.45), 0 0 90px rgba(255,215,0,0.18);
-      text-align: center;
-      transform: scale(.96);
-      transition: transform 220ms ease;
+      background: rgba(0,0,0,0.92);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 0 45px #00e5ff;
     ">
-      <img src="/bet_ai_ultra_pro_nowy_tip.gif" style="width:min(360px,82vw);border-radius:18px;display:block;" />
+      <img
+        src="/bet_ai_ultra_pro_nowy_tip.gif"
+        style="width:320px;border-radius:18px;"
+      />
       <div style="
-        color:#fff;
-        font-size:clamp(20px,4vw,28px);
-        line-height:1.2;
-        font-weight:900;
-        margin-top:16px;
-        text-shadow:0 0 14px rgba(0,229,255,.55);
-      ">Otrzymałeś TIP od: ${sender}</div>
+        color:white;
+        font-size:26px;
+        font-weight:800;
+        margin-top:14px;
+      ">
+        TIP OD: ${e.detail?.from || 'Użytkownik'}
+      </div>
     </div>
-  `
+  `;
 
-  document.body.appendChild(wrap)
-  requestAnimationFrame(() => {
-    wrap.style.opacity = '1'
-    const card = wrap.firstElementChild
-    if (card) card.style.transform = 'scale(1)'
-  })
+  document.body.appendChild(wrap);
 
   setTimeout(() => {
-    wrap.style.opacity = '0'
-    setTimeout(() => wrap.remove(), 260)
-  }, 4000)
+    wrap.remove();
+  }, 5000);
 });
 
 import React, { useMemo, useState, useEffect, useRef } from 'react'
@@ -1004,22 +992,6 @@ function LiveChatPanel({ user }) {
     const host = document.querySelector('.betai-chat-messages-final')
     if (host) host.scrollTop = host.scrollHeight
   }, [messages.length])
-
-
-  useEffect(() => {
-    if (!email || !isSupabaseConfigured || !supabase) return undefined
-    const tipChannel = supabase
-      .channel(`betai-live-chat-tip-popup-${email}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat_tips', filter: `to_email=eq.${email}` }, (payload) => {
-        const fromEmail = normalizeEmail(payload?.new?.from_email || '')
-        const senderName = messages.find(m => normalizeEmail(m.user_email) === fromEmail)?.user_name || nameFromEmail(fromEmail) || 'Użytkownik'
-        window.dispatchEvent(new CustomEvent('betai-tip', { detail: { from: senderName } }))
-      })
-      .subscribe()
-    return () => {
-      try { supabase.removeChannel(tipChannel) } catch (_) {}
-    }
-  }, [email, messages])
 
   useEffect(() => {
     loadOnlineCount()
@@ -3062,10 +3034,9 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
   const displayName = (email = '', username = '') => {
     const clean = normalizeEmail(email)
-    const rawName = String(username || '').trim()
-    if (rawName && !['user', 'uzytkownik', 'użytkownik'].includes(rawName.toLowerCase())) return rawName
+    if (username && String(username).trim()) return String(username).trim()
     if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    return clean ? clean.split('@')[0] : 'Użytkownik'
+    return clean || 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -3135,7 +3106,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       Object.keys(meta).forEach(id => {
         if (id === String(myId) || byId.has(id)) return
-        const name = `Użytkownik ${String(id).slice(0, 6)}`
+        const name = 'Użytkownik'
         byId.set(id, {
           id,
           email: '',
@@ -3305,8 +3276,11 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
   return (
     <div className="betai-dm-box">
-      <div className="betai-dm-toolbar betai-dm-toolbar-compact">
-        <span className="betai-notify-kicker">CZAT PRYWATNY</span>
+      <div className="betai-dm-toolbar">
+        <div>
+          <div className="betai-notify-kicker">WIADOMOŚCI</div>
+          <div className="betai-dm-title">Wiadomości użytkowników</div>
+        </div>
         <span className="betai-dm-unread">{activeUnread} nowe</span>
       </div>
       <div className="betai-dm-layout">

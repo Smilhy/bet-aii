@@ -1,0 +1,15 @@
+BET+AI — WERSJA 675 REAL FIX
+
+Naprawione realnie w plikach źródłowych:
+1. Sidebar: usunięty efekt dwóch żółtych żetonów i dodany jeden biały żeton jako grafika /betai-topbar-coin.png.
+2. Topbar: etykieta zmieniona na „Biały żeton”.
+3. Prywatne wiadomości: usunięty drugi, powielony nagłówek „Wiadomości użytkowników” z wnętrza okna.
+4. Prywatne wiadomości: poprawione nazwy użytkowników — aplikacja ignoruje generyczne „user” i próbuje pokazać username, e-mail/local-part albo identyfikator użytkownika.
+5. Prywatne wiadomości: dodatkowe dociąganie profili rozmówców z Supabase po ID z direct_messages.
+6. Live chat TIP: dodany popup odbiorcy na środku ekranu z plikiem bet_ai_ultra_pro_nowy_tip.gif.
+7. Popup TIP: napis „Otrzymałeś TIP od: [użytkownik]”, automatyczne zamknięcie po 4 sekundach.
+
+Netlify/Supabase:
+- Zostawione netlify.toml — Netlify ma wykonać npm install i npm run build/vite build.
+- Popup TIP nasłuchuje tabeli betai_token_transactions na INSERT z reason = live_chat_tip_received.
+- Żeby popup działał u drugiego użytkownika w czasie rzeczywistym, w Supabase musi być włączone Realtime dla tabeli betai_token_transactions.
