@@ -26540,3 +26540,11 @@ button.betfolio-fetch-btn{
 .live-real-badge.empty::after{
   content:'';
 }
+
+
+/* WERSJA 726 — szukanie od teraz + 2 dni */
+.betfolio-top-sports-note::before{
+  content:'od teraz + 2 dni  •  ';
+  color:#ffc21a!important;
+  font-weight:900!important;
+}

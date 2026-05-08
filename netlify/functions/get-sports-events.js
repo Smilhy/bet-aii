@@ -7,6 +7,7 @@ exports.handler = async function(event) {
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
+  const daysAhead = Math.max(0, Math.min(7, Number(qs.daysAhead ?? 2) || 0))
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -50,6 +51,23 @@ exports.handler = async function(event) {
     const month = parts.find(part => part.type === 'month')?.value
     const day = parts.find(part => part.type === 'day')?.value
     return year && month && day ? `${year}-${month}-${day}` : ''
+  }
+
+  const addDaysToDateKey = (dateKey, addDays) => {
+    const [year, month, day] = String(dateKey || '').split('-').map(Number)
+    if (!year || !month || !day) return ''
+    const d = new Date(Date.UTC(year, month - 1, day + addDays, 12, 0, 0))
+    const y = d.getUTCFullYear()
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const dd = String(d.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${dd}`
+  }
+
+  const isLocalDateInRange = (iso, startKey, rangeDays) => {
+    const eventKey = toLocalDateKey(iso)
+    if (!eventKey || !startKey) return false
+    const endKey = addDaysToDateKey(startKey, rangeDays)
+    return eventKey >= startKey && eventKey <= endKey
   }
 
 
@@ -340,7 +358,7 @@ exports.handler = async function(event) {
     if (oddsKey) {
       const sportKeys = await getDynamicSportKeys(oddsKey)
       if (!sportKeys.length) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', daysAhead, futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
       }
 
       const requestedDay = date
@@ -375,7 +393,7 @@ exports.handler = async function(event) {
             const commence = String(item.commence_time || '')
             const kickMs = Date.parse(commence)
             if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-            return !requestedDay || toLocalDateKey(commence) === requestedDay
+            return !requestedDay || isLocalDateInRange(commence, requestedDay, daysAhead)
           })
           .map((item, index) => {
             const home = item.home_team || item.teams?.[0] || 'Gospodarze'
@@ -411,14 +429,14 @@ exports.handler = async function(event) {
         .slice(0, countOnly ? 1000 : 160)
 
       if (countOnly) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
       }
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, futureOnly: true, fixtures }) }
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, fixtures }) }
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', daysAhead, futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', daysAhead, futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
   }
 }

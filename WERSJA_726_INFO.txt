@@ -1,0 +1,19 @@
+BET+AI — WERSJA 726 SEARCH NEXT 2 DAYS AUTO
+
+Zmiana zgodnie z prośbą:
+1. System nie szuka już tylko dokładnie "dzisiaj".
+2. Szuka meczów od aktualnego czasu + 2 dni do przodu.
+3. Jeśli dzień się kończy, system naturalnie przechodzi na kolejne dni.
+4. Auto refresh dalej działa co 1 minutę.
+5. Liczniki sportów też szukają w zakresie od teraz + 2 dni.
+6. Filtr dalej ukrywa mecze rozpoczęte oraz startujące za mniej niż 1 minutę.
+7. Dalej zero demo / zero fake meczów.
+8. Data liczona jest według Europe/Warsaw.
+
+Przykład:
+Jeśli dziś jest 09.05.2026 i jest 00:19, system szuka meczów:
+- od teraz,
+- do końca 11.05.2026 według czasu PL.
+
+SQL:
+- brak nowego SQL.
