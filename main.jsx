@@ -569,7 +569,7 @@ return (
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true" /> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
+        <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
         <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
@@ -8486,7 +8486,7 @@ function App() {
               </span>
               <span className="wallet-split-divider" aria-hidden="true" />
               <span className="wallet-split-segment wallet-split-tokens">
-                <span className="wallet-split-coin" aria-hidden="true"><span className="wallet-split-coin-core" /></span>
+                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span>
                 <span className="wallet-split-token-copy">
                   <strong>{Number(tokenBalance || 0)}</strong>
                   <small>Coin</small>
