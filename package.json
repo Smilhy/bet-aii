@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-689-dashboard-visible-tips-3",
-  "version": "689.0.0",
+  "name": "betai-wersja-690-add-tip-logic-real",
+  "version": "690.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

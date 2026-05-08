@@ -1475,6 +1475,431 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const confidenceDots = Array.from({ length: 15 }, (_, index) => index)
+  const isPremiumUser = isPremiumAccount(userPlan) || isPremiumProfile(user)
+  const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (user?.email ? String(user.email).split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
+  const email = normalizeEmail(user?.email || '')
+  const todayLabel = new Date().toLocaleDateString('pl-PL')
+
+  const sportsbook = useMemo(() => ({
+    'Piłka nożna': {
+      leagues: {
+        'Premier League': [
+          { id: 'mci-ars', home: 'Manchester City', away: 'Arsenal', date: '25.05.2025', time: '17:30', markets: [
+            { market: 'Wynik końcowy', pick: 'Manchester City wygra', odds: 1.72, confidence: 84 },
+            { market: 'Gole', pick: 'Powyżej 2.5 gola', odds: 1.68, confidence: 78 },
+            { market: 'BTTS', pick: 'Obie strzelą', odds: 1.61, confidence: 73 },
+          ]},
+          { id: 'liv-che', home: 'Liverpool', away: 'Chelsea', date: '25.05.2025', time: '20:45', markets: [
+            { market: 'Wynik końcowy', pick: 'Liverpool wygra', odds: 1.83, confidence: 76 },
+            { market: 'Gole', pick: 'Powyżej 2.5 gola', odds: 1.75, confidence: 79 },
+            { market: 'BTTS', pick: 'Obie strzelą', odds: 1.70, confidence: 71 },
+          ]}
+        ],
+        'Liga Mistrzów': [
+          { id: 'rm-bay', home: 'Real Madryt', away: 'Bayern Monachium', date: '25.05.2025', time: '21:00', markets: [
+            { market: 'Wynik końcowy', pick: 'Real Madryt wygra', odds: 1.91, confidence: 74 },
+            { market: 'Gole', pick: 'Powyżej 2.5 gola', odds: 1.72, confidence: 80 },
+            { market: 'BTTS', pick: 'Obie strzelą', odds: 1.67, confidence: 77 },
+          ]},
+          { id: 'bar-int', home: 'Barcelona', away: 'Inter Mediolan', date: '26.05.2025', time: '20:30', markets: [
+            { market: 'Wynik końcowy', pick: 'Barcelona wygra', odds: 1.85, confidence: 75 },
+            { market: 'Gole', pick: 'Powyżej 2.5 gola', odds: 1.79, confidence: 82 },
+            { market: 'BTTS', pick: 'Obie strzelą', odds: 1.65, confidence: 74 },
+          ]}
+        ]
+      }
+    },
+    'Koszykówka': {
+      leagues: {
+        'NBA': [
+          { id: 'lal-bos', home: 'LA Lakers', away: 'Boston Celtics', date: '25.05.2025', time: '02:30', markets: [
+            { market: 'Zwycięzca', pick: 'LA Lakers wygra', odds: 2.05, confidence: 67 },
+            { market: 'Punkty', pick: 'Powyżej 214.5 pkt', odds: 1.88, confidence: 72 },
+            { market: 'Handicap', pick: 'Boston +4.5', odds: 1.76, confidence: 69 },
+          ]}
+        ]
+      }
+    },
+    'Tenis': {
+      leagues: {
+        'ATP': [
+          { id: 'sinner-alcaraz', home: 'J. Sinner', away: 'C. Alcaraz', date: '25.05.2025', time: '15:00', markets: [
+            { market: 'Zwycięzca', pick: 'Sinner wygra', odds: 1.95, confidence: 66 },
+            { market: 'Sety', pick: 'Powyżej 3.5 seta', odds: 1.74, confidence: 71 },
+            { market: 'Handicap', pick: 'Alcaraz +1.5 seta', odds: 1.62, confidence: 64 },
+          ]}
+        ]
+      }
+    }
+  }), [])
+
+  const sportKeys = Object.keys(sportsbook)
+  const defaultSport = sportKeys[0]
+  const defaultLeague = Object.keys(sportsbook[defaultSport]?.leagues || {})[0] || 'Premier League'
+  const defaultMatch = (sportsbook[defaultSport]?.leagues?.[defaultLeague] || [])[0] || null
+  const defaultMarket = defaultMatch?.markets?.[0] || { market: 'Wynik końcowy', pick: 'Manchester City wygra', odds: 1.72, confidence: 84 }
+
+  const [form, setForm] = useState({
+    sport: defaultSport,
+    league: defaultLeague,
+    matchId: defaultMatch?.id || 'mci-ars',
+    market: defaultMarket.market,
+    betType: defaultMarket.pick,
+    odds: String(defaultMarket.odds),
+    stake: '100',
+    date: defaultMatch?.date || '25.05.2025',
+    time: defaultMatch?.time || '17:30',
+    description: 'Manchester City u siebie prezentuje świetną formę, wygrywając 7 z ostatnich 8 spotkań. Arsenal ma problemy w defensywie i traci średnio 1.6 gola na wyjazdach. Typ oparty na statystykach, formie i analizie AI.',
+    aiAnalysis: 'Model AI ocenia ten typ jako wartościowy. Manchester City ma 68% szans na wygraną. Kluczowe przewagi to forma, posiadanie piłki i skuteczność pod bramką.',
+    confidence: defaultMarket.confidence || 84,
+    tags: ['#BetAI', '#Statystyki', '#Value'],
+    accessType: 'free',
+    singlePrice: '29.00',
+  })
+  const [saving, setSaving] = useState(false)
+  const [dailyCount, setDailyCount] = useState(0)
+  const [countLoading, setCountLoading] = useState(false)
+  const [showHints, setShowHints] = useState(false)
+
+  const sportData = sportsbook[form.sport] || { leagues: {} }
+  const leagueOptions = Object.keys(sportData.leagues || {})
+  const currentLeague = leagueOptions.includes(form.league) ? form.league : (leagueOptions[0] || '')
+  const matchOptions = sportData.leagues?.[currentLeague] || []
+  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || defaultMatch
+  const marketOptions = selectedMatch?.markets || [defaultMarket]
+  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
+
+  useEffect(() => {
+    if (!leagueOptions.includes(form.league)) {
+      const nextLeague = leagueOptions[0] || ''
+      const nextMatch = (sportData.leagues?.[nextLeague] || [])[0]
+      const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+      setForm(prev => ({
+        ...prev,
+        league: nextLeague,
+        matchId: nextMatch?.id || prev.matchId,
+        market: nextMarket.market,
+        betType: nextMarket.pick,
+        odds: String(nextMarket.odds),
+        date: nextMatch?.date || prev.date,
+        time: nextMatch?.time || prev.time,
+        confidence: nextMarket.confidence || prev.confidence,
+      }))
+    }
+  }, [form.sport])
+
+  useEffect(() => {
+    if (!selectedMatch) return
+    if (!matchOptions.some(item => item.id === form.matchId)) {
+      const nextMarket = selectedMatch.markets?.[0] || defaultMarket
+      setForm(prev => ({
+        ...prev,
+        matchId: selectedMatch.id,
+        market: nextMarket.market,
+        betType: nextMarket.pick,
+        odds: String(nextMarket.odds),
+        date: selectedMatch.date || prev.date,
+        time: selectedMatch.time || prev.time,
+        confidence: nextMarket.confidence || prev.confidence,
+      }))
+    }
+  }, [form.league])
+
+  useEffect(() => {
+    if (!selectedMatch) return
+    const exists = marketOptions.some(item => item.market === form.market && item.pick === form.betType)
+    if (!exists) {
+      const nextMarket = marketOptions[0] || defaultMarket
+      setForm(prev => ({
+        ...prev,
+        market: nextMarket.market,
+        betType: nextMarket.pick,
+        odds: String(nextMarket.odds),
+        confidence: nextMarket.confidence || prev.confidence,
+      }))
+    }
+  }, [form.matchId])
+
+  async function fetchDailyCount() {
+    if (!isSupabaseConfigured || !supabase || !user?.id) {
+      setDailyCount(0)
+      return
+    }
+
+    setCountLoading(true)
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    try {
+      let result = await supabase
+        .from('tips')
+        .select('id', { count: 'exact', head: true })
+        .or(`author_id.eq.${user.id},user_id.eq.${user.id}`)
+        .gte('created_at', startOfDay.toISOString())
+
+      if (result.error && isSchemaError(result.error)) {
+        result = await supabase
+          .from('tips')
+          .select('id', { count: 'exact', head: true })
+          .eq('author_id', user.id)
+          .gte('created_at', startOfDay.toISOString())
+      }
+      if (result.error) throw result.error
+      setDailyCount(Number(result.count || 0))
+    } catch (error) {
+      console.warn('fetchDailyCount error', error)
+      setDailyCount(0)
+    } finally {
+      setCountLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDailyCount()
+  }, [user?.id, userPlan])
+
+  const dailyLimit = isPremiumUser ? Infinity : 5
+  const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)
+  const limitReached = !isPremiumUser && dailyCount >= 5
+  const canPublishPremium = isPremiumUser
+  const previewPrice = form.accessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+  const confidencePercent = Math.min(99, Math.max(15, Number(form.confidence || selectedMarket.confidence || 50) || 50))
+  const confidenceLabel = confidencePercent >= 85 ? 'Bardzo wysoki' : confidencePercent >= 70 ? 'Wysoki' : confidencePercent >= 55 ? 'Średni' : 'Niski'
+  const confidenceFilled = Math.max(1, Math.min(15, Math.round((confidencePercent / 100) * 15)))
+  const previewReachMin = form.accessType === 'premium' ? Math.round(confidencePercent * 28) : Math.round(confidencePercent * 18)
+  const previewReachMax = form.accessType === 'premium' ? previewReachMin + 700 : previewReachMin + 400
+
+  function updateForm(patch) {
+    setForm(prev => ({ ...prev, ...patch }))
+  }
+
+  function chooseSport(nextSport) {
+    const nextLeague = Object.keys(sportsbook[nextSport]?.leagues || {})[0] || ''
+    const nextMatch = (sportsbook[nextSport]?.leagues?.[nextLeague] || [])[0]
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+    updateForm({
+      sport: nextSport,
+      league: nextLeague,
+      matchId: nextMatch?.id || form.matchId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+    })
+  }
+
+  function chooseLeague(nextLeague) {
+    const nextMatch = (sportData.leagues?.[nextLeague] || [])[0]
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+    updateForm({
+      league: nextLeague,
+      matchId: nextMatch?.id || form.matchId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+    })
+  }
+
+  function chooseMatch(nextId) {
+    const nextMatch = matchOptions.find(item => item.id === nextId) || selectedMatch
+    const nextMarket = nextMatch?.markets?.[0] || defaultMarket
+    updateForm({
+      matchId: nextId,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+      date: nextMatch?.date || form.date,
+      time: nextMatch?.time || form.time,
+      description: `${nextMatch?.home || 'Gospodarze'} prezentuje solidną formę, ale ${nextMatch?.away || 'goście'} mają swoje argumenty. Typ oparty na aktualnej formie, statystykach i analizie AI.`,
+    })
+  }
+
+  function chooseMarket(value) {
+    const nextMarket = marketOptions.find(item => `${item.market}|||${item.pick}` === value) || selectedMarket
+    updateForm({
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds),
+      confidence: nextMarket.confidence || form.confidence,
+    })
+  }
+
+  function toggleAccess(type) {
+    if (type === 'premium' && !canPublishPremium) {
+      onToast?.({
+        type: 'premium',
+        title: 'Premium wymagane',
+        message: 'Konto FREE może publikować do 5 darmowych typów dziennie. Tipy premium i płatne single są dostępne w planie Premium.',
+        cta: 'Kup Premium',
+        event: 'betai:start-premium-checkout'
+      })
+      return
+    }
+    updateForm({ accessType: type })
+  }
+
+  function addTag() {
+    const next = window.prompt('Podaj tag, np. #PremierLeague')
+    if (!next) return
+    const normalized = next.startsWith('#') ? next : `#${next}`
+    setForm(prev => ({ ...prev, tags: Array.from(new Set([...(prev.tags || []), normalized.trim().slice(0, 24)])) }))
+  }
+
+  function removeTag(tag) {
+    setForm(prev => ({ ...prev, tags: (prev.tags || []).filter(item => item !== tag) }))
+  }
+
+  function regenerateAi() {
+    const nextConfidence = Math.min(96, Math.max(52, (selectedMarket?.confidence || 70) + Math.round((Math.random() * 8) - 2)))
+    const home = selectedMatch?.home || 'Gospodarze'
+    const away = selectedMatch?.away || 'Goście'
+    const nextText = `${home} vs ${away}: model AI ocenia ten typ jako ${nextConfidence >= 80 ? 'bardzo mocny' : nextConfidence >= 70 ? 'solidny' : 'ostrożny'} wybór. Główne argumenty: forma z ostatnich spotkań, jakość sytuacji bramkowych oraz dopasowanie kursu do ryzyka.`
+    updateForm({
+      aiAnalysis: nextText,
+      confidence: nextConfidence,
+      description: `${home} kontra ${away}. ${nextConfidence >= 80 ? 'Widzę tu wyraźną przewagę po stronie wybranego typu.' : 'Mecz wygląda korzystnie, ale wymaga rozsądnego zarządzania stawką.'} W analizie uwzględniłem formę, H2H i kontekst spotkania.`
+    })
+    onToast?.({ type: 'success', title: 'AI odświeżona', message: 'Wygenerowaliśmy nową wersję analizy i poziomu pewności.' })
+  }
+
+  async function handlePublish() {
+    if (!user?.id) {
+      onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
+      return
+    }
+    if (limitReached) {
+      onToast?.({
+        type: 'limit',
+        title: 'Limit FREE wykorzystany',
+        message: 'Konto FREE może publikować maksymalnie 5 typów na dobę. Aktywuj Premium, aby publikować bez limitu.',
+        cta: 'Kup Premium',
+        event: 'betai:start-premium-checkout'
+      })
+      return
+    }
+    if (form.accessType === 'premium' && !canPublishPremium) {
+      toggleAccess('premium')
+      return
+    }
+    if (!selectedMatch) {
+      onToast?.({ type: 'error', title: 'Brak meczu', message: 'Wybierz mecz przed publikacją typu.' })
+      return
+    }
+
+    setSaving(true)
+    const combinedIso = (() => {
+      try {
+        const [day, month, year] = String(form.date || '').split('.')
+        const dateObject = new Date(`${year}-${month}-${day}T${form.time || '12:00'}:00`)
+        return dateObject.toISOString()
+      } catch (_) {
+        return new Date().toISOString()
+      }
+    })()
+    const priceValue = form.accessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+    const tipPayloadRich = {
+      author_id: user.id,
+      user_id: user.id,
+      author_name: username,
+      author_email: email,
+      sport: form.sport,
+      league: currentLeague,
+      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      team_home: selectedMatch.home,
+      team_away: selectedMatch.away,
+      match_time: combinedIso,
+      market: form.market,
+      bet_type: form.betType,
+      prediction: form.betType,
+      odds: Number(form.odds || 0),
+      course: Number(form.odds || 0),
+      stake: Number(form.stake || 0),
+      description: form.description,
+      analysis: form.description,
+      ai_analysis: form.aiAnalysis,
+      ai_source: 'user_manual',
+      ai_confidence: confidencePercent,
+      ai_probability: confidencePercent,
+      confidence: confidencePercent,
+      access_type: form.accessType,
+      access: form.accessType,
+      is_premium: form.accessType === 'premium',
+      price: priceValue,
+      single_price: priceValue,
+      tip_price: priceValue,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    }
+    const tipPayloadBasic = {
+      author_id: user.id,
+      user_id: user.id,
+      author_name: username,
+      author_email: email,
+      league: currentLeague,
+      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      team_home: selectedMatch.home,
+      team_away: selectedMatch.away,
+      match_time: combinedIso,
+      bet_type: form.betType,
+      odds: Number(form.odds || 0),
+      description: form.description,
+      access_type: form.accessType,
+      is_premium: form.accessType === 'premium',
+      price: priceValue,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    }
+    const tipPayloadMinimal = {
+      user_id: user.id,
+      author_id: user.id,
+      author_name: username,
+      league: currentLeague,
+      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      prediction: form.betType,
+      odds: Number(form.odds || 0),
+      description: form.description,
+      created_at: new Date().toISOString(),
+    }
+
+    try {
+      let savedRow = null
+      let lastError = null
+      for (const candidate of [tipPayloadRich, tipPayloadBasic, tipPayloadMinimal]) {
+        const { data, error } = await supabase.from('tips').insert(candidate).select('*').single()
+        if (!error && data) {
+          savedRow = data
+          break
+        }
+        lastError = error
+        if (!isSchemaError(error)) break
+      }
+      if (!savedRow && lastError) throw lastError
+      if (!savedRow) savedRow = { id: `local_${Date.now()}`, ...tipPayloadBasic }
+
+      saveTipDebug('SUCCESS', `tip:${savedRow.id || 'new'}`)
+      setDailyCount(prev => prev + 1)
+      onToast?.({
+        type: 'success',
+        title: 'Typ opublikowany',
+        message: form.accessType === 'premium'
+          ? `Twój tip premium został dodany do dashboardu i profilu. Cena singla: ${priceValue.toFixed(2)} zł.`
+          : `Twój darmowy tip został dodany do dashboardu i profilu.${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
+      })
+      onTipSaved?.(normalizeTipRow(savedRow))
+    } catch (error) {
+      console.error('publish tip error', error)
+      saveTipDebug('ERROR', error?.message || String(error))
+      onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <section className="add-page add-tip-ultra-static">
@@ -1486,76 +1911,113 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <span className="static-add-title-icon">⬡</span>
                 <h1>Dodaj nowy typ</h1>
               </div>
-              <p>Stwórz i opublikuj swój typ bukmacherski. Wykorzystaj AI, statystyki i swoją wiedzę.</p>
+              <p>Twórz realne typy dla swojego profilu. Konto FREE: do 5 typów na dobę. Konto PREMIUM: bez limitu + tipy premium i płatne single.</p>
             </div>
-            <button type="button" className="static-add-hints">💡 Wskazówki</button>
+            <button type="button" className="static-add-hints" onClick={() => setShowHints(prev => !prev)}>{showHints ? '✕ Zamknij' : '💡 Wskazówki'}</button>
           </div>
+
+          <div className="tip-add-topbar">
+            <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
+              <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
+              <span>{isPremiumUser ? 'Publikujesz bez limitu' : 'Maks. 5 tipów / doba'}</span>
+            </div>
+            <div className="tip-add-usage-pill">
+              <strong>{countLoading ? '…' : isPremiumUser ? `${dailyCount}` : `${dailyCount}/5`}</strong>
+              <span>{isPremiumUser ? 'Dodane dziś' : `Pozostało dziś: ${remainingFreeSlots}`}</span>
+            </div>
+          </div>
+
+          {limitReached && (
+            <div className="tip-limit-banner">
+              <strong>Limit darmowych typów został wykorzystany.</strong>
+              <span>Dodałeś już 5 z 5 typów w dniu {todayLabel}. Aktywuj Premium, aby publikować bez limitu i uruchomić tipy premium.</span>
+              <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
+            </div>
+          )}
+
+          {showHints && (
+            <div className="tip-hints-box">
+              <ul>
+                <li>Darmowe konto publikuje maksymalnie 5 typów na dobę.</li>
+                <li>Konto Premium może publikować bez limitu i ustawiać typ jako premium.</li>
+                <li>Typ premium może mieć własną cenę singla i jest widoczny dopiero po zakupie / subskrypcji.</li>
+                <li>Każdy opublikowany typ trafia na dashboard i do Twojego profilu.</li>
+              </ul>
+            </div>
+          )}
 
           <div className="static-add-form-grid">
             <div className="static-add-card">
               <span className="static-add-label">1. Wybór sportu</span>
-              <div className="static-add-display"><span>⚽ Piłka nożna</span><b>⌄</b></div>
+              <div className="static-add-display form-field-display">
+                <select className="static-add-select" value={form.sport} onChange={(e) => chooseSport(e.target.value)}>
+                  {sportKeys.map(option => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">2. Liga</span>
-              <div className="static-add-display"><span>⚽ Premier League</span><b>⌄</b></div>
+              <div className="static-add-display form-field-display">
+                <select className="static-add-select" value={currentLeague} onChange={(e) => chooseLeague(e.target.value)}>
+                  {leagueOptions.map(option => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">3. Mecz</span>
-              <div className="static-add-display static-add-display-double">
-                <div className="match-line"><span className="club-badge city">MCI</span><span>Manchester City</span><span className="versus">vs</span><span>Arsenal</span><span className="club-badge arsenal">ARS</span></div>
-                <small>25.05.2025, 17:30</small>
+              <div className="static-add-display form-field-display">
+                <select className="static-add-select" value={selectedMatch?.id || ''} onChange={(e) => chooseMatch(e.target.value)}>
+                  {matchOptions.map(match => <option key={match.id} value={match.id}>{match.home} vs {match.away} • {match.date}, {match.time}</option>)}
+                </select>
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">4. Typ zakładu</span>
               <div className="static-add-stack">
-                <div className="static-add-display"><span>Wynik końcowy</span><b>⌄</b></div>
-                <div className="static-add-display"><span>Manchester City wygra</span><b>⌄</b></div>
+                <div className="static-add-display form-field-display">
+                  <select className="static-add-select" value={`${form.market}|||${form.betType}`} onChange={(e) => chooseMarket(e.target.value)}>
+                    {marketOptions.map(item => <option key={`${item.market}-${item.pick}`} value={`${item.market}|||${item.pick}`}>{item.market} • {item.pick}</option>)}
+                  </select>
+                </div>
+                <div className="field-help">Wybrany typ: <b>{form.betType}</b></div>
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">5. Kurs (średni)</span>
               <div className="static-add-inline-row">
-                <div className="static-add-display odds-display"><span>1.72</span></div>
-                <div className="auto-pill">✦ Automatycznie <i>●</i></div>
+                <div className="static-add-display odds-display form-field-display"><input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} /></div>
+                <div className="auto-pill">✦ Rynek sugeruje <i>{selectedMarket?.odds || form.odds}</i></div>
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">6. Stawka</span>
               <div className="stake-row">
-                <div className="static-add-display stake-value"><span>100.00</span></div>
-                <div className="static-add-display stake-currency"><span>zł</span><b>⌄</b></div>
+                <div className="static-add-display stake-value form-field-display"><input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: e.target.value.replace(/[^0-9.]/g, '') })} /></div>
+                <div className="static-add-display stake-currency"><span>zł</span></div>
               </div>
               <div className="stake-pills">
-                <span>10 zł</span>
-                <span>50 zł</span>
-                <span className="active">100 zł</span>
-                <span>200 zł</span>
-                <span>500 zł</span>
+                {[10, 50, 100, 200, 500].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value} zł</span>)}
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">7. Data i godzina</span>
               <div className="date-time-row">
-                <div className="static-add-display"><span>25.05.2025</span><b>🗓</b></div>
-                <div className="static-add-display"><span>17:30</span><b>◷</b></div>
+                <div className="static-add-display form-field-display"><input className="static-add-input" value={form.date} onChange={(e) => updateForm({ date: e.target.value })} /></div>
+                <div className="static-add-display form-field-display"><input className="static-add-input" value={form.time} onChange={(e) => updateForm({ time: e.target.value })} /></div>
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">8. Opis typu</span>
-              <div className="static-add-textarea">
-                Manchester City u siebie prezentuje świetną formę, wygrywając 7 z ostatnich 8 spotkań.<br />
-                Arsenal ma problemy w defensywie i traci średnio 1.6 gola na wyjazdach.<br />
-                Typ oparty na statystykach, formie i analizie AI.
-                <small>160 / 500</small>
+              <div className="static-add-textarea-wrapper">
+                <textarea className="static-add-textarea-input" maxLength={500} value={form.description} onChange={(e) => updateForm({ description: e.target.value })} />
+                <small>{String(form.description || '').length} / 500</small>
               </div>
             </div>
 
@@ -1563,16 +2025,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span className="static-add-label">9. Analiza AI</span>
               <div className="ai-analysis-box">
                 <div className="ai-analysis-head"><span className="ai-badge">AI</span><strong>Analiza wygenerowana przez AI</strong></div>
-                <p>Model AI ocenia ten typ jako wartościowy.<br />Manchester City ma <b>68% szans</b> na wygraną.<br />Kluczowe przewagi w formie, posiadaniu piłki i skuteczności.</p>
-                <button type="button">Generuj ponownie</button>
+                <p>{form.aiAnalysis}</p>
+                <button type="button" onClick={regenerateAi}>Generuj ponownie</button>
               </div>
             </div>
 
             <div className="static-add-card">
               <span className="static-add-label">10. Poziom pewności</span>
-              <div className="confidence-head"><strong>Wysoki</strong><b>84%</b></div>
+              <div className="confidence-head"><strong>{confidenceLabel}</strong><b>{confidencePercent}%</b></div>
               <div className="confidence-dots">
-                {confidenceDots.map((dot) => <i key={dot} className={dot < 10 ? 'active' : ''}></i>)}
+                {confidenceDots.map((dot) => <i key={dot} className={dot < confidenceFilled ? 'active' : ''}></i>)}
               </div>
               <div className="confidence-scale"><span>Niski</span><span>Bardzo wysoki</span></div>
             </div>
@@ -1580,11 +2042,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <div className="static-add-card static-span-two">
               <span className="static-add-label">11. Tagi</span>
               <div className="tag-row">
-                <span>#PremierLeague</span>
-                <span>#ManchesterCity</span>
-                <span>#Statystyki</span>
-                <span>#AI</span>
-                <button type="button">+ Dodaj tag</button>
+                {(form.tags || []).map(tag => <span key={tag} onClick={() => removeTag(tag)} title="Usuń tag">{tag}</span>)}
+                <button type="button" onClick={addTag}>+ Dodaj tag</button>
               </div>
             </div>
 
@@ -1593,12 +2052,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <div className="tip-price-config">
                 <div>
                   <strong>Ustal cenę pojedynczego typu</strong>
-                  <p>Każdy tipster sam decyduje, za ile sprzedaje pojedynczy typ premium.</p>
+                  <p>{isPremiumUser ? 'Jako konto Premium możesz ustawić własną cenę za pojedynczy tip premium.' : 'Płatne single są dostępne tylko dla konta Premium. Na koncie FREE publikujesz darmowe tipy.'}</p>
                 </div>
-                <div className="tip-price-box">
+                <div className={`tip-price-box ${!isPremiumUser ? 'locked' : ''}`}>
                   <span>Cena singla</span>
-                  <b>29.00 zł</b>
-                  <small>Ty: 23.20 zł • Platforma: 5.80 zł</small>
+                  {isPremiumUser ? (
+                    <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
+                  ) : (
+                    <b>Premium only</b>
+                  )}
+                  <small>{isPremiumUser ? `Ty: ${(previewPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)} zł • Platforma: ${(previewPrice * PLATFORM_COMMISSION_RATE).toFixed(2)} zł` : 'Odblokuj Premium, aby sprzedawać single i subskrypcje.'}</small>
                 </div>
               </div>
             </div>
@@ -1610,10 +2073,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
               <div className="publish-actions">
                 <div className="publish-toggle">
-                  <button type="button">Darmowy</button>
-                  <button type="button" className="active">Premium 👑</button>
+                  <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
+                  <button type="button" className={form.accessType === 'premium' ? 'active' : ''} onClick={() => toggleAccess('premium')}>Premium 👑</button>
                 </div>
-                <button type="button" className="publish-btn">Opublikuj typ ✈</button>
+                <button type="button" className="publish-btn" disabled={saving || limitReached} onClick={handlePublish}>{saving ? 'Publikowanie...' : 'Opublikuj typ ✈'}</button>
               </div>
             </div>
           </div>
@@ -1626,57 +2089,57 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <p>Zobacz jak Twój typ będzie wyglądał po publikacji.</p>
             </div>
             <div className="preview-match-card">
-              <div className="preview-topline"><span>⚽ PIŁKA NOŻNA ・ PREMIER LEAGUE</span><strong>👑 PREMIUM</strong></div>
+              <div className="preview-topline"><span>{form.sport.toUpperCase()} ・ {currentLeague.toUpperCase()}</span><strong>{form.accessType === 'premium' ? '👑 PREMIUM' : '○ FREE'}</strong></div>
               <div className="preview-teams-row">
-                <div className="preview-team"><span className="preview-logo city">MCI</span><b>Manchester City</b></div>
+                <div className="preview-team"><span className="preview-logo city">{(selectedMatch?.home || 'HM').slice(0,3).toUpperCase()}</span><b>{selectedMatch?.home || 'Gospodarze'}</b></div>
                 <span className="preview-vs">VS</span>
-                <div className="preview-team right"><span className="preview-logo arsenal">ARS</span><b>Arsenal</b></div>
+                <div className="preview-team right"><span className="preview-logo arsenal">{(selectedMatch?.away || 'AW').slice(0,3).toUpperCase()}</span><b>{selectedMatch?.away || 'Goście'}</b></div>
               </div>
-              <div className="preview-time">25.05.2025, 17:30</div>
+              <div className="preview-time">{form.date}, {form.time}</div>
               <div className="preview-stats-grid">
-                <div><small>TYP</small><strong>Manchester City wygra</strong></div>
-                <div><small>KURS</small><strong>1.72</strong></div>
-                <div><small>PEWNOŚĆ</small><strong className="accent">84%</strong></div>
-                <div><small>STAWKA</small><strong>100.00 zł</strong></div>
-                <div><small>ANALIZA AI</small><strong className="accent">AI Wysoka</strong></div>
-                <div><small>CENA SINGLA</small><strong>29.00 zł</strong></div>
+                <div><small>TYP</small><strong>{form.betType}</strong></div>
+                <div><small>KURS</small><strong>{form.odds}</strong></div>
+                <div><small>PEWNOŚĆ</small><strong className="accent">{confidencePercent}%</strong></div>
+                <div><small>STAWKA</small><strong>{Number(form.stake || 0).toFixed(2)} zł</strong></div>
+                <div><small>ANALIZA AI</small><strong className="accent">{confidenceLabel}</strong></div>
+                <div><small>{form.accessType === 'premium' ? 'CENA SINGLA' : 'WIDOCZNOŚĆ'}</small><strong>{form.accessType === 'premium' ? `${previewPrice.toFixed(2)} zł` : 'Darmowy'}</strong></div>
               </div>
               <div className="preview-ring">↗</div>
             </div>
-            <span className="preview-note">* To tylko podgląd. Rzeczywisty wygląd może się nieznacznie różnić.</span>
+            <span className="preview-note">Po publikacji tip pojawi się na dashboardzie głównym i w Twoim profilu: <b>{username}</b>.</span>
           </div>
 
           <div className="glass-ultra-panel static-side-card suggestion-card">
             <div className="small-card-head"><span>🏠 Sugestia AI</span><em>Inteligentna rekomendacja <b>New</b></em></div>
             <div className="suggestion-content">
               <div>
-                <p>AI sugeruje, że to wartościowy typ do publikacji.</p>
-                <small>Podobne typy w tej lidze miały 61% skuteczności. Rozważ dodanie statystyk H2H dla lepszego zasięgu.</small>
-                <button type="button">Zobacz szczegóły analizy</button>
+                <p>{confidencePercent >= 75 ? 'AI sugeruje, że to wartościowy typ do publikacji.' : 'AI sugeruje zachować ostrożność i dopracować opis przed publikacją.'}</p>
+                <small>{form.accessType === 'premium' ? 'Dla tipów premium warto dodać konkretną przewagę i statystyki H2H, aby zwiększyć konwersję zakupu.' : 'Dla darmowych tipów dodaj krótki, konkretny opis — to zwiększa zasięg i wiarygodność profilu.'}</small>
+                <button type="button" onClick={regenerateAi}>Zobacz szczegóły analizy</button>
               </div>
-              <div className="big-percent">82%</div>
+              <div className="big-percent">{Math.max(51, Math.min(95, confidencePercent - 2))}%</div>
             </div>
           </div>
 
           <div className="glass-ultra-panel static-side-card history-card">
-            <div className="small-card-head"><span>✦ Historia skuteczności</span><select><option>Premier League</option></select></div>
+            <div className="small-card-head"><span>✦ Historia skuteczności</span><select><option>{currentLeague}</option></select></div>
             <p>Twoje statystyki w wybranej lidze</p>
             <div className="history-grid">
-              <div><strong>62%</strong><small>Skuteczność</small></div>
-              <div><strong>+24.6%</strong><small>ROI</small></div>
-              <div><strong>18</strong><small>Typów</small></div>
-              <div><strong>11</strong><small>Wygrane</small></div>
+              <div><strong>{Math.max(44, confidencePercent - 18)}%</strong><small>Skuteczność</small></div>
+              <div><strong>+{Math.max(8, Math.round(confidencePercent / 2.5))}%</strong><small>ROI</small></div>
+              <div><strong>{Math.max(3, dailyCount + 7)}</strong><small>Typów</small></div>
+              <div><strong>{Math.max(2, Math.round((dailyCount + 7) * 0.6))}</strong><small>Wygrane</small></div>
             </div>
             <div className="history-chart"><span></span></div>
           </div>
 
           <div className="glass-ultra-panel static-side-card reach-card">
-            <div className="small-card-head"><span>📣 Przewidywany zasięg</span><em>Premium boost</em></div>
+            <div className="small-card-head"><span>📣 Przewidywany zasięg</span><em>{form.accessType === 'premium' ? 'Premium boost' : 'Organic reach'}</em></div>
             <p>Szacunkowy zasięg Twojego typu</p>
             <div className="reach-grid">
-              <div><strong>2.4K – 3.1K</strong><small>Wyświetlenia</small></div>
-              <div><strong>180 – 280</strong><small>Interakcje</small></div>
-              <div><strong>35 – 60</strong><small>Polubienia</small></div>
+              <div><strong>{(previewReachMin/1000).toFixed(1)}K – {(previewReachMax/1000).toFixed(1)}K</strong><small>Wyświetlenia</small></div>
+              <div><strong>{Math.round(previewReachMin * 0.08)} – {Math.round(previewReachMax * 0.09)}</strong><small>Interakcje</small></div>
+              <div><strong>{Math.round(previewReachMin * 0.02)} – {Math.round(previewReachMax * 0.025)}</strong><small>Polubienia</small></div>
             </div>
             <div className="reach-megaphone">📣</div>
           </div>

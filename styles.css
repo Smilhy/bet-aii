@@ -24706,3 +24706,30 @@ font[style*="border"]{
     padding:0!important;
   }
 }
+
+
+/* WERSJA 690 — Add Tip real logic */
+.tip-add-topbar{display:flex!important;gap:14px!important;align-items:stretch!important;justify-content:space-between!important;margin:0 0 16px!important;flex-wrap:wrap!important}
+.tip-add-plan-pill,.tip-add-usage-pill,.tip-limit-banner,.tip-hints-box{border:1px solid rgba(45,212,255,.12)!important;background:linear-gradient(180deg,rgba(8,20,31,.95),rgba(4,12,20,.98))!important;border-radius:18px!important;box-shadow:0 16px 32px rgba(0,0,0,.18)!important}
+.tip-add-plan-pill,.tip-add-usage-pill{padding:12px 14px!important;min-width:240px!important;display:flex!important;flex-direction:column!important;gap:4px!important}
+.tip-add-plan-pill strong,.tip-add-usage-pill strong{font-size:16px!important;color:#f2fbff!important}
+.tip-add-plan-pill span,.tip-add-usage-pill span{font-size:12.5px!important;color:#9eb4c1!important}
+.tip-add-plan-pill.premium{border-color:rgba(255,209,102,.28)!important;background:linear-gradient(180deg,rgba(25,23,12,.95),rgba(10,12,18,.98))!important}
+.tip-limit-banner{padding:14px 16px!important;display:flex!important;flex-direction:column!important;gap:8px!important;margin:0 0 16px!important;border-color:rgba(255,119,119,.28)!important}
+.tip-limit-banner strong{color:#fff2f2!important}
+.tip-limit-banner span{color:#f4b8b8!important;font-size:13px!important}
+.tip-limit-banner button{align-self:flex-start!important;border:0!important;border-radius:12px!important;padding:10px 14px!important;background:linear-gradient(180deg,#22eadc,#17b5ff)!important;color:#08131d!important;font-weight:900!important;cursor:pointer!important}
+.tip-hints-box{padding:12px 14px!important;margin:0 0 16px!important}
+.tip-hints-box ul{margin:0!important;padding-left:18px!important;color:#b7c9d4!important;font-size:13px!important;display:grid!important;gap:7px!important}
+.form-field-display{padding:0!important;overflow:hidden!important}
+.static-add-select,.static-add-input,.static-add-textarea-input,.price-input{appearance:none!important;width:100%!important;background:transparent!important;border:0!important;outline:none!important;color:#e8f7ff!important;font-size:14px!important;padding:13px 14px!important;font-family:inherit!important}
+.static-add-select option{background:#08131d!important;color:#e8f7ff!important}
+.field-help{font-size:12.5px!important;color:#8fa8b8!important;padding-left:2px!important}
+.static-add-textarea-wrapper{position:relative!important;border:1px solid rgba(45,212,255,.12)!important;border-radius:16px!important;background:rgba(1,8,14,.5)!important;min-height:126px!important}
+.static-add-textarea-input{min-height:126px!important;resize:vertical!important;line-height:1.55!important}
+.static-add-textarea-wrapper small{position:absolute!important;right:12px!important;bottom:10px!important;color:#7f97a7!important;font-size:12px!important}
+.tip-price-box.locked{opacity:.9!important}
+.tip-price-box .price-input{font-size:28px!important;font-weight:900!important;padding:4px 0!important;color:#2ae7ff!important}
+.publish-btn[disabled]{opacity:.55!important;cursor:not-allowed!important;filter:grayscale(.1)!important}
+.tag-row span{cursor:pointer!important}
+@media(max-width:900px){.tip-add-plan-pill,.tip-add-usage-pill{min-width:unset!important;width:100%!important}}
