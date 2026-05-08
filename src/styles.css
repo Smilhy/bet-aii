@@ -24319,3 +24319,27 @@ font[style*="border"]{
   text-shadow:0 0 18px rgba(34,211,238,.65)!important;
 }
 .betai-received-tip-text strong{color:#22d3ee!important;}
+
+
+/* WERSJA 676 - jeden biały żeton zamiast dwóch żółtych ikon */
+.wallet-split-coin img,
+.wallet-token-white-coin img{display:none!important;}
+.wallet-split-coin{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:28px!important;height:28px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 30%, #ffffff 0%, #f5f7fb 42%, #cfd6df 68%, #7b8797 100%)!important;
+  box-shadow:inset 0 2px 5px rgba(255,255,255,.85), inset 0 -3px 6px rgba(0,0,0,.38), 0 0 14px rgba(255,255,255,.35)!important;
+  border:1px solid rgba(255,255,255,.75)!important;
+  overflow:hidden!important;
+}
+.wallet-split-coin::before{content:'';width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(0,0,0,.08);}
+.wallet-split-coin-core{display:none!important;}
+.wallet-token-white-coin{
+  display:inline-flex!important;width:16px!important;height:16px!important;border-radius:50%!important;
+  margin-right:6px!important;vertical-align:-3px!important;
+  background:radial-gradient(circle at 35% 30%, #ffffff 0%, #f4f6fb 45%, #cfd6df 72%, #7b8797 100%)!important;
+  box-shadow:inset 0 1px 3px rgba(255,255,255,.9), inset 0 -2px 4px rgba(0,0,0,.32), 0 0 8px rgba(255,255,255,.25)!important;
+  border:1px solid rgba(255,255,255,.65)!important;
+}
+.betai-received-tip-overlay{z-index:999999!important;}
+.betai-received-tip-text{font-size:26px!important;font-weight:900!important;color:#fff!important;text-shadow:0 0 18px rgba(0,229,255,.75)!important;}

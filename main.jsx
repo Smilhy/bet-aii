@@ -569,7 +569,7 @@ return (
           <span className="pill">{getDisplayRole(user, userPlan)}</span>
         </div>
         <div className="wallet-row"><span>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-        <div className="wallet-row wallet-row-tokens"><span><img src="/betai-topbar-coin.png" alt="" className="wallet-token-white-coin" /> Żetony</span><b>{Number(tokenBalance || 0)}</b></div>
+        <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true" /> Biały żeton</span><b>{Number(tokenBalance || 0)}</b></div>
         <div className="wallet-row"><span>Odblokowane</span><b>{unlockedCount || 0}</b></div>
         <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
         <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
@@ -1055,6 +1055,17 @@ function LiveChatPanel({ user }) {
       }
 
       const receiverWallet = await getTokenWallet(targetEmail, null)
+      let receiverUserId = receiverWallet.user_id || null
+      try {
+        const { data: receiverProfile } = await supabase
+          .from('profiles')
+          .select('id,username,email')
+          .eq('email', targetEmail)
+          .maybeSingle()
+        receiverUserId = receiverProfile?.id || receiverUserId
+      } catch (lookupError) {
+        console.warn('tip receiver profile lookup skipped', lookupError)
+      }
       const nextSenderBalance = Number(senderWallet.balance || 0) - 1
       const nextReceiverBalance = Number(receiverWallet.balance || 0) + 1
       await setTokenWallet(email, nextSenderBalance, senderWallet.user_id || user?.id || null)
@@ -1066,6 +1077,16 @@ function LiveChatPanel({ user }) {
         message_id: String(msg.id),
         from_email: email,
         to_email: targetEmail,
+        amount: 1
+      })
+
+      // WERSJA 676: osobna tabela do realtime popupu TIP.
+      // To NIE jest tabela `tips` z typami bukmacherskimi.
+      await supabase.from('tip_transfers').insert({
+        sender_id: user?.id || senderWallet.user_id || null,
+        receiver_id: receiverUserId,
+        sender_username: userName || email.split('@')[0] || 'Użytkownik',
+        receiver_username: msg.user_name || nameFromEmail(targetEmail),
         amount: 1
       })
       await addTokenTransaction(email, -1, 'live_chat_tip_sent', 'live_chat_tips', { message_id: String(msg.id), to_email: targetEmail })
@@ -8385,25 +8406,22 @@ function App() {
   ]
 
   useEffect(() => {
-    const currentEmail = normalizeEmail(sessionUser?.email || '')
-    if (!currentEmail || !isSupabaseConfigured || !supabase) return undefined
+    const currentUserId = sessionUser?.id || ''
+    if (!currentUserId || !isSupabaseConfigured || !supabase) return undefined
     const channel = supabase
-      .channel(`betai-tip-popup-${currentEmail}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_token_transactions', filter: `email=eq.${currentEmail}` }, payload => {
+      .channel(`betai-tip-transfers-popup-${currentUserId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tip_transfers', filter: `receiver_id=eq.${currentUserId}` }, payload => {
         const row = payload?.new || {}
-        if (String(row.reason || '') !== 'live_chat_tip_received') return
         const key = String(row.id || row.created_at || Math.random())
         if (lastReceivedTipRef.current === key) return
         lastReceivedTipRef.current = key
-        const ref = row.ref_data || {}
-        const senderEmail = normalizeEmail(ref.from_email || ref.sender_email || '')
-        const senderName = senderEmail ? senderEmail.split('@')[0].replace(/[._-]+/g, ' ') : 'Użytkownik'
+        const senderName = row.sender_username || 'Użytkownik'
         showReceivedTipPopup(senderName)
         window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
       })
       .subscribe()
     return () => { try { supabase.removeChannel(channel) } catch (_) {} }
-  }, [sessionUser?.email])
+  }, [sessionUser?.id])
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
@@ -8457,7 +8475,7 @@ function App() {
               </span>
               <span className="wallet-split-divider" aria-hidden="true" />
               <span className="wallet-split-segment wallet-split-tokens">
-                <span className="wallet-split-coin" aria-hidden="true"><img src="/betai-topbar-coin.png" alt="" /></span>
+                <span className="wallet-split-coin" aria-hidden="true"><span className="wallet-split-coin-core" /></span>
                 <span className="wallet-split-token-copy">
                   <strong>{Number(tokenBalance || 0)}</strong>
                   <small>Biały żeton</small>
