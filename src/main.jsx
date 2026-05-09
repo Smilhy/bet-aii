@@ -8709,7 +8709,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       risk,
       formHome,
       formAway,
-      explanation: `Live AI wybrało ten typ z realnego meczu i kursu API. Model łączy kurs ${odds.toFixed(2)}, rynek „${best.market || 'rynek'}”, pewność ${confidence}% oraz oczekiwaną wartość ${ev >= 0 ? '+' : ''}${ev}%.`,
+      explanation: `Live AI wybrało ten typ z realnego meczu API. Model łączy kurs/szacunek ${odds.toFixed(2)}, rynek „${best.market || 'rynek'}”, pewność ${confidence}% oraz oczekiwaną wartość ${ev >= 0 ? '+' : ''}${ev}%.`,
       rawMatch: match
     }
   }
@@ -8717,7 +8717,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   async function fetchLiveAiPicks({ silent = false } = {}) {
     if (!silent) {
       setAiLoading(true)
-      setAiStatus('Pobieram realne mecze z The Odds API i generuję typy AI...')
+      setAiStatus('Pobieram realne mecze z The Odds API + API-Sports i generuję typy AI...')
     }
 
     try {
@@ -8763,7 +8763,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLastAiRefresh(stamp)
       setAiStatus(nextTips.length
         ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów z aktualnych meczów. Odświeżono ${stamp}.`
-        : 'LIVE AI: The Odds API nie zwróciło realnych meczów z kursami dla wybranego zakresu. Nie pokazuję demo ani fake typów.'
+        : 'LIVE AI: nie znaleziono realnych wydarzeń w The Odds API ani API-Sports dla wybranego sportu/zakresu.'
       )
     } catch (error) {
       console.warn('fetch live ai picks error', error)
@@ -8799,8 +8799,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     : 0
 
   const sourceRows = [
-    ['Realne mecze z The Odds API', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
-    ['Kursy bukmacherskie live', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
+    ['Realne mecze The Odds/API-Sports', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
+    ['Kursy lub szacunek AI', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
     ['Model wyboru value', 'AKTYWNE'],
     ['Filtr ryzyka', 'AKTYWNE'],
     ['Auto refresh 1 min', 'AKTYWNE'],
@@ -8831,7 +8831,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-v6-hero glass-ai-v6">
             <div>
               <h1>Typy AI</h1>
-              <p>Żywe typy AI generowane wyłącznie z realnych meczów i kursów The Odds API. Zero demo, zero fake.</p>
+              <p>Żywe typy AI generowane z realnych meczów The Odds API + API-Sports. Zero demo, zero fake wydarzeń.</p>
               <div className={`ai-live-status-v729 ${liveAiTips.length ? 'ok' : 'empty'}`}>{aiStatus}</div>
             </div>
             <div className="ai-v6-hero-art" aria-hidden="true">
@@ -8960,7 +8960,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <div><span>ODŚWIEŻANIE</span><b>1 MIN</b></div>
               </div>
             </div>
-            <p className="model-note-v6">Model generuje typy wyłącznie z realnych wydarzeń pobranych z The Odds API.</p>
+            <p className="model-note-v6">Model generuje typy z realnych wydarzeń pobranych z The Odds API oraz API-Sports.</p>
           </div>
 
           <div className="glass-ai-v6 ai-side-card-v6">

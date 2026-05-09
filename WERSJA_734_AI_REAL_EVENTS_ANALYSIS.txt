@@ -1,0 +1,7 @@
+Wersja 734 - AI Real Events Analysis
+
+- Typy AI używają The Odds API oraz API-Sports.
+- Jeśli The Odds API nie ma kursów, realne wydarzenia z API-Sports dostają modelowe rynki AI, żeby karta Typy AI mogła wygenerować analizę i najlepszy typ.
+- Nie dodano demo ani fikcyjnych meczów: wydarzenie musi pochodzić z API.
+- generate-live-ai-picks czyta APISPORTS_KEY / API_SPORTS_KEY / API_FOOTBALL_KEY.
+- Komunikaty UI zaktualizowane z The Odds API na The Odds API + API-Sports.

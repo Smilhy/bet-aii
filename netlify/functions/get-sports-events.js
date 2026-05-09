@@ -653,13 +653,12 @@ exports.handler = async function(event) {
       time: parts.time,
       commence_time: isoDate,
       source: 'api-sports',
-      markets: countOnly ? [] : [{
-        market: 'Własny typ',
-        pick: 'Uzupełnij kurs ręcznie',
-        odds: 1,
-        confidence: 55,
-        note: 'Realne wydarzenie z API-Sports; kurs nie pochodzi z The Odds API.'
-      }]
+      markets: countOnly ? [] : buildMarkets(home, away, [], cfg.sportName).map((m, marketIndex) => ({
+        ...m,
+        source: 'ai-estimated-market',
+        note: 'Realne wydarzenie z API-Sports. Kurs/pewność to modelowy szacunek Bet+AI, gdy The Odds API nie ma kursów.',
+        confidence: Math.max(56, Math.min(88, Number(m.confidence || 60) + (marketIndex % 4) - 1))
+      }))
     }
   }
 
@@ -818,7 +817,7 @@ exports.handler = async function(event) {
         requestedAllSports,
         daysAhead,
         fixtures: apiSports.fixtures,
-        message: apiSports.fixtures.length ? 'Realne wydarzenia pobrane z API-Sports. Kursy z The Odds API nie były dostępne dla tego filtra.' : `${oddsMessage} ${apiSports.message}`.trim()
+        message: apiSports.fixtures.length ? 'Realne wydarzenia pobrane z API-Sports. Dla braku kursów The Odds API dodano modelowe rynki AI do analizy.' : `${oddsMessage} ${apiSports.message}`.trim()
       })
     }
   } catch (error) {

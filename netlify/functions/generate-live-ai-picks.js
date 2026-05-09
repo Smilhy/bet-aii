@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY
+const API_FOOTBALL_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 function json(statusCode, body) { return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } }
@@ -14,7 +14,7 @@ function pctNumber(value) { return Number(String(value || '').replace('%', '').t
 
 const apiCache = new Map()
 async function apiFootball(path) {
-  if (!API_FOOTBALL_KEY) throw new Error('Missing API_FOOTBALL_KEY. Real AI PRO wymaga API-Football.')
+  if (!API_FOOTBALL_KEY) throw new Error('Missing APISPORTS_KEY/API_FOOTBALL_KEY. Real AI PRO wymaga API-Sports.')
   if (apiCache.has(path)) return apiCache.get(path)
   const res = await fetch(`https://v3.football.api-sports.io/${path}`, { headers: { 'x-apisports-key': API_FOOTBALL_KEY } })
   if (!res.ok) throw new Error(`API-Football ${path} error ${res.status}: ${await res.text().catch(() => '')}`)
