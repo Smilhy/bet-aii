@@ -8627,13 +8627,30 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   function normalizeLiveSportName(name = '') {
     const value = String(name || '').toLowerCase()
-    if (value.includes('soccer') || value.includes('football') || value.includes('premier') || value.includes('liga') || value.includes('serie') || value.includes('bundes')) return 'Piłka nożna'
-    if (value.includes('basketball') || value.includes('nba')) return 'Koszykówka'
-    if (value.includes('tennis') || value.includes('atp') || value.includes('wta')) return 'Tenis'
-    if (value.includes('hockey') || value.includes('nhl')) return 'Hokej'
+    if (value.includes('soccer') || value.includes('football') || value.includes('premier') || value.includes('liga') || value.includes('serie') || value.includes('bundes') || value.includes('piłka nożna') || value.includes('pilka nozna')) return 'Piłka nożna'
+    if (value.includes('basketball') || value.includes('nba') || value.includes('koszyk')) return 'Koszykówka'
+    if (value.includes('tennis') || value.includes('atp') || value.includes('wta') || value.includes('tenis')) return 'Tenis'
+    if (value.includes('hockey') || value.includes('nhl') || value.includes('hokej')) return 'Hokej'
     if (value.includes('baseball') || value.includes('mlb')) return 'Baseball'
     if (value.includes('mma') || value.includes('ufc')) return 'MMA'
+    if (value.includes('volley') || value.includes('siat')) return 'Siatkówka'
+    if (value.includes('handball') || value.includes('ręczna') || value.includes('reczna')) return 'Piłka ręczna'
+    if (value.includes('rugby')) return 'Rugby'
+    if (value.includes('nfl') || value.includes('american')) return 'NFL'
+    if (value.includes('afl')) return 'AFL'
     return name || 'Sport'
+  }
+
+  function isCardInActiveSport(card) {
+    if (activeSport === 'Wszystkie') return true
+    return normalizeLiveSportName(card?.sportName || card?.league || card?.rawMatch?.sport) === activeSport
+  }
+
+  function handleAiSportChange(tab) {
+    setActiveSport(tab)
+    setLiveAiTips([])
+    setAiLoading(true)
+    setAiStatus(`Pobieram realne mecze tylko dla: ${tab}. Segreguję typy według wybranej zakładki...`)
   }
 
   function chooseBestMarket(match) {
@@ -8782,9 +8799,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLiveAiTips(nextTips)
       const stamp = new Date().toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
       setLastAiRefresh(stamp)
+      const label = activeSport === 'Wszystkie' ? 'wszystkich aktywnych sportów' : activeSport
       setAiStatus(nextTips.length
-        ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów z aktualnych meczów. Odświeżono ${stamp}.`
-        : `LIVE AI: pobrano ${allFixtures.length} realnych meczów z API-Sports, ale nie udało się zbudować kart typów. Spróbuj wyłączyć filtr wysokiego AI Score albo kliknij konkretny sport.`
+        ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów dla: ${label}. Odświeżono ${stamp}.`
+        : `LIVE AI: API-Sports nie zwróciło meczów dla: ${label}. Kliknij inną zakładkę albo sprawdź limit API-Sports.`
       )
     } catch (error) {
       console.warn('fetch live ai picks error', error)
@@ -8807,6 +8825,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [activeSport])
 
   const visibleAiCards = liveAiTips
+    .filter(isCardInActiveSport)
     .filter(card => !onlyHighScore || card.scoreNumber >= 80)
     .sort((a, b) => {
       if (sortMode === 'odds') return Number(b.odds) - Number(a.odds)
@@ -8864,7 +8883,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
           <div className="glass-ai-v6 ai-v6-tabs">
             {aiSportTabs.map(tab => (
-              <button type="button" key={tab} className={activeSport === tab ? 'active' : ''} onClick={() => setActiveSport(tab)}>
+              <button type="button" key={tab} className={activeSport === tab ? 'active' : ''} onClick={() => handleAiSportChange(tab)}>
                 {tab}
               </button>
             ))}
