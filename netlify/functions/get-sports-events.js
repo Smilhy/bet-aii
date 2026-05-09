@@ -8,6 +8,8 @@ exports.handler = async function(event) {
   const countOnly = String(qs.countOnly || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
   const daysAhead = Math.max(0, Math.min(365, Number(qs.daysAhead ?? 365) || 365))
+  const requestedSportText = String(sport || '').trim()
+  const requestedAllSports = ['wszystkie', 'wszystkie sporty', 'all', 'all sports', '*'].includes(requestedSportText.toLowerCase())
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -328,228 +330,6 @@ exports.handler = async function(event) {
     return []
   }
 
-
-
-  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_FOOTBALL_KEY || process.env.API_SPORTS_KEY || ''
-
-  const formatDateKey = (dateObj) => {
-    const y = dateObj.getUTCFullYear()
-    const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
-    const d = String(dateObj.getUTCDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
-  }
-
-  const enumerateDateKeys = (startKey, rangeDays) => {
-    const [year, month, day] = String(startKey || new Date().toISOString().slice(0, 10)).split('-').map(Number)
-    const base = new Date(Date.UTC(year || new Date().getUTCFullYear(), (month || 1) - 1, day || 1, 12, 0, 0))
-    const maxDays = Math.min(Math.max(Number(rangeDays || 1), 0), 30)
-    return Array.from({ length: maxDays + 1 }, (_, index) => formatDateKey(new Date(base.getTime() + index * 86400000)))
-  }
-
-  const sportIs = (...needles) => {
-    const s = normalizeText(sport)
-    const l = normalizeText(league)
-    const c = normalizeText(country)
-    const text = `${s} ${l} ${c}`
-    return needles.some(needle => text.includes(normalizeText(needle)))
-  }
-
-  const apiSportsConfigsForRequest = () => {
-    const configs = []
-    const add = (base, endpoint, type, extra = {}) => configs.push({ base, endpoint, type, extra })
-
-    if (sportIs('pilka', 'football', 'soccer')) add('https://v3.football.api-sports.io', '/fixtures', 'football')
-    else if (sportIs('koszyk', 'basketball')) {
-      add('https://v1.basketball.api-sports.io', '/games', 'genericDate')
-      add('https://v2.nba.api-sports.io', '/games', 'genericDate')
-    }
-    else if (sportIs('nba')) add('https://v2.nba.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('baseball')) add('https://v1.baseball.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('hokej', 'hockey')) add('https://v1.hockey.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('siatkowka', 'volleyball')) add('https://v1.volleyball.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('reczna', 'handball')) add('https://v1.handball.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('nfl', 'american football')) add('https://v1.american-football.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('rugby')) add('https://v1.rugby.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('afl')) add('https://v1.afl.api-sports.io', '/games', 'genericDate')
-    else if (sportIs('mma', 'ufc')) add('https://v1.mma.api-sports.io', '/fights', 'fightDate')
-    else if (sportIs('boks', 'boxing', 'box')) {
-      // API-Sports na Twoim koncie nie ma osobnego Boxing API, więc boks zostaje głównie z The Odds API.
-      // Zostawiamy pusty fallback, żeby nie pokazywać fake eventów.
-    } else {
-      // Tryb awaryjny: kilka najczęstszych API-Sports, żeby „Dodaj typ” nie był zablokowany
-      // kiedy nazwa sportu w UI różni się od mapowania.
-      add('https://v3.football.api-sports.io', '/fixtures', 'football')
-      add('https://v1.basketball.api-sports.io', '/games', 'genericDate')
-      add('https://v1.hockey.api-sports.io', '/games', 'genericDate')
-      add('https://v1.baseball.api-sports.io', '/games', 'genericDate')
-      add('https://v1.mma.api-sports.io', '/fights', 'fightDate')
-    }
-
-    return configs
-  }
-
-  const pickName = (...values) => {
-    for (const value of values) {
-      if (typeof value === 'string' && value.trim()) return value.trim()
-      if (value && typeof value.name === 'string' && value.name.trim()) return value.name.trim()
-    }
-    return ''
-  }
-
-  const apiSportsDateToIso = (item) => {
-    const raw = item?.fixture?.date || item?.date || item?.game?.date?.date || item?.game?.date || item?.time || item?.timestamp
-    if (typeof raw === 'number') return new Date(raw * 1000).toISOString()
-    if (typeof raw === 'string' && raw) {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-        const time = item?.time || item?.hour || item?.fixture?.time || '12:00'
-        return new Date(`${raw}T${String(time).slice(0, 5) || '12:00'}:00Z`).toISOString()
-      }
-      const parsed = Date.parse(raw)
-      if (Number.isFinite(parsed)) return new Date(parsed).toISOString()
-    }
-    return ''
-  }
-
-  const mapApiSportsItemToFixture = (item, index, config) => {
-    const iso = apiSportsDateToIso(item)
-    const parts = toDateParts(iso || new Date().toISOString())
-    const home = pickName(
-      item?.teams?.home,
-      item?.teams?.home?.name,
-      item?.home,
-      item?.home?.name,
-      item?.fighters?.first,
-      item?.fighters?.first?.name,
-      item?.fighters?.home,
-      item?.fighters?.home?.name,
-      item?.competitors?.[0],
-      item?.competitors?.[0]?.name,
-      item?.participant_1,
-      item?.player_1
-    ) || 'Zawodnik / Gospodarze'
-    const away = pickName(
-      item?.teams?.away,
-      item?.teams?.away?.name,
-      item?.away,
-      item?.away?.name,
-      item?.fighters?.second,
-      item?.fighters?.second?.name,
-      item?.fighters?.away,
-      item?.fighters?.away?.name,
-      item?.competitors?.[1],
-      item?.competitors?.[1]?.name,
-      item?.participant_2,
-      item?.player_2
-    ) || 'Zawodnik / Goście'
-    const leagueName = pickName(item?.league, item?.league?.name, item?.competition, item?.competition?.name, item?.event, item?.event?.name, league) || sport
-    const countryName = pickName(item?.league?.country, item?.country, country) || country
-    const rawId = item?.fixture?.id || item?.game?.id || item?.id || item?.fight?.id || `${config.type}-${index}-${home}-${away}-${iso}`
-
-    return {
-      id: `apisports-${rawId}`,
-      sport,
-      sportKey: config.base,
-      country: countryName,
-      league: leagueName,
-      home,
-      away,
-      date: parts.date,
-      time: parts.time,
-      commence_time: iso,
-      source: 'api-sports',
-      markets: countOnly ? [] : buildMarkets(home, away, [], sport)
-    }
-  }
-
-  const fetchApiSportsUrl = async (apiKey, config, params) => {
-    const url = new URL(config.endpoint, config.base)
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value) !== '') url.searchParams.set(key, String(value))
-    })
-    const response = await fetch(url.toString(), { headers: { 'x-apisports-key': apiKey } })
-    const data = await response.json().catch(() => null)
-    if (!response.ok) return { ok: false, status: response.status, data, items: [] }
-    const items = Array.isArray(data?.response) ? data.response : (Array.isArray(data) ? data : [])
-    return { ok: true, status: response.status, data, items }
-  }
-
-  const fetchApiSportsFixtures = async (rangeDays) => {
-    const apiKey = getApiSportsKey()
-    if (!apiKey) return { ok: false, source: 'api-sports-missing-key', fixtures: [], message: 'Brak APISPORTS_KEY / API_FOOTBALL_KEY w Netlify.' }
-
-    const configs = apiSportsConfigsForRequest()
-    if (!configs.length) return { ok: true, source: 'api-sports-unsupported', fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
-
-    const startKey = date || new Date().toISOString().slice(0, 10)
-    const endKey = addDaysToDateKey(startKey, Math.min(Number(rangeDays || 365), 30))
-    const dateKeys = enumerateDateKeys(startKey, Math.min(Number(rangeDays || 365), 30))
-    const nowMs = Date.now() + 1 * 60 * 1000
-    const collected = []
-
-    for (const config of configs.slice(0, 5)) {
-      try {
-        if (config.type === 'football') {
-          const result = await fetchApiSportsUrl(apiKey, config, { from: startKey, to: endKey, timezone: APP_TIMEZONE })
-          if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
-          else console.warn('API-Sports football failed', config.base, result.status, result.data?.message || result.data?.errors)
-        } else if (config.type === 'fightDate') {
-          // MMA API różni się zależnie od endpointu; próbujemy najpierw zakres, potem pojedyncze daty.
-          let result = await fetchApiSportsUrl(apiKey, config, { from: startKey, to: endKey, timezone: APP_TIMEZONE })
-          if (result.ok && result.items.length) {
-            collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
-          } else {
-            for (const dayKey of dateKeys.slice(0, 14)) {
-              result = await fetchApiSportsUrl(apiKey, config, { date: dayKey, timezone: APP_TIMEZONE })
-              if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
-            }
-          }
-        } else {
-          for (const dayKey of dateKeys.slice(0, 14)) {
-            const result = await fetchApiSportsUrl(apiKey, config, { date: dayKey, timezone: APP_TIMEZONE })
-            if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
-            else console.warn('API-Sports generic failed', config.base, result.status, result.data?.message || result.data?.errors)
-          }
-        }
-      } catch (error) {
-        console.warn('API-Sports fallback error', config.base, error.message)
-      }
-    }
-
-    const seen = new Set()
-    const fixtures = collected
-      .filter(item => {
-        const kickMs = Date.parse(item.commence_time || '')
-        if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-        return !date || isLocalDateInRange(item.commence_time, date, rangeDays)
-      })
-      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-      .filter(item => {
-        const key = `${normalizeText(item.home)}-${normalizeText(item.away)}-${item.commence_time}`
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-      .slice(0, countOnly ? 1000 : 160)
-
-    return { ok: true, source: 'api-sports-fallback', fixtures, message: fixtures.length ? '' : 'API-Sports też nie zwrócił realnych przyszłych eventów dla tego sportu/zakresu.' }
-  }
-
-  const returnApiSportsFallback = async (baseMessage = '') => {
-    const fallback = await fetchApiSportsFixtures(daysAhead)
-    const payload = {
-      ok: true,
-      demo: false,
-      source: fallback.source,
-      allLeagues,
-      daysAhead,
-      futureOnly: true,
-      count: fallback.fixtures.length,
-      fixtures: countOnly ? [] : fallback.fixtures,
-      message: fallback.fixtures.length ? baseMessage : `${baseMessage ? `${baseMessage} ` : ''}${fallback.message}`.trim()
-    }
-    return { statusCode: 200, headers, body: JSON.stringify(payload) }
-  }
-
   const matchesRequestedSport = (item) => {
     const s = normalizeText(sport)
     const key = normalizeText(item?.key)
@@ -557,6 +337,8 @@ exports.handler = async function(event) {
     const title = normalizeText(item?.title)
     const description = normalizeText(item?.description)
     const combined = `${key} ${group} ${title} ${description}`
+
+    if (requestedAllSports || !s || s === 'wszystkie' || s === 'all') return true
 
     if (s.includes('pilka') || s.includes('football') || s.includes('soccer')) {
       return group.includes('soccer') || key.startsWith('soccer') || combined.includes('soccer')
@@ -643,224 +425,402 @@ exports.handler = async function(event) {
     return { ok: true, message: '', items: filtered }
   }
 
-  const getDynamicSportKeys = async (oddsKey) => {
-    const fallback = staticSportKeys()
-    if (!allLeagues) return fallback
-
+  const fetchActiveSportsList = async (oddsKey) => {
     try {
       const sportsUrl = new URL('https://api.the-odds-api.com/v4/sports/')
       sportsUrl.searchParams.set('apiKey', oddsKey)
       const response = await fetch(sportsUrl.toString())
       const data = await response.json().catch(() => [])
-
-      if (!response.ok || !Array.isArray(data)) return fallback
-
-      const dynamic = data
-        .filter(item => item && item.active !== false && matchesRequestedSport(item))
-        .map(item => item.key)
-        .filter(Boolean)
-
-      return [...new Set(dynamic.length ? dynamic : fallback)]
+      if (!response.ok || !Array.isArray(data)) return []
+      return data.filter(item => item && item.active !== false && item.has_outrights !== true)
     } catch (error) {
       console.warn('The Odds API sports list failed', error)
-      return fallback
+      return []
+    }
+  }
+
+  const getDynamicSportKeys = async (oddsKey) => {
+    const fallback = staticSportKeys()
+    const activeSports = await fetchActiveSportsList(oddsKey)
+
+    if (requestedAllSports) {
+      const allKeys = activeSports.map(item => item.key).filter(Boolean)
+      return [...new Set(allKeys.length ? allKeys : fallback)]
+    }
+
+    if (allLeagues) {
+      const dynamic = activeSports
+        .filter(item => item && matchesRequestedSport(item))
+        .map(item => item.key)
+        .filter(Boolean)
+      return [...new Set(dynamic.length ? dynamic : fallback)]
+    }
+
+    return fallback
+  }
+
+  const getWindowIso = (startKey, rangeDays) => {
+    const safeStart = startKey || new Date().toISOString().slice(0, 10)
+    const safeEnd = addDaysToDateKey(safeStart, Math.max(1, rangeDays || 365)) || addDaysToDateKey(new Date().toISOString().slice(0, 10), 365)
+    return {
+      from: `${safeStart}T00:00:00Z`,
+      to: `${safeEnd}T23:59:59Z`
+    }
+  }
+
+  const fetchOddsForSportKey = async (oddsKey, sportKey, rangeDays, requestedDay) => {
+    const nowMs = Date.now() + 1 * 60 * 1000
+    const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
+    const url = new URL(endpoint)
+    const windowIso = getWindowIso(requestedDay, rangeDays)
+    url.searchParams.set('apiKey', oddsKey)
+    url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
+    // H2H jest najbezpieczniejszy dla każdego sportu. Dodatkowe rynki często blokowały całe zapytanie.
+    url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_SAFE_MARKETS || 'h2h'))
+    url.searchParams.set('oddsFormat', 'decimal')
+    url.searchParams.set('dateFormat', 'iso')
+    url.searchParams.set('commenceTimeFrom', windowIso.from)
+    url.searchParams.set('commenceTimeTo', windowIso.to)
+
+    let response = await fetch(url.toString())
+    let data = await response.json().catch(() => [])
+
+    if (!response.ok && !countOnly) {
+      url.searchParams.set('markets', 'h2h')
+      response = await fetch(url.toString())
+      data = await response.json().catch(() => [])
+    }
+
+    if (!response.ok) {
+      console.warn('The Odds API sport key failed', sportKey, data?.message || response.status)
+      return []
+    }
+
+    return (Array.isArray(data) ? data : [])
+      .filter(item => {
+        const commence = String(item.commence_time || '')
+        const kickMs = Date.parse(commence)
+        if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
+        return !requestedDay || isLocalDateInRange(commence, requestedDay, rangeDays)
+      })
+      .map((item, index) => mapOddsItemToFixture(item, index, sportKey))
+  }
+
+  const fetchWideRealFixtures = async (oddsKey, rangeDays, requestedDay) => {
+    const sportKeys = await getDynamicSportKeys(oddsKey)
+    const collected = []
+
+    for (const sportKey of sportKeys) {
+      const fixturesForKey = await fetchOddsForSportKey(oddsKey, sportKey, rangeDays, requestedDay)
+      collected.push(...fixturesForKey)
+      // Przy widoku wszystkich sportów nie mielimy limitu bez końca; jak już mamy dużo realnych eventów, wystarczy do UI.
+      if (requestedAllSports && collected.length >= 240) break
+    }
+
+    if (!collected.length && rangeDays < 365) {
+      for (const sportKey of sportKeys) {
+        const fixturesForKey = await fetchOddsForSportKey(oddsKey, sportKey, 365, requestedDay)
+        collected.push(...fixturesForKey)
+        if (requestedAllSports && collected.length >= 240) break
+      }
+    }
+
+    const seen = new Set()
+    const fixtures = collected
+      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+      .filter(item => {
+        const key = item.id || `${item.sportKey}-${item.home}-${item.away}-${item.commence_time}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, countOnly ? 1000 : 240)
+
+    return { sportKeys, fixtures }
+  }
+
+
+  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
+
+  const getApiSportsConfigs = () => {
+    const s = normalizeText(sport)
+    const configs = []
+    const push = (cfg) => configs.push(cfg)
+
+    const wantsAll = requestedAllSports || s === 'wszystkie' || s === 'all'
+    const wantsFootball = wantsAll || s.includes('pilka') || s.includes('football') || s.includes('soccer')
+    const wantsBasketball = wantsAll || s.includes('koszyk') || s.includes('basketball')
+    const wantsNBA = s.includes('nba')
+    const wantsBaseball = wantsAll || s.includes('baseball')
+    const wantsHockey = wantsAll || s.includes('hokej') || s.includes('hockey')
+    const wantsMma = wantsAll || s.includes('mma') || s.includes('ufc')
+    const wantsVolleyball = wantsAll || s.includes('siatkow') || s.includes('volleyball')
+    const wantsHandball = wantsAll || s.includes('reczna') || s.includes('handball')
+    const wantsAfl = wantsAll || s === 'afl'
+    const wantsNfl = wantsAll || s.includes('nfl') || s.includes('american football')
+    const wantsRugby = wantsAll || s.includes('rugby')
+
+    if (wantsFootball) push({ key: 'api-football', sportName: 'Piłka nożna', host: 'https://v3.football.api-sports.io', path: '/fixtures', type: 'football' })
+    if (wantsBasketball && !wantsNBA) push({ key: 'api-basketball', sportName: 'Koszykówka', host: 'https://v1.basketball.api-sports.io', path: '/games', type: 'games' })
+    if (wantsNBA || wantsBasketball) push({ key: 'api-nba', sportName: 'NBA', host: 'https://v2.nba.api-sports.io', path: '/games', type: 'nba' })
+    if (wantsBaseball) push({ key: 'api-baseball', sportName: 'Baseball', host: 'https://v1.baseball.api-sports.io', path: '/games', type: 'games' })
+    if (wantsHockey) push({ key: 'api-hockey', sportName: 'Hokej', host: 'https://v1.hockey.api-sports.io', path: '/games', type: 'games' })
+    if (wantsMma) push({ key: 'api-mma', sportName: 'MMA', host: 'https://v1.mma.api-sports.io', path: '/fights', type: 'fights' })
+    if (wantsVolleyball) push({ key: 'api-volleyball', sportName: 'Siatkówka', host: 'https://v1.volleyball.api-sports.io', path: '/games', type: 'games' })
+    if (wantsHandball) push({ key: 'api-handball', sportName: 'Piłka ręczna', host: 'https://v1.handball.api-sports.io', path: '/games', type: 'games' })
+    if (wantsAfl) push({ key: 'api-afl', sportName: 'AFL', host: 'https://v1.afl.api-sports.io', path: '/games', type: 'games' })
+    if (wantsNfl) push({ key: 'api-nfl', sportName: 'NFL', host: 'https://v1.american-football.api-sports.io', path: '/games', type: 'games' })
+    if (wantsRugby) push({ key: 'api-rugby', sportName: 'Rugby', host: 'https://v1.rugby.api-sports.io', path: '/games', type: 'games' })
+
+    return configs
+  }
+
+  const firstText = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null) continue
+      if (typeof value === 'string' && value.trim()) return value.trim()
+      if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+    }
+    return ''
+  }
+
+  const pickTeamName = (obj, side) => {
+    if (!obj || typeof obj !== 'object') return ''
+    const s = obj[side]
+    return firstText(
+      s?.name,
+      s?.team?.name,
+      s?.fighter?.name,
+      s?.player?.name,
+      s?.longName,
+      s?.shortName,
+      s
+    )
+  }
+
+  const apiSportsEventDate = (item) => firstText(
+    item?.fixture?.date,
+    item?.date?.start,
+    item?.date?.date,
+    item?.date?.time,
+    item?.date,
+    item?.game?.date,
+    item?.fight?.date,
+    item?.timestamp ? new Date(Number(item.timestamp) * 1000).toISOString() : ''
+  )
+
+  const mapApiSportsItemToFixture = (item, index, cfg) => {
+    const home = firstText(
+      pickTeamName(item?.teams, 'home'),
+      pickTeamName(item?.teams, 'homeTeam'),
+      pickTeamName(item?.teams, 'team1'),
+      pickTeamName(item?.fighters, 'first'),
+      pickTeamName(item?.fighters, 'home'),
+      item?.home?.name,
+      item?.team?.home?.name,
+      item?.competitors?.[0]?.name,
+      item?.participants?.[0]?.name,
+      'Zawodnik / Gospodarze'
+    )
+    const away = firstText(
+      pickTeamName(item?.teams, 'away'),
+      pickTeamName(item?.teams, 'visitors'),
+      pickTeamName(item?.teams, 'visitor'),
+      pickTeamName(item?.teams, 'awayTeam'),
+      pickTeamName(item?.teams, 'team2'),
+      pickTeamName(item?.fighters, 'second'),
+      pickTeamName(item?.fighters, 'away'),
+      item?.away?.name,
+      item?.team?.away?.name,
+      item?.competitors?.[1]?.name,
+      item?.participants?.[1]?.name,
+      'Zawodnik / Goście'
+    )
+    const rawDate = apiSportsEventDate(item)
+    const isoDate = rawDate && !String(rawDate).includes('T') && /^\d{4}-\d{2}-\d{2}$/.test(String(rawDate)) ? `${rawDate}T12:00:00Z` : rawDate
+    const parts = toDateParts(isoDate)
+    const leagueName = firstText(item?.league?.name, item?.competition?.name, item?.category?.name, item?.event?.name, cfg.sportName)
+    const countryName = firstText(item?.league?.country, item?.country?.name, item?.country, country)
+    return {
+      id: firstText(item?.fixture?.id, item?.game?.id, item?.fight?.id, item?.id, `${cfg.key}-${index}-${home}-${away}-${isoDate}`).replace(/\s+/g, '-'),
+      sport: cfg.sportName,
+      sportKey: cfg.key,
+      country: countryName || 'Świat',
+      league: leagueName || cfg.sportName,
+      home,
+      away,
+      date: parts.date,
+      time: parts.time,
+      commence_time: isoDate,
+      source: 'api-sports',
+      markets: countOnly ? [] : [{
+        market: 'Własny typ',
+        pick: 'Uzupełnij kurs ręcznie',
+        odds: 1,
+        confidence: 55,
+        note: 'Realne wydarzenie z API-Sports; kurs nie pochodzi z The Odds API.'
+      }]
+    }
+  }
+
+  const fetchApiSportsFixtures = async (apiKey, rangeDays, requestedDay) => {
+    if (!apiKey) return { configs: [], fixtures: [], message: 'Brak APISPORTS_KEY w Netlify.' }
+    const configs = getApiSportsConfigs()
+    if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
+
+    const maxDays = requestedAllSports ? Math.min(2, rangeDays || 2) : Math.min(14, rangeDays || 14)
+    const dateKeys = []
+    const startKey = requestedDay || new Date().toISOString().slice(0, 10)
+    for (let i = 0; i <= maxDays; i += 1) dateKeys.push(addDaysToDateKey(startKey, i) || startKey)
+
+    const collected = []
+    const errors = []
+
+    for (const cfg of configs) {
+      for (const dayKey of dateKeys) {
+        const url = new URL(`${cfg.host}${cfg.path}`)
+        url.searchParams.set('date', dayKey)
+        if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+
+        try {
+          const response = await fetch(url.toString(), {
+            headers: {
+              'x-apisports-key': apiKey,
+              'x-rapidapi-key': apiKey
+            }
+          })
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            errors.push(`${cfg.key}: HTTP ${response.status}`)
+            continue
+          }
+          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+            errors.push(`${cfg.key}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+          }
+          const rows = Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+          rows
+            .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+            .filter(item => {
+              const kickMs = Date.parse(item.commence_time || '')
+              if (!Number.isFinite(kickMs)) return true
+              return kickMs > Date.now() + 60 * 1000
+            })
+            .forEach(item => collected.push(item))
+        } catch (error) {
+          errors.push(`${cfg.key}: ${error.message}`)
+        }
+
+        if (collected.length >= (countOnly ? 1000 : 240)) break
+      }
+      if (collected.length >= (countOnly ? 1000 : 240)) break
+    }
+
+    const seen = new Set()
+    const fixtures = collected
+      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+      .filter(item => {
+        const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, countOnly ? 1000 : 240)
+
+    return {
+      configs: configs.map(cfg => cfg.key),
+      fixtures,
+      message: fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło meczów. ${errors.slice(0, 3).join(' | ')}` : 'API-Sports nie zwróciło meczów dla tego sportu/daty.')
     }
   }
 
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
-    if (oddsKey) {
-      if (allLeagues) {
-        const upcomingResult = await fetchUpcomingForRequestedSport(oddsKey, daysAhead)
+    const apiSportsKey = getApiSportsKey()
+    let oddsMessage = ''
+    let oddsSportKeys = []
 
-        if (!upcomingResult.ok) {
-          return await returnApiSportsFallback(`The Odds API upcoming error: ${upcomingResult.message}. Przełączam na API-Sports fallback.`)
+    if (oddsKey) {
+      if (allLeagues || requestedAllSports) {
+        const wide = await fetchWideRealFixtures(oddsKey, daysAhead, date)
+        oddsSportKeys = wide.sportKeys || []
+        if (wide.fixtures.length) {
+          if (countOnly) {
+            return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api-wide-scan', allLeagues: true, requestedAllSports, daysAhead, sportKeys: oddsSportKeys, count: wide.fixtures.length, fixtures: [] }) }
+          }
+          return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api-wide-scan', allLeagues: true, requestedAllSports, daysAhead, sportKeys: oddsSportKeys, fixtures: wide.fixtures }) }
+        }
+        oddsMessage = 'The Odds API nie zwróciło kursów, przełączam na API-Sports.'
+      } else {
+        const sportKeys = await getDynamicSportKeys(oddsKey)
+        oddsSportKeys = sportKeys
+        if (!sportKeys.length) oddsMessage = 'Brak mapowania The Odds API dla tego sportu.'
+
+        const collected = []
+        for (const sportKey of sportKeys) {
+          const fixturesForKey = await fetchOddsForSportKey(oddsKey, sportKey, daysAhead, date)
+          collected.push(...fixturesForKey)
         }
 
-        const seenUpcoming = new Set()
-        const fixtures = upcomingResult.items
+        const seen = new Set()
+        const fixtures = collected
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-          .map((item, index) => mapOddsItemToFixture(item, index, 'upcoming'))
           .filter(item => {
             const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
-            if (seenUpcoming.has(key)) return false
-            seenUpcoming.add(key)
+            if (seen.has(key)) return false
+            seen.add(key)
             return true
           })
           .slice(0, countOnly ? 1000 : 160)
 
-        if (!fixtures.length) {
-          return await returnApiSportsFallback('The Odds API nic nie znalazło — pokazuję realne eventy z API-Sports, jeśli są dostępne.')
+        if (fixtures.length) {
+          if (countOnly) return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+          return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, daysAhead, futureOnly: true, fixtures }) }
         }
-
-        if (countOnly) {
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-              ok: true,
-              demo: false,
-              source: 'odds-api-upcoming-first',
-              allLeagues,
-              daysAhead,
-              count: fixtures.length,
-              fixtures: [],
-              message: ''
-            })
-          }
-        }
-
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            ok: true,
-            demo: false,
-            source: 'odds-api-upcoming-first',
-            allLeagues,
-            daysAhead,
-            fixtures,
-            message: ''
-          })
-        }
+        oddsMessage = oddsMessage || 'The Odds API nie zwróciło kursów, przełączam na API-Sports.'
       }
-
-      const sportKeys = await getDynamicSportKeys(oddsKey)
-      if (!sportKeys.length) {
-        return await returnApiSportsFallback('Brak mapowania The Odds API dla tego sportu — próbuję API-Sports.')
-      }
-
-      const requestedDay = date
-      const nowMs = Date.now() + 1 * 60 * 1000
-      const collected = []
-
-      for (const sportKey of sportKeys) {
-        const endpoint = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds`
-        const url = new URL(endpoint)
-        url.searchParams.set('apiKey', oddsKey)
-        url.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
-        url.searchParams.set('markets', countOnly ? 'h2h' : (process.env.ODDS_API_MARKETS || 'h2h,h2h_3_way,spreads,totals,btts,draw_no_bet,alternate_totals,alternate_spreads'))
-        url.searchParams.set('oddsFormat', 'decimal')
-        url.searchParams.set('dateFormat', 'iso')
-
-        let response = await fetch(url.toString())
-        let data = await response.json().catch(() => [])
-
-        if (!response.ok && !countOnly) {
-          url.searchParams.set('markets', 'h2h,spreads,totals')
-          response = await fetch(url.toString())
-          data = await response.json().catch(() => [])
-        }
-
-        if (!response.ok) {
-          console.warn('The Odds API sport key failed', sportKey, data?.message || response.status)
-          continue
-        }
-
-        const fixturesForKey = (Array.isArray(data) ? data : [])
-          .filter(item => {
-            const commence = String(item.commence_time || '')
-            const kickMs = Date.parse(commence)
-            if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-            return !requestedDay || isLocalDateInRange(commence, requestedDay, daysAhead)
-          })
-          .map((item, index) => {
-            const home = item.home_team || item.teams?.[0] || 'Gospodarze'
-            const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
-            const parts = toDateParts(item.commence_time)
-            return {
-              id: item.id || `${sportKey}-${index}`,
-              sport: item.sport_title || sport,
-              sportKey,
-              country,
-              league: item.sport_title || league || sport,
-              home,
-              away,
-              date: parts.date,
-              time: parts.time,
-              commence_time: item.commence_time,
-              markets: countOnly ? [] : buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
-            }
-          })
-
-        collected.push(...fixturesForKey)
-      }
-
-      if (!collected.length && allLeagues) {
-        try {
-          const upcomingUrl = new URL('https://api.the-odds-api.com/v4/sports/upcoming/odds')
-          upcomingUrl.searchParams.set('apiKey', oddsKey)
-          upcomingUrl.searchParams.set('regions', process.env.ODDS_API_REGIONS || 'eu,uk,us,au')
-          upcomingUrl.searchParams.set('markets', countOnly ? 'h2h' : 'h2h,spreads,totals')
-          upcomingUrl.searchParams.set('oddsFormat', 'decimal')
-          upcomingUrl.searchParams.set('dateFormat', 'iso')
-
-          const upcomingResponse = await fetch(upcomingUrl.toString())
-          const upcomingData = await upcomingResponse.json().catch(() => [])
-
-          if (upcomingResponse.ok && Array.isArray(upcomingData)) {
-            const fallbackFixtures = upcomingData
-              .filter(item => {
-                const sportKey = String(item.sport_key || item.sportKey || '')
-                const sportTitle = String(item.sport_title || item.sportTitle || '')
-                if (!matchesRequestedSportByText(sportKey, sportTitle)) return false
-
-                const commence = String(item.commence_time || '')
-                const kickMs = Date.parse(commence)
-                if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
-                return !requestedDay || isLocalDateInRange(commence, requestedDay, daysAhead)
-              })
-              .map((item, index) => {
-                const home = item.home_team || item.teams?.[0] || 'Gospodarze'
-                const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
-                const parts = toDateParts(item.commence_time)
-                return {
-                  id: item.id || `upcoming-${index}`,
-                  sport: item.sport_title || sport,
-                  sportKey: item.sport_key || 'upcoming',
-                  country,
-                  league: item.sport_title || league || sport,
-                  home,
-                  away,
-                  date: parts.date,
-                  time: parts.time,
-                  commence_time: item.commence_time,
-                  markets: countOnly ? [] : buildMarkets(home, away, item.bookmakers, item.sport_title || sport)
-                }
-              })
-
-            collected.push(...fallbackFixtures)
-          } else {
-            console.warn('The Odds API upcoming fallback failed', upcomingData?.message || upcomingResponse.status)
-          }
-        } catch (error) {
-          console.warn('The Odds API upcoming fallback error', error)
-        }
-      }
-
-      const seen = new Set()
-      const fixtures = collected
-        .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-        .filter(item => {
-          const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-        .slice(0, countOnly ? 1000 : 160)
-
-      if (!fixtures.length) {
-        return await returnApiSportsFallback('The Odds API nic nie znalazło — próbuję realne eventy z API-Sports.')
-      }
-
-      if (countOnly) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
-      }
-
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, fixtures }) }
+    } else {
+      oddsMessage = 'Brak ODDS_API_KEY — używam API-Sports do realnych wydarzeń.'
     }
 
-    return await returnApiSportsFallback('Brak ODDS_API_KEY w Netlify — próbuję API-Sports jako źródło realnych eventów.')
+    const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)
+    if (countOnly) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          demo: false,
+          source: 'api-sports-fallback',
+          oddsSourceMessage: oddsMessage,
+          oddsSportKeys,
+          apiSportsConfigs: apiSports.configs,
+          allLeagues,
+          requestedAllSports,
+          daysAhead,
+          count: apiSports.fixtures.length,
+          fixtures: [],
+          message: apiSports.fixtures.length ? '' : apiSports.message
+        })
+      }
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        ok: true,
+        demo: false,
+        source: 'api-sports-fallback',
+        oddsSourceMessage: oddsMessage,
+        oddsSportKeys,
+        apiSportsConfigs: apiSports.configs,
+        allLeagues,
+        requestedAllSports,
+        daysAhead,
+        fixtures: apiSports.fixtures,
+        message: apiSports.fixtures.length ? 'Realne wydarzenia pobrane z API-Sports. Kursy z The Odds API nie były dostępne dla tego filtra.' : `${oddsMessage} ${apiSports.message}`.trim()
+      })
+    }
   } catch (error) {
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', daysAhead, futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
   }

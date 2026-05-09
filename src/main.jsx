@@ -5572,7 +5572,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   async function fetchSportDayCounts(force = false) {
     const todayKey = getTodayLocalKey()
-    const cacheKey = `betai_sport_day_counts_${todayKey}`
+    const cacheKey = `betai_sport_day_counts_v733_${todayKey}`
 
     if (!force) {
       try {
@@ -5840,7 +5840,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(true)
     if (!isSilentRefresh) {
       setLiveDataSource('loading')
-      setLiveFixturesStatus(`LIVE: pobieram realne mecze bez limitu 2 dni — szeroko po wszystkich ligach...`)
+      setLiveFixturesStatus(`LIVE: pobieram realne mecze z The Odds API, a jeśli pusto — z API-Sports...`)
     }
     try {
       const params = new URLSearchParams({
@@ -5861,9 +5861,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
-        const sourceLabel = data.demo ? 'TRYB DEMO' : 'LIVE API'
+        const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych meczów/kursów bez limitu 2 dni. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych wydarzeń. Jeśli źródło to API-Sports, kurs wpisujesz ręcznie. Godziny pokazane dla Polski.`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
         } else {
           setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
@@ -5872,7 +5872,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveFixtures([])
         setLiveDataSource(data.source || 'empty')
         if (!isSilentRefresh) {
-          setLiveFixturesStatus(data.message || `LIVE API: brak realnych meczów bez limitu 2 dni dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
+          setLiveFixturesStatus(data.message || `LIVE API/API-Sports: brak realnych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
           onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
         } else {
           setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
@@ -5883,7 +5883,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveFixtures([])
       setLiveDataSource('error')
       if (!isSilentRefresh) {
-        setLiveFixturesStatus('LIVE API: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY w Netlify albo wybierz inną ligę.')
+        setLiveFixturesStatus('LIVE API/API-Sports: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY oraz APISPORTS_KEY w Netlify.')
         onToast?.({ type: 'error', title: 'Nie pobrano realnych kursów', message: error?.message || 'Sprawdź konfigurację API.' })
       } else {
         setLiveFixturesStatus('LIVE API: automatyczne odświeżenie nie powiodło się. Spróbuję ponownie za 1 minutę.')
