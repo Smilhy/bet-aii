@@ -589,6 +589,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
           <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
           <button className={view === 'aiStats' ? 'active' : ''} onClick={() => setView('aiStats')}>📈 Statystyki AI</button>
+          <button className={view === 'aiResults' ? 'active' : ''} onClick={() => setView('aiResults')}>🏁 Mecze Result</button>
           <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
           <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
           <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
@@ -8582,6 +8583,121 @@ function StatsView({ tips = [] }) {
   )
 }
 
+
+function normalizeAiResultStatus(value) {
+  const raw = String(value || '').toLowerCase()
+  if (raw === 'won' || raw === 'win' || raw.includes('won')) return 'WON'
+  if (raw === 'lost' || raw === 'loss' || raw.includes('lost') || raw.includes('lose')) return 'LOST'
+  if (raw === 'void' || raw === 'push' || raw.includes('void') || raw.includes('push')) return 'PUSH'
+  if (raw === 'cancelled' || raw === 'postponed') return raw.toUpperCase()
+  if (raw === 'live') return 'LIVE'
+  return 'PENDING'
+}
+
+function AiResultsView({ tips = [] }) {
+  const [sportFilter, setSportFilter] = useState('All Sports')
+  const [leagueFilter, setLeagueFilter] = useState('All Divisions')
+  const [query, setQuery] = useState('')
+  const [timeFilter, setTimeFilter] = useState('all')
+
+  const rows = (tips || []).map((tip, index) => {
+    const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : '') || (tip.match ? String(tip.match).split(' vs ')[0] : '') || 'Home Team'
+    const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : '') || (tip.match ? String(tip.match).split(' vs ')[1] : '') || 'Away Team'
+    const dateRaw = tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at
+    const result = normalizeAiResultStatus(tip.result || tip.status || tip.live_status)
+    return {
+      id: tip.id || `${home}-${away}-${index}`,
+      dateRaw,
+      dateNum: dateRaw ? new Date(dateRaw).toLocaleDateString('pl-PL').replaceAll('.', '') : '----',
+      time: dateRaw ? new Date(dateRaw).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '',
+      sport: tip.sport || tip.sport_key || 'Sport',
+      division: tip.league || tip.league_name || tip.country || 'Division',
+      home,
+      away,
+      score: Number.isFinite(Number(tip.live_score_home)) || Number.isFinite(Number(tip.live_score_away)) ? `${Number(tip.live_score_home || 0)}:${Number(tip.live_score_away || 0)}` : '-:-',
+      prediction: tip.selection || tip.pick || tip.prediction || tip.bet_type || tip.market || `${home} wygra`,
+      odds: Number(tip.odds || tip.course || 1.8).toFixed(2),
+      aiScore: Math.round(Number(tip.ai_score || tip.ai_confidence || tip.confidence || tip.ai_probability || 0)),
+      ev: Math.round(Number(tip.value_score || 0)),
+      result
+    }
+  }).sort((a,b) => new Date(b.dateRaw || 0) - new Date(a.dateRaw || 0))
+
+  const sports = ['All Sports', ...Array.from(new Set(rows.map(r => r.sport).filter(Boolean))).sort()]
+  const leagues = ['All Divisions', ...Array.from(new Set(rows.filter(r => sportFilter === 'All Sports' || r.sport === sportFilter).map(r => r.division).filter(Boolean))).sort()]
+  const now = Date.now()
+  const filteredRows = rows.filter(row => {
+    if (sportFilter !== 'All Sports' && row.sport !== sportFilter) return false
+    if (leagueFilter !== 'All Divisions' && row.division !== leagueFilter) return false
+    const hay = `${row.dateNum} ${row.sport} ${row.division} ${row.home} ${row.away} ${row.prediction} ${row.result}`.toLowerCase()
+    if (query.trim() && !hay.includes(query.trim().toLowerCase())) return false
+    if (timeFilter !== 'all') {
+      const ts = row.dateRaw ? new Date(row.dateRaw).getTime() : 0
+      const days = timeFilter === 'week' ? 7 : timeFilter === 'month' ? 31 : 365
+      if (!ts || now - ts > days * 24 * 60 * 60 * 1000) return false
+    }
+    return true
+  })
+
+  const settled = filteredRows.filter(r => ['WON','LOST','PUSH'].includes(r.result))
+  const won = filteredRows.filter(r => r.result === 'WON').length
+  const lost = filteredRows.filter(r => r.result === 'LOST').length
+  const hitRate = (won + lost) ? Math.round((won / (won + lost)) * 100) : 0
+
+  return (
+    <section className="ai-results-page-v745">
+      <div className="ai-results-hero-v745">
+        <div>
+          <span>AI MODEL JOURNAL</span>
+          <h1>Mecze Result</h1>
+          <p>Każdy typ wygenerowany przez Typy AI trafia tutaj: sport, liga, mecz, predykcja, kurs, AI Score i wynik po rozliczeniu.</p>
+        </div>
+        <div className="ai-results-kpis-v745">
+          <b>{filteredRows.length}</b><small>typów w dzienniku</small>
+          <b>{hitRate}%</b><small>hit rate</small>
+          <b>{settled.length}</b><small>rozliczone</small>
+        </div>
+      </div>
+
+      <div className="ai-results-toolbar-v745">
+        <div className="ai-results-tabs-v745">
+          {sports.slice(0, 12).map(item => <button key={item} className={sportFilter === item ? 'active' : ''} onClick={() => { setSportFilter(item); setLeagueFilter('All Divisions') }}>{item}</button>)}
+        </div>
+        <div className="ai-results-controls-v745">
+          <select value={leagueFilter} onChange={e => setLeagueFilter(e.target.value)}>{leagues.map(item => <option key={item}>{item}</option>)}</select>
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search team, league, prediction..." />
+          <button className={timeFilter === 'all' ? 'active' : ''} onClick={() => setTimeFilter('all')}>All Time</button>
+          <button className={timeFilter === 'year' ? 'active' : ''} onClick={() => setTimeFilter('year')}>This Year</button>
+          <button className={timeFilter === 'month' ? 'active' : ''} onClick={() => setTimeFilter('month')}>This Month</button>
+          <button className={timeFilter === 'week' ? 'active' : ''} onClick={() => setTimeFilter('week')}>This Week</button>
+        </div>
+      </div>
+
+      <div className="ai-results-table-wrap-v745">
+        <div className="ai-results-table-v745">
+          <div className="head"><b>DATE</b><b>SPORT</b><b>DIVISION</b><b>HOME TEAM</b><b>SCORE</b><b>AWAY TEAM</b><b>PREDICTION</b><b>ODDS</b><b>AI</b><b>RESULT</b></div>
+          {filteredRows.length ? filteredRows.map(row => (
+            <div key={row.id}>
+              <span>{row.dateNum}<small>{row.time}</small></span>
+              <span>{row.sport}</span>
+              <span>{row.division}</span>
+              <span>{row.home}</span>
+              <span>{row.score}</span>
+              <span>{row.away}</span>
+              <span>{row.prediction}</span>
+              <span>{row.odds}</span>
+              <span>{row.aiScore ? `${row.aiScore}%` : '-'}</span>
+              <em className={row.result.toLowerCase()}>{row.result}</em>
+            </div>
+          )) : (
+            <div className="empty"><span>Brak zapisanych typów AI. Wejdź w Typy AI i kliknij Odśwież live — typy zapiszą się do dziennika.</span></div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function AiStatBox({ label, value, hint, tone = '' }) {
   return <div className={`ai-stat-box ${tone}`}><span>{label}</span><b>{value}</b><small>{hint}</small></div>
 }
@@ -8790,6 +8906,90 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return `${year}-${month}-${day}`
   }
 
+
+  async function saveLiveAiTipsToJournal(cards = []) {
+    if (!isSupabaseConfigured || !supabase || !Array.isArray(cards) || !cards.length) return
+    try {
+      const externalKeys = cards.map(card => String(card.id || '')).filter(Boolean)
+      let existingKeys = new Set()
+      try {
+        const { data } = await supabase
+          .from('tips')
+          .select('ai_external_key')
+          .in('ai_external_key', externalKeys)
+        existingKeys = new Set((data || []).map(row => String(row.ai_external_key || '')))
+      } catch (_) {
+        existingKeys = new Set()
+      }
+
+      const payload = cards
+        .filter(card => !existingKeys.has(String(card.id || '')))
+        .slice(0, 30)
+        .map(card => {
+          const raw = card.rawMatch || {}
+          const kickoff = raw.commence_time || raw.kickoff_time || raw.event_time || raw.date || new Date().toISOString()
+          const odds = Number(card.odds || 1.8)
+          const score = Number(card.scoreNumber || String(card.score || '').replace('%','') || 0)
+          return {
+            ai_external_key: String(card.id || `${card.home}-${card.away}-${kickoff}`),
+            external_fixture_id: Number.isFinite(Number(raw.id)) ? Number(raw.id) : null,
+            ai_source: 'real_ai_engine',
+            source: 'live_ai_engine',
+            ai_model_version: modelVersion,
+            author_name: 'Bet+AI Live',
+            username: 'Bet+AI Live',
+            sport: card.sportName || raw.sport || activeSport || 'Sport',
+            sport_key: card.sportName || raw.sport || activeSport || 'Sport',
+            country: card.country || raw.country || 'API-Sports',
+            league: card.league || raw.league || raw.sport || 'Liga',
+            league_name: card.league || raw.league || raw.sport || 'Liga',
+            match: `${card.home} vs ${card.away}`,
+            match_name: `${card.home} vs ${card.away}`,
+            team_home: card.home,
+            team_away: card.away,
+            event_time: kickoff,
+            kickoff_time: kickoff,
+            match_time: kickoff,
+            market: card.pickType || 'Zwycięzca meczu',
+            bet_type: card.pickType || 'Zwycięzca meczu',
+            selection: card.pickTitle || `${card.home} wygra`,
+            pick: card.pickTitle || `${card.home} wygra`,
+            prediction: card.pickTitle || `${card.home} wygra`,
+            odds,
+            course: odds,
+            stake: 100,
+            implied_probability: odds > 0 ? Math.round((1 / odds) * 10000) / 100 : null,
+            model_probability: Number(card.probA ? String(card.probA).replace('%','') : score),
+            probability: Number(card.probA ? String(card.probA).replace('%','') : score),
+            value_score: Number(card.evNumber || 0),
+            ai_score: score,
+            ai_confidence: score,
+            ai_probability: score,
+            confidence: score,
+            risk_level: card.risk || 'średni',
+            description: card.explanation || '',
+            analysis: card.explanation || '',
+            ai_analysis: card.explanation || '',
+            status: 'pending',
+            result: 'pending',
+            live_status: raw.status || 'NS',
+            access_type: 'free',
+            access: 'free',
+            is_premium: false,
+            price: 0,
+            created_at: new Date().toISOString()
+          }
+        })
+
+      if (!payload.length) return
+      const { error } = await supabase.from('tips').insert(payload)
+      if (error) console.warn('AI journal save skipped', error)
+      else onRefresh?.()
+    } catch (error) {
+      console.warn('AI journal save error', error)
+    }
+  }
+
   async function fetchLiveAiPicks({ silent = false } = {}) {
     if (!silent) {
       setAiLoading(true)
@@ -8836,6 +9036,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .slice(0, 30)
 
       setLiveAiTips(nextTips)
+      saveLiveAiTipsToJournal(nextTips)
       if (!silent || !selectedAiCardId) {
         setSelectedAiCardId(nextTips[0]?.id || '')
       }
@@ -14186,6 +14387,10 @@ function App() {
 
         {view === 'aiStats' && (
           <StatsView tips={tips.filter(t => String(t.ai_source || t.source || '').includes('real_ai') || String(t.source || '').includes('live_ai'))} />
+        )}
+
+        {view === 'aiResults' && (
+          <AiResultsView tips={tips.filter(t => String(t.ai_source || t.source || '').includes('real_ai') || String(t.source || '').includes('live_ai'))} />
         )}
 
         {view === 'topTipsters' && (
