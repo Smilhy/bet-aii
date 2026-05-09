@@ -5599,7 +5599,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             country: item.country || 'Wszystkie',
             league: item.league || item.name,
             date: todayKey,
-            daysAhead: String(LIVE_SEARCH_DAYS_AHEAD),
+            // Dla Typów AI trzymamy krótki zakres, żeby darmowe API i Netlify nie łapały timeoutu.
+          // 2 = dzisiaj + 2 dni, czyli wystarczająco na start i nie zjada limitu APISports.
+          daysAhead: '2',
             realOnly: '1',
             countOnly: '1',
             allLeagues: '1'
@@ -8587,7 +8589,7 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const aiSportTabs = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'MMA', 'Baseball', 'Siatkówka', 'Piłka ręczna', 'Rugby', 'NFL', 'AFL']
+  const aiSportTabs = ['Wszystkie', 'Siatkówka', 'Koszykówka', 'Hokej', 'MMA', 'Baseball', 'Piłka ręczna', 'Rugby', 'NFL', 'AFL', 'Piłka nożna']
   const [activeSport, setActiveSport] = useState('Wszystkie')
   const [sortMode, setSortMode] = useState('score')
   const [onlyHighScore, setOnlyHighScore] = useState(false)
@@ -8596,8 +8598,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [aiStatus, setAiStatus] = useState('Live AI czeka na pierwsze pobranie realnych meczów.')
   const [lastAiRefresh, setLastAiRefresh] = useState('')
 
+  // FREE START: nie wołamy jednego globalnego endpointu dla wszystkich sportów,
+  // bo Netlify Free potrafi ztimeoutować przy wielu API naraz.
+  // Pobieramy konkretne, aktywne sporty pojedynczo i składamy z nich Typy AI.
   const aiSportFetchList = activeSport === 'Wszystkie'
-    ? ['Wszystkie']
+    ? ['Siatkówka', 'Koszykówka', 'Hokej', 'MMA', 'Baseball', 'Piłka ręczna', 'Rugby', 'NFL', 'AFL', 'Piłka nożna']
     : [activeSport]
 
   const modelVersion = 'Bet+AI Live v4.0'
@@ -8728,7 +8733,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           country: 'Wszystkie',
           league: 'Wszystkie ligi',
           date: getTodayLocalKey(),
-          daysAhead: String(LIVE_SEARCH_DAYS_AHEAD),
+          // Dla Typów AI trzymamy krótki zakres, żeby darmowe API i Netlify nie łapały timeoutu.
+          // 2 = dzisiaj + 2 dni, czyli wystarczająco na start i nie zjada limitu APISports.
+          daysAhead: '2',
           realOnly: '1',
           allLeagues: '1'
         })
@@ -8763,12 +8770,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLastAiRefresh(stamp)
       setAiStatus(nextTips.length
         ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów z aktualnych meczów. Odświeżono ${stamp}.`
-        : 'LIVE AI: API-Sports działa, ale dla tego filtra nie ma meczów z rynkami. Spróbuj zakładki Wszystkie albo sportu, który ma licznik w Dodaj typ, np. Siatkówka/Koszykówka/Hokej.'
+        : 'LIVE AI: API-Sports odpowiedziało, ale nie znaleziono wydarzeń z rynkami w darmowym zakresie. Spróbuj: Wszystkie, Siatkówka, Koszykówka albo Hokej. Tenis nie jest dostępny w Twoim darmowym API-Sports.'
       )
     } catch (error) {
       console.warn('fetch live ai picks error', error)
       setLiveAiTips([])
-      setAiStatus('LIVE AI: błąd pobierania realnych meczów. Sprawdź APISPORTS_KEY albo Netlify Functions.')
+      setAiStatus('LIVE AI: błąd pobierania realnych meczów. APISPORTS_KEY działa w Dodaj typ, więc sprawdź Netlify Functions/logi albo limit API-Sports.')
     } finally {
       if (!silent) setAiLoading(false)
     }
