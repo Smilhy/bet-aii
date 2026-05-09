@@ -7008,56 +7008,167 @@ function StatPill({ label, value, tone = '' }) {
 }
 
 function StatsView({ tips = [] }) {
-  const settled = tips.filter(t => ['win','won','lose','lost','loss','push'].includes(String(t.result || t.status || '').toLowerCase()))
-  const wins = settled.filter(t => ['win','won'].includes(String(t.result || t.status || '').toLowerCase())).length
-  const losses = settled.filter(t => ['lose','lost','loss'].includes(String(t.result || t.status || '').toLowerCase())).length
-  const push = settled.filter(t => String(t.result || t.status || '').toLowerCase() === 'push').length
-  const totalStake = Math.max(1, settled.length * 100)
-  const profit = settled.reduce((sum, tip) => {
-    const r = String(tip.result || tip.status || '').toLowerCase()
-    const odds = Number(tip.odds || 1)
-    if (['win','won'].includes(r)) return sum + ((odds - 1) * 100)
-    if (['lose','lost','loss'].includes(r)) return sum - 100
-    return sum
-  }, 0)
-  const winrate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0
-  const roi = Math.round((profit / totalStake) * 100)
-  const recent = tips.slice(0, 20).map(t => String(t.result || t.status || 'pending').toLowerCase())
-  const byLeague = tips.reduce((acc, t) => {
-    const key = t.league || t.country || 'Inne'
-    if (!acc[key]) acc[key] = { league: key, bets: 0, wins: 0, profit: 0 }
-    acc[key].bets += 1
-    const r = String(t.result || t.status || '').toLowerCase()
-    const odds = Number(t.odds || 1)
-    if (['win','won'].includes(r)) { acc[key].wins += 1; acc[key].profit += (odds - 1) * 100 }
-    if (['lose','lost','loss'].includes(r)) acc[key].profit -= 100
+  const [sportFilter, setSportFilter] = useState('all')
+  const [divisionFilter, setDivisionFilter] = useState('all')
+  const [betFilter, setBetFilter] = useState('all')
+  const [period, setPeriod] = useState('all')
+
+  const rows = useMemo(() => {
+    const now = new Date()
+    return (tips || []).map((t, index) => {
+      const rawStatus = String(t.result || t.status || 'pending').toLowerCase()
+      const isWin = ['win','won'].includes(rawStatus)
+      const isLost = ['lose','lost','loss'].includes(rawStatus)
+      const isPush = ['push','void'].includes(rawStatus)
+      const odds = Number(t.odds || t.course || 1.8) || 1.8
+      const stake = Number(t.stake || 100) || 100
+      const profit = Number.isFinite(Number(t.profit)) && Number(t.profit) !== 0
+        ? Number(t.profit)
+        : isWin ? (odds - 1) * stake : isLost ? -stake : 0
+      const dateValue = t.match_date || t.event_time || t.kickoff_time || t.match_time || t.created_at || new Date().toISOString()
+      const d = new Date(dateValue)
+      const home = t.home || t.home_team || t.team_home || String(t.match_name || t.match || 'Home vs Away').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i)[0] || 'Home'
+      const away = t.away || t.away_team || t.team_away || String(t.match_name || t.match || 'Home vs Away').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i)[1] || 'Away'
+      const sport = t.sport || t.sport_key || 'Sport'
+      const division = t.division || t.league || t.league_name || t.country || 'Inne ligi'
+      const betType = t.bet_type || t.market || 'Moneyline'
+      return {
+        id: t.id || `${sport}-${division}-${home}-${away}-${index}`,
+        created_at: d,
+        dateLabel: Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'2-digit' }),
+        sport,
+        division,
+        betType,
+        home,
+        away,
+        score: `${Number(t.live_score_home || t.score_home || 0)}:${Number(t.live_score_away || t.score_away || 0)}`,
+        prediction: t.prediction || t.selection || t.pick || betType,
+        odds,
+        stake,
+        profit,
+        result: isWin ? 'WON' : isLost ? 'LOST' : isPush ? 'PUSH' : 'PENDING',
+        hit: isWin ? 1 : 0,
+        settled: isWin || isLost || isPush,
+        aiScore: Number(t.ai_score || t.ai_confidence || t.confidence || 0) || 0,
+      }
+    }).filter(r => {
+      if (sportFilter !== 'all' && r.sport !== sportFilter) return false
+      if (divisionFilter !== 'all' && r.division !== divisionFilter) return false
+      if (betFilter !== 'all' && r.betType !== betFilter) return false
+      if (period !== 'all') {
+        const diff = now - r.created_at
+        if (period === 'week' && diff > 7 * 86400000) return false
+        if (period === 'month' && diff > 31 * 86400000) return false
+        if (period === 'year' && diff > 365 * 86400000) return false
+      }
+      return true
+    }).sort((a,b) => b.created_at - a.created_at)
+  }, [tips, sportFilter, divisionFilter, betFilter, period])
+
+  const settled = rows.filter(r => r.settled)
+  const wins = rows.filter(r => r.result === 'WON').length
+  const losses = rows.filter(r => r.result === 'LOST').length
+  const pushes = rows.filter(r => r.result === 'PUSH').length
+  const totalProfit = rows.reduce((a,r) => a + r.profit, 0)
+  const totalStake = Math.max(1, settled.reduce((a,r) => a + r.stake, 0))
+  const roi = settled.length ? (totalProfit / totalStake) * 100 : 0
+  const hitRate = (wins + losses) ? (wins / (wins + losses)) * 100 : 0
+  const avgOdds = rows.length ? rows.reduce((a,r)=>a+r.odds,0) / rows.length : 0
+  const currentStreak = (() => {
+    const done = rows.filter(r => r.result === 'WON' || r.result === 'LOST')
+    if (!done.length) return { label: '0', type: 'none' }
+    const first = done[0].result
+    let count = 0
+    for (const r of done) { if (r.result === first) count++; else break }
+    return { label: `${count}${first === 'WON' ? 'W' : 'L'}`, type: first === 'WON' ? 'win' : 'loss' }
+  })()
+
+  function groupBy(key, limit = 10) {
+    const map = rows.reduce((acc, r) => {
+      const name = r[key] || 'Inne'
+      if (!acc[name]) acc[name] = { name, bets: 0, wins: 0, losses: 0, profit: 0, odds: 0 }
+      acc[name].bets += 1
+      acc[name].wins += r.result === 'WON' ? 1 : 0
+      acc[name].losses += r.result === 'LOST' ? 1 : 0
+      acc[name].profit += r.profit
+      acc[name].odds += r.odds
+      return acc
+    }, {})
+    return Object.values(map).map(g => ({
+      ...g,
+      hitRate: (g.wins + g.losses) ? Math.round((g.wins / (g.wins + g.losses)) * 1000) / 10 : 0,
+      roi: g.bets ? Math.round((g.profit / (g.bets * 100)) * 1000) / 10 : 0,
+      avgOdds: g.bets ? Math.round((g.odds / g.bets) * 100) / 100 : 0,
+    })).sort((a,b) => b.bets - a.bets).slice(0, limit)
+  }
+
+  const divisions = groupBy('division', 10)
+  const betTypes = groupBy('betType', 8)
+  const sportOptions = ['all', ...Array.from(new Set((tips || []).map(t => t.sport || t.sport_key).filter(Boolean)))]
+  const divisionOptions = ['all', ...Array.from(new Set((tips || []).map(t => t.division || t.league || t.league_name || t.country).filter(Boolean)))]
+  const betOptions = ['all', ...Array.from(new Set((tips || []).map(t => t.bet_type || t.market).filter(Boolean)))]
+  const recent = rows.slice(0, 20)
+  const maxProfitAbs = Math.max(20, Math.abs(totalProfit), ...rows.map(r => Math.abs(r.profit)))
+  const equity = rows.slice().reverse().reduce((acc, r, i) => {
+    const prev = i ? acc[i-1].value : 0
+    acc.push({ index: i, value: prev + r.profit })
     return acc
-  }, {})
-  const leagueRows = Object.values(byLeague).sort((a,b) => b.bets - a.bets).slice(0, 8)
-  const aiTips = tips.filter(t => getAiConfidence(t) > 0)
-  const avgAi = aiTips.length ? Math.round(aiTips.reduce((a,t)=>a+getAiConfidence(t),0)/aiTips.length) : 0
+  }, [])
+  const points = equity.length ? equity.map((p, i) => `${40 + (i / Math.max(1, equity.length - 1)) * 1120},${120 - (p.value / maxProfitAbs) * 95}`).join(' ') : '40,120 1160,120'
+  const oddsBuckets = [
+    { label: '1.0-1.5', items: rows.filter(r => r.odds < 1.5) },
+    { label: '1.5-2.0', items: rows.filter(r => r.odds >= 1.5 && r.odds < 2) },
+    { label: '2.0-2.5', items: rows.filter(r => r.odds >= 2 && r.odds < 2.5) },
+    { label: '2.5-3.0', items: rows.filter(r => r.odds >= 2.5 && r.odds < 3) },
+    { label: '3.0+', items: rows.filter(r => r.odds >= 3) },
+  ]
 
   return (
-    <section className="stats-pro-page">
-      <div className="stats-pro-hero">
-        <div><span>BETAI ANALYTICS</span><h1>Statystyki modelu i wyników</h1><p>Profit, winrate, ROI, forma, dystrybucja i performance lig w stylu Twojej poprzedniej strony.</p></div>
-        <div className="stats-pro-filters"><button className="active">All Time</button><button>This Month</button><button>This Week</button></div>
+    <section className="stats-shot-page">
+      <div className="stats-shot-title">Statistics & Analytics</div>
+
+      <div className="stats-shot-filters stats-shot-card">
+        <label><span>SPORT</span><select value={sportFilter} onChange={e=>setSportFilter(e.target.value)}>{sportOptions.map(v => <option key={v} value={v}>{v === 'all' ? 'All Sports' : v}</option>)}</select></label>
+        <label><span>DIVISION</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(v => <option key={v} value={v}>{v === 'all' ? 'All Divisions' : v}</option>)}</select></label>
+        <label><span>BET TYPE</span><select value={betFilter} onChange={e=>setBetFilter(e.target.value)}>{betOptions.map(v => <option key={v} value={v}>{v === 'all' ? 'All Types' : v}</option>)}</select></label>
+        <div className="stats-shot-periods">{[['all','All Time'],['year','This Year'],['month','This Month'],['week','This Week']].map(([k,l]) => <button key={k} type="button" className={period === k ? 'active' : ''} onClick={() => setPeriod(k)}>{l}</button>)}</div>
       </div>
-      <div className="stats-pro-grid four">
-        <StatPill label="Łączny profit" value={`${Math.round(profit)} PLN`} tone={profit < 0 ? 'danger' : 'success'} />
-        <StatPill label="Win rate" value={`${winrate}%`} />
-        <StatPill label="ROI" value={`${roi}%`} tone={roi < 0 ? 'danger' : 'success'} />
-        <StatPill label="Rozliczone typy" value={settled.length || tips.length} />
+
+      <div className="stats-shot-kpis">
+        <div className={`stats-shot-kpi ${totalProfit < 0 ? 'danger' : 'success'}`}><i>●</i><small>TOTAL PROFIT</small><b>{totalProfit >= 0 ? '+' : ''}{Math.round(totalProfit * 100)/100}u</b><span>Based on {rows.length} bets</span></div>
+        <div className={`stats-shot-kpi ${roi < 0 ? 'danger' : 'success'}`}><i>%</i><small>ROI</small><b>{roi >= 0 ? '+' : ''}{Math.round(roi * 10)/10}%</b><span>Return on Investment</span></div>
+        <div className="stats-shot-kpi"><i>◎</i><small>HIT RATE</small><b>{Math.round(hitRate * 10)/10}%</b><span>{wins}W / {losses}L / {pushes}P</span></div>
+        <div className="stats-shot-kpi"><i>▤</i><small>TOTAL BETS</small><b>{rows.length}</b><span>Analyzed predictions</span></div>
+        <div className="stats-shot-kpi"><i>▣</i><small>AVG ODDS</small><b>{avgOdds ? avgOdds.toFixed(2) : '—'}</b><span>Won avg: {avgOdds ? avgOdds.toFixed(2) : '—'}</span></div>
+        <div className="stats-shot-kpi success"><i>♨</i><small>CURRENT STREAK</small><b>{currentStreak.label}</b><span>{currentStreak.type === 'win' ? 'winning streak' : currentStreak.type === 'loss' ? 'loss streak' : 'no results'}</span></div>
       </div>
-      <div className="stats-pro-grid two">
-        <div className="stats-panel distribution"><h3>Win/Loss Distribution</h3><div className="donut" style={{'--win': `${Math.max(5, winrate)}%`}}><span>{winrate}%</span></div><div className="legend"><p><b className="green"/> Won <strong>{wins}</strong></p><p><b className="red"/> Lost <strong>{losses}</strong></p><p><b className="yellow"/> Push <strong>{push}</strong></p></div></div>
-        <div className="stats-panel bars"><h3>Performance by AI Confidence</h3><div className="bar-chart"><i style={{height: `${Math.max(12, avgAi)}%`}}/><i className="red" style={{height: `${Math.max(12, 100-avgAi)}%`}}/></div><div className="bar-labels"><span>AI avg {avgAi}%</span><span>Risk {Math.max(0,100-avgAi)}%</span></div></div>
+
+      <div className="stats-shot-card stats-shot-profit">
+        <h3>Profit Evolution <em>● Profit</em></h3>
+        <svg viewBox="0 0 1200 170" preserveAspectRatio="none">
+          <defs><linearGradient id="profitFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#ff4060" stopOpacity=".42"/><stop offset="1" stopColor="#ff4060" stopOpacity=".04"/></linearGradient></defs>
+          {[0,1,2,3,4,5].map(i => <line key={i} x1="40" x2="1160" y1={30+i*24} y2={30+i*24} />)}
+          <polyline points={`40,120 ${points} 1160,120`} fill="url(#profitFill)" stroke="none" />
+          <polyline points={points} fill="none" stroke="#ff4964" strokeWidth="3" strokeLinecap="round" />
+        </svg>
       </div>
-      <div className="stats-pro-grid two small">
-        <div className="stats-panel streak"><h3>Streak Analysis</h3><p>Current <b>{recent[0]?.includes('win') ? '1 Win' : recent[0]?.includes('lose') ? '1 Loss' : 'Pending'}</b></p><p>Best Win <b>{wins}</b></p><p>Worst Loss <b>{losses}</b></p></div>
-        <div className="stats-panel recent-form"><h3>Recent Form (Last 20)</h3><div>{recent.map((r,i) => <span key={i} className={r.includes('win') ? 'w' : r.includes('lose') ? 'l' : 'p'}>{r.includes('win') ? 'W' : r.includes('lose') ? 'L' : 'P'}</span>)}</div><small>W = wygrana, L = przegrana, P = pending/live</small></div>
+
+      <div className="stats-shot-grid two">
+        <div className="stats-shot-card"><h3>Win/Loss Distribution</h3><div className="stats-shot-donut" style={{'--wins': `${Math.max(0, hitRate)}%`}}><span>{Math.round(hitRate)}%</span></div><div className="stats-shot-legend"><b className="w"/> Won <b className="l"/> Lost <b className="p"/> Push</div></div>
+        <div className="stats-shot-card"><h3>Performance by Odds Range <em><b className="w"/> Won <b className="l"/> Lost</em></h3><div className="stats-shot-bars">{oddsBuckets.map(bucket => { const w = bucket.items.filter(i=>i.result==='WON').length; const l = bucket.items.filter(i=>i.result==='LOST').length; const max = Math.max(1, ...oddsBuckets.map(b => b.items.length)); return <div key={bucket.label}><i className="w" style={{height: `${12 + (w/max)*160}px`}}/><i className="l" style={{height: `${12 + (l/max)*160}px`}}/><span>{bucket.label}</span></div> })}</div></div>
       </div>
-      <div className="stats-panel table-panel"><h3>Performance by Division</h3><div className="stats-table"><div><b>Division</b><b>Bets</b><b>Hit Rate</b><b>Profit</b><b>ROI</b></div>{leagueRows.map(row => { const hit = row.bets ? Math.round((row.wins / row.bets) * 100) : 0; const rowRoi = row.bets ? Math.round(row.profit / (row.bets * 100) * 100) : 0; return <div key={row.league}><span>{row.league}</span><span>{row.bets}</span><span>{hit}%</span><span className={row.profit < 0 ? 'danger-text' : 'success-text'}>{Math.round(row.profit)} PLN</span><span>{rowRoi}%</span></div> })}</div></div>
+
+      <div className="stats-shot-grid two compact">
+        <div className="stats-shot-card stats-shot-streak"><h3>Streak Analysis</h3><p>Current: <b>{currentStreak.label}</b></p><p>Best Win: <b>{wins}</b></p><p>Worst Loss: <b className="red">{losses}</b></p></div>
+        <div className="stats-shot-card stats-shot-form"><h3>Recent Form (Last 20)</h3><div>{recent.map((r,i) => <span key={i} className={r.result === 'WON' ? 'w' : r.result === 'LOST' ? 'l' : 'p'}>{r.result === 'WON' ? 'W' : r.result === 'LOST' ? 'L' : 'P'}</span>)}</div></div>
+      </div>
+
+      <div className="stats-shot-grid two tables">
+        <div className="stats-shot-card"><h3>Performance by Division</h3><div className="stats-shot-table"><div className="head"><span>DIVISION</span><span>BETS</span><span>HIT RATE</span><span>PROFIT</span><span>ROI</span></div>{divisions.map(row => <div key={row.name}><span>{row.name}</span><span>{row.bets}</span><span>{row.hitRate}% <i style={{width:`${row.hitRate}%`}} /></span><span className={row.profit >= 0 ? 'green' : 'red'}>{row.profit >= 0 ? '+' : ''}{Math.round(row.profit*100)/100}u</span><span className={row.roi >= 0 ? 'green' : 'red'}>{row.roi >= 0 ? '+' : ''}{row.roi}%</span></div>)}</div></div>
+        <div className="stats-shot-card"><h3>Performance by Bet Type</h3><div className="stats-shot-table bet"><div className="head"><span>BET TYPE</span><span>BETS</span><span>AVG ODDS</span><span>HIT RATE</span><span>PROFIT</span></div>{betTypes.map(row => <div key={row.name}><span>{row.name}</span><span>{row.bets}</span><span>{row.avgOdds}</span><span>{row.hitRate}% <i style={{width:`${row.hitRate}%`}} /></span><span className={row.profit >= 0 ? 'green' : 'red'}>{row.profit >= 0 ? '+' : ''}{Math.round(row.profit*100)/100}u</span></div>)}</div></div>
+      </div>
+
+      <div className="stats-shot-card stats-shot-drawdown"><h3>Drawdown Analysis</h3><svg viewBox="0 0 1200 160" preserveAspectRatio="none"><polyline points={points} fill="none" stroke="#ff4964" strokeWidth="3"/><polyline points={`40,120 ${points} 1160,120`} fill="rgba(255,64,96,.18)" stroke="none"/></svg><div><b>{Math.abs(Math.min(0, totalProfit)).toFixed(2)}u<small>MAX DRAWDOWN</small></b><b>{Math.abs(Math.min(0, totalProfit)).toFixed(2)}u<small>CURRENT DRAWDOWN</small></b><b>{roi.toFixed(2)}<small>RECOVERY FACTOR</small></b></div></div>
     </section>
   )
 }
@@ -7309,10 +7420,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           )}
 
           {section === 'stats' && (
-            <div className="aic-league-grid">
-              <div className="aic-panel aic-glass"><h3>Win/Loss distribution</h3><div className="aic-data-list"><div><span>Won</span><b>{wins}</b></div><div><span>Lost</span><b>{losses}</b></div><div><span>Pending/Live</span><b>{pending}</b></div><div><span>Profit</span><b>{totalProfit > 0 ? '+' : ''}{Math.round(totalProfit)} PLN</b></div></div></div>
-              <div className="aic-panel aic-glass"><h3>Performance modelu</h3><div className="aic-data-list"><div><span>Średni AI score</span><b>{avgScore}%</b></div><div><span>ROI / EV</span><b>{roi > 0 ? '+' : ''}{roi}%</b></div><div><span>Rozliczone typy</span><b>{settled.length}</b></div><div><span>Sporty</span><b>{Math.max(0, sports.length - 1)}</b></div></div></div>
-            </div>
+            <StatsView tips={filteredRows} />
           )}
 
           {section === 'leagues' && (
