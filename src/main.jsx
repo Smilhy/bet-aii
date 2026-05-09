@@ -588,6 +588,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
           {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
           <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
+          <button className={view === 'aiStats' ? 'active' : ''} onClick={() => setView('aiStats')}>📈 Statystyki AI</button>
           <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
           <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
           <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
@@ -8597,6 +8598,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [aiLoading, setAiLoading] = useState(false)
   const [aiStatus, setAiStatus] = useState('Live AI czeka na pierwsze pobranie realnych meczów.')
   const [lastAiRefresh, setLastAiRefresh] = useState('')
+  const [selectedAiCardId, setSelectedAiCardId] = useState('')
 
   // FREE START: nie wołamy jednego globalnego endpointu dla wszystkich sportów,
   // bo Netlify Free potrafi ztimeoutować przy wielu API naraz.
@@ -8650,6 +8652,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     setActiveSport(tab)
     setLiveAiTips([])
     setAiLoading(true)
+    setSelectedAiCardId('')
     setAiStatus(`Pobieram realne mecze tylko dla: ${tab}. Segreguję typy według wybranej zakładki...`)
   }
 
@@ -8797,6 +8800,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .slice(0, 30)
 
       setLiveAiTips(nextTips)
+      if (!silent || !selectedAiCardId) {
+        setSelectedAiCardId(nextTips[0]?.id || '')
+      }
       const stamp = new Date().toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
       setLastAiRefresh(stamp)
       const label = activeSport === 'Wszystkie' ? 'wszystkich aktywnych sportów' : activeSport
@@ -8833,7 +8839,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       return b.scoreNumber - a.scoreNumber
     })
 
-  const topCard = visibleAiCards[0]
+  const selectedAiCard = visibleAiCards.find(card => String(card.id) === String(selectedAiCardId)) || visibleAiCards[0] || null
+  const topCard = selectedAiCard
   const avgScore = visibleAiCards.length
     ? Math.round(visibleAiCards.reduce((sum, card) => sum + card.scoreNumber, 0) / visibleAiCards.length)
     : 0
@@ -8904,8 +8911,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
 
           <div className="ai-v6-cards">
-            {visibleAiCards.map((card, idx) => (
-              <article className="glass-ai-v6 ai-card-v6 live-ai-card-v729" key={card.id || idx}>
+            {visibleAiCards.map((card, idx) => {
+              const isSelectedCard = String(card.id || idx) === String(selectedAiCardId || visibleAiCards[0]?.id)
+              return (
+              <article
+                className={`glass-ai-v6 ai-card-v6 live-ai-card-v729 ${isSelectedCard ? 'selected-live-ai-card-v742' : ''}`}
+                key={card.id || idx}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedAiCardId(card.id || String(idx))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedAiCardId(card.id || String(idx))
+                  }
+                }}
+              >
                 <div className="ai-card-v6-top">
                   <div className="ai-card-v6-left">
                     <div className="league-line-v6"><span>{card.leagueFlag}</span><strong>{card.league}</strong><small>• {card.sportName}</small></div>
@@ -8967,7 +8988,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                 </div>
               </article>
-            ))}
+              )
+            })}
 
             {!visibleAiCards.length && (
               <div className="glass-ai-v6 ai-live-empty-v729">
@@ -14108,6 +14130,10 @@ function App() {
 
         {view === 'aiPicks' && (
           <AiPicksView tips={tips} loading={loading} liveGenerating={aiLiveGenerating} settleGenerating={aiSettleGenerating} onGenerateLive={runLiveAiEngine} onSettle={runAiSettlement} onRefresh={() => fetchTips(sessionUser?.id)} />
+        )}
+
+        {view === 'aiStats' && (
+          <StatsView tips={tips.filter(t => String(t.ai_source || t.source || '').includes('real_ai') || String(t.source || '').includes('live_ai'))} />
         )}
 
         {view === 'topTipsters' && (

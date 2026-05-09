@@ -26659,3 +26659,25 @@ button.betfolio-fetch-btn{
   border-color:transparent!important;
   font-weight:1000!important;
 }
+
+/* v742 — Typy AI: kliknięta karta steruje prawą kolumną */
+.live-ai-card-v729{cursor:pointer!important;transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease!important;}
+.live-ai-card-v729.selected-live-ai-card-v742{
+  border-color:rgba(34,242,255,.72)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.38),0 0 0 1px rgba(34,242,255,.20),0 0 42px rgba(34,242,255,.18)!important;
+  transform:translateY(-1px)!important;
+}
+.live-ai-card-v729.selected-live-ai-card-v742::after{
+  content:'WYBRANY TYP'!important;
+  position:absolute!important;
+  right:18px!important;
+  bottom:14px!important;
+  color:#06171f!important;
+  background:linear-gradient(90deg,#22f2ff,#20efaa)!important;
+  border-radius:999px!important;
+  padding:5px 10px!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  letter-spacing:.06em!important;
+  box-shadow:0 0 22px rgba(34,242,255,.22)!important;
+}
