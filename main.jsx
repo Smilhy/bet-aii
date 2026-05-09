@@ -7382,7 +7382,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <input className="aic-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Szukaj meczu, ligi, sportu..." />
       </div>
 
-      <div className="aic-shell">
+      <div className={`aic-shell ${section === 'stats' ? 'stats-full' : ''}`}>
         <main className="aic-main-grid">
           {(section === 'live' || section === 'analysis') && (filteredRows.length ? filteredRows.map(row => (
             <article className={`aic-card aic-glass ${String(selected?.id) === String(row.id) ? 'active' : ''}`} key={row.id} onClick={() => { setSelectedId(String(row.id)); setSection('analysis') }}>
@@ -7436,6 +7436,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           )}
         </main>
 
+        {section !== 'stats' && (
         <aside className="aic-side">
           <div className="aic-panel aic-glass">
             <div className="aic-kicker">WYBRANY TYP</div>
@@ -7469,6 +7470,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </div>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )

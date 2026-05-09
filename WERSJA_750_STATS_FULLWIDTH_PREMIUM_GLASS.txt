@@ -1,0 +1,7 @@
+WERSJA 750 - STATS FULL WIDTH PREMIUM GLASS
+
+- zakładka Statystyki nie pokazuje prawej kolumny po prawej stronie
+- statystyki wykorzystują pełną szerokość ekranu
+- zachowany układ ze screena: 6 KPI, Profit Evolution, Win/Loss, Odds Range, Streak, Recent Form, Division, Bet Type, Drawdown
+- dodany bardziej premium szklisty wygląd: blur, cyan/violet glow, głębsze szkło i nowa kolorystyka
+- prawa kolumna nadal zostaje w Live typach / analizie, bo tam wcześniej była potrzebna do klikniętego typu
