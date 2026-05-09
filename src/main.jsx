@@ -8582,6 +8582,165 @@ function StatsView({ tips = [] }) {
 }
 
 
+
+function AiStatsAnalyticsView({ tips = [] }) {
+  const [sportFilter, setSportFilter] = useState('All Sports')
+  const [divisionFilter, setDivisionFilter] = useState('All Divisions')
+  const [betTypeFilter, setBetTypeFilter] = useState('All Types')
+  const [timeFilter, setTimeFilter] = useState('all')
+
+  const normalizeResult = value => {
+    const raw = String(value || '').toLowerCase()
+    if (['win','won'].includes(raw) || raw.includes('won')) return 'won'
+    if (['lose','lost','loss'].includes(raw) || raw.includes('lost') || raw.includes('lose')) return 'lost'
+    if (['push','void'].includes(raw) || raw.includes('void') || raw.includes('push')) return 'push'
+    return 'pending'
+  }
+  const sportOptions = ['All Sports', ...Array.from(new Set((tips || []).map(t => t.sport || t.sport_key).filter(Boolean))).sort()]
+  const divisionOptions = ['All Divisions', ...Array.from(new Set((tips || [])
+    .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
+    .map(t => t.league || t.league_name || t.country)
+    .filter(Boolean))).sort()]
+  const betTypeOptions = ['All Types', ...Array.from(new Set((tips || []).map(t => t.market || t.bet_type || 'Typ AI').filter(Boolean))).sort()]
+  const now = new Date()
+  const inTimeRange = tip => {
+    const date = new Date(tip.settled_at || tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at || 0)
+    if (Number.isNaN(date.getTime())) return true
+    if (timeFilter === 'week') return date >= new Date(now.getTime() - 7*24*60*60*1000)
+    if (timeFilter === 'month') return date >= new Date(now.getFullYear(), now.getMonth(), 1)
+    if (timeFilter === 'year') return date >= new Date(now.getFullYear(), 0, 1)
+    return true
+  }
+  const filtered = (tips || []).filter(t => {
+    const sport = t.sport || t.sport_key || 'Inne'
+    const division = t.league || t.league_name || t.country || 'Inne'
+    const betType = t.market || t.bet_type || 'Typ AI'
+    return (sportFilter === 'All Sports' || sport === sportFilter)
+      && (divisionFilter === 'All Divisions' || division === divisionFilter)
+      && (betTypeFilter === 'All Types' || betType === betTypeFilter)
+      && inTimeRange(t)
+  })
+  const settled = filtered.filter(t => ['won','lost','push'].includes(normalizeResult(t.result || t.status)))
+  const wins = settled.filter(t => normalizeResult(t.result || t.status) === 'won')
+  const losses = settled.filter(t => normalizeResult(t.result || t.status) === 'lost')
+  const pushes = settled.filter(t => normalizeResult(t.result || t.status) === 'push')
+  const tipProfit = tip => {
+    const result = normalizeResult(tip.result || tip.status)
+    const stake = Number(tip.stake || 100)
+    const odds = Number(tip.odds || tip.course || 1.8)
+    if (result === 'won') return Number(tip.profit ?? ((odds - 1) * stake))
+    if (result === 'lost') return Number(tip.profit ?? -stake)
+    return Number(tip.profit || 0)
+  }
+  const totalProfit = settled.reduce((sum, tip) => sum + tipProfit(tip), 0)
+  const totalStake = settled.reduce((sum, tip) => sum + Number(tip.stake || 100), 0)
+  const hitRate = wins.length + losses.length ? (wins.length / (wins.length + losses.length)) * 100 : 0
+  const roi = totalStake ? (totalProfit / totalStake) * 100 : 0
+  const avgOdds = settled.length ? settled.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 1.8), 0) / settled.length : 0
+
+  const byDate = [...settled].sort((a,b) => new Date(a.settled_at || a.event_time || a.created_at) - new Date(b.settled_at || b.event_time || b.created_at))
+  let cumulative = 0
+  const profitSeries = byDate.map(t => {
+    cumulative += tipProfit(t)
+    return cumulative
+  })
+  const chartSeries = profitSeries.length ? profitSeries : [0,0,0,0,0,0,0]
+  const minY = Math.min(0, ...chartSeries)
+  const maxY = Math.max(1, ...chartSeries)
+  const rangeY = Math.max(1, maxY - minY)
+  const path = chartSeries.map((v, i) => {
+    const x = chartSeries.length === 1 ? 0 : (i / (chartSeries.length - 1)) * 100
+    const y = 100 - ((v - minY) / rangeY) * 100
+    return `${i ? 'L' : 'M'} ${x} ${y}`
+  }).join(' ')
+  let peak = 0, maxDrawdown = 0
+  chartSeries.forEach(value => {
+    peak = Math.max(peak, value)
+    maxDrawdown = Math.max(maxDrawdown, peak - value)
+  })
+  const currentDrawdown = Math.max(0, peak - chartSeries[chartSeries.length - 1])
+  const recoveryFactor = maxDrawdown ? totalProfit / maxDrawdown : 0
+
+  const oddsBuckets = [
+    { label:'1.0-1.5', min:1, max:1.5 },
+    { label:'1.5-2.0', min:1.5, max:2 },
+    { label:'2.0-2.5', min:2, max:2.5 },
+    { label:'2.5-3.0', min:2.5, max:3 },
+    { label:'3.0+', min:3, max:Infinity },
+  ].map(bucket => ({
+    ...bucket,
+    won: settled.filter(t => { const o=Number(t.odds || t.course || 0); return o >= bucket.min && o < bucket.max && normalizeResult(t.result || t.status) === 'won' }).length,
+    lost: settled.filter(t => { const o=Number(t.odds || t.course || 0); return o >= bucket.min && o < bucket.max && normalizeResult(t.result || t.status) === 'lost' }).length,
+  }))
+  const maxBucket = Math.max(1, ...oddsBuckets.flatMap(b => [b.won, b.lost]))
+
+  const recent = [...filtered].sort((a,b) => new Date(b.settled_at || b.event_time || b.created_at) - new Date(a.settled_at || a.event_time || a.created_at)).slice(0,20).map(t => normalizeResult(t.result || t.status))
+  const settledRecent = recent.filter(r => r !== 'pending')
+  const currentStreakResult = settledRecent[0] || 'pending'
+  let currentStreak = 0
+  for (const r of settledRecent) { if (r === currentStreakResult) currentStreak += 1; else break }
+  let bestWin = 0, worstLoss = 0, runningW = 0, runningL = 0
+  ;[...settled].sort((a,b) => new Date(a.settled_at || a.event_time || a.created_at) - new Date(b.settled_at || b.event_time || b.created_at)).forEach(t => {
+    const r = normalizeResult(t.result || t.status)
+    if (r === 'won') { runningW += 1; runningL = 0 } else if (r === 'lost') { runningL += 1; runningW = 0 } else { runningW = 0; runningL = 0 }
+    bestWin = Math.max(bestWin, runningW)
+    worstLoss = Math.max(worstLoss, runningL)
+  })
+
+  const buildRows = keyFn => Object.values(filtered.reduce((acc,t) => {
+    const key = keyFn(t)
+    if (!acc[key]) acc[key] = { key, bets:0, wins:0, losses:0, profit:0, odds:0 }
+    acc[key].bets += 1
+    acc[key].odds += Number(t.odds || t.course || 1.8)
+    const r = normalizeResult(t.result || t.status)
+    if (r === 'won') acc[key].wins += 1
+    if (r === 'lost') acc[key].losses += 1
+    acc[key].profit += tipProfit(t)
+    return acc
+  }, {})).map(row => ({
+    ...row,
+    hitRate: row.wins + row.losses ? (row.wins/(row.wins+row.losses))*100 : 0,
+    roi: row.bets ? (row.profit/(row.bets*100))*100 : 0,
+    avgOdds: row.bets ? row.odds/row.bets : 0,
+  })).sort((a,b)=>b.bets-a.bets)
+  const divisionRows = buildRows(t => t.league || t.league_name || t.country || 'Inne').slice(0,10)
+  const betTypeRows = buildRows(t => t.market || t.bet_type || 'Typ AI').slice(0,8)
+
+  return (
+    <section className="ai-analytics-screen-v749">
+      <h3>Statistics &amp; Analytics</h3>
+      <div className="ai-analytics-filterbar-v749">
+        <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>DIVISION</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>BET TYPE</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <div className="ai-analytics-time-v749">{[['all','All Time'],['year','This Year'],['month','This Month'],['week','This Week']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
+      </div>
+      <div className="ai-analytics-kpis-v749">
+        <article className={totalProfit < 0 ? 'danger' : 'success'}><span>TOTAL PROFIT</span><b>{totalProfit.toFixed(2)}u</b><small>Based on {settled.length} bets</small></article>
+        <article className={roi < 0 ? 'danger' : 'success'}><span>ROI</span><b>{roi.toFixed(1)}%</b><small>Return on investment</small></article>
+        <article><span>HIT RATE</span><b>{hitRate.toFixed(1)}%</b><small>{wins.length}W / {losses.length}L / {pushes.length}P</small></article>
+        <article><span>TOTAL BETS</span><b>{filtered.length}</b><small>Analyzed predictions</small></article>
+        <article><span>AVG ODDS</span><b>{avgOdds.toFixed(2)}</b><small>Won avg: {wins.length ? (wins.reduce((s,t)=>s+Number(t.odds||t.course||1.8),0)/wins.length).toFixed(2) : '0.00'}</small></article>
+        <article><span>CURRENT STREAK</span><b>{currentStreak}{currentStreakResult==='won'?'W':currentStreakResult==='lost'?'L':'-'}</b><small>Max {bestWin}W / {worstLoss}L</small></article>
+      </div>
+      <div className="ai-analytics-panel-v749 profit"><h4>Profit Evolution</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg></div>
+      <div className="ai-analytics-grid-v749 mid">
+        <div className="ai-analytics-panel-v749 donut-panel"><h4>Win/Loss Distribution</h4><div className="ai-donut-v749" style={{'--won': `${wins.length}`, '--lost': `${losses.length}`, '--push': `${pushes.length}`}}/><div className="legend"><span>● Won</span><span>● Lost</span><span>● Push</span></div></div>
+        <div className="ai-analytics-panel-v749 odds"><h4>Performance by Odds Range</h4><div className="odds-bars">{oddsBuckets.map(b=><div key={b.label}><i style={{height:`${(b.won/maxBucket)*100}%`}}/><em style={{height:`${(b.lost/maxBucket)*100}%`}}/><small>{b.label}</small></div>)}</div></div>
+      </div>
+      <div className="ai-analytics-grid-v749 compact">
+        <div className="ai-analytics-panel-v749 streak"><h4>Streak Analysis</h4><p>Current <b>{currentStreak}{currentStreakResult==='won'?' Wins':currentStreakResult==='lost'?' Losses':''}</b></p><p>Best Win <b>{bestWin}</b></p><p>Worst Loss <b>{worstLoss}</b></p></div>
+        <div className="ai-analytics-panel-v749 recent"><h4>Recent Form (Last 20)</h4><div>{recent.map((r,i)=><span key={i} className={r}>{r==='won'?'W':r==='lost'?'L':r==='push'?'P':'•'}</span>)}</div></div>
+      </div>
+      <div className="ai-analytics-grid-v749 tables">
+        <div className="ai-analytics-panel-v749 table"><h4>Performance by Division</h4><div className="table-head"><b>DIVISION</b><b>BETS</b><b>HIT RATE</b><b>PROFIT</b><b>ROI</b></div>{divisionRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span><span className={r.roi<0?'neg':'pos'}>{r.roi>=0?'+':''}{r.roi.toFixed(1)}%</span></div>)}</div>
+        <div className="ai-analytics-panel-v749 table bet"><h4>Performance by Bet Type</h4><div className="table-head"><b>BET TYPE</b><b>BETS</b><b>AVG ODDS</b><b>HIT RATE</b><b>PROFIT</b></div>{betTypeRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.avgOdds.toFixed(2)}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span></div>)}</div>
+      </div>
+      <div className="ai-analytics-panel-v749 drawdown"><h4>Drawdown Analysis</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg><footer><b>{maxDrawdown.toFixed(2)}u<small>MAX DRAWDOWN</small></b><b>{currentDrawdown.toFixed(2)}u<small>CURRENT DRAWDOWN</small></b><b>{recoveryFactor.toFixed(2)}<small>RECOVERY FACTOR</small></b></footer></div>
+    </section>
+  )
+}
+
 function normalizeAiResultStatus(value) {
   const raw = String(value || '').toLowerCase()
   if (raw === 'won' || raw === 'win' || raw.includes('won')) return 'WON'
@@ -9050,14 +9209,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </div>
           )}
 
-          {activePanel === 'stats' && (
-            <div className="ai-stats-board-v747">
-              <div className="ai-stat-big-v747"><span>Skuteczność modelu</span><strong>{stats.hitRate}%</strong><small>rozliczone typy: {stats.settled}</small></div>
-              <div className="ai-stat-big-v747"><span>Wygrane</span><strong>{stats.won}</strong><small>status WON</small></div>
-              <div className="ai-stat-big-v747"><span>Przegrane</span><strong>{stats.lost}</strong><small>status LOST</small></div>
-              <div className="ai-stat-big-v747"><span>Średni score</span><strong>{stats.avgScore}%</strong><small>wszystkie typy</small></div>
-            </div>
-          )}
+          {activePanel === 'stats' && <AiStatsAnalyticsView tips={allCards} />}
 
           {activePanel === 'leagues' && (
             <div className="ai-table-card-v747">
