@@ -132,6 +132,7 @@ exports.handler = async function(event) {
     const isTennis = sportText.includes('tennis') || sportText.includes('tenis') || sportText.includes('atp') || sportText.includes('wta')
     const isBasketball = sportText.includes('basketball') || sportText.includes('koszyk') || sportText.includes('nba')
     const isHockey = sportText.includes('hockey') || sportText.includes('hokej') || sportText.includes('nhl')
+    const isBoxing = sportText.includes('boxing') || sportText.includes('boks') || sportText.includes('box')
 
     bookmakerMarkets.forEach(bookMarket => {
       const key = String(bookMarket.key || bookMarket.market || '').toLowerCase()
@@ -197,6 +198,13 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Gemy', 'Poniżej 19.5 gemów', 1.92, 58)
       addMarketIfMissing(markets, 'Handicap gemów', `${home} -3.5`, 1.90, 56)
       addMarketIfMissing(markets, 'Handicap gemów', `${away} +3.5`, 1.80, 61)
+    } else if (isBoxing) {
+      addMarketIfMissing(markets, 'Zwycięzca walki', `${home} wygra`, 1.80, 66)
+      addMarketIfMissing(markets, 'Zwycięzca walki', `${away} wygra`, 2.05, 62)
+      addMarketIfMissing(markets, 'Rundy', 'Powyżej 6.5 rundy', 1.85, 61)
+      addMarketIfMissing(markets, 'Rundy', 'Poniżej 6.5 rundy', 1.95, 58)
+      addMarketIfMissing(markets, 'Metoda', `${home} przez KO/TKO`, 2.45, 54)
+      addMarketIfMissing(markets, 'Metoda', `${away} przez KO/TKO`, 3.10, 48)
     } else if (isBasketball) {
       addMarketIfMissing(markets, 'Spread', `${home} -4.5`, 1.90, 58)
       addMarketIfMissing(markets, 'Spread', `${away} +4.5`, 1.90, 58)
@@ -313,10 +321,233 @@ exports.handler = async function(event) {
     if (s.includes('hokej') || s.includes('hockey')) return allLeagues ? ['icehockey_nhl', 'icehockey_sweden_hockey_league', 'icehockey_sweden_allsvenskan'] : ['icehockey_nhl']
     if (s.includes('tenis') || s.includes('tennis')) return allLeagues ? ['tennis_atp', 'tennis_wta'] : [l.includes('wta') ? 'tennis_wta' : 'tennis_atp']
     if (s.includes('mma') || s.includes('ufc')) return ['mma_mixed_martial_arts']
+    if (s.includes('boks') || s.includes('boxing') || s.includes('box')) return ['boxing_boxing']
     if (s.includes('rugby league')) return ['rugbyleague_nrl']
     if (s.includes('rugby')) return ['rugbyunion_six_nations']
     if (s.includes('krykiet') || s.includes('cricket')) return ['cricket_international_t20']
     return []
+  }
+
+
+
+  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_FOOTBALL_KEY || process.env.API_SPORTS_KEY || ''
+
+  const formatDateKey = (dateObj) => {
+    const y = dateObj.getUTCFullYear()
+    const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(dateObj.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const enumerateDateKeys = (startKey, rangeDays) => {
+    const [year, month, day] = String(startKey || new Date().toISOString().slice(0, 10)).split('-').map(Number)
+    const base = new Date(Date.UTC(year || new Date().getUTCFullYear(), (month || 1) - 1, day || 1, 12, 0, 0))
+    const maxDays = Math.min(Math.max(Number(rangeDays || 1), 0), 30)
+    return Array.from({ length: maxDays + 1 }, (_, index) => formatDateKey(new Date(base.getTime() + index * 86400000)))
+  }
+
+  const sportIs = (...needles) => {
+    const s = normalizeText(sport)
+    const l = normalizeText(league)
+    const c = normalizeText(country)
+    const text = `${s} ${l} ${c}`
+    return needles.some(needle => text.includes(normalizeText(needle)))
+  }
+
+  const apiSportsConfigsForRequest = () => {
+    const configs = []
+    const add = (base, endpoint, type, extra = {}) => configs.push({ base, endpoint, type, extra })
+
+    if (sportIs('pilka', 'football', 'soccer')) add('https://v3.football.api-sports.io', '/fixtures', 'football')
+    else if (sportIs('koszyk', 'basketball')) {
+      add('https://v1.basketball.api-sports.io', '/games', 'genericDate')
+      add('https://v2.nba.api-sports.io', '/games', 'genericDate')
+    }
+    else if (sportIs('nba')) add('https://v2.nba.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('baseball')) add('https://v1.baseball.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('hokej', 'hockey')) add('https://v1.hockey.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('siatkowka', 'volleyball')) add('https://v1.volleyball.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('reczna', 'handball')) add('https://v1.handball.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('nfl', 'american football')) add('https://v1.american-football.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('rugby')) add('https://v1.rugby.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('afl')) add('https://v1.afl.api-sports.io', '/games', 'genericDate')
+    else if (sportIs('mma', 'ufc')) add('https://v1.mma.api-sports.io', '/fights', 'fightDate')
+    else if (sportIs('boks', 'boxing', 'box')) {
+      // API-Sports na Twoim koncie nie ma osobnego Boxing API, więc boks zostaje głównie z The Odds API.
+      // Zostawiamy pusty fallback, żeby nie pokazywać fake eventów.
+    } else {
+      // Tryb awaryjny: kilka najczęstszych API-Sports, żeby „Dodaj typ” nie był zablokowany
+      // kiedy nazwa sportu w UI różni się od mapowania.
+      add('https://v3.football.api-sports.io', '/fixtures', 'football')
+      add('https://v1.basketball.api-sports.io', '/games', 'genericDate')
+      add('https://v1.hockey.api-sports.io', '/games', 'genericDate')
+      add('https://v1.baseball.api-sports.io', '/games', 'genericDate')
+      add('https://v1.mma.api-sports.io', '/fights', 'fightDate')
+    }
+
+    return configs
+  }
+
+  const pickName = (...values) => {
+    for (const value of values) {
+      if (typeof value === 'string' && value.trim()) return value.trim()
+      if (value && typeof value.name === 'string' && value.name.trim()) return value.name.trim()
+    }
+    return ''
+  }
+
+  const apiSportsDateToIso = (item) => {
+    const raw = item?.fixture?.date || item?.date || item?.game?.date?.date || item?.game?.date || item?.time || item?.timestamp
+    if (typeof raw === 'number') return new Date(raw * 1000).toISOString()
+    if (typeof raw === 'string' && raw) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const time = item?.time || item?.hour || item?.fixture?.time || '12:00'
+        return new Date(`${raw}T${String(time).slice(0, 5) || '12:00'}:00Z`).toISOString()
+      }
+      const parsed = Date.parse(raw)
+      if (Number.isFinite(parsed)) return new Date(parsed).toISOString()
+    }
+    return ''
+  }
+
+  const mapApiSportsItemToFixture = (item, index, config) => {
+    const iso = apiSportsDateToIso(item)
+    const parts = toDateParts(iso || new Date().toISOString())
+    const home = pickName(
+      item?.teams?.home,
+      item?.teams?.home?.name,
+      item?.home,
+      item?.home?.name,
+      item?.fighters?.first,
+      item?.fighters?.first?.name,
+      item?.fighters?.home,
+      item?.fighters?.home?.name,
+      item?.competitors?.[0],
+      item?.competitors?.[0]?.name,
+      item?.participant_1,
+      item?.player_1
+    ) || 'Zawodnik / Gospodarze'
+    const away = pickName(
+      item?.teams?.away,
+      item?.teams?.away?.name,
+      item?.away,
+      item?.away?.name,
+      item?.fighters?.second,
+      item?.fighters?.second?.name,
+      item?.fighters?.away,
+      item?.fighters?.away?.name,
+      item?.competitors?.[1],
+      item?.competitors?.[1]?.name,
+      item?.participant_2,
+      item?.player_2
+    ) || 'Zawodnik / Goście'
+    const leagueName = pickName(item?.league, item?.league?.name, item?.competition, item?.competition?.name, item?.event, item?.event?.name, league) || sport
+    const countryName = pickName(item?.league?.country, item?.country, country) || country
+    const rawId = item?.fixture?.id || item?.game?.id || item?.id || item?.fight?.id || `${config.type}-${index}-${home}-${away}-${iso}`
+
+    return {
+      id: `apisports-${rawId}`,
+      sport,
+      sportKey: config.base,
+      country: countryName,
+      league: leagueName,
+      home,
+      away,
+      date: parts.date,
+      time: parts.time,
+      commence_time: iso,
+      source: 'api-sports',
+      markets: countOnly ? [] : buildMarkets(home, away, [], sport)
+    }
+  }
+
+  const fetchApiSportsUrl = async (apiKey, config, params) => {
+    const url = new URL(config.endpoint, config.base)
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && String(value) !== '') url.searchParams.set(key, String(value))
+    })
+    const response = await fetch(url.toString(), { headers: { 'x-apisports-key': apiKey } })
+    const data = await response.json().catch(() => null)
+    if (!response.ok) return { ok: false, status: response.status, data, items: [] }
+    const items = Array.isArray(data?.response) ? data.response : (Array.isArray(data) ? data : [])
+    return { ok: true, status: response.status, data, items }
+  }
+
+  const fetchApiSportsFixtures = async (rangeDays) => {
+    const apiKey = getApiSportsKey()
+    if (!apiKey) return { ok: false, source: 'api-sports-missing-key', fixtures: [], message: 'Brak APISPORTS_KEY / API_FOOTBALL_KEY w Netlify.' }
+
+    const configs = apiSportsConfigsForRequest()
+    if (!configs.length) return { ok: true, source: 'api-sports-unsupported', fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
+
+    const startKey = date || new Date().toISOString().slice(0, 10)
+    const endKey = addDaysToDateKey(startKey, Math.min(Number(rangeDays || 365), 30))
+    const dateKeys = enumerateDateKeys(startKey, Math.min(Number(rangeDays || 365), 30))
+    const nowMs = Date.now() + 1 * 60 * 1000
+    const collected = []
+
+    for (const config of configs.slice(0, 5)) {
+      try {
+        if (config.type === 'football') {
+          const result = await fetchApiSportsUrl(apiKey, config, { from: startKey, to: endKey, timezone: APP_TIMEZONE })
+          if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
+          else console.warn('API-Sports football failed', config.base, result.status, result.data?.message || result.data?.errors)
+        } else if (config.type === 'fightDate') {
+          // MMA API różni się zależnie od endpointu; próbujemy najpierw zakres, potem pojedyncze daty.
+          let result = await fetchApiSportsUrl(apiKey, config, { from: startKey, to: endKey, timezone: APP_TIMEZONE })
+          if (result.ok && result.items.length) {
+            collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
+          } else {
+            for (const dayKey of dateKeys.slice(0, 14)) {
+              result = await fetchApiSportsUrl(apiKey, config, { date: dayKey, timezone: APP_TIMEZONE })
+              if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
+            }
+          }
+        } else {
+          for (const dayKey of dateKeys.slice(0, 14)) {
+            const result = await fetchApiSportsUrl(apiKey, config, { date: dayKey, timezone: APP_TIMEZONE })
+            if (result.ok) collected.push(...result.items.map((item, index) => mapApiSportsItemToFixture(item, index, config)))
+            else console.warn('API-Sports generic failed', config.base, result.status, result.data?.message || result.data?.errors)
+          }
+        }
+      } catch (error) {
+        console.warn('API-Sports fallback error', config.base, error.message)
+      }
+    }
+
+    const seen = new Set()
+    const fixtures = collected
+      .filter(item => {
+        const kickMs = Date.parse(item.commence_time || '')
+        if (!Number.isFinite(kickMs) || kickMs <= nowMs) return false
+        return !date || isLocalDateInRange(item.commence_time, date, rangeDays)
+      })
+      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+      .filter(item => {
+        const key = `${normalizeText(item.home)}-${normalizeText(item.away)}-${item.commence_time}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, countOnly ? 1000 : 160)
+
+    return { ok: true, source: 'api-sports-fallback', fixtures, message: fixtures.length ? '' : 'API-Sports też nie zwrócił realnych przyszłych eventów dla tego sportu/zakresu.' }
+  }
+
+  const returnApiSportsFallback = async (baseMessage = '') => {
+    const fallback = await fetchApiSportsFixtures(daysAhead)
+    const payload = {
+      ok: true,
+      demo: false,
+      source: fallback.source,
+      allLeagues,
+      daysAhead,
+      futureOnly: true,
+      count: fallback.fixtures.length,
+      fixtures: countOnly ? [] : fallback.fixtures,
+      message: fallback.fixtures.length ? baseMessage : `${baseMessage ? `${baseMessage} ` : ''}${fallback.message}`.trim()
+    }
+    return { statusCode: 200, headers, body: JSON.stringify(payload) }
   }
 
   const matchesRequestedSport = (item) => {
@@ -335,6 +566,7 @@ exports.handler = async function(event) {
     if (s.includes('baseball')) return group.includes('baseball') || key.startsWith('baseball')
     if (s.includes('hokej') || s.includes('hockey')) return group.includes('ice hockey') || group.includes('hockey') || key.includes('icehockey')
     if (s.includes('mma') || s.includes('ufc')) return group.includes('mma') || key.includes('mma') || key.includes('ufc')
+    if (s.includes('boks') || s.includes('boxing') || s.includes('box')) return group.includes('boxing') || key.includes('boxing') || title.includes('boxing') || description.includes('boxing')
     if (s.includes('rugby league')) return group.includes('rugby league') || key.includes('rugbyleague')
     if (s.includes('rugby')) return group.includes('rugby') || key.includes('rugby')
     if (s.includes('krykiet') || s.includes('cricket')) return group.includes('cricket') || key.includes('cricket')
@@ -442,20 +674,7 @@ exports.handler = async function(event) {
         const upcomingResult = await fetchUpcomingForRequestedSport(oddsKey, daysAhead)
 
         if (!upcomingResult.ok) {
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-              ok: true,
-              demo: false,
-              source: 'api-error',
-              allLeagues,
-              daysAhead,
-              count: 0,
-              fixtures: [],
-              message: `The Odds API upcoming error: ${upcomingResult.message}. Sprawdź klucz, limit albo plan API.`
-            })
-          }
+          return await returnApiSportsFallback(`The Odds API upcoming error: ${upcomingResult.message}. Przełączam na API-Sports fallback.`)
         }
 
         const seenUpcoming = new Set()
@@ -470,6 +689,10 @@ exports.handler = async function(event) {
           })
           .slice(0, countOnly ? 1000 : 160)
 
+        if (!fixtures.length) {
+          return await returnApiSportsFallback('The Odds API nic nie znalazło — pokazuję realne eventy z API-Sports, jeśli są dostępne.')
+        }
+
         if (countOnly) {
           return {
             statusCode: 200,
@@ -482,7 +705,7 @@ exports.handler = async function(event) {
               daysAhead,
               count: fixtures.length,
               fixtures: [],
-              message: fixtures.length ? '' : 'Brak realnych upcoming meczów dla tego sportu w The Odds API.'
+              message: ''
             })
           }
         }
@@ -497,14 +720,14 @@ exports.handler = async function(event) {
             allLeagues,
             daysAhead,
             fixtures,
-            message: fixtures.length ? '' : 'Brak realnych upcoming meczów dla tego sportu w The Odds API.'
+            message: ''
           })
         }
       }
 
       const sportKeys = await getDynamicSportKeys(oddsKey)
       if (!sportKeys.length) {
-        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'unsupported', daysAhead, futureOnly: true, count: 0, fixtures: [], message: 'Brak mapowania live API dla tego sportu.' }) }
+        return await returnApiSportsFallback('Brak mapowania The Odds API dla tego sportu — próbuję API-Sports.')
       }
 
       const requestedDay = date
@@ -626,6 +849,10 @@ exports.handler = async function(event) {
         })
         .slice(0, countOnly ? 1000 : 160)
 
+      if (!fixtures.length) {
+        return await returnApiSportsFallback('The Odds API nic nie znalazło — próbuję realne eventy z API-Sports.')
+      }
+
       if (countOnly) {
         return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
       }
@@ -633,7 +860,7 @@ exports.handler = async function(event) {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, dynamicKeys: allLeagues, allLeagues, daysAhead, futureOnly: true, fixtures }) }
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'empty', daysAhead, futureOnly: true, count: 0, message: 'LIVE API: brak ODDS_API_KEY w Netlify — nie pokazuję demo ani fake meczów.', fixtures: [] }) }
+    return await returnApiSportsFallback('Brak ODDS_API_KEY w Netlify — próbuję API-Sports jako źródło realnych eventów.')
   } catch (error) {
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', daysAhead, futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
   }

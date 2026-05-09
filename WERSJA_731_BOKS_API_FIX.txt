@@ -1,0 +1,12 @@
+WERSJA 731 — BOKS / THE ODDS API FIX
+
+Naprawiono brak meczów dla Boksu w Dodaj typ.
+Przyczyna: backend nie miał mapowania sportu Boks/Boxing do klucza The Odds API boxing_boxing i filtr allLeagues odrzucał eventy boxing.
+
+Zmiany:
+- dodano sport key boxing_boxing
+- dodano rozpoznawanie Boks / Boxing / Box w filtrze dynamicznym sports/upcoming
+- dodano rynki dla boksu: zwycięzca walki, rundy, metoda
+- build produkcyjny przechodzi poprawnie
+
+W Netlify nadal wymagany jest poprawny ODDS_API_KEY albo THE_ODDS_API_KEY.
