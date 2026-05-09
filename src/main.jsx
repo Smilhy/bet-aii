@@ -5604,7 +5604,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             countOnly: '1',
             allLeagues: '1'
           })
-          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
+          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
           const data = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error(data.error || 'Count fetch failed')
           return [item.name, Number(data.count || 0)]
@@ -5852,7 +5852,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         realOnly: '1',
         allLeagues: '1'
       })
-      const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
+      const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
@@ -8587,7 +8587,7 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const aiSportTabs = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'MMA', 'Baseball']
+  const aiSportTabs = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'MMA', 'Baseball', 'Siatkówka', 'Piłka ręczna', 'Rugby', 'NFL', 'AFL']
   const [activeSport, setActiveSport] = useState('Wszystkie')
   const [sortMode, setSortMode] = useState('score')
   const [onlyHighScore, setOnlyHighScore] = useState(false)
@@ -8597,7 +8597,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [lastAiRefresh, setLastAiRefresh] = useState('')
 
   const aiSportFetchList = activeSport === 'Wszystkie'
-    ? ['Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'MMA', 'Baseball']
+    ? ['Wszystkie']
     : [activeSport]
 
   const modelVersion = 'Bet+AI Live v4.0'
@@ -8733,7 +8733,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           allLeagues: '1'
         })
 
-        const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
+        const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
         const data = await response.json().catch(() => ({}))
         if (!response.ok || data?.source === 'api-error') {
           console.warn('AI live picks API warning', sportName, data?.message || response.status)
@@ -8763,7 +8763,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLastAiRefresh(stamp)
       setAiStatus(nextTips.length
         ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów z aktualnych meczów. Odświeżono ${stamp}.`
-        : 'LIVE AI: nie znaleziono realnych wydarzeń w API-Sports dla wybranego sportu/zakresu.'
+        : 'LIVE AI: API-Sports działa, ale dla tego filtra nie ma meczów z rynkami. Spróbuj zakładki Wszystkie albo sportu, który ma licznik w Dodaj typ, np. Siatkówka/Koszykówka/Hokej.'
       )
     } catch (error) {
       console.warn('fetch live ai picks error', error)
@@ -8949,7 +8949,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="side-head-v6"><h3>Szczegóły modelu</h3><span>LIVE</span></div>
             <div className="model-copy-v6">
               <strong>Model: {modelVersion}</strong>
-              <small>{activeSport} — realne kursy API</small>
+              <small>{activeSport} — realne mecze API-Sports + lokalny score</small>
               <em>Ostatnia aktualizacja: {nowLabel}</em>
             </div>
             <div className="side-score-wrap-v6">

@@ -242,7 +242,7 @@ async function buildRow(ev) {
     profit: 0,
     source: 'live_ai_engine',
     ai_source: 'real_ai_engine',
-    ai_model_version: '735-multisport-api-sports',
+    ai_model_version: '737-free-apisports-only',
     access_type: pick.confidence >= 82 ? 'premium' : 'free',
     is_premium: pick.confidence >= 82,
     price: pick.confidence >= 82 ? 9 : 0,
@@ -280,8 +280,8 @@ exports.handler = async function (event) {
     await supabase.from('tips').delete().eq('ai_source', 'real_ai_engine').eq('source', 'live_ai_engine').catch?.(() => {})
     const { data, error } = await supabase.from('tips').insert(strongestRows).select('id,status')
     if (error) throw error
-    await supabase.from('ai_pick_runs').insert({ source: '735-multisport-api-sports', picks_created: data?.length || 0, status: 'success', finished_at: nowIso() }).catch?.(() => {})
-    return json(200, { inserted: data?.length || 0, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: '735-multisport-api-sports', warnings: errors.slice(0, 12) })
+    await supabase.from('ai_pick_runs').insert({ source: '737-free-apisports-only', picks_created: data?.length || 0, status: 'success', finished_at: nowIso() }).catch?.(() => {})
+    return json(200, { inserted: data?.length || 0, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: '737-free-apisports-only', warnings: errors.slice(0, 12) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'MultiSport AI Engine error' })
