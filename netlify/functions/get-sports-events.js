@@ -7,7 +7,7 @@ exports.handler = async function(event) {
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
-  const daysAhead = Math.max(0, Math.min(7, Number(qs.daysAhead ?? 2) || 0))
+  const daysAhead = Math.max(0, Math.min(365, Number(qs.daysAhead ?? 365) || 365))
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -402,9 +402,10 @@ exports.handler = async function(event) {
 
     let filtered = filterUpcomingItems(data, rangeDays)
 
-    // Jeżeli w zakresie 2 dni nic nie ma, szukamy szerzej, ale nadal tylko realne upcoming z API.
-    if (!filtered.length && rangeDays < 14) {
-      filtered = filterUpcomingItems(data, 14)
+    // Nie blokujemy już listy na 2 dni. Jeśli frontend poda mały zakres i nic nie ma,
+    // rozszerzamy automatycznie do 365 dni, nadal tylko realne upcoming z API.
+    if (!filtered.length && rangeDays < 365) {
+      filtered = filterUpcomingItems(data, 365)
     }
 
     return { ok: true, message: '', items: filtered }

@@ -4321,7 +4321,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return `${year}-${month}-${day}`
   }
 
-  const LIVE_SEARCH_DAYS_AHEAD = 2
+  const LIVE_SEARCH_DAYS_AHEAD = 365
 
   const sportIconMap = {
     'Piłka nożna': '⚽',
@@ -5602,7 +5602,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             daysAhead: String(LIVE_SEARCH_DAYS_AHEAD),
             realOnly: '1',
             countOnly: '1',
-            allLeagues: item.allLeagues ? '1' : ''
+            allLeagues: '1'
           })
           const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
           const data = await response.json().catch(() => ({}))
@@ -5635,7 +5635,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (item.name === 'Piłka nożna') setOpenFootballCountry('')
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`LIVE: pobieram mecze od teraz + ${LIVE_SEARCH_DAYS_AHEAD} dni do przodu — ${item.name}...`)
+    setLiveFixturesStatus(`LIVE: pobieram mecze bez limitu 2 dni — szeroko po wszystkich ligach — ${item.name}...`)
     updateForm({
       sport: item.name,
       country: item.country || 'Wszystkie',
@@ -5710,7 +5710,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource('manual')
         setLiveFixturesStatus('Nowy dzień. Liczniki sportów i lista meczów zostały odświeżone dla dzisiejszej daty.')
         fetchSportDayCounts(true)
-        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: form.league === 'Wszystkie ligi' })
+        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: true })
       }
     }, 30000)
 
@@ -5730,7 +5730,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           league: form.league || 'Wszystkie ligi',
           date: todayKey,
           daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-          allLeagues: form.league === 'Wszystkie ligi',
+          allLeagues: true,
           silent: true,
         })
       }
@@ -5830,7 +5830,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })
 
     window.setTimeout(() => {
-      fetchLiveFixturesForDay({ sport: nextSport, country: nextCountry || 'Wszystkie', league: nextLeague })
+      fetchLiveFixturesForDay({ sport: nextSport, country: nextCountry || 'Wszystkie', league: nextLeague, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: true })
     }, 60)
   }
 
@@ -5840,7 +5840,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(true)
     if (!isSilentRefresh) {
       setLiveDataSource('loading')
-      setLiveFixturesStatus(`LIVE: pobieram realne mecze od teraz + ${LIVE_SEARCH_DAYS_AHEAD} dni do przodu...`)
+      setLiveFixturesStatus(`LIVE: pobieram realne mecze bez limitu 2 dni — szeroko po wszystkich ligach...`)
     }
     try {
       const params = new URLSearchParams({
@@ -5850,7 +5850,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         date: overrides.date || liveDate || getTodayLocalKey(),
         daysAhead: String(overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD),
         realOnly: '1',
-        allLeagues: overrides.allLeagues ? '1' : ''
+        allLeagues: '1'
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
       const data = await response.json().catch(() => ({}))
@@ -5863,19 +5863,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : 'LIVE API'
         if (!isSilentRefresh) {
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych meczów/kursów od teraz do ${LIVE_SEARCH_DAYS_AHEAD} dni do przodu. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych meczów/kursów bez limitu 2 dni. Godziny pokazane dla Polski. Mecze startujące za mniej niż 1 minutę są ukryte.`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
         } else {
-          setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów od teraz + ${LIVE_SEARCH_DAYS_AHEAD} dni.`)
+          setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
         }
       } else {
         setLiveFixtures([])
         setLiveDataSource(data.source || 'empty')
         if (!isSilentRefresh) {
-          setLiveFixturesStatus(data.message || `LIVE API: brak realnych meczów od teraz + ${LIVE_SEARCH_DAYS_AHEAD} dni dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
+          setLiveFixturesStatus(data.message || `LIVE API: brak realnych meczów bez limitu 2 dni dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
           onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
         } else {
-          setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów od teraz + ${LIVE_SEARCH_DAYS_AHEAD} dni.`)
+          setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
         }
       }
     } catch (error) {
@@ -6388,7 +6388,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-top-sports-note">
-            Live radar: globalne realne upcoming z The Odds API. Szukam od teraz + 2 dni, a gdy pusto sprawdzam szerzej do 14 dni. Liczniki i lista odświeżają się co 1 minutę.
+            Live radar: globalne realne upcoming z The Odds API. Szukam szeroko po wszystkich aktywnych ligach i krajach, bez blokady na 2 dni. Liczniki i lista odświeżają się co 1 minutę.
           </div>
 
           <div className="betfolio-events-head">
@@ -8728,7 +8728,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           country: 'Wszystkie',
           league: 'Wszystkie ligi',
           date: getTodayLocalKey(),
-          daysAhead: '2',
+          daysAhead: String(LIVE_SEARCH_DAYS_AHEAD),
           realOnly: '1',
           allLeagues: '1'
         })
@@ -8853,7 +8853,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
 
           <div className="glass-ai-v6 ai-v6-filters">
-            <div className="filter-box-v6">Zakres: od teraz + 2 dni <span>LIVE</span></div>
+            <div className="filter-box-v6">Zakres: szeroki, bez limitu 2 dni <span>LIVE</span></div>
             <button type="button" className="filter-box-v6 ai-filter-button-v729" onClick={() => setSortMode(sortMode === 'score' ? 'ev' : sortMode === 'ev' ? 'odds' : 'score')}>
               Sortuj: {sortMode === 'score' ? 'Najwyższy AI Score' : sortMode === 'ev' ? 'Najlepszy EV' : 'Najwyższy kurs'} <span>⌄</span>
             </button>
