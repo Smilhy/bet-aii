@@ -1,0 +1,9 @@
+WERSJA 754 — API-FOOTBALL PRO ONLY
+
+Zmiany:
+- aplikacja korzysta tylko z API-FOOTBALL Pro / APISPORTS_KEY
+- w Dodaj typ zostaje tylko piłka nożna
+- usunięto pobieranie liczników i danych innych sportów, aby nie przepalać darmowych limitów
+- Typy AI pobierają tylko piłkę nożną
+- zakres pobierania ustawiony na 14 dni zamiast 365
+- backend get-sports-events wymusza tylko źródło api-football

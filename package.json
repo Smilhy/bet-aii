@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-736-free-start-apisports",
-  "version": "736.0.0",
+  "name": "betai-wersja-754-football-pro-only",
+  "version": "754.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

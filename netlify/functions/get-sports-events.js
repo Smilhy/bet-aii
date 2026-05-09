@@ -543,36 +543,11 @@ exports.handler = async function(event) {
   const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 
   const getApiSportsConfigs = () => {
-    const s = normalizeText(sport)
-    const configs = []
-    const push = (cfg) => configs.push(cfg)
-
-    const wantsAll = requestedAllSports || s === 'wszystkie' || s === 'all'
-    const wantsFootball = wantsAll || s.includes('pilka') || s.includes('football') || s.includes('soccer')
-    const wantsBasketball = wantsAll || s.includes('koszyk') || s.includes('basketball')
-    const wantsNBA = s.includes('nba')
-    const wantsBaseball = wantsAll || s.includes('baseball')
-    const wantsHockey = wantsAll || s.includes('hokej') || s.includes('hockey')
-    const wantsMma = wantsAll || s.includes('mma') || s.includes('ufc')
-    const wantsVolleyball = wantsAll || s.includes('siatkow') || s.includes('volleyball')
-    const wantsHandball = wantsAll || s.includes('reczna') || s.includes('handball')
-    const wantsAfl = wantsAll || s === 'afl'
-    const wantsNfl = wantsAll || s.includes('nfl') || s.includes('american football')
-    const wantsRugby = wantsAll || s.includes('rugby')
-
-    if (wantsFootball) push({ key: 'api-football', sportName: 'Piłka nożna', host: 'https://v3.football.api-sports.io', path: '/fixtures', type: 'football' })
-    if (wantsBasketball && !wantsNBA) push({ key: 'api-basketball', sportName: 'Koszykówka', host: 'https://v1.basketball.api-sports.io', path: '/games', type: 'games' })
-    if (wantsNBA || wantsBasketball) push({ key: 'api-nba', sportName: 'NBA', host: 'https://v2.nba.api-sports.io', path: '/games', type: 'nba' })
-    if (wantsBaseball) push({ key: 'api-baseball', sportName: 'Baseball', host: 'https://v1.baseball.api-sports.io', path: '/games', type: 'games' })
-    if (wantsHockey) push({ key: 'api-hockey', sportName: 'Hokej', host: 'https://v1.hockey.api-sports.io', path: '/games', type: 'games' })
-    if (wantsMma) push({ key: 'api-mma', sportName: 'MMA', host: 'https://v1.mma.api-sports.io', path: '/fights', type: 'fights' })
-    if (wantsVolleyball) push({ key: 'api-volleyball', sportName: 'Siatkówka', host: 'https://v1.volleyball.api-sports.io', path: '/games', type: 'games' })
-    if (wantsHandball) push({ key: 'api-handball', sportName: 'Piłka ręczna', host: 'https://v1.handball.api-sports.io', path: '/games', type: 'games' })
-    if (wantsAfl) push({ key: 'api-afl', sportName: 'AFL', host: 'https://v1.afl.api-sports.io', path: '/games', type: 'games' })
-    if (wantsNfl) push({ key: 'api-nfl', sportName: 'NFL', host: 'https://v1.american-football.api-sports.io', path: '/games', type: 'games' })
-    if (wantsRugby) push({ key: 'api-rugby', sportName: 'Rugby', host: 'https://v1.rugby.api-sports.io', path: '/games', type: 'games' })
-
-    return configs
+    // FOOTBALL PRO MODE: po zakupie API-FOOTBALL Pro korzystamy tylko z piłki nożnej,
+    // aby nie przepalać darmowych limitów innych sportów.
+    return [
+      { key: 'api-football', sportName: 'Piłka nożna', host: 'https://v3.football.api-sports.io', path: '/fixtures', type: 'football' }
+    ]
   }
 
   const firstText = (...values) => {
@@ -667,7 +642,7 @@ exports.handler = async function(event) {
     const configs = getApiSportsConfigs()
     if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
 
-    const maxDays = requestedAllSports ? Math.min(2, rangeDays || 2) : Math.min(14, rangeDays || 14)
+    const maxDays = Math.min(14, rangeDays || 14)
     const dateKeys = []
     const startKey = requestedDay || new Date().toISOString().slice(0, 10)
     for (let i = 0; i <= maxDays; i += 1) dateKeys.push(addDaysToDateKey(startKey, i) || startKey)
@@ -817,7 +792,7 @@ exports.handler = async function(event) {
         requestedAllSports,
         daysAhead,
         fixtures: apiSports.fixtures,
-        message: apiSports.fixtures.length ? 'Realne wydarzenia pobrane z API-Sports. Dla braku kursów The Odds API dodano modelowe rynki AI do analizy.' : `${oddsMessage} ${apiSports.message}`.trim()
+        message: apiSports.fixtures.length ? 'Realne mecze piłkarskie pobrane z API-FOOTBALL Pro. Dla braku kursów The Odds API dodano modelowe rynki AI do analizy.' : `${oddsMessage} ${apiSports.message}`.trim()
       })
     }
   } catch (error) {

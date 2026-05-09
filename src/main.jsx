@@ -4321,7 +4321,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return `${year}-${month}-${day}`
   }
 
-  const LIVE_SEARCH_DAYS_AHEAD = 365
+  const LIVE_SEARCH_DAYS_AHEAD = 14
 
   const sportIconMap = {
     'Piłka nożna': '⚽',
@@ -5339,27 +5339,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
 
-  const topSportButtons = useMemo(() => {
-    const otherSports = Object.keys(sportsbook)
-      .filter(name => name !== 'Piłka nożna')
-      .map(name => ({
-        name,
-        icon: sportIconMap[name] || '🏟️',
-        country: 'Wszystkie',
-        league: Object.keys(sportsbook[name]?.leagues || {})[0] || name,
-      }))
-
-    return [
-      {
-        name: 'Piłka nożna',
-        icon: sportIconMap['Piłka nożna'] || '⚽',
-        country: 'Wszystkie',
-        league: 'Wszystkie ligi',
-        allLeagues: true,
-      },
-      ...otherSports.map(item => ({ ...item, league: 'Wszystkie ligi', allLeagues: true })),
-    ]
-  }, [sportsbook])
+  const topSportButtons = useMemo(() => ([
+    {
+      name: 'Piłka nożna',
+      icon: sportIconMap['Piłka nożna'] || '⚽',
+      country: 'Wszystkie',
+      league: 'Wszystkie ligi',
+      allLeagues: true,
+    }
+  ]), [sportsbook])
 
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
@@ -6294,46 +6282,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               )}
             </div>
 
-            <div className={`sport-accordion-item ${openSidebarSport === 'Tenis' ? 'is-open' : ''}`}>
-              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Tenis')}>
-                <span>🎾 Tenis</span><b>{openSidebarSport === 'Tenis' ? '⌃' : '⌄'}</b>
-              </button>
-              {openSidebarSport === 'Tenis' && (
-                <div className="sport-accordion-children">
-                  <button type="button" className="is-muted">Wszystkie</button>
-                  <button type="button">Challenger</button>
-                  <button type="button" className="is-active">WTA</button>
-                  <div className="sport-accordion-children level-two">
-                    {['WTA Rome', 'WTA Madryt', 'WTA Paryż', 'WTA Berlin'].map(label => (
-                      <button type="button" key={label} className={currentLeague === label ? 'is-active league-active' : ''} onClick={() => selectSidebarLeague('Tenis', 'Wszystkie', label)}>{label}</button>
-                    ))}
-                  </div>
-                  <button type="button">ITF</button>
-                  <button type="button">ATP</button>
-                </div>
-              )}
+            <div className="football-pro-mode-note">
+              Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
             </div>
-
-            {[
-              ['Koszykówka', '🏀'],
-              ['Hokej', '🏒'],
-              ['MMA', '🥊'],
-              ['E-sport', '🎮'],
-              ['Siatkówka', '🏐'],
-              ['Boks', '🥊'],
-              ['Piłka ręczna', '🤾'],
-              ['Krykiet', '🏏'],
-              ['Rugby', '🏉'],
-              ['Rugby League', '🏉'],
-              ['Baseball', '⚾'],
-              ['Dart', '🎯'],
-            ].map(([name, icon]) => (
-              <div key={name} className={`sport-accordion-item ${openSidebarSport === name ? 'is-open' : ''}`}>
-                <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport(name)}>
-                  <span>{icon} {name}</span><b>{openSidebarSport === name ? '⌃' : '⌄'}</b>
-                </button>
-              </div>
-            ))}
           </div>
 
           <div className="betfolio-left-stats">
@@ -6390,7 +6341,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-top-sports-note">
-            Live radar: realne wydarzenia z API-Sports. Szukam szeroko po sportach i ligach, bez płatnego OpenAI i bez The Odds API. Liczniki i lista odświeżają się co 1 minutę.
+            Live radar: realne mecze z API-FOOTBALL Pro. Aktywny jest tylko futbol, żeby strona ładowała pełniej i nie marnowała limitów innych sportów.
           </div>
 
           <div className="betfolio-events-head">
@@ -6439,7 +6390,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             }) : (
               <div className="betfolio-empty-state no-fake-empty">
                 <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę i pobierz realne mecze'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Szukam realnych wydarzeń w API-Sports. Jeśli pusto: sprawdź APISPORTS_KEY albo limit darmowego API.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Szukam realnych meczów piłkarskich w API-FOOTBALL Pro. Jeśli pusto: sprawdź APISPORTS_KEY albo wybraną ligę/datę.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
               </div>
             )}
           </div>
@@ -8586,19 +8537,6 @@ function StatsView({ tips = [] }) {
 
 const ADD_TIP_SPORT_OPTIONS = [
   'Piłka nożna',
-  'Tenis',
-  'Koszykówka',
-  'Hokej',
-  'MMA',
-  'E-sport',
-  'Siatkówka',
-  'Boks',
-  'Piłka ręczna',
-  'Krykiet',
-  'Rugby',
-  'Rugby League',
-  'Baseball',
-  'Dart',
 ]
 
 const AI_STATS_BET_TYPES_BY_SPORT = {
@@ -8965,7 +8903,7 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const SPORTS = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Siatkówka', 'Hokej', 'MMA', 'Baseball', 'Piłka ręczna', 'Rugby', 'NFL', 'AFL']
+  const SPORTS = ['Wszystkie', 'Piłka nożna']
   const [activeSport, setActiveSport] = useState('Wszystkie')
   const [activePanel, setActivePanel] = useState('live')
   const [search, setSearch] = useState('')
@@ -9181,7 +9119,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     setStatusText('Pobieram realne mecze z API-Sports i buduję lokalne typy AI...')
     try {
       const sportsToFetch = activeSport === 'Wszystkie'
-        ? ['Piłka nożna', 'Koszykówka', 'Siatkówka', 'Hokej', 'MMA', 'Baseball']
+        ? ['Piłka nożna']
         : [activeSport]
       const collected = []
       for (const sport of sportsToFetch) {

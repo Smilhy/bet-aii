@@ -25136,3 +25136,6 @@ font[style*="border"]{
 @media(max-width:760px){
   .aic-shell.stats-full .stats-shot-kpis{grid-template-columns:1fr!important}
 }
+
+/* WERSJA 754 — API-FOOTBALL PRO ONLY */
+.football-pro-mode-note{margin:10px 0;padding:12px 14px;border-radius:16px;border:1px solid rgba(72,218,255,.18);background:rgba(16,42,64,.48);color:#9fdff0;font-size:12px;line-height:1.45;}
