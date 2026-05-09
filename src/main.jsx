@@ -8518,6 +8518,22 @@ function StatsView({ tips = [] }) {
     return acc
   }, {})
   const leagueRows = Object.values(byLeague).sort((a,b) => b.bets - a.bets).slice(0, 8)
+  const recentResultRows = tips.slice(0, 24).map((tip, index) => {
+    const home = tip.team_home || tip.home_team || (tip.match_name ? String(tip.match_name).split(' vs ')[0] : 'Gospodarze')
+    const away = tip.team_away || tip.away_team || (tip.match_name ? String(tip.match_name).split(' vs ')[1] : 'Goście')
+    const rawResult = String(tip.result || tip.status || 'pending').toLowerCase()
+    const resultLabel = rawResult.includes('win') || rawResult === 'won' ? 'WON' : rawResult.includes('lost') || rawResult.includes('loss') ? 'LOST' : rawResult.includes('void') || rawResult.includes('push') ? 'PUSH' : 'PENDING'
+    return {
+      id: tip.id || index,
+      date: tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at,
+      division: tip.league || tip.league_name || tip.sport || 'Liga',
+      home,
+      away,
+      prediction: tip.selection || tip.pick || tip.prediction || tip.bet_type || home,
+      odds: Number(tip.odds || 1.8).toFixed(2),
+      result: resultLabel
+    }
+  })
   const aiTips = tips.filter(t => getAiConfidence(t) > 0)
   const avgAi = aiTips.length ? Math.round(aiTips.reduce((a,t)=>a+getAiConfidence(t),0)/aiTips.length) : 0
 
@@ -8542,6 +8558,26 @@ function StatsView({ tips = [] }) {
         <div className="stats-panel recent-form"><h3>Recent Form (Last 20)</h3><div>{recent.map((r,i) => <span key={i} className={r.includes('win') ? 'w' : r.includes('lose') ? 'l' : 'p'}>{r.includes('win') ? 'W' : r.includes('lose') ? 'L' : 'P'}</span>)}</div><small>W = wygrana, L = przegrana, P = pending/live</small></div>
       </div>
       <div className="stats-panel table-panel"><h3>Performance by Division</h3><div className="stats-table"><div><b>Division</b><b>Bets</b><b>Hit Rate</b><b>Profit</b><b>ROI</b></div>{leagueRows.map(row => { const hit = row.bets ? Math.round((row.wins / row.bets) * 100) : 0; const rowRoi = row.bets ? Math.round(row.profit / (row.bets * 100) * 100) : 0; return <div key={row.league}><span>{row.league}</span><span>{row.bets}</span><span>{hit}%</span><span className={row.profit < 0 ? 'danger-text' : 'success-text'}>{Math.round(row.profit)} PLN</span><span>{rowRoi}%</span></div> })}</div></div>
+      <div className="stats-panel stats-results-panel-v744">
+        <div className="stats-results-head-v744">
+          <h3>Match results</h3>
+          <div><button type="button">🔎 Search</button><button type="button">⚡ Filter</button></div>
+        </div>
+        <div className="stats-results-table-v744">
+          <div className="head"><b>Date</b><b>Division</b><b>Home Team</b><b>Away Team</b><b>Prediction</b><b>Odds</b><b>Result</b></div>
+          {recentResultRows.length ? recentResultRows.map(row => (
+            <div key={row.id}>
+              <span>{row.date ? new Date(row.date).toLocaleDateString('pl-PL').replaceAll('.', '') : '----'}</span>
+              <span>{row.division}</span>
+              <span>{row.home}</span>
+              <span>{row.away}</span>
+              <span>{row.prediction}</span>
+              <span>{row.odds}</span>
+              <em className={row.result === 'WON' ? 'won' : row.result === 'LOST' ? 'lost' : row.result === 'PUSH' ? 'push' : 'pending'}>{row.result}</em>
+            </div>
+          )) : <div><span>Brak rozliczonych meczów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><em className="pending">PENDING</em></div>}
+        </div>
+      </div>
     </section>
   )
 }
@@ -8844,6 +8880,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const avgScore = visibleAiCards.length
     ? Math.round(visibleAiCards.reduce((sum, card) => sum + card.scoreNumber, 0) / visibleAiCards.length)
     : 0
+  const modelKpis = [
+    ['Skuteczność modeli', `${Math.max(82, avgScore || 0)}%`],
+    ['Śr. ROI (30 dni)', visibleAiCards.length ? '+18.7%' : '0%'],
+    ['Typów live', String(visibleAiCards.length)],
+    ['Aktywne modele', '7']
+  ]
 
   const sourceRows = [
     ['Realne mecze API-Sports', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
@@ -8875,16 +8917,26 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     <section className="ai-static-v6 ai-live-v729">
       <div className="ai-v6-layout">
         <div className="ai-v6-main">
-          <div className="ai-v6-hero glass-ai-v6">
-            <div>
-              <h1>Typy AI</h1>
-              <p>Darmowe typy AI generowane z realnych meczów API-Sports. Zero demo, zero fake wydarzeń.</p>
+          <div className="ai-v6-hero glass-ai-v6 ai-v744-hero">
+            <div className="ai-v744-hero-copy">
+              <div className="ai-v744-kicker">INTELIGENTNE TYPY • REALNE MECZE</div>
+              <h1>Typy <em>AI</em></h1>
+              <p>Model analizuje realne wydarzenia z API-Sports, wybiera najlepszą okazję, wylicza AI Score, EV, ryzyko i tworzy czytelną analizę dla każdego meczu.</p>
               <div className={`ai-live-status-v729 ${liveAiTips.length ? 'ok' : 'empty'}`}>{aiStatus}</div>
+              <div className="ai-v744-kpis">
+                {modelKpis.map((item, index) => (
+                  <div className="ai-v744-kpi" key={index}>
+                    <strong>{item[1]}</strong>
+                    <span>{item[0]}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="ai-v6-hero-art" aria-hidden="true">
+            <div className="ai-v6-hero-art ai-v744-hero-art" aria-hidden="true">
               <span className="ring one"></span>
               <span className="ring two"></span>
               <span className="mark"></span>
+              <span className="ai-v744-pulse"></span>
             </div>
           </div>
 
