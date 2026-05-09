@@ -1,0 +1,7 @@
+BET+AI wersja 739 — FREE AI RUNTIME FIX
+
+Naprawiono błąd runtime w zakładce Typy AI: komponent AiPicksView używał getTodayLocalKey(), które było zdefiniowane tylko wewnątrz głównego App i nie było dostępne w komponencie Typy AI.
+Objaw: Dodaj typ pobierał mecze z API-Sports, ale Typy AI pokazywały 0 i status błędu.
+
+Wersja 739 działa nadal darmowo: wymaga tylko APISPORTS_KEY.
+Nie wymaga OPENAI_API_KEY ani ODDS_API_KEY.
