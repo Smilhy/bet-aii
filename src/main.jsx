@@ -5883,7 +5883,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveFixtures([])
       setLiveDataSource('error')
       if (!isSilentRefresh) {
-        setLiveFixturesStatus('LIVE API/API-Sports: nie udało się pobrać realnych danych. Sprawdź ODDS_API_KEY oraz APISPORTS_KEY w Netlify.')
+        setLiveFixturesStatus('LIVE API/API-Sports: nie udało się pobrać realnych danych. Sprawdź APISPORTS_KEY w Netlify.')
         onToast?.({ type: 'error', title: 'Nie pobrano realnych kursów', message: error?.message || 'Sprawdź konfigurację API.' })
       } else {
         setLiveFixturesStatus('LIVE API: automatyczne odświeżenie nie powiodło się. Spróbuję ponownie za 1 minutę.')
@@ -6388,7 +6388,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-top-sports-note">
-            Live radar: globalne realne upcoming z The Odds API. Szukam szeroko po wszystkich aktywnych ligach i krajach, bez blokady na 2 dni. Liczniki i lista odświeżają się co 1 minutę.
+            Live radar: realne wydarzenia z API-Sports. Szukam szeroko po sportach i ligach, bez płatnego OpenAI i bez The Odds API. Liczniki i lista odświeżają się co 1 minutę.
           </div>
 
           <div className="betfolio-events-head">
@@ -6437,7 +6437,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             }) : (
               <div className="betfolio-empty-state no-fake-empty">
                 <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę i pobierz realne mecze'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Szukam w globalnym upcoming The Odds API. Jeśli pusto: API nie zwróciło realnych kursów dla tego sportu albo skończył się limit/klucz.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Szukam realnych wydarzeń w API-Sports. Jeśli pusto: sprawdź APISPORTS_KEY albo limit darmowego API.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
               </div>
             )}
           </div>
@@ -8717,7 +8717,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   async function fetchLiveAiPicks({ silent = false } = {}) {
     if (!silent) {
       setAiLoading(true)
-      setAiStatus('Pobieram realne mecze z The Odds API + API-Sports i generuję typy AI...')
+      setAiStatus('Pobieram realne mecze z API-Sports i generuję darmowe typy AI...')
     }
 
     try {
@@ -8763,12 +8763,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLastAiRefresh(stamp)
       setAiStatus(nextTips.length
         ? `LIVE AI: wygenerowano ${nextTips.length} realnych typów z aktualnych meczów. Odświeżono ${stamp}.`
-        : 'LIVE AI: nie znaleziono realnych wydarzeń w The Odds API ani API-Sports dla wybranego sportu/zakresu.'
+        : 'LIVE AI: nie znaleziono realnych wydarzeń w API-Sports dla wybranego sportu/zakresu.'
       )
     } catch (error) {
       console.warn('fetch live ai picks error', error)
       setLiveAiTips([])
-      setAiStatus('LIVE AI: błąd pobierania realnych meczów. Sprawdź ODDS_API_KEY, limit API albo Netlify Functions.')
+      setAiStatus('LIVE AI: błąd pobierania realnych meczów. Sprawdź APISPORTS_KEY albo Netlify Functions.')
     } finally {
       if (!silent) setAiLoading(false)
     }
@@ -8799,8 +8799,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     : 0
 
   const sourceRows = [
-    ['Realne mecze The Odds/API-Sports', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
-    ['Kursy lub szacunek AI', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
+    ['Realne mecze API-Sports', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
+    ['Szacunek AI', liveAiTips.length ? 'AKTYWNE' : 'PUSTE'],
     ['Model wyboru value', 'AKTYWNE'],
     ['Filtr ryzyka', 'AKTYWNE'],
     ['Auto refresh 1 min', 'AKTYWNE'],
@@ -8831,7 +8831,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-v6-hero glass-ai-v6">
             <div>
               <h1>Typy AI</h1>
-              <p>Żywe typy AI generowane z realnych meczów The Odds API + API-Sports. Zero demo, zero fake wydarzeń.</p>
+              <p>Darmowe typy AI generowane z realnych meczów API-Sports. Zero demo, zero fake wydarzeń.</p>
               <div className={`ai-live-status-v729 ${liveAiTips.length ? 'ok' : 'empty'}`}>{aiStatus}</div>
             </div>
             <div className="ai-v6-hero-art" aria-hidden="true">
@@ -8932,7 +8932,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             {!visibleAiCards.length && (
               <div className="glass-ai-v6 ai-live-empty-v729">
                 <strong>{aiLoading ? 'Pobieram realne typy AI...' : 'Brak realnych typów AI'}</strong>
-                <p>Nie pokazuję statycznych ani zmyślonych typów. Typy pojawią się dopiero wtedy, gdy The Odds API zwróci realne mecze z kursami.</p>
+                <p>Nie pokazuję statycznych ani zmyślonych typów. Typy pojawią się, gdy API-Sports zwróci realne mecze.</p>
                 <button type="button" onClick={() => fetchLiveAiPicks()} disabled={aiLoading}>{aiLoading ? 'Pobieram...' : 'Spróbuj ponownie'}</button>
               </div>
             )}
@@ -8960,7 +8960,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <div><span>ODŚWIEŻANIE</span><b>1 MIN</b></div>
               </div>
             </div>
-            <p className="model-note-v6">Model generuje typy z realnych wydarzeń pobranych z The Odds API oraz API-Sports.</p>
+            <p className="model-note-v6">Model generuje typy z realnych wydarzeń pobranych z API-Sports. Analiza działa lokalnym algorytmem, bez płatnego OpenAI.</p>
           </div>
 
           <div className="glass-ai-v6 ai-side-card-v6">
