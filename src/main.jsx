@@ -8583,11 +8583,67 @@ function StatsView({ tips = [] }) {
 
 
 
+
+const ADD_TIP_SPORT_OPTIONS = [
+  'Piłka nożna',
+  'Tenis',
+  'Koszykówka',
+  'Hokej',
+  'MMA',
+  'E-sport',
+  'Siatkówka',
+  'Boks',
+  'Piłka ręczna',
+  'Krykiet',
+  'Rugby',
+  'Rugby League',
+  'Baseball',
+  'Dart',
+]
+
+const AI_STATS_BET_TYPES_BY_SPORT = {
+  'Piłka nożna': ['1X2', 'Zwycięzca meczu', 'Podwójna szansa', 'Obie drużyny strzelą', 'Powyżej/Poniżej 2.5', 'Draw No Bet'],
+  'Tenis': ['Zwycięzca meczu', 'Handicap gemów', 'Suma gemów', 'Dokładny wynik setów'],
+  'Koszykówka': ['Zwycięzca meczu', 'Handicap', 'Suma punktów', 'Zwycięzca połowy'],
+  'Hokej': ['Zwycięzca meczu', '1X2', 'Suma goli', 'Handicap'],
+  'MMA': ['Zwycięzca walki', 'Metoda zwycięstwa', 'Dystans walki', 'Suma rund'],
+  'E-sport': ['Zwycięzca meczu', 'Handicap map', 'Suma map', 'Dokładny wynik'],
+  'Siatkówka': ['Zwycięzca meczu', 'Handicap setów', 'Suma punktów', 'Dokładny wynik setów'],
+  'Boks': ['Zwycięzca walki', 'Metoda zwycięstwa', 'Dystans walki', 'Suma rund'],
+  'Piłka ręczna': ['Zwycięzca meczu', '1X2', 'Handicap', 'Suma bramek'],
+  'Krykiet': ['Zwycięzca meczu', 'Handicap', 'Suma runów'],
+  'Rugby': ['Zwycięzca meczu', 'Handicap', 'Suma punktów'],
+  'Rugby League': ['Zwycięzca meczu', 'Handicap', 'Suma punktów'],
+  'Baseball': ['Moneyline', 'Run line', 'Suma runów'],
+  'Dart': ['Zwycięzca meczu', 'Handicap legów', 'Suma legów'],
+}
+
+const getAiStatsDefaultBetTypes = sport => {
+  if (sport && sport !== 'All Sports') return AI_STATS_BET_TYPES_BY_SPORT[sport] || ['Zwycięzca meczu']
+  return Array.from(new Set(Object.values(AI_STATS_BET_TYPES_BY_SPORT).flat()))
+}
+
 function AiStatsAnalyticsView({ tips = [] }) {
   const [sportFilter, setSportFilter] = useState('All Sports')
   const [divisionFilter, setDivisionFilter] = useState('All Divisions')
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
   const [timeFilter, setTimeFilter] = useState('all')
+  const [savedLeagues, setSavedLeagues] = useState([])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    let mounted = true
+    supabase
+      .from('ai_leagues_catalog')
+      .select('sport,league,country,last_seen,tips_count')
+      .order('league', { ascending: true })
+      .then(({ data, error }) => {
+        if (!mounted || error) return
+        setSavedLeagues(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {})
+    return () => { mounted = false }
+  }, [])
 
   const normalizeResult = value => {
     const raw = String(value || '').toLowerCase()
@@ -8596,12 +8652,22 @@ function AiStatsAnalyticsView({ tips = [] }) {
     if (['push','void'].includes(raw) || raw.includes('void') || raw.includes('push')) return 'push'
     return 'pending'
   }
-  const sportOptions = ['All Sports', ...Array.from(new Set((tips || []).map(t => t.sport || t.sport_key).filter(Boolean))).sort()]
-  const divisionOptions = ['All Divisions', ...Array.from(new Set((tips || [])
-    .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
-    .map(t => t.league || t.league_name || t.country)
-    .filter(Boolean))).sort()]
-  const betTypeOptions = ['All Types', ...Array.from(new Set((tips || []).map(t => t.market || t.bet_type || 'Typ AI').filter(Boolean))).sort()]
+  const sportOptions = ['All Sports', ...Array.from(new Set([...ADD_TIP_SPORT_OPTIONS, ...(tips || []).map(t => t.sport || t.sport_key).filter(Boolean)]))]
+  const divisionOptions = ['All Divisions', ...Array.from(new Set([
+    ...savedLeagues
+      .filter(item => sportFilter === 'All Sports' || item.sport === sportFilter)
+      .map(item => item.league),
+    ...(tips || [])
+      .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
+      .map(t => t.league || t.league_name || t.country),
+  ].filter(Boolean))).sort()]
+  const betTypeOptions = ['All Types', ...Array.from(new Set([
+    ...getAiStatsDefaultBetTypes(sportFilter),
+    ...(tips || [])
+      .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
+      .map(t => t.market || t.bet_type || 'Typ AI')
+      .filter(Boolean),
+  ])).sort()]
   const now = new Date()
   const inTimeRange = tip => {
     const date = new Date(tip.settled_at || tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at || 0)
@@ -8710,7 +8776,7 @@ function AiStatsAnalyticsView({ tips = [] }) {
     <section className="ai-analytics-screen-v749">
       <h3>Statistics &amp; Analytics</h3>
       <div className="ai-analytics-filterbar-v749">
-        <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>DIVISION</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>BET TYPE</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <div className="ai-analytics-time-v749">{[['all','All Time'],['year','This Year'],['month','This Month'],['week','This Week']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
@@ -8780,7 +8846,7 @@ function AiResultsView({ tips = [] }) {
     }
   }).sort((a,b) => new Date(b.dateRaw || 0) - new Date(a.dateRaw || 0))
 
-  const sports = ['All Sports', ...Array.from(new Set(rows.map(r => r.sport).filter(Boolean))).sort()]
+  const sports = ['All Sports', ...Array.from(new Set([...ADD_TIP_SPORT_OPTIONS, ...rows.map(r => r.sport).filter(Boolean)]))]
   const leagues = ['All Divisions', ...Array.from(new Set(rows.filter(r => sportFilter === 'All Sports' || r.sport === sportFilter).map(r => r.division).filter(Boolean))).sort()]
   const now = Date.now()
   const filteredRows = rows.filter(row => {
@@ -9175,7 +9241,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       <div className="ai-center-status-v747">{statusText}{lastRefresh ? ` • ${lastRefresh}` : ''}</div>
 
-      <div className="ai-center-grid-v747">
+      <div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
           <div className="ai-inner-tabs-v747">
             {[
@@ -9220,6 +9286,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           )}
         </div>
 
+        {activePanel !== 'stats' && (
         <aside className="ai-analysis-column-v747">
           {selectedCard ? (
             <>
@@ -9252,6 +9319,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Odśwież live AI i kliknij dowolny mecz.</p></div>
           )}
         </aside>
+        )}
       </div>
     </section>
   )
