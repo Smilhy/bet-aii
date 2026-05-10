@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
-const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988', 'buchajsonek1988', 'buchajson', 'buchajsonek'];
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
+const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 
 var userPlan = 'free'; // global anti-crash fallback
@@ -467,14 +467,16 @@ function isPremiumAccount(plan) {
   return ['premium', 'vip', 'active', 'trialing', 'admin'].includes(value)
 }
 
+function hasFuturePremiumEnd(value) {
+  const timestamp = value ? new Date(value).getTime() : 0
+  return Number.isFinite(timestamp) && timestamp > Date.now()
+}
+
 function isPremiumProfile(profile) {
   if (!profile) return false
-  return isGuaranteedPremiumIdentity(profile) ||
-    Boolean(profile.is_premium) ||
-    isAdminUser(profile) ||
-    isPremiumAccount(profile.plan) ||
-    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
-    (String(profile.status || '').toLowerCase() === 'premium' || isAdminUser(profile))
+  if (isAdminUser(profile) || isGuaranteedPremiumIdentity(profile)) return true
+  const premiumFlag = Boolean(profile.is_premium) || isPremiumAccount(profile.plan) || ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) || String(profile.status || '').toLowerCase() === 'premium'
+  return premiumFlag && hasFuturePremiumEnd(profile.current_period_end)
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
@@ -8185,13 +8187,13 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
   const historyRows = [
     { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
     { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
-    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.99 zł', positive: false },
+    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.00 zł', positive: false },
     { icon: '✓', title: 'Wygrana kupon', time: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
     { icon: 'AI', title: 'Zakup żetonów', time: '25.05.2025, 16:33', amount: '+50', positive: true }
   ]
   const invoiceRows = [
-    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.05.2025' },
-    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.04.2025' },
+    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.05.2025' },
+    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.04.2025' },
     { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
   ]
   const topUsers = [
@@ -14056,20 +14058,23 @@ function App() {
 
     if (!profileError) profileData = profData
 
-    const subPremium = subscriptionData && (
+    const subscriptionPeriodActive = hasFuturePremiumEnd(subscriptionData?.current_period_end)
+    const subPremium = Boolean(subscriptionData) && subscriptionPeriodActive && (
       subscriptionData.plan === 'premium' || ['active','trialing'].includes(String(subscriptionData.status || '').toLowerCase())
     )
     const profilePremium = isPremiumProfile(profileData)
-    const effectivePremium = Boolean(subPremium || profilePremium)
+    const effectivePremium = Boolean(subPremium || profilePremium || isAdminUser(profileData))
+    const effectivePeriodEnd = subscriptionData?.current_period_end || profileData?.current_period_end || null
 
     const effectiveProfile = buildEffectiveAccountProfile({
       ...(profileData || {}),
       id: profileData?.id || userId,
       email: profileData?.email || currentEmail || sessionUser?.email || '',
       username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
-      is_premium: effectivePremium || Boolean(profileData?.is_premium),
-      plan: effectivePremium ? 'premium' : (profileData?.plan || 'free'),
-      subscription_status: effectivePremium ? 'active' : (profileData?.subscription_status || 'free')
+      current_period_end: effectivePeriodEnd,
+      is_premium: effectivePremium,
+      plan: effectivePremium ? 'premium' : 'free',
+      subscription_status: effectivePremium ? 'active' : 'free'
     }, sessionUser)
 
     setAccountProfile(effectiveProfile)
@@ -14082,7 +14087,8 @@ function App() {
         is_admin: Boolean(effectiveProfile.is_admin),
         is_premium: Boolean(effectiveProfile.is_premium),
         plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
-        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free')
+        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
+        current_period_end: effectiveProfile.current_period_end || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)

@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com'];
-const BETAI_PREMIUM_USERNAMES = ['smilhytv', 'buchajson1988', 'buchajsonek1988', 'buchajson', 'buchajsonek'];
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
+const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 
 var userPlan = 'free'; // global anti-crash fallback
@@ -467,14 +467,16 @@ function isPremiumAccount(plan) {
   return ['premium', 'vip', 'active', 'trialing', 'admin'].includes(value)
 }
 
+function hasFuturePremiumEnd(value) {
+  const timestamp = value ? new Date(value).getTime() : 0
+  return Number.isFinite(timestamp) && timestamp > Date.now()
+}
+
 function isPremiumProfile(profile) {
   if (!profile) return false
-  return isGuaranteedPremiumIdentity(profile) ||
-    Boolean(profile.is_premium) ||
-    isAdminUser(profile) ||
-    isPremiumAccount(profile.plan) ||
-    ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) ||
-    (String(profile.status || '').toLowerCase() === 'premium' || isAdminUser(profile))
+  if (isAdminUser(profile) || isGuaranteedPremiumIdentity(profile)) return true
+  const premiumFlag = Boolean(profile.is_premium) || isPremiumAccount(profile.plan) || ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) || String(profile.status || '').toLowerCase() === 'premium'
+  return premiumFlag && hasFuturePremiumEnd(profile.current_period_end)
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
@@ -8176,22 +8178,44 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, onViewChange, onToast }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
   const walletAmount = Math.max(0, Number(wallet || 0) || 0)
   const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
   const tokenPlnValue = userTokens / 1000
+  const isPremiumWalletUser = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const subscriptionLabel = isPremiumWalletUser ? 'Premium' : 'Free'
+  const subscriptionPlanLabel = isPremiumWalletUser ? 'Plan miesięczny' : 'Plan darmowy'
+  const subscriptionPriceLabel = isPremiumWalletUser ? '29 zł / miesiąc' : '0 zł / miesiąc'
+  const subscriptionStatusText = isPremiumWalletUser ? 'Status konta: Premium aktywne' : 'Status konta: Free'
+  const subscriptionRenewalDate = user?.current_period_end
+    ? new Date(user.current_period_end).toLocaleDateString('pl-PL')
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL')
+  const subscriptionDaysLeft = user?.current_period_end
+    ? Math.max(0, Math.ceil((new Date(user.current_period_end).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    : (isPremiumWalletUser ? 30 : 0)
+  const subscriptionCtaLabel = isPremiumWalletUser ? 'Zarządzaj subskrypcją' : 'Aktywuj Premium przez Stripe'
+  const subscriptionStripeHint = isPremiumWalletUser
+    ? 'Otwórz Stripe Billing Portal i zarządzaj planem, metodą płatności oraz fakturami.'
+    : 'Bezpieczna płatność Stripe aktywuje Premium i odblokuje sprzedaż typów.'
+  const handleSubscriptionAction = () => {
+    if (isPremiumWalletUser) {
+      onManageSubscription?.()
+      return
+    }
+    onUpgradeSubscription?.()
+  }
   const formatWalletPln = value => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const formatTokenCount = value => Number(value || 0).toLocaleString('pl-PL')
   const historyRows = [
     { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
     { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
-    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.99 zł', positive: false },
+    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.00 zł', positive: false },
     { icon: '✓', title: 'Wygrana kupon', time: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
     { icon: 'AI', title: 'Zakup żetonów', time: '25.05.2025, 16:33', amount: '+50', positive: true }
   ]
   const invoiceRows = [
-    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.05.2025' },
-    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.99 zł', date: '26.04.2025' },
+    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.05.2025' },
+    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.04.2025' },
     { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
   ]
   const topUsers = [
@@ -8378,24 +8402,28 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
             </div>
 
             <div className="glass-v2-panel wallet-v2-card subscription-card-v2">
-              <div className="wallet-v2-card-head"><h3>Subskrypcja</h3></div>
+              <div className="wallet-v2-card-head">
+                <h3>Subskrypcja</h3>
+                <span className={`subscription-status-chip ${isPremiumWalletUser ? 'is-premium' : 'is-free'}`}>{subscriptionStatusText}</span>
+              </div>
               <p className="wallet-v2-sub">Aktywny plan</p>
               <div className="subscription-badge-v2">
-                <span className="premium-round">✦</span>
+                <span className="premium-round">{isPremiumWalletUser ? '✦' : '◌'}</span>
                 <div>
-                  <strong>Premium</strong>
-                  <small>Plan miesięczny</small>
-                  <b>29.99 zł / miesiąc</b>
+                  <strong>{subscriptionLabel}</strong>
+                  <small>{subscriptionPlanLabel}</small>
+                  <b>{subscriptionPriceLabel}</b>
                 </div>
               </div>
               <ul className="sub-feature-list">
-                <li>Dostęp do typów Premium</li>
-                <li>Zaawansowane statystyki</li>
-                <li>Typy AI bez limitu</li>
-                <li>Priorytetowe powiadomienia</li>
+                <li>{isPremiumWalletUser ? 'Dostęp do typów Premium' : 'Do 5 darmowych typów na dobę'}</li>
+                <li>{isPremiumWalletUser ? 'Zaawansowane statystyki' : 'Podstawowe funkcje portfela i profilu'}</li>
+                <li>{isPremiumWalletUser ? 'Typy AI bez limitu' : 'Sprzedaż typów zablokowana na koncie Free'}</li>
+                <li>{isPremiumWalletUser ? 'Priorytetowe powiadomienia' : 'Przejście na Premium odblokowuje pełny dostęp'}</li>
               </ul>
-              <div className="renew-info">Następne odnowienie: <b>26.06.2025</b></div>
-              <button type="button" className="wallet-v2-primary-btn">Zarządzaj subskrypcją</button>
+              <div className="renew-info">{isPremiumWalletUser ? <>Premium ważne do: <b>{subscriptionRenewalDate}</b> · zostało {subscriptionDaysLeft} dni</> : <>Przejdź na Premium, aby aktywować miesięczny plan Stripe.</>}</div>
+              <button type="button" className="wallet-v2-primary-btn" onClick={handleSubscriptionAction}>{subscriptionCtaLabel}</button>
+              <button type="button" className="subscription-stripe-link" onClick={handleSubscriptionAction}>{subscriptionStripeHint}</button>
             </div>
 
             <div className="glass-v2-panel wallet-v2-card earnings-card-v2">
@@ -14123,20 +14151,23 @@ function App() {
 
     if (!profileError) profileData = profData
 
-    const subPremium = subscriptionData && (
+    const subscriptionPeriodActive = hasFuturePremiumEnd(subscriptionData?.current_period_end)
+    const subPremium = Boolean(subscriptionData) && subscriptionPeriodActive && (
       subscriptionData.plan === 'premium' || ['active','trialing'].includes(String(subscriptionData.status || '').toLowerCase())
     )
     const profilePremium = isPremiumProfile(profileData)
-    const effectivePremium = Boolean(subPremium || profilePremium)
+    const effectivePremium = Boolean(subPremium || profilePremium || isAdminUser(profileData))
+    const effectivePeriodEnd = subscriptionData?.current_period_end || profileData?.current_period_end || null
 
     const effectiveProfile = buildEffectiveAccountProfile({
       ...(profileData || {}),
       id: profileData?.id || userId,
       email: profileData?.email || currentEmail || sessionUser?.email || '',
       username: profileData?.username || (currentEmail ? currentEmail.split('@')[0] : ''),
-      is_premium: effectivePremium || Boolean(profileData?.is_premium),
-      plan: effectivePremium ? 'premium' : (profileData?.plan || 'free'),
-      subscription_status: effectivePremium ? 'active' : (profileData?.subscription_status || 'free')
+      current_period_end: effectivePeriodEnd,
+      is_premium: effectivePremium,
+      plan: effectivePremium ? 'premium' : 'free',
+      subscription_status: effectivePremium ? 'active' : 'free'
     }, sessionUser)
 
     setAccountProfile(effectiveProfile)
@@ -14149,7 +14180,8 @@ function App() {
         is_admin: Boolean(effectiveProfile.is_admin),
         is_premium: Boolean(effectiveProfile.is_premium),
         plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
-        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free')
+        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
+        current_period_end: effectiveProfile.current_period_end || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)
@@ -14914,7 +14946,19 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={walletBalance} tokenBalance={tokenBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} onViewChange={setView} onToast={showToast} />
+          <WalletPanel
+            wallet={walletBalance}
+            tokenBalance={tokenBalance}
+            unlockedTips={unlockedTips}
+            tips={tips}
+            onTopUp={() => startStripeTopup(100)}
+            user={effectiveAccountProfile}
+            userPlan={effectiveAccountPlan}
+            onViewChange={setView}
+            onToast={showToast}
+            onManageSubscription={openCustomerPortal}
+            onUpgradeSubscription={runPremiumCheckout}
+          />
         )}
 
         {view === 'leaderboard' && (

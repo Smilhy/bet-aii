@@ -1,0 +1,7 @@
+WERSJA 816
+- buchajson1988 nie jest już wpisany jako wiecznie-premium w kodzie.
+- Premium jest teraz czasowe: 30 dni od uruchomienia SQL, potem konto wraca do FREE.
+- Dodany SQL: BETAI_SQL_816_PREMIUM_30_DNI_BUCHAJSON1988.sql.
+- Cena Premium w widoku zmieniona z 29.99 zł na 29 zł.
+- Data ważności i liczba pozostałych dni są pobierane z current_period_end.
+- Backend dodawania typów też sprawdza current_period_end, więc po wygaśnięciu wracają limity FREE.

@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com']
-const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com', 'buchajson1988@gmail.com']
+const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com']
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase() }
 
 const corsHeaders = {
@@ -66,7 +66,7 @@ exports.handler = async (event) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin,is_premium,plan,subscription_status,email')
+      .select('is_admin,is_premium,plan,subscription_status,current_period_end,email')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -90,7 +90,17 @@ exports.handler = async (event) => {
 
     const currentEmail = normalizeEmail(user.email)
     const isAdmin = Boolean(profile?.is_admin) || BETAI_ADMIN_EMAILS.includes(currentEmail)
-    const isPremiumUser = BETAI_PREMIUM_EMAILS.includes(currentEmail) || Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing','premium'].includes(String(profile?.subscription_status || '').toLowerCase()) || subscription?.plan === 'premium' || ['active','trialing'].includes(subscription?.status) || isAdmin
+    const hasFutureEnd = value => {
+      const timestamp = value ? new Date(value).getTime() : 0
+      return Number.isFinite(timestamp) && timestamp > Date.now()
+    }
+    const profilePremium = hasFutureEnd(profile?.current_period_end) && (
+      Boolean(profile?.is_premium) || profile?.plan === 'premium' || ['active','trialing','premium'].includes(String(profile?.subscription_status || '').toLowerCase())
+    )
+    const subscriptionPremium = hasFutureEnd(subscription?.current_period_end) && (
+      subscription?.plan === 'premium' || ['active','trialing'].includes(String(subscription?.status || '').toLowerCase())
+    )
+    const isPremiumUser = BETAI_PREMIUM_EMAILS.includes(currentEmail) || profilePremium || subscriptionPremium || isAdmin
 
     if (accessType === 'premium' && !isPremiumUser) {
       return json(403, { error: 'PREMIUM_REQUIRED: Nie posiadasz konta Premium. Aktywuj Premium, aby dodawać typy premium.' })
