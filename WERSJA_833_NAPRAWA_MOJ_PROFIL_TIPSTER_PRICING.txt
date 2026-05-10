@@ -1,0 +1,11 @@
+WERSJA 833
+- Naprawiono błąd „TipsterPricingSettings is not defined” w zakładce Mój profil.
+- Przyczyną było odwołanie do komponentu, którego nie było już w pliku.
+- Dodałem brakujący żywy komponent TipsterPricingSettings.
+- Mój profil znowu się otwiera.
+- Dodatkowo cennik subskrypcji profilu jest teraz realnie edytowalny:
+  • 1 tydzień
+  • 1 miesiąc
+  • 6 miesięcy
+  • 1 rok
+- Ceny zapisują się do istniejącej tabeli tipster_plans.

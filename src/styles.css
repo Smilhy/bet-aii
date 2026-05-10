@@ -29766,3 +29766,69 @@ button.betfolio-fetch-btn{
 @media(max-width:700px){
   .admin-payout-live-kpis{grid-template-columns:1fr!important}
 }
+
+
+/* WERSJA 833 — naprawa brakującego TipsterPricingSettings w Mój profil */
+.tipster-pricing-settings{
+  padding:22px!important;
+  border-radius:24px!important;
+  display:grid!important;
+  gap:14px!important;
+}
+.tipster-pricing-settings p{
+  margin:0!important;
+  color:#9fb5c8!important;
+  line-height:1.5!important;
+}
+.tipster-pricing-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:10px!important;
+}
+.tipster-pricing-grid label{
+  position:relative!important;
+  display:grid!important;
+  gap:6px!important;
+  padding:14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(55,216,226,.12)!important;
+  background:rgba(4,17,30,.64)!important;
+}
+.tipster-pricing-grid strong{color:#f4fbff!important}
+.tipster-pricing-grid span{color:#8fa9bd!important;font-size:12px!important}
+.tipster-pricing-grid input[type="number"]{
+  width:100%!important;
+  height:42px!important;
+  padding:0 34px 0 12px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(55,216,226,.15)!important;
+  background:rgba(3,14,27,.82)!important;
+  color:#f5fbff!important;
+  font-weight:900!important;
+}
+.tipster-pricing-grid em{
+  position:absolute!important;
+  right:26px!important;
+  bottom:25px!important;
+  color:#8fa9bd!important;
+  font-style:normal!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+.tipster-pricing-grid input[type="checkbox"]{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+}
+.tipster-pricing-settings>button{
+  min-height:48px!important;
+  border:0!important;
+  border-radius:16px!important;
+  color:#03131e!important;
+  font-weight:1000!important;
+  background:linear-gradient(135deg,#25e9ff,#6e7cff)!important;
+  cursor:pointer!important;
+}
+.tipster-pricing-settings>button:disabled{opacity:.55!important;cursor:not-allowed!important}
+@media(max-width:1200px){.tipster-pricing-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:700px){.tipster-pricing-grid{grid-template-columns:1fr!important}}

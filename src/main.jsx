@@ -11851,6 +11851,115 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
   )
 }
 
+function TipsterPricingSettings({ user, onToast }) {
+  const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(option => ({
+    ...option,
+    price: option.defaultPrice,
+    active: true
+  })))
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    async function loadPlans() {
+      if (!user?.id || !isSupabaseConfigured || !supabase) return
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('tipster_plans')
+          .select('plan_key,label,duration_days,price,active')
+          .eq('tipster_id', user.id)
+
+        if (error) throw error
+        if (!active) return
+
+        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
+          const row = Array.isArray(data) ? data.find(item => item.plan_key === option.key) : null
+          return row
+            ? {
+                ...option,
+                label: row.label || option.label,
+                durationDays: Number(row.duration_days || option.durationDays),
+                price: Number(row.price ?? option.defaultPrice),
+                active: row.active !== false
+              }
+            : { ...option, price: option.defaultPrice, active: true }
+        }))
+      } catch (error) {
+        console.warn('tipster plans load skipped', error)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    loadPlans()
+    return () => { active = false }
+  }, [user?.id])
+
+  const updatePlan = (key, patch) => {
+    setPlans(current => current.map(plan => plan.key === key ? { ...plan, ...patch } : plan))
+  }
+
+  const savePlans = async () => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Brak konta', message: 'Nie udało się zapisać cennika.' })
+      return
+    }
+    setSaving(true)
+    try {
+      const rows = plans.map(plan => ({
+        tipster_id: user.id,
+        plan_key: plan.key,
+        label: plan.label,
+        duration_days: Number(plan.durationDays),
+        price: Number(plan.price || 0),
+        active: Boolean(plan.active)
+      }))
+      const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
+      if (error) throw error
+      onToast?.({ type: 'success', title: 'Cennik zapisany', message: 'Ceny subskrypcji profilu zostały zaktualizowane.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd cennika', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="glass-profile-v3 tipster-pricing-settings">
+      <div className="profile-v3-card-head">
+        <h3>Cennik subskrypcji profilu</h3>
+        <span>{loading ? 'Ładowanie...' : 'Dla kupujących'}</span>
+      </div>
+      <p>Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu i typów.</p>
+      <div className="tipster-pricing-grid">
+        {plans.map(plan => (
+          <label key={plan.key}>
+            <strong>{plan.label}</strong>
+            <span>{plan.durationDays} dni</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={plan.price}
+              onChange={event => updatePlan(plan.key, { price: Math.max(0, Number(event.target.value || 0)) })}
+            />
+            <em>zł</em>
+            <input
+              type="checkbox"
+              checked={plan.active}
+              onChange={event => updatePlan(plan.key, { active: event.target.checked })}
+            />
+          </label>
+        ))}
+      </div>
+      <button type="button" onClick={savePlans} disabled={saving}>
+        {saving ? 'Zapisuję...' : 'Zapisz cennik'}
+      </button>
+    </div>
+  )
+}
+
 function ProfileSubscriptionModal({ tip, user, onClose }) {
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
   const [loadingKey, setLoadingKey] = useState('')
@@ -12489,7 +12598,7 @@ function EarningsView({ user, earnings = null, stripeConnectStatus = null, onCon
   )
 }
 
-function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null }) {
+function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
@@ -12620,7 +12729,7 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
             <button type="button">💬 Opinie</button>
           </div>
 
-          <TipsterPricingSettings user={user} onToast={null} />
+          <TipsterPricingSettings user={user} onToast={onToast} />
 
           <div className="glass-profile-v3 profile-stripe-connect-card">
             <div className="profile-stripe-connect-main">
@@ -16176,6 +16285,7 @@ function App() {
             userPlan={effectiveAccountPlan}
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
+            onToast={showToast}
           />
         )}
 
