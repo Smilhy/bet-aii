@@ -1,0 +1,12 @@
+WERSJA 771 — demo wyglądu dla "Dodaj typ" + automatyczny cache realnych meczów
+- Bazuje na wersji 770
+- Gdy API-Football ma limit i cache jest jeszcze pusty, wyszukiwarka w "Dodaj typ" pokazuje przykładowe mecze DEMO:
+  Legia Warszawa — Lech Poznań, Barcelona — Real Madryt, Arsenal — Chelsea itd.
+- Demo uruchamia się tylko w wyszukiwaniu "Dodaj typ", żeby można było teraz ustawić wygląd i flow
+- Po powrocie prawdziwych danych demo znika automatycznie: pierwszeństwo mają cache i realne API
+- Demo nie dotyczy "Typów AI", żeby nie tworzyć fałszywych typów AI
+- Nadal działa automatyczny cache realnych meczów o 00:05 UTC oraz odczyt cache dla "Dodaj typ" i "Typy AI"
+- Do wdrożenia:
+  1) Jeśli jeszcze nie robiłeś: uruchom SQL BETAI_SQL_770_AUTO_DAILY_FIXTURE_CACHE_DODAJ_TYP_AI.sql w Supabase
+  2) Wgraj ten ZIP na Netlify
+  3) W "Dodaj typ" wpisz np. Legia, Barcelona lub Arsenal — teraz zobaczysz demo do dopracowania wyglądu

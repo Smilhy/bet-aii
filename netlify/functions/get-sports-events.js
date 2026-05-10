@@ -332,32 +332,38 @@ exports.handler = async function(event) {
   }
 
   const demoFixtures = () => {
-    const selected = new Date(`${date}T00:00:00`)
     const now = new Date()
-    const isToday = date === now.toISOString().slice(0, 10)
-    const baseDate = isToday ? new Date(now.getTime() + 10 * 60 * 1000) : selected
-    const baseLeague = league || (sport === 'Piłka nożna' ? 'Premier League' : sport)
+    const baseDate = new Date(now.getTime() + 2 * 60 * 60 * 1000)
     const teams = [
-      ['Manchester City', 'Arsenal'],
-      ['Liverpool', 'Chelsea'],
-      ['Real Madryt', 'Bayern Monachium'],
-      ['Barcelona', 'Inter Mediolan']
+      { home: 'Legia Warszawa', away: 'Lech Poznań', league: 'Ekstraklasa', country: 'Polska' },
+      { home: 'Barcelona', away: 'Real Madryt', league: 'La Liga', country: 'Hiszpania' },
+      { home: 'Arsenal', away: 'Chelsea', league: 'Premier League', country: 'Anglia' },
+      { home: 'Liverpool', away: 'Manchester City', league: 'Premier League', country: 'Anglia' },
+      { home: 'Bayern Monachium', away: 'Borussia Dortmund', league: 'Bundesliga', country: 'Niemcy' },
+      { home: 'Inter Mediolan', away: 'AC Milan', league: 'Serie A', country: 'Włochy' }
     ]
     return teams.map((row, index) => {
       const kick = new Date(baseDate.getTime() + index * 90 * 60 * 1000)
-      const parts = toDateParts(kick.toISOString())
+      const commenceTime = kick.toISOString()
+      const parts = toDateParts(commenceTime)
       return {
-        id: `demo-${sport}-${country}-${baseLeague}-${index}`.replace(/\s+/g, '-').toLowerCase(),
-        sport,
-        country,
-        league: baseLeague,
-        home: row[0],
-        away: row[1],
+        id: `demo-${row.home}-${row.away}-${index}`.replace(/\s+/g, '-').toLowerCase(),
+        sport: 'Piłka nożna',
+        sportKey: 'demo-football',
+        country: row.country,
+        league: row.league,
+        home: row.home,
+        away: row.away,
         date: parts.date,
         time: parts.time,
-        markets: buildMarkets(row[0], row[1], [], sport)
+        commence_time: commenceTime,
+        source: 'demo',
+        apiFixtureId: '',
+        markets: buildMarkets(row.home, row.away, [], 'Piłka nożna'),
+        hasRealOdds: false,
+        oddsMessage: 'Tryb demo — przykładowe kursy tylko do ustawienia wyglądu.'
       }
-    })
+    }).filter(matchesRequestedFootballText)
   }
 
   const normalizeText = (value) => String(value || '')
@@ -1240,6 +1246,23 @@ exports.handler = async function(event) {
         }
       }
     }
+    if (!apiSports.fixtures?.length && !countOnly && mode === 'search' && query) {
+      const demoSearchFixtures = demoFixtures()
+      if (demoSearchFixtures.length) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            demo: true,
+            source: 'demo-search-preview',
+            demoPreview: true,
+            fixtures: demoSearchFixtures,
+            message: `TRYB DEMO: API jest teraz niedostępne albo limit wyczerpany. Pokazuję przykładowe mecze dla „${query}”, żeby można było ustawić wygląd zakładki. Gdy prawdziwe mecze wrócą, demo zniknie automatycznie.`
+          })
+        }
+      }
+    }
     if (countOnly) {
       return {
         statusCode: 200,
@@ -1285,6 +1308,12 @@ exports.handler = async function(event) {
       })
     }
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', daysAhead, futureOnly: true, count: 0, message: `LIVE API: ${error.message}. Nie pokazuję demo ani fake meczów.`, fixtures: [] }) }
+    if (mode === 'search' && query) {
+      const demoSearchFixtures = demoFixtures()
+      if (demoSearchFixtures.length) {
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: true, source: 'demo-search-preview', demoPreview: true, fixtures: demoSearchFixtures, message: `TRYB DEMO: ${error.message}. Pokazuję przykładowe mecze do ustawienia wyglądu zakładki.` }) }
+      }
+    }
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'error', daysAhead, futureOnly: true, count: 0, message: `LIVE API: ${error.message}.`, fixtures: [] }) }
   }
 }
