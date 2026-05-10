@@ -34,6 +34,44 @@ function safeName(v, fallback = '') {
   return String(v)
 }
 
+function cachedFixtureToAiEvent(fx) {
+  if (!fx?.home || !fx?.away || !fx?.commence_time) return null
+  const eventMs = Date.parse(fx.commence_time)
+  if (!Number.isFinite(eventMs) || eventMs <= Date.now()) return null
+  const id = fx.apiFixtureId || fx.id
+  return {
+    id: `football-${id}`,
+    external_fixture_id: Number(String(id || '').replace(/\D/g, '').slice(0, 12)) || hashNumber(`football-${id}`),
+    sport: fx.sport || 'Piłka nożna',
+    sport_key: 'football',
+    league: fx.league || 'Piłka nożna',
+    country: fx.country || '',
+    home: fx.home,
+    away: fx.away,
+    event_time: fx.commence_time,
+    status: 'pending',
+    live_score_home: 0,
+    live_score_away: 0,
+    rawStatus: 'NS',
+    source: 'sports_fixture_cache'
+  }
+}
+
+async function fetchCachedFootballEvents(supabase, days = 3) {
+  const now = new Date()
+  const end = new Date(now.getTime() + Math.max(1, days) * 24 * 60 * 60 * 1000)
+  const { data, error } = await supabase
+    .from('sports_fixture_cache')
+    .select('fixture_json')
+    .gt('expires_at', now.toISOString())
+    .gt('commence_time', now.toISOString())
+    .lt('commence_time', end.toISOString())
+    .order('commence_time', { ascending: true })
+    .limit(500)
+  if (error) throw error
+  return (data || []).map(row => cachedFixtureToAiEvent(row?.fixture_json)).filter(Boolean)
+}
+
 const SPORT_APIS = [
   { sport: 'Piłka nożna', key: 'football', host: 'https://v3.football.api-sports.io', path: '/fixtures', dateParam: 'date', type: 'football' },
   { sport: 'Koszykówka', key: 'basketball', host: 'https://v1.basketball.api-sports.io', path: '/games', dateParam: 'date', type: 'games' },
@@ -256,7 +294,22 @@ exports.handler = async function (event) {
   try {
     if (!SUPABASE_URL || !SERVICE_KEY) return json(500, { error: 'Missing Supabase env: SUPABASE_URL/VITE_SUPABASE_URL albo SUPABASE_SERVICE_ROLE_KEY.' })
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
-    const { events, errors, apisChecked, days } = await fetchAllRealEvents(event)
+    const days = clamp(Number(process.env.REAL_AI_LOOKAHEAD_DAYS || event?.queryStringParameters?.days || 3), 1, 14)
+    let events = []
+    let errors = []
+    let apisChecked = []
+    try {
+      events = await fetchCachedFootballEvents(supabase, days)
+      if (events.length) apisChecked = ['sports_fixture_cache']
+    } catch (cacheError) {
+      errors.push(`cache: ${cacheError.message || cacheError}`)
+    }
+    if (!events.length) {
+      const live = await fetchAllRealEvents(event)
+      events = live.events
+      errors = errors.concat(live.errors || [])
+      apisChecked = live.apisChecked
+    }
     const maxPicks = Number(process.env.REAL_AI_MAX_PICKS_PER_SCAN || 24)
     const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)

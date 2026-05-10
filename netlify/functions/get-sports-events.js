@@ -1,3 +1,5 @@
+const { createClient } = require('@supabase/supabase-js')
+
 exports.handler = async function(event) {
   const qs = event.queryStringParameters || {}
   const sport = String(qs.sport || 'Piłka nożna')
@@ -8,6 +10,7 @@ exports.handler = async function(event) {
   const query = String(qs.query || '').trim()
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
+  const forceRefresh = String(qs.forceRefresh || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
   const daysAhead = Math.max(0, Math.min(365, Number(qs.daysAhead ?? 365) || 365))
   const requestedSportText = String(sport || '').trim()
@@ -19,6 +22,79 @@ exports.handler = async function(event) {
   }
 
   const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Europe/Warsaw'
+  const FIXTURE_CACHE_HOURS = Math.max(1, Math.min(72, Number(process.env.FIXTURE_CACHE_HOURS || 24) || 24))
+  const getSupabaseAdmin = () => {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) return null
+    try { return createClient(url, key) } catch (_) { return null }
+  }
+  const cacheSupabase = getSupabaseAdmin()
+
+  const normalizeFixtureCacheKey = (fixture) => String(
+    fixture?.apiFixtureId || fixture?.id || `${fixture?.home || ''}|${fixture?.away || ''}|${fixture?.commence_time || ''}`
+  )
+
+  const writeFixturesToCache = async (fixtures = []) => {
+    if (!cacheSupabase || !Array.isArray(fixtures) || !fixtures.length) return
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + FIXTURE_CACHE_HOURS * 60 * 60 * 1000).toISOString()
+    const rows = fixtures
+      .filter(item => item && (item.home || item.away))
+      .map(item => ({
+        cache_key: normalizeFixtureCacheKey(item),
+        sport: String(item.sport || 'Piłka nożna'),
+        country: String(item.country || ''),
+        league: String(item.league || ''),
+        home: String(item.home || ''),
+        away: String(item.away || ''),
+        commence_time: item.commence_time || null,
+        fixture_json: item,
+        fetched_at: now.toISOString(),
+        expires_at: expiresAt
+      }))
+    if (!rows.length) return
+    try {
+      await cacheSupabase.from('sports_fixture_cache').upsert(rows, { onConflict: 'cache_key' })
+    } catch (error) {
+      console.warn('fixture cache write skipped:', error?.message || error)
+    }
+  }
+
+  const readCachedFixtures = async ({ rawQuery = '', futureOnly = true } = {}) => {
+    if (!cacheSupabase) return []
+    try {
+      const now = new Date().toISOString()
+      let q = cacheSupabase
+        .from('sports_fixture_cache')
+        .select('fixture_json')
+        .gt('expires_at', now)
+        .order('commence_time', { ascending: true })
+        .limit(2000)
+      if (futureOnly) q = q.gt('commence_time', now)
+      const { data, error } = await q
+      if (error) throw error
+      const wanted = normalizeLoose(rawQuery)
+      const seen = new Set()
+      return (data || [])
+        .map(row => row?.fixture_json)
+        .filter(Boolean)
+        .filter(item => {
+          if (!wanted) return true
+          const haystack = normalizeLoose(`${item.home || ''} ${item.away || ''} ${item.league || ''} ${item.country || ''}`)
+          return wanted.split(/\s+/).every(term => haystack.includes(term))
+        })
+        .filter(item => {
+          const key = normalizeFixtureCacheKey(item).toLowerCase()
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+    } catch (error) {
+      console.warn('fixture cache read skipped:', error?.message || error)
+      return []
+    }
+  }
 
   const toDateParts = (iso) => {
     const d = new Date(iso)
@@ -1044,6 +1120,56 @@ exports.handler = async function(event) {
 
 
   try {
+    if (!forceRefresh && mode === 'search' && query) {
+      const cachedFixtures = await readCachedFixtures({ rawQuery: query })
+      if (cachedFixtures.length) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            demo: false,
+            source: 'supabase-fixture-cache',
+            cacheHit: true,
+            cacheHours: FIXTURE_CACHE_HOURS,
+            fixtures: cachedFixtures.slice(0, 240),
+            message: `Cache: znaleziono ${cachedFixtures.length} zapisanych meczów z ostatnich ${FIXTURE_CACHE_HOURS} h.`
+          })
+        }
+      }
+    }
+
+    if (!forceRefresh && mode !== 'search') {
+      const cachedFixtures = (await readCachedFixtures({}))
+        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(item => mode !== 'today' || isTopTodayFootballLeague(item))
+        .filter(item => {
+          if (mode === 'today') return toLocalDateKey(item.commence_time) === date
+          return isLocalDateInRange(item.commence_time, date, daysAhead)
+        })
+      if (cachedFixtures.length) {
+        const fixtures = cachedFixtures
+          .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+          .slice(0, countOnly ? 1000 : 500)
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            demo: false,
+            source: 'supabase-fixture-cache',
+            cacheHit: true,
+            cacheHours: FIXTURE_CACHE_HOURS,
+            allLeagues,
+            daysAhead,
+            count: countOnly ? fixtures.length : undefined,
+            fixtures: countOnly ? [] : fixtures,
+            message: `Cache: używam zapisanych meczów z ostatnich ${FIXTURE_CACHE_HOURS} h.`
+          })
+        }
+      }
+    }
+
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     const apiSportsKey = getApiSportsKey()
     let oddsMessage = ''
@@ -1057,6 +1183,7 @@ exports.handler = async function(event) {
           if (countOnly) {
             return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api-wide-scan', allLeagues: true, requestedAllSports, daysAhead, sportKeys: oddsSportKeys, count: wide.fixtures.length, fixtures: [] }) }
           }
+          await writeFixturesToCache(wide.fixtures)
           return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api-wide-scan', allLeagues: true, requestedAllSports, daysAhead, sportKeys: oddsSportKeys, fixtures: wide.fixtures }) }
         }
         oddsMessage = 'The Odds API nie zwróciło kursów, przełączam na API-Sports.'
@@ -1084,6 +1211,7 @@ exports.handler = async function(event) {
 
         if (fixtures.length) {
           if (countOnly) return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
+          await writeFixturesToCache(fixtures)
           return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, daysAhead, futureOnly: true, fixtures }) }
         }
         oddsMessage = oddsMessage || 'The Odds API nie zwróciło kursów, przełączam na API-Sports.'
@@ -1093,6 +1221,25 @@ exports.handler = async function(event) {
     }
 
     const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)
+    if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
+    if (!apiSports.fixtures?.length && !countOnly) {
+      const cachedFallback = await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' })
+      if (cachedFallback.length) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            demo: false,
+            source: 'supabase-fixture-cache-fallback',
+            cacheHit: true,
+            cacheHours: FIXTURE_CACHE_HOURS,
+            fixtures: cachedFallback.slice(0, 500),
+            message: `API chwilowo niedostępne lub limit wyczerpany — pokazuję zapisane mecze z ostatnich ${FIXTURE_CACHE_HOURS} h.`
+          })
+        }
+      }
+    }
     if (countOnly) {
       return {
         statusCode: 200,
