@@ -766,44 +766,51 @@ exports.handler = async function(event) {
     const errors = []
 
     for (const cfg of configs) {
-      const url = new URL(`${cfg.host}${cfg.path}`)
-      if (mode === 'today' || safeDays === 0) {
-        url.searchParams.set('date', safeStart)
-      } else {
-        url.searchParams.set('from', safeStart)
-        url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
-      }
-      if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+      // API-FOOTBALL /fixtures nie przyjmuje szerokiego from/to bez dodatkowego kontekstu
+      // ligi/drużyny. Dla widoku globalnego i drzewa lig pobieramy więc dzień po dniu
+      // parametrem date=, a potem filtrujemy lokalnie po kraju/lidze. To jest poprawne
+      // również dla trybu "Dziś" i pozwala sortować mecze godzinami.
+      const dateKeys = mode === 'today' || safeDays === 0
+        ? [safeStart]
+        : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
 
-      try {
-        const response = await fetch(url.toString(), {
-          headers: {
-            'x-apisports-key': apiKey,
-            'x-rapidapi-key': apiKey
-          }
-        })
-        const data = await response.json().catch(() => ({}))
-        if (!response.ok) {
-          errors.push(`${cfg.key}: HTTP ${response.status}`)
-          continue
-        }
-        if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-          errors.push(`${cfg.key}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-        }
-        const rows = Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
-        rows
-          .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
-          .filter(item => {
-            const kickMs = Date.parse(item.commence_time || '')
-            if (!Number.isFinite(kickMs)) return true
-            return kickMs > Date.now() + 60 * 1000
+      const dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
+        const url = new URL(`${cfg.host}${cfg.path}`)
+        url.searchParams.set('date', dayKey)
+        if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+
+        try {
+          const response = await fetch(url.toString(), {
+            headers: {
+              'x-apisports-key': apiKey,
+              'x-rapidapi-key': apiKey
+            }
           })
-          .filter(item => allLeagues || matchesRequestedFootballScope(item))
-          .filter(matchesRequestedFootballText)
-          .forEach(item => collected.push(item))
-      } catch (error) {
-        errors.push(`${cfg.key}: ${error.message}`)
-      }
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
+            return []
+          }
+          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+            errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+          }
+          return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+        } catch (error) {
+          errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
+          return []
+        }
+      }))
+
+      dayResponses.flat()
+        .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+        .filter(item => {
+          const kickMs = Date.parse(item.commence_time || '')
+          if (!Number.isFinite(kickMs)) return true
+          return kickMs > Date.now() + 60 * 1000
+        })
+        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(matchesRequestedFootballText)
+        .forEach(item => collected.push(item))
     }
 
     const seen = new Set()
