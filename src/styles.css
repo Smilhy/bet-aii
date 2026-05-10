@@ -28717,3 +28717,20 @@ button.betfolio-fetch-btn{
 .subscription-status-chip.is-free{border-color:rgba(255,205,63,.28)!important;color:#ffd769!important}
 .subscription-stripe-link{width:100%!important;margin-top:10px!important;padding:12px 14px!important;border:none!important;border-radius:14px!important;background:rgba(6,20,36,.5)!important;color:#7ef8ff!important;font-weight:700!important;font-size:13px!important;line-height:1.45!important;cursor:pointer!important;box-shadow:inset 0 0 0 1px rgba(61,244,255,.16)!important;transition:transform .18s ease, box-shadow .18s ease, color .18s ease!important}
 .subscription-stripe-link:hover{transform:translateY(-1px)!important;box-shadow:inset 0 0 0 1px rgba(61,244,255,.28),0 12px 28px rgba(0,0,0,.22)!important;color:#a9ffff!important}
+
+
+/* WERSJA 819 — żywa historia transakcji */
+.wallet-v2-history-empty{display:flex!important;align-items:center!important;min-height:58px!important;padding:14px 16px!important;border-radius:14px!important;border:1px dashed rgba(32,218,255,.16)!important;color:#91a9bc!important;font-size:13px!important;font-weight:700!important;background:rgba(5,16,28,.34)!important}
+.wallet-v2-history-item .history-text strong{white-space:normal!important}
+
+
+/* WERSJA 820 — żywe płatności i faktury */
+.invoice-info a{color:#18ead8!important;font-style:normal!important;font-weight:900!important;text-decoration:none!important}
+.invoice-info a:hover{text-decoration:underline!important}
+.wallet-v2-empty-documents{min-height:126px!important;display:grid!important;place-content:center!important;gap:6px!important;text-align:center!important;color:#8ea6b7!important}
+.wallet-v2-empty-documents strong{color:#eaf8ff!important;font-size:15px!important}
+.wallet-v2-empty-documents small{font-size:13px!important}
+.payment-invoice-link{color:#18ead8!important;font-weight:900!important;text-decoration:none!important}
+.payment-invoice-link:hover{text-decoration:underline!important}
+.payments-row{grid-template-columns:1.1fr 1.25fr .8fr .8fr .8fr!important}
+@media(max-width:900px){.payments-row{grid-template-columns:1fr!important}}

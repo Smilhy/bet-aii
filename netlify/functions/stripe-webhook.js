@@ -28,6 +28,17 @@ async function getSubscription(subscriptionId) {
   }
 }
 
+
+async function getInvoice(invoiceId) {
+  if (!invoiceId) return null;
+  try {
+    return await stripe.invoices.retrieve(invoiceId);
+  } catch (error) {
+    console.warn('Could not retrieve Stripe invoice:', error.message);
+    return null;
+  }
+}
+
 async function syncPremiumFromSession(supabase, session) {
   const subscription = session.subscription ? await getSubscription(session.subscription) : null;
   const customerEmail = normalizeEmail(
@@ -300,6 +311,7 @@ exports.handler = async (event) => {
       if (isPremiumCheckout) {
         const result = await syncPremiumFromSession(supabase, session);
         const amount = Number(session.metadata?.amount || 29);
+        const invoice = session.invoice ? await getInvoice(session.invoice) : null;
         const { error: txError } = await supabase.from('wallet_transactions').insert({
           user_id: result.userId,
           amount,
@@ -310,6 +322,22 @@ exports.handler = async (event) => {
         });
         if (txError && !String(txError.message || '').toLowerCase().includes('duplicate')) {
           console.warn('premium wallet transaction warning:', txError.message);
+        }
+        const { error: premiumPaymentError } = await supabase.from('payments').insert({
+          user_id: result.userId,
+          tip_id: null,
+          stripe_session_id: session.id,
+          stripe_invoice_id: invoice?.id || session.invoice || null,
+          invoice_number: invoice?.number || null,
+          invoice_pdf_url: invoice?.invoice_pdf || null,
+          invoice_url: invoice?.hosted_invoice_url || null,
+          amount,
+          currency: String(session.currency || 'pln').toLowerCase(),
+          status: 'paid',
+          provider: 'stripe_premium'
+        });
+        if (premiumPaymentError && !String(premiumPaymentError.message || '').toLowerCase().includes('duplicate')) {
+          console.warn('premium payment history warning:', premiumPaymentError.message);
         }
         await recordReferralReward(supabase, {
           userId: result.userId,

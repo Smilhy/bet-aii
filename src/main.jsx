@@ -8179,7 +8179,10 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+  const [accountHistoryRows, setAccountHistoryRows] = useState([])
+  const [accountHistoryLoading, setAccountHistoryLoading] = useState(false)
+  const [accountHistoryExpanded, setAccountHistoryExpanded] = useState(false)
   const [walletClock, setWalletClock] = useState(() => new Date())
   useEffect(() => {
     const timer = window.setInterval(() => setWalletClock(new Date()), 60 * 1000)
@@ -8216,18 +8219,170 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
   }
   const formatWalletPln = value => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const formatTokenCount = value => Number(value || 0).toLocaleString('pl-PL')
-  const historyRows = [
-    { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
-    { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
-    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.00 zł', positive: false },
-    { icon: '✓', title: 'Wygrana kupon', time: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
-    { icon: 'AI', title: 'Zakup żetonów', time: '25.05.2025, 16:33', amount: '+50', positive: true }
-  ]
-  const invoiceRows = [
-    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.05.2025' },
-    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.04.2025' },
-    { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
-  ]
+  const formatHistoryDate = value => {
+    const date = value ? new Date(value) : null
+    if (!date || Number.isNaN(date.getTime())) return '—'
+    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatHistoryPln = (value, sign = '') => `${sign}${Math.abs(Number(value || 0)).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+  const formatHistoryTokens = value => {
+    const amount = Number(value || 0)
+    return `${amount > 0 ? '+' : ''}${amount.toLocaleString('pl-PL')} ${Math.abs(amount) === 1 ? 'żeton' : 'żetonów'}`
+  }
+
+  const loadAccountHistory = async () => {
+    const userId = user?.id
+    const userEmail = normalizeEmail(user?.email)
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setAccountHistoryRows([])
+      return
+    }
+    setAccountHistoryLoading(true)
+    try {
+      const [walletResult, paymentsResult, tokenResult] = await Promise.all([
+        supabase
+          .from('wallet_transactions')
+          .select('id,amount,type,provider,status,created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('payments')
+          .select('id,amount,provider,status,created_at,tip_id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        userEmail
+          ? supabase
+              .from('betai_token_transactions')
+              .select('id,delta_tokens,reason,ref_type,ref_data,created_at')
+              .eq('email', userEmail)
+              .order('created_at', { ascending: false })
+              .limit(100)
+          : Promise.resolve({ data: [], error: null })
+      ])
+
+      if (walletResult.error) console.warn('wallet history skipped', walletResult.error)
+      if (paymentsResult.error) console.warn('payments history skipped', paymentsResult.error)
+      if (tokenResult.error) console.warn('token history skipped', tokenResult.error)
+
+      const walletRows = (walletResult.data || []).map(row => {
+        const type = String(row.type || '').toLowerCase()
+        const rawAmount = Number(row.amount || 0)
+        const isNegative = ['payout', 'spend', 'purchase'].includes(type) || rawAmount < 0
+        let title = 'Operacja portfela'
+        let icon = '▣'
+        if (type === 'topup') { title = row.provider === 'stripe' ? 'Wpłata Stripe' : 'Wpłata środków'; icon = '▣' }
+        else if (type === 'payout') { title = 'Wypłata środków'; icon = '⇡' }
+        else if (type === 'spend' || type === 'purchase') { title = 'Zakup z portfela'; icon = '◎' }
+        else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '★' }
+        return {
+          id: `wallet_${row.id}`,
+          createdAt: row.created_at,
+          icon,
+          title,
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryPln(rawAmount, isNegative ? '-' : '+'),
+          positive: !isNegative,
+          kind: 'wallet'
+        }
+      })
+
+      const paymentRows = (paymentsResult.data || []).map(row => {
+        const provider = String(row.provider || '').toLowerCase()
+        const isPremium = provider.includes('premium') || provider.includes('subscription')
+        return {
+          id: `payment_${row.id}`,
+          createdAt: row.created_at,
+          icon: isPremium ? '★' : '🧾',
+          title: isPremium ? 'Zakup Premium' : 'Zakup typu premium',
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryPln(row.amount, '-'),
+          positive: false,
+          kind: 'payment'
+        }
+      })
+
+      const tokenRows = (tokenResult.data || []).map(row => {
+        const reason = String(row.reason || '').toLowerCase()
+        const delta = Number(row.delta_tokens || 0)
+        const refData = row.ref_data || {}
+        let title = 'Operacja żetonów'
+        let icon = 'AI'
+        if (reason === 'live_chat_tip_sent') { title = 'Tip wysłany'; icon = '↗' }
+        else if (reason === 'live_chat_tip_received') { title = 'Tip otrzymany'; icon = '♡' }
+        else if (reason === 'welcome_bonus') { title = 'Bonus powitalny'; icon = '🎁' }
+        else if (reason === 'live_chat_daily_leader') { title = 'Nagroda lidera czatu'; icon = '🏆' }
+        else if (reason === 'live_chat_daily_message') { title = 'Bonus za aktywność'; icon = '💬' }
+        if (reason === 'live_chat_tip_sent' && refData?.to_email) title = `Tip wysłany do ${String(refData.to_email).split('@')[0]}`
+        if (reason === 'live_chat_tip_received' && refData?.from_email) title = `Tip od ${String(refData.from_email).split('@')[0]}`
+        return {
+          id: `token_${row.id}`,
+          createdAt: row.created_at,
+          icon,
+          title,
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryTokens(delta),
+          positive: delta >= 0,
+          kind: 'token'
+        }
+      })
+
+      const dedupedRows = [...walletRows, ...paymentRows, ...tokenRows]
+        .filter(row => row.createdAt)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      setAccountHistoryRows(dedupedRows)
+    } catch (error) {
+      console.error('loadAccountHistory error', error)
+      setAccountHistoryRows([])
+    } finally {
+      setAccountHistoryLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAccountHistory()
+  }, [user?.id, user?.email])
+
+  useEffect(() => {
+    const refreshHistory = () => loadAccountHistory()
+    window.addEventListener('betai-token-balance-changed', refreshHistory)
+    window.addEventListener('betai-wallet-history-changed', refreshHistory)
+    return () => {
+      window.removeEventListener('betai-token-balance-changed', refreshHistory)
+      window.removeEventListener('betai-wallet-history-changed', refreshHistory)
+    }
+  }, [user?.id, user?.email])
+
+  const visibleHistoryRows = accountHistoryExpanded ? accountHistoryRows : accountHistoryRows.slice(0, 5)
+  const getPaymentDocumentLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getPaymentDocumentTitle = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    if (payment?.invoice_number) return `Faktura ${payment.invoice_number}`
+    if (provider.includes('premium')) return 'Zakup Premium'
+    if (provider.includes('token')) return 'Zakup żetonów'
+    if (payment?.tip_id) return 'Zakup typu premium'
+    return 'Płatność'
+  }
+  const getPaymentDocumentSubtitle = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    if (provider.includes('premium')) return 'Premium 30 dni'
+    if (provider.includes('token')) return 'Zakup żetonów'
+    if (payment?.tip_id) return 'Typ premium'
+    return String(payment?.provider || 'Płatność Stripe')
+  }
+  const invoiceRows = (payments || [])
+    .filter(payment => String(payment?.status || '').toLowerCase() === 'paid')
+    .slice(0, 3)
+    .map(payment => ({
+      id: payment.id,
+      title: getPaymentDocumentTitle(payment),
+      sub: getPaymentDocumentSubtitle(payment),
+      price: formatWalletPln(payment.amount),
+      date: payment.created_at ? new Date(payment.created_at).toLocaleDateString('pl-PL') : '—',
+      href: getPaymentDocumentLink(payment)
+    }))
   const topUsers = [
     ['RebelKoks', 'Typy: 66 • WIN: 68.2%'],
     ['smilhytv', 'Typy: 72 • WIN: 62.1%'],
@@ -8368,15 +8523,19 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
             </div>
 
             <div className="glass-v2-panel wallet-v2-card">
-              <div className="wallet-v2-card-head"><h3>Historia transakcji</h3><button type="button">Zobacz wszystkie</button></div>
+              <div className="wallet-v2-card-head"><h3>Historia transakcji</h3><button type="button" onClick={() => setAccountHistoryExpanded(prev => !prev)}>{accountHistoryExpanded ? 'Pokaż mniej' : 'Zobacz wszystkie'}</button></div>
               <div className="wallet-v2-history-list">
-                {historyRows.map((row, index) => (
-                  <div className="wallet-v2-history-item" key={index}>
+                {accountHistoryLoading ? (
+                  <div className="wallet-v2-history-empty">Ładuję transakcje...</div>
+                ) : visibleHistoryRows.length ? visibleHistoryRows.map(row => (
+                  <div className="wallet-v2-history-item" key={row.id}>
                     <span className="history-icon">{row.icon}</span>
                     <div className="history-text"><strong>{row.title}</strong><small>{row.time}</small></div>
                     <b className={row.positive ? 'positive' : 'negative'}>{row.amount}</b>
                   </div>
-                ))}
+                )) : (
+                  <div className="wallet-v2-history-empty">Brak transakcji na tym koncie.</div>
+                )}
               </div>
             </div>
 
@@ -8400,15 +8559,26 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
               <div className="wallet-v2-card-head"><h3>Płatności i faktury</h3></div>
               <p className="wallet-v2-sub">Historia płatności i faktur</p>
               <div className="wallet-v2-invoice-list">
-                {invoiceRows.map((row, index) => (
-                  <div className="invoice-item" key={index}>
+                {invoiceRows.length ? invoiceRows.map(row => (
+                  <div className="invoice-item" key={row.id}>
                     <span className="invoice-icon">▤</span>
-                    <div className="invoice-info"><strong>{row.title}</strong><small>{row.sub} <em>{row.action}</em></small></div>
+                    <div className="invoice-info">
+                      <strong>{row.title}</strong>
+                      <small>
+                        {row.sub}{' '}
+                        {row.href ? <a href={row.href} target="_blank" rel="noreferrer">Pobierz</a> : <em>Brak faktury</em>}
+                      </small>
+                    </div>
                     <div className="invoice-meta"><b>{row.price}</b><small>{row.date}</small></div>
                   </div>
-                ))}
+                )) : (
+                  <div className="wallet-v2-empty-documents">
+                    <strong>Brak płatności i faktur</strong>
+                    <small>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</small>
+                  </div>
+                )}
               </div>
-              <button type="button" className="wallet-v2-primary-btn">Zobacz wszystkie faktury</button>
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('payments')}>Zobacz wszystkie faktury</button>
             </div>
 
             <div className="glass-v2-panel wallet-v2-card subscription-card-v2">
@@ -11572,14 +11742,22 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
 
 function PaymentsView({ payments }) {
   const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const getInvoiceLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getPaymentName = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    if (provider.includes('premium')) return 'Zakup Premium'
+    if (provider.includes('token')) return 'Zakup żetonów'
+    if (payment?.tip_id) return 'Zakup typu premium'
+    return 'Płatność'
+  }
 
   return (
     <section className="payments-page">
       <UltraPageBanner variant="payments" />
       <div className="payments-hero">
         <div>
-          <h1>Historia płatności</h1>
-          <p>Panel zakupów premium i przychodów marketplace.</p>
+          <h1>Płatności i faktury</h1>
+          <p>Tylko prawdziwe płatności przypisane do Twojego konta.</p>
         </div>
         <div className="payments-total">
           <span>Razem</span>
@@ -11590,22 +11768,27 @@ function PaymentsView({ payments }) {
       <div className="payments-table">
         <div className="payments-row header">
           <span>Data</span>
-          <span>Tip ID</span>
+          <span>Dokument</span>
           <span>Status</span>
           <span>Kwota</span>
+          <span>Faktura</span>
         </div>
 
-        {payments.length ? payments.map(payment => (
-          <div className="payments-row" key={payment.id}>
-            <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
-            <span>{payment.tip_id || '—'}</span>
-            <span className="paid-status">{payment.status || 'paid'}</span>
-            <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
-          </div>
-        )) : (
+        {payments.length ? payments.map(payment => {
+          const invoiceLink = getInvoiceLink(payment)
+          return (
+            <div className="payments-row" key={payment.id}>
+              <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+              <span>{payment.invoice_number ? `Faktura ${payment.invoice_number}` : getPaymentName(payment)}</span>
+              <span className="paid-status">{payment.status || 'paid'}</span>
+              <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
+              <span>{invoiceLink ? <a className="payment-invoice-link" href={invoiceLink} target="_blank" rel="noreferrer">Pobierz</a> : 'Brak faktury'}</span>
+            </div>
+          )
+        }) : (
           <div className="payments-empty">
             <strong>Brak płatności</strong>
-            <span>Po pierwszym zakupie premium transakcja pojawi się tutaj.</span>
+            <span>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</span>
           </div>
         )}
       </div>
@@ -14961,6 +15144,7 @@ function App() {
             tokenBalance={tokenBalance}
             unlockedTips={unlockedTips}
             tips={tips}
+            payments={paymentHistory}
             onTopUp={() => startStripeTopup(100)}
             user={effectiveAccountProfile}
             userPlan={effectiveAccountPlan}
