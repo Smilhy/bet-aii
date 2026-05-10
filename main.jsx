@@ -8176,7 +8176,12 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) {
+  const walletAmount = Math.max(0, Number(wallet || 0) || 0)
+  const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
+  const tokenPlnValue = userTokens / 1000
+  const formatWalletPln = value => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+  const formatTokenCount = value => Number(value || 0).toLocaleString('pl-PL')
   const historyRows = [
     { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
     { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
@@ -8235,18 +8240,18 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
           <div className="wallet-v2-topstats">
             <div className="glass-v2-panel wallet-v2-stat">
               <div className="wallet-v2-stat-top"><span>Saldo główne</span><i>👛</i></div>
-              <strong>1,250.75 zł</strong>
+              <strong>{formatWalletPln(walletAmount)}</strong>
               <small>Dostępne środki</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
               <div className="wallet-v2-stat-top"><span>Saldo żetonów</span><i>◌</i></div>
-              <strong>86</strong>
+              <strong>{formatTokenCount(userTokens)}</strong>
               <small>Dostępne żetony</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
               <div className="wallet-v2-stat-top"><span>Wartość żetonów (PLN)</span><i>◍</i></div>
-              <strong>129.00 zł</strong>
-              <small>1 żeton = 1.50 zł</small>
+              <strong>{formatWalletPln(tokenPlnValue)}</strong>
+              <small>1000 żetonów = 1 zł</small>
             </div>
           </div>
 
@@ -14842,7 +14847,7 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={walletBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
+          <WalletPanel wallet={walletBalance} tokenBalance={tokenBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
         )}
 
         {view === 'leaderboard' && (
