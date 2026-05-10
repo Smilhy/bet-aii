@@ -1,0 +1,8 @@
+WERSJA 793
+- Usunięty cały górny box „Dodaj nowy typ / Tryb wyboru ligi / badge sport-kraj-liga”.
+- Usunięty trzeci kafelek „Analiza AI” z hero banera.
+- Dodane zielone obramowania do sekcji z przyciskami sportów i do sekcji z listą meczów.
+- W górnym pasku sportów dodane wszystkie sporty:
+  Piłka nożna, Tenis, Koszykówka, Hokej, MMA, E-sport, Siatkówka,
+  Boks, Piłka ręczna, Krykiet, Rugby, Rugby League, Baseball i Dart.
+- Pozostałe funkcje bez zmian.

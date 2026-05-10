@@ -5474,14 +5474,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const effectiveSelectedMatch = addTipMode === 'manual' && manualSelectedMatch ? manualSelectedMatch : selectedMatch
 
   const topSportButtons = useMemo(() => ([
-    {
-      name: 'Piłka nożna',
-      icon: sportIconMap['Piłka nożna'] || '⚽',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
-      allLeagues: true,
-    }
-  ]), [sportsbook])
+    'Piłka nożna',
+    'Tenis',
+    'Koszykówka',
+    'Hokej',
+    'MMA',
+    'E-sport',
+    'Siatkówka',
+    'Boks',
+    'Piłka ręczna',
+    'Krykiet',
+    'Rugby',
+    'Rugby League',
+    'Baseball',
+    'Dart',
+  ].map((name) => ({
+    name,
+    icon: sportIconMap[name] || '🏅',
+    country: 'Wszystkie',
+    league: 'Wszystkie ligi',
+    allLeagues: true,
+  }))), [sportsbook])
 
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
@@ -6687,23 +6700,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         <div className={`betfolio-center glass-ultra-panel ${showMarketBoard ? 'market-board-mode' : ''}`}>
           {!showMarketBoard && (
             <>
-              <div className="betfolio-center-header">
-                <div>
-                  <div className="static-add-title-row">
-                    <span className="static-add-title-icon">⬡</span>
-                    <h1>Dodaj nowy typ</h1>
-                  </div>
-                  <div className={`live-real-badge ${addTipMode === 'manual' ? 'manual-entry' : liveDataSource}`}>
-                    {addTipMode === 'manual' ? '● TRYB RĘCZNY — własne dane typu' : liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● Automatyczne pobieranie meczów i kursów' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
-                  </div>
-                </div>
-                <div className="betfolio-center-badges">
-                  <span>{addTipMode === 'manual' ? manualForm.sport : form.sport}</span>
-                  <span>{addTipMode === 'manual' ? manualForm.country : (form.country || currentCountry)}</span>
-                  <span>{addTipMode === 'manual' ? manualForm.league : (form.league || currentLeague)}</span>
-                </div>
-              </div>
-
               <div className="betfolio-add-hero">
                 <div className="betfolio-add-hero-copy">
                   <h2>Dodaj <span>typ</span></h2>
@@ -6719,11 +6715,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       <i>↗</i>
                       <strong>Setki rynków</strong>
                       <small>Najpopularniejsze rynki bukmacherskie</small>
-                    </div>
-                    <div>
-                      <i>◌</i>
-                      <strong>Analiza AI</strong>
-                      <small>Wskaźniki i szanse w czasie rzeczywistym</small>
                     </div>
                   </div>
                 </div>

@@ -5472,14 +5472,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || null
 
   const topSportButtons = useMemo(() => ([
-    {
-      name: 'Piłka nożna',
-      icon: sportIconMap['Piłka nożna'] || '⚽',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
-      allLeagues: true,
-    }
-  ]), [sportsbook])
+    'Piłka nożna',
+    'Tenis',
+    'Koszykówka',
+    'Hokej',
+    'MMA',
+    'E-sport',
+    'Siatkówka',
+    'Boks',
+    'Piłka ręczna',
+    'Krykiet',
+    'Rugby',
+    'Rugby League',
+    'Baseball',
+    'Dart',
+  ].map((name) => ({
+    name,
+    icon: sportIconMap[name] || '🏅',
+    country: 'Wszystkie',
+    league: 'Wszystkie ligi',
+    allLeagues: true,
+  }))), [sportsbook])
 
   function enrichPopularMarkets(match, sourceMarkets = []) {
     const home = match?.home || 'Gospodarze'
