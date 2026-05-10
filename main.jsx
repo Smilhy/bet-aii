@@ -6365,7 +6365,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   placeholder="Wpisz mecz lub drużynę, np. Barcelona"
                   value={sidebarSearch}
                   onChange={(e) => setSidebarSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
                 />
                 <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
                   {fixtureSearchLoading ? '…' : 'Szukaj'}
