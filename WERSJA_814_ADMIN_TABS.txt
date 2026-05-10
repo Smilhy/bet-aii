@@ -1,0 +1,1 @@
+Admin finanse i Admin wypłaty mają czerwony glow, ikonę zamkniętej kłódki i wejście tylko dla admina smilhytv / smilhytv@gmail.com. Dla innych użytkowników klik pokazuje komunikat o braku dostępu.

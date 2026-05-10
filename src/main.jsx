@@ -8176,7 +8176,7 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, onViewChange, onToast }) {
   const walletAmount = Math.max(0, Number(wallet || 0) || 0)
   const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
   const tokenPlnValue = userTokens / 1000
@@ -8213,6 +8213,20 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
     ['PSG vs Borussia Dortmund', 'Typ: Powyżej 2.5 gola', '63%'],
     ['Liverpool vs Bayer Leverkusen', 'Typ: Liverpool wygra', '61%']
   ]
+
+  const adminUnlocked = isAdminUser(user)
+
+  function handleAdminWalletTab(targetView) {
+    if (!adminUnlocked) {
+      onToast?.({
+        type: 'error',
+        title: 'Zakładka tylko dla admina',
+        message: 'Dostęp do tej sekcji ma wyłącznie administrator: smilhytv / smilhytv@gmail.com.'
+      })
+      return
+    }
+    onViewChange?.(targetView)
+  }
 
   return (
     <section className="wallet-panel wallet-ultra-page wallet-static-v2">
@@ -8270,8 +8284,24 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
             <button type="button">Płatności</button>
             <button type="button">Subskrypcja</button>
             <button type="button">Zarobki</button>
-            <button type="button">Admin finanse</button>
-            <button type="button">Admin wypłaty</button>
+            <button
+              type="button"
+              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
+              onClick={() => handleAdminWalletTab('adminFinance')}
+              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
+            >
+              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+              <span>Admin finanse</span>
+            </button>
+            <button
+              type="button"
+              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
+              onClick={() => handleAdminWalletTab('adminPayouts')}
+              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
+            >
+              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+              <span>Admin wypłaty</span>
+            </button>
           </div>
 
           <div className="wallet-v2-topstats">
@@ -14884,7 +14914,7 @@ function App() {
         )}
 
         {view === 'wallet' && (
-          <WalletPanel wallet={walletBalance} tokenBalance={tokenBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
+          <WalletPanel wallet={walletBalance} tokenBalance={tokenBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} onViewChange={setView} onToast={showToast} />
         )}
 
         {view === 'leaderboard' && (
