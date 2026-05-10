@@ -6562,19 +6562,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <button type="button" className="betfolio-small-outline" onClick={() => selectedMatch && applyMatchToForm(selectedMatch)}>Dodaj własny typ</button>
               </div>
 
-              <div className="betfolio-market-tabs board-tabs">
-                {marketTabs.map((tab) => (
-                  <button
-                    type="button"
-                    key={tab}
-                    className={activeMarketTab === tab ? 'active' : ''}
-                    onClick={() => setActiveMarketTab(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
               <div className="betfolio-board-note">
                 {selectedMatch?.hasRealOdds
                   ? 'Prawdziwe kursy pre-match z API-FOOTBALL. Kliknij kurs, aby dodać go do kuponu po prawej.'
