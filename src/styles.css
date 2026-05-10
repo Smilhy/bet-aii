@@ -17336,13 +17336,14 @@ img,video,canvas,svg{max-width:100%;}
 .wallet-v2-header p{margin:6px 0 0!important;color:#13ead8!important;font-size:14px!important;font-weight:700!important}
 .wallet-v2-update{align-self:center!important;color:#90a7b8!important;font-size:13px!important;white-space:nowrap!important}
 .wallet-v2-update b{color:#f2fbff!important}
-.wallet-v2-tabs{display:flex!important;align-items:center!important;gap:8px!important;padding:10px!important;overflow:auto!important}
+.wallet-v2-tabs{display:flex!important;align-items:center!important;gap:12px!important;padding:14px 12px!important;overflow:auto!important;background:transparent!important;border:0!important;box-shadow:none!important}
 .wallet-v2-tabs button{
-  height:44px!important;padding:0 18px!important;border-radius:12px!important;border:1px solid transparent!important;background:transparent!important;color:#b7cad6!important;font-size:14px!important;font-weight:800!important;white-space:nowrap!important;cursor:default!important
+  min-height:56px!important;padding:12px 22px!important;border-radius:18px!important;border:1px solid rgba(40,214,222,.12)!important;background:linear-gradient(180deg,rgba(6,20,32,.96),rgba(4,13,22,.98))!important;color:#e9f9fd!important;font-size:15px!important;font-weight:900!important;line-height:1!important;white-space:nowrap!important;cursor:default!important;box-shadow:0 12px 28px rgba(0,0,0,.14)!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important
 }
 .wallet-v2-tabs button.active{
-  background:linear-gradient(180deg,#16e8dd,#08c8da)!important;color:#06232d!important;box-shadow:0 10px 24px rgba(22,232,221,.22)!important
+  background:linear-gradient(180deg,rgba(17,212,220,.22),rgba(8,40,48,.92))!important;border-color:rgba(34,224,228,.26)!important;color:#f4fcff!important;box-shadow:0 0 0 1px rgba(34,224,228,.10) inset,0 14px 28px rgba(17,212,220,.14)!important
 }
+.wallet-v2-tabs button:hover{border-color:rgba(34,224,228,.22)!important;color:#f4fcff!important}
 .wallet-v2-topstats,.wallet-v2-midgrid,.wallet-v2-bottomgrid{display:grid!important;gap:16px!important}
 .wallet-v2-topstats{grid-template-columns:repeat(3,1fr)!important}
 .wallet-v2-midgrid,.wallet-v2-bottomgrid{grid-template-columns:1fr 1.15fr 1.05fr!important}
