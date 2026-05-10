@@ -4,6 +4,8 @@ exports.handler = async function(event) {
   const country = String(qs.country || '')
   const league = String(qs.league || '')
   const date = String(qs.date || new Date().toISOString().slice(0, 10))
+  const mode = String(qs.mode || '').trim().toLowerCase()
+  const query = String(qs.query || '').trim()
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
@@ -70,6 +72,32 @@ exports.handler = async function(event) {
     if (!eventKey || !startKey) return false
     const endKey = addDaysToDateKey(startKey, rangeDays)
     return eventKey >= startKey && eventKey <= endKey
+  }
+
+  const normalizeLoose = (value) => String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+  const matchesRequestedFootballText = (fixture) => {
+    const q = normalizeLoose(query)
+    if (!q) return true
+    const haystack = normalizeLoose(`${fixture.home || ''} ${fixture.away || ''} ${fixture.league || ''} ${fixture.country || ''}`)
+    return q.split(/\s+/).every(term => haystack.includes(term))
+  }
+
+  const matchesRequestedFootballScope = (fixture) => {
+    const wantedLeague = normalizeLoose(league)
+    const wantedCountry = normalizeLoose(country)
+    const actualLeague = normalizeLoose(fixture.league)
+    const actualCountry = normalizeLoose(fixture.country)
+    const countryIsWide = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry)
+    const leagueIsWide = !wantedLeague || wantedLeague.includes('wszystkie') || wantedLeague === normalizeLoose('Piłka nożna')
+    const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
+    const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague)
+    return countryMatches && leagueMatches
   }
 
 
@@ -637,56 +665,73 @@ exports.handler = async function(event) {
     }
   }
 
-  const fetchApiSportsFixtures = async (apiKey, rangeDays, requestedDay) => {
-    if (!apiKey) return { configs: [], fixtures: [], message: 'Brak APISPORTS_KEY w Netlify.' }
-    const configs = getApiSportsConfigs()
-    if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
+  const searchApiFootballFixtures = async (apiKey, rawQuery) => {
+    const cfg = getApiSportsConfigs().find(item => item.type === 'football')
+    if (!apiKey || !cfg) return { fixtures: [], errors: ['Brak konfiguracji API-FOOTBALL.'] }
 
-    const maxDays = Math.min(14, rangeDays || 14)
-    const dateKeys = []
-    const startKey = requestedDay || new Date().toISOString().slice(0, 10)
-    for (let i = 0; i <= maxDays; i += 1) dateKeys.push(addDaysToDateKey(startKey, i) || startKey)
+    const normalized = String(rawQuery || '').trim()
+    if (!normalized) return { fixtures: [], errors: [] }
 
-    const collected = []
+    const queryParts = normalized
+      .split(/\s+(?:vs|v|kontra)\s+|\s*[-–—]\s*/i)
+      .map(part => part.trim())
+      .filter(Boolean)
+    const teamSearchTerms = [...new Set([queryParts[0], normalized].filter(Boolean))]
+    const teamRows = []
     const errors = []
 
-    for (const cfg of configs) {
-      for (const dayKey of dateKeys) {
-        const url = new URL(`${cfg.host}${cfg.path}`)
-        url.searchParams.set('date', dayKey)
-        if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
-
-        try {
-          const response = await fetch(url.toString(), {
-            headers: {
-              'x-apisports-key': apiKey,
-              'x-rapidapi-key': apiKey
-            }
-          })
-          const data = await response.json().catch(() => ({}))
-          if (!response.ok) {
-            errors.push(`${cfg.key}: HTTP ${response.status}`)
-            continue
-          }
-          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-            errors.push(`${cfg.key}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-          }
-          const rows = Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
-          rows
-            .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
-            .filter(item => {
-              const kickMs = Date.parse(item.commence_time || '')
-              if (!Number.isFinite(kickMs)) return true
-              return kickMs > Date.now() + 60 * 1000
-            })
-            .forEach(item => collected.push(item))
-        } catch (error) {
-          errors.push(`${cfg.key}: ${error.message}`)
+    for (const term of teamSearchTerms) {
+      try {
+        const teamUrl = new URL(`${cfg.host}/teams`)
+        teamUrl.searchParams.set('search', term)
+        const teamResponse = await fetch(teamUrl.toString(), {
+          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
+        })
+        const teamData = await teamResponse.json().catch(() => ({}))
+        if (!teamResponse.ok) {
+          errors.push(`teams: HTTP ${teamResponse.status}`)
+          continue
         }
-
-        if (collected.length >= (countOnly ? 1000 : 240)) break
+        const rows = Array.isArray(teamData?.response) ? teamData.response : []
+        teamRows.push(...rows)
+      } catch (error) {
+        errors.push(`teams: ${error.message}`)
       }
-      if (collected.length >= (countOnly ? 1000 : 240)) break
+      if (teamRows.length) break
+    }
+
+    const teamIds = [...new Set(teamRows
+      .map(row => row?.team?.id)
+      .filter(id => id !== undefined && id !== null))]
+      .slice(0, 5)
+
+    const collected = []
+    for (const teamId of teamIds) {
+      try {
+        const fixturesUrl = new URL(`${cfg.host}/fixtures`)
+        fixturesUrl.searchParams.set('team', String(teamId))
+        fixturesUrl.searchParams.set('next', '50')
+        fixturesUrl.searchParams.set('timezone', APP_TIMEZONE)
+        const response = await fetch(fixturesUrl.toString(), {
+          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          errors.push(`fixtures: HTTP ${response.status}`)
+          continue
+        }
+        const rows = Array.isArray(data?.response) ? data.response : []
+        rows
+          .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+          .filter(item => {
+            const kickMs = Date.parse(item.commence_time || '')
+            return !Number.isFinite(kickMs) || kickMs > Date.now() + 60 * 1000
+          })
+          .filter(matchesRequestedFootballText)
+          .forEach(item => collected.push(item))
+      } catch (error) {
+        errors.push(`fixtures: ${error.message}`)
+      }
     }
 
     const seen = new Set()
@@ -698,14 +743,93 @@ exports.handler = async function(event) {
         seen.add(key)
         return true
       })
-      .slice(0, countOnly ? 1000 : 240)
+      .slice(0, 240)
+
+    return { fixtures, errors }
+  }
+
+  const fetchApiSportsFixtures = async (apiKey, rangeDays, requestedDay) => {
+    if (!apiKey) return { configs: [], fixtures: [], message: 'Brak APISPORTS_KEY w Netlify.' }
+    const configs = getApiSportsConfigs()
+    if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
+
+    if (mode === 'search' && query) {
+      const searched = await searchApiFootballFixtures(apiKey, query)
+      if (searched.fixtures.length) {
+        return { configs: configs.map(cfg => cfg.key), fixtures: searched.fixtures, message: '' }
+      }
+    }
+
+    const safeStart = requestedDay || new Date().toISOString().slice(0, 10)
+    const safeDays = Math.max(0, Math.min(365, Number(rangeDays || 0)))
+    const collected = []
+    const errors = []
+
+    for (const cfg of configs) {
+      const url = new URL(`${cfg.host}${cfg.path}`)
+      if (mode === 'today' || safeDays === 0) {
+        url.searchParams.set('date', safeStart)
+      } else {
+        url.searchParams.set('from', safeStart)
+        url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
+      }
+      if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+
+      try {
+        const response = await fetch(url.toString(), {
+          headers: {
+            'x-apisports-key': apiKey,
+            'x-rapidapi-key': apiKey
+          }
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          errors.push(`${cfg.key}: HTTP ${response.status}`)
+          continue
+        }
+        if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+          errors.push(`${cfg.key}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+        }
+        const rows = Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+        rows
+          .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+          .filter(item => {
+            const kickMs = Date.parse(item.commence_time || '')
+            if (!Number.isFinite(kickMs)) return true
+            return kickMs > Date.now() + 60 * 1000
+          })
+          .filter(item => allLeagues || matchesRequestedFootballScope(item))
+          .filter(matchesRequestedFootballText)
+          .forEach(item => collected.push(item))
+      } catch (error) {
+        errors.push(`${cfg.key}: ${error.message}`)
+      }
+    }
+
+    const seen = new Set()
+    const fixtures = collected
+      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+      .filter(item => {
+        const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .slice(0, countOnly ? 1000 : 500)
+
+    const emptyMessage = mode === 'search' && query
+      ? `API-FOOTBALL Pro nie znalazło meczu dla frazy „${query}”.`
+      : mode === 'today'
+        ? 'API-FOOTBALL Pro nie zwróciło przyszłych meczów na dziś.'
+        : 'API-FOOTBALL Pro nie zwróciło meczów dla wybranej ligi i zakresu.'
 
     return {
       configs: configs.map(cfg => cfg.key),
       fixtures,
-      message: fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło meczów. ${errors.slice(0, 3).join(' | ')}` : 'API-Sports nie zwróciło meczów dla tego sportu/daty.')
+      message: fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło meczów. ${errors.slice(0, 3).join(' | ')}` : emptyMessage)
     }
   }
+
 
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
@@ -792,7 +916,13 @@ exports.handler = async function(event) {
         requestedAllSports,
         daysAhead,
         fixtures: apiSports.fixtures,
-        message: apiSports.fixtures.length ? 'Realne mecze piłkarskie pobrane z API-FOOTBALL Pro. Dla braku kursów The Odds API dodano modelowe rynki AI do analizy.' : `${oddsMessage} ${apiSports.message}`.trim()
+        message: apiSports.fixtures.length
+          ? (mode === 'today'
+              ? 'Realne dzisiejsze mecze piłkarskie pobrane z API-FOOTBALL Pro.'
+              : mode === 'search'
+                ? `Realne wyniki wyszukiwania dla „${query}” pobrane z API-FOOTBALL Pro.`
+                : `Realne mecze piłkarskie z najbliższych ${daysAhead} dni pobrane z API-FOOTBALL Pro.`)
+          : `${oddsMessage} ${apiSports.message}`.trim()
       })
     }
   } catch (error) {
