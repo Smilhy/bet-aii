@@ -25139,3 +25139,52 @@ font[style*="border"]{
 
 /* WERSJA 754 — API-FOOTBALL PRO ONLY */
 .football-pro-mode-note{margin:10px 0;padding:12px 14px;border-radius:16px;border:1px solid rgba(72,218,255,.18);background:rgba(16,42,64,.48);color:#9fdff0;font-size:12px;line-height:1.45;}
+
+/* WERSJA 755 — Dodaj typ / API-FOOTBALL Pro: dziś, nadchodzące i globalna wyszukiwarka */
+.betfolio-global-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.betfolio-search-go-btn {
+  min-width: 64px;
+  height: 42px;
+  border: 1px solid rgba(37, 225, 237, .25);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(23, 201, 216, .18), rgba(124, 92, 255, .16));
+  color: #dffcff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.betfolio-search-go-btn:hover:not(:disabled) {
+  border-color: rgba(37, 225, 237, .58);
+  box-shadow: 0 0 18px rgba(24, 221, 232, .22);
+}
+.betfolio-search-go-btn:disabled { opacity: .55; cursor: wait; }
+.betfolio-fixture-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 12px;
+}
+.betfolio-fixture-mode-tabs button {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  background: rgba(8, 17, 31, .72);
+  color: rgba(224, 239, 248, .76);
+  font-weight: 800;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.betfolio-fixture-mode-tabs button.active {
+  color: #07151f;
+  background: linear-gradient(135deg, #32e9f0, #8c72ff);
+  border-color: transparent;
+  box-shadow: 0 0 22px rgba(50, 233, 240, .22);
+}
+.betfolio-events-head span { white-space: nowrap; }
+@media (max-width: 720px) {
+  .betfolio-global-search { grid-template-columns: 1fr; }
+  .betfolio-search-go-btn { width: 100%; }
+}
