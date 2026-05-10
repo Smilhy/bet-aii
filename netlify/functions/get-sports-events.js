@@ -810,7 +810,15 @@ exports.handler = async function(event) {
       .split(/\s+(?:vs|v|kontra)\s+|\s*[-–—]\s*/i)
       .map(part => part.trim())
       .filter(Boolean)
-    const teamSearchTerms = [...new Set([queryParts[0], normalized].filter(Boolean))]
+
+    // Szukamy szerzej niż wcześniej: pełna fraza, strony meczu oraz pierwszy wyraz.
+    // Dzięki temu zadziała zarówno "barcelona", "legia", jak i "barcelona - real madrid".
+    const teamSearchTerms = [...new Set([
+      ...queryParts,
+      normalized,
+      normalized.split(/\s+/)[0]
+    ].map(item => String(item || '').trim()).filter(item => item.length >= 3))]
+
     const teamRows = []
     const errors = []
 
@@ -823,53 +831,84 @@ exports.handler = async function(event) {
         })
         const teamData = await teamResponse.json().catch(() => ({}))
         if (!teamResponse.ok) {
-          errors.push(`teams: HTTP ${teamResponse.status}`)
+          errors.push(`teams/${term}: HTTP ${teamResponse.status}`)
           continue
         }
         const rows = Array.isArray(teamData?.response) ? teamData.response : []
         teamRows.push(...rows)
       } catch (error) {
-        errors.push(`teams: ${error.message}`)
+        errors.push(`teams/${term}: ${error.message}`)
       }
-      if (teamRows.length) break
     }
 
-    const teamIds = [...new Set(teamRows
-      .map(row => row?.team?.id)
-      .filter(id => id !== undefined && id !== null))]
-      .slice(0, 5)
+    const uniqueTeamRows = []
+    const seenTeamIds = new Set()
+    teamRows.forEach(row => {
+      const id = row?.team?.id
+      if (id === undefined || id === null || seenTeamIds.has(String(id))) return
+      seenTeamIds.add(String(id))
+      uniqueTeamRows.push(row)
+    })
 
+    const teamIds = uniqueTeamRows
+      .map(row => row?.team?.id)
+      .filter(id => id !== undefined && id !== null)
+      .slice(0, 8)
+
+    const todayKey = new Date().toISOString().slice(0, 10)
+    const futureKey = addDaysToDateKey(todayKey, 365) || todayKey
     const collected = []
-    for (const teamId of teamIds) {
+
+    const fetchTeamFixtures = async (teamId, modeName) => {
       try {
         const fixturesUrl = new URL(`${cfg.host}/fixtures`)
         fixturesUrl.searchParams.set('team', String(teamId))
-        fixturesUrl.searchParams.set('next', '50')
         fixturesUrl.searchParams.set('timezone', APP_TIMEZONE)
+        if (modeName === 'range') {
+          fixturesUrl.searchParams.set('from', todayKey)
+          fixturesUrl.searchParams.set('to', futureKey)
+        } else {
+          fixturesUrl.searchParams.set('next', '100')
+        }
         const response = await fetch(fixturesUrl.toString(), {
           headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
         })
         const data = await response.json().catch(() => ({}))
         if (!response.ok) {
-          errors.push(`fixtures: HTTP ${response.status}`)
-          continue
+          errors.push(`fixtures/${teamId}/${modeName}: HTTP ${response.status}`)
+          return []
         }
-        const rows = Array.isArray(data?.response) ? data.response : []
-        rows
-          .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
-          .filter(item => {
-            const kickMs = Date.parse(item.commence_time || '')
-            return !Number.isFinite(kickMs) || kickMs > Date.now() + 60 * 1000
-          })
-          .filter(matchesRequestedFootballText)
-          .forEach(item => collected.push(item))
+        if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+          errors.push(`fixtures/${teamId}/${modeName}: ${JSON.stringify(data.errors).slice(0, 160)}`)
+        }
+        return Array.isArray(data?.response) ? data.response : []
       } catch (error) {
-        errors.push(`fixtures: ${error.message}`)
+        errors.push(`fixtures/${teamId}/${modeName}: ${error.message}`)
+        return []
       }
     }
 
+    for (const teamId of teamIds) {
+      let rows = await fetchTeamFixtures(teamId, 'range')
+      if (!rows.length) rows = await fetchTeamFixtures(teamId, 'next')
+      rows
+        .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+        .filter(item => {
+          const kickMs = Date.parse(item.commence_time || '')
+          return !Number.isFinite(kickMs) || kickMs > Date.now() + 60 * 1000
+        })
+        .forEach(item => collected.push(item))
+    }
+
+    const normalizedParts = queryParts.map(normalizeLoose).filter(Boolean)
+    const useMatchPairFilter = normalizedParts.length >= 2
     const seen = new Set()
     const fixtures = collected
+      .filter(item => {
+        if (!useMatchPairFilter) return true
+        const haystack = normalizeLoose(`${item.home || ''} ${item.away || ''}`)
+        return normalizedParts.every(part => haystack.includes(part))
+      })
       .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
       .filter(item => {
         const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
