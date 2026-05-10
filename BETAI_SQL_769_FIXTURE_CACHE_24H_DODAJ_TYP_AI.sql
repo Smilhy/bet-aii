@@ -15,6 +15,7 @@ create table if not exists public.sports_fixture_cache (
 create index if not exists sports_fixture_cache_expires_at_idx
   on public.sports_fixture_cache (expires_at);
 
+create index if not exists sports_fixture_cache_commence_time_idx
   on public.sports_fixture_cache (commence_time);
 
 create index if not exists sports_fixture_cache_home_idx
