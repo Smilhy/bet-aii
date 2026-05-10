@@ -1,0 +1,5 @@
+WERSJA 775
+- W piłce nożnej usunięta została zakładka / grupa „Zwycięzca meczu”.
+- Dla piłki nożnej zostaje właściwy rynek „1X2”.
+- Dla innych sportów „Zwycięzca meczu” nadal może pozostać.
+- Pozostałe funkcje z wersji 774 bez zmian.

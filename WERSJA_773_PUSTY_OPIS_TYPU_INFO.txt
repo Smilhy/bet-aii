@@ -1,0 +1,6 @@
+WERSJA 773
+- Pole „Opis typu” w prawej kolumnie jest zawsze puste na starcie.
+- Po wybraniu meczu nie wpisuje się już automatyczny przykładowy opis.
+- Odświeżenie analizy AI nie uzupełnia automatycznie pola opisu typu.
+- Użytkownik sam wpisuje opis ręcznie.
+- Pozostałe funkcje z wersji 772 bez zmian.

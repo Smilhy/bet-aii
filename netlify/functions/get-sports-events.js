@@ -739,6 +739,8 @@ exports.handler = async function(event) {
       commence_time: isoDate,
       source: 'api-football',
       apiFixtureId: firstText(item?.fixture?.id, item?.id),
+      homeLogo: firstText(item?.teams?.home?.logo, item?.home?.logo),
+      awayLogo: firstText(item?.teams?.away?.logo, item?.teams?.visitors?.logo, item?.away?.logo),
       markets: [],
       hasRealOdds: false,
     }

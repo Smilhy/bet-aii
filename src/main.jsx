@@ -4352,7 +4352,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     stake: '100',
     date: defaultMatch?.date || '25.05.2025',
     time: defaultMatch?.time || '17:30',
-    description: 'Manchester City u siebie prezentuje świetną formę, wygrywając 7 z ostatnich 8 spotkań. Arsenal ma problemy w defensywie i traci średnio 1.6 gola na wyjazdach. Typ oparty na statystykach, formie i analizie AI.',
+    description: '',
     aiAnalysis: 'Model AI ocenia ten typ jako wartościowy. Manchester City ma 68% szans na wygraną. Kluczowe przewagi to forma, posiadanie piłki i skuteczność pod bramką.',
     confidence: defaultMarket.confidence || 84,
     tags: ['#BetAI', '#Statystyki', '#Value'],
@@ -5370,8 +5370,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
       .filter(item => {
-        if (isFootball) return true
-        return !footballOnlyMarkets.includes(String(item.market || ''))
+        const marketName = String(item.market || '')
+        if (isFootball) return marketName !== 'Zwycięzca meczu'
+        return !footballOnlyMarkets.includes(marketName)
       })
       .map(item => ({ ...item }))
 
@@ -5387,9 +5388,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
 
     const hasDraw = isFootball
-    add('Zwycięzca meczu', `${home} wygra`, 1.72, 70)
+    if (!isFootball) {
+      add('Zwycięzca meczu', `${home} wygra`, 1.72, 70)
+      add('Zwycięzca meczu', `${away} wygra`, 2.10, 64)
+    }
     if (hasDraw) add('1X2', 'Remis', 3.35, 56)
-    add('Zwycięzca meczu', `${away} wygra`, 2.10, 64)
 
     if (isFootball) {
       add('1X2', `${home} wygra`, 1.72, 72)
@@ -5812,7 +5815,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       confidence: nextMarket.confidence || form.confidence,
       date: match.date || form.date,
       time: match.time || form.time,
-      description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Typ wybrany z listy aktualnych meczów/kursów dnia. Uzupełnij własną analizę przed publikacją.`
+      description: ''
     })
   }
 
@@ -6194,8 +6197,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const nextText = `${home} vs ${away}: model AI ocenia ten typ jako ${nextConfidence >= 80 ? 'bardzo mocny' : nextConfidence >= 70 ? 'solidny' : 'ostrożny'} wybór. Główne argumenty: forma z ostatnich spotkań, jakość sytuacji bramkowych oraz dopasowanie kursu do ryzyka.`
     updateForm({
       aiAnalysis: nextText,
-      confidence: nextConfidence,
-      description: `${home} kontra ${away}. ${nextConfidence >= 80 ? 'Widzę tu wyraźną przewagę po stronie wybranego typu.' : 'Mecz wygląda korzystnie, ale wymaga rozsądnego zarządzania stawką.'} W analizie uwzględniłem formę, H2H i kontekst spotkania.`
+      confidence: nextConfidence
     })
     onToast?.({ type: 'success', title: 'AI odświeżona', message: 'Wygenerowaliśmy nową wersję analizy i poziomu pewności.' })
   }
@@ -6557,13 +6559,39 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </>
           ) : (
             <div className="betfolio-market-board-view">
+              {selectedMatch && (
+                <div className="betfolio-match-hero">
+                  <div className="betfolio-match-hero-team">
+                    {selectedMatch.homeLogo ? (
+                      <img src={selectedMatch.homeLogo} alt="" />
+                    ) : (
+                      <span>{String(selectedMatch.home || '').trim().charAt(0) || 'H'}</span>
+                    )}
+                    <strong>{selectedMatch.home}</strong>
+                  </div>
+
+                  <div className="betfolio-match-hero-center">
+                    <b>{selectedMatch.time || '--:--'}</b>
+                    <small>{getMatchDateBadge(selectedMatch)}</small>
+                  </div>
+
+                  <div className="betfolio-match-hero-team">
+                    {selectedMatch.awayLogo ? (
+                      <img src={selectedMatch.awayLogo} alt="" />
+                    ) : (
+                      <span>{String(selectedMatch.away || '').trim().charAt(0) || 'A'}</span>
+                    )}
+                    <strong>{selectedMatch.away}</strong>
+                  </div>
+                </div>
+              )}
+
               <div className="betfolio-market-board-head">
                 <button type="button" className="betfolio-back-btn" onClick={() => setShowMarketBoard(false)}>← Wróć do meczów</button>
                 <div>
                   <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Brak wybranego meczu'}</strong>
                   <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy.'}</span>
                 </div>
-                <button type="button" className="betfolio-small-outline" onClick={() => selectedMatch && applyMatchToForm(selectedMatch)}>Dodaj własny typ</button>
               </div>
 
               <div className="betfolio-market-accordion-list">
@@ -6686,10 +6714,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <div className="betfolio-total-box">
               <span>Kurs całkowity</span>
               <b>{Number(form.odds || 0).toFixed(2)}</b>
-            </div>
-            <div className="betfolio-total-box">
-              <span>Potencjalny zasięg</span>
-              <b>{previewReachMin}–{previewReachMax}</b>
             </div>
             <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !selectedMatch || !ticketMarketSelected} onClick={handlePublish}>
               {saving ? 'Publikowanie…' : 'Opublikuj typ'}

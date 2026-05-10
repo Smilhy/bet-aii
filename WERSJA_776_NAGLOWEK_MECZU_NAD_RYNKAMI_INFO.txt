@@ -1,0 +1,6 @@
+WERSJA 776
+- Nad wszystkimi rynkami w ekranie meczu dodany został duży nagłówek meczu:
+  drużyna gospodarzy — godzina/data — drużyna gości.
+- Na demo pokazuje prawdziwe nazwy drużyn z wybranego meczu.
+- Dla live, gdy API zwróci logotypy drużyn, nagłówek pokaże loga; w przeciwnym razie pokaże inicjały.
+- Pozostałe funkcje z wersji 775 bez zmian.
