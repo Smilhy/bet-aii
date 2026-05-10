@@ -1,0 +1,5 @@
+WERSJA 804
+- Finalna premium wersja zakładki „Dodaj typ”.
+- Mocniej dopracowany wygląd hero bannera, kart meczów, sportów, akordeonów rynków i prawej kolumny.
+- Dodane mikroanimacje premium, lepsze cienie, bardziej luksusowe szkło i bardziej dopracowane spacingi.
+- Ujednolicony look całej zakładki w kierunku jakości 10/10.

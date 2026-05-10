@@ -1,0 +1,7 @@
+WERSJA 803
+- Finalny polish wizualny zakładki „Dodaj typ”.
+- Lepsze odstępy i bardziej premium glass efekt.
+- Mocniej dopracowany hero baner, przełącznik trybu i sekcja sportów.
+- Bardziej elegancka lista meczów i lepszy układ kart kursów.
+- Dopracowany ekran rynków meczu: lepsze akordeony, spacing i responsywność.
+- Całość bardziej spójna z Dashboardem i bliżej jakości 9/10.
