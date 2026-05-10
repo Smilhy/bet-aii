@@ -899,15 +899,19 @@ exports.handler = async function(event) {
     const collected = []
     const errors = []
 
+    // Jedna lista dat dla pobierania fixtures i późniejszego wzbogacenia kursami.
+    // Wcześniej dateKeys było zdefiniowane tylko wewnątrz pętli i po jej zakończeniu
+    // wywołanie enrichFixturesWithApiFootballOdds wywalało ReferenceError, przez co UI
+    // pokazywał 0 meczów mimo poprawnego APISPORTS_KEY.
+    const dateKeys = mode === 'today' || safeDays === 0
+      ? [safeStart]
+      : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
+
     for (const cfg of configs) {
       // API-FOOTBALL /fixtures nie przyjmuje szerokiego from/to bez dodatkowego kontekstu
       // ligi/drużyny. Dla widoku globalnego i drzewa lig pobieramy więc dzień po dniu
       // parametrem date=, a potem filtrujemy lokalnie po kraju/lidze. To jest poprawne
       // również dla trybu "Dziś" i pozwala sortować mecze godzinami.
-      const dateKeys = mode === 'today' || safeDays === 0
-        ? [safeStart]
-        : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
-
       const dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
         const url = new URL(`${cfg.host}${cfg.path}`)
         url.searchParams.set('date', dayKey)
