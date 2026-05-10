@@ -4378,7 +4378,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [expandedMarketGroup, setExpandedMarketGroup] = useState('')
   const [ticketMarketSelected, setTicketMarketSelected] = useState(false)
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
-  const [openFootballCountry, setOpenFootballCountry] = useState('Anglia')
+  const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
   const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
   const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
@@ -4484,6 +4484,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     "Łotwa",
     "Świat"
 ]
+  const normalizeFootballCountryName = (value) => {
+    const raw = String(value || '').trim()
+    const cleaned = raw.replace(/^[A-Z]{2,3}\s+/, '').trim()
+    return cleaned || raw
+  }
+
   const footballCountryIcons = {
     "Afryka": "🌍",
     "Albania": "🇦🇱",
@@ -6368,7 +6374,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
-      <div className="betfolio-add-shell">
+      <div className={`betfolio-add-shell ${ticketMarketSelected ? "ticket-visible" : "ticket-hidden"}`}>
         <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
           <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
             <input
@@ -6383,9 +6389,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </button>
           </form>
 
-          <button type="button" className="betfolio-fetch-btn" onClick={fetchTodayFootballFixtures} disabled={liveFixturesLoading}>
-            {liveFixturesLoading && footballViewMode === 'today' ? 'Pobieram dziś…' : 'Dziś — szybki typ'}
-          </button>
 
           <div className="sports-accordion-title">SPORT</div>
 
@@ -6408,7 +6411,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           className={isCountryActive ? 'is-active country-active' : ''}
                           onClick={() => selectSidebarCountry(country)}
                         >
-                          <span>{footballCountryIcons[country] || '🏳️'} {country}</span>
+                          <span>{footballCountryIcons[normalizeFootballCountryName(country)] || footballCountryIcons[country] || '🏳️'} {normalizeFootballCountryName(country)}</span>
                           <b>{isCountryOpen ? '⌃' : '⌄'}</b>
                         </button>
 
@@ -6642,6 +6645,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           )}
         </div>
 
+        {ticketMarketSelected && (
         <aside className="betfolio-right glass-ultra-panel">
           <div className="betfolio-ticket-top">
             <div className="betfolio-ticket-tabs">
@@ -6720,6 +6724,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </button>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )

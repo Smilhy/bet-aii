@@ -4377,7 +4377,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
-  const [openFootballCountry, setOpenFootballCountry] = useState('Anglia')
+  const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
   const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
   const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
@@ -4483,6 +4483,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     "Łotwa",
     "Świat"
 ]
+  const normalizeFootballCountryName = (value) => {
+    const raw = String(value || '').trim()
+    const cleaned = raw.replace(/^[A-Z]{2,3}\s+/, '').trim()
+    return cleaned || raw
+  }
+
   const footballCountryIcons = {
     "Afryka": "🌍",
     "Albania": "🇦🇱",
@@ -6495,6 +6501,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         </div>
 
         {ticketOpen && (
+        {ticketMarketSelected && (
         <aside className="betfolio-right glass-ultra-panel">
           <div className="betfolio-ticket-top">
             <div className="betfolio-ticket-tabs">
@@ -7169,6 +7176,7 @@ function ReferralsView({ user, data, loading, onRefresh }) {
             </div>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )

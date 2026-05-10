@@ -1,0 +1,5 @@
+WERSJA 781
+- Po wejściu do zakładki Dodaj typ żadna lista kraju / ligi nie jest rozwinięta na start.
+- Anglia / Premier League nie otwierają się automatycznie.
+- Rozwinięcie następuje dopiero po kliknięciu użytkownika.
+- Pozostałe funkcje bez zmian.

@@ -1,0 +1,4 @@
+WERSJA 779
+- Gdy prawa kolumna pojawia się po kliknięciu typu, jest wyrównana do górnej krawędzi środkowej tabeli „Dodaj typ”.
+- Usunięte ewentualne przesunięcie w dół prawego panelu.
+- Pozostałe funkcje bez zmian.

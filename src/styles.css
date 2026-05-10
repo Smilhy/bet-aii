@@ -26755,3 +26755,48 @@ button.betfolio-fetch-btn{
   }
   .betfolio-match-hero-center{order:-1}
 }
+
+
+/* WERSJA 777 — lewa lista krajów wyrównana wyżej do sekcji Dodaj typ */
+.add-tip-betfolio-page .betfolio-add-shell{
+  align-items:start!important;
+}
+.add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav{
+  margin-top:-18px!important;
+  top:70px!important;
+}
+.add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav .sports-accordion-title{
+  margin-top:4px!important;
+}
+
+
+/* WERSJA 778 — prawa kolumna ukryta aż do kliknięcia typu */
+.add-tip-betfolio-page .betfolio-add-shell.ticket-hidden{
+  grid-template-columns:280px minmax(0,1fr)!important;
+}
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible{
+  grid-template-columns:280px minmax(0,1fr) 330px!important;
+}
+@media (max-width: 1380px){
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-hidden{grid-template-columns:250px minmax(0,1fr)!important}
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-visible{grid-template-columns:250px minmax(0,1fr) 300px!important}
+}
+@media (max-width:1180px){
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-hidden,
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-visible{grid-template-columns:1fr!important}
+}
+
+
+/* WERSJA 779 — prawa kolumna równo z górą środkowej tabeli */
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible{
+  align-items:start!important;
+}
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right{
+  align-self:start!important;
+  margin-top:0!important;
+  top:88px!important;
+}
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-center,
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right{
+  align-self:start!important;
+}
