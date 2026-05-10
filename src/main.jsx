@@ -12598,7 +12598,7 @@ function EarningsView({ user, earnings = null, stripeConnectStatus = null, onCon
   )
 }
 
-function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null }) {
+function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
@@ -12610,6 +12610,65 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   const admin = isAdminUser(user)
   const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
+  const avatarInputRef = useRef(null)
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+
+  useEffect(() => {
+    setAvatarUrl(user?.avatar_url || user?.user_metadata?.avatar_url || '')
+  }, [user?.avatar_url, user?.user_metadata?.avatar_url])
+
+  const chooseAvatar = () => {
+    avatarInputRef.current?.click()
+  }
+
+  const changeAvatar = async event => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Wybierz plik graficzny JPG, PNG lub WEBP.' })
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Avatar może mieć maksymalnie 3 MB.' })
+      return
+    }
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Nie udało się połączyć z profilem użytkownika.' })
+      return
+    }
+
+    setAvatarUploading(true)
+    try {
+      const extension = (file.name.split('.').pop() || file.type.split('/').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+      const path = `${user.id}/avatar-${Date.now()}.${extension}`
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type })
+      if (uploadError) throw uploadError
+
+      const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
+      const nextAvatarUrl = publicData?.publicUrl || ''
+      if (!nextAvatarUrl) throw new Error('Nie udało się pobrać adresu avatara.')
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: nextAvatarUrl })
+        .eq('id', user.id)
+      if (profileError) throw profileError
+
+      await supabase.auth.updateUser({ data: { avatar_url: nextAvatarUrl } }).catch(() => null)
+
+      setAvatarUrl(nextAvatarUrl)
+      onAvatarUpdated?.(nextAvatarUrl)
+      onToast?.({ type: 'success', title: 'Avatar zapisany', message: 'Zdjęcie profilowe zostało zaktualizowane.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd avatara', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
   const userTips = (Array.isArray(tips) ? tips : []).map(normalizeTipRow).filter(tip => {
     const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
     const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
@@ -12686,7 +12745,23 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
           <div className="profile-v3-hero glass-profile-v3">
             <div className="profile-v3-hero-overlay"></div>
             <div className="profile-v3-user-row">
-              <div className="profile-v3-avatar">{initials}</div>
+              <button
+                type="button"
+                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUploading ? 'is-uploading' : ''}`}
+                onClick={chooseAvatar}
+                title="Kliknij, aby dodać lub zmienić avatar"
+                style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
+              >
+                {avatarUrl ? '' : initials}
+                <span>{avatarUploading ? '...' : '✎'}</span>
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="profile-avatar-file-input"
+                onChange={changeAvatar}
+              />
               <div className="profile-v3-user-copy">
                 <div className="profile-v3-name-line">
                   <h1>{displayName}</h1>
@@ -15386,7 +15461,7 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
+      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url')
       .eq('id', userId)
       .maybeSingle()
 
@@ -15422,7 +15497,8 @@ function App() {
         is_premium: Boolean(effectiveProfile.is_premium),
         plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
         subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
-        current_period_end: effectiveProfile.current_period_end || null
+        current_period_end: effectiveProfile.current_period_end || null,
+        avatar_url: effectiveProfile.avatar_url || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)
@@ -16278,7 +16354,7 @@ function App() {
 
         {view === 'profile' && (
           <ProfileView
-            user={sessionUser}
+            user={effectiveAccountProfile || sessionUser}
             tips={tips}
             payments={paymentHistory}
             unlockedTips={unlockedTips}
@@ -16286,6 +16362,7 @@ function App() {
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
             onToast={showToast}
+            onAvatarUpdated={(nextAvatarUrl) => setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))}
           />
         )}
 

@@ -1,0 +1,7 @@
+WERSJA 834
+- W zakładce Mój profil avatar jest klikalny.
+- Po kliknięciu użytkownik może dodać lub zmienić avatar JPG/PNG/WEBP.
+- Limit pliku: 3 MB.
+- Avatar zapisuje się do Supabase Storage bucket avatars oraz do profiles.avatar_url.
+- Po zmianie avatar odświeża się od razu w profilu.
+- SQL do uruchomienia: BETAI_SQL_834_AVATARY_PROFILU.sql
