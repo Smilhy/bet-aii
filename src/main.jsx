@@ -4370,7 +4370,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
-  const [footballViewMode, setFootballViewMode] = useState('today')
+  const [footballViewMode, setFootballViewMode] = useState('search')
   const [fixtureSearchLoading, setFixtureSearchLoading] = useState(false)
   const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
@@ -5740,7 +5740,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }, [topSportButtons])
 
   useEffect(() => {
-    fetchTodayFootballFixtures()
+    setFootballViewMode('search')
+    setFixtureSearchPerformed(false)
+    setLiveFixtures([])
+    setLiveFixturesStatus('Wpisz nazwę meczu lub drużyny i kliknij Szukaj.')
   }, [])
 
   useEffect(() => {
@@ -5943,7 +5946,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     event?.preventDefault?.()
     const query = String(sidebarSearch || '').trim()
     if (!query) {
-      fetchTodayFootballFixtures()
+      setFootballViewMode('search')
+      setFixtureSearchPerformed(false)
+      setLiveFixtures([])
+      setLiveFixturesStatus('Wpisz nazwę meczu lub drużyny i kliknij Szukaj.')
       return
     }
     setFootballViewMode('search')
@@ -6366,138 +6372,38 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
-      <div className="betfolio-add-shell">
-        <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
-          <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
-            <input
-              className="betfolio-search-input"
-              placeholder="Szukaj meczu lub drużyny bez limitu dat"
-              value={sidebarSearch}
-              onChange={(e) => setSidebarSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
-            />
-            <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
-              {fixtureSearchLoading ? '…' : 'Szukaj'}
-            </button>
-          </form>
-
-          <button type="button" className="betfolio-fetch-btn" onClick={fetchTodayFootballFixtures} disabled={liveFixturesLoading}>
-            {liveFixturesLoading && footballViewMode === 'today' ? 'Pobieram dziś…' : 'Dziś — szybki typ'}
-          </button>
-
-          <div className="sports-accordion-title">SPORT</div>
-
-          <div className="sports-accordion-list">
-            <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
-              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Piłka nożna')}>
-                <span>⚽ Piłka nożna</span><b>{openSidebarSport === 'Piłka nożna' ? '⌃' : '⌄'}</b>
-              </button>
-              {openSidebarSport === 'Piłka nożna' && (
-                <div className="sport-accordion-children football-country-tree">
-                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
-                  {footballCountryOptions.map(country => {
-                    const isCountryActive = currentCountry === country
-                    const isCountryOpen = openFootballCountry === country
-                    const countryLeagues = getFootballLeaguesForCountry(country)
-                    return (
-                      <div className="football-country-node" key={country}>
-                        <button
-                          type="button"
-                          className={isCountryActive ? 'is-active country-active' : ''}
-                          onClick={() => selectSidebarCountry(country)}
-                        >
-                          <span>{footballCountryIcons[country] || '🏳️'} {country}</span>
-                          <b>{isCountryOpen ? '⌃' : '⌄'}</b>
-                        </button>
-
-                        {isCountryOpen && (
-                          <div className="sport-accordion-children level-two football-leagues-list">
-                            {countryLeagues.map(label => (
-                              <button
-                                type="button"
-                                key={`${country}-${label}`}
-                                className={currentLeague === label ? 'is-active league-active' : ''}
-                                onClick={() => selectSidebarLeague('Piłka nożna', country, label)}
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div className="football-pro-mode-note">
-              Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
-            </div>
-          </div>
-
-          <div className="betfolio-left-stats">
-            <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
-              <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
-              <span>{isPremiumUser ? 'Publikujesz bez limitu' : 'Maks. 5 tipów / doba'}</span>
-            </div>
-            <div className="tip-add-usage-pill">
-              <strong>{countLoading ? '…' : isPremiumUser ? `${dailyCount}` : `${dailyCount}/5`}</strong>
-              <span>{isPremiumUser ? 'Dodane dziś' : `Pozostało dziś: ${remainingFreeSlots}`}</span>
-            </div>
-          </div>
-
-          <div className="betfolio-side-note">
-            {liveFixturesStatus || 'Kliknij sport → kategorię/państwo → ligę, a potem pobierz mecze i kursy.'}
-          </div>
-        </aside>
-
+      <div className={`betfolio-add-shell ${showMarketBoard && ticketMarketSelected ? 'ticket-open' : 'search-only-shell'}`}>
         <div className={`betfolio-center glass-ultra-panel ${showMarketBoard ? 'market-board-mode' : ''}`}>
           {!showMarketBoard && (
             <>
-              <div className="betfolio-center-header">
+              <div className="betfolio-center-header search-only-header">
                 <div>
                   <div className="static-add-title-row">
                     <span className="static-add-title-icon">⬡</span>
                     <h1>Dodaj nowy typ</h1>
                   </div>
-                  <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
+                  <p>Wpisz prawdziwy mecz albo drużynę. Najpierw wyszukujesz, potem wybierasz mecz, a kupon otworzy się dopiero po kliknięciu konkretnego kursu.</p>
                   <div className={`live-real-badge ${liveDataSource}`}>
-                    {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+                    {liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Szukam realnych meczów...' : liveDataSource === 'error' ? '● Błąd live API' : '● Wyszukiwanie realnych meczów'}
                   </div>
                 </div>
-                <div className="betfolio-center-badges">
-                  <span>{form.sport}</span>
-                  <span>{currentCountry}</span>
-                  <span>{currentLeague}</span>
-                </div>
               </div>
 
-              <div className="betfolio-top-sports-row">
-                {topSportButtons.map((item) => {
-                  const active = form.sport === item.name
-                  const count = Number(sportDayCounts[item.name] || 0)
-                  return (
-                    <button
-                      type="button"
-                      key={`top-sport-${item.name}`}
-                      className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
-                      onClick={() => handleTopSportButtonClick(item)}
-                    >
-                      <span>{item.icon} {item.name}</span>
-                      <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
-                    </button>
-                  )
-                })}
-              </div>
+              <form className="betfolio-search-stage" onSubmit={handleFixtureSearchSubmit}>
+                <input
+                  className="betfolio-search-stage-input"
+                  placeholder="Wpisz mecz lub drużynę, np. Barcelona, Real Madryt, Legia..."
+                  value={sidebarSearch}
+                  onChange={(e) => setSidebarSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
+                />
+                <button type="submit" className="betfolio-search-stage-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
+                  {fixtureSearchLoading ? 'Szukam…' : 'Szukaj'}
+                </button>
+              </form>
 
-              <div className="betfolio-top-sports-note">
-                Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig. Wyszukiwarka szuka każdego meczu, a kliknięcie ligi po lewej pokazuje jej mecze na dziś i najbliższe terminy.
-              </div>
-
-              <div className="betfolio-fixture-mode-tabs">
-                <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
-                <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+              <div className="betfolio-fixture-mode-tabs search-only-tabs">
+                <button type="button" className="active" onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
               </div>
             </>
           )}
@@ -6505,8 +6411,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           {!showMarketBoard ? (
             <>
               <div className="betfolio-events-head">
-                <strong>{footballViewMode === 'today' ? 'Dziś — szybki typ' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Mecze ligi'}</strong>
-                <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                <strong>{fixtureSearchPerformed ? 'Wyniki wyszukiwania' : 'Wyszukaj mecz'}</strong>
+                <span>{visibleMatchOptions.length} znalezionych meczów</span>
               </div>
 
               <div className="betfolio-events-list">
@@ -6549,8 +6455,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   )
                 }) : (
                   <div className="betfolio-empty-state no-fake-empty">
-                    <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę albo kliknij Dziś'}</strong>
-                    <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję szybkie typy z top 6 lig, a wyszukiwarka znajduje każdy prawdziwy mecz. Kliknij ligę po lewej, aby zobaczyć jej mecze na dziś i najbliższe terminy.' : 'Kliknij ligę po lewej, użyj zakładki „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
+                    <strong>{fixtureSearchPerformed ? 'Brak realnych meczów z API' : 'Wpisz nazwę meczu lub drużyny'}</strong>
+                    <span>{fixtureSearchPerformed ? 'Nie pokazuję demo ani fake spotkań. Spróbuj pełnej nazwy drużyny albo meczu.' : 'Wyszukiwarka znajduje prawdziwe mecze. Po wyborze meczu zobaczysz rynki; prawa kolumna otworzy się dopiero po kliknięciu kursu.'}</span>
                   </div>
                 )}
               </div>
@@ -6614,6 +6520,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           )}
         </div>
 
+        {showMarketBoard && ticketMarketSelected && (
         <aside className="betfolio-right glass-ultra-panel">
           <div className="betfolio-ticket-top">
             <div className="betfolio-ticket-tabs">
@@ -6696,6 +6603,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </button>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -7291,6 +7199,7 @@ function ReferralsView({ user, data, loading, onRefresh }) {
             </div>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -7787,6 +7696,7 @@ function ArticlesView() {
             </div>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -8004,6 +7914,7 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
             <button type="button" className="wallet-v2-primary-btn">Zarządzaj wypłatami</button>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -9574,6 +9485,7 @@ function LeaderboardView({ tips = [], ranking = [] }) {
             <button type="button" className="hall-btn-v4 alt">Pobierz link polecający</button>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -11559,6 +11471,7 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
             <button type="button" className="side-link-v3">Pełny ranking →</button>
           </div>
         </aside>
+        )}
       </div>
     </section>
   )
@@ -12162,6 +12075,7 @@ function TopTipstersView() {
 
           <button type="button" className="sell-analysis-v7">☁ Sprzedaj swoją analizę</button>
         </aside>
+        )}
       </div>
     </section>
   )
