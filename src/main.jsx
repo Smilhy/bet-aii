@@ -422,12 +422,14 @@ function isVisibleTipForUser(tip, userId, unlockedSet) {
 
 function getUserProfileView(user) {
   const email = user?.email || ''
-  const username = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const username = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const avatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url || ''
   return {
     id: user?.id || null,
     email,
     username,
     initials: (username || 'U').slice(0, 2).toUpperCase(),
+    avatarUrl,
     isAdmin: email.toLowerCase() === 'smilhytv@gmail.com'
   }
 }
@@ -569,7 +571,12 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
         </div>
         <div className="user-card">
-          <div className="avatar">{profile.initials}</div>
+          <div
+            className={`avatar sidebar-user-avatar ${profile.avatarUrl ? 'has-avatar' : ''}`}
+            style={profile.avatarUrl ? { '--avatar-image': `url("${profile.avatarUrl}")` } : undefined}
+          >
+            {profile.avatarUrl ? '' : profile.initials}
+          </div>
           <div>
             <strong>{profile.username}</strong>
             <span className="pill">{getDisplayRole(user, userPlan)}</span>
@@ -12747,10 +12754,10 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
             <div className="profile-v3-user-row">
               <button
                 type="button"
-                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUploading ? 'is-uploading' : ''}`}
+                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
                 onClick={chooseAvatar}
                 title="Kliknij, aby dodać lub zmienić avatar"
-                style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
+                style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
               >
                 {avatarUrl ? '' : initials}
                 <span>{avatarUploading ? '...' : '✎'}</span>
@@ -16236,7 +16243,12 @@ function App() {
               </span>
             </button>
             <button type="button" className={`top-user-chip neutral-top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
-              <span className="top-user-avatar">{(getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}</span>
+              <span
+                className={`top-user-avatar ${effectiveAccountProfile?.avatar_url ? 'has-avatar' : ''}`}
+                style={effectiveAccountProfile?.avatar_url ? { '--avatar-image': `url("${effectiveAccountProfile.avatar_url}")` } : undefined}
+              >
+                {effectiveAccountProfile?.avatar_url ? '' : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
+              </span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
               <span className="top-user-chevron">⌄</span>
             </button>
@@ -16362,7 +16374,10 @@ function App() {
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
             onToast={showToast}
-            onAvatarUpdated={(nextAvatarUrl) => setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))}
+            onAvatarUpdated={(nextAvatarUrl) => {
+              setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
+              setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
+            }}
           />
         )}
 

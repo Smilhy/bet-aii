@@ -29875,3 +29875,17 @@ button.betfolio-fetch-btn{
   opacity:0!important;
   pointer-events:none!important;
 }
+
+
+/* WERSJA 835 — avatar widoczny w profilu, sidebarze i górnym pasku */
+.profile-v3-avatar-editable.has-avatar{
+  background:var(--avatar-image) center/cover no-repeat!important;
+}
+.sidebar-user-avatar.has-avatar{
+  background:var(--avatar-image) center/cover no-repeat!important;
+  border:1px solid rgba(37,233,255,.24)!important;
+}
+.top-user-avatar.has-avatar{
+  background:var(--avatar-image) center/cover no-repeat!important;
+  border:1px solid rgba(37,233,255,.24)!important;
+}

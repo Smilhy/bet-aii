@@ -1,0 +1,9 @@
+WERSJA 835
+- Naprawiono wyświetlanie avatara po dodaniu.
+- Przyczyna: stary background CSS z !important zasłaniał obraz w dużym avatarze profilu.
+- Po zapisaniu zdjęcie pokazuje się teraz:
+  • w dużym avatarze w Mój profil,
+  • w małym avatarze po lewej w panelu głównym,
+  • w avatarze użytkownika w górnym pasku.
+- Zamiast liter SM pojawia się zdjęcie, jeśli avatar istnieje.
+- Nie wymaga nowego SQL, jeżeli SQL 834 został już uruchomiony.
