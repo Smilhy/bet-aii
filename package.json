@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-756-football-pro-fixtures-query-fix",
-  "version": "756.0.0",
+  "name": "betai-wersja-757-football-pro-layout-restore",
+  "version": "757.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
