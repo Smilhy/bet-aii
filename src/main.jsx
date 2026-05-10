@@ -6452,51 +6452,55 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
         </aside>
 
-        <div className="betfolio-center glass-ultra-panel">
-          <div className="betfolio-center-header">
-            <div>
-              <div className="static-add-title-row">
-                <span className="static-add-title-icon">⬡</span>
-                <h1>Dodaj nowy typ</h1>
+        <div className={`betfolio-center glass-ultra-panel ${showMarketBoard ? 'market-board-mode' : ''}`}>
+          {!showMarketBoard && (
+            <>
+              <div className="betfolio-center-header">
+                <div>
+                  <div className="static-add-title-row">
+                    <span className="static-add-title-icon">⬡</span>
+                    <h1>Dodaj nowy typ</h1>
+                  </div>
+                  <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
+                  <div className={`live-real-badge ${liveDataSource}`}>
+                    {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+                  </div>
+                </div>
+                <div className="betfolio-center-badges">
+                  <span>{form.sport}</span>
+                  <span>{currentCountry}</span>
+                  <span>{currentLeague}</span>
+                </div>
               </div>
-              <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
-              <div className={`live-real-badge ${liveDataSource}`}>
-                {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+
+              <div className="betfolio-top-sports-row">
+                {topSportButtons.map((item) => {
+                  const active = form.sport === item.name
+                  const count = Number(sportDayCounts[item.name] || 0)
+                  return (
+                    <button
+                      type="button"
+                      key={`top-sport-${item.name}`}
+                      className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
+                      onClick={() => handleTopSportButtonClick(item)}
+                    >
+                      <span>{item.icon} {item.name}</span>
+                      <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
+                    </button>
+                  )
+                })}
               </div>
-            </div>
-            <div className="betfolio-center-badges">
-              <span>{form.sport}</span>
-              <span>{currentCountry}</span>
-              <span>{currentLeague}</span>
-            </div>
-          </div>
 
-          <div className="betfolio-top-sports-row">
-            {topSportButtons.map((item) => {
-              const active = form.sport === item.name
-              const count = Number(sportDayCounts[item.name] || 0)
-              return (
-                <button
-                  type="button"
-                  key={`top-sport-${item.name}`}
-                  className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
-                  onClick={() => handleTopSportButtonClick(item)}
-                >
-                  <span>{item.icon} {item.name}</span>
-                  <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
-                </button>
-              )
-            })}
-          </div>
+              <div className="betfolio-top-sports-note">
+                Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig. Wyszukiwarka szuka każdego meczu, a kliknięcie ligi po lewej pokazuje jej mecze na dziś i najbliższe terminy.
+              </div>
 
-          <div className="betfolio-top-sports-note">
-            Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig. Wyszukiwarka szuka każdego meczu, a kliknięcie ligi po lewej pokazuje jej mecze na dziś i najbliższe terminy.
-          </div>
-
-          <div className="betfolio-fixture-mode-tabs">
-            <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
-                        <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
-          </div>
+              <div className="betfolio-fixture-mode-tabs">
+                <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
+                <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+              </div>
+            </>
+          )}
 
           {!showMarketBoard ? (
             <>
@@ -6560,12 +6564,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy.'}</span>
                 </div>
                 <button type="button" className="betfolio-small-outline" onClick={() => selectedMatch && applyMatchToForm(selectedMatch)}>Dodaj własny typ</button>
-              </div>
-
-              <div className="betfolio-board-note">
-                {selectedMatch?.hasRealOdds
-                  ? 'Prawdziwe kursy pre-match z API-FOOTBALL. Kliknij kurs, aby dodać go do kuponu po prawej.'
-                  : 'API-FOOTBALL nie zwróciło jeszcze realnych kursów dla tego meczu.'}
               </div>
 
               <div className="betfolio-market-accordion-list">
