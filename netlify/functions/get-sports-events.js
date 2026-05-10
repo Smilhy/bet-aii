@@ -890,7 +890,15 @@ exports.handler = async function(event) {
     if (mode === 'search' && query) {
       const searched = await searchApiFootballFixtures(apiKey, query)
       if (searched.fixtures.length) {
-        return { configs: configs.map(cfg => cfg.key), fixtures: searched.fixtures, message: '' }
+        // Wyszukiwarka działała poprawnie dla meczów, ale wcześniej zwracała je
+        // przed wzbogaceniem o realne kursy z /odds. Efekt: lista znajdowała np.
+        // Barcelona vs Real Madrid, ale nie miała 1/X/2 ani popularnych rynków.
+        const searchDateKeys = searched.fixtures
+          .map(item => String(item?.date || item?.commence_time || '').slice(0, 10))
+          .filter(Boolean)
+        const oddsEnriched = await enrichFixturesWithApiFootballOdds(apiKey, cfg, searched.fixtures, searchDateKeys)
+        const message = oddsEnriched.errors.length ? oddsEnriched.errors.join(' | ') : ''
+        return { configs: configs.map(item => item.key), fixtures: oddsEnriched.fixtures, message }
       }
     }
 
