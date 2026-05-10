@@ -28940,3 +28940,45 @@ button.betfolio-fetch-btn{
     width:100%!important;
   }
 }
+
+
+/* WERSJA 824 — uproszczone metody wpłat i wypłat */
+.wallet-v2-methods-card{display:flex!important;flex-direction:column!important}
+.wallet-v2-method-section{display:grid!important;gap:8px!important}
+.wallet-v2-method-section-payout{
+  margin-top:14px!important;
+  padding-top:14px!important;
+  border-top:1px solid rgba(55,216,226,.10)!important;
+}
+.wallet-v2-payment-grid-live{margin-bottom:0!important}
+.wallet-v2-payment-grid-live > button.wallet-pay-method{
+  min-height:84px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(55,216,226,.12)!important;
+  background:linear-gradient(180deg,rgba(7,23,31,.96),rgba(4,14,22,.98))!important;
+  padding:12px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  text-align:center!important;
+  cursor:pointer!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease!important;
+}
+.wallet-v2-payment-grid-live > button.wallet-pay-method strong{font-size:13px!important;color:#ebfaff!important}
+.wallet-v2-payment-grid-live > button.wallet-pay-method small{font-size:11px!important;color:#8aa1b1!important}
+.wallet-v2-payment-grid-live > button.wallet-pay-method.is-active:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(37,231,255,.28)!important;
+  box-shadow:0 14px 28px rgba(0,0,0,.18),0 0 22px rgba(31,225,247,.08)!important;
+}
+.wallet-v2-payment-grid-live > button.wallet-pay-method.is-locked{
+  cursor:not-allowed!important;
+  opacity:.72!important;
+}
+.wallet-v2-payment-grid-live > button.wallet-pay-method.is-locked small{
+  color:#f1c36b!important;
+}
+.pay-logo.stripe{background:linear-gradient(135deg,#635bff,#2aa5ff)!important;color:#fff!important}
+.pay-logo.revolut{background:linear-gradient(135deg,#111d2f,#24405f)!important;color:#eef7ff!important}

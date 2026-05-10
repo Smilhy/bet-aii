@@ -8698,17 +8698,51 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               </div>
             </div>
 
-            <div className="glass-v2-panel wallet-v2-card">
-              <div className="wallet-v2-card-head"><h3>Metody wpłaty</h3></div>
-              <p className="wallet-v2-sub">Wybierz preferowaną metodę</p>
-              <div className="wallet-v2-payment-grid">
-                <div><span className="pay-logo blik">blik</span><strong>BLIK</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo bank">🏛</span><strong>Przelew online</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo card">💳</span><strong>Karta płatnicza</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo paypal">P</span><strong>PayPal</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo gpay">G Pay</span><strong>Google Pay</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo apple"> Pay</span><strong>Apple Pay</strong><small>Natychmiast</small></div>
+            <div className="glass-v2-panel wallet-v2-card wallet-v2-methods-card">
+              <div className="wallet-v2-card-head"><h3>Metody płatności</h3></div>
+
+              <div className="wallet-v2-method-section">
+                <p className="wallet-v2-sub">Wpłaty</p>
+                <div className="wallet-v2-payment-grid wallet-v2-payment-grid-live">
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo paypal">P</span>
+                    <strong>PayPal</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo revolut">R</span>
+                    <strong>Revolut</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-active" onClick={onTopUp}>
+                    <span className="pay-logo stripe">S</span>
+                    <strong>Stripe</strong>
+                    <small>Aktywne</small>
+                  </button>
+                </div>
               </div>
+
+              <div className="wallet-v2-method-section wallet-v2-method-section-payout">
+                <p className="wallet-v2-sub">Wypłaty</p>
+                <div className="wallet-v2-payment-grid wallet-v2-payment-grid-live">
+                  <button type="button" className="wallet-pay-method is-active" onClick={() => onViewChange?.('payouts')}>
+                    <span className="pay-logo stripe">S</span>
+                    <strong>Stripe</strong>
+                    <small>Aktywne</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo paypal">P</span>
+                    <strong>PayPal</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo revolut">R</span>
+                    <strong>Revolut</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                </div>
+              </div>
+
               <button type="button" className="wallet-v2-primary-btn" onClick={onTopUp}>Przejdź do wpłat</button>
             </div>
           </div>
