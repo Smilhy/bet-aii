@@ -5312,7 +5312,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
     setFootballViewMode('upcoming')
-    setLiveFixturesStatus('Wybierz ligę, a od razu pokażę najbliższe mecze z kolejnych 14 dni.')
+    setLiveFixturesStatus('Wybierz ligę, a pokażę mecze tej ligi na dziś i najbliższe terminy.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
@@ -5628,7 +5628,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           daysAhead: '7',
             realOnly: '1',
             countOnly: '1',
-            allLeagues: '1'
+            allLeagues: '1',
+            mode: 'today'
           })
           const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
           const data = await response.json().catch(() => ({}))
@@ -5786,7 +5787,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   function applyMatchToForm(match) {
     const nextMarket = match?.markets?.[0] || noRealMarket
     if (!match) return
+    if (match.country) setOpenFootballCountry(match.country)
     updateForm({
+      sport: match.sport || form.sport,
+      country: match.country || currentCountry,
       matchId: match.id || `${match.home}-${match.away}`,
       league: match.league || currentLeague,
       market: nextMarket.market,
@@ -5850,7 +5854,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setFixtureSearchPerformed(false)
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`LIVE: pobieram najbliższe mecze ligi ${nextLeague} z kolejnych ${LIVE_SEARCH_DAYS_AHEAD} dni...`)
+    setLiveFixturesStatus(`LIVE: pobieram mecze ligi ${nextLeague} na dziś i najbliższe terminy...`)
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -5957,7 +5961,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
           const scopeLabel = overrides.mode === 'today'
-            ? 'dzisiejszych meczów'
+            ? 'meczów z top 6 lig dziś'
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
               : `meczów z najbliższych ${overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD} dni`
@@ -6345,7 +6349,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </form>
 
           <button type="button" className="betfolio-fetch-btn" onClick={fetchTodayFootballFixtures} disabled={liveFixturesLoading}>
-            {liveFixturesLoading && footballViewMode === 'today' ? 'Pobieram dziś…' : 'Dziś — wszystkie mecze'}
+            {liveFixturesLoading && footballViewMode === 'today' ? 'Pobieram dziś…' : 'Dziś — szybki typ'}
           </button>
 
           <div className="sports-accordion-title">SPORT</div>
@@ -6453,17 +6457,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-top-sports-note">
-            Live radar: realne mecze z API-FOOTBALL Pro. Kliknij ligę po lewej, aby zobaczyć najbliższe 14 dni, albo użyj zakładki „Dziś”.
+            Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig. Wyszukiwarka szuka każdego meczu, a kliknięcie ligi po lewej pokazuje jej mecze na dziś i najbliższe terminy.
           </div>
 
           <div className="betfolio-fixture-mode-tabs">
             <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
-            <button type="button" className={footballViewMode === 'upcoming' ? 'active' : ''} onClick={fetchUpcomingFootballFixtures}>Nadchodzące 14 dni</button>
-            <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+                        <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
           </div>
 
           <div className="betfolio-events-head">
-            <strong>{footballViewMode === 'today' ? 'Mecze dziś' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Nadchodzące mecze'}</strong>
+            <strong>{footballViewMode === 'today' ? 'Dziś — szybki typ' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Mecze ligi'}</strong>
             <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
           </div>
 
@@ -6508,7 +6511,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             }) : (
               <div className="betfolio-empty-state no-fake-empty">
                 <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę albo kliknij Dziś'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję cały dzisiejszy kalendarz, liga pokazuje kolejne 14 dni, a wyszukiwarka szuka globalnie po meczu/drużynie.' : 'Kliknij kraj → ligę, zakładkę „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję szybkie typy z top 6 lig, a wyszukiwarka znajduje każdy prawdziwy mecz. Kliknij ligę po lewej, aby zobaczyć jej mecze na dziś i najbliższe terminy.' : 'Kliknij ligę po lewej, użyj zakładki „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
               </div>
             )}
           </div>

@@ -882,6 +882,63 @@ exports.handler = async function(event) {
     return { fixtures, errors }
   }
 
+  const TOP_TODAY_FOOTBALL_LEAGUES = [
+    { country: 'England', aliases: ['premier league'] },
+    { country: 'Germany', aliases: ['bundesliga'] },
+    { country: 'Italy', aliases: ['serie a'] },
+    { country: 'Spain', aliases: ['la liga', 'primera division'] },
+    { country: 'Poland', aliases: ['ekstraklasa'] },
+    { country: 'Portugal', aliases: ['primeira liga', 'liga portugal'] },
+  ]
+
+  const isTopTodayFootballLeague = (fixture) => {
+    const actualCountry = normalizeLoose(fixture?.country || '')
+    const actualLeague = normalizeLoose(fixture?.league || '')
+    return TOP_TODAY_FOOTBALL_LEAGUES.some(item => {
+      const wantedCountry = normalizeLoose(item.country)
+      return actualCountry.includes(wantedCountry)
+        && item.aliases.some(alias => actualLeague.includes(normalizeLoose(alias)))
+    })
+  }
+
+  const fetchApiFootballOddsByFixture = async (apiKey, cfg, fixtureId) => {
+    if (!apiKey || !cfg || !fixtureId) return { rows: [], errors: [] }
+    try {
+      const url = new URL(`${cfg.host}/odds`)
+      url.searchParams.set('fixture', String(fixtureId))
+      const response = await fetch(url.toString(), {
+        headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) return { rows: [], errors: [`odds/fixture/${fixtureId}: HTTP ${response.status}`] }
+      if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+        return { rows: [], errors: [`odds/fixture/${fixtureId}: ${JSON.stringify(data.errors).slice(0, 120)}`] }
+      }
+      return { rows: Array.isArray(data?.response) ? data.response : [], errors: [] }
+    } catch (error) {
+      return { rows: [], errors: [`odds/fixture/${fixtureId}: ${error.message}`] }
+    }
+  }
+
+  const enrichSearchFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures) => {
+    if (countOnly || !apiKey || !fixtures.length) return { fixtures, errors: [] }
+    const errors = []
+    const enriched = []
+    for (const fixture of fixtures.slice(0, 30)) {
+      const response = await fetchApiFootballOddsByFixture(apiKey, cfg, fixture.apiFixtureId || fixture.id)
+      errors.push(...response.errors)
+      const markets = mapApiFootballOddsRowsToMarkets(response.rows, fixture)
+      enriched.push({
+        ...fixture,
+        markets,
+        hasRealOdds: markets.length > 0,
+        oddsMessage: markets.length ? '' : 'API-FOOTBALL nie ma jeszcze kursów dla tego meczu.'
+      })
+    }
+    if (fixtures.length > enriched.length) enriched.push(...fixtures.slice(enriched.length))
+    return { fixtures: enriched, errors }
+  }
+
   const fetchApiSportsFixtures = async (apiKey, rangeDays, requestedDay) => {
     if (!apiKey) return { configs: [], fixtures: [], message: 'Brak APISPORTS_KEY w Netlify.' }
     const configs = getApiSportsConfigs()
@@ -893,10 +950,7 @@ exports.handler = async function(event) {
         // Wyszukiwarka działała poprawnie dla meczów, ale wcześniej zwracała je
         // przed wzbogaceniem o realne kursy z /odds. Efekt: lista znajdowała np.
         // Barcelona vs Real Madrid, ale nie miała 1/X/2 ani popularnych rynków.
-        const searchDateKeys = searched.fixtures
-          .map(item => String(item?.date || item?.commence_time || '').slice(0, 10))
-          .filter(Boolean)
-        const oddsEnriched = await enrichFixturesWithApiFootballOdds(apiKey, cfg, searched.fixtures, searchDateKeys)
+        const oddsEnriched = await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], searched.fixtures)
         const message = oddsEnriched.errors.length ? oddsEnriched.errors.join(' | ') : ''
         return { configs: configs.map(item => item.key), fixtures: oddsEnriched.fixtures, message }
       }
@@ -954,6 +1008,7 @@ exports.handler = async function(event) {
           if (!Number.isFinite(kickMs)) return true
           return kickMs > Date.now() + 60 * 1000
         })
+        .filter(item => mode !== 'today' || isTopTodayFootballLeague(item))
         .filter(item => allLeagues || matchesRequestedFootballScope(item))
         .filter(matchesRequestedFootballText)
         .forEach(item => collected.push(item))
@@ -977,7 +1032,7 @@ exports.handler = async function(event) {
     const emptyMessage = mode === 'search' && query
       ? `API-FOOTBALL Pro nie znalazło meczu dla frazy „${query}”.`
       : mode === 'today'
-        ? 'API-FOOTBALL Pro nie zwróciło przyszłych meczów na dziś.'
+        ? 'API-FOOTBALL Pro nie zwróciło dziś meczów z top 6 lig.'
         : 'API-FOOTBALL Pro nie zwróciło meczów dla wybranej ligi i zakresu.'
 
     return {
