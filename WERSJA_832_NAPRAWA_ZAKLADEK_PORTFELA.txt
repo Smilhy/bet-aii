@@ -1,0 +1,10 @@
+WERSJA 832
+- Naprawiono błąd, przez który zakładki:
+  • Płatności
+  • Subskrypcja
+  • Zarobki
+  • Wypłaty
+  po kliknięciu były automatycznie przerzucane do Dashboardu.
+- Przyczyną był stary useEffect, który wymuszał setView('dashboard') dla dawnych widoków.
+- Usunięto ten stary redirect.
+- Zakładki Portfela są teraz realnie klikalne i pozostają na swoich nowych stronach.

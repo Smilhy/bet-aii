@@ -15707,12 +15707,6 @@ function App() {
   }, [sessionUser?.id])
 
   useEffect(() => {
-    if (['notifications', 'payments', 'subscriptions', 'earnings', 'payouts'].includes(view)) {
-      setView('dashboard')
-    }
-  }, [view])
-
-  useEffect(() => {
     const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!currentEmail) return undefined
 
