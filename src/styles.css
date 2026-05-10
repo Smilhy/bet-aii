@@ -17422,6 +17422,11 @@ img,video,canvas,svg{max-width:100%;}
 .chart-area span{position:absolute;left:8px;right:8px;bottom:18px;height:92px;background:linear-gradient(180deg,rgba(18,236,223,.18),rgba(18,236,223,.02));clip-path:path('M 0 78 C 16 70, 22 60, 35 58 C 48 56, 56 52, 72 60 C 88 68, 96 34, 112 42 C 128 50, 140 46, 156 18 C 168 -2, 176 38, 190 32 C 206 26, 214 46, 226 24 C 238 2, 250 28, 262 26 C 276 24, 284 48, 296 38 C 310 26, 320 10, 334 12 C 348 14, 358 4, 372 0 L 372 100 L 0 100 Z');border-bottom:3px solid #17ecd8;filter:drop-shadow(0 0 10px rgba(23,236,216,.22))}
 .x-labels{grid-column:2!important;display:flex!important;justify-content:space-between!important;color:#839aab!important;font-size:11px!important;padding:0 4px!important}
 .wallet-v2-sidebar{grid-template-rows:auto auto auto!important}
+
+/* VERSION 531 — Wallet: remove right column and expand main content */
+.wallet-v2-layout{grid-template-columns:1fr!important}
+.wallet-v2-main{width:100%!important}
+.wallet-v2-sidebar{display:none!important}
 .side-head-line{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:12px!important;color:#14ecd8!important;font-size:14px!important;font-weight:900!important}
 .side-head-line span{color:#18ecd6!important;font-size:12px!important}
 .top-users-head{display:grid!important;grid-template-columns:1.2fr 1fr!important;gap:12px!important;padding:0 0 8px!important;border-bottom:1px solid rgba(255,255,255,.05)!important;margin-bottom:8px!important}
@@ -28453,4 +28458,226 @@ button.betfolio-fetch-btn{
 .add-tip-betfolio-page .betfolio-odd-box.active span,
 .add-tip-betfolio-page .betfolio-odd-box.active b{
   color:#07111d !important;
+}
+
+
+/* WERSJA 808 — stawka widoczna na karcie typu */
+.bet-row{grid-template-columns:minmax(0,1.6fr) minmax(110px,.7fr) minmax(130px,.8fr)!important;}
+.bet-row div:nth-child(3){background:linear-gradient(180deg, rgba(24,242,198,.04), rgba(58,208,255,.03))!important;}
+.bet-row div:nth-child(3) b{color:#eefaff!important;}
+@media (max-width: 900px){
+  .bet-row{grid-template-columns:1fr!important;}
+  .bet-row div+div{border-left:0!important;border-top:1px solid var(--border)!important;}
+}
+
+/* WERSJA 810 — baner hero Portfel w stylu Dodaj typ */
+.wallet-v2-hero{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 520px!important;
+  align-items:center!important;
+  gap:28px!important;
+  min-height:306px!important;
+  margin:2px 0 2px!important;
+  padding:34px 42px!important;
+  overflow:hidden!important;
+  border-radius:28px!important;
+  border:1px solid rgba(45,228,255,.18)!important;
+  background:
+    radial-gradient(circle at 72% 45%, rgba(16,157,255,.20), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(38,234,255,.10), transparent 18%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(7,25,53,.94))!important;
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 0 0 1px rgba(21,219,255,.035)!important;
+}
+.wallet-v2-hero::before{
+  content:""!important;
+  position:absolute!important;
+  inset:-1px!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(115deg, rgba(42,235,255,.08), transparent 38%),
+    linear-gradient(290deg, rgba(93,125,255,.08), transparent 34%)!important;
+}
+.wallet-v2-hero-copy{position:relative!important;z-index:2!important}
+.wallet-v2-hero-copy h2{
+  margin:0 0 14px!important;
+  color:#f4f8ff!important;
+  font-size:56px!important;
+  line-height:.95!important;
+  letter-spacing:-.055em!important;
+  font-weight:1000!important;
+  text-shadow:0 10px 36px rgba(0,0,0,.32)!important;
+}
+.wallet-v2-hero-copy h2 span{
+  color:#29ddff!important;
+  text-shadow:0 0 28px rgba(41,221,255,.24)!important;
+}
+.wallet-v2-hero-copy p{
+  max-width:640px!important;
+  margin:0 0 28px!important;
+  color:#d9e5f5!important;
+  font-size:18px!important;
+  line-height:1.5!important;
+  font-weight:650!important;
+}
+.wallet-v2-hero-features{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:26px!important;
+  flex-wrap:wrap!important;
+}
+.wallet-v2-hero-features div{
+  min-width:168px!important;
+  display:grid!important;
+  grid-template-columns:38px 1fr!important;
+  column-gap:12px!important;
+  row-gap:3px!important;
+  align-items:center!important;
+}
+.wallet-v2-hero-features i{
+  grid-row:span 2!important;
+  width:38px!important;
+  height:38px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:13px!important;
+  color:#24e5ff!important;
+  font-style:normal!important;
+  font-size:21px!important;
+  font-weight:1000!important;
+  background:rgba(24,211,255,.07)!important;
+  border:1px solid rgba(40,226,255,.18)!important;
+  box-shadow:0 0 24px rgba(36,229,255,.08)!important;
+}
+.wallet-v2-hero-features strong{color:#f3f7ff!important;font-size:13px!important;font-weight:900!important}
+.wallet-v2-hero-features small{color:#a8bbd3!important;font-size:12px!important;line-height:1.35!important}
+.wallet-v2-hero-visual{
+  position:relative!important;
+  min-height:220px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.wallet-v2-hero-orbit{
+  position:absolute!important;
+  width:470px!important;
+  height:170px!important;
+  border:1px solid rgba(43,219,255,.28)!important;
+  border-radius:50%!important;
+  transform:rotate(-14deg)!important;
+  box-shadow:0 0 35px rgba(35,212,255,.08)!important;
+}
+.wallet-v2-hero-orbit::after{
+  content:""!important;
+  position:absolute!important;
+  right:58px!important;
+  bottom:-4px!important;
+  width:8px!important;
+  height:8px!important;
+  border-radius:999px!important;
+  background:#2de7ff!important;
+  box-shadow:0 0 22px rgba(45,231,255,.9)!important;
+}
+.wallet-v2-hero-coin{
+  position:absolute!important;
+  left:78px!important;
+  top:28px!important;
+  width:150px!important;
+  height:150px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  font-size:106px!important;
+  line-height:1!important;
+  filter:saturate(.78) brightness(.88)!important;
+  text-shadow:0 0 34px rgba(29,214,255,.34)!important;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.28), transparent 27%),
+    radial-gradient(circle at 50% 50%, rgba(28,207,255,.18), rgba(7,17,35,.98) 68%)!important;
+  box-shadow:
+    0 0 0 1px rgba(47,222,255,.28),
+    0 0 55px rgba(24,211,255,.18),
+    inset 0 0 28px rgba(40,220,255,.10)!important;
+}
+.wallet-v2-hero-card{
+  position:absolute!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  padding:14px 16px!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg, rgba(11,35,68,.70), rgba(7,22,45,.76))!important;
+  border:1px solid rgba(44,226,255,.22)!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.26), 0 0 24px rgba(25,213,255,.08), inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.wallet-v2-hero-card b{
+  color:#9ed9ec!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+.wallet-v2-hero-card strong{
+  color:#f7fbff!important;
+  font-size:26px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+}
+.wallet-v2-hero-card span{
+  color:#95afc2!important;
+  font-size:11.5px!important;
+  font-weight:700!important;
+}
+.wallet-v2-hero-card-main{
+  right:28px!important;
+  top:12px!important;
+  width:208px!important;
+  min-height:106px!important;
+  transform:rotate(-6deg)!important;
+}
+.wallet-v2-hero-card-deposit{
+  right:146px!important;
+  bottom:18px!important;
+  width:166px!important;
+  min-height:88px!important;
+}
+.wallet-v2-hero-card-withdraw{
+  right:10px!important;
+  bottom:30px!important;
+  width:154px!important;
+  min-height:80px!important;
+  opacity:.96!important;
+}
+.wallet-v2-hero-card-deposit strong{color:#22efd1!important;font-size:22px!important}
+.wallet-v2-hero-card-withdraw strong{color:#7ed2ff!important;font-size:22px!important}
+
+@media(max-width:1450px){
+  .wallet-v2-hero{
+    grid-template-columns:minmax(0,1fr) 390px!important;
+    padding:30px!important;
+  }
+  .wallet-v2-hero-copy h2{font-size:48px!important}
+  .wallet-v2-hero-orbit{width:360px!important}
+  .wallet-v2-hero-coin{
+    left:16px!important;
+    width:128px!important;
+    height:128px!important;
+    font-size:92px!important;
+  }
+  .wallet-v2-hero-card-main{right:10px!important;width:184px!important}
+  .wallet-v2-hero-card-deposit{right:98px!important;width:150px!important}
+  .wallet-v2-hero-card-withdraw{right:0!important;width:140px!important}
+}
+@media(max-width:1100px){
+  .wallet-v2-hero{grid-template-columns:1fr!important;min-height:0!important}
+  .wallet-v2-hero-visual{min-height:210px!important}
+}
+@media(max-width:720px){
+  .wallet-v2-hero{padding:24px!important}
+  .wallet-v2-hero-copy h2{font-size:38px!important}
+  .wallet-v2-hero-copy p{font-size:15px!important}
+  .wallet-v2-hero-features{gap:18px!important}
+  .wallet-v2-hero-visual{display:none!important}
 }

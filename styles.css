@@ -28442,3 +28442,13 @@ button.betfolio-fetch-btn{
     height:56px !important;
   }
 }
+
+
+/* WERSJA 808 — stawka widoczna na karcie typu */
+.bet-row{grid-template-columns:minmax(0,1.6fr) minmax(110px,.7fr) minmax(130px,.8fr)!important;}
+.bet-row div:nth-child(3){background:linear-gradient(180deg, rgba(24,242,198,.04), rgba(58,208,255,.03))!important;}
+.bet-row div:nth-child(3) b{color:#eefaff!important;}
+@media (max-width: 900px){
+  .bet-row{grid-template-columns:1fr!important;}
+  .bet-row div+div{border-left:0!important;border-top:1px solid var(--border)!important;}
+}

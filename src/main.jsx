@@ -6551,6 +6551,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       access_type: form.accessType,
       is_premium: form.accessType === 'premium',
@@ -6566,6 +6567,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       created_at: new Date().toISOString(),
     }
@@ -6576,6 +6578,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       created_at: new Date().toISOString(),
     }
@@ -7242,6 +7245,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+  const stakeValue = Number(tip?.stake || 0)
+  const stakeLabel = stakeValue > 0
+    ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł`
+    : '—'
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -7322,6 +7329,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <div className="bet-row">
             <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
             <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
+            <div><span>Stawka</span><b>{stakeLabel}</b></div>
           </div>
         </div>
 
@@ -8222,6 +8230,51 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
             <button type="button">Zarobki</button>
             <button type="button">Admin finanse</button>
             <button type="button">Admin wypłaty</button>
+          </div>
+
+          <div className="wallet-v2-hero glass-v2-panel">
+            <div className="wallet-v2-hero-copy">
+              <h2>Portfel <span>Premium</span></h2>
+              <p>Wpłacaj, wypłacaj i zarządzaj środkami w jednym miejscu. Szybkie operacje, pełna kontrola salda i nowoczesny finansowy hub Bet+AI.</p>
+
+              <div className="wallet-v2-hero-features">
+                <div>
+                  <i>＋</i>
+                  <strong>Błyskawiczne wpłaty</strong>
+                  <small>BLIK, karta, PayPal i szybkie przelewy online</small>
+                </div>
+                <div>
+                  <i>⇡</i>
+                  <strong>Wygodne wypłaty</strong>
+                  <small>Wypłacaj środki na konto i śledź każdą operację</small>
+                </div>
+                <div>
+                  <i>◎</i>
+                  <strong>Pełna kontrola portfela</strong>
+                  <small>Saldo, żetony, płatności i subskrypcja zawsze pod ręką</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="wallet-v2-hero-visual" aria-hidden="true">
+              <div className="wallet-v2-hero-orbit"></div>
+              <div className="wallet-v2-hero-coin">🪙</div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-main">
+                <b>Saldo</b>
+                <strong>1,250.75 zł</strong>
+                <span>Środki dostępne</span>
+              </div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-deposit">
+                <b>Wpłata</b>
+                <strong>+200 zł</strong>
+                <span>BLIK • natychmiast</span>
+              </div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-withdraw">
+                <b>Wypłata</b>
+                <strong>-150 zł</strong>
+                <span>Konto bankowe</span>
+              </div>
+            </div>
           </div>
 
           <div className="wallet-v2-topstats">

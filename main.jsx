@@ -6551,6 +6551,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       access_type: form.accessType,
       is_premium: form.accessType === 'premium',
@@ -6566,6 +6567,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       created_at: new Date().toISOString(),
     }
@@ -6576,6 +6578,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
+      stake: stakeValue,
       description: form.description,
       created_at: new Date().toISOString(),
     }
@@ -7242,6 +7245,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+  const stakeValue = Number(tip?.stake || 0)
+  const stakeLabel = stakeValue > 0
+    ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł`
+    : '—'
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -7322,6 +7329,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <div className="bet-row">
             <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
             <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
+            <div><span>Stawka</span><b>{stakeLabel}</b></div>
           </div>
         </div>
 
