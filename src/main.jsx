@@ -5372,6 +5372,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       })
       .map(item => ({ ...item }))
 
+    // API-FOOTBALL Pro: pokazujemy wyłącznie kursy z endpointu /odds.
+    // Jeżeli dostawca nie ma jeszcze kursów dla meczu, UI pokaże kreski zamiast sztucznych 1.72 / 3.25 / 2.10.
+    if (match?.source === 'api-football' || match?.hasRealOdds === true || match?.hasRealOdds === false) {
+      return base
+    }
+
     const add = (market, pick, odds, confidence = 62) => {
       const exists = base.some(item => String(item.market) === market && String(item.pick) === pick)
       if (!exists) base.push({ market, pick, odds, confidence })
@@ -5485,7 +5491,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   const marketOptions = selectedMatch ? enrichPopularMarkets(selectedMatch, selectedMatch?.markets || []) : []
-  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
+  const noRealMarket = { market: 'Brak kursów', pick: 'Brak realnych kursów', odds: '', confidence: 50 }
+  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || noRealMarket
   const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
     const label = String(item.market || 'Inne')
     if (!groups[label]) groups[label] = []
@@ -5777,7 +5784,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function applyMatchToForm(match) {
-    const nextMarket = match?.markets?.[0] || defaultMarket
+    const nextMarket = match?.markets?.[0] || noRealMarket
     if (!match) return
     updateForm({
       matchId: match.id || `${match.home}-${match.away}`,
@@ -6417,7 +6424,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
               <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
               <div className={`live-real-badge ${liveDataSource}`}>
-                {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+                {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
               </div>
             </div>
             <div className="betfolio-center-badges">
