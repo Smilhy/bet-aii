@@ -12860,62 +12860,8 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
                 ))}
               </div>
 
-              <div className="glass-profile-v3 profile-v3-card history-v3">
-                <div className="profile-v3-card-head"><h3>📊 Historia wyników</h3></div>
-                <div className="history-v3-table">
-                  <div className="history-v3-row head"><span>OKRES</span><span>TYPY</span><span>WYGRANE</span><span>PRZEGRANE</span><span>WIN RATE</span><span>ROI</span><span>ZYSK</span></div>
-                  {resultRows.map((row, idx) => (
-                    <div className="history-v3-row" key={idx}>{row.map((cell, i) => <span key={i}>{cell}</span>)}</div>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            <div className="profile-v3-right-col">
-              <div className="glass-profile-v3 profile-v3-card month-stats-v3">
-                <div className="profile-v3-card-head"><h3>📈 Statystyki miesiąca</h3><button type="button">Zobacz więcej</button></div>
-                <div className="month-metrics-v3">
-                  <div><small>ROI</small><strong>+{roi}%</strong></div>
-                  <div><small>ZYSK</small><strong>+{walletAmount.toFixed(2)} zł</strong></div>
-                  <div><small>TYPY</small><strong>{totalTips}</strong></div>
-                  <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
-                </div>
-                <div className="month-bars-v3">
-                  <div><span>Typy wygrane</span><div className="bar"><i style={{width:`${winRate}%`}}></i></div><b>{wonTips} ({winRate}%)</b></div>
-                  <div><span>Typy przegrane</span><div className="bar red"><i style={{width:`${settledTips ? Math.round((lostTips / settledTips) * 100) : 0}%`}}></i></div><b>{lostTips}</b></div>
-                  <div><span>Wszystkie</span><div className="bar gray"><i style={{width:'100%'}}></i></div><b>{totalTips}</b></div>
-                </div>
-              </div>
-
-              <div className="profile-v3-split-row">
-                <div className="glass-profile-v3 profile-v3-card about-v3">
-                  <div className="profile-v3-card-head"><h3>ⓘ O mnie</h3></div>
-                  <p>{profileBio}</p>
-                  <div className="about-tags"><span>AI ANALIZA</span><span>DANE</span><span>STATYSTYKI</span><span>VALUE BETS</span></div>
-                </div>
-                <div className="glass-profile-v3 profile-v3-card analysis-v3">
-                  <div className="profile-v3-card-head"><h3>Ostatnie analizy</h3><button type="button">Zobacz wszystkie</button></div>
-                  <div className="analysis-list-v3">
-                    {analysisRows.map((row, idx) => (
-                      <div className="analysis-item-v3" key={idx}><span>▣</span><div><strong>{row[0]}</strong><small>{row[1]}</small></div></div>
-                    ))}
-                  </div>
-                  <button type="button" className="link-btn-v3">Więcej analiz →</button>
-                </div>
-              </div>
-
-              <div className="glass-profile-v3 profile-v3-card badges-v3">
-                <div className="profile-v3-card-head"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button">Zobacz wszystkie</button></div>
-                <div className="badges-grid-v3">
-                  <div><span className="badge-orb orange">🏆</span><strong>TOP 1%</strong><small>Ranking</small></div>
-                  <div><span className="badge-orb gold">✦</span><strong>1000+</strong><small>Typów</small></div>
-                  <div><span className="badge-orb cyan">🛡</span><strong>WIN RATE+</strong><small>60%+</small></div>
-                  <div><span className="badge-orb teal">↗</span><strong>ROI+</strong><small>10%+</small></div>
-                  <div><span className="badge-orb yellow">⚡</span><strong>AKTYWNY</strong><small>30 dni</small></div>
-                  <div><span className="badge-orb purple">♛</span><strong>PREMIUM</strong><small>Poziom 7</small></div>
-                </div>
-              </div>
-            </div>
           </div>
             </>
           )}
@@ -12932,6 +12878,18 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
           <div className="glass-profile-v3 side-card-v3">
             <div className="side-card-head-v3"><h3>Społeczność</h3><button type="button">Zobacz wszystkich</button></div>
             <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{Number(user?.following_count || user?.following || 0) || 0}</b></div></div>
+          </div>
+
+          <div className="glass-profile-v3 side-card-v3 side-badges-v3">
+            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="badges-grid-v3 sidebar-badges-grid">
+              <div><span className="badge-orb orange">🏆</span><strong>TOP 1%</strong><small>Ranking</small></div>
+              <div><span className="badge-orb gold">✦</span><strong>1000+</strong><small>Typów</small></div>
+              <div><span className="badge-orb cyan">🛡</span><strong>WIN RATE+</strong><small>60%+</small></div>
+              <div><span className="badge-orb teal">↗</span><strong>ROI+</strong><small>10%+</small></div>
+              <div><span className="badge-orb yellow">⚡</span><strong>AKTYWNY</strong><small>30 dni</small></div>
+              <div><span className="badge-orb purple">♛</span><strong>PREMIUM</strong><small>Poziom 7</small></div>
+            </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">

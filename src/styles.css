@@ -29933,3 +29933,38 @@ button.betfolio-fetch-btn{
     justify-content:center!important;
   }
 }
+
+
+/* WERSJA 840 — odznaki przeniesione do prawej kolumny profilu */
+.profile-static-v3 .profile-v3-content-grid{
+  grid-template-columns:1fr!important;
+}
+.side-badges-v3{
+  padding:16px!important;
+}
+.side-badges-v3 .sidebar-badges-grid{
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:12px 8px!important;
+}
+.side-badges-v3 .badge-orb{
+  width:52px!important;
+  height:52px!important;
+  margin-bottom:7px!important;
+  font-size:20px!important;
+}
+.side-badges-v3 .badges-grid-v3 strong{
+  font-size:11px!important;
+}
+.side-badges-v3 .badges-grid-v3 small{
+  font-size:10px!important;
+}
+@media(max-width:1200px){
+  .side-badges-v3 .sidebar-badges-grid{
+    grid-template-columns:repeat(3,1fr)!important;
+  }
+}
+@media(max-width:760px){
+  .side-badges-v3 .sidebar-badges-grid{
+    grid-template-columns:repeat(3,1fr)!important;
+  }
+}
