@@ -1,0 +1,5 @@
+Wersja 764 — czysty ekran zakładów meczu
+- Gdy otwarty jest widok rynków meczu, znikają: duży nagłówek "Dodaj nowy typ", sporty, live radar i zakładki Dziś/Wyszukiwanie.
+- Zostaje pasek meczu: "Wróć do meczów" + nazwa meczu + data/liga + Dodaj własny typ.
+- Usunięta notatka "Prawdziwe kursy pre-match..." nad kaflami rynków.
+- Zostają tylko kafle/akordeony prawdziwych rynków i prawa kolumna kuponu.
