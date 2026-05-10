@@ -28435,3 +28435,22 @@ button.betfolio-fetch-btn{
     height:56px !important;
   }
 }
+
+
+/* WERSJA 807 — zaznaczony typ na żółto jak przycisk Darmowy */
+.add-tip-betfolio-page .betfolio-market-option.active,
+.add-tip-betfolio-page .betfolio-market-option.active:hover,
+.add-tip-betfolio-page .betfolio-odd-box.active,
+.add-tip-betfolio-page .betfolio-odd-box.active:hover{
+  background:linear-gradient(180deg,#ffe27e 0%, #ffcf47 52%, #f4b800 100%) !important;
+  color:#07111d !important;
+  border-color:rgba(255,210,82,.86) !important;
+  box-shadow:0 12px 30px rgba(255,184,0,.28), inset 0 1px 0 rgba(255,255,255,.46), 0 0 0 1px rgba(255,220,115,.18) !important;
+}
+.add-tip-betfolio-page .betfolio-market-option.active span,
+.add-tip-betfolio-page .betfolio-market-option.active strong,
+.add-tip-betfolio-page .betfolio-market-option.active b,
+.add-tip-betfolio-page .betfolio-odd-box.active span,
+.add-tip-betfolio-page .betfolio-odd-box.active b{
+  color:#07111d !important;
+}
