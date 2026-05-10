@@ -584,7 +584,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
         <nav className="menu">
           <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
           <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
-          <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
+          <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
           <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
@@ -8625,12 +8625,12 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
           </div>
 
           <div className="wallet-v2-tabs glass-v2-panel wallet-v2-tabs-under-hero">
-            <button type="button" className="active">Portfel</button>
-            <button type="button">Wpłaty</button>
-            <button type="button">Wypłaty</button>
-            <button type="button">Płatności</button>
-            <button type="button">Subskrypcja</button>
-            <button type="button">Zarobki</button>
+            <button type="button" className="active" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+            <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+            <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+            <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+            <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+            <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
             <button
               type="button"
               className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
@@ -8673,7 +8673,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
             <div className="glass-v2-panel wallet-v2-card">
               <div className="wallet-v2-card-head"><h3>Szybkie operacje</h3></div>
               <div className="wallet-v2-action-grid">
-                <button type="button" onClick={onTopUp}><b>＋</b><span><strong>Wpłać środki</strong><small>Doładuj saldo przez Stripe</small></span></button>
+                <button type="button" onClick={() => onViewChange?.('deposits')}><b>＋</b><span><strong>Wpłać środki</strong><small>Przejdź do wpłat</small></span></button>
                 <button type="button" onClick={() => onViewChange?.('payouts')}><b>⇡</b><span><strong>Wypłać środki</strong><small>Przejdź do wypłat</small></span></button>
                 <button type="button" onClick={() => openTokenExchange('buy')}><b>◎</b><span><strong>Kup żetony</strong><small>1000 żetonów = 1,10 zł</small></span></button>
                 <button type="button" onClick={() => openTokenExchange('sell')}><b>⇄</b><span><strong>Wymień żetony na walutę</strong><small>1000 żetonów = 0,90 zł</small></span></button>
@@ -8714,7 +8714,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
                     <strong>Revolut</strong>
                     <small>🔒 Wkrótce</small>
                   </button>
-                  <button type="button" className="wallet-pay-method is-active" onClick={onTopUp}>
+                  <button type="button" className="wallet-pay-method is-active" onClick={() => onViewChange?.('deposits')}>
                     <span className="pay-logo stripe">S</span>
                     <strong>Stripe</strong>
                     <small>Aktywne</small>
@@ -8743,7 +8743,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
                 </div>
               </div>
 
-              <button type="button" className="wallet-v2-primary-btn" onClick={onTopUp}>Przejdź do wpłat</button>
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('deposits')}>Przejdź do wpłat</button>
             </div>
           </div>
 
@@ -12497,6 +12497,141 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
 }
 
 
+function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
+  const [amount, setAmount] = useState(100)
+  const [customAmount, setCustomAmount] = useState('')
+  const [topups, setTopups] = useState([])
+  const [loading, setLoading] = useState(false)
+  const presetAmounts = [10, 25, 50, 100, 200, 500]
+  const selectedAmount = customAmount !== '' ? Number(customAmount || 0) : Number(amount || 0)
+  const safeAmount = Math.max(1, Math.round(Number(selectedAmount || 0) * 100) / 100)
+
+  useEffect(() => {
+    let active = true
+    async function loadTopups() {
+      if (!isSupabaseConfigured || !supabase || !user?.id) return
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('wallet_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('type', 'topup')
+          .order('created_at', { ascending: false })
+          .limit(10)
+        if (error) throw error
+        if (active) setTopups(data || [])
+      } catch (error) {
+        console.warn('deposits history skipped', error)
+        if (active) setTopups([])
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    loadTopups()
+    const refresh = () => loadTopups()
+    window.addEventListener('betai-wallet-history-changed', refresh)
+    return () => {
+      active = false
+      window.removeEventListener('betai-wallet-history-changed', refresh)
+    }
+  }, [user?.id])
+
+  return (
+    <section className="deposits-page wallet-subpage">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" className="active">Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="deposits-hero glass-v2-panel">
+        <div>
+          <span>Doładuj portfel</span>
+          <h1>Wpłaty</h1>
+          <p>Dodaj środki do salda Bet+AI. Na teraz aktywną metodą jest Stripe, a każda opłacona wpłata zapisuje się automatycznie w historii konta.</p>
+        </div>
+        <div className="deposits-balance">
+          <small>Aktualne saldo</small>
+          <b>{formatMoney(wallet)}</b>
+        </div>
+      </div>
+
+      <div className="deposits-grid">
+        <div className="glass-v2-panel deposits-card">
+          <div className="deposits-card-head">
+            <h2>Nowa wpłata</h2>
+            <span className="deposits-live-pill">Stripe aktywne</span>
+          </div>
+          <p>Wybierz kwotę lub wpisz własną. Po płatności Stripe saldo zwiększy się po potwierdzeniu webhooka.</p>
+          <div className="deposits-amounts">
+            {presetAmounts.map(value => (
+              <button
+                type="button"
+                key={value}
+                className={customAmount === '' && Number(amount) === value ? 'active' : ''}
+                onClick={() => { setAmount(value); setCustomAmount('') }}
+              >
+                {value} zł
+              </button>
+            ))}
+          </div>
+          <label className="deposits-custom">
+            <span>Własna kwota</span>
+            <input
+              type="number"
+              min="1"
+              step="0.01"
+              placeholder="np. 75"
+              value={customAmount}
+              onChange={event => setCustomAmount(event.target.value)}
+            />
+          </label>
+          <button type="button" className="wallet-v2-primary-btn deposits-pay-btn" onClick={() => onTopUp?.(safeAmount)}>
+            Wpłać {formatMoney(safeAmount)} przez Stripe
+          </button>
+        </div>
+
+        <div className="glass-v2-panel deposits-card">
+          <div className="deposits-card-head"><h2>Metoda wpłaty</h2></div>
+          <div className="deposits-methods">
+            <div className="active"><span className="pay-logo stripe">S</span><strong>Stripe</strong><small>Aktywne</small></div>
+            <div className="locked"><span className="pay-logo paypal">P</span><strong>PayPal</strong><small>🔒 Wkrótce</small></div>
+            <div className="locked"><span className="pay-logo revolut">R</span><strong>Revolut</strong><small>🔒 Wkrótce</small></div>
+          </div>
+          <ul className="deposits-rules">
+            <li>Wpłata jest przypisana do zalogowanego użytkownika.</li>
+            <li>Saldo rośnie dopiero po potwierdzeniu płatności Stripe.</li>
+            <li>Każda wpłata pojawia się w historii transakcji i płatnościach.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel deposits-card deposits-history-card">
+          <div className="deposits-card-head"><h2>Ostatnie wpłaty</h2></div>
+          {loading ? (
+            <div className="deposits-empty">Ładowanie wpłat...</div>
+          ) : topups.length ? (
+            <div className="deposits-history-list">
+              {topups.map(row => (
+                <div key={row.id}>
+                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>+{formatMoney(row.amount)}</strong>
+                  <small>{row.status === 'completed' ? 'Opłacona' : row.status || 'Oczekuje'}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="deposits-empty">Nie masz jeszcze żadnych wpłat.</div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
   const MIN_PAYOUT_AMOUNT = 50
   if (!user) {
@@ -15426,6 +15561,15 @@ function App() {
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               setView('dashboard')
             }}
+          />
+        )}
+
+        {view === 'deposits' && (
+          <DepositsView
+            user={sessionUser}
+            wallet={walletBalance}
+            onTopUp={startStripeTopup}
+            onViewChange={setView}
           />
         )}
 

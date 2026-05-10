@@ -1,0 +1,10 @@
+WERSJA 825
+- Zakładka „Wpłaty” jest już żywym przyciskiem i otwiera osobną stronę.
+- Logika strony Wpłaty:
+  • użytkownik widzi aktualne saldo,
+  • wybiera gotową kwotę albo wpisuje własną,
+  • płatność aktywna tylko przez Stripe,
+  • PayPal i Revolut widoczne jako „wkrótce”,
+  • po potwierdzeniu Stripe saldo rośnie przez istniejącą logikę webhooka,
+  • ostatnie realne wpłaty są pobierane z wallet_transactions type=topup.
+- Nie dodano fake danych.
