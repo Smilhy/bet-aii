@@ -4490,6 +4490,98 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return cleaned || raw
   }
 
+  const footballCountryFlagCodes = {
+    "Albania": "al",
+    "Algieria": "dz",
+    "Anglia": "gb-eng",
+    "Arabia Saudyjska": "sa",
+    "Argentyna": "ar",
+    "Armenia": "am",
+    "Aruba": "aw",
+    "Australia": "au",
+    "Austria": "at",
+    "Azerbejdżan": "az",
+    "Belgia": "be",
+    "Białoruś": "by",
+    "Boliwia": "bo",
+    "Bośnia": "ba",
+    "Brazylia": "br",
+    "Bułgaria": "bg",
+    "Chile": "cl",
+    "Chiny": "cn",
+    "Chińsko-Tajpej": "tw",
+    "Chorwacja": "hr",
+    "Cypr": "cy",
+    "Czarnogóra": "me",
+    "Czechy": "cz",
+    "Dania": "dk",
+    "Dominikana-Republika": "do",
+    "Egipt": "eg",
+    "Ekwador": "ec",
+    "Estonia": "ee",
+    "Etiopia": "et",
+    "Finlandia": "fi",
+    "Francja": "fr",
+    "Grecja": "gr",
+    "Gruzja": "ge",
+    "Gwatemala": "gt",
+    "Hiszpania": "es",
+    "Holandia": "nl",
+    "Honduras": "hn",
+    "Hongkong": "hk",
+    "Indie": "in",
+    "Indonezja": "id",
+    "Irlandia": "ie",
+    "Irlandia Północna": "gb-nir",
+    "Islandia": "is",
+    "Izrael": "il",
+    "Japonia": "jp",
+    "Kamerun": "cm",
+    "Kanada": "ca",
+    "Kazachstan": "kz",
+    "Kenia": "ke",
+    "Kolumbia": "co",
+    "Korea Południowa": "kr",
+    "Kosowa": "xk",
+    "Kostaryka": "cr",
+    "Litwa": "lt",
+    "Macedonia": "mk",
+    "Malezja": "my",
+    "Malta": "mt",
+    "Maroko": "ma",
+    "Meksyk": "mx",
+    "Mongolia": "mn",
+    "Niemcy": "de",
+    "Norwegia": "no",
+    "Panama": "pa",
+    "Paragwaj": "py",
+    "Peru": "pe",
+    "Polska": "pl",
+    "Portugalia": "pt",
+    "Republika Południowej Afryki": "za",
+    "Rosja": "ru",
+    "Rumunia": "ro",
+    "San-Marino": "sm",
+    "Serbia": "rs",
+    "Singapur": "sg",
+    "Szkocja": "gb-sct",
+    "Szwajcaria": "ch",
+    "Szwecja": "se",
+    "Słowacja": "sk",
+    "Słowenia": "si",
+    "Tajlandia": "th",
+    "Turcja": "tr",
+    "USA": "us",
+    "Ukraina": "ua",
+    "Urugwaj": "uy",
+    "Wenezuela": "ve",
+    "Wietnam": "vn",
+    "Wyspy Owcze": "fo",
+    "Węgry": "hu",
+    "Włochy": "it",
+    "Łotwa": "lv",
+  }
+
   const footballCountryIcons = {
     "Afryka": "🌍",
     "Albania": "🇦🇱",
@@ -6401,6 +6493,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <div className="sport-accordion-children football-country-tree">
                   <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
                   {footballCountryOptions.map(country => {
+                    const cleanCountry = normalizeFootballCountryName(country)
+                    const flagCode = footballCountryFlagCodes[cleanCountry]
                     const isCountryActive = currentCountry === country
                     const isCountryOpen = openFootballCountry === country
                     const countryLeagues = getFootballLeaguesForCountry(country)
@@ -6411,7 +6505,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           className={isCountryActive ? 'is-active country-active' : ''}
                           onClick={() => selectSidebarCountry(country)}
                         >
-                          <span>{footballCountryIcons[normalizeFootballCountryName(country)] || footballCountryIcons[country] || '🏳️'} {normalizeFootballCountryName(country)}</span>
+                          <span className="football-country-label">
+                            {flagCode ? (
+                              <img className="football-country-flag" src={`https://flagcdn.com/w20/${flagCode}.png`} alt="" loading="lazy" />
+                            ) : (
+                              <i className="football-country-region-icon">{footballCountryIcons[cleanCountry] || footballCountryIcons[country] || '🌍'}</i>
+                            )}
+                            {cleanCountry}
+                          </span>
                           <b>{isCountryOpen ? '⌃' : '⌄'}</b>
                         </button>
 

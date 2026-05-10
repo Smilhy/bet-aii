@@ -26800,3 +26800,35 @@ button.betfolio-fetch-btn{
 .add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right{
   align-self:start!important;
 }
+
+
+/* WERSJA 783 — realne obrazki flag + mocne wyrównanie bocznych kolumn */
+.football-country-label{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-width:0!important;
+}
+.football-country-flag{
+  width:20px!important;
+  height:15px!important;
+  object-fit:cover!important;
+  border-radius:2px!important;
+  flex:0 0 auto!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12)!important;
+}
+.football-country-region-icon{
+  width:20px!important;
+  display:inline-flex!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  font-style:normal!important;
+}
+@media(min-width:1181px){
+  .add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav{
+    margin-top:-52px!important;
+  }
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right{
+    margin-top:-62px!important;
+  }
+}
