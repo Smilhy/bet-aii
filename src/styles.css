@@ -29894,3 +29894,42 @@ button.betfolio-fetch-btn{
 /* WERSJA 836 — cennik subskrypcji w osobnej zakładce profilu */
 .profile-v3-tabs{flex-wrap:wrap!important}
 .profile-v3-tabs button{cursor:pointer!important}
+
+
+/* WERSJA 837 — Stripe w prawym górnym rogu baneru profilu */
+.profile-v3-hero{
+  position:relative!important;
+}
+.profile-hero-stripe-btn{
+  position:absolute!important;
+  top:18px!important;
+  right:18px!important;
+  z-index:3!important;
+  min-height:46px!important;
+  padding:0 20px!important;
+  border:0!important;
+  border-radius:16px!important;
+  color:#03131e!important;
+  font-weight:1000!important;
+  font-size:14px!important;
+  background:linear-gradient(135deg,#25e9ff,#3c8cff)!important;
+  box-shadow:0 14px 30px rgba(0,180,255,.18)!important;
+  cursor:pointer!important;
+}
+.profile-hero-stripe-btn.ready{
+  background:linear-gradient(135deg,#21e9d8,#25e9ff)!important;
+}
+.profile-hero-stripe-btn.pending{
+  background:linear-gradient(135deg,#ffd164,#ff9f43)!important;
+}
+@media(max-width:900px){
+  .profile-hero-stripe-btn{
+    position:relative!important;
+    top:auto!important;
+    right:auto!important;
+    margin:0 0 16px auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+}

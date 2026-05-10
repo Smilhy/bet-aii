@@ -12752,6 +12752,13 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">
             <div className="profile-v3-hero-overlay"></div>
+            <button
+              type="button"
+              className={`profile-hero-stripe-btn ${stripeConnectStatus?.payouts_enabled ? 'ready' : stripeConnectStatus?.stripe_account_id ? 'pending' : 'empty'}`}
+              onClick={() => onConnectStripe?.()}
+            >
+              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+            </button>
             <div className="profile-v3-user-row">
               <button
                 type="button"
@@ -12819,27 +12826,6 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
 
           {profileTab === 'overview' && (
             <>
-          <div className="glass-profile-v3 profile-stripe-connect-card">
-            <div className="profile-stripe-connect-main">
-              <div className="profile-stripe-connect-icon">💳</div>
-              <div>
-                <div className="profile-v3-card-head stripe-head-inline">
-                  <h3>Moje konto Stripe</h3>
-                  <span className={stripeConnectStatus?.payouts_enabled ? 'stripe-status-pill ready' : stripeConnectStatus?.stripe_account_id ? 'stripe-status-pill pending' : 'stripe-status-pill empty'}>
-                    {stripeConnectStatus?.payouts_enabled ? 'Stripe aktywny' : stripeConnectStatus?.stripe_account_id ? 'Dokończ konfigurację' : 'Niepodłączone'}
-                  </span>
-                </div>
-                <p>
-                  Podłącz swoje konto Stripe Connect, żeby sprzedawać single i subskrypcje profilu. Kupujący płaci na stronie, Stripe automatycznie kieruje <b>80%</b> do Ciebie, a <b>20%</b> marży zostaje dla platformy.
-                </p>
-                <small>Kupujący nie wpisuje konta bankowego sprzedawcy. Dane bankowe podajesz tylko bezpiecznie w Stripe.</small>
-              </div>
-            </div>
-            <button type="button" className="profile-connect-stripe-btn" onClick={() => onConnectStripe?.()}>
-              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
-            </button>
-          </div>
-
           <div className="profile-v3-content-grid">
             <div className="profile-v3-left-col">
               <div className="glass-profile-v3 profile-v3-card tip-card-v3">
