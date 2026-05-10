@@ -383,6 +383,7 @@ function normalizeTipRow(row = {}) {
     user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
     author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
     author_email: row.author_email || row.email || null,
+    author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
     team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
     team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
@@ -770,6 +771,7 @@ function LiveChatPanel({ user }) {
 
   const email = normalizeEmail(user?.email)
   const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const currentAvatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url || ''
 
   const nameFromEmail = (value = '') => {
     const clean = normalizeEmail(value)
@@ -1174,7 +1176,7 @@ function LiveChatPanel({ user }) {
           const isAdmin = msgEmail === 'smilhytv@gmail.com'
           const isLeader = leader?.email && leader.email === msgEmail
           const name = msg.user_name || nameFromEmail(msgEmail)
-          const avatar = msg.avatar_url || ''
+          const avatar = msg.avatar_url || (mine ? currentAvatarUrl : '')
           return (
             <div className={`livechat226-msg ${mine ? 'me' : ''}`} key={msg.id || msg.created_at}>
               <div className="livechat226-avatar" style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}>{avatar ? '' : initialsFromName(name)}</div>
@@ -6617,7 +6619,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           ? `Twój tip premium został dodany do dashboardu i profilu. Cena singla: ${priceValue.toFixed(2)} zł.`
           : `Twój darmowy tip został dodany do dashboardu i profilu.${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
-      onTipSaved?.(normalizeTipRow(savedRow))
+      onTipSaved?.(normalizeTipRow({
+        ...savedRow,
+        author_avatar_url: savedRow?.author_avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null
+      }))
     } catch (error) {
       console.error('publish tip error', error)
       saveTipDebug('ERROR', error?.message || String(error))
@@ -7213,6 +7218,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   )
   const followKey = authorId ? String(authorId) : String(author).toLowerCase()
   const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
+  const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? (currentUser?.avatar_url || currentUser?.user_metadata?.avatar_url || '') : '')
 
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
@@ -7310,7 +7316,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
       <div className="tip-header">
         <div className="tipster">
-          <div className={`photo ${isAiTip ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
+          <div
+            className={`photo ${isAiTip ? 'bot' : ''} ${authorAvatarUrl ? 'has-avatar' : ''}`}
+            style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}
+          >
+            {authorAvatarUrl ? '' : author.slice(0,2).toUpperCase()}
+          </div>
           <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{isAiTip ? 'AI' : 'TYPER'}</em>
           {!isOwnTip && !isAiTip && (
@@ -12711,11 +12722,49 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
     return [home, away, `${league} • ${timeLabel}`, pick, odds, confidence, access, String(Number(normalized.likes || normalized.hearts || 0) || 0), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Teraz']
   }
 
-  const premiumRows = userTips.filter(isTipPremium).slice(0, 3).map(tip => toTipRow(tip, true))
-  if (!premiumRows.length) premiumRows.push(['Brak typów', 'Premium', 'Dodaj pierwszy typ premium', '—', '—', '0%', 'Premium', '0', '—'])
+  const buildProfileTipCard = (tip) => {
+    const normalized = normalizeTipRow(tip)
+    const premiumTip = isTipPremium(normalized)
+    const home = normalized.home_team || normalized.team_home || 'Gospodarze'
+    const away = normalized.away_team || normalized.team_away || 'Goście'
+    const league = normalized.league || 'Liga'
+    const matchTime = normalized.match_time || normalized.event_date || normalized.kickoff_at || normalized.created_at
+    const createdAt = normalized.created_at ? new Date(normalized.created_at) : null
+    const matchAt = matchTime ? new Date(matchTime) : null
+    const formatDateTime = (value) => value && !Number.isNaN(value.getTime())
+      ? value.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'Brak daty'
+    const status = String(normalized.status || 'pending').toLowerCase()
+    const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
+      ? 'Wygrany'
+      : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
+        ? 'Przegrany'
+        : 'Oczekujący'
+    const confidence = Math.max(0, Math.min(100, Number(normalized.ai_probability || normalized.ai_confidence || normalized.confidence || 0) || 0))
+    return {
+      id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
+      premium: premiumTip,
+      home,
+      away,
+      league,
+      pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
+      odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
+      stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || (premiumTip ? 1 : 10)) || (premiumTip ? 1 : 10),
+      analysis: normalized.ai_analysis || normalized.analysis || normalized.description || 'Brak analizy użytkownika.',
+      confidence,
+      createdLabel: formatDateTime(createdAt),
+      matchLabel: formatDateTime(matchAt),
+      statusLabel,
+      likes: Number(normalized.likes || normalized.hearts || 0) || 0,
+      trophies: Number(normalized.trophies || normalized.upvotes || 0) || 0,
+      comments: Number(normalized.comments || normalized.comments_count || 0) || 0,
+      price: Math.max(0, Number(normalized.price || 29) || 29)
+    }
+  }
 
-  const freeRows = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(tip => toTipRow(tip, false))
-  if (!freeRows.length) freeRows.push(['Brak typów', 'FREE', 'Dodaj pierwszy darmowy typ', '—', '—', '0%', 'FREE', '0', '—'])
+  const premiumCards = userTips.filter(isTipPremium).slice(0, 3).map(buildProfileTipCard)
+  const freeCards = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(buildProfileTipCard)
+  const allProfileTipCards = userTips.map(buildProfileTipCard)
 
   const resultRows = [
     ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
@@ -12745,6 +12794,85 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   const rankingRows = [
     ['1', displayName, `${roi}% ROI`, String(followersCount), `+${walletAmount.toFixed(2)} zł`],
   ]
+
+  const renderProfileTipCard = (tip) => (
+    <article className={`profile-live-tip-card ${tip.premium ? 'premium' : 'free'}`} key={tip.id}>
+      <header className="profile-live-tip-head">
+        <div className="profile-live-tip-author">
+          <span
+            className={`profile-live-tip-avatar ${avatarUrl ? 'has-avatar' : ''}`}
+            style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
+          >
+            {avatarUrl ? '' : initials}
+          </span>
+          <div>
+            <strong>{displayName}</strong>
+            <small>{tip.createdLabel}</small>
+          </div>
+          <em>TYPER</em>
+        </div>
+        <div className="profile-live-tip-tags">
+          <span>{tip.premium ? '▣ PREMIUM' : '◯ FREE'}</span>
+          <span>ANALIZA UŻ.{tip.premium ? ' 🔒' : ''}</span>
+        </div>
+      </header>
+
+      <div className="profile-live-tip-meta">{tip.league} • {tip.matchLabel}</div>
+
+      <div className="profile-live-tip-body">
+        <div className="profile-live-tip-ticket">
+          <div className="profile-live-tip-match">
+            <strong>{tip.home}</strong>
+            <span>VS</span>
+            <strong>{tip.away}</strong>
+          </div>
+          <div className="profile-live-tip-fields">
+            <div>
+              <small>Typ</small>
+              <b>{tip.premium ? '🔒 Typ premium' : tip.pick}</b>
+            </div>
+            <div>
+              <small>Kurs</small>
+              <b>{tip.premium ? '—' : tip.odds}</b>
+            </div>
+            <div>
+              <small>Stawka</small>
+              <b>{tip.stake.toFixed(0)} zł</b>
+            </div>
+          </div>
+        </div>
+
+        <div className="profile-live-tip-analysis">
+          <div>
+            <strong>✦ Analiza użytkownika</strong>
+            {tip.premium && <span>🔒</span>}
+          </div>
+          <p>{tip.premium ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+          <i><span style={{ width: `${tip.premium ? Math.max(18, tip.confidence || 24) : tip.confidence}%` }}></span></i>
+          {tip.premium && <em>🔒 Premium</em>}
+        </div>
+      </div>
+
+      <footer className="profile-live-tip-foot">
+        <div className="profile-live-tip-stats">
+          <span className={`status-${tip.statusLabel.toLowerCase()}`}>◷ {tip.statusLabel}</span>
+          <span>♡ {tip.likes}</span>
+          <span>🏆 {tip.trophies}</span>
+          <span>☁ {tip.comments}</span>
+        </div>
+        <div className="profile-live-tip-actions">
+          {tip.premium ? (
+            <>
+              <button type="button">Kup singiel za {formatMoney(tip.price)}</button>
+              <button type="button" className="secondary">Kup subskrypcję profilu</button>
+            </>
+          ) : (
+            <button type="button">Zobacz typ</button>
+          )}
+        </div>
+      </footer>
+    </article>
+  )
 
   return (
     <section className="profile-page profile-static-v3" aria-label="Mój profil">
@@ -12812,13 +12940,24 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
 
           <div className="profile-v3-tabs glass-profile-v3">
             <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}>▣ Przegląd</button>
-            <button type="button">◉ Typy</button>
+            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}>◉ Typy</button>
             <button type="button">↗ Wyniki</button>
             <button type="button">⌁ Analizy</button>
             <button type="button">◔ Historia</button>
             <button type="button">💬 Opinie</button>
             <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}>💳 Cennik subskrypcji</button>
           </div>
+
+          {profileTab === 'tips' && (
+            <section className="glass-profile-v3 profile-v3-card profile-all-tips-tab">
+              <div className="profile-v3-card-head"><h3>◉ Wszystkie typy</h3><span>{allProfileTipCards.length} pozycji</span></div>
+              {allProfileTipCards.length ? (
+                <div className="profile-all-tips-list">{allProfileTipCards.map(renderProfileTipCard)}</div>
+              ) : (
+                <div className="profile-live-tip-empty">Nie masz jeszcze żadnych typów.</div>
+              )}
+            </section>
+          )}
 
           {profileTab === 'pricing' && (
             <TipsterPricingSettings user={user} onToast={onToast} />
@@ -12827,41 +12966,21 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
           {profileTab === 'overview' && (
             <>
           <div className="profile-v3-content-grid">
-            <div className="profile-v3-left-col">
-              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
-                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button">Zobacz wszystkie</button></div>
-                {premiumRows.map((row, idx) => (
-                  <div className="tip-preview-v3" key={idx}>
-                    <div className="tip-preview-top"><span className="club-round">RM</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
-                    <div className="tip-preview-mid">
-                      <div><small>TYP</small><b>{row[3]}</b></div>
-                      <div><small>KURS</small><b>{row[4]}</b></div>
-                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
-                    </div>
-                    <div className="tip-progress"><span style={{width:'85%'}}></span></div>
-                    <div className="tip-preview-foot"><em className="premium-pill">♥ {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
-                  </div>
-                ))}
-              </div>
+            <div className="profile-v3-left-col profile-live-tip-sections">
+              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
+                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                {premiumCards.length ? premiumCards.map(renderProfileTipCard) : (
+                  <div className="profile-live-tip-empty">Brak typów premium.</div>
+                )}
+              </section>
 
-              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
-                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button">Zobacz wszystkie</button></div>
-                {freeRows.map((row, idx) => (
-                  <div className="tip-preview-v3 free" key={idx}>
-                    <div className="tip-preview-top"><span className="club-round arsenal">AR</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
-                    <div className="tip-preview-mid">
-                      <div><small>TYP</small><b>{row[3]}</b></div>
-                      <div><small>KURS</small><b>{row[4]}</b></div>
-                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
-                    </div>
-                    <div className="tip-progress"><span style={{width:'78%'}}></span></div>
-                    <div className="tip-preview-foot"><em className="free-pill">● {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
-                  </div>
-                ))}
-              </div>
-
+              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
+                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                {freeCards.length ? freeCards.map(renderProfileTipCard) : (
+                  <div className="profile-live-tip-empty">Brak darmowych typów.</div>
+                )}
+              </section>
             </div>
-
           </div>
             </>
           )}
@@ -14576,7 +14695,32 @@ function App() {
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = (tipsData || []).map(normalizeTipRow)
+    let sourceTips = (tipsData || []).map(normalizeTipRow)
+    try {
+      const authorIds = [...new Set(sourceTips.map(tip => getTipAuthorId(tip)).filter(Boolean).map(String))]
+      if (authorIds.length) {
+        const { data: authorProfiles, error: authorProfilesError } = await supabase
+          .from('profiles')
+          .select('id,email,username,avatar_url')
+          .in('id', authorIds)
+        if (!authorProfilesError && Array.isArray(authorProfiles)) {
+          const authorProfileMap = new Map(authorProfiles.map(profile => [String(profile.id), profile]))
+          sourceTips = sourceTips.map(tip => {
+            const profile = authorProfileMap.get(String(getTipAuthorId(tip) || ''))
+            return profile
+              ? {
+                  ...tip,
+                  author_name: tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+                  author_email: tip.author_email || profile.email || null,
+                  author_avatar_url: tip.author_avatar_url || profile.avatar_url || null,
+                }
+              : tip
+          })
+        }
+      }
+    } catch (avatarEnrichError) {
+      console.warn('tip avatar enrichment skipped', avatarEnrichError)
+    }
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
@@ -16434,7 +16578,7 @@ function App() {
         )}
       </main>
 
-      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>

@@ -1,0 +1,9 @@
+WERSJA 842
+- Naprawiono avatar zalogowanego użytkownika w dashboardzie i czacie.
+- W kartach typów na dashboardzie zamiast inicjałów pokazuje się avatar autora, jeśli istnieje.
+- Dla własnych typów używany jest avatar aktualnego profilu nawet przy starszych rekordach.
+- Dashboard wzbogaca typy o avatar_url autora z tabeli profiles.
+- Live chat dostaje pełny profil z avatar_url.
+- Starsze własne wiadomości w live chat bez zapisanej miniatury pokazują aktualny avatar użytkownika.
+- Nowe wiadomości zapisują avatar_url aktualnego profilu.
+- Nowego SQL nie trzeba, jeżeli działa już SQL 834 dla avatarów.
