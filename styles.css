@@ -27475,3 +27475,39 @@ button.betfolio-fetch-btn{
     min-width:140px !important;
   }
 }
+
+
+/* WERSJA 794 — ciemniejsze ramki, mniejsza czcionka i zapis Home - Away */
+.add-tip-betfolio-page .betfolio-top-sports-row{
+  border:1px solid rgba(33, 77, 110, .78) !important;
+  box-shadow:
+    0 0 0 1px rgba(8, 32, 52, .34),
+    0 18px 42px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+.add-tip-betfolio-page .betfolio-events-list{
+  border:1px solid rgba(33, 77, 110, .78) !important;
+  box-shadow:
+    0 0 0 1px rgba(8, 32, 52, .34),
+    0 18px 42px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+.add-tip-betfolio-page .betfolio-event-teamline{
+  display:block !important;
+}
+.add-tip-betfolio-page .betfolio-event-teamline strong{
+  display:block !important;
+  font-size:17px !important;
+  line-height:1.28 !important;
+  font-weight:800 !important;
+  letter-spacing:-.01em !important;
+  color:#edf5ff !important;
+}
+.add-tip-betfolio-page .betfolio-event-teamline span{
+  display:none !important;
+}
+@media (max-width: 1200px){
+  .add-tip-betfolio-page .betfolio-event-teamline strong{
+    font-size:16px !important;
+  }
+}

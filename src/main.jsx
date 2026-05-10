@@ -6782,8 +6782,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                         <div key={match.id} className={`betfolio-event-row ${active ? 'active' : ''}`}>
                           <button type="button" className="betfolio-event-main" onClick={() => openMatchMarkets(match)}>
                             <div className="betfolio-event-teamline">
-                              <strong>{match.home}</strong>
-                              <span>{match.away}</span>
+                              <strong>{`${match.home} - ${match.away}`}</strong>
                             </div>
                             <div className="betfolio-event-meta">
                               <span>{getMatchDateBadge(match)}</span>
