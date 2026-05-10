@@ -1,0 +1,4 @@
+WERSJA 790
+- Górne etykiety sport / kraj / liga aktualizują się teraz po kliknięciu w lewą kolumnę.
+- Po wyborze kraju i ligi nie zostają już stare etykiety typu „Anglia / Premier League”.
+- Pozostałe funkcje bez zmian.

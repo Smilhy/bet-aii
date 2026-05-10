@@ -4341,6 +4341,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     'Dart': '🎯',
   }
 
+  const sidebarComingSoonSports = [
+    'Tenis',
+    'Koszykówka',
+    'Hokej',
+    'MMA',
+    'E-sport',
+    'Siatkówka',
+    'Boks',
+    'Piłka ręczna',
+    'Krykiet',
+    'Rugby',
+    'Rugby League',
+    'Baseball',
+    'Dart',
+  ]
+
   const [form, setForm] = useState({
     sport: defaultSport,
     country: 'Anglia',
@@ -6634,6 +6650,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               )}
             </div>
 
+            {sidebarComingSoonSports.map((sportName) => (
+              <div className="sport-accordion-item is-coming-soon" key={`sidebar-coming-soon-${sportName}`}>
+                <button
+                  type="button"
+                  className="sport-accordion-head sport-coming-soon-head"
+                  onClick={() => onToast?.({ type: 'success', title: sportName, message: 'Kafelek jest już dodany. Obsługę tego sportu podłączymy później.' })}
+                >
+                  <span>{sportIconMap[sportName] || '🏅'} {sportName}</span>
+                  <b>⌄</b>
+                </button>
+              </div>
+            ))}
+
             <div className="football-pro-mode-note">
               Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
             </div>
@@ -6664,15 +6693,50 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     <span className="static-add-title-icon">⬡</span>
                     <h1>Dodaj nowy typ</h1>
                   </div>
-                  <p>{addTipMode === 'manual' ? 'Dodaj typ ręcznie, jeśli chcesz sam wpisać wydarzenie, datę, typ i kurs.' : 'Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.'}</p>
                   <div className={`live-real-badge ${addTipMode === 'manual' ? 'manual-entry' : liveDataSource}`}>
-                    {addTipMode === 'manual' ? '● TRYB RĘCZNY — własne dane typu' : liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+                    {addTipMode === 'manual' ? '● TRYB RĘCZNY — własne dane typu' : liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'api-football-pro' ? '● Automatyczne pobieranie meczów i kursów' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
                   </div>
                 </div>
                 <div className="betfolio-center-badges">
-                  <span>{form.sport}</span>
-                  <span>{addTipMode === 'manual' ? manualForm.country : currentCountry}</span>
-                  <span>{addTipMode === 'manual' ? manualForm.league : currentLeague}</span>
+                  <span>{addTipMode === 'manual' ? manualForm.sport : form.sport}</span>
+                  <span>{addTipMode === 'manual' ? manualForm.country : (form.country || currentCountry)}</span>
+                  <span>{addTipMode === 'manual' ? manualForm.league : (form.league || currentLeague)}</span>
+                </div>
+              </div>
+
+              <div className="betfolio-add-hero">
+                <div className="betfolio-add-hero-copy">
+                  <h2>Dodaj <span>typ</span></h2>
+                  <p>Wyszukaj mecz, wybierz rynek i stwórz swój własny typ w kilka sekund.</p>
+
+                  <div className="betfolio-add-hero-features">
+                    <div>
+                      <i>⌕</i>
+                      <strong>Szybkie wyszukiwanie</strong>
+                      <small>Znajdź każdy mecz błyskawicznie</small>
+                    </div>
+                    <div>
+                      <i>↗</i>
+                      <strong>Setki rynków</strong>
+                      <small>Najpopularniejsze rynki bukmacherskie</small>
+                    </div>
+                    <div>
+                      <i>◌</i>
+                      <strong>Analiza AI</strong>
+                      <small>Wskaźniki i szanse w czasie rzeczywistym</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="betfolio-add-hero-visual" aria-hidden="true">
+                  <div className="betfolio-add-hero-orbit"></div>
+                  <div className="betfolio-add-hero-ball">⚽</div>
+                  <div className="betfolio-add-hero-ticket">
+                    <b>◎</b>
+                    <span></span>
+                    <span></span>
+                    <em></em>
+                  </div>
                 </div>
               </div>
 
@@ -6699,10 +6763,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     </button>
                   )
                 })}
-              </div>
-
-              <div className="betfolio-top-sports-note">
-                Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig. Wyszukiwarka szuka każdego meczu, a kliknięcie ligi po lewej pokazuje jej mecze na dziś i najbliższe terminy.
               </div>
 
               <div className="betfolio-fixture-mode-tabs">

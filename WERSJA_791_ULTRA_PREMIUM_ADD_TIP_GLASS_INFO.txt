@@ -1,0 +1,5 @@
+WERSJA 791
+- Zakładka Dodaj typ dostała mocniejszy styl premium, spójny kolorystycznie z dashboardem.
+- Powiększona i bardziej czytelna karta wyniku po wyszukaniu meczu (około 200%).
+- Większe nazwy drużyn, większe kursy, większe przyciski i mocniejszy efekt szkła / glow.
+- Ujednolicony kolor, cienie i szklisty wygląd dla lewej, środkowej i prawej kolumny.

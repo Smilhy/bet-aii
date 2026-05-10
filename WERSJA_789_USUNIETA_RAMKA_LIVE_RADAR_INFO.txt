@@ -1,0 +1,4 @@
+WERSJA 789
+- Usunięta ramka z tekstem:
+  „Live radar: dziś pokazuję szybkie typy z 6 najważniejszych lig...”
+- Pozostałe funkcje bez zmian.

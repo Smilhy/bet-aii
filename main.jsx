@@ -4341,6 +4341,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     'Dart': '🎯',
   }
 
+  const sidebarComingSoonSports = [
+    'Tenis',
+    'Koszykówka',
+    'Hokej',
+    'MMA',
+    'E-sport',
+    'Siatkówka',
+    'Boks',
+    'Piłka ręczna',
+    'Krykiet',
+    'Rugby',
+    'Rugby League',
+    'Baseball',
+    'Dart',
+  ]
+
   const [form, setForm] = useState({
     sport: defaultSport,
     country: 'Anglia',
@@ -6550,7 +6566,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   </div>
                   <p>Wyszukaj prawdziwy mecz piłkarski i wybierz go, aby zobaczyć realne rynki i kursy.</p>
                   <div className={`live-real-badge ${liveDataSource}`}>
-                    {liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : '● Wyszukiwanie meczu'}
+                    {liveDataSource === 'api-football-pro' ? '● Automatyczne pobieranie meczów i kursów' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : '● Wyszukiwanie meczu'}
                   </div>
                 </div>
               </div>
