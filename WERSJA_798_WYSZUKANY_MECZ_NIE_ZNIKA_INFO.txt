@@ -1,0 +1,4 @@
+WERSJA 798
+- Poprawione znikanie meczu po wyszukaniu.
+- Automatyczne odświeżanie co minutę nie nadpisuje już wyników w trybie „Wyszukiwanie”.
+- Wyszukany mecz zostaje na ekranie, dopóki użytkownik sam nie zmieni widoku albo nie wykona nowego wyszukiwania.

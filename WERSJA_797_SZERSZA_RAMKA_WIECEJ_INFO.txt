@@ -1,0 +1,4 @@
+WERSJA 797
+- Poszerzona karta meczu po wyszukaniu.
+- Przycisk „Więcej” ma teraz większą szerokość i nie ucina tekstu.
+- Delikatnie zwiększony prawy odstęp w wierszu meczu.

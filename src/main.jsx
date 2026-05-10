@@ -5909,6 +5909,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveDate(todayKey)
       fetchSportDayCounts(true)
 
+      // Nie nadpisuj wyników ręcznego wyszukiwania automatycznym odświeżaniem.
+      // Wyszukany mecz ma zostać na ekranie, dopóki użytkownik sam nie zmieni widoku
+      // albo nie wykona nowego wyszukiwania.
+      if (footballViewMode === 'search' || fixtureSearchPerformed) return
+
       if (form.sport) {
         fetchLiveFixturesForDay({
           sport: form.sport,
@@ -5923,7 +5928,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }, 60000)
 
     return () => window.clearInterval(timer)
-  }, [form.sport, form.country, form.league])
+  }, [form.sport, form.country, form.league, footballViewMode, fixtureSearchPerformed])
 
   const dailyLimit = isPremiumUser ? Infinity : 5
   const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)

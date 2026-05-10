@@ -1,0 +1,4 @@
+WERSJA 796
+- Powiększone przyciski „Dodaj typ automatycznie” i „Dodaj typ ręcznie”.
+- Większe napisy w tych przyciskach dla lepszej czytelności.
+- Wszystkie kafelki sportów poniżej zostały zmniejszone, żeby były lżejsze wizualnie.

@@ -1,0 +1,4 @@
+WERSJA 795
+- Przycisk „Dodaj typ ręcznie” dostał kolor i styl jak kafelek sportu z drugiego zdjęcia.
+- Ma teraz ciemne premium tło, delikatną cyan ramkę i lepszą widoczność.
+- Aktywny przycisk nadal zostaje podświetlony gradientem.
