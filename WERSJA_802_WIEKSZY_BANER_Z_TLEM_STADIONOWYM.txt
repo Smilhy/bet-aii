@@ -1,0 +1,5 @@
+WERSJA 802
+- Powiększony banner meczu, żeby był bardziej czytelny i mocniej się wyróżniał.
+- Zwiększone: wysokość bannera, rozmiary logo/liter drużyn, nazwy drużyn, godzina i meta-info.
+- Dodane subtelne tło stadionowo-boiskowe: delikatny klimat boiska i światła, bez rozwalania layoutu.
+- Zachowany premium, ciemny i nowoczesny styl strony.

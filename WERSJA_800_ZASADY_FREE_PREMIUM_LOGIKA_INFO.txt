@@ -1,0 +1,9 @@
+WERSJA 800
+- Zmieniony opis w karcie konta:
+  FREE: 5 darmowych typów na dobę, bez sprzedaży.
+  PREMIUM: bez limitu, możliwość sprzedaży typów.
+- Wzmocniona logika:
+  * konto FREE nie może opublikować typu premium / płatnego,
+  * konto FREE ma limit 5 darmowych typów na dobę,
+  * konto PREMIUM publikuje bez limitu i może sprzedawać typy,
+  * jeśli konto FREE jakimś sposobem miałoby ustawiony tryb premium, system automatycznie wraca na darmowy.

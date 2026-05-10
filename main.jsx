@@ -4361,10 +4361,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     sport: defaultSport,
     country: 'Anglia',
     league: defaultLeague,
-    matchId: '',
-    market: '',
-    betType: '',
-    odds: '',
+    matchId: defaultMatch?.id || 'mci-ars',
+    market: defaultMarket.market,
+    betType: defaultMarket.pick,
+    odds: String(defaultMarket.odds),
     stake: '100',
     date: defaultMatch?.date || '25.05.2025',
     time: defaultMatch?.time || '17:30',
@@ -4386,12 +4386,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
-  const [footballViewMode, setFootballViewMode] = useState('search')
-  const [marketBoardOpen, setMarketBoardOpen] = useState(false)
-  const [ticketOpen, setTicketOpen] = useState(false)
+  const [footballViewMode, setFootballViewMode] = useState('today')
   const [fixtureSearchLoading, setFixtureSearchLoading] = useState(false)
   const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
+  const [showMarketBoard, setShowMarketBoard] = useState(false)
+  const [expandedMarketGroup, setExpandedMarketGroup] = useState('')
+  const [ticketMarketSelected, setTicketMarketSelected] = useState(false)
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
@@ -5439,7 +5440,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
     setFootballViewMode('upcoming')
-    setLiveFixturesStatus('Wybierz ligę, a od razu pokażę najbliższe mecze z kolejnych 14 dni.')
+    setLiveFixturesStatus('Wybierz ligę, a pokażę mecze tej ligi na dziś i najbliższe terminy.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
@@ -5469,7 +5470,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
-  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || null
+  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
+  const effectiveSelectedMatch = addTipMode === 'manual' && manualSelectedMatch ? manualSelectedMatch : selectedMatch
 
   const topSportButtons = useMemo(() => ([
     'Piłka nożna',
@@ -5654,6 +5656,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (activeMarketTab === 'Popularne') return ['Zwycięzca meczu', 'Wynik końcowy', 'Moneyline', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Suma runów', 'Suma punktów', 'BTTS', 'Handicap', 'Run Line', 'Spread', 'Kartki', 'Rogi'].includes(label)
     return label === activeMarketTab
   })
+
+  useEffect(() => {
+    if (!showMarketBoard) return
+    if (!visibleMarketGroups.length) {
+      setExpandedMarketGroup('')
+      return
+    }
+    const stillVisible = visibleMarketGroups.some(([label]) => label === expandedMarketGroup)
+    if (!stillVisible) setExpandedMarketGroup(visibleMarketGroups[0][0])
+  }, [showMarketBoard, activeMarketTab, selectedMatch?.id, visibleMarketGroups.length])
   const normalizedSearch = String(sidebarSearch || '')
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -5771,7 +5783,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           daysAhead: '7',
             realOnly: '1',
             countOnly: '1',
-            allLeagues: '1'
+            allLeagues: '1',
+            mode: 'today'
           })
           const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
           const data = await response.json().catch(() => ({}))
@@ -5917,10 +5930,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return () => window.clearInterval(timer)
   }, [form.sport, form.country, form.league, footballViewMode, fixtureSearchPerformed])
 
-  const dailyLimit = isPremiumUser ? Infinity : 5
+  const FREE_DAILY_TIP_LIMIT = 5
+  useEffect(() => {
+    if (!isPremiumUser && form.accessType !== 'free') {
+      setForm(prev => ({ ...prev, accessType: 'free' }))
+    }
+  }, [isPremiumUser, form.accessType])
+
+  const dailyLimit = isPremiumUser ? Infinity : FREE_DAILY_TIP_LIMIT
   const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)
-  const limitReached = !isPremiumUser && dailyCount >= 5
+  const limitReached = !isPremiumUser && dailyCount >= FREE_DAILY_TIP_LIMIT
   const canPublishPremium = isPremiumUser
+  const canSellTips = isPremiumUser
   const previewPrice = form.accessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
   const confidencePercent = Math.min(99, Math.max(15, Number(form.confidence || selectedMarket.confidence || 50) || 50))
   const confidenceLabel = confidencePercent >= 85 ? 'Bardzo wysoki' : confidencePercent >= 70 ? 'Wysoki' : confidencePercent >= 55 ? 'Średni' : 'Niski'
@@ -5931,19 +5952,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setForm(prev => ({ ...prev, ...patch }))
   }
 
-  function applyMatchToForm(match, marketItem = null) {
+  function applyMatchToForm(match) {
+    const nextMarket = match?.markets?.[0] || noRealMarket
     if (!match) return
-    const nextMarket = marketItem || noRealMarket
+    if (match.country) setOpenFootballCountry(match.country)
     updateForm({
+      sport: match.sport || form.sport,
+      country: match.country || currentCountry,
       matchId: match.id || `${match.home}-${match.away}`,
       league: match.league || currentLeague,
-      market: marketItem ? nextMarket.market : '',
-      betType: marketItem ? nextMarket.pick : '',
-      odds: marketItem ? String(nextMarket.odds || '') : '',
-      confidence: marketItem ? (nextMarket.confidence || form.confidence) : form.confidence,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds || form.odds || 1.7),
+      confidence: nextMarket.confidence || form.confidence,
       date: match.date || form.date,
       time: match.time || form.time,
-      description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Wybierz prawdziwy kurs, aby dodać zakład do kuponu.`
+      description: ''
     })
   }
 
@@ -5964,24 +5988,33 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     ]
   }
 
+  function openMatchMarkets(match) {
+    if (!match) return
+    applyMatchToForm(match)
+    setShowMarketBoard(true)
+    setTicketMarketSelected(false)
+    setActiveMarketTab('Wszystkie')
+    requestAnimationFrame(() => {
+      const firstGroup = Object.keys((match?.markets || []).reduce((groups, item) => {
+        const label = String(item.market || 'Inne')
+        groups[label] = true
+        return groups
+      }, {}))[0] || ''
+      setExpandedMarketGroup(firstGroup)
+    })
+  }
+
   function selectMatchAndMaybeMarket(match, marketItem = null) {
     if (!match) return
-    setMarketBoardOpen(true)
-    applyMatchToForm(match, marketItem)
+    applyMatchToForm(match)
     if (marketItem) {
-      setTicketOpen(true)
+      setShowMarketBoard(false)
       requestAnimationFrame(() => {
         chooseMarket(`${marketItem.market}|||${marketItem.pick}|||${marketItem.odds}|||${marketItem.confidence || confidencePercent}`)
       })
-    } else {
-      setTicketOpen(false)
+      return
     }
-  }
-
-  function returnToSearchResults() {
-    setMarketBoardOpen(false)
-    setTicketOpen(false)
-    updateForm({ matchId: '', market: '', betType: '', odds: '' })
+    openMatchMarkets(match)
   }
 
 
@@ -6008,7 +6041,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setFixtureSearchPerformed(false)
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`LIVE: pobieram najbliższe mecze ligi ${nextLeague} z kolejnych ${LIVE_SEARCH_DAYS_AHEAD} dni...`)
+    setLiveFixturesStatus(`LIVE: pobieram mecze ligi ${nextLeague} na dziś i najbliższe terminy...`)
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -6115,7 +6148,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
           const scopeLabel = overrides.mode === 'today'
-            ? 'dzisiejszych meczów'
+            ? 'meczów z top 6 lig dziś'
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
               : `meczów z najbliższych ${overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD} dni`
@@ -6262,8 +6295,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseMarket(value) {
-    setTicketOpen(true)
     const [marketName, pickName, oddsValue, confidenceValue] = String(value || '').split('|||')
+    setTicketMarketSelected(true)
     const nextMarket = marketOptions.find(item =>
       String(item.market) === marketName &&
       String(item.pick) === pickName &&
@@ -6289,7 +6322,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({
         type: 'premium',
         title: 'Premium wymagane',
-        message: 'Konto FREE może publikować do 5 darmowych typów dziennie. Tipy premium i płatne single są dostępne w planie Premium.',
+        message: 'Konto FREE może opublikować maksymalnie 5 darmowych typów na dobę i nie może sprzedawać typów. Sprzedaż oraz brak limitu są dostępne w koncie Premium.',
         cta: 'Kup Premium',
         event: 'betai:start-premium-checkout'
       })
@@ -6411,11 +6444,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
       return
     }
+    if (!canSellTips && form.accessType === 'premium') {
+      updateForm({ accessType: 'free' })
+      onToast?.({
+        type: 'premium',
+        title: 'Sprzedaż tylko w Premium',
+        message: 'Konto FREE może publikować tylko darmowe typy. Sprzedaż typów jest dostępna dopiero w koncie Premium.',
+        cta: 'Kup Premium',
+        event: 'betai:start-premium-checkout'
+      })
+      return
+    }
     if (limitReached) {
       onToast?.({
         type: 'limit',
         title: 'Limit FREE wykorzystany',
-        message: 'Konto FREE może publikować maksymalnie 5 typów na dobę. Aktywuj Premium, aby publikować bez limitu.',
+        message: 'Konto FREE może opublikować maksymalnie 5 darmowych typów na dobę i nie może sprzedawać typów. Aktywuj Premium, aby publikować bez limitu i sprzedawać swoje typy.',
         cta: 'Kup Premium',
         event: 'betai:start-premium-checkout'
       })
@@ -6572,157 +6616,378 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
-      <div className={`betfolio-add-shell betfolio-search-only-shell ${ticketOpen ? 'ticket-open' : 'ticket-closed'}`}>
-        <div className="betfolio-center glass-ultra-panel">
-          {!marketBoardOpen && (
-            <>
-              <div className="betfolio-center-header search-only-header">
-                <div>
-                  <div className="static-add-title-row">
-                    <span className="static-add-title-icon">⬡</span>
-                    <h1>Dodaj nowy typ</h1>
-                  </div>
-                  <p>Wyszukaj prawdziwy mecz piłkarski i wybierz go, aby zobaczyć realne rynki i kursy.</p>
-                  <div className={`live-real-badge ${liveDataSource}`}>
-                    {liveDataSource === 'api-football-pro' ? '● Automatyczne pobieranie meczów i kursów' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : '● Wyszukiwanie meczu'}
-                  </div>
-                </div>
-              </div>
+      <div className={`betfolio-add-shell ${ticketMarketSelected ? "ticket-visible" : "ticket-hidden"}`}>
+        <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
+          <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
+            <input
+              className="betfolio-search-input"
+              placeholder="Szukaj meczu lub drużyny bez limitu dat"
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
+            />
+            <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
+              {fixtureSearchLoading ? '…' : 'Szukaj'}
+            </button>
+          </form>
 
-              <form className="betfolio-search-wrap betfolio-main-search-only" onSubmit={handleFixtureSearchSubmit}>
-                <input
-                  className="betfolio-search-input"
-                  placeholder="Wpisz mecz lub drużynę, np. Barcelona"
-                  value={sidebarSearch}
-                  onChange={(e) => setSidebarSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
-                />
-                <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
-                  {fixtureSearchLoading ? '…' : 'Szukaj'}
-                </button>
-              </form>
 
-              <div className="betfolio-fixture-mode-tabs search-only-tabs">
-                <button type="button" className="active" onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
-              </div>
-            </>
-          )}
-          {!marketBoardOpen && (
-            <>
-              <div className="betfolio-events-head">
-                <strong>{fixtureSearchPerformed ? 'Wyniki wyszukiwania' : 'Wyszukaj mecz'}</strong>
-                <span>{visibleMatchOptions.length} wyników • realne mecze</span>
-              </div>
+          <div className="sports-accordion-title">SPORT</div>
 
-              <div className="betfolio-events-list">
-            {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
-              const active = selectedMatch?.id === match.id
-              const primaryOdds = getPrimaryOdds(match)
-              return (
-                <div key={match.id} className={`betfolio-event-row ${active ? 'active' : ''}`}>
-                  <button type="button" className="betfolio-event-main" onClick={() => selectMatchAndMaybeMarket(match)}>
-                    <div className="betfolio-event-teamline">
-                      <strong>{match.home}</strong>
-                      <span>{match.away}</span>
-                    </div>
-                    <div className="betfolio-event-meta">
-                      <span>{getMatchDateBadge(match)}</span>
-                      <span>{match.time}</span>
-                      <span>{match.league || currentLeague}</span>
-                    </div>
-                  </button>
-                  <div className="betfolio-event-odds">
-                    {primaryOdds.map((entry) => {
-                      const oddsItem = entry.item
-                      const isSelectedOdd = oddsItem && String(form.market) === String(oddsItem.market) && String(form.betType) === String(oddsItem.pick) && selectedMatch?.id === match.id
-                      return (
+          <div className="sports-accordion-list">
+            <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
+              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Piłka nożna')}>
+                <span>⚽ Piłka nożna</span><b>{openSidebarSport === 'Piłka nożna' ? '⌃' : '⌄'}</b>
+              </button>
+              {openSidebarSport === 'Piłka nożna' && (
+                <div className="sport-accordion-children football-country-tree">
+                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
+                  {footballCountryOptions.map(country => {
+                    const cleanCountry = normalizeFootballCountryName(country)
+                    const flagCode = footballCountryFlagCodes[cleanCountry]
+                    const isCountryActive = currentCountry === country
+                    const isCountryOpen = openFootballCountry === country
+                    const countryLeagues = getFootballLeaguesForCountry(country)
+                    return (
+                      <div className="football-country-node" key={country}>
                         <button
                           type="button"
-                          key={`${match.id}-${entry.short}`}
-                          className={`betfolio-odd-box ${isSelectedOdd ? 'active' : ''}`}
-                          disabled={!oddsItem}
-                          onClick={() => oddsItem && selectMatchAndMaybeMarket(match, oddsItem)}
+                          className={isCountryActive ? 'is-active country-active' : ''}
+                          onClick={() => selectSidebarCountry(country)}
                         >
-                          <span>{entry.short}</span>
-                          <b>{oddsItem ? Number(oddsItem.odds || 0).toFixed(2) : '—'}</b>
+                          <span className="football-country-label">
+                            {flagCode ? (
+                              <img className="football-country-flag" src={`https://flagcdn.com/w20/${flagCode}.png`} alt="" loading="lazy" />
+                            ) : (
+                              <i className="football-country-region-icon">{footballCountryIcons[cleanCountry] || footballCountryIcons[country] || '🌍'}</i>
+                            )}
+                            {cleanCountry}
+                          </span>
+                          <b>{isCountryOpen ? '⌃' : '⌄'}</b>
                         </button>
-                      )
-                    })}
-                    <button type="button" className="betfolio-more-btn" onClick={() => selectMatchAndMaybeMarket(match)}>Więcej</button>
-                  </div>
-                </div>
-              )
-            }) : (
-              <div className="betfolio-empty-state no-fake-empty">
-                <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wpisz nazwę meczu lub drużyny'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Spróbuj innej nazwy drużyny lub meczu.' : 'Wyszukiwarka pokazuje realne mecze, a po kliknięciu otwiera rynki i prawdziwe kursy.'}</span>
-              </div>
-            )}
-              </div>
-            </>
-          )}
 
-          {marketBoardOpen && (
-          <div className="betfolio-details-wrap market-board-clean-view">
-            <div className="betfolio-details-top market-board-match-header">
-              <button type="button" className="betfolio-small-outline" onClick={returnToSearchResults}>← Wróć do meczów</button>
-              <div>
-                <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak wybranego meczu'}</strong>
-                <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy powyżej'}</span>
-              </div>
-            </div>
-
-            <div className="betfolio-market-tabs">
-              {marketTabs.map((tab) => (
-                <button
-                  type="button"
-                  key={tab}
-                  className={activeMarketTab === tab ? 'active' : ''}
-                  onClick={() => setActiveMarketTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            <div className="betfolio-market-groups">
-              {!effectiveSelectedMatch && (
-                <div className="betfolio-empty-state no-fake-empty">
-                  <strong>Brak realnego wydarzenia</strong>
-                  <span>Rynki pojawią się dopiero po pobraniu prawdziwego meczu z API.</span>
+                        {isCountryOpen && (
+                          <div className="sport-accordion-children level-two football-leagues-list">
+                            {countryLeagues.map(label => (
+                              <button
+                                type="button"
+                                key={`${country}-${label}`}
+                                className={currentLeague === label ? 'is-active league-active' : ''}
+                                onClick={() => selectSidebarLeague('Piłka nożna', country, label)}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
-              {selectedMatch && visibleMarketGroups.map(([groupLabel, items]) => (
-                <div key={groupLabel} className="betfolio-market-group">
-                  <div className="betfolio-market-group-title">
-                    <strong>{groupLabel}</strong>
-                    <span>{items.length} opcji</span>
-                  </div>
-                  <div className="betfolio-market-options">
-                    {items.map((item, index) => {
-                      const active = String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
-                      const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
-                      return (
-                        <button
-                          type="button"
-                          key={`${groupLabel}-${item.pick}-${item.odds}-${index}`}
-                          className={`betfolio-market-option ${active ? 'active' : ''}`}
-                          onClick={() => chooseMarket(value)}
-                        >
-                          <span>{item.pick}</span>
-                          <b>{Number(item.odds || 0).toFixed(2)}</b>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+            </div>
+
+            {sidebarComingSoonSports.map((sportName) => (
+              <div className="sport-accordion-item is-coming-soon" key={`sidebar-coming-soon-${sportName}`}>
+                <button
+                  type="button"
+                  className="sport-accordion-head sport-coming-soon-head"
+                  onClick={() => onToast?.({ type: 'success', title: sportName, message: 'Kafelek jest już dodany. Obsługę tego sportu podłączymy później.' })}
+                >
+                  <span>{sportIconMap[sportName] || '🏅'} {sportName}</span>
+                  <b>⌄</b>
+                </button>
+              </div>
+            ))}
+
+            <div className="football-pro-mode-note">
+              Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
             </div>
           </div>
+
+          <div className="betfolio-left-stats">
+            <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
+              <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
+              <span>{isPremiumUser ? 'Bez limitu • możesz sprzedawać typy' : '5 darmowych typów / doba • bez sprzedaży'}</span>
+              <small>{isPremiumUser ? 'Publikuj bez limitu i zarabiaj na swoich analizach.' : 'Po wykorzystaniu limitu kolejne typy dodasz następnego dnia.'}</small>
+            </div>
+            <div className="tip-add-usage-pill">
+              <strong>{countLoading ? '…' : isPremiumUser ? `${dailyCount}` : `${dailyCount}/5`}</strong>
+              <span>{isPremiumUser ? 'Dodane dziś' : `Pozostało dziś: ${remainingFreeSlots}`}</span>
+            </div>
+          </div>
+
+          <div className="betfolio-side-note">
+            {liveFixturesStatus || 'Kliknij sport → kategorię/państwo → ligę, a potem pobierz mecze i kursy.'}
+          </div>
+        </aside>
+
+        <div className={`betfolio-center glass-ultra-panel ${showMarketBoard ? 'market-board-mode' : ''}`}>
+          {!showMarketBoard && (
+            <>
+              <div className="betfolio-add-hero">
+                <div className="betfolio-add-hero-copy">
+                  <h2>Dodaj <span>typ</span></h2>
+                  <p>Wyszukaj mecz, wybierz rynek i stwórz swój własny typ w kilka sekund.</p>
+
+                  <div className="betfolio-add-hero-features">
+                    <div>
+                      <i>⌕</i>
+                      <strong>Szybkie wyszukiwanie</strong>
+                      <small>Znajdź każdy mecz błyskawicznie</small>
+                    </div>
+                    <div>
+                      <i>↗</i>
+                      <strong>Setki rynków</strong>
+                      <small>Najpopularniejsze rynki bukmacherskie</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="betfolio-add-hero-visual" aria-hidden="true">
+                  <div className="betfolio-add-hero-orbit"></div>
+                  <div className="betfolio-add-hero-ball">⚽</div>
+                  <div className="betfolio-add-hero-ticket">
+                    <b>◎</b>
+                    <span></span>
+                    <span></span>
+                    <em></em>
+                  </div>
+                </div>
+              </div>
+
+              <div className="betfolio-add-mode-switch">
+                <button type="button" className={addTipMode === 'auto' ? 'active' : ''} onClick={() => switchAddTipMode('auto')}>Dodaj typ automatycznie</button>
+                <button type="button" className={addTipMode === 'manual' ? 'active' : ''} onClick={() => switchAddTipMode('manual')}>Dodaj typ ręcznie</button>
+              </div>
+
+              {addTipMode === 'auto' && (
+              <>
+              <div className="betfolio-top-sports-row">
+                {topSportButtons.map((item) => {
+                  const active = form.sport === item.name
+                  const count = Number(sportDayCounts[item.name] || 0)
+                  return (
+                    <button
+                      type="button"
+                      key={`top-sport-${item.name}`}
+                      className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
+                      onClick={() => handleTopSportButtonClick(item)}
+                    >
+                      <span>{item.icon} {item.name}</span>
+                      <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="betfolio-fixture-mode-tabs">
+                <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
+                <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+              </div>
+              </>
+              )}
+            </>
+          )}
+
+          {!showMarketBoard ? (
+            <>
+              {addTipMode === 'auto' ? (
+                <>
+                  <div className="betfolio-events-head">
+                    <strong>{footballViewMode === 'today' ? 'Dziś — szybki typ' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Mecze ligi'}</strong>
+                    <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                  </div>
+
+                  <div className="betfolio-events-list">
+                    {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
+                      const active = selectedMatch?.id === match.id
+                      const primaryOdds = getPrimaryOdds(match)
+                      return (
+                        <div key={match.id} className={`betfolio-event-row ${active ? 'active' : ''}`}>
+                          <button type="button" className="betfolio-event-main" onClick={() => openMatchMarkets(match)}>
+                            <div className="betfolio-event-teamline">
+                              <strong>{`${match.home} - ${match.away}`}</strong>
+                            </div>
+                            <div className="betfolio-event-meta">
+                              <span>{getMatchDateBadge(match)}</span>
+                              <span>{match.time}</span>
+                              <span>{match.league || currentLeague}</span>
+                            </div>
+                          </button>
+                          <div className="betfolio-event-odds">
+                            {primaryOdds.map((entry) => {
+                              const oddsItem = entry.item
+                              const isSelectedOdd = oddsItem && String(form.market) === String(oddsItem.market) && String(form.betType) === String(oddsItem.pick) && selectedMatch?.id === match.id && ticketMarketSelected
+                              return (
+                                <button
+                                  type="button"
+                                  key={`${match.id}-${entry.short}`}
+                                  className={`betfolio-odd-box ${isSelectedOdd ? 'active' : ''}`}
+                                  disabled={!oddsItem}
+                                  onClick={() => oddsItem && selectMatchAndMaybeMarket(match, oddsItem)}
+                                >
+                                  <span>{entry.short}</span>
+                                  <b>{oddsItem ? Number(oddsItem.odds || 0).toFixed(2) : '—'}</b>
+                                </button>
+                              )
+                            })}
+                            <button type="button" className="betfolio-more-btn" onClick={() => openMatchMarkets(match)}>Więcej</button>
+                          </div>
+                        </div>
+                      )
+                    }) : (
+                      <div className="betfolio-empty-state no-fake-empty">
+                        <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę albo kliknij Dziś'}</strong>
+                        <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję szybkie typy z top 6 lig, a wyszukiwarka znajduje każdy prawdziwy mecz. Kliknij ligę po lewej, aby zobaczyć jej mecze na dziś i najbliższe terminy.' : 'Kliknij ligę po lewej, użyj zakładki „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <form className="betfolio-manual-card" onSubmit={handleManualAddToTicket}>
+                  <div className="betfolio-manual-section">
+                    <h3>Krok 1</h3>
+                    <div className="betfolio-manual-grid betfolio-manual-grid-top">
+                      <label>
+                        <span>Sport</span>
+                        <select className="static-add-input" value={manualForm.sport} onChange={(e) => updateManualForm({ sport: e.target.value })}>
+                          <option>Piłka nożna</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Kraj</span>
+                        <select className="static-add-input" value={manualForm.country} onChange={(e) => updateManualForm({ country: e.target.value, league: getFootballLeaguesForCountry(e.target.value)[0] || '' })}>
+                          {footballCountryOptions.map(country => <option key={`manual-country-${country}`} value={country}>{normalizeFootballCountryName(country)}</option>)}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Liga</span>
+                        <select className="static-add-input" value={manualForm.league} onChange={(e) => updateManualForm({ league: e.target.value })}>
+                          {getFootballLeaguesForCountry(manualForm.country).map(league => <option key={`manual-league-${league}`} value={league}>{league}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="betfolio-manual-section">
+                    <h3>Krok 2</h3>
+                    <div className="betfolio-manual-grid">
+                      <label className="betfolio-manual-span-2">
+                        <span>Wydarzenie</span>
+                        <input className="static-add-input" value={manualForm.event} onChange={(e) => updateManualForm({ event: e.target.value })} placeholder="np. Legia Warszawa - FC Porto" />
+                      </label>
+
+                      <label>
+                        <span>Data wydarzenia</span>
+                        <input type="datetime-local" className="static-add-input" value={manualForm.datetimeLocal} onChange={(e) => updateManualForm({ datetimeLocal: e.target.value })} />
+                      </label>
+
+                      <label className="betfolio-manual-span-2">
+                        <span>Typ</span>
+                        <input className="static-add-input" value={manualForm.betType} onChange={(e) => updateManualForm({ betType: e.target.value })} placeholder="np. wygra 1 / Remis / Obie drużyny strzelą: TAK" />
+                      </label>
+
+                      <label>
+                        <span>Kurs</span>
+                        <input className="static-add-input" value={manualForm.odds} onChange={(e) => updateManualForm({ odds: e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.') })} placeholder="1.80" />
+                      </label>
+                    </div>
+
+                    <div className="betfolio-manual-actions">
+                      <button type="submit" className="publish-btn betfolio-manual-submit">Dodaj zakład</button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </>
+          ) : (
+            <div className="betfolio-market-board-view">
+              {effectiveSelectedMatch && (
+                <div className="betfolio-match-hero">
+                  <div className="betfolio-match-hero-team">
+                    {effectiveSelectedMatch.homeLogo ? (
+                      <img src={effectiveSelectedMatch.homeLogo} alt="" />
+                    ) : (
+                      <span>{String(effectiveSelectedMatch.home || '').trim().charAt(0) || 'H'}</span>
+                    )}
+                    <strong>{effectiveSelectedMatch.home}</strong>
+                  </div>
+
+                  <div className="betfolio-match-hero-center">
+                    <b>{effectiveSelectedMatch.time || '--:--'}</b>
+                    <small>{getMatchDateBadge(effectiveSelectedMatch)}</small>
+                  </div>
+
+                  <div className="betfolio-match-hero-team">
+                    {effectiveSelectedMatch.awayLogo ? (
+                      <img src={effectiveSelectedMatch.awayLogo} alt="" />
+                    ) : (
+                      <span>{String(effectiveSelectedMatch.away || '').trim().charAt(0) || 'A'}</span>
+                    )}
+                    <strong>{effectiveSelectedMatch.away}</strong>
+                  </div>
+
+                  <div className="betfolio-match-hero-meta">
+                    <button type="button" className="betfolio-back-btn betfolio-match-hero-back" onClick={() => setShowMarketBoard(false)}>← Wróć do meczów</button>
+                    <div className="betfolio-match-hero-meta-copy">
+                      <strong>{`${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}`}</strong>
+                      <span>{`${effectiveSelectedMatch.date} • ${effectiveSelectedMatch.time} • ${effectiveSelectedMatch.league || currentLeague}`}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="betfolio-market-accordion-list">
+                {!effectiveSelectedMatch && (
+                  <div className="betfolio-empty-state no-fake-empty">
+                    <strong>Brak realnego wydarzenia</strong>
+                    <span>Rynki pojawią się dopiero po pobraniu prawdziwego meczu z API.</span>
+                  </div>
+                )}
+                {effectiveSelectedMatch && !visibleMarketGroups.length && (
+                  <div className="betfolio-empty-state no-fake-empty">
+                    <strong>Brak realnych kursów</strong>
+                    <span>Nie pokazuję sztucznych kursów. Gdy API-FOOTBALL udostępni rynki dla tego meczu, pojawią się tutaj.</span>
+                  </div>
+                )}
+                {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
+                  const expanded = expandedMarketGroup === groupLabel
+                  return (
+                    <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''}`}>
+                      <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
+                        <span>{groupLabel}</span>
+                        <b>{items.length} opcji {expanded ? '⌃' : '⌄'}</b>
+                      </button>
+                      {expanded && (
+                        <div className="betfolio-market-options board-options">
+                          {items.map((item, index) => {
+                            const active = ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
+                            const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
+                            return (
+                              <button
+                                type="button"
+                                key={`${groupLabel}-${item.pick}-${item.odds}-${index}`}
+                                className={`betfolio-market-option ${active ? 'active' : ''}`}
+                                onClick={() => chooseMarket(value)}
+                              >
+                                <span>{item.pick}</span>
+                                <b>{Number(item.odds || 0).toFixed(2)}</b>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
 
-        {ticketOpen && (
         {ticketMarketSelected && (
         <aside className="betfolio-right glass-ultra-panel">
           <div className="betfolio-ticket-top">
@@ -6737,12 +7002,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           </div>
 
           <div className="betfolio-ticket-card">
-            <small>Dodaj analizę</small>
+            <small>Kupon / dodaj typ</small>
             <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak realnego meczu'}</strong>
-            <span>{form.market} • {form.betType}</span>
+            <span>{ticketMarketSelected ? `${form.market} • ${form.betType}` : addTipMode === 'manual' ? 'Wypełnij formularz ręczny i kliknij Dodaj zakład' : 'Kliknij prawdziwy kurs, aby dodać zakład'}</span>
             <div className="betfolio-ticket-row">
               <label>Kurs</label>
-              <input className="static-add-input" value={form.odds} onChange={(e) => updateForm({ odds: e.target.value })} />
+              <input className="static-add-input" value={ticketMarketSelected ? form.odds : ''} placeholder="—" onChange={(e) => updateForm({ odds: e.target.value })} />
             </div>
             <div className="betfolio-ticket-row">
               <label>Data meczu</label>
@@ -6782,7 +7047,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {isPremiumUser ? (
                 <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
               ) : (
-                <div className="betfolio-premium-lock">Premium only</div>
+                <div className="betfolio-premium-lock">Sprzedaż tylko w Premium</div>
               )}
             </div>
             <div className="betfolio-ticket-profit">
@@ -6797,7 +7062,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <span>Kurs całkowity</span>
               <b>{Number(form.odds || 0).toFixed(2)}</b>
             </div>
-            <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !selectedMatch} onClick={handlePublish}>
+            <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !effectiveSelectedMatch || !ticketMarketSelected} onClick={handlePublish}>
               {saving ? 'Publikowanie…' : 'Opublikuj typ'}
             </button>
           </div>
@@ -7398,7 +7663,6 @@ function ReferralsView({ user, data, loading, onRefresh }) {
             </div>
           </div>
         </aside>
-        )}
       </div>
     </section>
   )

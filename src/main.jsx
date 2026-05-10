@@ -5930,10 +5930,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return () => window.clearInterval(timer)
   }, [form.sport, form.country, form.league, footballViewMode, fixtureSearchPerformed])
 
-  const dailyLimit = isPremiumUser ? Infinity : 5
+  const FREE_DAILY_TIP_LIMIT = 5
+  useEffect(() => {
+    if (!isPremiumUser && form.accessType !== 'free') {
+      setForm(prev => ({ ...prev, accessType: 'free' }))
+    }
+  }, [isPremiumUser, form.accessType])
+
+  const dailyLimit = isPremiumUser ? Infinity : FREE_DAILY_TIP_LIMIT
   const remainingFreeSlots = isPremiumUser ? '∞' : Math.max(dailyLimit - dailyCount, 0)
-  const limitReached = !isPremiumUser && dailyCount >= 5
+  const limitReached = !isPremiumUser && dailyCount >= FREE_DAILY_TIP_LIMIT
   const canPublishPremium = isPremiumUser
+  const canSellTips = isPremiumUser
   const previewPrice = form.accessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
   const confidencePercent = Math.min(99, Math.max(15, Number(form.confidence || selectedMarket.confidence || 50) || 50))
   const confidenceLabel = confidencePercent >= 85 ? 'Bardzo wysoki' : confidencePercent >= 70 ? 'Wysoki' : confidencePercent >= 55 ? 'Średni' : 'Niski'
@@ -6314,7 +6322,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({
         type: 'premium',
         title: 'Premium wymagane',
-        message: 'Konto FREE może publikować do 5 darmowych typów dziennie. Tipy premium i płatne single są dostępne w planie Premium.',
+        message: 'Konto FREE może opublikować maksymalnie 5 darmowych typów na dobę i nie może sprzedawać typów. Sprzedaż oraz brak limitu są dostępne w koncie Premium.',
         cta: 'Kup Premium',
         event: 'betai:start-premium-checkout'
       })
@@ -6436,11 +6444,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
       return
     }
+    if (!canSellTips && form.accessType === 'premium') {
+      updateForm({ accessType: 'free' })
+      onToast?.({
+        type: 'premium',
+        title: 'Sprzedaż tylko w Premium',
+        message: 'Konto FREE może publikować tylko darmowe typy. Sprzedaż typów jest dostępna dopiero w koncie Premium.',
+        cta: 'Kup Premium',
+        event: 'betai:start-premium-checkout'
+      })
+      return
+    }
     if (limitReached) {
       onToast?.({
         type: 'limit',
         title: 'Limit FREE wykorzystany',
-        message: 'Konto FREE może publikować maksymalnie 5 typów na dobę. Aktywuj Premium, aby publikować bez limitu.',
+        message: 'Konto FREE może opublikować maksymalnie 5 darmowych typów na dobę i nie może sprzedawać typów. Aktywuj Premium, aby publikować bez limitu i sprzedawać swoje typy.',
         cta: 'Kup Premium',
         event: 'betai:start-premium-checkout'
       })
@@ -6689,7 +6708,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           <div className="betfolio-left-stats">
             <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
               <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
-              <span>{isPremiumUser ? 'Publikujesz bez limitu' : 'Maks. 5 tipów / doba'}</span>
+              <span>{isPremiumUser ? 'Bez limitu • możesz sprzedawać typy' : '5 darmowych typów / doba • bez sprzedaży'}</span>
+              <small>{isPremiumUser ? 'Publikuj bez limitu i zarabiaj na swoich analizach.' : 'Po wykorzystaniu limitu kolejne typy dodasz następnego dnia.'}</small>
             </div>
             <div className="tip-add-usage-pill">
               <strong>{countLoading ? '…' : isPremiumUser ? `${dailyCount}` : `${dailyCount}/5`}</strong>
@@ -6909,16 +6929,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     )}
                     <strong>{effectiveSelectedMatch.away}</strong>
                   </div>
+
+                  <div className="betfolio-match-hero-meta">
+                    <button type="button" className="betfolio-back-btn betfolio-match-hero-back" onClick={() => setShowMarketBoard(false)}>← Wróć do meczów</button>
+                    <div className="betfolio-match-hero-meta-copy">
+                      <strong>{`${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}`}</strong>
+                      <span>{`${effectiveSelectedMatch.date} • ${effectiveSelectedMatch.time} • ${effectiveSelectedMatch.league || currentLeague}`}</span>
+                    </div>
+                  </div>
                 </div>
               )}
-
-              <div className="betfolio-market-board-head">
-                <button type="button" className="betfolio-back-btn" onClick={() => setShowMarketBoard(false)}>← Wróć do meczów</button>
-                <div>
-                  <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak wybranego meczu'}</strong>
-                  <span>{effectiveSelectedMatch ? `${effectiveSelectedMatch.date} • ${effectiveSelectedMatch.time} • ${effectiveSelectedMatch.league || currentLeague}` : 'Wybierz mecz z listy.'}</span>
-                </div>
-              </div>
 
               <div className="betfolio-market-accordion-list">
                 {!effectiveSelectedMatch && (
@@ -7027,7 +7047,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {isPremiumUser ? (
                 <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
               ) : (
-                <div className="betfolio-premium-lock">Premium only</div>
+                <div className="betfolio-premium-lock">Sprzedaż tylko w Premium</div>
               )}
             </div>
             <div className="betfolio-ticket-profit">
