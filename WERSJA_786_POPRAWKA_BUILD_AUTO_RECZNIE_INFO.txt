@@ -1,0 +1,3 @@
+WERSJA 786
+- Poprawiony błąd budowania z wersji 785: brakujący fragment JSX przy sekcji „Dodaj typ automatycznie”.
+- Przełącznik „Dodaj typ automatycznie / Dodaj typ ręcznie” zostaje bez zmian.

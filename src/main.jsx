@@ -6682,6 +6682,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               {addTipMode === 'auto' && (
+              <>
               <div className="betfolio-top-sports-row">
                 {topSportButtons.map((item) => {
                   const active = form.sport === item.name
@@ -6708,6 +6709,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
                 <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
               </div>
+              </>
               )}
             </>
           )}
