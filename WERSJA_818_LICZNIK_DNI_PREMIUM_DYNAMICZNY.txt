@@ -1,0 +1,6 @@
+WERSJA 818
+- Licznik „zostało X dni” w karcie Subskrypcja zmienia się według dni kalendarzowych:
+  dziś 30, jutro 29, pojutrze 28 itd. aż do 0.
+- Licznik odświeża się automatycznie co minutę, więc zmieni się także bez przeładowania strony po północy.
+- Dodano poprawną odmianę: „1 dzień”, pozostałe wartości „dni”.
+- Zachowane wszystkie poprawki z wersji 817.

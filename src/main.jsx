@@ -8180,6 +8180,12 @@ function ArticlesView() {
 }
 
 function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+  const [walletClock, setWalletClock] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setWalletClock(new Date()), 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const walletAmount = Math.max(0, Number(wallet || 0) || 0)
   const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
   const tokenPlnValue = userTokens / 1000
@@ -8192,8 +8198,15 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
     ? new Date(user.current_period_end).toLocaleDateString('pl-PL')
     : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL')
   const subscriptionDaysLeft = user?.current_period_end
-    ? Math.max(0, Math.ceil((new Date(user.current_period_end).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    ? (() => {
+        const today = new Date(walletClock)
+        const end = new Date(user.current_period_end)
+        today.setHours(0, 0, 0, 0)
+        end.setHours(0, 0, 0, 0)
+        return Math.max(0, Math.round((end.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)))
+      })()
     : (isPremiumWalletUser ? 30 : 0)
+  const subscriptionDaysLabel = subscriptionDaysLeft === 1 ? 'dzień' : 'dni'
   const subscriptionCtaLabel = isPremiumWalletUser ? 'Zarządzaj subskrypcją' : 'Aktywuj Premium przez Stripe'
   const subscriptionStripeHint = isPremiumWalletUser
     ? 'Otwórz Stripe Billing Portal i zarządzaj planem, metodą płatności oraz fakturami.'
@@ -8418,7 +8431,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp, us
                 <li>{isPremiumWalletUser ? 'Typy AI bez limitu' : 'Sprzedaż typów zablokowana na koncie Free'}</li>
                 <li>{isPremiumWalletUser ? 'Priorytetowe powiadomienia' : 'Przejście na Premium odblokowuje pełny dostęp'}</li>
               </ul>
-              <div className="renew-info">{isPremiumWalletUser ? <>Premium ważne do: <b>{subscriptionRenewalDate}</b> · zostało {subscriptionDaysLeft} dni</> : <>Przejdź na Premium, aby aktywować miesięczny plan Stripe.</>}</div>
+              <div className="renew-info">{isPremiumWalletUser ? <>Premium ważne do: <b>{subscriptionRenewalDate}</b> · zostało {subscriptionDaysLeft} {subscriptionDaysLabel}</> : <>Przejdź na Premium, aby aktywować miesięczny plan Stripe.</>}</div>
               <button type="button" className="wallet-v2-primary-btn" onClick={handleSubscriptionAction}>{subscriptionCtaLabel}</button>
               <button type="button" className="subscription-stripe-link" onClick={handleSubscriptionAction}>{subscriptionStripeHint}</button>
             </div>
