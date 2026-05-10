@@ -4322,7 +4322,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   const LIVE_SEARCH_DAYS_AHEAD = 14
-  const GLOBAL_SEARCH_DAYS_AHEAD = 90
 
   const sportIconMap = {
     'Piłka nożna': '⚽',
@@ -4345,10 +4344,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     sport: defaultSport,
     country: 'Anglia',
     league: defaultLeague,
-    matchId: '',
-    market: '',
-    betType: '',
-    odds: '',
+    matchId: defaultMatch?.id || 'mci-ars',
+    market: defaultMarket.market,
+    betType: defaultMarket.pick,
+    odds: String(defaultMarket.odds),
     stake: '100',
     date: defaultMatch?.date || '25.05.2025',
     time: defaultMatch?.time || '17:30',
@@ -4370,11 +4369,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
-  const [footballViewMode, setFootballViewMode] = useState('search')
-  const [marketBoardOpen, setMarketBoardOpen] = useState(false)
-  const [ticketOpen, setTicketOpen] = useState(false)
-  const [fixtureSearchLoading, setFixtureSearchLoading] = useState(false)
-  const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('Anglia')
@@ -5313,8 +5307,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setLiveFixtures([])
     setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
-    setFootballViewMode('upcoming')
-    setLiveFixturesStatus('Wybierz ligę, a od razu pokażę najbliższe mecze z kolejnych 14 dni.')
+    setLiveFixturesStatus('Wybierz ligę i kliknij „Dodaj inne wydarzenie”, aby pobrać prawdziwe mecze/kursy z API.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
@@ -5344,7 +5337,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
-  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || null
+  const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
 
   const topSportButtons = useMemo(() => ([
     {
@@ -5373,12 +5366,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         return !footballOnlyMarkets.includes(String(item.market || ''))
       })
       .map(item => ({ ...item }))
-
-    // API-FOOTBALL Pro: pokazujemy wyłącznie kursy z endpointu /odds.
-    // Jeżeli dostawca nie ma jeszcze kursów dla meczu, UI pokaże kreski zamiast sztucznych 1.72 / 3.25 / 2.10.
-    if (match?.source === 'api-football' || match?.hasRealOdds === true || match?.hasRealOdds === false) {
-      return base
-    }
 
     const add = (market, pick, odds, confidence = 62) => {
       const exists = base.some(item => String(item.market) === market && String(item.pick) === pick)
@@ -5493,8 +5480,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   const marketOptions = selectedMatch ? enrichPopularMarkets(selectedMatch, selectedMatch?.markets || []) : []
-  const noRealMarket = { market: 'Brak kursów', pick: 'Brak realnych kursów', odds: '', confidence: 50 }
-  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || noRealMarket
+  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
   const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
     const label = String(item.market || 'Inne')
     if (!groups[label]) groups[label] = []
@@ -5517,33 +5503,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .trim()
-  const visibleMatchOptions = (normalizedSearch
+  const visibleMatchOptions = normalizedSearch
     ? matchOptions.filter((item) => (`${item.home || ''} ${item.away || ''} ${item.league || currentLeague} ${item.country || currentCountry}`).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizedSearch))
     : matchOptions
-  ).slice().sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-
-  function getMatchDateBadge(match) {
-    const eventKey = (() => {
-      if (match?.commence_time) {
-        const d = new Date(match.commence_time)
-        if (!Number.isNaN(d.getTime())) {
-          const year = d.getFullYear()
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const day = String(d.getDate()).padStart(2, '0')
-          return `${year}-${month}-${day}`
-        }
-      }
-      const label = String(match?.date || '')
-      const m = label.match(/^(\d{2})\.(\d{2})\.(\d{4})$/)
-      return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
-    })()
-    if (!eventKey) return match?.date || ''
-    const today = getTodayLocalKey()
-    const tomorrow = getDateKeyPlusDays(1)
-    if (eventKey === today) return 'Dziś'
-    if (eventKey === tomorrow) return 'Jutro'
-    return match?.date || eventKey
-  }
 
   useEffect(() => {
     if (!leagueOptions.includes(form.league)) {
@@ -5728,10 +5690,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }, [topSportButtons])
 
   useEffect(() => {
-    fetchTodayFootballFixtures()
-  }, [])
-
-  useEffect(() => {
     const timer = window.setInterval(() => {
       const todayKey = getTodayLocalKey()
       if (todayKey !== sportCountsDate) {
@@ -5785,19 +5743,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setForm(prev => ({ ...prev, ...patch }))
   }
 
-  function applyMatchToForm(match, marketItem = null) {
+  function applyMatchToForm(match) {
+    const nextMarket = match?.markets?.[0] || defaultMarket
     if (!match) return
-    const nextMarket = marketItem || noRealMarket
     updateForm({
       matchId: match.id || `${match.home}-${match.away}`,
       league: match.league || currentLeague,
-      market: marketItem ? nextMarket.market : '',
-      betType: marketItem ? nextMarket.pick : '',
-      odds: marketItem ? String(nextMarket.odds || '') : '',
-      confidence: marketItem ? (nextMarket.confidence || form.confidence) : form.confidence,
+      market: nextMarket.market,
+      betType: nextMarket.pick,
+      odds: String(nextMarket.odds || form.odds || 1.7),
+      confidence: nextMarket.confidence || form.confidence,
       date: match.date || form.date,
       time: match.time || form.time,
-      description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Wybierz prawdziwy kurs, aby dodać zakład do kuponu.`
+      description: `${match.home || 'Gospodarze'} vs ${match.away || 'Goście'}. Typ wybrany z listy aktualnych meczów/kursów dnia. Uzupełnij własną analizę przed publikacją.`
     })
   }
 
@@ -5820,22 +5778,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function selectMatchAndMaybeMarket(match, marketItem = null) {
     if (!match) return
-    setMarketBoardOpen(true)
-    applyMatchToForm(match, marketItem)
+    applyMatchToForm(match)
     if (marketItem) {
-      setTicketOpen(true)
       requestAnimationFrame(() => {
         chooseMarket(`${marketItem.market}|||${marketItem.pick}|||${marketItem.odds}|||${marketItem.confidence || confidencePercent}`)
       })
-    } else {
-      setTicketOpen(false)
     }
-  }
-
-  function returnToSearchResults() {
-    setMarketBoardOpen(false)
-    setTicketOpen(false)
-    updateForm({ matchId: '', market: '', betType: '', odds: '' })
   }
 
 
@@ -5858,11 +5806,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setOpenSidebarSport(nextSport)
     if (nextSport === 'Piłka nożna') setOpenFootballCountry(nextCountry)
 
-    setFootballViewMode('upcoming')
-    setFixtureSearchPerformed(false)
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`LIVE: pobieram najbliższe mecze ligi ${nextLeague} z kolejnych ${LIVE_SEARCH_DAYS_AHEAD} dni...`)
+    setLiveFixturesStatus('LIVE: pobieram realne mecze i kursy dla wybranej ligi...')
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -5874,67 +5820,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })
 
     window.setTimeout(() => {
-      fetchLiveFixturesForDay({
-        sport: nextSport,
-        country: nextCountry || 'Wszystkie',
-        league: nextLeague,
-        date: getTodayLocalKey(),
-        daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-        allLeagues: false,
-        mode: 'upcoming',
-      })
+      fetchLiveFixturesForDay({ sport: nextSport, country: nextCountry || 'Wszystkie', league: nextLeague, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: true })
     }, 60)
-  }
-
-  function fetchTodayFootballFixtures() {
-    setFootballViewMode('today')
-    setFixtureSearchPerformed(false)
-    setSidebarSearch('')
-    fetchLiveFixturesForDay({
-      sport: 'Piłka nożna',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
-      date: getTodayLocalKey(),
-      daysAhead: 0,
-      allLeagues: true,
-      mode: 'today',
-    })
-  }
-
-  function fetchUpcomingFootballFixtures() {
-    setFootballViewMode('upcoming')
-    setFixtureSearchPerformed(false)
-    fetchLiveFixturesForDay({
-      sport: 'Piłka nożna',
-      country: form.country || 'Wszystkie',
-      league: form.league || 'Wszystkie ligi',
-      date: getTodayLocalKey(),
-      daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-      allLeagues: !form.league || form.league === 'Wszystkie ligi',
-      mode: 'upcoming',
-    })
-  }
-
-  function handleFixtureSearchSubmit(event) {
-    event?.preventDefault?.()
-    const query = String(sidebarSearch || '').trim()
-    if (!query) {
-      fetchTodayFootballFixtures()
-      return
-    }
-    setFootballViewMode('search')
-    setFixtureSearchPerformed(true)
-    setFixtureSearchLoading(true)
-    fetchLiveFixturesForDay({
-      sport: 'Piłka nożna',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
-      date: getTodayLocalKey(),
-      daysAhead: GLOBAL_SEARCH_DAYS_AHEAD,
-      allLeagues: true,
-      mode: 'search',
-      query,
-    }).finally(() => setFixtureSearchLoading(false))
   }
 
   async function fetchLiveFixturesForDay(overrides = {}) {
@@ -5953,9 +5840,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         date: overrides.date || liveDate || getTodayLocalKey(),
         daysAhead: String(overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD),
         realOnly: '1',
-        allLeagues: overrides.allLeagues ? '1' : '0',
-        mode: overrides.mode || footballViewMode || 'upcoming',
-        query: overrides.query || '',
+        allLeagues: '1'
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
@@ -5968,13 +5853,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
-          const scopeLabel = overrides.mode === 'today'
-            ? 'dzisiejszych meczów'
-            : overrides.mode === 'search'
-              ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
-              : `meczów z najbliższych ${overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD} dni`
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.`)
-          onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} realnych wydarzeń. Jeśli źródło to API-Sports, kurs wpisujesz ręcznie. Godziny pokazane dla Polski.`)
+          onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Live kursy pobrane', message: `Załadowano ${fixtures.length} przyszłych wydarzeń dla wybranej ligi.` })
         } else {
           setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
         }
@@ -6116,7 +5996,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function chooseMarket(value) {
-    setTicketOpen(true)
     const [marketName, pickName, oddsValue, confidenceValue] = String(value || '').split('|||')
     const nextMarket = marketOptions.find(item =>
       String(item.market) === marketName &&
@@ -6342,48 +6221,135 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   return (
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
-      <div className={`betfolio-add-shell betfolio-search-only-shell ${ticketOpen ? 'ticket-open' : 'ticket-closed'}`}>
-        <div className="betfolio-center glass-ultra-panel">
-          {!marketBoardOpen && (
-            <>
-              <div className="betfolio-center-header search-only-header">
-                <div>
-                  <div className="static-add-title-row">
-                    <span className="static-add-title-icon">⬡</span>
-                    <h1>Dodaj nowy typ</h1>
-                  </div>
-                  <p>Wyszukaj prawdziwy mecz piłkarski i wybierz go, aby zobaczyć realne rynki i kursy.</p>
-                  <div className={`live-real-badge ${liveDataSource}`}>
-                    {liveDataSource === 'api-football-pro' ? '● API-FOOTBALL PRO — realne mecze i kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : '● Wyszukiwanie meczu'}
-                  </div>
+      <div className="betfolio-add-shell">
+        <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
+          <div className="betfolio-search-wrap">
+            <input
+              className="betfolio-search-input"
+              placeholder="Wyszukaj mecz lub zawody"
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+            />
+          </div>
+
+          <button type="button" className="betfolio-fetch-btn" onClick={fetchLiveFixturesForDay} disabled={liveFixturesLoading}>
+            {liveFixturesLoading ? 'Pobieram mecze…' : 'Dodaj inne wydarzenie'}
+          </button>
+
+          <div className="sports-accordion-title">SPORT</div>
+
+          <div className="sports-accordion-list">
+            <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
+              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Piłka nożna')}>
+                <span>⚽ Piłka nożna</span><b>{openSidebarSport === 'Piłka nożna' ? '⌃' : '⌄'}</b>
+              </button>
+              {openSidebarSport === 'Piłka nożna' && (
+                <div className="sport-accordion-children football-country-tree">
+                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
+                  {footballCountryOptions.map(country => {
+                    const isCountryActive = currentCountry === country
+                    const isCountryOpen = openFootballCountry === country
+                    const countryLeagues = getFootballLeaguesForCountry(country)
+                    return (
+                      <div className="football-country-node" key={country}>
+                        <button
+                          type="button"
+                          className={isCountryActive ? 'is-active country-active' : ''}
+                          onClick={() => selectSidebarCountry(country)}
+                        >
+                          <span>{footballCountryIcons[country] || '🏳️'} {country}</span>
+                          <b>{isCountryOpen ? '⌃' : '⌄'}</b>
+                        </button>
+
+                        {isCountryOpen && (
+                          <div className="sport-accordion-children level-two football-leagues-list">
+                            {countryLeagues.map(label => (
+                              <button
+                                type="button"
+                                key={`${country}-${label}`}
+                                className={currentLeague === label ? 'is-active league-active' : ''}
+                                onClick={() => selectSidebarLeague('Piłka nożna', country, label)}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
+              )}
+            </div>
 
-              <form className="betfolio-search-wrap betfolio-main-search-only" onSubmit={handleFixtureSearchSubmit}>
-                <input
-                  className="betfolio-search-input"
-                  placeholder="Wpisz mecz lub drużynę, np. Barcelona"
-                  value={sidebarSearch}
-                  onChange={(e) => setSidebarSearch(e.target.value)}
-                />
-                <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
-                  {fixtureSearchLoading ? '…' : 'Szukaj'}
+            <div className="football-pro-mode-note">
+              Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
+            </div>
+          </div>
+
+          <div className="betfolio-left-stats">
+            <div className={`tip-add-plan-pill ${isPremiumUser ? 'premium' : 'free'}`}>
+              <strong>{isPremiumUser ? 'KONTO PREMIUM' : 'KONTO FREE'}</strong>
+              <span>{isPremiumUser ? 'Publikujesz bez limitu' : 'Maks. 5 tipów / doba'}</span>
+            </div>
+            <div className="tip-add-usage-pill">
+              <strong>{countLoading ? '…' : isPremiumUser ? `${dailyCount}` : `${dailyCount}/5`}</strong>
+              <span>{isPremiumUser ? 'Dodane dziś' : `Pozostało dziś: ${remainingFreeSlots}`}</span>
+            </div>
+          </div>
+
+          <div className="betfolio-side-note">
+            {liveFixturesStatus || 'Kliknij sport → kategorię/państwo → ligę, a potem pobierz mecze i kursy.'}
+          </div>
+        </aside>
+
+        <div className="betfolio-center glass-ultra-panel">
+          <div className="betfolio-center-header">
+            <div>
+              <div className="static-add-title-row">
+                <span className="static-add-title-icon">⬡</span>
+                <h1>Dodaj nowy typ</h1>
+              </div>
+              <p>Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.</p>
+              <div className={`live-real-badge ${liveDataSource}`}>
+                {liveDataSource === 'odds-api' ? '● LIVE API — realne kursy' : liveDataSource === 'loading' ? '● Pobieram live...' : liveDataSource === 'error' ? '● Błąd live API' : liveDataSource === 'empty' ? '● Brak live meczów' : '● Tryb wyboru ligi'}
+              </div>
+            </div>
+            <div className="betfolio-center-badges">
+              <span>{form.sport}</span>
+              <span>{currentCountry}</span>
+              <span>{currentLeague}</span>
+            </div>
+          </div>
+
+          <div className="betfolio-top-sports-row">
+            {topSportButtons.map((item) => {
+              const active = form.sport === item.name
+              const count = Number(sportDayCounts[item.name] || 0)
+              return (
+                <button
+                  type="button"
+                  key={`top-sport-${item.name}`}
+                  className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
+                  onClick={() => handleTopSportButtonClick(item)}
+                >
+                  <span>{item.icon} {item.name}</span>
+                  <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
                 </button>
-              </form>
+              )
+            })}
+          </div>
 
-              <div className="betfolio-fixture-mode-tabs search-only-tabs">
-                <button type="button" className="active" onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
-              </div>
-            </>
-          )}
-          {!marketBoardOpen && (
-            <>
-              <div className="betfolio-events-head">
-                <strong>{fixtureSearchPerformed ? 'Wyniki wyszukiwania' : 'Wyszukaj mecz'}</strong>
-                <span>{visibleMatchOptions.length} wyników • realne mecze</span>
-              </div>
+          <div className="betfolio-top-sports-note">
+            Live radar: realne mecze z API-FOOTBALL Pro. Aktywny jest tylko futbol, żeby strona ładowała pełniej i nie marnowała limitów innych sportów.
+          </div>
 
-              <div className="betfolio-events-list">
+          <div className="betfolio-events-head">
+            <strong>Mecze / kursy</strong>
+            <span>{visibleMatchOptions.length} wydarzeń</span>
+          </div>
+
+          <div className="betfolio-events-list">
             {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
               const active = selectedMatch?.id === match.id
               const primaryOdds = getPrimaryOdds(match)
@@ -6395,7 +6361,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       <span>{match.away}</span>
                     </div>
                     <div className="betfolio-event-meta">
-                      <span>{getMatchDateBadge(match)}</span>
+                      <span>{match.date}</span>
                       <span>{match.time}</span>
                       <span>{match.league || currentLeague}</span>
                     </div>
@@ -6423,22 +6389,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               )
             }) : (
               <div className="betfolio-empty-state no-fake-empty">
-                <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wpisz nazwę meczu lub drużyny'}</strong>
-                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Spróbuj innej nazwy drużyny lub meczu.' : 'Wyszukiwarka pokazuje realne mecze, a po kliknięciu otwiera rynki i prawdziwe kursy.'}</span>
+                <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę i pobierz realne mecze'}</strong>
+                <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Szukam realnych meczów piłkarskich w API-FOOTBALL Pro. Jeśli pusto: sprawdź APISPORTS_KEY albo wybraną ligę/datę.' : 'Kliknij kraj → ligę albo przycisk „Dodaj inne wydarzenie”.'}</span>
               </div>
             )}
-              </div>
-            </>
-          )}
+          </div>
 
-          {marketBoardOpen && (
-          <div className="betfolio-details-wrap market-board-clean-view">
-            <div className="betfolio-details-top market-board-match-header">
-              <button type="button" className="betfolio-small-outline" onClick={returnToSearchResults}>← Wróć do meczów</button>
+          <div className="betfolio-details-wrap">
+            <div className="betfolio-details-top">
               <div>
-                <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Brak wybranego meczu'}</strong>
+                <strong>{selectedMatch ? `${selectedMatch.home} vs ${selectedMatch.away}` : 'Brak wybranego meczu'}</strong>
                 <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy powyżej'}</span>
               </div>
+              <button type="button" className="betfolio-small-outline" onClick={() => selectedMatch && applyMatchToForm(selectedMatch)}>Dodaj własny typ</button>
             </div>
 
             <div className="betfolio-market-tabs">
@@ -6488,10 +6451,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               ))}
             </div>
           </div>
-          )}
         </div>
 
-        {ticketOpen && (
         <aside className="betfolio-right glass-ultra-panel">
           <div className="betfolio-ticket-top">
             <div className="betfolio-ticket-tabs">
@@ -6574,7 +6535,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </button>
           </div>
         </aside>
-        )}
       </div>
     </section>
   )

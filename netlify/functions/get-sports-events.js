@@ -4,8 +4,6 @@ exports.handler = async function(event) {
   const country = String(qs.country || '')
   const league = String(qs.league || '')
   const date = String(qs.date || new Date().toISOString().slice(0, 10))
-  const mode = String(qs.mode || '').trim().toLowerCase()
-  const query = String(qs.query || '').trim()
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
@@ -72,32 +70,6 @@ exports.handler = async function(event) {
     if (!eventKey || !startKey) return false
     const endKey = addDaysToDateKey(startKey, rangeDays)
     return eventKey >= startKey && eventKey <= endKey
-  }
-
-  const normalizeLoose = (value) => String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-
-  const matchesRequestedFootballText = (fixture) => {
-    const q = normalizeLoose(query)
-    if (!q) return true
-    const haystack = normalizeLoose(`${fixture.home || ''} ${fixture.away || ''} ${fixture.league || ''} ${fixture.country || ''}`)
-    return q.split(/\s+/).every(term => haystack.includes(term))
-  }
-
-  const matchesRequestedFootballScope = (fixture) => {
-    const wantedLeague = normalizeLoose(league)
-    const wantedCountry = normalizeLoose(country)
-    const actualLeague = normalizeLoose(fixture.league)
-    const actualCountry = normalizeLoose(fixture.country)
-    const countryIsWide = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry)
-    const leagueIsWide = !wantedLeague || wantedLeague.includes('wszystkie') || wantedLeague === normalizeLoose('Piłka nożna')
-    const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
-    const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague)
-    return countryMatches && leagueMatches
   }
 
 
@@ -655,288 +627,14 @@ exports.handler = async function(event) {
       date: parts.date,
       time: parts.time,
       commence_time: isoDate,
-      source: 'api-football',
-      apiFixtureId: firstText(item?.fixture?.id, item?.id),
-      markets: [],
-      hasRealOdds: false,
+      source: 'api-sports',
+      markets: countOnly ? [] : buildMarkets(home, away, [], cfg.sportName).map((m, marketIndex) => ({
+        ...m,
+        source: 'ai-estimated-market',
+        note: 'Realne wydarzenie z API-Sports. Kurs/pewność to modelowy szacunek Bet+AI, gdy The Odds API nie ma kursów.',
+        confidence: Math.max(56, Math.min(88, Number(m.confidence || 60) + (marketIndex % 4) - 1))
+      }))
     }
-  }
-
-
-  const apiFootballBetLabel = (rawName) => {
-    const name = String(rawName || '').trim()
-    const lower = name.toLowerCase()
-    if (lower === 'match winner' || lower === 'winner') return '1X2'
-    if (lower.includes('double chance')) return 'Podwójna szansa'
-    if (lower.includes('both teams score') || lower.includes('both teams to score')) return 'BTTS'
-    if (lower.includes('goals over/under') || lower.includes('over/under')) return 'Gole'
-    if (lower.includes('draw no bet')) return 'DNB / Remis nie ma zakładu'
-    if (lower.includes('handicap')) return 'Handicap'
-    if (lower.includes('corners')) return 'Rogi'
-    if (lower.includes('cards')) return 'Kartki'
-    if (lower.includes('half time')) return 'Połowy'
-    return name || 'Rynek'
-  }
-
-  const normalizeApiFootballOddPick = (market, rawValue, home, away) => {
-    const value = String(rawValue || '').trim()
-    const lower = value.toLowerCase()
-    if (market === '1X2') {
-      if (lower === 'home') return `${home} wygra`
-      if (lower === 'draw') return 'Remis'
-      if (lower === 'away') return `${away} wygra`
-    }
-    if (market === 'Podwójna szansa') {
-      if (lower === 'home/draw') return '1X'
-      if (lower === 'home/away') return '12'
-      if (lower === 'draw/away') return 'X2'
-    }
-    if (market === 'BTTS') {
-      if (lower === 'yes') return 'Obie drużyny strzelą: TAK'
-      if (lower === 'no') return 'Obie drużyny strzelą: NIE'
-    }
-    if (market === 'DNB / Remis nie ma zakładu') {
-      if (lower === 'home') return `${home} DNB`
-      if (lower === 'away') return `${away} DNB`
-    }
-    if (market === 'Gole') {
-      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)}`
-      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)}`
-    }
-    return value
-  }
-
-  const mapApiFootballOddsRowsToMarkets = (rows, fixture) => {
-    const markets = []
-    const home = fixture?.home || ''
-    const away = fixture?.away || ''
-    const seen = new Set()
-    ;(Array.isArray(rows) ? rows : []).forEach(row => {
-      ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
-        ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
-          const market = apiFootballBetLabel(bet?.name)
-          ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
-            const rawOdd = Number(value?.odd)
-            if (!Number.isFinite(rawOdd) || rawOdd <= 1) return
-            const pick = normalizeApiFootballOddPick(market, value?.value, home, away)
-            if (!pick) return
-            const key = `${market}|${pick}`.toLowerCase()
-            if (seen.has(key)) return
-            seen.add(key)
-            markets.push({
-              market,
-              pick,
-              odds: rawOdd,
-              confidence: 0,
-              bookmaker: bookmaker?.name || '',
-              source: 'api-football-odds',
-              note: 'Realny kurs pre-match z API-FOOTBALL.'
-            })
-          })
-        })
-      })
-    })
-    return markets
-  }
-
-  const fetchApiFootballOddsByDate = async (apiKey, cfg, dayKey) => {
-    const collected = []
-    const errors = []
-    let totalPages = 1
-    for (let page = 1; page <= totalPages; page += 1) {
-      try {
-        const url = new URL(`${cfg.host}/odds`)
-        url.searchParams.set('date', dayKey)
-        url.searchParams.set('page', String(page))
-        const response = await fetch(url.toString(), {
-          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
-        })
-        const data = await response.json().catch(() => ({}))
-        if (!response.ok) {
-          errors.push(`odds/${dayKey}/p${page}: HTTP ${response.status}`)
-          break
-        }
-        if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-          errors.push(`odds/${dayKey}/p${page}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-        }
-        const rows = Array.isArray(data?.response) ? data.response : []
-        collected.push(...rows)
-        const pagingTotal = Number(data?.paging?.total || 1)
-        totalPages = Number.isFinite(pagingTotal) && pagingTotal > 0 ? Math.min(pagingTotal, 200) : 1
-      } catch (error) {
-        errors.push(`odds/${dayKey}: ${error.message}`)
-        break
-      }
-    }
-    return { rows: collected, errors }
-  }
-
-  const enrichFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures, dateKeys) => {
-    if (countOnly || !apiKey || !fixtures.length) return { fixtures, errors: [] }
-    const byFixtureId = new Map()
-    const errors = []
-    for (const dayKey of [...new Set(dateKeys)]) {
-      const response = await fetchApiFootballOddsByDate(apiKey, cfg, dayKey)
-      errors.push(...response.errors)
-      ;(response.rows || []).forEach(row => {
-        const id = firstText(row?.fixture?.id)
-        if (!id) return
-        const current = byFixtureId.get(id) || []
-        current.push(row)
-        byFixtureId.set(id, current)
-      })
-    }
-    const enriched = fixtures.map(fixture => {
-      const rows = byFixtureId.get(String(fixture.apiFixtureId || fixture.id)) || []
-      const markets = mapApiFootballOddsRowsToMarkets(rows, fixture)
-      return {
-        ...fixture,
-        markets,
-        hasRealOdds: markets.length > 0,
-        oddsMessage: markets.length ? '' : 'API-FOOTBALL nie ma jeszcze kursów dla tego meczu.'
-      }
-    })
-    return { fixtures: enriched, errors }
-  }
-
-  const searchApiFootballFixtures = async (apiKey, rawQuery) => {
-    const cfg = getApiSportsConfigs().find(item => item.type === 'football')
-    if (!apiKey || !cfg) return { fixtures: [], errors: ['Brak konfiguracji API-FOOTBALL.'] }
-
-    const normalized = String(rawQuery || '').trim()
-    if (!normalized) return { fixtures: [], errors: [] }
-
-    const queryParts = normalized
-      .split(/\s+(?:vs|v|kontra)\s+|\s*[-–—]\s*/i)
-      .map(part => part.trim())
-      .filter(Boolean)
-    const teamSearchTerms = [...new Set([queryParts[0], normalized].filter(Boolean))]
-    const teamRows = []
-    const errors = []
-
-    for (const term of teamSearchTerms) {
-      try {
-        const teamUrl = new URL(`${cfg.host}/teams`)
-        teamUrl.searchParams.set('search', term)
-        const teamResponse = await fetch(teamUrl.toString(), {
-          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
-        })
-        const teamData = await teamResponse.json().catch(() => ({}))
-        if (!teamResponse.ok) {
-          errors.push(`teams: HTTP ${teamResponse.status}`)
-          continue
-        }
-        const rows = Array.isArray(teamData?.response) ? teamData.response : []
-        teamRows.push(...rows)
-      } catch (error) {
-        errors.push(`teams: ${error.message}`)
-      }
-      if (teamRows.length) break
-    }
-
-    const teamIds = [...new Set(teamRows
-      .map(row => row?.team?.id)
-      .filter(id => id !== undefined && id !== null))]
-      .slice(0, 5)
-
-    const collected = []
-    for (const teamId of teamIds) {
-      try {
-        const fixturesUrl = new URL(`${cfg.host}/fixtures`)
-        fixturesUrl.searchParams.set('team', String(teamId))
-        fixturesUrl.searchParams.set('next', '50')
-        fixturesUrl.searchParams.set('timezone', APP_TIMEZONE)
-        const response = await fetch(fixturesUrl.toString(), {
-          headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
-        })
-        const data = await response.json().catch(() => ({}))
-        if (!response.ok) {
-          errors.push(`fixtures: HTTP ${response.status}`)
-          continue
-        }
-        const rows = Array.isArray(data?.response) ? data.response : []
-        rows
-          .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
-          .filter(item => {
-            const kickMs = Date.parse(item.commence_time || '')
-            return !Number.isFinite(kickMs) || kickMs > Date.now() + 60 * 1000
-          })
-          .filter(matchesRequestedFootballText)
-          .forEach(item => collected.push(item))
-      } catch (error) {
-        errors.push(`fixtures: ${error.message}`)
-      }
-    }
-
-    const seen = new Set()
-    const fixtures = collected
-      .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-      .filter(item => {
-        const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-      .slice(0, 240)
-
-    return { fixtures, errors }
-  }
-
-  const TOP_TODAY_FOOTBALL_LEAGUES = [
-    { country: 'England', aliases: ['premier league'] },
-    { country: 'Germany', aliases: ['bundesliga'] },
-    { country: 'Italy', aliases: ['serie a'] },
-    { country: 'Spain', aliases: ['la liga', 'primera division'] },
-    { country: 'Poland', aliases: ['ekstraklasa'] },
-    { country: 'Portugal', aliases: ['primeira liga', 'liga portugal'] },
-  ]
-
-  const isTopTodayFootballLeague = (fixture) => {
-    const actualCountry = normalizeLoose(fixture?.country || '')
-    const actualLeague = normalizeLoose(fixture?.league || '')
-    return TOP_TODAY_FOOTBALL_LEAGUES.some(item => {
-      const wantedCountry = normalizeLoose(item.country)
-      return actualCountry.includes(wantedCountry)
-        && item.aliases.some(alias => actualLeague.includes(normalizeLoose(alias)))
-    })
-  }
-
-  const fetchApiFootballOddsByFixture = async (apiKey, cfg, fixtureId) => {
-    if (!apiKey || !cfg || !fixtureId) return { rows: [], errors: [] }
-    try {
-      const url = new URL(`${cfg.host}/odds`)
-      url.searchParams.set('fixture', String(fixtureId))
-      const response = await fetch(url.toString(), {
-        headers: { 'x-apisports-key': apiKey, 'x-rapidapi-key': apiKey }
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) return { rows: [], errors: [`odds/fixture/${fixtureId}: HTTP ${response.status}`] }
-      if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-        return { rows: [], errors: [`odds/fixture/${fixtureId}: ${JSON.stringify(data.errors).slice(0, 120)}`] }
-      }
-      return { rows: Array.isArray(data?.response) ? data.response : [], errors: [] }
-    } catch (error) {
-      return { rows: [], errors: [`odds/fixture/${fixtureId}: ${error.message}`] }
-    }
-  }
-
-  const enrichSearchFixturesWithApiFootballOdds = async (apiKey, cfg, fixtures) => {
-    if (countOnly || !apiKey || !fixtures.length) return { fixtures, errors: [] }
-    const errors = []
-    const enriched = []
-    for (const fixture of fixtures.slice(0, 30)) {
-      const response = await fetchApiFootballOddsByFixture(apiKey, cfg, fixture.apiFixtureId || fixture.id)
-      errors.push(...response.errors)
-      const markets = mapApiFootballOddsRowsToMarkets(response.rows, fixture)
-      enriched.push({
-        ...fixture,
-        markets,
-        hasRealOdds: markets.length > 0,
-        oddsMessage: markets.length ? '' : 'API-FOOTBALL nie ma jeszcze kursów dla tego meczu.'
-      })
-    }
-    if (fixtures.length > enriched.length) enriched.push(...fixtures.slice(enriched.length))
-    return { fixtures: enriched, errors }
   }
 
   const fetchApiSportsFixtures = async (apiKey, rangeDays, requestedDay) => {
@@ -944,37 +642,16 @@ exports.handler = async function(event) {
     const configs = getApiSportsConfigs()
     if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
 
-    if (mode === 'search' && query) {
-      const searched = await searchApiFootballFixtures(apiKey, query)
-      if (searched.fixtures.length) {
-        // Wyszukiwarka działała poprawnie dla meczów, ale wcześniej zwracała je
-        // przed wzbogaceniem o realne kursy z /odds. Efekt: lista znajdowała np.
-        // Barcelona vs Real Madrid, ale nie miała 1/X/2 ani popularnych rynków.
-        const oddsEnriched = await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], searched.fixtures)
-        const message = oddsEnriched.errors.length ? oddsEnriched.errors.join(' | ') : ''
-        return { configs: configs.map(item => item.key), fixtures: oddsEnriched.fixtures, message }
-      }
-    }
+    const maxDays = Math.min(14, rangeDays || 14)
+    const dateKeys = []
+    const startKey = requestedDay || new Date().toISOString().slice(0, 10)
+    for (let i = 0; i <= maxDays; i += 1) dateKeys.push(addDaysToDateKey(startKey, i) || startKey)
 
-    const safeStart = requestedDay || new Date().toISOString().slice(0, 10)
-    const safeDays = Math.max(0, Math.min(365, Number(rangeDays || 0)))
     const collected = []
     const errors = []
 
-    // Jedna lista dat dla pobierania fixtures i późniejszego wzbogacenia kursami.
-    // Wcześniej dateKeys było zdefiniowane tylko wewnątrz pętli i po jej zakończeniu
-    // wywołanie enrichFixturesWithApiFootballOdds wywalało ReferenceError, przez co UI
-    // pokazywał 0 meczów mimo poprawnego APISPORTS_KEY.
-    const dateKeys = mode === 'today' || safeDays === 0
-      ? [safeStart]
-      : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
-
     for (const cfg of configs) {
-      // API-FOOTBALL /fixtures nie przyjmuje szerokiego from/to bez dodatkowego kontekstu
-      // ligi/drużyny. Dla widoku globalnego i drzewa lig pobieramy więc dzień po dniu
-      // parametrem date=, a potem filtrujemy lokalnie po kraju/lidze. To jest poprawne
-      // również dla trybu "Dziś" i pozwala sortować mecze godzinami.
-      const dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
+      for (const dayKey of dateKeys) {
         const url = new URL(`${cfg.host}${cfg.path}`)
         url.searchParams.set('date', dayKey)
         if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
@@ -988,34 +665,32 @@ exports.handler = async function(event) {
           })
           const data = await response.json().catch(() => ({}))
           if (!response.ok) {
-            errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
-            return []
+            errors.push(`${cfg.key}: HTTP ${response.status}`)
+            continue
           }
           if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-            errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+            errors.push(`${cfg.key}: ${JSON.stringify(data.errors).slice(0, 120)}`)
           }
-          return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+          const rows = Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+          rows
+            .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
+            .filter(item => {
+              const kickMs = Date.parse(item.commence_time || '')
+              if (!Number.isFinite(kickMs)) return true
+              return kickMs > Date.now() + 60 * 1000
+            })
+            .forEach(item => collected.push(item))
         } catch (error) {
-          errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
-          return []
+          errors.push(`${cfg.key}: ${error.message}`)
         }
-      }))
 
-      dayResponses.flat()
-        .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
-        .filter(item => {
-          const kickMs = Date.parse(item.commence_time || '')
-          if (!Number.isFinite(kickMs)) return true
-          return kickMs > Date.now() + 60 * 1000
-        })
-        .filter(item => mode !== 'today' || isTopTodayFootballLeague(item))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
-        .filter(matchesRequestedFootballText)
-        .forEach(item => collected.push(item))
+        if (collected.length >= (countOnly ? 1000 : 240)) break
+      }
+      if (collected.length >= (countOnly ? 1000 : 240)) break
     }
 
     const seen = new Set()
-    const baseFixtures = collected
+    const fixtures = collected
       .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
       .filter(item => {
         const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
@@ -1023,55 +698,20 @@ exports.handler = async function(event) {
         seen.add(key)
         return true
       })
-      .slice(0, countOnly ? 1000 : 500)
-
-    const oddsEnriched = await enrichFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures, dateKeys)
-    const fixtures = oddsEnriched.fixtures
-    errors.push(...oddsEnriched.errors)
-
-    const emptyMessage = mode === 'search' && query
-      ? `API-FOOTBALL Pro nie znalazło meczu dla frazy „${query}”.`
-      : mode === 'today'
-        ? 'API-FOOTBALL Pro nie zwróciło dziś meczów z top 6 lig.'
-        : 'API-FOOTBALL Pro nie zwróciło meczów dla wybranej ligi i zakresu.'
+      .slice(0, countOnly ? 1000 : 240)
 
     return {
       configs: configs.map(cfg => cfg.key),
       fixtures,
-      message: fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło meczów. ${errors.slice(0, 3).join(' | ')}` : emptyMessage)
+      message: fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło meczów. ${errors.slice(0, 3).join(' | ')}` : 'API-Sports nie zwróciło meczów dla tego sportu/daty.')
     }
   }
-
 
   try {
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     const apiSportsKey = getApiSportsKey()
     let oddsMessage = ''
     let oddsSportKeys = []
-
-    // W trybie wyszukiwania zawsze pytamy najpierw API-FOOTBALL po nazwie drużyny/meczu.
-    // The Odds API zwraca tylko ograniczoną listę spotkań z kursami i nie nadaje się jako
-    // główne źródło globalnej wyszukiwarki drużyn (np. "Legia").
-    if (mode === 'search' && query) {
-      const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          ok: true,
-          demo: false,
-          source: 'api-football-pro-search',
-          oddsSourceMessage: oddsKey ? 'Wyszukiwanie używa API-FOOTBALL; kursy są dociągane dla znalezionych meczów.' : '',
-          oddsSportKeys,
-          apiSportsConfigs: apiSports.configs,
-          allLeagues,
-          requestedAllSports,
-          daysAhead,
-          fixtures: apiSports.fixtures,
-          message: apiSports.message
-        })
-      }
-    }
 
     if (oddsKey) {
       if (allLeagues || requestedAllSports) {
@@ -1124,7 +764,7 @@ exports.handler = async function(event) {
         body: JSON.stringify({
           ok: true,
           demo: false,
-          source: 'api-football-pro',
+          source: 'api-sports-fallback',
           oddsSourceMessage: oddsMessage,
           oddsSportKeys,
           apiSportsConfigs: apiSports.configs,
@@ -1144,7 +784,7 @@ exports.handler = async function(event) {
       body: JSON.stringify({
         ok: true,
         demo: false,
-        source: 'api-football-pro',
+        source: 'api-sports-fallback',
         oddsSourceMessage: oddsMessage,
         oddsSportKeys,
         apiSportsConfigs: apiSports.configs,
@@ -1152,13 +792,7 @@ exports.handler = async function(event) {
         requestedAllSports,
         daysAhead,
         fixtures: apiSports.fixtures,
-        message: apiSports.fixtures.length
-          ? (mode === 'today'
-              ? 'Realne dzisiejsze mecze piłkarskie pobrane z API-FOOTBALL Pro.'
-              : mode === 'search'
-                ? `Realne wyniki wyszukiwania dla „${query}” pobrane z API-FOOTBALL Pro.`
-                : `Realne mecze piłkarskie z najbliższych ${daysAhead} dni pobrane z API-FOOTBALL Pro.`)
-          : `${oddsMessage} ${apiSports.message}`.trim()
+        message: apiSports.fixtures.length ? 'Realne mecze piłkarskie pobrane z API-FOOTBALL Pro. Dla braku kursów The Odds API dodano modelowe rynki AI do analizy.' : `${oddsMessage} ${apiSports.message}`.trim()
       })
     }
   } catch (error) {

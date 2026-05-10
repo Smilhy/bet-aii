@@ -1,7 +1,0 @@
-WERSJA 765 — Search-only flow for Dodaj typ
-- Usunięta wewnętrzna lewa kolumna krajów/lig na etapie wyszukiwania
-- Usunięty przycisk Dziś; zostaje tylko Wyszukiwanie
-- Prawa kolumna kuponu jest ukryta, dopóki użytkownik nie kliknie konkretnego prawdziwego kursu
-- Kliknięcie meczu otwiera ekran rynków meczu
-- W nagłówku rynku zostaje: Wróć do meczów + nazwa spotkania + data/godzina/liga
-- Dalej używane są wyłącznie realne mecze i realne kursy z API-Football Pro
