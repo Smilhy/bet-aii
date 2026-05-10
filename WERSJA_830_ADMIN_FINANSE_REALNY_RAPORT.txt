@@ -1,0 +1,15 @@
+WERSJA 830
+- Stary widok Admin Finanse został zastąpiony nowym panelem.
+- Bez fake danych.
+- Nowy panel pokazuje:
+  • przychód platformy,
+  • przychód z Premium,
+  • prowizję marketplace,
+  • wpłaty do portfeli,
+  • obrót marketplace,
+  • zarobki typerów,
+  • wypłaty: wypłacone, pending, do wypłaty,
+  • szybki stan ryzyka / uwagi,
+  • ostatnie operacje finansowe z filtrami.
+- Uwaga: wpłaty do portfeli są pokazane jako przepływ środków, a nie jako zysk platformy.
+- SQL do uruchomienia: BETAI_SQL_830_ADMIN_FINANSE_REALNY_RAPORT.sql

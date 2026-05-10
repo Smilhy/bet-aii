@@ -1,0 +1,14 @@
+WERSJA 827
+- Zakładka „Płatności” została przebudowana na żywą stronę Portfela.
+- Bez fake danych.
+- Źródło prawdy: realne płatności zalogowanego użytkownika z tabeli payments.
+- Strona pokazuje:
+  • sumę opłaconych płatności,
+  • liczbę wszystkich dokumentów,
+  • liczbę opłaconych transakcji,
+  • liczbę prawdziwych faktur Stripe do pobrania,
+  • ostatnią płatność,
+  • pełną historię płatności.
+- Filtry: wszystkie, Premium, typy, żetony, inne.
+- Przycisk Pobierz pojawia się tylko przy prawdziwym linku faktury Stripe.
+- Dodatkowe przyciski: Zarządzaj subskrypcją oraz Wpłać środki.

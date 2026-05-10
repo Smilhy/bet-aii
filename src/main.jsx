@@ -11925,57 +11925,111 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
   )
 }
 
-function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
-  const isPremium = isPremiumAccount(userPlan)
+function SubscriptionView({ userPlan = 'free', user = null, payments = [], onUpgrade, onManage, onViewChange }) {
+  const [subscriptionClock, setSubscriptionClock] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setSubscriptionClock(new Date()), 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const isPremium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const periodEnd = user?.current_period_end ? new Date(user.current_period_end) : null
+  const hasPeriodEnd = !!periodEnd && !Number.isNaN(periodEnd.getTime())
+  const daysLeft = hasPeriodEnd
+    ? (() => {
+        const today = new Date(subscriptionClock)
+        const end = new Date(periodEnd)
+        today.setHours(0, 0, 0, 0)
+        end.setHours(0, 0, 0, 0)
+        return Math.max(0, Math.round((end.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)))
+      })()
+    : (isPremium ? 30 : 0)
+  const daysLabel = daysLeft === 1 ? 'dzień' : 'dni'
+  const expiryLabel = hasPeriodEnd ? periodEnd.toLocaleDateString('pl-PL') : '—'
+  const paymentKind = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    const type = String(payment?.type || payment?.kind || '').toLowerCase()
+    return provider.includes('premium') || type.includes('premium')
+  }
+  const premiumPayments = payments.filter(paymentKind)
+  const latestPremiumPayment = premiumPayments[0] || null
+  const getInvoiceLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getStatusLabel = () => {
+    if (!isPremium) return 'Konto Free'
+    if (daysLeft <= 0) return 'Premium wygasło'
+    return 'Premium aktywne'
+  }
+  const planPrice = isPremium ? '29 zł / miesiąc' : '0 zł / miesiąc'
+  const planFeatures = isPremium
+    ? [
+        'Sprzedaż typów premium',
+        'Brak limitu dodawania typów',
+        '3 wypłaty miesięcznie',
+        'AI, statystyki, bonusy i dropy'
+      ]
+    : [
+        '5 darmowych typów dziennie',
+        '1 wypłata miesięcznie',
+        'Brak sprzedaży typów premium',
+        'Podstawowe funkcje konta'
+      ]
+
   return (
-    <section className="subscription-page subscription-ultra-page">
-      <UltraPageBanner variant="subscriptions">{isPremium ? <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button> : <button type="button" onClick={onUpgrade}>Aktywuj Premium</button>}</UltraPageBanner>
-      <div className="subscription-hero subscription-ultra-hero">
-        <div className="subscription-hero-copy">
-          <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
-          <h1>Subskrypcja BetAI</h1>
-          <p>Ultra profesjonalny panel Premium: paywall, sprzedaż typów, AI, statystyki PRO i pełna kontrola subskrypcji przez Stripe.</p>
-          <div className="subscription-hero-pills">
-            <em>Stripe Billing</em>
-            <em>Marketplace PRO</em>
-            <em>AI + Statystyki</em>
-          </div>
+    <section className="wallet-subpage subscription-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" className="active">Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="subscription-live-hero glass-v2-panel">
+        <div>
+          <span>Plan konta</span>
+          <h1>Subskrypcja</h1>
+          <p>Tu widzisz realny status planu, datę końca Premium i historię płatności za subskrypcję przypisaną do Twojego konta.</p>
         </div>
-        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>
-          <small>Aktualny plan</small>
-          <b>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</b>
+        <div className={`subscription-live-status ${isPremium ? 'premium' : 'free'}`}>
+          <small>Aktualny status</small>
+          <b>{getStatusLabel()}</b>
         </div>
       </div>
 
-      <div className="pricing-grid subscription-pricing-grid">
-        <div className="pricing-card subscription-plan-card free-plan-card">
-          <div className="plan-topline">
-            <span>FREE</span>
-            <em>Start</em>
-          </div>
-          <strong>0 zł</strong>
-          <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
-          <ul>
-            <li><b>✓</b> 5 darmowych typów dziennie</li>
-            <li><b>✓</b> 1 wypłata miesięcznie</li>
-            <li><i>✕</i> Sprzedaż typów premium</li>
-            <li><i>✕</i> Avatar, bonusy i dropy</li>
-          </ul>
+      <div className="subscription-live-stats">
+        <div className="glass-v2-panel">
+          <span>Aktualny plan</span>
+          <b>{isPremium ? 'Premium' : 'Free'}</b>
+          <small>{planPrice}</small>
         </div>
+        <div className="glass-v2-panel">
+          <span>Ważne do</span>
+          <b>{isPremium ? expiryLabel : '—'}</b>
+          <small>{isPremium ? `Zostało ${daysLeft} ${daysLabel}` : 'Brak aktywnego Premium'}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Płatności Premium</span>
+          <b>{premiumPayments.length}</b>
+          <small>Prawdziwe dokumenty</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Ostatnia płatność</span>
+          <b>{latestPremiumPayment ? formatMoney(latestPremiumPayment.amount) : '—'}</b>
+          <small>{latestPremiumPayment ? new Date(latestPremiumPayment.created_at).toLocaleDateString('pl-PL') : 'Brak płatności'}</small>
+        </div>
+      </div>
 
-        <div className="pricing-card featured subscription-plan-card premium-plan-card">
-          <div className="plan-topline">
-            <span>PREMIUM</span>
-            <em>Najlepszy wybór</em>
+      <div className="subscription-live-grid">
+        <div className="glass-v2-panel subscription-live-plan-card">
+          <div className="subscription-live-card-head">
+            <h2>{isPremium ? 'Twój plan Premium' : 'Twój plan Free'}</h2>
+            <span className={isPremium ? 'premium' : 'free'}>{isPremium ? 'Aktywny' : 'Free'}</span>
           </div>
-          <strong>29 zł <small>/ miesiąc</small></strong>
-          <p>Pełny SaaS plan z paywallem, marketplace premium i narzędziami dla aktywnych tipsterów.</p>
+          <strong>{planPrice}</strong>
+          <p>{isPremium ? 'Pełny dostęp do funkcji twórcy i sprzedaży premium.' : 'Plan startowy bez sprzedaży płatnych typów.'}</p>
           <ul>
-            <li><b>✓</b> Sprzedaż typów premium</li>
-            <li><b>✓</b> Brak limitu dodawania typów</li>
-            <li><b>✓</b> 3 wypłaty miesięcznie</li>
-            <li><b>✓</b> Avatar, AI, statystyki, bonusy i dropy</li>
-            <li><b>✓</b> Stripe Billing Portal</li>
+            {planFeatures.map(feature => <li key={feature}>✓ {feature}</li>)}
           </ul>
           {isPremium ? (
             <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
@@ -11983,225 +12037,455 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
             <button type="button" onClick={onUpgrade}>Aktywuj Premium przez Stripe</button>
           )}
         </div>
-      </div>
 
-      <div className="paywall-rules-card subscription-rules-card">
-        <div>
-          <strong>Paywall aktywny</strong>
-          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży. Premium: brak limitu typów, sprzedaż singli i subskrypcji profilu, 3 wypłaty/miesiąc. Premium nigdy nie daje admina — admin tylko smilhytv.</span>
+        <div className="glass-v2-panel subscription-live-rules-card">
+          <div className="subscription-live-card-head"><h2>Limity planów</h2></div>
+          <div className="subscription-live-compare">
+            <div>
+              <strong>Free</strong>
+              <span>5 typów dziennie</span>
+              <span>1 wypłata / miesiąc</span>
+              <span>Brak sprzedaży</span>
+            </div>
+            <div className="featured">
+              <strong>Premium</strong>
+              <span>Bez limitu typów</span>
+              <span>3 wypłaty / miesiąc</span>
+              <span>Sprzedaż singli i profilu</span>
+            </div>
+          </div>
+          <small>Premium nie daje uprawnień admina. Adminem jest tylko smilhytv.</small>
+        </div>
+
+        <div className="glass-v2-panel subscription-live-history-card">
+          <div className="subscription-live-card-head">
+            <h2>Historia Premium</h2>
+            <button type="button" onClick={() => onViewChange?.('payments')}>Wszystkie płatności</button>
+          </div>
+          {premiumPayments.length ? (
+            <div className="subscription-live-history">
+              {premiumPayments.slice(0, 5).map(payment => {
+                const invoiceLink = getInvoiceLink(payment)
+                return (
+                  <div key={payment.id}>
+                    <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+                    <strong>{formatMoney(payment.amount)}</strong>
+                    <small>{invoiceLink ? <a href={invoiceLink} target="_blank" rel="noreferrer">Pobierz fakturę</a> : 'Brak faktury'}</small>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="subscription-live-empty">
+              <strong>Brak płatności Premium</strong>
+              <span>Po pierwszym zakupie Premium historia pojawi się tutaj.</span>
+            </div>
+          )}
         </div>
       </div>
     </section>
   )
 }
 
-function PaymentsView({ payments }) {
-  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+function PaymentsView({ payments = [], onViewChange, onTopUp }) {
+  const [paymentFilter, setPaymentFilter] = useState('all')
   const getInvoiceLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
-  const getPaymentName = payment => {
+  const getPaymentKind = payment => {
     const provider = String(payment?.provider || '').toLowerCase()
-    if (provider.includes('premium')) return 'Zakup Premium'
-    if (provider.includes('token')) return 'Zakup żetonów'
-    if (payment?.tip_id) return 'Zakup typu premium'
+    const type = String(payment?.type || payment?.kind || '').toLowerCase()
+    if (provider.includes('premium') || type.includes('premium')) return 'premium'
+    if (provider.includes('token') || type.includes('token')) return 'tokens'
+    if (payment?.tip_id) return 'tips'
+    return 'other'
+  }
+  const getPaymentName = payment => {
+    const kind = getPaymentKind(payment)
+    if (kind === 'premium') return 'Zakup Premium'
+    if (kind === 'tokens') return 'Zakup żetonów'
+    if (kind === 'tips') return 'Zakup typu premium'
     return 'Płatność'
   }
-
-  return (
-    <section className="payments-page">
-      <UltraPageBanner variant="payments" />
-      <div className="payments-hero">
-        <div>
-          <h1>Płatności i faktury</h1>
-          <p>Tylko prawdziwe płatności przypisane do Twojego konta.</p>
-        </div>
-        <div className="payments-total">
-          <span>Razem</span>
-          <b>{total.toFixed(2)} zł</b>
-        </div>
-      </div>
-
-      <div className="payments-table">
-        <div className="payments-row header">
-          <span>Data</span>
-          <span>Dokument</span>
-          <span>Status</span>
-          <span>Kwota</span>
-          <span>Faktura</span>
-        </div>
-
-        {payments.length ? payments.map(payment => {
-          const invoiceLink = getInvoiceLink(payment)
-          return (
-            <div className="payments-row" key={payment.id}>
-              <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
-              <span>{payment.invoice_number ? `Faktura ${payment.invoice_number}` : getPaymentName(payment)}</span>
-              <span className="paid-status">{payment.status || 'paid'}</span>
-              <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
-              <span>{invoiceLink ? <a className="payment-invoice-link" href={invoiceLink} target="_blank" rel="noreferrer">Pobierz</a> : 'Brak faktury'}</span>
-            </div>
-          )
-        }) : (
-          <div className="payments-empty">
-            <strong>Brak płatności</strong>
-            <span>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onConnectStripe }) {
-  const total = Number(earnings?.total || 0)
-  const sales = Number(earnings?.sales || 0)
-  const history = Array.isArray(earnings?.history) ? earnings.history : []
-  const average = sales ? total / sales : 0
-  const thisMonth = history.filter(row => {
-    const d = new Date(row.created_at)
-    const now = new Date()
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  }).reduce((sum, row) => sum + Number(row.amount || 0), 0)
-
-  return (
-    <section className="earnings-page">
-      <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
-      <div className="page-title">
-        <h1>Zarobki typera</h1>
-        <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
-      </div>
-
-      <div className="stripe-connect-card">
-        <div>
-          <strong>🏦 Stripe Connect</strong>
-          <span>
-            {stripeConnectStatus?.payouts_enabled
-              ? 'Konto Stripe jest połączone i gotowe do wypłat.'
-              : stripeConnectStatus?.stripe_account_id
-                ? 'Konto Stripe jest utworzone. Dokończ onboarding, aby odbierać wypłaty.'
-                : 'Połącz konto Stripe, aby admin mógł wypłacać Ci realne zarobki.'}
-          </span>
-        </div>
-        <button type="button" onClick={onConnectStripe}>
-          {stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}
-        </button>
-      </div>
-
-      <div className="earnings-hero">
-        <div>
-          <span>💰 Zarobiłeś łącznie</span>
-          <strong>{total.toFixed(2)} zł</strong>
-          <p>Kwota po prowizji platformy.</p>
-        </div>
-        <div>
-          <span>📊 Liczba sprzedaży</span>
-          <strong>{sales}</strong>
-          <p>Kupione premium typy.</p>
-        </div>
-        <div>
-          <span>📅 Ten miesiąc</span>
-          <strong>{thisMonth.toFixed(2)} zł</strong>
-          <p>Historia bieżącego miesiąca.</p>
-        </div>
-        <div>
-          <span>Średnio / sprzedaż</span>
-          <strong>{average.toFixed(2)} zł</strong>
-          <p>Po prowizji 20%.</p>
-        </div>
-      </div>
-
-      <div className="earnings-table-card">
-        <div className="earnings-table-head">
-          <h2>Historia zarobków</h2>
-          <span>{history.length} transakcji</span>
-        </div>
-
-        {history.length ? (
-          <table className="earnings-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Kwota dla Ciebie</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((row, idx) => (
-                <tr key={row.id || idx}>
-                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
-                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
-                  <td><span className="status-pill success">completed</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-wallet">
-            <strong>Brak sprzedaży premium</strong>
-            <span>Gdy ktoś kupi Twój premium typ, tutaj pojawi się zarobek 80% ceny.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function TipsterPricingSettings({ user, onToast }) {
-  const [prices, setPrices] = useState(() => Object.fromEntries(TIPSTER_PLAN_OPTIONS.map(p => [p.key, p.defaultPrice])))
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    async function load() {
-      if (!isSupabaseConfigured || !supabase || !user?.id) return
-      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', user.id)
-      if (Array.isArray(data) && data.length) {
-        setPrices(prev => {
-          const next = { ...prev }
-          data.forEach(row => { if (row.plan_key) next[row.plan_key] = Number(row.price || 0) })
-          return next
-        })
-      }
-    }
-    load()
-  }, [user?.id])
-
-  async function save() {
-    if (!user?.id || !supabase) return
-    setSaving(true)
-    setMessage('')
-    const rows = TIPSTER_PLAN_OPTIONS.map(plan => ({
-      tipster_id: user.id,
-      plan_key: plan.key,
-      label: plan.label,
-      duration_days: plan.durationDays,
-      price: Math.max(1, Number(prices[plan.key] || plan.defaultPrice)),
-      active: true
-    }))
-    const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
-    setSaving(false)
-    if (error) {
-      setMessage('Błąd zapisu cen: ' + formatAppErrorMessage(error.message))
-      return
-    }
-    setMessage('✅ Ceny subskrypcji profilu zapisane.')
+  const getPaymentStatusLabel = status => {
+    const clean = String(status || 'paid').toLowerCase()
+    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Opłacona'
+    if (clean === 'pending') return 'Oczekuje'
+    if (clean === 'failed') return 'Nieudana'
+    if (clean === 'refunded') return 'Zwrócona'
+    return status || 'Opłacona'
+  }
+  const isPaidPayment = payment => ['completed', 'paid', 'succeeded'].includes(String(payment?.status || 'paid').toLowerCase())
+  const filteredPayments = payments.filter(payment => paymentFilter === 'all' || getPaymentKind(payment) === paymentFilter)
+  const total = payments.filter(isPaidPayment).reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+  const paidCount = payments.filter(isPaidPayment).length
+  const invoiceCount = payments.filter(payment => !!getInvoiceLink(payment)).length
+  const latestPayment = payments[0] || null
+  const filterCounts = {
+    all: payments.length,
+    premium: payments.filter(payment => getPaymentKind(payment) === 'premium').length,
+    tips: payments.filter(payment => getPaymentKind(payment) === 'tips').length,
+    tokens: payments.filter(payment => getPaymentKind(payment) === 'tokens').length,
+    other: payments.filter(payment => getPaymentKind(payment) === 'other').length
   }
 
   return (
-    <div className="profile-panel tipster-pricing-panel">
-      <div className="profile-panel-head"><h3>Ceny subskrypcji profilu</h3><span>Typer ustala ceny</span></div>
-      <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
-      <div className="pricing-settings-grid">
-        {TIPSTER_PLAN_OPTIONS.map(plan => (
-          <label key={plan.key}>
-            <span>{plan.label}</span>
-            <input type="number" step="0.01" min="1" value={prices[plan.key]} onChange={e => setPrices(prev => ({ ...prev, [plan.key]: e.target.value }))} />
-            <small>Ty: {(Number(prices[plan.key] || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(prices[plan.key] || 0) * 0.2).toFixed(2)} zł</small>
-          </label>
-        ))}
+    <section className="wallet-subpage payments-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" className="active">Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
       </div>
-      {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny subskrypcji'}</button>
-    </div>
+
+      <div className="payments-live-hero glass-v2-panel">
+        <div>
+          <span>Dokumenty konta</span>
+          <h1>Płatności i faktury</h1>
+          <p>Tu widzisz tylko prawdziwe płatności przypisane do zalogowanego konta oraz faktury wygenerowane przez Stripe.</p>
+        </div>
+        <div className="payments-live-total">
+          <small>Opłacono razem</small>
+          <b>{formatMoney(total)}</b>
+        </div>
+      </div>
+
+      <div className="payments-live-stats">
+        <div className="glass-v2-panel">
+          <span>Wszystkie płatności</span>
+          <b>{payments.length}</b>
+          <small>Dokumenty konta</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Opłacone</span>
+          <b>{paidCount}</b>
+          <small>Zakończone sukcesem</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Faktury do pobrania</span>
+          <b>{invoiceCount}</b>
+          <small>Realne linki Stripe</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Ostatnia płatność</span>
+          <b>{latestPayment ? formatMoney(latestPayment.amount) : '—'}</b>
+          <small>{latestPayment ? new Date(latestPayment.created_at).toLocaleDateString('pl-PL') : 'Brak płatności'}</small>
+        </div>
+      </div>
+
+      <div className="payments-live-grid">
+        <div className="glass-v2-panel payments-live-table-card">
+          <div className="payments-live-card-head">
+            <h2>Historia płatności</h2>
+            <span>{filteredPayments.length} wyników</span>
+          </div>
+
+          <div className="payments-live-filters">
+            <button type="button" className={paymentFilter === 'all' ? 'active' : ''} onClick={() => setPaymentFilter('all')}>Wszystkie <b>{filterCounts.all}</b></button>
+            <button type="button" className={paymentFilter === 'premium' ? 'active' : ''} onClick={() => setPaymentFilter('premium')}>Premium <b>{filterCounts.premium}</b></button>
+            <button type="button" className={paymentFilter === 'tips' ? 'active' : ''} onClick={() => setPaymentFilter('tips')}>Typy <b>{filterCounts.tips}</b></button>
+            <button type="button" className={paymentFilter === 'tokens' ? 'active' : ''} onClick={() => setPaymentFilter('tokens')}>Żetony <b>{filterCounts.tokens}</b></button>
+            <button type="button" className={paymentFilter === 'other' ? 'active' : ''} onClick={() => setPaymentFilter('other')}>Inne <b>{filterCounts.other}</b></button>
+          </div>
+
+          <div className="payments-live-table">
+            <div className="payments-live-row header">
+              <span>Data</span>
+              <span>Dokument</span>
+              <span>Status</span>
+              <span>Kwota</span>
+              <span>Faktura</span>
+            </div>
+
+            {filteredPayments.length ? filteredPayments.map(payment => {
+              const invoiceLink = getInvoiceLink(payment)
+              return (
+                <div className="payments-live-row" key={payment.id}>
+                  <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+                  <span>
+                    <strong>{payment.invoice_number ? `Faktura ${payment.invoice_number}` : getPaymentName(payment)}</strong>
+                    <small>{getPaymentName(payment)}</small>
+                  </span>
+                  <span className={`payments-live-status status-${String(payment.status || 'paid').toLowerCase()}`}>{getPaymentStatusLabel(payment.status)}</span>
+                  <span className="payments-live-amount">{formatMoney(payment.amount)}</span>
+                  <span>{invoiceLink ? <a className="payment-invoice-link" href={invoiceLink} target="_blank" rel="noreferrer">Pobierz</a> : 'Brak faktury'}</span>
+                </div>
+              )
+            }) : (
+              <div className="payments-live-empty">
+                <strong>Brak płatności</strong>
+                <span>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="payments-live-side">
+          <div className="glass-v2-panel payments-live-info-card">
+            <div className="payments-live-card-head"><h2>Co tu trafia?</h2></div>
+            <ul>
+              <li>Zakupy Premium.</li>
+              <li>Zakupy płatnych typów.</li>
+              <li>Zakupy żetonów, gdy zostaną podpięte pod płatność.</li>
+              <li>Prawdziwe faktury Stripe, jeśli zostały wygenerowane.</li>
+            </ul>
+          </div>
+
+          <div className="glass-v2-panel payments-live-info-card">
+            <div className="payments-live-card-head"><h2>Faktury Stripe</h2></div>
+            <p>Przycisk <b>Pobierz</b> pojawia się tylko wtedy, gdy Stripe zwróci prawdziwy link do faktury PDF lub faktury online.</p>
+            <button type="button" onClick={() => onViewChange?.('subscriptions')}>Zarządzaj subskrypcją</button>
+            <button type="button" className="secondary" onClick={() => onTopUp?.(100)}>Wpłać środki</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function EarningsView({ user, earnings = null, stripeConnectStatus = null, onConnectStripe, onViewChange }) {
+  const [earningsPeriod, setEarningsPeriod] = useState('current_month')
+  const history = Array.isArray(earnings?.history) ? earnings.history : []
+  const total = Number(earnings?.total || 0)
+  const sales = Number(earnings?.sales || history.length || 0)
+  const availableToPayout = Number(earnings?.available_to_payout || 0)
+  const startOfDay = value => {
+    const date = new Date(value)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const startOfMonth = value => {
+    const date = new Date(value)
+    date.setDate(1)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const addMonths = (value, months) => {
+    const date = new Date(value)
+    date.setMonth(date.getMonth() + months)
+    return date
+  }
+  const now = new Date()
+  const currentMonthStart = startOfMonth(now)
+  const nextMonthStart = addMonths(currentMonthStart, 1)
+  const periodRange = (() => {
+    if (earningsPeriod === 'previous_month') {
+      return { start: addMonths(currentMonthStart, -1), end: currentMonthStart, label: 'Poprzedni miesiąc' }
+    }
+    if (earningsPeriod === 'last_3_months') {
+      return { start: addMonths(currentMonthStart, -2), end: nextMonthStart, label: 'Ostatnie 3 miesiące' }
+    }
+    if (earningsPeriod === 'year') {
+      return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear() + 1, 0, 1), label: 'Cały rok' }
+    }
+    return { start: currentMonthStart, end: nextMonthStart, label: 'Bieżący miesiąc' }
+  })()
+  const previousPeriodRange = (() => {
+    const span = periodRange.end.getTime() - periodRange.start.getTime()
+    return { start: new Date(periodRange.start.getTime() - span), end: periodRange.start }
+  })()
+  const amountFromRow = row => Number(row?.amount || row?.net_amount || row?.tipster_amount || 0) || 0
+  const grossFromRow = row => Number(row?.gross_amount || (amountFromRow(row) + Number(row?.commission || 0)) || 0)
+  const rowsForRange = range => history.filter(row => {
+    const createdAt = new Date(row?.created_at || 0)
+    return !Number.isNaN(createdAt.getTime()) && createdAt >= range.start && createdAt < range.end
+  })
+  const currentRows = rowsForRange(periodRange)
+  const previousRows = rowsForRange(previousPeriodRange)
+  const periodNet = currentRows.reduce((sum, row) => sum + amountFromRow(row), 0)
+  const periodGross = currentRows.reduce((sum, row) => sum + grossFromRow(row), 0)
+  const periodCommission = currentRows.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+  const periodSales = currentRows.length
+  const previousNet = previousRows.reduce((sum, row) => sum + amountFromRow(row), 0)
+  const average = periodSales ? periodNet / periodSales : 0
+  const growth = previousNet > 0 ? ((periodNet - previousNet) / previousNet) * 100 : (periodNet > 0 ? 100 : 0)
+  const growthLabel = previousNet > 0
+    ? `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}% vs poprzedni okres`
+    : periodNet > 0
+      ? 'Pierwszy zarobek w tym okresie'
+      : 'Brak danych do porównania'
+  const sourceLabel = source => {
+    if (source === 'profile_subscription') return 'Subskrypcja profilu'
+    if (source === 'tip_purchase') return 'Sprzedaż typu'
+    return 'Zarobek twórcy'
+  }
+  const chartBuckets = (() => {
+    const useMonths = earningsPeriod === 'last_3_months' || earningsPeriod === 'year'
+    const buckets = []
+    if (useMonths) {
+      const cursor = startOfMonth(periodRange.start)
+      while (cursor < periodRange.end) {
+        const bucketStart = new Date(cursor)
+        const bucketEnd = addMonths(bucketStart, 1)
+        buckets.push({
+          key: `${bucketStart.getFullYear()}-${bucketStart.getMonth()}`,
+          label: bucketStart.toLocaleDateString('pl-PL', { month: 'short' }),
+          amount: rowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromRow(row), 0)
+        })
+        cursor.setMonth(cursor.getMonth() + 1)
+      }
+      return buckets
+    }
+    const cursor = startOfDay(periodRange.start)
+    while (cursor < periodRange.end) {
+      const bucketStart = new Date(cursor)
+      const bucketEnd = new Date(bucketStart)
+      bucketEnd.setDate(bucketEnd.getDate() + 1)
+      buckets.push({
+        key: bucketStart.toISOString().slice(0, 10),
+        label: String(bucketStart.getDate()),
+        amount: rowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromRow(row), 0)
+      })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return buckets
+  })()
+  const chartMax = Math.max(1, ...chartBuckets.map(bucket => Number(bucket.amount || 0)))
+  const chartPoints = chartBuckets.map((bucket, index) => {
+    const x = chartBuckets.length <= 1 ? 0 : (index / (chartBuckets.length - 1)) * 100
+    const y = 100 - (Number(bucket.amount || 0) / chartMax) * 100
+    return `${x},${y}`
+  }).join(' ')
+  const chartAreaPoints = chartBuckets.length ? `0,100 ${chartPoints} 100,100` : ''
+  const chartLabels = chartBuckets.length > 7
+    ? chartBuckets.filter((_, index) => index === 0 || index === chartBuckets.length - 1 || index % Math.ceil(chartBuckets.length / 4) === 0)
+    : chartBuckets
+  const recentRows = history.slice(0, 5)
+  const stripeReady = !!stripeConnectStatus?.payouts_enabled
+  const profile = getUserProfileView(user || {})
+
+  return (
+    <section className="wallet-subpage earnings-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" className="active">Zarobki</button>
+      </div>
+
+      <div className="earnings-live-hero glass-v2-panel">
+        <div>
+          <span>Zarobki twórcy</span>
+          <h1>Zarobki</h1>
+          <p>{profile.username || 'Typer'} — tu widzisz realne przychody ze sprzedaży płatnych typów i subskrypcji profilu.</p>
+        </div>
+        <div className="earnings-live-total">
+          <small>Zarobiłeś łącznie</small>
+          <b>{formatMoney(total)}</b>
+        </div>
+      </div>
+
+      <div className="earnings-live-stats">
+        <div className="glass-v2-panel">
+          <span>Zarobek netto</span>
+          <b>{formatMoney(periodNet)}</b>
+          <small>{periodRange.label}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Sprzedaż brutto</span>
+          <b>{formatMoney(periodGross)}</b>
+          <small>Przed prowizją</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Prowizja platformy</span>
+          <b>{formatMoney(periodCommission)}</b>
+          <small>20% od sprzedaży</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Dostępne do wypłaty</span>
+          <b>{formatMoney(availableToPayout)}</b>
+          <small>Realne saldo zarobków</small>
+        </div>
+      </div>
+
+      <div className="earnings-live-grid">
+        <div className="glass-v2-panel earnings-live-chart-card">
+          <div className="earnings-live-card-head">
+            <div>
+              <h2>Wykres zarobków</h2>
+              <span>{growthLabel}</span>
+            </div>
+            <select value={earningsPeriod} onChange={event => setEarningsPeriod(event.target.value)} aria-label="Okres zarobków">
+              <option value="current_month">Bieżący miesiąc</option>
+              <option value="previous_month">Poprzedni miesiąc</option>
+              <option value="last_3_months">Ostatnie 3 miesiące</option>
+              <option value="year">Cały rok</option>
+            </select>
+          </div>
+
+          {periodSales > 0 ? (
+            <>
+              <div className="earnings-live-metrics">
+                <span><b>{periodSales}</b> sprzedaży</span>
+                <span><b>{formatMoney(average)}</b> średnio / sprzedaż</span>
+              </div>
+              <div className="earnings-live-chart-v2">
+                <div className="y-labels">
+                  <span>{formatMoney(chartMax)}</span>
+                  <span>{formatMoney(chartMax / 2)}</span>
+                  <span>0 zł</span>
+                </div>
+                <div className="chart-area">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polygon points={chartAreaPoints} />
+                    <polyline points={chartPoints} />
+                  </svg>
+                </div>
+                <div className="x-labels">
+                  {chartLabels.map(bucket => <small key={bucket.key}>{bucket.label}</small>)}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="earnings-live-empty">
+              <strong>Brak zarobków w tym okresie</strong>
+              <span>Po pierwszej sprzedaży płatnego typu albo subskrypcji profilu wykres ożyje realnymi danymi.</span>
+            </div>
+          )}
+        </div>
+
+        <div className="glass-v2-panel earnings-live-stripe-card">
+          <div className="earnings-live-card-head"><h2>Wypłaty Stripe</h2></div>
+          <div className={`earnings-live-stripe-status ${stripeReady ? 'ready' : 'locked'}`}>
+            <strong>{stripeReady ? 'Stripe aktywny' : 'Stripe niepodłączony'}</strong>
+            <span>{stripeReady ? 'Konto jest gotowe do odbierania wypłat.' : 'Podłącz Stripe Connect, aby odbierać realne wypłaty.'}</span>
+          </div>
+          <button type="button" onClick={() => stripeReady ? onViewChange?.('payouts') : onConnectStripe?.()}>
+            {stripeReady ? 'Przejdź do wypłat' : 'Podłącz Stripe'}
+          </button>
+          <ul>
+            <li>Zarabiasz 80% wartości sprzedaży.</li>
+            <li>20% zostaje jako prowizja platformy.</li>
+            <li>Wypłata trafia do zakładki Wypłaty.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel earnings-live-history-card">
+          <div className="earnings-live-card-head">
+            <h2>Ostatnie zarobki</h2>
+            <span>{sales} łącznie</span>
+          </div>
+          {recentRows.length ? (
+            <div className="earnings-live-history">
+              {recentRows.map(row => (
+                <div key={row.id || `${row.created_at}_${row.source}`}>
+                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>+{formatMoney(amountFromRow(row))}</strong>
+                  <small>{sourceLabel(row.source)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="earnings-live-empty compact">
+              <strong>Brak zarobków</strong>
+              <span>Sprzedaże pojawią się tutaj automatycznie.</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -12632,89 +12916,177 @@ function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
   )
 }
 
-function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
+function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe, onViewChange, submitting = false, earnings = null }) {
   const MIN_PAYOUT_AMOUNT = 50
+
   if (!user) {
     return (
-      <section className="payout-page">
-        <div className="payout-loading">
+      <section className="wallet-subpage payout-live-page">
+        <div className="payout-live-loading glass-v2-panel">
           <strong>Ładowanie wypłat...</strong>
           <span>Trwa pobieranie danych konta.</span>
         </div>
       </section>
     )
   }
+
   const profile = getUserProfileView(user)
-  const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
-  const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
-  const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  const platformFee = grossRevenue * PLATFORM_COMMISSION_RATE
   const planLimits = getPlanLimits(userPlan)
   const monthlyPayoutCount = getMonthlyCount(payoutRequests)
   const payoutLimitReached = monthlyPayoutCount >= planLimits.monthlyPayoutLimit
+  const grossRevenue = Array.isArray(earnings?.history)
+    ? earnings.history.reduce((sum, row) => sum + Number(row?.gross_amount || Number(row?.amount || 0) + Number(row?.commission || 0) || 0), 0)
+    : 0
+  const platformFee = Array.isArray(earnings?.history)
+    ? earnings.history.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+    : 0
+  const totalNetEarnings = Number(earnings?.total || 0)
   const paidOut = payoutRequests
     .filter(request => request.status === 'paid' || request.status === 'approved')
     .reduce((sum, request) => sum + Number(request.amount || 0), 0)
-  const available = Math.max(0, grossRevenue - platformFee - paidOut)
+  const pendingAmount = payoutRequests
+    .filter(request => request.status === 'pending')
+    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const available = Math.max(0, Number(earnings?.available_to_payout ?? (totalNetEarnings - paidOut - pendingAmount) ?? 0))
   const hasPending = payoutRequests.some(request => request.status === 'pending')
   const stripeReady = !!stripeConnectStatus?.payouts_enabled
-  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached
+  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached && !submitting
+  const payoutStatusLabel = status => {
+    if (status === 'paid') return 'Wypłacona'
+    if (status === 'approved') return 'Zatwierdzona'
+    if (status === 'pending') return 'Oczekuje'
+    if (status === 'rejected') return 'Odrzucona'
+    return status || 'Nieznany'
+  }
+  const payoutActionLabel = hasPending
+    ? 'Masz oczekującą wypłatę'
+    : payoutLimitReached
+      ? 'Limit wypłat wykorzystany'
+      : !stripeReady
+        ? 'Połącz Stripe'
+        : available < MIN_PAYOUT_AMOUNT
+          ? 'Minimum 50 zł'
+          : submitting
+            ? 'Wysyłam...'
+            : 'Poproś o wypłatę'
 
   return (
-    <section className="payout-page">
-      <UltraPageBanner variant="payouts" />
-      <div className="payout-hero">
+    <section className="wallet-subpage payout-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" className="active">Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="payout-live-hero glass-v2-panel">
         <div>
-          <h1>Wypłaty typera</h1>
-          <p>{profile.username} — zgłaszaj wypłaty z zarobków premium.</p>
+          <span>Wypłaty twórcy</span>
+          <h1>Wypłaty</h1>
+          <p>{profile.username} — tu zgłaszasz wypłaty z realnych zarobków ze sprzedaży typów i subskrypcji profilu.</p>
         </div>
-        <div className="payout-available">
-          <span>Dostępne do wypłaty</span>
-          <b>{available.toFixed(2)} zł</b>
+        <div className="payout-live-available">
+          <small>Dostępne do wypłaty</small>
+          <b>{formatMoney(available)}</b>
         </div>
       </div>
 
-      <div className="payout-grid">
-        <div className="payout-stat"><span>Przychód brutto</span><b>{grossRevenue.toFixed(2)} zł</b></div>
-        <div className="payout-stat"><span>Prowizja 20%</span><b>{platformFee.toFixed(2)} zł</b></div>
-        <div className="payout-stat"><span>Limit wypłat</span><b>{monthlyPayoutCount}/{planLimits.monthlyPayoutLimit}</b></div>
-        <div className="payout-stat"><span>Wypłacone / zatwierdzone</span><b>{paidOut.toFixed(2)} zł</b></div>
+      <div className="payout-live-stats">
+        <div className="glass-v2-panel">
+          <span>Zarobek netto</span>
+          <b>{formatMoney(totalNetEarnings)}</b>
+          <small>Po prowizji platformy</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Sprzedaż brutto</span>
+          <b>{formatMoney(grossRevenue)}</b>
+          <small>Typy i subskrypcje</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Prowizja platformy</span>
+          <b>{formatMoney(platformFee)}</b>
+          <small>20% od sprzedaży</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Limit w miesiącu</span>
+          <b>{monthlyPayoutCount}/{planLimits.monthlyPayoutLimit}</b>
+          <small>{isPremiumAccount(userPlan) ? 'Plan Premium' : 'Plan Free'}</small>
+        </div>
       </div>
 
-      <div className="payout-request-card">
-        <div>
-          <strong>Poproś o wypłatę</strong>
-          <span>Minimum wypłaty to 50 zł. FREE ma 1 wypłatę/miesiąc, PREMIUM ma 3 wypłaty/miesiąc.</span>
-        </div>
-        <button disabled={!canRequestPayout} onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
-          {hasPending ? 'Masz pending' : payoutLimitReached ? 'Limit wypłat' : !stripeReady ? 'Połącz Stripe' : available < MIN_PAYOUT_AMOUNT ? 'Minimum 50 zł' : 'Poproś o wypłatę'}
-        </button>
-      </div>
-
-      <div className="payout-table">
-        <div className="payout-row header">
-          <span>Data</span>
-          <span>Kwota</span>
-          <span>Status</span>
-        </div>
-
-        {payoutRequests.length ? payoutRequests.map(request => (
-          <div className="payout-row" key={request.id}>
-            <span>{new Date(request.created_at).toLocaleString('pl-PL')}</span>
-            <span>{Number(request.amount || 0).toFixed(2)} zł</span>
-            <span className={`payout-status ${request.status}`}>{request.status}</span>
+      <div className="payout-live-grid">
+        <div className="glass-v2-panel payout-live-request-card">
+          <div className="payout-live-card-head">
+            <h2>Nowa wypłata</h2>
+            <span className={stripeReady ? 'ready' : 'locked'}>
+              {stripeReady ? 'Stripe aktywny' : 'Stripe niepodłączony'}
+            </span>
           </div>
-        )) : (
-          <div className="payout-empty">
-            <strong>Brak wypłat</strong>
-            <span>Twoje zgłoszenia wypłat pojawią się tutaj.</span>
+          <p>
+            Minimum wypłaty to <b>50 zł</b>. Konto FREE ma 1 wypłatę miesięcznie, a konto Premium 3 wypłaty miesięcznie.
+          </p>
+          <div className="payout-live-request-summary">
+            <div><small>Dostępne</small><b>{formatMoney(available)}</b></div>
+            <div><small>Oczekuje</small><b>{formatMoney(pendingAmount)}</b></div>
+            <div><small>Wypłacone</small><b>{formatMoney(paidOut)}</b></div>
           </div>
-        )}
-      </div>
+          <button type="button" disabled={!canRequestPayout} onClick={() => onRequestPayout?.()}>
+            {payoutActionLabel}
+          </button>
+          {!stripeReady && (
+            <button type="button" className="secondary" onClick={() => onConnectStripe?.()}>
+              Podłącz Stripe Connect
+            </button>
+          )}
+        </div>
 
-      <div className="stripe-connect-note">
-        <strong>Następny etap: Stripe Connect</strong>
-        <span>Stripe Connect jest aktywny: wypłata zostanie przekazana przez realny Stripe transfer po zatwierdzeniu admina albo przez cron automatycznych wypłat.</span>
+        <div className="glass-v2-panel payout-live-methods-card">
+          <div className="payout-live-card-head"><h2>Metody wypłaty</h2></div>
+          <div className="payout-live-methods">
+            <button type="button" className="active" onClick={() => stripeReady ? null : onConnectStripe?.()}>
+              <span className="pay-logo stripe">S</span>
+              <strong>Stripe</strong>
+              <small>{stripeReady ? 'Aktywne' : 'Połącz'}</small>
+            </button>
+            <button type="button" className="locked" disabled>
+              <span className="pay-logo paypal">P</span>
+              <strong>PayPal</strong>
+              <small>🔒 Wkrótce</small>
+            </button>
+            <button type="button" className="locked" disabled>
+              <span className="pay-logo revolut">R</span>
+              <strong>Revolut</strong>
+              <small>🔒 Wkrótce</small>
+            </button>
+          </div>
+          <ul>
+            <li>Wypłata działa tylko z realnych zarobków twórcy.</li>
+            <li>Po zgłoszeniu wypłata trafia do panelu admina.</li>
+            <li>Po zatwierdzeniu wypłata idzie przez Stripe Connect.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel payout-live-history-card">
+          <div className="payout-live-card-head"><h2>Historia wypłat</h2></div>
+          {payoutRequests.length ? (
+            <div className="payout-live-history">
+              {payoutRequests.map(request => (
+                <div key={request.id}>
+                  <span>{new Date(request.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>{formatMoney(request.amount)}</strong>
+                  <small className={`status-${request.status}`}>{payoutStatusLabel(request.status)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="payout-live-empty">
+              <strong>Brak wypłat</strong>
+              <span>Twoje prawdziwe zgłoszenia wypłat pojawią się tutaj.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
@@ -12722,89 +13094,172 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
 
 
-
-function AdminFinanceView({ report, onRefresh }) {
-  const tx = Array.isArray(report?.transactions) ? report.transactions : []
+function AdminFinanceView({ report, onRefresh, onViewChange }) {
+  const [adminFinanceFilter, setAdminFinanceFilter] = useState('all')
+  const transactions = Array.isArray(report?.transactions) ? report.transactions : []
+  const getTxType = row => {
+    const raw = String(row?.type || row?.source || '').toLowerCase()
+    if (raw.includes('earning') || raw.includes('sale') || raw.includes('tip_purchase')) return 'marketplace'
+    if (raw.includes('premium')) return 'premium'
+    if (raw.includes('payout')) return 'payout'
+    if (raw.includes('topup')) return 'topup'
+    return 'other'
+  }
+  const getTxLabel = row => {
+    const type = getTxType(row)
+    if (type === 'marketplace') return 'Sprzedaż marketplace'
+    if (type === 'premium') return 'Subskrypcja Premium'
+    if (type === 'payout') return 'Wypłata typera'
+    if (type === 'topup') return 'Wpłata do portfela'
+    return row?.label || row?.type || 'Operacja'
+  }
+  const getStatusLabel = status => {
+    const clean = String(status || '').toLowerCase()
+    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Zakończona'
+    if (clean === 'pending') return 'Oczekuje'
+    if (clean === 'approved') return 'Zatwierdzona'
+    if (clean === 'rejected') return 'Odrzucona'
+    return status || '—'
+  }
+  const txCounts = {
+    all: transactions.length,
+    marketplace: transactions.filter(row => getTxType(row) === 'marketplace').length,
+    premium: transactions.filter(row => getTxType(row) === 'premium').length,
+    payout: transactions.filter(row => getTxType(row) === 'payout').length,
+    topup: transactions.filter(row => getTxType(row) === 'topup').length
+  }
+  const filteredTransactions = transactions.filter(row => adminFinanceFilter === 'all' || getTxType(row) === adminFinanceFilter)
+  const totalPlatformRevenue = Number(report?.total_platform_revenue || (Number(report?.platform_commission || 0) + Number(report?.premium_revenue || 0)))
+  const platformCommission = Number(report?.platform_commission || 0)
+  const premiumRevenue = Number(report?.premium_revenue || 0)
+  const grossSales = Number(report?.gross_sales || 0)
+  const tipsterEarnings = Number(report?.tipster_earnings || 0)
+  const paidOut = Number(report?.total_payouts || 0)
+  const pendingPayouts = Number(report?.pending_payouts || 0)
+  const availableToPayout = Number(report?.available_to_payout || Math.max(0, tipsterEarnings - paidOut - pendingPayouts))
+  const walletTopups = Number(report?.wallet_topups || 0)
+  const activePremiumUsers = Number(report?.active_premium_users || 0)
+  const payoutCoverage = tipsterEarnings > 0 ? Math.min(100, (paidOut / tipsterEarnings) * 100) : 0
 
   return (
-    <section className="admin-finance-page">
-      <UltraPageBanner variant="adminFinance"><button type="button" onClick={onRefresh}>Odśwież raport</button></UltraPageBanner>
-      <div className="page-title admin-finance-title">
+    <section className="admin-finance-live-page">
+      <div className="admin-finance-live-hero glass-v2-panel">
         <div>
-          <h1>Admin — raport platformy</h1>
-          <p>Kontrola finansów marketplace: sprzedaż, prowizja 20%, zarobki typerów i wypłaty.</p>
+          <span>Tylko administrator</span>
+          <h1>Finanse platformy</h1>
+          <p>Prawdziwy raport Bet+AI: przychód platformy, obrót marketplace, zobowiązania wobec typerów, wpłaty i ostatnie operacje.</p>
         </div>
         <button type="button" onClick={onRefresh}>Odśwież raport</button>
       </div>
 
-      <div className="admin-finance-grid">
-        <div className="finance-card primary">
-          <span>💰 Prowizja platformy 20%</span>
-          <strong>{Number(report?.platform_commission || 0).toFixed(2)} zł</strong>
-          <p>Twoje przychody z premium sprzedaży.</p>
+      <div className="admin-finance-live-kpis">
+        <div className="glass-v2-panel primary">
+          <span>Przychód platformy</span>
+          <b>{formatMoney(totalPlatformRevenue)}</b>
+          <small>Premium + prowizja marketplace</small>
         </div>
-        <div className="finance-card">
-          <span>📊 Sprzedaż premium</span>
-          <strong>{Number(report?.total_sales || 0)}</strong>
-          <p>Liczba kupionych premium typów.</p>
+        <div className="glass-v2-panel">
+          <span>Premium</span>
+          <b>{formatMoney(premiumRevenue)}</b>
+          <small>{activePremiumUsers} aktywnych kont</small>
         </div>
-        <div className="finance-card">
-          <span>🧾 Obrót brutto</span>
-          <strong>{Number(report?.gross_sales || 0).toFixed(2)} zł</strong>
-          <p>100% ceny premium typów.</p>
+        <div className="glass-v2-panel">
+          <span>Prowizja marketplace</span>
+          <b>{formatMoney(platformCommission)}</b>
+          <small>20% od sprzedaży</small>
         </div>
-        <div className="finance-card">
-          <span>👥 Zarobki typerów</span>
-          <strong>{Number(report?.tipster_earnings || 0).toFixed(2)} zł</strong>
-          <p>80% sprzedaży dla autorów.</p>
-        </div>
-        <div className="finance-card">
-          <span>✅ Wypłacono</span>
-          <strong>{Number(report?.total_payouts || 0).toFixed(2)} zł</strong>
-          <p>Zatwierdzone wypłaty typerów.</p>
-        </div>
-        <div className="finance-card warning">
-          <span>⏳ Pending wypłaty</span>
-          <strong>{Number(report?.pending_payouts || 0).toFixed(2)} zł</strong>
-          <p>Zgłoszone, ale jeszcze niewypłacone.</p>
+        <div className="glass-v2-panel">
+          <span>Wpłaty do portfeli</span>
+          <b>{formatMoney(walletTopups)}</b>
+          <small>Przepływ środków, nie zysk</small>
         </div>
       </div>
 
-      <div className="earnings-table-card">
-        <div className="earnings-table-head">
-          <h2>Ostatnie transakcje marketplace</h2>
-          <span>{tx.length} pozycji</span>
+      <div className="admin-finance-live-grid">
+        <div className="glass-v2-panel admin-finance-overview-card">
+          <div className="admin-finance-live-card-head">
+            <h2>Marketplace</h2>
+            <span>{Number(report?.total_sales || 0)} sprzedaży</span>
+          </div>
+          <div className="admin-finance-overview-list">
+            <div><span>Obrót brutto</span><b>{formatMoney(grossSales)}</b></div>
+            <div><span>Zarobki typerów</span><b>{formatMoney(tipsterEarnings)}</b></div>
+            <div><span>Prowizja platformy</span><b>{formatMoney(platformCommission)}</b></div>
+          </div>
+          <div className="admin-finance-split">
+            <span style={{ width: grossSales > 0 ? `${Math.min(100, (tipsterEarnings / grossSales) * 100)}%` : '0%' }}></span>
+          </div>
+          <small>Podział sprzedaży: 80% typerzy / 20% platforma.</small>
         </div>
 
-        {tx.length ? (
-          <table className="earnings-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>User ID</th>
-                <th>Typ</th>
-                <th>Kwota</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tx.map((row, idx) => (
-                <tr key={row.id || idx}>
-                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
-                  <td><code>{row.user_id}</code></td>
-                  <td><span className="status-pill">{row.type}</span></td>
-                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
-                  <td><span className={`status-pill ${row.status === 'completed' ? 'success' : ''}`}>{row.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-wallet">
-            <strong>Brak transakcji</strong>
-            <span>Po pierwszej sprzedaży premium pojawi się tutaj historia.</span>
+        <div className="glass-v2-panel admin-finance-overview-card">
+          <div className="admin-finance-live-card-head">
+            <h2>Wypłaty typerów</h2>
+            <button type="button" onClick={() => onViewChange?.('adminPayouts')}>Przejdź</button>
           </div>
-        )}
+          <div className="admin-finance-overview-list">
+            <div><span>Wypłacono</span><b>{formatMoney(paidOut)}</b></div>
+            <div><span>Oczekuje</span><b>{formatMoney(pendingPayouts)}</b></div>
+            <div><span>Do wypłaty</span><b>{formatMoney(availableToPayout)}</b></div>
+          </div>
+          <div className="admin-finance-payout-progress">
+            <span style={{ width: `${payoutCoverage}%` }}></span>
+          </div>
+          <small>{payoutCoverage.toFixed(1)}% wypłaconych zarobków typerów.</small>
+        </div>
+
+        <div className="glass-v2-panel admin-finance-health-card">
+          <div className="admin-finance-live-card-head"><h2>Szybki stan</h2></div>
+          <div className="admin-finance-health-list">
+            <div className={pendingPayouts > 0 ? 'warning' : 'ok'}>
+              <strong>{pendingPayouts > 0 ? 'Wypłaty wymagają uwagi' : 'Brak zaległych wypłat'}</strong>
+              <span>{pendingPayouts > 0 ? `${formatMoney(pendingPayouts)} oczekuje na obsługę.` : 'Nie ma zgłoszonych wypłat do ręcznej obsługi.'}</span>
+            </div>
+            <div className={totalPlatformRevenue > 0 ? 'ok' : 'neutral'}>
+              <strong>{totalPlatformRevenue > 0 ? 'Platforma zarabia' : 'Brak przychodu platformy'}</strong>
+              <span>{totalPlatformRevenue > 0 ? `Łącznie ${formatMoney(totalPlatformRevenue)} realnego przychodu.` : 'Po pierwszych sprzedażach pojawią się tu dane.'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-v2-panel admin-finance-transactions-card">
+        <div className="admin-finance-live-card-head">
+          <h2>Ostatnie operacje finansowe</h2>
+          <span>{filteredTransactions.length} wyników</span>
+        </div>
+
+        <div className="admin-finance-live-filters">
+          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => setAdminFinanceFilter('all')}>Wszystkie <b>{txCounts.all}</b></button>
+          <button type="button" className={adminFinanceFilter === 'marketplace' ? 'active' : ''} onClick={() => setAdminFinanceFilter('marketplace')}>Marketplace <b>{txCounts.marketplace}</b></button>
+          <button type="button" className={adminFinanceFilter === 'premium' ? 'active' : ''} onClick={() => setAdminFinanceFilter('premium')}>Premium <b>{txCounts.premium}</b></button>
+          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => setAdminFinanceFilter('payout')}>Wypłaty <b>{txCounts.payout}</b></button>
+          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => setAdminFinanceFilter('topup')}>Wpłaty <b>{txCounts.topup}</b></button>
+        </div>
+
+        <div className="admin-finance-live-table">
+          <div className="admin-finance-live-row header">
+            <span>Data</span>
+            <span>Operacja</span>
+            <span>Użytkownik</span>
+            <span>Kwota</span>
+            <span>Status</span>
+          </div>
+          {filteredTransactions.length ? filteredTransactions.map((row, idx) => (
+            <div className="admin-finance-live-row" key={row.id || idx}>
+              <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+              <span><strong>{getTxLabel(row)}</strong><small>{row.type || row.source || '—'}</small></span>
+              <span><code>{row.user_email || row.username || row.user_id || '—'}</code></span>
+              <span className="amount">{formatMoney(row.amount)}</span>
+              <span className={`status status-${String(row.status || '').toLowerCase()}`}>{getStatusLabel(row.status)}</span>
+            </div>
+          )) : (
+            <div className="admin-finance-empty">
+              <strong>Brak operacji finansowych</strong>
+              <span>Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
@@ -12819,34 +13274,47 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
   const normalizedRequests = requests.map(request => ({
     ...request,
-    normalizedStatus: (request.status || 'pending').toLowerCase(),
+    normalizedStatus: String(request.status || 'pending').toLowerCase(),
+    normalizedStripeStatus: String(request.stripe_status || '').toLowerCase(),
     amountNumber: Number(request.amount || 0),
-    searchText: String((request.id || '') + ' ' + (request.user_id || '') + ' ' + (request.status || '') + ' ' + (request.stripe_status || '') + ' ' + (request.stripe_transfer_id || '')).toLowerCase()
+    searchText: String([
+      request.id,
+      request.user_id,
+      request.user_email,
+      request.email,
+      request.status,
+      request.stripe_status,
+      request.stripe_transfer_id
+    ].filter(Boolean).join(' ')).toLowerCase()
   }))
 
   const pendingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'pending')
   const processingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'processing')
-  const paidRequests = normalizedRequests.filter(request => request.normalizedStatus === 'paid')
-  const failedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'failed' || request.stripe_status === 'failed')
+  const paidRequests = normalizedRequests.filter(request => ['paid', 'approved'].includes(request.normalizedStatus))
   const rejectedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'rejected')
-  const payableRequests = pendingRequests.filter(request => request.amountNumber >= 50)
+  const failedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'failed' || request.normalizedStripeStatus === 'failed')
+  const readyRequests = pendingRequests.filter(request => request.amountNumber >= 50)
+  const smallPendingRequests = pendingRequests.filter(request => request.amountNumber < 50)
   const totalPending = pendingRequests.reduce((sum, request) => sum + request.amountNumber, 0)
+  const totalReady = readyRequests.reduce((sum, request) => sum + request.amountNumber, 0)
   const totalPaid = paidRequests.reduce((sum, request) => sum + request.amountNumber, 0)
-  const automationReady = payableRequests.length > 0
+  const attentionCount = processingRequests.length + failedRequests.length
+  const automationReady = readyRequests.length > 0
 
   const filteredRequests = normalizedRequests.filter(request => {
     const matchesStatus = statusFilter === 'all' || request.normalizedStatus === statusFilter
     const matchesQuery = !query.trim() || request.searchText.includes(query.trim().toLowerCase())
     const matchesAmount = amountFilter === 'all'
-      || (amountFilter === 'payable' && request.amountNumber >= 50)
-      || (amountFilter === 'small' && request.amountNumber < 50)
+      || (amountFilter === 'ready' && request.normalizedStatus === 'pending' && request.amountNumber >= 50)
+      || (amountFilter === 'small' && request.normalizedStatus === 'pending' && request.amountNumber < 50)
     return matchesStatus && matchesQuery && matchesAmount
   })
 
   const selectedRequests = normalizedRequests.filter(request => selectedIds.includes(request.id))
   const selectedPending = selectedRequests.filter(request => request.normalizedStatus === 'pending')
+  const selectedReady = selectedPending.filter(request => request.amountNumber >= 50)
 
-  const toggleSelected = (id) => {
+  const toggleSelected = id => {
     setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id])
   }
 
@@ -12856,13 +13324,14 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     setSelectedIds(current => allSelected ? current.filter(id => !visiblePendingIds.includes(id)) : Array.from(new Set([...current, ...visiblePendingIds])))
   }
 
-  const bulkUpdate = (status) => {
-    selectedPending.forEach(request => onUpdateStatus(request.id, status))
+  const bulkUpdate = status => {
+    const rows = status === 'paid' ? selectedReady : selectedPending
+    rows.forEach(request => onUpdateStatus(request.id, status))
     setSelectedIds([])
   }
 
   const exportCsv = () => {
-    const headers = ['user_id', 'created_at', 'amount', 'status', 'stripe_status', 'stripe_transfer_id']
+    const headers = ['id', 'user_id', 'created_at', 'amount', 'status', 'stripe_status', 'stripe_transfer_id']
     const rows = filteredRequests.map(request => headers.map(key => '"' + String(request[key] ?? '').replaceAll('"', '""') + '"').join(','))
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -12873,18 +13342,27 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     URL.revokeObjectURL(url)
   }
 
-  const getStripeLabel = (request) => {
+  const getStripeLabel = request => {
     if (request.stripe_transfer_id) return request.stripe_transfer_id
     if (request.normalizedStatus === 'rejected') return 'nie dotyczy'
-    if (request.amountNumber < 50 && request.normalizedStatus === 'pending') return 'poniżej minimum'
-    if (request.stripe_status === 'failed' || request.normalizedStatus === 'failed') return 'błąd Stripe'
-    if (request.normalizedStatus === 'processing') return 'przetwarzanie'
-    return 'czeka'
+    if (request.normalizedStatus === 'processing') return 'transfer w toku'
+    if (request.normalizedStatus === 'failed' || request.normalizedStripeStatus === 'failed') return 'błąd Stripe'
+    if (request.normalizedStatus === 'pending' && request.amountNumber < 50) return 'poniżej minimum'
+    return 'czeka na transfer'
+  }
+
+  const getStatusLabel = status => {
+    if (status === 'pending') return 'Oczekuje'
+    if (status === 'processing') return 'Przetwarzana'
+    if (status === 'paid' || status === 'approved') return 'Wypłacona'
+    if (status === 'rejected') return 'Odrzucona'
+    if (status === 'failed') return 'Błąd'
+    return status || '—'
   }
 
   if (!profile.isAdmin) {
     return (
-      <section className="admin-payout-page admin-payout-page-pro">
+      <section className="admin-payout-live-page">
         <div className="admin-denied">
           <strong>Brak dostępu</strong>
           <span>Ten panel jest dostępny tylko dla administratora.</span>
@@ -12894,123 +13372,158 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   return (
-    <section className="admin-payout-page admin-payout-page-pro">
-      <UltraPageBanner variant="adminPayouts"><button type="button" onClick={onRunCron}>Uruchom cron wypłat</button></UltraPageBanner>
-      <div className="admin-payout-hero admin-payout-hero-pro">
+    <section className="admin-payout-live-page">
+      <div className="admin-payout-live-hero glass-v2-panel">
         <div>
-          <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
+          <span>Tylko administrator</span>
           <h1>Admin wypłaty</h1>
-          <p>PRO panel do realnych wypłat Stripe Connect: approve, reject, transfer ID, CSV, filtry i gotowość pod cron.</p>
+          <p>Centrum realizacji wypłat typerów: kolejka oczekujących, transfery Stripe, akcje ręczne, cron i pełna historia zgłoszeń.</p>
         </div>
-        <div className="admin-payout-badge">ADMIN PRO</div>
+        <button type="button" onClick={onRunCron} disabled={!automationReady}>
+          {automationReady ? 'Uruchom cron' : 'Brak gotowych wypłat'}
+        </button>
       </div>
 
-      <div className="admin-payout-stats admin-payout-stats-pro admin-payout-stat-cards-pro">
-        <div><span>Zgłoszenia</span><b>{requests.length}</b><small>Wszystkie zgłoszenia</small></div>
-        <div><span>Pending</span><b>{pendingRequests.length}</b><small>{totalPending.toFixed(2)} zł oczekuje</small></div>
-        <div><span>Wypłacone</span><b>{paidRequests.length}</b><small>{totalPaid.toFixed(2)} zł zrealizowane</small></div>
-        <div><span>Odrzucone</span><b>{rejectedRequests.length}</b><small>Do audytu</small></div>
-      </div>
-
-      <div className="admin-payout-summary admin-payout-summary-pro">
-        <div>
-          <span>Do automatu cron</span>
-          <strong>{payableRequests.length}</strong>
-          <p>Pending wypłaty od 50 zł gotowe do realnego transferu Stripe.</p>
+      <div className="admin-payout-live-kpis">
+        <div className="glass-v2-panel primary">
+          <span>Gotowe do wypłaty</span>
+          <b>{readyRequests.length}</b>
+          <small>{formatMoney(totalReady)} od minimum 50 zł</small>
         </div>
-        <div>
+        <div className="glass-v2-panel">
+          <span>Oczekujące łącznie</span>
+          <b>{pendingRequests.length}</b>
+          <small>{formatMoney(totalPending)}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Wypłacone</span>
+          <b>{paidRequests.length}</b>
+          <small>{formatMoney(totalPaid)}</small>
+        </div>
+        <div className={`glass-v2-panel ${attentionCount > 0 ? 'warning' : ''}`}>
           <span>Wymaga uwagi</span>
-          <strong>{failedRequests.length + processingRequests.length}</strong>
-          <p>Pozycje processing/failed do sprawdzenia w logach Stripe i admin_logs.</p>
+          <b>{attentionCount}</b>
+          <small>Processing / failed</small>
         </div>
       </div>
 
-      <div className="admin-cron-card admin-cron-card-pro">
-        <div>
-          <strong>Automatyczne wypłaty — cron ready <em>Aktywne</em></strong>
-          <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje tylko pending wypłaty od 50 zł, blokuje duplikaty statusem processing i używa idempotency key.</span>
-        </div>
-        <button type="button" className="cron-run-button" onClick={onRunCron} disabled={!automationReady}>{automationReady ? 'Uruchom teraz' : 'Brak pending ≥ 50 zł'}</button>
-      </div>
-
-      <div className="admin-payout-toolbar">
-        <div className="admin-search-field">
-          <span>⌕</span>
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po ID użytkownika, statusie, Stripe ID..." />
-        </div>
-        <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
-          <option value="all">Status: wszystkie</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="paid">Paid</option>
-          <option value="rejected">Rejected</option>
-          <option value="failed">Failed</option>
-        </select>
-        <select value={amountFilter} onChange={event => setAmountFilter(event.target.value)}>
-          <option value="all">Kwota: wszystkie</option>
-          <option value="payable">Gotowe ≥ 50 zł</option>
-          <option value="small">Poniżej 50 zł</option>
-        </select>
-        <button type="button" onClick={exportCsv}>Eksport CSV</button>
-      </div>
-
-      <div className="admin-bulk-bar">
-        <strong>Zaznaczone: {selectedPending.length}</strong>
-        <button type="button" disabled={!selectedPending.length} onClick={() => bulkUpdate('paid')}>Zatwierdź wypłaty</button>
-        <button type="button" className="danger" disabled={!selectedPending.length} onClick={() => bulkUpdate('rejected')}>Odrzuć</button>
-        <button type="button" onClick={() => setSelectedIds([])}>Wyczyść</button>
-        <span>{filteredRequests.length} pozycji po filtrze</span>
-      </div>
-
-      <div className="admin-payout-table admin-payout-table-pro">
-        <div className="admin-payout-row header admin-payout-row-pro">
-          <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(r => r.normalizedStatus === 'pending') && filteredRequests.filter(r => r.normalizedStatus === 'pending').every(r => selectedIds.includes(r.id))} /></span>
-          <span>User ID</span>
-          <span>Data</span>
-          <span>Kwota</span>
-          <span>Status</span>
-          <span>Stripe</span>
-          <span>Akcje</span>
-        </div>
-
-        {filteredRequests.length ? filteredRequests.map(request => (
-          <div className="admin-payout-row admin-payout-row-pro" key={request.id}>
-            <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
-            <span className="mono">{request.user_id ? request.user_id.slice(0, 8) + '...' : '—'}</span>
-            <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
-            <span><b>{request.amountNumber.toFixed(2)} zł</b></span>
-            <span className={`payout-status ${request.normalizedStatus}`}>{request.normalizedStatus}</span>
-            <span className="admin-stripe-cell">
-              <b>{request.stripe_status || (request.normalizedStatus === 'rejected' ? 'rejected' : '—')}</b>
-              <small>{getStripeLabel(request)}</small>
-            </span>
-            <span className="admin-actions">
-              {request.normalizedStatus === 'pending' ? (
-                <>
-                  <button type="button" disabled={request.amountNumber < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>Zatwierdź</button>
-                  <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
-                </>
-              ) : (
-                <span className="admin-action-locked">Szczegóły</span>
-              )}
-            </span>
+      <div className="admin-payout-live-grid">
+        <div className="glass-v2-panel admin-payout-queue-card">
+          <div className="admin-payout-live-card-head">
+            <h2>Kolejka wypłat</h2>
+            <span>{readyRequests.length} gotowych</span>
           </div>
-        )) : (
-          <div className="admin-empty">
-            <strong>Brak zgłoszeń dla wybranych filtrów</strong>
-            <span>Zmień status, kwotę lub wyszukiwane ID.</span>
+          <div className="admin-payout-queue-list">
+            <div>
+              <strong>Gotowe do przelewu Stripe</strong>
+              <span>{readyRequests.length} zgłoszeń na {formatMoney(totalReady)}</span>
+            </div>
+            <div>
+              <strong>Poniżej minimum</strong>
+              <span>{smallPendingRequests.length} zgłoszeń poniżej 50 zł</span>
+            </div>
+            <div className={attentionCount > 0 ? 'warning' : 'ok'}>
+              <strong>{attentionCount > 0 ? 'Sprawdź ręcznie' : 'Brak błędów'}</strong>
+              <span>{attentionCount > 0 ? `${attentionCount} pozycji processing / failed.` : 'Nie ma pozycji wymagających interwencji.'}</span>
+            </div>
           </div>
-        )}
+        </div>
+
+        <div className="glass-v2-panel admin-payout-cron-card">
+          <div className="admin-payout-live-card-head">
+            <h2>Automatyka wypłat</h2>
+            <span className={automationReady ? 'ready' : 'idle'}>{automationReady ? 'Gotowe' : 'Pusto'}</span>
+          </div>
+          <p>Cron uruchamia tylko pending wypłaty od 50 zł i zabezpiecza transfery przed duplikacją przez status processing.</p>
+          <code>/.netlify/functions/process-payouts</code>
+          <button type="button" onClick={onRunCron} disabled={!automationReady}>
+            {automationReady ? 'Przetwórz gotowe wypłaty' : 'Brak pending ≥ 50 zł'}
+          </button>
+        </div>
+
+        <div className="glass-v2-panel admin-payout-actions-card">
+          <div className="admin-payout-live-card-head"><h2>Akcje zaznaczonych</h2></div>
+          <strong>{selectedPending.length} zaznaczonych oczekujących</strong>
+          <span>{selectedReady.length} z nich gotowych do wypłaty</span>
+          <div>
+            <button type="button" disabled={!selectedReady.length} onClick={() => bulkUpdate('paid')}>Zatwierdź wypłaty</button>
+            <button type="button" className="danger" disabled={!selectedPending.length} onClick={() => bulkUpdate('rejected')}>Odrzuć</button>
+          </div>
+        </div>
       </div>
 
-      <div className="stripe-connect-note stripe-connect-note-pro">
-        <strong>System finalizacji wypłat</strong>
-        <span>Manual approve wykonuje realny Stripe transfer. Cron może przetwarzać pending automatycznie, jeżeli ustawisz CRON_SECRET i harmonogram Netlify.</span>
+      <div className="glass-v2-panel admin-payout-transactions-card">
+        <div className="admin-payout-live-card-head">
+          <h2>Zgłoszenia wypłat</h2>
+          <button type="button" onClick={exportCsv}>Eksport CSV</button>
+        </div>
+
+        <div className="admin-payout-live-toolbar">
+          <label>
+            <span>⌕</span>
+            <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po ID, e-mailu, statusie, Stripe ID..." />
+          </label>
+          <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+            <option value="all">Status: wszystkie</option>
+            <option value="pending">Oczekuje</option>
+            <option value="processing">Przetwarzana</option>
+            <option value="paid">Wypłacona</option>
+            <option value="rejected">Odrzucona</option>
+            <option value="failed">Błąd</option>
+          </select>
+          <select value={amountFilter} onChange={event => setAmountFilter(event.target.value)}>
+            <option value="all">Kwota: wszystkie</option>
+            <option value="ready">Gotowe ≥ 50 zł</option>
+            <option value="small">Poniżej 50 zł</option>
+          </select>
+        </div>
+
+        <div className="admin-payout-live-table">
+          <div className="admin-payout-live-row header">
+            <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(row => row.normalizedStatus === 'pending') && filteredRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
+            <span>Użytkownik</span>
+            <span>Data</span>
+            <span>Kwota</span>
+            <span>Status</span>
+            <span>Stripe</span>
+            <span>Akcje</span>
+          </div>
+          {filteredRequests.length ? filteredRequests.map(request => (
+            <div className="admin-payout-live-row" key={request.id}>
+              <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
+              <span>
+                <strong>{request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
+                <small>{request.user_id || '—'}</small>
+              </span>
+              <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
+              <span className="amount">{formatMoney(request.amountNumber)}</span>
+              <span className={`status status-${request.normalizedStatus}`}>{getStatusLabel(request.normalizedStatus)}</span>
+              <span>
+                <strong>{request.stripe_status || '—'}</strong>
+                <small>{getStripeLabel(request)}</small>
+              </span>
+              <span className="actions">
+                {request.normalizedStatus === 'pending' ? (
+                  <>
+                    <button type="button" disabled={request.amountNumber < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>Zatwierdź</button>
+                    <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
+                  </>
+                ) : (
+                  <em>Zamknięte</em>
+                )}
+              </span>
+            </div>
+          )) : (
+            <div className="admin-payout-empty">
+              <strong>Brak zgłoszeń dla wybranych filtrów</strong>
+              <span>Zmień filtr albo poczekaj na nowe prawdziwe wypłaty użytkowników.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
 }
-
 
 function TopTipstersView() {
   const categories = [
@@ -14881,7 +15394,7 @@ function App() {
 
   async function fetchAdminFinanceReport() {
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
-      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
       return
     }
 
@@ -14889,23 +15402,27 @@ function App() {
       const { data, error } = await supabase.rpc('get_admin_finance_report')
 
       if (error || !data) {
-        setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
         return
       }
 
       setAdminFinanceReport({
         platform_commission: Number(data.platform_commission || 0),
+        premium_revenue: Number(data.premium_revenue || 0),
+        total_platform_revenue: Number(data.total_platform_revenue || Number(data.platform_commission || 0) + Number(data.premium_revenue || 0)),
         total_sales: Number(data.total_sales || 0),
         gross_sales: Number(data.gross_sales || 0),
         tipster_earnings: Number(data.tipster_earnings || 0),
         total_payouts: Number(data.total_payouts || 0),
         pending_payouts: Number(data.pending_payouts || 0),
         available_to_payout: Number(data.available_to_payout || 0),
+        wallet_topups: Number(data.wallet_topups || 0),
+        active_premium_users: Number(data.active_premium_users || 0),
         transactions: Array.isArray(data.transactions) ? data.transactions : []
       })
     } catch (error) {
       console.error('fetchAdminFinanceReport error', error)
-      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
     }
   }
 
@@ -15632,15 +16149,28 @@ function App() {
         )}
 
         {view === 'payments' && (
-          <PaymentsView payments={paymentHistory} />
+          <PaymentsView payments={paymentHistory} onViewChange={setView} onTopUp={startStripeTopup} />
         )}
 
         {view === 'subscriptions' && (
-          <SubscriptionView userPlan={effectiveAccountPlan} onUpgrade={runPremiumCheckout} onManage={openCustomerPortal} />
+          <SubscriptionView
+            userPlan={effectiveAccountPlan}
+            user={effectiveAccountProfile}
+            payments={paymentHistory}
+            onUpgrade={runPremiumCheckout}
+            onManage={openCustomerPortal}
+            onViewChange={setView}
+          />
         )}
 
         {view === 'earnings' && (
-          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} earnings={tipsterEarnings} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} />
+          <EarningsView
+            user={effectiveAccountProfile}
+            earnings={tipsterEarnings}
+            stripeConnectStatus={stripeConnectStatus}
+            onConnectStripe={connectStripeAccount}
+            onViewChange={setView}
+          />
         )}
 
         {view === 'profile' && (
@@ -15665,7 +16195,7 @@ function App() {
         )}
 
         {view === 'payouts' && (
-          <PayoutsView user={effectiveAccountProfile} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
+          <PayoutsView user={effectiveAccountProfile} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} onViewChange={setView} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
 
@@ -15673,6 +16203,7 @@ function App() {
           <AdminFinanceView
             report={adminFinanceReport}
             onRefresh={fetchAdminFinanceReport}
+            onViewChange={setView}
           />
         )}
 

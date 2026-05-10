@@ -1,0 +1,19 @@
+WERSJA 829
+- Zakładka „Zarobki” została przebudowana na żywą stronę Portfela.
+- Bez fake danych.
+- Źródło prawdy: realne dane earnings / get_tipster_earnings.
+- Strona pokazuje:
+  • zarobek netto,
+  • sprzedaż brutto,
+  • prowizję platformy,
+  • dostępne do wypłaty,
+  • realny wykres zarobków,
+  • ostatnie realne sprzedaże,
+  • status Stripe Connect.
+- Filtry wykresu:
+  • bieżący miesiąc,
+  • poprzedni miesiąc,
+  • ostatnie 3 miesiące,
+  • cały rok.
+- Przy braku sprzedaży pokazuje stan pusty zamiast fejkowego wykresu.
+- Przycisk Stripe prowadzi do podłączenia konta lub do zakładki Wypłaty.
