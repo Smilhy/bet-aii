@@ -8213,25 +8213,6 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
     <section className="wallet-panel wallet-ultra-page wallet-static-v2">
       <div className="wallet-v2-layout">
         <div className="wallet-v2-main">
-          <div className="wallet-v2-header">
-            <div>
-              <h1>Portfel</h1>
-              <p>Zarządzaj swoimi środkami i finansami</p>
-            </div>
-            <div className="wallet-v2-update">Ostatnia aktualizacja: <b>Teraz</b> ⟳</div>
-          </div>
-
-          <div className="wallet-v2-tabs glass-v2-panel">
-            <button type="button" className="active">Portfel</button>
-            <button type="button">Wpłaty</button>
-            <button type="button">Wypłaty</button>
-            <button type="button">Płatności</button>
-            <button type="button">Subskrypcja</button>
-            <button type="button">Zarobki</button>
-            <button type="button">Admin finanse</button>
-            <button type="button">Admin wypłaty</button>
-          </div>
-
           <div className="wallet-v2-hero glass-v2-panel">
             <div className="wallet-v2-hero-copy">
               <h2>Portfel <span>Premium</span></h2>
@@ -8275,6 +8256,17 @@ function WalletPanel({ wallet, unlockedTips, tips, onTopUp }) {
                 <span>Konto bankowe</span>
               </div>
             </div>
+          </div>
+
+          <div className="wallet-v2-tabs glass-v2-panel wallet-v2-tabs-under-hero">
+            <button type="button" className="active">Portfel</button>
+            <button type="button">Wpłaty</button>
+            <button type="button">Wypłaty</button>
+            <button type="button">Płatności</button>
+            <button type="button">Subskrypcja</button>
+            <button type="button">Zarobki</button>
+            <button type="button">Admin finanse</button>
+            <button type="button">Admin wypłaty</button>
           </div>
 
           <div className="wallet-v2-topstats">
