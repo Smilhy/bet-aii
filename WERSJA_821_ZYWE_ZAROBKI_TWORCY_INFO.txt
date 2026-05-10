@@ -1,0 +1,8 @@
+WERSJA 821
+- Usunięty fejk z karty „Zarobki twórcy”.
+- Karta bierze realne dane z earnings / get_tipster_earnings.
+- Pokazuje realny zarobek netto, sprzedaż brutto, prowizję platformy, liczbę sprzedaży i wykres z realnych danych.
+- Filtry: bieżący miesiąc, poprzedni miesiąc, ostatnie 3 miesiące, cały rok.
+- Brak sprzedaży = czytelny empty state zamiast sztucznego wykresu.
+- „Szczegółowe statystyki” prowadzą do prawdziwego widoku Zarobki.
+- SQL 821 naprawia funkcję get_tipster_earnings tak, aby uwzględniała sprzedaż typów i subskrypcje profilu.

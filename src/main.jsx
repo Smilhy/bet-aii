@@ -8179,7 +8179,7 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], earnings = null, onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
   const [accountHistoryRows, setAccountHistoryRows] = useState([])
   const [accountHistoryLoading, setAccountHistoryLoading] = useState(false)
   const [accountHistoryExpanded, setAccountHistoryExpanded] = useState(false)
@@ -8403,6 +8403,115 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
     ['Liverpool vs Bayer Leverkusen', 'Typ: Liverpool wygra', '61%']
   ]
 
+  const [walletEarningsPeriod, setWalletEarningsPeriod] = useState('current_month')
+  const creatorEarningsHistory = Array.isArray(earnings?.history) ? earnings.history : []
+  const startOfDay = value => {
+    const date = new Date(value)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const startOfMonth = value => {
+    const date = new Date(value)
+    date.setDate(1)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const addMonths = (value, months) => {
+    const date = new Date(value)
+    date.setMonth(date.getMonth() + months)
+    return date
+  }
+  const creatorPeriodRange = (() => {
+    const now = new Date(walletClock)
+    const currentStart = startOfMonth(now)
+    const nextStart = addMonths(currentStart, 1)
+    if (walletEarningsPeriod === 'previous_month') {
+      return { start: addMonths(currentStart, -1), end: currentStart, label: 'Poprzedni miesiąc' }
+    }
+    if (walletEarningsPeriod === 'last_3_months') {
+      return { start: addMonths(currentStart, -2), end: nextStart, label: 'Ostatnie 3 miesiące' }
+    }
+    if (walletEarningsPeriod === 'year') {
+      const yearStart = new Date(now.getFullYear(), 0, 1)
+      return { start: yearStart, end: new Date(now.getFullYear() + 1, 0, 1), label: 'Cały rok' }
+    }
+    return { start: currentStart, end: nextStart, label: 'Bieżący miesiąc' }
+  })()
+  const previousCreatorPeriodRange = (() => {
+    const span = creatorPeriodRange.end.getTime() - creatorPeriodRange.start.getTime()
+    return {
+      start: new Date(creatorPeriodRange.start.getTime() - span),
+      end: creatorPeriodRange.start
+    }
+  })()
+  const amountFromCreatorRow = row => Number(row?.amount || row?.net_amount || row?.tipster_amount || 0) || 0
+  const creatorRowsForRange = (range) => creatorEarningsHistory.filter(row => {
+    const createdAt = new Date(row?.created_at || 0)
+    return !Number.isNaN(createdAt.getTime()) && createdAt >= range.start && createdAt < range.end
+  })
+  const currentCreatorRows = creatorRowsForRange(creatorPeriodRange)
+  const previousCreatorRows = creatorRowsForRange(previousCreatorPeriodRange)
+  const creatorPeriodTotal = currentCreatorRows.reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+  const previousCreatorTotal = previousCreatorRows.reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+  const creatorGrowthPercent = previousCreatorTotal > 0
+    ? ((creatorPeriodTotal - previousCreatorTotal) / previousCreatorTotal) * 100
+    : (creatorPeriodTotal > 0 ? 100 : 0)
+  const creatorGrossTotal = currentCreatorRows.reduce((sum, row) => sum + Number(row?.gross_amount || (amountFromCreatorRow(row) + Number(row?.commission || 0)) || 0), 0)
+  const creatorCommissionTotal = currentCreatorRows.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+  const creatorSalesCount = currentCreatorRows.length
+  const creatorChartBuckets = (() => {
+    const useMonths = walletEarningsPeriod === 'last_3_months' || walletEarningsPeriod === 'year'
+    const buckets = []
+    if (useMonths) {
+      const cursor = startOfMonth(creatorPeriodRange.start)
+      while (cursor < creatorPeriodRange.end) {
+        const bucketStart = new Date(cursor)
+        const bucketEnd = addMonths(bucketStart, 1)
+        buckets.push({
+          key: `${bucketStart.getFullYear()}-${bucketStart.getMonth()}`,
+          label: bucketStart.toLocaleDateString('pl-PL', { month: 'short' }),
+          amount: creatorRowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+        })
+        cursor.setMonth(cursor.getMonth() + 1)
+      }
+      return buckets
+    }
+
+    const cursor = startOfDay(creatorPeriodRange.start)
+    while (cursor < creatorPeriodRange.end) {
+      const bucketStart = new Date(cursor)
+      const bucketEnd = new Date(bucketStart)
+      bucketEnd.setDate(bucketEnd.getDate() + 1)
+      buckets.push({
+        key: bucketStart.toISOString().slice(0, 10),
+        label: String(bucketStart.getDate()),
+        amount: creatorRowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+      })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return buckets
+  })()
+  const creatorChartMax = Math.max(1, ...creatorChartBuckets.map(bucket => Number(bucket.amount || 0)))
+  const creatorChartPoints = creatorChartBuckets.map((bucket, index) => {
+    const x = creatorChartBuckets.length <= 1 ? 0 : (index / (creatorChartBuckets.length - 1)) * 100
+    const y = 100 - (Number(bucket.amount || 0) / creatorChartMax) * 100
+    return `${x},${y}`
+  }).join(' ')
+  const creatorChartAreaPoints = creatorChartBuckets.length
+    ? `0,100 ${creatorChartPoints} 100,100`
+    : ''
+  const creatorChartXAxisLabels = creatorChartBuckets.length > 6
+    ? creatorChartBuckets.filter((_, index) => index === 0 || index === creatorChartBuckets.length - 1 || index % Math.ceil(creatorChartBuckets.length / 4) === 0)
+    : creatorChartBuckets
+  const creatorGrowthLabel = previousCreatorTotal > 0
+    ? `${creatorGrowthPercent >= 0 ? '+' : ''}${creatorGrowthPercent.toFixed(1)}% vs poprzedni okres`
+    : (creatorPeriodTotal > 0 ? 'Pierwszy zarobek w tym okresie' : 'Brak danych do porównania')
+  const creatorSourceLabel = source => {
+    if (source === 'profile_subscription') return 'Subskrypcja profilu'
+    if (source === 'tip_purchase') return 'Sprzedaż typu'
+    return 'Zarobek twórcy'
+  }
+
   const adminUnlocked = isAdminUser(user)
 
   function handleAdminWalletTab(targetView) {
@@ -8607,17 +8716,48 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
             </div>
 
             <div className="glass-v2-panel wallet-v2-card earnings-card-v2">
-              <div className="wallet-v2-card-head"><h3>Zarobki twórcy</h3><span>Twoje zarobki jako twórca typów</span></div>
+              <div className="wallet-v2-card-head"><h3>Zarobki twórcy</h3><span>Twoje realne zarobki ze sprzedaży typów i subskrypcji</span></div>
               <div className="earnings-topline">
-                <button type="button">Bieżący miesiąc ⌄</button>
-                <div><strong>2,450.75 zł</strong><small>+18.5% vs poprzedni miesiąc</small></div>
+                <select value={walletEarningsPeriod} onChange={event => setWalletEarningsPeriod(event.target.value)} aria-label="Okres zarobków">
+                  <option value="current_month">Bieżący miesiąc</option>
+                  <option value="previous_month">Poprzedni miesiąc</option>
+                  <option value="last_3_months">Ostatnie 3 miesiące</option>
+                  <option value="year">Cały rok</option>
+                </select>
+                <div><strong>{formatWalletPln(creatorPeriodTotal)}</strong><small>{creatorGrowthLabel}</small></div>
               </div>
-              <div className="earnings-chart-v2">
-                <div className="y-labels"><span>30</span><span>20</span><span>10</span><span>0</span></div>
-                <div className="chart-area"><span></span></div>
-                <div className="x-labels"><small>1 Maj</small><small>8 Maj</small><small>15 Maj</small><small>22 Maj</small><small>29 Maj</small></div>
-              </div>
-              <button type="button" className="wallet-v2-primary-btn">Szczegółowe statystyki</button>
+              {creatorSalesCount > 0 ? (
+                <>
+                  <div className="earnings-live-stats">
+                    <span><b>{formatWalletPln(creatorGrossTotal)}</b> sprzedaż brutto</span>
+                    <span><b>{formatWalletPln(creatorCommissionTotal)}</b> prowizja platformy</span>
+                    <span><b>{creatorSalesCount}</b> sprzedaży</span>
+                  </div>
+                  <div className="earnings-chart-v2 earnings-live-chart">
+                    <div className="y-labels"><span>{formatWalletPln(creatorChartMax)}</span><span>{formatWalletPln(creatorChartMax / 2)}</span><span>0 zł</span></div>
+                    <div className="chart-area">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <polygon points={creatorChartAreaPoints} />
+                        <polyline points={creatorChartPoints} />
+                      </svg>
+                    </div>
+                    <div className="x-labels">{creatorChartXAxisLabels.map(bucket => <small key={bucket.key}>{bucket.label}</small>)}</div>
+                  </div>
+                  <div className="earnings-live-last">
+                    {currentCreatorRows.slice(0, 2).map(row => (
+                      <span key={row.id || `${row.created_at}_${row.source}`}>
+                        {creatorSourceLabel(row.source)} <b>+{formatWalletPln(amountFromCreatorRow(row))}</b>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="earnings-empty-v2">
+                  <strong>Brak zarobków w tym okresie</strong>
+                  <span>Opublikuj pierwszy płatny typ albo uruchom subskrypcję profilu, aby zacząć zarabiać.</span>
+                </div>
+              )}
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('earnings')}>Szczegółowe statystyki</button>
             </div>
           </div>
         </div>
@@ -15145,6 +15285,7 @@ function App() {
             unlockedTips={unlockedTips}
             tips={tips}
             payments={paymentHistory}
+            earnings={tipsterEarnings}
             onTopUp={() => startStripeTopup(100)}
             user={effectiveAccountProfile}
             userPlan={effectiveAccountPlan}
