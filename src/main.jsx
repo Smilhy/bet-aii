@@ -8179,10 +8179,13 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], earnings = null, onTopUp, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], earnings = null, stripeConnectStatus = null, onTopUp, onBuyTokens, onSellTokens, onConnectStripe, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
   const [accountHistoryRows, setAccountHistoryRows] = useState([])
   const [accountHistoryLoading, setAccountHistoryLoading] = useState(false)
   const [accountHistoryExpanded, setAccountHistoryExpanded] = useState(false)
+  const [tokenExchangeMode, setTokenExchangeMode] = useState(null)
+  const [tokenExchangePacks, setTokenExchangePacks] = useState(1)
+  const [tokenExchangeBusy, setTokenExchangeBusy] = useState(false)
   const [walletClock, setWalletClock] = useState(() => new Date())
   useEffect(() => {
     const timer = window.setInterval(() => setWalletClock(new Date()), 60 * 1000)
@@ -8219,6 +8222,27 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
   }
   const formatWalletPln = value => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const formatTokenCount = value => Number(value || 0).toLocaleString('pl-PL')
+  const tokenExchangeTokens = Math.max(1, Number(tokenExchangePacks || 1)) * 1000
+  const tokenBuyPrice = Math.max(1, Number(tokenExchangePacks || 1)) * 1.10
+  const tokenSellPrice = Math.max(1, Number(tokenExchangePacks || 1)) * 0.90
+  const openTokenExchange = mode => {
+    setTokenExchangePacks(1)
+    setTokenExchangeMode(mode)
+  }
+  const closeTokenExchange = () => {
+    if (!tokenExchangeBusy) setTokenExchangeMode(null)
+  }
+  const submitTokenExchange = async () => {
+    const packs = Math.max(1, Math.floor(Number(tokenExchangePacks || 1)))
+    setTokenExchangeBusy(true)
+    try {
+      if (tokenExchangeMode === 'buy') await onBuyTokens?.(packs)
+      if (tokenExchangeMode === 'sell') await onSellTokens?.(packs)
+      setTokenExchangeMode(null)
+    } finally {
+      setTokenExchangeBusy(false)
+    }
+  }
   const formatHistoryDate = value => {
     const date = value ? new Date(value) : null
     if (!date || Number.isNaN(date.getTime())) return '—'
@@ -8275,6 +8299,8 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         let icon = '▣'
         if (type === 'topup') { title = row.provider === 'stripe' ? 'Wpłata Stripe' : 'Wpłata środków'; icon = '▣' }
         else if (type === 'payout') { title = 'Wypłata środków'; icon = '⇡' }
+        else if ((type === 'spend' || type === 'purchase') && row.provider === 'token_exchange') { title = 'Kupno żetonów'; icon = '◎' }
+        else if (type === 'token_exchange') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
         else if (type === 'spend' || type === 'purchase') { title = 'Zakup z portfela'; icon = '◎' }
         else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '★' }
         return {
@@ -8313,6 +8339,8 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         if (reason === 'live_chat_tip_sent') { title = 'Tip wysłany'; icon = '↗' }
         else if (reason === 'live_chat_tip_received') { title = 'Tip otrzymany'; icon = '♡' }
         else if (reason === 'welcome_bonus') { title = 'Bonus powitalny'; icon = '🎁' }
+        else if (reason === 'token_purchase') { title = 'Kupno żetonów'; icon = '◎' }
+        else if (reason === 'token_exchange_to_wallet') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
         else if (reason === 'live_chat_daily_leader') { title = 'Nagroda lidera czatu'; icon = '🏆' }
         else if (reason === 'live_chat_daily_message') { title = 'Bonus za aktywność'; icon = '💬' }
         if (reason === 'live_chat_tip_sent' && refData?.to_email) title = `Tip wysłany do ${String(refData.to_email).split('@')[0]}`
@@ -8575,6 +8603,27 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
             </div>
           </div>
 
+          <div className="wallet-stripe-connect-card glass-v2-panel">
+            <div className="wallet-stripe-connect-main">
+              <div className="wallet-stripe-connect-icon">▣</div>
+              <div>
+                <div className="wallet-stripe-connect-head">
+                  <h3>Moje konto Stripe</h3>
+                  <span className={stripeConnectStatus?.payouts_enabled ? 'stripe-status-pill ready' : stripeConnectStatus?.stripe_account_id ? 'stripe-status-pill pending' : 'stripe-status-pill empty'}>
+                    {stripeConnectStatus?.payouts_enabled ? 'Stripe aktywny' : stripeConnectStatus?.stripe_account_id ? 'Dokończ konfigurację' : 'Niepodłączone'}
+                  </span>
+                </div>
+                <p>
+                  Podłącz swoje konto Stripe Connect, żeby sprzedawać single i subskrypcje profilu. Kupujący płaci na stronie, Stripe automatycznie kieruje <b>80%</b> do Ciebie, a <b>20%</b> marży zostaje dla platformy.
+                </p>
+                <small>Kupujący nie wpisuje konta bankowego sprzedawcy. Dane bankowe podajesz tylko bezpiecznie w Stripe.</small>
+              </div>
+            </div>
+            <button type="button" onClick={() => onConnectStripe?.()}>
+              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+            </button>
+          </div>
+
           <div className="wallet-v2-tabs glass-v2-panel wallet-v2-tabs-under-hero">
             <button type="button" className="active">Portfel</button>
             <button type="button">Wpłaty</button>
@@ -8624,10 +8673,11 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
             <div className="glass-v2-panel wallet-v2-card">
               <div className="wallet-v2-card-head"><h3>Szybkie operacje</h3></div>
               <div className="wallet-v2-action-grid">
-                <button type="button"><b>＋</b><span><strong>Wpłać środki</strong><small>Ulepsz konto błyskawicznie</small></span></button>
-                <button type="button"><b>⇡</b><span><strong>Wypłać środki</strong><small>Wypłata na konto bankowe</small></span></button>
-                <button type="button"><b>◎</b><span><strong>Kup żetony</strong><small>Doładuj swoje żetony</small></span></button>
-                <button type="button"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
+                <button type="button" onClick={onTopUp}><b>＋</b><span><strong>Wpłać środki</strong><small>Doładuj saldo przez Stripe</small></span></button>
+                <button type="button" onClick={() => onViewChange?.('payouts')}><b>⇡</b><span><strong>Wypłać środki</strong><small>Przejdź do wypłat</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('buy')}><b>◎</b><span><strong>Kup żetony</strong><small>1000 żetonów = 1,10 zł</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('sell')}><b>⇄</b><span><strong>Wymień żetony na walutę</strong><small>1000 żetonów = 0,90 zł</small></span></button>
+                <button type="button" onClick={() => setAccountHistoryExpanded(true)} className="wallet-v2-action-history"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
               </div>
             </div>
 
@@ -8809,6 +8859,37 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
           </div>
         </aside>
       </div>
+
+      {tokenExchangeMode && (
+        <div className="wallet-token-exchange-overlay" onMouseDown={event => { if (event.target === event.currentTarget) closeTokenExchange() }}>
+          <div className="wallet-token-exchange-modal glass-v2-panel">
+            <button type="button" className="wallet-token-exchange-close" onClick={closeTokenExchange}>×</button>
+            <h3>{tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony na walutę'}</h3>
+            <p>
+              {tokenExchangeMode === 'buy'
+                ? 'Kupujesz drożej: 1000 żetonów kosztuje 1,10 zł.'
+                : 'Sprzedajesz taniej: 1000 żetonów daje 0,90 zł.'}
+            </p>
+            <label>
+              <span>Liczba pakietów po 1000 żetonów</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={tokenExchangePacks}
+                onChange={event => setTokenExchangePacks(Math.max(1, Math.floor(Number(event.target.value || 1))))}
+              />
+            </label>
+            <div className="wallet-token-exchange-summary">
+              <div><small>Żetony</small><b>{formatTokenCount(tokenExchangeTokens)}</b></div>
+              <div><small>{tokenExchangeMode === 'buy' ? 'Koszt' : 'Otrzymasz'}</small><b>{formatWalletPln(tokenExchangeMode === 'buy' ? tokenBuyPrice : tokenSellPrice)}</b></div>
+            </div>
+            <button type="button" className="wallet-v2-primary-btn" disabled={tokenExchangeBusy} onClick={submitTokenExchange}>
+              {tokenExchangeBusy ? 'Przetwarzam...' : tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony'}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -14393,6 +14474,42 @@ function App() {
     }
   }
 
+  async function buyWalletTokens(packs = 1) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić żetony.' })
+      return
+    }
+    try {
+      const { data, error } = await supabase.rpc('buy_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
+      if (error) throw error
+      showToast({ type: 'success', title: 'Kupiono żetony', message: `Dodano ${Number(data?.tokens || packs * 1000).toLocaleString('pl-PL')} żetonów.` })
+      await fetchWalletBalance(sessionUser.id)
+      await fetchCurrentTokenBalance()
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
+    } catch (error) {
+      showToast({ type: 'error', title: 'Nie udało się kupić żetonów', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
+  async function sellWalletTokens(packs = 1) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby wymienić żetony.' })
+      return
+    }
+    try {
+      const { data, error } = await supabase.rpc('sell_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
+      if (error) throw error
+      showToast({ type: 'success', title: 'Wymieniono żetony', message: `Dodano ${Number(data?.pln || packs * 0.9).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł do salda.` })
+      await fetchWalletBalance(sessionUser.id)
+      await fetchCurrentTokenBalance()
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
+    } catch (error) {
+      showToast({ type: 'error', title: 'Nie udało się wymienić żetonów', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
   async function startStripeTopup(amount = 100) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby doładować konto.' })
@@ -15286,7 +15403,11 @@ function App() {
             tips={tips}
             payments={paymentHistory}
             earnings={tipsterEarnings}
+            stripeConnectStatus={stripeConnectStatus}
             onTopUp={() => startStripeTopup(100)}
+            onBuyTokens={buyWalletTokens}
+            onSellTokens={sellWalletTokens}
+            onConnectStripe={connectStripeAccount}
             user={effectiveAccountProfile}
             userPlan={effectiveAccountPlan}
             onViewChange={setView}

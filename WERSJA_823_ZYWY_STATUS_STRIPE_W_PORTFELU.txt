@@ -1,0 +1,11 @@
+WERSJA 823
+- Dodany żywy pasek Stripe między banerem Portfela a kafelkami.
+- Status pokazuje się z realnego stripeConnectStatus:
+  • Niepodłączone
+  • Dokończ konfigurację
+  • Stripe aktywny
+- Przycisk jest żywy:
+  • Podłącz Stripe
+  • Dokończ Stripe
+  • Zarządzaj Stripe
+- Kliknięcie używa istniejącej logiki Stripe Connect.

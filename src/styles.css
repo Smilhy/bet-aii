@@ -28832,3 +28832,111 @@ button.betfolio-fetch-btn{
 }
 .earnings-empty-v2 strong{color:#eefaff!important;font-size:16px!important}
 .earnings-empty-v2 span{max-width:390px!important;color:#91a8bc!important;font-size:13px!important;line-height:1.45!important}
+
+
+/* WERSJA 822 — szybkie operacje i wymiana żetonów */
+.wallet-v2-action-grid button{cursor:pointer!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important}
+.wallet-v2-action-grid button:hover{transform:translateY(-2px)!important;border-color:rgba(55,216,226,.28)!important;box-shadow:0 16px 30px rgba(0,0,0,.20),0 0 22px rgba(18,235,223,.08)!important}
+.wallet-v2-action-grid .wallet-v2-action-history{grid-column:span 2!important}
+.wallet-token-exchange-overlay{position:fixed!important;inset:0!important;z-index:1200!important;display:grid!important;place-items:center!important;padding:20px!important;background:rgba(2,8,16,.72)!important;backdrop-filter:blur(12px)!important}
+.wallet-token-exchange-modal{position:relative!important;width:min(470px,100%)!important;padding:28px!important;border-radius:24px!important;border:1px solid rgba(45,228,255,.20)!important;background:linear-gradient(180deg,rgba(8,27,49,.98),rgba(4,14,27,.98))!important;box-shadow:0 26px 80px rgba(0,0,0,.48),0 0 44px rgba(35,223,255,.10)!important}
+.wallet-token-exchange-close{position:absolute!important;right:16px!important;top:14px!important;width:34px!important;height:34px!important;border-radius:999px!important;border:1px solid rgba(45,228,255,.18)!important;background:rgba(6,20,35,.72)!important;color:#dffaff!important;font-size:22px!important;cursor:pointer!important}
+.wallet-token-exchange-modal h3{margin:0 0 8px!important;color:#f4fbff!important;font-size:24px!important}
+.wallet-token-exchange-modal p{margin:0 0 18px!important;color:#a8bdd1!important;line-height:1.45!important}
+.wallet-token-exchange-modal label{display:grid!important;gap:8px!important;margin-bottom:16px!important}
+.wallet-token-exchange-modal label span{color:#dcecf7!important;font-weight:800!important;font-size:13px!important}
+.wallet-token-exchange-modal input{height:50px!important;border-radius:14px!important;border:1px solid rgba(45,228,255,.18)!important;background:rgba(4,15,28,.84)!important;color:#f5fbff!important;padding:0 16px!important;font-size:17px!important;font-weight:900!important}
+.wallet-token-exchange-summary{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;margin:0 0 18px!important}
+.wallet-token-exchange-summary div{display:grid!important;gap:5px!important;padding:14px!important;border-radius:16px!important;border:1px solid rgba(45,228,255,.14)!important;background:rgba(7,22,39,.72)!important}
+.wallet-token-exchange-summary small{color:#93aabd!important;font-size:12px!important;font-weight:800!important}
+.wallet-token-exchange-summary b{color:#20eadc!important;font-size:22px!important}
+
+
+/* WERSJA 823 — żywy pasek Stripe w Portfelu */
+.wallet-stripe-connect-card{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:24px!important;
+  min-height:116px!important;
+  padding:22px 28px!important;
+  margin:0 0 2px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(45,228,255,.16)!important;
+  background:linear-gradient(135deg,rgba(6,24,40,.96),rgba(7,29,47,.92))!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.wallet-stripe-connect-main{
+  display:flex!important;
+  align-items:center!important;
+  gap:18px!important;
+  min-width:0!important;
+}
+.wallet-stripe-connect-icon{
+  flex:0 0 auto!important;
+  width:58px!important;
+  height:58px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:18px!important;
+  color:#2ee9ff!important;
+  font-size:23px!important;
+  font-weight:1000!important;
+  border:1px solid rgba(45,228,255,.22)!important;
+  background:rgba(22,201,242,.08)!important;
+  box-shadow:0 0 28px rgba(45,228,255,.09)!important;
+}
+.wallet-stripe-connect-head{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+  margin-bottom:8px!important;
+}
+.wallet-stripe-connect-head h3{
+  margin:0!important;
+  color:#f4fbff!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+.wallet-stripe-connect-card p{
+  margin:0 0 6px!important;
+  color:#dbe7f3!important;
+  font-size:15px!important;
+  line-height:1.45!important;
+}
+.wallet-stripe-connect-card p b{color:#24e9ff!important}
+.wallet-stripe-connect-card small{
+  color:#8fa9bd!important;
+  font-size:13px!important;
+  line-height:1.35!important;
+}
+.wallet-stripe-connect-card > button{
+  flex:0 0 auto!important;
+  min-width:206px!important;
+  min-height:58px!important;
+  padding:0 22px!important;
+  border:0!important;
+  border-radius:18px!important;
+  color:#fff!important;
+  font-size:15px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  background:linear-gradient(135deg,#22cfff,#246fe8)!important;
+  box-shadow:0 16px 34px rgba(22,124,239,.28)!important;
+  transition:transform .18s ease, box-shadow .18s ease!important;
+}
+.wallet-stripe-connect-card > button:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 20px 42px rgba(22,124,239,.36)!important;
+}
+@media(max-width:900px){
+  .wallet-stripe-connect-card{
+    flex-direction:column!important;
+    align-items:stretch!important;
+  }
+  .wallet-stripe-connect-card > button{
+    width:100%!important;
+  }
+}

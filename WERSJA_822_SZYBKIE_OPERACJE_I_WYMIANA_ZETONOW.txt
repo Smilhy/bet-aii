@@ -1,0 +1,8 @@
+WERSJA 822
+- Dodany nowy klawisz: Wymień żetony na walutę.
+- Ożywione szybkie operacje.
+- Kurs nominalny: 1000 żetonów = 1 zł.
+- Kupno: 1000 żetonów = 1,10 zł.
+- Wymiana na walutę: 1000 żetonów = 0,90 zł.
+- Operacje zapisują się w historii transakcji.
+- SQL do uruchomienia: BETAI_SQL_822_KUPNO_I_WYMIANA_ZETONOW.sql
