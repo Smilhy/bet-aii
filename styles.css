@@ -26839,3 +26839,144 @@ button.betfolio-fetch-btn{
     margin-top:-62px!important;
   }
 }
+
+
+/* WERSJA 784 — szersza lewa tabela bez poziomego scrolla */
+.add-tip-betfolio-page .betfolio-add-shell.ticket-hidden{
+  grid-template-columns:340px minmax(0,1fr)!important;
+}
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible{
+  grid-template-columns:340px minmax(0,1fr) 330px!important;
+}
+.add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav{
+  width:340px!important;
+  max-width:340px!important;
+}
+.add-tip-betfolio-page .football-country-tree,
+.add-tip-betfolio-page .football-leagues-list{
+  overflow-x:hidden!important;
+}
+.add-tip-betfolio-page .football-country-node,
+.add-tip-betfolio-page .football-league-node{
+  width:100%!important;
+  min-width:0!important;
+}
+.add-tip-betfolio-page .football-country-label{
+  width:100%!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+@media (max-width: 1500px){
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-hidden{
+    grid-template-columns:320px minmax(0,1fr)!important;
+  }
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-visible{
+    grid-template-columns:320px minmax(0,1fr) 320px!important;
+  }
+  .add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav{
+    width:320px!important;
+    max-width:320px!important;
+  }
+}
+
+@media (max-width: 1380px){
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-hidden{
+    grid-template-columns:290px minmax(0,1fr)!important;
+  }
+  .add-tip-betfolio-page .betfolio-add-shell.ticket-visible{
+    grid-template-columns:290px minmax(0,1fr) 300px!important;
+  }
+  .add-tip-betfolio-page .betfolio-left.betai-sportsbook-nav{
+    width:290px!important;
+    max-width:290px!important;
+  }
+}
+
+
+/* WERSJA 785 — przełącznik auto / ręcznie + formularz ręczny */
+.betfolio-add-mode-switch{
+  display:inline-flex;
+  gap:10px;
+  margin:16px 0 20px;
+  padding:6px;
+  border-radius:18px;
+  background:rgba(8,18,38,.78);
+  border:1px solid rgba(46,219,255,.14);
+}
+.betfolio-add-mode-switch button{
+  min-width:220px;
+  padding:13px 18px;
+  border:none;
+  border-radius:14px;
+  background:transparent;
+  color:#b9cce5;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s ease;
+}
+.betfolio-add-mode-switch button.active{
+  color:#06131f;
+  background:linear-gradient(135deg,#2ce4ff,#8c7bff);
+  box-shadow:0 10px 24px rgba(44,228,255,.2);
+}
+.betfolio-manual-card{
+  padding:20px;
+  border-radius:24px;
+  background:linear-gradient(180deg,rgba(20,31,54,.84),rgba(16,26,44,.88));
+  border:1px solid rgba(58,203,255,.14);
+}
+.betfolio-manual-section + .betfolio-manual-section{
+  margin-top:16px;
+}
+.betfolio-manual-section h3{
+  margin:0 0 18px;
+  color:#eef6ff;
+  font-size:26px;
+  font-weight:900;
+}
+.betfolio-manual-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+}
+.betfolio-manual-grid label{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.betfolio-manual-grid label span{
+  color:#b7cae4;
+  font-size:13px;
+  font-weight:700;
+}
+.betfolio-manual-span-2{
+  grid-column:span 2;
+}
+.betfolio-manual-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:12px;
+}
+.betfolio-manual-submit{
+  min-width:180px;
+}
+@media (max-width: 1280px){
+  .betfolio-add-mode-switch button{min-width:180px}
+  .betfolio-manual-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width: 860px){
+  .betfolio-add-mode-switch{
+    display:flex;
+    flex-direction:column;
+  }
+  .betfolio-add-mode-switch button,
+  .betfolio-manual-grid,
+  .betfolio-manual-span-2{
+    min-width:0;
+    grid-column:auto;
+  }
+  .betfolio-manual-grid{grid-template-columns:1fr}
+}

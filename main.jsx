@@ -4381,6 +4381,17 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [sportDayCounts, setSportDayCounts] = useState({})
   const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
   const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
+  const [addTipMode, setAddTipMode] = useState('auto')
+  const [manualSelectedMatch, setManualSelectedMatch] = useState(null)
+  const [manualForm, setManualForm] = useState({
+    sport: 'Piłka nożna',
+    country: 'Polska',
+    league: 'Ekstraklasa',
+    event: '',
+    datetimeLocal: '',
+    betType: '',
+    odds: '',
+  })
 
   const sportData = sportsbook[form.sport] || { leagues: {} }
   const countryMap = sportData.countries || null
@@ -6266,8 +6277,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   function regenerateAi() {
     const nextConfidence = Math.min(96, Math.max(52, (selectedMarket?.confidence || 70) + Math.round((Math.random() * 8) - 2)))
-    const home = selectedMatch?.home || 'Gospodarze'
-    const away = selectedMatch?.away || 'Goście'
+    const home = effectiveSelectedMatch?.home || 'Gospodarze'
+    const away = effectiveSelectedMatch?.away || 'Goście'
     const nextText = `${home} vs ${away}: model AI ocenia ten typ jako ${nextConfidence >= 80 ? 'bardzo mocny' : nextConfidence >= 70 ? 'solidny' : 'ostrożny'} wybór. Główne argumenty: forma z ostatnich spotkań, jakość sytuacji bramkowych oraz dopasowanie kursu do ryzyka.`
     updateForm({
       aiAnalysis: nextText,
@@ -6276,7 +6287,92 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     onToast?.({ type: 'success', title: 'AI odświeżona', message: 'Wygenerowaliśmy nową wersję analizy i poziomu pewności.' })
   }
 
+  function switchAddTipMode(mode) {
+    setAddTipMode(mode)
+    setShowMarketBoard(false)
+    setTicketMarketSelected(false)
+    if (mode !== 'manual') setManualSelectedMatch(null)
+  }
+
+  function updateManualForm(patch) {
+    setManualForm(prev => ({ ...prev, ...patch }))
+  }
+
+  function parseManualEventName(value) {
+    const raw = String(value || '').trim()
+    if (!raw) return { home: 'Gospodarze', away: 'Goście' }
+    const separators = [' vs ', ' VS ', ' - ', '–', '—', ':']
+    for (const separator of separators) {
+      if (raw.includes(separator)) {
+        const [home, away] = raw.split(separator).map(item => String(item || '').trim()).filter(Boolean)
+        if (home && away) return { home, away }
+      }
+    }
+    return { home: raw, away: 'Rywale' }
+  }
+
+  function formatManualDateTimeParts(value) {
+    const raw = String(value || '').trim()
+    if (!raw) return { date: '', time: '' }
+    const parsed = new Date(raw)
+    if (Number.isNaN(parsed.getTime())) return { date: '', time: '' }
+    const day = String(parsed.getDate()).padStart(2, '0')
+    const month = String(parsed.getMonth() + 1).padStart(2, '0')
+    const year = parsed.getFullYear()
+    const hours = String(parsed.getHours()).padStart(2, '0')
+    const minutes = String(parsed.getMinutes()).padStart(2, '0')
+    return { date: `${day}.${month}.${year}`, time: `${hours}:${minutes}` }
+  }
+
+  function handleManualAddToTicket(event) {
+    event?.preventDefault?.()
+    if (!String(manualForm.event || '').trim()) {
+      onToast?.({ type: 'error', title: 'Brak wydarzenia', message: 'Wpisz nazwę meczu lub wydarzenia.' })
+      return
+    }
+    if (!String(manualForm.betType || '').trim()) {
+      onToast?.({ type: 'error', title: 'Brak typu', message: 'Wpisz typ ręczny, który chcesz dodać.' })
+      return
+    }
+    if (!String(manualForm.odds || '').trim()) {
+      onToast?.({ type: 'error', title: 'Brak kursu', message: 'Podaj kurs dla typu ręcznego.' })
+      return
+    }
+
+    const teams = parseManualEventName(manualForm.event)
+    const dt = formatManualDateTimeParts(manualForm.datetimeLocal)
+    const nextMatch = {
+      id: `manual-${Date.now()}`,
+      sport: manualForm.sport,
+      country: manualForm.country,
+      league: manualForm.league,
+      home: teams.home,
+      away: teams.away,
+      date: dt.date || form.date,
+      time: dt.time || form.time,
+      commence_time: manualForm.datetimeLocal ? new Date(manualForm.datetimeLocal).toISOString() : null,
+      markets: [],
+      source: 'manual-entry',
+    }
+
+    setManualSelectedMatch(nextMatch)
+    updateForm({
+      sport: manualForm.sport,
+      country: manualForm.country,
+      league: manualForm.league,
+      market: 'Ręczny typ',
+      betType: manualForm.betType,
+      odds: manualForm.odds,
+      date: dt.date || form.date,
+      time: dt.time || form.time,
+      matchId: nextMatch.id,
+    })
+    setTicketMarketSelected(true)
+    onToast?.({ type: 'success', title: 'Dodano do kuponu', message: 'Ręczny typ został dodany. Możesz go teraz opublikować.' })
+  }
+
   async function handlePublish() {
+    const publishMatch = effectiveSelectedMatch
     if (!user?.id) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
       return
@@ -6295,8 +6391,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       toggleAccess('premium')
       return
     }
-    if (!selectedMatch) {
-      onToast?.({ type: 'error', title: 'Brak meczu', message: 'Wybierz mecz przed publikacją typu.' })
+    if (!publishMatch) {
+      onToast?.({ type: 'error', title: 'Brak meczu', message: addTipMode === 'manual' ? 'Dodaj najpierw typ ręczny do kuponu.' : 'Wybierz mecz przed publikacją typu.' })
       return
     }
 
@@ -6339,9 +6435,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_email: email,
       sport: form.sport,
       league: currentLeague,
-      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
-      team_home: selectedMatch.home,
-      team_away: selectedMatch.away,
+      match: `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: publishMatch.home,
+      team_away: publishMatch.away,
       match_time: combinedIso,
       market: form.market,
       bet_type: form.betType,
@@ -6371,9 +6467,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_name: username,
       author_email: email,
       league: currentLeague,
-      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
-      team_home: selectedMatch.home,
-      team_away: selectedMatch.away,
+      match: `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: publishMatch.home,
+      team_away: publishMatch.away,
       match_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
@@ -6389,7 +6485,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_id: user.id,
       author_name: username,
       league: currentLeague,
-      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       description: form.description,
@@ -6399,7 +6495,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       user_id: user.id,
       username,
       league: currentLeague,
-      match: `${selectedMatch.home} vs ${selectedMatch.away}`,
+      match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       description: form.description,
@@ -6537,7 +6633,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <div className="betfolio-details-top market-board-match-header">
               <button type="button" className="betfolio-small-outline" onClick={returnToSearchResults}>← Wróć do meczów</button>
               <div>
-                <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Brak wybranego meczu'}</strong>
+                <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak wybranego meczu'}</strong>
                 <span>{selectedMatch ? `${selectedMatch.date} • ${selectedMatch.time} • ${selectedMatch.league || currentLeague}` : 'Wybierz mecz z listy powyżej'}</span>
               </div>
             </div>
@@ -6556,7 +6652,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
 
             <div className="betfolio-market-groups">
-              {!selectedMatch && (
+              {!effectiveSelectedMatch && (
                 <div className="betfolio-empty-state no-fake-empty">
                   <strong>Brak realnego wydarzenia</strong>
                   <span>Rynki pojawią się dopiero po pobraniu prawdziwego meczu z API.</span>
@@ -6608,7 +6704,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
           <div className="betfolio-ticket-card">
             <small>Dodaj analizę</small>
-            <strong>{selectedMatch ? `${selectedMatch.home} - ${selectedMatch.away}` : 'Brak realnego meczu'}</strong>
+            <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak realnego meczu'}</strong>
             <span>{form.market} • {form.betType}</span>
             <div className="betfolio-ticket-row">
               <label>Kurs</label>
