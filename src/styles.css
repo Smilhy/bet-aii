@@ -28386,3 +28386,52 @@ button.betfolio-fetch-btn{
     width:100% !important;
   }
 }
+
+
+/* WERSJA 805 — realne herby + wyrównana prawa kolumna */
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right,
+.add-tip-betfolio-page .betfolio-right{
+  top:88px !important;
+  align-self:start !important;
+  margin-top:0 !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap{
+  position:relative !important;
+  width:64px !important;
+  height:64px !important;
+  display:grid !important;
+  place-items:center !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap img,
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap .betfolio-match-hero-fallback{
+  grid-area:1 / 1 !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap img{
+  width:64px !important;
+  height:64px !important;
+  object-fit:contain !important;
+  border-radius:18px !important;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.28)) !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap.has-logo:not(.logo-failed) .betfolio-match-hero-fallback{
+  display:none !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap.logo-failed img{
+  display:none !important;
+}
+.add-tip-betfolio-page .betfolio-match-hero-logo-wrap .betfolio-match-hero-fallback{
+  width:64px !important;
+  height:64px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:18px !important;
+}
+@media (max-width: 900px){
+  .add-tip-betfolio-page .betfolio-match-hero-logo-wrap,
+  .add-tip-betfolio-page .betfolio-match-hero-logo-wrap img,
+  .add-tip-betfolio-page .betfolio-match-hero-logo-wrap .betfolio-match-hero-fallback{
+    width:56px !important;
+    height:56px !important;
+  }
+}

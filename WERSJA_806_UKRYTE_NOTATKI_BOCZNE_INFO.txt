@@ -1,0 +1,6 @@
+WERSJA 806
+- Usunięte z widoku dwie notatki w lewej kolumnie:
+  1. opis „Tryb API-FOOTBALL Pro...”
+  2. status / komunikat techniczny API na dole.
+- Logika API, cache, limity i statusy nadal zostają w kodzie; tylko nie są pokazywane użytkownikowi.
+- Zawiera też poprawki z wersji 805: realne herby + wyrównanie prawej kolumny.

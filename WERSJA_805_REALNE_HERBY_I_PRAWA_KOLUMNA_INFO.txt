@@ -1,0 +1,5 @@
+WERSJA 805
+- Prawa kolumna obniżona i wyrównana, żeby nie była ucinana u góry.
+- Realny herb drużyny ma pierwszeństwo w banerze meczu.
+- Jeśli API nie zwróci logo lub obrazek się nie załaduje, litera pojawia się tylko awaryjnie.
+- Do danych meczu dopisane są teamId oraz linki do logo z API-Sports; zapisują się razem z fixture_json w cache 24h.

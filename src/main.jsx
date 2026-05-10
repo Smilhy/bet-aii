@@ -6700,9 +6700,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             ))}
 
-            <div className="football-pro-mode-note">
-              Tryb API-FOOTBALL Pro: aktywna tylko piłka nożna, żeby nie przepalać limitów darmowych sportów.
-            </div>
           </div>
 
           <div className="betfolio-left-stats">
@@ -6717,9 +6714,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
           </div>
 
-          <div className="betfolio-side-note">
-            {liveFixturesStatus || 'Kliknij sport → kategorię/państwo → ligę, a potem pobierz mecze i kursy.'}
-          </div>
         </aside>
 
         <div className={`betfolio-center glass-ultra-panel ${showMarketBoard ? 'market-board-mode' : ''}`}>
@@ -6908,11 +6902,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {effectiveSelectedMatch && (
                 <div className="betfolio-match-hero">
                   <div className="betfolio-match-hero-team">
-                    {effectiveSelectedMatch.homeLogo ? (
-                      <img src={effectiveSelectedMatch.homeLogo} alt="" />
-                    ) : (
-                      <span>{String(effectiveSelectedMatch.home || '').trim().charAt(0) || 'H'}</span>
-                    )}
+                    <div className={`betfolio-match-hero-logo-wrap ${effectiveSelectedMatch.homeLogo ? 'has-logo' : ''}`}>
+                      {effectiveSelectedMatch.homeLogo && (
+                        <img
+                          src={effectiveSelectedMatch.homeLogo}
+                          alt=""
+                          onError={(event) => event.currentTarget.parentElement?.classList.add('logo-failed')}
+                        />
+                      )}
+                      <span className="betfolio-match-hero-fallback">{String(effectiveSelectedMatch.home || '').trim().charAt(0) || 'H'}</span>
+                    </div>
                     <strong>{effectiveSelectedMatch.home}</strong>
                   </div>
 
@@ -6922,11 +6921,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                   </div>
 
                   <div className="betfolio-match-hero-team">
-                    {effectiveSelectedMatch.awayLogo ? (
-                      <img src={effectiveSelectedMatch.awayLogo} alt="" />
-                    ) : (
-                      <span>{String(effectiveSelectedMatch.away || '').trim().charAt(0) || 'A'}</span>
-                    )}
+                    <div className={`betfolio-match-hero-logo-wrap ${effectiveSelectedMatch.awayLogo ? 'has-logo' : ''}`}>
+                      {effectiveSelectedMatch.awayLogo && (
+                        <img
+                          src={effectiveSelectedMatch.awayLogo}
+                          alt=""
+                          onError={(event) => event.currentTarget.parentElement?.classList.add('logo-failed')}
+                        />
+                      )}
+                      <span className="betfolio-match-hero-fallback">{String(effectiveSelectedMatch.away || '').trim().charAt(0) || 'A'}</span>
+                    </div>
                     <strong>{effectiveSelectedMatch.away}</strong>
                   </div>
 

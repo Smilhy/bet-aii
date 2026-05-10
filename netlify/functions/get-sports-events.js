@@ -694,6 +694,10 @@ exports.handler = async function(event) {
     item?.timestamp ? new Date(Number(item.timestamp) * 1000).toISOString() : ''
   )
 
+  const apiFootballTeamLogoUrl = (teamId) => teamId
+    ? `https://media.api-sports.io/football/teams/${teamId}.png`
+    : ''
+
   const mapApiSportsItemToFixture = (item, index, cfg) => {
     const home = firstText(
       pickTeamName(item?.teams, 'home'),
@@ -739,8 +743,19 @@ exports.handler = async function(event) {
       commence_time: isoDate,
       source: 'api-football',
       apiFixtureId: firstText(item?.fixture?.id, item?.id),
-      homeLogo: firstText(item?.teams?.home?.logo, item?.home?.logo),
-      awayLogo: firstText(item?.teams?.away?.logo, item?.teams?.visitors?.logo, item?.away?.logo),
+      homeTeamId: firstText(item?.teams?.home?.id, item?.home?.id),
+      awayTeamId: firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id),
+      homeLogo: firstText(
+        item?.teams?.home?.logo,
+        item?.home?.logo,
+        apiFootballTeamLogoUrl(firstText(item?.teams?.home?.id, item?.home?.id))
+      ),
+      awayLogo: firstText(
+        item?.teams?.away?.logo,
+        item?.teams?.visitors?.logo,
+        item?.away?.logo,
+        apiFootballTeamLogoUrl(firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id))
+      ),
       markets: [],
       hasRealOdds: false,
     }
