@@ -29889,3 +29889,8 @@ button.betfolio-fetch-btn{
   background:var(--avatar-image) center/cover no-repeat!important;
   border:1px solid rgba(37,233,255,.24)!important;
 }
+
+
+/* WERSJA 836 — cennik subskrypcji w osobnej zakładce profilu */
+.profile-v3-tabs{flex-wrap:wrap!important}
+.profile-v3-tabs button{cursor:pointer!important}

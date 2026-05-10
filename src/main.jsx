@@ -12620,6 +12620,7 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   const avatarInputRef = useRef(null)
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [profileTab, setProfileTab] = useState('overview')
 
   useEffect(() => {
     setAvatarUrl(user?.avatar_url || user?.user_metadata?.avatar_url || '')
@@ -12803,16 +12804,21 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
           </div>
 
           <div className="profile-v3-tabs glass-profile-v3">
-            <button type="button" className="active">▣ Przegląd</button>
+            <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}>▣ Przegląd</button>
             <button type="button">◉ Typy</button>
             <button type="button">↗ Wyniki</button>
             <button type="button">⌁ Analizy</button>
             <button type="button">◔ Historia</button>
             <button type="button">💬 Opinie</button>
+            <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}>💳 Cennik subskrypcji</button>
           </div>
 
-          <TipsterPricingSettings user={user} onToast={onToast} />
+          {profileTab === 'pricing' && (
+            <TipsterPricingSettings user={user} onToast={onToast} />
+          )}
 
+          {profileTab === 'overview' && (
+            <>
           <div className="glass-profile-v3 profile-stripe-connect-card">
             <div className="profile-stripe-connect-main">
               <div className="profile-stripe-connect-icon">💳</div>
@@ -12925,6 +12931,8 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
 
         <aside className="profile-v3-sidebar">
