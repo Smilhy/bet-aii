@@ -1249,6 +1249,9 @@ exports.handler = async function(event) {
       dayResponses.flat()
         .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
         .filter(item => {
+          // Dla "league-today" pokazujemy WSZYSTKIE dzisiejsze mecze ligi,
+          // nie tylko przyszłe. Inaczej po rozpoczęciu pierwszego spotkania UI wygląda jak zepsute.
+          if (mode === 'league-today') return true
           const kickMs = Date.parse(item.commence_time || '')
           if (!Number.isFinite(kickMs)) return true
           return kickMs > Date.now() + 60 * 1000

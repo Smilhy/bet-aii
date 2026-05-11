@@ -6089,26 +6089,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
-      const requestedCountry = String(overrides.country || currentCountry || '').trim()
       const requestedLeague = String(overrides.league || currentLeague || '').trim()
-      const strictLeagueScope = !overrides.allLeagues && requestedLeague && requestedLeague !== 'Wszystkie ligi'
-      const normalizeScope = (value = '') => String(value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim()
-      const matchesStrictScope = (match) => {
-        if (!strictLeagueScope) return true
-        const wantedLeague = normalizeScope(requestedLeague)
-        const wantedCountry = normalizeScope(requestedCountry)
-        const matchLeague = normalizeScope(match?.league)
-        const matchCountry = normalizeScope(match?.country)
-        const leagueOk = matchLeague.includes(wantedLeague) || wantedLeague.includes(matchLeague)
-        const countryOk = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry) || matchCountry.includes(wantedCountry) || wantedCountry.includes(matchCountry)
-        return leagueOk && countryOk
-      }
-      const fixtures = rawFixtures.filter(matchStartsAfterBuffer).filter(matchesStrictScope)
+
+      // WERSJA 851:
+      // Backend już pilnuje kraju i ligi. Frontend NIE może drugi raz odrzucać meczów,
+      // bo API zwraca kraj np. "England", a UI ma "Anglia". To właśnie wycinało poprawne mecze.
+      // W widoku "mecze dzisiaj" pokazujemy wszystkie dzisiejsze mecze ligi, także te które już się zaczęły.
+      const fixtures = overrides.mode === 'league-today'
+        ? rawFixtures
+        : rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
@@ -6125,7 +6114,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource(data.source || 'empty')
         if (!isSilentRefresh) {
           setLiveFixturesStatus(data.message || `LIVE API/API-Sports: brak realnych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
-          onToast?.({ type: 'info', title: 'Dziś brak meczów', message: `Dziś nie ma meczów w lidze ${requestedLeague}.` })
+          onToast?.({ type: 'info', title: 'Dziś brak meczów', message: `API nie zwróciło dziś meczów dla ligi ${requestedLeague}.` })
         } else {
           setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
         }

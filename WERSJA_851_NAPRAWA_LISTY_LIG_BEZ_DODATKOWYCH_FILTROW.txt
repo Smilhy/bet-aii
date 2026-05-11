@@ -1,0 +1,13 @@
+WERSJA 851
+Przyczyna problemu:
+1. Backend zwracał poprawne mecze, ale frontend drugi raz filtrował po kraju.
+   API zwracało np. "England", a UI miało "Anglia", więc poprawne mecze były odrzucane.
+2. Widok ligi pokazywał tylko mecze, które jeszcze się nie zaczęły.
+   Po rozpoczęciu spotkań wyglądało to jak "brak meczów", mimo że liga miała mecze dziś.
+
+Naprawa:
+- Usunąłem dodatkowy frontendowy filtr kraju/ligi.
+- Backend nadal pilnuje właściwej ligi.
+- W widoku ligi pokazuję wszystkie dzisiejsze mecze tej ligi, także już rozpoczęte.
+- Nie dokładam nowych limitów ani dodatkowych filtrów.
+- SQL nie jest potrzebny.
