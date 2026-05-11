@@ -7366,7 +7366,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <small>{tip.created_at ? new Date(tip.created_at).toLocaleString('pl-PL') : 'teraz'}</small>
         </div>
         <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
-          {isPremium ? '♕ PREMIUM' : '▣ DARMOWY'}
+          {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
       </div>
 
@@ -12886,7 +12886,7 @@ function ProfileLiveTipCard({
           <small>{tip.createdLabel}</small>
         </div>
         <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
-          {tip.premium ? '♕ PREMIUM' : '▣ DARMOWY'}
+          {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
       </div>
 
@@ -13552,9 +13552,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
               <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3><span>{profileVisibleTipCards.length} pozycji</span></div>
               <div className="profile-v4-filter-row">
-                <button type="button" className={profileTipsFilter === 'all' ? 'active' : ''} onClick={() => setProfileTipsFilter('all')}>Wszystkie typy <b>{allProfileTipCards.length}</b></button>
-                <button type="button" className={profileTipsFilter === 'premium' ? 'active' : ''} onClick={() => setProfileTipsFilter('premium')}>Premium <b>{premiumCards.length}</b></button>
-                <button type="button" className={profileTipsFilter === 'free' ? 'active' : ''} onClick={() => setProfileTipsFilter('free')}>Darmowe <b>{freeCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{allProfileTipCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
                 <button type="button" className="profile-v4-filter-menu">☷ Filtry⌄</button>
               </div>
               {profileVisibleTipCards.length ? (

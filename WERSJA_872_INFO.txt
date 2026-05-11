@@ -1,0 +1,11 @@
+WERSJA 872
+- Dodano ikonki do filtrów w zakładce Typy:
+  • Wszystkie
+  • Premium z koroną
+  • Darmowe z zielonym prezentem
+- Poprawiono wygląd filtrów na bardziej świecący / premium.
+- Poprawiono badge na kartach typów:
+  • PREMIUM — żywy złoty kolor z koroną
+  • DARMOWY — żywy zielony kolor z prezentem
+- Dodatkowo wymuszono białe napisy w filtrach i kartach typów.
+- SQL nie jest potrzebny.
