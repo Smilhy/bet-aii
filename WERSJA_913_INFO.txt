@@ -1,0 +1,5 @@
+WERSJA 913
+- Poprawiono prawą kolumnę Top typerzy.
+- Profit pokazuje pełną kwotę, np. +79919.89 zł.
+- Usunięto ucinanie do +79... / +...
+- Kolumna profitu ma stałe miejsce i tekst nie wychodzi poza panel.
