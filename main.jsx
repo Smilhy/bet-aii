@@ -1378,63 +1378,64 @@ function LiveChatPanel({ user }) {
       if (error) throw error
       let nextMessages = (data || []).reverse()
 
-      // Starsze wiadomości nie zawsze miały zapisany avatar_url.
-      // Wersja 905: KAŻDY widzi avatar KAŻDEGO — mapujemy po id/email/nick/email-local i nadpisujemy stare puste/błędne kółka.
+      // WERSJA 907: avatar w czacie zawsze z prawdziwego profilu.
+      // Nie ufamy starym avatar_url z wiadomości, bo mogły zostać zapisane od innego użytkownika.
       try {
-        const messageEmails = [...new Set(nextMessages.map(row => normalizeEmail(row.user_email)).filter(Boolean))]
-        const messageNames = [...new Set(nextMessages.map(row => normalizeEmail(row.user_name)).filter(Boolean))]
         const chatProfileMap = new Map()
-        const addAvatarKeys = (source = {}, avatar = '') => {
-          const finalAvatar = avatar || getProfileAvatarUrl(source)
-          if (!finalAvatar) return
-          const emailKey = normalizeEmail(source.email || source.user_email || source.author_email)
-          const nameKey = normalizeEmail(source.username || source.user_name || source.author_name)
+        const addProfileAvatar = (profile = {}) => {
+          const avatar = getProfileAvatarUrl(profile)
+          if (!avatar) return
+          const emailKey = normalizeEmail(profile.email || profile.user_email || profile.author_email)
+          const nameKey = normalizeEmail(profile.username || profile.user_name || profile.author_name)
           const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          if (source.id) chatProfileMap.set(String(source.id).toLowerCase(), finalAvatar)
-          if (emailKey) chatProfileMap.set(emailKey, finalAvatar)
-          if (localKey) chatProfileMap.set(localKey, finalAvatar)
-          if (nameKey) chatProfileMap.set(nameKey, finalAvatar)
+          if (profile.id) chatProfileMap.set(String(profile.id).toLowerCase(), avatar)
+          if (emailKey) chatProfileMap.set(emailKey, avatar)
+          if (localKey) chatProfileMap.set(localKey, avatar)
+          if (nameKey) chatProfileMap.set(nameKey, avatar)
         }
 
-        // Pobierz profile szeroko, nie tylko dokładny warunek, bo stare wiadomości mają czasem user_name zamiast emaila.
+        // Najpierw profiles — to jest źródło prawdy.
         try {
           const { data: chatProfiles, error: chatProfilesError } = await supabase
             .from('profiles')
-            .select('id,email,username,avatar_url,profile_avatar_url')
+            .select('id,email,username,avatar_url')
             .limit(1000)
           if (!chatProfilesError && Array.isArray(chatProfiles)) {
-            chatProfiles.forEach(profile => addAvatarKeys(profile))
+            chatProfiles.forEach(addProfileAvatar)
           }
         } catch (profileAvatarError) {
           console.warn('chat profiles avatar hydration skipped', profileAvatarError)
         }
 
-        // Fallback z tips: avatar autora z kart typów.
+        // Fallback tylko wtedy, kiedy nie ma profilu w mapie.
         try {
           const { data: chatTipAuthors } = await supabase
             .from('tips')
             .select('author_id,user_id,author_name,username,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
             .order('created_at', { ascending: false })
             .limit(500)
-          ;(chatTipAuthors || []).forEach(row => addAvatarKeys({
-            id: row.author_id || row.user_id,
-            email: row.author_email,
-            username: row.author_name || row.username,
-            avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url
-          }))
+          ;(chatTipAuthors || []).forEach(row => {
+            const emailKey = normalizeEmail(row.author_email)
+            const nameKey = normalizeEmail(row.author_name || row.username)
+            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+            const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
+            if (!avatar) return
+            if (emailKey && !chatProfileMap.has(emailKey)) chatProfileMap.set(emailKey, avatar)
+            if (localKey && !chatProfileMap.has(localKey)) chatProfileMap.set(localKey, avatar)
+            if (nameKey && !chatProfileMap.has(nameKey)) chatProfileMap.set(nameKey, avatar)
+          })
         } catch (tipAvatarError) {
           console.warn('chat tip avatar fallback skipped', tipAvatarError)
         }
 
-        if (chatProfileMap.size) {
-          nextMessages = nextMessages.map(row => {
-            const emailKey = normalizeEmail(row.user_email)
-            const nameKey = normalizeEmail(row.user_name)
-            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-            const mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
-            return mappedAvatar ? { ...row, avatar_url: mappedAvatar } : row
-          })
-        }
+        nextMessages = nextMessages.map(row => {
+          const emailKey = normalizeEmail(row.user_email)
+          const nameKey = normalizeEmail(row.user_name)
+          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+          const mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
+          // mappedAvatar ma pierwszeństwo nad row.avatar_url, bo row.avatar_url bywa błędny/stary.
+          return mappedAvatar ? { ...row, avatar_url: mappedAvatar } : row
+        })
       } catch (avatarError) {
         console.warn('chat avatar hydration skipped', avatarError)
       }
@@ -1757,9 +1758,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
             </div>
             <strong className={`ranking-profit-box ${Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
               <em>Profit</em>
-              <span title={formatMoney(row.earnings || row.total_earnings || row.profit || 0)}>
-                {Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}
-              </span>
+              <span>{Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}</span>
             </strong>
           </div>
         )) : (
@@ -16011,7 +16010,7 @@ function App() {
       if (profileFilters) {
         const { data: authorProfiles, error: authorProfilesError } = await supabase
           .from('profiles')
-          .select('id,email,username,avatar_url,profile_avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
+          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
           .or(profileFilters)
         if (!authorProfilesError && Array.isArray(authorProfiles)) {
           const authorProfileMap = new Map()
@@ -16048,7 +16047,7 @@ function App() {
     try {
       const { data: allProfiles, error: allProfilesError } = await supabase
         .from('profiles')
-        .select('id,email,username,avatar_url,profile_avatar_url')
+        .select('id,email,username,avatar_url')
         .limit(1000)
       if (!allProfilesError && Array.isArray(allProfiles)) {
         const profileMap = new Map()

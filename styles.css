@@ -29387,3 +29387,54 @@ button.betfolio-fetch-btn{
   padding:0!important;
   border-radius:0!important;
 }
+
+
+/* WERSJA 907 — pełny profit i poprawione avatary live chat */
+.real-ranking-panel .rank{
+  grid-template-columns:30px 34px minmax(0,1fr) 124px!important;
+  column-gap:9px!important;
+}
+.real-ranking-panel .ranking-profit-box{
+  width:124px!important;
+  max-width:124px!important;
+  min-width:124px!important;
+  overflow:visible!important;
+}
+.real-ranking-panel .ranking-profit-box span{
+  max-width:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  font-size:12px!important;
+  letter-spacing:-.02em!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+.livechat226-avatar.has-avatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  display:block!important;
+}
+
+
+/* WERSJA 908 — avatary innych użytkowników widoczne dla każdego */
+.profile-ticket-v6-avatar.has-avatar,
+.dashboard-ticket-v6-avatar.has-avatar,
+.livechat226-avatar.has-avatar{
+  overflow:hidden!important;
+  background-size:cover!important;
+  background-position:center!important;
+}
+.profile-ticket-v6-avatar.has-avatar img,
+.dashboard-ticket-v6-avatar.has-avatar img,
+.livechat226-avatar.has-avatar img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:inherit!important;
+}
