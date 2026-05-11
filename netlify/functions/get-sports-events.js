@@ -164,16 +164,98 @@ exports.handler = async function(event) {
     return q.split(/\s+/).every(term => haystack.includes(term))
   }
 
+  const normalizeFootballCountryAlias = (value) => {
+    const clean = normalizeLoose(value)
+    const aliases = {
+      england: 'anglia',
+      english: 'anglia',
+      uk: 'anglia',
+      poland: 'polska',
+      spain: 'hiszpania',
+      germany: 'niemcy',
+      france: 'francja',
+      italy: 'wlochy',
+      netherlands: 'holandia',
+      portugal: 'portugalia',
+      usa: 'usa',
+      unitedstates: 'usa',
+      unitedstatesofamerica: 'usa',
+      brazil: 'brazylia',
+      argentina: 'argentyna',
+      japan: 'japonia',
+      belgium: 'belgia',
+      scotland: 'szkocja',
+      turkey: 'turcja',
+    }
+    return aliases[clean.replace(/\s+/g, '')] || clean
+  }
+
+  const normalizeFootballLeagueAlias = (value) => {
+    const clean = normalizeLoose(value)
+    const aliases = {
+      premierleague: 'premier league',
+      englishpremierleague: 'premier league',
+      championship: 'championship',
+      leagueone: 'league one',
+      leaguetwo: 'league two',
+      nationallleague: 'national league',
+      nationalliga: 'national league',
+      nationalleague: 'national league',
+      laliga: 'la liga',
+      bundesliga: 'bundesliga',
+      seriea: 'serie a',
+      ligue1: 'ligue 1',
+      eredivisie: 'eredivisie',
+      primeiraliga: 'primeira liga',
+      mls: 'mls',
+    }
+    return aliases[clean.replace(/\s+/g, '')] || clean
+  }
+
   const matchesRequestedFootballScope = (fixture) => {
-    const wantedLeague = normalizeLoose(league)
-    const wantedCountry = normalizeLoose(country)
-    const actualLeague = normalizeLoose(fixture.league)
-    const actualCountry = normalizeLoose(fixture.country)
+    const wantedLeague = normalizeFootballLeagueAlias(league)
+    const wantedCountry = normalizeFootballCountryAlias(country)
+    const actualLeague = normalizeFootballLeagueAlias(fixture.league)
+    const actualCountry = normalizeFootballCountryAlias(fixture.country)
     const countryIsWide = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry)
     const leagueIsWide = !wantedLeague || wantedLeague.includes('wszystkie') || wantedLeague === normalizeLoose('Piłka nożna')
     const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
     const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague)
     return countryMatches && leagueMatches
+  }
+
+  const apiFootballLeagueIds = {
+    'anglia|premier league': 39,
+    'anglia|championship': 40,
+    'anglia|league one': 41,
+    'anglia|league two': 42,
+    'anglia|national league': 43,
+    'hiszpania|la liga': 140,
+    'niemcy|bundesliga': 78,
+    'wlochy|serie a': 135,
+    'francja|ligue 1': 61,
+    'holandia|eredivisie': 88,
+    'portugalia|primeira liga': 94,
+    'usa|mls': 253,
+  }
+
+  const getApiFootballSeasonForDate = (dateKey = '') => {
+    const [year, month] = String(dateKey || new Date().toISOString().slice(0, 10)).split('-').map(Number)
+    if (!year) return new Date().getUTCFullYear()
+    // Europejskie sezony piłkarskie zaczynają się latem. Maj 2026 = sezon 2025.
+    return month >= 7 ? year : year - 1
+  }
+
+  const getApiFootballLeagueFilter = (dateKey = '') => {
+    if (allLeagues) return null
+    const wantedCountry = normalizeFootballCountryAlias(country)
+    const wantedLeague = normalizeFootballLeagueAlias(league)
+    const leagueId = apiFootballLeagueIds[`${wantedCountry}|${wantedLeague}`]
+    if (!leagueId) return null
+    return {
+      leagueId,
+      season: getApiFootballSeasonForDate(dateKey),
+    }
   }
 
 
@@ -1096,15 +1178,19 @@ exports.handler = async function(event) {
       : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
 
     for (const cfg of configs) {
-      // API-FOOTBALL /fixtures nie przyjmuje szerokiego from/to bez dodatkowego kontekstu
-      // ligi/drużyny. Dla widoku globalnego i drzewa lig pobieramy więc dzień po dniu
-      // parametrem date=, a potem filtrujemy lokalnie po kraju/lidze. To jest poprawne
-      // również dla trybu "Dziś" i pozwala sortować mecze godzinami.
-      const dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
-        const url = new URL(`${cfg.host}${cfg.path}`)
-        url.searchParams.set('date', dayKey)
-        if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+      const leagueFilter = cfg.type === 'football' ? getApiFootballLeagueFilter(safeStart) : null
+      let dayResponses = []
 
+      if (leagueFilter && mode !== 'search') {
+        // Dla konkretnej ligi pobieramy ją bezpośrednio jednym zapytaniem league+season+from+to.
+        // To jest dokładniejsze niż globalne pobieranie dzień po dniu, zużywa mniej requestów
+        // i gwarantuje, że Premier League nie zostanie zastąpiona np. MLS.
+        const url = new URL(`${cfg.host}${cfg.path}`)
+        url.searchParams.set('league', String(leagueFilter.leagueId))
+        url.searchParams.set('season', String(leagueFilter.season))
+        url.searchParams.set('from', safeStart)
+        url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
+        url.searchParams.set('timezone', APP_TIMEZONE)
         try {
           const response = await fetch(url.toString(), {
             headers: {
@@ -1114,18 +1200,47 @@ exports.handler = async function(event) {
           })
           const data = await response.json().catch(() => ({}))
           if (!response.ok) {
-            errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
+            errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: HTTP ${response.status}`)
+            dayResponses = [[]]
+          } else {
+            if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+              errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+            }
+            dayResponses = [Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []]
+          }
+        } catch (error) {
+          errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${error.message}`)
+          dayResponses = [[]]
+        }
+      } else {
+        // Widok globalny i ligi bez mapowania zostają na pobieraniu dzień po dniu.
+        dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
+          const url = new URL(`${cfg.host}${cfg.path}`)
+          url.searchParams.set('date', dayKey)
+          if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+
+          try {
+            const response = await fetch(url.toString(), {
+              headers: {
+                'x-apisports-key': apiKey,
+                'x-rapidapi-key': apiKey
+              }
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) {
+              errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
+              return []
+            }
+            if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+              errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+            }
+            return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+          } catch (error) {
+            errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
             return []
           }
-          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-            errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-          }
-          return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
-        } catch (error) {
-          errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
-          return []
-        }
-      }))
+        }))
+      }
 
       dayResponses.flat()
         .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
