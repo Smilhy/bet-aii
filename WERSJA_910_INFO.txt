@@ -1,0 +1,12 @@
+WERSJA 910
+- Naprawiono błąd: darmowy typ dodany przez Premium/Admin nie zmienia się już w premium.
+- Frontend:
+  • po kliknięciu "Darmowy" cena singla zeruje się na 0.00,
+  • darmowy payload zawsze wysyła access_type='free', is_premium=false i ceny 0,
+  • cena singla pokazuje się tylko przy zakładce Premium.
+- SQL:
+  • usuwa stare triggery limit/premium,
+  • naprawia stare rekordy premium z ceną 0,
+  • darmowy typ zawsze zostaje darmowy,
+  • typ premium wymaga Premium/Admin,
+  • smilhytv dalej ma premium/admin.

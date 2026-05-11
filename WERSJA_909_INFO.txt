@@ -1,0 +1,11 @@
+WERSJA 909
+- Ostateczna naprawa dodawania typów premium przez smilhytv.
+- Frontend:
+  • smilhytv / smilhytv@gmail.com jest zawsze premium/admin,
+  • wszystkie payloady insertu wysyłają author_email/email/author_name/username,
+  • komunikat błędu wskazuje SQL 909.
+- SQL:
+  • usuwa stare triggery PREMIUM_REQUIRED/FREE_LIMIT z public.tips,
+  • sprawdza premium po payloadzie, auth.uid(), auth.users i JWT email,
+  • smilhytv@gmail.com jest hardcoded jako premium/admin,
+  • zakłada nowe bezpieczne triggery trigger_tip_limit i trigger_block_premium.

@@ -1105,7 +1105,7 @@ function formatAppErrorMessage(rawMessage) {
   }
 
   if (message.includes('PREMIUM_REQUIRED') || message.includes('Tylko konta Premium')) {
-    return 'Baza nadal widzi konto jako FREE. Uruchom BETAI_SQL_897_FIX_PREMIUM_TIPS_SMILHYTV_FINAL.sql, wyloguj się i zaloguj ponownie.'
+    return 'Baza nadal widzi konto jako FREE. Uruchom BETAI_SQL_910_FIX_FREE_TIPS_NOT_PREMIUM.sql, wyloguj się i zaloguj ponownie.'
   }
 
   if (message.includes('new row violates row-level security') || message.includes('row-level security')) {
@@ -2008,7 +2008,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const username = resolveRealProfileUsername(user)
   const email = normalizeEmail(user?.email || '')
   const addTipIdentity = { ...(user || {}), username, email, author_name: username, author_email: email }
-  const isPremiumUser = hasUnlimitedTipAccess(addTipIdentity, userPlan) || isSmilhytvLifetimePremium(addTipIdentity)
+  const isPremiumUser = hasUnlimitedTipAccess(addTipIdentity, userPlan) || isSmilhytvLifetimePremium(addTipIdentity) || normalizeEmail(email) === 'smilhytv@gmail.com' || normalizeEmail(username) === 'smilhytv'
   const todayLabel = new Date().toLocaleDateString('pl-PL')
 
   const sportsbook = useMemo(() => ({
@@ -6815,7 +6815,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       })
       return
     }
-    updateForm({ accessType: type })
+    if (type === 'free') {
+      updateForm({ accessType: 'free', singlePrice: '0.00' })
+      return
+    }
+    updateForm({ accessType: 'premium', singlePrice: Number(form.singlePrice || 0) > 0 ? form.singlePrice : '29.00' })
   }
 
   function addTag() {
@@ -6992,7 +6996,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         return new Date().toISOString()
       }
     })()
-    const priceValue = form.accessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+    const finalAccessType = form.accessType === 'premium' ? 'premium' : 'free'
+    const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -7022,9 +7027,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       ai_confidence: confidencePercent,
       ai_probability: confidencePercent,
       confidence: confidencePercent,
-      access_type: form.accessType,
-      access: form.accessType,
-      is_premium: form.accessType === 'premium',
+      access_type: finalAccessType,
+      access: finalAccessType,
+      is_premium: finalAccessType === 'premium',
       price: priceValue,
       single_price: priceValue,
       tip_price: priceValue,
@@ -7050,8 +7055,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       odds: Number(form.odds || 0),
       stake: stakeValue,
       description: form.description,
-      access_type: form.accessType,
-      is_premium: form.accessType === 'premium',
+      access_type: finalAccessType,
+      is_premium: finalAccessType === 'premium',
       price: priceValue,
       status: 'pending',
       created_at: new Date().toISOString(),
@@ -7060,23 +7065,38 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       user_id: user.id,
       author_id: user.id,
       author_name: username,
+      username,
+      author_email: email,
+      email,
       league: currentLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
       description: form.description,
+      access_type: finalAccessType,
+      is_premium: finalAccessType === 'premium',
+      price: priceValue,
+      single_price: priceValue,
+      tip_price: priceValue,
       created_at: new Date().toISOString(),
     }
     const tipPayloadLegacy = {
       user_id: user.id,
+      author_id: user.id,
       username,
+      author_name: username,
+      author_email: email,
+      email,
       league: currentLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
       description: form.description,
+      access_type: finalAccessType,
+      is_premium: finalAccessType === 'premium',
+      price: priceValue,
       created_at: new Date().toISOString(),
     }
 
@@ -7100,7 +7120,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({
         type: 'success',
         title: 'Typ opublikowany',
-        message: form.accessType === 'premium'
+        message: finalAccessType === 'premium'
           ? `Twój tip premium został dodany do dashboardu i profilu. Cena singla: ${priceValue.toFixed(2)} zł.`
           : `Twój darmowy tip został dodany do dashboardu i profilu.${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
@@ -7533,19 +7553,23 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
             </div>
 
-            <div className="betfolio-ticket-row">
-              <label>Cena singla</label>
-              {isPremiumUser ? (
-                <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
-              ) : (
-                <div className="betfolio-premium-lock">Sprzedaż tylko w Premium</div>
-              )}
-            </div>
-            <div className="betfolio-ticket-profit">
-              {form.accessType === 'premium'
-                ? `Ty: ${(previewPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)} zł • Platforma: ${(previewPrice * PLATFORM_COMMISSION_RATE).toFixed(2)} zł`
-                : 'Typ darmowy — bez ceny singla.'}
-            </div>
+            {form.accessType === 'premium' ? (
+              <>
+                <div className="betfolio-ticket-row">
+                  <label>Cena singla</label>
+                  {isPremiumUser ? (
+                    <input className="static-add-input price-input" value={form.singlePrice} onChange={(e) => updateForm({ singlePrice: e.target.value.replace(/[^0-9.]/g, '') })} />
+                  ) : (
+                    <div className="betfolio-premium-lock">Sprzedaż tylko w Premium</div>
+                  )}
+                </div>
+                <div className="betfolio-ticket-profit">
+                  {`Ty: ${(previewPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)} zł • Platforma: ${(previewPrice * PLATFORM_COMMISSION_RATE).toFixed(2)} zł`}
+                </div>
+              </>
+            ) : (
+              <div className="betfolio-ticket-profit is-free-mode">Typ darmowy — cena 0.00 zł, bez blokady premium.</div>
+            )}
           </div>
 
           <div className="betfolio-publish-footer">
