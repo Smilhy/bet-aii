@@ -12868,6 +12868,23 @@ function ProfileLiveTipCard({
   )
 }
 
+
+function ProfileStatsTable({ title, columns, rows, wide = false }) {
+  return (
+    <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''}`}>
+      <div className="profile-v3-card-head"><h3>{title}</h3></div>
+      <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
+        <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
+        {rows.map((row, index) => (
+          <div key={`${title}-${index}`}>
+            {row.map((cell, cellIndex) => <span key={`${title}-${index}-${cellIndex}`}>{cell}</span>)}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
@@ -12884,6 +12901,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileTab, setProfileTab] = useState('overview')
+  const [profileTipsFilter, setProfileTipsFilter] = useState('all')
+  const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
   const [bioSaving, setBioSaving] = useState(false)
@@ -13205,6 +13224,83 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? [[String(ownRankingRow.liveRank || rankingPosition || '—'), displayName, `${Number(ownRankingRow.roi || roi || 0).toFixed(0)}% ROI`, String(ownRankingRow.followers || followersCount), `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`]]
     : []
 
+
+  const importedTypeStatsRows = [
+    { label: 'Publiczny', coupons: 190, profit: 2207.34, yield: 36.00, avgOdds: 1.80, avgStake: 325.81 },
+    { label: 'Płatny', coupons: 499, profit: 57848.55, yield: 41.00, avgOdds: 1.94, avgStake: 282.36 },
+  ]
+  const importedSportStatsRows = [
+    { label: 'MMA', coupons: 47, stake: 33073.99, profit: 75029.02, yield: 227.00 },
+    { label: 'Baseball', coupons: 26, stake: 5215.00, profit: 4107.70, yield: 79.00 },
+    { label: 'Krykiet', coupons: 2, stake: 50.00, profit: 16.80, yield: 34.00 },
+    { label: 'Koszykówka', coupons: 20, stake: 3428.00, profit: 622.39, yield: 18.00 },
+    { label: 'Piłka nożna', coupons: 497, stake: 109473.34, profit: 5903.54, yield: 5.00 },
+    { label: 'Tenis', coupons: 103, stake: 21423.67, profit: 546.54, yield: 3.00 },
+    { label: 'Darts', coupons: 4, stake: 50.00, profit: 0.70, yield: 1.00 },
+    { label: 'Hokej', coupons: 30, stake: 8036.00, profit: -45.60, yield: -1.00 },
+    { label: 'Boks', coupons: 5, stake: 3020.00, profit: -650.00, yield: -22.00 },
+    { label: 'Snooker', coupons: 22, stake: 19030.00, profit: -5611.20, yield: -29.00 },
+  ]
+  const importedOddsStatsRows = [
+    { label: '1.01 - 1.50', coupons: 136, profit: 1392.96, yield: 3.00, avgOdds: 1.45, avgStake: 347.82 },
+    { label: '1.51 - 2.00', coupons: 448, profit: 9163.29, yield: 8.00, avgOdds: 1.71, avgStake: 251.25 },
+    { label: '2.01 - 3.00', coupons: 71, profit: 9091.58, yield: 37.00, avgOdds: 2.26, avgStake: 342.20 },
+    { label: '3.01 - 5.00', coupons: 27, profit: 1892.06, yield: 13.00, avgOdds: 3.58, avgStake: 541.41 },
+    { label: '5.01 - 8.00', coupons: 1, profit: 4100.00, yield: 410.00, avgOdds: 5.10, avgStake: 1000.00 },
+    { label: '8.01 - 9.99', coupons: 1, profit: 7290.00, yield: 729.00, avgOdds: 8.29, avgStake: 1000.00 },
+    { label: '10.00+', coupons: 2, profit: 46990.00, yield: 4652.00, avgOdds: 36.40, avgStake: 505.00 },
+  ]
+  const importedHourStatsRows = [
+    { label: '00:00 - 07:59', coupons: 114, profit: 60871.45, yield: 153.00, avgOdds: 2.36, avgStake: 349.57 },
+    { label: '08:00 - 11:59', coupons: 52, profit: 1564.82, yield: 14.00, avgOdds: 1.73, avgStake: 220.58 },
+    { label: '12:00 - 16:59', coupons: 167, profit: -5910.06, yield: -23.00, avgOdds: 1.77, avgStake: 155.08 },
+    { label: '17:00 - 19:59', coupons: 215, profit: 12269.92, yield: 18.00, avgOdds: 1.79, avgStake: 323.05 },
+    { label: '20:00 - 23:59', coupons: 141, profit: 1123.76, yield: 20.00, avgOdds: 1.91, avgStake: 398.04 },
+  ]
+  const importedMonthStatsRows = [
+    { label: '05/2026', coupons: 55, stake: 19340.00, profit: 2049.10, yield: 11.00 },
+    { label: '04/2026', coupons: 251, stake: 74481.00, profit: 5850.88, yield: 8.00 },
+    { label: '03/2026', coupons: 272, stake: 105496.00, profit: 70296.40, yield: 67.00 },
+    { label: '02/2026', coupons: 58, stake: 3165.00, profit: 1593.26, yield: 50.00 },
+    { label: '01/2026', coupons: 53, stake: 318.00, profit: 130.25, yield: 41.00 },
+    { label: '12/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '11/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '10/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '09/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+  ]
+  const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
+  const profileVisibleTipCards = allProfileTipCards.filter(tip => {
+    if (profileTipsFilter === 'premium') return tip.premium
+    if (profileTipsFilter === 'free') return !tip.premium
+    return true
+  })
+  const resultTipRows = allProfileTipCards.filter(tip => {
+    if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
+    if (profileResultsFilter === 'lost') return tip.statusLabel === 'Przegrany'
+    if (profileResultsFilter === 'pending') return tip.statusLabel === 'Oczekujący'
+    return true
+  })
+  const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
+  const linePoints = balanceChartRows.map((row, index) => {
+    const maxValue = Math.max(...balanceChartRows.map(item => Number(item.value || 0)), 1)
+    const x = balanceChartRows.length <= 1 ? 0 : (index / (balanceChartRows.length - 1)) * 100
+    const y = 100 - ((Number(row.value || 0) / maxValue) * 100)
+    return `${x},${Math.max(0, Math.min(100, y))}`
+  }).join(' ')
+  const historyEvents = sortedUserTips.slice(0, 8).map(tip => {
+    const normalized = normalizeTipRow(tip)
+    const card = buildProfileTipCard(normalized)
+    return {
+      date: formatProfileDate(normalized.created_at),
+      title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : `Rozliczono typ: ${card.statusLabel}`,
+      detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
+      tone: card.statusLabel === 'Wygrany' ? 'success' : card.statusLabel === 'Przegrany' ? 'danger' : 'info',
+      amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)} zł` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)} zł` : '',
+    }
+  })
+  const reviewRows = Array.isArray(user?.reviews) ? user.reviews : []
+
   const renderProfileTipCard = (tip) => (
     <ProfileLiveTipCard
       key={tip.id}
@@ -13224,7 +13320,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
 
   return (
-    <section className="profile-page profile-static-v3" aria-label="Mój profil">
+    <section className={`profile-page profile-static-v3 ${profileTab === 'overview' ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">
@@ -13315,24 +13411,153 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             </div>
           </section>
 
-          <div className="profile-v3-tabs glass-profile-v3">
-            <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}>▣ Przegląd</button>
-            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}>◉ Typy</button>
-            <button type="button">↗ Wyniki</button>
-            <button type="button">⌁ Analizy</button>
-            <button type="button">◔ Historia</button>
-            <button type="button">💬 Opinie</button>
-            <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}>💳 Cennik subskrypcji</button>
+          <div className="profile-v3-tabs glass-profile-v3 profile-v4-tabs">
+            <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}><span>▣</span> Przegląd <b>{totalTips}</b></button>
+            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> Typy</button>
+            <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> Wyniki</button>
+            <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
+            <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
+            <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> Opinie</button>
+            <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
           </div>
 
           {profileTab === 'tips' && (
-            <section className="glass-profile-v3 profile-v3-card profile-all-tips-tab">
-              <div className="profile-v3-card-head"><h3>◉ Wszystkie typy</h3><span>{allProfileTipCards.length} pozycji</span></div>
-              {allProfileTipCards.length ? (
-                <div className="profile-all-tips-list">{allProfileTipCards.map(renderProfileTipCard)}</div>
+            <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
+              <div className="profile-v4-filter-row">
+                <button type="button" className={profileTipsFilter === 'all' ? 'active' : ''} onClick={() => setProfileTipsFilter('all')}>Wszystkie <b>{allProfileTipCards.length}</b></button>
+                <button type="button" className={profileTipsFilter === 'premium' ? 'active' : ''} onClick={() => setProfileTipsFilter('premium')}>Premium <b>{premiumCards.length}</b></button>
+                <button type="button" className={profileTipsFilter === 'free' ? 'active' : ''} onClick={() => setProfileTipsFilter('free')}>Darmowe <b>{freeCards.length}</b></button>
+              </div>
+              <div className="profile-v3-card-head"><h3>◉ Typy</h3><span>{profileVisibleTipCards.length} pozycji</span></div>
+              {profileVisibleTipCards.length ? (
+                <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
               ) : (
-                <div className="profile-live-tip-empty">Nie masz jeszcze żadnych typów.</div>
+                <div className="profile-live-tip-empty">Brak typów w tej kategorii.</div>
               )}
+            </section>
+          )}
+
+
+          {profileTab === 'results' && (
+            <section className="profile-v4-page profile-v4-results-page">
+              <div className="profile-v4-summary-grid">
+                <article><small>Wszystkie rozliczone</small><strong>{settledTips}</strong></article>
+                <article className="success"><small>Wygrane</small><strong>{wonTips}</strong></article>
+                <article className="danger"><small>Przegrane</small><strong>{lostTips}</strong></article>
+                <article className="warning"><small>Nierozliczone</small><strong>{pendingTips}</strong></article>
+                <article className={roi >= 0 ? 'success' : 'danger'}><small>Yield</small><strong>{roi}%</strong></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount >= 0 ? '+' : ''}{profitAmount.toFixed(2)} zł</strong></article>
+              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
+                <div className="profile-v3-card-head"><h3>Wyniki — przebieg bilansu</h3></div>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart">
+                  <defs>
+                    <linearGradient id="profileBalanceFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(0,255,148,.32)" />
+                      <stop offset="100%" stopColor="rgba(0,255,148,0)" />
+                    </linearGradient>
+                  </defs>
+                  <polyline points={linePoints} fill="none" stroke="currentColor" strokeWidth="1.6" />
+                  <polygon points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFill)" />
+                </svg>
+              </section>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">
+                <div className="profile-v4-filter-row">
+                  <button type="button" className={profileResultsFilter === 'all' ? 'active' : ''} onClick={() => setProfileResultsFilter('all')}>Wszystkie</button>
+                  <button type="button" className={profileResultsFilter === 'won' ? 'active' : ''} onClick={() => setProfileResultsFilter('won')}>Wygrane</button>
+                  <button type="button" className={profileResultsFilter === 'lost' ? 'active' : ''} onClick={() => setProfileResultsFilter('lost')}>Przegrane</button>
+                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>Nierozliczone</button>
+                </div>
+                <div className="profile-v4-results-table">
+                  <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b></div>
+                  {resultTipRows.length ? resultTipRows.map(tip => (
+                    <div key={tip.id}>
+                      <span>{tip.home} — {tip.away}</span>
+                      <span>{tip.pick}</span>
+                      <span>{tip.odds}</span>
+                      <span>{tip.stake.toFixed(2)} zł</span>
+                      <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : 'wait'}>{tip.statusLabel}</em>
+                    </div>
+                  )) : <p>Brak wyników w tej kategorii.</p>}
+                </div>
+              </section>
+            </section>
+          )}
+
+          {profileTab === 'stats' && (
+            <section className="profile-v4-page profile-v4-stats-page">
+              <div className="profile-v4-summary-grid profile-v4-stats-top">
+                <article><small>Postawione kupony</small><strong>{totalTips}</strong></article>
+                <article><small>Wygrane / przegrane</small><strong>{wonTips} / {lostTips}</strong></article>
+                <article className="warning"><small>Nierozliczone kupony</small><strong>{pendingTips}</strong></article>
+                <article className="success"><small>Yield</small><strong>{roi}%</strong></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount.toFixed(2)}</strong></article>
+                <article><small>Zainwestowane pieniądze</small><strong>{totalStakedAmount.toFixed(2)}</strong></article>
+              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
+                <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart cyan">
+                  <defs>
+                    <linearGradient id="profileBalanceBlue" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(0,180,255,.34)" />
+                      <stop offset="100%" stopColor="rgba(0,180,255,0)" />
+                    </linearGradient>
+                  </defs>
+                  <polyline points={linePoints} fill="none" stroke="currentColor" strokeWidth="1.6" />
+                  <polygon points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceBlue)" />
+                </svg>
+              </section>
+              <div className="profile-v4-stats-grid">
+                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={importedSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={importedMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+              </div>
+            </section>
+          )}
+
+          {profileTab === 'history' && (
+            <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">
+              <div className="profile-v3-card-head"><h3>Historia aktywności</h3><span>{historyEvents.length} zdarzeń</span></div>
+              <div className="profile-v4-history-timeline">
+                {historyEvents.length ? historyEvents.map((event, index) => (
+                  <article key={`${event.title}-${index}`} className={event.tone}>
+                    <small>{event.date}</small>
+                    <div>
+                      <strong>{event.title}</strong>
+                      <span>{event.detail}</span>
+                    </div>
+                    {event.amount && <b>{event.amount}</b>}
+                  </article>
+                )) : <p>Brak aktywności do pokazania.</p>}
+              </div>
+            </section>
+          )}
+
+          {profileTab === 'opinions' && (
+            <section className="profile-v4-page profile-v4-opinions-page">
+              <div className="glass-profile-v3 profile-v3-card profile-v4-opinion-summary">
+                <div>
+                  <small>Podsumowanie opinii</small>
+                  <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
+                  <span>{profileRatingCount ? `${profileRatingCount} opinii` : 'Brak opinii profilu'}</span>
+                </div>
+                <div className="profile-v4-rating-bars">
+                  {ratingBars.map(row => (
+                    <label key={row.label}><span>{row.label}</span><i><b style={{ width: `${row.width}%` }} /></i><em>{row.count}</em></label>
+                  ))}
+                </div>
+              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-reviews-list">
+                <div className="profile-v3-card-head"><h3>Opinie</h3><span>{reviewRows.length} pozycji</span></div>
+                {reviewRows.length ? reviewRows.map((review, index) => (
+                  <article key={review.id || index}>
+                    <strong>{review.author_name || 'Użytkownik'}</strong>
+                    <span>{review.comment || review.body || ''}</span>
+                  </article>
+                )) : <div className="profile-live-tip-empty">Nie masz jeszcze opinii.</div>}
+              </section>
             </section>
           )}
 
@@ -13363,7 +13588,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           )}
         </div>
 
-        <aside className="profile-v3-sidebar">
+        {profileTab === 'overview' && <aside className="profile-v3-sidebar">
           <div className="glass-profile-v3 side-card-v3">
             <div className="side-card-head-v3"><h3>Podsumowanie</h3><span>• ONLINE ●</span></div>
             <div className="key-list-v3">
@@ -13419,7 +13644,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               )}
             </div>
           </div>
-        </aside>
+        </aside>}
       </div>
     </section>
   )

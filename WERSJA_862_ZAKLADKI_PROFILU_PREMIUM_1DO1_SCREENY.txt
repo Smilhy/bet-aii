@@ -1,0 +1,22 @@
+WERSJA 862
+- Zmieniłem wygląd zakładek profilu na duże premium pille jak na podanych screenach.
+- Usunąłem zakładkę „Analizy” i w jej miejsce dodałem „Statystyki”.
+- Wszystkie zakładki są aktywne:
+  • Przegląd
+  • Typy
+  • Wyniki
+  • Statystyki
+  • Historia
+  • Opinie
+  • Cennik subskrypcji
+- Każda zakładka ma własną stronę.
+- Zakładka Statystyki zawiera dane ze screenów:
+  • wykres salda
+  • statystyki typów kuponów
+  • statystyki sportów
+  • statystyki zakresów kursów
+  • statystyki godzin dodawania kuponów
+  • statystyki miesięcy
+- Zakładka Wyniki, Historia, Typy i Opinie korzystają z realnych danych aplikacji.
+- Dla zakładek innych niż Przegląd układ przechodzi w pełną szerokość, żeby wyglądał jak na screenach.
+- SQL nie jest potrzebny.
