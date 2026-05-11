@@ -1,0 +1,11 @@
+WERSJA 904
+- Ożywiono ranking Top typerzy w prawej kolumnie.
+- Profit typera jest teraz pokazywany jako osobny box "Profit".
+- Profit decyduje o miejscu w rankingu.
+- Ranking scala dane z:
+  • tipster_ranking,
+  • profiles/imported_profit/imported_total_tips/imported_yield,
+  • tips i author_visible_stats z kart.
+- Jeżeli tipster_ranking ma zera, ranking i tak weźmie profit z profilu/importu albo kart.
+- Dodano dodatkowe statystyki: typy, wygrane, przegrane, yield, WR.
+- Dodano SQL BETAI_SQL_904_REALNY_RANKING_PROFIT_TYPERA.sql tworzący widok tipster_ranking_live.

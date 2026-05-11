@@ -1,0 +1,4 @@
+WERSJA 903
+- Całkowicie usunięto panel "Wyniki live" z prawej kolumny dashboardu.
+- Prawa kolumna nie pokazuje już sekcji z Premier League / La Liga / wynikami.
+- Zostają poprawki z wersji 902.

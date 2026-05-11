@@ -551,18 +551,144 @@ function sortRankingRows(rows = []) {
   })
 }
 
+function getRankingIdentityKey(row = {}) {
+  return String(
+    row.tipster_id ||
+    row.author_id ||
+    row.user_id ||
+    row.id ||
+    row.email ||
+    row.author_email ||
+    row.username ||
+    row.author_name ||
+    ''
+  ).toLowerCase()
+}
+
+function normalizeRankingProfit(row = {}) {
+  return getRankingNumber(row, [
+    'imported_profit',
+    'profit',
+    'earnings',
+    'total_earnings',
+    'balance',
+    'net_profit',
+    'pnl'
+  ], 0)
+}
+
+function normalizeRankingTipsCount(row = {}) {
+  return getRankingNumber(row, ['imported_total_tips', 'totalTips', 'total_tips', 'tips_count', 'tips'], 0)
+}
+
+function normalizeRankingWins(row = {}) {
+  return getRankingNumber(row, ['imported_won_tips', 'wonTips', 'wins', 'won'], 0)
+}
+
+function normalizeRankingLosses(row = {}) {
+  return getRankingNumber(row, ['imported_lost_tips', 'lostTips', 'losses', 'lost'], 0)
+}
+
+function normalizeRankingYield(row = {}) {
+  return getRankingNumber(row, ['imported_yield', 'yield', 'roi'], 0)
+}
+
+function buildRankingRowsFromTipCards(tips = []) {
+  const rows = new Map()
+  ;(tips || []).forEach(tipRaw => {
+    const tip = normalizeTipRow(tipRaw)
+    const stats = tip.author_visible_stats || getImportedProfileStats(tip) || getTipFallbackAuthorStats(tip)
+    const key = getRankingIdentityKey(tip)
+    if (!key) return
+    const previous = rows.get(key) || {}
+    const profit = Number(stats?.profit ?? tip.imported_profit ?? tip.profit ?? 0) || 0
+    const totalTips = Number(stats?.totalTips ?? tip.imported_total_tips ?? 0) || 0
+    const wins = Number(stats?.wonTips ?? tip.imported_won_tips ?? 0) || 0
+    const losses = Number(stats?.lostTips ?? tip.imported_lost_tips ?? 0) || 0
+    const roi = Number(stats?.yield ?? tip.imported_yield ?? 0) || 0
+    rows.set(key, {
+      ...previous,
+      tipster_id: tip.author_id || tip.user_id || previous.tipster_id || key,
+      id: tip.author_id || tip.user_id || previous.id || key,
+      username: isGenericProfileName(tip.author_name) ? (tip.author_email ? String(tip.author_email).split('@')[0] : previous.username || 'Użytkownik') : (tip.author_name || previous.username || 'Użytkownik'),
+      email: tip.author_email || previous.email || '',
+      avatar_url: tip.author_avatar_url || tip.avatar_url || previous.avatar_url || '',
+      total_tips: Math.max(Number(previous.total_tips || 0), totalTips),
+      wins: Math.max(Number(previous.wins || 0), wins),
+      losses: Math.max(Number(previous.losses || 0), losses),
+      roi: Math.abs(roi) >= Math.abs(Number(previous.roi || 0)) ? roi : Number(previous.roi || 0),
+      yield: Math.abs(roi) >= Math.abs(Number(previous.yield || 0)) ? roi : Number(previous.yield || 0),
+      winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : Number(previous.winrate || 0),
+      earnings: Math.abs(profit) >= Math.abs(Number(previous.earnings || 0)) ? profit : Number(previous.earnings || 0),
+      profit: Math.abs(profit) >= Math.abs(Number(previous.profit || 0)) ? profit : Number(previous.profit || 0),
+    })
+  })
+  return Array.from(rows.values())
+}
+
+function mergeRankingRows(...groups) {
+  const map = new Map()
+  groups.flat().filter(Boolean).forEach(raw => {
+    const key = getRankingIdentityKey(raw)
+    if (!key) return
+    const previous = map.get(key) || {}
+    const profit = normalizeRankingProfit(raw)
+    const previousProfit = normalizeRankingProfit(previous)
+    const tipsCount = normalizeRankingTipsCount(raw)
+    const wins = normalizeRankingWins(raw)
+    const losses = normalizeRankingLosses(raw)
+    const roi = normalizeRankingYield(raw)
+    const username = raw.username || raw.author_name || previous.username || previous.author_name || (raw.email ? String(raw.email).split('@')[0] : 'Użytkownik')
+    map.set(key, {
+      ...previous,
+      ...raw,
+      tipster_id: raw.tipster_id || raw.author_id || raw.user_id || raw.id || previous.tipster_id || key,
+      username: isGenericProfileName(username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : username,
+      email: raw.email || raw.author_email || previous.email || '',
+      avatar_url: raw.avatar_url || raw.author_avatar_url || previous.avatar_url || '',
+      total_tips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
+      totalTips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
+      wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
+      losses: Math.max(Number(previous.losses || 0), Number(losses || 0)),
+      roi: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.roi || previous.yield || 0)) ? Number(roi || 0) : Number(previous.roi || previous.yield || 0),
+      yield: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.yield || previous.roi || 0)) ? Number(roi || 0) : Number(previous.yield || previous.roi || 0),
+      winrate: (Number(wins || 0) + Number(losses || 0)) > 0
+        ? (Number(wins || 0) / (Number(wins || 0) + Number(losses || 0))) * 100
+        : Number(raw.winrate || raw.wr || previous.winrate || 0),
+      earnings: Math.abs(Number(profit || 0)) >= Math.abs(Number(previousProfit || 0)) ? Number(profit || 0) : Number(previousProfit || 0),
+      profit: Math.abs(Number(profit || 0)) >= Math.abs(Number(previousProfit || 0)) ? Number(profit || 0) : Number(previousProfit || 0),
+    })
+  })
+  return Array.from(map.values()).filter(row => !['bet+ai live','betai live','ai tip'].includes(String(row?.username || row?.name || '').toLowerCase()))
+}
+
 function buildLiveLeaderboardRows(ranking = [], tips = []) {
-  const rows = (Array.isArray(ranking) && ranking.length ? ranking : buildRankingFromTips(tips)).filter(row => !['bet+ai live','betai live','ai tip'].includes(String(row?.username || row?.name || '').toLowerCase()))
-  return sortRankingRows(rows).map((row, index) => ({
-    ...row,
-    liveRank: index + 1,
-    totalTips: getRankingNumber(row, ['total_tips', 'tips_count']),
-    wins: getRankingNumber(row, ['wins']),
-    winrate: getRankingNumber(row, ['winrate', 'wr']),
-    roi: getRankingNumber(row, ['roi', 'yield']),
-    earnings: getRankingNumber(row, ['earnings', 'total_earnings', 'profit']),
-    followers: getRankingNumber(row, ['followers_count', 'followers'])
-  }))
+  const rows = mergeRankingRows(
+    Array.isArray(ranking) ? ranking : [],
+    buildRankingFromTips(tips),
+    buildRankingRowsFromTipCards(tips)
+  )
+  return sortRankingRows(rows).map((row, index) => {
+    const wins = normalizeRankingWins(row)
+    const losses = normalizeRankingLosses(row)
+    const totalTips = normalizeRankingTipsCount(row)
+    const profit = normalizeRankingProfit(row)
+    const roi = normalizeRankingYield(row)
+    return {
+      ...row,
+      liveRank: index + 1,
+      totalTips,
+      total_tips: totalTips,
+      wins,
+      losses,
+      winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : getRankingNumber(row, ['winrate', 'wr']),
+      roi,
+      yield: roi,
+      earnings: profit,
+      profit,
+      followers: getRankingNumber(row, ['followers_count', 'followers'])
+    }
+  })
 }
 
 function isSchemaError(error) {
@@ -577,8 +703,13 @@ function normalizeTipRow(row = {}) {
     ...row,
     author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
     user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
-    author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
-    author_email: row.author_email || row.email || null,
+    author_name: resolveRealProfileUsername({
+      username: isGenericProfileName(row.author_name) ? (row.username || row.author_username || row.profile_username) : (row.author_name || row.username || row.author_username || row.profile_username),
+      author_name: isGenericProfileName(row.author_name) ? (row.username || row.author_username || row.profile_username) : row.author_name,
+      email: row.author_email || row.email || row.user_email,
+      author_email: row.author_email || row.email || row.user_email
+    }),
+    author_email: row.author_email || row.email || row.user_email || null,
     author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
     league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || null,
@@ -1596,11 +1727,12 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
             <div className="mini-avatar">{formatRankingName(row).slice(0, 2).toUpperCase()}</div>
             <div>
               <b>{formatRankingName(row)}</b>
-              <small>Yield: {Number(row.roi || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
-              <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)}</small>
+              <small>Yield: {Number(row.roi || row.yield || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
+              <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)} • Przegrane: {Number(row.losses || 0)}</small>
             </div>
-            <strong className={Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}>
-              {Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}
+            <strong className={`ranking-profit-box ${Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
+              <em>Profit</em>
+              <span>{Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}</span>
             </strong>
           </div>
         )) : (
@@ -1614,8 +1746,6 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
         <div className="ai-pick"><div className="club psg ai-club">AI</div><div><b>PSG <span>vs</span> Borussia Dortmund</b><small>Typ: Powyżej 2.5 gola</small><div className="tiny-progress"><i style={{width:'63%'}}></i></div></div><strong>63%</strong></div>
         <div className="ai-pick"><div className="club lfc ai-club">AI</div><div><b>Liverpool <span>vs</span> Bayer Leverkusen</b><small>Typ: Liverpool wygra</small><div className="tiny-progress"><i style={{width:'61%'}}></i></div></div><strong>61%</strong></div>
       </section>
-
-      <section className="panel"><div className="panel-head"><h2>Wyniki live</h2><a>Dzisiaj</a></div><div className="result"><span>Premier League</span><b>Man City <i>2:1</i> Liverpool</b></div><div className="result"><span>La Liga</span><b>Barcelona <i>1:0</i> Real Madryt</b></div><div className="result"><span>Serie A</span><b>Inter <i>3:0</i> Milan</b></div></section>
     </aside>
   )
 }
@@ -1657,7 +1787,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(profileRes.data))
         setTipsterTips(normalizedTipsterTips.map(tip => ({
           ...tip,
-          author_name: tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik'),
+          author_name: isGenericProfileName(tip.author_name) ? (profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')) : (tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')),
           author_email: tip.author_email || profileRes.data?.email || null,
           author_avatar_url: tip.author_avatar_url || profileRes.data?.avatar_url || null,
           author_visible_stats: tipsterVisibleStats,
@@ -1849,7 +1979,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const confidenceDots = Array.from({ length: 15 }, (_, index) => index)
-  const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (user?.email ? String(user.email).split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
+  const username = resolveRealProfileUsername(user)
   const email = normalizeEmail(user?.email || '')
   const addTipIdentity = { ...(user || {}), username, email, author_name: username, author_email: email }
   const isPremiumUser = hasUnlimitedTipAccess(addTipIdentity, userPlan) || isSmilhytvLifetimePremium(addTipIdentity)
@@ -7508,9 +7638,14 @@ function FeedSkeleton() {
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
-  const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
+  const author = resolveRealProfileUsername({
+    username: tip.author_name,
+    author_name: tip.author_name,
+    email: tip.author_email || tip.email || tip.user_email,
+    author_email: tip.author_email || tip.email || tip.user_email
+  })
   const authorId = getTipAuthorId(tip)
-  const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0]
+  const currentUsername = resolveRealProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0]
   const tipIdentity = {
     id: authorId,
     user_id: tip.user_id,
@@ -7574,7 +7709,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
   const stakeValue = Number(tip?.stake || 0)
   const stakeLabel = stakeValue > 0 ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł` : '—'
-  const cardAuthor = isOwnTip ? (currentUsername || author) : author
+  const cardAuthor = resolveRealProfileUsername({ username: isOwnTip ? (currentUsername || author) : author, author_name: isOwnTip ? (currentUsername || author) : author, email: tip.author_email || tip.email || tip.user_email })
   const cardHome = tip.team_home || tip.home_team || 'Gospodarze'
   const cardAway = tip.team_away || tip.away_team || 'Goście'
   const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
@@ -13295,7 +13430,7 @@ function ProfileLiveTipCard({
             <TipActionLikeIcon />
             <b>{feedback.likes}</b>
           </button>
-          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} aria-label={commentsOpen ? 'Zamknij komentarze' : 'Otwórz komentarze'}>
             <TipActionCommentIcon />
             <b>{commentCount}</b>
           </button>
@@ -13308,16 +13443,21 @@ function ProfileLiveTipCard({
 
       {commentsOpen && (
         <div className="profile-live-tip-comments profile-ticket-v6-comments">
-          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
-          <div className="tip-comment-form profile-comment-form-no-button">
+          <div className="tip-comments-head">
+            <strong>Komentarze:</strong>
+            <span>{commentCount} łącznie</span>
+            <button type="button" className="tip-comments-close" onClick={() => setCommentsOpen(false)} aria-label="Zamknij komentarze">×</button>
+          </div>
+          <div className="tip-comment-form">
             <input
               type="text"
               value={commentDraft}
               onChange={event => setCommentDraft(event.target.value)}
               onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); submitComment() } }}
-              placeholder="Dodaj komentarz do tego typu i naciśnij Enter..."
+              placeholder="Dodaj komentarz do tego typu..."
               maxLength={280}
             />
+            <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
           </div>
           {feedback.comments.length > 0 ? (
             <div className="tip-comment-list">
@@ -15655,59 +15795,71 @@ function App() {
 
   async function fetchRealRanking() {
     if (!isSupabaseConfigured || !supabase) {
-      setRealRanking(buildRankingFromTips(tips))
+      setRealRanking(buildLiveLeaderboardRows([], tips))
       return
     }
 
     try {
-      const [rankingRes, tipsRes, profilesRes] = await Promise.all([
-        supabase.from('tipster_ranking').select('*').limit(50),
-        supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500),
-        supabase
-          .from('profiles')
-          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_profit,profit,total_tips,wins,losses,yield,roi')
-          .limit(500)
-      ])
+      let rankingRows = []
+      let tipRows = []
+      let profileRows = []
 
-      const rowsMap = new Map()
-
-      const upsertRankingRow = (raw = {}) => {
-        const key = String(raw.tipster_id || raw.id || raw.user_id || raw.author_id || raw.email || raw.username || '').toLowerCase()
-        if (!key) return
-        const previous = rowsMap.get(key) || {}
-        const profit = getRankingNumber(raw, ['imported_profit','earnings','total_earnings','profit'], 0)
-        const tipsCount = getRankingNumber(raw, ['imported_total_tips','total_tips','tips_count'], 0)
-        const wins = getRankingNumber(raw, ['imported_won_tips','wins'], 0)
-        const losses = getRankingNumber(raw, ['imported_lost_tips','losses'], 0)
-        const roi = getRankingNumber(raw, ['imported_yield','roi','yield'], 0)
-        rowsMap.set(key, {
-          ...previous,
-          ...raw,
-          tipster_id: raw.tipster_id || raw.id || previous.tipster_id || key,
-          username: isGenericProfileName(raw.username || previous.username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : (raw.username || previous.username),
-          email: raw.email || previous.email || '',
-          avatar_url: raw.avatar_url || previous.avatar_url || '',
-          total_tips: Math.max(Number(previous.total_tips || 0), Number(tipsCount || 0)),
-          wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
-          losses: Math.max(Number(previous.losses || 0), Number(losses || 0)),
-          roi: Number(roi || previous.roi || 0) || 0,
-          winrate: (Number(wins || 0) + Number(losses || 0)) > 0 ? (Number(wins || 0) / (Number(wins || 0) + Number(losses || 0))) * 100 : Number(raw.winrate || previous.winrate || 0) || 0,
-          earnings: Math.abs(Number(profit || 0)) >= Math.abs(Number(previous.earnings || 0)) ? Number(profit || 0) : Number(previous.earnings || 0),
-          profit: Math.abs(Number(profit || 0)) >= Math.abs(Number(previous.profit || 0)) ? Number(profit || 0) : Number(previous.profit || 0),
-        })
+      try {
+        const { data, error } = await supabase.from('tipster_ranking').select('*').limit(100)
+        if (!error && Array.isArray(data)) rankingRows = data
+        else if (error) console.warn('tipster_ranking skipped', error)
+      } catch (error) {
+        console.warn('tipster_ranking exception skipped', error)
       }
 
-      ;(profilesRes.data || []).forEach(profile => upsertRankingRow(profile))
-      ;(rankingRes.data || []).forEach(row => upsertRankingRow(row))
+      try {
+        const { data, error } = await supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(1000)
+        if (!error && Array.isArray(data)) tipRows = data
+        else if (error) console.warn('ranking tips skipped', error)
+      } catch (error) {
+        console.warn('ranking tips exception skipped', error)
+      }
 
-      const dynamicRows = buildRankingFromTips(tipsRes.data || tips || [])
-      dynamicRows.forEach(row => upsertRankingRow(row))
+      try {
+        const { data, error } = await supabase.from('profiles').select('*').limit(1000)
+        if (!error && Array.isArray(data)) profileRows = data
+        else if (error) console.warn('ranking profiles skipped', error)
+      } catch (error) {
+        console.warn('ranking profiles exception skipped', error)
+      }
 
-      const finalRows = sortRankingRows(Array.from(rowsMap.values())).slice(0, 10)
+      const profileRankingRows = profileRows.map(profile => {
+        const imported = getImportedProfileStats(profile)
+        const profit = Number(imported?.profit ?? profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
+        const totalTips = Number(imported?.totalTips ?? profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
+        const wins = Number(imported?.wonTips ?? profile.imported_won_tips ?? profile.wins ?? 0) || 0
+        const losses = Number(imported?.lostTips ?? profile.imported_lost_tips ?? profile.losses ?? 0) || 0
+        const roi = Number(imported?.yield ?? profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0
+        return {
+          ...profile,
+          tipster_id: profile.id,
+          username: profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+          total_tips: totalTips,
+          totalTips,
+          wins,
+          losses,
+          winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : Number(profile.winrate || 0),
+          roi,
+          yield: roi,
+          earnings: profit,
+          profit
+        }
+      })
+
+      const finalRows = buildLiveLeaderboardRows(
+        mergeRankingRows(profileRankingRows, rankingRows, buildRankingFromTips(tipRows)),
+        tipRows.length ? tipRows : tips
+      ).slice(0, 10)
+
       setRealRanking(finalRows)
     } catch (error) {
       console.error('fetchRealRanking exception', error)
-      setRealRanking(buildRankingFromTips(tips))
+      setRealRanking(buildLiveLeaderboardRows([], tips))
     }
   }
 
@@ -15812,24 +15964,43 @@ function App() {
     const authorDynamicStatsMap = buildAuthorStatsFromTips(sourceTips)
     try {
       const authorIds = [...new Set(sourceTips.map(tip => getTipAuthorId(tip)).filter(Boolean).map(String))]
-      if (authorIds.length) {
+      const authorEmails = [...new Set(sourceTips.map(tip => normalizeEmail(tip.author_email || tip.email || tip.user_email)).filter(Boolean))]
+      const authorNames = [...new Set(sourceTips.map(tip => normalizeEmail(tip.author_name || tip.username)).filter(Boolean).filter(name => !isGenericProfileName(name)))]
+      const profileFilters = [
+        ...authorIds.map(id => `id.eq.${id}`),
+        ...authorEmails.map(email => `email.eq.${email}`),
+        ...authorNames.map(name => `username.eq.${name}`)
+      ].join(',')
+      if (profileFilters) {
         const { data: authorProfiles, error: authorProfilesError } = await supabase
           .from('profiles')
-          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
-          .in('id', authorIds)
+          .select('id,email,username,avatar_url,profile_avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
+          .or(profileFilters)
         if (!authorProfilesError && Array.isArray(authorProfiles)) {
-          const authorProfileMap = new Map(authorProfiles.map(profile => [String(profile.id), profile]))
+          const authorProfileMap = new Map()
+          authorProfiles.forEach(profile => {
+            if (profile.id) authorProfileMap.set(String(profile.id), profile)
+            if (profile.email) authorProfileMap.set(normalizeEmail(profile.email), profile)
+            if (profile.username) authorProfileMap.set(normalizeEmail(profile.username), profile)
+          })
           sourceTips = sourceTips.map(tip => {
-            const profile = authorProfileMap.get(String(getTipAuthorId(tip) || ''))
+            const profile =
+              authorProfileMap.get(String(getTipAuthorId(tip) || '')) ||
+              authorProfileMap.get(normalizeEmail(tip.author_email || tip.email || tip.user_email)) ||
+              authorProfileMap.get(normalizeEmail(tip.author_name || tip.username))
             return profile
               ? {
                   ...tip,
-                  author_name: isGenericProfileName(tip.author_name) ? (profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik')) : (tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik')),
+                  author_name: profile.username || (profile.email ? String(profile.email).split('@')[0] : resolveRealProfileUsername(tip)),
+                  username: profile.username || tip.username,
                   author_email: tip.author_email || profile.email || null,
-                  author_avatar_url: tip.author_avatar_url || profile.avatar_url || null,
+                  author_avatar_url: tip.author_avatar_url || getProfileAvatarUrl(profile) || null,
                   author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), getImportedProfileStats(profile)),
                 }
-              : tip
+              : {
+                  ...tip,
+                  author_name: resolveRealProfileUsername(tip)
+                }
           })
         }
       }
