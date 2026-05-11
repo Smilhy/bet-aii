@@ -12981,19 +12981,35 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const authorName = normalizeEmail(tip.author_name || tip.username || '')
     return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
   })
-  const totalTips = userTips.length
-  const wonTips = userTips.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
-  const lostTips = userTips.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
-  const settledTips = wonTips + lostTips
-  const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
-  const avgOddsNumber = userTips.length ? (userTips.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / userTips.length) : 0
-  const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
-  const settledStake = userTips.reduce((sum, tip) => {
+  const importedAtMs = Date.parse(user?.stats_imported_at || '')
+  const hasImportedStats = Number(user?.imported_total_tips || 0) > 0 || Number(user?.imported_total_staked || 0) > 0 || Number(user?.imported_profit || 0) !== 0
+  const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
+    ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
+    : userTips
+
+  const importedTotalTips = Number(user?.imported_total_tips || 0) || 0
+  const importedWonTips = Number(user?.imported_won_tips || 0) || 0
+  const importedLostTips = Number(user?.imported_lost_tips || 0) || 0
+  const importedPendingTips = Number(user?.imported_pending_tips || 0) || 0
+  const importedTotalStaked = Number(user?.imported_total_staked || 0) || 0
+  const importedProfit = Number(user?.imported_profit || 0) || 0
+  const importedAvgOdds = Number(user?.imported_avg_odds || 0) || 0
+  const importedHighestOdds = Number(user?.imported_highest_odds || 0) || 0
+  const importedTipsAmount = Number(user?.imported_tips_amount || 0) || 0
+  const importedTipsCurrency = String(user?.imported_tips_currency || 'zł').trim() || 'zł'
+
+  const liveTotalTips = liveTipsForStats.length
+  const liveWonTips = liveTipsForStats.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveLostTips = liveTipsForStats.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveSettledTips = liveWonTips + liveLostTips
+  const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips)
+  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / liveTipsForStats.length) : 0
+  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => {
     const status = String(tip.status || '').toLowerCase()
     if (!['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum
     return sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
   }, 0)
-  const profitAmount = userTips.reduce((sum, tip) => {
+  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => {
     const status = String(tip.status || '').toLowerCase()
     const stake = Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
     const odds = Math.max(0, Number(tip.odds || tip.course || 0) || 0)
@@ -13001,12 +13017,28 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     if (['lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum - stake
     return sum
   }, 0)
-  const roi = settledStake ? Math.round((profitAmount / settledStake) * 100) : 0
-  const pendingTips = Math.max(0, totalTips - settledTips)
-  const totalStakedAmount = userTips.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
-  const highestOddsNumber = userTips.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
+  const liveTotalStakedAmount = liveTipsForStats.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
+  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
+
+  // Statystyki historyczne z poprzedniej platformy stanowią bazę.
+  // Nowe typy dodane PO dacie importu dopisują się automatycznie do kafelków.
+  const totalTips = importedTotalTips + liveTotalTips
+  const wonTips = importedWonTips + liveWonTips
+  const lostTips = importedLostTips + liveLostTips
+  const settledTips = wonTips + lostTips
+  const pendingTips = importedPendingTips + livePendingTips
+  const totalStakedAmount = importedTotalStaked + liveTotalStakedAmount
+  const profitAmount = importedProfit + liveProfitAmount
+  const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
+  const avgOddsNumber = totalTips
+    ? (((importedAvgOdds * importedTotalTips) + (liveAvgOddsNumber * liveTotalTips)) / totalTips)
+    : 0
+  const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
+  const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
-  const tipsSupportAmount = Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0
+  const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(user?.imported_yield || 0) || 0)
+  const tipsSupportAmount = importedTipsAmount + (Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0)
+
   const statsCards = [
     { label: 'Yield', value: `${roi}%`, sub: roi > 0 ? 'Zwrot na plus' : roi < 0 ? 'Zwrot na minus' : 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
     { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount > 0 ? 'Bilans na plus' : profitAmount < 0 ? 'Bilans na minus' : 'Bilans zerowy', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
@@ -13017,7 +13049,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
     { label: 'Śr. kurs', value: avgOdds, sub: 'Średnia kursów', tone: Number(avgOdds) > 2 ? 'info' : 'neutral' },
     { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
-    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} zł`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} ${importedTipsCurrency}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
   ]
   const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
   const followingCount = Number(user?.following_count || user?.following || 0) || 0
@@ -15914,7 +15946,7 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url,bio')
+      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url,bio,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
       .eq('id', userId)
       .maybeSingle()
 

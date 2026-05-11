@@ -1,0 +1,15 @@
+WERSJA 860
+- Dodałem import historycznych statystyk z poprzedniej platformy dla konta smilhytv.
+- Kafelki pokazują teraz:
+  • Yield 39%
+  • Profit +79919.89 zł
+  • Typy 689
+  • Wygrane 403
+  • Przegrane 286
+  • Pending 2
+  • Stawki 202800.00 zł
+  • Śr. kurs 1.86
+  • Max kurs 48.00
+  • Napiwki 1.34 USD
+- Statystyki historyczne są bazą; nowe typy dodane po imporcie będą dopisywane automatycznie.
+- SQL do uruchomienia: BETAI_SQL_860_IMPORT_STATYSTYK_HISTORYCZNYCH_SMILHYTV.sql
