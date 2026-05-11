@@ -662,7 +662,7 @@ function mergeRankingRows(...groups) {
       tipster_id: raw.tipster_id || raw.author_id || raw.user_id || raw.id || previous.tipster_id || key,
       username: isGenericProfileName(username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : username,
       email: raw.email || raw.author_email || previous.email || '',
-      avatar_url: raw.avatar_url || raw.author_avatar_url || previous.avatar_url || '',
+      avatar_url: raw.avatar_url || raw.author_avatar_url || raw.profile_avatar_url || previous.avatar_url || previous.author_avatar_url || '',
       total_tips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
       totalTips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
       wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
@@ -832,6 +832,82 @@ function getProfileAvatarUrl(user) {
     user?.raw_user_meta_data?.photo_url ||
     ''
   )
+}
+
+function addProfileToMap(profileMap, profile = {}) {
+  if (!profileMap || !profile) return
+  const emailKey = normalizeEmail(profile.email || profile.user_email || profile.author_email)
+  const usernameKey = normalizeEmail(profile.username || profile.user_name || profile.author_name)
+  const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+  const idKey = String(profile.id || profile.user_id || profile.author_id || profile.tipster_id || '').toLowerCase()
+  if (idKey) profileMap.set(idKey, profile)
+  if (emailKey) profileMap.set(emailKey, profile)
+  if (localKey) profileMap.set(localKey, profile)
+  if (usernameKey) profileMap.set(usernameKey, profile)
+}
+
+function findProfileFromMap(profileMap, source = {}) {
+  if (!profileMap || !source) return null
+  const emailKey = normalizeEmail(source.email || source.author_email || source.user_email)
+  const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+  const nameKey = normalizeEmail(source.username || source.author_name || source.user_name)
+  const idKey = String(getTipAuthorId(source) || source.id || source.user_id || source.author_id || source.tipster_id || '').toLowerCase()
+  return profileMap.get(idKey) || profileMap.get(emailKey) || profileMap.get(localKey) || profileMap.get(nameKey) || null
+}
+
+async function fetchBetaiPublicProfiles() {
+  if (!isSupabaseConfigured || !supabase) return []
+
+  // Najpierw RPC SECURITY DEFINER — omija RLS i daje publiczny avatar każdego użytkownika.
+  try {
+    const { data, error } = await supabase.rpc('betai_public_profiles_for_ui')
+    if (!error && Array.isArray(data)) return data
+    if (error) console.warn('betai_public_profiles_for_ui rpc skipped', error)
+  } catch (error) {
+    console.warn('betai_public_profiles_for_ui rpc exception skipped', error)
+  }
+
+  // Fallback: widok publiczny.
+  try {
+    const { data, error } = await supabase.from('betai_public_profiles_for_ui').select('*').limit(1000)
+    if (!error && Array.isArray(data)) return data
+    if (error) console.warn('betai_public_profiles_for_ui view skipped', error)
+  } catch (error) {
+    console.warn('betai_public_profiles_for_ui view exception skipped', error)
+  }
+
+  // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
+  try {
+    const { data, error } = await supabase.from('profiles').select('id,email,username,avatar_url').limit(1000)
+    if (!error && Array.isArray(data)) return data
+    if (error) console.warn('profiles avatar fallback skipped', error)
+  } catch (error) {
+    console.warn('profiles avatar fallback exception skipped', error)
+  }
+
+  return []
+}
+
+function buildBetaiProfileMap(profiles = []) {
+  const profileMap = new Map()
+  ;(profiles || []).forEach(profile => addProfileToMap(profileMap, profile))
+  return profileMap
+}
+
+function applyProfileAvatarToTip(tip, profileMap) {
+  const profile = findProfileFromMap(profileMap, tip)
+  if (!profile) return tip
+  const profileAvatar = getProfileAvatarUrl(profile)
+  const profileName = profile.username || profile.user_name || (profile.email ? String(profile.email).split('@')[0] : '')
+  return {
+    ...tip,
+    author_name: profileName || resolveRealProfileUsername(tip),
+    username: profileName || tip.username,
+    author_email: tip.author_email || profile.email || null,
+    author_avatar_url: profileAvatar || tip.author_avatar_url || tip.avatar_url || null,
+    avatar_url: profileAvatar || tip.avatar_url || tip.author_avatar_url || null,
+    profile_avatar_url: profileAvatar || tip.profile_avatar_url || null
+  }
 }
 
 function isSameProfileIdentity(left, right) {
@@ -1394,15 +1470,10 @@ function LiveChatPanel({ user }) {
           if (nameKey) chatProfileMap.set(nameKey, avatar)
         }
 
-        // Najpierw profiles — to jest źródło prawdy.
+        // Najpierw RPC publicznych profili — to jest źródło prawdy niezależnie od zalogowanego konta.
         try {
-          const { data: chatProfiles, error: chatProfilesError } = await supabase
-            .from('profiles')
-            .select('id,email,username,avatar_url')
-            .limit(1000)
-          if (!chatProfilesError && Array.isArray(chatProfiles)) {
-            chatProfiles.forEach(addProfileAvatar)
-          }
+          const chatProfiles = await fetchBetaiPublicProfiles()
+          ;(chatProfiles || []).forEach(addProfileAvatar)
         } catch (profileAvatarError) {
           console.warn('chat profiles avatar hydration skipped', profileAvatarError)
         }
@@ -1750,7 +1821,9 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
           <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
-            <div className="mini-avatar">{formatRankingName(row).slice(0, 2).toUpperCase()}</div>
+            <div className={`mini-avatar ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
+              {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : formatRankingName(row).slice(0, 2).toUpperCase()}
+            </div>
             <div>
               <b>{formatRankingName(row)}</b>
               <small>Yield: {Number(row.roi || row.yield || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
@@ -11066,7 +11139,9 @@ function LeaderboardView({ tips = [], ranking = [] }) {
               {topTyperRows.map((row, idx) => (
                 <div className="top-tipster-row-v4" key={row.tipster_id || row.id || idx}>
                   <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
-                  <i className="mini-avatar-v4">{formatRankingName(row).slice(0,2).toUpperCase()}</i>
+                  <i className={`mini-avatar-v4 ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
+                    {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : formatRankingName(row).slice(0,2).toUpperCase()}
+                  </i>
                   <div><strong>{formatRankingName(row)}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || 0).toFixed(2)}%</small></div>
                   <b>+{formatMoney(row.earnings || row.total_earnings || 0)}</b>
                 </div>
@@ -15881,11 +15956,9 @@ function App() {
       }
 
       try {
-        const { data, error } = await supabase.from('profiles').select('*').limit(1000)
-        if (!error && Array.isArray(data)) profileRows = data
-        else if (error) console.warn('ranking profiles skipped', error)
+        profileRows = await fetchBetaiPublicProfiles()
       } catch (error) {
-        console.warn('ranking profiles exception skipped', error)
+        console.warn('ranking public profiles exception skipped', error)
       }
 
       const profileRankingRows = profileRows.map(profile => {
@@ -16067,44 +16140,13 @@ function App() {
     } catch (avatarEnrichError) {
       console.warn('tip avatar enrichment skipped', avatarEnrichError)
     }
-    // WERSJA 905: globalne uzupełnienie avatarów/nicków — każdy użytkownik widzi każdego.
+    // WERSJA 911: globalne uzupełnienie avatarów/nicków przez RPC SECURITY DEFINER.
+    // Dzięki temu buchajson1988 widzi avatar smilhytv i odwrotnie, mimo RLS na profiles.
     try {
-      const { data: allProfiles, error: allProfilesError } = await supabase
-        .from('profiles')
-        .select('id,email,username,avatar_url')
-        .limit(1000)
-      if (!allProfilesError && Array.isArray(allProfiles)) {
-        const profileMap = new Map()
-        allProfiles.forEach(profile => {
-          const emailKey = normalizeEmail(profile.email)
-          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          const usernameKey = normalizeEmail(profile.username)
-          if (profile.id) profileMap.set(String(profile.id), profile)
-          if (emailKey) profileMap.set(emailKey, profile)
-          if (localKey) profileMap.set(localKey, profile)
-          if (usernameKey) profileMap.set(usernameKey, profile)
-        })
-        sourceTips = sourceTips.map(tip => {
-          const emailKey = normalizeEmail(tip.author_email || tip.email || tip.user_email)
-          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          const nameKey = normalizeEmail(tip.author_name || tip.username)
-          const profile =
-            profileMap.get(String(getTipAuthorId(tip) || '')) ||
-            profileMap.get(emailKey) ||
-            profileMap.get(localKey) ||
-            profileMap.get(nameKey)
-          if (!profile) return tip
-          const profileAvatar = getProfileAvatarUrl(profile)
-          const profileName = profile.username || (profile.email ? String(profile.email).split('@')[0] : '')
-          return {
-            ...tip,
-            author_name: profileName || resolveRealProfileUsername(tip),
-            username: profileName || tip.username,
-            author_email: tip.author_email || profile.email || null,
-            author_avatar_url: profileAvatar || tip.author_avatar_url || tip.avatar_url || null,
-            profile_avatar_url: profileAvatar || tip.profile_avatar_url || null
-          }
-        })
+      const allProfiles = await fetchBetaiPublicProfiles()
+      const profileMap = buildBetaiProfileMap(allProfiles)
+      if (profileMap.size) {
+        sourceTips = sourceTips.map(tip => applyProfileAvatarToTip(tip, profileMap))
       }
     } catch (allProfileAvatarError) {
       console.warn('global tip avatar hydration skipped', allProfileAvatarError)

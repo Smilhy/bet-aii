@@ -29438,3 +29438,21 @@ button.betfolio-fetch-btn{
   object-position:center!important;
   border-radius:inherit!important;
 }
+
+
+/* WERSJA 911 — avatary publiczne mimo RLS */
+.mini-avatar.has-avatar,
+.mini-avatar-v4.has-avatar{
+  overflow:hidden!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.mini-avatar.has-avatar img,
+.mini-avatar-v4.has-avatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  display:block!important;
+  border-radius:inherit!important;
+}
