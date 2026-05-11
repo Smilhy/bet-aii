@@ -5980,7 +5980,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           league: form.league || 'Wszystkie ligi',
           date: todayKey,
           daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-          allLeagues: true,
+          allLeagues: !form.league || form.league === 'Wszystkie ligi',
           silent: true,
         })
       }
@@ -6160,16 +6160,21 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       fetchTodayFootballFixtures()
       return
     }
+
+    const hasSpecificLeague = Boolean(form.league && form.league !== 'Wszystkie ligi')
+    const scopedCountry = hasSpecificLeague ? (form.country || currentCountry || 'Wszystkie') : 'Wszystkie'
+    const scopedLeague = hasSpecificLeague ? form.league : 'Wszystkie ligi'
+
     setFootballViewMode('search')
     setFixtureSearchPerformed(true)
     setFixtureSearchLoading(true)
     fetchLiveFixturesForDay({
       sport: 'Piłka nożna',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
+      country: scopedCountry,
+      league: scopedLeague,
       date: getTodayLocalKey(),
       daysAhead: GLOBAL_SEARCH_DAYS_AHEAD,
-      allLeagues: true,
+      allLeagues: !hasSpecificLeague,
       mode: 'search',
       query,
     }).finally(() => setFixtureSearchLoading(false))
@@ -6199,7 +6204,26 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
-      const fixtures = rawFixtures.filter(matchStartsAfterBuffer)
+      const requestedCountry = String(overrides.country || currentCountry || '').trim()
+      const requestedLeague = String(overrides.league || currentLeague || '').trim()
+      const strictLeagueScope = !overrides.allLeagues && requestedLeague && requestedLeague !== 'Wszystkie ligi'
+      const normalizeScope = (value = '') => String(value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+      const matchesStrictScope = (match) => {
+        if (!strictLeagueScope) return true
+        const wantedLeague = normalizeScope(requestedLeague)
+        const wantedCountry = normalizeScope(requestedCountry)
+        const matchLeague = normalizeScope(match?.league)
+        const matchCountry = normalizeScope(match?.country)
+        const leagueOk = matchLeague.includes(wantedLeague) || wantedLeague.includes(matchLeague)
+        const countryOk = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry) || matchCountry.includes(wantedCountry) || wantedCountry.includes(matchCountry)
+        return leagueOk && countryOk
+      }
+      const fixtures = rawFixtures.filter(matchStartsAfterBuffer).filter(matchesStrictScope)
       setLiveFixtures(fixtures)
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {

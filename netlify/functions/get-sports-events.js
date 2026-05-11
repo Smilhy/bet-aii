@@ -474,16 +474,43 @@ exports.handler = async function(event) {
     })
   }
 
+  const oddsLeagueMetaByKey = {
+    soccer_epl: { country: 'Anglia', league: 'Premier League' },
+    soccer_efl_champ: { country: 'Anglia', league: 'Championship' },
+    soccer_england_league1: { country: 'Anglia', league: 'League One' },
+    soccer_england_league2: { country: 'Anglia', league: 'League Two' },
+    soccer_spain_la_liga: { country: 'Hiszpania', league: 'La Liga' },
+    soccer_germany_bundesliga: { country: 'Niemcy', league: 'Bundesliga' },
+    soccer_italy_serie_a: { country: 'Włochy', league: 'Serie A' },
+    soccer_france_ligue_one: { country: 'Francja', league: 'Ligue 1' },
+    soccer_netherlands_eredivisie: { country: 'Holandia', league: 'Eredivisie' },
+    soccer_portugal_primeira_liga: { country: 'Portugalia', league: 'Primeira Liga' },
+    soccer_usa_mls: { country: 'USA', league: 'MLS' },
+    soccer_uefa_champs_league: { country: 'Europa', league: 'Liga Mistrzów' },
+    soccer_uefa_europa_league: { country: 'Europa', league: 'Liga Europy' },
+    soccer_uefa_europa_conference_league: { country: 'Europa', league: 'Liga Konferencji' },
+    soccer_brazil_campeonato: { country: 'Brazylia', league: 'Serie A' },
+    soccer_argentina_primera_division: { country: 'Argentyna', league: 'Primera División' },
+    soccer_japan_j_league: { country: 'Japonia', league: 'J1 League' },
+    soccer_korea_kleague1: { country: 'Korea Południowa', league: 'K League 1' },
+    soccer_mexico_ligamx: { country: 'Meksyk', league: 'Liga MX' },
+    soccer_turkey_super_league: { country: 'Turcja', league: 'Süper Lig' },
+    soccer_belgium_first_div: { country: 'Belgia', league: 'First Division A' },
+    soccer_scotland_premiership: { country: 'Szkocja', league: 'Premiership' },
+  }
+
   const mapOddsItemToFixture = (item, index, sourceKey = '') => {
     const home = item.home_team || item.teams?.[0] || 'Gospodarze'
     const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
     const parts = toDateParts(item.commence_time)
+    const sportKey = item.sport_key || sourceKey || ''
+    const leagueMeta = oddsLeagueMetaByKey[sportKey] || null
     return {
       id: item.id || `${sourceKey || item.sport_key || 'event'}-${index}`,
       sport: item.sport_title || sport,
-      sportKey: item.sport_key || sourceKey || '',
-      country,
-      league: item.sport_title || league || sport,
+      sportKey,
+      country: leagueMeta?.country || country,
+      league: leagueMeta?.league || item.sport_title || league || sport,
       home,
       away,
       date: parts.date,
@@ -1144,7 +1171,8 @@ exports.handler = async function(event) {
 
   try {
     if (!forceRefresh && mode === 'search' && query) {
-      const cachedFixtures = await readCachedFixtures({ rawQuery: query })
+      const cachedFixtures = (await readCachedFixtures({ rawQuery: query }))
+        .filter(item => allLeagues || matchesRequestedFootballScope(item))
       if (cachedFixtures.length) {
         return {
           statusCode: 200,
@@ -1223,6 +1251,8 @@ exports.handler = async function(event) {
 
         const seen = new Set()
         const fixtures = collected
+          .filter(item => allLeagues || matchesRequestedFootballScope(item))
+          .filter(matchesRequestedFootballText)
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
           .filter(item => {
             const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
@@ -1246,7 +1276,8 @@ exports.handler = async function(event) {
     const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)
     if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
     if (!apiSports.fixtures?.length && !countOnly) {
-      const cachedFallback = await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' })
+      const cachedFallback = (await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' }))
+        .filter(item => allLeagues || matchesRequestedFootballScope(item))
       if (cachedFallback.length) {
         return {
           statusCode: 200,
