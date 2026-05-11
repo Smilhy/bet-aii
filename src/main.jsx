@@ -12867,7 +12867,7 @@ function ProfileLiveTipCard({
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
@@ -12883,10 +12883,18 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileTab, setProfileTab] = useState('overview')
+  const fallbackBio = `${displayName} — dodaj własny opis profilu.`
+  const [bioEditing, setBioEditing] = useState(false)
+  const [bioSaving, setBioSaving] = useState(false)
+  const [bioDraft, setBioDraft] = useState(user?.bio || user?.description || user?.about || fallbackBio)
 
   useEffect(() => {
     setAvatarUrl(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   }, [user?.avatar_url, user?.user_metadata?.avatar_url])
+
+  useEffect(() => {
+    setBioDraft(user?.bio || user?.description || user?.about || fallbackBio)
+  }, [user?.bio, user?.description, user?.about, fallbackBio])
 
   const chooseAvatar = () => {
     avatarInputRef.current?.click()
@@ -12939,6 +12947,32 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       setAvatarUploading(false)
     }
   }
+
+  const saveBio = async () => {
+    const cleanBio = String(bioDraft || '').trim().slice(0, 220)
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Opis profilu', message: 'Nie udało się połączyć z profilem użytkownika.' })
+      return
+    }
+    setBioSaving(true)
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ bio: cleanBio })
+        .eq('id', user.id)
+      if (profileError) throw profileError
+
+      await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
+      onProfileUpdated?.({ bio: cleanBio })
+      setBioEditing(false)
+      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd opisu', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setBioSaving(false)
+    }
+  }
+
   const userTips = (Array.isArray(tips) ? tips : []).map(normalizeTipRow).filter(tip => {
     const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
     const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
@@ -12946,18 +12980,32 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
   })
   const totalTips = userTips.length
-  const wonTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'won').length
-  const lostTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'lost').length
+  const wonTips = userTips.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
+  const lostTips = userTips.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
   const settledTips = wonTips + lostTips
   const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
   const avgOddsNumber = userTips.length ? (userTips.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / userTips.length) : 0
   const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
-  const roi = settledTips ? Math.max(0, Math.round((winRate - 50) * 1.7)) : 0
+  const settledStake = userTips.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    if (!['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum
+    return sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+  }, 0)
+  const profitAmount = userTips.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    const stake = Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+    const odds = Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+    if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) return sum + (stake * Math.max(0, odds - 1))
+    if (['lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum - stake
+    return sum
+  }, 0)
+  const roi = settledStake ? Math.round((profitAmount / settledStake) * 100) : 0
   const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
+  const followingCount = Number(user?.following_count || user?.following || 0) || 0
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
-  const profileBio = user?.bio || user?.description || user?.about || `${displayName} — prywatny profil użytkownika Bet+AI. Każdy zalogowany użytkownik widzi tutaj własne konto, własne statystyki i własne ustawienia profilu.`
-  const preferredSport = user?.preferred_sport || user?.sport || 'Piłka nożna ⚽'
+  const profileBio = user?.bio || user?.description || user?.about || fallbackBio
+  const preferredSport = user?.preferred_sport || user?.sport || 'Nie ustawiono'
 
   const toTipRow = (tip, fallbackPremium = false) => {
     const normalized = normalizeTipRow(tip)
@@ -13019,8 +13067,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const allProfileTipCards = userTips.map(buildProfileTipCard)
 
   const resultRows = [
-    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
-    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
+    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
+    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
   ]
   const analysisRows = userTips.slice(0, 3).map(tip => {
     const normalized = normalizeTipRow(tip)
@@ -13028,24 +13076,82 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
   if (!analysisRows.length) analysisRows.push(['Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.', 'Bet+AI'])
 
+  const rankingSnapshot = buildRankingFromTips(Array.isArray(tips) ? tips : [])
+  const ownRankingRow = rankingSnapshot.find(row => {
+    const sameId = profile.id && String(row.id || '') === String(profile.id)
+    const sameEmail = email && normalizeEmail(row.email || '') === email
+    const sameName = username && normalizeEmail(row.username || '') === normalizeEmail(username)
+    return sameId || sameEmail || sameName
+  })
+  const rankingPosition = Number(user?.ranking_position || user?.rank || ownRankingRow?.liveRank || 0) || 0
+
+  const sortedUserTips = [...userTips].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
+  const latestTip = sortedUserTips[0] || null
+  const latestActivityRaw = latestTip?.created_at || user?.last_sign_in_at || user?.updated_at || profileCreatedAt || ''
+  const formatProfileDate = (value) => {
+    if (!value) return 'Brak danych'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Brak danych'
+    const today = new Date()
+    const sameDay = date.toDateString() === today.toDateString()
+    if (sameDay) return 'Dzisiaj'
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    if (date.toDateString() === yesterday.toDateString()) return 'Wczoraj'
+    return date.toLocaleDateString('pl-PL')
+  }
+  const lastActivityLabel = formatProfileDate(latestActivityRaw)
+  const lastTipAt = latestTip?.created_at ? new Date(latestTip.created_at) : null
+  const isActive30d = Boolean(lastTipAt && !Number.isNaN(lastTipAt.getTime()) && Date.now() - lastTipAt.getTime() <= 30 * 24 * 60 * 60 * 1000)
+  const rankingPercent = Number(user?.ranking_percent || user?.rank_percent || 0) || 0
+
+  const profileBadges = [
+    { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPercent > 0 ? `${rankingPercent}%` : (rankingPosition ? `#${rankingPosition}` : 'Brak rankingu'), achieved: rankingPercent > 0 && rankingPercent <= 1 },
+    { icon: '✦', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
+    { icon: '🛡', tone: 'cyan', title: 'WIN RATE+', detail: settledTips ? `${winRate}% / 60%` : '0 rozliczeń', achieved: settledTips >= 10 && winRate >= 60 },
+    { icon: '↗', tone: 'teal', title: 'ROI+', detail: `${roi}% / 10%`, achieved: settledTips >= 10 && roi >= 10 },
+    { icon: '⚡', tone: 'yellow', title: 'AKTYWNY', detail: isActive30d ? 'Typ w 30 dni' : 'Brak typu 30 dni', achieved: isActive30d },
+    { icon: '♛', tone: 'purple', title: 'PREMIUM', detail: premium ? 'Aktywne' : 'Nieaktywne', achieved: premium },
+  ]
+
   const summaryRows = [
     ['Użytkownik od', createdLabel],
-    ['Ostatnia aktywność', 'Dzisiaj'],
+    ['Ostatnia aktywność', lastActivityLabel],
     ['Poziom', roleLabel],
-    ['Ranking globalny', totalTips ? '# aktywny typer' : 'Nowy użytkownik'],
+    ['Ranking globalny', rankingPosition ? `#${rankingPosition}` : 'Brak danych'],
     ['Preferowane dyscypliny', preferredSport],
   ]
-  const recentAchievements = [
-    [premium ? 'PREMIUM' : 'START', premium ? 'Konto premium aktywne' : 'Profil gotowy do działania', createdLabel],
-    [`${totalTips} TYPÓW`, totalTips ? 'Opublikowane typy na koncie' : 'Dodaj pierwszy typ', 'Dzisiaj'],
-    [`${winRate}% WIN RATE`, settledTips ? 'Skuteczność z rozliczonych typów' : 'Brak rozliczonych typów', 'Dzisiaj'],
-  ]
-  const ratingBars = [
-    ['5 ★', '0'], ['4 ★', '0'], ['3 ★', '0'], ['2 ★', '0'], ['1 ★', '0']
-  ]
-  const rankingRows = [
-    ['1', displayName, `${roi}% ROI`, String(followersCount), `+${walletAmount.toFixed(2)} zł`],
-  ]
+
+  const recentActivityRows = sortedUserTips.slice(0, 3).map(tip => {
+    const normalized = normalizeTipRow(tip)
+    const status = String(normalized.status || 'pending').toLowerCase()
+    const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
+      ? 'Wygrany'
+      : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
+        ? 'Przegrany'
+        : 'Oczekujący'
+    return [
+      normalized.bet_type || normalized.pick || 'Typ',
+      `${normalized.team_home || 'Mecz'} vs ${normalized.team_away || ''}`.trim(),
+      `${statusLabel} • ${formatProfileDate(normalized.created_at)}`
+    ]
+  })
+  if (!recentActivityRows.length) recentActivityRows.push(['Brak typów', 'Dodaj pierwszy typ, aby zbudować aktywność profilu', createdLabel])
+
+  const profileRatingAverage = Number(user?.rating_avg || user?.average_rating || user?.rating || 0) || 0
+  const profileRatingCount = Number(user?.rating_count || user?.reviews_count || 0) || 0
+  const ratingDistribution = user?.rating_distribution && typeof user.rating_distribution === 'object'
+    ? user.rating_distribution
+    : {}
+  const ratingBars = [5,4,3,2,1].map(score => {
+    const count = Number(ratingDistribution[score] ?? ratingDistribution[String(score)] ?? 0) || 0
+    const width = profileRatingCount ? Math.round((count / profileRatingCount) * 100) : 0
+    return { label: `${score} ★`, count, width }
+  })
+
+  const rankingRows = ownRankingRow
+    ? [[String(ownRankingRow.liveRank || rankingPosition || '—'), displayName, `${Number(ownRankingRow.roi || roi || 0).toFixed(0)}% ROI`, String(ownRankingRow.followers || followersCount), `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`]]
+    : []
 
   const renderProfileTipCard = (tip) => (
     <ProfileLiveTipCard
@@ -13107,7 +13213,29 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <span>TYPER</span>
                   {totalTips > 0 && <span>AKTYWNY</span>}
                 </div>
-                <p>{profileBio}</p>
+                {bioEditing ? (
+                  <div className="profile-v3-bio-editor">
+                    <textarea
+                      value={bioDraft}
+                      onChange={(event) => setBioDraft(event.target.value.slice(0, 220))}
+                      maxLength={220}
+                      autoFocus
+                    />
+                    <div>
+                      <small>{bioDraft.length}/220</small>
+                      <button type="button" onClick={() => {
+                        setBioDraft(profileBio)
+                        setBioEditing(false)
+                      }}>Anuluj</button>
+                      <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
+                    {profileBio}
+                    <span>✎</span>
+                  </button>
+                )}
                 <div className="profile-v3-actions">
                   <button type="button" className="primary">Mój profil</button>
                   <button type="button">▢ Wiadomości</button>
@@ -13186,46 +13314,52 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Społeczność</h3><button type="button">Zobacz wszystkich</button></div>
-            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{Number(user?.following_count || user?.following || 0) || 0}</b></div></div>
+            <div className="side-card-head-v3"><h3>Społeczność</h3></div>
+            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{followingCount}</b></div></div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3 side-badges-v3">
-            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button></div>
             <div className="badges-grid-v3 sidebar-badges-grid">
-              <div><span className="badge-orb orange">🏆</span><strong>TOP 1%</strong><small>Ranking</small></div>
-              <div><span className="badge-orb gold">✦</span><strong>1000+</strong><small>Typów</small></div>
-              <div><span className="badge-orb cyan">🛡</span><strong>WIN RATE+</strong><small>60%+</small></div>
-              <div><span className="badge-orb teal">↗</span><strong>ROI+</strong><small>10%+</small></div>
-              <div><span className="badge-orb yellow">⚡</span><strong>AKTYWNY</strong><small>30 dni</small></div>
-              <div><span className="badge-orb purple">♛</span><strong>PREMIUM</strong><small>Poziom 7</small></div>
+              {profileBadges.map(badge => (
+                <div key={badge.title} className={badge.achieved ? 'achieved' : 'locked'}>
+                  <span className={`badge-orb ${badge.tone}`}>{badge.icon}</span>
+                  <strong>{badge.title}</strong>
+                  <small>{badge.detail}</small>
+                </div>
+              ))}
             </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>🌀 Ostatnie osiągnięcia</h3></div>
+            <div className="side-card-head-v3"><h3>🌀 Ostatnia aktywność</h3></div>
             <div className="recent-achievements-v3">
-              {recentAchievements.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
+              {recentActivityRows.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
             </div>
-            <button type="button" className="side-link-v3">Zobacz wszystkie odznaki →</button>
+            <button type="button" className="side-link-v3" onClick={() => setProfileTab('history')}>Zobacz historię →</button>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button" onClick={() => setProfileTab('opinions')}>Zobacz opinie</button></div>
             <div className="ratings-v3">
-              <div className="rating-score"><strong>4.9</strong><span>★★★★★</span><small>Na podstawie 236 opinii</small></div>
+              <div className="rating-score">
+                <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
+                <span>{profileRatingCount ? '★★★★★' : '☆☆☆☆☆'}</span>
+                <small>{profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu'}</small>
+              </div>
               <div className="rating-bars">
-                {ratingBars.map((row, idx) => <div key={idx}><span>{row[0]}</span><div className="rate-bar"><i style={{width: `${[100,42,18,8,6][idx]}%`}}></i></div><b>{row[1]}</b></div>)}
+                {ratingBars.map((row, idx) => <div key={idx}><span>{row.label}</span><div className="rate-bar"><i style={{width: `${row.width}%`}}></i></div><b>{row.count}</b></div>)}
               </div>
             </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Ranking typerów</h3><button type="button">Zobacz ranking</button></div>
+            <div className="side-card-head-v3"><h3>Ranking typerów</h3></div>
             <div className="ranking-v3">
-              {rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>)}
+              {rankingRows.length ? rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>) : (
+                <div className="profile-sidebar-empty">Brak danych rankingowych.</div>
+              )}
             </div>
-            <button type="button" className="side-link-v3">Pełny ranking →</button>
           </div>
         </aside>
       </div>
@@ -16667,6 +16801,10 @@ function App() {
             onAvatarUpdated={(nextAvatarUrl) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
               setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
+            }}
+            onProfileUpdated={(patch) => {
+              setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), ...(patch || {}) }))
+              setSessionUser(prev => prev ? ({ ...prev, ...(patch || {}), user_metadata: { ...(prev.user_metadata || {}), ...(patch || {}) } }) : prev)
             }}
           />
         )}
