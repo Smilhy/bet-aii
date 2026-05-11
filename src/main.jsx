@@ -426,9 +426,29 @@ function isVisibleTipForUser(tip, userId, unlockedSet) {
   return false
 }
 
+function isGenericProfileName(value) {
+  const clean = String(value || '').trim().toLowerCase()
+  return ['user', 'użytkownik', 'uzytkownik'].includes(clean)
+}
+
+function resolveRealProfileUsername(user) {
+  const email = normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
+  const emailLocal = email ? email.split('@')[0] : ''
+  const candidates = [
+    user?.username,
+    user?.user_metadata?.username,
+    user?.user_metadata?.name,
+    user?.raw_user_meta_data?.username,
+    user?.author_name,
+    user?.name,
+    emailLocal,
+  ].map(value => String(value || '').trim()).filter(Boolean)
+  return candidates.find(value => !isGenericProfileName(value)) || emailLocal || candidates[0] || 'Użytkownik'
+}
+
 function getUserProfileView(user) {
   const email = user?.email || ''
-  const username = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const username = resolveRealProfileUsername(user)
   const avatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url || ''
   return {
     id: user?.id || null,
@@ -436,7 +456,7 @@ function getUserProfileView(user) {
     username,
     initials: (username || 'U').slice(0, 2).toUpperCase(),
     avatarUrl,
-    isAdmin: email.toLowerCase() === 'smilhytv@gmail.com'
+    isAdmin: email.toLowerCase() === 'smilhytv@gmail.com' || String(username).toLowerCase() === 'smilhytv'
   }
 }
 
@@ -447,16 +467,7 @@ function getProfileEmail(user) {
 }
 
 function getProfileUsername(user) {
-  const email = getProfileEmail(user)
-  return normalizeEmail(
-    user?.username ||
-    user?.author_name ||
-    user?.name ||
-    user?.user_metadata?.username ||
-    user?.user_metadata?.name ||
-    user?.raw_user_meta_data?.username ||
-    (email ? email.split('@')[0] : '')
-  )
+  return normalizeEmail(resolveRealProfileUsername(user))
 }
 
 
@@ -7192,23 +7203,9 @@ function FeedSkeleton() {
 
 
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
-  const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
-  const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
-  const probability = getAiConfidence(tip)
-  const aiScore = getAiScore(tip)
-  const aiAnalysis = getAiAnalysis(tip)
-  const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
-  const isAiTip = author === 'AI Tip'
-  const analysisTitle = isAiTip ? 'AI Analiza' : 'Analiza użytkownika'
-  const analysisTopBadge = isAiTip
-    ? (isLocked ? 'AI 🔒' : `AI ${probability}%`)
-    : (isLocked ? 'ANALIZA UŻ. 🔒' : 'ANALIZA UŻ.')
-  const analysisStrongLabel = isAiTip
-    ? (isLocked ? '🔒' : `${probability}%`)
-    : (isLocked ? '🔒' : '')
   const authorId = getTipAuthorId(tip)
   const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0]
   const tipIdentity = {
@@ -7221,25 +7218,22 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     author_name: tip.author_name,
   }
   const isOwnTip = isSameProfileIdentity(currentUser, tipIdentity) || Boolean(
-    (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
+    currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase()
   )
-  const followKey = authorId ? String(authorId) : String(author).toLowerCase()
-  const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
   const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
-
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
-  const baseLikes = Number(tip?.likes ?? 128) || 128
+  const baseLikes = Number(tip?.likes ?? 0) || 0
   const baseDislikes = Number(tip?.dislikes ?? 0) || 0
-  const baseCommentCount = 0
+  const baseCommentCount = Number(tip?.comments_count ?? 0) || 0
   const interactionStorageKey = useMemo(
     () => `betai_tip_interactions_v3_${tip?.id || `${tip?.team_home || 'home'}_${tip?.team_away || 'away'}_${tip?.created_at || 'now'}`}`,
     [tip?.id, tip?.team_home, tip?.team_away, tip?.created_at]
   )
-
   const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -7252,7 +7246,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       setFeedback({
         likes: Number(parsed?.likes ?? baseLikes) || 0,
         dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
-        comments: [],
+        comments: Array.isArray(parsed?.comments) ? parsed.comments : [],
         votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {}
       })
     } catch (_) {
@@ -7261,25 +7255,28 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }, [interactionStorageKey, baseLikes, baseDislikes])
 
   useEffect(() => {
-    try {
-      localStorage.setItem(interactionStorageKey, JSON.stringify(feedback))
-    } catch (_) {}
+    try { localStorage.setItem(interactionStorageKey, JSON.stringify(feedback)) } catch (_) {}
   }, [interactionStorageKey, feedback])
 
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
   const stakeValue = Number(tip?.stake || 0)
-  const stakeLabel = stakeValue > 0
-    ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł`
-    : '—'
+  const stakeLabel = stakeValue > 0 ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł` : '—'
+  const cardAuthor = isOwnTip ? (currentUsername || author) : author
+  const cardHome = tip.team_home || tip.home_team || 'Gospodarze'
+  const cardAway = tip.team_away || tip.away_team || 'Goście'
+  const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
+  const cardAnalysis = tip.analysis || tip.ai_analysis || tip.description || 'Brak analizy użytkownika.'
+  const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
+  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
+  const createdAgo = formatRelativeAddedTime(tip?.created_at)
 
   function handleVote(nextVote) {
     const previousVote = activeVote
-    setFeedback((prev) => {
+    setFeedback(prev => {
       const votes = { ...(prev?.votes || {}) }
       let likes = Number(prev?.likes || 0)
       let dislikes = Number(prev?.dislikes || 0)
-
       if (previousVote === nextVote) {
         if (nextVote === 'like') likes = Math.max(0, likes - 1)
         if (nextVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
@@ -7291,17 +7288,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         if (nextVote === 'dislike') dislikes += 1
         votes[actorKey] = nextVote
       }
-
       return { ...prev, likes, dislikes, votes }
     })
-
-    if (previousVote === nextVote) {
-      onToast?.({ type: 'info', title: 'Reakcja usunięta', message: 'Usunęliśmy Twoją reakcję z tego typu.' })
-    } else if (nextVote === 'like') {
-      onToast?.({ type: 'success', title: 'Typ polubiony', message: 'Dziękujemy za pozytywną reakcję.' })
-    } else {
-      onToast?.({ type: 'info', title: 'Zapisano opinię', message: 'Twoja negatywna reakcja została zapisana.' })
-    }
   }
 
   function submitComment() {
@@ -7313,119 +7301,163 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       text: clean.slice(0, 280),
       created_at: new Date().toISOString()
     }
-    setFeedback((prev) => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
+    setFeedback(prev => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
     setCommentDraft('')
     setCommentsOpen(true)
     onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
   }
 
+  async function reportDashboardTip() {
+    setMenuOpen(false)
+    onToast?.({ type: 'info', title: 'Zgłoszono wpis', message: 'Zgłoszenie zostało przyjęte do sprawdzenia.' })
+  }
+
+  async function settleDashboardTip() {
+    setMenuOpen(false)
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
+    if (!nextStatus) return
+    const clean = String(nextStatus).trim().toLowerCase()
+    if (!['won', 'lost', 'void'].includes(clean)) {
+      onToast?.({ type: 'error', title: 'Nieprawidłowy wynik', message: 'Dozwolone wartości: won, lost albo void.' })
+      return
+    }
+    try {
+      await updateTipField(tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
+    }
+  }
+
+  async function addDashboardAnalysis() {
+    setMenuOpen(false)
+    const nextAnalysis = window.prompt('Dodaj analizę do typu:', cardAnalysis || '')
+    if (!nextAnalysis) return
+    try {
+      await updateTipField(tip?.id, { analysis: nextAnalysis, description: nextAnalysis })
+      onToast?.({ type: 'success', title: 'Analiza zapisana', message: 'Analiza została dodana do typu.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd analizy', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać analizy.') })
+    }
+  }
+
+  async function shareDashboardTip() {
+    setMenuOpen(false)
+    const text = shareTipText({ home: cardHome, away: cardAway, pick: cardPick, odds: tip.odds })
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Typ Bet+AI', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+        onToast?.({ type: 'success', title: 'Skopiowano', message: 'Treść typu skopiowana do schowka.' })
+      }
+    } catch (_) {}
+  }
+
   return (
-    <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
-      <div className="tip-header">
-        <div className="tipster">
-          <div className={`photo ${isAiTip ? 'bot' : ''} ${authorAvatarUrl ? 'has-avatar' : ''}`}>
-            {authorAvatarUrl ? <img src={authorAvatarUrl} alt="" /> : author.slice(0,2).toUpperCase()}
-          </div>
-          <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
-          <em>{isAiTip ? 'AI' : 'TYPER'}</em>
-          {!isOwnTip && !isAiTip && (
-            <button
-              type="button"
-              className={isFollowing ? 'follow-btn active' : 'follow-btn'}
-              onClick={() => onToggleFollow?.(authorId, author)}
-              title="Obserwuj tego tipstera i dostawaj powiadomienia o nowych typach"
-            >
-              {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
-            </button>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${isLocked ? 'locked' : 'unlocked'}`}>
+      <div className="profile-ticket-v6-left">
+        <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
+          {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
+        </span>
+        <div>
+          <strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{cardAuthor}</strong>
+          <b>✓</b>
+          <small>{tip.created_at ? new Date(tip.created_at).toLocaleString('pl-PL') : 'teraz'}</small>
+        </div>
+        <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
+          {isPremium ? '♕ PREMIUM' : '▣ DARMOWY'}
+        </button>
+      </div>
+
+      <div className="profile-ticket-v6-main">
+        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
+        <div className="profile-ticket-v6-match">
+          <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{cardHome}</strong></div>
+          <span>vs</span>
+          <div><TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} /><strong>{cardAway}</strong></div>
+        </div>
+        <small>{cardMatchLabel}</small>
+      </div>
+
+      <div className="profile-ticket-v6-field">
+        <small>TYP</small>
+        <strong>{isLocked ? 'Typ premium' : cardPick}</strong>
+        <span>{isPremium ? 'Singiel' : 'Darmowy typ'}</span>
+      </div>
+
+      <div className="profile-ticket-v6-field stake">
+        <small>STAWKA</small>
+        <strong>{stakeLabel}</strong>
+        <i><b style={{ width: `${Math.max(12, Math.min(100, stakeValue * 10))}%` }} /></i>
+      </div>
+
+      <div className="profile-ticket-v6-field odds">
+        <small>KURS</small>
+        <strong>{isLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</strong>
+      </div>
+
+      <div className={`profile-ticket-v6-analysis ${isLocked ? 'locked' : ''}`}>
+        <small>ANALIZA</small>
+        <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : cardAnalysis}</p>
+        <button type="button">Czytaj więcej⌄</button>
+      </div>
+
+      <div className="profile-ticket-v6-buy">
+        <div className="profile-ticket-v6-corner">
+          <span>{createdAgo}</span>
+          <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
+          {menuOpen && (
+            <div className="profile-ticket-v6-menu">
+              <button type="button" onClick={reportDashboardTip}>△ Zgłoś wpis</button>
+              <button type="button" onClick={settleDashboardTip}>✓ Rozlicz</button>
+              <button type="button" onClick={addDashboardAnalysis}>▣ Dodaj analizę</button>
+              <button type="button" onClick={shareDashboardTip}>⇧ Udostępnij</button>
+            </div>
           )}
         </div>
-        <div className="card-badges">
-          <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
-          <span className="ai-badge">{analysisTopBadge}</span>
-          {!isLocked && isAiTip && aiScore >= 75 && <span className="ai-score-badge">Score {aiScore}</span>}
-        </div>
-      </div>
-
-      <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
-
-      <div className="tip-grid">
-        <div className="match-box">
-          <div className="teams"><b>{tip.team_home}</b><span>vs</span><b>{tip.team_away}</b></div>
-          <div className="bet-row">
-            <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
-            <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
-            <div><span>Stawka</span><b>{stakeLabel}</b></div>
-          </div>
-        </div>
-
-        <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
-          <div className="ai-title">✦ {analysisTitle}{analysisStrongLabel ? <strong>{analysisStrongLabel}</strong> : null}</div>
-          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
-          <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
-          {!isLocked && isAiTip && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
-          {isLocked && <div className="lock-overlay">🔒 Premium</div>}
-        </div>
-      </div>
-
-      <div className="tip-footer">
-        <span className={statusClass}>{statusLabel}</span>
-
-        <div className="tip-feedback-actions">
-          <button type="button" className={`tip-react-btn like ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')} title="Polub typ">
-            <span>♡</span><b>{feedback.likes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn dislike ${activeVote === 'dislike' ? 'active' : ''}`} onClick={() => handleVote('dislike')} title="Nie podoba mi się">
-            <span>👎</span><b>{feedback.dislikes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn comment ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen((prev) => !prev)} title="Komentarze">
-            <span>💬</span><b>{commentCount}</b>
-          </button>
-        </div>
-
+        <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
+        <small>zakończenie: {cardMatchLabel}</small>
         {isLocked ? (
           <>
-            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup singiel za {Number(tip.price || 29).toFixed(2)} zł</button>
-            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup subskrypcję profilu</button>
+            <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
+            <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
           </>
         ) : (
-          <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
+          <button type="button">{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
         )}
       </div>
 
-      {commentsOpen && (
-        <div className="tip-comments-panel">
-          <div className="tip-comments-head">
-            <strong>Komentarze</strong>
-            <span>{commentCount} łącznie</span>
-          </div>
+      <footer className="profile-ticket-v6-footer">
+        <div>
+          <button type="button" className={activeVote === 'like' ? 'active' : ''} onClick={() => handleVote('like')}>♡ <b>{feedback.likes}</b></button>
+          <button type="button" className={commentsOpen ? 'active' : ''} onClick={() => setCommentsOpen(prev => !prev)}>▣ <b>{commentCount}</b></button>
+          <button type="button" className={activeVote === 'dislike' ? 'active' : ''} onClick={() => handleVote('dislike')}>↗ <b>{feedback.dislikes}</b></button>
+        </div>
+        <button type="button">♡ Zapisz</button>
+      </footer>
 
+      {commentsOpen && (
+        <div className="tip-comments-panel profile-ticket-v6-comments">
+          <div className="tip-comments-head"><strong>Komentarze</strong><span>{commentCount} łącznie</span></div>
           <div className="tip-comment-form">
             <input
               type="text"
               value={commentDraft}
               onChange={(e) => setCommentDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  submitComment()
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitComment() } }}
               placeholder="Dodaj komentarz do tego typu..."
               maxLength={280}
             />
             <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
           </div>
-
           {feedback.comments.length > 0 ? (
             <div className="tip-comment-list">
               {feedback.comments.map((comment) => (
                 <div key={comment.id} className="tip-comment-item">
                   <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
                   <div className="tip-comment-body">
-                    <div className="tip-comment-meta">
-                      <strong>{comment.author}</strong>
-                      <span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span>
-                    </div>
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
                     <p>{comment.text}</p>
                   </div>
                 </div>
@@ -12670,6 +12702,30 @@ function TipTeamLogo({ logo, teamId, name }) {
   )
 }
 
+
+function formatRelativeAddedTime(value) {
+  const ts = Date.parse(value || '')
+  if (!Number.isFinite(ts)) return 'teraz'
+  const diffMinutes = Math.max(0, Math.floor((Date.now() - ts) / 60000))
+  if (diffMinutes < 1) return 'teraz'
+  if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minutę' : 'minut'} temu`
+  const hours = Math.floor(diffMinutes / 60)
+  if (hours < 24) return `${hours} ${hours === 1 ? 'godzinę' : hours < 5 ? 'godziny' : 'godzin'} temu`
+  const days = Math.floor(hours / 24)
+  return `${days} ${days === 1 ? 'dzień' : 'dni'} temu`
+}
+
+async function updateTipField(tipId, patch) {
+  if (!tipId || !isSupabaseConfigured || !supabase) return false
+  const { error } = await supabase.from('tips').update(patch).eq('id', tipId)
+  if (error) throw error
+  return true
+}
+
+function shareTipText(tip) {
+  return `${tip?.home || tip?.team_home || 'Mecz'} vs ${tip?.away || tip?.team_away || ''} • ${tip?.pick || tip?.bet_type || tip?.prediction || 'Typ'} • kurs ${tip?.odds || '—'}`
+}
+
 function ProfileLiveTipCard({
   tip,
   sourceTip,
@@ -12702,6 +12758,8 @@ function ProfileLiveTipCard({
   const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel)
 
   useEffect(() => {
     try {
@@ -12752,14 +12810,6 @@ function ProfileLiveTipCard({
 
       return { ...prev, likes, dislikes, votes }
     })
-
-    if (previousVote === nextVote) {
-      onToast?.({ type: 'info', title: 'Reakcja usunięta', message: 'Usunęliśmy Twoją reakcję z tego typu.' })
-    } else if (nextVote === 'like') {
-      onToast?.({ type: 'success', title: 'Typ polubiony', message: 'Dziękujemy za pozytywną reakcję.' })
-    } else {
-      onToast?.({ type: 'info', title: 'Zapisano opinię', message: 'Twoja negatywna reakcja została zapisana.' })
-    }
   }
 
   function submitComment() {
@@ -12777,6 +12827,53 @@ function ProfileLiveTipCard({
     onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
   }
 
+  async function reportTip() {
+    setMenuOpen(false)
+    onToast?.({ type: 'info', title: 'Zgłoszono wpis', message: 'Zgłoszenie zostało przyjęte do sprawdzenia.' })
+  }
+
+  async function settleTip() {
+    setMenuOpen(false)
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
+    if (!nextStatus) return
+    const clean = String(nextStatus).trim().toLowerCase()
+    if (!['won', 'lost', 'void'].includes(clean)) {
+      onToast?.({ type: 'error', title: 'Nieprawidłowy wynik', message: 'Dozwolone wartości: won, lost albo void.' })
+      return
+    }
+    try {
+      await updateTipField(sourceTip?.id || tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
+    }
+  }
+
+  async function addAnalysis() {
+    setMenuOpen(false)
+    const nextAnalysis = window.prompt('Dodaj analizę do typu:', tip?.analysis || sourceTip?.analysis || '')
+    if (!nextAnalysis) return
+    try {
+      await updateTipField(sourceTip?.id || tip?.id, { analysis: nextAnalysis, description: nextAnalysis })
+      onToast?.({ type: 'success', title: 'Analiza zapisana', message: 'Analiza została dodana do typu.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd analizy', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać analizy.') })
+    }
+  }
+
+  async function shareTip() {
+    setMenuOpen(false)
+    const text = shareTipText(tip)
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Typ Bet+AI', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+        onToast?.({ type: 'success', title: 'Skopiowano', message: 'Treść typu skopiowana do schowka.' })
+      }
+    } catch (_) {}
+  }
+
   return (
     <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${isUnlocked ? 'unlocked' : 'locked'}`}>
       <div className="profile-ticket-v6-left">
@@ -12788,25 +12885,17 @@ function ProfileLiveTipCard({
           <b>✓</b>
           <small>{tip.createdLabel}</small>
         </div>
-        <em>PRO</em>
-        <label>{tip.premium ? '♕ PREMIUM' : '▣ DARMOWY'}</label>
+        <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
+          {tip.premium ? '♕ PREMIUM' : '▣ DARMOWY'}
+        </button>
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-league">
-          <span>⚽</span>
-          <strong>{tip.league}</strong>
-        </div>
+        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
         <div className="profile-ticket-v6-match">
-          <div>
-            <TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} />
-            <strong>{tip.home}</strong>
-          </div>
+          <div><TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} /><strong>{tip.home}</strong></div>
           <span>vs</span>
-          <div>
-            <TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} />
-            <strong>{tip.away}</strong>
-          </div>
+          <div><TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} /><strong>{tip.away}</strong></div>
         </div>
         <small>{tip.matchLabel}</small>
       </div>
@@ -12831,10 +12920,22 @@ function ProfileLiveTipCard({
       <div className={`profile-ticket-v6-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
         <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
-        <button type="button">{tip.premium && !isUnlocked ? 'Czytaj więcej' : 'Czytaj więcej'}⌄</button>
+        <button type="button">Czytaj więcej⌄</button>
       </div>
 
       <div className="profile-ticket-v6-buy">
+        <div className="profile-ticket-v6-corner">
+          <span>{createdAgo}</span>
+          <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
+          {menuOpen && (
+            <div className="profile-ticket-v6-menu">
+              <button type="button" onClick={reportTip}>△ Zgłoś wpis</button>
+              <button type="button" onClick={settleTip}>✓ Rozlicz</button>
+              <button type="button" onClick={addAnalysis}>▣ Dodaj analizę</button>
+              <button type="button" onClick={shareTip}>⇧ Udostępnij</button>
+            </div>
+          )}
+        </div>
         <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
         <small>zakończenie: {tip.matchLabel}</small>
         {tip.premium && !isUnlocked ? (
@@ -12858,21 +12959,13 @@ function ProfileLiveTipCard({
 
       {commentsOpen && (
         <div className="profile-live-tip-comments profile-ticket-v6-comments">
-          <div className="tip-comments-head">
-            <strong>Komentarze</strong>
-            <span>{commentCount} łącznie</span>
-          </div>
+          <div className="tip-comments-head"><strong>Komentarze</strong><span>{commentCount} łącznie</span></div>
           <div className="tip-comment-form profile-comment-form-no-button">
             <input
               type="text"
               value={commentDraft}
               onChange={event => setCommentDraft(event.target.value)}
-              onKeyDown={event => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  submitComment()
-                }
-              }}
+              onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); submitComment() } }}
               placeholder="Dodaj komentarz do tego typu i naciśnij Enter..."
               maxLength={280}
             />
@@ -12883,10 +12976,7 @@ function ProfileLiveTipCard({
                 <div key={comment.id} className="tip-comment-item">
                   <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
                   <div className="tip-comment-body">
-                    <div className="tip-comment-meta">
-                      <strong>{comment.author}</strong>
-                      <span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span>
-                    </div>
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
                     <p>{comment.text}</p>
                   </div>
                 </div>

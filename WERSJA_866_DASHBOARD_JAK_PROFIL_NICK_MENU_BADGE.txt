@@ -1,0 +1,12 @@
+WERSJA 866
+- Dashboard ma taki sam wygląd kart typów jak profil.
+- Przywrócono realny nick: generyczne "user" nie wygrywa już z prawdziwą nazwą konta.
+- Własne typy pokazują prawdziwy nick zalogowanego użytkownika.
+- Usunięto napis PRO z kart.
+- PREMIUM ma jaśniejszy, żywszy złoty kolor.
+- DARMOWY ma żywy zielony kolor.
+- Kliknięcie w PREMIUM otwiera zakup pakietu/subskrypcji profilu.
+- W prawym górnym rogu karty jest realny czas dodania oraz menu ⋮.
+- W menu ⋮ są ukryte opcje: Zgłoś wpis, Rozlicz, Dodaj analizę, Udostępnij.
+- Karty nadal korzystają z realnych herbów z wersji 865.
+- SQL nie jest potrzebny ponad SQL 865.
