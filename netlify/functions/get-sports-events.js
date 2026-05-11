@@ -1188,8 +1188,12 @@ exports.handler = async function(event) {
         const url = new URL(`${cfg.host}${cfg.path}`)
         url.searchParams.set('league', String(leagueFilter.leagueId))
         url.searchParams.set('season', String(leagueFilter.season))
-        url.searchParams.set('from', safeStart)
-        url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
+        if (mode === 'league-today') {
+          url.searchParams.set('date', safeStart)
+        } else {
+          url.searchParams.set('from', safeStart)
+          url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
+        }
         url.searchParams.set('timezone', APP_TIMEZONE)
         try {
           const response = await fetch(url.toString(), {
@@ -1338,6 +1342,29 @@ exports.handler = async function(event) {
 
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     const apiSportsKey = getApiSportsKey()
+
+    // CLEAN LEAGUE MODE: dla konkretnej ligi i dzisiejszej daty pobieramy tylko tę ligę z API-FOOTBALL.
+    // Bez skanowania dni, bez mieszania źródeł, bez podmiany na obce ligi.
+    if (mode === 'league-today' && !allLeagues) {
+      const apiSports = await fetchApiSportsFixtures(apiSportsKey, 0, date)
+      if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          demo: false,
+          source: 'api-football-league-today',
+          allLeagues: false,
+          daysAhead: 0,
+          count: countOnly ? apiSports.fixtures.length : undefined,
+          fixtures: countOnly ? [] : apiSports.fixtures,
+          message: apiSports.fixtures.length
+            ? `Dzisiejsze mecze ligi ${league} pobrane z API-FOOTBALL.`
+            : `Dziś brak meczów w lidze ${league}. ${apiSports.message || ''}`.trim()
+        })
+      }
+    }
     let oddsMessage = ''
     let oddsSportKeys = []
 

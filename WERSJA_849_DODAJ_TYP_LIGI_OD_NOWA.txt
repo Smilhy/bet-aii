@@ -1,0 +1,12 @@
+WERSJA 849
+- Usunąłem mieszaną logikę Dziś / Wyszukiwanie / zakres dni dla wyboru meczów.
+- Zostaje prosta logika:
+  1. kraj,
+  2. liga,
+  3. dzisiejsze mecze tej ligi.
+- Środek nie ma już przełączników Dziś/Wyszukiwanie.
+- Po kliknięciu ligi pobierane są tylko dzisiejsze mecze tej konkretnej ligi.
+- Każdy mecz musi pasować do country + league.
+- Dla lig znanych API-FOOTBALL idzie jedno czyste zapytanie po league + season + date.
+- Cache nadal działa, ale nie miesza lig.
+- SQL nie jest potrzebny.
