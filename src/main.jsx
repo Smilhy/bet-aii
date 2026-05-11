@@ -7474,9 +7474,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
             <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
           </>
-        ) : (
-          <button type="button">{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
-        )}
+        ) : null}
       </div>
 
       <footer className="profile-ticket-v6-footer">
@@ -7494,12 +7492,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <b>{feedback.dislikes}</b>
           </button>
         </div>
-        <button type="button" className="ticket-save-btn-v877" aria-label="Zapisz"><TipActionSaveIcon /></button>
       </footer>
 
       {commentsOpen && (
         <div className="tip-comments-panel profile-ticket-v6-comments">
-          <div className="tip-comments-head"><strong>Komentarze</strong><span>{commentCount} łącznie</span></div>
+          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
           <div className="tip-comment-form">
             <input
               type="text"
@@ -7524,7 +7521,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               ))}
             </div>
           ) : (
-            <div className="tip-comments-empty">Brak nowych komentarzy. Dodaj pierwszy komentarz.</div>
+            {null}
           )}
         </div>
       )}
@@ -13014,9 +13011,7 @@ function ProfileLiveTipCard({
             <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>
             <strong>{formatMoney(tip.price)}</strong>
           </>
-        ) : (
-          <button type="button" onClick={() => onViewType?.()}>{tip.premium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
-        )}
+        ) : null}
       </div>
 
       <footer className="profile-ticket-v6-footer">
@@ -13034,12 +13029,11 @@ function ProfileLiveTipCard({
             <b>{feedback.dislikes}</b>
           </button>
         </div>
-        <button type="button" className="ticket-save-btn-v877" aria-label="Zapisz"><TipActionSaveIcon /></button>
       </footer>
 
       {commentsOpen && (
         <div className="profile-live-tip-comments profile-ticket-v6-comments">
-          <div className="tip-comments-head"><strong>Komentarze</strong><span>{commentCount} łącznie</span></div>
+          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
           <div className="tip-comment-form profile-comment-form-no-button">
             <input
               type="text"
@@ -13063,7 +13057,7 @@ function ProfileLiveTipCard({
               ))}
             </div>
           ) : (
-            <div className="tip-comments-empty">Brak nowych komentarzy. Dodaj pierwszy komentarz.</div>
+            {null}
           )}
         </div>
       )}
@@ -13627,7 +13621,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           <div className="profile-v3-tabs glass-profile-v3 profile-v4-tabs">
             <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> Typy <b>{totalTips}</b></button>
-            <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}><span>▣</span> Przegląd</button>
             <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> Wyniki</button>
             <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
             <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
@@ -13637,12 +13630,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'tips' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
-              <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3><span>{profileVisibleTipCards.length} pozycji</span></div>
+              <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
               <div className="profile-v4-filter-row">
                 <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{allProfileTipCards.length}</b></button>
                 <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCards.length}</b></button>
                 <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
-                <button type="button" className="profile-v4-filter-menu">☷ Filtry⌄</button>
               </div>
               {profileVisibleTipCards.length ? (
                 <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
@@ -13827,14 +13819,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>🌀 Ostatnia aktywność</h3></div>
-            <div className="recent-achievements-v3">
-              {recentActivityRows.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
-            </div>
-            <button type="button" className="side-link-v3" onClick={() => setProfileTab('history')}>Zobacz historię →</button>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">

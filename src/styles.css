@@ -17517,7 +17517,7 @@ img,video,canvas,svg{max-width:100%;}
 .profile-v3-badges span{height:30px!important;padding:0 12px!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.08)!important;background:rgba(10,21,34,.84)!important;color:#ff70c7!important;font-size:12px!important;font-weight:900!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
 .profile-v3-badges span:nth-child(2){color:#1cebcf!important}.profile-v3-badges span:nth-child(3){color:#ffb35d!important}
 .profile-v3-user-copy p{max-width:560px!important;margin:0 0 16px!important;color:#b4c7d4!important;font-size:14px!important;line-height:1.5!important}
-.profile-v3-actions{display:flex!important;gap:12px!important;flex-wrap:wrap!important}
+.profile-v3-actions{display:flex!important;gap:12px!important;flex-wrap:wrap!important;margin-top:12px!important;padding-top:2px!important}
 .profile-v3-actions button{height:44px!important;padding:0 20px!important;border-radius:12px!important;border:1px solid rgba(25,236,220,.18)!important;background:rgba(6,22,31,.92)!important;color:#dff4fd!important;font-size:14px!important;font-weight:900!important;cursor:default!important}
 .profile-v3-actions button.primary{background:linear-gradient(90deg,#19eadb,#0cc9dc)!important;color:#05272e!important;border:0!important;box-shadow:0 12px 28px rgba(25,234,219,.16)!important}
 .profile-v3-stats-strip{margin-top:18px!important;display:grid!important;grid-template-columns:repeat(10,1fr)!important;gap:8px!important;position:relative!important;z-index:1!important}
@@ -31463,33 +31463,138 @@ button.betfolio-fetch-btn{
 .profile-ticket-v6-footer .ticket-save-btn-v877 span{display:none!important}
 
 
-/* WERSJA 880 — zwężona kolumna analizy w kartach typów w Moj profil */
-.profile-v4-tips-page .profile-ticket-v6,
+/* WERSJA 883 — usuń Przegląd, usuń Zobacz typ i zapis, popraw analizę */
+.profile-v4-tabs button:has(span + :contains("Przegląd")){display:none!important;} /* fallback ignored by most browsers */
+.profile-ticket-v6-footer .ticket-save-btn-v877,
+.profile-ticket-v6-footer > button.ticket-save-btn-v877{
+  display:none!important;
+}
+.profile-ticket-v6-buy > button:not(:first-child),
+.profile-ticket-v6-buy > button:last-child{
+  display:none!important;
+}
+
+/* Nie ukrywaj przycisku Kup singiel przy locked premium */
+.profile-ticket-v6.locked .profile-ticket-v6-buy > button,
+.profile-ticket-v6.premium.locked .profile-ticket-v6-buy > button{
+  display:inline-flex!important;
+}
+
+/* więcej miejsca i mniej nachodzenia w prawej części karty */
+.profile-ticket-v6-buy{
+  min-width:168px!important;
+  padding-top:50px!important;
+}
+.profile-ticket-v6-corner{
+  top:8px!important;
+  right:8px!important;
+}
+.profile-ticket-v6-corner > span{
+  max-width:82px!important;
+  white-space:normal!important;
+  line-height:1.05!important;
+  text-align:right!important;
+  font-size:12px!important;
+}
+.profile-ticket-v6-buy .status-oczekujący,
+.profile-ticket-v6-buy .status-oczekujacy,
+.profile-ticket-v6-buy span[class^="status-"]{
+  font-size:13px!important;
+  padding:5px 10px!important;
+}
+
+/* analiza bardziej kompaktowa */
+.profile-ticket-v6-analysis{
+  min-width:0!important;
+  padding:12px 12px!important;
+  gap:5px!important;
+}
+.profile-ticket-v6-analysis small{
+  font-size:11px!important;
+  letter-spacing:.08em!important;
+}
+.profile-ticket-v6-analysis p{
+  font-size:12.5px!important;
+  line-height:1.28!important;
+  min-height:auto!important;
+  -webkit-line-clamp:3!important;
+}
+.profile-ticket-v6-analysis button{
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+
+/* układ w profilu: analiza trochę węższa, prawy status ma oddech */
 .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6,
 .profile-static-v3 .profile-all-tips-list .profile-ticket-v6{
-  grid-template-columns:210px minmax(220px,1.05fr) minmax(120px,.48fr) minmax(118px,.40fr) minmax(82px,.28fr) minmax(180px,.58fr) 190px !important;
+  grid-template-columns:210px minmax(230px,1.08fr) minmax(118px,.48fr) minmax(112px,.38fr) minmax(76px,.25fr) minmax(165px,.50fr) 178px!important;
 }
-.profile-v4-tips-page .profile-ticket-v6-analysis,
-.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis,
-.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-analysis{
-  padding:14px 14px !important;
-  gap:6px !important;
+
+
+/* WERSJA 884 — usuń licznik pozycji i Filtry, ukryj Przegląd/Zobacz typ/Zapisz fallback */
+.profile-v4-filter-menu,
+.profile-v4-tips-page .profile-v3-card-head span,
+.profile-v4-tips-head span{
+  display:none!important;
 }
-.profile-v4-tips-page .profile-ticket-v6-analysis p,
-.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis p,
-.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-analysis p{
-  font-size:13px !important;
-  line-height:1.34 !important;
-  -webkit-line-clamp:3 !important;
+.profile-v4-tabs button:nth-child(2):has(span){
+  /* zabezpieczenie: jeśli drugim przyciskiem nadal był Przegląd po cache */
 }
-.profile-v4-tips-page .profile-ticket-v6-buy,
-.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy,
-.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-buy{
-  min-width:190px !important;
-  padding:44px 14px 14px !important;
+.profile-v4-tabs button[onclick*="overview"],
+.profile-v4-tabs button[data-tab="overview"]{
+  display:none!important;
 }
-.profile-v4-tips-page .profile-ticket-v6-buy button,
-.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy button,
-.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-buy button{
-  width:100% !important;
+.profile-ticket-v6-footer .ticket-save-btn-v877,
+.profile-ticket-v6-footer > button,
+.profile-ticket-v6-buy > button:not(:first-child){
+  display:none!important;
+}
+.profile-ticket-v6.locked .profile-ticket-v6-buy > button,
+.profile-ticket-v6.premium.locked .profile-ticket-v6-buy > button{
+  display:inline-flex!important;
+}
+.profile-v4-tips-page .profile-v4-filter-row{
+  justify-content:flex-start!important;
+}
+
+
+/* WERSJA 886 — badge PREMIUM/DARMOWY opuszczony do dolnej ramki karty */
+.profile-ticket-v6-left{
+  display:grid!important;
+  grid-template-columns:68px 1fr!important;
+  grid-template-rows:auto 1fr auto!important;
+  align-content:stretch!important;
+  align-items:start!important;
+  min-height:100%!important;
+  padding-bottom:16px!important;
+}
+.profile-ticket-v6-left .profile-ticket-v6-avatar{
+  grid-column:1!important;
+  grid-row:1!important;
+}
+.profile-ticket-v6-left > div{
+  grid-column:2!important;
+  grid-row:1!important;
+}
+.profile-ticket-v6-left .profile-ticket-v6-access{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+  align-self:end!important;
+  justify-self:start!important;
+  margin-top:auto!important;
+  margin-bottom:0!important;
+}
+
+/* na kartach w profilu i dashboardzie badge jest na wysokości dolnych ikon */
+.profile-v4-tips-page .profile-ticket-v6-left,
+.dashboard-ticket-v6 .profile-ticket-v6-left,
+.profile-all-tips-list .profile-ticket-v6-left{
+  grid-template-rows:auto 1fr auto!important;
+}
+.profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access,
+.dashboard-ticket-v6 .profile-ticket-v6-left .profile-ticket-v6-access,
+.profile-all-tips-list .profile-ticket-v6-left .profile-ticket-v6-access{
+  grid-row:3!important;
+  align-self:end!important;
+  margin-top:auto!important;
 }

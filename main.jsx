@@ -7372,7 +7372,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       {commentsOpen && (
         <div className="tip-comments-panel">
           <div className="tip-comments-head">
-            <strong>Komentarze</strong>
+            <strong>Komentarze:</strong>
             <span>{commentCount} łącznie</span>
           </div>
 
@@ -7409,7 +7409,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               ))}
             </div>
           ) : (
-            <div className="tip-comments-empty">Brak nowych komentarzy. Dodaj pierwszy komentarz.</div>
+            {null}
           )}
         </div>
       )}
