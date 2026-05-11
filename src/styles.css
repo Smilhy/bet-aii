@@ -31884,3 +31884,23 @@ button.betfolio-fetch-btn{
 .profile-ticket-v6-footer{
   align-items:center!important;
 }
+
+
+/* WERSJA 894 — avatar w górnym pasku, portfelu, wiadomościach i czacie */
+.top-user-avatar.has-avatar,
+.sidebar-user-avatar.has-avatar,
+.profile-v3-avatar-editable.has-avatar,
+.betai-chat-avatar.has-avatar,
+.chat-avatar.has-avatar,
+.live-chat-avatar.has-avatar,
+.dm-avatar.has-avatar,
+.message-avatar.has-avatar{
+  background-image:var(--avatar-image)!important;
+  background-position:center!important;
+  background-size:cover!important;
+  background-repeat:no-repeat!important;
+}
+.top-user-avatar.has-avatar{
+  color:transparent!important;
+  overflow:hidden!important;
+}

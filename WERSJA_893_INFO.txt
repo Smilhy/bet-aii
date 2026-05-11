@@ -1,0 +1,6 @@
+WERSJA 893
+- Naprawka problemu: smilhytv ma admina, ale baza mogła nadal blokować dodawanie premium.
+- Najważniejsza zmiana SQL: profiles.plan = 'premium', profiles.role = 'admin'.
+- SQL dopisuje/aktualizuje też public.user_subscriptions na plan='premium', status='active'.
+- Frontend nadal traktuje smilhytv jako lifetime premium/admin.
+- Uruchom BETAI_SQL_893_SMILHYTV_FIX_PREMIUM_INSERT.sql w Supabase, potem zrób deploy paczki i wyloguj/zaloguj smilhytv.

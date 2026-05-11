@@ -702,7 +702,23 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
     ...(accountProfile || {}),
     id: accountProfile?.id || sessionUser?.id || null,
     email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || fallbackUsername,
+    username: accountProfile?.username || sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name || fallbackUsername,
+    avatar_url:
+      accountProfile?.avatar_url ||
+      accountProfile?.profile_avatar_url ||
+      accountProfile?.author_avatar_url ||
+      sessionUser?.avatar_url ||
+      sessionUser?.profile_avatar_url ||
+      sessionUser?.user_metadata?.avatar_url ||
+      sessionUser?.raw_user_meta_data?.avatar_url ||
+      '',
+    profile_avatar_url:
+      accountProfile?.profile_avatar_url ||
+      accountProfile?.avatar_url ||
+      sessionUser?.profile_avatar_url ||
+      sessionUser?.user_metadata?.avatar_url ||
+      sessionUser?.raw_user_meta_data?.avatar_url ||
+      '',
     bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
   }
   if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
@@ -875,8 +891,8 @@ function formatAppErrorMessage(rawMessage) {
     return 'Masz maksymalny limit 5 typów dziennie na koncie FREE. Przejdź na Premium, aby dodawać bez limitu.'
   }
 
-  if (message.includes('PREMIUM_REQUIRED')) {
-    return 'Nie posiadasz konta Premium. Typy premium możesz dodawać po aktywacji Premium.'
+  if (message.includes('PREMIUM_REQUIRED') || message.includes('Tylko konta Premium')) {
+    return 'Baza nadal widzi konto jako FREE. Uruchom BETAI_SQL_893_SMILHYTV_FIX_PREMIUM_INSERT.sql, wyloguj się i zaloguj ponownie.'
   }
 
   if (message.includes('new row violates row-level security') || message.includes('row-level security')) {
@@ -16482,7 +16498,7 @@ function App() {
     const currentEmail = normalizeEmail(sessionUser?.email)
     if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
       setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active' }))
+      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : prev?.role, is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active', current_period_end: '2099-12-31T23:59:59Z' }))
       return
     }
 
@@ -16538,6 +16554,7 @@ function App() {
       current_period_end: effectivePeriodEnd,
       is_premium: effectivePremium,
       plan: effectivePremium ? 'premium' : 'free',
+      role: isAdminUser(profileData) || isSmilhytvLifetimePremium(profileData) ? 'admin' : profileData?.role,
       subscription_status: effectivePremium ? 'active' : 'free'
     }, sessionUser)
 
@@ -16550,8 +16567,9 @@ function App() {
         username: effectiveProfile.username || effectiveProfile.email?.split('@')?.[0] || 'user',
         is_admin: Boolean(effectiveProfile.is_admin),
         is_premium: Boolean(effectiveProfile.is_premium),
-        plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
-        subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
+        plan: effectivePremium ? 'premium' : (effectiveProfile.plan || 'free'),
+        role: isAdminUser(effectiveProfile) || isSmilhytvLifetimePremium(effectiveProfile) ? 'admin' : effectiveProfile.role,
+        subscription_status: effectivePremium ? 'active' : (effectiveProfile.subscription_status || 'free'),
         current_period_end: effectiveProfile.current_period_end || null,
         avatar_url: effectiveProfile.avatar_url || null,
         bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null
@@ -17293,10 +17311,10 @@ function App() {
             </button>
             <button type="button" className={`top-user-chip neutral-top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
               <span
-                className={`top-user-avatar ${effectiveAccountProfile?.avatar_url ? 'has-avatar' : ''}`}
-                style={effectiveAccountProfile?.avatar_url ? { '--avatar-image': `url("${effectiveAccountProfile.avatar_url}")` } : undefined}
+                className={`top-user-avatar ${getProfileAvatarUrl(effectiveAccountProfile) ? 'has-avatar' : ''}`}
+                style={getProfileAvatarUrl(effectiveAccountProfile) ? { '--avatar-image': `url("${getProfileAvatarUrl(effectiveAccountProfile)}")` } : undefined}
               >
-                {effectiveAccountProfile?.avatar_url ? '' : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
+                {getProfileAvatarUrl(effectiveAccountProfile) ? '' : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
               </span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
               <span className="top-user-chevron">⌄</span>
