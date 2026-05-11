@@ -30998,3 +30998,35 @@ button.betfolio-fetch-btn{
 .dashboard-ticket-v6 .profile-ticket-v6-left strong{
   cursor:pointer;
 }
+
+
+/* WERSJA 867 — kolejność zakładek + prawa kolumna w Typach + poprawa nicku */
+.profile-v4-tab-with-sidebar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:16px;
+  align-items:start;
+}
+.profile-v4-tips-with-sidebar .profile-v4-tips-page{
+  min-width:0;
+}
+.profile-v4-tips-sidebar{
+  display:grid!important;
+  gap:14px;
+  position:sticky;
+  top:88px;
+}
+.profile-v4-filter-menu{
+  margin-left:auto;
+}
+.profile-v4-tabs button:first-child{
+  border-color:rgba(0,238,255,.28);
+}
+@media(max-width:1280px){
+  .profile-v4-tab-with-sidebar{
+    grid-template-columns:1fr;
+  }
+  .profile-v4-tips-sidebar{
+    position:static;
+  }
+}
