@@ -7603,7 +7603,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           )}
         </div>
         <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
-        <small>zakończenie: {cardMatchLabel}</small>
         {isLocked ? (
           <>
             <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
@@ -13138,7 +13137,6 @@ function ProfileLiveTipCard({
           )}
         </div>
         <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
-        <small>zakończenie: {tip.matchLabel}</small>
         {tip.premium && !isUnlocked ? (
           <>
             <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>

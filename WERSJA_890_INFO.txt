@@ -1,0 +1,10 @@
+WERSJA 890
+- Usunięto napis "zakończenie: data/godzina" z kart typów wszędzie.
+- Poprawiono wygląd niebieskiego przycisku "Kup singiel":
+  • wyśrodkowany tekst,
+  • lepszy gradient,
+  • stały rozmiar,
+  • lepszy border i glow,
+  • hover.
+- Poprawiono prawą kolumnę statusu, żeby elementy nie nachodziły.
+- SQL nie jest potrzebny.

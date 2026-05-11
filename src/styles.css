@@ -31760,3 +31760,86 @@ button.betfolio-fetch-btn{
   align-self:end!important;
   margin-top:auto!important;
 }
+
+
+/* WERSJA 890 — usuń zakończenie i popraw przycisk Kup singiel */
+.profile-ticket-v6-buy small{
+  display:none!important;
+}
+
+.profile-ticket-v6-buy{
+  display:grid!important;
+  align-content:center!important;
+  justify-items:center!important;
+  gap:10px!important;
+  padding:46px 12px 14px!important;
+}
+
+.profile-ticket-v6-buy > button{
+  width:138px!important;
+  min-width:138px!important;
+  max-width:138px!important;
+  min-height:44px!important;
+  height:44px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:0 14px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(34,217,255,.92)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(80,228,255,.36),transparent 48%),
+    linear-gradient(180deg,#15bdf7 0%,#087fd7 58%,#0564ba 100%)!important;
+  color:#ffffff!important;
+  font-size:14px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  letter-spacing:.01em!important;
+  box-shadow:
+    0 0 18px rgba(0,203,255,.26),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    inset 0 -10px 18px rgba(0,25,80,.16)!important;
+  cursor:pointer!important;
+  white-space:nowrap!important;
+}
+
+.profile-ticket-v6-buy > button:hover{
+  transform:translateY(-1px)!important;
+  filter:brightness(1.08)!important;
+  box-shadow:
+    0 0 24px rgba(0,203,255,.42),
+    inset 0 1px 0 rgba(255,255,255,.3)!important;
+}
+
+.profile-ticket-v6-buy > strong{
+  display:block!important;
+  margin-top:0!important;
+  color:#ffffff!important;
+  font-size:15px!important;
+  font-weight:950!important;
+  text-align:center!important;
+  line-height:1.15!important;
+}
+
+/* status i czas bez nachodzenia */
+.profile-ticket-v6-corner{
+  top:9px!important;
+  right:10px!important;
+  align-items:center!important;
+}
+.profile-ticket-v6-corner > span{
+  max-width:92px!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  text-align:right!important;
+}
+.profile-ticket-v6-buy > span[class^="status-"],
+.profile-ticket-v6-buy > span{
+  justify-self:center!important;
+  max-width:118px!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
