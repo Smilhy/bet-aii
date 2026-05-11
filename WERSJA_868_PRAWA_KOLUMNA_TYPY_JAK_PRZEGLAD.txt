@@ -1,0 +1,7 @@
+WERSJA 868
+- W zakładce Typy prawa kolumna została przeniesiona do góry, tak jak w zakładce Przegląd.
+- Środkowa kolumna została zwężona przez wspólny układ 1fr + prawa kolumna 360px.
+- Prawa kolumna w Typach jest teraz taka sama jak w Przeglądzie i zaczyna się przy górnym hero profilu.
+- Usunięto wcześniejsze wstawianie prawej kolumny dopiero pod zakładkami.
+- Zostają poprawki z wersji 867: Typy pierwsze, Przegląd drugi, poprawiony nick.
+- Nowy SQL nie jest potrzebny.

@@ -31030,3 +31030,72 @@ button.betfolio-fetch-btn{
     position:static;
   }
 }
+
+
+/* WERSJA 868 — prawa kolumna w Typach jak w Przeglądzie */
+.profile-static-v3 .profile-v3-layout{
+  grid-template-columns:minmax(0,1fr) 360px;
+  align-items:start;
+}
+.profile-static-v3 .profile-v3-main{
+  min-width:0;
+}
+.profile-static-v3 .profile-v4-shared-sidebar{
+  display:grid!important;
+  gap:14px;
+  align-self:start;
+  position:sticky;
+  top:88px;
+}
+.profile-static-v3 .profile-v4-tips-page{
+  min-width:0;
+}
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6,
+.profile-static-v3 .profile-live-tip-section .profile-ticket-v6,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6{
+  grid-template-columns:178px minmax(220px,1fr) minmax(110px,.46fr) minmax(100px,.38fr) minmax(74px,.26fr) minmax(190px,.70fr) 142px;
+}
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-left{
+  padding-left:14px;
+  padding-right:14px;
+}
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-avatar,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-avatar{
+  width:56px;
+  height:56px;
+  flex-basis:56px;
+}
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-access,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-access{
+  min-width:112px;
+  padding:8px 12px;
+}
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-field,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-analysis{
+  padding-left:12px;
+  padding-right:12px;
+}
+.profile-static-v3 .profile-v4-filter-menu{
+  margin-left:auto;
+}
+@media(max-width:1450px){
+  .profile-static-v3 .profile-v3-layout{
+    grid-template-columns:minmax(0,1fr) 330px;
+  }
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6,
+  .profile-static-v3 .profile-live-tip-section .profile-ticket-v6,
+  .profile-static-v3 .profile-all-tips-list .profile-ticket-v6{
+    grid-template-columns:160px minmax(210px,1fr) minmax(100px,.42fr) minmax(88px,.34fr) minmax(70px,.24fr) minmax(172px,.64fr) 132px;
+  }
+}
+@media(max-width:1180px){
+  .profile-static-v3 .profile-v3-layout{
+    grid-template-columns:1fr;
+  }
+  .profile-static-v3 .profile-v4-shared-sidebar{
+    position:static;
+  }
+}
