@@ -1,0 +1,4 @@
+WERSJA 870
+- Napis „Typy” przeniesiony nad kafelki filtrów.
+- Kafelki filtrów „Wszystkie typy / Premium / Darmowe” zostają pod nagłówkiem.
+- Szare napisy w kartach typów zmienione na białe dla lepszej czytelności.

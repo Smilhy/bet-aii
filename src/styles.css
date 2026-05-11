@@ -31120,3 +31120,34 @@ button.betfolio-fetch-btn{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* WERSJA 870 — Typy: nagłówek nad filtrami + białe opisy w kafelkach */
+
+.profile-v4-tips-head{
+  margin-bottom:6px;
+}
+.profile-v4-tips-page .profile-v4-filter-row{
+  margin-bottom:8px;
+}
+.profile-ticket-v6 .profile-ticket-v6-left small,
+.profile-ticket-v6 .profile-ticket-v6-main > small,
+.profile-ticket-v6 .profile-ticket-v6-field small,
+.profile-ticket-v6 .profile-ticket-v6-field span,
+.profile-ticket-v6 .profile-ticket-v6-analysis small,
+.profile-ticket-v6 .profile-ticket-v6-analysis p,
+.profile-ticket-v6 .profile-ticket-v6-buy small,
+.profile-ticket-v6 .profile-ticket-v6-corner > span,
+.profile-ticket-v6 .profile-ticket-v6-footer button,
+.profile-ticket-v6 .profile-ticket-v6-footer b{
+  color:rgba(255,255,255,.95)!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-analysis button{
+  color:#31dfff!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-league,
+.profile-ticket-v6 .profile-ticket-v6-match > div strong,
+.profile-ticket-v6 .profile-ticket-v6-field strong,
+.profile-ticket-v6 .profile-ticket-v6-left strong{
+  color:#ffffff;
+}
