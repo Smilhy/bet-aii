@@ -385,8 +385,13 @@ function normalizeTipRow(row = {}) {
     author_email: row.author_email || row.email || null,
     author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
+    league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || null,
     team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
     team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
+    home_team_id: row.home_team_id || row.homeTeamId || row.fixture_json?.homeTeamId || null,
+    away_team_id: row.away_team_id || row.awayTeamId || row.fixture_json?.awayTeamId || null,
+    home_logo: row.home_logo || row.team_home_logo || row.homeLogo || row.fixture_json?.homeLogo || null,
+    away_logo: row.away_logo || row.team_away_logo || row.awayLogo || row.fixture_json?.awayLogo || null,
     bet_type: row.bet_type || row.prediction || row.type || 'Typ',
     odds: Number(row.odds || row.course || 0),
     analysis: row.analysis || row.description || '',
@@ -6532,6 +6537,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
+      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      home_team_id: publishMatch.homeTeamId || null,
+      away_team_id: publishMatch.awayTeamId || null,
+      home_logo: publishMatch.homeLogo || null,
+      away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
       market: form.market,
       bet_type: form.betType,
@@ -6564,6 +6574,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
+      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      home_team_id: publishMatch.homeTeamId || null,
+      away_team_id: publishMatch.awayTeamId || null,
+      home_logo: publishMatch.homeLogo || null,
+      away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
@@ -12633,6 +12648,28 @@ function EarningsView({ user, earnings = null, stripeConnectStatus = null, onCon
 }
 
 
+
+function getApiSportsFootballTeamLogo(teamId) {
+  const id = String(teamId || '').replace(/[^\d]/g, '')
+  return id ? `https://media.api-sports.io/football/teams/${id}.png` : ''
+}
+
+function resolveTipTeamLogo(explicitLogo, teamId) {
+  return explicitLogo || getApiSportsFootballTeamLogo(teamId) || ''
+}
+
+function TipTeamLogo({ logo, teamId, name }) {
+  const [failed, setFailed] = useState(false)
+  const src = resolveTipTeamLogo(logo, teamId)
+  const initial = String(name || '?').trim().charAt(0).toUpperCase() || '?'
+  return (
+    <span className={`profile-ticket-v6-team-logo ${src && !failed ? 'has-logo' : ''}`}>
+      {src && !failed && <img src={src} alt="" onError={() => setFailed(true)} />}
+      <b>{initial}</b>
+    </span>
+  )
+}
+
 function ProfileLiveTipCard({
   tip,
   sourceTip,
@@ -12741,90 +12778,86 @@ function ProfileLiveTipCard({
   }
 
   return (
-    <article className={`profile-live-tip-card ${tip.premium ? 'premium' : 'free'}`}>
-      <header className="profile-live-tip-head">
-        <div className="profile-live-tip-author">
-          <span
-            className={`profile-live-tip-avatar ${avatarUrl ? 'has-avatar' : ''}`}
-            style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
-          >
-            {avatarUrl ? '' : initials}
-          </span>
-          <div>
-            <strong>{displayName}</strong>
-            <small>{tip.createdLabel}</small>
-          </div>
-          <em>TYPER</em>
+    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${isUnlocked ? 'unlocked' : 'locked'}`}>
+      <div className="profile-ticket-v6-left">
+        <span className={`profile-ticket-v6-avatar ${avatarUrl ? 'has-avatar' : ''}`} style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}>
+          {avatarUrl ? '' : initials}
+        </span>
+        <div>
+          <strong>{displayName}</strong>
+          <b>✓</b>
+          <small>{tip.createdLabel}</small>
         </div>
-        <div className="profile-live-tip-tags">
-          <span>{tip.premium ? '▣ PREMIUM' : '◯ FREE'}</span>
-          <span>ANALIZA UŻ.{tip.premium && !isUnlocked ? ' 🔒' : ''}</span>
-        </div>
-      </header>
-
-      <div className="profile-live-tip-meta">{tip.league} • {tip.matchLabel}</div>
-
-      <div className="profile-live-tip-body">
-        <div className="profile-live-tip-ticket">
-          <div className="profile-live-tip-match">
-            <strong>{tip.home}</strong>
-            <span>VS</span>
-            <strong>{tip.away}</strong>
-          </div>
-          <div className="profile-live-tip-fields">
-            <div>
-              <small>Typ</small>
-              <b>{tip.premium && !isUnlocked ? '🔒 Typ premium' : tip.pick}</b>
-            </div>
-            <div>
-              <small>Kurs</small>
-              <b>{tip.premium && !isUnlocked ? '—' : tip.odds}</b>
-            </div>
-            <div>
-              <small>Stawka</small>
-              <b>{tip.stake.toFixed(0)} zł</b>
-            </div>
-          </div>
-        </div>
-
-        <div className={`profile-live-tip-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
-          <div>
-            <strong>✦ Analiza użytkownika</strong>
-            {tip.premium && !isUnlocked && <span>🔒</span>}
-          </div>
-          <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
-          <i><span style={{ width: `${tip.premium && !isUnlocked ? Math.max(18, tip.confidence || 24) : tip.confidence}%` }}></span></i>
-          {tip.premium && !isUnlocked && <em>🔒 Premium</em>}
-        </div>
+        <em>PRO</em>
+        <label>{tip.premium ? '♕ PREMIUM' : '▣ DARMOWY'}</label>
       </div>
 
-      <footer className="profile-live-tip-foot">
-        <div className="profile-live-tip-stats profile-live-tip-stats-active">
-          <span className={`status-${tip.statusLabel.toLowerCase()}`}>◷ {tip.statusLabel}</span>
-          <button type="button" className={`tip-react-btn like ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')} title="Polub typ">
-            <span>♡</span><b>{feedback.likes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn dislike ${activeVote === 'dislike' ? 'active' : ''}`} onClick={() => handleVote('dislike')} title="Nie podoba mi się">
-            <span>👎</span><b>{feedback.dislikes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn comment ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} title="Komentarze">
-            <span>💬</span><b>{commentCount}</b>
-          </button>
+      <div className="profile-ticket-v6-main">
+        <div className="profile-ticket-v6-league">
+          <span>⚽</span>
+          <strong>{tip.league}</strong>
         </div>
-        <div className="profile-live-tip-actions">
-          {tip.premium && !isUnlocked ? (
-            <>
-              <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel za {formatMoney(tip.price)}</button>
-              <button type="button" className="secondary" onClick={() => onSubscribeToTipster?.(sourceTip)}>Kup subskrypcję profilu</button>
-            </>
-          ) : (
-            <button type="button" onClick={() => onViewType?.()}>{tip.premium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
-          )}
+        <div className="profile-ticket-v6-match">
+          <div>
+            <TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} />
+            <strong>{tip.home}</strong>
+          </div>
+          <span>vs</span>
+          <div>
+            <TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} />
+            <strong>{tip.away}</strong>
+          </div>
         </div>
+        <small>{tip.matchLabel}</small>
+      </div>
+
+      <div className="profile-ticket-v6-field">
+        <small>TYP</small>
+        <strong>{tip.premium && !isUnlocked ? 'Typ premium' : tip.pick}</strong>
+        <span>{tip.premium ? 'Singiel' : 'Darmowy typ'}</span>
+      </div>
+
+      <div className="profile-ticket-v6-field stake">
+        <small>STAWKA</small>
+        <strong>{tip.stake.toFixed(0)} zł</strong>
+        <i><b style={{ width: `${Math.max(12, Math.min(100, tip.stake * 10))}%` }} /></i>
+      </div>
+
+      <div className="profile-ticket-v6-field odds">
+        <small>KURS</small>
+        <strong>{tip.premium && !isUnlocked ? '—' : tip.odds}</strong>
+      </div>
+
+      <div className={`profile-ticket-v6-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
+        <small>ANALIZA</small>
+        <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+        <button type="button">{tip.premium && !isUnlocked ? 'Czytaj więcej' : 'Czytaj więcej'}⌄</button>
+      </div>
+
+      <div className="profile-ticket-v6-buy">
+        <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
+        <small>zakończenie: {tip.matchLabel}</small>
+        {tip.premium && !isUnlocked ? (
+          <>
+            <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>
+            <strong>{formatMoney(tip.price)}</strong>
+          </>
+        ) : (
+          <button type="button" onClick={() => onViewType?.()}>{tip.premium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
+        )}
+      </div>
+
+      <footer className="profile-ticket-v6-footer">
+        <div>
+          <button type="button" className={activeVote === 'like' ? 'active' : ''} onClick={() => handleVote('like')}>♡ <b>{feedback.likes}</b></button>
+          <button type="button" className={commentsOpen ? 'active' : ''} onClick={() => setCommentsOpen(prev => !prev)}>▣ <b>{commentCount}</b></button>
+          <button type="button" className={activeVote === 'dislike' ? 'active' : ''} onClick={() => handleVote('dislike')}>↗ <b>{feedback.dislikes}</b></button>
+        </div>
+        <button type="button">♡ Zapisz</button>
       </footer>
 
       {commentsOpen && (
-        <div className="profile-live-tip-comments">
+        <div className="profile-live-tip-comments profile-ticket-v6-comments">
           <div className="tip-comments-head">
             <strong>Komentarze</strong>
             <span>{commentCount} łącznie</span>
@@ -13118,6 +13151,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       home,
       away,
       league,
+      homeLogo: normalized.home_logo || normalized.homeLogo || null,
+      awayLogo: normalized.away_logo || normalized.awayLogo || null,
+      homeTeamId: normalized.home_team_id || normalized.homeTeamId || null,
+      awayTeamId: normalized.away_team_id || normalized.awayTeamId || null,
       pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
       odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
       stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || (premiumTip ? 1 : 10)) || (premiumTip ? 1 : 10),
