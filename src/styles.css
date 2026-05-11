@@ -30145,3 +30145,25 @@ button.betfolio-fetch-btn{
   object-fit:cover!important;
   border-radius:inherit!important;
 }
+
+
+/* WERSJA 850 — komunikat trybu oszczędnego API */
+.betfolio-api-saver-note{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+  margin:14px 0!important;
+  padding:14px 16px!important;
+  border:1px solid rgba(33,233,216,.18)!important;
+  border-radius:16px!important;
+  background:rgba(3,20,28,.58)!important;
+}
+.betfolio-api-saver-note strong{
+  color:#21e9d8!important;
+  font-size:13px!important;
+}
+.betfolio-api-saver-note span{
+  color:#9db3c4!important;
+  font-size:13px!important;
+}

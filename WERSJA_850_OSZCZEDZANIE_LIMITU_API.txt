@@ -1,0 +1,9 @@
+WERSJA 850
+- Usunięto automatyczne pobieranie po wejściu na stronę Dodaj typ.
+- Usunięto automatyczne odświeżanie w tle.
+- Usunięto liczniki sportów u góry, które zjadały requesty API.
+- Kliknięcie samego kraju nie pobiera już meczów; dopiero kliknięcie konkretnej ligi odpala API.
+- Lista ligi pobiera teraz tylko fixtures tej ligi na dziś.
+- W trybie listy ligi nie dociągam automatycznie kursów, żeby nie robić dodatkowych requestów do /odds przy samym wejściu na listę.
+- Po wejściu na stronę: 0 requestów do API.
+- SQL nie jest potrzebny.
