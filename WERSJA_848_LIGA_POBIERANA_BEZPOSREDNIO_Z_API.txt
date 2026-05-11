@@ -1,7 +1,0 @@
-WERSJA 848
-- Naprawiono pobieranie meczów po kliknięciu konkretnej ligi.
-- Dla znanych lig piłkarskich (m.in. Premier League) funkcja Netlify pobiera mecze bezpośrednio po league+season+from+to, zamiast skanować globalnie dzień po dniu.
-- Anglia/Premier League ma mapowanie do API-FOOTBALL league=39.
-- Dodano aliasy krajów API: England -> Anglia, Spain -> Hiszpania itd., więc filtrowanie nie odrzuca już prawidłowych meczów przez różnicę języka.
-- Rozwiązanie zużywa mniej requestów API niż globalne skanowanie.
-- SQL nie jest potrzebny.

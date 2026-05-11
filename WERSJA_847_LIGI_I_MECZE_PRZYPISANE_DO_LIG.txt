@@ -1,9 +1,0 @@
-WERSJA 847
-- Naprawiono filtr lig w lewej kolumnie.
-- Po wybraniu kraju + ligi automatyczne odświeżenie nie przeskakuje już na wszystkie ligi.
-- Wyszukiwarka po wybraniu konkretnej ligi szuka w tej lidze, a nie globalnie.
-- Frontend odrzuca mecz, który nie pasuje do wybranej ligi/kraju.
-- Netlify function przypisuje meczom z The Odds API normalne country + league po sport_key.
-- Cache i fallback cache też respektują wybraną ligę.
-- Dzięki temu Anglia -> Premier League ma pokazywać tylko Premier League, bez późniejszego podmieniania na USA/MLS.
-- SQL nie jest potrzebny.

@@ -4445,7 +4445,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
-  const [footballViewMode, setFootballViewMode] = useState('league-today')
+  const [footballViewMode, setFootballViewMode] = useState('today')
   const [fixtureSearchLoading, setFixtureSearchLoading] = useState(false)
   const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
@@ -5498,8 +5498,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setLiveFixtures([])
     setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
-    setFootballViewMode('league-today')
-    setLiveFixturesStatus('Wybierz ligę po lewej, a pokażę tylko dzisiejsze mecze tej ligi.')
+    setFootballViewMode('upcoming')
+    setLiveFixturesStatus('Wybierz ligę, a pokażę mecze tej ligi na dziś i najbliższe terminy.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
@@ -5725,9 +5725,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const stillVisible = visibleMarketGroups.some(([label]) => label === expandedMarketGroup)
     if (!stillVisible) setExpandedMarketGroup(visibleMarketGroups[0][0])
   }, [showMarketBoard, activeMarketTab, selectedMatch?.id, visibleMarketGroups.length])
-  const visibleMatchOptions = matchOptions
-    .slice()
-    .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+  const normalizedSearch = String(sidebarSearch || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim()
+  const visibleMatchOptions = (normalizedSearch
+    ? matchOptions.filter((item) => (`${item.home || ''} ${item.away || ''} ${item.league || currentLeague} ${item.country || currentCountry}`).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizedSearch))
+    : matchOptions
+  ).slice().sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
 
   function getMatchDateBadge(match) {
     const eventKey = (() => {
@@ -5936,7 +5941,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }, [topSportButtons])
 
   useEffect(() => {
-    fetchSelectedLeagueToday()
+    fetchTodayFootballFixtures()
   }, [])
 
   useEffect(() => {
@@ -5950,7 +5955,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource('manual')
         setLiveFixturesStatus('Nowy dzień. Liczniki sportów i lista meczów zostały odświeżone dla dzisiejszej daty.')
         fetchSportDayCounts(true)
-        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, daysAhead: 0, allLeagues: false, mode: 'league-today' })
+        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: true })
       }
     }, 30000)
 
@@ -5971,12 +5976,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       if (form.sport) {
         fetchLiveFixturesForDay({
           sport: form.sport,
-          country: form.country || currentCountry || 'Wszystkie',
-          league: form.league || currentLeague || '',
+          country: form.country || 'Wszystkie',
+          league: form.league || 'Wszystkie ligi',
           date: todayKey,
-          daysAhead: 0,
-          allLeagues: false,
-          mode: 'league-today',
+          daysAhead: LIVE_SEARCH_DAYS_AHEAD,
+          allLeagues: true,
           silent: true,
         })
       }
@@ -6092,12 +6096,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setOpenSidebarSport(nextSport)
     if (nextSport === 'Piłka nożna') setOpenFootballCountry(nextCountry)
 
-    setFootballViewMode('league-today')
+    setFootballViewMode('upcoming')
     setFixtureSearchPerformed(false)
-    setSidebarSearch('')
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`Pobieram dzisiejsze mecze ligi ${nextLeague}...`)
+    setLiveFixturesStatus(`LIVE: pobieram mecze ligi ${nextLeague} na dziś i najbliższe terminy...`)
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -6114,17 +6117,62 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         country: nextCountry || 'Wszystkie',
         league: nextLeague,
         date: getTodayLocalKey(),
-        daysAhead: 0,
+        daysAhead: LIVE_SEARCH_DAYS_AHEAD,
         allLeagues: false,
-        mode: 'league-today',
+        mode: 'upcoming',
       })
-    }, 30)
+    }, 60)
   }
 
-  function fetchSelectedLeagueToday() {
-    const nextCountry = form.country || currentCountry || 'Anglia'
-    const nextLeague = form.league || currentLeague || 'Premier League'
-    selectSidebarLeague('Piłka nożna', nextCountry, nextLeague)
+  function fetchTodayFootballFixtures() {
+    setFootballViewMode('today')
+    setFixtureSearchPerformed(false)
+    setSidebarSearch('')
+    fetchLiveFixturesForDay({
+      sport: 'Piłka nożna',
+      country: 'Wszystkie',
+      league: 'Wszystkie ligi',
+      date: getTodayLocalKey(),
+      daysAhead: 0,
+      allLeagues: true,
+      mode: 'today',
+    })
+  }
+
+  function fetchUpcomingFootballFixtures() {
+    setFootballViewMode('upcoming')
+    setFixtureSearchPerformed(false)
+    fetchLiveFixturesForDay({
+      sport: 'Piłka nożna',
+      country: form.country || 'Wszystkie',
+      league: form.league || 'Wszystkie ligi',
+      date: getTodayLocalKey(),
+      daysAhead: LIVE_SEARCH_DAYS_AHEAD,
+      allLeagues: !form.league || form.league === 'Wszystkie ligi',
+      mode: 'upcoming',
+    })
+  }
+
+  function handleFixtureSearchSubmit(event) {
+    event?.preventDefault?.()
+    const query = String(sidebarSearch || '').trim()
+    if (!query) {
+      fetchTodayFootballFixtures()
+      return
+    }
+    setFootballViewMode('search')
+    setFixtureSearchPerformed(true)
+    setFixtureSearchLoading(true)
+    fetchLiveFixturesForDay({
+      sport: 'Piłka nożna',
+      country: 'Wszystkie',
+      league: 'Wszystkie ligi',
+      date: getTodayLocalKey(),
+      daysAhead: GLOBAL_SEARCH_DAYS_AHEAD,
+      allLeagues: true,
+      mode: 'search',
+      query,
+    }).finally(() => setFixtureSearchLoading(false))
   }
 
   async function fetchLiveFixturesForDay(overrides = {}) {
@@ -6133,7 +6181,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(true)
     if (!isSilentRefresh) {
       setLiveDataSource('loading')
-      setLiveFixturesStatus(`Pobieram dzisiejsze mecze wybranej ligi...`)
+      setLiveFixturesStatus(`LIVE: pobieram realne mecze z The Odds API, a jeśli pusto — z API-Sports...`)
     }
     try {
       const params = new URLSearchParams({
@@ -6141,43 +6189,29 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         country: overrides.country || currentCountry || '',
         league: overrides.league || currentLeague || '',
         date: overrides.date || liveDate || getTodayLocalKey(),
-        daysAhead: String(overrides.daysAhead ?? 0),
+        daysAhead: String(overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD),
         realOnly: '1',
         allLeagues: overrides.allLeagues ? '1' : '0',
-        mode: overrides.mode || footballViewMode || 'league-today',
+        mode: overrides.mode || footballViewMode || 'upcoming',
         query: overrides.query || '',
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
-      const requestedCountry = String(overrides.country || currentCountry || '').trim()
-      const requestedLeague = String(overrides.league || currentLeague || '').trim()
-      const strictLeagueScope = !overrides.allLeagues && requestedLeague && requestedLeague !== 'Wszystkie ligi'
-      const normalizeScope = (value = '') => String(value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim()
-      const matchesStrictScope = (match) => {
-        if (!strictLeagueScope) return true
-        const wantedLeague = normalizeScope(requestedLeague)
-        const wantedCountry = normalizeScope(requestedCountry)
-        const matchLeague = normalizeScope(match?.league)
-        const matchCountry = normalizeScope(match?.country)
-        const leagueOk = matchLeague.includes(wantedLeague) || wantedLeague.includes(matchLeague)
-        const countryOk = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry) || matchCountry.includes(wantedCountry) || wantedCountry.includes(matchCountry)
-        return leagueOk && countryOk
-      }
-      const fixtures = rawFixtures.filter(matchStartsAfterBuffer).filter(matchesStrictScope)
+      const fixtures = rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} dzisiejszych meczów ligi ${requestedLeague}. Godziny rosnąco, czas dla Polski.`)
+          const scopeLabel = overrides.mode === 'today'
+            ? 'meczów z top 6 lig dziś'
+            : overrides.mode === 'search'
+              ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
+              : `meczów z najbliższych ${overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD} dni`
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
         } else {
           setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
@@ -6187,7 +6221,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource(data.source || 'empty')
         if (!isSilentRefresh) {
           setLiveFixturesStatus(data.message || `LIVE API/API-Sports: brak realnych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
-          onToast?.({ type: 'info', title: 'Dziś brak meczów', message: `Dziś nie ma meczów w lidze ${requestedLeague}.` })
+          onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
         } else {
           setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
         }
@@ -6649,7 +6683,21 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     <section className="add-page add-tip-ultra-static add-tip-betfolio-page">
       <div className={`betfolio-add-shell ${ticketMarketSelected ? "ticket-visible" : "ticket-hidden"}`}>
         <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
-<div className="sports-accordion-title">SPORT</div>
+          <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
+            <input
+              className="betfolio-search-input"
+              placeholder="Szukaj meczu lub drużyny bez limitu dat"
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
+            />
+            <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
+              {fixtureSearchLoading ? '…' : 'Szukaj'}
+            </button>
+          </form>
+
+
+          <div className="sports-accordion-title">SPORT</div>
 
           <div className="sports-accordion-list">
             <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
@@ -6658,6 +6706,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </button>
               {openSidebarSport === 'Piłka nożna' && (
                 <div className="sport-accordion-children football-country-tree">
+                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
                   {footballCountryOptions.map(country => {
                     const cleanCountry = normalizeFootballCountryName(country)
                     const flagCode = footballCountryFlagCodes[cleanCountry]
@@ -6791,6 +6840,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 })}
               </div>
 
+              <div className="betfolio-fixture-mode-tabs">
+                <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
+                <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+              </div>
               </>
               )}
             </>
@@ -6801,7 +6854,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {addTipMode === 'auto' ? (
                 <>
                   <div className="betfolio-events-head">
-                    <strong>{`Dzisiejsze mecze • ${currentCountry} • ${currentLeague}`}</strong>
+                    <strong>{footballViewMode === 'today' ? 'Dziś — szybki typ' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Mecze ligi'}</strong>
                     <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
                   </div>
 
@@ -6844,7 +6897,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       )
                     }) : (
                       <div className="betfolio-empty-state no-fake-empty">
-                        <strong>{hasTriedLiveLoad ? 'Dziś brak meczów w tej lidze' : 'Wybierz ligę albo kliknij Dziś'}</strong>
+                        <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę albo kliknij Dziś'}</strong>
                         <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję szybkie typy z top 6 lig, a wyszukiwarka znajduje każdy prawdziwy mecz. Kliknij ligę po lewej, aby zobaczyć jej mecze na dziś i najbliższe terminy.' : 'Kliknij ligę po lewej, użyj zakładki „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
                       </div>
                     )}

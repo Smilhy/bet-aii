@@ -164,98 +164,16 @@ exports.handler = async function(event) {
     return q.split(/\s+/).every(term => haystack.includes(term))
   }
 
-  const normalizeFootballCountryAlias = (value) => {
-    const clean = normalizeLoose(value)
-    const aliases = {
-      england: 'anglia',
-      english: 'anglia',
-      uk: 'anglia',
-      poland: 'polska',
-      spain: 'hiszpania',
-      germany: 'niemcy',
-      france: 'francja',
-      italy: 'wlochy',
-      netherlands: 'holandia',
-      portugal: 'portugalia',
-      usa: 'usa',
-      unitedstates: 'usa',
-      unitedstatesofamerica: 'usa',
-      brazil: 'brazylia',
-      argentina: 'argentyna',
-      japan: 'japonia',
-      belgium: 'belgia',
-      scotland: 'szkocja',
-      turkey: 'turcja',
-    }
-    return aliases[clean.replace(/\s+/g, '')] || clean
-  }
-
-  const normalizeFootballLeagueAlias = (value) => {
-    const clean = normalizeLoose(value)
-    const aliases = {
-      premierleague: 'premier league',
-      englishpremierleague: 'premier league',
-      championship: 'championship',
-      leagueone: 'league one',
-      leaguetwo: 'league two',
-      nationallleague: 'national league',
-      nationalliga: 'national league',
-      nationalleague: 'national league',
-      laliga: 'la liga',
-      bundesliga: 'bundesliga',
-      seriea: 'serie a',
-      ligue1: 'ligue 1',
-      eredivisie: 'eredivisie',
-      primeiraliga: 'primeira liga',
-      mls: 'mls',
-    }
-    return aliases[clean.replace(/\s+/g, '')] || clean
-  }
-
   const matchesRequestedFootballScope = (fixture) => {
-    const wantedLeague = normalizeFootballLeagueAlias(league)
-    const wantedCountry = normalizeFootballCountryAlias(country)
-    const actualLeague = normalizeFootballLeagueAlias(fixture.league)
-    const actualCountry = normalizeFootballCountryAlias(fixture.country)
+    const wantedLeague = normalizeLoose(league)
+    const wantedCountry = normalizeLoose(country)
+    const actualLeague = normalizeLoose(fixture.league)
+    const actualCountry = normalizeLoose(fixture.country)
     const countryIsWide = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry)
     const leagueIsWide = !wantedLeague || wantedLeague.includes('wszystkie') || wantedLeague === normalizeLoose('Piłka nożna')
     const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
     const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague)
     return countryMatches && leagueMatches
-  }
-
-  const apiFootballLeagueIds = {
-    'anglia|premier league': 39,
-    'anglia|championship': 40,
-    'anglia|league one': 41,
-    'anglia|league two': 42,
-    'anglia|national league': 43,
-    'hiszpania|la liga': 140,
-    'niemcy|bundesliga': 78,
-    'wlochy|serie a': 135,
-    'francja|ligue 1': 61,
-    'holandia|eredivisie': 88,
-    'portugalia|primeira liga': 94,
-    'usa|mls': 253,
-  }
-
-  const getApiFootballSeasonForDate = (dateKey = '') => {
-    const [year, month] = String(dateKey || new Date().toISOString().slice(0, 10)).split('-').map(Number)
-    if (!year) return new Date().getUTCFullYear()
-    // Europejskie sezony piłkarskie zaczynają się latem. Maj 2026 = sezon 2025.
-    return month >= 7 ? year : year - 1
-  }
-
-  const getApiFootballLeagueFilter = (dateKey = '') => {
-    if (allLeagues) return null
-    const wantedCountry = normalizeFootballCountryAlias(country)
-    const wantedLeague = normalizeFootballLeagueAlias(league)
-    const leagueId = apiFootballLeagueIds[`${wantedCountry}|${wantedLeague}`]
-    if (!leagueId) return null
-    return {
-      leagueId,
-      season: getApiFootballSeasonForDate(dateKey),
-    }
   }
 
 
@@ -556,43 +474,16 @@ exports.handler = async function(event) {
     })
   }
 
-  const oddsLeagueMetaByKey = {
-    soccer_epl: { country: 'Anglia', league: 'Premier League' },
-    soccer_efl_champ: { country: 'Anglia', league: 'Championship' },
-    soccer_england_league1: { country: 'Anglia', league: 'League One' },
-    soccer_england_league2: { country: 'Anglia', league: 'League Two' },
-    soccer_spain_la_liga: { country: 'Hiszpania', league: 'La Liga' },
-    soccer_germany_bundesliga: { country: 'Niemcy', league: 'Bundesliga' },
-    soccer_italy_serie_a: { country: 'Włochy', league: 'Serie A' },
-    soccer_france_ligue_one: { country: 'Francja', league: 'Ligue 1' },
-    soccer_netherlands_eredivisie: { country: 'Holandia', league: 'Eredivisie' },
-    soccer_portugal_primeira_liga: { country: 'Portugalia', league: 'Primeira Liga' },
-    soccer_usa_mls: { country: 'USA', league: 'MLS' },
-    soccer_uefa_champs_league: { country: 'Europa', league: 'Liga Mistrzów' },
-    soccer_uefa_europa_league: { country: 'Europa', league: 'Liga Europy' },
-    soccer_uefa_europa_conference_league: { country: 'Europa', league: 'Liga Konferencji' },
-    soccer_brazil_campeonato: { country: 'Brazylia', league: 'Serie A' },
-    soccer_argentina_primera_division: { country: 'Argentyna', league: 'Primera División' },
-    soccer_japan_j_league: { country: 'Japonia', league: 'J1 League' },
-    soccer_korea_kleague1: { country: 'Korea Południowa', league: 'K League 1' },
-    soccer_mexico_ligamx: { country: 'Meksyk', league: 'Liga MX' },
-    soccer_turkey_super_league: { country: 'Turcja', league: 'Süper Lig' },
-    soccer_belgium_first_div: { country: 'Belgia', league: 'First Division A' },
-    soccer_scotland_premiership: { country: 'Szkocja', league: 'Premiership' },
-  }
-
   const mapOddsItemToFixture = (item, index, sourceKey = '') => {
     const home = item.home_team || item.teams?.[0] || 'Gospodarze'
     const away = item.away_team || item.teams?.find(t => t !== home) || 'Goście'
     const parts = toDateParts(item.commence_time)
-    const sportKey = item.sport_key || sourceKey || ''
-    const leagueMeta = oddsLeagueMetaByKey[sportKey] || null
     return {
       id: item.id || `${sourceKey || item.sport_key || 'event'}-${index}`,
       sport: item.sport_title || sport,
-      sportKey,
-      country: leagueMeta?.country || country,
-      league: leagueMeta?.league || item.sport_title || league || sport,
+      sportKey: item.sport_key || sourceKey || '',
+      country,
+      league: item.sport_title || league || sport,
       home,
       away,
       date: parts.date,
@@ -1178,23 +1069,15 @@ exports.handler = async function(event) {
       : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
 
     for (const cfg of configs) {
-      const leagueFilter = cfg.type === 'football' ? getApiFootballLeagueFilter(safeStart) : null
-      let dayResponses = []
-
-      if (leagueFilter && mode !== 'search') {
-        // Dla konkretnej ligi pobieramy ją bezpośrednio jednym zapytaniem league+season+from+to.
-        // To jest dokładniejsze niż globalne pobieranie dzień po dniu, zużywa mniej requestów
-        // i gwarantuje, że Premier League nie zostanie zastąpiona np. MLS.
+      // API-FOOTBALL /fixtures nie przyjmuje szerokiego from/to bez dodatkowego kontekstu
+      // ligi/drużyny. Dla widoku globalnego i drzewa lig pobieramy więc dzień po dniu
+      // parametrem date=, a potem filtrujemy lokalnie po kraju/lidze. To jest poprawne
+      // również dla trybu "Dziś" i pozwala sortować mecze godzinami.
+      const dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
         const url = new URL(`${cfg.host}${cfg.path}`)
-        url.searchParams.set('league', String(leagueFilter.leagueId))
-        url.searchParams.set('season', String(leagueFilter.season))
-        if (mode === 'league-today') {
-          url.searchParams.set('date', safeStart)
-        } else {
-          url.searchParams.set('from', safeStart)
-          url.searchParams.set('to', addDaysToDateKey(safeStart, safeDays) || safeStart)
-        }
-        url.searchParams.set('timezone', APP_TIMEZONE)
+        url.searchParams.set('date', dayKey)
+        if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
+
         try {
           const response = await fetch(url.toString(), {
             headers: {
@@ -1204,47 +1087,18 @@ exports.handler = async function(event) {
           })
           const data = await response.json().catch(() => ({}))
           if (!response.ok) {
-            errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: HTTP ${response.status}`)
-            dayResponses = [[]]
-          } else {
-            if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-              errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-            }
-            dayResponses = [Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []]
-          }
-        } catch (error) {
-          errors.push(`${cfg.key}/league-${leagueFilter.leagueId}: ${error.message}`)
-          dayResponses = [[]]
-        }
-      } else {
-        // Widok globalny i ligi bez mapowania zostają na pobieraniu dzień po dniu.
-        dayResponses = await Promise.all(dateKeys.map(async (dayKey) => {
-          const url = new URL(`${cfg.host}${cfg.path}`)
-          url.searchParams.set('date', dayKey)
-          if (cfg.type === 'football') url.searchParams.set('timezone', APP_TIMEZONE)
-
-          try {
-            const response = await fetch(url.toString(), {
-              headers: {
-                'x-apisports-key': apiKey,
-                'x-rapidapi-key': apiKey
-              }
-            })
-            const data = await response.json().catch(() => ({}))
-            if (!response.ok) {
-              errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
-              return []
-            }
-            if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-              errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-            }
-            return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
-          } catch (error) {
-            errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
+            errors.push(`${cfg.key}/${dayKey}: HTTP ${response.status}`)
             return []
           }
-        }))
-      }
+          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
+            errors.push(`${cfg.key}/${dayKey}: ${JSON.stringify(data.errors).slice(0, 120)}`)
+          }
+          return Array.isArray(data?.response) ? data.response : Array.isArray(data) ? data : []
+        } catch (error) {
+          errors.push(`${cfg.key}/${dayKey}: ${error.message}`)
+          return []
+        }
+      }))
 
       dayResponses.flat()
         .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
@@ -1290,8 +1144,7 @@ exports.handler = async function(event) {
 
   try {
     if (!forceRefresh && mode === 'search' && query) {
-      const cachedFixtures = (await readCachedFixtures({ rawQuery: query }))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+      const cachedFixtures = await readCachedFixtures({ rawQuery: query })
       if (cachedFixtures.length) {
         return {
           statusCode: 200,
@@ -1342,29 +1195,6 @@ exports.handler = async function(event) {
 
     const oddsKey = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY
     const apiSportsKey = getApiSportsKey()
-
-    // CLEAN LEAGUE MODE: dla konkretnej ligi i dzisiejszej daty pobieramy tylko tę ligę z API-FOOTBALL.
-    // Bez skanowania dni, bez mieszania źródeł, bez podmiany na obce ligi.
-    if (mode === 'league-today' && !allLeagues) {
-      const apiSports = await fetchApiSportsFixtures(apiSportsKey, 0, date)
-      if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          ok: true,
-          demo: false,
-          source: 'api-football-league-today',
-          allLeagues: false,
-          daysAhead: 0,
-          count: countOnly ? apiSports.fixtures.length : undefined,
-          fixtures: countOnly ? [] : apiSports.fixtures,
-          message: apiSports.fixtures.length
-            ? `Dzisiejsze mecze ligi ${league} pobrane z API-FOOTBALL.`
-            : `Dziś brak meczów w lidze ${league}. ${apiSports.message || ''}`.trim()
-        })
-      }
-    }
     let oddsMessage = ''
     let oddsSportKeys = []
 
@@ -1393,8 +1223,6 @@ exports.handler = async function(event) {
 
         const seen = new Set()
         const fixtures = collected
-          .filter(item => allLeagues || matchesRequestedFootballScope(item))
-          .filter(matchesRequestedFootballText)
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
           .filter(item => {
             const key = item.id || `${item.home}-${item.away}-${item.commence_time}`
@@ -1418,8 +1246,7 @@ exports.handler = async function(event) {
     const apiSports = await fetchApiSportsFixtures(apiSportsKey, daysAhead, date)
     if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
     if (!apiSports.fixtures?.length && !countOnly) {
-      const cachedFallback = (await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' }))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+      const cachedFallback = await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' })
       if (cachedFallback.length) {
         return {
           statusCode: 200,
