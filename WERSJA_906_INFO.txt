@@ -1,0 +1,8 @@
+WERSJA 906
+- Naprawiono prawą kolumnę rankingu:
+  • smilhytv nie powinien pojawiać się dwa razy,
+  • ranking scala rekordy po emailu, nicku, email-local i id,
+  • frontend próbuje teraz pobrać tipster_ranking_live przed starym tipster_ranking,
+  • profit nie wychodzi już poza kartę/panel,
+  • kwota profitu ma kompaktowy układ.
+- Zostają poprawki avatarów z wersji 905.

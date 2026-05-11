@@ -552,17 +552,12 @@ function sortRankingRows(rows = []) {
 }
 
 function getRankingIdentityKey(row = {}) {
-  return String(
-    row.tipster_id ||
-    row.author_id ||
-    row.user_id ||
-    row.id ||
-    row.email ||
-    row.author_email ||
-    row.username ||
-    row.author_name ||
-    ''
-  ).toLowerCase()
+  const email = normalizeEmail(row.email || row.author_email || row.user_email)
+  const username = normalizeEmail(row.username || row.author_name || row.user_name)
+  const id = String(row.tipster_id || row.author_id || row.user_id || row.id || '').toLowerCase()
+  if (email) return `email:${email}`
+  if (username && !isGenericProfileName(username)) return `user:${username}`
+  return id ? `id:${id}` : ''
 }
 
 function normalizeRankingProfit(row = {}) {
@@ -628,9 +623,30 @@ function buildRankingRowsFromTipCards(tips = []) {
 
 function mergeRankingRows(...groups) {
   const map = new Map()
+  const aliasToKey = new Map()
+
+  const aliasesFor = (raw = {}) => {
+    const aliases = []
+    const email = normalizeEmail(raw.email || raw.author_email || raw.user_email)
+    const username = normalizeEmail(raw.username || raw.author_name || raw.user_name)
+    const id = String(raw.tipster_id || raw.author_id || raw.user_id || raw.id || '').toLowerCase()
+    if (email) {
+      aliases.push(`email:${email}`)
+      aliases.push(`user:${email.split('@')[0]}`)
+    }
+    if (username && !isGenericProfileName(username)) aliases.push(`user:${username}`)
+    if (id) aliases.push(`id:${id}`)
+    return [...new Set(aliases.filter(Boolean))]
+  }
+
   groups.flat().filter(Boolean).forEach(raw => {
-    const key = getRankingIdentityKey(raw)
+    const aliases = aliasesFor(raw)
+    let key = aliases.find(alias => aliasToKey.has(alias))
+    if (key) key = aliasToKey.get(key)
+    if (!key) key = aliases[0] || getRankingIdentityKey(raw)
     if (!key) return
+    aliases.forEach(alias => aliasToKey.set(alias, key))
+
     const previous = map.get(key) || {}
     const profit = normalizeRankingProfit(raw)
     const previousProfit = normalizeRankingProfit(previous)
@@ -639,6 +655,7 @@ function mergeRankingRows(...groups) {
     const losses = normalizeRankingLosses(raw)
     const roi = normalizeRankingYield(raw)
     const username = raw.username || raw.author_name || previous.username || previous.author_name || (raw.email ? String(raw.email).split('@')[0] : 'Użytkownik')
+
     map.set(key, {
       ...previous,
       ...raw,
@@ -659,6 +676,7 @@ function mergeRankingRows(...groups) {
       profit: Math.abs(Number(profit || 0)) >= Math.abs(Number(previousProfit || 0)) ? Number(profit || 0) : Number(previousProfit || 0),
     })
   })
+
   return Array.from(map.values()).filter(row => !['bet+ai live','betai live','ai tip'].includes(String(row?.username || row?.name || '').toLowerCase()))
 }
 
@@ -1189,7 +1207,7 @@ function LiveChatPanel({ user }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   const email = normalizeEmail(user?.email)
-  const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const userName = resolveRealProfileUsername(user) || (email ? email.split('@')[0] : 'Użytkownik')
   const currentAvatarUrl = getProfileAvatarUrl(user)
 
   const nameFromEmail = (value = '') => {
@@ -1199,7 +1217,12 @@ function LiveChatPanel({ user }) {
     return clean.split('@')[0].replace(/[._-]+/g, ' ').split(' ').filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
   }
 
-  const initialsFromName = (name = '') => String(name || 'LC').split(' ').filter(Boolean).slice(0, 2).map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase() || 'LC'
+  const initialsFromName = (name = '') => {
+    const clean = String(name || 'LC').trim()
+    const parts = clean.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) return parts.slice(0, 2).map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase() || 'LC'
+    return clean.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'LC'
+  }
 
   const todayKey = () => new Date().toISOString().slice(0, 10)
 
@@ -1356,58 +1379,60 @@ function LiveChatPanel({ user }) {
       let nextMessages = (data || []).reverse()
 
       // Starsze wiadomości nie zawsze miały zapisany avatar_url.
-      // Dociągamy avatar po emailu/nicku z profiles oraz z ostatnich typów autora.
+      // Wersja 905: KAŻDY widzi avatar KAŻDEGO — mapujemy po id/email/nick/email-local i nadpisujemy stare puste/błędne kółka.
       try {
         const messageEmails = [...new Set(nextMessages.map(row => normalizeEmail(row.user_email)).filter(Boolean))]
         const messageNames = [...new Set(nextMessages.map(row => normalizeEmail(row.user_name)).filter(Boolean))]
         const chatProfileMap = new Map()
-        if (messageEmails.length || messageNames.length) {
-          const filters = []
-          if (messageEmails.length) filters.push(messageEmails.map(email => `email.eq.${email}`).join(','))
-          if (messageNames.length) filters.push(messageNames.map(name => `username.eq.${name}`).join(','))
-          const profileFilter = [...messageEmails.map(email => `email.eq.${email}`), ...messageNames.map(name => `username.eq.${name}`)].join(',')
+        const addAvatarKeys = (source = {}, avatar = '') => {
+          const finalAvatar = avatar || getProfileAvatarUrl(source)
+          if (!finalAvatar) return
+          const emailKey = normalizeEmail(source.email || source.user_email || source.author_email)
+          const nameKey = normalizeEmail(source.username || source.user_name || source.author_name)
+          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+          if (source.id) chatProfileMap.set(String(source.id).toLowerCase(), finalAvatar)
+          if (emailKey) chatProfileMap.set(emailKey, finalAvatar)
+          if (localKey) chatProfileMap.set(localKey, finalAvatar)
+          if (nameKey) chatProfileMap.set(nameKey, finalAvatar)
+        }
+
+        // Pobierz profile szeroko, nie tylko dokładny warunek, bo stare wiadomości mają czasem user_name zamiast emaila.
+        try {
           const { data: chatProfiles, error: chatProfilesError } = await supabase
             .from('profiles')
             .select('id,email,username,avatar_url,profile_avatar_url')
-            .or(profileFilter)
-
+            .limit(1000)
           if (!chatProfilesError && Array.isArray(chatProfiles)) {
-            chatProfiles.forEach(profile => {
-              const avatar = getProfileAvatarUrl(profile)
-              if (!avatar) return
-              if (profile.email) chatProfileMap.set(normalizeEmail(profile.email), avatar)
-              if (profile.username) chatProfileMap.set(normalizeEmail(profile.username), avatar)
-            })
+            chatProfiles.forEach(profile => addAvatarKeys(profile))
           }
+        } catch (profileAvatarError) {
+          console.warn('chat profiles avatar hydration skipped', profileAvatarError)
         }
 
-        // Fallback z tips: jeżeli profil nie ma avatar_url, bierz avatar autora z kart typów.
+        // Fallback z tips: avatar autora z kart typów.
         try {
-          const tipNames = messageNames.filter(Boolean)
-          const tipEmails = messageEmails.filter(Boolean)
-          const tipFilter = [...tipNames.map(name => `author_name.eq.${name}`), ...tipEmails.map(email => `author_email.eq.${email}`)].join(',')
-          if (tipFilter) {
-            const { data: chatTipAuthors } = await supabase
-              .from('tips')
-              .select('author_name,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
-              .or(tipFilter)
-              .order('created_at', { ascending: false })
-              .limit(80)
-            ;(chatTipAuthors || []).forEach(row => {
-              const avatar = getProfileAvatarUrl(row)
-              if (!avatar) return
-              if (row.author_email) chatProfileMap.set(normalizeEmail(row.author_email), avatar)
-              if (row.author_name) chatProfileMap.set(normalizeEmail(row.author_name), avatar)
-            })
-          }
+          const { data: chatTipAuthors } = await supabase
+            .from('tips')
+            .select('author_id,user_id,author_name,username,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
+            .order('created_at', { ascending: false })
+            .limit(500)
+          ;(chatTipAuthors || []).forEach(row => addAvatarKeys({
+            id: row.author_id || row.user_id,
+            email: row.author_email,
+            username: row.author_name || row.username,
+            avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url
+          }))
         } catch (tipAvatarError) {
           console.warn('chat tip avatar fallback skipped', tipAvatarError)
         }
 
         if (chatProfileMap.size) {
           nextMessages = nextMessages.map(row => {
-            const avatar = row.avatar_url || chatProfileMap.get(normalizeEmail(row.user_email)) || chatProfileMap.get(normalizeEmail(row.user_name)) || ''
-            return avatar && !row.avatar_url ? { ...row, avatar_url: avatar } : row
+            const emailKey = normalizeEmail(row.user_email)
+            const nameKey = normalizeEmail(row.user_name)
+            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+            const mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
+            return mappedAvatar ? { ...row, avatar_url: mappedAvatar } : row
           })
         }
       } catch (avatarError) {
@@ -1732,7 +1757,9 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
             </div>
             <strong className={`ranking-profit-box ${Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
               <em>Profit</em>
-              <span>{Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}</span>
+              <span title={formatMoney(row.earnings || row.total_earnings || row.profit || 0)}>
+                {Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}
+              </span>
             </strong>
           </div>
         )) : (
@@ -7658,7 +7685,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const isOwnTip = isSameProfileIdentity(currentUser, tipIdentity) || Boolean(
     currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase()
   )
-  const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
+  const authorAvatarUrl = getProfileAvatarUrl({ avatar_url: tip.author_avatar_url || tip.avatar_url || tip.profile_avatar_url, author_avatar_url: tip.author_avatar_url, profile_avatar_url: tip.profile_avatar_url }) || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
   const baseLikes = Number(tip?.likes ?? 0) || 0
@@ -15805,11 +15832,21 @@ function App() {
       let profileRows = []
 
       try {
-        const { data, error } = await supabase.from('tipster_ranking').select('*').limit(100)
+        const { data, error } = await supabase.from('tipster_ranking_live').select('*').order('profit', { ascending: false }).limit(100)
         if (!error && Array.isArray(data)) rankingRows = data
-        else if (error) console.warn('tipster_ranking skipped', error)
+        else if (error) console.warn('tipster_ranking_live skipped', error)
       } catch (error) {
-        console.warn('tipster_ranking exception skipped', error)
+        console.warn('tipster_ranking_live exception skipped', error)
+      }
+
+      if (!rankingRows.length) {
+        try {
+          const { data, error } = await supabase.from('tipster_ranking').select('*').limit(100)
+          if (!error && Array.isArray(data)) rankingRows = data
+          else if (error) console.warn('tipster_ranking skipped', error)
+        } catch (error) {
+          console.warn('tipster_ranking exception skipped', error)
+        }
       }
 
       try {
@@ -16007,6 +16044,49 @@ function App() {
     } catch (avatarEnrichError) {
       console.warn('tip avatar enrichment skipped', avatarEnrichError)
     }
+    // WERSJA 905: globalne uzupełnienie avatarów/nicków — każdy użytkownik widzi każdego.
+    try {
+      const { data: allProfiles, error: allProfilesError } = await supabase
+        .from('profiles')
+        .select('id,email,username,avatar_url,profile_avatar_url')
+        .limit(1000)
+      if (!allProfilesError && Array.isArray(allProfiles)) {
+        const profileMap = new Map()
+        allProfiles.forEach(profile => {
+          const emailKey = normalizeEmail(profile.email)
+          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+          const usernameKey = normalizeEmail(profile.username)
+          if (profile.id) profileMap.set(String(profile.id), profile)
+          if (emailKey) profileMap.set(emailKey, profile)
+          if (localKey) profileMap.set(localKey, profile)
+          if (usernameKey) profileMap.set(usernameKey, profile)
+        })
+        sourceTips = sourceTips.map(tip => {
+          const emailKey = normalizeEmail(tip.author_email || tip.email || tip.user_email)
+          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
+          const nameKey = normalizeEmail(tip.author_name || tip.username)
+          const profile =
+            profileMap.get(String(getTipAuthorId(tip) || '')) ||
+            profileMap.get(emailKey) ||
+            profileMap.get(localKey) ||
+            profileMap.get(nameKey)
+          if (!profile) return tip
+          const profileAvatar = getProfileAvatarUrl(profile)
+          const profileName = profile.username || (profile.email ? String(profile.email).split('@')[0] : '')
+          return {
+            ...tip,
+            author_name: profileName || resolveRealProfileUsername(tip),
+            username: profileName || tip.username,
+            author_email: tip.author_email || profile.email || null,
+            author_avatar_url: profileAvatar || tip.author_avatar_url || tip.avatar_url || null,
+            profile_avatar_url: profileAvatar || tip.profile_avatar_url || null
+          }
+        })
+      }
+    } catch (allProfileAvatarError) {
+      console.warn('global tip avatar hydration skipped', allProfileAvatarError)
+    }
+
     sourceTips = sourceTips.map(tip => ({
       ...tip,
       author_visible_stats: tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)

@@ -32320,3 +32320,79 @@ button.betfolio-fetch-btn{
 .real-ranking-panel .rank small{
   line-height:1.18!important;
 }
+
+
+/* WERSJA 905 — każdy widzi avatar każdego w typach i czacie */
+.livechat226-avatar.has-avatar,
+.profile-ticket-v6-avatar.has-avatar,
+.dashboard-ticket-v6-avatar.has-avatar,
+.tip-author-avatar.has-avatar{
+  overflow:hidden!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+}
+
+.livechat226-avatar.has-avatar img,
+.profile-ticket-v6-avatar.has-avatar img,
+.dashboard-ticket-v6-avatar.has-avatar img,
+.tip-author-avatar.has-avatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  display:block!important;
+  border-radius:inherit!important;
+}
+
+
+/* WERSJA 906 — ranking: bez duplikatów, profit nie wychodzi poza panel */
+.real-ranking-panel{
+  overflow:hidden!important;
+}
+.real-ranking-panel .rank{
+  grid-template-columns:30px 34px minmax(0,1fr) minmax(74px,86px)!important;
+  column-gap:9px!important;
+  padding:12px 10px!important;
+  overflow:hidden!important;
+}
+.real-ranking-panel .rank > div:not(.mini-avatar){
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.real-ranking-panel .rank b,
+.real-ranking-panel .rank small{
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.real-ranking-panel .ranking-profit-box{
+  min-width:0!important;
+  width:86px!important;
+  max-width:86px!important;
+  justify-self:end!important;
+  justify-items:end!important;
+  text-align:right!important;
+  overflow:hidden!important;
+}
+.real-ranking-panel .ranking-profit-box em{
+  display:block!important;
+  font-size:9px!important;
+  line-height:1!important;
+  opacity:.85!important;
+  margin-bottom:2px!important;
+}
+.real-ranking-panel .ranking-profit-box span{
+  display:block!important;
+  max-width:86px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:13px!important;
+  line-height:1.1!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+  border-radius:0!important;
+}
