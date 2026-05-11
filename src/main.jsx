@@ -6641,11 +6641,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         <aside className="betfolio-left glass-ultra-panel betai-sportsbook-nav">
           <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
             <input
+              className="betfolio-search-input"
               value={sidebarSearch}
               onChange={(event) => setSidebarSearch(event.target.value)}
               placeholder="Szukaj meczu lub drużyny..."
             />
-            <button type="submit" disabled={fixtureSearchLoading}>{fixtureSearchLoading ? '...' : 'Szukaj'}</button>
+            <button className="betfolio-search-go-btn" type="submit" disabled={fixtureSearchLoading}>{fixtureSearchLoading ? '...' : 'Szukaj'}</button>
           </form>
 <div className="sports-accordion-title">SPORT</div>
 
@@ -12827,7 +12828,7 @@ function ProfileLiveTipCard({
             <strong>Komentarze</strong>
             <span>{commentCount} łącznie</span>
           </div>
-          <div className="tip-comment-form">
+          <div className="tip-comment-form profile-comment-form-no-button">
             <input
               type="text"
               value={commentDraft}
@@ -12838,10 +12839,9 @@ function ProfileLiveTipCard({
                   submitComment()
                 }
               }}
-              placeholder="Dodaj komentarz do tego typu..."
+              placeholder="Dodaj komentarz do tego typu i naciśnij Enter..."
               maxLength={280}
             />
-            <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
           </div>
           {feedback.comments.length > 0 ? (
             <div className="tip-comment-list">
@@ -13000,6 +13000,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return sum
   }, 0)
   const roi = settledStake ? Math.round((profitAmount / settledStake) * 100) : 0
+  const pendingTips = Math.max(0, totalTips - settledTips)
+  const totalStakedAmount = userTips.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
+  const highestOddsNumber = userTips.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
+  const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
+  const tipsSupportAmount = Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0
+  const statsCards = [
+    { label: 'Yield', value: `${roi}%`, sub: 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount >= 0 ? 'Bilans na plus' : 'Bilans na minus', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Typy oddane', value: String(totalTips), sub: 'Wszystkie dodane typy', tone: 'neutral' },
+    { label: 'Wygrane', value: String(wonTips), sub: 'Rozliczone na plus', tone: wonTips > lostTips ? 'success' : 'neutral' },
+    { label: 'Przegrane', value: String(lostTips), sub: 'Rozliczone na minus', tone: lostTips > 0 ? 'danger' : 'neutral' },
+    { label: 'Nierozliczone', value: String(pendingTips), sub: 'Typy oczekujące', tone: 'neutral' },
+    { label: 'Zainwestowane', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łączna suma stawek', tone: 'neutral' },
+    { label: 'Średni kurs', value: avgOdds, sub: 'Średnia wszystkich kursów', tone: 'neutral' },
+    { label: 'Najwyższy kurs', value: highestOdds, sub: 'Najwyższy trafiony/ustawiony kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
+    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} zł`, sub: 'Wsparcie od społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+  ]
   const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
   const followingCount = Number(user?.following_count || user?.following || 0) || 0
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
@@ -13243,19 +13260,26 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
               </div>
             </div>
-            <div className="profile-v3-stats-strip">
-              <div><small>ROI</small><strong>{roi}%</strong></div>
-              <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
-              <div><small>SKUTECZNOŚĆ</small><strong>{avgOdds} <em>ŚR. KURS</em></strong></div>
-              <div><small>LICZBA TYPÓW</small><strong>{totalTips}</strong></div>
-              <div><small>OBSERWUJĄCY</small><strong>{followersCount}</strong></div>
-              <div><small>POZIOM</small><strong>{roleLabel}</strong></div>
-              <div><small>ŻETONY</small><strong>{tokenCount}</strong></div>
-              <div><small>SALDO</small><strong>{walletAmount.toFixed(2)} zł</strong></div>
-              <div><small>RANKING</small><strong>{totalTips ? '# aktywny' : '—'} <em>{roleLabel}</em></strong></div>
-              <div><small>ŚR. KURS</small><strong>{avgOdds}</strong></div>
-            </div>
           </div>
+
+          <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
+            <div className="profile-v3-card-head">
+              <h3>📊 Twoje statystyki</h3>
+              <span>Duże, czytelne podsumowanie profilu</span>
+            </div>
+            <div className="profile-stats-cards-grid">
+              {statsCards.map((card) => (
+                <article
+                  key={card.label}
+                  className={`profile-stat-card profile-stat-card-${card.tone} ${card.accent ? 'is-accent' : ''}`}
+                >
+                  <small>{card.label}</small>
+                  <strong>{card.value}</strong>
+                  <span>{card.sub}</span>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <div className="profile-v3-tabs glass-profile-v3">
             <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}>▣ Przegląd</button>

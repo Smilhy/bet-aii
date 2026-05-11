@@ -1,0 +1,5 @@
+WERSJA 854
+- Naprawiono wygląd przycisku „Szukaj” w lewej wyszukiwarce meczów.
+- Przycisk dostał klasę stylu Bet+AI zamiast domyślnego białego wyglądu przeglądarki.
+- Pole wyszukiwarki dostało właściwą klasę stylu, żeby całość była spójna z resztą strony.
+- SQL nie jest potrzebny.

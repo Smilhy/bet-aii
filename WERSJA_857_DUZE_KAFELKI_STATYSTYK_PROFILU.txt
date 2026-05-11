@@ -1,0 +1,8 @@
+WERSJA 857
+- Dodałem nowe, duże i czytelne kafelki statystyk w profilu.
+- Profit oraz Yield mają kolorystykę zależną od wyniku:
+  - dodatnie wartości = zielone,
+  - ujemne wartości = czerwone.
+- Pozostałe statystyki są pokazane w dużych kafelkach: typy oddane, wygrane, przegrane, nierozliczone, zainwestowane, średni kurs, najwyższy kurs, napiwki.
+- Logika została oparta na realnych danych już liczonych w profilu.
+- SQL nie jest potrzebny.
