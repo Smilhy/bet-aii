@@ -1,0 +1,5 @@
+WERSJA 912
+- Naprawa błędnego mieszania avatarów smilhytv/buchajson1988.
+- Dodany lokalny cache avatarów z aktualnej sesji.
+- Publiczne profile z RPC są łączone z cache; cache ma priorytet nad starymi błędnymi rekordami.
+- SQL tworzy betai_public_avatar_overrides i próbuje pobrać prawdziwe avatary z auth.users metadata.

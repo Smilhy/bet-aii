@@ -29456,3 +29456,6 @@ button.betfolio-fetch-btn{
   display:block!important;
   border-radius:inherit!important;
 }
+
+/* WERSJA 912 avatar fix */
+.mini-avatar.has-avatar img,.mini-avatar-v4.has-avatar img{width:100%!important;height:100%!important;object-fit:cover!important;border-radius:inherit!important;display:block!important}

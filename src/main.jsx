@@ -861,7 +861,7 @@ async function fetchBetaiPublicProfiles() {
   // Najpierw RPC SECURITY DEFINER — omija RLS i daje publiczny avatar każdego użytkownika.
   try {
     const { data, error } = await supabase.rpc('betai_public_profiles_for_ui')
-    if (!error && Array.isArray(data)) return data
+    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
     if (error) console.warn('betai_public_profiles_for_ui rpc skipped', error)
   } catch (error) {
     console.warn('betai_public_profiles_for_ui rpc exception skipped', error)
@@ -869,8 +869,8 @@ async function fetchBetaiPublicProfiles() {
 
   // Fallback: widok publiczny.
   try {
-    const { data, error } = await supabase.from('betai_public_profiles_for_ui').select('*').limit(1000)
-    if (!error && Array.isArray(data)) return data
+    const { data, error } = await supabase.from('betai_public_profiles_for_ui_view').select('*').limit(1000)
+    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
     if (error) console.warn('betai_public_profiles_for_ui view skipped', error)
   } catch (error) {
     console.warn('betai_public_profiles_for_ui view exception skipped', error)
@@ -879,19 +879,83 @@ async function fetchBetaiPublicProfiles() {
   // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
   try {
     const { data, error } = await supabase.from('profiles').select('id,email,username,avatar_url').limit(1000)
-    if (!error && Array.isArray(data)) return data
+    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
     if (error) console.warn('profiles avatar fallback skipped', error)
   } catch (error) {
     console.warn('profiles avatar fallback exception skipped', error)
   }
 
-  return []
+  return mergeBetaiProfilesWithCache([])
 }
 
 function buildBetaiProfileMap(profiles = []) {
   const profileMap = new Map()
   ;(profiles || []).forEach(profile => addProfileToMap(profileMap, profile))
   return profileMap
+}
+
+const BETAI_PUBLIC_AVATAR_CACHE_KEY = 'betai_public_avatar_cache_v912'
+
+function readBetaiPublicAvatarCache() {
+  try {
+    return JSON.parse(localStorage.getItem(BETAI_PUBLIC_AVATAR_CACHE_KEY) || '[]')
+  } catch (_) {
+    return []
+  }
+}
+
+function writeBetaiPublicAvatarCache(items = []) {
+  try {
+    const byKey = new Map()
+    ;(readBetaiPublicAvatarCache() || []).forEach(item => {
+      const key = normalizeEmail(item.email || item.username || item.id)
+      if (key && getProfileAvatarUrl(item)) byKey.set(key, item)
+    })
+    ;(items || []).forEach(item => {
+      const avatar = getProfileAvatarUrl(item)
+      const email = normalizeEmail(item.email || item.user_email || item.author_email)
+      const username = normalizeEmail(item.username || item.user_name || item.author_name)
+      const id = String(item.id || item.user_id || item.author_id || '').toLowerCase()
+      if (!avatar) return
+      const saved = {
+        id: id || item.id || '',
+        email: email || '',
+        username: username || (email ? email.split('@')[0] : ''),
+        avatar_url: avatar
+      }
+      if (email) byKey.set(email, saved)
+      if (username) byKey.set(username, saved)
+      if (id) byKey.set(id, saved)
+    })
+    localStorage.setItem(BETAI_PUBLIC_AVATAR_CACHE_KEY, JSON.stringify(Array.from(byKey.values()).slice(-200)))
+  } catch (_) {}
+}
+
+function cacheBetaiCurrentUserAvatar(user) {
+  const avatar = getProfileAvatarUrl(user)
+  const email = normalizeEmail(user?.email || user?.user_email || user?.author_email)
+  const username = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || user?.raw_user_meta_data?.username || user?.raw_user_meta_data?.name)
+  if (!avatar || (!email && !username)) return
+  writeBetaiPublicAvatarCache([{ id: user?.id || '', email, username, avatar_url: avatar }])
+}
+
+function mergeBetaiProfilesWithCache(profiles = []) {
+  const all = [...(profiles || [])]
+  const cache = readBetaiPublicAvatarCache()
+  const existing = buildBetaiProfileMap(all)
+  ;(cache || []).forEach(item => {
+    const profile = findProfileFromMap(existing, item)
+    const cachedAvatar = getProfileAvatarUrl(item)
+    if (profile) {
+      const profileAvatar = getProfileAvatarUrl(profile)
+      // Cache ma wyższy priorytet, bo w bazie stare rekordy były nadpisane avatarem innego usera.
+      if (cachedAvatar) profile.avatar_url = cachedAvatar
+    } else if (cachedAvatar) {
+      all.push(item)
+      addProfileToMap(existing, item)
+    }
+  })
+  return all
 }
 
 function applyProfileAvatarToTip(tip, profileMap) {
@@ -1454,8 +1518,9 @@ function LiveChatPanel({ user }) {
       if (error) throw error
       let nextMessages = (data || []).reverse()
 
-      // WERSJA 907: avatar w czacie zawsze z prawdziwego profilu.
+      // WERSJA 912: avatar w czacie zawsze z prawdziwego profilu/cache.
       // Nie ufamy starym avatar_url z wiadomości, bo mogły zostać zapisane od innego użytkownika.
+      cacheBetaiCurrentUserAvatar(user)
       try {
         const chatProfileMap = new Map()
         const addProfileAvatar = (profile = {}) => {
@@ -1503,7 +1568,11 @@ function LiveChatPanel({ user }) {
           const emailKey = normalizeEmail(row.user_email)
           const nameKey = normalizeEmail(row.user_name)
           const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          const mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
+          let mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
+          const currentAvatar = getProfileAvatarUrl(user)
+          const currentEmail = normalizeEmail(user?.email)
+          const currentName = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name)
+          if (currentAvatar && ((currentEmail && emailKey === currentEmail) || (currentName && nameKey === currentName))) mappedAvatar = currentAvatar
           // mappedAvatar ma pierwszeństwo nad row.avatar_url, bo row.avatar_url bywa błędny/stary.
           return mappedAvatar ? { ...row, avatar_url: mappedAvatar } : row
         })
@@ -1811,7 +1880,19 @@ function LiveChatPanel({ user }) {
 
 
 function Rightbar({ ranking = [], tips = [], user = null }) {
-  const realRanking = buildLiveLeaderboardRows(ranking, tips)
+  cacheBetaiCurrentUserAvatar(user)
+  const currentAvatar = getProfileAvatarUrl(user)
+  const currentEmail = normalizeEmail(user?.email)
+  const currentName = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name)
+  const rankingWithCurrentAvatar = (ranking || []).map(row => {
+    const rowEmail = normalizeEmail(row.email || row.author_email || row.user_email)
+    const rowName = normalizeEmail(row.username || row.author_name || row.user_name)
+    if (currentAvatar && ((currentEmail && rowEmail === currentEmail) || (currentName && rowName === currentName))) {
+      return { ...row, avatar_url: currentAvatar, author_avatar_url: currentAvatar }
+    }
+    return row
+  })
+  const realRanking = buildLiveLeaderboardRows(rankingWithCurrentAvatar, tips)
 
   return (
     <aside className="rightbar">
@@ -16140,13 +16221,27 @@ function App() {
     } catch (avatarEnrichError) {
       console.warn('tip avatar enrichment skipped', avatarEnrichError)
     }
-    // WERSJA 911: globalne uzupełnienie avatarów/nicków przez RPC SECURITY DEFINER.
-    // Dzięki temu buchajson1988 widzi avatar smilhytv i odwrotnie, mimo RLS na profiles.
+    // WERSJA 912: cache aktualnego usera + RPC publicznych profili.
+    // Naprawia przypadek, gdzie stare rekordy w DB miały avatar buchajson1988 przy smilhytv.
     try {
+      cacheBetaiCurrentUserAvatar(sessionUser)
       const allProfiles = await fetchBetaiPublicProfiles()
       const profileMap = buildBetaiProfileMap(allProfiles)
       if (profileMap.size) {
         sourceTips = sourceTips.map(tip => applyProfileAvatarToTip(tip, profileMap))
+      }
+      const currentAvatar = getProfileAvatarUrl(sessionUser)
+      if (currentAvatar) {
+        const currentEmail = normalizeEmail(sessionUser?.email)
+        const currentUsername = normalizeEmail(sessionUser?.username || sessionUser?.user_metadata?.username || sessionUser?.user_metadata?.name)
+        sourceTips = sourceTips.map(tip => {
+          const tipEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email)
+          const tipName = normalizeEmail(tip.author_name || tip.username)
+          if ((currentEmail && tipEmail === currentEmail) || (currentUsername && tipName === currentUsername)) {
+            return { ...tip, author_avatar_url: currentAvatar, avatar_url: currentAvatar, profile_avatar_url: currentAvatar }
+          }
+          return tip
+        })
       }
     } catch (allProfileAvatarError) {
       console.warn('global tip avatar hydration skipped', allProfileAvatarError)
