@@ -661,7 +661,16 @@ function isGuaranteedPremiumIdentity(user) {
 function isAdminUser(user) {
   const email = getProfileEmail(user)
   const username = getProfileUsername(user)
-  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv'
+  const emailLocal = email ? email.split('@')[0] : ''
+  const role = String(user?.role || user?.app_role || user?.account_role || user?.profile_role || '').toLowerCase()
+  return BETAI_ADMIN_EMAILS.includes(email) || username === 'smilhytv' || emailLocal === 'smilhytv' || role === 'admin'
+}
+
+function isSmilhytvLifetimePremium(user) {
+  const email = getProfileEmail(user)
+  const username = getProfileUsername(user)
+  const emailLocal = email ? email.split('@')[0] : ''
+  return username === 'smilhytv' || emailLocal === 'smilhytv' || email === 'smilhytv@gmail.com'
 }
 
 function isPremiumAccount(plan) {
@@ -676,13 +685,13 @@ function hasFuturePremiumEnd(value) {
 
 function isPremiumProfile(profile) {
   if (!profile) return false
-  if (isAdminUser(profile) || isGuaranteedPremiumIdentity(profile)) return true
+  if (isAdminUser(profile) || isGuaranteedPremiumIdentity(profile) || isSmilhytvLifetimePremium(profile)) return true
   const premiumFlag = Boolean(profile.is_premium) || isPremiumAccount(profile.plan) || ['active', 'trialing', 'premium'].includes(String(profile.subscription_status || '').toLowerCase()) || String(profile.status || '').toLowerCase() === 'premium'
   return premiumFlag && hasFuturePremiumEnd(profile.current_period_end)
 }
 
 function hasUnlimitedTipAccess(user, plan = 'free') {
-  return isAdminUser(user) || isGuaranteedPremiumIdentity(user) || isPremiumProfile(user) || isPremiumAccount(plan)
+  return isAdminUser(user) || isGuaranteedPremiumIdentity(user) || isSmilhytvLifetimePremium(user) || isPremiumProfile(user) || isPremiumAccount(plan)
 }
 
 function buildEffectiveAccountProfile(accountProfile, sessionUser) {
@@ -1723,9 +1732,10 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const confidenceDots = Array.from({ length: 15 }, (_, index) => index)
-  const isPremiumUser = isPremiumAccount(userPlan) || isPremiumProfile(user)
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (user?.email ? String(user.email).split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
   const email = normalizeEmail(user?.email || '')
+  const addTipIdentity = { ...(user || {}), username, email, author_name: username, author_email: email }
+  const isPremiumUser = hasUnlimitedTipAccess(addTipIdentity, userPlan) || isSmilhytvLifetimePremium(addTipIdentity)
   const todayLabel = new Date().toLocaleDateString('pl-PL')
 
   const sportsbook = useMemo(() => ({
@@ -6828,7 +6838,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     } catch (error) {
       console.error('publish tip error', error)
       saveTipDebug('ERROR', error?.message || String(error))
-      onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') + ' Jeśli widzisz błąd column author_id, uruchom SQL WERSJA 691.' })
+      onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') })
     } finally {
       setSaving(false)
     }

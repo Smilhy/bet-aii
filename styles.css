@@ -28834,3 +28834,44 @@ button.betfolio-fetch-btn{
   overflow:hidden!important;
   text-overflow:ellipsis!important;
 }
+
+
+/* WERSJA 891 — DARMOWY/PREMIUM przy samej dolnej ramce lewej kolumny */
+.profile-ticket-v6-left,
+.dashboard-ticket-v6 .profile-ticket-v6-left,
+.profile-v4-tips-page .profile-ticket-v6-left,
+.profile-all-tips-list .profile-ticket-v6-left{
+  position:relative!important;
+  min-height:100%!important;
+  height:100%!important;
+  padding-bottom:58px!important;
+}
+
+/* przycisk/badge na dół — dotyczy DARMOWY i PREMIUM */
+.profile-ticket-v6-left .profile-ticket-v6-access,
+.dashboard-ticket-v6 .profile-ticket-v6-left .profile-ticket-v6-access,
+.profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access,
+.profile-all-tips-list .profile-ticket-v6-left .profile-ticket-v6-access{
+  position:absolute!important;
+  left:18px!important;
+  bottom:14px!important;
+  top:auto!important;
+  right:auto!important;
+  transform:none!important;
+  margin:0!important;
+  align-self:auto!important;
+  justify-self:auto!important;
+  z-index:3!important;
+}
+
+/* premium i darmowy ten sam dół, tylko własne kolory */
+.profile-ticket-v6-left .profile-ticket-v6-access.free,
+.profile-ticket-v6-left .profile-ticket-v6-access.premium{
+  min-height:40px!important;
+  height:40px!important;
+}
+
+/* rząd ikon zostaje w swojej sekcji, badge schodzi do dolnej ramki lewej kolumny */
+.profile-ticket-v6-footer{
+  align-items:center!important;
+}
