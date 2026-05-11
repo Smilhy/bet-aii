@@ -1,0 +1,10 @@
+WERSJA 889
+- Naprawiono statystyki w kartach typów: każdy typer ma własne statystyki widoczne przy nicku.
+- Statystyki są widoczne publicznie: także dla niezalogowanych użytkowników.
+- Karta nie bierze już statystyk tylko z zalogowanego użytkownika.
+- Statystyki są przypisane do autora konkretnego typu.
+- Jeśli profil ma importowane statystyki, pokazuje importowane wartości.
+- Jeśli profil nie ma importu, statystyki liczą się dynamicznie z typów autora:
+  Yield, oddane typy, bilans, wygrane/przegrane/pending.
+- Po rozliczeniu typu i odświeżeniu danych statystyki autora zmieniają się żywo.
+- SQL nie jest potrzebny, jeśli pola importowane z wcześniejszych wersji już istnieją.

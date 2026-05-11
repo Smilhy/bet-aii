@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
+const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
@@ -20,6 +21,39 @@ const BETAI_LANG_FLAG_IMAGES = {
   es: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="64" fill="%23c60b1e"/><rect y="16" width="64" height="32" fill="%23ffc400"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`),
   ru: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="21.34" fill="%23ffffff"/><rect y="21.33" width="64" height="21.34" fill="%230039a6"/><rect y="42.66" width="64" height="21.34" fill="%23d52b1e"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`)
 }
+
+
+function TipActionLikeIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm2 10h7.2a2 2 0 0 0 1.96-1.58l1.28-6A2 2 0 0 0 17.48 10H14V6.5A2.5 2.5 0 0 0 11.5 4L9 10v10Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function TipActionCommentIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function TipActionShareIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 15 19 5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      <path d="M13 5h6v6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M5 19c2.5-3.2 5.5-4.8 10-5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+    </svg>
+  )
+}
+function TipActionSaveIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
 
 function getInitialBetaiLanguage() {
   try {
@@ -281,6 +315,136 @@ function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
 
+function getTipAuthorStatsKey(tip) {
+  return String(
+    getTipAuthorId(tip) ||
+    tip?.author_email ||
+    tip?.email ||
+    tip?.user_email ||
+    tip?.author_name ||
+    tip?.username ||
+    'unknown'
+  ).toLowerCase()
+}
+
+function normalizeTipSettlementStatus(value) {
+  const clean = String(value || '').trim().toLowerCase()
+  if (['won', 'win', 'wygrał', 'wygral', 'wygrany', 'green'].includes(clean)) return 'won'
+  if (['lost', 'loss', 'przegrał', 'przegral', 'przegrany', 'red'].includes(clean)) return 'lost'
+  if (['void', 'push', 'zwrot', 'cancelled', 'canceled', 'anulowany'].includes(clean)) return 'void'
+  return 'pending'
+}
+
+function readTipStakeValue(tip) {
+  return Number(tip?.stake ?? tip?.amount ?? tip?.stawka ?? tip?.bet_amount ?? tip?.total_staked ?? 0) || 0
+}
+
+function readTipProfitValue(tip) {
+  const explicit = tip?.profit ?? tip?.profit_amount ?? tip?.result_profit ?? tip?.payout_profit
+  if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
+  const stake = readTipStakeValue(tip)
+  const odds = Number(tip?.odds ?? tip?.course ?? 0) || 0
+  const status = normalizeTipSettlementStatus(tip?.status ?? tip?.result)
+  if (status === 'won') return stake * Math.max(odds - 1, 0)
+  if (status === 'lost') return -stake
+  return 0
+}
+
+function buildAuthorStatsFromTips(tips = []) {
+  const statsMap = new Map()
+  ;(tips || []).forEach(rawTip => {
+    const tip = normalizeTipRow(rawTip)
+    const key = getTipAuthorStatsKey(tip)
+    if (!key || key === 'unknown') return
+    const current = statsMap.get(key) || {
+      totalTips: 0,
+      wonTips: 0,
+      lostTips: 0,
+      pendingTips: 0,
+      totalStaked: 0,
+      profit: 0,
+      highestOdds: 0,
+      avgOddsSum: 0,
+      avgOddsCount: 0,
+    }
+    const status = normalizeTipSettlementStatus(tip.status ?? tip.result)
+    const stake = readTipStakeValue(tip)
+    const odds = Number(tip.odds ?? tip.course ?? 0) || 0
+    current.totalTips += 1
+    if (status === 'won') current.wonTips += 1
+    else if (status === 'lost') current.lostTips += 1
+    else current.pendingTips += 1
+    if (status === 'won' || status === 'lost') current.totalStaked += stake
+    current.profit += readTipProfitValue(tip)
+    if (odds > 0) {
+      current.highestOdds = Math.max(current.highestOdds, odds)
+      current.avgOddsSum += odds
+      current.avgOddsCount += 1
+    }
+    statsMap.set(key, current)
+  })
+  return statsMap
+}
+
+function getImportedProfileStats(profile) {
+  if (!profile) return null
+  const totalTips = Number(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
+  const hasImported =
+    profile.imported_yield !== undefined ||
+    profile.imported_total_tips !== undefined ||
+    profile.imported_profit !== undefined ||
+    profile.total_tips !== undefined
+  if (!hasImported && totalTips <= 0) return null
+  return {
+    yield: Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0,
+    totalTips,
+    wonTips: Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0,
+    lostTips: Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0,
+    pendingTips: Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0,
+    totalStaked: Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0,
+    profit: Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0,
+    avgOdds: Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0,
+    highestOdds: Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0,
+  }
+}
+
+function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
+  if (importedStats && Number(importedStats.totalTips || 0) > 0) return importedStats
+  const totalStaked = Number(dynamicStats?.totalStaked || 0)
+  const profit = Number(dynamicStats?.profit || 0)
+  return {
+    yield: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
+    totalTips: Number(dynamicStats?.totalTips || 0) || 0,
+    wonTips: Number(dynamicStats?.wonTips || 0) || 0,
+    lostTips: Number(dynamicStats?.lostTips || 0) || 0,
+    pendingTips: Number(dynamicStats?.pendingTips || 0) || 0,
+    totalStaked,
+    profit,
+    avgOdds: Number(dynamicStats?.avgOddsCount || 0) > 0 ? Number(dynamicStats.avgOddsSum || 0) / Number(dynamicStats.avgOddsCount || 1) : 0,
+    highestOdds: Number(dynamicStats?.highestOdds || 0) || 0,
+  }
+}
+
+function compactNumberLabel(value, decimals = 2) {
+  const num = Number(value || 0)
+  if (Number.isInteger(num)) return String(num)
+  return num.toFixed(decimals).replace(/\.?0+$/, '')
+}
+
+function getAuthorStatsLabels(sourceStats) {
+  const stats = sourceStats || finalizeAuthorStats(null, null)
+  const profit = Number(stats.profit || 0)
+  return {
+    yieldLabel: `${compactNumberLabel(stats.yield, 2)}%`,
+    totalTipsLabel: String(Number(stats.totalTips || 0) || 0),
+    profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} zł`,
+  }
+}
+
+function getTipFallbackAuthorStats(tip) {
+  return finalizeAuthorStats(buildAuthorStatsFromTips([tip]).get(getTipAuthorStatsKey(tip)), null)
+}
+
 
 function saveTipDebug(status, details = '') {
   const text = `[${new Date().toLocaleString('pl-PL')}] ${status}${details ? ': ' + details : ''}`
@@ -382,9 +546,15 @@ function normalizeTipRow(row = {}) {
     user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
     author_name: row.author_name || row.username || (row.author_email ? String(row.author_email).split('@')[0] : null) || 'Użytkownik',
     author_email: row.author_email || row.email || null,
+    author_avatar_url: row.author_avatar_url || row.avatar_url || row.profile_avatar_url || null,
     league: row.league || 'Liga',
+    league_logo: row.league_logo || row.leagueLogo || row.fixture_json?.leagueLogo || null,
     team_home: row.team_home || teamsFromMatch[0] || 'Drużyna 1',
     team_away: row.team_away || teamsFromMatch[1] || 'Drużyna 2',
+    home_team_id: row.home_team_id || row.homeTeamId || row.fixture_json?.homeTeamId || null,
+    away_team_id: row.away_team_id || row.awayTeamId || row.fixture_json?.awayTeamId || null,
+    home_logo: row.home_logo || row.team_home_logo || row.homeLogo || row.fixture_json?.homeLogo || null,
+    away_logo: row.away_logo || row.team_away_logo || row.awayLogo || row.fixture_json?.awayLogo || null,
     bet_type: row.bet_type || row.prediction || row.type || 'Typ',
     odds: Number(row.odds || row.course || 0),
     analysis: row.analysis || row.description || '',
@@ -419,15 +589,37 @@ function isVisibleTipForUser(tip, userId, unlockedSet) {
   return false
 }
 
+function isGenericProfileName(value) {
+  const clean = String(value || '').trim().toLowerCase()
+  return ['user', 'użytkownik', 'uzytkownik'].includes(clean)
+}
+
+function resolveRealProfileUsername(user) {
+  const email = normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
+  const emailLocal = email ? email.split('@')[0] : ''
+  const candidates = [
+    user?.username,
+    user?.user_metadata?.username,
+    user?.user_metadata?.name,
+    user?.raw_user_meta_data?.username,
+    user?.author_name,
+    user?.name,
+    emailLocal,
+  ].map(value => String(value || '').trim()).filter(Boolean)
+  return candidates.find(value => !isGenericProfileName(value)) || emailLocal || candidates[0] || 'Użytkownik'
+}
+
 function getUserProfileView(user) {
   const email = user?.email || ''
-  const username = user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const username = resolveRealProfileUsername(user)
+  const avatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url || ''
   return {
     id: user?.id || null,
     email,
     username,
     initials: (username || 'U').slice(0, 2).toUpperCase(),
-    isAdmin: email.toLowerCase() === 'smilhytv@gmail.com'
+    avatarUrl,
+    isAdmin: email.toLowerCase() === 'smilhytv@gmail.com' || String(username).toLowerCase() === 'smilhytv'
   }
 }
 
@@ -438,16 +630,26 @@ function getProfileEmail(user) {
 }
 
 function getProfileUsername(user) {
-  const email = getProfileEmail(user)
-  return normalizeEmail(
-    user?.username ||
-    user?.author_name ||
-    user?.name ||
-    user?.user_metadata?.username ||
-    user?.user_metadata?.name ||
-    user?.raw_user_meta_data?.username ||
-    (email ? email.split('@')[0] : '')
-  )
+  return normalizeEmail(resolveRealProfileUsername(user))
+}
+
+
+function getProfileAvatarUrl(user) {
+  return user?.avatar_url || user?.author_avatar_url || user?.profile_avatar_url || user?.user_metadata?.avatar_url || user?.raw_user_meta_data?.avatar_url || ''
+}
+
+function isSameProfileIdentity(left, right) {
+  const leftId = String(left?.id || left?.user_id || left?.author_id || '').trim()
+  const rightId = String(right?.id || right?.user_id || right?.author_id || '').trim()
+  if (leftId && rightId && leftId === rightId) return true
+
+  const leftEmail = getProfileEmail(left)
+  const rightEmail = getProfileEmail(right)
+  if (leftEmail && rightEmail && leftEmail === rightEmail) return true
+
+  const leftUsername = getProfileUsername(left)
+  const rightUsername = getProfileUsername(right)
+  return Boolean(leftUsername && rightUsername && leftUsername === rightUsername)
 }
 
 function isGuaranteedPremiumIdentity(user) {
@@ -491,7 +693,8 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
     ...(accountProfile || {}),
     id: accountProfile?.id || sessionUser?.id || null,
     email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || fallbackUsername
+    username: accountProfile?.username || sessionUser?.username || fallbackUsername,
+    bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
   }
   if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
     merged.is_premium = true
@@ -568,7 +771,12 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
         </div>
         <div className="user-card">
-          <div className="avatar">{profile.initials}</div>
+          <div
+            className={`avatar sidebar-user-avatar ${profile.avatarUrl ? 'has-avatar' : ''}`}
+            style={profile.avatarUrl ? { '--avatar-image': `url("${profile.avatarUrl}")` } : undefined}
+          >
+            {profile.avatarUrl ? '' : profile.initials}
+          </div>
           <div>
             <strong>{profile.username}</strong>
             <span className="pill">{getDisplayRole(user, userPlan)}</span>
@@ -583,7 +791,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
         <nav className="menu">
           <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
           <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
-          <button className={view === 'wallet' ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
+          <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
           <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
@@ -762,6 +970,7 @@ function LiveChatPanel({ user }) {
 
   const email = normalizeEmail(user?.email)
   const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const currentAvatarUrl = getProfileAvatarUrl(user)
 
   const nameFromEmail = (value = '') => {
     const clean = normalizeEmail(value)
@@ -924,7 +1133,32 @@ function LiveChatPanel({ user }) {
         .order('created_at', { ascending: false })
         .limit(20)
       if (error) throw error
-      const nextMessages = (data || []).reverse()
+      let nextMessages = (data || []).reverse()
+
+      // Starsze wiadomości nie zawsze miały zapisany avatar_url.
+      // Dociągamy avatar po emailu z profiles, żeby czat pokazywał aktualne zdjęcie.
+      try {
+        const messageEmails = [...new Set(nextMessages.map(row => normalizeEmail(row.user_email)).filter(Boolean))]
+        if (messageEmails.length) {
+          const { data: chatProfiles, error: chatProfilesError } = await supabase
+            .from('profiles')
+            .select('email,username,avatar_url')
+            .in('email', messageEmails)
+
+          if (!chatProfilesError && Array.isArray(chatProfiles)) {
+            const chatProfileMap = new Map(chatProfiles.map(profile => [normalizeEmail(profile.email), profile]))
+            nextMessages = nextMessages.map(row => {
+              const profile = chatProfileMap.get(normalizeEmail(row.user_email))
+              return profile?.avatar_url && !row.avatar_url
+                ? { ...row, avatar_url: profile.avatar_url }
+                : row
+            })
+          }
+        }
+      } catch (avatarError) {
+        console.warn('chat avatar hydration skipped', avatarError)
+      }
+
       setMessages(nextMessages)
       setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
       // Wersja 606: lider czatu jest nagradzany funkcją SQL o 00:00, nie podczas odświeżania UI.
@@ -998,7 +1232,7 @@ function LiveChatPanel({ user }) {
       const { error } = await supabase.from('live_chat_messages').insert({
         user_email: email,
         user_name: userName,
-        avatar_url: user?.avatar_url || user?.user_metadata?.avatar_url || '',
+        avatar_url: currentAvatarUrl || '',
         message: clean,
         tipped_amount: 0,
         created_at: new Date().toISOString()
@@ -1162,14 +1396,17 @@ function LiveChatPanel({ user }) {
       <div className="livechat226-messages betai-chat-messages-final" id="liveChatMessages226">
         {messages.length ? messages.map(msg => {
           const msgEmail = normalizeEmail(msg.user_email)
-          const mine = msgEmail && msgEmail === email
+          const name = msg.user_name || nameFromEmail(msgEmail)
+          const mine = Boolean(
+            (msgEmail && msgEmail === email) ||
+            (getProfileUsername(user) && normalizeEmail(name) === getProfileUsername(user))
+          )
           const isAdmin = msgEmail === 'smilhytv@gmail.com'
           const isLeader = leader?.email && leader.email === msgEmail
-          const name = msg.user_name || nameFromEmail(msgEmail)
-          const avatar = msg.avatar_url || ''
+          const avatar = msg.avatar_url || (mine ? currentAvatarUrl : '')
           return (
             <div className={`livechat226-msg ${mine ? 'me' : ''}`} key={msg.id || msg.created_at}>
-              <div className="livechat226-avatar" style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}>{avatar ? '' : initialsFromName(name)}</div>
+              <div className={`livechat226-avatar ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initialsFromName(name)}</div>
               <div className="livechat226-bubble">
                 <div className="livechat226-meta">
                   <span className="livechat226-name">{name}</span>
@@ -1274,7 +1511,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
       setLoading(true)
       try {
         const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
-          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status').eq('id', tipsterId).maybeSingle(),
+          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').eq('id', tipsterId).maybeSingle(),
           supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
           supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
           supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
@@ -1289,7 +1526,16 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         if (typeRes.error) console.error('typeRes error', typeRes.error)
         if (formRes.error) console.error('formRes error', formRes.error)
         setProfile(profileRes.data || null)
-        setTipsterTips(tipsRes.data || [])
+        const normalizedTipsterTips = (tipsRes.data || []).map(normalizeTipRow)
+        const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(String(tipsterId).toLowerCase())
+        const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(profileRes.data))
+        setTipsterTips(normalizedTipsterTips.map(tip => ({
+          ...tip,
+          author_name: tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik'),
+          author_email: tip.author_email || profileRes.data?.email || null,
+          author_avatar_url: tip.author_avatar_url || profileRes.data?.avatar_url || null,
+          author_visible_stats: tipsterVisibleStats,
+        })))
         setStats(rankingRes.data || null)
         setByLeague(leagueRes.data || [])
         setByType(typeRes.data || [])
@@ -4383,12 +4629,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [showHints, setShowHints] = useState(false)
   const [liveFixtures, setLiveFixtures] = useState([])
   const [liveFixturesLoading, setLiveFixturesLoading] = useState(false)
-  const [liveFixturesStatus, setLiveFixturesStatus] = useState('')
+  const [liveFixturesStatus, setLiveFixturesStatus] = useState('Wybierz kraj i ligę po lewej. Dopiero wtedy pobiorę dzisiejsze mecze tej ligi.')
   const [liveDataSource, setLiveDataSource] = useState('manual')
   const [hasTriedLiveLoad, setHasTriedLiveLoad] = useState(false)
   const [liveDate, setLiveDate] = useState(() => getTodayLocalKey())
   const [sidebarSearch, setSidebarSearch] = useState('')
-  const [footballViewMode, setFootballViewMode] = useState('today')
+  const [footballViewMode, setFootballViewMode] = useState('league-today')
   const [fixtureSearchLoading, setFixtureSearchLoading] = useState(false)
   const [fixtureSearchPerformed, setFixtureSearchPerformed] = useState(false)
   const [activeMarketTab, setActiveMarketTab] = useState('Wszystkie')
@@ -5435,18 +5681,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
 
     setOpenFootballCountry(nextCountry)
-    const nextLeagues = getFootballLeaguesForCountry(nextCountry)
-    const nextLeague = nextLeagues[0] || ''
-
     setLiveFixtures([])
     setHasTriedLiveLoad(false)
     setLiveDataSource('manual')
-    setFootballViewMode('upcoming')
-    setLiveFixturesStatus('Wybierz ligę, a pokażę mecze tej ligi na dziś i najbliższe terminy.')
+    setFootballViewMode('league-today')
+    setLiveFixturesStatus('Wybierz ligę po lewej, a pokażę tylko dzisiejsze mecze tej ligi.')
     updateForm({
       sport: 'Piłka nożna',
       country: nextCountry,
-      league: nextLeague,
+      league: '',
       matchId: '',
       market: '',
       betType: '',
@@ -5668,14 +5911,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const stillVisible = visibleMarketGroups.some(([label]) => label === expandedMarketGroup)
     if (!stillVisible) setExpandedMarketGroup(visibleMarketGroups[0][0])
   }, [showMarketBoard, activeMarketTab, selectedMatch?.id, visibleMarketGroups.length])
-  const normalizedSearch = String(sidebarSearch || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .trim()
-  const visibleMatchOptions = (normalizedSearch
-    ? matchOptions.filter((item) => (`${item.home || ''} ${item.away || ''} ${item.league || currentLeague} ${item.country || currentCountry}`).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizedSearch))
-    : matchOptions
-  ).slice().sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+  const visibleMatchOptions = matchOptions
+    .slice()
+    .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
 
   function getMatchDateBadge(match) {
     const eventKey = (() => {
@@ -5879,59 +6117,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     fetchDailyCount()
   }, [user?.id, userPlan])
 
-  useEffect(() => {
-    fetchSportDayCounts()
-  }, [topSportButtons])
-
-  useEffect(() => {
-    fetchTodayFootballFixtures()
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      const todayKey = getTodayLocalKey()
-      if (todayKey !== sportCountsDate) {
-        setSportCountsDate(todayKey)
-        setLiveDate(todayKey)
-        setLiveFixtures([])
-        setHasTriedLiveLoad(false)
-        setLiveDataSource('manual')
-        setLiveFixturesStatus('Nowy dzień. Liczniki sportów i lista meczów zostały odświeżone dla dzisiejszej daty.')
-        fetchSportDayCounts(true)
-        fetchLiveFixturesForDay({ sport: form.sport, country: form.country, league: form.league, date: todayKey, daysAhead: LIVE_SEARCH_DAYS_AHEAD, allLeagues: true })
-      }
-    }, 30000)
-
-    return () => window.clearInterval(timer)
-  }, [sportCountsDate, topSportButtons, form.sport, form.country, form.league])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      const todayKey = getTodayLocalKey()
-      setLiveDate(todayKey)
-      fetchSportDayCounts(true)
-
-      // Nie nadpisuj wyników ręcznego wyszukiwania automatycznym odświeżaniem.
-      // Wyszukany mecz ma zostać na ekranie, dopóki użytkownik sam nie zmieni widoku
-      // albo nie wykona nowego wyszukiwania.
-      if (footballViewMode === 'search' || fixtureSearchPerformed) return
-
-      if (form.sport) {
-        fetchLiveFixturesForDay({
-          sport: form.sport,
-          country: form.country || 'Wszystkie',
-          league: form.league || 'Wszystkie ligi',
-          date: todayKey,
-          daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-          allLeagues: true,
-          silent: true,
-        })
-      }
-    }, 60000)
-
-    return () => window.clearInterval(timer)
-  }, [form.sport, form.country, form.league, footballViewMode, fixtureSearchPerformed])
-
   const FREE_DAILY_TIP_LIMIT = 5
   useEffect(() => {
     if (!isPremiumUser && form.accessType !== 'free') {
@@ -6039,11 +6224,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setOpenSidebarSport(nextSport)
     if (nextSport === 'Piłka nożna') setOpenFootballCountry(nextCountry)
 
-    setFootballViewMode('upcoming')
+    setFootballViewMode('league-today')
     setFixtureSearchPerformed(false)
+    setSidebarSearch('')
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`LIVE: pobieram mecze ligi ${nextLeague} na dziś i najbliższe terminy...`)
+    setLiveFixturesStatus(`Pobieram dzisiejsze mecze ligi ${nextLeague}...`)
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -6060,17 +6246,30 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         country: nextCountry || 'Wszystkie',
         league: nextLeague,
         date: getTodayLocalKey(),
-        daysAhead: LIVE_SEARCH_DAYS_AHEAD,
+        daysAhead: 0,
         allLeagues: false,
-        mode: 'upcoming',
+        mode: 'league-today',
       })
-    }, 60)
+    }, 30)
   }
 
-  function fetchTodayFootballFixtures() {
-    setFootballViewMode('today')
+
+  function fetchAllTodayFootballFixtures() {
+    setFootballViewMode('all-today')
     setFixtureSearchPerformed(false)
     setSidebarSearch('')
+    setLiveFixtures([])
+    setLiveDataSource('loading')
+    setLiveFixturesStatus('Pobieram wszystkie dzisiejsze mecze piłki nożnej...')
+    updateForm({
+      sport: 'Piłka nożna',
+      country: 'Wszystkie',
+      league: 'Wszystkie ligi',
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
+    })
     fetchLiveFixturesForDay({
       sport: 'Piłka nożna',
       country: 'Wszystkie',
@@ -6078,21 +6277,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       date: getTodayLocalKey(),
       daysAhead: 0,
       allLeagues: true,
-      mode: 'today',
-    })
-  }
-
-  function fetchUpcomingFootballFixtures() {
-    setFootballViewMode('upcoming')
-    setFixtureSearchPerformed(false)
-    fetchLiveFixturesForDay({
-      sport: 'Piłka nożna',
-      country: form.country || 'Wszystkie',
-      league: form.league || 'Wszystkie ligi',
-      date: getTodayLocalKey(),
-      daysAhead: LIVE_SEARCH_DAYS_AHEAD,
-      allLeagues: !form.league || form.league === 'Wszystkie ligi',
-      mode: 'upcoming',
+      mode: 'all-today',
     })
   }
 
@@ -6100,23 +6285,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     event?.preventDefault?.()
     const query = String(sidebarSearch || '').trim()
     if (!query) {
-      fetchTodayFootballFixtures()
+      fetchAllTodayFootballFixtures()
       return
     }
     setFootballViewMode('search')
     setFixtureSearchPerformed(true)
     setFixtureSearchLoading(true)
+    setLiveFixtures([])
+    setLiveDataSource('loading')
+    setLiveFixturesStatus(`Szukam prawdziwych meczów dla „${query}”...`)
     fetchLiveFixturesForDay({
       sport: 'Piłka nożna',
       country: 'Wszystkie',
       league: 'Wszystkie ligi',
       date: getTodayLocalKey(),
-      daysAhead: GLOBAL_SEARCH_DAYS_AHEAD,
+      daysAhead: 365,
       allLeagues: true,
       mode: 'search',
       query,
     }).finally(() => setFixtureSearchLoading(false))
   }
+
 
   async function fetchLiveFixturesForDay(overrides = {}) {
     const isSilentRefresh = Boolean(overrides.silent)
@@ -6124,7 +6313,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(true)
     if (!isSilentRefresh) {
       setLiveDataSource('loading')
-      setLiveFixturesStatus(`LIVE: pobieram realne mecze z The Odds API, a jeśli pusto — z API-Sports...`)
+      setLiveFixturesStatus(overrides.mode === 'search' ? `Szukam meczu „${overrides.query || sidebarSearch}”...` : overrides.mode === 'all-today' ? 'Pobieram wszystkie dzisiejsze mecze...' : 'Pobieram dzisiejsze mecze wybranej ligi...')
     }
     try {
       const params = new URLSearchParams({
@@ -6132,28 +6321,36 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         country: overrides.country || currentCountry || '',
         league: overrides.league || currentLeague || '',
         date: overrides.date || liveDate || getTodayLocalKey(),
-        daysAhead: String(overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD),
+        daysAhead: String(overrides.daysAhead ?? 0),
         realOnly: '1',
         allLeagues: overrides.allLeagues ? '1' : '0',
-        mode: overrides.mode || footballViewMode || 'upcoming',
+        mode: overrides.mode || footballViewMode || 'league-today',
         query: overrides.query || '',
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać meczów')
       const rawFixtures = Array.isArray(data.fixtures) ? data.fixtures : []
-      const fixtures = rawFixtures.filter(matchStartsAfterBuffer)
+      const requestedLeague = String(overrides.league || currentLeague || '').trim()
+
+      // WERSJA 851:
+      // Backend już pilnuje kraju i ligi. Frontend NIE może drugi raz odrzucać meczów,
+      // bo API zwraca kraj np. "England", a UI ma "Anglia". To właśnie wycinało poprawne mecze.
+      // W widoku "mecze dzisiaj" pokazujemy wszystkie dzisiejsze mecze ligi, także te które już się zaczęły.
+      const fixtures = ['league-today', 'all-today'].includes(overrides.mode)
+        ? rawFixtures
+        : rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
-          const scopeLabel = overrides.mode === 'today'
-            ? 'meczów z top 6 lig dziś'
+          const scopeLabel = overrides.mode === 'all-today'
+            ? 'wszystkich dzisiejszych meczów piłki nożnej'
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
-              : `meczów z najbliższych ${overrides.daysAhead ?? LIVE_SEARCH_DAYS_AHEAD} dni`
+              : `dzisiejszych meczów ligi ${requestedLeague}`
           setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
         } else {
@@ -6164,7 +6361,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         setLiveDataSource(data.source || 'empty')
         if (!isSilentRefresh) {
           setLiveFixturesStatus(data.message || `LIVE API/API-Sports: brak realnych meczów dla wybranych filtrów. Nie pokazuję demo ani fake meczów.`)
-          onToast?.({ type: 'info', title: 'Brak przyszłych meczów', message: 'Wybierz późniejszą datę albo inną ligę.' })
+          const noResultsMessage = overrides.mode === 'all-today'
+            ? 'API nie zwróciło dziś meczów piłki nożnej.'
+            : overrides.mode === 'search'
+              ? `Nie znaleziono meczu dla „${overrides.query || sidebarSearch}”.`
+              : `API nie zwróciło dziś meczów dla ligi ${requestedLeague}.`
+          onToast?.({ type: 'info', title: overrides.mode === 'search' ? 'Brak wyników' : 'Dziś brak meczów', message: noResultsMessage })
         } else {
           setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
         }
@@ -6518,6 +6720,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
+      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      home_team_id: publishMatch.homeTeamId || null,
+      away_team_id: publishMatch.awayTeamId || null,
+      home_logo: publishMatch.homeLogo || null,
+      away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
       market: form.market,
       bet_type: form.betType,
@@ -6550,6 +6757,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
+      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      home_team_id: publishMatch.homeTeamId || null,
+      away_team_id: publishMatch.awayTeamId || null,
+      home_logo: publishMatch.homeLogo || null,
+      away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
@@ -6609,7 +6821,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           ? `Twój tip premium został dodany do dashboardu i profilu. Cena singla: ${priceValue.toFixed(2)} zł.`
           : `Twój darmowy tip został dodany do dashboardu i profilu.${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
-      onTipSaved?.(normalizeTipRow(savedRow))
+      onTipSaved?.(normalizeTipRow({
+        ...savedRow,
+        author_avatar_url: savedRow?.author_avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null
+      }))
     } catch (error) {
       console.error('publish tip error', error)
       saveTipDebug('ERROR', error?.message || String(error))
@@ -6626,18 +6841,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           <form className="betfolio-search-wrap betfolio-global-search" onSubmit={handleFixtureSearchSubmit}>
             <input
               className="betfolio-search-input"
-              placeholder="Szukaj meczu lub drużyny bez limitu dat"
               value={sidebarSearch}
-              onChange={(e) => setSidebarSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleFixtureSearchSubmit(e)}
+              onChange={(event) => setSidebarSearch(event.target.value)}
+              placeholder="Szukaj meczu lub drużyny..."
             />
-            <button type="submit" className="betfolio-search-go-btn" disabled={fixtureSearchLoading || liveFixturesLoading}>
-              {fixtureSearchLoading ? '…' : 'Szukaj'}
-            </button>
+            <button className="betfolio-search-go-btn" type="submit" disabled={fixtureSearchLoading}>{fixtureSearchLoading ? '...' : 'Szukaj'}</button>
           </form>
-
-
-          <div className="sports-accordion-title">SPORT</div>
+<div className="sports-accordion-title">SPORT</div>
 
           <div className="sports-accordion-list">
             <div className={`sport-accordion-item ${openSidebarSport === 'Piłka nożna' ? 'is-open' : ''}`}>
@@ -6646,7 +6856,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </button>
               {openSidebarSport === 'Piłka nożna' && (
                 <div className="sport-accordion-children football-country-tree">
-                  <button type="button" className="is-muted country-all-btn" onClick={() => selectSidebarCountry('Świat')}>🌐 Wszystkie kraje / Świat</button>
                   {footballCountryOptions.map(country => {
                     const cleanCountry = normalizeFootballCountryName(country)
                     const flagCode = footballCountryFlagCodes[cleanCountry]
@@ -6761,30 +6970,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               {addTipMode === 'auto' && (
-              <>
-              <div className="betfolio-top-sports-row">
-                {topSportButtons.map((item) => {
-                  const active = form.sport === item.name
-                  const count = Number(sportDayCounts[item.name] || 0)
-                  return (
-                    <button
-                      type="button"
-                      key={`top-sport-${item.name}`}
-                      className={`betfolio-top-sport-pill ${active ? 'active' : ''}`}
-                      onClick={() => handleTopSportButtonClick(item)}
-                    >
-                      <span>{item.icon} {item.name}</span>
-                      <b data-count={count}>{sportDayCountsLoading && !(item.name in sportDayCounts) ? '…' : count}</b>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className="betfolio-fixture-mode-tabs">
-                <button type="button" className={footballViewMode === 'today' ? 'active' : ''} onClick={fetchTodayFootballFixtures}>Dziś</button>
-                <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
-              </div>
-              </>
+                <>
+                  <div className="betfolio-api-saver-note">
+                    <strong>Tryb ręczny API</strong>
+                    <span>Nic nie pobieram automatycznie. Kliknij ligę, wyszukaj mecz albo pokaż wszystkie dzisiejsze.</span>
+                  </div>
+                  <div className="betfolio-fixture-mode-tabs">
+                    <button type="button" className={footballViewMode === 'all-today' ? 'active' : ''} onClick={fetchAllTodayFootballFixtures}>Wszystkie dziś</button>
+                    <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+                  </div>
+                </>
               )}
             </>
           )}
@@ -6794,7 +6989,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {addTipMode === 'auto' ? (
                 <>
                   <div className="betfolio-events-head">
-                    <strong>{footballViewMode === 'today' ? 'Dziś — szybki typ' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : 'Mecze ligi'}</strong>
+                    <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
                     <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
                   </div>
 
@@ -6837,8 +7032,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       )
                     }) : (
                       <div className="betfolio-empty-state no-fake-empty">
-                        <strong>{hasTriedLiveLoad ? 'Brak realnych meczów z API' : 'Wybierz ligę albo kliknij Dziś'}</strong>
-                        <span>{hasTriedLiveLoad ? 'Nie pokazuję demo ani fake spotkań. Dziś pokazuję szybkie typy z top 6 lig, a wyszukiwarka znajduje każdy prawdziwy mecz. Kliknij ligę po lewej, aby zobaczyć jej mecze na dziś i najbliższe terminy.' : 'Kliknij ligę po lewej, użyj zakładki „Dziś” albo wpisz mecz w wyszukiwarce.'}</span>
+                        <strong>{!hasTriedLiveLoad ? 'Wybierz ligę, pokaż wszystkie mecze albo wyszukaj drużynę' : footballViewMode === 'search' ? 'Brak wyników wyszukiwania' : footballViewMode === 'all-today' ? 'Dziś brak meczów' : 'Dziś brak meczów w tej lidze'}</strong>
+                        <span>{!hasTriedLiveLoad ? 'Nie pobieram nic automatycznie. Możesz kliknąć ligę po lewej, przycisk „Wszystkie dziś” albo użyć wyszukiwarki meczów.' : footballViewMode === 'search' ? 'Nie znalazłem prawdziwego meczu dla wpisanej frazy.' : footballViewMode === 'all-today' ? 'API nie zwróciło dziś meczów. Nie pokazuję demo ani fake spotkań.' : 'API nie zwróciło dziś meczów dla tej ligi. Nie pokazuję demo ani fake spotkań.'}</span>
                       </div>
                     )}
                   </div>
@@ -7180,45 +7375,37 @@ function FeedSkeleton() {
 
 
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
-  const statusLabel = tip.status === 'won' ? '● Wygrany' : tip.status === 'lost' ? '● Przegrany' : tip.status === 'void' ? '● Zwrot' : '◷ Oczekujący'
-  const statusClass = tip.status === 'won' ? 'won' : tip.status === 'lost' ? 'lost' : 'pending'
-  const probability = getAiConfidence(tip)
-  const aiScore = getAiScore(tip)
-  const aiAnalysis = getAiAnalysis(tip)
-  const aiBadges = getAiBadges(tip)
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
   const author = tip.author_name || tip.author_email?.split('@')[0] || 'Użytkownik'
-  const isAiTip = author === 'AI Tip'
-  const analysisTitle = isAiTip ? 'AI Analiza' : 'Analiza użytkownika'
-  const analysisTopBadge = isAiTip
-    ? (isLocked ? 'AI 🔒' : `AI ${probability}%`)
-    : (isLocked ? 'ANALIZA UŻ. 🔒' : 'ANALIZA UŻ.')
-  const analysisStrongLabel = isAiTip
-    ? (isLocked ? '🔒' : `${probability}%`)
-    : (isLocked ? '🔒' : '')
   const authorId = getTipAuthorId(tip)
-  const currentUsername = (currentUser?.email || '').split('@')[0]
-  const isOwnTip = Boolean(
-    (currentUser?.id && authorId && String(currentUser.id) === String(authorId)) ||
-    (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
+  const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0]
+  const tipIdentity = {
+    id: authorId,
+    user_id: tip.user_id,
+    author_id: tip.author_id,
+    email: tip.author_email || tip.email || tip.user_email,
+    author_email: tip.author_email,
+    username: tip.author_name || tip.username,
+    author_name: tip.author_name,
+  }
+  const isOwnTip = isSameProfileIdentity(currentUser, tipIdentity) || Boolean(
+    currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase()
   )
-  const followKey = authorId ? String(authorId) : String(author).toLowerCase()
-  const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
-
+  const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
-  const baseLikes = Number(tip?.likes ?? 128) || 128
+  const baseLikes = Number(tip?.likes ?? 0) || 0
   const baseDislikes = Number(tip?.dislikes ?? 0) || 0
-  const baseCommentCount = 0
+  const baseCommentCount = Number(tip?.comments_count ?? 0) || 0
   const interactionStorageKey = useMemo(
     () => `betai_tip_interactions_v3_${tip?.id || `${tip?.team_home || 'home'}_${tip?.team_away || 'away'}_${tip?.created_at || 'now'}`}`,
     [tip?.id, tip?.team_home, tip?.team_away, tip?.created_at]
   )
-
   const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -7231,7 +7418,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       setFeedback({
         likes: Number(parsed?.likes ?? baseLikes) || 0,
         dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
-        comments: [],
+        comments: Array.isArray(parsed?.comments) ? parsed.comments : [],
         votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {}
       })
     } catch (_) {
@@ -7240,25 +7427,29 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }, [interactionStorageKey, baseLikes, baseDislikes])
 
   useEffect(() => {
-    try {
-      localStorage.setItem(interactionStorageKey, JSON.stringify(feedback))
-    } catch (_) {}
+    try { localStorage.setItem(interactionStorageKey, JSON.stringify(feedback)) } catch (_) {}
   }, [interactionStorageKey, feedback])
 
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
   const stakeValue = Number(tip?.stake || 0)
-  const stakeLabel = stakeValue > 0
-    ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł`
-    : '—'
+  const stakeLabel = stakeValue > 0 ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł` : '—'
+  const cardAuthor = isOwnTip ? (currentUsername || author) : author
+  const cardHome = tip.team_home || tip.home_team || 'Gospodarze'
+  const cardAway = tip.team_away || tip.away_team || 'Goście'
+  const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
+  const cardAnalysis = tip.analysis || tip.ai_analysis || tip.description || 'Brak analizy użytkownika.'
+  const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
+  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
+  const createdAgo = formatRelativeAddedTime(tip?.created_at)
+  const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
 
   function handleVote(nextVote) {
     const previousVote = activeVote
-    setFeedback((prev) => {
+    setFeedback(prev => {
       const votes = { ...(prev?.votes || {}) }
       let likes = Number(prev?.likes || 0)
       let dislikes = Number(prev?.dislikes || 0)
-
       if (previousVote === nextVote) {
         if (nextVote === 'like') likes = Math.max(0, likes - 1)
         if (nextVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
@@ -7270,17 +7461,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         if (nextVote === 'dislike') dislikes += 1
         votes[actorKey] = nextVote
       }
-
       return { ...prev, likes, dislikes, votes }
     })
-
-    if (previousVote === nextVote) {
-      onToast?.({ type: 'info', title: 'Reakcja usunięta', message: 'Usunęliśmy Twoją reakcję z tego typu.' })
-    } else if (nextVote === 'like') {
-      onToast?.({ type: 'success', title: 'Typ polubiony', message: 'Dziękujemy za pozytywną reakcję.' })
-    } else {
-      onToast?.({ type: 'info', title: 'Zapisano opinię', message: 'Twoja negatywna reakcja została zapisana.' })
-    }
   }
 
   function submitComment() {
@@ -7292,117 +7474,182 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       text: clean.slice(0, 280),
       created_at: new Date().toISOString()
     }
-    setFeedback((prev) => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
+    setFeedback(prev => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
     setCommentDraft('')
     setCommentsOpen(true)
     onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
   }
 
+  async function reportDashboardTip() {
+    setMenuOpen(false)
+    onToast?.({ type: 'info', title: 'Zgłoszono wpis', message: 'Zgłoszenie zostało przyjęte do sprawdzenia.' })
+  }
+
+  async function settleDashboardTip() {
+    setMenuOpen(false)
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
+    if (!nextStatus) return
+    const clean = String(nextStatus).trim().toLowerCase()
+    if (!['won', 'lost', 'void'].includes(clean)) {
+      onToast?.({ type: 'error', title: 'Nieprawidłowy wynik', message: 'Dozwolone wartości: won, lost albo void.' })
+      return
+    }
+    try {
+      await updateTipField(tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
+    }
+  }
+
+  async function addDashboardAnalysis() {
+    setMenuOpen(false)
+    const nextAnalysis = window.prompt('Dodaj analizę do typu:', cardAnalysis || '')
+    if (!nextAnalysis) return
+    try {
+      await updateTipField(tip?.id, { analysis: nextAnalysis, description: nextAnalysis })
+      onToast?.({ type: 'success', title: 'Analiza zapisana', message: 'Analiza została dodana do typu.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd analizy', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać analizy.') })
+    }
+  }
+
+  async function shareDashboardTip() {
+    setMenuOpen(false)
+    const text = shareTipText({ home: cardHome, away: cardAway, pick: cardPick, odds: tip.odds })
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Typ Bet+AI', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+        onToast?.({ type: 'success', title: 'Skopiowano', message: 'Treść typu skopiowana do schowka.' })
+      }
+    } catch (_) {}
+  }
+
+  function handleShareAction() {
+    setFeedback(prev => ({ ...prev, dislikes: Number(prev?.dislikes || 0) + 1 }))
+    shareDashboardTip()
+  }
+
   return (
-    <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
-      <div className="tip-header">
-        <div className="tipster">
-          <div className={`photo ${isAiTip ? 'bot' : ''}`}>{author.slice(0,2).toUpperCase()}</div>
-          <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
-          <em>{isAiTip ? 'AI' : 'TYPER'}</em>
-          {!isOwnTip && !isAiTip && (
-            <button
-              type="button"
-              className={isFollowing ? 'follow-btn active' : 'follow-btn'}
-              onClick={() => onToggleFollow?.(authorId, author)}
-              title="Obserwuj tego tipstera i dostawaj powiadomienia o nowych typach"
-            >
-              {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
-            </button>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${isLocked ? 'locked' : 'unlocked'}`}>
+      <div className="profile-ticket-v6-left">
+        <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
+          {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
+        </span>
+        <div>
+          <span className="ticket-author-row-v874">
+            <strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{cardAuthor}</strong>
+            <b>✓</b>
+          </span>
+          {dashboardAuthorStats?.totalTipsLabel ? (
+            <div className="ticket-mini-stats-v876">
+              <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b>{dashboardAuthorStats.profitLabel}</b></span>
+            </div>
+          ) : null}
+        </div>
+        <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
+          {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
+        </button>
+      </div>
+
+      <div className="profile-ticket-v6-main">
+        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
+        <div className="profile-ticket-v6-match">
+          <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{cardHome}</strong></div>
+          <span>vs</span>
+          <div><TipTeamLogo logo={tip.away_logo || tip.awayLogo} teamId={tip.away_team_id || tip.awayTeamId} name={cardAway} /><strong>{cardAway}</strong></div>
+        </div>
+        <small>{cardMatchLabel}</small>
+      </div>
+
+      <div className="profile-ticket-v6-field">
+        <small>TYP</small>
+        <strong>{isLocked ? 'Typ premium' : cardPick}</strong>
+        <span>{isPremium ? 'Singiel' : 'Darmowy typ'}</span>
+      </div>
+
+      <div className="profile-ticket-v6-field stake">
+        <small>STAWKA</small>
+        <strong>{stakeLabel}</strong>
+        <i><b style={{ width: `${Math.max(12, Math.min(100, stakeValue * 10))}%` }} /></i>
+      </div>
+
+      <div className="profile-ticket-v6-field odds">
+        <small>KURS</small>
+        <strong>{isLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</strong>
+      </div>
+
+      <div className={`profile-ticket-v6-analysis ${isLocked ? 'locked' : ''}`}>
+        <small>ANALIZA</small>
+        <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : cardAnalysis}</p>
+        <button type="button">Czytaj więcej⌄</button>
+      </div>
+
+      <div className="profile-ticket-v6-buy">
+        <div className="profile-ticket-v6-corner">
+          <span>{createdAgo}</span>
+          <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
+          {menuOpen && (
+            <div className="profile-ticket-v6-menu">
+              <button type="button" onClick={reportDashboardTip}>⚠ Zgłoś wpis</button>
+              <button type="button" onClick={settleDashboardTip}>✓ Rozlicz</button>
+              <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button>
+              <button type="button" onClick={shareDashboardTip}>↗ Udostępnij</button>
+            </div>
           )}
         </div>
-        <div className="card-badges">
-          <span className={isPremium ? 'premium-tag' : 'free-tag'}>{isPremium ? '▣ PREMIUM' : '○ FREE'}</span>
-          <span className="ai-badge">{analysisTopBadge}</span>
-          {!isLocked && isAiTip && aiScore >= 75 && <span className="ai-score-badge">Score {aiScore}</span>}
-        </div>
-      </div>
-
-      <div className="league">{tip.league} • {tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'}</div>
-
-      <div className="tip-grid">
-        <div className="match-box">
-          <div className="teams"><b>{tip.team_home}</b><span>vs</span><b>{tip.team_away}</b></div>
-          <div className="bet-row">
-            <div><span>Typ</span><b>{isLocked ? '🔒 Typ premium' : tip.bet_type}</b></div>
-            <div><span>Kurs</span><b>{isLocked ? '—' : tip.odds}</b></div>
-            <div><span>Stawka</span><b>{stakeLabel}</b></div>
-          </div>
-        </div>
-
-        <div className={`ai-box ${isLocked ? 'premium-blur-box' : ''}`}>
-          <div className="ai-title">✦ {analysisTitle}{analysisStrongLabel ? <strong>{analysisStrongLabel}</strong> : null}</div>
-          <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : aiAnalysis}</p>
-          <div className="progress"><i style={{width:`${isLocked ? 18 : probability}%`}}></i></div>
-          {!isLocked && isAiTip && aiBadges.length > 0 && <div className="ai-mini-badges">{aiBadges.map(badge => <span key={badge}>{badge}</span>)}</div>}
-          {isLocked && <div className="lock-overlay">🔒 Premium</div>}
-        </div>
-      </div>
-
-      <div className="tip-footer">
-        <span className={statusClass}>{statusLabel}</span>
-
-        <div className="tip-feedback-actions">
-          <button type="button" className={`tip-react-btn like ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')} title="Polub typ">
-            <span>♡</span><b>{feedback.likes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn dislike ${activeVote === 'dislike' ? 'active' : ''}`} onClick={() => handleVote('dislike')} title="Nie podoba mi się">
-            <span>👎</span><b>{feedback.dislikes}</b>
-          </button>
-          <button type="button" className={`tip-react-btn comment ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen((prev) => !prev)} title="Komentarze">
-            <span>💬</span><b>{commentCount}</b>
-          </button>
-        </div>
-
+        <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
+        <small>zakończenie: {cardMatchLabel}</small>
         {isLocked ? (
           <>
-            <button className="unlock-btn" onClick={() => onUnlock(tip)}>Kup singiel za {Number(tip.price || 29).toFixed(2)} zł</button>
-            <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.(tip)}>Kup subskrypcję profilu</button>
+            <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
+            <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
           </>
-        ) : (
-          <button>{isPremium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
-        )}
+        ) : null}
       </div>
 
-      {commentsOpen && (
-        <div className="tip-comments-panel">
-          <div className="tip-comments-head">
-            <strong>Komentarze:</strong>
-            <span>{commentCount} łącznie</span>
-          </div>
+      <footer className="profile-ticket-v6-footer">
+        <div>
+          <button type="button" className={`ticket-action-btn-v877 ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')}>
+            <TipActionLikeIcon />
+            <b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+            <TipActionCommentIcon />
+            <b>{commentCount}</b>
+          </button>
+          <button type="button" className="ticket-action-btn-v877" onClick={handleShareAction}>
+            <TipActionShareIcon />
+            <b>{feedback.dislikes}</b>
+          </button>
+        </div>
+      </footer>
 
+      {commentsOpen && (
+        <div className="tip-comments-panel profile-ticket-v6-comments">
+          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
           <div className="tip-comment-form">
             <input
               type="text"
               value={commentDraft}
               onChange={(e) => setCommentDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  submitComment()
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitComment() } }}
               placeholder="Dodaj komentarz do tego typu..."
               maxLength={280}
             />
             <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
           </div>
-
           {feedback.comments.length > 0 ? (
             <div className="tip-comment-list">
               {feedback.comments.map((comment) => (
                 <div key={comment.id} className="tip-comment-item">
                   <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
                   <div className="tip-comment-body">
-                    <div className="tip-comment-meta">
-                      <strong>{comment.author}</strong>
-                      <span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span>
-                    </div>
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
                     <p>{comment.text}</p>
                   </div>
                 </div>
@@ -8176,24 +8423,238 @@ function ArticlesView() {
   )
 }
 
-function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) {
+function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = [], earnings = null, stripeConnectStatus = null, onTopUp, onBuyTokens, onSellTokens, onConnectStripe, user, userPlan = 'free', onViewChange, onToast, onManageSubscription, onUpgradeSubscription }) {
+  const [accountHistoryRows, setAccountHistoryRows] = useState([])
+  const [accountHistoryLoading, setAccountHistoryLoading] = useState(false)
+  const [accountHistoryExpanded, setAccountHistoryExpanded] = useState(false)
+  const [tokenExchangeMode, setTokenExchangeMode] = useState(null)
+  const [tokenExchangePacks, setTokenExchangePacks] = useState(1)
+  const [tokenExchangeBusy, setTokenExchangeBusy] = useState(false)
+  const [walletClock, setWalletClock] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setWalletClock(new Date()), 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const walletAmount = Math.max(0, Number(wallet || 0) || 0)
   const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
   const tokenPlnValue = userTokens / 1000
+  const isPremiumWalletUser = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const subscriptionLabel = isPremiumWalletUser ? 'Premium' : 'Free'
+  const subscriptionPlanLabel = isPremiumWalletUser ? 'Plan miesięczny' : 'Plan darmowy'
+  const subscriptionPriceLabel = isPremiumWalletUser ? '29 zł / miesiąc' : '0 zł / miesiąc'
+  const subscriptionStatusText = isPremiumWalletUser ? 'Status konta: Premium aktywne' : 'Status konta: Free'
+  const subscriptionRenewalDate = user?.current_period_end
+    ? new Date(user.current_period_end).toLocaleDateString('pl-PL')
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pl-PL')
+  const subscriptionDaysLeft = user?.current_period_end
+    ? (() => {
+        const today = new Date(walletClock)
+        const end = new Date(user.current_period_end)
+        today.setHours(0, 0, 0, 0)
+        end.setHours(0, 0, 0, 0)
+        return Math.max(0, Math.round((end.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)))
+      })()
+    : (isPremiumWalletUser ? 30 : 0)
+  const subscriptionDaysLabel = subscriptionDaysLeft === 1 ? 'dzień' : 'dni'
+  const subscriptionCtaLabel = isPremiumWalletUser ? 'Zarządzaj subskrypcją' : 'Aktywuj Premium przez Stripe'
+  const subscriptionStripeHint = isPremiumWalletUser
+    ? 'Otwórz Stripe Billing Portal i zarządzaj planem, metodą płatności oraz fakturami.'
+    : 'Bezpieczna płatność Stripe aktywuje Premium i odblokuje sprzedaż typów.'
+  const handleSubscriptionAction = () => {
+    window.location.href = BETAI_STRIPE_SUBSCRIPTION_LINK
+  }
   const formatWalletPln = value => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const formatTokenCount = value => Number(value || 0).toLocaleString('pl-PL')
-  const historyRows = [
-    { icon: '▣', title: 'Wpłata BLIK', time: '26.05.2025, 14:23', amount: '+200.00 zł', positive: true },
-    { icon: '◎', title: 'Wypłata na konto', time: '27.05.2025, 09:11', amount: '-150.00 zł', positive: false },
-    { icon: '★', title: 'Zakup Premium', time: 'Premium 30 dni', amount: '-29.00 zł', positive: false },
-    { icon: '✓', title: 'Wygrana kupon', time: '25.05.2025, 22:17', amount: '+320.50 zł', positive: true },
-    { icon: 'AI', title: 'Zakup żetonów', time: '25.05.2025, 16:33', amount: '+50', positive: true }
-  ]
-  const invoiceRows = [
-    { title: 'Faktura F/2025/05/128', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.05.2025' },
-    { title: 'Faktura F/2025/04/095', sub: 'Premium 30 dni', action: 'Pobierz', price: '29.00 zł', date: '26.04.2025' },
-    { title: 'Faktura F/2025/03/067', sub: 'Żetony (100 szt.)', action: 'Pobierz', price: '149.00 zł', date: '26.03.2025' }
-  ]
+  const tokenExchangeTokens = Math.max(1, Number(tokenExchangePacks || 1)) * 1000
+  const tokenBuyPrice = Math.max(1, Number(tokenExchangePacks || 1)) * 1.10
+  const tokenSellPrice = Math.max(1, Number(tokenExchangePacks || 1)) * 0.90
+  const openTokenExchange = mode => {
+    setTokenExchangePacks(1)
+    setTokenExchangeMode(mode)
+  }
+  const closeTokenExchange = () => {
+    if (!tokenExchangeBusy) setTokenExchangeMode(null)
+  }
+  const submitTokenExchange = async () => {
+    const packs = Math.max(1, Math.floor(Number(tokenExchangePacks || 1)))
+    setTokenExchangeBusy(true)
+    try {
+      if (tokenExchangeMode === 'buy') await onBuyTokens?.(packs)
+      if (tokenExchangeMode === 'sell') await onSellTokens?.(packs)
+      setTokenExchangeMode(null)
+    } finally {
+      setTokenExchangeBusy(false)
+    }
+  }
+  const formatHistoryDate = value => {
+    const date = value ? new Date(value) : null
+    if (!date || Number.isNaN(date.getTime())) return '—'
+    return date.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatHistoryPln = (value, sign = '') => `${sign}${Math.abs(Number(value || 0)).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+  const formatHistoryTokens = value => {
+    const amount = Number(value || 0)
+    return `${amount > 0 ? '+' : ''}${amount.toLocaleString('pl-PL')} ${Math.abs(amount) === 1 ? 'żeton' : 'żetonów'}`
+  }
+
+  const loadAccountHistory = async () => {
+    const userId = user?.id
+    const userEmail = normalizeEmail(user?.email)
+    if (!isSupabaseConfigured || !supabase || !userId) {
+      setAccountHistoryRows([])
+      return
+    }
+    setAccountHistoryLoading(true)
+    try {
+      const [walletResult, paymentsResult, tokenResult] = await Promise.all([
+        supabase
+          .from('wallet_transactions')
+          .select('id,amount,type,provider,status,created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('payments')
+          .select('id,amount,provider,status,created_at,tip_id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        userEmail
+          ? supabase
+              .from('betai_token_transactions')
+              .select('id,delta_tokens,reason,ref_type,ref_data,created_at')
+              .eq('email', userEmail)
+              .order('created_at', { ascending: false })
+              .limit(100)
+          : Promise.resolve({ data: [], error: null })
+      ])
+
+      if (walletResult.error) console.warn('wallet history skipped', walletResult.error)
+      if (paymentsResult.error) console.warn('payments history skipped', paymentsResult.error)
+      if (tokenResult.error) console.warn('token history skipped', tokenResult.error)
+
+      const walletRows = (walletResult.data || []).map(row => {
+        const type = String(row.type || '').toLowerCase()
+        const rawAmount = Number(row.amount || 0)
+        const isNegative = ['payout', 'spend', 'purchase'].includes(type) || rawAmount < 0
+        let title = 'Operacja portfela'
+        let icon = '▣'
+        if (type === 'topup') { title = row.provider === 'stripe' ? 'Wpłata Stripe' : 'Wpłata środków'; icon = '▣' }
+        else if (type === 'payout') { title = 'Wypłata środków'; icon = '⇡' }
+        else if ((type === 'spend' || type === 'purchase') && row.provider === 'token_exchange') { title = 'Kupno żetonów'; icon = '◎' }
+        else if (type === 'token_exchange') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
+        else if (type === 'spend' || type === 'purchase') { title = 'Zakup z portfela'; icon = '◎' }
+        else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '★' }
+        return {
+          id: `wallet_${row.id}`,
+          createdAt: row.created_at,
+          icon,
+          title,
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryPln(rawAmount, isNegative ? '-' : '+'),
+          positive: !isNegative,
+          kind: 'wallet'
+        }
+      })
+
+      const paymentRows = (paymentsResult.data || []).map(row => {
+        const provider = String(row.provider || '').toLowerCase()
+        const isPremium = provider.includes('premium') || provider.includes('subscription')
+        return {
+          id: `payment_${row.id}`,
+          createdAt: row.created_at,
+          icon: isPremium ? '★' : '🧾',
+          title: isPremium ? 'Zakup Premium' : 'Zakup typu premium',
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryPln(row.amount, '-'),
+          positive: false,
+          kind: 'payment'
+        }
+      })
+
+      const tokenRows = (tokenResult.data || []).map(row => {
+        const reason = String(row.reason || '').toLowerCase()
+        const delta = Number(row.delta_tokens || 0)
+        const refData = row.ref_data || {}
+        let title = 'Operacja żetonów'
+        let icon = 'AI'
+        if (reason === 'live_chat_tip_sent') { title = 'Tip wysłany'; icon = '↗' }
+        else if (reason === 'live_chat_tip_received') { title = 'Tip otrzymany'; icon = '♡' }
+        else if (reason === 'welcome_bonus') { title = 'Bonus powitalny'; icon = '🎁' }
+        else if (reason === 'token_purchase') { title = 'Kupno żetonów'; icon = '◎' }
+        else if (reason === 'token_exchange_to_wallet') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
+        else if (reason === 'live_chat_daily_leader') { title = 'Nagroda lidera czatu'; icon = '🏆' }
+        else if (reason === 'live_chat_daily_message') { title = 'Bonus za aktywność'; icon = '💬' }
+        if (reason === 'live_chat_tip_sent' && refData?.to_email) title = `Tip wysłany do ${String(refData.to_email).split('@')[0]}`
+        if (reason === 'live_chat_tip_received' && refData?.from_email) title = `Tip od ${String(refData.from_email).split('@')[0]}`
+        return {
+          id: `token_${row.id}`,
+          createdAt: row.created_at,
+          icon,
+          title,
+          time: formatHistoryDate(row.created_at),
+          amount: formatHistoryTokens(delta),
+          positive: delta >= 0,
+          kind: 'token'
+        }
+      })
+
+      const dedupedRows = [...walletRows, ...paymentRows, ...tokenRows]
+        .filter(row => row.createdAt)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      setAccountHistoryRows(dedupedRows)
+    } catch (error) {
+      console.error('loadAccountHistory error', error)
+      setAccountHistoryRows([])
+    } finally {
+      setAccountHistoryLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAccountHistory()
+  }, [user?.id, user?.email])
+
+  useEffect(() => {
+    const refreshHistory = () => loadAccountHistory()
+    window.addEventListener('betai-token-balance-changed', refreshHistory)
+    window.addEventListener('betai-wallet-history-changed', refreshHistory)
+    return () => {
+      window.removeEventListener('betai-token-balance-changed', refreshHistory)
+      window.removeEventListener('betai-wallet-history-changed', refreshHistory)
+    }
+  }, [user?.id, user?.email])
+
+  const visibleHistoryRows = accountHistoryExpanded ? accountHistoryRows : accountHistoryRows.slice(0, 5)
+  const getPaymentDocumentLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getPaymentDocumentTitle = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    if (payment?.invoice_number) return `Faktura ${payment.invoice_number}`
+    if (provider.includes('premium')) return 'Zakup Premium'
+    if (provider.includes('token')) return 'Zakup żetonów'
+    if (payment?.tip_id) return 'Zakup typu premium'
+    return 'Płatność'
+  }
+  const getPaymentDocumentSubtitle = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    if (provider.includes('premium')) return 'Premium 30 dni'
+    if (provider.includes('token')) return 'Zakup żetonów'
+    if (payment?.tip_id) return 'Typ premium'
+    return String(payment?.provider || 'Płatność Stripe')
+  }
+  const invoiceRows = (payments || [])
+    .filter(payment => String(payment?.status || '').toLowerCase() === 'paid')
+    .slice(0, 3)
+    .map(payment => ({
+      id: payment.id,
+      title: getPaymentDocumentTitle(payment),
+      sub: getPaymentDocumentSubtitle(payment),
+      price: formatWalletPln(payment.amount),
+      date: payment.created_at ? new Date(payment.created_at).toLocaleDateString('pl-PL') : '—',
+      href: getPaymentDocumentLink(payment)
+    }))
   const topUsers = [
     ['RebelKoks', 'Typy: 66 • WIN: 68.2%'],
     ['smilhytv', 'Typy: 72 • WIN: 62.1%'],
@@ -8214,27 +8675,224 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
     ['Liverpool vs Bayer Leverkusen', 'Typ: Liverpool wygra', '61%']
   ]
 
+  const [walletEarningsPeriod, setWalletEarningsPeriod] = useState('current_month')
+  const creatorEarningsHistory = Array.isArray(earnings?.history) ? earnings.history : []
+  const startOfDay = value => {
+    const date = new Date(value)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const startOfMonth = value => {
+    const date = new Date(value)
+    date.setDate(1)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const addMonths = (value, months) => {
+    const date = new Date(value)
+    date.setMonth(date.getMonth() + months)
+    return date
+  }
+  const creatorPeriodRange = (() => {
+    const now = new Date(walletClock)
+    const currentStart = startOfMonth(now)
+    const nextStart = addMonths(currentStart, 1)
+    if (walletEarningsPeriod === 'previous_month') {
+      return { start: addMonths(currentStart, -1), end: currentStart, label: 'Poprzedni miesiąc' }
+    }
+    if (walletEarningsPeriod === 'last_3_months') {
+      return { start: addMonths(currentStart, -2), end: nextStart, label: 'Ostatnie 3 miesiące' }
+    }
+    if (walletEarningsPeriod === 'year') {
+      const yearStart = new Date(now.getFullYear(), 0, 1)
+      return { start: yearStart, end: new Date(now.getFullYear() + 1, 0, 1), label: 'Cały rok' }
+    }
+    return { start: currentStart, end: nextStart, label: 'Bieżący miesiąc' }
+  })()
+  const previousCreatorPeriodRange = (() => {
+    const span = creatorPeriodRange.end.getTime() - creatorPeriodRange.start.getTime()
+    return {
+      start: new Date(creatorPeriodRange.start.getTime() - span),
+      end: creatorPeriodRange.start
+    }
+  })()
+  const amountFromCreatorRow = row => Number(row?.amount || row?.net_amount || row?.tipster_amount || 0) || 0
+  const creatorRowsForRange = (range) => creatorEarningsHistory.filter(row => {
+    const createdAt = new Date(row?.created_at || 0)
+    return !Number.isNaN(createdAt.getTime()) && createdAt >= range.start && createdAt < range.end
+  })
+  const currentCreatorRows = creatorRowsForRange(creatorPeriodRange)
+  const previousCreatorRows = creatorRowsForRange(previousCreatorPeriodRange)
+  const creatorPeriodTotal = currentCreatorRows.reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+  const previousCreatorTotal = previousCreatorRows.reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+  const creatorGrowthPercent = previousCreatorTotal > 0
+    ? ((creatorPeriodTotal - previousCreatorTotal) / previousCreatorTotal) * 100
+    : (creatorPeriodTotal > 0 ? 100 : 0)
+  const creatorGrossTotal = currentCreatorRows.reduce((sum, row) => sum + Number(row?.gross_amount || (amountFromCreatorRow(row) + Number(row?.commission || 0)) || 0), 0)
+  const creatorCommissionTotal = currentCreatorRows.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+  const creatorSalesCount = currentCreatorRows.length
+  const creatorChartBuckets = (() => {
+    const useMonths = walletEarningsPeriod === 'last_3_months' || walletEarningsPeriod === 'year'
+    const buckets = []
+    if (useMonths) {
+      const cursor = startOfMonth(creatorPeriodRange.start)
+      while (cursor < creatorPeriodRange.end) {
+        const bucketStart = new Date(cursor)
+        const bucketEnd = addMonths(bucketStart, 1)
+        buckets.push({
+          key: `${bucketStart.getFullYear()}-${bucketStart.getMonth()}`,
+          label: bucketStart.toLocaleDateString('pl-PL', { month: 'short' }),
+          amount: creatorRowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+        })
+        cursor.setMonth(cursor.getMonth() + 1)
+      }
+      return buckets
+    }
+
+    const cursor = startOfDay(creatorPeriodRange.start)
+    while (cursor < creatorPeriodRange.end) {
+      const bucketStart = new Date(cursor)
+      const bucketEnd = new Date(bucketStart)
+      bucketEnd.setDate(bucketEnd.getDate() + 1)
+      buckets.push({
+        key: bucketStart.toISOString().slice(0, 10),
+        label: String(bucketStart.getDate()),
+        amount: creatorRowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromCreatorRow(row), 0)
+      })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return buckets
+  })()
+  const creatorChartMax = Math.max(1, ...creatorChartBuckets.map(bucket => Number(bucket.amount || 0)))
+  const creatorChartPoints = creatorChartBuckets.map((bucket, index) => {
+    const x = creatorChartBuckets.length <= 1 ? 0 : (index / (creatorChartBuckets.length - 1)) * 100
+    const y = 100 - (Number(bucket.amount || 0) / creatorChartMax) * 100
+    return `${x},${y}`
+  }).join(' ')
+  const creatorChartAreaPoints = creatorChartBuckets.length
+    ? `0,100 ${creatorChartPoints} 100,100`
+    : ''
+  const creatorChartXAxisLabels = creatorChartBuckets.length > 6
+    ? creatorChartBuckets.filter((_, index) => index === 0 || index === creatorChartBuckets.length - 1 || index % Math.ceil(creatorChartBuckets.length / 4) === 0)
+    : creatorChartBuckets
+  const creatorGrowthLabel = previousCreatorTotal > 0
+    ? `${creatorGrowthPercent >= 0 ? '+' : ''}${creatorGrowthPercent.toFixed(1)}% vs poprzedni okres`
+    : (creatorPeriodTotal > 0 ? 'Pierwszy zarobek w tym okresie' : 'Brak danych do porównania')
+  const creatorSourceLabel = source => {
+    if (source === 'profile_subscription') return 'Subskrypcja profilu'
+    if (source === 'tip_purchase') return 'Sprzedaż typu'
+    return 'Zarobek twórcy'
+  }
+
+  const adminUnlocked = isAdminUser(user)
+
+  function handleAdminWalletTab(targetView) {
+    if (!adminUnlocked) {
+      onToast?.({
+        type: 'error',
+        title: 'Zakładka tylko dla admina',
+        message: 'Dostęp do tej sekcji ma wyłącznie administrator: smilhytv / smilhytv@gmail.com.'
+      })
+      return
+    }
+    onViewChange?.(targetView)
+  }
+
   return (
     <section className="wallet-panel wallet-ultra-page wallet-static-v2">
       <div className="wallet-v2-layout">
         <div className="wallet-v2-main">
-          <div className="wallet-v2-header">
-            <div>
-              <h1>Portfel</h1>
-              <p>Zarządzaj swoimi środkami i finansami</p>
+          <div className="wallet-v2-hero glass-v2-panel">
+            <div className="wallet-v2-hero-copy">
+              <h2>Portfel <span>Premium</span></h2>
+              <p>Wpłacaj, wypłacaj i zarządzaj środkami w jednym miejscu. Szybkie operacje, pełna kontrola salda i nowoczesny finansowy hub Bet+AI.</p>
+
+              <div className="wallet-v2-hero-features">
+                <div>
+                  <i>＋</i>
+                  <strong>Błyskawiczne wpłaty</strong>
+                  <small>BLIK, karta, PayPal i szybkie przelewy online</small>
+                </div>
+                <div>
+                  <i>⇡</i>
+                  <strong>Wygodne wypłaty</strong>
+                  <small>Wypłacaj środki na konto i śledź każdą operację</small>
+                </div>
+                <div>
+                  <i>◎</i>
+                  <strong>Pełna kontrola portfela</strong>
+                  <small>Saldo, żetony, płatności i subskrypcja zawsze pod ręką</small>
+                </div>
+              </div>
             </div>
-            <div className="wallet-v2-update">Ostatnia aktualizacja: <b>Teraz</b> ⟳</div>
+
+            <div className="wallet-v2-hero-visual" aria-hidden="true">
+              <div className="wallet-v2-hero-orbit"></div>
+              <div className="wallet-v2-hero-coin">🪙</div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-main">
+                <b>Saldo</b>
+                <strong>{formatWalletPln(walletAmount)}</strong>
+                <span>Środki dostępne</span>
+              </div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-deposit">
+                <b>Wpłata</b>
+                <strong>+200 zł</strong>
+                <span>BLIK • natychmiast</span>
+              </div>
+              <div className="wallet-v2-hero-card wallet-v2-hero-card-withdraw">
+                <b>Wypłata</b>
+                <strong>-150 zł</strong>
+                <span>Konto bankowe</span>
+              </div>
+            </div>
           </div>
 
-          <div className="wallet-v2-tabs glass-v2-panel">
-            <button type="button" className="active">Portfel</button>
-            <button type="button">Wpłaty</button>
-            <button type="button">Wypłaty</button>
-            <button type="button">Płatności</button>
-            <button type="button">Subskrypcja</button>
-            <button type="button">Zarobki</button>
-            <button type="button">Admin finanse</button>
-            <button type="button">Admin wypłaty</button>
+          <div className="wallet-stripe-connect-card glass-v2-panel">
+            <div className="wallet-stripe-connect-main">
+              <div className="wallet-stripe-connect-icon">▣</div>
+              <div>
+                <div className="wallet-stripe-connect-head">
+                  <h3>Moje konto Stripe</h3>
+                  <span className={stripeConnectStatus?.payouts_enabled ? 'stripe-status-pill ready' : stripeConnectStatus?.stripe_account_id ? 'stripe-status-pill pending' : 'stripe-status-pill empty'}>
+                    {stripeConnectStatus?.payouts_enabled ? 'Stripe aktywny' : stripeConnectStatus?.stripe_account_id ? 'Dokończ konfigurację' : 'Niepodłączone'}
+                  </span>
+                </div>
+                <p>
+                  Podłącz swoje konto Stripe Connect, żeby sprzedawać single i subskrypcje profilu. Kupujący płaci na stronie, Stripe automatycznie kieruje <b>80%</b> do Ciebie, a <b>20%</b> marży zostaje dla platformy.
+                </p>
+                <small>Kupujący nie wpisuje konta bankowego sprzedawcy. Dane bankowe podajesz tylko bezpiecznie w Stripe.</small>
+              </div>
+            </div>
+            <button type="button" onClick={() => onConnectStripe?.()}>
+              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+            </button>
+          </div>
+
+          <div className="wallet-v2-tabs glass-v2-panel wallet-v2-tabs-under-hero">
+            <button type="button" className="active" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+            <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+            <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+            <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+            <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+            <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+            <button
+              type="button"
+              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
+              onClick={() => handleAdminWalletTab('adminFinance')}
+              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
+            >
+              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+              <span>Admin finanse</span>
+            </button>
+            <button
+              type="button"
+              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
+              onClick={() => handleAdminWalletTab('adminPayouts')}
+              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
+            >
+              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+              <span>Admin wypłaty</span>
+            </button>
           </div>
 
           <div className="wallet-v2-topstats">
@@ -8259,38 +8917,77 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
             <div className="glass-v2-panel wallet-v2-card">
               <div className="wallet-v2-card-head"><h3>Szybkie operacje</h3></div>
               <div className="wallet-v2-action-grid">
-                <button type="button"><b>＋</b><span><strong>Wpłać środki</strong><small>Ulepsz konto błyskawicznie</small></span></button>
-                <button type="button"><b>⇡</b><span><strong>Wypłać środki</strong><small>Wypłata na konto bankowe</small></span></button>
-                <button type="button"><b>◎</b><span><strong>Kup żetony</strong><small>Doładuj swoje żetony</small></span></button>
-                <button type="button"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
+                <button type="button" onClick={() => onViewChange?.('deposits')}><b>＋</b><span><strong>Wpłać środki</strong><small>Przejdź do wpłat</small></span></button>
+                <button type="button" onClick={() => onViewChange?.('payouts')}><b>⇡</b><span><strong>Wypłać środki</strong><small>Przejdź do wypłat</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('buy')}><b>◎</b><span><strong>Kup żetony</strong><small>1000 żetonów = 1,10 zł</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('sell')}><b>⇄</b><span><strong>Wymień żetony na walutę</strong><small>1000 żetonów = 0,90 zł</small></span></button>
+                <button type="button" onClick={() => setAccountHistoryExpanded(true)} className="wallet-v2-action-history"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
               </div>
             </div>
 
             <div className="glass-v2-panel wallet-v2-card">
-              <div className="wallet-v2-card-head"><h3>Historia transakcji</h3><button type="button">Zobacz wszystkie</button></div>
+              <div className="wallet-v2-card-head"><h3>Historia transakcji</h3><button type="button" onClick={() => setAccountHistoryExpanded(prev => !prev)}>{accountHistoryExpanded ? 'Pokaż mniej' : 'Zobacz wszystkie'}</button></div>
               <div className="wallet-v2-history-list">
-                {historyRows.map((row, index) => (
-                  <div className="wallet-v2-history-item" key={index}>
+                {accountHistoryLoading ? (
+                  <div className="wallet-v2-history-empty">Ładuję transakcje...</div>
+                ) : visibleHistoryRows.length ? visibleHistoryRows.map(row => (
+                  <div className="wallet-v2-history-item" key={row.id}>
                     <span className="history-icon">{row.icon}</span>
                     <div className="history-text"><strong>{row.title}</strong><small>{row.time}</small></div>
                     <b className={row.positive ? 'positive' : 'negative'}>{row.amount}</b>
                   </div>
-                ))}
+                )) : (
+                  <div className="wallet-v2-history-empty">Brak transakcji na tym koncie.</div>
+                )}
               </div>
             </div>
 
-            <div className="glass-v2-panel wallet-v2-card">
-              <div className="wallet-v2-card-head"><h3>Metody wpłaty</h3></div>
-              <p className="wallet-v2-sub">Wybierz preferowaną metodę</p>
-              <div className="wallet-v2-payment-grid">
-                <div><span className="pay-logo blik">blik</span><strong>BLIK</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo bank">🏛</span><strong>Przelew online</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo card">💳</span><strong>Karta płatnicza</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo paypal">P</span><strong>PayPal</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo gpay">G Pay</span><strong>Google Pay</strong><small>Natychmiast</small></div>
-                <div><span className="pay-logo apple"> Pay</span><strong>Apple Pay</strong><small>Natychmiast</small></div>
+            <div className="glass-v2-panel wallet-v2-card wallet-v2-methods-card">
+              <div className="wallet-v2-card-head"><h3>Metody płatności</h3></div>
+
+              <div className="wallet-v2-method-section">
+                <p className="wallet-v2-sub">Wpłaty</p>
+                <div className="wallet-v2-payment-grid wallet-v2-payment-grid-live">
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo paypal">P</span>
+                    <strong>PayPal</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo revolut">R</span>
+                    <strong>Revolut</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-active" onClick={() => onViewChange?.('deposits')}>
+                    <span className="pay-logo stripe">S</span>
+                    <strong>Stripe</strong>
+                    <small>Aktywne</small>
+                  </button>
+                </div>
               </div>
-              <button type="button" className="wallet-v2-primary-btn" onClick={onTopUp}>Przejdź do wpłat</button>
+
+              <div className="wallet-v2-method-section wallet-v2-method-section-payout">
+                <p className="wallet-v2-sub">Wypłaty</p>
+                <div className="wallet-v2-payment-grid wallet-v2-payment-grid-live">
+                  <button type="button" className="wallet-pay-method is-active" onClick={() => onViewChange?.('payouts')}>
+                    <span className="pay-logo stripe">S</span>
+                    <strong>Stripe</strong>
+                    <small>Aktywne</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo paypal">P</span>
+                    <strong>PayPal</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                  <button type="button" className="wallet-pay-method is-locked" disabled>
+                    <span className="pay-logo revolut">R</span>
+                    <strong>Revolut</strong>
+                    <small>🔒 Wkrótce</small>
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('deposits')}>Przejdź do wpłat</button>
             </div>
           </div>
 
@@ -8299,50 +8996,96 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
               <div className="wallet-v2-card-head"><h3>Płatności i faktury</h3></div>
               <p className="wallet-v2-sub">Historia płatności i faktur</p>
               <div className="wallet-v2-invoice-list">
-                {invoiceRows.map((row, index) => (
-                  <div className="invoice-item" key={index}>
+                {invoiceRows.length ? invoiceRows.map(row => (
+                  <div className="invoice-item" key={row.id}>
                     <span className="invoice-icon">▤</span>
-                    <div className="invoice-info"><strong>{row.title}</strong><small>{row.sub} <em>{row.action}</em></small></div>
+                    <div className="invoice-info">
+                      <strong>{row.title}</strong>
+                      <small>
+                        {row.sub}{' '}
+                        {row.href ? <a href={row.href} target="_blank" rel="noreferrer">Pobierz</a> : <em>Brak faktury</em>}
+                      </small>
+                    </div>
                     <div className="invoice-meta"><b>{row.price}</b><small>{row.date}</small></div>
                   </div>
-                ))}
+                )) : (
+                  <div className="wallet-v2-empty-documents">
+                    <strong>Brak płatności i faktur</strong>
+                    <small>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</small>
+                  </div>
+                )}
               </div>
-              <button type="button" className="wallet-v2-primary-btn">Zobacz wszystkie faktury</button>
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('payments')}>Zobacz wszystkie faktury</button>
             </div>
 
             <div className="glass-v2-panel wallet-v2-card subscription-card-v2">
-              <div className="wallet-v2-card-head"><h3>Subskrypcja</h3></div>
+              <div className="wallet-v2-card-head">
+                <h3>Subskrypcja</h3>
+                <span className={`subscription-status-chip ${isPremiumWalletUser ? 'is-premium' : 'is-free'}`}>{subscriptionStatusText}</span>
+              </div>
               <p className="wallet-v2-sub">Aktywny plan</p>
               <div className="subscription-badge-v2">
-                <span className="premium-round">✦</span>
+                <span className="premium-round">{isPremiumWalletUser ? '✦' : '◌'}</span>
                 <div>
-                  <strong>Premium</strong>
-                  <small>Plan miesięczny</small>
-                  <b>29.99 zł / miesiąc</b>
+                  <strong>{subscriptionLabel}</strong>
+                  <small>{subscriptionPlanLabel}</small>
+                  <b>{subscriptionPriceLabel}</b>
                 </div>
               </div>
               <ul className="sub-feature-list">
-                <li>Dostęp do typów Premium</li>
-                <li>Zaawansowane statystyki</li>
-                <li>Typy AI bez limitu</li>
-                <li>Priorytetowe powiadomienia</li>
+                <li>{isPremiumWalletUser ? 'Dostęp do typów Premium' : 'Do 5 darmowych typów na dobę'}</li>
+                <li>{isPremiumWalletUser ? 'Zaawansowane statystyki' : 'Podstawowe funkcje portfela i profilu'}</li>
+                <li>{isPremiumWalletUser ? 'Typy AI bez limitu' : 'Sprzedaż typów zablokowana na koncie Free'}</li>
+                <li>{isPremiumWalletUser ? 'Priorytetowe powiadomienia' : 'Przejście na Premium odblokowuje pełny dostęp'}</li>
               </ul>
-              <div className="renew-info">Następne odnowienie: <b>26.06.2025</b></div>
-              <button type="button" className="wallet-v2-primary-btn">Zarządzaj subskrypcją</button>
+              <div className="renew-info">{isPremiumWalletUser ? <>Premium ważne do: <b>{subscriptionRenewalDate}</b> · zostało {subscriptionDaysLeft} {subscriptionDaysLabel}</> : <>Przejdź na Premium, aby aktywować miesięczny plan Stripe.</>}</div>
+              <button type="button" className="wallet-v2-primary-btn" onClick={handleSubscriptionAction}>{subscriptionCtaLabel}</button>
+              <button type="button" className="subscription-stripe-link" onClick={handleSubscriptionAction}>{subscriptionStripeHint}</button>
             </div>
 
             <div className="glass-v2-panel wallet-v2-card earnings-card-v2">
-              <div className="wallet-v2-card-head"><h3>Zarobki twórcy</h3><span>Twoje zarobki jako twórca typów</span></div>
+              <div className="wallet-v2-card-head"><h3>Zarobki twórcy</h3><span>Twoje realne zarobki ze sprzedaży typów i subskrypcji</span></div>
               <div className="earnings-topline">
-                <button type="button">Bieżący miesiąc ⌄</button>
-                <div><strong>2,450.75 zł</strong><small>+18.5% vs poprzedni miesiąc</small></div>
+                <select value={walletEarningsPeriod} onChange={event => setWalletEarningsPeriod(event.target.value)} aria-label="Okres zarobków">
+                  <option value="current_month">Bieżący miesiąc</option>
+                  <option value="previous_month">Poprzedni miesiąc</option>
+                  <option value="last_3_months">Ostatnie 3 miesiące</option>
+                  <option value="year">Cały rok</option>
+                </select>
+                <div><strong>{formatWalletPln(creatorPeriodTotal)}</strong><small>{creatorGrowthLabel}</small></div>
               </div>
-              <div className="earnings-chart-v2">
-                <div className="y-labels"><span>30</span><span>20</span><span>10</span><span>0</span></div>
-                <div className="chart-area"><span></span></div>
-                <div className="x-labels"><small>1 Maj</small><small>8 Maj</small><small>15 Maj</small><small>22 Maj</small><small>29 Maj</small></div>
-              </div>
-              <button type="button" className="wallet-v2-primary-btn">Szczegółowe statystyki</button>
+              {creatorSalesCount > 0 ? (
+                <>
+                  <div className="earnings-live-stats">
+                    <span><b>{formatWalletPln(creatorGrossTotal)}</b> sprzedaż brutto</span>
+                    <span><b>{formatWalletPln(creatorCommissionTotal)}</b> prowizja platformy</span>
+                    <span><b>{creatorSalesCount}</b> sprzedaży</span>
+                  </div>
+                  <div className="earnings-chart-v2 earnings-live-chart">
+                    <div className="y-labels"><span>{formatWalletPln(creatorChartMax)}</span><span>{formatWalletPln(creatorChartMax / 2)}</span><span>0 zł</span></div>
+                    <div className="chart-area">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <polygon points={creatorChartAreaPoints} />
+                        <polyline points={creatorChartPoints} />
+                      </svg>
+                    </div>
+                    <div className="x-labels">{creatorChartXAxisLabels.map(bucket => <small key={bucket.key}>{bucket.label}</small>)}</div>
+                  </div>
+                  <div className="earnings-live-last">
+                    {currentCreatorRows.slice(0, 2).map(row => (
+                      <span key={row.id || `${row.created_at}_${row.source}`}>
+                        {creatorSourceLabel(row.source)} <b>+{formatWalletPln(amountFromCreatorRow(row))}</b>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="earnings-empty-v2">
+                  <strong>Brak zarobków w tym okresie</strong>
+                  <span>Opublikuj pierwszy płatny typ albo uruchom subskrypcję profilu, aby zacząć zarabiać.</span>
+                </div>
+              )}
+              <button type="button" className="wallet-v2-primary-btn" onClick={() => onViewChange?.('earnings')}>Szczegółowe statystyki</button>
             </div>
           </div>
         </div>
@@ -8394,6 +9137,37 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, onTopUp }) 
           </div>
         </aside>
       </div>
+
+      {tokenExchangeMode && (
+        <div className="wallet-token-exchange-overlay" onMouseDown={event => { if (event.target === event.currentTarget) closeTokenExchange() }}>
+          <div className="wallet-token-exchange-modal glass-v2-panel">
+            <button type="button" className="wallet-token-exchange-close" onClick={closeTokenExchange}>×</button>
+            <h3>{tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony na walutę'}</h3>
+            <p>
+              {tokenExchangeMode === 'buy'
+                ? 'Kupujesz drożej: 1000 żetonów kosztuje 1,10 zł.'
+                : 'Sprzedajesz taniej: 1000 żetonów daje 0,90 zł.'}
+            </p>
+            <label>
+              <span>Liczba pakietów po 1000 żetonów</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={tokenExchangePacks}
+                onChange={event => setTokenExchangePacks(Math.max(1, Math.floor(Number(event.target.value || 1))))}
+              />
+            </label>
+            <div className="wallet-token-exchange-summary">
+              <div><small>Żetony</small><b>{formatTokenCount(tokenExchangeTokens)}</b></div>
+              <div><small>{tokenExchangeMode === 'buy' ? 'Koszt' : 'Otrzymasz'}</small><b>{formatWalletPln(tokenExchangeMode === 'buy' ? tokenBuyPrice : tokenSellPrice)}</b></div>
+            </div>
+            <button type="button" className="wallet-v2-primary-btn" disabled={tokenExchangeBusy} onClick={submitTokenExchange}>
+              {tokenExchangeBusy ? 'Przetwarzam...' : tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony'}
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -8465,21 +9239,38 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     const rawUsername = String(username || '').trim()
     const genericNames = ['user', 'uzytkownik', 'użytkownik', 'guest', 'gość', 'gosc']
     const isGeneric = !rawUsername || genericNames.includes(rawUsername.toLowerCase())
+
+    // Najważniejsze: nigdy nie zamieniaj prawdziwego nicku na losowy "Użytkownik ABC123".
     if (!isGeneric) return rawUsername
-    if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    if (clean) {
-      return clean.split('@')[0]
-        .replace(/[._-]+/g, ' ')
-        .split(' ')
-        .filter(Boolean)
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ')
-    }
-    const shortId = String(id || '').replace(/-/g, '').slice(0, 6).toUpperCase()
-    return shortId ? `Użytkownik ${shortId}` : 'Użytkownik'
+
+    // Gdy profil nie ma jeszcze username, stabilnym fallbackiem jest login z emaila, zawsze małymi literami.
+    if (clean) return clean.split('@')[0].toLowerCase()
+
+    // Tylko konto bez profilu i bez emaila dostaje neutralny opis, bez losowego ID.
+    return 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+
+  const isPlaceholderDmName = (value = '') => {
+    const clean = normalizeSearch(value)
+    return !clean || clean === 'użytkownik' || clean === 'uzytkownik' || /^użytkownik [a-f0-9]{4,}$/i.test(clean) || /^uzytkownik [a-f0-9]{4,}$/i.test(clean)
+  }
+
+  const preferStableDmUser = (previous = {}, incoming = {}) => {
+    const prevHasStableName = !isPlaceholderDmName(previous?.name)
+    const nextHasStableName = !isPlaceholderDmName(incoming?.name)
+    return {
+      ...previous,
+      ...incoming,
+      name: nextHasStableName ? incoming.name : (prevHasStableName ? previous.name : incoming.name || previous.name || 'Użytkownik'),
+      email: incoming.email || previous.email || '',
+      username: incoming.username || previous.username || '',
+      initials: nextHasStableName
+        ? incoming.initials
+        : (prevHasStableName ? previous.initials : incoming.initials || previous.initials || 'U'),
+    }
+  }
 
   useEffect(() => {
     activeUserRef.current = activeUser
@@ -8508,7 +9299,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
       const map = new Map((prev || []).map(item => [String(item.id || item.email), item]))
       nextItems.forEach(item => {
         const key = String(item.id || item.email)
-        map.set(key, { ...(map.get(key) || {}), ...item })
+        map.set(key, preferStableDmUser(map.get(key) || {}, item))
       })
       return Array.from(map.values()).sort((a, b) => {
         const unreadDiff = Number(unreadMap[b.id] || 0) - Number(unreadMap[a.id] || 0)
@@ -8679,17 +9470,26 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       const dmUserIds = Array.from(new Set((dmRows || []).flatMap(row => [String(row?.sender_id || ''), String(row?.receiver_id || '')]).filter(id => id && id !== String(myId))))
       if (dmUserIds.length) {
+        // WERSJA 846: zawsze rozwiąż użytkowników rozmów po UUID przez SECURITY DEFINER.
+        // Dzięki temu nicki nie zamieniają się na "Użytkownik ABC123", gdy zwykły SELECT z profiles zablokuje RLS.
+        try {
+          const { data: resolvedDmProfiles, error: resolvedDmProfilesError } = await supabase.rpc('resolve_betai_user_directory', {
+            p_user_ids: dmUserIds
+          })
+          if (!resolvedDmProfilesError && Array.isArray(resolvedDmProfiles)) {
+            resolvedDmProfiles.forEach(addProfileRow)
+          }
+        } catch (resolveError) {
+          console.warn('user messages dm resolver rpc skipped', resolveError)
+        }
+
         try {
           const { data: dmProfiles, error: dmProfilesError } = await supabase
             .from('profiles')
             .select('id,email,username,created_at')
             .in('id', dmUserIds)
           if (!dmProfilesError && Array.isArray(dmProfiles)) {
-            const existing = new Set(profileRows.map(row => String(row?.id || '')).filter(Boolean))
-            dmProfiles.forEach(row => {
-              const id = String(row?.id || '')
-              if (id && !existing.has(id)) profileRows.push(row)
-            })
+            dmProfiles.forEach(addProfileRow)
           }
         } catch (profileLookupError) {
           console.warn('user messages dm profile lookup skipped', profileLookupError)
@@ -8728,7 +9528,8 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       Object.keys(meta).forEach(id => {
         if (id === String(myId) || byId.has(id)) return
-        const name = displayName('', '', id)
+        // Brak danych profilu oznacza konto nierozwiązane, ale nie generujemy już fałszywego "nicku" z UUID.
+        const name = 'Użytkownik'
         byId.set(id, {
           id,
           email: '',
@@ -11321,6 +12122,115 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
   )
 }
 
+function TipsterPricingSettings({ user, onToast }) {
+  const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(option => ({
+    ...option,
+    price: option.defaultPrice,
+    active: true
+  })))
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    async function loadPlans() {
+      if (!user?.id || !isSupabaseConfigured || !supabase) return
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('tipster_plans')
+          .select('plan_key,label,duration_days,price,active')
+          .eq('tipster_id', user.id)
+
+        if (error) throw error
+        if (!active) return
+
+        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
+          const row = Array.isArray(data) ? data.find(item => item.plan_key === option.key) : null
+          return row
+            ? {
+                ...option,
+                label: row.label || option.label,
+                durationDays: Number(row.duration_days || option.durationDays),
+                price: Number(row.price ?? option.defaultPrice),
+                active: row.active !== false
+              }
+            : { ...option, price: option.defaultPrice, active: true }
+        }))
+      } catch (error) {
+        console.warn('tipster plans load skipped', error)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    loadPlans()
+    return () => { active = false }
+  }, [user?.id])
+
+  const updatePlan = (key, patch) => {
+    setPlans(current => current.map(plan => plan.key === key ? { ...plan, ...patch } : plan))
+  }
+
+  const savePlans = async () => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Brak konta', message: 'Nie udało się zapisać cennika.' })
+      return
+    }
+    setSaving(true)
+    try {
+      const rows = plans.map(plan => ({
+        tipster_id: user.id,
+        plan_key: plan.key,
+        label: plan.label,
+        duration_days: Number(plan.durationDays),
+        price: Number(plan.price || 0),
+        active: Boolean(plan.active)
+      }))
+      const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
+      if (error) throw error
+      onToast?.({ type: 'success', title: 'Cennik zapisany', message: 'Ceny subskrypcji profilu zostały zaktualizowane.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd cennika', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="glass-profile-v3 tipster-pricing-settings">
+      <div className="profile-v3-card-head">
+        <h3>Cennik subskrypcji profilu</h3>
+        <span>{loading ? 'Ładowanie...' : 'Dla kupujących'}</span>
+      </div>
+      <p>Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu i typów.</p>
+      <div className="tipster-pricing-grid">
+        {plans.map(plan => (
+          <label key={plan.key}>
+            <strong>{plan.label}</strong>
+            <span>{plan.durationDays} dni</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={plan.price}
+              onChange={event => updatePlan(plan.key, { price: Math.max(0, Number(event.target.value || 0)) })}
+            />
+            <em>zł</em>
+            <input
+              type="checkbox"
+              checked={plan.active}
+              onChange={event => updatePlan(plan.key, { active: event.target.checked })}
+            />
+          </label>
+        ))}
+      </div>
+      <button type="button" onClick={savePlans} disabled={saving}>
+        {saving ? 'Zapisuję...' : 'Zapisz cennik'}
+      </button>
+    </div>
+  )
+}
+
 function ProfileSubscriptionModal({ tip, user, onClose }) {
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
   const [loadingKey, setLoadingKey] = useState('')
@@ -11395,57 +12305,111 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
   )
 }
 
-function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
-  const isPremium = isPremiumAccount(userPlan)
+function SubscriptionView({ userPlan = 'free', user = null, payments = [], onUpgrade, onManage, onViewChange }) {
+  const [subscriptionClock, setSubscriptionClock] = useState(() => new Date())
+  useEffect(() => {
+    const timer = window.setInterval(() => setSubscriptionClock(new Date()), 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const isPremium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const periodEnd = user?.current_period_end ? new Date(user.current_period_end) : null
+  const hasPeriodEnd = !!periodEnd && !Number.isNaN(periodEnd.getTime())
+  const daysLeft = hasPeriodEnd
+    ? (() => {
+        const today = new Date(subscriptionClock)
+        const end = new Date(periodEnd)
+        today.setHours(0, 0, 0, 0)
+        end.setHours(0, 0, 0, 0)
+        return Math.max(0, Math.round((end.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)))
+      })()
+    : (isPremium ? 30 : 0)
+  const daysLabel = daysLeft === 1 ? 'dzień' : 'dni'
+  const expiryLabel = hasPeriodEnd ? periodEnd.toLocaleDateString('pl-PL') : '—'
+  const paymentKind = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    const type = String(payment?.type || payment?.kind || '').toLowerCase()
+    return provider.includes('premium') || type.includes('premium')
+  }
+  const premiumPayments = payments.filter(paymentKind)
+  const latestPremiumPayment = premiumPayments[0] || null
+  const getInvoiceLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getStatusLabel = () => {
+    if (!isPremium) return 'Konto Free'
+    if (daysLeft <= 0) return 'Premium wygasło'
+    return 'Premium aktywne'
+  }
+  const planPrice = isPremium ? '29 zł / miesiąc' : '0 zł / miesiąc'
+  const planFeatures = isPremium
+    ? [
+        'Sprzedaż typów premium',
+        'Brak limitu dodawania typów',
+        '3 wypłaty miesięcznie',
+        'AI, statystyki, bonusy i dropy'
+      ]
+    : [
+        '5 darmowych typów dziennie',
+        '1 wypłata miesięcznie',
+        'Brak sprzedaży typów premium',
+        'Podstawowe funkcje konta'
+      ]
+
   return (
-    <section className="subscription-page subscription-ultra-page">
-      <UltraPageBanner variant="subscriptions">{isPremium ? <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button> : <button type="button" onClick={onUpgrade}>Aktywuj Premium</button>}</UltraPageBanner>
-      <div className="subscription-hero subscription-ultra-hero">
-        <div className="subscription-hero-copy">
-          <span className="subscription-kicker">BETAI PREMIUM ACCESS</span>
-          <h1>Subskrypcja BetAI</h1>
-          <p>Ultra profesjonalny panel Premium: paywall, sprzedaż typów, AI, statystyki PRO i pełna kontrola subskrypcji przez Stripe.</p>
-          <div className="subscription-hero-pills">
-            <em>Stripe Billing</em>
-            <em>Marketplace PRO</em>
-            <em>AI + Statystyki</em>
-          </div>
+    <section className="wallet-subpage subscription-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" className="active">Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="subscription-live-hero glass-v2-panel">
+        <div>
+          <span>Plan konta</span>
+          <h1>Subskrypcja</h1>
+          <p>Tu widzisz realny status planu, datę końca Premium i historię płatności za subskrypcję przypisaną do Twojego konta.</p>
         </div>
-        <div className={`subscription-status ${isPremium ? 'active' : 'free'}`}>
-          <small>Aktualny plan</small>
-          <b>{isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}</b>
+        <div className={`subscription-live-status ${isPremium ? 'premium' : 'free'}`}>
+          <small>Aktualny status</small>
+          <b>{getStatusLabel()}</b>
         </div>
       </div>
 
-      <div className="pricing-grid subscription-pricing-grid">
-        <div className="pricing-card subscription-plan-card free-plan-card">
-          <div className="plan-topline">
-            <span>FREE</span>
-            <em>Start</em>
-          </div>
-          <strong>0 zł</strong>
-          <p>Dostęp do dashboardu, darmowych typów i podstawowych funkcji.</p>
-          <ul>
-            <li><b>✓</b> 5 darmowych typów dziennie</li>
-            <li><b>✓</b> 1 wypłata miesięcznie</li>
-            <li><i>✕</i> Sprzedaż typów premium</li>
-            <li><i>✕</i> Avatar, bonusy i dropy</li>
-          </ul>
+      <div className="subscription-live-stats">
+        <div className="glass-v2-panel">
+          <span>Aktualny plan</span>
+          <b>{isPremium ? 'Premium' : 'Free'}</b>
+          <small>{planPrice}</small>
         </div>
+        <div className="glass-v2-panel">
+          <span>Ważne do</span>
+          <b>{isPremium ? expiryLabel : '—'}</b>
+          <small>{isPremium ? `Zostało ${daysLeft} ${daysLabel}` : 'Brak aktywnego Premium'}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Płatności Premium</span>
+          <b>{premiumPayments.length}</b>
+          <small>Prawdziwe dokumenty</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Ostatnia płatność</span>
+          <b>{latestPremiumPayment ? formatMoney(latestPremiumPayment.amount) : '—'}</b>
+          <small>{latestPremiumPayment ? new Date(latestPremiumPayment.created_at).toLocaleDateString('pl-PL') : 'Brak płatności'}</small>
+        </div>
+      </div>
 
-        <div className="pricing-card featured subscription-plan-card premium-plan-card">
-          <div className="plan-topline">
-            <span>PREMIUM</span>
-            <em>Najlepszy wybór</em>
+      <div className="subscription-live-grid">
+        <div className="glass-v2-panel subscription-live-plan-card">
+          <div className="subscription-live-card-head">
+            <h2>{isPremium ? 'Twój plan Premium' : 'Twój plan Free'}</h2>
+            <span className={isPremium ? 'premium' : 'free'}>{isPremium ? 'Aktywny' : 'Free'}</span>
           </div>
-          <strong>29 zł <small>/ miesiąc</small></strong>
-          <p>Pełny SaaS plan z paywallem, marketplace premium i narzędziami dla aktywnych tipsterów.</p>
+          <strong>{planPrice}</strong>
+          <p>{isPremium ? 'Pełny dostęp do funkcji twórcy i sprzedaży premium.' : 'Plan startowy bez sprzedaży płatnych typów.'}</p>
           <ul>
-            <li><b>✓</b> Sprzedaż typów premium</li>
-            <li><b>✓</b> Brak limitu dodawania typów</li>
-            <li><b>✓</b> 3 wypłaty miesięcznie</li>
-            <li><b>✓</b> Avatar, AI, statystyki, bonusy i dropy</li>
-            <li><b>✓</b> Stripe Billing Portal</li>
+            {planFeatures.map(feature => <li key={feature}>✓ {feature}</li>)}
           </ul>
           {isPremium ? (
             <button type="button" onClick={onManage}>Zarządzaj subskrypcją</button>
@@ -11453,219 +12417,806 @@ function SubscriptionView({ userPlan = 'free', onUpgrade, onManage }) {
             <button type="button" onClick={onUpgrade}>Aktywuj Premium przez Stripe</button>
           )}
         </div>
-      </div>
 
-      <div className="paywall-rules-card subscription-rules-card">
-        <div>
-          <strong>Paywall aktywny</strong>
-          <span>Konto FREE: 5 typów dziennie, 1 wypłata/miesiąc, brak sprzedaży. Premium: brak limitu typów, sprzedaż singli i subskrypcji profilu, 3 wypłaty/miesiąc. Premium nigdy nie daje admina — admin tylko smilhytv.</span>
+        <div className="glass-v2-panel subscription-live-rules-card">
+          <div className="subscription-live-card-head"><h2>Limity planów</h2></div>
+          <div className="subscription-live-compare">
+            <div>
+              <strong>Free</strong>
+              <span>5 typów dziennie</span>
+              <span>1 wypłata / miesiąc</span>
+              <span>Brak sprzedaży</span>
+            </div>
+            <div className="featured">
+              <strong>Premium</strong>
+              <span>Bez limitu typów</span>
+              <span>3 wypłaty / miesiąc</span>
+              <span>Sprzedaż singli i profilu</span>
+            </div>
+          </div>
+          <small>Premium nie daje uprawnień admina. Adminem jest tylko smilhytv.</small>
+        </div>
+
+        <div className="glass-v2-panel subscription-live-history-card">
+          <div className="subscription-live-card-head">
+            <h2>Historia Premium</h2>
+            <button type="button" onClick={() => onViewChange?.('payments')}>Wszystkie płatności</button>
+          </div>
+          {premiumPayments.length ? (
+            <div className="subscription-live-history">
+              {premiumPayments.slice(0, 5).map(payment => {
+                const invoiceLink = getInvoiceLink(payment)
+                return (
+                  <div key={payment.id}>
+                    <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+                    <strong>{formatMoney(payment.amount)}</strong>
+                    <small>{invoiceLink ? <a href={invoiceLink} target="_blank" rel="noreferrer">Pobierz fakturę</a> : 'Brak faktury'}</small>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="subscription-live-empty">
+              <strong>Brak płatności Premium</strong>
+              <span>Po pierwszym zakupie Premium historia pojawi się tutaj.</span>
+            </div>
+          )}
         </div>
       </div>
     </section>
   )
 }
 
-function PaymentsView({ payments }) {
-  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-
-  return (
-    <section className="payments-page">
-      <UltraPageBanner variant="payments" />
-      <div className="payments-hero">
-        <div>
-          <h1>Historia płatności</h1>
-          <p>Panel zakupów premium i przychodów marketplace.</p>
-        </div>
-        <div className="payments-total">
-          <span>Razem</span>
-          <b>{total.toFixed(2)} zł</b>
-        </div>
-      </div>
-
-      <div className="payments-table">
-        <div className="payments-row header">
-          <span>Data</span>
-          <span>Tip ID</span>
-          <span>Status</span>
-          <span>Kwota</span>
-        </div>
-
-        {payments.length ? payments.map(payment => (
-          <div className="payments-row" key={payment.id}>
-            <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
-            <span>{payment.tip_id || '—'}</span>
-            <span className="paid-status">{payment.status || 'paid'}</span>
-            <span className="paid-amount">{Number(payment.amount || 0).toFixed(2)} zł</span>
-          </div>
-        )) : (
-          <div className="payments-empty">
-            <strong>Brak płatności</strong>
-            <span>Po pierwszym zakupie premium transakcja pojawi się tutaj.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function EarningsView({ tips, payments, user, earnings, stripeConnectStatus, onConnectStripe }) {
-  const total = Number(earnings?.total || 0)
-  const sales = Number(earnings?.sales || 0)
-  const history = Array.isArray(earnings?.history) ? earnings.history : []
-  const average = sales ? total / sales : 0
-  const thisMonth = history.filter(row => {
-    const d = new Date(row.created_at)
-    const now = new Date()
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-  }).reduce((sum, row) => sum + Number(row.amount || 0), 0)
-
-  return (
-    <section className="earnings-page">
-      <UltraPageBanner variant="earnings"><button type="button" onClick={onConnectStripe}>{stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}</button></UltraPageBanner>
-      <div className="page-title">
-        <h1>Zarobki typera</h1>
-        <p>Realne zarobki są liczone tylko ze sprzedaży premium typów. Platforma pobiera 20% prowizji, a 80% trafia do Ciebie.</p>
-      </div>
-
-      <div className="stripe-connect-card">
-        <div>
-          <strong>🏦 Stripe Connect</strong>
-          <span>
-            {stripeConnectStatus?.payouts_enabled
-              ? 'Konto Stripe jest połączone i gotowe do wypłat.'
-              : stripeConnectStatus?.stripe_account_id
-                ? 'Konto Stripe jest utworzone. Dokończ onboarding, aby odbierać wypłaty.'
-                : 'Połącz konto Stripe, aby admin mógł wypłacać Ci realne zarobki.'}
-          </span>
-        </div>
-        <button type="button" onClick={onConnectStripe}>
-          {stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}
-        </button>
-      </div>
-
-      <div className="earnings-hero">
-        <div>
-          <span>💰 Zarobiłeś łącznie</span>
-          <strong>{total.toFixed(2)} zł</strong>
-          <p>Kwota po prowizji platformy.</p>
-        </div>
-        <div>
-          <span>📊 Liczba sprzedaży</span>
-          <strong>{sales}</strong>
-          <p>Kupione premium typy.</p>
-        </div>
-        <div>
-          <span>📅 Ten miesiąc</span>
-          <strong>{thisMonth.toFixed(2)} zł</strong>
-          <p>Historia bieżącego miesiąca.</p>
-        </div>
-        <div>
-          <span>Średnio / sprzedaż</span>
-          <strong>{average.toFixed(2)} zł</strong>
-          <p>Po prowizji 20%.</p>
-        </div>
-      </div>
-
-      <div className="earnings-table-card">
-        <div className="earnings-table-head">
-          <h2>Historia zarobków</h2>
-          <span>{history.length} transakcji</span>
-        </div>
-
-        {history.length ? (
-          <table className="earnings-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Kwota dla Ciebie</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((row, idx) => (
-                <tr key={row.id || idx}>
-                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
-                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
-                  <td><span className="status-pill success">completed</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-wallet">
-            <strong>Brak sprzedaży premium</strong>
-            <span>Gdy ktoś kupi Twój premium typ, tutaj pojawi się zarobek 80% ceny.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function TipsterPricingSettings({ user, onToast }) {
-  const [prices, setPrices] = useState(() => Object.fromEntries(TIPSTER_PLAN_OPTIONS.map(p => [p.key, p.defaultPrice])))
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    async function load() {
-      if (!isSupabaseConfigured || !supabase || !user?.id) return
-      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', user.id)
-      if (Array.isArray(data) && data.length) {
-        setPrices(prev => {
-          const next = { ...prev }
-          data.forEach(row => { if (row.plan_key) next[row.plan_key] = Number(row.price || 0) })
-          return next
-        })
-      }
-    }
-    load()
-  }, [user?.id])
-
-  async function save() {
-    if (!user?.id || !supabase) return
-    setSaving(true)
-    setMessage('')
-    const rows = TIPSTER_PLAN_OPTIONS.map(plan => ({
-      tipster_id: user.id,
-      plan_key: plan.key,
-      label: plan.label,
-      duration_days: plan.durationDays,
-      price: Math.max(1, Number(prices[plan.key] || plan.defaultPrice)),
-      active: true
-    }))
-    const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
-    setSaving(false)
-    if (error) {
-      setMessage('Błąd zapisu cen: ' + formatAppErrorMessage(error.message))
-      return
-    }
-    setMessage('✅ Ceny subskrypcji profilu zapisane.')
+function PaymentsView({ payments = [], onViewChange, onTopUp }) {
+  const [paymentFilter, setPaymentFilter] = useState('all')
+  const getInvoiceLink = payment => payment?.invoice_pdf_url || payment?.invoice_pdf || payment?.invoice_url || payment?.hosted_invoice_url || null
+  const getPaymentKind = payment => {
+    const provider = String(payment?.provider || '').toLowerCase()
+    const type = String(payment?.type || payment?.kind || '').toLowerCase()
+    if (provider.includes('premium') || type.includes('premium')) return 'premium'
+    if (provider.includes('token') || type.includes('token')) return 'tokens'
+    if (payment?.tip_id) return 'tips'
+    return 'other'
+  }
+  const getPaymentName = payment => {
+    const kind = getPaymentKind(payment)
+    if (kind === 'premium') return 'Zakup Premium'
+    if (kind === 'tokens') return 'Zakup żetonów'
+    if (kind === 'tips') return 'Zakup typu premium'
+    return 'Płatność'
+  }
+  const getPaymentStatusLabel = status => {
+    const clean = String(status || 'paid').toLowerCase()
+    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Opłacona'
+    if (clean === 'pending') return 'Oczekuje'
+    if (clean === 'failed') return 'Nieudana'
+    if (clean === 'refunded') return 'Zwrócona'
+    return status || 'Opłacona'
+  }
+  const isPaidPayment = payment => ['completed', 'paid', 'succeeded'].includes(String(payment?.status || 'paid').toLowerCase())
+  const filteredPayments = payments.filter(payment => paymentFilter === 'all' || getPaymentKind(payment) === paymentFilter)
+  const total = payments.filter(isPaidPayment).reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+  const paidCount = payments.filter(isPaidPayment).length
+  const invoiceCount = payments.filter(payment => !!getInvoiceLink(payment)).length
+  const latestPayment = payments[0] || null
+  const filterCounts = {
+    all: payments.length,
+    premium: payments.filter(payment => getPaymentKind(payment) === 'premium').length,
+    tips: payments.filter(payment => getPaymentKind(payment) === 'tips').length,
+    tokens: payments.filter(payment => getPaymentKind(payment) === 'tokens').length,
+    other: payments.filter(payment => getPaymentKind(payment) === 'other').length
   }
 
   return (
-    <div className="profile-panel tipster-pricing-panel">
-      <div className="profile-panel-head"><h3>Ceny subskrypcji profilu</h3><span>Typer ustala ceny</span></div>
-      <p className="small-muted">Sam ustalasz ceny. Kupujący może kupić pojedynczy typ albo dostęp do wszystkich Twoich typów na wybrany okres.</p>
-      <div className="pricing-settings-grid">
-        {TIPSTER_PLAN_OPTIONS.map(plan => (
-          <label key={plan.key}>
-            <span>{plan.label}</span>
-            <input type="number" step="0.01" min="1" value={prices[plan.key]} onChange={e => setPrices(prev => ({ ...prev, [plan.key]: e.target.value }))} />
-            <small>Ty: {(Number(prices[plan.key] || 0) * 0.8).toFixed(2)} zł • Platforma: {(Number(prices[plan.key] || 0) * 0.2).toFixed(2)} zł</small>
-          </label>
-        ))}
+    <section className="wallet-subpage payments-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" className="active">Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
       </div>
-      {message && <div className={message.startsWith('✅') ? 'success-message' : 'error-message'}>{message}</div>}
-      <button className="submit-btn" type="button" onClick={save} disabled={saving}>{saving ? 'Zapisywanie...' : 'Zapisz ceny subskrypcji'}</button>
-    </div>
+
+      <div className="payments-live-hero glass-v2-panel">
+        <div>
+          <span>Dokumenty konta</span>
+          <h1>Płatności i faktury</h1>
+          <p>Tu widzisz tylko prawdziwe płatności przypisane do zalogowanego konta oraz faktury wygenerowane przez Stripe.</p>
+        </div>
+        <div className="payments-live-total">
+          <small>Opłacono razem</small>
+          <b>{formatMoney(total)}</b>
+        </div>
+      </div>
+
+      <div className="payments-live-stats">
+        <div className="glass-v2-panel">
+          <span>Wszystkie płatności</span>
+          <b>{payments.length}</b>
+          <small>Dokumenty konta</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Opłacone</span>
+          <b>{paidCount}</b>
+          <small>Zakończone sukcesem</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Faktury do pobrania</span>
+          <b>{invoiceCount}</b>
+          <small>Realne linki Stripe</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Ostatnia płatność</span>
+          <b>{latestPayment ? formatMoney(latestPayment.amount) : '—'}</b>
+          <small>{latestPayment ? new Date(latestPayment.created_at).toLocaleDateString('pl-PL') : 'Brak płatności'}</small>
+        </div>
+      </div>
+
+      <div className="payments-live-grid">
+        <div className="glass-v2-panel payments-live-table-card">
+          <div className="payments-live-card-head">
+            <h2>Historia płatności</h2>
+            <span>{filteredPayments.length} wyników</span>
+          </div>
+
+          <div className="payments-live-filters">
+            <button type="button" className={paymentFilter === 'all' ? 'active' : ''} onClick={() => setPaymentFilter('all')}>Wszystkie <b>{filterCounts.all}</b></button>
+            <button type="button" className={paymentFilter === 'premium' ? 'active' : ''} onClick={() => setPaymentFilter('premium')}>Premium <b>{filterCounts.premium}</b></button>
+            <button type="button" className={paymentFilter === 'tips' ? 'active' : ''} onClick={() => setPaymentFilter('tips')}>Typy <b>{filterCounts.tips}</b></button>
+            <button type="button" className={paymentFilter === 'tokens' ? 'active' : ''} onClick={() => setPaymentFilter('tokens')}>Żetony <b>{filterCounts.tokens}</b></button>
+            <button type="button" className={paymentFilter === 'other' ? 'active' : ''} onClick={() => setPaymentFilter('other')}>Inne <b>{filterCounts.other}</b></button>
+          </div>
+
+          <div className="payments-live-table">
+            <div className="payments-live-row header">
+              <span>Data</span>
+              <span>Dokument</span>
+              <span>Status</span>
+              <span>Kwota</span>
+              <span>Faktura</span>
+            </div>
+
+            {filteredPayments.length ? filteredPayments.map(payment => {
+              const invoiceLink = getInvoiceLink(payment)
+              return (
+                <div className="payments-live-row" key={payment.id}>
+                  <span>{new Date(payment.created_at).toLocaleString('pl-PL')}</span>
+                  <span>
+                    <strong>{payment.invoice_number ? `Faktura ${payment.invoice_number}` : getPaymentName(payment)}</strong>
+                    <small>{getPaymentName(payment)}</small>
+                  </span>
+                  <span className={`payments-live-status status-${String(payment.status || 'paid').toLowerCase()}`}>{getPaymentStatusLabel(payment.status)}</span>
+                  <span className="payments-live-amount">{formatMoney(payment.amount)}</span>
+                  <span>{invoiceLink ? <a className="payment-invoice-link" href={invoiceLink} target="_blank" rel="noreferrer">Pobierz</a> : 'Brak faktury'}</span>
+                </div>
+              )
+            }) : (
+              <div className="payments-live-empty">
+                <strong>Brak płatności</strong>
+                <span>Po pierwszej prawdziwej płatności dokument pojawi się tutaj.</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="payments-live-side">
+          <div className="glass-v2-panel payments-live-info-card">
+            <div className="payments-live-card-head"><h2>Co tu trafia?</h2></div>
+            <ul>
+              <li>Zakupy Premium.</li>
+              <li>Zakupy płatnych typów.</li>
+              <li>Zakupy żetonów, gdy zostaną podpięte pod płatność.</li>
+              <li>Prawdziwe faktury Stripe, jeśli zostały wygenerowane.</li>
+            </ul>
+          </div>
+
+          <div className="glass-v2-panel payments-live-info-card">
+            <div className="payments-live-card-head"><h2>Faktury Stripe</h2></div>
+            <p>Przycisk <b>Pobierz</b> pojawia się tylko wtedy, gdy Stripe zwróci prawdziwy link do faktury PDF lub faktury online.</p>
+            <button type="button" onClick={() => onViewChange?.('subscriptions')}>Zarządzaj subskrypcją</button>
+            <button type="button" className="secondary" onClick={() => onTopUp?.(100)}>Wpłać środki</button>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
-function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null }) {
+function EarningsView({ user, earnings = null, stripeConnectStatus = null, onConnectStripe, onViewChange }) {
+  const [earningsPeriod, setEarningsPeriod] = useState('current_month')
+  const history = Array.isArray(earnings?.history) ? earnings.history : []
+  const total = Number(earnings?.total || 0)
+  const sales = Number(earnings?.sales || history.length || 0)
+  const availableToPayout = Number(earnings?.available_to_payout || 0)
+  const startOfDay = value => {
+    const date = new Date(value)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const startOfMonth = value => {
+    const date = new Date(value)
+    date.setDate(1)
+    date.setHours(0, 0, 0, 0)
+    return date
+  }
+  const addMonths = (value, months) => {
+    const date = new Date(value)
+    date.setMonth(date.getMonth() + months)
+    return date
+  }
+  const now = new Date()
+  const currentMonthStart = startOfMonth(now)
+  const nextMonthStart = addMonths(currentMonthStart, 1)
+  const periodRange = (() => {
+    if (earningsPeriod === 'previous_month') {
+      return { start: addMonths(currentMonthStart, -1), end: currentMonthStart, label: 'Poprzedni miesiąc' }
+    }
+    if (earningsPeriod === 'last_3_months') {
+      return { start: addMonths(currentMonthStart, -2), end: nextMonthStart, label: 'Ostatnie 3 miesiące' }
+    }
+    if (earningsPeriod === 'year') {
+      return { start: new Date(now.getFullYear(), 0, 1), end: new Date(now.getFullYear() + 1, 0, 1), label: 'Cały rok' }
+    }
+    return { start: currentMonthStart, end: nextMonthStart, label: 'Bieżący miesiąc' }
+  })()
+  const previousPeriodRange = (() => {
+    const span = periodRange.end.getTime() - periodRange.start.getTime()
+    return { start: new Date(periodRange.start.getTime() - span), end: periodRange.start }
+  })()
+  const amountFromRow = row => Number(row?.amount || row?.net_amount || row?.tipster_amount || 0) || 0
+  const grossFromRow = row => Number(row?.gross_amount || (amountFromRow(row) + Number(row?.commission || 0)) || 0)
+  const rowsForRange = range => history.filter(row => {
+    const createdAt = new Date(row?.created_at || 0)
+    return !Number.isNaN(createdAt.getTime()) && createdAt >= range.start && createdAt < range.end
+  })
+  const currentRows = rowsForRange(periodRange)
+  const previousRows = rowsForRange(previousPeriodRange)
+  const periodNet = currentRows.reduce((sum, row) => sum + amountFromRow(row), 0)
+  const periodGross = currentRows.reduce((sum, row) => sum + grossFromRow(row), 0)
+  const periodCommission = currentRows.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+  const periodSales = currentRows.length
+  const previousNet = previousRows.reduce((sum, row) => sum + amountFromRow(row), 0)
+  const average = periodSales ? periodNet / periodSales : 0
+  const growth = previousNet > 0 ? ((periodNet - previousNet) / previousNet) * 100 : (periodNet > 0 ? 100 : 0)
+  const growthLabel = previousNet > 0
+    ? `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}% vs poprzedni okres`
+    : periodNet > 0
+      ? 'Pierwszy zarobek w tym okresie'
+      : 'Brak danych do porównania'
+  const sourceLabel = source => {
+    if (source === 'profile_subscription') return 'Subskrypcja profilu'
+    if (source === 'tip_purchase') return 'Sprzedaż typu'
+    return 'Zarobek twórcy'
+  }
+  const chartBuckets = (() => {
+    const useMonths = earningsPeriod === 'last_3_months' || earningsPeriod === 'year'
+    const buckets = []
+    if (useMonths) {
+      const cursor = startOfMonth(periodRange.start)
+      while (cursor < periodRange.end) {
+        const bucketStart = new Date(cursor)
+        const bucketEnd = addMonths(bucketStart, 1)
+        buckets.push({
+          key: `${bucketStart.getFullYear()}-${bucketStart.getMonth()}`,
+          label: bucketStart.toLocaleDateString('pl-PL', { month: 'short' }),
+          amount: rowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromRow(row), 0)
+        })
+        cursor.setMonth(cursor.getMonth() + 1)
+      }
+      return buckets
+    }
+    const cursor = startOfDay(periodRange.start)
+    while (cursor < periodRange.end) {
+      const bucketStart = new Date(cursor)
+      const bucketEnd = new Date(bucketStart)
+      bucketEnd.setDate(bucketEnd.getDate() + 1)
+      buckets.push({
+        key: bucketStart.toISOString().slice(0, 10),
+        label: String(bucketStart.getDate()),
+        amount: rowsForRange({ start: bucketStart, end: bucketEnd }).reduce((sum, row) => sum + amountFromRow(row), 0)
+      })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    return buckets
+  })()
+  const chartMax = Math.max(1, ...chartBuckets.map(bucket => Number(bucket.amount || 0)))
+  const chartPoints = chartBuckets.map((bucket, index) => {
+    const x = chartBuckets.length <= 1 ? 0 : (index / (chartBuckets.length - 1)) * 100
+    const y = 100 - (Number(bucket.amount || 0) / chartMax) * 100
+    return `${x},${y}`
+  }).join(' ')
+  const chartAreaPoints = chartBuckets.length ? `0,100 ${chartPoints} 100,100` : ''
+  const chartLabels = chartBuckets.length > 7
+    ? chartBuckets.filter((_, index) => index === 0 || index === chartBuckets.length - 1 || index % Math.ceil(chartBuckets.length / 4) === 0)
+    : chartBuckets
+  const recentRows = history.slice(0, 5)
+  const stripeReady = !!stripeConnectStatus?.payouts_enabled
+  const profile = getUserProfileView(user || {})
+
+  return (
+    <section className="wallet-subpage earnings-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" className="active">Zarobki</button>
+      </div>
+
+      <div className="earnings-live-hero glass-v2-panel">
+        <div>
+          <span>Zarobki twórcy</span>
+          <h1>Zarobki</h1>
+          <p>{profile.username || 'Typer'} — tu widzisz realne przychody ze sprzedaży płatnych typów i subskrypcji profilu.</p>
+        </div>
+        <div className="earnings-live-total">
+          <small>Zarobiłeś łącznie</small>
+          <b>{formatMoney(total)}</b>
+        </div>
+      </div>
+
+      <div className="earnings-live-stats">
+        <div className="glass-v2-panel">
+          <span>Zarobek netto</span>
+          <b>{formatMoney(periodNet)}</b>
+          <small>{periodRange.label}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Sprzedaż brutto</span>
+          <b>{formatMoney(periodGross)}</b>
+          <small>Przed prowizją</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Prowizja platformy</span>
+          <b>{formatMoney(periodCommission)}</b>
+          <small>20% od sprzedaży</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Dostępne do wypłaty</span>
+          <b>{formatMoney(availableToPayout)}</b>
+          <small>Realne saldo zarobków</small>
+        </div>
+      </div>
+
+      <div className="earnings-live-grid">
+        <div className="glass-v2-panel earnings-live-chart-card">
+          <div className="earnings-live-card-head">
+            <div>
+              <h2>Wykres zarobków</h2>
+              <span>{growthLabel}</span>
+            </div>
+            <select value={earningsPeriod} onChange={event => setEarningsPeriod(event.target.value)} aria-label="Okres zarobków">
+              <option value="current_month">Bieżący miesiąc</option>
+              <option value="previous_month">Poprzedni miesiąc</option>
+              <option value="last_3_months">Ostatnie 3 miesiące</option>
+              <option value="year">Cały rok</option>
+            </select>
+          </div>
+
+          {periodSales > 0 ? (
+            <>
+              <div className="earnings-live-metrics">
+                <span><b>{periodSales}</b> sprzedaży</span>
+                <span><b>{formatMoney(average)}</b> średnio / sprzedaż</span>
+              </div>
+              <div className="earnings-live-chart-v2">
+                <div className="y-labels">
+                  <span>{formatMoney(chartMax)}</span>
+                  <span>{formatMoney(chartMax / 2)}</span>
+                  <span>0 zł</span>
+                </div>
+                <div className="chart-area">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polygon points={chartAreaPoints} />
+                    <polyline points={chartPoints} />
+                  </svg>
+                </div>
+                <div className="x-labels">
+                  {chartLabels.map(bucket => <small key={bucket.key}>{bucket.label}</small>)}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="earnings-live-empty">
+              <strong>Brak zarobków w tym okresie</strong>
+              <span>Po pierwszej sprzedaży płatnego typu albo subskrypcji profilu wykres ożyje realnymi danymi.</span>
+            </div>
+          )}
+        </div>
+
+        <div className="glass-v2-panel earnings-live-stripe-card">
+          <div className="earnings-live-card-head"><h2>Wypłaty Stripe</h2></div>
+          <div className={`earnings-live-stripe-status ${stripeReady ? 'ready' : 'locked'}`}>
+            <strong>{stripeReady ? 'Stripe aktywny' : 'Stripe niepodłączony'}</strong>
+            <span>{stripeReady ? 'Konto jest gotowe do odbierania wypłat.' : 'Podłącz Stripe Connect, aby odbierać realne wypłaty.'}</span>
+          </div>
+          <button type="button" onClick={() => stripeReady ? onViewChange?.('payouts') : onConnectStripe?.()}>
+            {stripeReady ? 'Przejdź do wypłat' : 'Podłącz Stripe'}
+          </button>
+          <ul>
+            <li>Zarabiasz 80% wartości sprzedaży.</li>
+            <li>20% zostaje jako prowizja platformy.</li>
+            <li>Wypłata trafia do zakładki Wypłaty.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel earnings-live-history-card">
+          <div className="earnings-live-card-head">
+            <h2>Ostatnie zarobki</h2>
+            <span>{sales} łącznie</span>
+          </div>
+          {recentRows.length ? (
+            <div className="earnings-live-history">
+              {recentRows.map(row => (
+                <div key={row.id || `${row.created_at}_${row.source}`}>
+                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>+{formatMoney(amountFromRow(row))}</strong>
+                  <small>{sourceLabel(row.source)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="earnings-live-empty compact">
+              <strong>Brak zarobków</strong>
+              <span>Sprzedaże pojawią się tutaj automatycznie.</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+
+function getApiSportsFootballTeamLogo(teamId) {
+  const id = String(teamId || '').replace(/[^\d]/g, '')
+  return id ? `https://media.api-sports.io/football/teams/${id}.png` : ''
+}
+
+function resolveTipTeamLogo(explicitLogo, teamId) {
+  return explicitLogo || getApiSportsFootballTeamLogo(teamId) || ''
+}
+
+function TipTeamLogo({ logo, teamId, name }) {
+  const [failed, setFailed] = useState(false)
+  const src = resolveTipTeamLogo(logo, teamId)
+  const initial = String(name || '?').trim().charAt(0).toUpperCase() || '?'
+  return (
+    <span className={`profile-ticket-v6-team-logo ${src && !failed ? 'has-logo' : ''}`}>
+      {src && !failed && <img src={src} alt="" onError={() => setFailed(true)} />}
+      <b>{initial}</b>
+    </span>
+  )
+}
+
+
+function formatRelativeAddedTime(value) {
+  const ts = Date.parse(value || '')
+  if (!Number.isFinite(ts)) return 'teraz'
+  const diffMinutes = Math.max(0, Math.floor((Date.now() - ts) / 60000))
+  if (diffMinutes < 1) return 'teraz'
+  if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minutę' : 'minut'} temu`
+  const hours = Math.floor(diffMinutes / 60)
+  if (hours < 24) return `${hours} ${hours === 1 ? 'godzinę' : hours < 5 ? 'godziny' : 'godzin'} temu`
+  const days = Math.floor(hours / 24)
+  return `${days} ${days === 1 ? 'dzień' : 'dni'} temu`
+}
+
+async function updateTipField(tipId, patch) {
+  if (!tipId || !isSupabaseConfigured || !supabase) return false
+  const { error } = await supabase.from('tips').update(patch).eq('id', tipId)
+  if (error) throw error
+  return true
+}
+
+function shareTipText(tip) {
+  return `${tip?.home || tip?.team_home || 'Mecz'} vs ${tip?.away || tip?.team_away || ''} • ${tip?.pick || tip?.bet_type || tip?.prediction || 'Typ'} • kurs ${tip?.odds || '—'}`
+}
+
+function ProfileLiveTipCard({
+  tip,
+  sourceTip,
+  avatarUrl,
+  initials,
+  displayName,
+  currentUser,
+  unlockedTips = new Set(),
+  tipsterSubscriptions = [],
+  onUnlock,
+  onSubscribeToTipster,
+  onToast,
+  onViewType,
+  authorStats = null,
+}) {
+  const profileSubActive = hasActiveTipsterSubscription(sourceTip, tipsterSubscriptions)
+  const singleUnlocked = Boolean(sourceTip?.id && unlockedTips?.has?.(sourceTip.id))
+  const isUnlocked = !tip.premium || singleUnlocked || profileSubActive
+
+  const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0] || displayName || 'Użytkownik'
+  const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
+  const actorLabel = currentUsername || displayName || 'Gość'
+  const baseLikes = Number(sourceTip?.likes ?? tip.likes ?? 0) || 0
+  const baseDislikes = Number(sourceTip?.dislikes ?? 0) || 0
+  const baseCommentCount = Number(sourceTip?.comments_count ?? sourceTip?.comments ?? tip.comments ?? 0) || 0
+  const interactionStorageKey = useMemo(
+    () => `betai_tip_interactions_v3_${sourceTip?.id || tip.id || `${tip.home || 'home'}_${tip.away || 'away'}`}`,
+    [sourceTip?.id, tip.id, tip.home, tip.away]
+  )
+
+  const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [commentDraft, setCommentDraft] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(interactionStorageKey)
+      if (!raw) {
+        setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+        return
+      }
+      const parsed = JSON.parse(raw)
+      setFeedback({
+        likes: Number(parsed?.likes ?? baseLikes) || 0,
+        dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
+        comments: Array.isArray(parsed?.comments) ? parsed.comments : [],
+        votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {},
+      })
+    } catch (_) {
+      setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+    }
+  }, [interactionStorageKey, baseLikes, baseDislikes])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(interactionStorageKey, JSON.stringify(feedback))
+    } catch (_) {}
+  }, [interactionStorageKey, feedback])
+
+  const activeVote = feedback?.votes?.[actorKey] || null
+  const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+
+  function handleVote(nextVote) {
+    const previousVote = activeVote
+    setFeedback(prev => {
+      const votes = { ...(prev?.votes || {}) }
+      let likes = Number(prev?.likes || 0)
+      let dislikes = Number(prev?.dislikes || 0)
+
+      if (previousVote === nextVote) {
+        if (nextVote === 'like') likes = Math.max(0, likes - 1)
+        if (nextVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        delete votes[actorKey]
+      } else {
+        if (previousVote === 'like') likes = Math.max(0, likes - 1)
+        if (previousVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        if (nextVote === 'like') likes += 1
+        if (nextVote === 'dislike') dislikes += 1
+        votes[actorKey] = nextVote
+      }
+
+      return { ...prev, likes, dislikes, votes }
+    })
+  }
+
+  function submitComment() {
+    const clean = commentDraft.trim()
+    if (!clean) return
+    const newComment = {
+      id: `comment_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      author: actorLabel || 'Gość',
+      text: clean.slice(0, 280),
+      created_at: new Date().toISOString(),
+    }
+    setFeedback(prev => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
+    setCommentDraft('')
+    setCommentsOpen(true)
+    onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
+  }
+
+  async function reportTip() {
+    setMenuOpen(false)
+    onToast?.({ type: 'info', title: 'Zgłoszono wpis', message: 'Zgłoszenie zostało przyjęte do sprawdzenia.' })
+  }
+
+  async function settleTip() {
+    setMenuOpen(false)
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
+    if (!nextStatus) return
+    const clean = String(nextStatus).trim().toLowerCase()
+    if (!['won', 'lost', 'void'].includes(clean)) {
+      onToast?.({ type: 'error', title: 'Nieprawidłowy wynik', message: 'Dozwolone wartości: won, lost albo void.' })
+      return
+    }
+    try {
+      await updateTipField(sourceTip?.id || tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
+    }
+  }
+
+  async function addAnalysis() {
+    setMenuOpen(false)
+    const nextAnalysis = window.prompt('Dodaj analizę do typu:', tip?.analysis || sourceTip?.analysis || '')
+    if (!nextAnalysis) return
+    try {
+      await updateTipField(sourceTip?.id || tip?.id, { analysis: nextAnalysis, description: nextAnalysis })
+      onToast?.({ type: 'success', title: 'Analiza zapisana', message: 'Analiza została dodana do typu.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd analizy', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać analizy.') })
+    }
+  }
+
+  async function shareTip() {
+    setMenuOpen(false)
+    const text = shareTipText(tip)
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Typ Bet+AI', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+        onToast?.({ type: 'success', title: 'Skopiowano', message: 'Treść typu skopiowana do schowka.' })
+      }
+    } catch (_) {}
+  }
+
+  function handleShareAction() {
+    setFeedback(prev => ({ ...prev, dislikes: Number(prev?.dislikes || 0) + 1 }))
+    shareTip()
+  }
+
+  return (
+    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${isUnlocked ? 'unlocked' : 'locked'}`}>
+      <div className="profile-ticket-v6-left">
+        <span className={`profile-ticket-v6-avatar ${avatarUrl ? 'has-avatar' : ''}`} style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}>
+          {avatarUrl ? '' : initials}
+        </span>
+        <div>
+          <span className="ticket-author-row-v874"><strong>{displayName}</strong><b>✓</b></span>
+          {authorStats ? (
+            <div className="ticket-mini-stats-v876">
+              <span>Yield: <b>{authorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b>{authorStats.profitLabel}</b></span>
+            </div>
+          ) : null}
+        </div>
+        <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
+          {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
+        </button>
+      </div>
+
+      <div className="profile-ticket-v6-main">
+        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
+        <div className="profile-ticket-v6-match">
+          <div><TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} /><strong>{tip.home}</strong></div>
+          <span>vs</span>
+          <div><TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} /><strong>{tip.away}</strong></div>
+        </div>
+        <small>{tip.matchLabel}</small>
+      </div>
+
+      <div className="profile-ticket-v6-field">
+        <small>TYP</small>
+        <strong>{tip.premium && !isUnlocked ? 'Typ premium' : tip.pick}</strong>
+        <span>{tip.premium ? 'Singiel' : 'Darmowy typ'}</span>
+      </div>
+
+      <div className="profile-ticket-v6-field stake">
+        <small>STAWKA</small>
+        <strong>{tip.stake.toFixed(0)} zł</strong>
+        <i><b style={{ width: `${Math.max(12, Math.min(100, tip.stake * 10))}%` }} /></i>
+      </div>
+
+      <div className="profile-ticket-v6-field odds">
+        <small>KURS</small>
+        <strong>{tip.premium && !isUnlocked ? '—' : tip.odds}</strong>
+      </div>
+
+      <div className={`profile-ticket-v6-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
+        <small>ANALIZA</small>
+        <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+        <button type="button">Czytaj więcej⌄</button>
+      </div>
+
+      <div className="profile-ticket-v6-buy">
+        <div className="profile-ticket-v6-corner">
+          <span>{createdAgo}</span>
+          <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
+          {menuOpen && (
+            <div className="profile-ticket-v6-menu">
+              <button type="button" onClick={reportTip}>⚠ Zgłoś wpis</button>
+              <button type="button" onClick={settleTip}>✓ Rozlicz</button>
+              <button type="button" onClick={addAnalysis}>📝 Dodaj analizę</button>
+              <button type="button" onClick={shareTip}>↗ Udostępnij</button>
+            </div>
+          )}
+        </div>
+        <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
+        <small>zakończenie: {tip.matchLabel}</small>
+        {tip.premium && !isUnlocked ? (
+          <>
+            <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>
+            <strong>{formatMoney(tip.price)}</strong>
+          </>
+        ) : null}
+      </div>
+
+      <footer className="profile-ticket-v6-footer">
+        <div>
+          <button type="button" className={`ticket-action-btn-v877 ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')}>
+            <TipActionLikeIcon />
+            <b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+            <TipActionCommentIcon />
+            <b>{commentCount}</b>
+          </button>
+          <button type="button" className="ticket-action-btn-v877" onClick={handleShareAction}>
+            <TipActionShareIcon />
+            <b>{feedback.dislikes}</b>
+          </button>
+        </div>
+      </footer>
+
+      {commentsOpen && (
+        <div className="profile-live-tip-comments profile-ticket-v6-comments">
+          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
+          <div className="tip-comment-form profile-comment-form-no-button">
+            <input
+              type="text"
+              value={commentDraft}
+              onChange={event => setCommentDraft(event.target.value)}
+              onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); submitComment() } }}
+              placeholder="Dodaj komentarz do tego typu i naciśnij Enter..."
+              maxLength={280}
+            />
+          </div>
+          {feedback.comments.length > 0 ? (
+            <div className="tip-comment-list">
+              {feedback.comments.map(comment => (
+                <div key={comment.id} className="tip-comment-item">
+                  <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
+                  <div className="tip-comment-body">
+                    <div className="tip-comment-meta"><strong>{comment.author}</strong><span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span></div>
+                    <p>{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </article>
+  )
+}
+
+
+function ProfileStatsTable({ title, columns, rows, wide = false }) {
+  return (
+    <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''}`}>
+      <div className="profile-v3-card-head"><h3>{title}</h3></div>
+      <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
+        <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
+        {rows.map((row, index) => (
+          <div key={`${title}-${index}`}>
+            {row.map((cell, cellIndex) => <span key={`${title}-${index}-${cellIndex}`}>{cell}</span>)}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
-  const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
+  const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
   const displayName = username
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
@@ -11674,25 +13225,186 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   const admin = isAdminUser(user)
   const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
+  const avatarInputRef = useRef(null)
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [profileTab, setProfileTab] = useState('tips')
+  const [profileTipsFilter, setProfileTipsFilter] = useState('all')
+  const [profileResultsFilter, setProfileResultsFilter] = useState('all')
+  const fallbackBio = `${displayName} — dodaj własny opis profilu.`
+  const [bioEditing, setBioEditing] = useState(false)
+  const [bioSaving, setBioSaving] = useState(false)
+  const [bioDraft, setBioDraft] = useState(user?.bio || user?.description || user?.about || fallbackBio)
+
+  useEffect(() => {
+    setAvatarUrl(user?.avatar_url || user?.user_metadata?.avatar_url || '')
+  }, [user?.avatar_url, user?.user_metadata?.avatar_url])
+
+  useEffect(() => {
+    setBioDraft(user?.bio || user?.description || user?.about || fallbackBio)
+  }, [user?.bio, user?.description, user?.about, fallbackBio])
+
+  const chooseAvatar = () => {
+    avatarInputRef.current?.click()
+  }
+
+  const changeAvatar = async event => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Wybierz plik graficzny JPG, PNG lub WEBP.' })
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Avatar może mieć maksymalnie 3 MB.' })
+      return
+    }
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Avatar', message: 'Nie udało się połączyć z profilem użytkownika.' })
+      return
+    }
+
+    setAvatarUploading(true)
+    try {
+      const extension = (file.name.split('.').pop() || file.type.split('/').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+      const path = `${user.id}/avatar-${Date.now()}.${extension}`
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type })
+      if (uploadError) throw uploadError
+
+      const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
+      const nextAvatarUrl = publicData?.publicUrl || ''
+      if (!nextAvatarUrl) throw new Error('Nie udało się pobrać adresu avatara.')
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: nextAvatarUrl })
+        .eq('id', user.id)
+      if (profileError) throw profileError
+
+      await supabase.auth.updateUser({ data: { avatar_url: nextAvatarUrl } }).catch(() => null)
+
+      setAvatarUrl(nextAvatarUrl)
+      onAvatarUpdated?.(nextAvatarUrl)
+      onToast?.({ type: 'success', title: 'Avatar zapisany', message: 'Zdjęcie profilowe zostało zaktualizowane.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd avatara', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  const saveBio = async () => {
+    const cleanBio = String(bioDraft || '').trim().slice(0, 220)
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Opis profilu', message: 'Nie udało się połączyć z profilem użytkownika.' })
+      return
+    }
+    setBioSaving(true)
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ bio: cleanBio })
+        .eq('id', user.id)
+      if (profileError) throw profileError
+
+      await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
+      setBioDraft(cleanBio)
+      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
+      setBioEditing(false)
+      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd opisu', message: formatAppErrorMessage(error.message) })
+    } finally {
+      setBioSaving(false)
+    }
+  }
+
   const userTips = (Array.isArray(tips) ? tips : []).map(normalizeTipRow).filter(tip => {
     const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
     const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
     const authorName = normalizeEmail(tip.author_name || tip.username || '')
     return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
   })
-  const totalTips = userTips.length
-  const wonTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'won').length
-  const lostTips = userTips.filter(tip => String(tip.status || '').toLowerCase() === 'lost').length
+  const profileStatsSource = user || {}
+  const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
+  const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
+  const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
+    ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
+    : userTips
+
+  const importedTotalTips = Number(profileStatsSource?.imported_total_tips || 0) || 0
+  const importedWonTips = Number(profileStatsSource?.imported_won_tips || 0) || 0
+  const importedLostTips = Number(profileStatsSource?.imported_lost_tips || 0) || 0
+  const importedPendingTips = Number(profileStatsSource?.imported_pending_tips || 0) || 0
+  const importedTotalStaked = Number(profileStatsSource?.imported_total_staked || 0) || 0
+  const importedProfit = Number(profileStatsSource?.imported_profit || 0) || 0
+  const importedAvgOdds = Number(profileStatsSource?.imported_avg_odds || 0) || 0
+  const importedHighestOdds = Number(profileStatsSource?.imported_highest_odds || 0) || 0
+  const importedTipsAmount = Number(profileStatsSource?.imported_tips_amount || 0) || 0
+  const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || 'zł').trim() || 'zł'
+
+  const liveTotalTips = liveTipsForStats.length
+  const liveWonTips = liveTipsForStats.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveLostTips = liveTipsForStats.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveSettledTips = liveWonTips + liveLostTips
+  const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips)
+  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / liveTipsForStats.length) : 0
+  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    if (!['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum
+    return sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+  }, 0)
+  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    const stake = Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+    const odds = Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+    if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) return sum + (stake * Math.max(0, odds - 1))
+    if (['lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum - stake
+    return sum
+  }, 0)
+  const liveTotalStakedAmount = liveTipsForStats.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
+  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
+
+  // Statystyki historyczne z poprzedniej platformy stanowią bazę.
+  // Nowe typy dodane PO dacie importu dopisują się automatycznie do kafelków.
+  const totalTips = importedTotalTips + liveTotalTips
+  const wonTips = importedWonTips + liveWonTips
+  const lostTips = importedLostTips + liveLostTips
   const settledTips = wonTips + lostTips
+  const pendingTips = importedPendingTips + livePendingTips
+  const totalStakedAmount = importedTotalStaked + liveTotalStakedAmount
+  const profitAmount = importedProfit + liveProfitAmount
   const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
-  const avgOddsNumber = userTips.length ? (userTips.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / userTips.length) : 0
+  const avgOddsNumber = totalTips
+    ? (((importedAvgOdds * importedTotalTips) + (liveAvgOddsNumber * liveTotalTips)) / totalTips)
+    : 0
   const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
-  const roi = settledTips ? Math.max(0, Math.round((winRate - 50) * 1.7)) : 0
+  const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
+  const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
+  const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(profileStatsSource?.imported_yield || 0) || 0)
+  const tipsSupportAmount = importedTipsAmount + (Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0)
+
+  const statsCards = [
+    { label: 'Yield', value: `${roi}%`, sub: roi > 0 ? 'Zwrot na plus' : roi < 0 ? 'Zwrot na minus' : 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount > 0 ? 'Bilans na plus' : profitAmount < 0 ? 'Bilans na minus' : 'Bilans zerowy', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Typy', value: String(totalTips), sub: 'Wszystkie dodane', tone: totalTips > 0 ? 'info' : 'neutral' },
+    { label: 'Wygrane', value: String(wonTips), sub: 'Rozliczone na plus', tone: wonTips > 0 ? 'success' : 'neutral' },
+    { label: 'Przegrane', value: String(lostTips), sub: 'Rozliczone na minus', tone: lostTips > 0 ? 'danger' : 'neutral' },
+    { label: 'Pending', value: String(pendingTips), sub: 'Czekają na wynik', tone: pendingTips > 0 ? 'warning' : 'neutral' },
+    { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
+    { label: 'Śr. kurs', value: avgOdds, sub: 'Średnia kursów', tone: Number(avgOdds) > 2 ? 'info' : 'neutral' },
+    { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
+    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} ${importedTipsCurrency}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+  ]
   const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
+  const followingCount = Number(user?.following_count || user?.following || 0) || 0
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
-  const profileBio = user?.bio || user?.description || user?.about || `${displayName} — prywatny profil użytkownika Bet+AI. Każdy zalogowany użytkownik widzi tutaj własne konto, własne statystyki i własne ustawienia profilu.`
-  const preferredSport = user?.preferred_sport || user?.sport || 'Piłka nożna ⚽'
+  const profileBio = user?.bio || user?.description || user?.about || fallbackBio
+  const preferredSport = user?.preferred_sport || user?.sport || 'Nie ustawiono'
 
   const toTipRow = (tip, fallbackPremium = false) => {
     const normalized = normalizeTipRow(tip)
@@ -11708,15 +13420,58 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
     return [home, away, `${league} • ${timeLabel}`, pick, odds, confidence, access, String(Number(normalized.likes || normalized.hearts || 0) || 0), normalized.created_at ? new Date(normalized.created_at).toLocaleDateString('pl-PL') : 'Teraz']
   }
 
-  const premiumRows = userTips.filter(isTipPremium).slice(0, 3).map(tip => toTipRow(tip, true))
-  if (!premiumRows.length) premiumRows.push(['Brak typów', 'Premium', 'Dodaj pierwszy typ premium', '—', '—', '0%', 'Premium', '0', '—'])
+  const buildProfileTipCard = (tip) => {
+    const normalized = normalizeTipRow(tip)
+    const premiumTip = isTipPremium(normalized)
+    const home = normalized.home_team || normalized.team_home || 'Gospodarze'
+    const away = normalized.away_team || normalized.team_away || 'Goście'
+    const league = normalized.league || 'Liga'
+    const matchTime = normalized.match_time || normalized.event_date || normalized.kickoff_at || normalized.created_at
+    const createdAt = normalized.created_at ? new Date(normalized.created_at) : null
+    const matchAt = matchTime ? new Date(matchTime) : null
+    const formatDateTime = (value) => value && !Number.isNaN(value.getTime())
+      ? value.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'Brak daty'
+    const status = String(normalized.status || 'pending').toLowerCase()
+    const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
+      ? 'Wygrany'
+      : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
+        ? 'Przegrany'
+        : 'Oczekujący'
+    const confidence = Math.max(0, Math.min(100, Number(normalized.ai_probability || normalized.ai_confidence || normalized.confidence || 0) || 0))
+    return {
+      id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
+      rawTip: normalized,
+      premium: premiumTip,
+      home,
+      away,
+      league,
+      homeLogo: normalized.home_logo || normalized.homeLogo || null,
+      awayLogo: normalized.away_logo || normalized.awayLogo || null,
+      homeTeamId: normalized.home_team_id || normalized.homeTeamId || null,
+      awayTeamId: normalized.away_team_id || normalized.awayTeamId || null,
+      pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
+      odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
+      stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || (premiumTip ? 1 : 10)) || (premiumTip ? 1 : 10),
+      analysis: normalized.ai_analysis || normalized.analysis || normalized.description || 'Brak analizy użytkownika.',
+      confidence,
+      createdLabel: formatDateTime(createdAt),
+      matchLabel: formatDateTime(matchAt),
+      statusLabel,
+      likes: Number(normalized.likes || normalized.hearts || 0) || 0,
+      trophies: Number(normalized.trophies || normalized.upvotes || 0) || 0,
+      comments: Number(normalized.comments || normalized.comments_count || 0) || 0,
+      price: Math.max(0, Number(normalized.price || 29) || 29)
+    }
+  }
 
-  const freeRows = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(tip => toTipRow(tip, false))
-  if (!freeRows.length) freeRows.push(['Brak typów', 'FREE', 'Dodaj pierwszy darmowy typ', '—', '—', '0%', 'FREE', '0', '—'])
+  const premiumCards = userTips.filter(isTipPremium).slice(0, 3).map(buildProfileTipCard)
+  const freeCards = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(buildProfileTipCard)
+  const allProfileTipCards = userTips.map(buildProfileTipCard)
 
   const resultRows = [
-    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
-    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${walletAmount.toFixed(2)} zł`],
+    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
+    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
   ]
   const analysisRows = userTips.slice(0, 3).map(tip => {
     const normalized = normalizeTipRow(tip)
@@ -11724,37 +13479,220 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   })
   if (!analysisRows.length) analysisRows.push(['Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.', 'Bet+AI'])
 
-  const summaryRows = [
-    ['Użytkownik od', createdLabel],
-    ['Ostatnia aktywność', 'Dzisiaj'],
-    ['Poziom', roleLabel],
-    ['Ranking globalny', totalTips ? '# aktywny typer' : 'Nowy użytkownik'],
-    ['Preferowane dyscypliny', preferredSport],
-  ]
-  const recentAchievements = [
-    [premium ? 'PREMIUM' : 'START', premium ? 'Konto premium aktywne' : 'Profil gotowy do działania', createdLabel],
-    [`${totalTips} TYPÓW`, totalTips ? 'Opublikowane typy na koncie' : 'Dodaj pierwszy typ', 'Dzisiaj'],
-    [`${winRate}% WIN RATE`, settledTips ? 'Skuteczność z rozliczonych typów' : 'Brak rozliczonych typów', 'Dzisiaj'],
-  ]
-  const ratingBars = [
-    ['5 ★', '0'], ['4 ★', '0'], ['3 ★', '0'], ['2 ★', '0'], ['1 ★', '0']
-  ]
-  const rankingRows = [
-    ['1', displayName, `${roi}% ROI`, String(followersCount), `+${walletAmount.toFixed(2)} zł`],
+  const rankingSnapshot = buildRankingFromTips(Array.isArray(tips) ? tips : [])
+  const ownRankingRow = rankingSnapshot.find(row => {
+    const sameId = profile.id && String(row.id || '') === String(profile.id)
+    const sameEmail = email && normalizeEmail(row.email || '') === email
+    const sameName = username && normalizeEmail(row.username || '') === normalizeEmail(username)
+    return sameId || sameEmail || sameName
+  })
+  const rankingPosition = Number(user?.ranking_position || user?.rank || ownRankingRow?.liveRank || 0) || 0
+
+  const sortedUserTips = [...userTips].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
+  const latestTip = sortedUserTips[0] || null
+  const latestActivityRaw = latestTip?.created_at || user?.last_sign_in_at || user?.updated_at || profileCreatedAt || ''
+  const formatProfileDate = (value) => {
+    if (!value) return 'Brak danych'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Brak danych'
+    const today = new Date()
+    const sameDay = date.toDateString() === today.toDateString()
+    if (sameDay) return 'Dzisiaj'
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    if (date.toDateString() === yesterday.toDateString()) return 'Wczoraj'
+    return date.toLocaleDateString('pl-PL')
+  }
+  const lastActivityLabel = formatProfileDate(latestActivityRaw)
+  const lastTipAt = latestTip?.created_at ? new Date(latestTip.created_at) : null
+  const isActive30d = Boolean(lastTipAt && !Number.isNaN(lastTipAt.getTime()) && Date.now() - lastTipAt.getTime() <= 30 * 24 * 60 * 60 * 1000)
+  const rankingPercent = Number(user?.ranking_percent || user?.rank_percent || 0) || 0
+
+  const profileBadges = [
+    { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPercent > 0 ? `${rankingPercent}%` : (rankingPosition ? `#${rankingPosition}` : 'Brak rankingu'), achieved: rankingPercent > 0 && rankingPercent <= 1 },
+    { icon: '✦', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
+    { icon: '🛡', tone: 'cyan', title: 'WIN RATE+', detail: settledTips ? `${winRate}% / 60%` : '0 rozliczeń', achieved: settledTips >= 10 && winRate >= 60 },
+    { icon: '↗', tone: 'teal', title: 'ROI+', detail: `${roi}% / 10%`, achieved: settledTips >= 10 && roi >= 10 },
+    { icon: '⚡', tone: 'yellow', title: 'AKTYWNY', detail: isActive30d ? 'Typ w 30 dni' : 'Brak typu 30 dni', achieved: isActive30d },
+    { icon: '♛', tone: 'purple', title: 'PREMIUM', detail: premium ? 'Aktywne' : 'Nieaktywne', achieved: premium },
   ]
 
+  const summaryRows = [
+    ['Użytkownik od', createdLabel],
+    ['Ostatnia aktywność', lastActivityLabel],
+    ['Poziom', roleLabel],
+    ['Ranking globalny', rankingPosition ? `#${rankingPosition}` : 'Brak danych'],
+    ['Preferowane dyscypliny', preferredSport],
+  ]
+
+  const recentActivityRows = sortedUserTips.slice(0, 3).map(tip => {
+    const normalized = normalizeTipRow(tip)
+    const status = String(normalized.status || 'pending').toLowerCase()
+    const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
+      ? 'Wygrany'
+      : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
+        ? 'Przegrany'
+        : 'Oczekujący'
+    return [
+      normalized.bet_type || normalized.pick || 'Typ',
+      `${normalized.team_home || 'Mecz'} vs ${normalized.team_away || ''}`.trim(),
+      `${statusLabel} • ${formatProfileDate(normalized.created_at)}`
+    ]
+  })
+  if (!recentActivityRows.length) recentActivityRows.push(['Brak typów', 'Dodaj pierwszy typ, aby zbudować aktywność profilu', createdLabel])
+
+  const profileRatingAverage = Number(user?.rating_avg || user?.average_rating || user?.rating || 0) || 0
+  const profileRatingCount = Number(user?.rating_count || user?.reviews_count || 0) || 0
+  const ratingDistribution = user?.rating_distribution && typeof user.rating_distribution === 'object'
+    ? user.rating_distribution
+    : {}
+  const ratingBars = [5,4,3,2,1].map(score => {
+    const count = Number(ratingDistribution[score] ?? ratingDistribution[String(score)] ?? 0) || 0
+    const width = profileRatingCount ? Math.round((count / profileRatingCount) * 100) : 0
+    return { label: `${score} ★`, count, width }
+  })
+
+  const rankingRows = ownRankingRow
+    ? [[String(ownRankingRow.liveRank || rankingPosition || '—'), displayName, `${Number(ownRankingRow.roi || roi || 0).toFixed(0)}% ROI`, String(ownRankingRow.followers || followersCount), `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`]]
+    : []
+
+
+  const importedTypeStatsRows = [
+    { label: 'Publiczny', coupons: 190, profit: 2207.34, yield: 36.00, avgOdds: 1.80, avgStake: 325.81 },
+    { label: 'Płatny', coupons: 499, profit: 57848.55, yield: 41.00, avgOdds: 1.94, avgStake: 282.36 },
+  ]
+  const importedSportStatsRows = [
+    { label: 'MMA', coupons: 47, stake: 33073.99, profit: 75029.02, yield: 227.00 },
+    { label: 'Baseball', coupons: 26, stake: 5215.00, profit: 4107.70, yield: 79.00 },
+    { label: 'Krykiet', coupons: 2, stake: 50.00, profit: 16.80, yield: 34.00 },
+    { label: 'Koszykówka', coupons: 20, stake: 3428.00, profit: 622.39, yield: 18.00 },
+    { label: 'Piłka nożna', coupons: 497, stake: 109473.34, profit: 5903.54, yield: 5.00 },
+    { label: 'Tenis', coupons: 103, stake: 21423.67, profit: 546.54, yield: 3.00 },
+    { label: 'Darts', coupons: 4, stake: 50.00, profit: 0.70, yield: 1.00 },
+    { label: 'Hokej', coupons: 30, stake: 8036.00, profit: -45.60, yield: -1.00 },
+    { label: 'Boks', coupons: 5, stake: 3020.00, profit: -650.00, yield: -22.00 },
+    { label: 'Snooker', coupons: 22, stake: 19030.00, profit: -5611.20, yield: -29.00 },
+  ]
+  const importedOddsStatsRows = [
+    { label: '1.01 - 1.50', coupons: 136, profit: 1392.96, yield: 3.00, avgOdds: 1.45, avgStake: 347.82 },
+    { label: '1.51 - 2.00', coupons: 448, profit: 9163.29, yield: 8.00, avgOdds: 1.71, avgStake: 251.25 },
+    { label: '2.01 - 3.00', coupons: 71, profit: 9091.58, yield: 37.00, avgOdds: 2.26, avgStake: 342.20 },
+    { label: '3.01 - 5.00', coupons: 27, profit: 1892.06, yield: 13.00, avgOdds: 3.58, avgStake: 541.41 },
+    { label: '5.01 - 8.00', coupons: 1, profit: 4100.00, yield: 410.00, avgOdds: 5.10, avgStake: 1000.00 },
+    { label: '8.01 - 9.99', coupons: 1, profit: 7290.00, yield: 729.00, avgOdds: 8.29, avgStake: 1000.00 },
+    { label: '10.00+', coupons: 2, profit: 46990.00, yield: 4652.00, avgOdds: 36.40, avgStake: 505.00 },
+  ]
+  const importedHourStatsRows = [
+    { label: '00:00 - 07:59', coupons: 114, profit: 60871.45, yield: 153.00, avgOdds: 2.36, avgStake: 349.57 },
+    { label: '08:00 - 11:59', coupons: 52, profit: 1564.82, yield: 14.00, avgOdds: 1.73, avgStake: 220.58 },
+    { label: '12:00 - 16:59', coupons: 167, profit: -5910.06, yield: -23.00, avgOdds: 1.77, avgStake: 155.08 },
+    { label: '17:00 - 19:59', coupons: 215, profit: 12269.92, yield: 18.00, avgOdds: 1.79, avgStake: 323.05 },
+    { label: '20:00 - 23:59', coupons: 141, profit: 1123.76, yield: 20.00, avgOdds: 1.91, avgStake: 398.04 },
+  ]
+  const importedMonthStatsRows = [
+    { label: '05/2026', coupons: 55, stake: 19340.00, profit: 2049.10, yield: 11.00 },
+    { label: '04/2026', coupons: 251, stake: 74481.00, profit: 5850.88, yield: 8.00 },
+    { label: '03/2026', coupons: 272, stake: 105496.00, profit: 70296.40, yield: 67.00 },
+    { label: '02/2026', coupons: 58, stake: 3165.00, profit: 1593.26, yield: 50.00 },
+    { label: '01/2026', coupons: 53, stake: 318.00, profit: 130.25, yield: 41.00 },
+    { label: '12/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '11/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '10/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '09/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+  ]
+  const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
+  const profileVisibleTipCards = allProfileTipCards.filter(tip => {
+    if (profileTipsFilter === 'premium') return tip.premium
+    if (profileTipsFilter === 'free') return !tip.premium
+    return true
+  })
+  const resultTipRows = allProfileTipCards.filter(tip => {
+    if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
+    if (profileResultsFilter === 'lost') return tip.statusLabel === 'Przegrany'
+    if (profileResultsFilter === 'pending') return tip.statusLabel === 'Oczekujący'
+    return true
+  })
+  const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
+  const linePoints = balanceChartRows.map((row, index) => {
+    const maxValue = Math.max(...balanceChartRows.map(item => Number(item.value || 0)), 1)
+    const x = balanceChartRows.length <= 1 ? 0 : (index / (balanceChartRows.length - 1)) * 100
+    const y = 100 - ((Number(row.value || 0) / maxValue) * 100)
+    return `${x},${Math.max(0, Math.min(100, y))}`
+  }).join(' ')
+  const historyEvents = sortedUserTips.slice(0, 8).map(tip => {
+    const normalized = normalizeTipRow(tip)
+    const card = buildProfileTipCard(normalized)
+    return {
+      date: formatProfileDate(normalized.created_at),
+      title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : `Rozliczono typ: ${card.statusLabel}`,
+      detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
+      tone: card.statusLabel === 'Wygrany' ? 'success' : card.statusLabel === 'Przegrany' ? 'danger' : 'info',
+      amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)} zł` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)} zł` : '',
+    }
+  })
+  const reviewRows = Array.isArray(user?.reviews) ? user.reviews : []
+
+  const profileTipStats = {
+    yieldLabel: `${roi}%`,
+    totalTipsLabel: String(totalTips),
+    profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`,
+  }
+
+  const renderProfileTipCard = (tip) => (
+    <ProfileLiveTipCard
+      key={tip.id}
+      tip={tip}
+      sourceTip={tip.rawTip || {}}
+      avatarUrl={avatarUrl}
+      initials={initials}
+      displayName={displayName}
+      currentUser={user}
+      unlockedTips={unlockedTips}
+      tipsterSubscriptions={tipsterSubscriptions}
+      onUnlock={onUnlock}
+      onSubscribeToTipster={onSubscribeToTipster}
+      onToast={onToast}
+      onViewType={() => setProfileTab('tips')}
+      authorStats={profileTipStats}
+    />
+  )
+
   return (
-    <section className="profile-page profile-static-v3" aria-label="Mój profil">
+    <section className={`profile-page profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">
             <div className="profile-v3-hero-overlay"></div>
+            <button
+              type="button"
+              className={`profile-hero-stripe-btn ${stripeConnectStatus?.payouts_enabled ? 'ready' : stripeConnectStatus?.stripe_account_id ? 'pending' : 'empty'}`}
+              onClick={() => onConnectStripe?.()}
+            >
+              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
+            </button>
             <div className="profile-v3-user-row">
-              <div className="profile-v3-avatar">{initials}</div>
+              <button
+                type="button"
+                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
+                onClick={chooseAvatar}
+                title="Kliknij, aby dodać lub zmienić avatar"
+                style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
+              >
+                {avatarUrl ? '' : initials}
+                <span>{avatarUploading ? '...' : '✎'}</span>
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="profile-avatar-file-input"
+                onChange={changeAvatar}
+              />
               <div className="profile-v3-user-copy">
                 <div className="profile-v3-name-line">
                   <h1>{displayName}</h1>
-                  <span className="verify-dot">✓</span>
+                  
                 </div>
                 <small>{handleName}</small>
                 <div className="profile-v3-badges">
@@ -11762,7 +13700,29 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
                   <span>TYPER</span>
                   {totalTips > 0 && <span>AKTYWNY</span>}
                 </div>
-                <p>{profileBio}</p>
+                {bioEditing ? (
+                  <div className="profile-v3-bio-editor">
+                    <textarea
+                      value={bioDraft}
+                      onChange={(event) => setBioDraft(event.target.value.slice(0, 220))}
+                      maxLength={220}
+                      autoFocus
+                    />
+                    <div>
+                      <small>{bioDraft.length}/220</small>
+                      <button type="button" onClick={() => {
+                        setBioDraft(profileBio)
+                        setBioEditing(false)
+                      }}>Anuluj</button>
+                      <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
+                    {profileBio}
+                    <span>✎</span>
+                  </button>
+                )}
                 <div className="profile-v3-actions">
                   <button type="button" className="primary">Mój profil</button>
                   <button type="button">▢ Wiadomości</button>
@@ -11770,146 +13730,203 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
                 </div>
               </div>
             </div>
-            <div className="profile-v3-stats-strip">
-              <div><small>ROI</small><strong>{roi}%</strong></div>
-              <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
-              <div><small>SKUTECZNOŚĆ</small><strong>{avgOdds} <em>ŚR. KURS</em></strong></div>
-              <div><small>LICZBA TYPÓW</small><strong>{totalTips}</strong></div>
-              <div><small>OBSERWUJĄCY</small><strong>{followersCount}</strong></div>
-              <div><small>POZIOM</small><strong>{roleLabel}</strong></div>
-              <div><small>ŻETONY</small><strong>{tokenCount}</strong></div>
-              <div><small>SALDO</small><strong>{walletAmount.toFixed(2)} zł</strong></div>
-              <div><small>RANKING</small><strong>{totalTips ? '# aktywny' : '—'} <em>{roleLabel}</em></strong></div>
-              <div><small>ŚR. KURS</small><strong>{avgOdds}</strong></div>
+          </div>
+
+          <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
+            <div className="profile-v3-card-head">
+              <h3>📊 Twoje statystyki</h3>
             </div>
+            <div className="profile-stats-cards-grid">
+              {statsCards.map((card) => (
+                <article
+                  key={card.label}
+                  className={`profile-stat-card profile-stat-card-${card.tone} ${card.accent ? 'is-accent' : ''}`}
+                >
+                  <small>{card.label}</small>
+                  <strong>{card.value}</strong>
+                  <span>{card.sub}</span>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="profile-v3-tabs glass-profile-v3 profile-v4-tabs">
+            <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}><span>◉</span> Typy <b>{totalTips}</b></button>
+            <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}><span>↗</span> Wyniki</button>
+            <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
+            <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
+            <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> Opinie</button>
+            <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
           </div>
 
-          <div className="profile-v3-tabs glass-profile-v3">
-            <button type="button" className="active">▣ Przegląd</button>
-            <button type="button">◉ Typy</button>
-            <button type="button">↗ Wyniki</button>
-            <button type="button">⌁ Analizy</button>
-            <button type="button">◔ Historia</button>
-            <button type="button">💬 Opinie</button>
-          </div>
+          {profileTab === 'tips' && (
+            <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
+              <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
+              <div className="profile-v4-filter-row">
+                <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{allProfileTipCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
+              </div>
+              {profileVisibleTipCards.length ? (
+                <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
+              ) : (
+                <div className="profile-live-tip-empty">Brak typów w tej kategorii.</div>
+              )}
+            </section>
+          )}
 
-          <TipsterPricingSettings user={user} onToast={null} />
 
-          <div className="glass-profile-v3 profile-stripe-connect-card">
-            <div className="profile-stripe-connect-main">
-              <div className="profile-stripe-connect-icon">💳</div>
-              <div>
-                <div className="profile-v3-card-head stripe-head-inline">
-                  <h3>Moje konto Stripe</h3>
-                  <span className={stripeConnectStatus?.payouts_enabled ? 'stripe-status-pill ready' : stripeConnectStatus?.stripe_account_id ? 'stripe-status-pill pending' : 'stripe-status-pill empty'}>
-                    {stripeConnectStatus?.payouts_enabled ? 'Stripe aktywny' : stripeConnectStatus?.stripe_account_id ? 'Dokończ konfigurację' : 'Niepodłączone'}
-                  </span>
+          {profileTab === 'results' && (
+            <section className="profile-v4-page profile-v4-results-page">
+              <div className="profile-v4-summary-grid">
+                <article><small>Wszystkie rozliczone</small><strong>{settledTips}</strong></article>
+                <article className="success"><small>Wygrane</small><strong>{wonTips}</strong></article>
+                <article className="danger"><small>Przegrane</small><strong>{lostTips}</strong></article>
+                <article className="warning"><small>Nierozliczone</small><strong>{pendingTips}</strong></article>
+                <article className={roi >= 0 ? 'success' : 'danger'}><small>Yield</small><strong>{roi}%</strong></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount >= 0 ? '+' : ''}{profitAmount.toFixed(2)} zł</strong></article>
+              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
+                <div className="profile-v3-card-head"><h3>Wyniki — przebieg bilansu</h3></div>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart">
+                  <defs>
+                    <linearGradient id="profileBalanceFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(0,255,148,.32)" />
+                      <stop offset="100%" stopColor="rgba(0,255,148,0)" />
+                    </linearGradient>
+                  </defs>
+                  <polyline points={linePoints} fill="none" stroke="currentColor" strokeWidth="1.6" />
+                  <polygon points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFill)" />
+                </svg>
+              </section>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">
+                <div className="profile-v4-filter-row">
+                  <button type="button" className={profileResultsFilter === 'all' ? 'active' : ''} onClick={() => setProfileResultsFilter('all')}>Wszystkie</button>
+                  <button type="button" className={profileResultsFilter === 'won' ? 'active' : ''} onClick={() => setProfileResultsFilter('won')}>Wygrane</button>
+                  <button type="button" className={profileResultsFilter === 'lost' ? 'active' : ''} onClick={() => setProfileResultsFilter('lost')}>Przegrane</button>
+                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>Nierozliczone</button>
                 </div>
-                <p>
-                  Podłącz swoje konto Stripe Connect, żeby sprzedawać single i subskrypcje profilu. Kupujący płaci na stronie, Stripe automatycznie kieruje <b>80%</b> do Ciebie, a <b>20%</b> marży zostaje dla platformy.
-                </p>
-                <small>Kupujący nie wpisuje konta bankowego sprzedawcy. Dane bankowe podajesz tylko bezpiecznie w Stripe.</small>
-              </div>
-            </div>
-            <button type="button" className="profile-connect-stripe-btn" onClick={() => onConnectStripe?.()}>
-              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
-            </button>
-          </div>
-
-          <div className="profile-v3-content-grid">
-            <div className="profile-v3-left-col">
-              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
-                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button">Zobacz wszystkie</button></div>
-                {premiumRows.map((row, idx) => (
-                  <div className="tip-preview-v3" key={idx}>
-                    <div className="tip-preview-top"><span className="club-round">RM</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
-                    <div className="tip-preview-mid">
-                      <div><small>TYP</small><b>{row[3]}</b></div>
-                      <div><small>KURS</small><b>{row[4]}</b></div>
-                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
+                <div className="profile-v4-results-table">
+                  <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b></div>
+                  {resultTipRows.length ? resultTipRows.map(tip => (
+                    <div key={tip.id}>
+                      <span>{tip.home} — {tip.away}</span>
+                      <span>{tip.pick}</span>
+                      <span>{tip.odds}</span>
+                      <span>{tip.stake.toFixed(2)} zł</span>
+                      <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : 'wait'}>{tip.statusLabel}</em>
                     </div>
-                    <div className="tip-progress"><span style={{width:'85%'}}></span></div>
-                    <div className="tip-preview-foot"><em className="premium-pill">♥ {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
-                  </div>
-                ))}
-              </div>
+                  )) : <p>Brak wyników w tej kategorii.</p>}
+                </div>
+              </section>
+            </section>
+          )}
 
-              <div className="glass-profile-v3 profile-v3-card tip-card-v3">
-                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button">Zobacz wszystkie</button></div>
-                {freeRows.map((row, idx) => (
-                  <div className="tip-preview-v3 free" key={idx}>
-                    <div className="tip-preview-top"><span className="club-round arsenal">AR</span><div><strong>{row[0]} <span>vs</span> {row[1]}</strong><small>{row[2]}</small></div></div>
-                    <div className="tip-preview-mid">
-                      <div><small>TYP</small><b>{row[3]}</b></div>
-                      <div><small>KURS</small><b>{row[4]}</b></div>
-                      <div><small>AI PEWNOŚĆ</small><b>{row[5]}</b></div>
+          {profileTab === 'stats' && (
+            <section className="profile-v4-page profile-v4-stats-page">
+              <div className="profile-v4-summary-grid profile-v4-stats-top">
+                <article><small>Postawione kupony</small><strong>{totalTips}</strong></article>
+                <article><small>Wygrane / przegrane</small><strong>{wonTips} / {lostTips}</strong></article>
+                <article className="warning"><small>Nierozliczone kupony</small><strong>{pendingTips}</strong></article>
+                <article className="success"><small>Yield</small><strong>{roi}%</strong></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount.toFixed(2)}</strong></article>
+                <article><small>Zainwestowane pieniądze</small><strong>{totalStakedAmount.toFixed(2)}</strong></article>
+              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
+                <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart cyan">
+                  <defs>
+                    <linearGradient id="profileBalanceBlue" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(0,180,255,.34)" />
+                      <stop offset="100%" stopColor="rgba(0,180,255,0)" />
+                    </linearGradient>
+                  </defs>
+                  <polyline points={linePoints} fill="none" stroke="currentColor" strokeWidth="1.6" />
+                  <polygon points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceBlue)" />
+                </svg>
+              </section>
+              <div className="profile-v4-stats-grid">
+                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={importedSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={importedMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+              </div>
+            </section>
+          )}
+
+          {profileTab === 'history' && (
+            <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">
+              <div className="profile-v3-card-head"><h3>Historia aktywności</h3><span>{historyEvents.length} zdarzeń</span></div>
+              <div className="profile-v4-history-timeline">
+                {historyEvents.length ? historyEvents.map((event, index) => (
+                  <article key={`${event.title}-${index}`} className={event.tone}>
+                    <small>{event.date}</small>
+                    <div>
+                      <strong>{event.title}</strong>
+                      <span>{event.detail}</span>
                     </div>
-                    <div className="tip-progress"><span style={{width:'78%'}}></span></div>
-                    <div className="tip-preview-foot"><em className="free-pill">● {row[6]}</em><span>{row[7]} ♡</span><span>{row[8]}</span></div>
-                  </div>
-                ))}
+                    {event.amount && <b>{event.amount}</b>}
+                  </article>
+                )) : <p>Brak aktywności do pokazania.</p>}
               </div>
+            </section>
+          )}
 
-              <div className="glass-profile-v3 profile-v3-card history-v3">
-                <div className="profile-v3-card-head"><h3>📊 Historia wyników</h3></div>
-                <div className="history-v3-table">
-                  <div className="history-v3-row head"><span>OKRES</span><span>TYPY</span><span>WYGRANE</span><span>PRZEGRANE</span><span>WIN RATE</span><span>ROI</span><span>ZYSK</span></div>
-                  {resultRows.map((row, idx) => (
-                    <div className="history-v3-row" key={idx}>{row.map((cell, i) => <span key={i}>{cell}</span>)}</div>
+          {profileTab === 'opinions' && (
+            <section className="profile-v4-page profile-v4-opinions-page">
+              <div className="glass-profile-v3 profile-v3-card profile-v4-opinion-summary">
+                <div>
+                  <small>Podsumowanie opinii</small>
+                  <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
+                  <span>{profileRatingCount ? `${profileRatingCount} opinii` : 'Brak opinii profilu'}</span>
+                </div>
+                <div className="profile-v4-rating-bars">
+                  {ratingBars.map(row => (
+                    <label key={row.label}><span>{row.label}</span><i><b style={{ width: `${row.width}%` }} /></i><em>{row.count}</em></label>
                   ))}
                 </div>
               </div>
-            </div>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-reviews-list">
+                <div className="profile-v3-card-head"><h3>Opinie</h3><span>{reviewRows.length} pozycji</span></div>
+                {reviewRows.length ? reviewRows.map((review, index) => (
+                  <article key={review.id || index}>
+                    <strong>{review.author_name || 'Użytkownik'}</strong>
+                    <span>{review.comment || review.body || ''}</span>
+                  </article>
+                )) : <div className="profile-live-tip-empty">Nie masz jeszcze opinii.</div>}
+              </section>
+            </section>
+          )}
 
-            <div className="profile-v3-right-col">
-              <div className="glass-profile-v3 profile-v3-card month-stats-v3">
-                <div className="profile-v3-card-head"><h3>📈 Statystyki miesiąca</h3><button type="button">Zobacz więcej</button></div>
-                <div className="month-metrics-v3">
-                  <div><small>ROI</small><strong>+{roi}%</strong></div>
-                  <div><small>ZYSK</small><strong>+{walletAmount.toFixed(2)} zł</strong></div>
-                  <div><small>TYPY</small><strong>{totalTips}</strong></div>
-                  <div><small>WIN RATE</small><strong>{winRate}%</strong></div>
-                </div>
-                <div className="month-bars-v3">
-                  <div><span>Typy wygrane</span><div className="bar"><i style={{width:`${winRate}%`}}></i></div><b>{wonTips} ({winRate}%)</b></div>
-                  <div><span>Typy przegrane</span><div className="bar red"><i style={{width:`${settledTips ? Math.round((lostTips / settledTips) * 100) : 0}%`}}></i></div><b>{lostTips}</b></div>
-                  <div><span>Wszystkie</span><div className="bar gray"><i style={{width:'100%'}}></i></div><b>{totalTips}</b></div>
-                </div>
-              </div>
+          {profileTab === 'pricing' && (
+            <TipsterPricingSettings user={user} onToast={onToast} />
+          )}
 
-              <div className="profile-v3-split-row">
-                <div className="glass-profile-v3 profile-v3-card about-v3">
-                  <div className="profile-v3-card-head"><h3>ⓘ O mnie</h3></div>
-                  <p>{profileBio}</p>
-                  <div className="about-tags"><span>AI ANALIZA</span><span>DANE</span><span>STATYSTYKI</span><span>VALUE BETS</span></div>
-                </div>
-                <div className="glass-profile-v3 profile-v3-card analysis-v3">
-                  <div className="profile-v3-card-head"><h3>Ostatnie analizy</h3><button type="button">Zobacz wszystkie</button></div>
-                  <div className="analysis-list-v3">
-                    {analysisRows.map((row, idx) => (
-                      <div className="analysis-item-v3" key={idx}><span>▣</span><div><strong>{row[0]}</strong><small>{row[1]}</small></div></div>
-                    ))}
-                  </div>
-                  <button type="button" className="link-btn-v3">Więcej analiz →</button>
-                </div>
-              </div>
+          {profileTab === 'overview' && (
+            <>
+          <div className="profile-v3-content-grid">
+            <div className="profile-v3-left-col profile-live-tip-sections">
+              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
+                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                {premiumCards.length ? premiumCards.map(renderProfileTipCard) : (
+                  <div className="profile-live-tip-empty">Brak typów premium.</div>
+                )}
+              </section>
 
-              <div className="glass-profile-v3 profile-v3-card badges-v3">
-                <div className="profile-v3-card-head"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button">Zobacz wszystkie</button></div>
-                <div className="badges-grid-v3">
-                  <div><span className="badge-orb orange">🏆</span><strong>TOP 1%</strong><small>Ranking</small></div>
-                  <div><span className="badge-orb gold">✦</span><strong>1000+</strong><small>Typów</small></div>
-                  <div><span className="badge-orb cyan">🛡</span><strong>WIN RATE+</strong><small>60%+</small></div>
-                  <div><span className="badge-orb teal">↗</span><strong>ROI+</strong><small>10%+</small></div>
-                  <div><span className="badge-orb yellow">⚡</span><strong>AKTYWNY</strong><small>30 dni</small></div>
-                  <div><span className="badge-orb purple">♛</span><strong>PREMIUM</strong><small>Poziom 7</small></div>
-                </div>
-              </div>
+              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
+                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
+                {freeCards.length ? freeCards.map(renderProfileTipCard) : (
+                  <div className="profile-live-tip-empty">Brak darmowych typów.</div>
+                )}
+              </section>
             </div>
           </div>
+            </>
+          )}
         </div>
 
-        <aside className="profile-v3-sidebar">
+        {(profileTab === 'overview' || profileTab === 'tips') && <aside className="profile-v3-sidebar profile-v4-shared-sidebar">
           <div className="glass-profile-v3 side-card-v3">
             <div className="side-card-head-v3"><h3>Podsumowanie</h3><span>• ONLINE ●</span></div>
             <div className="key-list-v3">
@@ -11918,125 +13935,358 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Społeczność</h3><button type="button">Zobacz wszystkich</button></div>
-            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{Number(user?.following_count || user?.following || 0) || 0}</b></div></div>
+            <div className="side-card-head-v3"><h3>Społeczność</h3></div>
+            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{followingCount}</b></div></div>
           </div>
 
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>🌀 Ostatnie osiągnięcia</h3></div>
-            <div className="recent-achievements-v3">
-              {recentAchievements.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
+          <div className="glass-profile-v3 side-card-v3 side-badges-v3">
+            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button></div>
+            <div className="badges-grid-v3 sidebar-badges-grid">
+              {profileBadges.map(badge => (
+                <div key={badge.title} className={badge.achieved ? 'achieved' : 'locked'}>
+                  <span className={`badge-orb ${badge.tone}`}>{badge.icon}</span>
+                  <strong>{badge.title}</strong>
+                  <small>{badge.detail}</small>
+                </div>
+              ))}
             </div>
-            <button type="button" className="side-link-v3">Zobacz wszystkie odznaki →</button>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button">Zobacz wszystkie</button></div>
+            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button" onClick={() => setProfileTab('opinions')}>Zobacz opinie</button></div>
             <div className="ratings-v3">
-              <div className="rating-score"><strong>4.9</strong><span>★★★★★</span><small>Na podstawie 236 opinii</small></div>
+              <div className="rating-score">
+                <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
+                <span>{profileRatingCount ? '★★★★★' : '☆☆☆☆☆'}</span>
+                <small>{profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu'}</small>
+              </div>
               <div className="rating-bars">
-                {ratingBars.map((row, idx) => <div key={idx}><span>{row[0]}</span><div className="rate-bar"><i style={{width: `${[100,42,18,8,6][idx]}%`}}></i></div><b>{row[1]}</b></div>)}
+                {ratingBars.map((row, idx) => <div key={idx}><span>{row.label}</span><div className="rate-bar"><i style={{width: `${row.width}%`}}></i></div><b>{row.count}</b></div>)}
               </div>
             </div>
           </div>
 
           <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Ranking typerów</h3><button type="button">Zobacz ranking</button></div>
+            <div className="side-card-head-v3"><h3>Ranking typerów</h3></div>
             <div className="ranking-v3">
-              {rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>)}
+              {rankingRows.length ? rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>) : (
+                <div className="profile-sidebar-empty">Brak danych rankingowych.</div>
+              )}
             </div>
-            <button type="button" className="side-link-v3">Pełny ranking →</button>
           </div>
-        </aside>
+        </aside>}
       </div>
     </section>
   )
 }
 
 
-function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe}) {
+function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
+  const [amount, setAmount] = useState(100)
+  const [customAmount, setCustomAmount] = useState('')
+  const [topups, setTopups] = useState([])
+  const [loading, setLoading] = useState(false)
+  const presetAmounts = [10, 25, 50, 100, 200, 500]
+  const selectedAmount = customAmount !== '' ? Number(customAmount || 0) : Number(amount || 0)
+  const safeAmount = Math.max(1, Math.round(Number(selectedAmount || 0) * 100) / 100)
+
+  useEffect(() => {
+    let active = true
+    async function loadTopups() {
+      if (!isSupabaseConfigured || !supabase || !user?.id) return
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('wallet_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('type', 'topup')
+          .order('created_at', { ascending: false })
+          .limit(10)
+        if (error) throw error
+        if (active) setTopups(data || [])
+      } catch (error) {
+        console.warn('deposits history skipped', error)
+        if (active) setTopups([])
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    loadTopups()
+    const refresh = () => loadTopups()
+    window.addEventListener('betai-wallet-history-changed', refresh)
+    return () => {
+      active = false
+      window.removeEventListener('betai-wallet-history-changed', refresh)
+    }
+  }, [user?.id])
+
+  return (
+    <section className="deposits-page wallet-subpage">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" className="active">Wpłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payouts')}>Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="deposits-hero glass-v2-panel">
+        <div>
+          <span>Doładuj portfel</span>
+          <h1>Wpłaty</h1>
+          <p>Dodaj środki do salda Bet+AI. Na teraz aktywną metodą jest Stripe, a każda opłacona wpłata zapisuje się automatycznie w historii konta.</p>
+        </div>
+        <div className="deposits-balance">
+          <small>Aktualne saldo</small>
+          <b>{formatMoney(wallet)}</b>
+        </div>
+      </div>
+
+      <div className="deposits-grid">
+        <div className="glass-v2-panel deposits-card">
+          <div className="deposits-card-head">
+            <h2>Nowa wpłata</h2>
+            <span className="deposits-live-pill">Stripe aktywne</span>
+          </div>
+          <p>Wybierz kwotę lub wpisz własną. Po płatności Stripe saldo zwiększy się po potwierdzeniu webhooka.</p>
+          <div className="deposits-amounts">
+            {presetAmounts.map(value => (
+              <button
+                type="button"
+                key={value}
+                className={customAmount === '' && Number(amount) === value ? 'active' : ''}
+                onClick={() => { setAmount(value); setCustomAmount('') }}
+              >
+                {value} zł
+              </button>
+            ))}
+          </div>
+          <label className="deposits-custom">
+            <span>Własna kwota</span>
+            <input
+              type="number"
+              min="1"
+              step="0.01"
+              placeholder="np. 75"
+              value={customAmount}
+              onChange={event => setCustomAmount(event.target.value)}
+            />
+          </label>
+          <button type="button" className="wallet-v2-primary-btn deposits-pay-btn" onClick={() => onTopUp?.(safeAmount)}>
+            Wpłać {formatMoney(safeAmount)} przez Stripe
+          </button>
+        </div>
+
+        <div className="glass-v2-panel deposits-card">
+          <div className="deposits-card-head"><h2>Metoda wpłaty</h2></div>
+          <div className="deposits-methods">
+            <div className="active"><span className="pay-logo stripe">S</span><strong>Stripe</strong><small>Aktywne</small></div>
+            <div className="locked"><span className="pay-logo paypal">P</span><strong>PayPal</strong><small>🔒 Wkrótce</small></div>
+            <div className="locked"><span className="pay-logo revolut">R</span><strong>Revolut</strong><small>🔒 Wkrótce</small></div>
+          </div>
+          <ul className="deposits-rules">
+            <li>Wpłata jest przypisana do zalogowanego użytkownika.</li>
+            <li>Saldo rośnie dopiero po potwierdzeniu płatności Stripe.</li>
+            <li>Każda wpłata pojawia się w historii transakcji i płatnościach.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel deposits-card deposits-history-card">
+          <div className="deposits-card-head"><h2>Ostatnie wpłaty</h2></div>
+          {loading ? (
+            <div className="deposits-empty">Ładowanie wpłat...</div>
+          ) : topups.length ? (
+            <div className="deposits-history-list">
+              {topups.map(row => (
+                <div key={row.id}>
+                  <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>+{formatMoney(row.amount)}</strong>
+                  <small>{row.status === 'completed' ? 'Opłacona' : row.status || 'Oczekuje'}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="deposits-empty">Nie masz jeszcze żadnych wpłat.</div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'free', stripeConnectStatus, onConnectStripe, onViewChange, submitting = false, earnings = null }) {
   const MIN_PAYOUT_AMOUNT = 50
+
   if (!user) {
     return (
-      <section className="payout-page">
-        <div className="payout-loading">
+      <section className="wallet-subpage payout-live-page">
+        <div className="payout-live-loading glass-v2-panel">
           <strong>Ładowanie wypłat...</strong>
           <span>Trwa pobieranie danych konta.</span>
         </div>
       </section>
     )
   }
+
   const profile = getUserProfileView(user)
-  const myTips = tips.filter(tip => getTipAuthorId(tip) === user?.id)
-  const soldPayments = payments.filter(payment => myTips.some(tip => tip.id === payment.tip_id))
-  const grossRevenue = soldPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  const platformFee = grossRevenue * PLATFORM_COMMISSION_RATE
   const planLimits = getPlanLimits(userPlan)
   const monthlyPayoutCount = getMonthlyCount(payoutRequests)
   const payoutLimitReached = monthlyPayoutCount >= planLimits.monthlyPayoutLimit
+  const grossRevenue = Array.isArray(earnings?.history)
+    ? earnings.history.reduce((sum, row) => sum + Number(row?.gross_amount || Number(row?.amount || 0) + Number(row?.commission || 0) || 0), 0)
+    : 0
+  const platformFee = Array.isArray(earnings?.history)
+    ? earnings.history.reduce((sum, row) => sum + Number(row?.commission || 0), 0)
+    : 0
+  const totalNetEarnings = Number(earnings?.total || 0)
   const paidOut = payoutRequests
     .filter(request => request.status === 'paid' || request.status === 'approved')
     .reduce((sum, request) => sum + Number(request.amount || 0), 0)
-  const available = Math.max(0, grossRevenue - platformFee - paidOut)
+  const pendingAmount = payoutRequests
+    .filter(request => request.status === 'pending')
+    .reduce((sum, request) => sum + Number(request.amount || 0), 0)
+  const available = Math.max(0, Number(earnings?.available_to_payout ?? (totalNetEarnings - paidOut - pendingAmount) ?? 0))
   const hasPending = payoutRequests.some(request => request.status === 'pending')
   const stripeReady = !!stripeConnectStatus?.payouts_enabled
-  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached
+  const canRequestPayout = available >= MIN_PAYOUT_AMOUNT && !hasPending && stripeReady && !payoutLimitReached && !submitting
+  const payoutStatusLabel = status => {
+    if (status === 'paid') return 'Wypłacona'
+    if (status === 'approved') return 'Zatwierdzona'
+    if (status === 'pending') return 'Oczekuje'
+    if (status === 'rejected') return 'Odrzucona'
+    return status || 'Nieznany'
+  }
+  const payoutActionLabel = hasPending
+    ? 'Masz oczekującą wypłatę'
+    : payoutLimitReached
+      ? 'Limit wypłat wykorzystany'
+      : !stripeReady
+        ? 'Połącz Stripe'
+        : available < MIN_PAYOUT_AMOUNT
+          ? 'Minimum 50 zł'
+          : submitting
+            ? 'Wysyłam...'
+            : 'Poproś o wypłatę'
 
   return (
-    <section className="payout-page">
-      <UltraPageBanner variant="payouts" />
-      <div className="payout-hero">
+    <section className="wallet-subpage payout-live-page">
+      <div className="wallet-subpage-tabs glass-v2-panel">
+        <button type="button" onClick={() => onViewChange?.('wallet')}>Portfel</button>
+        <button type="button" onClick={() => onViewChange?.('deposits')}>Wpłaty</button>
+        <button type="button" className="active">Wypłaty</button>
+        <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
+        <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
+        <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
+      </div>
+
+      <div className="payout-live-hero glass-v2-panel">
         <div>
-          <h1>Wypłaty typera</h1>
-          <p>{profile.username} — zgłaszaj wypłaty z zarobków premium.</p>
+          <span>Wypłaty twórcy</span>
+          <h1>Wypłaty</h1>
+          <p>{profile.username} — tu zgłaszasz wypłaty z realnych zarobków ze sprzedaży typów i subskrypcji profilu.</p>
         </div>
-        <div className="payout-available">
-          <span>Dostępne do wypłaty</span>
-          <b>{available.toFixed(2)} zł</b>
+        <div className="payout-live-available">
+          <small>Dostępne do wypłaty</small>
+          <b>{formatMoney(available)}</b>
         </div>
       </div>
 
-      <div className="payout-grid">
-        <div className="payout-stat"><span>Przychód brutto</span><b>{grossRevenue.toFixed(2)} zł</b></div>
-        <div className="payout-stat"><span>Prowizja 20%</span><b>{platformFee.toFixed(2)} zł</b></div>
-        <div className="payout-stat"><span>Limit wypłat</span><b>{monthlyPayoutCount}/{planLimits.monthlyPayoutLimit}</b></div>
-        <div className="payout-stat"><span>Wypłacone / zatwierdzone</span><b>{paidOut.toFixed(2)} zł</b></div>
+      <div className="payout-live-stats">
+        <div className="glass-v2-panel">
+          <span>Zarobek netto</span>
+          <b>{formatMoney(totalNetEarnings)}</b>
+          <small>Po prowizji platformy</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Sprzedaż brutto</span>
+          <b>{formatMoney(grossRevenue)}</b>
+          <small>Typy i subskrypcje</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Prowizja platformy</span>
+          <b>{formatMoney(platformFee)}</b>
+          <small>20% od sprzedaży</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Limit w miesiącu</span>
+          <b>{monthlyPayoutCount}/{planLimits.monthlyPayoutLimit}</b>
+          <small>{isPremiumAccount(userPlan) ? 'Plan Premium' : 'Plan Free'}</small>
+        </div>
       </div>
 
-      <div className="payout-request-card">
-        <div>
-          <strong>Poproś o wypłatę</strong>
-          <span>Minimum wypłaty to 50 zł. FREE ma 1 wypłatę/miesiąc, PREMIUM ma 3 wypłaty/miesiąc.</span>
-        </div>
-        <button disabled={!canRequestPayout} onClick={() => onRequestPayout(Number(available.toFixed(2)))}>
-          {hasPending ? 'Masz pending' : payoutLimitReached ? 'Limit wypłat' : !stripeReady ? 'Połącz Stripe' : available < MIN_PAYOUT_AMOUNT ? 'Minimum 50 zł' : 'Poproś o wypłatę'}
-        </button>
-      </div>
-
-      <div className="payout-table">
-        <div className="payout-row header">
-          <span>Data</span>
-          <span>Kwota</span>
-          <span>Status</span>
-        </div>
-
-        {payoutRequests.length ? payoutRequests.map(request => (
-          <div className="payout-row" key={request.id}>
-            <span>{new Date(request.created_at).toLocaleString('pl-PL')}</span>
-            <span>{Number(request.amount || 0).toFixed(2)} zł</span>
-            <span className={`payout-status ${request.status}`}>{request.status}</span>
+      <div className="payout-live-grid">
+        <div className="glass-v2-panel payout-live-request-card">
+          <div className="payout-live-card-head">
+            <h2>Nowa wypłata</h2>
+            <span className={stripeReady ? 'ready' : 'locked'}>
+              {stripeReady ? 'Stripe aktywny' : 'Stripe niepodłączony'}
+            </span>
           </div>
-        )) : (
-          <div className="payout-empty">
-            <strong>Brak wypłat</strong>
-            <span>Twoje zgłoszenia wypłat pojawią się tutaj.</span>
+          <p>
+            Minimum wypłaty to <b>50 zł</b>. Konto FREE ma 1 wypłatę miesięcznie, a konto Premium 3 wypłaty miesięcznie.
+          </p>
+          <div className="payout-live-request-summary">
+            <div><small>Dostępne</small><b>{formatMoney(available)}</b></div>
+            <div><small>Oczekuje</small><b>{formatMoney(pendingAmount)}</b></div>
+            <div><small>Wypłacone</small><b>{formatMoney(paidOut)}</b></div>
           </div>
-        )}
-      </div>
+          <button type="button" disabled={!canRequestPayout} onClick={() => onRequestPayout?.()}>
+            {payoutActionLabel}
+          </button>
+          {!stripeReady && (
+            <button type="button" className="secondary" onClick={() => onConnectStripe?.()}>
+              Podłącz Stripe Connect
+            </button>
+          )}
+        </div>
 
-      <div className="stripe-connect-note">
-        <strong>Następny etap: Stripe Connect</strong>
-        <span>Stripe Connect jest aktywny: wypłata zostanie przekazana przez realny Stripe transfer po zatwierdzeniu admina albo przez cron automatycznych wypłat.</span>
+        <div className="glass-v2-panel payout-live-methods-card">
+          <div className="payout-live-card-head"><h2>Metody wypłaty</h2></div>
+          <div className="payout-live-methods">
+            <button type="button" className="active" onClick={() => stripeReady ? null : onConnectStripe?.()}>
+              <span className="pay-logo stripe">S</span>
+              <strong>Stripe</strong>
+              <small>{stripeReady ? 'Aktywne' : 'Połącz'}</small>
+            </button>
+            <button type="button" className="locked" disabled>
+              <span className="pay-logo paypal">P</span>
+              <strong>PayPal</strong>
+              <small>🔒 Wkrótce</small>
+            </button>
+            <button type="button" className="locked" disabled>
+              <span className="pay-logo revolut">R</span>
+              <strong>Revolut</strong>
+              <small>🔒 Wkrótce</small>
+            </button>
+          </div>
+          <ul>
+            <li>Wypłata działa tylko z realnych zarobków twórcy.</li>
+            <li>Po zgłoszeniu wypłata trafia do panelu admina.</li>
+            <li>Po zatwierdzeniu wypłata idzie przez Stripe Connect.</li>
+          </ul>
+        </div>
+
+        <div className="glass-v2-panel payout-live-history-card">
+          <div className="payout-live-card-head"><h2>Historia wypłat</h2></div>
+          {payoutRequests.length ? (
+            <div className="payout-live-history">
+              {payoutRequests.map(request => (
+                <div key={request.id}>
+                  <span>{new Date(request.created_at).toLocaleString('pl-PL')}</span>
+                  <strong>{formatMoney(request.amount)}</strong>
+                  <small className={`status-${request.status}`}>{payoutStatusLabel(request.status)}</small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="payout-live-empty">
+              <strong>Brak wypłat</strong>
+              <span>Twoje prawdziwe zgłoszenia wypłat pojawią się tutaj.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
@@ -12044,89 +14294,172 @@ function PayoutsView({ user, tips = [], payments = [], payoutRequests = [], onRe
 
 
 
-
-function AdminFinanceView({ report, onRefresh }) {
-  const tx = Array.isArray(report?.transactions) ? report.transactions : []
+function AdminFinanceView({ report, onRefresh, onViewChange }) {
+  const [adminFinanceFilter, setAdminFinanceFilter] = useState('all')
+  const transactions = Array.isArray(report?.transactions) ? report.transactions : []
+  const getTxType = row => {
+    const raw = String(row?.type || row?.source || '').toLowerCase()
+    if (raw.includes('earning') || raw.includes('sale') || raw.includes('tip_purchase')) return 'marketplace'
+    if (raw.includes('premium')) return 'premium'
+    if (raw.includes('payout')) return 'payout'
+    if (raw.includes('topup')) return 'topup'
+    return 'other'
+  }
+  const getTxLabel = row => {
+    const type = getTxType(row)
+    if (type === 'marketplace') return 'Sprzedaż marketplace'
+    if (type === 'premium') return 'Subskrypcja Premium'
+    if (type === 'payout') return 'Wypłata typera'
+    if (type === 'topup') return 'Wpłata do portfela'
+    return row?.label || row?.type || 'Operacja'
+  }
+  const getStatusLabel = status => {
+    const clean = String(status || '').toLowerCase()
+    if (clean === 'completed' || clean === 'paid' || clean === 'succeeded') return 'Zakończona'
+    if (clean === 'pending') return 'Oczekuje'
+    if (clean === 'approved') return 'Zatwierdzona'
+    if (clean === 'rejected') return 'Odrzucona'
+    return status || '—'
+  }
+  const txCounts = {
+    all: transactions.length,
+    marketplace: transactions.filter(row => getTxType(row) === 'marketplace').length,
+    premium: transactions.filter(row => getTxType(row) === 'premium').length,
+    payout: transactions.filter(row => getTxType(row) === 'payout').length,
+    topup: transactions.filter(row => getTxType(row) === 'topup').length
+  }
+  const filteredTransactions = transactions.filter(row => adminFinanceFilter === 'all' || getTxType(row) === adminFinanceFilter)
+  const totalPlatformRevenue = Number(report?.total_platform_revenue || (Number(report?.platform_commission || 0) + Number(report?.premium_revenue || 0)))
+  const platformCommission = Number(report?.platform_commission || 0)
+  const premiumRevenue = Number(report?.premium_revenue || 0)
+  const grossSales = Number(report?.gross_sales || 0)
+  const tipsterEarnings = Number(report?.tipster_earnings || 0)
+  const paidOut = Number(report?.total_payouts || 0)
+  const pendingPayouts = Number(report?.pending_payouts || 0)
+  const availableToPayout = Number(report?.available_to_payout || Math.max(0, tipsterEarnings - paidOut - pendingPayouts))
+  const walletTopups = Number(report?.wallet_topups || 0)
+  const activePremiumUsers = Number(report?.active_premium_users || 0)
+  const payoutCoverage = tipsterEarnings > 0 ? Math.min(100, (paidOut / tipsterEarnings) * 100) : 0
 
   return (
-    <section className="admin-finance-page">
-      <UltraPageBanner variant="adminFinance"><button type="button" onClick={onRefresh}>Odśwież raport</button></UltraPageBanner>
-      <div className="page-title admin-finance-title">
+    <section className="admin-finance-live-page">
+      <div className="admin-finance-live-hero glass-v2-panel">
         <div>
-          <h1>Admin — raport platformy</h1>
-          <p>Kontrola finansów marketplace: sprzedaż, prowizja 20%, zarobki typerów i wypłaty.</p>
+          <span>Tylko administrator</span>
+          <h1>Finanse platformy</h1>
+          <p>Prawdziwy raport Bet+AI: przychód platformy, obrót marketplace, zobowiązania wobec typerów, wpłaty i ostatnie operacje.</p>
         </div>
         <button type="button" onClick={onRefresh}>Odśwież raport</button>
       </div>
 
-      <div className="admin-finance-grid">
-        <div className="finance-card primary">
-          <span>💰 Prowizja platformy 20%</span>
-          <strong>{Number(report?.platform_commission || 0).toFixed(2)} zł</strong>
-          <p>Twoje przychody z premium sprzedaży.</p>
+      <div className="admin-finance-live-kpis">
+        <div className="glass-v2-panel primary">
+          <span>Przychód platformy</span>
+          <b>{formatMoney(totalPlatformRevenue)}</b>
+          <small>Premium + prowizja marketplace</small>
         </div>
-        <div className="finance-card">
-          <span>📊 Sprzedaż premium</span>
-          <strong>{Number(report?.total_sales || 0)}</strong>
-          <p>Liczba kupionych premium typów.</p>
+        <div className="glass-v2-panel">
+          <span>Premium</span>
+          <b>{formatMoney(premiumRevenue)}</b>
+          <small>{activePremiumUsers} aktywnych kont</small>
         </div>
-        <div className="finance-card">
-          <span>🧾 Obrót brutto</span>
-          <strong>{Number(report?.gross_sales || 0).toFixed(2)} zł</strong>
-          <p>100% ceny premium typów.</p>
+        <div className="glass-v2-panel">
+          <span>Prowizja marketplace</span>
+          <b>{formatMoney(platformCommission)}</b>
+          <small>20% od sprzedaży</small>
         </div>
-        <div className="finance-card">
-          <span>👥 Zarobki typerów</span>
-          <strong>{Number(report?.tipster_earnings || 0).toFixed(2)} zł</strong>
-          <p>80% sprzedaży dla autorów.</p>
-        </div>
-        <div className="finance-card">
-          <span>✅ Wypłacono</span>
-          <strong>{Number(report?.total_payouts || 0).toFixed(2)} zł</strong>
-          <p>Zatwierdzone wypłaty typerów.</p>
-        </div>
-        <div className="finance-card warning">
-          <span>⏳ Pending wypłaty</span>
-          <strong>{Number(report?.pending_payouts || 0).toFixed(2)} zł</strong>
-          <p>Zgłoszone, ale jeszcze niewypłacone.</p>
+        <div className="glass-v2-panel">
+          <span>Wpłaty do portfeli</span>
+          <b>{formatMoney(walletTopups)}</b>
+          <small>Przepływ środków, nie zysk</small>
         </div>
       </div>
 
-      <div className="earnings-table-card">
-        <div className="earnings-table-head">
-          <h2>Ostatnie transakcje marketplace</h2>
-          <span>{tx.length} pozycji</span>
+      <div className="admin-finance-live-grid">
+        <div className="glass-v2-panel admin-finance-overview-card">
+          <div className="admin-finance-live-card-head">
+            <h2>Marketplace</h2>
+            <span>{Number(report?.total_sales || 0)} sprzedaży</span>
+          </div>
+          <div className="admin-finance-overview-list">
+            <div><span>Obrót brutto</span><b>{formatMoney(grossSales)}</b></div>
+            <div><span>Zarobki typerów</span><b>{formatMoney(tipsterEarnings)}</b></div>
+            <div><span>Prowizja platformy</span><b>{formatMoney(platformCommission)}</b></div>
+          </div>
+          <div className="admin-finance-split">
+            <span style={{ width: grossSales > 0 ? `${Math.min(100, (tipsterEarnings / grossSales) * 100)}%` : '0%' }}></span>
+          </div>
+          <small>Podział sprzedaży: 80% typerzy / 20% platforma.</small>
         </div>
 
-        {tx.length ? (
-          <table className="earnings-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>User ID</th>
-                <th>Typ</th>
-                <th>Kwota</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tx.map((row, idx) => (
-                <tr key={row.id || idx}>
-                  <td>{new Date(row.created_at).toLocaleString('pl-PL')}</td>
-                  <td><code>{row.user_id}</code></td>
-                  <td><span className="status-pill">{row.type}</span></td>
-                  <td><b>{Number(row.amount || 0).toFixed(2)} zł</b></td>
-                  <td><span className={`status-pill ${row.status === 'completed' ? 'success' : ''}`}>{row.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="empty-wallet">
-            <strong>Brak transakcji</strong>
-            <span>Po pierwszej sprzedaży premium pojawi się tutaj historia.</span>
+        <div className="glass-v2-panel admin-finance-overview-card">
+          <div className="admin-finance-live-card-head">
+            <h2>Wypłaty typerów</h2>
+            <button type="button" onClick={() => onViewChange?.('adminPayouts')}>Przejdź</button>
           </div>
-        )}
+          <div className="admin-finance-overview-list">
+            <div><span>Wypłacono</span><b>{formatMoney(paidOut)}</b></div>
+            <div><span>Oczekuje</span><b>{formatMoney(pendingPayouts)}</b></div>
+            <div><span>Do wypłaty</span><b>{formatMoney(availableToPayout)}</b></div>
+          </div>
+          <div className="admin-finance-payout-progress">
+            <span style={{ width: `${payoutCoverage}%` }}></span>
+          </div>
+          <small>{payoutCoverage.toFixed(1)}% wypłaconych zarobków typerów.</small>
+        </div>
+
+        <div className="glass-v2-panel admin-finance-health-card">
+          <div className="admin-finance-live-card-head"><h2>Szybki stan</h2></div>
+          <div className="admin-finance-health-list">
+            <div className={pendingPayouts > 0 ? 'warning' : 'ok'}>
+              <strong>{pendingPayouts > 0 ? 'Wypłaty wymagają uwagi' : 'Brak zaległych wypłat'}</strong>
+              <span>{pendingPayouts > 0 ? `${formatMoney(pendingPayouts)} oczekuje na obsługę.` : 'Nie ma zgłoszonych wypłat do ręcznej obsługi.'}</span>
+            </div>
+            <div className={totalPlatformRevenue > 0 ? 'ok' : 'neutral'}>
+              <strong>{totalPlatformRevenue > 0 ? 'Platforma zarabia' : 'Brak przychodu platformy'}</strong>
+              <span>{totalPlatformRevenue > 0 ? `Łącznie ${formatMoney(totalPlatformRevenue)} realnego przychodu.` : 'Po pierwszych sprzedażach pojawią się tu dane.'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-v2-panel admin-finance-transactions-card">
+        <div className="admin-finance-live-card-head">
+          <h2>Ostatnie operacje finansowe</h2>
+          <span>{filteredTransactions.length} wyników</span>
+        </div>
+
+        <div className="admin-finance-live-filters">
+          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => setAdminFinanceFilter('all')}>Wszystkie <b>{txCounts.all}</b></button>
+          <button type="button" className={adminFinanceFilter === 'marketplace' ? 'active' : ''} onClick={() => setAdminFinanceFilter('marketplace')}>Marketplace <b>{txCounts.marketplace}</b></button>
+          <button type="button" className={adminFinanceFilter === 'premium' ? 'active' : ''} onClick={() => setAdminFinanceFilter('premium')}>Premium <b>{txCounts.premium}</b></button>
+          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => setAdminFinanceFilter('payout')}>Wypłaty <b>{txCounts.payout}</b></button>
+          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => setAdminFinanceFilter('topup')}>Wpłaty <b>{txCounts.topup}</b></button>
+        </div>
+
+        <div className="admin-finance-live-table">
+          <div className="admin-finance-live-row header">
+            <span>Data</span>
+            <span>Operacja</span>
+            <span>Użytkownik</span>
+            <span>Kwota</span>
+            <span>Status</span>
+          </div>
+          {filteredTransactions.length ? filteredTransactions.map((row, idx) => (
+            <div className="admin-finance-live-row" key={row.id || idx}>
+              <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
+              <span><strong>{getTxLabel(row)}</strong><small>{row.type || row.source || '—'}</small></span>
+              <span><code>{row.user_email || row.username || row.user_id || '—'}</code></span>
+              <span className="amount">{formatMoney(row.amount)}</span>
+              <span className={`status status-${String(row.status || '').toLowerCase()}`}>{getStatusLabel(row.status)}</span>
+            </div>
+          )) : (
+            <div className="admin-finance-empty">
+              <strong>Brak operacji finansowych</strong>
+              <span>Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
@@ -12141,34 +14474,47 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
   const normalizedRequests = requests.map(request => ({
     ...request,
-    normalizedStatus: (request.status || 'pending').toLowerCase(),
+    normalizedStatus: String(request.status || 'pending').toLowerCase(),
+    normalizedStripeStatus: String(request.stripe_status || '').toLowerCase(),
     amountNumber: Number(request.amount || 0),
-    searchText: String((request.id || '') + ' ' + (request.user_id || '') + ' ' + (request.status || '') + ' ' + (request.stripe_status || '') + ' ' + (request.stripe_transfer_id || '')).toLowerCase()
+    searchText: String([
+      request.id,
+      request.user_id,
+      request.user_email,
+      request.email,
+      request.status,
+      request.stripe_status,
+      request.stripe_transfer_id
+    ].filter(Boolean).join(' ')).toLowerCase()
   }))
 
   const pendingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'pending')
   const processingRequests = normalizedRequests.filter(request => request.normalizedStatus === 'processing')
-  const paidRequests = normalizedRequests.filter(request => request.normalizedStatus === 'paid')
-  const failedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'failed' || request.stripe_status === 'failed')
+  const paidRequests = normalizedRequests.filter(request => ['paid', 'approved'].includes(request.normalizedStatus))
   const rejectedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'rejected')
-  const payableRequests = pendingRequests.filter(request => request.amountNumber >= 50)
+  const failedRequests = normalizedRequests.filter(request => request.normalizedStatus === 'failed' || request.normalizedStripeStatus === 'failed')
+  const readyRequests = pendingRequests.filter(request => request.amountNumber >= 50)
+  const smallPendingRequests = pendingRequests.filter(request => request.amountNumber < 50)
   const totalPending = pendingRequests.reduce((sum, request) => sum + request.amountNumber, 0)
+  const totalReady = readyRequests.reduce((sum, request) => sum + request.amountNumber, 0)
   const totalPaid = paidRequests.reduce((sum, request) => sum + request.amountNumber, 0)
-  const automationReady = payableRequests.length > 0
+  const attentionCount = processingRequests.length + failedRequests.length
+  const automationReady = readyRequests.length > 0
 
   const filteredRequests = normalizedRequests.filter(request => {
     const matchesStatus = statusFilter === 'all' || request.normalizedStatus === statusFilter
     const matchesQuery = !query.trim() || request.searchText.includes(query.trim().toLowerCase())
     const matchesAmount = amountFilter === 'all'
-      || (amountFilter === 'payable' && request.amountNumber >= 50)
-      || (amountFilter === 'small' && request.amountNumber < 50)
+      || (amountFilter === 'ready' && request.normalizedStatus === 'pending' && request.amountNumber >= 50)
+      || (amountFilter === 'small' && request.normalizedStatus === 'pending' && request.amountNumber < 50)
     return matchesStatus && matchesQuery && matchesAmount
   })
 
   const selectedRequests = normalizedRequests.filter(request => selectedIds.includes(request.id))
   const selectedPending = selectedRequests.filter(request => request.normalizedStatus === 'pending')
+  const selectedReady = selectedPending.filter(request => request.amountNumber >= 50)
 
-  const toggleSelected = (id) => {
+  const toggleSelected = id => {
     setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id])
   }
 
@@ -12178,13 +14524,14 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     setSelectedIds(current => allSelected ? current.filter(id => !visiblePendingIds.includes(id)) : Array.from(new Set([...current, ...visiblePendingIds])))
   }
 
-  const bulkUpdate = (status) => {
-    selectedPending.forEach(request => onUpdateStatus(request.id, status))
+  const bulkUpdate = status => {
+    const rows = status === 'paid' ? selectedReady : selectedPending
+    rows.forEach(request => onUpdateStatus(request.id, status))
     setSelectedIds([])
   }
 
   const exportCsv = () => {
-    const headers = ['user_id', 'created_at', 'amount', 'status', 'stripe_status', 'stripe_transfer_id']
+    const headers = ['id', 'user_id', 'created_at', 'amount', 'status', 'stripe_status', 'stripe_transfer_id']
     const rows = filteredRequests.map(request => headers.map(key => '"' + String(request[key] ?? '').replaceAll('"', '""') + '"').join(','))
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -12195,18 +14542,27 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     URL.revokeObjectURL(url)
   }
 
-  const getStripeLabel = (request) => {
+  const getStripeLabel = request => {
     if (request.stripe_transfer_id) return request.stripe_transfer_id
     if (request.normalizedStatus === 'rejected') return 'nie dotyczy'
-    if (request.amountNumber < 50 && request.normalizedStatus === 'pending') return 'poniżej minimum'
-    if (request.stripe_status === 'failed' || request.normalizedStatus === 'failed') return 'błąd Stripe'
-    if (request.normalizedStatus === 'processing') return 'przetwarzanie'
-    return 'czeka'
+    if (request.normalizedStatus === 'processing') return 'transfer w toku'
+    if (request.normalizedStatus === 'failed' || request.normalizedStripeStatus === 'failed') return 'błąd Stripe'
+    if (request.normalizedStatus === 'pending' && request.amountNumber < 50) return 'poniżej minimum'
+    return 'czeka na transfer'
+  }
+
+  const getStatusLabel = status => {
+    if (status === 'pending') return 'Oczekuje'
+    if (status === 'processing') return 'Przetwarzana'
+    if (status === 'paid' || status === 'approved') return 'Wypłacona'
+    if (status === 'rejected') return 'Odrzucona'
+    if (status === 'failed') return 'Błąd'
+    return status || '—'
   }
 
   if (!profile.isAdmin) {
     return (
-      <section className="admin-payout-page admin-payout-page-pro">
+      <section className="admin-payout-live-page">
         <div className="admin-denied">
           <strong>Brak dostępu</strong>
           <span>Ten panel jest dostępny tylko dla administratora.</span>
@@ -12216,123 +14572,158 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   return (
-    <section className="admin-payout-page admin-payout-page-pro">
-      <UltraPageBanner variant="adminPayouts"><button type="button" onClick={onRunCron}>Uruchom cron wypłat</button></UltraPageBanner>
-      <div className="admin-payout-hero admin-payout-hero-pro">
+    <section className="admin-payout-live-page">
+      <div className="admin-payout-live-hero glass-v2-panel">
         <div>
-          <div className="admin-eyebrow">Stripe Connect · payouts control center</div>
+          <span>Tylko administrator</span>
           <h1>Admin wypłaty</h1>
-          <p>PRO panel do realnych wypłat Stripe Connect: approve, reject, transfer ID, CSV, filtry i gotowość pod cron.</p>
+          <p>Centrum realizacji wypłat typerów: kolejka oczekujących, transfery Stripe, akcje ręczne, cron i pełna historia zgłoszeń.</p>
         </div>
-        <div className="admin-payout-badge">ADMIN PRO</div>
+        <button type="button" onClick={onRunCron} disabled={!automationReady}>
+          {automationReady ? 'Uruchom cron' : 'Brak gotowych wypłat'}
+        </button>
       </div>
 
-      <div className="admin-payout-stats admin-payout-stats-pro admin-payout-stat-cards-pro">
-        <div><span>Zgłoszenia</span><b>{requests.length}</b><small>Wszystkie zgłoszenia</small></div>
-        <div><span>Pending</span><b>{pendingRequests.length}</b><small>{totalPending.toFixed(2)} zł oczekuje</small></div>
-        <div><span>Wypłacone</span><b>{paidRequests.length}</b><small>{totalPaid.toFixed(2)} zł zrealizowane</small></div>
-        <div><span>Odrzucone</span><b>{rejectedRequests.length}</b><small>Do audytu</small></div>
-      </div>
-
-      <div className="admin-payout-summary admin-payout-summary-pro">
-        <div>
-          <span>Do automatu cron</span>
-          <strong>{payableRequests.length}</strong>
-          <p>Pending wypłaty od 50 zł gotowe do realnego transferu Stripe.</p>
+      <div className="admin-payout-live-kpis">
+        <div className="glass-v2-panel primary">
+          <span>Gotowe do wypłaty</span>
+          <b>{readyRequests.length}</b>
+          <small>{formatMoney(totalReady)} od minimum 50 zł</small>
         </div>
-        <div>
+        <div className="glass-v2-panel">
+          <span>Oczekujące łącznie</span>
+          <b>{pendingRequests.length}</b>
+          <small>{formatMoney(totalPending)}</small>
+        </div>
+        <div className="glass-v2-panel">
+          <span>Wypłacone</span>
+          <b>{paidRequests.length}</b>
+          <small>{formatMoney(totalPaid)}</small>
+        </div>
+        <div className={`glass-v2-panel ${attentionCount > 0 ? 'warning' : ''}`}>
           <span>Wymaga uwagi</span>
-          <strong>{failedRequests.length + processingRequests.length}</strong>
-          <p>Pozycje processing/failed do sprawdzenia w logach Stripe i admin_logs.</p>
+          <b>{attentionCount}</b>
+          <small>Processing / failed</small>
         </div>
       </div>
 
-      <div className="admin-cron-card admin-cron-card-pro">
-        <div>
-          <strong>Automatyczne wypłaty — cron ready <em>Aktywne</em></strong>
-          <span>Endpoint <code>/.netlify/functions/process-payouts</code> obsługuje tylko pending wypłaty od 50 zł, blokuje duplikaty statusem processing i używa idempotency key.</span>
-        </div>
-        <button type="button" className="cron-run-button" onClick={onRunCron} disabled={!automationReady}>{automationReady ? 'Uruchom teraz' : 'Brak pending ≥ 50 zł'}</button>
-      </div>
-
-      <div className="admin-payout-toolbar">
-        <div className="admin-search-field">
-          <span>⌕</span>
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po ID użytkownika, statusie, Stripe ID..." />
-        </div>
-        <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
-          <option value="all">Status: wszystkie</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="paid">Paid</option>
-          <option value="rejected">Rejected</option>
-          <option value="failed">Failed</option>
-        </select>
-        <select value={amountFilter} onChange={event => setAmountFilter(event.target.value)}>
-          <option value="all">Kwota: wszystkie</option>
-          <option value="payable">Gotowe ≥ 50 zł</option>
-          <option value="small">Poniżej 50 zł</option>
-        </select>
-        <button type="button" onClick={exportCsv}>Eksport CSV</button>
-      </div>
-
-      <div className="admin-bulk-bar">
-        <strong>Zaznaczone: {selectedPending.length}</strong>
-        <button type="button" disabled={!selectedPending.length} onClick={() => bulkUpdate('paid')}>Zatwierdź wypłaty</button>
-        <button type="button" className="danger" disabled={!selectedPending.length} onClick={() => bulkUpdate('rejected')}>Odrzuć</button>
-        <button type="button" onClick={() => setSelectedIds([])}>Wyczyść</button>
-        <span>{filteredRequests.length} pozycji po filtrze</span>
-      </div>
-
-      <div className="admin-payout-table admin-payout-table-pro">
-        <div className="admin-payout-row header admin-payout-row-pro">
-          <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(r => r.normalizedStatus === 'pending') && filteredRequests.filter(r => r.normalizedStatus === 'pending').every(r => selectedIds.includes(r.id))} /></span>
-          <span>User ID</span>
-          <span>Data</span>
-          <span>Kwota</span>
-          <span>Status</span>
-          <span>Stripe</span>
-          <span>Akcje</span>
-        </div>
-
-        {filteredRequests.length ? filteredRequests.map(request => (
-          <div className="admin-payout-row admin-payout-row-pro" key={request.id}>
-            <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
-            <span className="mono">{request.user_id ? request.user_id.slice(0, 8) + '...' : '—'}</span>
-            <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
-            <span><b>{request.amountNumber.toFixed(2)} zł</b></span>
-            <span className={`payout-status ${request.normalizedStatus}`}>{request.normalizedStatus}</span>
-            <span className="admin-stripe-cell">
-              <b>{request.stripe_status || (request.normalizedStatus === 'rejected' ? 'rejected' : '—')}</b>
-              <small>{getStripeLabel(request)}</small>
-            </span>
-            <span className="admin-actions">
-              {request.normalizedStatus === 'pending' ? (
-                <>
-                  <button type="button" disabled={request.amountNumber < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>Zatwierdź</button>
-                  <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
-                </>
-              ) : (
-                <span className="admin-action-locked">Szczegóły</span>
-              )}
-            </span>
+      <div className="admin-payout-live-grid">
+        <div className="glass-v2-panel admin-payout-queue-card">
+          <div className="admin-payout-live-card-head">
+            <h2>Kolejka wypłat</h2>
+            <span>{readyRequests.length} gotowych</span>
           </div>
-        )) : (
-          <div className="admin-empty">
-            <strong>Brak zgłoszeń dla wybranych filtrów</strong>
-            <span>Zmień status, kwotę lub wyszukiwane ID.</span>
+          <div className="admin-payout-queue-list">
+            <div>
+              <strong>Gotowe do przelewu Stripe</strong>
+              <span>{readyRequests.length} zgłoszeń na {formatMoney(totalReady)}</span>
+            </div>
+            <div>
+              <strong>Poniżej minimum</strong>
+              <span>{smallPendingRequests.length} zgłoszeń poniżej 50 zł</span>
+            </div>
+            <div className={attentionCount > 0 ? 'warning' : 'ok'}>
+              <strong>{attentionCount > 0 ? 'Sprawdź ręcznie' : 'Brak błędów'}</strong>
+              <span>{attentionCount > 0 ? `${attentionCount} pozycji processing / failed.` : 'Nie ma pozycji wymagających interwencji.'}</span>
+            </div>
           </div>
-        )}
+        </div>
+
+        <div className="glass-v2-panel admin-payout-cron-card">
+          <div className="admin-payout-live-card-head">
+            <h2>Automatyka wypłat</h2>
+            <span className={automationReady ? 'ready' : 'idle'}>{automationReady ? 'Gotowe' : 'Pusto'}</span>
+          </div>
+          <p>Cron uruchamia tylko pending wypłaty od 50 zł i zabezpiecza transfery przed duplikacją przez status processing.</p>
+          <code>/.netlify/functions/process-payouts</code>
+          <button type="button" onClick={onRunCron} disabled={!automationReady}>
+            {automationReady ? 'Przetwórz gotowe wypłaty' : 'Brak pending ≥ 50 zł'}
+          </button>
+        </div>
+
+        <div className="glass-v2-panel admin-payout-actions-card">
+          <div className="admin-payout-live-card-head"><h2>Akcje zaznaczonych</h2></div>
+          <strong>{selectedPending.length} zaznaczonych oczekujących</strong>
+          <span>{selectedReady.length} z nich gotowych do wypłaty</span>
+          <div>
+            <button type="button" disabled={!selectedReady.length} onClick={() => bulkUpdate('paid')}>Zatwierdź wypłaty</button>
+            <button type="button" className="danger" disabled={!selectedPending.length} onClick={() => bulkUpdate('rejected')}>Odrzuć</button>
+          </div>
+        </div>
       </div>
 
-      <div className="stripe-connect-note stripe-connect-note-pro">
-        <strong>System finalizacji wypłat</strong>
-        <span>Manual approve wykonuje realny Stripe transfer. Cron może przetwarzać pending automatycznie, jeżeli ustawisz CRON_SECRET i harmonogram Netlify.</span>
+      <div className="glass-v2-panel admin-payout-transactions-card">
+        <div className="admin-payout-live-card-head">
+          <h2>Zgłoszenia wypłat</h2>
+          <button type="button" onClick={exportCsv}>Eksport CSV</button>
+        </div>
+
+        <div className="admin-payout-live-toolbar">
+          <label>
+            <span>⌕</span>
+            <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po ID, e-mailu, statusie, Stripe ID..." />
+          </label>
+          <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+            <option value="all">Status: wszystkie</option>
+            <option value="pending">Oczekuje</option>
+            <option value="processing">Przetwarzana</option>
+            <option value="paid">Wypłacona</option>
+            <option value="rejected">Odrzucona</option>
+            <option value="failed">Błąd</option>
+          </select>
+          <select value={amountFilter} onChange={event => setAmountFilter(event.target.value)}>
+            <option value="all">Kwota: wszystkie</option>
+            <option value="ready">Gotowe ≥ 50 zł</option>
+            <option value="small">Poniżej 50 zł</option>
+          </select>
+        </div>
+
+        <div className="admin-payout-live-table">
+          <div className="admin-payout-live-row header">
+            <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(row => row.normalizedStatus === 'pending') && filteredRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
+            <span>Użytkownik</span>
+            <span>Data</span>
+            <span>Kwota</span>
+            <span>Status</span>
+            <span>Stripe</span>
+            <span>Akcje</span>
+          </div>
+          {filteredRequests.length ? filteredRequests.map(request => (
+            <div className="admin-payout-live-row" key={request.id}>
+              <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
+              <span>
+                <strong>{request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
+                <small>{request.user_id || '—'}</small>
+              </span>
+              <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
+              <span className="amount">{formatMoney(request.amountNumber)}</span>
+              <span className={`status status-${request.normalizedStatus}`}>{getStatusLabel(request.normalizedStatus)}</span>
+              <span>
+                <strong>{request.stripe_status || '—'}</strong>
+                <small>{getStripeLabel(request)}</small>
+              </span>
+              <span className="actions">
+                {request.normalizedStatus === 'pending' ? (
+                  <>
+                    <button type="button" disabled={request.amountNumber < 50} onClick={() => onUpdateStatus(request.id, 'paid')}>Zatwierdź</button>
+                    <button type="button" className="danger" onClick={() => onUpdateStatus(request.id, 'rejected')}>Odrzuć</button>
+                  </>
+                ) : (
+                  <em>Zamknięte</em>
+                )}
+              </span>
+            </div>
+          )) : (
+            <div className="admin-payout-empty">
+              <strong>Brak zgłoszeń dla wybranych filtrów</strong>
+              <span>Zmień filtr albo poczekaj na nowe prawdziwe wypłaty użytkowników.</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
 }
-
 
 function TopTipstersView() {
   const categories = [
@@ -13242,7 +15633,38 @@ function App() {
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    const sourceTips = (tipsData || []).map(normalizeTipRow)
+    let sourceTips = (tipsData || []).map(normalizeTipRow)
+    const authorDynamicStatsMap = buildAuthorStatsFromTips(sourceTips)
+    try {
+      const authorIds = [...new Set(sourceTips.map(tip => getTipAuthorId(tip)).filter(Boolean).map(String))]
+      if (authorIds.length) {
+        const { data: authorProfiles, error: authorProfilesError } = await supabase
+          .from('profiles')
+          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
+          .in('id', authorIds)
+        if (!authorProfilesError && Array.isArray(authorProfiles)) {
+          const authorProfileMap = new Map(authorProfiles.map(profile => [String(profile.id), profile]))
+          sourceTips = sourceTips.map(tip => {
+            const profile = authorProfileMap.get(String(getTipAuthorId(tip) || ''))
+            return profile
+              ? {
+                  ...tip,
+                  author_name: tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+                  author_email: tip.author_email || profile.email || null,
+                  author_avatar_url: tip.author_avatar_url || profile.avatar_url || null,
+                  author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), getImportedProfileStats(profile)),
+                }
+              : tip
+          })
+        }
+      }
+    } catch (avatarEnrichError) {
+      console.warn('tip avatar enrichment skipped', avatarEnrichError)
+    }
+    sourceTips = sourceTips.map(tip => ({
+      ...tip,
+      author_visible_stats: tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)
+    }))
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
@@ -13965,6 +16387,42 @@ function App() {
     }
   }
 
+  async function buyWalletTokens(packs = 1) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić żetony.' })
+      return
+    }
+    try {
+      const { data, error } = await supabase.rpc('buy_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
+      if (error) throw error
+      showToast({ type: 'success', title: 'Kupiono żetony', message: `Dodano ${Number(data?.tokens || packs * 1000).toLocaleString('pl-PL')} żetonów.` })
+      await fetchWalletBalance(sessionUser.id)
+      await fetchCurrentTokenBalance()
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
+    } catch (error) {
+      showToast({ type: 'error', title: 'Nie udało się kupić żetonów', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
+  async function sellWalletTokens(packs = 1) {
+    if (!sessionUser?.id) {
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby wymienić żetony.' })
+      return
+    }
+    try {
+      const { data, error } = await supabase.rpc('sell_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
+      if (error) throw error
+      showToast({ type: 'success', title: 'Wymieniono żetony', message: `Dodano ${Number(data?.pln || packs * 0.9).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł do salda.` })
+      await fetchWalletBalance(sessionUser.id)
+      await fetchCurrentTokenBalance()
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
+      window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
+    } catch (error) {
+      showToast({ type: 'error', title: 'Nie udało się wymienić żetonów', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
   async function startStripeTopup(amount = 100) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby doładować konto.' })
@@ -14050,7 +16508,7 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end')
+      .select('*')
       .eq('id', userId)
       .maybeSingle()
 
@@ -14086,7 +16544,9 @@ function App() {
         is_premium: Boolean(effectiveProfile.is_premium),
         plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
         subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
-        current_period_end: effectiveProfile.current_period_end || null
+        current_period_end: effectiveProfile.current_period_end || null,
+        avatar_url: effectiveProfile.avatar_url || null,
+        bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)
@@ -14167,7 +16627,7 @@ function App() {
 
   async function fetchAdminFinanceReport() {
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
-      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
       return
     }
 
@@ -14175,23 +16635,27 @@ function App() {
       const { data, error } = await supabase.rpc('get_admin_finance_report')
 
       if (error || !data) {
-        setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
         return
       }
 
       setAdminFinanceReport({
         platform_commission: Number(data.platform_commission || 0),
+        premium_revenue: Number(data.premium_revenue || 0),
+        total_platform_revenue: Number(data.total_platform_revenue || Number(data.platform_commission || 0) + Number(data.premium_revenue || 0)),
         total_sales: Number(data.total_sales || 0),
         gross_sales: Number(data.gross_sales || 0),
         tipster_earnings: Number(data.tipster_earnings || 0),
         total_payouts: Number(data.total_payouts || 0),
         pending_payouts: Number(data.pending_payouts || 0),
         available_to_payout: Number(data.available_to_payout || 0),
+        wallet_topups: Number(data.wallet_topups || 0),
+        active_premium_users: Number(data.active_premium_users || 0),
         transactions: Array.isArray(data.transactions) ? data.transactions : []
       })
     } catch (error) {
       console.error('fetchAdminFinanceReport error', error)
-      setAdminFinanceReport({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
     }
   }
 
@@ -14474,12 +16938,6 @@ function App() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [sessionUser?.id])
-
-  useEffect(() => {
-    if (['notifications', 'payments', 'subscriptions', 'earnings', 'payouts'].includes(view)) {
-      setView('dashboard')
-    }
-  }, [view])
 
   useEffect(() => {
     const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
@@ -14826,7 +17284,12 @@ function App() {
               </span>
             </button>
             <button type="button" className={`top-user-chip neutral-top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
-              <span className="top-user-avatar">{(getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}</span>
+              <span
+                className={`top-user-avatar ${effectiveAccountProfile?.avatar_url ? 'has-avatar' : ''}`}
+                style={effectiveAccountProfile?.avatar_url ? { '--avatar-image': `url("${effectiveAccountProfile.avatar_url}")` } : undefined}
+              >
+                {effectiveAccountProfile?.avatar_url ? '' : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
+              </span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
               <span className="top-user-chevron">⌄</span>
             </button>
@@ -14850,8 +17313,35 @@ function App() {
           />
         )}
 
+        {view === 'deposits' && (
+          <DepositsView
+            user={sessionUser}
+            wallet={walletBalance}
+            onTopUp={startStripeTopup}
+            onViewChange={setView}
+          />
+        )}
+
         {view === 'wallet' && (
-          <WalletPanel wallet={walletBalance} tokenBalance={tokenBalance} unlockedTips={unlockedTips} tips={tips} onTopUp={() => startStripeTopup(100)} />
+          <WalletPanel
+            wallet={walletBalance}
+            tokenBalance={tokenBalance}
+            unlockedTips={unlockedTips}
+            tips={tips}
+            payments={paymentHistory}
+            earnings={tipsterEarnings}
+            stripeConnectStatus={stripeConnectStatus}
+            onTopUp={() => startStripeTopup(100)}
+            onBuyTokens={buyWalletTokens}
+            onSellTokens={sellWalletTokens}
+            onConnectStripe={connectStripeAccount}
+            user={effectiveAccountProfile}
+            userPlan={effectiveAccountPlan}
+            onViewChange={setView}
+            onToast={showToast}
+            onManageSubscription={openCustomerPortal}
+            onUpgradeSubscription={runPremiumCheckout}
+          />
         )}
 
         {view === 'leaderboard' && (
@@ -14891,26 +17381,51 @@ function App() {
         )}
 
         {view === 'payments' && (
-          <PaymentsView payments={paymentHistory} />
+          <PaymentsView payments={paymentHistory} onViewChange={setView} onTopUp={startStripeTopup} />
         )}
 
         {view === 'subscriptions' && (
-          <SubscriptionView userPlan={effectiveAccountPlan} onUpgrade={runPremiumCheckout} onManage={openCustomerPortal} />
+          <SubscriptionView
+            userPlan={effectiveAccountPlan}
+            user={effectiveAccountProfile}
+            payments={paymentHistory}
+            onUpgrade={runPremiumCheckout}
+            onManage={openCustomerPortal}
+            onViewChange={setView}
+          />
         )}
 
         {view === 'earnings' && (
-          <EarningsView tips={tips} payments={paymentHistory} user={sessionUser} earnings={tipsterEarnings} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} />
+          <EarningsView
+            user={effectiveAccountProfile}
+            earnings={tipsterEarnings}
+            stripeConnectStatus={stripeConnectStatus}
+            onConnectStripe={connectStripeAccount}
+            onViewChange={setView}
+          />
         )}
 
         {view === 'profile' && (
           <ProfileView
-            user={sessionUser}
+            user={effectiveAccountProfile || sessionUser}
             tips={tips}
             payments={paymentHistory}
             unlockedTips={unlockedTips}
             userPlan={effectiveAccountPlan}
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
+            onToast={showToast}
+            onUnlock={unlockTip}
+            onSubscribeToTipster={setSelectedProfileSub}
+            tipsterSubscriptions={tipsterSubscriptions}
+            onAvatarUpdated={(nextAvatarUrl) => {
+              setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
+              setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
+            }}
+            onProfileUpdated={(patch) => {
+              setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), ...(patch || {}) }))
+              setSessionUser(prev => prev ? ({ ...prev, ...(patch || {}), user_metadata: { ...(prev.user_metadata || {}), ...(patch || {}) } }) : prev)
+            }}
           />
         )}
 
@@ -14924,7 +17439,7 @@ function App() {
         )}
 
         {view === 'payouts' && (
-          <PayoutsView user={effectiveAccountProfile} tips={tips} payments={paymentHistory} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
+          <PayoutsView user={effectiveAccountProfile} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} onViewChange={setView} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
 
@@ -14932,6 +17447,7 @@ function App() {
           <AdminFinanceView
             report={adminFinanceReport}
             onRefresh={fetchAdminFinanceReport}
+            onViewChange={setView}
           />
         )}
 
@@ -15014,7 +17530,7 @@ function App() {
         )}
       </main>
 
-      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>

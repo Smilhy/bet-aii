@@ -315,6 +315,136 @@ function getTipAuthorId(tip) {
   return tip?.author_id || tip?.user_id || tip?.created_by || tip?.owner_id || tip?.tipster_id || null
 }
 
+function getTipAuthorStatsKey(tip) {
+  return String(
+    getTipAuthorId(tip) ||
+    tip?.author_email ||
+    tip?.email ||
+    tip?.user_email ||
+    tip?.author_name ||
+    tip?.username ||
+    'unknown'
+  ).toLowerCase()
+}
+
+function normalizeTipSettlementStatus(value) {
+  const clean = String(value || '').trim().toLowerCase()
+  if (['won', 'win', 'wygrał', 'wygral', 'wygrany', 'green'].includes(clean)) return 'won'
+  if (['lost', 'loss', 'przegrał', 'przegral', 'przegrany', 'red'].includes(clean)) return 'lost'
+  if (['void', 'push', 'zwrot', 'cancelled', 'canceled', 'anulowany'].includes(clean)) return 'void'
+  return 'pending'
+}
+
+function readTipStakeValue(tip) {
+  return Number(tip?.stake ?? tip?.amount ?? tip?.stawka ?? tip?.bet_amount ?? tip?.total_staked ?? 0) || 0
+}
+
+function readTipProfitValue(tip) {
+  const explicit = tip?.profit ?? tip?.profit_amount ?? tip?.result_profit ?? tip?.payout_profit
+  if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
+  const stake = readTipStakeValue(tip)
+  const odds = Number(tip?.odds ?? tip?.course ?? 0) || 0
+  const status = normalizeTipSettlementStatus(tip?.status ?? tip?.result)
+  if (status === 'won') return stake * Math.max(odds - 1, 0)
+  if (status === 'lost') return -stake
+  return 0
+}
+
+function buildAuthorStatsFromTips(tips = []) {
+  const statsMap = new Map()
+  ;(tips || []).forEach(rawTip => {
+    const tip = normalizeTipRow(rawTip)
+    const key = getTipAuthorStatsKey(tip)
+    if (!key || key === 'unknown') return
+    const current = statsMap.get(key) || {
+      totalTips: 0,
+      wonTips: 0,
+      lostTips: 0,
+      pendingTips: 0,
+      totalStaked: 0,
+      profit: 0,
+      highestOdds: 0,
+      avgOddsSum: 0,
+      avgOddsCount: 0,
+    }
+    const status = normalizeTipSettlementStatus(tip.status ?? tip.result)
+    const stake = readTipStakeValue(tip)
+    const odds = Number(tip.odds ?? tip.course ?? 0) || 0
+    current.totalTips += 1
+    if (status === 'won') current.wonTips += 1
+    else if (status === 'lost') current.lostTips += 1
+    else current.pendingTips += 1
+    if (status === 'won' || status === 'lost') current.totalStaked += stake
+    current.profit += readTipProfitValue(tip)
+    if (odds > 0) {
+      current.highestOdds = Math.max(current.highestOdds, odds)
+      current.avgOddsSum += odds
+      current.avgOddsCount += 1
+    }
+    statsMap.set(key, current)
+  })
+  return statsMap
+}
+
+function getImportedProfileStats(profile) {
+  if (!profile) return null
+  const totalTips = Number(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
+  const hasImported =
+    profile.imported_yield !== undefined ||
+    profile.imported_total_tips !== undefined ||
+    profile.imported_profit !== undefined ||
+    profile.total_tips !== undefined
+  if (!hasImported && totalTips <= 0) return null
+  return {
+    yield: Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0,
+    totalTips,
+    wonTips: Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0,
+    lostTips: Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0,
+    pendingTips: Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0,
+    totalStaked: Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0,
+    profit: Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0,
+    avgOdds: Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0,
+    highestOdds: Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0,
+  }
+}
+
+function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
+  if (importedStats && Number(importedStats.totalTips || 0) > 0) return importedStats
+  const totalStaked = Number(dynamicStats?.totalStaked || 0)
+  const profit = Number(dynamicStats?.profit || 0)
+  return {
+    yield: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
+    totalTips: Number(dynamicStats?.totalTips || 0) || 0,
+    wonTips: Number(dynamicStats?.wonTips || 0) || 0,
+    lostTips: Number(dynamicStats?.lostTips || 0) || 0,
+    pendingTips: Number(dynamicStats?.pendingTips || 0) || 0,
+    totalStaked,
+    profit,
+    avgOdds: Number(dynamicStats?.avgOddsCount || 0) > 0 ? Number(dynamicStats.avgOddsSum || 0) / Number(dynamicStats.avgOddsCount || 1) : 0,
+    highestOdds: Number(dynamicStats?.highestOdds || 0) || 0,
+  }
+}
+
+function compactNumberLabel(value, decimals = 2) {
+  const num = Number(value || 0)
+  if (Number.isInteger(num)) return String(num)
+  return num.toFixed(decimals).replace(/\.?0+$/, '')
+}
+
+function getAuthorStatsLabels(sourceStats) {
+  const stats = sourceStats || finalizeAuthorStats(null, null)
+  const profit = Number(stats.profit || 0)
+  return {
+    yieldLabel: `${compactNumberLabel(stats.yield, 2)}%`,
+    totalTipsLabel: String(Number(stats.totalTips || 0) || 0),
+    profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} zł`,
+  }
+}
+
+function getTipFallbackAuthorStats(tip) {
+  return finalizeAuthorStats(buildAuthorStatsFromTips([tip]).get(getTipAuthorStatsKey(tip)), null)
+}
+
 
 function saveTipDebug(status, details = '') {
   const text = `[${new Date().toLocaleString('pl-PL')}] ${status}${details ? ': ' + details : ''}`
@@ -1381,7 +1511,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
       setLoading(true)
       try {
         const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
-          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status').eq('id', tipsterId).maybeSingle(),
+          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').eq('id', tipsterId).maybeSingle(),
           supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
           supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
           supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
@@ -1396,7 +1526,16 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         if (typeRes.error) console.error('typeRes error', typeRes.error)
         if (formRes.error) console.error('formRes error', formRes.error)
         setProfile(profileRes.data || null)
-        setTipsterTips(tipsRes.data || [])
+        const normalizedTipsterTips = (tipsRes.data || []).map(normalizeTipRow)
+        const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(String(tipsterId).toLowerCase())
+        const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(profileRes.data))
+        setTipsterTips(normalizedTipsterTips.map(tip => ({
+          ...tip,
+          author_name: tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik'),
+          author_email: tip.author_email || profileRes.data?.email || null,
+          author_avatar_url: tip.author_avatar_url || profileRes.data?.avatar_url || null,
+          author_visible_stats: tipsterVisibleStats,
+        })))
         setStats(rankingRes.data || null)
         setByLeague(leagueRes.data || [])
         setByType(typeRes.data || [])
@@ -7303,11 +7442,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
-  const dashboardAuthorStats = isOwnTip ? {
-    yieldLabel: `${Number(currentUser?.imported_yield || 0) || 0}%`,
-    totalTipsLabel: String(Number(currentUser?.imported_total_tips || 0) || ''),
-    profitLabel: `${Number(currentUser?.imported_profit || 0) >= 0 ? '+' : ''}${Number(currentUser?.imported_profit || 0).toFixed(2)} zł`,
-  } : null
+  const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -15499,12 +15634,13 @@ function App() {
     setUnlockedTips(unlockedSet)
 
     let sourceTips = (tipsData || []).map(normalizeTipRow)
+    const authorDynamicStatsMap = buildAuthorStatsFromTips(sourceTips)
     try {
       const authorIds = [...new Set(sourceTips.map(tip => getTipAuthorId(tip)).filter(Boolean).map(String))]
       if (authorIds.length) {
         const { data: authorProfiles, error: authorProfilesError } = await supabase
           .from('profiles')
-          .select('id,email,username,avatar_url')
+          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
           .in('id', authorIds)
         if (!authorProfilesError && Array.isArray(authorProfiles)) {
           const authorProfileMap = new Map(authorProfiles.map(profile => [String(profile.id), profile]))
@@ -15516,6 +15652,7 @@ function App() {
                   author_name: tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
                   author_email: tip.author_email || profile.email || null,
                   author_avatar_url: tip.author_avatar_url || profile.avatar_url || null,
+                  author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), getImportedProfileStats(profile)),
                 }
               : tip
           })
@@ -15524,6 +15661,10 @@ function App() {
     } catch (avatarEnrichError) {
       console.warn('tip avatar enrichment skipped', avatarEnrichError)
     }
+    sourceTips = sourceTips.map(tip => ({
+      ...tip,
+      author_visible_stats: tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)
+    }))
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')

@@ -31598,3 +31598,165 @@ button.betfolio-fetch-btn{
   align-self:end!important;
   margin-top:auto!important;
 }
+
+
+/* WERSJA 888 — więcej miejsca na nick, węższa analiza, badge na samym dole */
+.profile-ticket-v6,
+.dashboard-ticket-v6,
+.profile-v4-tips-page .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6{
+  grid-template-columns:
+    260px
+    minmax(300px,1.16fr)
+    minmax(132px,.46fr)
+    minmax(132px,.38fr)
+    minmax(86px,.22fr)
+    minmax(150px,.36fr)
+    174px !important;
+}
+
+/* lewa kolumna: nick ma więcej miejsca, badge schodzi na sam dół */
+.profile-ticket-v6-left{
+  display:grid!important;
+  grid-template-columns:76px 1fr!important;
+  grid-template-rows:auto 1fr auto!important;
+  align-content:stretch!important;
+  align-items:start!important;
+  min-height:100%!important;
+  padding:16px 18px 14px!important;
+  gap:0 14px!important;
+}
+.profile-ticket-v6-left .profile-ticket-v6-avatar{
+  grid-column:1!important;
+  grid-row:1!important;
+  width:72px!important;
+  height:72px!important;
+}
+.profile-ticket-v6-left > div{
+  grid-column:2!important;
+  grid-row:1!important;
+  min-width:0!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  max-width:100%!important;
+  min-width:0!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 strong,
+.profile-ticket-v6-left strong.tipster-name-link,
+.profile-ticket-v6-left .tipster-name-link{
+  max-width:172px!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 b{
+  flex:0 0 17px!important;
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  margin-left:0!important;
+}
+
+/* jeśli gdzieś została druga ikonka obok nicku, nie pozwól jej rozwalać wiersza */
+.profile-ticket-v6-left .ticket-author-row-v874 b + b,
+.profile-ticket-v6-left .ticket-author-row-v874 .verify-dot + .verify-dot{
+  display:none!important;
+}
+
+.profile-ticket-v6-left .ticket-mini-stats-v876{
+  margin-top:5px!important;
+  max-width:178px!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876 span{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+/* Badge DARMOWY/PREMIUM na sam dół lewej ramki */
+.profile-ticket-v6-left .profile-ticket-v6-access{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+  align-self:end!important;
+  justify-self:start!important;
+  margin-top:auto!important;
+  margin-bottom:0!important;
+  transform:translateY(2px)!important;
+}
+
+/* Analiza ma być wyraźnie węższa, żeby oddać miejsce lewej kolumnie */
+.profile-ticket-v6-analysis{
+  min-width:0!important;
+  padding:12px 10px!important;
+  gap:4px!important;
+}
+.profile-ticket-v6-analysis small{
+  font-size:10.5px!important;
+}
+.profile-ticket-v6-analysis p{
+  max-width:150px!important;
+  font-size:12px!important;
+  line-height:1.24!important;
+  -webkit-line-clamp:3!important;
+}
+.profile-ticket-v6-analysis button{
+  font-size:11.5px!important;
+}
+
+/* prawa kolumna statusu bez nachodzenia */
+.profile-ticket-v6-buy{
+  min-width:174px!important;
+  padding:46px 14px 14px!important;
+}
+.profile-ticket-v6-corner{
+  right:10px!important;
+}
+.profile-ticket-v6-corner > span{
+  max-width:84px!important;
+  white-space:normal!important;
+  line-height:1.05!important;
+  text-align:right!important;
+}
+
+/* zachowanie mobilne */
+@media(max-width:1260px){
+  .profile-ticket-v6,
+  .dashboard-ticket-v6,
+  .profile-v4-tips-page .profile-ticket-v6{
+    grid-template-columns:1fr!important;
+  }
+  .profile-ticket-v6-analysis p{
+    max-width:none!important;
+  }
+}
+
+
+/* WERSJA 889 — statystyki każdego autora typu, widoczne publicznie */
+.profile-ticket-v6-left .ticket-mini-stats-v876{
+  display:grid!important;
+  gap:2px!important;
+  margin-top:5px!important;
+  max-width:190px!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876 span{
+  display:block!important;
+  color:#ffffff!important;
+  font-size:12px!important;
+  line-height:1.22!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876 b{
+  color:#ffffff!important;
+  font-weight:950!important;
+}
+.profile-ticket-v6-left .profile-ticket-v6-access{
+  align-self:end!important;
+  margin-top:auto!important;
+}
