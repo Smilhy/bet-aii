@@ -12981,22 +12981,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const authorName = normalizeEmail(tip.author_name || tip.username || '')
     return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
   })
-  const importedAtMs = Date.parse(user?.stats_imported_at || '')
-  const hasImportedStats = Number(user?.imported_total_tips || 0) > 0 || Number(user?.imported_total_staked || 0) > 0 || Number(user?.imported_profit || 0) !== 0
+  const profileStatsSource = user || {}
+  const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
+  const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
   const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
     ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
     : userTips
 
-  const importedTotalTips = Number(user?.imported_total_tips || 0) || 0
-  const importedWonTips = Number(user?.imported_won_tips || 0) || 0
-  const importedLostTips = Number(user?.imported_lost_tips || 0) || 0
-  const importedPendingTips = Number(user?.imported_pending_tips || 0) || 0
-  const importedTotalStaked = Number(user?.imported_total_staked || 0) || 0
-  const importedProfit = Number(user?.imported_profit || 0) || 0
-  const importedAvgOdds = Number(user?.imported_avg_odds || 0) || 0
-  const importedHighestOdds = Number(user?.imported_highest_odds || 0) || 0
-  const importedTipsAmount = Number(user?.imported_tips_amount || 0) || 0
-  const importedTipsCurrency = String(user?.imported_tips_currency || 'zł').trim() || 'zł'
+  const importedTotalTips = Number(profileStatsSource?.imported_total_tips || 0) || 0
+  const importedWonTips = Number(profileStatsSource?.imported_won_tips || 0) || 0
+  const importedLostTips = Number(profileStatsSource?.imported_lost_tips || 0) || 0
+  const importedPendingTips = Number(profileStatsSource?.imported_pending_tips || 0) || 0
+  const importedTotalStaked = Number(profileStatsSource?.imported_total_staked || 0) || 0
+  const importedProfit = Number(profileStatsSource?.imported_profit || 0) || 0
+  const importedAvgOdds = Number(profileStatsSource?.imported_avg_odds || 0) || 0
+  const importedHighestOdds = Number(profileStatsSource?.imported_highest_odds || 0) || 0
+  const importedTipsAmount = Number(profileStatsSource?.imported_tips_amount || 0) || 0
+  const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || 'zł').trim() || 'zł'
 
   const liveTotalTips = liveTipsForStats.length
   const liveWonTips = liveTipsForStats.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
@@ -13036,7 +13037,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
   const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
-  const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(user?.imported_yield || 0) || 0)
+  const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(profileStatsSource?.imported_yield || 0) || 0)
   const tipsSupportAmount = importedTipsAmount + (Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0)
 
   const statsCards = [
@@ -15946,7 +15947,7 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url,bio,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
+      .select('*')
       .eq('id', userId)
       .maybeSingle()
 
