@@ -1173,7 +1173,7 @@ exports.handler = async function(event) {
     // Wcześniej dateKeys było zdefiniowane tylko wewnątrz pętli i po jej zakończeniu
     // wywołanie enrichFixturesWithApiFootballOdds wywalało ReferenceError, przez co UI
     // pokazywał 0 meczów mimo poprawnego APISPORTS_KEY.
-    const dateKeys = mode === 'today' || safeDays === 0
+    const dateKeys = mode === 'today' || mode === 'all-today' || safeDays === 0
       ? [safeStart]
       : Array.from({ length: safeDays + 1 }, (_, idx) => addDaysToDateKey(safeStart, idx) || safeStart)
 
@@ -1256,7 +1256,6 @@ exports.handler = async function(event) {
           if (!Number.isFinite(kickMs)) return true
           return kickMs > Date.now() + 60 * 1000
         })
-        .filter(item => mode !== 'today' || isTopTodayFootballLeague(item))
         .filter(item => allLeagues || matchesRequestedFootballScope(item))
         .filter(matchesRequestedFootballText)
         .forEach(item => collected.push(item))
@@ -1283,8 +1282,8 @@ exports.handler = async function(event) {
 
     const emptyMessage = mode === 'search' && query
       ? `API-FOOTBALL Pro nie znalazło meczu dla frazy „${query}”.`
-      : mode === 'today'
-        ? 'API-FOOTBALL Pro nie zwróciło dziś meczów z top 6 lig.'
+      : mode === 'today' || mode === 'all-today'
+        ? 'API-FOOTBALL Pro nie zwróciło dziś meczów.'
         : 'API-FOOTBALL Pro nie zwróciło meczów dla wybranej ligi i zakresu.'
 
     return {
@@ -1319,9 +1318,8 @@ exports.handler = async function(event) {
     if (!forceRefresh && mode !== 'search') {
       const cachedFixtures = (await readCachedFixtures({}))
         .filter(item => allLeagues || matchesRequestedFootballScope(item))
-        .filter(item => mode !== 'today' || isTopTodayFootballLeague(item))
         .filter(item => {
-          if (mode === 'today') return toLocalDateKey(item.commence_time) === date
+          if (mode === 'today' || mode === 'all-today') return toLocalDateKey(item.commence_time) === date
           return isLocalDateInRange(item.commence_time, date, daysAhead)
         })
       if (cachedFixtures.length) {
