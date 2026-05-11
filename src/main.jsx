@@ -13320,7 +13320,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
 
   return (
-    <section className={`profile-page profile-static-v3 ${profileTab === 'overview' ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
+    <section className="profile-page profile-static-v3 profile-v4-wide-mode profile-v5-screen-overview" aria-label="Mój profil">
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">
@@ -13392,24 +13392,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </div>
             </div>
           </div>
-
-          <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
-            <div className="profile-v3-card-head">
-              <h3>📊 Twoje statystyki</h3>
-            </div>
-            <div className="profile-stats-cards-grid">
-              {statsCards.map((card) => (
-                <article
-                  key={card.label}
-                  className={`profile-stat-card profile-stat-card-${card.tone} ${card.accent ? 'is-accent' : ''}`}
-                >
-                  <small>{card.label}</small>
-                  <strong>{card.value}</strong>
-                  <span>{card.sub}</span>
-                </article>
-              ))}
-            </div>
-          </section>
 
           <div className="profile-v3-tabs glass-profile-v3 profile-v4-tabs">
             <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}><span>▣</span> Przegląd <b>{totalTips}</b></button>
@@ -13566,85 +13548,108 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           )}
 
           {profileTab === 'overview' && (
-            <>
-          <div className="profile-v3-content-grid">
-            <div className="profile-v3-left-col profile-live-tip-sections">
-              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
-                <div className="profile-v3-card-head"><h3>🏆 Ostatnie typy PREMIUM</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
-                {premiumCards.length ? premiumCards.map(renderProfileTipCard) : (
-                  <div className="profile-live-tip-empty">Brak typów premium.</div>
-                )}
-              </section>
+            <section className="profile-v5-overview-page">
+              <div className="profile-v5-kpis">
+                <article><span>◈</span><strong>{totalTips}</strong><small>Postawione kupony</small></article>
+                <article><span>↗</span><strong>{wonTips} / {lostTips}</strong><small>Wygrane / przegrane</small></article>
+                <article className={roi >= 0 ? 'success' : 'danger'}><span>%</span><strong>{roi.toFixed(2)}%</strong><small>Yield</small></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><span>▣</span><strong>{profitAmount.toFixed(2)}</strong><small>Bilans</small></article>
+                <article><span>⌂</span><strong>{totalStakedAmount.toFixed(2)}</strong><small>Zainwestowane</small></article>
+                <article className="success"><span>✣</span><strong>{avgOdds}</strong><small>Średni kurs</small></article>
+                <article className={isActive30d ? 'success' : 'neutral'}><span>◉</span><strong>{isActive30d ? 'Na żywo' : 'Offline'}</strong><small>Aktywny typer</small></article>
+              </div>
 
-              <section className="glass-profile-v3 profile-v3-card profile-live-tip-section">
-                <div className="profile-v3-card-head"><h3>🟢 Ostatnie typy FREE</h3><button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie</button></div>
-                {freeCards.length ? freeCards.map(renderProfileTipCard) : (
-                  <div className="profile-live-tip-empty">Brak darmowych typów.</div>
-                )}
+              <div className="profile-v5-latest-grid">
+                <section className="glass-profile-v3 profile-v5-latest-card premium">
+                  <div className="profile-v3-card-head">
+                    <h3>♛ Najnowsze typy premium</h3>
+                    <button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie ›</button>
+                  </div>
+                  {premiumCards.length ? premiumCards.slice(0, 3).map(tip => (
+                    <article key={`premium-${tip.id}`}>
+                      <div><strong>{tip.home}</strong><small>vs {tip.away}</small></div>
+                      <b>{tip.odds}</b>
+                      <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : 'wait'}>{tip.statusLabel}</em>
+                      <span>{tip.matchLabel}</span>
+                    </article>
+                  )) : <div className="profile-live-tip-empty">Brak typów premium.</div>}
+                  <button type="button" className="profile-v5-block-link" onClick={() => setProfileTab('tips')}>Zobacz wszystkie typy premium</button>
+                </section>
+
+                <section className="glass-profile-v3 profile-v5-latest-card free">
+                  <div className="profile-v3-card-head">
+                    <h3>▣ Najnowsze typy darmowe</h3>
+                    <button type="button" onClick={() => setProfileTab('tips')}>Zobacz wszystkie ›</button>
+                  </div>
+                  {freeCards.length ? freeCards.slice(0, 3).map(tip => (
+                    <article key={`free-${tip.id}`}>
+                      <div><strong>{tip.home}</strong><small>vs {tip.away}</small></div>
+                      <b>{tip.odds}</b>
+                      <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : 'wait'}>{tip.statusLabel}</em>
+                      <span>{tip.matchLabel}</span>
+                    </article>
+                  )) : <div className="profile-live-tip-empty">Brak darmowych typów.</div>}
+                  <button type="button" className="profile-v5-block-link" onClick={() => setProfileTab('tips')}>Zobacz wszystkie typy darmowe</button>
+                </section>
+              </div>
+
+              <div className="profile-v5-lower-grid">
+                <section className="glass-profile-v3 profile-v5-mini-summary">
+                  <div className="profile-v3-card-head"><h3>Szybkie podsumowanie</h3></div>
+                  <div>
+                    <article><small>Yield</small><strong>{roi}%</strong></article>
+                    <article><small>ROI 30 dni</small><strong>{roi}%</strong></article>
+                    <article><small>Wygrane</small><strong>{wonTips}</strong></article>
+                    <article><small>Przegrane</small><strong>{lostTips}</strong></article>
+                    <article><small>Średni kurs</small><strong>{avgOdds}</strong></article>
+                    <article><small>Śr. stawka</small><strong>{totalTips ? (totalStakedAmount / totalTips).toFixed(2) : '0.00'} zł</strong></article>
+                  </div>
+                </section>
+
+                <section className="glass-profile-v3 profile-v5-form-card">
+                  <div className="profile-v3-card-head"><h3>Forma</h3><span>ostatnie typy</span></div>
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <polyline points={linePoints} fill="none" />
+                  </svg>
+                </section>
+
+                <section className="glass-profile-v3 profile-v5-community-card">
+                  <div className="profile-v3-card-head"><h3>Społeczność</h3></div>
+                  <strong>{followersCount}</strong>
+                  <span>obserwujących</span>
+                  <small>{followingCount} obserwowanych</small>
+                  <button type="button" onClick={() => setProfileTab('opinions')}>Zobacz wszystkich</button>
+                </section>
+
+                <section className="glass-profile-v3 profile-v5-achievements-card">
+                  <div className="profile-v3-card-head"><h3>Osiągnięcia</h3></div>
+                  <div>
+                    {profileBadges.map(badge => (
+                      <span key={badge.title} className={badge.achieved ? 'on' : ''}>{badge.icon}</span>
+                    ))}
+                  </div>
+                  <small>{profileBadges.filter(item => item.achieved).length} / {profileBadges.length} odznak zdobytych</small>
+                  <i><b style={{width: `${Math.round((profileBadges.filter(item => item.achieved).length / Math.max(1, profileBadges.length)) * 100)}%`}} /></i>
+                  <button type="button" onClick={() => setProfileTab('history')}>Zobacz wszystkie</button>
+                </section>
+              </div>
+
+              <section className="glass-profile-v3 profile-v5-activity-card">
+                <div className="profile-v3-card-head"><h3>Ostatnia aktywność</h3></div>
+                {recentActivityRows.map((row, idx) => (
+                  <article key={`recent-${idx}`}>
+                    <span>♛</span>
+                    <strong>{row[0]}</strong>
+                    <small>{row[1]}</small>
+                    <em>{row[2]}</em>
+                  </article>
+                ))}
+                <button type="button" onClick={() => setProfileTab('history')}>Zobacz całą aktywność</button>
               </section>
-            </div>
-          </div>
-            </>
+            </section>
           )}
         </div>
 
-        {profileTab === 'overview' && <aside className="profile-v3-sidebar">
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Podsumowanie</h3><span>• ONLINE ●</span></div>
-            <div className="key-list-v3">
-              {summaryRows.map((row, idx) => <div key={idx}><span>{row[0]}</span><b>{row[1]}</b></div>)}
-            </div>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Społeczność</h3></div>
-            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{followingCount}</b></div></div>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3 side-badges-v3">
-            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button></div>
-            <div className="badges-grid-v3 sidebar-badges-grid">
-              {profileBadges.map(badge => (
-                <div key={badge.title} className={badge.achieved ? 'achieved' : 'locked'}>
-                  <span className={`badge-orb ${badge.tone}`}>{badge.icon}</span>
-                  <strong>{badge.title}</strong>
-                  <small>{badge.detail}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>🌀 Ostatnia aktywność</h3></div>
-            <div className="recent-achievements-v3">
-              {recentActivityRows.map((row, idx) => <div key={idx}><span className={`mini-achieve ${idx===0?'gold':idx===1?'orange':'green'}`}></span><div><strong>{row[0]}</strong><small>{row[1]}</small></div><em>{row[2]}</em></div>)}
-            </div>
-            <button type="button" className="side-link-v3" onClick={() => setProfileTab('history')}>Zobacz historię →</button>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Oceny i opinie</h3><button type="button" onClick={() => setProfileTab('opinions')}>Zobacz opinie</button></div>
-            <div className="ratings-v3">
-              <div className="rating-score">
-                <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
-                <span>{profileRatingCount ? '★★★★★' : '☆☆☆☆☆'}</span>
-                <small>{profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu'}</small>
-              </div>
-              <div className="rating-bars">
-                {ratingBars.map((row, idx) => <div key={idx}><span>{row.label}</span><div className="rate-bar"><i style={{width: `${row.width}%`}}></i></div><b>{row.count}</b></div>)}
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Ranking typerów</h3></div>
-            <div className="ranking-v3">
-              {rankingRows.length ? rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>) : (
-                <div className="profile-sidebar-empty">Brak danych rankingowych.</div>
-              )}
-            </div>
-          </div>
-        </aside>}
       </div>
     </section>
   )
