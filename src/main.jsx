@@ -13447,7 +13447,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
 
   return (
-    <section className={`profile-page profile-static-v3 ${profileTab === 'overview' ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
+    <section className={`profile-page profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">

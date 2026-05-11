@@ -1,0 +1,6 @@
+WERSJA 869
+- Naprawiono brak prawej kolumny w zakładce Typy.
+- Przyczyną był tryb profile-v4-wide-mode, który wymuszał pełną szerokość i chował układ 1fr + prawa kolumna.
+- Teraz profile-v4-wide-mode nie włącza się dla zakładki Typy.
+- Typy i Przegląd mają ten sam układ z prawą kolumną od góry.
+- Nowy SQL nie jest potrzebny.

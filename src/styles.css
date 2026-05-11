@@ -31099,3 +31099,24 @@ button.betfolio-fetch-btn{
     position:static;
   }
 }
+
+
+/* WERSJA 869 — wymuszenie prawej kolumny w Typach, bez trybu full width */
+.profile-static-v3:not(.profile-v4-wide-mode) .profile-v3-layout{
+  grid-template-columns:minmax(0,1fr) 360px!important;
+  align-items:start!important;
+}
+.profile-static-v3:not(.profile-v4-wide-mode) .profile-v4-shared-sidebar{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.profile-static-v3:not(.profile-v4-wide-mode) .profile-v3-main{
+  min-width:0!important;
+  width:100%!important;
+}
+@media(max-width:1180px){
+  .profile-static-v3:not(.profile-v4-wide-mode) .profile-v3-layout{
+    grid-template-columns:1fr!important;
+  }
+}
