@@ -1,0 +1,11 @@
+WERSJA 864
+- Przerobiłem cały widok profilu na układ ze screena 2, nie tylko środek:
+  • własny lewy panel profilu,
+  • własny górny pasek,
+  • duży nagłówek profilu,
+  • okrągły avatar,
+  • pigułkowe zakładki,
+  • układ kart i sekcji jak na screenie 2.
+- Zakładki nadal są realne i działają.
+- Dane nadal są żywe z Twojej aplikacji.
+- SQL nie jest potrzebny.

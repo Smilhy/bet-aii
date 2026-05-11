@@ -12885,7 +12885,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onViewChange = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
@@ -13320,28 +13320,62 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
 
   return (
-    <section className="profile-page profile-static-v3 profile-v4-wide-mode profile-v5-screen-overview" aria-label="Mój profil">
+    <section className="profile-page profile-static-v3 profile-v4-wide-mode profile-v5-screen-overview profile-screen2-page" aria-label="Mój profil">
+      <aside className="profile-screen2-sidebar">
+        <div className="profile-screen2-brand">Bet<span>+AI</span></div>
+        <nav>
+          <button type="button" className={profileTab === 'overview' ? 'active' : ''} onClick={() => setProfileTab('overview')}>⌂ <span>Przegląd</span></button>
+          <button type="button" className={profileTab === 'tips' ? 'active' : ''} onClick={() => setProfileTab('tips')}>◉ <span>Typy</span></button>
+          <button type="button" className={profileTab === 'results' ? 'active' : ''} onClick={() => setProfileTab('results')}>▣ <span>Wyniki</span></button>
+          <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}>▥ <span>Statystyki</span></button>
+          <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}>◷ <span>Historia</span></button>
+          <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}>☁ <span>Opinie</span></button>
+          <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}>♙ <span>Cennik subskrypcji</span></button>
+        </nav>
+        <div className="profile-screen2-divider" />
+        <small>NARZĘDZIA</small>
+        <nav>
+          <button type="button" onClick={() => onViewChange?.('aiPicks')}>◎ <span>Generator AI</span><b>AI</b></button>
+          <button type="button" onClick={() => onViewChange?.('add')}>⌕ <span>Skaner kursów</span></button>
+          <button type="button" onClick={() => onViewChange?.('dashboard')}>♧ <span>Alerty</span></button>
+          <button type="button" onClick={() => onViewChange?.('dashboard')}>☆ <span>Ulubione</span></button>
+        </nav>
+        <div className="profile-screen2-divider" />
+        <small>KONTO</small>
+        <nav>
+          <button type="button" onClick={() => onViewChange?.('wallet')}>▣ <span>Portfel</span></button>
+          <button type="button" onClick={() => onViewChange?.('subscription')}>♙ <span>Subskrypcja</span></button>
+          <button type="button" onClick={() => onViewChange?.('profile')}>⚙ <span>Ustawienia</span></button>
+        </nav>
+        <div className="profile-screen2-premium">
+          <strong>♕ Bet+AI Premium</strong>
+          <span>Więcej funkcji, większe zyski.</span>
+          <button type="button">Zobacz korzyści</button>
+        </div>
+      </aside>
+      <div className="profile-screen2-content">
+        <header className="profile-screen2-topbar">
+          <label><span>⌕</span><input placeholder="Szukaj sportów, lig, typów..." /></label>
+          <div>
+            <button type="button">◔<b>2</b></button>
+            <button type="button">☷<b>3</b></button>
+            <span className={`profile-screen2-mini-avatar ${avatarUrl ? 'has-avatar' : ''}`} style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}>{avatarUrl ? '' : initials}</span>
+            <strong>{displayName}</strong>
+          </div>
+        </header>
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
-          <div className="profile-v3-hero glass-profile-v3">
-            <div className="profile-v3-hero-overlay"></div>
-            <button
-              type="button"
-              className={`profile-hero-stripe-btn ${stripeConnectStatus?.payouts_enabled ? 'ready' : stripeConnectStatus?.stripe_account_id ? 'pending' : 'empty'}`}
-              onClick={() => onConnectStripe?.()}
-            >
-              {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Podłącz Stripe'}
-            </button>
-            <div className="profile-v3-user-row">
+          <div className="profile-screen2-hero">
+            <div className="profile-screen2-user">
               <button
                 type="button"
-                className={`profile-v3-avatar profile-v3-avatar-editable ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
+                className={`profile-screen2-avatar ${avatarUrl ? 'has-avatar' : ''} ${avatarUploading ? 'is-uploading' : ''}`}
                 onClick={chooseAvatar}
                 title="Kliknij, aby dodać lub zmienić avatar"
                 style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
               >
                 {avatarUrl ? '' : initials}
-                <span>{avatarUploading ? '...' : '✎'}</span>
+                <i>{avatarUploading ? '...' : '●'}</i>
               </button>
               <input
                 ref={avatarInputRef}
@@ -13350,46 +13384,39 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 className="profile-avatar-file-input"
                 onChange={changeAvatar}
               />
-              <div className="profile-v3-user-copy">
-                <div className="profile-v3-name-line">
+              <div>
+                <div className="profile-screen2-name">
                   <h1>{displayName}</h1>
-                  <span className="verify-dot">✓</span>
+                  <b>✓</b>
+                  <em>{premium ? 'PRO' : roleLabel}</em>
                 </div>
                 <small>{handleName}</small>
-                <div className="profile-v3-badges">
-                  <span>{roleLabel}</span>
-                  <span>TYPER</span>
-                  {totalTips > 0 && <span>AKTYWNY</span>}
-                </div>
                 {bioEditing ? (
                   <div className="profile-v3-bio-editor">
-                    <textarea
-                      value={bioDraft}
-                      onChange={(event) => setBioDraft(event.target.value.slice(0, 220))}
-                      maxLength={220}
-                      autoFocus
-                    />
+                    <textarea value={bioDraft} onChange={(event) => setBioDraft(event.target.value.slice(0, 220))} maxLength={220} autoFocus />
                     <div>
                       <small>{bioDraft.length}/220</small>
-                      <button type="button" onClick={() => {
-                        setBioDraft(profileBio)
-                        setBioEditing(false)
-                      }}>Anuluj</button>
+                      <button type="button" onClick={() => { setBioDraft(profileBio); setBioEditing(false) }}>Anuluj</button>
                       <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
                     </div>
                   </div>
                 ) : (
-                  <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
+                  <button type="button" className="profile-screen2-bio" onClick={() => setBioEditing(true)}>
                     {profileBio}
                     <span>✎</span>
                   </button>
                 )}
-                <div className="profile-v3-actions">
-                  <button type="button" className="primary">Mój profil</button>
-                  <button type="button">▢ Wiadomości</button>
-                  <button type="button">🏆 Wsparcie tipami</button>
+                <div className="profile-screen2-meta">
+                  <span>▣ Dołączył: {createdLabel}</span>
+                  <span>♙ {followersCount} obserwujących</span>
                 </div>
               </div>
+            </div>
+            <div className="profile-screen2-stripe">
+              <button type="button" onClick={() => onConnectStripe?.()}>
+                $ {stripeConnectStatus?.payouts_enabled ? 'Zarządzaj Stripe' : stripeConnectStatus?.stripe_account_id ? 'Dokończ Stripe' : 'Połącz Stripe'}
+              </button>
+              <span>Zarządzaj płatnościami i wypłatami ›</span>
             </div>
           </div>
 
@@ -13650,6 +13677,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           )}
         </div>
 
+      </div>
       </div>
     </section>
   )
@@ -16911,7 +16939,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''} ${view === 'profile' ? 'profile-screen2-clone-shell' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
@@ -17095,6 +17123,7 @@ function App() {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), ...(patch || {}) }))
               setSessionUser(prev => prev ? ({ ...prev, ...(patch || {}), user_metadata: { ...(prev.user_metadata || {}), ...(patch || {}) } }) : prev)
             }}
+            onViewChange={setView}
           />
         )}
 
