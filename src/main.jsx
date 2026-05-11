@@ -7520,9 +7520,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                 </div>
               ))}
             </div>
-          ) : (
-            {null}
-          )}
+          ) : null}
         </div>
       )}
     </article>
@@ -13056,9 +13054,7 @@ function ProfileLiveTipCard({
                 </div>
               ))}
             </div>
-          ) : (
-            {null}
-          )}
+          ) : null}
         </div>
       )}
     </article>

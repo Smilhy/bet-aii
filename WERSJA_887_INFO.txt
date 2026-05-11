@@ -1,0 +1,6 @@
+WERSJA 887
+- Naprawiono błąd builda Vite/esbuild: Expected ":" but found "}".
+- Przyczyną było niepoprawne JSX: ) : ( {null} )
+- Poprawione na: ) : null
+- Zostają poprawki z wersji 886.
+- SQL nie jest potrzebny.
