@@ -1,0 +1,11 @@
+WERSJA 900
+- Naprawiono ranking w prawej kolumnie dashboardu.
+- Usunięto napis/link "Ranking real".
+- Kwota po prawej stronie rankingu pokazuje realny profit typera.
+- Ranking sortuje po proficie, potem yield, WR, wygrane i liczbie typów.
+- Ranking łączy dane z:
+  tipster_ranking,
+  profiles/imported_profit,
+  oraz dynamicznie z tabeli tips.
+- smilhytv z profitem powinien wejść na 1 miejsce po odświeżeniu danych.
+- Usunięto systemowy wpis "Bet+AI Live" z listy top typerów.

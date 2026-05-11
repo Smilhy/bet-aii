@@ -472,24 +472,57 @@ function buildRankingFromTips(tips = []) {
   const map = new Map()
   ;(tips || []).forEach(tip => {
     const normalized = normalizeTipRow(tip)
-    const authorName = normalized.author_name || 'Użytkownik'
+    const authorName = isGenericProfileName(normalized.author_name)
+      ? (normalized.username || normalized.author_email?.split('@')?.[0] || 'Użytkownik')
+      : (normalized.author_name || normalized.username || 'Użytkownik')
     if (String(authorName).toLowerCase() === 'ai tip') return
-    const id = normalized.author_id || normalized.user_id || normalized.author_email || normalized.author_name || 'unknown'
-    const current = map.get(id) || { tipster_id: id, username: authorName, email: normalized.author_email || '', total_tips: 0, wins: 0, losses: 0, roi: 0, winrate: 0, earnings: 0 }
+
+    const id = String(normalized.author_id || normalized.user_id || normalized.author_email || normalized.username || normalized.author_name || 'unknown').toLowerCase()
+    const current = map.get(id) || {
+      tipster_id: id,
+      id,
+      username: authorName,
+      email: normalized.author_email || normalized.email || '',
+      total_tips: 0,
+      wins: 0,
+      losses: 0,
+      pending: 0,
+      roi: 0,
+      winrate: 0,
+      earnings: 0,
+      profit: 0,
+      total_staked: 0
+    }
+
+    current.username = isGenericProfileName(current.username) ? authorName : current.username
+    current.email = current.email || normalized.author_email || normalized.email || ''
     current.total_tips += 1
-    const odds = Number(normalized.odds || 0)
-    const st = String(normalized.status || normalized.result || '').toLowerCase()
-    if (['won','win','wygrany','wygrana'].includes(st)) {
-      current.wins += 1
-      current.earnings += odds > 1 ? (odds - 1) * 10 : 10
+
+    const odds = Number(normalized.odds || normalized.course || 0) || 0
+    const stake = Number(normalized.stake || normalized.amount || normalized.stawka || normalized.bet_amount || 0) || 0
+    const explicitProfit = normalized.profit ?? normalized.result_profit ?? normalized.profit_amount ?? normalized.payout_profit
+    const st = String(normalized.status || normalized.result || normalized.result_status || '').toLowerCase()
+
+    let profit = 0
+    if (explicitProfit !== undefined && explicitProfit !== null && String(explicitProfit) !== '') {
+      profit = Number(explicitProfit) || 0
+    } else if (['won','win','wygrany','wygrana'].includes(st)) {
+      profit = stake > 0 ? stake * Math.max(odds - 1, 0) : 0
+    } else if (['lost','loss','lose','przegrany','przegrana'].includes(st)) {
+      profit = stake > 0 ? -stake : 0
     }
-    if (['lost','loss','lose','przegrany','przegrana'].includes(st)) {
-      current.losses += 1
-      current.earnings -= 10
+
+    if (['won','win','wygrany','wygrana'].includes(st)) current.wins += 1
+    else if (['lost','loss','lose','przegrany','przegrana'].includes(st)) current.losses += 1
+    else current.pending += 1
+
+    if (['won','win','wygrany','wygrana','lost','loss','lose','przegrany','przegrana'].includes(st)) {
+      current.total_staked += stake
     }
-    current.winrate = current.total_tips ? (current.wins / current.total_tips) * 100 : 0
-    const exposure = current.total_tips * 10
-    current.roi = exposure ? (current.earnings / exposure) * 100 : 0
+    current.earnings += profit
+    current.profit = current.earnings
+    current.winrate = (current.wins + current.losses) ? (current.wins / (current.wins + current.losses)) * 100 : 0
+    current.roi = current.total_staked > 0 ? (current.earnings / current.total_staked) * 100 : 0
     map.set(id, current)
   })
   return sortRankingRows(Array.from(map.values())).slice(0, 10)
@@ -519,7 +552,7 @@ function sortRankingRows(rows = []) {
 }
 
 function buildLiveLeaderboardRows(ranking = [], tips = []) {
-  const rows = Array.isArray(ranking) && ranking.length ? ranking : buildRankingFromTips(tips)
+  const rows = (Array.isArray(ranking) && ranking.length ? ranking : buildRankingFromTips(tips)).filter(row => !['bet+ai live','betai live','ai tip'].includes(String(row?.username || row?.name || '').toLowerCase()))
   return sortRankingRows(rows).map((row, index) => ({
     ...row,
     liveRank: index + 1,
@@ -635,7 +668,21 @@ function getProfileUsername(user) {
 
 
 function getProfileAvatarUrl(user) {
-  return user?.avatar_url || user?.author_avatar_url || user?.profile_avatar_url || user?.user_metadata?.avatar_url || user?.raw_user_meta_data?.avatar_url || ''
+  return (
+    user?.avatar_url ||
+    user?.author_avatar_url ||
+    user?.profile_avatar_url ||
+    user?.photo_url ||
+    user?.picture ||
+    user?.image_url ||
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.user_metadata?.photo_url ||
+    user?.raw_user_meta_data?.avatar_url ||
+    user?.raw_user_meta_data?.picture ||
+    user?.raw_user_meta_data?.photo_url ||
+    ''
+  )
 }
 
 function isSameProfileIdentity(left, right) {
@@ -707,17 +754,34 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
       accountProfile?.avatar_url ||
       accountProfile?.profile_avatar_url ||
       accountProfile?.author_avatar_url ||
+      accountProfile?.photo_url ||
+      accountProfile?.picture ||
       sessionUser?.avatar_url ||
       sessionUser?.profile_avatar_url ||
+      sessionUser?.photo_url ||
+      sessionUser?.picture ||
       sessionUser?.user_metadata?.avatar_url ||
+      sessionUser?.user_metadata?.picture ||
+      sessionUser?.user_metadata?.photo_url ||
       sessionUser?.raw_user_meta_data?.avatar_url ||
+      sessionUser?.raw_user_meta_data?.picture ||
+      sessionUser?.raw_user_meta_data?.photo_url ||
       '',
     profile_avatar_url:
       accountProfile?.profile_avatar_url ||
       accountProfile?.avatar_url ||
+      accountProfile?.photo_url ||
+      accountProfile?.picture ||
       sessionUser?.profile_avatar_url ||
+      sessionUser?.avatar_url ||
+      sessionUser?.photo_url ||
+      sessionUser?.picture ||
       sessionUser?.user_metadata?.avatar_url ||
+      sessionUser?.user_metadata?.picture ||
+      sessionUser?.user_metadata?.photo_url ||
       sessionUser?.raw_user_meta_data?.avatar_url ||
+      sessionUser?.raw_user_meta_data?.picture ||
+      sessionUser?.raw_user_meta_data?.photo_url ||
       '',
     bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
   }
@@ -892,7 +956,7 @@ function formatAppErrorMessage(rawMessage) {
   }
 
   if (message.includes('PREMIUM_REQUIRED') || message.includes('Tylko konta Premium')) {
-    return 'Baza nadal widzi konto jako FREE. Uruchom BETAI_SQL_893_SMILHYTV_FIX_PREMIUM_INSERT.sql, wyloguj się i zaloguj ponownie.'
+    return 'Baza nadal widzi konto jako FREE. Uruchom BETAI_SQL_897_FIX_PREMIUM_TIPS_SMILHYTV_FINAL.sql, wyloguj się i zaloguj ponownie.'
   }
 
   if (message.includes('new row violates row-level security') || message.includes('row-level security')) {
@@ -1161,24 +1225,59 @@ function LiveChatPanel({ user }) {
       let nextMessages = (data || []).reverse()
 
       // Starsze wiadomości nie zawsze miały zapisany avatar_url.
-      // Dociągamy avatar po emailu z profiles, żeby czat pokazywał aktualne zdjęcie.
+      // Dociągamy avatar po emailu/nicku z profiles oraz z ostatnich typów autora.
       try {
         const messageEmails = [...new Set(nextMessages.map(row => normalizeEmail(row.user_email)).filter(Boolean))]
-        if (messageEmails.length) {
+        const messageNames = [...new Set(nextMessages.map(row => normalizeEmail(row.user_name)).filter(Boolean))]
+        const chatProfileMap = new Map()
+        if (messageEmails.length || messageNames.length) {
+          const filters = []
+          if (messageEmails.length) filters.push(messageEmails.map(email => `email.eq.${email}`).join(','))
+          if (messageNames.length) filters.push(messageNames.map(name => `username.eq.${name}`).join(','))
+          const profileFilter = [...messageEmails.map(email => `email.eq.${email}`), ...messageNames.map(name => `username.eq.${name}`)].join(',')
           const { data: chatProfiles, error: chatProfilesError } = await supabase
             .from('profiles')
-            .select('email,username,avatar_url')
-            .in('email', messageEmails)
+            .select('id,email,username,avatar_url,profile_avatar_url')
+            .or(profileFilter)
 
           if (!chatProfilesError && Array.isArray(chatProfiles)) {
-            const chatProfileMap = new Map(chatProfiles.map(profile => [normalizeEmail(profile.email), profile]))
-            nextMessages = nextMessages.map(row => {
-              const profile = chatProfileMap.get(normalizeEmail(row.user_email))
-              return profile?.avatar_url && !row.avatar_url
-                ? { ...row, avatar_url: profile.avatar_url }
-                : row
+            chatProfiles.forEach(profile => {
+              const avatar = getProfileAvatarUrl(profile)
+              if (!avatar) return
+              if (profile.email) chatProfileMap.set(normalizeEmail(profile.email), avatar)
+              if (profile.username) chatProfileMap.set(normalizeEmail(profile.username), avatar)
             })
           }
+        }
+
+        // Fallback z tips: jeżeli profil nie ma avatar_url, bierz avatar autora z kart typów.
+        try {
+          const tipNames = messageNames.filter(Boolean)
+          const tipEmails = messageEmails.filter(Boolean)
+          const tipFilter = [...tipNames.map(name => `author_name.eq.${name}`), ...tipEmails.map(email => `author_email.eq.${email}`)].join(',')
+          if (tipFilter) {
+            const { data: chatTipAuthors } = await supabase
+              .from('tips')
+              .select('author_name,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
+              .or(tipFilter)
+              .order('created_at', { ascending: false })
+              .limit(80)
+            ;(chatTipAuthors || []).forEach(row => {
+              const avatar = getProfileAvatarUrl(row)
+              if (!avatar) return
+              if (row.author_email) chatProfileMap.set(normalizeEmail(row.author_email), avatar)
+              if (row.author_name) chatProfileMap.set(normalizeEmail(row.author_name), avatar)
+            })
+          }
+        } catch (tipAvatarError) {
+          console.warn('chat tip avatar fallback skipped', tipAvatarError)
+        }
+
+        if (chatProfileMap.size) {
+          nextMessages = nextMessages.map(row => {
+            const avatar = row.avatar_url || chatProfileMap.get(normalizeEmail(row.user_email)) || chatProfileMap.get(normalizeEmail(row.user_name)) || ''
+            return avatar && !row.avatar_url ? { ...row, avatar_url: avatar } : row
+          })
         }
       } catch (avatarError) {
         console.warn('chat avatar hydration skipped', avatarError)
@@ -1490,7 +1589,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
     <aside className="rightbar">
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
-        <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
+        <div className="panel-head"><h2>🏆 Top typerzy</h2></div>
         {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
           <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
@@ -1500,7 +1599,9 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
               <small>Yield: {Number(row.roi || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
               <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)}</small>
             </div>
-            <strong>+{formatMoney(row.earnings || row.total_earnings || 0)}</strong>
+            <strong className={Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}>
+              {Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}
+            </strong>
           </div>
         )) : (
           <div className="empty-mini">Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.</div>
@@ -6849,7 +6950,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       })
       onTipSaved?.(normalizeTipRow({
         ...savedRow,
-        author_avatar_url: savedRow?.author_avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null
+        author_name: username,
+        username,
+        author_email: email,
+        author_avatar_url: savedRow?.author_avatar_url || getProfileAvatarUrl(user) || null,
+        avatar_url: savedRow?.avatar_url || getProfileAvatarUrl(user) || null
       }))
     } catch (error) {
       console.error('publish tip error', error)
@@ -7434,6 +7539,15 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
+    if (!commentsOpen) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setCommentsOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [commentsOpen])
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(interactionStorageKey)
       if (!raw) {
@@ -7643,7 +7757,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <TipActionLikeIcon />
             <b>{feedback.likes}</b>
           </button>
-          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} aria-label={commentsOpen ? 'Zamknij komentarze' : 'Otwórz komentarze'}>
             <TipActionCommentIcon />
             <b>{commentCount}</b>
           </button>
@@ -7656,7 +7770,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       {commentsOpen && (
         <div className="tip-comments-panel profile-ticket-v6-comments">
-          <div className="tip-comments-head"><strong>Komentarze:</strong><span>{commentCount} łącznie</span></div>
+          <div className="tip-comments-head">
+            <strong>Komentarze:</strong>
+            <span>{commentCount} łącznie</span>
+            <button type="button" className="tip-comments-close" onClick={() => setCommentsOpen(false)} aria-label="Zamknij komentarze">×</button>
+          </div>
           <div className="tip-comment-form">
             <input
               type="text"
@@ -15315,6 +15433,7 @@ function App() {
   const [accountProfile, setAccountProfile] = useState(null)
   const effectiveAccountProfile = buildEffectiveAccountProfile(accountProfile, sessionUser)
   const effectiveAccountPlan = getEffectiveAccountPlan(accountProfile, sessionUser, accountPlan)
+  const effectiveTopbarAvatarUrl = getProfileAvatarUrl(effectiveAccountProfile || sessionUser)
   const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
@@ -15536,27 +15655,59 @@ function App() {
 
   async function fetchRealRanking() {
     if (!isSupabaseConfigured || !supabase) {
-      setRealRanking([])
+      setRealRanking(buildRankingFromTips(tips))
       return
     }
 
     try {
-      const { data, error } = await supabase
-        .from('tipster_ranking')
-        .select('*')
-        .order('earnings', { ascending: false })
-        .limit(5)
+      const [rankingRes, tipsRes, profilesRes] = await Promise.all([
+        supabase.from('tipster_ranking').select('*').limit(50),
+        supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500),
+        supabase
+          .from('profiles')
+          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_profit,profit,total_tips,wins,losses,yield,roi')
+          .limit(500)
+      ])
 
-      if (error) {
-        console.error('fetchRealRanking error', error)
-        setRealRanking([])
-        return
+      const rowsMap = new Map()
+
+      const upsertRankingRow = (raw = {}) => {
+        const key = String(raw.tipster_id || raw.id || raw.user_id || raw.author_id || raw.email || raw.username || '').toLowerCase()
+        if (!key) return
+        const previous = rowsMap.get(key) || {}
+        const profit = getRankingNumber(raw, ['imported_profit','earnings','total_earnings','profit'], 0)
+        const tipsCount = getRankingNumber(raw, ['imported_total_tips','total_tips','tips_count'], 0)
+        const wins = getRankingNumber(raw, ['imported_won_tips','wins'], 0)
+        const losses = getRankingNumber(raw, ['imported_lost_tips','losses'], 0)
+        const roi = getRankingNumber(raw, ['imported_yield','roi','yield'], 0)
+        rowsMap.set(key, {
+          ...previous,
+          ...raw,
+          tipster_id: raw.tipster_id || raw.id || previous.tipster_id || key,
+          username: isGenericProfileName(raw.username || previous.username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : (raw.username || previous.username),
+          email: raw.email || previous.email || '',
+          avatar_url: raw.avatar_url || previous.avatar_url || '',
+          total_tips: Math.max(Number(previous.total_tips || 0), Number(tipsCount || 0)),
+          wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
+          losses: Math.max(Number(previous.losses || 0), Number(losses || 0)),
+          roi: Number(roi || previous.roi || 0) || 0,
+          winrate: (Number(wins || 0) + Number(losses || 0)) > 0 ? (Number(wins || 0) / (Number(wins || 0) + Number(losses || 0))) * 100 : Number(raw.winrate || previous.winrate || 0) || 0,
+          earnings: Math.abs(Number(profit || 0)) >= Math.abs(Number(previous.earnings || 0)) ? Number(profit || 0) : Number(previous.earnings || 0),
+          profit: Math.abs(Number(profit || 0)) >= Math.abs(Number(previous.profit || 0)) ? Number(profit || 0) : Number(previous.profit || 0),
+        })
       }
 
-      setRealRanking(sortRankingRows(data || []))
+      ;(profilesRes.data || []).forEach(profile => upsertRankingRow(profile))
+      ;(rankingRes.data || []).forEach(row => upsertRankingRow(row))
+
+      const dynamicRows = buildRankingFromTips(tipsRes.data || tips || [])
+      dynamicRows.forEach(row => upsertRankingRow(row))
+
+      const finalRows = sortRankingRows(Array.from(rowsMap.values())).slice(0, 10)
+      setRealRanking(finalRows)
     } catch (error) {
       console.error('fetchRealRanking exception', error)
-      setRealRanking([])
+      setRealRanking(buildRankingFromTips(tips))
     }
   }
 
@@ -15673,7 +15824,7 @@ function App() {
             return profile
               ? {
                   ...tip,
-                  author_name: tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+                  author_name: isGenericProfileName(tip.author_name) ? (profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik')) : (tip.author_name || profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik')),
                   author_email: tip.author_email || profile.email || null,
                   author_avatar_url: tip.author_avatar_url || profile.avatar_url || null,
                   author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), getImportedProfileStats(profile)),
@@ -15706,8 +15857,17 @@ function App() {
     const channel = supabase
       .channel(`betai-live-tip-center-${sessionUser.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
-        const incomingTip = normalizeTipRow(payload?.new || {})
+        let incomingTip = normalizeTipRow(payload?.new || {})
         if (!incomingTip?.id) return
+        if (isSameProfileIdentity(effectiveAccountProfile || sessionUser, incomingTip)) {
+          incomingTip = normalizeTipRow({
+            ...incomingTip,
+            author_name: getProfileUsername(effectiveAccountProfile || sessionUser) || incomingTip.author_name,
+            author_email: (effectiveAccountProfile || sessionUser)?.email || incomingTip.author_email,
+            author_avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.author_avatar_url,
+            avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.avatar_url
+          })
+        }
 
         setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
         showLiveTipPopup(incomingTip)
@@ -17311,10 +17471,13 @@ function App() {
             </button>
             <button type="button" className={`top-user-chip neutral-top-user-chip role-${getDisplayRole(effectiveAccountProfile, effectiveAccountPlan).toLowerCase()}`} onClick={() => setView('profile')} aria-label="Mój profil">
               <span
-                className={`top-user-avatar ${getProfileAvatarUrl(effectiveAccountProfile) ? 'has-avatar' : ''}`}
-                style={getProfileAvatarUrl(effectiveAccountProfile) ? { '--avatar-image': `url("${getProfileAvatarUrl(effectiveAccountProfile)}")` } : undefined}
+                className={`top-user-avatar ${effectiveTopbarAvatarUrl ? 'has-avatar' : ''}`}
+                style={effectiveTopbarAvatarUrl ? { '--avatar-image': `url("${effectiveTopbarAvatarUrl}")`, backgroundImage: `url("${effectiveTopbarAvatarUrl}")` } : undefined}
+                data-avatar-url={effectiveTopbarAvatarUrl || ''}
               >
-                {getProfileAvatarUrl(effectiveAccountProfile) ? '' : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
+                {effectiveTopbarAvatarUrl
+                  ? <img src={effectiveTopbarAvatarUrl} alt="" loading="eager" decoding="async" referrerPolicy="no-referrer" />
+                  : (getProfileUsername(effectiveAccountProfile) || 'U').slice(0,2).toUpperCase()}
               </span>
               <span className="top-user-info"><strong>{getProfileUsername(effectiveAccountProfile) || 'Użytkownik'}</strong><small>{getDisplayRole(effectiveAccountProfile, effectiveAccountPlan)}</small></span>
               <span className="top-user-chevron">⌄</span>

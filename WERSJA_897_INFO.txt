@@ -1,0 +1,14 @@
+WERSJA 897
+- Finalna naprawa dodawania premium typów dla smilhytv.
+- Problem był w triggerach na public.tips, nie w samym profiles.
+- SQL 897 ustawia is_admin=true, is_premium=true, role=admin, plan=premium.
+- SQL 897 podmienia funkcje:
+  betai_user_is_premium
+  is_betai_premium_user
+  get_user_status
+  can_add_tip
+  enforce_tip_limit
+  block_free_premium_tips
+- Trigger premium sprawdza teraz user_id, author_id, author_email i author_name.
+- Hardcoded: smilhytv / smilhytv@gmail.com zawsze Premium/Admin.
+- Po SQL zrób wyloguj/zaloguj i dodaj typ premium.

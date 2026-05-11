@@ -31904,3 +31904,273 @@ button.betfolio-fetch-btn{
   color:transparent!important;
   overflow:hidden!important;
 }
+
+
+/* WERSJA 895 — realny avatar w topbarze/czacie oraz brak fallbacku "user" na kartach */
+.top-user-avatar.has-avatar img,
+.livechat226-avatar.has-avatar img,
+.betai-chat-avatar.has-avatar img,
+.chat-avatar.has-avatar img,
+.dm-avatar.has-avatar img,
+.message-avatar.has-avatar img{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  border-radius:inherit!important;
+}
+.top-user-avatar.has-avatar{
+  padding:0!important;
+  overflow:hidden!important;
+  color:transparent!important;
+}
+.livechat226-avatar.has-avatar{
+  overflow:hidden!important;
+  padding:0!important;
+  background:transparent!important;
+}
+
+
+/* WERSJA 896 — avatar każdego użytkownika w górnym pasku */
+.top-user-chip .top-user-avatar.has-avatar,
+.top-user-avatar.has-avatar{
+  position:relative!important;
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  flex:0 0 34px!important;
+  border-radius:999px!important;
+  overflow:hidden!important;
+  padding:0!important;
+  color:transparent!important;
+  background-image:var(--avatar-image)!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  border:1px solid rgba(37,233,255,.34)!important;
+  box-shadow:0 0 0 1px rgba(37,233,255,.10),0 0 18px rgba(37,233,255,.24)!important;
+}
+
+.top-user-chip .top-user-avatar.has-avatar img,
+.top-user-avatar.has-avatar img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:100%!important;
+  min-height:100%!important;
+  display:block!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:999px!important;
+  opacity:1!important;
+  visibility:visible!important;
+  z-index:2!important;
+}
+
+/* fallback: jeżeli obrazek chwilę się ładuje, tło nadal pokazuje avatar */
+.top-user-avatar.has-avatar::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  background-image:var(--avatar-image)!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  border-radius:999px!important;
+}
+
+/* spójnie także dla sidebar/chatu */
+.sidebar-user-avatar.has-avatar,
+.livechat226-avatar.has-avatar,
+.betai-chat-avatar.has-avatar,
+.chat-avatar.has-avatar,
+.dm-avatar.has-avatar,
+.message-avatar.has-avatar{
+  background-image:var(--avatar-image)!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+}
+
+
+/* WERSJA 898 — ukrycie rozwijanego panelu komentarzy na dashboardzie/profilu */
+.tip-comments-panel,
+.profile-ticket-v6-comments,
+.tip-comment-form,
+.tip-comment-list,
+.tip-comments-head{
+  display:none!important;
+}
+
+
+/* WERSJA 899 — komentarze można otworzyć i zamknąć X albo Escape */
+.tip-comments-panel.profile-ticket-v6-comments,
+.profile-ticket-v6-comments{
+  display:block!important;
+  margin-top:0!important;
+  padding:12px 14px 14px!important;
+  border-top:1px solid rgba(118,246,255,.10)!important;
+  background:rgba(2,11,20,.40)!important;
+}
+
+.profile-ticket-v6-comments .tip-comments-head,
+.tip-comments-panel .tip-comments-head{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-height:28px!important;
+  color:#f4fbff!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+
+.profile-ticket-v6-comments .tip-comments-head strong,
+.tip-comments-panel .tip-comments-head strong{
+  display:inline!important;
+  color:#ffffff!important;
+}
+
+.profile-ticket-v6-comments .tip-comments-head span,
+.tip-comments-panel .tip-comments-head span{
+  display:inline!important;
+  color:#a9bed0!important;
+  font-weight:800!important;
+}
+
+.tip-comments-close{
+  margin-left:auto!important;
+  width:28px!important;
+  height:28px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(118,246,255,.24)!important;
+  background:linear-gradient(180deg,rgba(12,36,55,.96),rgba(3,14,25,.96))!important;
+  color:#eaffff!important;
+  font-size:20px!important;
+  line-height:24px!important;
+  font-weight:900!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  cursor:pointer!important;
+  box-shadow:0 0 14px rgba(35,230,244,.10)!important;
+}
+.tip-comments-close:hover{
+  border-color:rgba(35,230,244,.72)!important;
+  color:#28f4ff!important;
+  box-shadow:0 0 18px rgba(35,230,244,.24)!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-form,
+.tip-comments-panel .tip-comment-form{
+  display:flex!important;
+  gap:8px!important;
+  margin-top:8px!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-form input,
+.tip-comments-panel .tip-comment-form input{
+  display:block!important;
+  flex:1 1 auto!important;
+  min-height:38px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(118,246,255,.14)!important;
+  background:rgba(4,17,30,.92)!important;
+  color:#eafcff!important;
+  padding:0 12px!important;
+  outline:none!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-submit,
+.tip-comments-panel .tip-comment-submit{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:38px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(35,230,244,.34)!important;
+  background:linear-gradient(135deg,#23e6f4,#138bd8)!important;
+  color:#03131e!important;
+  font-weight:950!important;
+  cursor:pointer!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-list,
+.tip-comments-panel .tip-comment-list{
+  display:grid!important;
+  gap:8px!important;
+  margin-top:10px!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-item,
+.tip-comments-panel .tip-comment-item{
+  display:flex!important;
+  gap:8px!important;
+  padding:8px 10px!important;
+  border-radius:12px!important;
+  background:rgba(8,25,42,.62)!important;
+  border:1px solid rgba(118,246,255,.10)!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-avatar,
+.tip-comments-panel .tip-comment-avatar{
+  width:26px!important;
+  height:26px!important;
+  border-radius:999px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:rgba(35,230,244,.16)!important;
+  color:#eaffff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-body,
+.tip-comments-panel .tip-comment-body{
+  display:block!important;
+  min-width:0!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-meta,
+.tip-comments-panel .tip-comment-meta{
+  display:flex!important;
+  gap:8px!important;
+  align-items:center!important;
+  color:#a9bed0!important;
+  font-size:11px!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-meta strong,
+.tip-comments-panel .tip-comment-meta strong{
+  color:#ffffff!important;
+}
+
+.profile-ticket-v6-comments .tip-comment-body p,
+.tip-comments-panel .tip-comment-body p{
+  margin:3px 0 0!important;
+  color:#d9edf8!important;
+  font-size:13px!important;
+  line-height:1.35!important;
+}
+
+
+/* WERSJA 900 — prawy ranking realny profit typera */
+.real-ranking-panel .panel-head a{
+  display:none!important;
+}
+.real-ranking-panel .rank > strong,
+.real-ranking-panel .ranking-profit-positive{
+  color:#23f4ff!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+.real-ranking-panel .ranking-profit-negative{
+  color:#ff5c7a!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+.real-ranking-panel .rank{
+  grid-template-columns:auto auto minmax(0,1fr) auto!important;
+}
