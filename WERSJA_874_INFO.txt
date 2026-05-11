@@ -1,0 +1,6 @@
+WERSJA 874
+- Poprawiono niebieski znaczek weryfikacji w kartach typów.
+- Znaczek jest teraz zawsze bezpośrednio obok nicku.
+- Poprawka działa w Mój profil i na dashboardzie.
+- Zostają wszystkie poprawki z wersji 873.
+- SQL nie jest potrzebny.

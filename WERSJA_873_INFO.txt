@@ -1,0 +1,6 @@
+WERSJA 873
+- Po wejściu w Mój profil domyślnie otwiera się zakładka Typy.
+- Przegląd nadal zostaje jako druga zakładka.
+- Zostają poprawki z wersji 872: ikonki Premium/Darmowe i poprawione badge.
+- SQL nie jest potrzebny.
+- Podmieniono wystąpień: 1

@@ -22,6 +22,39 @@ const BETAI_LANG_FLAG_IMAGES = {
   ru: svgToDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs><g clip-path="url(%23c)"><rect width="64" height="21.34" fill="%23ffffff"/><rect y="21.33" width="64" height="21.34" fill="%230039a6"/><rect y="42.66" width="64" height="21.34" fill="%23d52b1e"/></g><circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/></svg>`)
 }
 
+
+function TipActionLikeIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm2 10h7.2a2 2 0 0 0 1.96-1.58l1.28-6A2 2 0 0 0 17.48 10H14V6.5A2.5 2.5 0 0 0 11.5 4L9 10v10Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function TipActionCommentIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function TipActionShareIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 15 19 5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      <path d="M13 5h6v6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M5 19c2.5-3.2 5.5-4.8 10-5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+    </svg>
+  )
+}
+function TipActionSaveIcon(){
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+
 function getInitialBetaiLanguage() {
   try {
     const saved = localStorage.getItem('betai_language')
@@ -7270,6 +7303,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
+  const dashboardAuthorStats = isOwnTip ? {
+    yieldLabel: `${Number(currentUser?.imported_yield || 0) || 0}%`,
+    totalTipsLabel: String(Number(currentUser?.imported_total_tips || 0) || ''),
+    profitLabel: `${Number(currentUser?.imported_profit || 0) >= 0 ? '+' : ''}${Number(currentUser?.imported_profit || 0).toFixed(2)} zł`,
+  } : null
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -7354,6 +7392,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     } catch (_) {}
   }
 
+  function handleShareAction() {
+    setFeedback(prev => ({ ...prev, dislikes: Number(prev?.dislikes || 0) + 1 }))
+    shareDashboardTip()
+  }
+
   return (
     <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${isLocked ? 'locked' : 'unlocked'}`}>
       <div className="profile-ticket-v6-left">
@@ -7361,9 +7404,17 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
         </span>
         <div>
-          <strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{cardAuthor}</strong>
-          <b>✓</b>
-          <small>{tip.created_at ? new Date(tip.created_at).toLocaleString('pl-PL') : 'teraz'}</small>
+          <span className="ticket-author-row-v874">
+            <strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{cardAuthor}</strong>
+            <b>✓</b>
+          </span>
+          {dashboardAuthorStats?.totalTipsLabel ? (
+            <div className="ticket-mini-stats-v876">
+              <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b>{dashboardAuthorStats.profitLabel}</b></span>
+            </div>
+          ) : null}
         </div>
         <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
@@ -7409,10 +7460,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
-              <button type="button" onClick={reportDashboardTip}>△ Zgłoś wpis</button>
+              <button type="button" onClick={reportDashboardTip}>⚠ Zgłoś wpis</button>
               <button type="button" onClick={settleDashboardTip}>✓ Rozlicz</button>
-              <button type="button" onClick={addDashboardAnalysis}>▣ Dodaj analizę</button>
-              <button type="button" onClick={shareDashboardTip}>⇧ Udostępnij</button>
+              <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button>
+              <button type="button" onClick={shareDashboardTip}>↗ Udostępnij</button>
             </div>
           )}
         </div>
@@ -7430,11 +7481,20 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       <footer className="profile-ticket-v6-footer">
         <div>
-          <button type="button" className={activeVote === 'like' ? 'active' : ''} onClick={() => handleVote('like')}>♡ <b>{feedback.likes}</b></button>
-          <button type="button" className={commentsOpen ? 'active' : ''} onClick={() => setCommentsOpen(prev => !prev)}>▣ <b>{commentCount}</b></button>
-          <button type="button" className={activeVote === 'dislike' ? 'active' : ''} onClick={() => handleVote('dislike')}>↗ <b>{feedback.dislikes}</b></button>
+          <button type="button" className={`ticket-action-btn-v877 ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')}>
+            <TipActionLikeIcon />
+            <b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+            <TipActionCommentIcon />
+            <b>{commentCount}</b>
+          </button>
+          <button type="button" className="ticket-action-btn-v877" onClick={handleShareAction}>
+            <TipActionShareIcon />
+            <b>{feedback.dislikes}</b>
+          </button>
         </div>
-        <button type="button">♡ Zapisz</button>
+        <button type="button" className="ticket-save-btn-v877" aria-label="Zapisz"><TipActionSaveIcon /></button>
       </footer>
 
       {commentsOpen && (
@@ -12739,6 +12799,7 @@ function ProfileLiveTipCard({
   onSubscribeToTipster,
   onToast,
   onViewType,
+  authorStats = null,
 }) {
   const profileSubActive = hasActiveTipsterSubscription(sourceTip, tipsterSubscriptions)
   const singleUnlocked = Boolean(sourceTip?.id && unlockedTips?.has?.(sourceTip.id))
@@ -12874,6 +12935,11 @@ function ProfileLiveTipCard({
     } catch (_) {}
   }
 
+  function handleShareAction() {
+    setFeedback(prev => ({ ...prev, dislikes: Number(prev?.dislikes || 0) + 1 }))
+    shareTip()
+  }
+
   return (
     <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${isUnlocked ? 'unlocked' : 'locked'}`}>
       <div className="profile-ticket-v6-left">
@@ -12881,9 +12947,14 @@ function ProfileLiveTipCard({
           {avatarUrl ? '' : initials}
         </span>
         <div>
-          <strong>{displayName}</strong>
-          <b>✓</b>
-          <small>{tip.createdLabel}</small>
+          <span className="ticket-author-row-v874"><strong>{displayName}</strong><b>✓</b></span>
+          {authorStats ? (
+            <div className="ticket-mini-stats-v876">
+              <span>Yield: <b>{authorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b>{authorStats.profitLabel}</b></span>
+            </div>
+          ) : null}
         </div>
         <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
           {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
@@ -12929,10 +13000,10 @@ function ProfileLiveTipCard({
           <button type="button" onClick={() => setMenuOpen(prev => !prev)}>⋮</button>
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
-              <button type="button" onClick={reportTip}>△ Zgłoś wpis</button>
+              <button type="button" onClick={reportTip}>⚠ Zgłoś wpis</button>
               <button type="button" onClick={settleTip}>✓ Rozlicz</button>
-              <button type="button" onClick={addAnalysis}>▣ Dodaj analizę</button>
-              <button type="button" onClick={shareTip}>⇧ Udostępnij</button>
+              <button type="button" onClick={addAnalysis}>📝 Dodaj analizę</button>
+              <button type="button" onClick={shareTip}>↗ Udostępnij</button>
             </div>
           )}
         </div>
@@ -12950,11 +13021,20 @@ function ProfileLiveTipCard({
 
       <footer className="profile-ticket-v6-footer">
         <div>
-          <button type="button" className={activeVote === 'like' ? 'active' : ''} onClick={() => handleVote('like')}>♡ <b>{feedback.likes}</b></button>
-          <button type="button" className={commentsOpen ? 'active' : ''} onClick={() => setCommentsOpen(prev => !prev)}>▣ <b>{commentCount}</b></button>
-          <button type="button" className={activeVote === 'dislike' ? 'active' : ''} onClick={() => handleVote('dislike')}>↗ <b>{feedback.dislikes}</b></button>
+          <button type="button" className={`ticket-action-btn-v877 ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')}>
+            <TipActionLikeIcon />
+            <b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`ticket-action-btn-v877 ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)}>
+            <TipActionCommentIcon />
+            <b>{commentCount}</b>
+          </button>
+          <button type="button" className="ticket-action-btn-v877" onClick={handleShareAction}>
+            <TipActionShareIcon />
+            <b>{feedback.dislikes}</b>
+          </button>
         </div>
-        <button type="button">♡ Zapisz</button>
+        <button type="button" className="ticket-save-btn-v877" aria-label="Zapisz"><TipActionSaveIcon /></button>
       </footer>
 
       {commentsOpen && (
@@ -13023,7 +13103,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const avatarInputRef = useRef(null)
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
-  const [profileTab, setProfileTab] = useState('overview')
+  const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('all')
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
@@ -13428,6 +13508,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
   const reviewRows = Array.isArray(user?.reviews) ? user.reviews : []
 
+  const profileTipStats = {
+    yieldLabel: `${roi}%`,
+    totalTipsLabel: String(totalTips),
+    profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`,
+  }
+
   const renderProfileTipCard = (tip) => (
     <ProfileLiveTipCard
       key={tip.id}
@@ -13443,6 +13529,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       onSubscribeToTipster={onSubscribeToTipster}
       onToast={onToast}
       onViewType={() => setProfileTab('tips')}
+      authorStats={profileTipStats}
     />
   )
 
@@ -13480,7 +13567,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="profile-v3-user-copy">
                 <div className="profile-v3-name-line">
                   <h1>{displayName}</h1>
-                  <span className="verify-dot">✓</span>
+                  
                 </div>
                 <small>{handleName}</small>
                 <div className="profile-v3-badges">

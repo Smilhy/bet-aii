@@ -31312,3 +31312,184 @@ button.betfolio-fetch-btn{
 .profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-field.odds strong{
   color:#ffffff!important;
 }
+
+
+/* WERSJA 874 — znaczek weryfikacji zawsze obok nicku */
+.profile-ticket-v6-left div{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  align-content:start!important;
+  gap:6px!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:100%!important;
+  min-width:0!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 strong{
+  display:inline-block!important;
+  min-width:0!important;
+  max-width:150px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  line-height:1.15!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 b,
+.profile-ticket-v6-left div > b{
+  flex:0 0 17px!important;
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  margin:0!important;
+  border-radius:999px!important;
+  color:#ffffff!important;
+  background:linear-gradient(180deg,#32c7ff,#0a8bff)!important;
+  box-shadow:0 0 12px rgba(33,174,255,.55)!important;
+  font-size:11px!important;
+  line-height:1!important;
+  transform:none!important;
+  position:static!important;
+}
+.profile-ticket-v6-left small{
+  grid-column:auto!important;
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  color:#ffffff!important;
+  line-height:1.28!important;
+}
+.profile-ticket-v6-left .tipster-name-link{
+  cursor:pointer!important;
+}
+
+
+/* WERSJA 875 — usunięty niebieski znaczek weryfikacji */
+.ticket-author-row-v874 b, .verify-dot { display:none !important; }
+.profile-ticket-v6-left .ticket-author-row-v874 { display:inline !important; gap:0 !important; }
+.profile-v3-name-line .verify-dot { display:none !important; }
+
+
+/* WERSJA 876 — przywrócony znaczek + zamiast daty żywe statystyki */
+.profile-ticket-v6-left div{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  align-content:start!important;
+  gap:6px!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 strong{
+  display:inline-block!important;
+  max-width:155px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  line-height:1.15!important;
+}
+.profile-ticket-v6-left .ticket-author-row-v874 b,
+.profile-ticket-v6-left div > b{
+  flex:0 0 17px!important;
+  width:17px!important;
+  height:17px!important;
+  min-width:17px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  margin:0!important;
+  border-radius:999px!important;
+  color:#ffffff!important;
+  background:linear-gradient(180deg,#35caff,#0a8cff)!important;
+  box-shadow:0 0 12px rgba(33,174,255,.58)!important;
+  font-size:11px!important;
+  line-height:1!important;
+  transform:none!important;
+  position:static!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876{
+  display:grid!important;
+  gap:2px!important;
+  margin-top:2px!important;
+  color:#dce9f6!important;
+  font-size:12px!important;
+  line-height:1.25!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876 span{
+  display:block!important;
+  color:#dce9f6!important;
+  white-space:nowrap!important;
+}
+.profile-ticket-v6-left .ticket-mini-stats-v876 b{
+  all:unset!important;
+  color:#ffffff!important;
+  font-weight:900!important;
+}
+.profile-ticket-v6-left small{
+  display:none!important;
+}
+.verify-dot{
+  display:inline-grid!important;
+}
+
+
+/* WERSJA 877 — reakcje jak na screenie */
+.profile-ticket-v6-footer div{gap:18px!important}
+.profile-ticket-v6-footer .ticket-action-btn-v877,
+.profile-ticket-v6-footer .ticket-save-btn-v877{display:inline-flex!important;align-items:center!important;gap:8px!important;padding:0!important;background:transparent!important;border:0!important;color:#eef5ff!important;font-weight:800!important;letter-spacing:0!important;min-height:auto!important;box-shadow:none!important}
+.profile-ticket-v6-footer .ticket-action-btn-v877 svg,
+.profile-ticket-v6-footer .ticket-save-btn-v877 svg{width:18px!important;height:18px!important;display:block!important;stroke:currentColor!important}
+.profile-ticket-v6-footer .ticket-action-btn-v877 b,
+.profile-ticket-v6-footer .ticket-save-btn-v877 span{all:unset!important;color:#eef5ff!important;font-weight:800!important;font-size:13px!important;line-height:1!important}
+.profile-ticket-v6-footer .ticket-action-btn-v877:hover,
+.profile-ticket-v6-footer .ticket-action-btn-v877.active,
+.profile-ticket-v6-footer .ticket-save-btn-v877:hover{color:#ffffff!important;text-shadow:0 0 10px rgba(255,255,255,.14)}
+.profile-ticket-v6-footer .ticket-action-btn-v877.active{color:#28d7ff!important}
+.profile-ticket-v6-footer .ticket-save-btn-v877{color:#dbe7f4!important}
+.profile-ticket-v6-menu button{gap:8px!important;align-items:center!important}
+
+/* WERSJA 879 — usuń napis Zapisz przy ikonie */
+.profile-ticket-v6-footer .ticket-save-btn-v877{gap:0!important}
+.profile-ticket-v6-footer .ticket-save-btn-v877 span{display:none!important}
+
+
+/* WERSJA 880 — zwężona kolumna analizy w kartach typów w Moj profil */
+.profile-v4-tips-page .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6{
+  grid-template-columns:210px minmax(220px,1.05fr) minmax(120px,.48fr) minmax(118px,.40fr) minmax(82px,.28fr) minmax(180px,.58fr) 190px !important;
+}
+.profile-v4-tips-page .profile-ticket-v6-analysis,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-analysis{
+  padding:14px 14px !important;
+  gap:6px !important;
+}
+.profile-v4-tips-page .profile-ticket-v6-analysis p,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis p,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-analysis p{
+  font-size:13px !important;
+  line-height:1.34 !important;
+  -webkit-line-clamp:3 !important;
+}
+.profile-v4-tips-page .profile-ticket-v6-buy,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-buy{
+  min-width:190px !important;
+  padding:44px 14px 14px !important;
+}
+.profile-v4-tips-page .profile-ticket-v6-buy button,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy button,
+.profile-static-v3 .profile-all-tips-list .profile-ticket-v6-buy button{
+  width:100% !important;
+}

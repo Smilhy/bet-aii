@@ -1,0 +1,4 @@
+WERSJA 875
+- Usunięto niebieski znaczek weryfikacji obok nicku wszędzie, gdzie był dodany.
+- Usunięto go z kart typów na dashboardzie, w zakładce Typy i w nagłówku profilu.
+- SQL nie jest potrzebny.

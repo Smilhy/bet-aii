@@ -1,0 +1,10 @@
+WERSJA 876
+- Przywrócono niebieski znaczek weryfikacji obok nicku.
+- Usunięto datę pod nickiem w kartach typów.
+- W miejscu daty w Mój profil pokazują się żywe statystyki:
+  • Yield
+  • Oddane typy
+  • Bilans
+- Statystyki biorą wartości z aktualnych danych profilu, więc po rozliczaniu typów będą się zmieniać razem z logiką kafelków.
+- Na dashboardzie dla własnych typów też pokazuje mini-statystyki, jeśli użytkownik ma dane importu.
+- SQL nie jest potrzebny.
