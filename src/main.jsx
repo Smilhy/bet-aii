@@ -454,6 +454,25 @@ function getProfileUsername(user) {
   )
 }
 
+
+function getProfileAvatarUrl(user) {
+  return user?.avatar_url || user?.author_avatar_url || user?.profile_avatar_url || user?.user_metadata?.avatar_url || user?.raw_user_meta_data?.avatar_url || ''
+}
+
+function isSameProfileIdentity(left, right) {
+  const leftId = String(left?.id || left?.user_id || left?.author_id || '').trim()
+  const rightId = String(right?.id || right?.user_id || right?.author_id || '').trim()
+  if (leftId && rightId && leftId === rightId) return true
+
+  const leftEmail = getProfileEmail(left)
+  const rightEmail = getProfileEmail(right)
+  if (leftEmail && rightEmail && leftEmail === rightEmail) return true
+
+  const leftUsername = getProfileUsername(left)
+  const rightUsername = getProfileUsername(right)
+  return Boolean(leftUsername && rightUsername && leftUsername === rightUsername)
+}
+
 function isGuaranteedPremiumIdentity(user) {
   const email = getProfileEmail(user)
   const username = getProfileUsername(user)
@@ -771,7 +790,7 @@ function LiveChatPanel({ user }) {
 
   const email = normalizeEmail(user?.email)
   const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
-  const currentAvatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url || ''
+  const currentAvatarUrl = getProfileAvatarUrl(user)
 
   const nameFromEmail = (value = '') => {
     const clean = normalizeEmail(value)
@@ -934,7 +953,32 @@ function LiveChatPanel({ user }) {
         .order('created_at', { ascending: false })
         .limit(20)
       if (error) throw error
-      const nextMessages = (data || []).reverse()
+      let nextMessages = (data || []).reverse()
+
+      // Starsze wiadomości nie zawsze miały zapisany avatar_url.
+      // Dociągamy avatar po emailu z profiles, żeby czat pokazywał aktualne zdjęcie.
+      try {
+        const messageEmails = [...new Set(nextMessages.map(row => normalizeEmail(row.user_email)).filter(Boolean))]
+        if (messageEmails.length) {
+          const { data: chatProfiles, error: chatProfilesError } = await supabase
+            .from('profiles')
+            .select('email,username,avatar_url')
+            .in('email', messageEmails)
+
+          if (!chatProfilesError && Array.isArray(chatProfiles)) {
+            const chatProfileMap = new Map(chatProfiles.map(profile => [normalizeEmail(profile.email), profile]))
+            nextMessages = nextMessages.map(row => {
+              const profile = chatProfileMap.get(normalizeEmail(row.user_email))
+              return profile?.avatar_url && !row.avatar_url
+                ? { ...row, avatar_url: profile.avatar_url }
+                : row
+            })
+          }
+        }
+      } catch (avatarError) {
+        console.warn('chat avatar hydration skipped', avatarError)
+      }
+
       setMessages(nextMessages)
       setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
       // Wersja 606: lider czatu jest nagradzany funkcją SQL o 00:00, nie podczas odświeżania UI.
@@ -1008,7 +1052,7 @@ function LiveChatPanel({ user }) {
       const { error } = await supabase.from('live_chat_messages').insert({
         user_email: email,
         user_name: userName,
-        avatar_url: user?.avatar_url || user?.user_metadata?.avatar_url || '',
+        avatar_url: currentAvatarUrl || '',
         message: clean,
         tipped_amount: 0,
         created_at: new Date().toISOString()
@@ -1172,14 +1216,17 @@ function LiveChatPanel({ user }) {
       <div className="livechat226-messages betai-chat-messages-final" id="liveChatMessages226">
         {messages.length ? messages.map(msg => {
           const msgEmail = normalizeEmail(msg.user_email)
-          const mine = msgEmail && msgEmail === email
+          const name = msg.user_name || nameFromEmail(msgEmail)
+          const mine = Boolean(
+            (msgEmail && msgEmail === email) ||
+            (getProfileUsername(user) && normalizeEmail(name) === getProfileUsername(user))
+          )
           const isAdmin = msgEmail === 'smilhytv@gmail.com'
           const isLeader = leader?.email && leader.email === msgEmail
-          const name = msg.user_name || nameFromEmail(msgEmail)
           const avatar = msg.avatar_url || (mine ? currentAvatarUrl : '')
           return (
             <div className={`livechat226-msg ${mine ? 'me' : ''}`} key={msg.id || msg.created_at}>
-              <div className="livechat226-avatar" style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}>{avatar ? '' : initialsFromName(name)}</div>
+              <div className={`livechat226-avatar ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initialsFromName(name)}</div>
               <div className="livechat226-bubble">
                 <div className="livechat226-meta">
                   <span className="livechat226-name">{name}</span>
@@ -7211,14 +7258,22 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     ? (isLocked ? '🔒' : `${probability}%`)
     : (isLocked ? '🔒' : '')
   const authorId = getTipAuthorId(tip)
-  const currentUsername = (currentUser?.email || '').split('@')[0]
-  const isOwnTip = Boolean(
-    (currentUser?.id && authorId && String(currentUser.id) === String(authorId)) ||
+  const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0]
+  const tipIdentity = {
+    id: authorId,
+    user_id: tip.user_id,
+    author_id: tip.author_id,
+    email: tip.author_email || tip.email || tip.user_email,
+    author_email: tip.author_email,
+    username: tip.author_name || tip.username,
+    author_name: tip.author_name,
+  }
+  const isOwnTip = isSameProfileIdentity(currentUser, tipIdentity) || Boolean(
     (currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase())
   )
   const followKey = authorId ? String(authorId) : String(author).toLowerCase()
   const isFollowing = Boolean(followKey && followingTipsters?.has?.(followKey))
-  const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? (currentUser?.avatar_url || currentUser?.user_metadata?.avatar_url || '') : '')
+  const authorAvatarUrl = tip.author_avatar_url || tip.avatar_url || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
 
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
@@ -7316,11 +7371,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     <article className={`tip-card pro-tip-card ${isLocked ? 'locked-card' : ''}`}>
       <div className="tip-header">
         <div className="tipster">
-          <div
-            className={`photo ${isAiTip ? 'bot' : ''} ${authorAvatarUrl ? 'has-avatar' : ''}`}
-            style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}
-          >
-            {authorAvatarUrl ? '' : author.slice(0,2).toUpperCase()}
+          <div className={`photo ${isAiTip ? 'bot' : ''} ${authorAvatarUrl ? 'has-avatar' : ''}`}>
+            {authorAvatarUrl ? <img src={authorAvatarUrl} alt="" /> : author.slice(0,2).toUpperCase()}
           </div>
           <div><strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{author}</strong><span>{new Date(tip.created_at).toLocaleString('pl-PL')}</span></div>
           <em>{isAiTip ? 'AI' : 'TYPER'}</em>
@@ -9013,21 +9065,38 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
     const rawUsername = String(username || '').trim()
     const genericNames = ['user', 'uzytkownik', 'użytkownik', 'guest', 'gość', 'gosc']
     const isGeneric = !rawUsername || genericNames.includes(rawUsername.toLowerCase())
+
+    // Najważniejsze: nigdy nie zamieniaj prawdziwego nicku na losowy "Użytkownik ABC123".
     if (!isGeneric) return rawUsername
-    if (clean === 'smilhytv@gmail.com') return 'Smilhytv'
-    if (clean) {
-      return clean.split('@')[0]
-        .replace(/[._-]+/g, ' ')
-        .split(' ')
-        .filter(Boolean)
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ')
-    }
-    const shortId = String(id || '').replace(/-/g, '').slice(0, 6).toUpperCase()
-    return shortId ? `Użytkownik ${shortId}` : 'Użytkownik'
+
+    // Gdy profil nie ma jeszcze username, stabilnym fallbackiem jest login z emaila, zawsze małymi literami.
+    if (clean) return clean.split('@')[0].toLowerCase()
+
+    // Tylko konto bez profilu i bez emaila dostaje neutralny opis, bez losowego ID.
+    return 'Użytkownik'
   }
   const initials = (name = '') => String(name || 'BU').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'BU'
   const normalizeSearch = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+
+  const isPlaceholderDmName = (value = '') => {
+    const clean = normalizeSearch(value)
+    return !clean || clean === 'użytkownik' || clean === 'uzytkownik' || /^użytkownik [a-f0-9]{4,}$/i.test(clean) || /^uzytkownik [a-f0-9]{4,}$/i.test(clean)
+  }
+
+  const preferStableDmUser = (previous = {}, incoming = {}) => {
+    const prevHasStableName = !isPlaceholderDmName(previous?.name)
+    const nextHasStableName = !isPlaceholderDmName(incoming?.name)
+    return {
+      ...previous,
+      ...incoming,
+      name: nextHasStableName ? incoming.name : (prevHasStableName ? previous.name : incoming.name || previous.name || 'Użytkownik'),
+      email: incoming.email || previous.email || '',
+      username: incoming.username || previous.username || '',
+      initials: nextHasStableName
+        ? incoming.initials
+        : (prevHasStableName ? previous.initials : incoming.initials || previous.initials || 'U'),
+    }
+  }
 
   useEffect(() => {
     activeUserRef.current = activeUser
@@ -9056,7 +9125,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
       const map = new Map((prev || []).map(item => [String(item.id || item.email), item]))
       nextItems.forEach(item => {
         const key = String(item.id || item.email)
-        map.set(key, { ...(map.get(key) || {}), ...item })
+        map.set(key, preferStableDmUser(map.get(key) || {}, item))
       })
       return Array.from(map.values()).sort((a, b) => {
         const unreadDiff = Number(unreadMap[b.id] || 0) - Number(unreadMap[a.id] || 0)
@@ -9227,17 +9296,26 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       const dmUserIds = Array.from(new Set((dmRows || []).flatMap(row => [String(row?.sender_id || ''), String(row?.receiver_id || '')]).filter(id => id && id !== String(myId))))
       if (dmUserIds.length) {
+        // WERSJA 846: zawsze rozwiąż użytkowników rozmów po UUID przez SECURITY DEFINER.
+        // Dzięki temu nicki nie zamieniają się na "Użytkownik ABC123", gdy zwykły SELECT z profiles zablokuje RLS.
+        try {
+          const { data: resolvedDmProfiles, error: resolvedDmProfilesError } = await supabase.rpc('resolve_betai_user_directory', {
+            p_user_ids: dmUserIds
+          })
+          if (!resolvedDmProfilesError && Array.isArray(resolvedDmProfiles)) {
+            resolvedDmProfiles.forEach(addProfileRow)
+          }
+        } catch (resolveError) {
+          console.warn('user messages dm resolver rpc skipped', resolveError)
+        }
+
         try {
           const { data: dmProfiles, error: dmProfilesError } = await supabase
             .from('profiles')
             .select('id,email,username,created_at')
             .in('id', dmUserIds)
           if (!dmProfilesError && Array.isArray(dmProfiles)) {
-            const existing = new Set(profileRows.map(row => String(row?.id || '')).filter(Boolean))
-            dmProfiles.forEach(row => {
-              const id = String(row?.id || '')
-              if (id && !existing.has(id)) profileRows.push(row)
-            })
+            dmProfiles.forEach(addProfileRow)
           }
         } catch (profileLookupError) {
           console.warn('user messages dm profile lookup skipped', profileLookupError)
@@ -9276,7 +9354,8 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
       Object.keys(meta).forEach(id => {
         if (id === String(myId) || byId.has(id)) return
-        const name = displayName('', '', id)
+        // Brak danych profilu oznacza konto nierozwiązane, ale nie generujemy już fałszywego "nicku" z UUID.
+        const name = 'Użytkownik'
         byId.set(id, {
           id,
           email: '',
@@ -12616,7 +12695,244 @@ function EarningsView({ user, earnings = null, stripeConnectStatus = null, onCon
   )
 }
 
-function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null }) {
+
+function ProfileLiveTipCard({
+  tip,
+  sourceTip,
+  avatarUrl,
+  initials,
+  displayName,
+  currentUser,
+  unlockedTips = new Set(),
+  tipsterSubscriptions = [],
+  onUnlock,
+  onSubscribeToTipster,
+  onToast,
+  onViewType,
+}) {
+  const profileSubActive = hasActiveTipsterSubscription(sourceTip, tipsterSubscriptions)
+  const singleUnlocked = Boolean(sourceTip?.id && unlockedTips?.has?.(sourceTip.id))
+  const isUnlocked = !tip.premium || singleUnlocked || profileSubActive
+
+  const currentUsername = getProfileUsername(currentUser) || String(currentUser?.email || '').split('@')[0] || displayName || 'Użytkownik'
+  const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
+  const actorLabel = currentUsername || displayName || 'Gość'
+  const baseLikes = Number(sourceTip?.likes ?? tip.likes ?? 0) || 0
+  const baseDislikes = Number(sourceTip?.dislikes ?? 0) || 0
+  const baseCommentCount = Number(sourceTip?.comments_count ?? sourceTip?.comments ?? tip.comments ?? 0) || 0
+  const interactionStorageKey = useMemo(
+    () => `betai_tip_interactions_v3_${sourceTip?.id || tip.id || `${tip.home || 'home'}_${tip.away || 'away'}`}`,
+    [sourceTip?.id, tip.id, tip.home, tip.away]
+  )
+
+  const [feedback, setFeedback] = useState({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [commentDraft, setCommentDraft] = useState('')
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(interactionStorageKey)
+      if (!raw) {
+        setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+        return
+      }
+      const parsed = JSON.parse(raw)
+      setFeedback({
+        likes: Number(parsed?.likes ?? baseLikes) || 0,
+        dislikes: Number(parsed?.dislikes ?? baseDislikes) || 0,
+        comments: Array.isArray(parsed?.comments) ? parsed.comments : [],
+        votes: parsed?.votes && typeof parsed.votes === 'object' ? parsed.votes : {},
+      })
+    } catch (_) {
+      setFeedback({ likes: baseLikes, dislikes: baseDislikes, comments: [], votes: {} })
+    }
+  }, [interactionStorageKey, baseLikes, baseDislikes])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(interactionStorageKey, JSON.stringify(feedback))
+    } catch (_) {}
+  }, [interactionStorageKey, feedback])
+
+  const activeVote = feedback?.votes?.[actorKey] || null
+  const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+
+  function handleVote(nextVote) {
+    const previousVote = activeVote
+    setFeedback(prev => {
+      const votes = { ...(prev?.votes || {}) }
+      let likes = Number(prev?.likes || 0)
+      let dislikes = Number(prev?.dislikes || 0)
+
+      if (previousVote === nextVote) {
+        if (nextVote === 'like') likes = Math.max(0, likes - 1)
+        if (nextVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        delete votes[actorKey]
+      } else {
+        if (previousVote === 'like') likes = Math.max(0, likes - 1)
+        if (previousVote === 'dislike') dislikes = Math.max(0, dislikes - 1)
+        if (nextVote === 'like') likes += 1
+        if (nextVote === 'dislike') dislikes += 1
+        votes[actorKey] = nextVote
+      }
+
+      return { ...prev, likes, dislikes, votes }
+    })
+
+    if (previousVote === nextVote) {
+      onToast?.({ type: 'info', title: 'Reakcja usunięta', message: 'Usunęliśmy Twoją reakcję z tego typu.' })
+    } else if (nextVote === 'like') {
+      onToast?.({ type: 'success', title: 'Typ polubiony', message: 'Dziękujemy za pozytywną reakcję.' })
+    } else {
+      onToast?.({ type: 'info', title: 'Zapisano opinię', message: 'Twoja negatywna reakcja została zapisana.' })
+    }
+  }
+
+  function submitComment() {
+    const clean = commentDraft.trim()
+    if (!clean) return
+    const newComment = {
+      id: `comment_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      author: actorLabel || 'Gość',
+      text: clean.slice(0, 280),
+      created_at: new Date().toISOString(),
+    }
+    setFeedback(prev => ({ ...prev, comments: [newComment, ...(prev?.comments || [])] }))
+    setCommentDraft('')
+    setCommentsOpen(true)
+    onToast?.({ type: 'success', title: 'Komentarz dodany', message: 'Twój komentarz został dodany do typu.' })
+  }
+
+  return (
+    <article className={`profile-live-tip-card ${tip.premium ? 'premium' : 'free'}`}>
+      <header className="profile-live-tip-head">
+        <div className="profile-live-tip-author">
+          <span
+            className={`profile-live-tip-avatar ${avatarUrl ? 'has-avatar' : ''}`}
+            style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
+          >
+            {avatarUrl ? '' : initials}
+          </span>
+          <div>
+            <strong>{displayName}</strong>
+            <small>{tip.createdLabel}</small>
+          </div>
+          <em>TYPER</em>
+        </div>
+        <div className="profile-live-tip-tags">
+          <span>{tip.premium ? '▣ PREMIUM' : '◯ FREE'}</span>
+          <span>ANALIZA UŻ.{tip.premium && !isUnlocked ? ' 🔒' : ''}</span>
+        </div>
+      </header>
+
+      <div className="profile-live-tip-meta">{tip.league} • {tip.matchLabel}</div>
+
+      <div className="profile-live-tip-body">
+        <div className="profile-live-tip-ticket">
+          <div className="profile-live-tip-match">
+            <strong>{tip.home}</strong>
+            <span>VS</span>
+            <strong>{tip.away}</strong>
+          </div>
+          <div className="profile-live-tip-fields">
+            <div>
+              <small>Typ</small>
+              <b>{tip.premium && !isUnlocked ? '🔒 Typ premium' : tip.pick}</b>
+            </div>
+            <div>
+              <small>Kurs</small>
+              <b>{tip.premium && !isUnlocked ? '—' : tip.odds}</b>
+            </div>
+            <div>
+              <small>Stawka</small>
+              <b>{tip.stake.toFixed(0)} zł</b>
+            </div>
+          </div>
+        </div>
+
+        <div className={`profile-live-tip-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
+          <div>
+            <strong>✦ Analiza użytkownika</strong>
+            {tip.premium && !isUnlocked && <span>🔒</span>}
+          </div>
+          <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+          <i><span style={{ width: `${tip.premium && !isUnlocked ? Math.max(18, tip.confidence || 24) : tip.confidence}%` }}></span></i>
+          {tip.premium && !isUnlocked && <em>🔒 Premium</em>}
+        </div>
+      </div>
+
+      <footer className="profile-live-tip-foot">
+        <div className="profile-live-tip-stats profile-live-tip-stats-active">
+          <span className={`status-${tip.statusLabel.toLowerCase()}`}>◷ {tip.statusLabel}</span>
+          <button type="button" className={`tip-react-btn like ${activeVote === 'like' ? 'active' : ''}`} onClick={() => handleVote('like')} title="Polub typ">
+            <span>♡</span><b>{feedback.likes}</b>
+          </button>
+          <button type="button" className={`tip-react-btn dislike ${activeVote === 'dislike' ? 'active' : ''}`} onClick={() => handleVote('dislike')} title="Nie podoba mi się">
+            <span>👎</span><b>{feedback.dislikes}</b>
+          </button>
+          <button type="button" className={`tip-react-btn comment ${commentsOpen ? 'active' : ''}`} onClick={() => setCommentsOpen(prev => !prev)} title="Komentarze">
+            <span>💬</span><b>{commentCount}</b>
+          </button>
+        </div>
+        <div className="profile-live-tip-actions">
+          {tip.premium && !isUnlocked ? (
+            <>
+              <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel za {formatMoney(tip.price)}</button>
+              <button type="button" className="secondary" onClick={() => onSubscribeToTipster?.(sourceTip)}>Kup subskrypcję profilu</button>
+            </>
+          ) : (
+            <button type="button" onClick={() => onViewType?.()}>{tip.premium ? 'Odblokowany ✓' : 'Zobacz typ'}</button>
+          )}
+        </div>
+      </footer>
+
+      {commentsOpen && (
+        <div className="profile-live-tip-comments">
+          <div className="tip-comments-head">
+            <strong>Komentarze</strong>
+            <span>{commentCount} łącznie</span>
+          </div>
+          <div className="tip-comment-form">
+            <input
+              type="text"
+              value={commentDraft}
+              onChange={event => setCommentDraft(event.target.value)}
+              onKeyDown={event => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  submitComment()
+                }
+              }}
+              placeholder="Dodaj komentarz do tego typu..."
+              maxLength={280}
+            />
+            <button type="button" className="tip-comment-submit" onClick={submitComment}>Dodaj komentarz</button>
+          </div>
+          {feedback.comments.length > 0 ? (
+            <div className="tip-comment-list">
+              {feedback.comments.map(comment => (
+                <div key={comment.id} className="tip-comment-item">
+                  <div className="tip-comment-avatar">{String(comment.author || 'G').slice(0, 1).toUpperCase()}</div>
+                  <div className="tip-comment-body">
+                    <div className="tip-comment-meta">
+                      <strong>{comment.author}</strong>
+                      <span>{new Date(comment.created_at).toLocaleString('pl-PL')}</span>
+                    </div>
+                    <p>{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="tip-comments-empty">Brak nowych komentarzy. Dodaj pierwszy komentarz.</div>
+          )}
+        </div>
+      )}
+    </article>
+  )
+}
+
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = String(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || profile.username || (email ? email.split('@')[0] : 'Użytkownik')).trim() || 'Użytkownik'
@@ -12743,6 +13059,7 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
     const confidence = Math.max(0, Math.min(100, Number(normalized.ai_probability || normalized.ai_confidence || normalized.confidence || 0) || 0))
     return {
       id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
+      rawTip: normalized,
       premium: premiumTip,
       home,
       away,
@@ -12796,82 +13113,21 @@ function ProfileView({ user, tips = [], userPlan = 'free', stripeConnectStatus =
   ]
 
   const renderProfileTipCard = (tip) => (
-    <article className={`profile-live-tip-card ${tip.premium ? 'premium' : 'free'}`} key={tip.id}>
-      <header className="profile-live-tip-head">
-        <div className="profile-live-tip-author">
-          <span
-            className={`profile-live-tip-avatar ${avatarUrl ? 'has-avatar' : ''}`}
-            style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}
-          >
-            {avatarUrl ? '' : initials}
-          </span>
-          <div>
-            <strong>{displayName}</strong>
-            <small>{tip.createdLabel}</small>
-          </div>
-          <em>TYPER</em>
-        </div>
-        <div className="profile-live-tip-tags">
-          <span>{tip.premium ? '▣ PREMIUM' : '◯ FREE'}</span>
-          <span>ANALIZA UŻ.{tip.premium ? ' 🔒' : ''}</span>
-        </div>
-      </header>
-
-      <div className="profile-live-tip-meta">{tip.league} • {tip.matchLabel}</div>
-
-      <div className="profile-live-tip-body">
-        <div className="profile-live-tip-ticket">
-          <div className="profile-live-tip-match">
-            <strong>{tip.home}</strong>
-            <span>VS</span>
-            <strong>{tip.away}</strong>
-          </div>
-          <div className="profile-live-tip-fields">
-            <div>
-              <small>Typ</small>
-              <b>{tip.premium ? '🔒 Typ premium' : tip.pick}</b>
-            </div>
-            <div>
-              <small>Kurs</small>
-              <b>{tip.premium ? '—' : tip.odds}</b>
-            </div>
-            <div>
-              <small>Stawka</small>
-              <b>{tip.stake.toFixed(0)} zł</b>
-            </div>
-          </div>
-        </div>
-
-        <div className="profile-live-tip-analysis">
-          <div>
-            <strong>✦ Analiza użytkownika</strong>
-            {tip.premium && <span>🔒</span>}
-          </div>
-          <p>{tip.premium ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
-          <i><span style={{ width: `${tip.premium ? Math.max(18, tip.confidence || 24) : tip.confidence}%` }}></span></i>
-          {tip.premium && <em>🔒 Premium</em>}
-        </div>
-      </div>
-
-      <footer className="profile-live-tip-foot">
-        <div className="profile-live-tip-stats">
-          <span className={`status-${tip.statusLabel.toLowerCase()}`}>◷ {tip.statusLabel}</span>
-          <span>♡ {tip.likes}</span>
-          <span>🏆 {tip.trophies}</span>
-          <span>☁ {tip.comments}</span>
-        </div>
-        <div className="profile-live-tip-actions">
-          {tip.premium ? (
-            <>
-              <button type="button">Kup singiel za {formatMoney(tip.price)}</button>
-              <button type="button" className="secondary">Kup subskrypcję profilu</button>
-            </>
-          ) : (
-            <button type="button">Zobacz typ</button>
-          )}
-        </div>
-      </footer>
-    </article>
+    <ProfileLiveTipCard
+      key={tip.id}
+      tip={tip}
+      sourceTip={tip.rawTip || {}}
+      avatarUrl={avatarUrl}
+      initials={initials}
+      displayName={displayName}
+      currentUser={user}
+      unlockedTips={unlockedTips}
+      tipsterSubscriptions={tipsterSubscriptions}
+      onUnlock={onUnlock}
+      onSubscribeToTipster={onSubscribeToTipster}
+      onToast={onToast}
+      onViewType={() => setProfileTab('tips')}
+    />
   )
 
   return (
@@ -16470,6 +16726,9 @@ function App() {
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
             onToast={showToast}
+            onUnlock={unlockTip}
+            onSubscribeToTipster={setSelectedProfileSub}
+            tipsterSubscriptions={tipsterSubscriptions}
             onAvatarUpdated={(nextAvatarUrl) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
               setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)

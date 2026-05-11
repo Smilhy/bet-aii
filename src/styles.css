@@ -30088,3 +30088,60 @@ button.betfolio-fetch-btn{
   background-size:cover!important;
   background-repeat:no-repeat!important;
 }
+
+
+/* WERSJA 844 — aktywne interakcje typów w profilu */
+.profile-live-tip-stats-active{
+  align-items:center!important;
+}
+.profile-live-tip-stats-active .tip-react-btn{
+  min-height:38px!important;
+  padding:0 13px!important;
+  border-radius:12px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  background:rgba(3,16,28,.72)!important;
+  color:#eef8ff!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+.profile-live-tip-stats-active .tip-react-btn.active.like{
+  border-color:rgba(33,233,216,.28)!important;
+  color:#21e9d8!important;
+}
+.profile-live-tip-stats-active .tip-react-btn.active.dislike{
+  border-color:rgba(255,114,136,.28)!important;
+  color:#ff7d8d!important;
+}
+.profile-live-tip-stats-active .tip-react-btn.active.comment{
+  border-color:rgba(37,233,255,.28)!important;
+  color:#25e9ff!important;
+}
+.profile-live-tip-comments{
+  display:grid!important;
+  gap:12px!important;
+  padding-top:14px!important;
+  border-top:1px solid rgba(255,255,255,.06)!important;
+}
+.profile-live-tip-analysis.locked p{
+  filter:blur(.35px)!important;
+  opacity:.78!important;
+}
+
+
+/* WERSJA 845 — pewny avatar w dashboardzie i live chacie */
+.tipster .photo.has-avatar,
+.livechat226-avatar.has-avatar{
+  overflow:hidden!important;
+  padding:0!important;
+}
+.tipster .photo.has-avatar img,
+.livechat226-avatar.has-avatar img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border-radius:inherit!important;
+}
