@@ -514,7 +514,8 @@ function buildEffectiveAccountProfile(accountProfile, sessionUser) {
     ...(accountProfile || {}),
     id: accountProfile?.id || sessionUser?.id || null,
     email: sessionEmail || accountProfile?.email || sessionUser?.email || '',
-    username: accountProfile?.username || sessionUser?.username || fallbackUsername
+    username: accountProfile?.username || sessionUser?.username || fallbackUsername,
+    bio: accountProfile?.bio || sessionUser?.bio || sessionUser?.user_metadata?.bio || accountProfile?.description || accountProfile?.about || ''
   }
   if (isGuaranteedPremiumIdentity(merged) || BETAI_PREMIUM_EMAILS.includes(sessionEmail)) {
     merged.is_premium = true
@@ -12963,7 +12964,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       if (profileError) throw profileError
 
       await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
-      onProfileUpdated?.({ bio: cleanBio })
+      setBioDraft(cleanBio)
+      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
       setBioEditing(false)
       onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
     } catch (error) {
@@ -13006,16 +13008,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
   const tipsSupportAmount = Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0
   const statsCards = [
-    { label: 'Yield', value: `${roi}%`, sub: 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
-    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount >= 0 ? 'Bilans na plus' : 'Bilans na minus', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
-    { label: 'Typy oddane', value: String(totalTips), sub: 'Wszystkie dodane typy', tone: 'neutral' },
-    { label: 'Wygrane', value: String(wonTips), sub: 'Rozliczone na plus', tone: wonTips > lostTips ? 'success' : 'neutral' },
+    { label: 'Yield', value: `${roi}%`, sub: roi > 0 ? 'Zwrot na plus' : roi < 0 ? 'Zwrot na minus' : 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount > 0 ? 'Bilans na plus' : profitAmount < 0 ? 'Bilans na minus' : 'Bilans zerowy', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Typy', value: String(totalTips), sub: 'Wszystkie dodane', tone: totalTips > 0 ? 'info' : 'neutral' },
+    { label: 'Wygrane', value: String(wonTips), sub: 'Rozliczone na plus', tone: wonTips > 0 ? 'success' : 'neutral' },
     { label: 'Przegrane', value: String(lostTips), sub: 'Rozliczone na minus', tone: lostTips > 0 ? 'danger' : 'neutral' },
-    { label: 'Nierozliczone', value: String(pendingTips), sub: 'Typy oczekujące', tone: 'neutral' },
-    { label: 'Zainwestowane', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łączna suma stawek', tone: 'neutral' },
-    { label: 'Średni kurs', value: avgOdds, sub: 'Średnia wszystkich kursów', tone: 'neutral' },
-    { label: 'Najwyższy kurs', value: highestOdds, sub: 'Najwyższy trafiony/ustawiony kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
-    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} zł`, sub: 'Wsparcie od społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+    { label: 'Pending', value: String(pendingTips), sub: 'Czekają na wynik', tone: pendingTips > 0 ? 'warning' : 'neutral' },
+    { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
+    { label: 'Śr. kurs', value: avgOdds, sub: 'Średnia kursów', tone: Number(avgOdds) > 2 ? 'info' : 'neutral' },
+    { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
+    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} zł`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
   ]
   const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
   const followingCount = Number(user?.following_count || user?.following || 0) || 0
@@ -13265,7 +13267,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
             <div className="profile-v3-card-head">
               <h3>📊 Twoje statystyki</h3>
-              <span>Duże, czytelne podsumowanie profilu</span>
             </div>
             <div className="profile-stats-cards-grid">
               {statsCards.map((card) => (
@@ -15913,7 +15914,7 @@ function App() {
 
     const { data: profData, error: profileError } = await supabase
       .from('profiles')
-      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url')
+      .select('id,email,username,is_admin,is_premium,plan,subscription_status,stripe_customer_id,stripe_subscription_id,current_period_end,avatar_url,bio')
       .eq('id', userId)
       .maybeSingle()
 
@@ -15950,7 +15951,8 @@ function App() {
         plan: effectiveProfile.plan || (effectivePremium ? 'premium' : 'free'),
         subscription_status: effectiveProfile.subscription_status || (effectivePremium ? 'active' : 'free'),
         current_period_end: effectiveProfile.current_period_end || null,
-        avatar_url: effectiveProfile.avatar_url || null
+        avatar_url: effectiveProfile.avatar_url || null,
+        bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)
