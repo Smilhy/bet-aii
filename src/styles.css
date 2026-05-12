@@ -33263,3 +33263,157 @@ button.betfolio-fetch-btn{
   text-overflow: clip !important;
   font-variant-numeric: tabular-nums !important;
 }
+
+/* WERSJA 922 — prawa kolumna jak wcześniej: 4 widoczne miejsca, kompakt, bez ramki Profit */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel{
+  padding: 12px 10px 10px !important;
+  overflow: hidden !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 8px !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head h2{
+  font-size: 16px !important;
+  margin: 0 !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head a{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 20px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank,
+.rightbar .real-ranking-panel .rank,
+.real-ranking-panel .rank{
+  display: grid !important;
+  grid-template-columns: 26px 28px minmax(0, 1fr) 76px !important;
+  column-gap: 8px !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  padding: 8px 6px !important;
+  margin: 0 !important;
+  border-radius: 14px !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank + .rank{
+  margin-top: 4px !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:nth-of-type(-n+4),
+.rightbar .real-ranking-panel .rank:nth-of-type(-n+4){
+  display: grid !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:nth-of-type(n+5),
+.rightbar .real-ranking-panel .rank:nth-of-type(n+5){
+  display: none !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank-position-badge,
+.rightbar .real-ranking-panel .rank-position-badge{
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  font-size: 11px !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .mini-avatar,
+.rightbar .real-ranking-panel .mini-avatar{
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  font-size: 10px !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank > div:not(.mini-avatar),
+.rightbar .real-ranking-panel .rank > div:not(.mini-avatar){
+  min-width: 0 !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank b,
+.rightbar .real-ranking-panel .rank b{
+  display: block !important;
+  margin: 0 0 2px 0 !important;
+  font-size: 12px !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank small,
+.rightbar .real-ranking-panel .rank small{
+  display: block !important;
+  margin: 0 !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  color: #a8bacd !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box,
+.rightbar .real-ranking-panel .ranking-profit-box,
+.real-ranking-panel .ranking-profit-box{
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box em,
+.rightbar .real-ranking-panel .ranking-profit-box em,
+.real-ranking-panel .ranking-profit-box em{
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-style: normal !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  text-align: right !important;
+  opacity: 1 !important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box span,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-positive span,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-negative span,
+.rightbar .real-ranking-panel .ranking-profit-box span,
+.rightbar .real-ranking-panel .ranking-profit-positive span,
+.rightbar .real-ranking-panel .ranking-profit-negative span,
+.real-ranking-panel .ranking-profit-box span,
+.real-ranking-panel .ranking-profit-positive span,
+.real-ranking-panel .ranking-profit-negative span{
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  text-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 1000 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.03em !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  text-align: right !important;
+  font-variant-numeric: tabular-nums !important;
+}

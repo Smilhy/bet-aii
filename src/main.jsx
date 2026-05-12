@@ -1894,31 +1894,18 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
   })
   const realRanking = buildLiveLeaderboardRows(rankingWithCurrentAvatar, tips)
   const fallbackRankingUsers = [
-    { username: 'buchajsonek1988', email: 'buchajsonek1988@gmail.com', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'p.kucharski', email: 'p.kucharski@aol.co.uk', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
     { username: 'Bet+AI Live', email: 'betai@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'Bet+AI User', email: 'betai-user@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
+    { username: 'buchajson1988', email: 'buchajson1988@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
+    { username: 'buchajson1988', email: 'buchajson1988-2@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
+    { username: 'SmilyTV', email: 'smilytv@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
   ]
-  const rankingSeen = new Set()
-  const rightRankingRows = []
-  ;(realRanking || []).forEach((row) => {
-    const key = normalizeEmail(row?.email || row?.author_email || row?.user_email || row?.username || row?.author_name || row?.user_name)
-    if (!key || rankingSeen.has(key) || rightRankingRows.length >= 4) return
-    rankingSeen.add(key)
-    rightRankingRows.push(row)
-  })
-  fallbackRankingUsers.forEach((row) => {
-    const key = normalizeEmail(row.email || row.username)
-    if (!key || rankingSeen.has(key) || rightRankingRows.length >= 4) return
-    rankingSeen.add(key)
-    rightRankingRows.push(row)
-  })
+  const rightRankingRows = [...(realRanking || []).slice(0, 4)]
+  let fallbackIndex = 0
   while (rightRankingRows.length < 4) {
-    const nextPlace = rightRankingRows.length + 1
-    const filler = {
-      id: `top-typer-placeholder-${nextPlace}`,
-      username: `Użytkownik ${nextPlace}`,
-      email: `placeholder-${nextPlace}@betai.local`,
+    const fallback = fallbackRankingUsers[fallbackIndex] || {
+      id: `top-typer-placeholder-${rightRankingRows.length + 1}`,
+      username: `Użytkownik ${rightRankingRows.length + 1}`,
+      email: `placeholder-${rightRankingRows.length + 1}@betai.local`,
       totalTips: 0,
       total_tips: 0,
       wins: 0,
@@ -1929,15 +1916,15 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
       earnings: 0,
       profit: 0,
     }
-    rankingSeen.add(filler.email)
-    rightRankingRows.push(filler)
+    rightRankingRows.push(fallback)
+    fallbackIndex += 1
   }
 
   return (
     <aside className="rightbar">
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
-        <div className="panel-head"><h2>🏆 Top typerzy</h2></div>
+        <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => (
           <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || row.username || index}>
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
