@@ -34295,3 +34295,169 @@ button.betfolio-fetch-btn{
   font-weight:950 !important;
   cursor:pointer !important;
 }
+
+
+/* WERSJA 945 — zakładka Wyniki: ręczne rozliczanie + admin */
+.profile-results-filter-row-v945{
+  gap:8px !important;
+  flex-wrap:wrap !important;
+}
+.profile-results-filter-row-v945 button b{
+  margin-left:6px !important;
+  color:#21e6d6 !important;
+}
+.profile-results-logic-note-v945{
+  display:flex !important;
+  gap:10px !important;
+  align-items:center !important;
+  margin:0 0 12px !important;
+  padding:12px 14px !important;
+  border-radius:14px !important;
+  background:rgba(33,230,214,.08) !important;
+  border:1px solid rgba(33,230,214,.18) !important;
+  color:#cffff9 !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+}
+.profile-results-logic-note-v945 strong{color:#fff !important; white-space:nowrap !important;}
+.profile-v4-results-table-v945 > div{
+  grid-template-columns:1.4fr 1fr .55fr .75fr .8fr 1.45fr !important;
+}
+.profile-v4-results-table-v945 em.void{
+  color:#ffd166 !important;
+  background:rgba(255,209,102,.12) !important;
+}
+.profile-v4-results-table-v945 em.admin{
+  color:#7dd3fc !important;
+  background:rgba(125,211,252,.12) !important;
+}
+.manual-settle-actions-v945{
+  display:flex !important;
+  gap:6px !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+}
+.manual-settle-actions-v945 button,
+.admin-coupon-actions-v945 button{
+  border:0 !important;
+  min-height:28px !important;
+  padding:0 9px !important;
+  border-radius:999px !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  cursor:pointer !important;
+}
+.manual-settle-actions-v945 .won,
+.admin-coupon-actions-v945 .won{
+  background:rgba(34,230,122,.16) !important;
+  color:#72ffad !important;
+}
+.manual-settle-actions-v945 .lost,
+.admin-coupon-actions-v945 .lost{
+  background:rgba(255,77,103,.16) !important;
+  color:#ff8aa0 !important;
+}
+.manual-settle-actions-v945 .void,
+.admin-coupon-actions-v945 .void{
+  background:rgba(255,209,102,.16) !important;
+  color:#ffd166 !important;
+}
+.manual-settle-actions-v945 small{
+  color:#9fb3c8 !important;
+  font-size:11px !important;
+}
+.admin-coupon-approval-page-v945{
+  display:grid !important;
+  gap:16px !important;
+  padding:18px !important;
+}
+.admin-coupon-hero-v945{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  padding:22px !important;
+  border-radius:22px !important;
+}
+.admin-coupon-hero-v945 span{
+  color:#21e6d6 !important;
+  font-size:12px !important;
+  font-weight:950 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+}
+.admin-coupon-hero-v945 h1{
+  color:#fff !important;
+  margin:4px 0 6px !important;
+}
+.admin-coupon-hero-v945 p{
+  color:#aebed0 !important;
+  margin:0 !important;
+}
+.admin-coupon-hero-v945 button{
+  border:0 !important;
+  min-height:38px !important;
+  padding:0 14px !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#21e6d6,#2f8dff) !important;
+  color:#03121b !important;
+  font-weight:950 !important;
+}
+.admin-coupon-tabs-v945{
+  display:flex !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+}
+.admin-coupon-tabs-v945 button{
+  min-height:38px !important;
+  padding:0 14px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  background:rgba(255,255,255,.05) !important;
+  color:#dce9f6 !important;
+  font-weight:900 !important;
+}
+.admin-coupon-tabs-v945 button.active{
+  background:rgba(33,230,214,.12) !important;
+  border-color:rgba(33,230,214,.55) !important;
+  color:#fff !important;
+}
+.admin-coupon-list-v945{
+  display:grid !important;
+  gap:12px !important;
+}
+.admin-coupon-card-v945{
+  display:flex !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  align-items:center !important;
+  padding:16px !important;
+  border-radius:18px !important;
+}
+.admin-coupon-card-v945 div:first-child{
+  display:grid !important;
+  gap:5px !important;
+}
+.admin-coupon-card-v945 strong{
+  color:#fff !important;
+  font-size:16px !important;
+}
+.admin-coupon-card-v945 span,
+.admin-coupon-card-v945 em{
+  color:#b9c8d9 !important;
+  font-size:13px !important;
+}
+.admin-coupon-actions-v945{
+  display:flex !important;
+  gap:7px !important;
+  flex-wrap:wrap !important;
+  justify-content:flex-end !important;
+}
+.admin-coupon-actions-v945 .reject{
+  background:rgba(255,255,255,.10) !important;
+  color:#e8eef7 !important;
+}
+@media(max-width:900px){
+  .profile-v4-results-table-v945 > div{grid-template-columns:1fr !important;}
+  .admin-coupon-card-v945{align-items:flex-start !important; flex-direction:column !important;}
+}

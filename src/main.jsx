@@ -1204,6 +1204,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
           {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
+          {isAdminUser(user) && <button className={view === 'adminCoupons' ? 'active' : ''} onClick={() => setView('adminCoupons')}>🧾 Kupony admin</button>}
           {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
           <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
           <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
@@ -1250,6 +1251,7 @@ const ULTRA_PAGE_BANNERS = {
   payouts: '/ultra-payouts-banner.png',
   adminFinance: '/ultra-admin-finance-banner.png',
   adminPayouts: '/ultra-admin-payouts-banner.png',
+  adminCoupons: '/ultra-admin-finance-banner.png',
   aiPicks: '/ultra-ai-banner.png'
 }
 
@@ -13903,6 +13905,34 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     onSubscribeToTipster?.(profileSubPurchasePayload)
   }
+  const normalizeManualResultLabel = (result) => {
+    const clean = String(result || '').toLowerCase()
+    if (['won', 'win'].includes(clean)) return 'wygraną'
+    if (['lost', 'loss'].includes(clean)) return 'przegraną'
+    if (['void', 'push'].includes(clean)) return 'zwrot'
+    return 'wynik'
+  }
+  const submitManualSettlementRequest = async (tip, result) => {
+    const clean = String(result || '').toLowerCase()
+    if (!tip?.id || !['won', 'lost', 'void'].includes(clean)) return
+    const patch = {
+      status: 'pending_admin',
+      manual_settlement_status: 'pending_admin',
+      manual_settlement_result: clean,
+      manual_settlement_requested_at: new Date().toISOString(),
+      manual_settlement_requested_by: viewerProfile?.id || null,
+      admin_approval_status: 'pending',
+      settlement_source: 'manual_user'
+    }
+    setLocalSettlementPatches(prev => ({ ...prev, [String(tip.id)]: patch }))
+    try {
+      await updateTipField(tip.id, patch)
+      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się wysłać kuponu do admina. Uruchom SQL wersji 945.') })
+    }
+  }
   const handleProfileSubscribeClick = () => onSubscribeToTipster?.(profileSubPurchasePayload)
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
@@ -13917,6 +13947,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('free')
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
+  const [localSettlementPatches, setLocalSettlementPatches] = useState({})
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
   const [bioSaving, setBioSaving] = useState(false)
@@ -14013,7 +14044,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
     const authorName = normalizeEmail(tip.author_name || tip.username || '')
     return (profile.id && authorId === String(profile.id)) || (email && authorEmail === email) || (username && authorName === normalizeEmail(username))
-  })
+  }).map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
   const profileStatsSource = user || {}
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
   const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
@@ -14119,11 +14150,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       ? value.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : 'Brak daty'
     const status = String(normalized.status || 'pending').toLowerCase()
+    const approvalStatus = String(normalized.admin_approval_status || normalized.manual_settlement_status || '').toLowerCase()
+    const manualResult = String(normalized.manual_settlement_result || normalized.admin_approved_result || '').toLowerCase()
     const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
       ? 'Wygrany'
       : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
         ? 'Przegrany'
-        : 'Oczekujący'
+        : ['void', 'push', 'zwrot'].includes(status)
+          ? 'Zwrot'
+          : status === 'pending_admin' || approvalStatus === 'pending' || approvalStatus === 'pending_admin'
+            ? 'Czeka na admina'
+            : approvalStatus === 'rejected'
+              ? 'Odrzucony'
+              : 'Oczekujący'
     const confidence = Math.max(0, Math.min(100, Number(normalized.ai_probability || normalized.ai_confidence || normalized.confidence || 0) || 0))
     return {
       id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
@@ -14143,6 +14182,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       confidence,
       createdLabel: formatDateTime(createdAt),
       matchLabel: formatDateTime(matchAt),
+      status,
+      approvalStatus,
+      manualResult,
+      settlementSource: normalized.settlement_source || '',
       statusLabel,
       likes: Number(normalized.likes || normalized.hearts || 0) || 0,
       trophies: Number(normalized.trophies || normalized.upvotes || 0) || 0,
@@ -14295,9 +14338,17 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const resultTipRows = allProfileTipCards.filter(tip => {
     if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
     if (profileResultsFilter === 'lost') return tip.statusLabel === 'Przegrany'
+    if (profileResultsFilter === 'void') return tip.statusLabel === 'Zwrot'
     if (profileResultsFilter === 'pending') return tip.statusLabel === 'Oczekujący'
+    if (profileResultsFilter === 'admin') return tip.statusLabel === 'Czeka na admina'
+    if (profileResultsFilter === 'rejected') return tip.statusLabel === 'Odrzucony'
+    if (profileResultsFilter === 'auto') return String(tip.settlementSource || '').includes('auto')
     return true
   })
+  const adminPendingResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Czeka na admina').length
+  const voidResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Zwrot').length
+  const rejectedResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Odrzucony').length
+  const autoResultsCount = allProfileTipCards.filter(tip => String(tip.settlementSource || '').includes('auto')).length
   const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
   const linePoints = balanceChartRows.map((row, index) => {
     const maxValue = Math.max(...balanceChartRows.map(item => Number(item.value || 0)), 1)
@@ -14510,23 +14561,49 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </svg>
               </section>
               <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">
-                <div className="profile-v4-filter-row">
+                <div className="profile-v4-filter-row profile-results-filter-row-v945">
                   <button type="button" className={profileResultsFilter === 'all' ? 'active' : ''} onClick={() => setProfileResultsFilter('all')}>Wszystkie</button>
                   <button type="button" className={profileResultsFilter === 'won' ? 'active' : ''} onClick={() => setProfileResultsFilter('won')}>Wygrane</button>
                   <button type="button" className={profileResultsFilter === 'lost' ? 'active' : ''} onClick={() => setProfileResultsFilter('lost')}>Przegrane</button>
-                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>Nierozliczone</button>
+                  <button type="button" className={profileResultsFilter === 'void' ? 'active' : ''} onClick={() => setProfileResultsFilter('void')}>Zwroty</button>
+                  <button type="button" className={profileResultsFilter === 'pending' ? 'active' : ''} onClick={() => setProfileResultsFilter('pending')}>Do rozliczenia</button>
+                  <button type="button" className={profileResultsFilter === 'admin' ? 'active' : ''} onClick={() => setProfileResultsFilter('admin')}>Czeka na admina <b>{adminPendingResultsCount}</b></button>
+                  <button type="button" className={profileResultsFilter === 'auto' ? 'active' : ''} onClick={() => setProfileResultsFilter('auto')}>Automatyczne <b>{autoResultsCount}</b></button>
+                  <button type="button" className={profileResultsFilter === 'rejected' ? 'active' : ''} onClick={() => setProfileResultsFilter('rejected')}>Odrzucone <b>{rejectedResultsCount}</b></button>
                 </div>
-                <div className="profile-v4-results-table">
-                  <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b></div>
-                  {resultTipRows.length ? resultTipRows.map(tip => (
-                    <div key={tip.id}>
-                      <span>{tip.home} — {tip.away}</span>
-                      <span>{tip.pick}</span>
-                      <span>{tip.odds}</span>
-                      <span>{tip.stake.toFixed(2)} zł</span>
-                      <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : 'wait'}>{tip.statusLabel}</em>
-                    </div>
-                  )) : <p>Brak wyników w tej kategorii.</p>}
+                <div className="profile-results-logic-note-v945">
+                  <strong>Logika wyników:</strong>
+                  <span>Typy automatyczne rozlicza system po wyniku meczu. Typy ręczne użytkownik zgłasza jako wygrana/przegrana/zwrot, ale statystyki dopisują się dopiero po zatwierdzeniu admina.</span>
+                </div>
+                <div className="profile-v4-results-table profile-v4-results-table-v945">
+                  <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
+                  {resultTipRows.length ? resultTipRows.map(tip => {
+                    const canRequestSettlement = profileIsOwnForViewer && ['Oczekujący', 'Odrzucony'].includes(tip.statusLabel)
+                    return (
+                      <div key={tip.id}>
+                        <span>{tip.home} — {tip.away}</span>
+                        <span>{tip.pick}</span>
+                        <span>{tip.odds}</span>
+                        <span>{tip.stake.toFixed(2)} zł</span>
+                        <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : tip.statusLabel === 'Zwrot' ? 'void' : tip.statusLabel === 'Czeka na admina' ? 'admin' : 'wait'}>{tip.statusLabel}</em>
+                        <span className="manual-settle-actions-v945">
+                          {canRequestSettlement ? (
+                            <>
+                              <button type="button" className="won" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'won')}>Wygrana</button>
+                              <button type="button" className="lost" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'lost')}>Przegrana</button>
+                              <button type="button" className="void" onClick={() => submitManualSettlementRequest(tip.rawTip || tip, 'void')}>Zwrot</button>
+                            </>
+                          ) : tip.statusLabel === 'Czeka na admina' ? (
+                            <small>Czeka na zatwierdzenie admina</small>
+                          ) : String(tip.settlementSource || '').includes('auto') ? (
+                            <small>Rozliczone automatycznie</small>
+                          ) : (
+                            <small>—</small>
+                          )}
+                        </span>
+                      </div>
+                    )
+                  }) : <p>Brak wyników w tej kategorii.</p>}
                 </div>
               </section>
             </section>
@@ -15002,6 +15079,139 @@ function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'f
   )
 }
 
+
+
+
+function AdminCouponApprovalView({ user, onToast }) {
+  const [rows, setRows] = useState([])
+  const [tab, setTab] = useState('pending')
+  const [loading, setLoading] = useState(false)
+
+  const resultLabel = (value) => {
+    const clean = String(value || '').toLowerCase()
+    if (clean === 'won') return 'Wygrana'
+    if (clean === 'lost') return 'Przegrana'
+    if (clean === 'void') return 'Zwrot'
+    return '—'
+  }
+  const statusOf = (row) => String(row?.admin_approval_status || row?.manual_settlement_status || row?.status || '').toLowerCase()
+  const pendingRows = rows.filter(row => ['pending', 'pending_admin'].includes(statusOf(row)) || row.status === 'pending_admin')
+  const approvedRows = rows.filter(row => statusOf(row) === 'approved')
+  const rejectedRows = rows.filter(row => statusOf(row) === 'rejected')
+  const visibleRows = tab === 'approved' ? approvedRows : tab === 'rejected' ? rejectedRows : pendingRows
+
+  async function loadRows() {
+    if (!isSupabaseConfigured || !supabase || !isAdminUser(user)) return
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('tips')
+        .select('*')
+        .or('status.eq.pending_admin,manual_settlement_status.eq.pending_admin,admin_approval_status.eq.pending,admin_approval_status.eq.approved,admin_approval_status.eq.rejected')
+        .order('manual_settlement_requested_at', { ascending: false, nullsFirst: false })
+        .limit(300)
+      if (error) throw error
+      setRows((data || []).map(normalizeTipRow))
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Kupony admin', message: formatAppErrorMessage(error.message || 'Nie udało się pobrać kuponów.') })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadRows()
+    const handler = () => loadRows()
+    window.addEventListener('betai:admin-coupon-approval-changed', handler)
+    return () => window.removeEventListener('betai:admin-coupon-approval-changed', handler)
+  }, [user?.id])
+
+  async function approveRow(row, result) {
+    if (!isAdminUser(user)) return
+    const clean = String(result || '').toLowerCase()
+    try {
+      const patch = {
+        status: clean,
+        result: clean,
+        manual_settlement_status: 'approved',
+        admin_approval_status: 'approved',
+        admin_approved_result: clean,
+        admin_approved_at: new Date().toISOString(),
+        admin_approved_by: user?.id || null,
+        settlement_source: 'manual_admin_approved'
+      }
+      await updateTipField(row.id, patch)
+      onToast?.({ type: 'success', title: 'Kupon zatwierdzony', message: `Zatwierdzono: ${resultLabel(clean)}. Statystyki mogą zostać dopisane.` })
+      loadRows()
+      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd zatwierdzenia', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
+  async function rejectRow(row) {
+    const reason = window.prompt('Powód odrzucenia:', 'Wynik wymaga poprawy') || ''
+    try {
+      const patch = {
+        status: 'pending',
+        manual_settlement_status: 'rejected',
+        admin_approval_status: 'rejected',
+        admin_rejected_at: new Date().toISOString(),
+        admin_rejection_reason: reason,
+        settlement_source: 'manual_admin_rejected'
+      }
+      await updateTipField(row.id, patch)
+      onToast?.({ type: 'success', title: 'Zgłoszenie odrzucone', message: 'Typ wrócił do nierozliczonych. Statystyki nie zostały dopisane.' })
+      loadRows()
+      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+    } catch (error) {
+      onToast?.({ type: 'error', title: 'Błąd odrzucenia', message: formatAppErrorMessage(error.message) })
+    }
+  }
+
+  return (
+    <section className="admin-coupon-approval-page-v945">
+      <div className="admin-coupon-hero-v945 glass-v2-panel">
+        <div>
+          <span>Tylko administrator</span>
+          <h1>Kupony do zatwierdzenia</h1>
+          <p>Ręczne rozliczenia użytkowników czekają tutaj na potwierdzenie. Dopiero po zatwierdzeniu wynik dopisuje się do statystyk.</p>
+        </div>
+        <button type="button" onClick={loadRows}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
+      </div>
+      <div className="admin-coupon-tabs-v945">
+        <button className={tab === 'pending' ? 'active' : ''} onClick={() => setTab('pending')}>Czekają <b>{pendingRows.length}</b></button>
+        <button className={tab === 'approved' ? 'active' : ''} onClick={() => setTab('approved')}>Zatwierdzone <b>{approvedRows.length}</b></button>
+        <button className={tab === 'rejected' ? 'active' : ''} onClick={() => setTab('rejected')}>Odrzucone <b>{rejectedRows.length}</b></button>
+      </div>
+      <div className="admin-coupon-list-v945">
+        {visibleRows.length ? visibleRows.map(row => {
+          const home = row.team_home || row.home_team || 'Gospodarze'
+          const away = row.team_away || row.away_team || 'Goście'
+          const author = row.author_name || row.username || row.author_email || 'Typer'
+          const pending = ['pending', 'pending_admin'].includes(statusOf(row)) || row.status === 'pending_admin'
+          return (
+            <article className="admin-coupon-card-v945 glass-v2-panel" key={row.id}>
+              <div>
+                <strong>{home} — {away}</strong>
+                <span>{author} · typ: {row.pick || row.bet_type || row.prediction || '—'} · kurs {row.odds || '—'} · stawka {row.stake || row.amount || '—'}</span>
+                <em>Zgłoszony wynik: {resultLabel(row.manual_settlement_result || row.admin_approved_result)}</em>
+              </div>
+              {pending ? (
+                <div className="admin-coupon-actions-v945">
+                  <button className="won" onClick={() => approveRow(row, 'won')}>Potwierdź wygraną</button>
+                  <button className="lost" onClick={() => approveRow(row, 'lost')}>Potwierdź przegraną</button>
+                  <button className="void" onClick={() => approveRow(row, 'void')}>Zwrot</button>
+                  <button className="reject" onClick={() => rejectRow(row)}>Odrzuć</button>
+                </div>
+              ) : <small>{statusOf(row) === 'approved' ? 'Zatwierdzony' : 'Odrzucony'}</small>}
+            </article>
+          )
+        }) : <div className="profile-live-tip-empty">Brak kuponów w tej zakładce.</div>}
+      </div>
+    </section>
+  )
+}
 
 
 function AdminFinanceView({ report, onRefresh, onViewChange }) {
@@ -18373,6 +18583,10 @@ function App() {
           <PayoutsView user={effectiveAccountProfile} payoutRequests={payoutRequests} onRequestPayout={requestTipsterPayout} stripeConnectStatus={stripeConnectStatus} onConnectStripe={connectStripeAccount} onViewChange={setView} userPlan={effectiveAccountPlan} submitting={payoutSubmitting} earnings={tipsterEarnings} />
         )}
 
+
+        {view === 'adminCoupons' && isAdminUser(effectiveAccountProfile || sessionUser) && (
+          <AdminCouponApprovalView user={effectiveAccountProfile || sessionUser} onToast={showToast} />
+        )}
 
         {view === 'adminFinance' && (
           <AdminFinanceView
