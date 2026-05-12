@@ -33465,3 +33465,105 @@ button.betfolio-fetch-btn{
 .rightbar .real-ranking-panel .rank:last-of-type{
   margin-bottom: 10px !important;
 }
+
+/* WERSJA 925 — Top typerzy większy jak AI Typy dnia: większe kafelki i napisy */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+.rightbar .real-ranking-panel{
+  min-height: 342px !important;
+  padding: 14px 12px 18px !important;
+  overflow: hidden !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head,
+.rightbar .real-ranking-panel .panel-head{
+  margin-bottom: 12px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head h2,
+.rightbar .real-ranking-panel .panel-head h2{
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .panel-head a,
+.rightbar .real-ranking-panel .panel-head a{
+  height: 24px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank,
+.rightbar .real-ranking-panel .rank,
+.real-ranking-panel .rank{
+  grid-template-columns: 34px 34px minmax(0, 1fr) 86px !important;
+  column-gap: 10px !important;
+  align-items: center !important;
+  min-height: 66px !important;
+  padding: 12px 10px !important;
+  border-radius: 18px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank + .rank,
+.rightbar .real-ranking-panel .rank + .rank{
+  margin-top: 6px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank-position-badge,
+.rightbar .real-ranking-panel .rank-position-badge{
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .mini-avatar,
+.rightbar .real-ranking-panel .mini-avatar{
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  font-size: 11px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank b,
+.rightbar .real-ranking-panel .rank b{
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+  margin: 0 0 3px 0 !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank small,
+.rightbar .real-ranking-panel .rank small{
+  font-size: 11px !important;
+  line-height: 1.24 !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box,
+.rightbar .real-ranking-panel .ranking-profit-box,
+.real-ranking-panel .ranking-profit-box{
+  width: 86px !important;
+  min-width: 86px !important;
+  max-width: 86px !important;
+  gap: 2px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box em,
+.rightbar .real-ranking-panel .ranking-profit-box em,
+.real-ranking-panel .ranking-profit-box em{
+  font-size: 10px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-box span,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-positive span,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .ranking-profit-negative span,
+.rightbar .real-ranking-panel .ranking-profit-box span,
+.rightbar .real-ranking-panel .ranking-profit-positive span,
+.rightbar .real-ranking-panel .ranking-profit-negative span,
+.real-ranking-panel .ranking-profit-box span,
+.real-ranking-panel .ranking-profit-positive span,
+.real-ranking-panel .ranking-profit-negative span{
+  font-size: 15px !important;
+  line-height: 1.06 !important;
+}

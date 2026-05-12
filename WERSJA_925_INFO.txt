@@ -1,0 +1,15 @@
+WERSJA 925
+
+Zmiany:
+1. Powiększyłem panel „Top typerzy”, aby był czytelniejszy i bliższy rozmiarom sekcji „AI Typy dnia”.
+2. Zwiększyłem rozmiar:
+   - kafelków / wierszy rankingu,
+   - numerów miejsc,
+   - avatarów,
+   - nazw użytkowników,
+   - opisów statystyk,
+   - napisu i wartości Profit.
+3. Zwiększyłem też minimalną wysokość całego panelu, aby po powiększeniu nadal było widoczne pełne 4 miejsce.
+
+Pliki zmienione:
+- src/styles.css
