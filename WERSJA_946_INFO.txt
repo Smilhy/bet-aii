@@ -1,0 +1,34 @@
+WERSJA 946
+
+Poprawka wyglądu zakładki Wyniki.
+
+Zrobione:
+1. Poprawione kolory i wygląd kafelków podsumowania.
+2. Poprawione przyciski filtrów:
+   - Wszystkie
+   - Wygrane
+   - Przegrane
+   - Zwroty
+   - Do rozliczenia
+   - Czeka na admina
+   - Automatyczne
+   - Odrzucone
+3. Poprawiony wygląd tabeli wyników.
+4. Poprawione przyciski ręcznego rozliczania:
+   - Wygrana — zielony
+   - Przegrana — czerwony
+   - Zwrot — żółty
+5. Poprawione statusy:
+   - Wygrany
+   - Przegrany
+   - Oczekujący
+   - Zwrot
+   - Czeka na admina
+6. Poprawiony wygląd przycisków w panelu admina „Kupony admin”.
+7. Logika z wersji 945 została bez zmian.
+
+Start z wersji:
+- betai_wersja_945_ZAKLADKA_WYNIKI_LOGIKA_ADMIN.zip
+
+Pliki zmienione:
+- src/styles.css
