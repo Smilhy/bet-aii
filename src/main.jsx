@@ -2031,8 +2031,10 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
           } : null)
 
           const lookupStatsKey = String(fallbackProfile?.id || normalizedTipsterTips[0]?.author_id || normalizedTipsterTips[0]?.user_id || lookupTipsterKey).toLowerCase()
+          const importedFromProfile = getImportedProfileStats(fallbackProfile)
+          const importedFromTip = (normalizedTipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
           const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(lookupStatsKey) || buildAuthorStatsFromTips(normalizedTipsterTips).values?.()?.next?.()?.value
-          const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(fallbackProfile))
+          const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, importedFromProfile || importedFromTip)
 
           if (cancelled) return
           setProfile(fallbackProfile)
@@ -2067,8 +2069,10 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         if (formRes.error) console.error('formRes error', formRes.error)
         setProfile(profileRes.data || null)
         const normalizedTipsterTips = (tipsRes.data || []).map(normalizeTipRow)
+        const importedFromProfile = getImportedProfileStats(profileRes.data)
+        const importedFromTip = (normalizedTipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
         const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(String(tipsterId).toLowerCase())
-        const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(profileRes.data))
+        const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, importedFromProfile || importedFromTip)
         setTipsterTips(normalizedTipsterTips.map(tip => ({
           ...tip,
           author_name: isGenericProfileName(tip.author_name) ? (profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')) : (tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')),
@@ -2092,8 +2096,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
   const firstVisibleStats = tipsterTips.find(t => t?.author_visible_stats)?.author_visible_stats || null
   const importedProfileStats = getImportedProfileStats(profile)
-  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).values?.()?.next?.()?.value, importedProfileStats)
-  const mergedVisibleStats = firstVisibleStats || importedProfileStats || dynamicProfileStats || {}
+  const importedTipStats = (tipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
+  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
+  const mergedVisibleStats = importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {}
   const targetProfileUser = {
     ...(profile || {}),
     id: profileId,
@@ -13505,10 +13510,11 @@ function ProfileLiveTipCard({
     currentUsername && String(currentUsername).toLowerCase() === String(profileTipAuthor).toLowerCase()
   )
   const showFollowButton = !isOwnTip
-  const profileFollowLookupKey = String(profileTipAuthor || displayName || '').toLowerCase()
+  const profileFollowLookupKey = normalizeEmail(profileTipAuthor || displayName || profileTipIdentity.username || '')
   const profileTipsterId = profileTipIdentity.id || profileTipIdentity.author_id || profileTipIdentity.user_id
+  const profileTipsterKey = String(profileTipsterId || '')
   const isFollowing = Boolean(
-    followingTipsters?.has?.(String(profileTipsterId || '')) ||
+    (profileTipsterKey && followingTipsters?.has?.(profileTipsterKey)) ||
     (profileFollowLookupKey && followingTipsters?.has?.(profileFollowLookupKey))
   )
 
@@ -13698,7 +13704,7 @@ function ProfileLiveTipCard({
               className={`ticket-follow-inline-btn ${isFollowing ? 'active' : ''}`}
               onClick={(event) => {
                 event.stopPropagation()
-                onToggleFollow?.(profileFollowLookupKey || profileTipAuthor, profileTipAuthor)
+                onToggleFollow?.(profileFollowLookupKey || profileTipAuthor || displayName, profileTipAuthor || displayName)
               }}
               aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
             >
