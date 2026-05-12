@@ -34721,3 +34721,268 @@ button.betfolio-fetch-btn{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* WERSJA 949 — ożywiona ramka wykresu w zakładce Wyniki */
+.profile-live-balance-card-v949{
+  position:relative !important;
+  overflow:hidden !important;
+  padding:18px !important;
+  border-radius:22px !important;
+  border:1px solid rgba(24,247,231,.22) !important;
+  background:
+    radial-gradient(circle at 80% 24%, rgba(33,230,214,.13), transparent 28%),
+    linear-gradient(180deg, rgba(3,35,46,.92), rgba(2,12,20,.96)) !important;
+  box-shadow:0 18px 45px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.03) !important;
+}
+
+.profile-live-balance-card-v949::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-2px !important;
+  background:linear-gradient(115deg, transparent 0%, rgba(24,247,231,.18) 36%, transparent 58%) !important;
+  transform:translateX(-120%) !important;
+  animation:profileBalanceShineV949 5.2s ease-in-out infinite !important;
+  pointer-events:none !important;
+}
+
+.profile-live-balance-card-v949::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:auto 18px 18px 18px !important;
+  height:1px !important;
+  background:linear-gradient(90deg, transparent, rgba(24,247,231,.55), transparent) !important;
+  opacity:.55 !important;
+  pointer-events:none !important;
+}
+
+.profile-live-balance-head-v949{
+  position:relative !important;
+  z-index:2 !important;
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin-bottom:12px !important;
+}
+
+.profile-live-balance-head-v949 h3{
+  margin:0 !important;
+  font-size:17px !important;
+  color:#fff !important;
+}
+
+.profile-live-balance-head-v949 span{
+  display:block !important;
+  margin-top:4px !important;
+  color:#8fb0c8 !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+
+.profile-live-balance-status-v949{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  min-height:28px !important;
+  padding:0 12px !important;
+  border-radius:999px !important;
+  background:rgba(24,247,231,.10) !important;
+  border:1px solid rgba(24,247,231,.28) !important;
+  color:#35f7e8 !important;
+  font-size:11px !important;
+  font-weight:1000 !important;
+  letter-spacing:.08em !important;
+}
+
+.profile-live-balance-status-v949 i{
+  width:8px !important;
+  height:8px !important;
+  border-radius:50% !important;
+  background:#29ff99 !important;
+  box-shadow:0 0 14px rgba(41,255,153,.9) !important;
+  animation:profileLivePulseV949 1.2s ease-in-out infinite !important;
+}
+
+.profile-live-balance-toolbar-v949{
+  position:relative !important;
+  z-index:2 !important;
+  display:flex !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  margin-bottom:12px !important;
+}
+
+.profile-live-balance-toolbar-v949 span{
+  min-height:34px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  padding:0 12px !important;
+  border-radius:12px !important;
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.075) !important;
+  color:#9fb7ca !important;
+  font-size:12px !important;
+  font-weight:850 !important;
+}
+
+.profile-live-balance-toolbar-v949 b{
+  color:#fff !important;
+  font-size:14px !important;
+  font-weight:1000 !important;
+}
+
+.profile-live-balance-toolbar-v949 .good{
+  background:rgba(34,230,122,.10) !important;
+  border-color:rgba(34,230,122,.20) !important;
+  color:#b9ffdc !important;
+}
+
+.profile-live-balance-toolbar-v949 .bad{
+  background:rgba(255,77,103,.10) !important;
+  border-color:rgba(255,77,103,.20) !important;
+  color:#ffc0ca !important;
+}
+
+.profile-live-balance-stage-v949{
+  position:relative !important;
+  z-index:2 !important;
+  height:230px !important;
+  border-radius:18px !important;
+  overflow:hidden !important;
+  background:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/100% 25%,
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/12.5% 100%,
+    radial-gradient(circle at 70% 35%, rgba(33,230,214,.12), transparent 32%),
+    rgba(1,10,18,.70) !important;
+  border:1px solid rgba(24,247,231,.12) !important;
+}
+
+.profile-live-balance-ylabels-v949{
+  position:absolute !important;
+  left:12px !important;
+  top:10px !important;
+  bottom:10px !important;
+  z-index:3 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:space-between !important;
+  color:#6f879d !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  text-transform:uppercase !important;
+  pointer-events:none !important;
+}
+
+.profile-live-balance-chart-v949{
+  position:absolute !important;
+  inset:10px 12px 20px 46px !important;
+  width:calc(100% - 58px) !important;
+  height:calc(100% - 30px) !important;
+  color:#2dffbd !important;
+  overflow:visible !important;
+}
+
+.profile-live-balance-area-v949{
+  opacity:.88 !important;
+  animation:profileBalanceAreaV949 3.2s ease-in-out infinite alternate !important;
+}
+
+.profile-live-balance-line-v949{
+  stroke-dasharray:180 !important;
+  stroke-dashoffset:180 !important;
+  animation:profileDrawLineV949 1.45s ease-out forwards, profileLineFlowV949 2.6s linear infinite 1.45s !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+}
+
+.profile-live-balance-line-shadow-v949{
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  animation:profileShadowPulseV949 2.2s ease-in-out infinite !important;
+}
+
+.profile-live-balance-dot-v949{
+  fill:#bffff4 !important;
+  stroke:#05131c !important;
+  stroke-width:.45 !important;
+  filter:drop-shadow(0 0 4px rgba(24,247,231,.9)) !important;
+  animation:profileDotPulseV949 1.8s ease-in-out infinite !important;
+}
+
+.profile-live-balance-dot-v949:nth-of-type(odd){
+  animation-delay:.35s !important;
+}
+
+.profile-live-balance-scan-v949{
+  position:absolute !important;
+  top:0 !important;
+  bottom:0 !important;
+  width:90px !important;
+  background:linear-gradient(90deg, transparent, rgba(24,247,231,.14), transparent) !important;
+  transform:translateX(-120px) !important;
+  animation:profileScanV949 4s linear infinite !important;
+  pointer-events:none !important;
+}
+
+.profile-live-balance-footer-v949{
+  position:relative !important;
+  z-index:2 !important;
+  display:flex !important;
+  justify-content:space-between !important;
+  margin-top:8px !important;
+  color:#6f879d !important;
+  font-size:11px !important;
+  font-weight:850 !important;
+}
+
+@keyframes profileBalanceShineV949{
+  0%,52%{transform:translateX(-120%); opacity:0;}
+  58%{opacity:1;}
+  100%{transform:translateX(120%); opacity:0;}
+}
+
+@keyframes profileLivePulseV949{
+  0%,100%{transform:scale(1); opacity:.75;}
+  50%{transform:scale(1.45); opacity:1;}
+}
+
+@keyframes profileDrawLineV949{
+  to{stroke-dashoffset:0;}
+}
+
+@keyframes profileLineFlowV949{
+  0%{filter:drop-shadow(0 0 7px rgba(24,247,231,.50));}
+  50%{filter:drop-shadow(0 0 18px rgba(24,247,231,.95));}
+  100%{filter:drop-shadow(0 0 7px rgba(24,247,231,.50));}
+}
+
+@keyframes profileShadowPulseV949{
+  0%,100%{opacity:.45;}
+  50%{opacity:.9;}
+}
+
+@keyframes profileBalanceAreaV949{
+  from{opacity:.55;}
+  to{opacity:.95;}
+}
+
+@keyframes profileDotPulseV949{
+  0%,100%{opacity:.72; transform:scale(1);}
+  50%{opacity:1; transform:scale(1.28);}
+}
+
+@keyframes profileScanV949{
+  from{left:-110px;}
+  to{left:calc(100% + 110px);}
+}
+
+@media(max-width:760px){
+  .profile-live-balance-stage-v949{
+    height:190px !important;
+  }
+  .profile-live-balance-toolbar-v949 span{
+    flex:1 1 140px !important;
+  }
+}

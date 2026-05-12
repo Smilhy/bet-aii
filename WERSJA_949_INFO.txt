@@ -1,0 +1,24 @@
+WERSJA 949
+
+Ożywienie ramki/wykresu w zakładce Wyniki.
+
+Zrobione:
+1. Ramka „Wyniki — przebieg bilansu” nie jest już martwa/statyczna.
+2. Dodałem animowany nagłówek LIVE.
+3. Dodałem kafelki wewnątrz wykresu:
+   - rozliczone
+   - wygrane
+   - przegrane
+   - bilans
+4. Wykres ma animowane rysowanie linii.
+5. Dodałem świecące punkty na linii.
+6. Dodałem przejeżdżający skaner/poświatę.
+7. Dodałem lepsze tło, siatkę i ramkę.
+8. Logika wyników z wersji 948 zostaje bez zmian.
+
+Start z wersji:
+- betai_wersja_948_PRZEGRANA_BEZ_ADMINA.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
