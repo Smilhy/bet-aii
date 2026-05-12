@@ -335,6 +335,14 @@ function normalizeTipSettlementStatus(value) {
   return 'pending'
 }
 
+function normalizeResult(value) {
+  const clean = String(value || '').trim().toLowerCase()
+  if (['won', 'win', 'wygrał', 'wygral', 'wygrany', 'green', 'success'].includes(clean) || clean.includes('won') || clean.includes('win')) return 'win'
+  if (['lost', 'lose', 'loss', 'przegrał', 'przegral', 'przegrany', 'red', 'failed'].includes(clean) || clean.includes('lost') || clean.includes('lose') || clean.includes('loss')) return 'loss'
+  if (['void', 'push', 'zwrot', 'cancelled', 'canceled', 'anulowany', 'return'].includes(clean)) return 'void'
+  return 'pending'
+}
+
 function readTipStakeValue(tip) {
   return Number(tip?.stake ?? tip?.amount ?? tip?.stawka ?? tip?.bet_amount ?? tip?.total_staked ?? 0) || 0
 }
