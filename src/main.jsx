@@ -16535,38 +16535,95 @@ function App() {
     }
   }
 
-  async function resolveTipsterId(tipsterId, authorName) {
-    if (tipsterId) return String(tipsterId)
-    if (!authorName || !isSupabaseConfigured || !supabase) return null
+  async function resolveTipsterProfile(tipsterRef, authorName) {
+    if (!isSupabaseConfigured || !supabase) return null
 
-    const username = String(authorName).toLowerCase().trim()
+    const rawRef = String(tipsterRef || '').trim()
+    const rawName = String(authorName || '').trim()
+    const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    if (rawRef && uuidLike.test(rawRef)) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id,email,username,public_slug,avatar_url')
+        .eq('id', rawRef)
+        .maybeSingle()
+      if (!error && data?.id) return data
+    }
+
+    const candidates = [rawRef, rawName]
+      .flatMap(value => {
+        const clean = String(value || '').trim()
+        if (!clean) return []
+        const lower = clean.toLowerCase()
+        const noAt = lower.startsWith('@') ? lower.slice(1) : lower
+        const emailLocal = lower.includes('@') ? lower.split('@')[0] : ''
+        return [lower, noAt, emailLocal].filter(Boolean)
+      })
+      .filter(Boolean)
+
+    if (!candidates.length) return null
+
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email')
-      .limit(100)
+      .select('id,email,username,public_slug,avatar_url')
+      .limit(500)
 
     if (error) {
-      console.error('resolveTipsterId error', error)
+      console.error('resolveTipsterProfile error', error)
       return null
     }
 
-    const match = (data || []).find(profile => {
+    return (data || []).find(profile => {
       const email = String(profile.email || '').toLowerCase()
-      return email === username || email.split('@')[0] === username
-    })
+      const emailLocal = email ? email.split('@')[0] : ''
+      const username = String(profile.username || '').toLowerCase()
+      const slug = String(profile.public_slug || '').toLowerCase()
+      const id = String(profile.id || '').toLowerCase()
+      return candidates.some(candidate =>
+        candidate === id ||
+        candidate === email ||
+        candidate === emailLocal ||
+        candidate === username ||
+        candidate === slug
+      )
+    }) || null
+  }
 
-    return match?.id ? String(match.id) : null
+  async function resolveTipsterId(tipsterId, authorName) {
+    const profile = await resolveTipsterProfile(tipsterId, authorName)
+    return profile?.id ? String(profile.id) : null
   }
 
   async function openTipsterProfile(tipsterRef, authorName) {
-    const resolvedId = await resolveTipsterId(tipsterRef, authorName)
-    const id = resolvedId ? String(resolvedId) : String(tipsterRef || '').trim()
+    const profile = await resolveTipsterProfile(tipsterRef, authorName)
+    const id = profile?.id ? String(profile.id) : null
+
     if (!id) {
       showToast({ type: 'error', title: 'Profil typera', message: 'Nie udało się otworzyć profilu tego użytkownika.' })
       return
     }
-    setSelectedTipsterId(id)
-    setView('dashboard')
+
+    const currentProfile = effectiveAccountProfile || sessionUser || {}
+    const currentId = currentProfile?.id || sessionUser?.id
+    const currentEmail = normalizeEmail(currentProfile?.email || sessionUser?.email || '')
+    const currentUsername = normalizeEmail(resolveRealProfileUsername(currentProfile || sessionUser || {}))
+    const targetEmail = normalizeEmail(profile?.email || '')
+    const targetUsername = normalizeEmail(profile?.username || profile?.public_slug || '')
+
+    const isOwnProfile = Boolean(
+      (currentId && String(currentId) === id) ||
+      (currentEmail && targetEmail && currentEmail === targetEmail) ||
+      (currentUsername && targetUsername && currentUsername === targetUsername)
+    )
+
+    setSelectedTipsterId(null)
+    if (isOwnProfile) {
+      setView('profile')
+    } else {
+      setSelectedTipsterId(id)
+      setView('dashboard')
+    }
     try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (_) {}
   }
 
