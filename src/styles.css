@@ -34108,3 +34108,37 @@ button.betfolio-fetch-btn{
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* WERSJA 938 — klik w nick otwiera realny widok Mój profil tego użytkownika */
+.tipster-profile-as-real-profile{
+  width: 100% !important;
+  padding: 18px !important;
+}
+.tipster-profile-as-real-profile > .profile-page{
+  padding: 0 !important;
+}
+.tipster-profile-as-real-profile .public-profile-back{
+  width: fit-content !important;
+  margin: 0 0 12px !important;
+}
+.tipster-profile-as-real-profile .profile-hero-stripe-btn{
+  display: none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-avatar-editable{
+  cursor: default !important;
+  pointer-events: none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-avatar-editable span{
+  display: none !important;
+}
+.tipster-profile-as-real-profile .profile-avatar-file-input{
+  display: none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-bio-click{
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.tipster-profile-as-real-profile .profile-v3-bio-click span{
+  display: none !important;
+}
