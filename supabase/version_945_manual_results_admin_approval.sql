@@ -32,3 +32,17 @@ create index if not exists tips_manual_settlement_requested_at_idx on public.tip
 -- status='pending'
 -- manual_settlement_status='pending_admin'
 -- admin_approval_status='pending'
+
+
+-- WERSJA 948 — zmiana logiki:
+-- Przegrana zgłoszona przez właściciela typu nie wymaga zatwierdzenia admina.
+-- Dla przegranej aplikacja zapisuje od razu:
+-- status='lost'
+-- result='lost'
+-- manual_settlement_status='self_lost'
+-- admin_approval_status='not_required'
+-- settlement_source='manual_user_loss'
+--
+-- Admin zatwierdza tylko:
+-- manual_settlement_result='won'
+-- manual_settlement_result='void'

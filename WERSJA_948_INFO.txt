@@ -1,0 +1,22 @@
+WERSJA 948
+
+Zmiana logiki zakładki Wyniki:
+1. Jeżeli użytkownik sam oznaczy typ jako Przegrana, nie czeka to na admina.
+2. Przegrana zapisuje się od razu:
+   - status = lost
+   - result = lost
+   - manual_settlement_status = self_lost
+   - admin_approval_status = not_required
+   - settlement_source = manual_user_loss
+3. Admin zatwierdza tylko:
+   - Wygrana
+   - Zwrot
+4. Tekst w zakładce Wyniki został zaktualizowany.
+5. Panel Kupony admin opisuje teraz, że czekają tam tylko wygrane i zwroty.
+
+Start z wersji:
+- betai_wersja_947_FIX_WYNIKI_STATUS_CONSTRAINT.zip
+
+Pliki zmienione:
+- src/main.jsx
+- supabase/version_945_manual_results_admin_approval.sql

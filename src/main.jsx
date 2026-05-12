@@ -13915,22 +13915,42 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const submitManualSettlementRequest = async (tip, result) => {
     const clean = String(result || '').toLowerCase()
     if (!tip?.id || !['won', 'lost', 'void'].includes(clean)) return
-    const patch = {
-      status: 'pending',
-      manual_settlement_status: 'pending_admin',
-      manual_settlement_result: clean,
-      manual_settlement_requested_at: new Date().toISOString(),
-      manual_settlement_requested_by: viewerProfile?.id || null,
-      admin_approval_status: 'pending',
-      settlement_source: 'manual_user'
-    }
+
+    // Przegrana zadeklarowana przez właściciela typu nie wymaga admina.
+    // Admin zatwierdza tylko wygraną albo zwrot.
+    const isSelfLoss = clean === 'lost'
+    const patch = isSelfLoss
+      ? {
+          status: 'lost',
+          result: 'lost',
+          manual_settlement_status: 'self_lost',
+          manual_settlement_result: 'lost',
+          manual_settlement_requested_at: new Date().toISOString(),
+          manual_settlement_requested_by: viewerProfile?.id || null,
+          admin_approval_status: 'not_required',
+          settlement_source: 'manual_user_loss'
+        }
+      : {
+          status: 'pending',
+          manual_settlement_status: 'pending_admin',
+          manual_settlement_result: clean,
+          manual_settlement_requested_at: new Date().toISOString(),
+          manual_settlement_requested_by: viewerProfile?.id || null,
+          admin_approval_status: 'pending',
+          settlement_source: 'manual_user'
+        }
+
     setLocalSettlementPatches(prev => ({ ...prev, [String(tip.id)]: patch }))
     try {
       await updateTipField(tip.id, patch)
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      if (isSelfLoss) {
+        onToast?.({ type: 'success', title: 'Typ rozliczony', message: 'Oznaczono przegraną. Ten wynik nie wymaga zatwierdzenia admina.' })
+      } else {
+        onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      }
       window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się wysłać kuponu do admina. Uruchom SQL wersji 945.') })
+      onToast?.({ type: 'error', title: isSelfLoss ? 'Błąd rozliczenia' : 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać rozliczenia. Uruchom SQL wersji 945.') })
     }
   }
   const handleProfileSubscribeClick = () => onSubscribeToTipster?.(profileSubPurchasePayload)
@@ -14573,7 +14593,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
                 <div className="profile-results-logic-note-v945">
                   <strong>Logika wyników:</strong>
-                  <span>Typy automatyczne rozlicza system po wyniku meczu. Typy ręczne użytkownik zgłasza jako wygrana/przegrana/zwrot, ale statystyki dopisują się dopiero po zatwierdzeniu admina.</span>
+                  <span>Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.</span>
                 </div>
                 <div className="profile-v4-results-table profile-v4-results-table-v945">
                   <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
@@ -15175,7 +15195,7 @@ function AdminCouponApprovalView({ user, onToast }) {
         <div>
           <span>Tylko administrator</span>
           <h1>Kupony do zatwierdzenia</h1>
-          <p>Ręczne rozliczenia użytkowników czekają tutaj na potwierdzenie. Dopiero po zatwierdzeniu wynik dopisuje się do statystyk.</p>
+          <p>Wygrane i zwroty zgłoszone ręcznie czekają tutaj na potwierdzenie. Przegrane użytkownik może rozliczyć samodzielnie bez admina.</p>
         </div>
         <button type="button" onClick={loadRows}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
       </div>
