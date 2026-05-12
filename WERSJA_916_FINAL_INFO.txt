@@ -1,0 +1,5 @@
+WERSJA 916 FINAL
+- Przywrócone 4 miejsca w prawym rankingu Top typerzy.
+- Profit poprawiony wizualnie jak w projekcie: mniejszy badge, pełna kwota, dobre wyrównanie.
+- Przycisk Obserwuj ustawiony pod badge Premium/Darmowy.
+- Build sprawdzony.

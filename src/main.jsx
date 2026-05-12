@@ -1899,7 +1899,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top typerzy</h2></div>
-        {realRanking.length ? realRanking.slice(0, 5).map((row, index) => (
+        {realRanking.length ? realRanking.slice(0, 4).map((row, index) => (
           <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
             <div className={`mini-avatar ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
