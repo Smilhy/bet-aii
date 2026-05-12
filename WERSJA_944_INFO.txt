@@ -1,0 +1,27 @@
+WERSJA 944
+
+Zmiany w profilu użytkownika:
+1. Usunięto zakładkę „Wszystkie”.
+2. Zostały tylko:
+   - Darmowe
+   - Premium
+3. Kolejność jest teraz:
+   - Darmowe
+   - Premium
+4. Zakładka Premium u innego użytkownika jest zablokowana, jeżeli nie masz aktywnej subskrypcji profilu.
+5. Kliknięcie Premium bez subskrypcji otwiera kupno subskrypcji profilu.
+6. Po zakupie subskrypcji:
+   - zakładka Premium jest aktywna,
+   - typy premium są widoczne,
+   - typy premium są rozszyfrowane.
+7. Subskrypcja jest traktowana jako dostęp na 30 dni.
+8. Pokazuje się informacja ile dni dostępu zostało i do kiedy jest ważna.
+9. Po upływie 30 dni zakładka Premium automatycznie znowu się blokuje i trzeba przedłużyć dostęp.
+10. Logika działa globalnie dla profili użytkowników.
+
+Start z wersji:
+- betai_wersja_943_BEZ_OBSERWUJ_NA_WLASNYM_PROFILU.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

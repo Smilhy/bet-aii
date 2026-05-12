@@ -34244,3 +34244,54 @@ button.betfolio-fetch-btn{
   background:linear-gradient(135deg,#22e6d6,#2f8dff) !important;
   color:#03121b !important;
 }
+
+
+/* WERSJA 944 — profil: tylko Darmowe/Premium + blokada Premium 30 dni */
+.filter-pill-v872.locked{
+  opacity:.82 !important;
+  border-color:rgba(255,210,31,.45) !important;
+}
+.profile-v4-filter-row-paid-access{
+  gap:12px !important;
+}
+.profile-premium-tab-lock-note,
+.profile-subscription-active-note{
+  margin:0 0 14px !important;
+  padding:12px 14px !important;
+  border-radius:16px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  flex-wrap:wrap !important;
+  border:1px solid rgba(255,210,31,.28) !important;
+  background:rgba(255,210,31,.08) !important;
+  color:#ffe9a8 !important;
+  font-weight:850 !important;
+}
+.profile-subscription-active-note{
+  border-color:rgba(33,230,214,.32) !important;
+  background:rgba(33,230,214,.08) !important;
+  color:#cffffa !important;
+}
+.profile-premium-tab-lock-note strong,
+.profile-subscription-active-note strong{
+  color:#fff !important;
+  font-weight:1000 !important;
+}
+.profile-premium-tab-lock-note span,
+.profile-subscription-active-note span{
+  flex:1 1 420px !important;
+  font-size:13px !important;
+  line-height:1.35 !important;
+}
+.profile-premium-tab-lock-note button{
+  min-height:36px !important;
+  border:0 !important;
+  border-radius:999px !important;
+  padding:0 14px !important;
+  background:linear-gradient(135deg,#21e6d6,#2f8dff) !important;
+  color:#03121b !important;
+  font-weight:950 !important;
+  cursor:pointer !important;
+}

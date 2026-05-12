@@ -13870,6 +13870,40 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     !profileIsOwnForViewer &&
     ((viewedIdKey && followingTipsters?.has?.(viewedIdKey)) || (viewedUsernameKey && followingTipsters?.has?.(viewedUsernameKey)))
   )
+  const profileSubscriptionKeys = [viewedIdKey, viewedUsernameKey, username, email, normalizeEmail(email).split('@')[0]].filter(Boolean).map(value => String(value).toLowerCase())
+  const activeProfileSubscription = (tipsterSubscriptions || []).find(sub => {
+    const subTipster = String(sub?.tipster_id || sub?.author_id || sub?.user_id || '').toLowerCase()
+    if (!subTipster || !profileSubscriptionKeys.includes(subTipster)) return false
+    if (sub?.status && sub.status !== 'active') return false
+    if (!sub?.expires_at) return true
+    return new Date(sub.expires_at).getTime() > Date.now()
+  }) || null
+  const profileSubscriptionActive = Boolean(profileIsOwnForViewer || activeProfileSubscription)
+  const profileSubscriptionDaysLeft = activeProfileSubscription?.expires_at
+    ? Math.max(0, Math.ceil((new Date(activeProfileSubscription.expires_at).getTime() - Date.now()) / 86400000))
+    : null
+  const profileSubscriptionTimeLabel = profileSubscriptionActive && !profileIsOwnForViewer
+    ? (profileSubscriptionDaysLeft === null ? 'Subskrypcja aktywna' : profileSubscriptionDaysLeft === 1 ? 'Został 1 dzień dostępu' : `Zostało ${profileSubscriptionDaysLeft} dni dostępu`)
+    : ''
+  const profileSubscriptionExpiresLabel = activeProfileSubscription?.expires_at
+    ? new Date(activeProfileSubscription.expires_at).toLocaleDateString('pl-PL')
+    : ''
+  const profileSubPurchasePayload = {
+    author_id: viewedIdKey || viewedUsernameKey || username,
+    user_id: viewedIdKey || viewedUsernameKey || username,
+    tipster_id: viewedIdKey || viewedUsernameKey || username,
+    author_name: username,
+    author_email: email,
+    duration_days: 30
+  }
+  const handlePremiumProfileTabClick = () => {
+    if (profileSubscriptionActive) {
+      setProfileTipsFilter('premium')
+      return
+    }
+    onSubscribeToTipster?.(profileSubPurchasePayload)
+  }
+  const handleProfileSubscribeClick = () => onSubscribeToTipster?.(profileSubPurchasePayload)
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
@@ -13881,7 +13915,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileTab, setProfileTab] = useState('tips')
-  const [profileTipsFilter, setProfileTipsFilter] = useState('all')
+  const [profileTipsFilter, setProfileTipsFilter] = useState('free')
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
@@ -14255,9 +14289,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   ]
   const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
   const profileVisibleTipCards = allProfileTipCards.filter(tip => {
-    if (profileTipsFilter === 'premium') return tip.premium
-    if (profileTipsFilter === 'free') return !tip.premium
-    return true
+    if (profileTipsFilter === 'premium') return profileSubscriptionActive && tip.premium
+    return !tip.premium
   })
   const resultTipRows = allProfileTipCards.filter(tip => {
     if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
@@ -14302,7 +14335,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       displayName={displayName}
       currentUser={viewerProfile}
       unlockedTips={unlockedTips}
-      tipsterSubscriptions={tipsterSubscriptions}
+      tipsterSubscriptions={profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
+        ...tipsterSubscriptions,
+        { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
+      ] : tipsterSubscriptions}
       followingTipsters={followingTipsters}
       onToggleFollow={onToggleFollow}
       onUnlock={onUnlock}
@@ -14424,15 +14460,27 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           {profileTab === 'tips' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
               <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
-              <div className="profile-v4-filter-row">
-                <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{allProfileTipCards.length}</b></button>
-                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCards.length}</b></button>
+              <div className="profile-v4-filter-row profile-v4-filter-row-paid-access">
                 <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
+                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileSubscriptionActive ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileSubscriptionActive ? premiumCards.length : '🔒'}</b></button>
               </div>
+              {!profileIsOwnForViewer && profileSubscriptionActive ? (
+                <div className="profile-subscription-active-note">
+                  <strong>Premium aktywne</strong>
+                  <span>{profileSubscriptionTimeLabel}{profileSubscriptionExpiresLabel ? ` • ważne do ${profileSubscriptionExpiresLabel}` : ''}</span>
+                </div>
+              ) : null}
+              {!profileIsOwnForViewer && !profileSubscriptionActive && premiumCards.length > 0 ? (
+                <div className="profile-premium-tab-lock-note">
+                  <strong>Zakładka Premium jest zablokowana.</strong>
+                  <span>Kup subskrypcję profilu na 30 dni, aby zobaczyć i rozszyfrować typy premium tego typera. Po 30 dniach dostęp automatycznie wygaśnie i trzeba będzie przedłużyć subskrypcję.</span>
+                  <button type="button" onClick={handleProfileSubscribeClick}>Kup subskrypcję 30 dni</button>
+                </div>
+              ) : null}
               {profileVisibleTipCards.length ? (
                 <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
               ) : (
-                <div className="profile-live-tip-empty">Brak typów w tej kategorii.</div>
+                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileSubscriptionActive ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak typów w tej kategorii.'}</div>
               )}
             </section>
           )}
