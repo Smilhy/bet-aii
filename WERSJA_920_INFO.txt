@@ -1,0 +1,3 @@
+WERSJA 920
+- 4 miejsca w prawym rankingu (z fallbackiem do 4 rekordów).
+- Obserwuj ustawiony pod Premium/Darmowy w lewej kolumnie typu.

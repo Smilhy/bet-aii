@@ -1893,17 +1893,23 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
     return row
   })
   const realRanking = buildLiveLeaderboardRows(rankingWithCurrentAvatar, tips)
-  const rankingFallbackUsers = [
+  const fallbackRankingUsers = [
     { username: 'buchajsonek1988', email: 'buchajsonek1988@gmail.com', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
     { username: 'p.kucharski', email: 'p.kucharski@aol.co.uk', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'Bet+AI Live', email: 'betai@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 }
+    { username: 'Bet+AI Live', email: 'betai@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
   ]
-  const rankingKeys = new Set(realRanking.map(row => normalizeEmail(row.email || row.username || row.author_name || row.user_name)))
-  const rightRankingRows = [...realRanking]
-  rankingFallbackUsers.forEach(row => {
+  const rankingSeen = new Set()
+  const rightRankingRows = []
+  ;(realRanking || []).forEach((row) => {
+    const key = normalizeEmail(row?.email || row?.author_email || row?.user_email || row?.username || row?.author_name || row?.user_name)
+    if (!key || rankingSeen.has(key)) return
+    rankingSeen.add(key)
+    rightRankingRows.push(row)
+  })
+  fallbackRankingUsers.forEach((row) => {
     const key = normalizeEmail(row.email || row.username)
-    if (rightRankingRows.length < 4 && key && !rankingKeys.has(key)) {
-      rankingKeys.add(key)
+    if (!rankingSeen.has(key) && rightRankingRows.length < 4) {
+      rankingSeen.add(key)
       rightRankingRows.push(row)
     }
   })
@@ -1914,7 +1920,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top typerzy</h2></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => (
-          <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || index}>
+          <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || row.username || index}>
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
             <div className={`mini-avatar ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
               {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : formatRankingName(row).slice(0, 2).toUpperCase()}
@@ -8044,11 +8050,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             </div>
           ) : null}
         </div>
-        <div className="betai-author-actions">
-<button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
+        <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
-<button
+        <button
           type="button"
           className="betai-follow-author-btn"
           onClick={(event) => {
@@ -8059,7 +8064,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         >
           Obserwuj
         </button>
-        </div>
       </div>
 
       <div className="profile-ticket-v6-main">
@@ -13597,11 +13601,10 @@ function ProfileLiveTipCard({
             </div>
           ) : null}
         </div>
-        <div className="betai-author-actions">
-<button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
+        <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
           {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
-<button
+        <button
           type="button"
           className="betai-follow-author-btn"
           onClick={(event) => {
@@ -13612,7 +13615,6 @@ function ProfileLiveTipCard({
         >
           Obserwuj
         </button>
-        </div>
       </div>
 
       <div className="profile-ticket-v6-main">
