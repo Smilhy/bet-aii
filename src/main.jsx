@@ -8033,6 +8033,17 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
+            <button
+              type="button"
+              className="betai-follow-author-btn"
+              onClick={(event) => {
+                event.stopPropagation()
+                typeof onFollowTipster === 'function' ? onFollowTipster(tip) : window.dispatchEvent(new CustomEvent('betai:follow-tipster', { detail: tip }))
+              }}
+              aria-label="Obserwuj typera"
+            >
+              Obserwuj
+            </button>
       </div>
 
       <div className="profile-ticket-v6-main">
@@ -13573,6 +13584,17 @@ function ProfileLiveTipCard({
         <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
           {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
+            <button
+              type="button"
+              className="betai-follow-author-btn"
+              onClick={(event) => {
+                event.stopPropagation()
+                typeof onFollowTipster === 'function' ? onFollowTipster(tip) : window.dispatchEvent(new CustomEvent('betai:follow-tipster', { detail: tip }))
+              }}
+              aria-label="Obserwuj typera"
+            >
+              Obserwuj
+            </button>
       </div>
 
       <div className="profile-ticket-v6-main">
