@@ -33864,3 +33864,247 @@ button.betfolio-fetch-btn{
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* WERSJA 937 — poprawka publicznego profilu: wygląd jak Mój profil + toggle follow */
+.public-profile-as-my-profile{
+  width: 100% !important;
+  padding: 18px !important;
+}
+.public-profile-as-my-profile .profile-v3-layout{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 300px !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+.public-profile-as-my-profile .profile-v3-main{
+  min-width: 0 !important;
+}
+.public-profile-as-my-profile .profile-v3-hero,
+.public-profile-as-my-profile .glass-profile-v3,
+.public-profile-mirror-hero{
+  min-height: 235px !important;
+  padding: 28px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 74% 35%, rgba(0,255,230,.14), transparent 32%),
+    linear-gradient(135deg, rgba(4,18,29,.96), rgba(4,42,50,.90)) !important;
+  border: 1px solid rgba(0,255,230,.18) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 18px 48px rgba(0,0,0,.24) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.public-profile-mirror-hero .profile-v3-hero-content{
+  display: flex !important;
+  align-items: center !important;
+  gap: 24px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+.public-profile-mirror-hero .profile-v3-avatar{
+  width: 122px !important;
+  height: 122px !important;
+  min-width: 122px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background:
+    var(--avatar-image, none) center/cover no-repeat,
+    linear-gradient(145deg, rgba(24,247,231,.18), rgba(0,0,0,.40)) !important;
+  border: 3px solid rgba(24,247,231,.46) !important;
+  box-shadow: 0 0 28px rgba(24,247,231,.22) !important;
+  color: #fff !important;
+  font-size: 32px !important;
+  font-weight: 1000 !important;
+  position: relative !important;
+}
+.public-profile-mirror-hero .profile-v3-title h1{
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 34px !important;
+  line-height: 1.08 !important;
+}
+.public-profile-mirror-hero .profile-v3-title > p{
+  margin: 4px 0 0 !important;
+  color: #91a9bf !important;
+  font-weight: 850 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges{
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  margin: 12px 0 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges span{
+  min-height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: rgba(24,247,231,.10) !important;
+  border: 1px solid rgba(24,247,231,.18) !important;
+  color: #35f7e8 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges .premium{
+  background: rgba(255,64,214,.13) !important;
+  color: #ff76df !important;
+  border-color: rgba(255,64,214,.22) !important;
+}
+.public-profile-mirror-hero .profile-v3-badges .active{
+  background: rgba(255,168,24,.13) !important;
+  color: #ffbf56 !important;
+  border-color: rgba(255,168,24,.22) !important;
+}
+.public-profile-mirror-hero .profile-v3-bio{
+  color: #d8eafd !important;
+  margin: 10px 0 12px !important;
+  font-weight: 850 !important;
+}
+.public-profile-mirror-hero .profile-v3-actions{
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+.public-profile-mirror-hero .profile-v3-actions button,
+.profile-v3-stripe-btn{
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(24,247,231,.22) !important;
+  background: rgba(2,16,24,.66) !important;
+  color: #e8fbff !important;
+  padding: 0 16px !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+.public-profile-mirror-hero .profile-v3-actions .primary,
+.profile-v3-stripe-btn{
+  background: linear-gradient(135deg, #26f0e0, #2f91ff) !important;
+  color: #03121b !important;
+  border: 0 !important;
+}
+.profile-v3-stripe-btn{
+  position: absolute !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 3 !important;
+}
+.public-profile-as-my-profile .profile-v4-stats-grid,
+.public-profile-stats{
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(130px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 18px 0 !important;
+}
+.public-profile-as-my-profile .profile-v4-stats-grid > div,
+.public-profile-stats > div{
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-height: 86px !important;
+  padding: 16px 18px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(6,31,48,.95), rgba(5,21,35,.96)) !important;
+  border: 1px solid rgba(24,247,231,.13) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025) !important;
+}
+.public-profile-as-my-profile .profile-v4-stats-grid > div span,
+.public-profile-stats > div span{
+  color: #8fa8bd !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  letter-spacing: .08em !important;
+}
+.public-profile-as-my-profile .profile-v4-stats-grid > div b,
+.public-profile-stats > div b{
+  display: block !important;
+  margin: 8px 0 4px !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  font-weight: 1000 !important;
+}
+.public-profile-as-my-profile .profile-v4-stats-grid > div small,
+.public-profile-stats > div small{
+  color: #7f96ad !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+.public-profile-as-my-profile .profile-v4-tabs,
+.public-profile-tabs{
+  display: flex !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin: 0 0 18px !important;
+  padding: 14px !important;
+  border-radius: 20px !important;
+  background: rgba(3,31,43,.78) !important;
+  border: 1px solid rgba(24,247,231,.10) !important;
+}
+.public-profile-as-my-profile .profile-v4-tabs button,
+.public-profile-tabs button{
+  min-height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  background: rgba(2,14,24,.72) !important;
+  color: #dce9f6 !important;
+  font-weight: 950 !important;
+}
+.public-profile-as-my-profile .profile-v4-tabs button.active,
+.public-profile-tabs button.active{
+  background: linear-gradient(135deg, rgba(31,226,255,.85), rgba(47,141,255,.92)) !important;
+  color: #06131c !important;
+}
+.public-profile-tips-section{
+  padding: 18px !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, rgba(2,35,45,.86), rgba(2,12,20,.95)) !important;
+  border: 1px solid rgba(24,247,231,.12) !important;
+}
+.public-profile-side{
+  display: grid !important;
+  gap: 14px !important;
+}
+.public-profile-side .profile-side-card{
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: rgba(3,15,24,.92) !important;
+  border: 1px solid rgba(24,247,231,.12) !important;
+}
+.public-profile-side .profile-side-card h3{
+  margin: 0 0 14px !important;
+  color: #fff !important;
+  font-size: 16px !important;
+}
+.public-profile-side .profile-side-card h3 span{
+  float: right !important;
+  color: #24f5df !important;
+  font-size: 11px !important;
+}
+.public-profile-side .profile-side-card p{
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 10px 0 !important;
+  border-top: 1px solid rgba(255,255,255,.06) !important;
+  color: #9db0c4 !important;
+  font-size: 13px !important;
+}
+.public-profile-side .profile-side-card strong{
+  color: #fff !important;
+  text-align: right !important;
+}
+@media(max-width:1300px){
+  .public-profile-as-my-profile .profile-v4-stats-grid,
+  .public-profile-stats{
+    grid-template-columns: repeat(3, minmax(130px, 1fr)) !important;
+  }
+}
+@media(max-width:1100px){
+  .public-profile-as-my-profile .profile-v3-layout{
+    grid-template-columns: 1fr !important;
+  }
+}

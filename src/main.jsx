@@ -2160,7 +2160,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
                   {isOwn ? (
                     <button type="button" className="primary">Mój profil</button>
                   ) : (
-                    <button type="button" className={isFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(profileId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}</button>
+                    <button type="button" className={isFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(username, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}</button>
                   )}
                   {!isOwn && <button type="button" onClick={() => onSubscribeToTipster?.({ author_id: profileId, user_id: profileId, tipster_id: profileId, author_name: username })}>Kup dostęp do profilu</button>}
                   <button type="button" onClick={copyPublicProfileLink}>Udostępnij</button>
@@ -8011,9 +8011,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
   const showFollowButton = !isOwnTip
-  const followLookupKey = String(author || cardAuthor || '').toLowerCase()
+  const followLookupKey = normalizeEmail(author || cardAuthor || tip.author_name || '')
+  const followIdKey = String(authorId || tip.author_id || tip.user_id || '')
   const isFollowing = Boolean(
-    followingTipsters?.has?.(String(authorId || tip.author_id || tip.user_id || '')) ||
+    (followIdKey && followingTipsters?.has?.(followIdKey)) ||
     (followLookupKey && followingTipsters?.has?.(followLookupKey))
   )
 
@@ -8205,7 +8206,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               className={`ticket-follow-inline-btn ${isFollowing ? 'active' : ''}`}
               onClick={(event) => {
                 event.stopPropagation()
-                onToggleFollow?.(authorId || tip.author_id || tip.user_id, author || cardAuthor)
+                onToggleFollow?.(followLookupKey || author || cardAuthor, author || cardAuthor)
               }}
               aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
             >
@@ -16685,87 +16686,100 @@ function App() {
     const currentNameKey = normalizeEmail(resolveRealProfileUsername(effectiveAccountProfile || sessionUser || {}))
     const currentEmailKey = normalizeEmail((effectiveAccountProfile || sessionUser || {})?.email || sessionUser?.email || '')
     const currentEmailLocalKey = currentEmailKey ? currentEmailKey.split('@')[0] : ''
-    const fallbackKey = normalizeEmail(authorName || tipsterId || '')
-    const fallbackLocalKey = fallbackKey ? fallbackKey.split('@')[0] : ''
+    const rawTargetKey = normalizeEmail(authorName || tipsterId || '')
+    const rawTargetLocalKey = rawTargetKey ? rawTargetKey.split('@')[0] : ''
     const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-    const targetLooksLikeOwnName = Boolean(
-      fallbackKey &&
+    const isOwnByName = Boolean(
+      rawTargetKey &&
       (
-        fallbackKey === currentNameKey ||
-        fallbackKey === currentEmailKey ||
-        fallbackKey === currentEmailLocalKey ||
-        fallbackLocalKey === currentNameKey ||
-        fallbackLocalKey === currentEmailLocalKey
+        rawTargetKey === currentNameKey ||
+        rawTargetKey === currentEmailKey ||
+        rawTargetKey === currentEmailLocalKey ||
+        rawTargetLocalKey === currentNameKey ||
+        rawTargetLocalKey === currentEmailLocalKey
       )
     )
 
     let resolvedId = null
     if (isSupabaseConfigured && supabase) {
-      resolvedId = await resolveTipsterId(tipsterId, authorName)
+      try {
+        resolvedId = await resolveTipsterId(tipsterId, authorName)
+      } catch (_) {
+        resolvedId = null
+      }
     }
 
     const id = resolvedId ? String(resolvedId) : null
-    const resolvedIsOwnId = Boolean(id && String(id) === String(sessionUser.id))
-
-    // Blokuj tylko naprawdę własne konto. Wcześniej blokowało też innych, gdy profil nie był znaleziony w profiles.
-    if (targetLooksLikeOwnName || (resolvedIsOwnId && !fallbackKey)) {
+    const isOwnById = Boolean(id && String(id) === String(sessionUser.id))
+    if (isOwnByName || isOwnById) {
       showToast({ type: 'info', title: 'Follow', message: 'Nie możesz obserwować własnego konta.' })
       return
     }
 
-    const localFollowKey = fallbackKey || (id ? String(id).toLowerCase() : '')
-    const alreadyFollowing = Boolean(
-      (id && followingTipsters.has(id)) ||
-      (localFollowKey && followingTipsters.has(localFollowKey))
-    )
-
-    // Jeśli nie ma poprawnego UUID profilu w Supabase, robimy bezpieczny fallback lokalny.
-    // Dzięki temu inny użytkownik może obserwować typa widocznego na typach, nawet gdy nie ma wpisu w profiles.
-    const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && id && uuidLike.test(id) && !resolvedIsOwnId)
-
-    if (alreadyFollowing) {
-      if (canPersistInSupabase) {
-        const { error } = await supabase
-          .from('tipster_follows')
-          .delete()
-          .eq('follower_id', sessionUser.id)
-          .eq('tipster_id', id)
-
-        if (error) {
-          showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
-          return
-        }
-      }
-
-      setFollowingTipsters(prev => {
-        const next = new Set(prev)
-        if (id) next.delete(id)
-        if (localFollowKey) next.delete(localFollowKey)
-        return next
-      })
-      showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować typera.' })
+    const localKey = rawTargetKey || (id ? String(id).toLowerCase() : '')
+    if (!localKey && !id) {
+      showToast({ type: 'error', title: 'Follow', message: 'Nie udało się odczytać nazwy typera.' })
       return
     }
 
-    if (canPersistInSupabase) {
-      const { error } = await supabase
-        .from('tipster_follows')
-        .upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
+    const alreadyFollowing = Boolean(
+      (id && followingTipsters.has(id)) ||
+      (localKey && followingTipsters.has(localKey))
+    )
 
-      if (error) {
+    // Zmiana statusu natychmiast w UI.
+    setFollowingTipsters(prev => {
+      const next = new Set(prev)
+      if (alreadyFollowing) {
+        if (id) next.delete(id)
+        if (localKey) next.delete(localKey)
+      } else {
+        if (id) next.add(id)
+        if (localKey) next.add(localKey)
+      }
+      return next
+    })
+
+    const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && id && uuidLike.test(id) && !isOwnById)
+    if (canPersistInSupabase) {
+      try {
+        if (alreadyFollowing) {
+          const { error } = await supabase
+            .from('tipster_follows')
+            .delete()
+            .eq('follower_id', sessionUser.id)
+            .eq('tipster_id', id)
+          if (error) throw error
+        } else {
+          const { error } = await supabase
+            .from('tipster_follows')
+            .upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
+          if (error) throw error
+        }
+      } catch (error) {
+        // Cofnij UI tylko gdy realny zapis w DB się nie udał.
+        setFollowingTipsters(prev => {
+          const next = new Set(prev)
+          if (alreadyFollowing) {
+            if (id) next.add(id)
+            if (localKey) next.add(localKey)
+          } else {
+            if (id) next.delete(id)
+            if (localKey) next.delete(localKey)
+          }
+          return next
+        })
         showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
         return
       }
     }
 
-    setFollowingTipsters(prev => {
-      const next = new Set(prev)
-      if (id && !resolvedIsOwnId) next.add(id)
-      if (localFollowKey) next.add(localFollowKey)
-      return next
+    showToast({
+      type: 'success',
+      title: 'Follow',
+      message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera. Powiadomienia pojawią się po nowych typach.'
     })
-    showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz typera. Powiadomienia pojawią się po nowych typach.' })
   }
 
   async function markAllNotificationsRead() {

@@ -1,0 +1,16 @@
+WERSJA 937
+
+Poprawki:
+1. Naprawiono kliknięcie „Obserwujesz” — po ponownym kliknięciu od razu wraca na „Obserwuj”.
+2. Follow działa poprawnie dla innych użytkowników także wtedy, gdy profil nie ma poprawnego wpisu UUID w tabeli profiles.
+3. Własnego konta nadal nie można obserwować.
+4. Poprawiono wygląd publicznego profilu innego użytkownika, żeby był jak „Mój profil”.
+5. Statystyki publicznego profilu nie są już ściśnięte w cienkie paski — są kafelki jak na profilu.
+6. Zachowane są poprzednie poprawki kliknięcia nicka i publicznego profilu.
+
+Start z wersji:
+- betai_wersja_936_FIX_FOLLOW_INNEGO_UZYTKOWNIKA.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
