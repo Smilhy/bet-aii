@@ -1,0 +1,10 @@
+WERSJA 930
+
+Poprawka błędu w zakładce „Mój profil”:
+1. Naprawiono błąd: followingTipsters is not defined.
+2. Przyczyną było dodanie obsługi przycisku „Obserwuj/Obserwujesz” w kartach profilu bez przekazania stanu obserwowanych użytkowników do komponentu profilu.
+3. Teraz „Mój profil” poprawnie dostaje followingTipsters oraz funkcję onToggleFollow.
+4. Zakładka „Mój profil” powinna otwierać się normalnie.
+
+Pliki zmienione:
+- src/main.jsx

@@ -13783,7 +13783,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), onToggleFollow = null, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
@@ -14222,7 +14222,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       unlockedTips={unlockedTips}
       tipsterSubscriptions={tipsterSubscriptions}
       followingTipsters={followingTipsters}
-      onToggleFollow={toggleFollowTipster}
+      onToggleFollow={onToggleFollow}
       onUnlock={onUnlock}
       onSubscribeToTipster={onSubscribeToTipster}
       onToast={onToast}
@@ -18104,6 +18104,8 @@ function App() {
             onUnlock={unlockTip}
             onSubscribeToTipster={setSelectedProfileSub}
             tipsterSubscriptions={tipsterSubscriptions}
+            followingTipsters={followingTipsters}
+            onToggleFollow={toggleFollowTipster}
             onAvatarUpdated={(nextAvatarUrl) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
               setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
