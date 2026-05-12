@@ -1,0 +1,8 @@
+WERSJA 917 REAL FIX
+- Poprawiono realnie JSX i CSS.
+- Obserwuj jest w DOM po przycisku Premium/Darmowy.
+- CSS wymusza kolejność: avatar/staty -> Premium/Darmowy -> Obserwuj.
+- Ranking prawy pokazuje 4 miejsca.
+- CSS ukrywa ewentualny 5+ rekord awaryjnie.
+- Profit ma poprawiony badge i pełną kwotę.
+- Liczba wstawek Obserwuj w JSX: 1
