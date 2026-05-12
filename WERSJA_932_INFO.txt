@@ -1,0 +1,12 @@
+WERSJA 932
+
+Zmiany:
+1. Kliknięcie w nazwę użytkownika na typie otwiera profil tego typera przez poprawne wyszukanie profilu po ID / emailu / nazwie.
+2. Typy premium na profilu typera są blokowane dla innych użytkowników.
+3. Inny użytkownik widzi darmowe typy oraz tylko te premium, które kupił jako singiel albo ma dostęp przez subskrypcję profilu.
+4. Właściciel konta nadal widzi swoje własne typy premium normalnie.
+5. Dodano komunikat o ukrytych typach premium, gdy użytkownik nie ma dostępu.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

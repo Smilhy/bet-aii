@@ -33658,3 +33658,17 @@ button.betfolio-fetch-btn{
 .profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text{
   color: #ff4d67 !important;
 }
+
+
+/* WERSJA 932 — profil typera: premium ukryte dla użytkowników bez zakupu */
+.premium-lock-note{
+  margin-top: 8px !important;
+  padding: 10px 12px !important;
+  border: 1px solid rgba(255,210,31,.28) !important;
+  border-radius: 14px !important;
+  background: rgba(255,210,31,.08) !important;
+  color: #ffe08a !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+}

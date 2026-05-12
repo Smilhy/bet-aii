@@ -2042,13 +2042,17 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const buyersCount = Number(stats?.buyers_count || stats?.buyers || 0)
   const roi7 = Number(stats?.roi_7d || stats?.roi7 || roi || 0)
   const roi30 = Number(stats?.roi_30d || stats?.roi30 || roi || 0)
-  const featuredTips = [...tipsterTips]
-    .filter(t => isTipPremium(t) || Number(t.ai_confidence || t.ai_score || t.confidence || 0) >= 85 || normalizeResult(t.result || t.status) === 'win')
-    .sort((a, b) => Number(b.ai_confidence || b.ai_score || b.confidence || b.odds || 0) - Number(a.ai_confidence || a.ai_score || a.confidence || a.odds || 0))
-    .slice(0, 3)
-  const lastTenTips = tipsterTips.slice(0, 10)
   const isTopSeller = salesCount >= 10 || buyersCount >= 10 || earnings >= 500
   const isOwn = currentUser?.id && String(currentUser.id) === String(tipsterId)
+  const profileSubscriptionActive = hasActiveTipsterSubscription({ author_id: tipsterId, user_id: tipsterId, tipster_id: tipsterId, author_name: username }, tipsterSubscriptions)
+  const canViewTipsterPremiumTip = (tip) => !isTipPremium(tip) || isOwn || profileSubscriptionActive || Boolean(tip?.id && unlockedTips?.has?.(tip.id))
+  const visibleTipsterTips = tipsterTips.filter(canViewTipsterPremiumTip)
+  const hiddenPremiumTipsCount = Math.max(0, tipsterTips.length - visibleTipsterTips.length)
+  const featuredTips = [...visibleTipsterTips]
+    .filter(t => !isTipPremium(t) || Number(t.ai_confidence || t.ai_score || t.confidence || 0) >= 85 || normalizeResult(t.result || t.status) === 'win')
+    .sort((a, b) => Number(b.ai_confidence || b.ai_score || b.confidence || b.odds || 0) - Number(a.ai_confidence || a.ai_score || a.confidence || a.odds || 0))
+    .slice(0, 3)
+  const lastTenTips = visibleTipsterTips.slice(0, 10)
   const isFollowing = followingTipsters?.has?.(String(tipsterId))
   const donutWin = Math.max(0, Math.min(100, winrate))
   const donutLoss = Math.max(0, 100 - donutWin)
@@ -2089,6 +2093,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
               <span className="sales-eyebrow">TYPER PROFILE PRO</span>
               <h2>{isTopSeller ? '🔥 TOP SELLER — sprawdzony profil premium' : 'Profil premium gotowy do sprzedaży'}</h2>
               <p>Ostatnie wyniki, statystyki i social proof w jednym miejscu. Kup dostęp do profilu albo odblokuj pojedynczy typ.</p>
+              {!isOwn && hiddenPremiumTipsCount > 0 && !profileSubscriptionActive ? (
+                <p className="premium-lock-note">Ukryte typy premium: {hiddenPremiumTipsCount}. Pełny podgląd typu premium dostaniesz dopiero po zakupie singla albo subskrypcji profilu.</p>
+              ) : null}
             </div>
             {!isOwn && (
               <div className="sales-actions">
@@ -8061,7 +8068,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         </span>
         <div>
           <span className="ticket-author-row-v874">
-            <strong className="tipster-name-link" onClick={() => authorId && onOpenTipster?.(authorId)}>{cardAuthor}</strong>
+            <strong className="tipster-name-link" onClick={() => onOpenTipster?.(authorId || tip.author_id || tip.user_id || tip.author_email || tip.email || tip.user_email || cardAuthor, cardAuthor)}>{cardAuthor}</strong>
             <b>✓</b>
           </span>
           {dashboardAuthorStats?.totalTipsLabel ? (
@@ -16551,6 +16558,18 @@ function App() {
     return match?.id ? String(match.id) : null
   }
 
+  async function openTipsterProfile(tipsterRef, authorName) {
+    const resolvedId = await resolveTipsterId(tipsterRef, authorName)
+    const id = resolvedId ? String(resolvedId) : String(tipsterRef || '').trim()
+    if (!id) {
+      showToast({ type: 'error', title: 'Profil typera', message: 'Nie udało się otworzyć profilu tego użytkownika.' })
+      return
+    }
+    setSelectedTipsterId(id)
+    setView('dashboard')
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (_) {}
+  }
+
   async function toggleFollowTipster(tipsterId, authorName) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować typera.' })
@@ -18192,7 +18211,7 @@ function App() {
 
 
             <div className="feed">
-              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={setSelectedTipsterId} onToast={showToast} />) : (
+              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
                 <div className="empty-state">Brak typów w tym filtrze.</div>
               )}
             </div>
