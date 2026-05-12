@@ -33443,3 +33443,25 @@ button.betfolio-fetch-btn{
 .rightbar .real-ranking-panel .rank:last-of-type{
   margin-bottom: 2px !important;
 }
+
+/* WERSJA 924 — Top typerzy: mocniej rozciągnięta ramka w dół dla pełnego 4. miejsca */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+.rightbar .real-ranking-panel{
+  min-height: 290px !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-bottom: 20px !important;
+  margin-bottom: 8px !important;
+  overflow: hidden !important;
+  flex: 0 0 auto !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank,
+.rightbar .real-ranking-panel .rank{
+  min-height: 52px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:last-of-type,
+.rightbar .real-ranking-panel .rank:last-of-type{
+  margin-bottom: 10px !important;
+}

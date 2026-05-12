@@ -1,0 +1,9 @@
+WERSJA 924
+
+Poprawka:
+1. Panel „Top typerzy” został dodatkowo i wyraźnie rozciągnięty w dół.
+2. Zwiększyłem minimalną wysokość panelu, dolny padding i odstęp pod ostatnim wierszem.
+3. 4. miejsce ma być teraz w pełni widoczne i nie może być przycinane przez następną sekcję.
+
+Pliki zmienione:
+- src/styles.css
