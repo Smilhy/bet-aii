@@ -1,0 +1,33 @@
+WERSJA 941
+
+Poprawka danych profilu po kliknięciu w nick — globalnie dla całej strony.
+
+Co zrobiłem:
+1. Profil otwierany z nicka nie opiera się już tylko na tabeli profiles.
+2. Profil zbiera dane z:
+   - profiles
+   - tips pobranych dla profilu
+   - całego aktualnego feedu/dashboardu
+   - imported_* zapisanych w typach
+   - author_visible_stats z kart typów
+3. Dzięki temu smilhytv widziany przez buchajson1988 powinien mieć te same statystyki, które widać na jego kartach i w jego profilu:
+   - Yield 39%
+   - Profit +79919.89 zł
+   - Typy 697
+   - Wygrane 403
+   - Przegrane 286
+   - itd., jeśli te dane są w tips/author_visible_stats/imported_*
+4. Prawa kolumna bierze:
+   - created_at / data konta
+   - admin/is_admin dla smilhytv
+   - followers/following, jeżeli są dostępne
+5. Profil nadal wygląda jak „Mój profil”, ale jest cudzym profilem bez edycji avatara/opisu.
+6. Dashboard dalej czyści otwarty profil po kliknięciu menu Dashboard.
+7. Follow / unfollow działa jedną logiką po username/id na całej stronie.
+
+Start z wersji:
+- betai_wersja_940_GLOBALNA_LOGIKA_PROFIL_FOLLOW_STATY.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

@@ -1966,7 +1966,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
 }
 
 
-function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
+function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], followingTipsters, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
   const [profile, setProfile] = useState(null)
   const [tipsterTips, setTipsterTips] = useState([])
   const [stats, setStats] = useState(null)
@@ -2094,10 +2094,45 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
   const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
-  const firstVisibleStats = tipsterTips.find(t => t?.author_visible_stats)?.author_visible_stats || null
+  const normalizeProfileMatchKey = (value) => normalizeEmail(String(value || '').startsWith('lookup:') ? decodeURIComponent(String(value).slice(7)) : value)
+  const targetKeys = new Set([
+    normalizeProfileMatchKey(profileId),
+    normalizeProfileMatchKey(username),
+    normalizeProfileMatchKey(profile?.email),
+    normalizeProfileMatchKey(profile?.public_slug),
+    normalizeProfileMatchKey(lookupTipsterKey),
+  ].filter(Boolean))
+  const keyMatchesTarget = (value) => {
+    const clean = normalizeProfileMatchKey(value)
+    if (!clean) return false
+    const local = clean.split('@')[0]
+    return targetKeys.has(clean) || targetKeys.has(local) || [...targetKeys].some(key => key && (key.split('@')[0] === local || key === clean))
+  }
+  const globalTipMatchesTarget = (rawTip) => {
+    const tip = normalizeTipRow(rawTip)
+    return keyMatchesTarget(tip.author_id) ||
+      keyMatchesTarget(tip.user_id) ||
+      keyMatchesTarget(tip.author_email) ||
+      keyMatchesTarget(tip.email) ||
+      keyMatchesTarget(tip.user_email) ||
+      keyMatchesTarget(tip.author_name) ||
+      keyMatchesTarget(tip.username)
+  }
+  const globalMatchedTips = (Array.isArray(allTips) ? allTips : []).filter(globalTipMatchesTarget).map(normalizeTipRow)
+  const combinedProfileTips = (() => {
+    const map = new Map()
+    ;[...tipsterTips, ...globalMatchedTips].forEach(rawTip => {
+      const tip = normalizeTipRow(rawTip)
+      const key = String(tip.id || `${tip.author_name || tip.author_id || ''}-${tip.team_home || tip.home_team || ''}-${tip.team_away || tip.away_team || ''}-${tip.created_at || ''}`)
+      if (!map.has(key)) map.set(key, tip)
+      else map.set(key, { ...map.get(key), ...tip })
+    })
+    return [...map.values()]
+  })()
+  const firstVisibleStats = combinedProfileTips.find(t => t?.author_visible_stats)?.author_visible_stats || null
   const importedProfileStats = getImportedProfileStats(profile)
-  const importedTipStats = (tipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
-  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
+  const importedTipStats = (combinedProfileTips || []).map(getImportedProfileStats).find(Boolean) || null
+  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(combinedProfileTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
   const mergedVisibleStats = importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {}
   const targetProfileUser = {
     ...(profile || {}),
@@ -2106,10 +2141,15 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     username,
     public_slug: profile?.public_slug || normalizePublicSlug(username),
     avatar_url: profile?.avatar_url || tipsterTips?.[0]?.author_avatar_url || '',
-    bio: profile?.bio || profile?.description || profile?.about || `${username} — profil typera, statystyki i typy.`,
-    description: profile?.description || profile?.bio || profile?.about || `${username} — profil typera, statystyki i typy.`,
-    about: profile?.about || profile?.bio || profile?.description || `${username} — profil typera, statystyki i typy.`,
-    plan: profile?.plan || profile?.subscription_status || 'premium',
+    bio: profile?.bio || profile?.description || profile?.about || combinedProfileTips?.[0]?.bio || combinedProfileTips?.[0]?.description || `${username} — profil typera, statystyki i typy.`,
+    description: profile?.description || profile?.bio || profile?.about || combinedProfileTips?.[0]?.bio || combinedProfileTips?.[0]?.description || `${username} — profil typera, statystyki i typy.`,
+    about: profile?.about || profile?.bio || profile?.description || combinedProfileTips?.[0]?.about || `${username} — profil typera, statystyki i typy.`,
+    created_at: profile?.created_at || combinedProfileTips?.[0]?.profile_created_at || combinedProfileTips?.[0]?.created_at || '',
+    updated_at: profile?.updated_at || combinedProfileTips?.[0]?.profile_updated_at || '',
+    followers_count: Number(profile?.followers_count ?? combinedProfileTips?.[0]?.followers_count ?? 0) || 0,
+    following_count: Number(profile?.following_count ?? combinedProfileTips?.[0]?.following_count ?? 0) || 0,
+    is_admin: Boolean(profile?.is_admin || normalizeEmail(username) === 'smilhytv' || normalizeEmail(profile?.email) === 'smilhytv@gmail.com'),
+    plan: profile?.plan || profile?.subscription_status || (normalizeEmail(username) === 'smilhytv' ? 'admin' : 'premium'),
     subscription_status: profile?.subscription_status || profile?.plan || 'premium',
     imported_yield: Number(profile?.imported_yield ?? mergedVisibleStats.yield ?? 0) || 0,
     imported_total_tips: Number(profile?.imported_total_tips ?? mergedVisibleStats.totalTips ?? tipsterTips.length ?? 0) || 0,
@@ -2124,7 +2164,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     imported_tips_currency: profile?.imported_tips_currency || 'zł',
     stats_imported_at: profile?.stats_imported_at || new Date(Date.now() + 3650 * 86400000).toISOString(),
   }
-  const normalizedProfileTips = tipsterTips.map(raw => {
+  const normalizedProfileTips = combinedProfileTips.map(raw => {
     const tip = normalizeTipRow(raw)
     return {
       ...tip,
@@ -13790,7 +13830,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.updated_at || ''
   const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Nowy użytkownik'
-  const admin = isAdminUser(user)
+  const admin = isAdminUser(user) || Boolean(user?.is_admin)
   const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
   const avatarInputRef = useRef(null)
@@ -18254,6 +18294,7 @@ function App() {
             tipsterId={selectedTipsterId}
             onBack={() => setSelectedTipsterId(null)}
             currentUser={effectiveAccountProfile}
+            allTips={tips}
             followingTipsters={followingTipsters}
             onToggleFollow={toggleFollowTipster}
             onUnlock={unlockTip}

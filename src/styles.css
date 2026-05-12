@@ -34210,3 +34210,37 @@ button.betfolio-fetch-btn{
   background:linear-gradient(135deg,#22e6d6,#2f8dff) !important;
   color:#03121b !important;
 }
+
+
+/* WERSJA 941 — profil z nicku używa danych z całej strony/feedu + profiles */
+.tipster-profile-as-real-profile{
+  width:100% !important;
+  padding:18px !important;
+}
+.tipster-profile-as-real-profile > .profile-page{
+  padding:0 !important;
+}
+.tipster-profile-as-real-profile .public-profile-back{
+  width:fit-content !important;
+  margin:0 0 12px !important;
+}
+.tipster-profile-as-real-profile .profile-hero-stripe-btn{
+  display:none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-avatar-editable{
+  cursor:default !important;
+  pointer-events:none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-avatar-editable span,
+.tipster-profile-as-real-profile .profile-v3-bio-click span,
+.tipster-profile-as-real-profile .profile-avatar-file-input{
+  display:none !important;
+}
+.tipster-profile-as-real-profile .profile-v3-bio-click{
+  pointer-events:none !important;
+  cursor:default !important;
+}
+.profile-v3-actions .primary.active{
+  background:linear-gradient(135deg,#22e6d6,#2f8dff) !important;
+  color:#03121b !important;
+}
