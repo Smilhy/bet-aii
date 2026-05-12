@@ -1176,7 +1176,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
         </div>
 
         <nav className="menu">
-          <button className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}>⌂ Dashboard</button>
+          <button className={view === 'dashboard' ? 'active' : ''} onClick={() => { window.dispatchEvent(new CustomEvent('betai:clear-selected-tipster')); setView('dashboard') }}>⌂ Dashboard</button>
           <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
           <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
           <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
@@ -1988,7 +1988,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
       try {
         if (lookupTipsterKey) {
           const [{ data: profilesData, error: profilesError }, { data: allTipsData, error: tipsLookupError }] = await Promise.all([
-            supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').limit(500),
+            supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at').limit(500),
             supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500)
           ])
           if (profilesError) console.error('profile lookup error', profilesError)
@@ -2051,7 +2051,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         }
 
         const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
-          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').eq('id', tipsterId).maybeSingle(),
+          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at').eq('id', tipsterId).maybeSingle(),
           supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
           supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
           supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
@@ -2090,6 +2090,10 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
 
   const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
+  const firstVisibleStats = tipsterTips.find(t => t?.author_visible_stats)?.author_visible_stats || null
+  const importedProfileStats = getImportedProfileStats(profile)
+  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).values?.()?.next?.()?.value, importedProfileStats)
+  const mergedVisibleStats = firstVisibleStats || importedProfileStats || dynamicProfileStats || {}
   const targetProfileUser = {
     ...(profile || {}),
     id: profileId,
@@ -2097,8 +2101,23 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     username,
     public_slug: profile?.public_slug || normalizePublicSlug(username),
     avatar_url: profile?.avatar_url || tipsterTips?.[0]?.author_avatar_url || '',
+    bio: profile?.bio || profile?.description || profile?.about || `${username} — profil typera, statystyki i typy.`,
+    description: profile?.description || profile?.bio || profile?.about || `${username} — profil typera, statystyki i typy.`,
+    about: profile?.about || profile?.bio || profile?.description || `${username} — profil typera, statystyki i typy.`,
     plan: profile?.plan || profile?.subscription_status || 'premium',
     subscription_status: profile?.subscription_status || profile?.plan || 'premium',
+    imported_yield: Number(profile?.imported_yield ?? mergedVisibleStats.yield ?? 0) || 0,
+    imported_total_tips: Number(profile?.imported_total_tips ?? mergedVisibleStats.totalTips ?? tipsterTips.length ?? 0) || 0,
+    imported_won_tips: Number(profile?.imported_won_tips ?? mergedVisibleStats.wonTips ?? 0) || 0,
+    imported_lost_tips: Number(profile?.imported_lost_tips ?? mergedVisibleStats.lostTips ?? 0) || 0,
+    imported_pending_tips: Number(profile?.imported_pending_tips ?? mergedVisibleStats.pendingTips ?? Math.max(0, (Number(mergedVisibleStats.totalTips || tipsterTips.length || 0) - Number(mergedVisibleStats.wonTips || 0) - Number(mergedVisibleStats.lostTips || 0))) ) || 0,
+    imported_total_staked: Number(profile?.imported_total_staked ?? mergedVisibleStats.totalStaked ?? 0) || 0,
+    imported_profit: Number(profile?.imported_profit ?? mergedVisibleStats.profit ?? 0) || 0,
+    imported_avg_odds: Number(profile?.imported_avg_odds ?? mergedVisibleStats.avgOdds ?? 0) || 0,
+    imported_highest_odds: Number(profile?.imported_highest_odds ?? mergedVisibleStats.highestOdds ?? 0) || 0,
+    imported_tips_amount: Number(profile?.imported_tips_amount || 0) || 0,
+    imported_tips_currency: profile?.imported_tips_currency || 'zł',
+    stats_imported_at: profile?.stats_imported_at || new Date(Date.now() + 3650 * 86400000).toISOString(),
   }
   const normalizedProfileTips = tipsterTips.map(raw => {
     const tip = normalizeTipRow(raw)
@@ -2122,6 +2141,8 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
         <ProfileView
           user={targetProfileUser}
           tips={normalizedProfileTips}
+          viewerUser={currentUser}
+          isPublicProfile={true}
           unlockedTips={unlockedTips}
           tipsterSubscriptions={tipsterSubscriptions}
           followingTipsters={followingTipsters}
@@ -13741,11 +13762,24 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), onToggleFollow = null, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
   const displayName = username
+  const viewerProfile = viewerUser || user
+  const viewerUsername = normalizeEmail(resolveRealProfileUsername(viewerProfile || {}))
+  const viewedUsernameKey = normalizeEmail(username)
+  const viewedIdKey = String(profile.id || user?.id || '')
+  const profileIsOwnForViewer = Boolean(
+    !isPublicProfile ||
+    (viewerProfile?.id && viewedIdKey && String(viewerProfile.id) === viewedIdKey) ||
+    (viewerUsername && viewedUsernameKey && viewerUsername === viewedUsernameKey)
+  )
+  const profileIsFollowing = Boolean(
+    !profileIsOwnForViewer &&
+    ((viewedIdKey && followingTipsters?.has?.(viewedIdKey)) || (viewedUsernameKey && followingTipsters?.has?.(viewedUsernameKey)))
+  )
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.updated_at || ''
@@ -14176,7 +14210,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       avatarUrl={avatarUrl}
       initials={initials}
       displayName={displayName}
-      currentUser={user}
+      currentUser={viewerProfile}
       unlockedTips={unlockedTips}
       tipsterSubscriptions={tipsterSubscriptions}
       followingTipsters={followingTipsters}
@@ -14255,7 +14289,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   </button>
                 )}
                 <div className="profile-v3-actions">
-                  <button type="button" className="primary">Mój profil</button>
+                  {isPublicProfile && !profileIsOwnForViewer ? (
+                    <button type="button" className={profileIsFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(viewedUsernameKey || viewedIdKey || username, username)}>
+                      {profileIsFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
+                    </button>
+                  ) : (
+                    <button type="button" className="primary">Mój profil</button>
+                  )}
                   <button type="button">▢ Wiadomości</button>
                   <button type="button">🏆 Wsparcie tipami</button>
                 </div>
@@ -16726,6 +16766,12 @@ function App() {
     }
   }, [sessionUser?.id])
 
+
+  useEffect(() => {
+    const handler = () => setSelectedTipsterId(null)
+    window.addEventListener('betai:clear-selected-tipster', handler)
+    return () => window.removeEventListener('betai:clear-selected-tipster', handler)
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
