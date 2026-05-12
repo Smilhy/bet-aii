@@ -13916,7 +13916,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const clean = String(result || '').toLowerCase()
     if (!tip?.id || !['won', 'lost', 'void'].includes(clean)) return
     const patch = {
-      status: 'pending_admin',
+      status: 'pending',
       manual_settlement_status: 'pending_admin',
       manual_settlement_result: clean,
       manual_settlement_requested_at: new Date().toISOString(),
@@ -14158,7 +14158,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         ? 'Przegrany'
         : ['void', 'push', 'zwrot'].includes(status)
           ? 'Zwrot'
-          : status === 'pending_admin' || approvalStatus === 'pending' || approvalStatus === 'pending_admin'
+          : approvalStatus === 'pending' || approvalStatus === 'pending_admin'
             ? 'Czeka na admina'
             : approvalStatus === 'rejected'
               ? 'Odrzucony'
@@ -15095,7 +15095,7 @@ function AdminCouponApprovalView({ user, onToast }) {
     return '—'
   }
   const statusOf = (row) => String(row?.admin_approval_status || row?.manual_settlement_status || row?.status || '').toLowerCase()
-  const pendingRows = rows.filter(row => ['pending', 'pending_admin'].includes(statusOf(row)) || row.status === 'pending_admin')
+  const pendingRows = rows.filter(row => ['pending', 'pending_admin'].includes(statusOf(row)) )
   const approvedRows = rows.filter(row => statusOf(row) === 'approved')
   const rejectedRows = rows.filter(row => statusOf(row) === 'rejected')
   const visibleRows = tab === 'approved' ? approvedRows : tab === 'rejected' ? rejectedRows : pendingRows
@@ -15107,7 +15107,7 @@ function AdminCouponApprovalView({ user, onToast }) {
       const { data, error } = await supabase
         .from('tips')
         .select('*')
-        .or('status.eq.pending_admin,manual_settlement_status.eq.pending_admin,admin_approval_status.eq.pending,admin_approval_status.eq.approved,admin_approval_status.eq.rejected')
+        .or('manual_settlement_status.eq.pending_admin,admin_approval_status.eq.pending,admin_approval_status.eq.approved,admin_approval_status.eq.rejected')
         .order('manual_settlement_requested_at', { ascending: false, nullsFirst: false })
         .limit(300)
       if (error) throw error
@@ -15189,7 +15189,7 @@ function AdminCouponApprovalView({ user, onToast }) {
           const home = row.team_home || row.home_team || 'Gospodarze'
           const away = row.team_away || row.away_team || 'Goście'
           const author = row.author_name || row.username || row.author_email || 'Typer'
-          const pending = ['pending', 'pending_admin'].includes(statusOf(row)) || row.status === 'pending_admin'
+          const pending = ['pending', 'pending_admin'].includes(statusOf(row)) 
           return (
             <article className="admin-coupon-card-v945 glass-v2-panel" key={row.id}>
               <div>

@@ -20,7 +20,15 @@ create index if not exists tips_admin_approval_status_idx on public.tips(admin_a
 create index if not exists tips_manual_settlement_requested_at_idx on public.tips(manual_settlement_requested_at desc);
 
 -- Logika:
--- status='pending_admin' + admin_approval_status='pending' => użytkownik zgłosił wynik, czeka na admina, NIE liczy się jeszcze do statystyk
+-- status='pending' + admin_approval_status='pending' => użytkownik zgłosił wynik, czeka na admina, NIE liczy się jeszcze do statystyk
 -- admin zatwierdza => status='won'/'lost'/'void', manual_settlement_status='approved', admin_approval_status='approved'
 -- admin odrzuca => status='pending', manual_settlement_status='rejected', admin_approval_status='rejected'
 -- automatyczne rozliczenie w przyszłości powinno ustawiać settlement_source='auto_result_api' oraz status='won'/'lost'/'void'
+
+
+-- WERSJA 947 — poprawka:
+-- Nie ustawiamy status='pending_admin', bo w wielu bazach istnieje constraint tips_status_check_v745b.
+-- Oczekiwanie na admina jest oznaczone przez:
+-- status='pending'
+-- manual_settlement_status='pending_admin'
+-- admin_approval_status='pending'
