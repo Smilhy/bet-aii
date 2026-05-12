@@ -34986,3 +34986,300 @@ button.betfolio-fetch-btn{
     flex:1 1 140px !important;
   }
 }
+
+
+/* WERSJA 950 — blokada zakładki Wyniki dla użytkowników bez subskrypcji */
+.profile-results-locked-v950{
+  padding:0 !important;
+}
+.profile-results-locked-box-v950{
+  min-height:230px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:22px !important;
+  padding:26px !important;
+  border-radius:22px !important;
+  background:
+    radial-gradient(circle at 78% 28%, rgba(24,247,231,.14), transparent 32%),
+    linear-gradient(135deg, rgba(5,28,42,.96), rgba(2,12,20,.98)) !important;
+  border:1px solid rgba(255,210,31,.28) !important;
+  box-shadow:0 18px 45px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.03) !important;
+}
+.profile-results-locked-icon-v950{
+  width:74px !important;
+  height:74px !important;
+  min-width:74px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:22px !important;
+  background:rgba(255,210,31,.13) !important;
+  border:1px solid rgba(255,210,31,.28) !important;
+  box-shadow:0 0 28px rgba(255,210,31,.16) !important;
+  font-size:32px !important;
+}
+.profile-results-locked-box-v950 h3{
+  margin:0 0 8px !important;
+  color:#fff !important;
+  font-size:24px !important;
+  font-weight:1000 !important;
+}
+.profile-results-locked-box-v950 p{
+  margin:0 0 8px !important;
+  max-width:760px !important;
+  color:#c9d8e6 !important;
+  font-size:15px !important;
+  line-height:1.45 !important;
+  font-weight:850 !important;
+}
+.profile-results-locked-box-v950 small{
+  display:block !important;
+  color:#ffd166 !important;
+  font-size:13px !important;
+  line-height:1.4 !important;
+  font-weight:900 !important;
+}
+.profile-results-locked-box-v950 button{
+  min-height:44px !important;
+  min-width:190px !important;
+  border:0 !important;
+  border-radius:999px !important;
+  padding:0 18px !important;
+  background:linear-gradient(135deg,#21e6d6,#2f8dff) !important;
+  color:#03121b !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 28px rgba(33,230,214,.18) !important;
+}
+.profile-results-locked-box-v950 button:hover{
+  filter:brightness(1.1) !important;
+  transform:translateY(-1px) !important;
+}
+@media(max-width:850px){
+  .profile-results-locked-box-v950{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+  .profile-results-locked-box-v950 button{
+    width:100% !important;
+  }
+}
+
+
+/* WERSJA 951 — strona Odblokowane typy / kupione single */
+.wallet-row-clickable{
+  width:100% !important;
+  border:0 !important;
+  background:rgba(255,255,255,.035) !important;
+  cursor:pointer !important;
+  text-align:left !important;
+}
+.wallet-row-clickable:hover{
+  background:rgba(33,230,214,.08) !important;
+}
+.unlocked-row-v951{
+  border:1px solid rgba(33,230,214,.12) !important;
+  border-radius:12px !important;
+}
+
+.unlocked-tips-page-v951{
+  display:grid !important;
+  gap:16px !important;
+  padding:18px !important;
+}
+
+.unlocked-tips-hero-v951{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  gap:18px !important;
+  padding:24px !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(circle at 80% 28%, rgba(33,230,214,.15), transparent 32%),
+    linear-gradient(135deg, rgba(4,25,39,.96), rgba(2,12,20,.98)) !important;
+  border:1px solid rgba(33,230,214,.18) !important;
+}
+
+.unlocked-tips-hero-v951 span{
+  color:#21e6d6 !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+}
+
+.unlocked-tips-hero-v951 h1{
+  color:#fff !important;
+  margin:6px 0 !important;
+  font-size:30px !important;
+  font-weight:1000 !important;
+}
+
+.unlocked-tips-hero-v951 p{
+  max-width:760px !important;
+  margin:0 !important;
+  color:#b8c9d9 !important;
+  line-height:1.45 !important;
+  font-weight:850 !important;
+}
+
+.unlocked-tips-hero-stat-v951{
+  min-width:150px !important;
+  min-height:100px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:20px !important;
+  background:rgba(33,230,214,.09) !important;
+  border:1px solid rgba(33,230,214,.18) !important;
+}
+
+.unlocked-tips-hero-stat-v951 b{
+  color:#fff !important;
+  font-size:34px !important;
+  font-weight:1000 !important;
+}
+
+.unlocked-tips-hero-stat-v951 small{
+  color:#93aabd !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+
+.unlocked-tips-stats-v951{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(140px,1fr)) !important;
+  gap:12px !important;
+}
+
+.unlocked-tips-stats-v951 article{
+  min-height:78px !important;
+  padding:14px 16px !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg,rgba(6,31,48,.95),rgba(5,21,35,.96)) !important;
+  border:1px solid rgba(33,230,214,.12) !important;
+}
+
+.unlocked-tips-stats-v951 article.success{
+  border-color:rgba(34,230,122,.25) !important;
+  background:linear-gradient(180deg,rgba(4,48,31,.88),rgba(5,21,35,.96)) !important;
+}
+
+.unlocked-tips-stats-v951 article.danger{
+  border-color:rgba(255,77,103,.25) !important;
+  background:linear-gradient(180deg,rgba(55,10,26,.85),rgba(5,21,35,.96)) !important;
+}
+
+.unlocked-tips-stats-v951 article.warning{
+  border-color:rgba(255,209,102,.25) !important;
+  background:linear-gradient(180deg,rgba(62,39,8,.85),rgba(5,21,35,.96)) !important;
+}
+
+.unlocked-tips-stats-v951 small{
+  color:#8fa8bd !important;
+  font-size:11px !important;
+  font-weight:950 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+}
+
+.unlocked-tips-stats-v951 strong{
+  display:block !important;
+  margin-top:8px !important;
+  color:#fff !important;
+  font-size:26px !important;
+  font-weight:1000 !important;
+}
+
+.unlocked-tips-filter-v951{
+  display:flex !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  padding:12px !important;
+  border-radius:18px !important;
+  background:rgba(3,31,43,.72) !important;
+  border:1px solid rgba(24,247,231,.12) !important;
+}
+
+.unlocked-tips-filter-v951 button{
+  min-height:40px !important;
+  padding:0 15px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  background:linear-gradient(180deg,rgba(7,22,36,.94),rgba(3,13,24,.96)) !important;
+  color:#dce9f6 !important;
+  font-weight:950 !important;
+  cursor:pointer !important;
+}
+
+.unlocked-tips-filter-v951 button.active{
+  background:linear-gradient(135deg,rgba(31,226,255,.88),rgba(47,141,255,.96)) !important;
+  color:#04131d !important;
+}
+
+.unlocked-tips-filter-v951 b{
+  margin-left:5px !important;
+}
+
+.unlocked-tips-list-v951{
+  display:grid !important;
+  gap:16px !important;
+}
+
+.unlocked-tip-card-wrap-v951{
+  position:relative !important;
+}
+
+.unlocked-single-badge-v951{
+  position:absolute !important;
+  top:12px !important;
+  right:14px !important;
+  z-index:10 !important;
+  min-height:28px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  padding:0 12px !important;
+  border-radius:999px !important;
+  background:rgba(33,230,214,.14) !important;
+  border:1px solid rgba(33,230,214,.35) !important;
+  color:#d7fffb !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  box-shadow:0 0 20px rgba(33,230,214,.14) !important;
+}
+
+.unlocked-tips-empty-v951{
+  min-height:170px !important;
+  display:grid !important;
+  place-items:center !important;
+  text-align:center !important;
+  gap:6px !important;
+  padding:24px !important;
+  border-radius:22px !important;
+}
+
+.unlocked-tips-empty-v951 strong{
+  color:#fff !important;
+  font-size:20px !important;
+}
+
+.unlocked-tips-empty-v951 span{
+  color:#9fb4c8 !important;
+  font-weight:850 !important;
+}
+
+@media(max-width:900px){
+  .unlocked-tips-hero-v951{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+  .unlocked-tips-stats-v951{
+    grid-template-columns:repeat(2,minmax(140px,1fr)) !important;
+  }
+}
+
+@media(max-width:560px){
+  .unlocked-tips-stats-v951{
+    grid-template-columns:1fr !important;
+  }
+}

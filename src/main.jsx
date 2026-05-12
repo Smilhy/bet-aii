@@ -1191,7 +1191,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           </div>
           <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
           <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
-          <div className="wallet-row"><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></div>
+          <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951" onClick={() => setView('unlockedTips')}><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></button>
           <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
           <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
         </div>
@@ -1201,6 +1201,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
           <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
           <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
+          <button className={view === 'unlockedTips' ? 'active' : ''} onClick={() => setView('unlockedTips')}>🔓 Odblokowane typy</button>
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
           {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
@@ -14558,6 +14559,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
 
           {profileTab === 'results' && (
+            !profileIsOwnForViewer && !profileSubscriptionActive ? (
+              <section className="profile-v4-page profile-v4-results-page profile-results-locked-v950">
+                <div className="profile-results-locked-box-v950">
+                  <div className="profile-results-locked-icon-v950">🔒</div>
+                  <div>
+                    <h3>Wyniki typera są zablokowane</h3>
+                    <p>Chcesz zobaczyć pełną historię wyników, rozliczone mecze i szczegóły tego typera? Kup subskrypcję profilu.</p>
+                    <small>Bez dostępu pokazujemy tylko publiczne darmowe typy. Wyniki i pełna historia są ukryte.</small>
+                  </div>
+                  <button type="button" onClick={handleProfileSubscribeClick}>Kup subskrypcję 30 dni</button>
+                </div>
+              </section>
+            ) : (
             <section className="profile-v4-page profile-v4-results-page">
               <div className="profile-v4-summary-grid">
                 <article><small>Wszystkie rozliczone</small><strong>{settledTips}</strong></article>
@@ -14671,6 +14685,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
               </section>
             </section>
+
+            )
           )}
 
           {profileTab === 'stats' && (
@@ -15144,6 +15160,86 @@ function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'f
 }
 
 
+
+
+
+function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, followingTipsters = new Set(), onToggleFollow, onOpenTipster, onUnlock, onSubscribeToTipster, onToast }) {
+  const [filter, setFilter] = useState('all')
+  const unlockedIds = new Set([...unlockedTips].map(value => String(value)))
+  const unlockedRows = (Array.isArray(tips) ? tips : [])
+    .map(normalizeTipRow)
+    .filter(tip => unlockedIds.has(String(tip.id)))
+    .sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
+
+  const wonRows = unlockedRows.filter(tip => normalizeResult(tip.result || tip.status) === 'win')
+  const lostRows = unlockedRows.filter(tip => normalizeResult(tip.result || tip.status) === 'loss')
+  const pendingRows = unlockedRows.filter(tip => !['win', 'loss', 'void'].includes(normalizeResult(tip.result || tip.status)))
+
+  const visibleRows = unlockedRows.filter(tip => {
+    const result = normalizeResult(tip.result || tip.status)
+    if (filter === 'won') return result === 'win'
+    if (filter === 'lost') return result === 'loss'
+    if (filter === 'pending') return !['win', 'loss', 'void'].includes(result)
+    return true
+  })
+
+  return (
+    <section className="unlocked-tips-page-v951">
+      <div className="unlocked-tips-hero-v951 glass-v2-panel">
+        <div>
+          <span>Moje zakupy</span>
+          <h1>Odblokowane typy</h1>
+          <p>Tutaj widzisz wszystkie kupione single. Singiel odblokowuje tylko jeden konkretny kupon — nie odblokowuje całego profilu ani zakładki Wyniki typera.</p>
+        </div>
+        <div className="unlocked-tips-hero-stat-v951">
+          <b>{unlockedRows.length}</b>
+          <small>kupionych singli</small>
+        </div>
+      </div>
+
+      <div className="unlocked-tips-stats-v951">
+        <article><small>Wszystkie</small><strong>{unlockedRows.length}</strong></article>
+        <article className="success"><small>Wygrane</small><strong>{wonRows.length}</strong></article>
+        <article className="danger"><small>Przegrane</small><strong>{lostRows.length}</strong></article>
+        <article className="warning"><small>Oczekujące</small><strong>{pendingRows.length}</strong></article>
+      </div>
+
+      <div className="unlocked-tips-filter-v951">
+        <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Wszystkie <b>{unlockedRows.length}</b></button>
+        <button className={filter === 'won' ? 'active' : ''} onClick={() => setFilter('won')}>Wygrane <b>{wonRows.length}</b></button>
+        <button className={filter === 'lost' ? 'active' : ''} onClick={() => setFilter('lost')}>Przegrane <b>{lostRows.length}</b></button>
+        <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Oczekujące <b>{pendingRows.length}</b></button>
+      </div>
+
+      {visibleRows.length ? (
+        <div className="unlocked-tips-list-v951">
+          {visibleRows.map(tip => (
+            <div className="unlocked-tip-card-wrap-v951" key={tip.id}>
+              <div className="unlocked-single-badge-v951">🔓 Odblokowany singiel</div>
+              <TipCard
+                tip={tip}
+                unlocked={true}
+                profileSubscriptionActive={false}
+                currentUser={currentUser}
+                followingTipsters={followingTipsters}
+                onToggleFollow={onToggleFollow}
+                onOpenTipster={onOpenTipster}
+                onUnlock={onUnlock}
+                onSubscribeToTipster={onSubscribeToTipster}
+                onToast={onToast}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="unlocked-tips-empty-v951 glass-v2-panel">
+          <strong>Nie masz jeszcze kupionych singli</strong>
+          <span>Gdy kupisz pojedynczy typ premium, pojawi się tutaj i będzie zawsze łatwy do znalezienia.</span>
+        </div>
+      )}
+    </section>
+  )
+}
 
 
 function AdminCouponApprovalView({ user, onToast }) {
@@ -18605,6 +18701,20 @@ function App() {
             stripeConnectStatus={stripeConnectStatus}
             onConnectStripe={connectStripeAccount}
             onViewChange={setView}
+          />
+        )}
+
+        {view === 'unlockedTips' && (
+          <UnlockedTipsView
+            tips={tips}
+            unlockedTips={unlockedTips}
+            currentUser={effectiveAccountProfile || sessionUser}
+            followingTipsters={followingTipsters}
+            onToggleFollow={toggleFollowTipster}
+            onOpenTipster={openTipsterProfile}
+            onUnlock={unlockTip}
+            onSubscribeToTipster={setSelectedProfileSub}
+            onToast={showToast}
           />
         )}
 
