@@ -1974,6 +1974,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const [byType, setByType] = useState([])
   const [recentForm, setRecentForm] = useState([])
   const [loading, setLoading] = useState(false)
+  const tipsterRefValue = String(tipsterId || '')
+  const lookupTipsterKey = tipsterRefValue.startsWith('lookup:')
+    ? decodeURIComponent(tipsterRefValue.slice('lookup:'.length))
+    : ''
+  const normalizedLookupTipsterKey = normalizeEmail(lookupTipsterKey)
 
   useEffect(() => {
     let cancelled = false
@@ -1981,6 +1986,70 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
       if (!tipsterId || !isSupabaseConfigured || !supabase) return
       setLoading(true)
       try {
+        if (lookupTipsterKey) {
+          const [{ data: profilesData, error: profilesError }, { data: allTipsData, error: tipsLookupError }] = await Promise.all([
+            supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').limit(500),
+            supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500)
+          ])
+          if (profilesError) console.error('profile lookup error', profilesError)
+          if (tipsLookupError) console.error('tips lookup error', tipsLookupError)
+
+          const matchesKey = (value) => {
+            const clean = normalizeEmail(value)
+            if (!clean || !normalizedLookupTipsterKey) return false
+            return clean === normalizedLookupTipsterKey ||
+              clean.split('@')[0] === normalizedLookupTipsterKey ||
+              normalizedLookupTipsterKey.split('@')[0] === clean
+          }
+
+          const foundProfile = (profilesData || []).find(profile =>
+            matchesKey(profile.id) ||
+            matchesKey(profile.email) ||
+            matchesKey(profile.username) ||
+            matchesKey(profile.public_slug)
+          ) || null
+
+          const normalizedTipsterTips = (allTipsData || [])
+            .filter(rawTip => {
+              const tip = normalizeTipRow(rawTip)
+              return matchesKey(tip.author_id) ||
+                matchesKey(tip.user_id) ||
+                matchesKey(tip.author_email) ||
+                matchesKey(tip.email) ||
+                matchesKey(tip.user_email) ||
+                matchesKey(tip.author_name) ||
+                matchesKey(tip.username)
+            })
+            .map(normalizeTipRow)
+
+          const fallbackProfile = foundProfile || (normalizedTipsterTips[0] ? {
+            id: normalizedTipsterTips[0].author_id || normalizedTipsterTips[0].user_id || null,
+            email: normalizedTipsterTips[0].author_email || normalizedTipsterTips[0].email || null,
+            username: normalizedTipsterTips[0].author_name || normalizedTipsterTips[0].username || lookupTipsterKey,
+            public_slug: normalizePublicSlug(normalizedTipsterTips[0].author_name || lookupTipsterKey),
+            avatar_url: normalizedTipsterTips[0].author_avatar_url || null
+          } : null)
+
+          const lookupStatsKey = String(fallbackProfile?.id || normalizedTipsterTips[0]?.author_id || normalizedTipsterTips[0]?.user_id || lookupTipsterKey).toLowerCase()
+          const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(lookupStatsKey) || buildAuthorStatsFromTips(normalizedTipsterTips).values?.()?.next?.()?.value
+          const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, getImportedProfileStats(fallbackProfile))
+
+          if (cancelled) return
+          setProfile(fallbackProfile)
+          setTipsterTips(normalizedTipsterTips.map(tip => ({
+            ...tip,
+            author_name: isGenericProfileName(tip.author_name) ? (fallbackProfile?.username || lookupTipsterKey || 'Użytkownik') : (tip.author_name || fallbackProfile?.username || lookupTipsterKey || 'Użytkownik'),
+            author_email: tip.author_email || fallbackProfile?.email || null,
+            author_avatar_url: tip.author_avatar_url || fallbackProfile?.avatar_url || null,
+            author_visible_stats: tipsterVisibleStats,
+          })))
+          setStats(null)
+          setByLeague([])
+          setByType([])
+          setRecentForm([])
+          return
+        }
+
         const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
           supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency').eq('id', tipsterId).maybeSingle(),
           supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
@@ -2017,7 +2086,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     }
     loadTipsterProfile()
     return () => { cancelled = true }
-  }, [tipsterId])
+  }, [tipsterId, lookupTipsterKey])
 
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || 'Tipster').split('@')[0]
   const publicProfileUrl = getTipsterPublicUrl(profile, tipsterId)
@@ -16599,7 +16668,8 @@ function App() {
     const profile = await resolveTipsterProfile(tipsterRef, authorName)
     const id = profile?.id ? String(profile.id) : null
 
-    if (!id) {
+    const fallbackLookup = String(authorName || tipsterRef || '').trim()
+    if (!id && !fallbackLookup) {
       showToast({ type: 'error', title: 'Profil typera', message: 'Nie udało się otworzyć profilu tego użytkownika.' })
       return
     }
@@ -16611,17 +16681,19 @@ function App() {
     const targetEmail = normalizeEmail(profile?.email || '')
     const targetUsername = normalizeEmail(profile?.username || profile?.public_slug || '')
 
+    const fallbackLookupKey = normalizeEmail(fallbackLookup)
     const isOwnProfile = Boolean(
-      (currentId && String(currentId) === id) ||
+      (id && currentId && String(currentId) === id) ||
       (currentEmail && targetEmail && currentEmail === targetEmail) ||
-      (currentUsername && targetUsername && currentUsername === targetUsername)
+      (currentUsername && targetUsername && currentUsername === targetUsername) ||
+      (!id && fallbackLookupKey && (fallbackLookupKey === currentUsername || fallbackLookupKey === currentEmail || fallbackLookupKey === String(currentEmail || '').split('@')[0]))
     )
 
     setSelectedTipsterId(null)
     if (isOwnProfile) {
       setView('profile')
     } else {
-      setSelectedTipsterId(id)
+      setSelectedTipsterId(id || `lookup:${encodeURIComponent(fallbackLookup)}`)
       setView('dashboard')
     }
     try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (_) {}
