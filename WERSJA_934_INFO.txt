@@ -1,0 +1,15 @@
+WERSJA 934
+
+Zmiany:
+1. W profilach/usłudze typów usunięto zakładkę „Wszystkie”.
+2. Zostają tylko zakładki „Darmowe typy” i „Premium”.
+3. Zakładka „Darmowe typy” pokazuje tylko darmowe typy.
+4. Zakładka „Premium” na publicznym profilu typera jest blokowana dla użytkownika bez aktywnej subskrypcji.
+5. Kliknięcie zablokowanej zakładki Premium uruchamia zakup subskrypcji profilu.
+6. Po opłaceniu subskrypcji aktywnej przez 30 dni zakładka Premium pokazuje odblokowane typy premium.
+7. Po wygaśnięciu subskrypcji mechanizm hasActiveTipsterSubscription ponownie blokuje dostęp.
+8. Właściciel profilu widzi swoje typy premium normalnie.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

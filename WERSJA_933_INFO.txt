@@ -1,0 +1,11 @@
+WERSJA 933
+
+Poprawka:
+1. Kliknięcie w nazwę użytkownika ma otwierać publiczny profil typera, a nie portfel / prywatny widok użytkownika.
+2. Poprawiłem wyszukiwanie profilu typera: teraz ID jest rozpoznawane tylko gdy wygląda jak UUID, a nazwa/email/public_slug są wyszukiwane w tabeli profiles.
+3. Dodałem zabezpieczenie, żeby przy braku profilu nie wpadać w błędny widok.
+4. Właściciel dalej widzi swoje premium typy, a inni widzą premium tylko po zakupie singla albo subskrypcji.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

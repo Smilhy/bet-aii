@@ -1,0 +1,18 @@
+WERSJA 936
+
+Zmiany:
+1. Obok zakładek „Darmowe typy” i „Premium” dodałem zakładkę „Singiel płatny”.
+2. W zakładce „Singiel płatny” pokazują się pojedyncze płatne typy premium dostępne do kupienia jako singiel.
+3. Typ singiel pokazuje cenę ustawioną przez sprzedającego.
+4. Po zakupie singla użytkownik widzi szczegóły tego konkretnego typu.
+5. Zakładka „Premium” dalej jest od subskrypcji profilu.
+6. Marża platformy 20% jest zachowana: single i subskrypcje liczą 20% dla platformy oraz 80% dla typera w funkcjach płatności Stripe.
+7. Dodałem komunikat informujący kupującego, że platforma pobiera 20% marży.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
+
+Potwierdzenie techniczne:
+- netlify/functions/create-checkout-session.js już liczy platformFee = price * 0.2 dla singli.
+- netlify/functions/create-tipster-subscription-checkout.js już liczy platformFee = price * 0.2 dla subskrypcji.
