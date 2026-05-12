@@ -1,0 +1,11 @@
+WERSJA 927
+
+Zmiany:
+1. Po kliknięciu przycisku „Obserwuj” tekst zmienia się na „✓ Obserwujesz”.
+2. Stan przycisku jest powiązany z realną listą obserwowanych tipsterów.
+3. Ponowne kliknięcie działa jak toggle — można przełączyć obserwowanie / przestać obserwować.
+4. Działa to na kartach typów na dashboardzie oraz na kartach typów w profilu.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

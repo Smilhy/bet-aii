@@ -438,6 +438,7 @@ function getAuthorStatsLabels(sourceStats) {
     yieldLabel: `${compactNumberLabel(stats.yield, 2)}%`,
     totalTipsLabel: String(Number(stats.totalTips || 0) || 0),
     profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} zł`,
+    profitValue: profit,
   }
 }
 
@@ -7948,6 +7949,13 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
+  const showFollowButton = !isOwnTip
+  const followLookupKey = String(author || cardAuthor || '').toLowerCase()
+  const isFollowing = Boolean(
+    followingTipsters?.has?.(String(authorId || tip.author_id || tip.user_id || '')) ||
+    (followLookupKey && followingTipsters?.has?.(followLookupKey))
+  )
+
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -8052,23 +8060,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>Bilans: <b className={dashboardAuthorStats.profitValue >= 0 ? 'profit-positive-text' : 'profit-negative-text'}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
         <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
-        </button>
-        <button
-          type="button"
-          className="betai-follow-author-btn"
-          onClick={(event) => {
-            event.stopPropagation()
-            typeof onFollowTipster === 'function' ? onFollowTipster(tip) : window.dispatchEvent(new CustomEvent('betai:follow-tipster', { detail: tip }))
-          }}
-          aria-label="Obserwuj typera"
-        >
-          Obserwuj
         </button>
       </div>
 
@@ -8141,6 +8138,19 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <TipActionShareIcon />
             <b>{feedback.dislikes}</b>
           </button>
+          {showFollowButton ? (
+            <button
+              type="button"
+              className={`ticket-follow-inline-btn ${isFollowing ? 'active' : ''}`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleFollow?.(authorId || tip.author_id || tip.user_id, author || cardAuthor)
+              }}
+              aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
+            >
+              {isFollowing ? '✓ Obserwujesz' : 'Obserwuj'}
+            </button>
+          ) : null}
         </div>
       </footer>
 
@@ -13446,6 +13456,8 @@ function ProfileLiveTipCard({
   currentUser,
   unlockedTips = new Set(),
   tipsterSubscriptions = [],
+  followingTipsters = new Set(),
+  onToggleFollow,
   onUnlock,
   onSubscribeToTipster,
   onToast,
@@ -13500,6 +13512,26 @@ function ProfileLiveTipCard({
 
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
+  const profileTipIdentity = {
+    id: sourceTip?.author_id || sourceTip?.user_id || tip?.author_id || tip?.user_id,
+    user_id: sourceTip?.user_id || tip?.user_id,
+    author_id: sourceTip?.author_id || tip?.author_id,
+    email: sourceTip?.author_email || sourceTip?.email || tip?.author_email || tip?.email || tip?.user_email,
+    author_email: sourceTip?.author_email || tip?.author_email,
+    username: sourceTip?.author_name || sourceTip?.username || tip?.author_name || tip?.username || displayName,
+    author_name: sourceTip?.author_name || tip?.author_name || displayName,
+  }
+  const profileTipAuthor = resolveRealProfileUsername(profileTipIdentity) || displayName || 'Użytkownik'
+  const isOwnTip = isSameProfileIdentity(currentUser, profileTipIdentity) || Boolean(
+    currentUsername && String(currentUsername).toLowerCase() === String(profileTipAuthor).toLowerCase()
+  )
+  const showFollowButton = !isOwnTip
+  const profileFollowLookupKey = String(profileTipAuthor || displayName || '').toLowerCase()
+  const profileTipsterId = profileTipIdentity.id || profileTipIdentity.author_id || profileTipIdentity.user_id
+  const isFollowing = Boolean(
+    followingTipsters?.has?.(String(profileTipsterId || '')) ||
+    (profileFollowLookupKey && followingTipsters?.has?.(profileFollowLookupKey))
+  )
 
   function handleVote(nextVote) {
     const previousVote = activeVote
@@ -13603,23 +13635,12 @@ function ProfileLiveTipCard({
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{authorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b>{authorStats.profitLabel}</b></span>
+              <span>Bilans: <b className={(Number(authorStats?.profitValue || 0) >= 0) ? 'profit-positive-text' : 'profit-negative-text'}>{authorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
         <button type="button" className={`profile-ticket-v6-access ${tip.premium ? 'premium' : 'free'}`} onClick={() => tip.premium && onSubscribeToTipster?.(sourceTip)}>
           {tip.premium ? '♕ PREMIUM' : '🎁 DARMOWY'}
-        </button>
-        <button
-          type="button"
-          className="betai-follow-author-btn"
-          onClick={(event) => {
-            event.stopPropagation()
-            typeof onFollowTipster === 'function' ? onFollowTipster(tip) : window.dispatchEvent(new CustomEvent('betai:follow-tipster', { detail: tip }))
-          }}
-          aria-label="Obserwuj typera"
-        >
-          Obserwuj
         </button>
       </div>
 
@@ -13692,6 +13713,19 @@ function ProfileLiveTipCard({
             <TipActionShareIcon />
             <b>{feedback.dislikes}</b>
           </button>
+          {showFollowButton ? (
+            <button
+              type="button"
+              className={`ticket-follow-inline-btn ${isFollowing ? 'active' : ''}`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleFollow?.(profileTipsterId, profileTipAuthor)
+              }}
+              aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
+            >
+              {isFollowing ? '✓ Obserwujesz' : 'Obserwuj'}
+            </button>
+          ) : null}
         </div>
       </footer>
 
@@ -14173,6 +14207,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     yieldLabel: `${roi}%`,
     totalTipsLabel: String(totalTips),
     profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`,
+    profitValue: profitAmount,
   }
 
   const renderProfileTipCard = (tip) => (
@@ -14186,6 +14221,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       currentUser={user}
       unlockedTips={unlockedTips}
       tipsterSubscriptions={tipsterSubscriptions}
+      followingTipsters={followingTipsters}
+      onToggleFollow={toggleFollowTipster}
       onUnlock={onUnlock}
       onSubscribeToTipster={onSubscribeToTipster}
       onToast={onToast}

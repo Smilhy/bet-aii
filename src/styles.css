@@ -33567,3 +33567,94 @@ button.betfolio-fetch-btn{
   font-size: 15px !important;
   line-height: 1.06 !important;
 }
+
+/* WERSJA 926 — Obserwuj tylko na cudzych typach + przycisk obok udostępnij */
+.profile-ticket-v6-left,
+.dashboard-ticket-v6 .profile-ticket-v6-left,
+.profile-v4-tips-page .profile-ticket-v6-left,
+.profile-all-tips-list .profile-ticket-v6-left{
+  padding-bottom: 58px !important;
+}
+
+.profile-ticket-v6-left .profile-ticket-v6-access,
+.dashboard-ticket-v6 .profile-ticket-v6-left .profile-ticket-v6-access,
+.profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access,
+.profile-all-tips-list .profile-ticket-v6-left .profile-ticket-v6-access{
+  bottom: 14px !important;
+}
+
+.profile-ticket-v6-left .betai-follow-author-btn,
+.dashboard-ticket-v6 .profile-ticket-v6-left .betai-follow-author-btn,
+.profile-v4-tips-page .profile-ticket-v6-left .betai-follow-author-btn,
+.profile-all-tips-list .profile-ticket-v6-left .betai-follow-author-btn{
+  display: none !important;
+}
+
+.profile-ticket-v6-footer,
+.profile-v4-tips-page .profile-ticket-v6-footer,
+.dashboard-ticket-v6 .profile-ticket-v6-footer{
+  align-items: center !important;
+}
+
+.profile-ticket-v6-footer div,
+.profile-v4-tips-page .profile-ticket-v6-footer div,
+.dashboard-ticket-v6 .profile-ticket-v6-footer div{
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  flex-wrap: wrap !important;
+}
+
+.profile-ticket-v6-footer .ticket-follow-inline-btn,
+.profile-v4-tips-page .profile-ticket-v6-footer .ticket-follow-inline-btn,
+.dashboard-ticket-v6 .profile-ticket-v6-footer .ticket-follow-inline-btn{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  padding: 0 12px !important;
+  margin-left: 2px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(0,255,230,.55) !important;
+  background: rgba(0,17,26,.42) !important;
+  color: #18f7e7 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  box-shadow: inset 0 0 0 1px rgba(0,255,230,.05), 0 6px 14px rgba(0,255,230,.08) !important;
+  white-space: nowrap !important;
+}
+
+.profile-ticket-v6-footer .ticket-follow-inline-btn:hover,
+.profile-v4-tips-page .profile-ticket-v6-footer .ticket-follow-inline-btn:hover,
+.dashboard-ticket-v6 .profile-ticket-v6-footer .ticket-follow-inline-btn:hover{
+  background: rgba(0,255,230,.10) !important;
+  border-color: rgba(0,255,230,.85) !important;
+  color: #7efcf4 !important;
+}
+
+/* WERSJA 927 — po kliknięciu Obserwuj zmienia się na Obserwujesz */
+.profile-ticket-v6-footer .ticket-follow-inline-btn.active,
+.profile-v4-tips-page .profile-ticket-v6-footer .ticket-follow-inline-btn.active,
+.dashboard-ticket-v6 .profile-ticket-v6-footer .ticket-follow-inline-btn.active{
+  background: rgba(0,255,230,.18) !important;
+  border-color: rgba(0,255,230,.95) !important;
+  color: #dffffb !important;
+  box-shadow: inset 0 0 0 1px rgba(0,255,230,.08), 0 8px 18px rgba(0,255,230,.12) !important;
+}
+
+/* WERSJA 928 — Bilans/Profit: plus zielony, minus czerwony */
+.profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.dashboard-ticket-v6 .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text{
+  color: #21e67a !important;
+}
+
+.profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.dashboard-ticket-v6 .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text{
+  color: #ff4d67 !important;
+}
