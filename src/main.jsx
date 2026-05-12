@@ -1183,7 +1183,6 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
           {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
-          {isAdminUser(user) && <button className={view === 'adminCoupons' ? 'active' : ''} onClick={() => setView('adminCoupons')}>🧾 Kupony admin</button>}
           {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
           <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
           <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
@@ -1975,7 +1974,6 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const [byType, setByType] = useState([])
   const [recentForm, setRecentForm] = useState([])
   const [loading, setLoading] = useState(false)
-  const [tipsterTab, setTipsterTab] = useState('free')
 
   useEffect(() => {
     let cancelled = false
@@ -2045,86 +2043,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const roi7 = Number(stats?.roi_7d || stats?.roi7 || roi || 0)
   const roi30 = Number(stats?.roi_30d || stats?.roi30 || roi || 0)
   const isTopSeller = salesCount >= 10 || buyersCount >= 10 || earnings >= 500
-  const isOwn = Boolean(
-    (currentUser?.id && String(currentUser.id) === String(tipsterId)) ||
-    (profile?.email && normalizeEmail(currentUser?.email) === normalizeEmail(profile.email)) ||
-    (profile?.username && normalizeEmail(resolveRealProfileUsername(currentUser)) === normalizeEmail(profile.username))
-  )
-  const activeTipsterSubscription = (tipsterSubscriptions || []).find(sub => {
-    const subTipsterId = String(sub?.tipster_id || sub?.author_id || sub?.user_id || '')
-    if (subTipsterId !== String(tipsterId) || sub?.status !== 'active') return false
-    if (!sub?.expires_at) return true
-    return new Date(sub.expires_at).getTime() > Date.now()
-  }) || null
-  const profileSubscriptionActive = Boolean(activeTipsterSubscription)
-  const subscriptionDaysLeft = activeTipsterSubscription?.expires_at
-    ? Math.max(0, Math.ceil((new Date(activeTipsterSubscription.expires_at).getTime() - Date.now()) / 86400000))
-    : null
-  const subscriptionTimeLabel = profileSubscriptionActive
-    ? (subscriptionDaysLeft === null
-        ? 'Aktywna subskrypcja'
-        : subscriptionDaysLeft === 1
-          ? 'Został 1 dzień dostępu'
-          : `Zostało ${subscriptionDaysLeft} dni dostępu`)
-    : ''
-  const subscriptionExpiresLabel = activeTipsterSubscription?.expires_at
-    ? new Date(activeTipsterSubscription.expires_at).toLocaleDateString('pl-PL')
-    : ''
+  const isOwn = currentUser?.id && String(currentUser.id) === String(tipsterId)
+  const profileSubscriptionActive = hasActiveTipsterSubscription({ author_id: tipsterId, user_id: tipsterId, tipster_id: tipsterId, author_name: username }, tipsterSubscriptions)
   const canViewTipsterPremiumTip = (tip) => !isTipPremium(tip) || isOwn || profileSubscriptionActive || Boolean(tip?.id && unlockedTips?.has?.(tip.id))
   const visibleTipsterTips = tipsterTips.filter(canViewTipsterPremiumTip)
   const hiddenPremiumTipsCount = Math.max(0, tipsterTips.length - visibleTipsterTips.length)
-  const publicFreeTips = tipsterTips.filter(tip => !isTipPremium(tip))
-  const publicPremiumTips = tipsterTips.filter(tip => isTipPremium(tip))
-  const singlePaidTips = publicPremiumTips
-  const unlockedPublicPremiumTips = publicPremiumTips.filter(canViewTipsterPremiumTip)
-  const canOpenPremiumTab = isOwn || profileSubscriptionActive
-  const publicTabTips = tipsterTab === 'premium'
-    ? unlockedPublicPremiumTips
-    : tipsterTab === 'single'
-      ? singlePaidTips
-      : publicFreeTips
-  const buildPublicTipCard = (tipRaw) => {
-    const normalized = normalizeTipRow(tipRaw)
-    const premiumTip = isTipPremium(normalized)
-    const home = normalized.team_home || normalized.home_team || normalized.home || 'Gospodarze'
-    const away = normalized.team_away || normalized.away_team || normalized.away || 'Goście'
-    const matchTime = normalized.match_time || normalized.event_date || normalized.kickoff_at || normalized.created_at
-    const matchAt = matchTime ? new Date(matchTime) : null
-    const formatDateTime = (value) => value && !Number.isNaN(value.getTime())
-      ? value.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-      : 'Brak daty'
-    const status = String(normalized.status || 'pending').toLowerCase()
-    const statusLabel = ['won', 'win', 'wygrany', 'wygrana'].includes(status)
-      ? 'Wygrany'
-      : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
-        ? 'Przegrany'
-        : ['pending_admin', 'manual_pending', 'awaiting_admin'].includes(status)
-          ? 'Czeka na admina'
-          : 'Oczekujący'
-    return {
-      id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
-      rawTip: normalized,
-      premium: premiumTip,
-      home,
-      away,
-      league: normalized.league || 'Liga',
-      homeLogo: normalized.home_logo || normalized.homeLogo || null,
-      awayLogo: normalized.away_logo || normalized.awayLogo || null,
-      homeTeamId: normalized.home_team_id || normalized.homeTeamId || null,
-      awayTeamId: normalized.away_team_id || normalized.awayTeamId || null,
-      pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
-      odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
-      stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || 100) || 100,
-      analysis: normalized.ai_analysis || normalized.analysis || normalized.description || 'Brak analizy użytkownika.',
-      matchLabel: formatDateTime(matchAt),
-      statusLabel,
-      price: Math.max(0, Number(normalized.price || 29) || 29),
-      likes: Number(normalized.likes || normalized.hearts || 0) || 0,
-      comments: Number(normalized.comments || normalized.comments_count || 0) || 0,
-    }
-  }
-  const publicTipCards = publicTabTips.map(buildPublicTipCard)
-  const publicAuthorStats = getAuthorStatsLabels(finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).get(String(tipsterId).toLowerCase()), getImportedProfileStats(profile)))
   const featuredTips = [...visibleTipsterTips]
     .filter(t => !isTipPremium(t) || Number(t.ai_confidence || t.ai_score || t.confidence || 0) >= 85 || normalizeResult(t.result || t.status) === 'win')
     .sort((a, b) => Number(b.ai_confidence || b.ai_score || b.confidence || b.odds || 0) - Number(a.ai_confidence || a.ai_score || a.confidence || a.odds || 0))
@@ -2133,26 +2056,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
   const isFollowing = followingTipsters?.has?.(String(tipsterId))
   const donutWin = Math.max(0, Math.min(100, winrate))
   const donutLoss = Math.max(0, 100 - donutWin)
-  useEffect(() => {
-    if (tipsterTab === 'premium' && !canOpenPremiumTab) {
-      setTipsterTab('free')
-    }
-  }, [tipsterTab, canOpenPremiumTab])
-
-
-  if (!loading && !profile && !tipsterTips.length) {
-    return (
-      <section className="tipster-profile-page pro-stats-page public-tipster-only-page">
-        <button className="back-btn" onClick={onBack}>← Powrót do feedu</button>
-        <div className="empty-state">
-          Nie znaleziono publicznego profilu tego typera. Spróbuj odświeżyć stronę albo kliknąć nazwę użytkownika jeszcze raz.
-        </div>
-      </section>
-    )
-  }
 
   return (
-    <section className="tipster-profile-page pro-stats-page public-tipster-only-page">
+    <section className="tipster-profile-page pro-stats-page">
       <button className="back-btn" onClick={onBack}>← Powrót do feedu</button>
       <div className="tipster-profile-hero">
         <div className="tipster-profile-main">
@@ -2193,79 +2099,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
             </div>
             {!isOwn && (
               <div className="sales-actions">
-                {profileSubscriptionActive ? (
-                  <div className="premium-subscription-mini-status">{subscriptionTimeLabel}{subscriptionExpiresLabel ? ` • do ${subscriptionExpiresLabel}` : ''}</div>
-                ) : (
-                  <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
-                )}
+                <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
                 <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj typera'}</button>
                 <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>Kopiuj link</button>
               </div>
             )}
-          </div>
-
-          <div className="public-tipster-tabs-card">
-            <div className="profile-v4-filter-row public-tipster-filter-row">
-              <button type="button" className={`filter-pill-v872 free ${tipsterTab === 'free' ? 'active' : ''}`} onClick={() => setTipsterTab('free')}>
-                <span className="filter-icon-v872">🎁</span><span>Darmowe typy</span><b>{publicFreeTips.length}</b>
-              </button>
-              <button type="button" className={`filter-pill-v872 single ${tipsterTab === 'single' ? 'active' : ''}`} onClick={() => setTipsterTab('single')}>
-                <span className="filter-icon-v872">💳</span><span>Singiel płatny</span><b>{singlePaidTips.length}</b>
-              </button>
-              <button
-                type="button"
-                className={`filter-pill-v872 premium ${tipsterTab === 'premium' ? 'active' : ''} ${!canOpenPremiumTab ? 'locked' : ''}`}
-                onClick={() => {
-                  if (canOpenPremiumTab) {
-                    setTipsterTab('premium')
-                  } else {
-                    onSubscribeToTipster?.({ author_id: tipsterId, user_id: tipsterId, tipster_id: tipsterId, author_name: username })
-                  }
-                }}
-              >
-                <span className="filter-icon-v872">♕</span><span>Premium</span><b>{canOpenPremiumTab ? unlockedPublicPremiumTips.length : '🔒'}</b>
-              </button>
-            </div>
-            {profileSubscriptionActive && !isOwn ? (
-              <div className="premium-subscription-time-box">
-                <strong>Premium aktywne</strong>
-                <span>{subscriptionTimeLabel}{subscriptionExpiresLabel ? ` • ważne do ${subscriptionExpiresLabel}` : ''}</span>
-              </div>
-            ) : null}
-            {tipsterTab === 'single' && !isOwn ? (
-              <div className="single-tab-info-box">
-                W tej zakładce kupujesz pojedynczy typ premium. Cena jest taka, jaką ustawił sprzedający. Platforma pobiera 20% marży, a 80% trafia do typera.
-              </div>
-            ) : null}
-            {!canOpenPremiumTab && tipsterTab !== 'premium' && publicPremiumTips.length > 0 ? (
-              <div className="premium-tab-lock-box">
-                Zakładka Premium jest zablokowana. Kup subskrypcję profilu na 30 dni, aby odblokować typy premium tego typera.
-                <button type="button" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, user_id: tipsterId, tipster_id: tipsterId, author_name: username })}>Kup subskrypcję 30 dni</button>
-              </div>
-            ) : null}
-            <div className="public-tipster-tip-list">
-              {publicTipCards.length ? publicTipCards.map(tip => (
-                <ProfileLiveTipCard
-                  key={tip.id}
-                  tip={tip}
-                  sourceTip={tip.rawTip || {}}
-                  avatarUrl={profile?.avatar_url || ''}
-                  initials={initials}
-                  displayName={username}
-                  currentUser={currentUser}
-                  unlockedTips={unlockedTips}
-                  tipsterSubscriptions={tipsterSubscriptions}
-                  followingTipsters={followingTipsters}
-                  onToggleFollow={onToggleFollow}
-                  onUnlock={onUnlock}
-                  onSubscribeToTipster={onSubscribeToTipster}
-                  onToast={null}
-                  authorStats={publicAuthorStats}
-                />
-              )) : (
-                <div className="empty-mini">{tipsterTab === 'premium' ? 'Brak odblokowanych typów premium.' : tipsterTab === 'single' ? 'Brak pojedynczych płatnych typów.' : 'Brak darmowych typów.'}</div>
-              )}
-            </div>
           </div>
 
           <div className="pro-metric-grid sales-upgrade">
@@ -8123,7 +7961,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
   const cardAnalysis = tip.analysis || tip.ai_analysis || tip.description || 'Brak analizy użytkownika.'
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
-  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : (tip.status === 'pending_admin' || tip.admin_approval_status === 'pending') ? 'Czeka na admina' : 'Oczekujący'
+  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
   const showFollowButton = !isOwnTip
@@ -8177,7 +8015,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
   async function settleDashboardTip() {
     setMenuOpen(false)
-    const nextStatus = window.prompt('Zgłoś wynik do admina: won / lost / void', 'won')
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
     if (!nextStatus) return
     const clean = String(nextStatus).trim().toLowerCase()
     if (!['won', 'lost', 'void'].includes(clean)) {
@@ -8185,19 +8023,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       return
     }
     try {
-      await updateTipField(tip?.id, {
-        status: 'pending_admin',
-        manual_settlement_status: 'pending_admin',
-        manual_settlement_result: clean,
-        manual_settlement_requested_at: new Date().toISOString(),
-        manual_settlement_requested_by: currentUser?.id || null,
-        admin_approval_status: 'pending',
-        settlement_source: 'manual_user'
-      })
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono wynik: ${clean}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
-      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+      await updateTipField(tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zgłosić wyniku do admina. Sprawdź SQL wersji 937.') })
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
     }
   }
 
@@ -13764,7 +13593,7 @@ function ProfileLiveTipCard({
 
   async function settleTip() {
     setMenuOpen(false)
-    const nextStatus = window.prompt('Zgłoś wynik do admina: won / lost / void', 'won')
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
     if (!nextStatus) return
     const clean = String(nextStatus).trim().toLowerCase()
     if (!['won', 'lost', 'void'].includes(clean)) {
@@ -13772,19 +13601,10 @@ function ProfileLiveTipCard({
       return
     }
     try {
-      await updateTipField(sourceTip?.id || tip?.id, {
-        status: 'pending_admin',
-        manual_settlement_status: 'pending_admin',
-        manual_settlement_result: clean,
-        manual_settlement_requested_at: new Date().toISOString(),
-        manual_settlement_requested_by: currentUser?.id || null,
-        admin_approval_status: 'pending',
-        settlement_source: 'manual_user'
-      })
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono wynik: ${clean}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
-      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+      await updateTipField(sourceTip?.id || tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zgłosić wyniku do admina. Sprawdź SQL wersji 937.') })
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
     }
   }
 
@@ -13994,7 +13814,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileTab, setProfileTab] = useState('tips')
-  const [profileTipsFilter, setProfileTipsFilter] = useState('free')
+  const [profileTipsFilter, setProfileTipsFilter] = useState('all')
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
@@ -14202,9 +14022,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       ? 'Wygrany'
       : ['lost', 'loss', 'przegrany', 'przegrana'].includes(status)
         ? 'Przegrany'
-        : ['pending_admin', 'manual_pending', 'awaiting_admin'].includes(status)
-          ? 'Czeka na admina'
-          : 'Oczekujący'
+        : 'Oczekujący'
     const confidence = Math.max(0, Math.min(100, Number(normalized.ai_probability || normalized.ai_confidence || normalized.confidence || 0) || 0))
     return {
       id: normalized.id || `${home}-${away}-${normalized.created_at || Math.random()}`,
@@ -14371,7 +14189,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
   const profileVisibleTipCards = allProfileTipCards.filter(tip => {
     if (profileTipsFilter === 'premium') return tip.premium
-    return !tip.premium
+    if (profileTipsFilter === 'free') return !tip.premium
+    return true
   })
   const resultTipRows = allProfileTipCards.filter(tip => {
     if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
@@ -14532,6 +14351,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
               <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
               <div className="profile-v4-filter-row">
+                <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{allProfileTipCards.length}</b></button>
                 <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCards.length}</b></button>
                 <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
               </div>
@@ -15232,119 +15052,6 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
     </section>
   )
 }
-
-
-function AdminCouponApprovalView({ rows = [], onRefresh, onApprove, onReject }) {
-  const [tab, setTab] = useState('pending')
-  const [query, setQuery] = useState('')
-  const normStatus = row => String(row?.admin_approval_status || row?.manual_settlement_status || row?.status || '').toLowerCase()
-  const rowResult = row => String(row?.manual_settlement_result || row?.admin_approved_result || row?.status || '').toLowerCase()
-  const labelResult = value => {
-    const clean = String(value || '').toLowerCase()
-    if (clean === 'won' || clean === 'win') return 'Wygrana'
-    if (clean === 'lost' || clean === 'loss') return 'Przegrana'
-    if (clean === 'void' || clean === 'push') return 'Zwrot'
-    return 'Oczekuje'
-  }
-  const filtered = (rows || []).filter(row => {
-    const status = normStatus(row)
-    const isPending = status === 'pending' || status === 'pending_admin' || row.status === 'pending_admin'
-    const isApproved = status === 'approved'
-    const isRejected = status === 'rejected'
-    if (tab === 'pending' && !isPending) return false
-    if (tab === 'approved' && !isApproved) return false
-    if (tab === 'rejected' && !isRejected) return false
-    if (query.trim()) {
-      const haystack = [
-        row.id,
-        row.author_name,
-        row.author_email,
-        row.team_home,
-        row.home_team,
-        row.team_away,
-        row.away_team,
-        row.bet_type,
-        row.pick,
-        row.prediction,
-        row.league,
-        row.status,
-        row.manual_settlement_result,
-      ].filter(Boolean).join(' ').toLowerCase()
-      return haystack.includes(query.trim().toLowerCase())
-    }
-    return true
-  })
-  const counts = {
-    pending: (rows || []).filter(row => {
-      const status = normStatus(row)
-      return status === 'pending' || status === 'pending_admin' || row.status === 'pending_admin'
-    }).length,
-    approved: (rows || []).filter(row => normStatus(row) === 'approved').length,
-    rejected: (rows || []).filter(row => normStatus(row) === 'rejected').length,
-  }
-
-  return (
-    <section className="admin-coupons-page">
-      <div className="admin-coupons-hero glass-v2-panel">
-        <div>
-          <span>Tylko administrator</span>
-          <h1>Kupony do zatwierdzenia</h1>
-          <p>Ręcznie dodane typy użytkowników trafiają tutaj po zgłoszeniu wyniku. Statystyki dopisują się dopiero po potwierdzeniu admina.</p>
-        </div>
-        <button type="button" onClick={onRefresh}>Odśwież</button>
-      </div>
-
-      <div className="admin-coupons-tabs">
-        <button type="button" className={tab === 'pending' ? 'active' : ''} onClick={() => setTab('pending')}>Czekają <b>{counts.pending}</b></button>
-        <button type="button" className={tab === 'approved' ? 'active' : ''} onClick={() => setTab('approved')}>Zatwierdzone <b>{counts.approved}</b></button>
-        <button type="button" className={tab === 'rejected' ? 'active' : ''} onClick={() => setTab('rejected')}>Odrzucone <b>{counts.rejected}</b></button>
-      </div>
-
-      <div className="admin-coupons-search glass-v2-panel">
-        <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Szukaj po użytkowniku, meczu, lidze, typie..." />
-      </div>
-
-      <div className="admin-coupons-list">
-        {filtered.length ? filtered.map(row => {
-          const result = rowResult(row)
-          const pending = ['pending', 'pending_admin'].includes(normStatus(row)) || row.status === 'pending_admin'
-          const home = row.team_home || row.home_team || row.home || 'Gospodarze'
-          const away = row.team_away || row.away_team || row.away || 'Goście'
-          const pick = row.bet_type || row.pick || row.prediction || 'Typ'
-          const author = row.author_name || row.username || row.author_email || 'Użytkownik'
-          return (
-            <article className="admin-coupon-card glass-v2-panel" key={row.id}>
-              <div className="admin-coupon-main">
-                <span className={`admin-coupon-status status-${normStatus(row) || 'pending'}`}>{pending ? 'Czeka na admina' : normStatus(row) === 'approved' ? 'Zatwierdzony' : normStatus(row) === 'rejected' ? 'Odrzucony' : row.status || 'Status'}</span>
-                <h2>{home} <small>vs</small> {away}</h2>
-                <p><b>Typer:</b> {author}</p>
-                <p><b>Liga:</b> {row.league || '—'} · <b>Typ:</b> {pick} · <b>Kurs:</b> {row.odds || '—'} · <b>Stawka:</b> {row.stake || row.amount || '—'}</p>
-                <p><b>Zgłoszony wynik:</b> <strong>{labelResult(result)}</strong></p>
-                {row.manual_settlement_requested_at ? <p><b>Zgłoszono:</b> {new Date(row.manual_settlement_requested_at).toLocaleString('pl-PL')}</p> : null}
-                {row.admin_approved_at ? <p><b>Zatwierdzono:</b> {new Date(row.admin_approved_at).toLocaleString('pl-PL')}</p> : null}
-                {row.admin_rejection_reason ? <p><b>Powód odrzucenia:</b> {row.admin_rejection_reason}</p> : null}
-              </div>
-              {pending ? (
-                <div className="admin-coupon-actions">
-                  <button type="button" className="approve won" onClick={() => onApprove(row, 'won')}>Potwierdź wygraną</button>
-                  <button type="button" className="approve lost" onClick={() => onApprove(row, 'lost')}>Potwierdź przegraną</button>
-                  <button type="button" className="approve void" onClick={() => onApprove(row, 'void')}>Zwrot</button>
-                  <button type="button" className="reject" onClick={() => onReject(row)}>Odrzuć</button>
-                </div>
-              ) : null}
-            </article>
-          )
-        }) : (
-          <div className="admin-coupons-empty glass-v2-panel">
-            <strong>Brak kuponów w tej zakładce</strong>
-            <span>Gdy użytkownik zgłosi rozliczenie ręcznego typu, pojawi się tutaj.</span>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
 
 function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   const profile = getUserProfileView(user)
@@ -16176,7 +15883,6 @@ function App() {
   const [walletBalance, setWalletBalance] = useState(0)
   const [payoutSubmitting, setPayoutSubmitting] = useState(false)
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
-  const [adminCouponApprovals, setAdminCouponApprovals] = useState([])
   const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
   const [stripeConnectStatus, setStripeConnectStatus] = useState(null)
   const [adminFinanceReport, setAdminFinanceReport] = useState({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
@@ -16830,33 +16536,14 @@ function App() {
   }
 
   async function resolveTipsterId(tipsterId, authorName) {
-    if (!isSupabaseConfigured || !supabase) return tipsterId ? String(tipsterId) : null
+    if (tipsterId) return String(tipsterId)
+    if (!authorName || !isSupabaseConfigured || !supabase) return null
 
-    const rawRef = String(tipsterId || '').trim()
-    const rawName = String(authorName || '').trim()
-    const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-    if (rawRef && uuidLike.test(rawRef)) {
-      return rawRef
-    }
-
-    const candidates = [rawRef, rawName]
-      .flatMap(value => {
-        const clean = String(value || '').trim()
-        if (!clean) return []
-        const lower = clean.toLowerCase()
-        const noAt = lower.startsWith('@') ? lower.slice(1) : lower
-        const emailLocal = lower.includes('@') ? lower.split('@')[0] : ''
-        return [lower, noAt, emailLocal].filter(Boolean)
-      })
-      .filter(Boolean)
-
-    if (!candidates.length) return null
-
+    const username = String(authorName).toLowerCase().trim()
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email,username,public_slug')
-      .limit(300)
+      .select('id,email')
+      .limit(100)
 
     if (error) {
       console.error('resolveTipsterId error', error)
@@ -16865,17 +16552,7 @@ function App() {
 
     const match = (data || []).find(profile => {
       const email = String(profile.email || '').toLowerCase()
-      const emailLocal = email ? email.split('@')[0] : ''
-      const username = String(profile.username || '').toLowerCase()
-      const slug = String(profile.public_slug || '').toLowerCase()
-      const id = String(profile.id || '').toLowerCase()
-      return candidates.some(candidate =>
-        candidate === id ||
-        candidate === email ||
-        candidate === emailLocal ||
-        candidate === username ||
-        candidate === slug
-      )
+      return email === username || email.split('@')[0] === username
     })
 
     return match?.id ? String(match.id) : null
@@ -17353,92 +17030,6 @@ function App() {
 
 
 
-
-
-  async function fetchAdminCouponApprovals() {
-    if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
-      setAdminCouponApprovals([])
-      return
-    }
-    try {
-      const { data, error } = await supabase
-        .from('tips')
-        .select('id,author_id,user_id,author_name,author_email,team_home,home_team,team_away,away_team,league,bet_type,pick,prediction,odds,stake,amount,status,manual_settlement_status,manual_settlement_result,manual_settlement_requested_at,manual_settlement_requested_by,admin_approval_status,admin_approved_result,admin_approved_at,admin_approved_by,admin_rejected_at,admin_rejection_reason,settlement_source,created_at')
-        .or('admin_approval_status.eq.pending,admin_approval_status.eq.approved,admin_approval_status.eq.rejected,status.eq.pending_admin,manual_settlement_status.eq.pending_admin')
-        .order('manual_settlement_requested_at', { ascending: false, nullsFirst: false })
-        .limit(200)
-
-      if (error) throw error
-      setAdminCouponApprovals(data || [])
-    } catch (error) {
-      console.error('fetchAdminCouponApprovals error', error)
-      setAdminCouponApprovals([])
-      showToast({ type: 'error', title: 'Kupony admin', message: formatAppErrorMessage(error.message || 'Nie udało się pobrać kuponów. Sprawdź SQL wersji 937.') })
-    }
-  }
-
-  async function approveManualCoupon(row, result) {
-    if (!sessionUser?.id || !isAdminUser(sessionUser)) {
-      showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może zatwierdzać kupony.' })
-      return
-    }
-    const clean = String(result || row?.manual_settlement_result || '').toLowerCase()
-    if (!['won', 'lost', 'void'].includes(clean)) {
-      showToast({ type: 'error', title: 'Nieprawidłowy wynik', message: 'Dozwolone: won / lost / void.' })
-      return
-    }
-    try {
-      const { error } = await supabase
-        .from('tips')
-        .update({
-          status: clean,
-          result: clean,
-          manual_settlement_status: 'approved',
-          admin_approval_status: 'approved',
-          admin_approved_result: clean,
-          admin_approved_at: new Date().toISOString(),
-          admin_approved_by: sessionUser.id,
-          settlement_source: 'manual_admin_approved'
-        })
-        .eq('id', row.id)
-
-      if (error) throw error
-      showToast({ type: 'success', title: 'Kupon zatwierdzony', message: `Admin zatwierdził wynik: ${clean}. Statystyki mogą zostać dopisane.` })
-      await fetchAdminCouponApprovals()
-      await fetchTips?.()
-      await fetchRealRanking?.()
-    } catch (error) {
-      showToast({ type: 'error', title: 'Błąd zatwierdzenia', message: formatAppErrorMessage(error.message) })
-    }
-  }
-
-  async function rejectManualCoupon(row) {
-    if (!sessionUser?.id || !isAdminUser(sessionUser)) {
-      showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może odrzucać kupony.' })
-      return
-    }
-    const reason = window.prompt('Powód odrzucenia zgłoszenia:', 'Wynik wymaga poprawy') || ''
-    try {
-      const { error } = await supabase
-        .from('tips')
-        .update({
-          status: 'pending',
-          manual_settlement_status: 'rejected',
-          admin_approval_status: 'rejected',
-          admin_rejected_at: new Date().toISOString(),
-          admin_rejection_reason: reason,
-          settlement_source: 'manual_admin_rejected'
-        })
-        .eq('id', row.id)
-
-      if (error) throw error
-      showToast({ type: 'success', title: 'Zgłoszenie odrzucone', message: 'Kupon wrócił do statusu oczekującego, statystyki nie zostały dopisane.' })
-      await fetchAdminCouponApprovals()
-      await fetchTips?.()
-    } catch (error) {
-      showToast({ type: 'error', title: 'Błąd odrzucenia', message: formatAppErrorMessage(error.message) })
-    }
-  }
 
 
   async function runPremiumCheckout() {
@@ -18015,18 +17606,7 @@ function App() {
     if (view === 'adminFinance' && isAdminUser(sessionUser)) {
       fetchAdminFinanceReport()
     }
-    if (view === 'adminCoupons' && isAdminUser(sessionUser)) {
-      fetchAdminCouponApprovals()
-    }
   }, [view, sessionUser?.id])
-
-  useEffect(() => {
-    const handler = () => {
-      if (isAdminUser(sessionUser)) fetchAdminCouponApprovals()
-    }
-    window.addEventListener('betai:admin-coupon-approval-changed', handler)
-    return () => window.removeEventListener('betai:admin-coupon-approval-changed', handler)
-  }, [sessionUser?.id])
 
 
 
@@ -18561,15 +18141,6 @@ function App() {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), ...(patch || {}) }))
               setSessionUser(prev => prev ? ({ ...prev, ...(patch || {}), user_metadata: { ...(prev.user_metadata || {}), ...(patch || {}) } }) : prev)
             }}
-          />
-        )}
-
-        {view === 'adminCoupons' && (
-          <AdminCouponApprovalView
-            rows={adminCouponApprovals}
-            onRefresh={fetchAdminCouponApprovals}
-            onApprove={approveManualCoupon}
-            onReject={rejectManualCoupon}
           />
         )}
 
