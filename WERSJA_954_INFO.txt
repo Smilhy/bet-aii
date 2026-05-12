@@ -1,0 +1,21 @@
+WERSJA 954
+
+Zmiana logiki zakładek Darmowe/Premium:
+1. W zakładkach Darmowe i Premium pokazują się tylko aktywne/nierozstrzygnięte typy.
+2. Typ rozstrzygnięty jako:
+   - Wygrany
+   - Przegrany
+   - Zwrot
+   - Czeka na admina / po zgłoszeniu
+   znika z listy Darmowe/Premium.
+3. Liczniki Darmowe/Premium pokazują tylko aktywne typy.
+4. Wszystkie rozstrzygnięte typy zostają w zakładce Wyniki.
+5. Statystyki i historia nie są usuwane — zmienia się tylko widoczność w bieżących listach.
+6. Dodano krótką informację pod filtrami, że rozstrzygnięte typy są w Wyniki.
+
+Start z wersji:
+- betai_wersja_953_SZKLISTE_KLAWISZE_PROFILU.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

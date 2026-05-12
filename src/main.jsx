@@ -14215,9 +14215,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
   }
 
-  const premiumCards = userTips.filter(isTipPremium).slice(0, 3).map(buildProfileTipCard)
-  const freeCards = userTips.filter(tip => !isTipPremium(tip)).slice(0, 3).map(buildProfileTipCard)
   const allProfileTipCards = userTips.map(buildProfileTipCard)
+  const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący')
+  const premiumCards = activeProfileTipCards.filter(tip => tip.premium).slice(0, 3)
+  const freeCards = activeProfileTipCards.filter(tip => !tip.premium).slice(0, 3)
 
   const resultRows = [
     ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
@@ -14366,7 +14367,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       )
     })
     .map(tip => buildProfileTipCard({ ...tip, rawTip: tip.rawTip || tip }))
-  const profileVisibleTipCards = allProfileTipCards.filter(tip => {
+  const profileVisibleTipCards = activeProfileTipCards.filter(tip => {
     if (profileTipsFilter === 'purchased') return false
     if (profileTipsFilter === 'premium') return profileSubscriptionActive && tip.premium
     return !tip.premium
@@ -14584,6 +14585,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>Kupione single</span><b>{purchasedSingleCards.length}</b></button>
                 ) : null}
               </div>
+              <div className="profile-active-tips-note-v954">
+                <strong>Widok aktywnych typów</strong>
+                <span>Rozstrzygnięte typy automatycznie znikają z Darmowe/Premium i zostają zapisane w zakładce Wyniki.</span>
+              </div>
               {!profileIsOwnForViewer && profileSubscriptionActive ? (
                 <div className="profile-subscription-active-note">
                   <strong>Premium aktywne</strong>
@@ -14606,7 +14611,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               ) : profileVisibleTipCards.length ? (
                 <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
               ) : (
-                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileSubscriptionActive ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak typów w tej kategorii.'}</div>
+                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileSubscriptionActive ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.'}</div>
               )}
             </section>
           )}
