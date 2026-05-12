@@ -1,0 +1,11 @@
+WERSJA 921
+
+Zmiany:
+1. Prawy panel „Top typerzy” został poprawiony tak, aby zawsze wyświetlał 4 miejsca / 4 użytkowników.
+2. Dodałem twarde dopełnienie listy do 4 pozycji, jeśli w rankingu jest mniej realnych kont.
+3. Usunąłem ramkę / box przy napisie „Profit”.
+4. Profit po prawej jest teraz pokazany jako sam biały napis (etykieta i wartość), bez obramowania i bez kolorowego badge.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

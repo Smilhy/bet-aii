@@ -33188,3 +33188,78 @@ button.betfolio-fetch-btn{
   text-overflow: clip !important;
   font-variant-numeric: tabular-nums !important;
 }
+
+/* WERSJA 921 — Top typerzy: zawsze 4 miejsca + Profit bez ramki */
+.rightbar .real-ranking-panel .rank:nth-of-type(-n+5){
+  display: grid !important;
+}
+.rightbar .real-ranking-panel .rank:nth-of-type(n+6){
+  display: none !important;
+}
+.rightbar .real-ranking-panel .rank{
+  display: grid !important;
+  grid-template-columns: 30px 36px minmax(0, 1fr) 98px !important;
+  column-gap: 10px !important;
+  align-items: center !important;
+  padding: 10px 8px !important;
+  min-height: 64px !important;
+}
+.rightbar .real-ranking-panel .ranking-profit-box,
+.real-ranking-panel .ranking-profit-box{
+  width: 98px !important;
+  min-width: 98px !important;
+  max-width: 98px !important;
+  justify-self: end !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-end !important;
+  gap: 2px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  backdrop-filter: none !important;
+}
+.rightbar .real-ranking-panel .ranking-profit-box em,
+.real-ranking-panel .ranking-profit-box em{
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-style: normal !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .05em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-align: right !important;
+}
+.rightbar .real-ranking-panel .ranking-profit-box span,
+.real-ranking-panel .ranking-profit-box span,
+.rightbar .real-ranking-panel .ranking-profit-positive span,
+.rightbar .real-ranking-panel .ranking-profit-negative span,
+.real-ranking-panel .ranking-profit-positive span,
+.real-ranking-panel .ranking-profit-negative span{
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  text-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 1000 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.03em !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-variant-numeric: tabular-nums !important;
+}

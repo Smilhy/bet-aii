@@ -1897,22 +1897,41 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
     { username: 'buchajsonek1988', email: 'buchajsonek1988@gmail.com', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
     { username: 'p.kucharski', email: 'p.kucharski@aol.co.uk', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
     { username: 'Bet+AI Live', email: 'betai@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
+    { username: 'Bet+AI User', email: 'betai-user@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
   ]
   const rankingSeen = new Set()
   const rightRankingRows = []
   ;(realRanking || []).forEach((row) => {
     const key = normalizeEmail(row?.email || row?.author_email || row?.user_email || row?.username || row?.author_name || row?.user_name)
-    if (!key || rankingSeen.has(key)) return
+    if (!key || rankingSeen.has(key) || rightRankingRows.length >= 4) return
     rankingSeen.add(key)
     rightRankingRows.push(row)
   })
   fallbackRankingUsers.forEach((row) => {
     const key = normalizeEmail(row.email || row.username)
-    if (!rankingSeen.has(key) && rightRankingRows.length < 4) {
-      rankingSeen.add(key)
-      rightRankingRows.push(row)
-    }
+    if (!key || rankingSeen.has(key) || rightRankingRows.length >= 4) return
+    rankingSeen.add(key)
+    rightRankingRows.push(row)
   })
+  while (rightRankingRows.length < 4) {
+    const nextPlace = rightRankingRows.length + 1
+    const filler = {
+      id: `top-typer-placeholder-${nextPlace}`,
+      username: `Użytkownik ${nextPlace}`,
+      email: `placeholder-${nextPlace}@betai.local`,
+      totalTips: 0,
+      total_tips: 0,
+      wins: 0,
+      losses: 0,
+      winrate: 0,
+      roi: 0,
+      yield: 0,
+      earnings: 0,
+      profit: 0,
+    }
+    rankingSeen.add(filler.email)
+    rightRankingRows.push(filler)
+  }
 
   return (
     <aside className="rightbar">
