@@ -32933,3 +32933,117 @@ button.betfolio-fetch-btn{
 .real-ranking-panel .ranking-profit-negative span{
   color: #ff7d99 !important;
 }
+
+
+/* WERSJA 918 — FINALNE ustawienie Obserwuj POD Premium/Darmowy + ranking 4 */
+
+/* author cell in ticket cards */
+.profile-ticket-v6-author,
+.dashboard-ticket-v6-author{
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+/* Access badge must be before follow */
+.profile-ticket-v6-access,
+.dashboard-ticket-v6-access{
+  order: 30 !important;
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+/* Follow button must be below badge */
+.profile-ticket-v6-author > .betai-follow-author-btn,
+.dashboard-ticket-v6-author > .betai-follow-author-btn,
+.betai-follow-author-btn{
+  order: 40 !important;
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 164px !important;
+  min-width: 112px !important;
+  height: 30px !important;
+  margin: 9px auto 0 auto !important;
+  padding: 0 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 255, 230, .75) !important;
+  background: rgba(0, 17, 26, .74) !important;
+  color: #19f7e8 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  cursor: pointer !important;
+  box-shadow: inset 0 0 0 1px rgba(0,255,230,.06), 0 8px 18px rgba(0, 255, 230, .08) !important;
+  z-index: 2 !important;
+}
+
+/* hide 5th+ right ranking entries even if data has more */
+.real-ranking-panel .rank:nth-of-type(n+5){
+  display: none !important;
+}
+
+/* nicer compact profit badge */
+.real-ranking-panel .rank{
+  display: grid !important;
+  grid-template-columns: 30px 36px minmax(0, 1fr) 118px !important;
+  column-gap: 10px !important;
+  align-items: center !important;
+  padding: 12px 10px !important;
+}
+.real-ranking-panel .ranking-profit-box{
+  width: 118px !important;
+  min-width: 118px !important;
+  max-width: 118px !important;
+  justify-self: end !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 7px 9px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(35, 244, 255, .38) !important;
+  background: linear-gradient(135deg, rgba(7, 33, 49, .82), rgba(10, 112, 146, .34)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 22px rgba(0,0,0,.18), 0 0 18px rgba(35,244,255,.08) !important;
+  overflow: hidden !important;
+}
+.real-ranking-panel .ranking-profit-box em{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  font-style:normal!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  color:rgba(171,218,234,.90)!important;
+  text-align:right!important;
+}
+.real-ranking-panel .ranking-profit-box span{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#27f4ff!important;
+  font-size:15px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+  letter-spacing:-0.045em!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  text-align:right!important;
+  font-variant-numeric:tabular-nums!important;
+}
