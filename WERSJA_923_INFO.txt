@@ -1,0 +1,10 @@
+WERSJA 923
+
+Poprawka po kolejnym zgłoszeniu:
+1. Brak 4. miejsca wynikał z CSS: nagłówek panelu był liczony jako pierwszy div, więc reguła ukrywała 4. wiersz rankingu.
+2. Poprawiłem selektory tak, aby w prawym panelu było widoczne dokładnie 4 miejsca.
+3. Rozciągnąłem panel „Top typerzy” w dół, żeby 4. wiersz nie był ucinany / zjadany.
+4. Zostawiłem wcześniejsze ustawienie Profit bez ramki.
+
+Pliki zmienione:
+- src/styles.css

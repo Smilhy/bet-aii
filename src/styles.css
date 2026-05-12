@@ -33417,3 +33417,29 @@ button.betfolio-fetch-btn{
   text-align: right !important;
   font-variant-numeric: tabular-nums !important;
 }
+
+/* WERSJA 923 — Top typerzy: pokazuj 4. miejsce i rozciągnij panel w dół */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+.rightbar .real-ranking-panel{
+  min-height: 232px !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-bottom: 12px !important;
+  overflow: visible !important;
+}
+
+/* panel-head jest pierwszym divem, więc 4. pozycja rankingu wpada w nth-of-type(5) */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:nth-of-type(-n+5),
+.rightbar .real-ranking-panel .rank:nth-of-type(-n+5){
+  display: grid !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:nth-of-type(n+6),
+.rightbar .real-ranking-panel .rank:nth-of-type(n+6){
+  display: none !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel .rank:last-of-type,
+.rightbar .real-ranking-panel .rank:last-of-type{
+  margin-bottom: 2px !important;
+}
