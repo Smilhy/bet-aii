@@ -1,0 +1,4 @@
+WERSJA 914
+- Poprawiona ramka Profit w prawym panelu Top typerzy.
+- Pełna kwota nadal jest widoczna.
+- Lepszy wygląd: zaokrąglona ramka, gradient, lepsze paddingi i czytelność.
