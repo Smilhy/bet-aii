@@ -2088,8 +2088,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     return () => { cancelled = true }
   }, [tipsterId, lookupTipsterKey])
 
-  const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || 'Tipster').split('@')[0]
-  const publicProfileUrl = getTipsterPublicUrl(profile, tipsterId)
+  const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
+  const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
+  const publicProfileUrl = getTipsterPublicUrl(profile || { username, public_slug: username }, profileId)
   const copyPublicProfileLink = async () => {
     try {
       await navigator.clipboard.writeText(publicProfileUrl)
@@ -2099,170 +2100,146 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, followingTipsters,
     }
   }
   const initials = username.slice(0, 2).toUpperCase()
+  const currentEmail = normalizeEmail(currentUser?.email || '')
+  const currentUsername = normalizeEmail(resolveRealProfileUsername(currentUser || {}))
+  const targetEmail = normalizeEmail(profile?.email || tipsterTips?.[0]?.author_email || '')
+  const targetUsername = normalizeEmail(username)
+  const isOwn = Boolean(
+    (currentUser?.id && profileId && String(currentUser.id) === String(profileId)) ||
+    (currentEmail && targetEmail && currentEmail === targetEmail) ||
+    (currentUsername && targetUsername && currentUsername === targetUsername)
+  )
+
   const totalTips = Number(stats?.total_tips || tipsterTips.length || 0)
   const wins = Number(stats?.wins || tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'win').length || 0)
   const losses = Number(stats?.losses || tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'loss').length || 0)
-  const voids = tipsterTips.filter(t => normalizeResult(t.result || t.status) === 'void').length
-  const settled = wins + losses + voids
-  const winrate = Number(stats?.winrate || (settled ? (wins / Math.max(wins + losses, 1)) * 100 : 0))
-  const earnings = Number(stats?.earnings || stats?.total_earnings || 0)
-  const roi = Number(stats?.roi || 0)
-  const salesCount = Number(stats?.sales_count || stats?.sales || 0)
-  const buyersCount = Number(stats?.buyers_count || stats?.buyers || 0)
-  const roi7 = Number(stats?.roi_7d || stats?.roi7 || roi || 0)
-  const roi30 = Number(stats?.roi_30d || stats?.roi30 || roi || 0)
-  const isTopSeller = salesCount >= 10 || buyersCount >= 10 || earnings >= 500
-  const isOwn = currentUser?.id && String(currentUser.id) === String(tipsterId)
-  const profileSubscriptionActive = hasActiveTipsterSubscription({ author_id: tipsterId, user_id: tipsterId, tipster_id: tipsterId, author_name: username }, tipsterSubscriptions)
+  const pendingTips = tipsterTips.filter(t => ['pending', 'pending_admin', ''].includes(String(t.status || '').toLowerCase())).length
+  const settled = wins + losses
+  const winrate = Number(stats?.winrate || (settled ? (wins / Math.max(settled, 1)) * 100 : 0))
+  const profitAmount = Number(stats?.roi || stats?.earnings || stats?.total_earnings || getImportedProfileStats(profile)?.profit || 0)
+  const totalStaked = Number(getImportedProfileStats(profile)?.totalStaked || tipsterTips.reduce((sum, tip) => sum + Number(tip.stake || tip.amount || 0), 0))
+  const avgOdds = Number(getImportedProfileStats(profile)?.avgOdds || 0)
+  const maxOdds = Number(getImportedProfileStats(profile)?.maxOdds || 0)
+  const premiumCount = tipsterTips.filter(isTipPremium).length
+  const freeCount = tipsterTips.filter(tip => !isTipPremium(tip)).length
+  const profileSubscriptionActive = hasActiveTipsterSubscription({ author_id: profileId, user_id: profileId, tipster_id: profileId, author_name: username }, tipsterSubscriptions)
   const canViewTipsterPremiumTip = (tip) => !isTipPremium(tip) || isOwn || profileSubscriptionActive || Boolean(tip?.id && unlockedTips?.has?.(tip.id))
-  const visibleTipsterTips = tipsterTips.filter(canViewTipsterPremiumTip)
-  const hiddenPremiumTipsCount = Math.max(0, tipsterTips.length - visibleTipsterTips.length)
-  const featuredTips = [...visibleTipsterTips]
-    .filter(t => !isTipPremium(t) || Number(t.ai_confidence || t.ai_score || t.confidence || 0) >= 85 || normalizeResult(t.result || t.status) === 'win')
-    .sort((a, b) => Number(b.ai_confidence || b.ai_score || b.confidence || b.odds || 0) - Number(a.ai_confidence || a.ai_score || a.confidence || a.odds || 0))
-    .slice(0, 3)
-  const lastTenTips = visibleTipsterTips.slice(0, 10)
-  const isFollowing = followingTipsters?.has?.(String(tipsterId))
-  const donutWin = Math.max(0, Math.min(100, winrate))
-  const donutLoss = Math.max(0, 100 - donutWin)
+  const hiddenPremiumTipsCount = isOwn || profileSubscriptionActive ? 0 : tipsterTips.filter(tip => isTipPremium(tip) && !unlockedTips?.has?.(tip.id)).length
+  const [profileTipsFilter, setProfileTipsFilter] = useState('all')
+  const visibleTips = tipsterTips.filter(tip => {
+    if (profileTipsFilter === 'premium') return isTipPremium(tip)
+    if (profileTipsFilter === 'free') return !isTipPremium(tip)
+    return true
+  })
+  const profileTipStats = getAuthorStatsLabels(finalizeAuthorStats(buildAuthorStatsFromTips(tipsterTips).values?.()?.next?.()?.value, getImportedProfileStats(profile)))
+  const isFollowing = followingTipsters?.has?.(String(profileId)) || followingTipsters?.has?.(String(username).toLowerCase())
 
   return (
-    <section className="tipster-profile-page pro-stats-page">
-      <button className="back-btn" onClick={onBack}>← Powrót do feedu</button>
-      <div className="tipster-profile-hero">
-        <div className="tipster-profile-main">
-          <div className="profile-big-avatar">{initials}</div>
-          <div>
-            <p className="eyebrow">PROFIL TYPERA</p>
-            <h1>{username}</h1>
-            <span>{profile?.email || 'Profil publiczny'}</span>
-            <div className="tipster-profile-actions">
-              {!isOwn && (
-                <button className={isFollowing ? 'follow-profile-btn active' : 'follow-profile-btn'} onClick={() => onToggleFollow?.(tipsterId, username)}>
-                  {isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
-                </button>
-              )}
-              {!isOwn && <button className="unlock-btn secondary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do profilu</button>}
-              <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>🔗 Udostępnij</button>
-            </div>
-            <div className="public-profile-link" onClick={copyPublicProfileLink}>{publicProfileUrl.replace(/^https?:\/\//, '')}</div>
-          </div>
-        </div>
-        <div className="tipster-profile-summary">
-          <b>{totalTips}</b><span>typów</span>
-          <b>{winrate.toFixed(0)}%</b><span>winrate</span>
-          <b>{formatMoney(earnings)}</b><span>zarobki</span>
-        </div>
-      </div>
+    <section className="profile-page profile-static-v3 public-profile-as-my-profile" aria-label="Profil użytkownika">
+      <div className="profile-v3-layout">
+        <div className="profile-v3-main">
+          <button className="back-btn public-profile-back" onClick={onBack}>← Powrót do feedu</button>
 
-      {loading ? <div className="empty-state">Ładowanie profilu typera...</div> : (
-        <>
-          <div className="tipster-sales-strip">
-            <div className="sales-copy">
-              <span className="sales-eyebrow">TYPER PROFILE PRO</span>
-              <h2>{isTopSeller ? '🔥 TOP SELLER — sprawdzony profil premium' : 'Profil premium gotowy do sprzedaży'}</h2>
-              <p>Ostatnie wyniki, statystyki i social proof w jednym miejscu. Kup dostęp do profilu albo odblokuj pojedynczy typ.</p>
-              {!isOwn && hiddenPremiumTipsCount > 0 && !profileSubscriptionActive ? (
-                <p className="premium-lock-note">Ukryte typy premium: {hiddenPremiumTipsCount}. Pełny podgląd typu premium dostaniesz dopiero po zakupie singla albo subskrypcji profilu.</p>
-              ) : null}
-            </div>
-            {!isOwn && (
-              <div className="sales-actions">
-                <button className="unlock-btn sales-primary" onClick={() => onSubscribeToTipster?.({ author_id: tipsterId, author_name: username })}>Kup dostęp do wszystkich typów</button>
-                <button className="follow-profile-btn" onClick={() => onToggleFollow?.(tipsterId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj typera'}</button>
-                <button className="follow-profile-btn share" onClick={copyPublicProfileLink}>Kopiuj link</button>
+          <div className="profile-v3-hero glass-profile-v3 public-profile-mirror-hero">
+            <div className="profile-v3-hero-overlay"></div>
+            <div className="profile-v3-hero-content">
+              <div className={`profile-v3-avatar ${profile?.avatar_url ? 'has-avatar' : ''}`} style={profile?.avatar_url ? { '--avatar-image': `url("${profile.avatar_url}")` } : undefined}>
+                {profile?.avatar_url ? '' : initials}
+                <span className="profile-v3-status-dot"></span>
               </div>
-            )}
-          </div>
-
-          <div className="pro-metric-grid sales-upgrade">
-            <div className={roi7 >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI 7 dni</span><b>{roi7 ? roi7.toFixed(2) + ' zł' : '0.00 zł'}</b><small>Szybki sygnał formy</small></div>
-            <div className={roi30 >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>ROI 30 dni</span><b>{roi30 ? roi30.toFixed(2) + ' zł' : '0.00 zł'}</b><small>Stabilność profilu</small></div>
-            <div className="pro-metric"><span>Win rate</span><b>{winrate.toFixed(0)}%</b><small>Skuteczność rozliczonych typów</small></div>
-            <div className="pro-metric"><span>Kupujący</span><b>{buyersCount}</b><small>Social proof profilu</small></div>
-            <div className="pro-metric"><span>Sprzedaże</span><b>{salesCount}</b><small>Zakupy typów i dostępów</small></div>
-            <div className={earnings >= 0 ? 'pro-metric success' : 'pro-metric danger'}><span>Łączny profit</span><b>{formatMoney(earnings)}</b><small>Suma zarobków marketplace</small></div>
-          </div>
-
-          <div className="featured-tipster-grid">
-            <div className="featured-card">
-              <div className="feed-title compact"><div><h2>Wyróżnione typy</h2><p>Najmocniejsze sygnały premium z profilu.</p></div></div>
-              <div className="featured-list">
-                {featuredTips.length ? featuredTips.map(tip => {
-                  const ai = Number(tip.ai_confidence || tip.ai_score || tip.confidence || 0)
-                  return (
-                    <div className="featured-tip-row" key={tip.id}>
-                      <div><strong>{tip.team_home || tip.home_team || 'Gospodarz'} vs {tip.team_away || tip.away_team || 'Gość'}</strong><span>{tip.market || tip.bet_type || 'Typ premium'} · kurs {tip.odds || '-'}</span></div>
-                      <div className="featured-badges">
-                        {isTipPremium(tip) && <em>💎 PREMIUM</em>}
-                        {ai >= 85 && <em>🧠 AI {ai}%</em>}
-                        {normalizeResult(tip.result || tip.status) === 'win' && <em>🏆 WIN</em>}
-                      </div>
-                      {!isOwn && <button className="mini-buy-btn" onClick={() => onUnlock?.(tip)}>Odblokuj</button>}
-                    </div>
-                  )
-                }) : <div className="empty-mini">Brak wyróżnionych typów — pojawią się po dodaniu wyników albo AI%.</div>}
-              </div>
-            </div>
-            <div className="featured-card">
-              <div className="feed-title compact"><div><h2>Ostatnie 10 typów</h2><p>Transparentna forma typera.</p></div></div>
-              <div className="last-results-list">
-                {lastTenTips.length ? lastTenTips.map(tip => {
-                  const res = normalizeResult(tip.result || tip.status)
-                  return <div className="last-result-row" key={tip.id}><span className={'result-pill ' + res}>{res === 'win' ? '✅ WIN' : res === 'loss' ? '❌ LOSS' : res === 'void' ? '↩ VOID' : '⏳ PENDING'}</span><strong>{tip.team_home || tip.home_team || 'Typ'} vs {tip.team_away || tip.away_team || ''}</strong><small>{new Date(tip.created_at).toLocaleDateString('pl-PL')}</small></div>
-                }) : <div className="empty-mini">Brak ostatnich typów.</div>}
-              </div>
-            </div>
-          </div>
-          <div className="pro-stats-layout">
-            <div className="pro-chart-card">
-              <h3>Win/Loss distribution</h3>
-              <div className="donut-wrap">
-                <div className="donut" style={{ background: `conic-gradient(#20d982 0 ${donutWin}%, #ff5165 ${donutWin}% ${donutWin + donutLoss}%, #ffd21f ${donutWin + donutLoss}% 100%)` }} />
-                <div className="legend">
-                  <span><b><i className="green"></i>Won</b><strong>{wins}</strong></span>
-                  <span><b><i className="red"></i>Lost</b><strong>{losses}</strong></span>
-                  <span><b><i className="yellow"></i>Void</b><strong>{voids}</strong></span>
+              <div className="profile-v3-title">
+                <h1>{username}</h1>
+                <p>@{username}</p>
+                <div className="profile-v3-badges">
+                  {(profile?.plan === 'premium' || isOwn) && <span className="premium">PREMIUM</span>}
+                  <span>TYPER</span>
+                  <span className="active">AKTYWNY</span>
+                </div>
+                <p className="profile-v3-bio">{username} — profil typera, statystyki i typy.</p>
+                <div className="profile-v3-actions">
+                  {isOwn ? (
+                    <button type="button" className="primary">Mój profil</button>
+                  ) : (
+                    <button type="button" className={isFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(profileId, username)}>{isFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}</button>
+                  )}
+                  {!isOwn && <button type="button" onClick={() => onSubscribeToTipster?.({ author_id: profileId, user_id: profileId, tipster_id: profileId, author_name: username })}>Kup dostęp do profilu</button>}
+                  <button type="button" onClick={copyPublicProfileLink}>Udostępnij</button>
                 </div>
               </div>
             </div>
-            <div className="pro-chart-card recent-card">
-              <h3>Recent form (last 20)</h3>
-              <div className="form-dots">
-                {(recentForm.length ? recentForm : tipsterTips.slice(0, 20)).map((row, index) => {
-                  const res = normalizeResult(row.result || row.status)
-                  return <span key={`${row.id || row.created_at || index}`} className={res}>{res === 'win' ? 'W' : res === 'loss' ? 'L' : res === 'void' ? 'P' : '—'}</span>
-                })}
-              </div>
-              <small>W = wygrana, L = przegrana, P = zwrot, — = oczekuje</small>
-            </div>
+            {!isOwn && <button type="button" className="profile-v3-stripe-btn" onClick={() => onSubscribeToTipster?.({ author_id: profileId, user_id: profileId, tipster_id: profileId, author_name: username })}>Kup subskrypcję</button>}
           </div>
 
-          <div className="pro-tables-grid">
-            <div className="pro-table-card">
-              <h3>Performance by league</h3>
-              <div className="pro-table-head"><span>Liga</span><span>Typy</span><span>Hit rate</span><span>Wins</span><span>ROI</span></div>
-              {byLeague.length ? byLeague.map(row => (
-                <div className="pro-table-row" key={row.league || 'liga'}><span>{row.league || 'Inne'}</span><span>{row.bets || 0}</span><span>{Number(row.hit_rate || 0).toFixed(0)}%</span><span>{row.wins || 0}</span><span>{Number(row.roi || 0).toFixed(0)}</span></div>
-              )) : <div className="empty-mini">Brak danych lig.</div>}
-            </div>
-            <div className="pro-table-card">
-              <h3>Performance by bet type</h3>
-              <div className="pro-table-head"><span>Typ</span><span>Typy</span><span>Hit rate</span><span>Wins</span><span>ROI</span></div>
-              {byType.length ? byType.map(row => (
-                <div className="pro-table-row" key={row.bet_type || 'typ'}><span>{row.bet_type || 'Inne'}</span><span>{row.bets || 0}</span><span>{Number(row.hit_rate || 0).toFixed(0)}%</span><span>{row.wins || 0}</span><span>{Number(row.roi || 0).toFixed(0)}</span></div>
-              )) : <div className="empty-mini">Brak danych typów.</div>}
-            </div>
+          <div className="profile-v4-stats-grid public-profile-stats">
+            <div><span>YIELD</span><b>{Number(profileTipStats?.yieldLabel?.replace('%','') || 0).toFixed(0)}%</b><small>Zwrot z inwestycji</small></div>
+            <div><span>PROFIT</span><b>{formatMoney(profitAmount)}</b><small>Bilans profilu</small></div>
+            <div><span>TYPY</span><b>{totalTips}</b><small>Wszystkie dodane</small></div>
+            <div><span>WYGRANE</span><b>{wins}</b><small>Rozliczone na plus</small></div>
+            <div><span>PRZEGRANE</span><b>{losses}</b><small>Rozliczone na minus</small></div>
+            <div><span>PENDING</span><b>{pendingTips}</b><small>Czekają na wynik</small></div>
+            <div><span>STAWKI</span><b>{formatMoney(totalStaked)}</b><small>Łącznie zagrane</small></div>
+            <div><span>ŚR. KURS</span><b>{avgOdds ? avgOdds.toFixed(2) : '—'}</b><small>Średnia kursów</small></div>
+            <div><span>MAX KURS</span><b>{maxOdds ? maxOdds.toFixed(2) : '—'}</b><small>Najwyższy kurs</small></div>
           </div>
 
-          <div className="tipster-profile-tips">
-            <div className="feed-title"><div><h2>Typy typera</h2><p>Publiczny feed tego użytkownika.</p></div></div>
-            <div className="feed">
-              {tipsterTips.length ? tipsterTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={onUnlock} onSubscribeToTipster={onSubscribeToTipster} currentUser={currentUser} followingTipsters={followingTipsters} onToggleFollow={onToggleFollow} onOpenTipster={() => {}} onToast={null} />) : <div className="empty-state">Ten tipster nie dodał jeszcze typów.</div>}
-            </div>
+          <div className="profile-v4-tabs public-profile-tabs">
+            <button type="button" className="active">◉ Typy <b>{totalTips}</b></button>
+            <button type="button">↗ Wyniki</button>
+            <button type="button">▦ Statystyki</button>
+            <button type="button">◷ Historia</button>
+            <button type="button">☁ Opinie</button>
+            {!isOwn && <button type="button" onClick={() => onSubscribeToTipster?.({ author_id: profileId, user_id: profileId, tipster_id: profileId, author_name: username })}>▣ Cennik subskrypcji</button>}
           </div>
-        </>
-      )}
+
+          <section className="profile-v4-section profile-v4-tips-page public-profile-tips-section">
+            <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
+            <div className="profile-v4-filter-row">
+              <button type="button" className={`filter-pill-v872 all ${profileTipsFilter === 'all' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('all')}><span className="filter-icon-v872">◉</span><span>Wszystkie</span><b>{totalTips}</b></button>
+              <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('premium')}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{premiumCount}</b></button>
+              <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCount}</b></button>
+            </div>
+            {!isOwn && hiddenPremiumTipsCount > 0 ? (
+              <div className="premium-lock-note public-profile-lock-note">Ukryte typy premium: {hiddenPremiumTipsCount}. Pełny podgląd premium dostaniesz po zakupie singla albo subskrypcji profilu.</div>
+            ) : null}
+            <div className="feed public-profile-feed">
+              {loading ? <div className="empty-state">Ładowanie profilu...</div> : visibleTips.length ? visibleTips.map(tip => (
+                <TipCard
+                  key={tip.id}
+                  tip={{ ...tip, author_name: username, author_email: tip.author_email || profile?.email || '' }}
+                  unlocked={Boolean(isOwn || unlockedTips?.has?.(tip.id))}
+                  profileSubscriptionActive={profileSubscriptionActive}
+                  onUnlock={onUnlock}
+                  onSubscribeToTipster={onSubscribeToTipster}
+                  currentUser={currentUser}
+                  followingTipsters={followingTipsters}
+                  onToggleFollow={onToggleFollow}
+                  onOpenTipster={() => {}}
+                  onToast={null}
+                />
+              )) : <div className="empty-state">Ten użytkownik nie ma typów w tej zakładce.</div>}
+            </div>
+          </section>
+        </div>
+
+        <aside className="profile-v3-side public-profile-side">
+          <div className="profile-side-card">
+            <h3>Podsumowanie <span>• ONLINE</span></h3>
+            <p><b>Użytkownik od</b><strong>{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pl-PL') : 'Brak danych'}</strong></p>
+            <p><b>Ostatnia aktywność</b><strong>Dzisiaj</strong></p>
+            <p><b>Poziom</b><strong>{profile?.plan === 'premium' ? 'PREMIUM' : 'TYPER'}</strong></p>
+            <p><b>Ranking globalny</b><strong>Brak danych</strong></p>
+          </div>
+          <div className="profile-side-card">
+            <h3>Społeczność</h3>
+            <p><b>Obserwujący</b><strong>0</strong></p>
+            <p><b>Obserwowani</b><strong>0</strong></p>
+          </div>
+          <div className="profile-side-card">
+            <h3>Ranking typerów</h3>
+            <p><b>{username}</b><strong>{formatMoney(profitAmount)}</strong></p>
+          </div>
+        </aside>
+      </div>
     </section>
   )
 }
@@ -16705,56 +16682,87 @@ function App() {
       return
     }
 
-    if (!isSupabaseConfigured || !supabase) {
-      showToast({ type: 'error', title: 'Supabase', message: 'Brak konfiguracji bazy.' })
-      return
+    const currentNameKey = normalizeEmail(resolveRealProfileUsername(effectiveAccountProfile || sessionUser || {}))
+    const currentEmailKey = normalizeEmail((effectiveAccountProfile || sessionUser || {})?.email || sessionUser?.email || '')
+    const currentEmailLocalKey = currentEmailKey ? currentEmailKey.split('@')[0] : ''
+    const fallbackKey = normalizeEmail(authorName || tipsterId || '')
+    const fallbackLocalKey = fallbackKey ? fallbackKey.split('@')[0] : ''
+    const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    const targetLooksLikeOwnName = Boolean(
+      fallbackKey &&
+      (
+        fallbackKey === currentNameKey ||
+        fallbackKey === currentEmailKey ||
+        fallbackKey === currentEmailLocalKey ||
+        fallbackLocalKey === currentNameKey ||
+        fallbackLocalKey === currentEmailLocalKey
+      )
+    )
+
+    let resolvedId = null
+    if (isSupabaseConfigured && supabase) {
+      resolvedId = await resolveTipsterId(tipsterId, authorName)
     }
 
-    const resolvedId = await resolveTipsterId(tipsterId, authorName)
     const id = resolvedId ? String(resolvedId) : null
-    if (!id || id === String(sessionUser.id)) {
-      showToast({ type: 'info', title: 'Follow', message: 'Nie można obserwować własnego konta albo nie znaleziono typera w profiles.' })
+    const resolvedIsOwnId = Boolean(id && String(id) === String(sessionUser.id))
+
+    // Blokuj tylko naprawdę własne konto. Wcześniej blokowało też innych, gdy profil nie był znaleziony w profiles.
+    if (targetLooksLikeOwnName || (resolvedIsOwnId && !fallbackKey)) {
+      showToast({ type: 'info', title: 'Follow', message: 'Nie możesz obserwować własnego konta.' })
       return
     }
 
-    const fallbackKey = String(authorName || '').toLowerCase()
-    const alreadyFollowing = followingTipsters.has(id) || (fallbackKey && followingTipsters.has(fallbackKey))
+    const localFollowKey = fallbackKey || (id ? String(id).toLowerCase() : '')
+    const alreadyFollowing = Boolean(
+      (id && followingTipsters.has(id)) ||
+      (localFollowKey && followingTipsters.has(localFollowKey))
+    )
+
+    // Jeśli nie ma poprawnego UUID profilu w Supabase, robimy bezpieczny fallback lokalny.
+    // Dzięki temu inny użytkownik może obserwować typa widocznego na typach, nawet gdy nie ma wpisu w profiles.
+    const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && id && uuidLike.test(id) && !resolvedIsOwnId)
 
     if (alreadyFollowing) {
-      const { error } = await supabase
-        .from('tipster_follows')
-        .delete()
-        .eq('follower_id', sessionUser.id)
-        .eq('tipster_id', id)
+      if (canPersistInSupabase) {
+        const { error } = await supabase
+          .from('tipster_follows')
+          .delete()
+          .eq('follower_id', sessionUser.id)
+          .eq('tipster_id', id)
 
-      if (error) {
-        showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
-        return
+        if (error) {
+          showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
+          return
+        }
       }
 
       setFollowingTipsters(prev => {
         const next = new Set(prev)
-        next.delete(id)
-        if (fallbackKey) next.delete(fallbackKey)
+        if (id) next.delete(id)
+        if (localFollowKey) next.delete(localFollowKey)
         return next
       })
       showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować typera.' })
       return
     }
 
-    const { error } = await supabase
-      .from('tipster_follows')
-      .upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
+    if (canPersistInSupabase) {
+      const { error } = await supabase
+        .from('tipster_follows')
+        .upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
 
-    if (error) {
-      showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
-      return
+      if (error) {
+        showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
+        return
+      }
     }
 
     setFollowingTipsters(prev => {
       const next = new Set(prev)
-      next.add(id)
-      if (authorName) next.add(String(authorName).toLowerCase())
+      if (id && !resolvedIsOwnId) next.add(id)
+      if (localFollowKey) next.add(localFollowKey)
       return next
     })
     showToast({ type: 'success', title: 'Follow', message: 'Obserwujesz typera. Powiadomienia pojawią się po nowych typach.' })

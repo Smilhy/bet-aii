@@ -33672,3 +33672,195 @@ button.betfolio-fetch-btn{
   font-weight: 800 !important;
   line-height: 1.35 !important;
 }
+
+
+/* WERSJA 935 — publiczny profil użytkownika jak zakładka Mój profil */
+.public-profile-as-my-profile{
+  padding: 18px !important;
+}
+.public-profile-as-my-profile .profile-v3-layout{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 300px !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+.public-profile-back{
+  width: fit-content !important;
+  margin: 0 0 12px !important;
+}
+.public-profile-mirror-hero{
+  min-height: 220px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.public-profile-mirror-hero .profile-v3-hero-content{
+  display: flex !important;
+  align-items: center !important;
+  gap: 22px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+.public-profile-mirror-hero .profile-v3-avatar{
+  width: 118px !important;
+  height: 118px !important;
+  min-width: 118px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background:
+    var(--avatar-image, none) center/cover no-repeat,
+    linear-gradient(145deg, rgba(24,247,231,.18), rgba(0,0,0,.40)) !important;
+  border: 3px solid rgba(24,247,231,.45) !important;
+  box-shadow: 0 0 28px rgba(24,247,231,.20) !important;
+  color: #fff !important;
+  font-size: 32px !important;
+  font-weight: 1000 !important;
+  position: relative !important;
+}
+.public-profile-mirror-hero .profile-v3-status-dot{
+  position: absolute !important;
+  right: 8px !important;
+  top: 8px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  background: #44ff73 !important;
+  border: 3px solid #06131c !important;
+}
+.public-profile-mirror-hero .profile-v3-title h1{
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 34px !important;
+  line-height: 1.05 !important;
+}
+.public-profile-mirror-hero .profile-v3-title > p{
+  margin: 4px 0 0 !important;
+  color: #91a9bf !important;
+  font-weight: 800 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 12px 0 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges span{
+  min-height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: rgba(24,247,231,.10) !important;
+  border: 1px solid rgba(24,247,231,.18) !important;
+  color: #35f7e8 !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+}
+.public-profile-mirror-hero .profile-v3-badges .premium{
+  background: rgba(255,64,214,.13) !important;
+  color: #ff76df !important;
+  border-color: rgba(255,64,214,.22) !important;
+}
+.public-profile-mirror-hero .profile-v3-badges .active{
+  background: rgba(255,168,24,.13) !important;
+  color: #ffbf56 !important;
+  border-color: rgba(255,168,24,.22) !important;
+}
+.public-profile-mirror-hero .profile-v3-bio{
+  color: #e6f3ff !important;
+  margin: 10px 0 12px !important;
+  font-weight: 850 !important;
+}
+.public-profile-mirror-hero .profile-v3-actions{
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+.public-profile-mirror-hero .profile-v3-actions button,
+.profile-v3-stripe-btn{
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(24,247,231,.22) !important;
+  background: rgba(2,16,24,.66) !important;
+  color: #e8fbff !important;
+  padding: 0 16px !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+.public-profile-mirror-hero .profile-v3-actions .primary,
+.profile-v3-stripe-btn{
+  background: linear-gradient(135deg, #26f0e0, #2f91ff) !important;
+  color: #03121b !important;
+  border: 0 !important;
+}
+.profile-v3-stripe-btn{
+  position: absolute !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 3 !important;
+}
+.public-profile-stats{
+  margin: 18px 0 !important;
+}
+.public-profile-stats > div{
+  border-radius: 16px !important;
+  background: rgba(5,25,39,.84) !important;
+  border: 1px solid rgba(24,247,231,.12) !important;
+}
+.public-profile-tabs{
+  margin: 0 0 18px !important;
+}
+.public-profile-tabs button{
+  min-height: 44px !important;
+}
+.public-profile-tips-section{
+  padding: 18px !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, rgba(2,35,45,.86), rgba(2,12,20,.95)) !important;
+  border: 1px solid rgba(24,247,231,.12) !important;
+}
+.public-profile-feed .profile-ticket-v6{
+  margin-bottom: 16px !important;
+}
+.public-profile-side{
+  display: grid !important;
+  gap: 14px !important;
+}
+.public-profile-side .profile-side-card{
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: rgba(3,15,24,.92) !important;
+  border: 1px solid rgba(24,247,231,.12) !important;
+}
+.public-profile-side .profile-side-card h3{
+  margin: 0 0 14px !important;
+  color: #fff !important;
+  font-size: 16px !important;
+}
+.public-profile-side .profile-side-card h3 span{
+  float: right !important;
+  color: #24f5df !important;
+  font-size: 11px !important;
+}
+.public-profile-side .profile-side-card p{
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 10px 0 !important;
+  border-top: 1px solid rgba(255,255,255,.06) !important;
+  color: #9db0c4 !important;
+  font-size: 13px !important;
+}
+.public-profile-side .profile-side-card strong{
+  color: #fff !important;
+  text-align: right !important;
+}
+.public-profile-lock-note{
+  margin: 0 0 14px !important;
+}
+@media(max-width:1200px){
+  .public-profile-as-my-profile .profile-v3-layout{
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -1,0 +1,15 @@
+WERSJA 935
+
+Poprawka wyglądu publicznego profilu użytkownika:
+1. Publiczny profil innego użytkownika wygląda teraz jak zakładka „Mój profil”.
+2. Po kliknięciu w nick innego użytkownika wchodzisz w jego profil z dużym banerem, statystykami, zakładkami i listą typów.
+3. Po kliknięciu we własny nick nadal otwiera się „Mój profil”.
+4. Zostawiłem blokadę premium: ukryte typy premium dalej wymagają zakupu singla albo subskrypcji profilu.
+5. Dodałem prawą kolumnę podsumowania podobną do widoku „Mój profil”.
+
+Start z wersji:
+- betai_wersja_934_FIX_KLIK_NICK_FALLBACK_PROFIL_Z_TYPOW.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
