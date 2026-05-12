@@ -1,0 +1,18 @@
+WERSJA 943
+
+Poprawka z filmu:
+1. Na własnym profilu użytkownika nie pokazuje się już przycisk „Obserwuj / Obserwujesz” przy jego własnych typach.
+2. To usuwa błąd, gdzie na swoim profilu można było kliknąć „Obserwujesz” i wyskakiwał toast follow/unfollow.
+3. W cudzym profilu przycisk obserwowania nadal jest dostępny.
+4. Wzmocniłem wykrywanie własnego typu po:
+   - id,
+   - emailu,
+   - username,
+   - lokalnej części emaila.
+5. Poprawka działa globalnie dla profilu i kart profilu.
+
+Start z wersji:
+- betai_wersja_942_OPIS_PRAWA_KOLUMNA_PROFILU.zip
+
+Pliki zmienione:
+- src/main.jsx

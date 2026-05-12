@@ -13519,6 +13519,7 @@ function ProfileLiveTipCard({
   onToast,
   onViewType,
   authorStats = null,
+  canFollowAuthor = true,
 }) {
   const profileSubActive = hasActiveTipsterSubscription(sourceTip, tipsterSubscriptions)
   const singleUnlocked = Boolean(sourceTip?.id && unlockedTips?.has?.(sourceTip.id))
@@ -13578,10 +13579,20 @@ function ProfileLiveTipCard({
     author_name: sourceTip?.author_name || tip?.author_name || displayName,
   }
   const profileTipAuthor = resolveRealProfileUsername(profileTipIdentity) || displayName || 'Użytkownik'
+  const currentProfileKey = normalizeEmail(currentUsername || currentUser?.username || currentUser?.email || '')
+  const currentEmailKey = normalizeEmail(currentUser?.email || currentUser?.author_email || '')
+  const currentIdKey = String(currentUser?.id || '')
+  const authorNameKey = normalizeEmail(profileTipAuthor || profileTipIdentity.username || profileTipIdentity.author_name || displayName || '')
+  const authorEmailKey = normalizeEmail(profileTipIdentity.email || profileTipIdentity.author_email || '')
+  const authorIdKey = String(profileTipIdentity.id || profileTipIdentity.author_id || profileTipIdentity.user_id || '')
   const isOwnTip = isSameProfileIdentity(currentUser, profileTipIdentity) || Boolean(
-    currentUsername && String(currentUsername).toLowerCase() === String(profileTipAuthor).toLowerCase()
+    (currentIdKey && authorIdKey && currentIdKey === authorIdKey) ||
+    (currentEmailKey && authorEmailKey && currentEmailKey === authorEmailKey) ||
+    (currentProfileKey && authorNameKey && currentProfileKey === authorNameKey) ||
+    (currentEmailKey && authorNameKey && currentEmailKey.split('@')[0] === authorNameKey) ||
+    (authorEmailKey && currentProfileKey && authorEmailKey.split('@')[0] === currentProfileKey)
   )
-  const showFollowButton = !isOwnTip
+  const showFollowButton = Boolean(canFollowAuthor && !isOwnTip)
   const profileFollowLookupKey = normalizeEmail(profileTipAuthor || displayName || profileTipIdentity.username || '')
   const profileTipsterId = profileTipIdentity.id || profileTipIdentity.author_id || profileTipIdentity.user_id
   const profileTipsterKey = String(profileTipsterId || '')
@@ -13776,6 +13787,7 @@ function ProfileLiveTipCard({
               className={`ticket-follow-inline-btn ${isFollowing ? 'active' : ''}`}
               onClick={(event) => {
                 event.stopPropagation()
+                if (isOwnTip) return
                 onToggleFollow?.(profileFollowLookupKey || profileTipAuthor || displayName, profileTipAuthor || displayName)
               }}
               aria-label={isFollowing ? 'Obserwujesz typera' : 'Obserwuj typera'}
@@ -14298,6 +14310,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       onToast={onToast}
       onViewType={() => setProfileTab('tips')}
       authorStats={profileTipStats}
+      canFollowAuthor={!profileIsOwnForViewer}
     />
   )
 
@@ -14368,7 +14381,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 )}
                 <div className="profile-v3-actions">
                   {isPublicProfile && !profileIsOwnForViewer ? (
-                    <button type="button" className={profileIsFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(viewedUsernameKey || viewedIdKey || username, username)}>
+                    <button type="button" className={profileIsFollowing ? 'primary active' : 'primary'} onClick={() => onToggleFollow?.(viewedUsernameKey || username || viewedIdKey, username)}>
                       {profileIsFollowing ? '✓ Obserwujesz' : '+ Obserwuj'}
                     </button>
                   ) : (
