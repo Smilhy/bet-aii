@@ -1201,7 +1201,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
           <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
           <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
-          <button className={view === 'unlockedTips' ? 'active' : ''} onClick={() => setView('unlockedTips')}>🔓 Odblokowane typy</button>
+          <button className={view === 'unlockedTips' ? 'active' : ''} onClick={() => setView('unlockedTips')}>🔓 Kupione single</button>
           <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
           <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
           {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
@@ -14352,7 +14352,22 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
   ]
   const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
+  const purchasedSingleCards = (Array.isArray(tips) ? tips : [])
+    .map(normalizeTipRow)
+    .filter(tip => unlockedTips?.has?.(String(tip.id)) || unlockedTips?.has?.(tip.id))
+    .filter(tip => {
+      const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
+      const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
+      const authorName = normalizeEmail(tip.author_name || tip.username || '')
+      return !(
+        (profile.id && authorId === String(profile.id)) ||
+        (email && authorEmail === email) ||
+        (username && authorName === normalizeEmail(username))
+      )
+    })
+    .map(tip => buildProfileTipCard({ ...tip, rawTip: tip.rawTip || tip }))
   const profileVisibleTipCards = allProfileTipCards.filter(tip => {
+    if (profileTipsFilter === 'purchased') return false
     if (profileTipsFilter === 'premium') return profileSubscriptionActive && tip.premium
     return !tip.premium
   })
@@ -14421,6 +14436,36 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       canFollowAuthor={!profileIsOwnForViewer}
     />
   )
+
+  const renderPurchasedSingleCard = (tip) => {
+    const raw = tip.rawTip || tip
+    const purchasedDisplayName = raw.author_name || raw.username || tip.author || 'Typer'
+    const purchasedAvatar = raw.author_avatar_url || raw.avatar_url || ''
+    const purchasedInitials = String(purchasedDisplayName || 'TY').slice(0, 2).toUpperCase()
+    return (
+      <div className="profile-purchased-single-wrap-v952" key={tip.id}>
+        <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
+        <ProfileLiveTipCard
+          tip={tip}
+          sourceTip={raw}
+          avatarUrl={purchasedAvatar}
+          initials={purchasedInitials}
+          displayName={purchasedDisplayName}
+          currentUser={viewerProfile}
+          unlockedTips={unlockedTips}
+          tipsterSubscriptions={tipsterSubscriptions}
+          followingTipsters={followingTipsters}
+          onToggleFollow={onToggleFollow}
+          onUnlock={onUnlock}
+          onSubscribeToTipster={onSubscribeToTipster}
+          onToast={onToast}
+          onViewType={() => setProfileTab('tips')}
+          authorStats={null}
+          canFollowAuthor={!isSameProfileIdentity(viewerProfile, raw)}
+        />
+      </div>
+    )
+  }
 
   return (
     <section className={`profile-page profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
@@ -14535,6 +14580,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="profile-v4-filter-row profile-v4-filter-row-paid-access">
                 <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
                 <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileSubscriptionActive ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileSubscriptionActive ? premiumCards.length : '🔒'}</b></button>
+                {profileIsOwnForViewer ? (
+                  <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>Kupione single</span><b>{purchasedSingleCards.length}</b></button>
+                ) : null}
               </div>
               {!profileIsOwnForViewer && profileSubscriptionActive ? (
                 <div className="profile-subscription-active-note">
@@ -14549,7 +14597,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <button type="button" onClick={handleProfileSubscribeClick}>Kup subskrypcję 30 dni</button>
                 </div>
               ) : null}
-              {profileVisibleTipCards.length ? (
+              {profileTipsFilter === 'purchased' ? (
+                purchasedSingleCards.length ? (
+                  <div className="profile-all-tips-list profile-purchased-singles-list-v952">{purchasedSingleCards.map(renderPurchasedSingleCard)}</div>
+                ) : (
+                  <div className="profile-live-tip-empty">Nie masz jeszcze kupionych singli. Kup pojedynczy typ premium, a pojawi się tutaj.</div>
+                )
+              ) : profileVisibleTipCards.length ? (
                 <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
               ) : (
                 <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileSubscriptionActive ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak typów w tej kategorii.'}</div>

@@ -35283,3 +35283,37 @@ button.betfolio-fetch-btn{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* WERSJA 952 — Kupione single jako zakładka obok Darmowe/Premium */
+.filter-pill-v872.purchased{
+  border-color:rgba(33,230,214,.24) !important;
+}
+.filter-pill-v872.purchased.active{
+  background:linear-gradient(135deg,#21e6d6,#2f8dff) !important;
+  color:#03121b !important;
+  box-shadow:0 0 24px rgba(33,230,214,.28) !important;
+}
+.profile-purchased-singles-list-v952{
+  position:relative !important;
+}
+.profile-purchased-single-wrap-v952{
+  position:relative !important;
+}
+.profile-purchased-single-badge-v952{
+  position:absolute !important;
+  top:12px !important;
+  right:14px !important;
+  z-index:12 !important;
+  min-height:30px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  padding:0 12px !important;
+  border-radius:999px !important;
+  background:rgba(33,230,214,.14) !important;
+  border:1px solid rgba(33,230,214,.38) !important;
+  color:#d8fffb !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  box-shadow:0 0 22px rgba(33,230,214,.14) !important;
+}
