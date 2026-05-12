@@ -1,0 +1,6 @@
+WERSJA 919
+- Obserwuj przeniesiony do wspólnego wrappera betai-author-actions.
+- W wrapperze kolejność jest wymuszona: Premium/Darmowy, potem Obserwuj.
+- Prawy ranking renderuje rightRankingRows i uzupełnia do 4 miejsc.
+- Poprawione CSS nth-of-type, żeby nie ukrywać 4 miejsca przez panel-head.
+- Wrapped blocks: 2
