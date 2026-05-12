@@ -16579,6 +16579,7 @@ function App() {
       setFollowingTipsters(prev => {
         const next = new Set(prev)
         next.delete(id)
+        if (fallbackKey) next.delete(fallbackKey)
         return next
       })
       showToast({ type: 'success', title: 'Follow', message: 'Przestałeś obserwować typera.' })
