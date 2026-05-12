@@ -814,6 +814,27 @@ function getUserProfileView(user) {
   }
 }
 
+function getPublicProfileOverride(profileLike = {}) {
+  const username = normalizeEmail(profileLike?.username || profileLike?.public_slug || profileLike?.author_name || '')
+  const email = normalizeEmail(profileLike?.email || profileLike?.author_email || '')
+  if (username === 'smilhytv' || email === 'smilhytv@gmail.com') {
+    return {
+      username: 'smilhytv',
+      public_slug: 'smilhytv',
+      email: email || 'smilhytv@gmail.com',
+      bio: 'Cześć, typuję (albo jak kto woli — obstawiam) mecze od 15 lat. Byłem też półzawodowym piłkarzem — gram właściwie od dziecka. Kocham sport, to moja pasja.',
+      description: 'Cześć, typuję (albo jak kto woli — obstawiam) mecze od 15 lat. Byłem też półzawodowym piłkarzem — gram właściwie od dziecka. Kocham sport, to moja pasja.',
+      about: 'Cześć, typuję (albo jak kto woli — obstawiam) mecze od 15 lat. Byłem też półzawodowym piłkarzem — gram właściwie od dziecka. Kocham sport, to moja pasja.',
+      created_at: '2026-04-30T00:00:00.000Z',
+      plan: 'admin',
+      subscription_status: 'admin',
+      is_admin: true,
+      preferred_sport: 'Piłka nożna',
+    }
+  }
+  return {}
+}
+
 
 
 function getProfileEmail(user) {
@@ -2134,23 +2155,34 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
   const importedTipStats = (combinedProfileTips || []).map(getImportedProfileStats).find(Boolean) || null
   const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(combinedProfileTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
   const mergedVisibleStats = importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {}
+  const publicOverride = getPublicProfileOverride({
+    ...(profile || {}),
+    username,
+    public_slug: profile?.public_slug || username,
+    email: profile?.email || tipsterTips?.[0]?.author_email || combinedProfileTips?.[0]?.author_email || '',
+    author_name: username,
+  })
+  const firstProfileTip = combinedProfileTips?.[0] || tipsterTips?.[0] || {}
+  const fallbackBioText = `${username} — profil typera, statystyki i typy.`
   const targetProfileUser = {
     ...(profile || {}),
+    ...publicOverride,
     id: profileId,
-    email: profile?.email || tipsterTips?.[0]?.author_email || '',
-    username,
-    public_slug: profile?.public_slug || normalizePublicSlug(username),
-    avatar_url: profile?.avatar_url || tipsterTips?.[0]?.author_avatar_url || '',
-    bio: profile?.bio || profile?.description || profile?.about || combinedProfileTips?.[0]?.bio || combinedProfileTips?.[0]?.description || `${username} — profil typera, statystyki i typy.`,
-    description: profile?.description || profile?.bio || profile?.about || combinedProfileTips?.[0]?.bio || combinedProfileTips?.[0]?.description || `${username} — profil typera, statystyki i typy.`,
-    about: profile?.about || profile?.bio || profile?.description || combinedProfileTips?.[0]?.about || `${username} — profil typera, statystyki i typy.`,
-    created_at: profile?.created_at || combinedProfileTips?.[0]?.profile_created_at || combinedProfileTips?.[0]?.created_at || '',
-    updated_at: profile?.updated_at || combinedProfileTips?.[0]?.profile_updated_at || '',
-    followers_count: Number(profile?.followers_count ?? combinedProfileTips?.[0]?.followers_count ?? 0) || 0,
-    following_count: Number(profile?.following_count ?? combinedProfileTips?.[0]?.following_count ?? 0) || 0,
-    is_admin: Boolean(profile?.is_admin || normalizeEmail(username) === 'smilhytv' || normalizeEmail(profile?.email) === 'smilhytv@gmail.com'),
-    plan: profile?.plan || profile?.subscription_status || (normalizeEmail(username) === 'smilhytv' ? 'admin' : 'premium'),
-    subscription_status: profile?.subscription_status || profile?.plan || 'premium',
+    email: publicOverride.email || profile?.email || firstProfileTip?.author_email || tipsterTips?.[0]?.author_email || '',
+    username: publicOverride.username || username,
+    public_slug: publicOverride.public_slug || profile?.public_slug || normalizePublicSlug(username),
+    avatar_url: profile?.avatar_url || firstProfileTip?.author_avatar_url || tipsterTips?.[0]?.author_avatar_url || '',
+    bio: publicOverride.bio || profile?.bio || profile?.description || profile?.about || firstProfileTip?.profile_bio || firstProfileTip?.author_bio || firstProfileTip?.bio || firstProfileTip?.description || fallbackBioText,
+    description: publicOverride.description || profile?.description || profile?.bio || profile?.about || firstProfileTip?.profile_description || firstProfileTip?.author_description || firstProfileTip?.bio || firstProfileTip?.description || fallbackBioText,
+    about: publicOverride.about || profile?.about || profile?.bio || profile?.description || firstProfileTip?.profile_about || firstProfileTip?.author_about || firstProfileTip?.about || fallbackBioText,
+    created_at: publicOverride.created_at || profile?.created_at || firstProfileTip?.profile_created_at || firstProfileTip?.author_created_at || firstProfileTip?.user_created_at || firstProfileTip?.created_at || '',
+    updated_at: profile?.updated_at || firstProfileTip?.profile_updated_at || firstProfileTip?.author_updated_at || '',
+    followers_count: Number(profile?.followers_count ?? firstProfileTip?.followers_count ?? firstProfileTip?.author_followers_count ?? 0) || 0,
+    following_count: Number(profile?.following_count ?? firstProfileTip?.following_count ?? firstProfileTip?.author_following_count ?? 0) || 0,
+    is_admin: Boolean(publicOverride.is_admin || profile?.is_admin || normalizeEmail(username) === 'smilhytv' || normalizeEmail(profile?.email) === 'smilhytv@gmail.com'),
+    preferred_sport: publicOverride.preferred_sport || profile?.preferred_sport || firstProfileTip?.preferred_sport || 'Nie ustawiono',
+    plan: publicOverride.plan || profile?.plan || profile?.subscription_status || (normalizeEmail(username) === 'smilhytv' ? 'admin' : 'premium'),
+    subscription_status: publicOverride.subscription_status || profile?.subscription_status || profile?.plan || 'premium',
     imported_yield: Number(profile?.imported_yield ?? mergedVisibleStats.yield ?? 0) || 0,
     imported_total_tips: Number(profile?.imported_total_tips ?? mergedVisibleStats.totalTips ?? tipsterTips.length ?? 0) || 0,
     imported_won_tips: Number(profile?.imported_won_tips ?? mergedVisibleStats.wonTips ?? 0) || 0,
@@ -13828,8 +13860,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
-  const profileCreatedAt = user?.created_at || user?.createdAt || user?.updated_at || ''
-  const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Nowy użytkownik'
+  const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
+  const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Brak danych'
   const admin = isAdminUser(user) || Boolean(user?.is_admin)
   const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
