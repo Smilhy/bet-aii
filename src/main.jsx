@@ -530,9 +530,12 @@ function buildRankingFromTips(tips = []) {
   const map = new Map()
   ;(tips || []).forEach(tip => {
     const normalized = normalizeTipRow(tip)
-    const authorName = isGenericProfileName(normalized.author_name)
-      ? (normalized.username || normalized.author_email?.split('@')?.[0] || 'Użytkownik')
-      : (normalized.author_name || normalized.username || 'Użytkownik')
+    const authorName = resolveRealProfileUsername({
+      public_slug: normalized.public_slug || normalized.author_slug || normalized.profile_slug,
+      username: normalized.username || normalized.author_username || normalized.profile_username,
+      author_name: normalized.author_name,
+      email: normalized.author_email || normalized.email || normalized.user_email
+    })
     if (String(authorName).toLowerCase() === 'ai tip') return
 
     const id = String(normalized.author_id || normalized.user_id || normalized.author_email || normalized.username || normalized.author_name || 'unknown').toLowerCase()
@@ -916,12 +919,16 @@ function addProfileToMap(profileMap, profile = {}) {
   if (!profileMap || !profile) return
   const emailKey = normalizeEmail(profile.email || profile.user_email || profile.author_email)
   const usernameKey = normalizeEmail(profile.username || profile.user_name || profile.author_name)
+  const slugKey = normalizeEmail(profile.public_slug || profile.slug)
+  const displayKey = normalizeEmail(profile.display_name || profile.profile_name)
   const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
   const idKey = String(profile.id || profile.user_id || profile.author_id || profile.tipster_id || '').toLowerCase()
   if (idKey) profileMap.set(idKey, profile)
   if (emailKey) profileMap.set(emailKey, profile)
   if (localKey) profileMap.set(localKey, profile)
-  if (usernameKey) profileMap.set(usernameKey, profile)
+  if (slugKey && !isGenericProfileName(slugKey)) profileMap.set(slugKey, profile)
+  if (displayKey && !isGenericProfileName(displayKey)) profileMap.set(displayKey, profile)
+  if (usernameKey && !isGenericProfileName(usernameKey)) profileMap.set(usernameKey, profile)
 }
 
 function findProfileFromMap(profileMap, source = {}) {
@@ -929,8 +936,14 @@ function findProfileFromMap(profileMap, source = {}) {
   const emailKey = normalizeEmail(source.email || source.author_email || source.user_email)
   const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
   const nameKey = normalizeEmail(source.username || source.author_name || source.user_name)
+  const slugKey = normalizeEmail(source.public_slug || source.slug)
   const idKey = String(getTipAuthorId(source) || source.id || source.user_id || source.author_id || source.tipster_id || '').toLowerCase()
-  return profileMap.get(idKey) || profileMap.get(emailKey) || profileMap.get(localKey) || profileMap.get(nameKey) || null
+  return profileMap.get(idKey) ||
+    profileMap.get(emailKey) ||
+    profileMap.get(localKey) ||
+    (slugKey && !isGenericProfileName(slugKey) ? profileMap.get(slugKey) : null) ||
+    (nameKey && !isGenericProfileName(nameKey) ? profileMap.get(nameKey) : null) ||
+    null
 }
 
 async function fetchBetaiPublicProfiles() {
@@ -989,11 +1002,15 @@ function mergeProfilesPreferStats(...groups) {
     const id = String(profile.id || profile.user_id || profile.author_id || '').toLowerCase()
     const email = normalizeEmail(profile.email || profile.user_email || profile.author_email)
     const username = normalizeEmail(profile.username || profile.user_name || profile.author_name)
+    const slug = normalizeEmail(profile.public_slug || profile.slug)
+    const display = normalizeEmail(profile.display_name || profile.profile_name)
     if (id) out.push(`id:${id}`)
     if (email) {
       out.push(`email:${email}`)
       out.push(`user:${email.split('@')[0]}`)
     }
+    if (slug && !isGenericProfileName(slug)) out.push(`user:${slug}`)
+    if (display && !isGenericProfileName(display)) out.push(`user:${display}`)
     if (username && !isGenericProfileName(username)) out.push(`user:${username}`)
     return [...new Set(out)]
   }
@@ -1017,9 +1034,12 @@ function mergeProfilesPreferStats(...groups) {
     const previous = map.get(key) || {}
     const preferred = score(profile) >= score(previous) ? profile : previous
     const other = preferred === profile ? previous : profile
+    const stableUsername = resolveRealProfileUsername({ ...other, ...preferred })
     map.set(key, {
       ...other,
       ...preferred,
+      username: stableUsername,
+      public_slug: preferred.public_slug || other.public_slug || normalizePublicSlug(stableUsername),
       avatar_url: getProfileAvatarUrl(preferred) || getProfileAvatarUrl(other) || '',
       imported_yield: preferred.imported_yield ?? other.imported_yield,
       imported_total_tips: preferred.imported_total_tips ?? other.imported_total_tips,
@@ -1536,8 +1556,18 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 }
 
 function formatRankingName(row) {
-  const email = row?.email || row?.username || 'Typer'
-  return String(email).includes('@') ? String(email).split('@')[0] : String(email)
+  // 🔒 v982: jedna zasada nazwy w rankingach/top typerach.
+  // Nie pokazujemy technicznego "user/użytkownik", jeśli mamy public_slug/email/display.
+  const resolved = resolveRealProfileUsername({
+    ...(row || {}),
+    public_slug: row?.public_slug,
+    display_name: row?.display_name,
+    profile_name: row?.profile_name,
+    username: isGenericProfileName(row?.username) ? '' : row?.username,
+    author_name: isGenericProfileName(row?.author_name || row?.name) ? '' : (row?.author_name || row?.name),
+    email: row?.email || row?.author_email || row?.user_email
+  })
+  return String(resolved || 'Typer').includes('@') ? String(resolved).split('@')[0] : String(resolved || 'Typer')
 }
 
 function formatMoney(value) {
@@ -2234,32 +2264,15 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
     return row
   })
   const realRanking = buildLiveLeaderboardRows(rankingWithCurrentAvatar, tips)
-  const fallbackRankingUsers = [
-    { username: 'Bet+AI Live', email: 'betai@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'buchajson1988', email: 'buchajson1988@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'buchajson1988', email: 'buchajson1988-2@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-    { username: 'SmilyTV', email: 'smilytv@live.local', totalTips: 0, total_tips: 0, wins: 0, losses: 0, winrate: 0, roi: 0, yield: 0, earnings: 0, profit: 0 },
-  ]
-  const rightRankingRows = [...(realRanking || []).slice(0, 4)]
-  let fallbackIndex = 0
-  while (rightRankingRows.length < 4) {
-    const fallback = fallbackRankingUsers[fallbackIndex] || {
-      id: `top-typer-placeholder-${rightRankingRows.length + 1}`,
-      username: `Użytkownik ${rightRankingRows.length + 1}`,
-      email: `placeholder-${rightRankingRows.length + 1}@betai.local`,
-      totalTips: 0,
-      total_tips: 0,
-      wins: 0,
-      losses: 0,
-      winrate: 0,
-      roi: 0,
-      yield: 0,
-      earnings: 0,
-      profit: 0,
-    }
-    rightRankingRows.push(fallback)
-    fallbackIndex += 1
-  }
+  // 🔒 v982: po resecie typów ranking może mieć zera, ale nazwy nadal muszą pochodzić z profili.
+  // Nie generujemy już placeholderów "Użytkownik", bo to wygląda jak zepsuty profil.
+  const rightRankingRows = [...(realRanking || [])]
+    .map(row => ({ ...row, username: formatRankingName(row), public_slug: row.public_slug || normalizePublicSlug(formatRankingName(row)) }))
+    .filter(row => {
+      const name = formatRankingName(row)
+      return name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
+    })
+    .slice(0, 4)
 
   return (
     <aside className="rightbar">
