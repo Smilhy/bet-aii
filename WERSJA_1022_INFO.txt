@@ -1,0 +1,13 @@
+WERSJA 1022 — MISJE DZIENNE ŻYWE
+
+Zrobione:
+- Misje dzienne mają przyciski Odbierz +1.
+- Każda misja jest osobnym reward_key:
+  daily_chat, daily_post, daily_active.
+- Blokada odbioru działa co 24h przez SQL 1021.
+- Po odbiorze Coin zapisuje się do portfela, historii i powiadomień.
+- Status Odebrano/Za Xh czyta się z Supabase.
+
+Wymagane:
+- Musi być odpalony SQL 1021.
+- SQL 1022 jest informacyjny i nie trzeba go odpalać.

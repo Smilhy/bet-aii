@@ -40813,3 +40813,334 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1017 */
+
+
+/* ==========================================================================
+   WERSJA 1020 — SPOŁECZNOŚĆ CLEAN: BEZ ZAKŁADKI KANAŁY, BEZ DOLNYCH TABEL
+   ========================================================================== */
+
+.community-10-v1017 .community-tabs-v1016{
+  gap:12px !important;
+}
+
+.community-10-v1017 .community-tabs-v1016 button{
+  min-width:150px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020{
+  display:grid !important;
+  grid-template-columns:48px minmax(0,1fr) 116px !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:12px !important;
+  min-height:70px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5{
+  width:48px !important;
+  height:48px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(32,242,210,.34) !important;
+  background:linear-gradient(135deg,#20f2d2,#268dff) !important;
+  color:#031321 !important;
+  font-weight:1000 !important;
+  display:grid !important;
+  place-items:center !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  cursor:pointer !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5 img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+}
+
+.community-10-v1017 .suggested-info-v1020{
+  min-width:0 !important;
+}
+
+.community-10-v1017 .suggested-name-v1020{
+  max-width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:14px !important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small{
+  display:block !important;
+  color:#8fb0c4 !important;
+  margin-top:3px !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020{
+  width:116px !important;
+  min-width:116px !important;
+  height:36px !important;
+  border-radius:12px !important;
+  border:0 !important;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff) !important;
+  color:#031321 !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 24px rgba(32,242,210,.14) !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020.is-following{
+  background:rgba(32,242,210,.08) !important;
+  color:#20f2d2 !important;
+  border:1px solid rgba(32,242,210,.30) !important;
+  box-shadow:none !important;
+}
+
+.community-10-v1017 .community-pro-grid-v1012{
+  margin-bottom:34px !important;
+}
+
+/* KONIEC WERSJI 1020 */
+
+
+/* ==========================================================================
+   WERSJA 1021 — BLOKADA NAGRÓD SPOŁECZNOŚCI 24H
+   ========================================================================== */
+
+.community-10-v1017 .community-reward-row-v1008.is-claimed button,
+.community-10-v1017 .mini-reward-row-v1017.is-claimed{
+  opacity:.68 !important;
+  filter:saturate(.72) !important;
+}
+
+.community-10-v1017 .community-reward-row-v1008.is-claimed button{
+  min-width:128px !important;
+  color:#9fb8c8 !important;
+  background:rgba(255,255,255,.055) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  cursor:not-allowed !important;
+}
+
+/* KONIEC WERSJI 1021 */
+
+
+/* ==========================================================================
+   WERSJA 1022 — MISJE DZIENNE Z ODBIOREM +1 I BLOKADĄ 24H
+   ========================================================================== */
+
+.daily-missions-v1022{
+  display:grid !important;
+  gap:10px !important;
+}
+
+.daily-missions-v1022 .pro-missions-head-v1012 button{
+  min-width:38px !important;
+  height:24px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(255,215,106,.26) !important;
+  color:#ffd76a !important;
+  background:rgba(255,215,106,.08) !important;
+  font-size:11px !important;
+  font-weight:1000 !important;
+}
+
+.daily-mission-item-v1022{
+  padding:9px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  background:rgba(3,14,27,.38) !important;
+}
+
+.daily-mission-item-v1022.is-done{
+  border-color:rgba(32,242,210,.20) !important;
+}
+
+.daily-mission-item-v1022.is-claimed{
+  opacity:.72 !important;
+  filter:saturate(.78) !important;
+}
+
+.daily-mission-claim-v1022{
+  width:100% !important;
+  height:32px !important;
+  margin-top:8px !important;
+  border:0 !important;
+  border-radius:11px !important;
+  color:#031321 !important;
+  font-weight:1000 !important;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff) !important;
+  cursor:pointer !important;
+  box-shadow:0 10px 20px rgba(32,242,210,.12) !important;
+}
+
+.daily-mission-claim-v1022:disabled{
+  color:#9fb8c8 !important;
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  box-shadow:none !important;
+  cursor:not-allowed !important;
+}
+
+.daily-mission-item-v1022 .mission-bar-v1012{
+  margin-top:5px !important;
+}
+
+/* KONIEC WERSJI 1022 */
+
+
+/* ==========================================================================
+   WERSJA 1023 — AKTYWNE PRZYCISKI CZATU DLA KAŻDEGO KANAŁU
+   ========================================================================== */
+
+.chat-input-active-v1023{
+  display:grid !important;
+  grid-template-columns:1fr auto 48px !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+
+.chat-tools-v1023{
+  display:flex !important;
+  gap:7px !important;
+  align-items:center !important;
+}
+
+.chat-tools-v1023 button,
+.chat-send-v1023{
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease, opacity .14s ease !important;
+}
+
+.chat-tools-v1023 button:hover,
+.chat-send-v1023:hover:not(:disabled){
+  transform:translateY(-1px) scale(1.03) !important;
+  box-shadow:0 0 20px rgba(32,242,210,.18) !important;
+  border-color:rgba(32,242,210,.34) !important;
+}
+
+.chat-tools-v1023 button:active,
+.chat-send-v1023:active:not(:disabled){
+  transform:translateY(0) scale(.98) !important;
+}
+
+.chat-tools-v1023 button{
+  cursor:pointer !important;
+}
+
+.chat-send-v1023:disabled{
+  opacity:.45 !important;
+  cursor:not-allowed !important;
+}
+
+/* KONIEC WERSJI 1023 */
+
+
+/* ==========================================================================
+   WERSJA 1024 — MENU POSTA: EDYTUJ / USUŃ / ZGŁOŚ
+   ========================================================================== */
+
+.post-menu-wrap-v1024{
+  position:relative !important;
+  z-index:6 !important;
+}
+
+.post-menu-trigger-v1024{
+  width:38px !important;
+  height:38px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(24,231,255,.14) !important;
+  background:rgba(24,231,255,.06) !important;
+  color:#cfefff !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+}
+
+.post-menu-trigger-v1024:hover{
+  border-color:rgba(32,242,210,.34) !important;
+  box-shadow:0 0 20px rgba(32,242,210,.12) !important;
+}
+
+.post-menu-v1024{
+  position:absolute !important;
+  right:0 !important;
+  top:44px !important;
+  width:190px !important;
+  padding:8px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(24,231,255,.22) !important;
+  background:linear-gradient(180deg, rgba(5,26,44,.98), rgba(2,12,24,.98)) !important;
+  box-shadow:0 18px 40px rgba(0,0,0,.40), 0 0 28px rgba(24,231,255,.10) !important;
+  display:grid !important;
+  gap:6px !important;
+}
+
+.post-menu-v1024 button{
+  width:100% !important;
+  min-height:36px !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:11px !important;
+  background:rgba(255,255,255,.045) !important;
+  color:#eaf8ff !important;
+  font-weight:900 !important;
+  cursor:pointer !important;
+  text-align:left !important;
+  padding:0 10px !important;
+}
+
+.post-menu-v1024 button:hover{
+  background:rgba(32,242,210,.10) !important;
+  border-color:rgba(32,242,210,.24) !important;
+}
+
+.post-menu-v1024 button.danger:hover{
+  background:rgba(255,72,111,.12) !important;
+  border-color:rgba(255,72,111,.32) !important;
+  color:#ffb8c7 !important;
+}
+
+.post-edit-box-v1024{
+  display:grid !important;
+  gap:10px !important;
+  margin:12px 0 !important;
+}
+
+.post-edit-box-v1024 textarea{
+  width:100% !important;
+  min-height:96px !important;
+  resize:vertical !important;
+  border-radius:16px !important;
+  border:1px solid rgba(24,231,255,.18) !important;
+  background:rgba(2,12,24,.62) !important;
+  color:#eefbff !important;
+  padding:12px !important;
+  font-weight:800 !important;
+  outline:none !important;
+}
+
+.post-edit-box-v1024 textarea:focus{
+  border-color:rgba(32,242,210,.40) !important;
+  box-shadow:0 0 0 3px rgba(32,242,210,.08) !important;
+}
+
+.post-edit-box-v1024 > div{
+  display:flex !important;
+  gap:8px !important;
+}
+
+.post-edit-box-v1024 button{
+  min-height:38px !important;
+  padding:0 16px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(24,231,255,.18) !important;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff) !important;
+  color:#031321 !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+}
+
+.post-edit-box-v1024 button:last-child{
+  background:rgba(255,255,255,.06) !important;
+  color:#cfefff !important;
+}
+
+/* KONIEC WERSJI 1024 */

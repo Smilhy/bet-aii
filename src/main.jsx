@@ -8668,6 +8668,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [chatText, setChatText] = useState('')
   const [commentDrafts, setCommentDrafts] = useState({})
   const [expandedComments, setExpandedComments] = useState({})
+  const [openPostMenuId, setOpenPostMenuId] = useState(null)
+  const [editingPostId, setEditingPostId] = useState(null)
+  const [editingPostText, setEditingPostText] = useState('')
   const [posts, setPosts] = useState([])
   const [chatMessages, setChatMessages] = useState([])
   const [commentsByPost, setCommentsByPost] = useState({})
@@ -8693,6 +8696,20 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       .replace(/\s+/g, ' ')
       .trim()
       .replace(/\b\w/g, ch => ch.toUpperCase()) || 'Użytkownik'
+  }
+
+  const isRewardClaimFresh24h = (createdAt) => {
+    const ts = new Date(createdAt || 0).getTime()
+    return Number.isFinite(ts) && ts > 0 && (Date.now() - ts) < 24 * 60 * 60 * 1000
+  }
+
+  const getRewardUnlockLabel = (rewardKey) => {
+    const claim = rewardClaims?.[rewardKey]
+    const ts = new Date(claim?.created_at || 0).getTime()
+    if (!Number.isFinite(ts) || !ts) return 'Odebrano'
+    const left = Math.max(0, (ts + 24 * 60 * 60 * 1000) - Date.now())
+    const hours = Math.ceil(left / (60 * 60 * 1000))
+    return hours > 1 ? `Za ${hours}h` : 'Za mniej niż 1h'
   }
 
 
@@ -8747,6 +8764,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     )
   }
 
+  const isOwnPost = (post = {}) => {
+    return Boolean(
+      (user?.id && post.author_id && String(user.id) === String(post.author_id)) ||
+      (userEmail && normalizeEmail(post.author_email || '') === userEmail)
+    )
+  }
+
   const communityStats = useMemo(() => {
     const myPosts = posts.filter(row => normalizeEmail(row.author_email) === userEmail || String(row.author_id || '') === String(user?.id || '')).length
     const myComments = Object.values(commentsByPost || {}).flat().filter(row => normalizeEmail(row.author_email) === userEmail || String(row.author_id || '') === String(user?.id || '')).length
@@ -8760,6 +8784,12 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     { key: 'first_comment', icon: '💬', title: 'Pierwszy komentarz', desc: 'Dodaj komentarz pod postem.', done: communityStats.myComments >= 1, progress: Math.min(100, communityStats.myComments * 100), current: `${communityStats.myComments}/1`, reward: 1 },
     { key: 'first_chat', icon: '📡', title: 'Pierwsza wiadomość live', desc: 'Napisz wiadomość na czacie live.', done: communityStats.myChat >= 1, progress: Math.min(100, communityStats.myChat * 100), current: `${communityStats.myChat}/1`, reward: 1 },
     { key: 'social_value', icon: '💚', title: 'Value społeczności', desc: 'Zdobądź minimum 3 reakcje pod swoimi postami.', done: communityStats.myLikes >= 3, progress: Math.min(100, (communityStats.myLikes / 3) * 100), current: `${communityStats.myLikes}/3`, reward: 1 }
+  ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
+
+  const dailyMissionRows = [
+    { key: 'daily_chat', icon: '💬', title: 'Napisz wiadomość', desc: 'Napisz minimum jedną wiadomość na czacie.', done: communityStats.myChat >= 1, progress: communityStats.myChat >= 1 ? 100 : 8, current: `${Math.min(communityStats.myChat, 1)}/1`, reward: 1 },
+    { key: 'daily_post', icon: '📝', title: 'Dodaj post', desc: 'Dodaj minimum jeden post społeczności.', done: communityStats.myPosts >= 1, progress: communityStats.myPosts >= 1 ? 100 : 8, current: `${Math.min(communityStats.myPosts, 1)}/1`, reward: 1 },
+    { key: 'daily_active', icon: '⚡', title: 'Bądź aktywny', desc: 'Zrób łącznie 3 aktywności w społeczności.', done: communityStats.total >= 3, progress: Math.min(100, (communityStats.total / 3) * 100), current: `${Math.min(communityStats.total, 3)}/3`, reward: 1 }
   ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
 
   const channelCounts = useMemo(() => {
@@ -8828,7 +8858,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setOnlineUsers(profiles.slice(0, 8))
 
       const claims = {}
-      ;(claimsResult.data || []).forEach(row => { claims[row.reward_key] = true })
+      ;(claimsResult.data || []).forEach(row => {
+        if (row.reward_key && isRewardClaimFresh24h(row.created_at)) claims[row.reward_key] = row
+      })
       setRewardClaims(claims)
 
       await loadCommentsForPosts(loadedPosts.slice(0, 18))
@@ -8993,7 +9025,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       })
       if (error) throw error
       if (data?.claimed === false) {
-        setRewardClaims(prev => ({ ...prev, [reward.key]: true }))
+        setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
         onToast?.({ type: 'info', title: 'Społeczność', message: data?.message || 'Ta nagroda była już odebrana.' })
         await loadCommunity()
         return
@@ -9005,7 +9037,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           localStorage.setItem('betai_reward_balance_lock_' + userEmail, JSON.stringify({ balance: nextBalance, until: Date.now() + 90000, reason: 'community_' + reward.key }))
         }
       } catch (_) {}
-      setRewardClaims(prev => ({ ...prev, [reward.key]: true }))
+      setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: userEmail, balance: nextBalance, reason: 'community_reward' } }))
       window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
       await onRefreshTokens?.()
@@ -9014,6 +9046,102 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     } catch (error) {
       console.error('claim community reward error', error)
       onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się odebrać nagrody.' })
+    }
+  }
+
+  const addChatEmoji = (emoji = '😊') => {
+    setChatText(prev => {
+      const base = String(prev || '')
+      return base ? `${base} ${emoji}` : emoji
+    })
+  }
+
+  const addChatAttachmentMarker = () => {
+    setChatText(prev => {
+      const base = String(prev || '').trim()
+      const marker = '📎 Załącznik'
+      return base ? `${base} ${marker}` : marker
+    })
+    onToast?.({ type: 'info', title: 'Czat live', message: `Dodano znacznik załącznika w kanale #${activeChannelMeta.label}.` })
+  }
+
+  async function deleteCommunityPost(post) {
+    if (!post?.id || !isOwnPost(post) || !isSupabaseConfigured || !supabase) return
+    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć ten post? Tej akcji nie da się cofnąć.')
+    if (!ok) return
+    try {
+      setBusy(true)
+      await supabase.from('community_reactions').delete().eq('post_id', post.id)
+      await supabase.from('community_comments').delete().eq('post_id', post.id)
+      const { error } = await supabase.from('community_posts').delete().eq('id', post.id).eq('author_id', user.id)
+      if (error) throw error
+      setOpenPostMenuId(null)
+      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został usunięty.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('delete community post error', error)
+      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się usunąć posta.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function startEditCommunityPost(post) {
+    if (!post?.id || !isOwnPost(post)) return
+    setEditingPostId(post.id)
+    setEditingPostText(String(post.body || ''))
+    setOpenPostMenuId(null)
+  }
+
+  async function saveEditCommunityPost(post) {
+    const clean = String(editingPostText || '').trim()
+    if (!post?.id || !isOwnPost(post) || !clean || !isSupabaseConfigured || !supabase) return
+    try {
+      setBusy(true)
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ body: clean, updated_at: new Date().toISOString() })
+        .eq('id', post.id)
+        .eq('author_id', user.id)
+      if (error) throw error
+      setEditingPostId(null)
+      setEditingPostText('')
+      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został zaktualizowany.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('edit community post error', error)
+      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się edytować posta.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function reportCommunityPost(post) {
+    if (!post?.id || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
+    try {
+      setBusy(true)
+      const reason = typeof window === 'undefined'
+        ? 'Zgłoszenie użytkownika'
+        : (window.prompt('Powód zgłoszenia posta:', 'Naruszenie zasad społeczności') || '').trim()
+      if (!reason) return
+      const { error } = await supabase.from('community_post_reports').insert({
+        post_id: post.id,
+        reporter_id: user.id,
+        reporter_email: userEmail,
+        reported_author_id: post.author_id || null,
+        reported_author_email: normalizeEmail(post.author_email || ''),
+        reason,
+        status: 'new',
+        created_at: new Date().toISOString()
+      })
+      if (error) throw error
+      setOpenPostMenuId(null)
+      onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został zgłoszony do moderacji.' })
+    } catch (error) {
+      console.error('report community post error', error)
+      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się zgłosić posta.' })
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -9030,9 +9158,29 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
             <div><button type="button" className="community-name-btn-v1016 feed-name-v1016" onClick={() => openCommunityProfile(post)}>{author}</button><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small><em>#{post.channel_key || 'ogolny'}</em></div></div>
           </div>
-          <button type="button">⋮</button>
+          <div className="post-menu-wrap-v1024">
+            <button type="button" className="post-menu-trigger-v1024" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
+            {openPostMenuId === post.id ? (
+              <div className="post-menu-v1024">
+                {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ Edytuj post</button> : null}
+                {isOwnPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń post</button> : null}
+                {!isOwnPost(post) ? <button type="button" onClick={() => reportCommunityPost(post)}>🚩 Zgłoś post</button> : null}
+                <button type="button" onClick={() => setOpenPostMenuId(null)}>Zamknij</button>
+              </div>
+            ) : null}
+          </div>
         </div>
-        <p className="feed-text-v5">{post.body}</p>
+        {editingPostId === post.id ? (
+          <div className="post-edit-box-v1024">
+            <textarea value={editingPostText} onChange={event => setEditingPostText(event.target.value)} />
+            <div>
+              <button type="button" disabled={busy || !editingPostText.trim()} onClick={() => saveEditCommunityPost(post)}>Zapisz</button>
+              <button type="button" onClick={() => { setEditingPostId(null); setEditingPostText('') }}>Anuluj</button>
+            </div>
+          </div>
+        ) : (
+          <p className="feed-text-v5">{post.body}</p>
+        )}
         <div className="feed-actions-v5">
           <button type="button" onClick={() => toggleLike(post)}>👍 {Number(post.likes_count || 0)}</button>
           <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}>💬 {Number(post.comments_count || postComments.length || 0)}</button>
@@ -9089,7 +9237,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       <div className="community-v5-tabs glass-community-v5 community-pro-tabs-v1012 community-tabs-v1016">
         <button type="button" className={activeTab === 'feed' ? 'active' : ''} onClick={() => setActiveTab('feed')}>💬 Czat live</button>
-        <button type="button" className={activeTab === 'channels' ? 'active' : ''} onClick={() => setActiveTab('channels')}>🎚️ Kanały</button>
         <button type="button" className={activeTab === 'rewards' ? 'active' : ''} onClick={() => setActiveTab('rewards')}>🏆 Nagrody</button>
       </div>
 
@@ -9106,14 +9253,26 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             </div>
           </div>
 
-          <div className="glass-community-v5 pro-missions-v1012">
-            <div className="pro-missions-head-v1012"><strong>Misje dzienne</strong><button type="button">×</button></div>
-            <div className="mission-row-v1012"><span>Napisz wiadomość</span><b>{communityStats.myChat >= 1 ? '1/1' : '0/1'}</b><em>+1</em></div>
-            <div className="mission-bar-v1012"><i style={{ width: communityStats.myChat >= 1 ? '100%' : '8%' }}></i></div>
-            <div className="mission-row-v1012"><span>Dodaj post</span><b>{communityStats.myPosts >= 1 ? '1/1' : '0/1'}</b><em>+1</em></div>
-            <div className="mission-bar-v1012"><i style={{ width: communityStats.myPosts >= 1 ? '100%' : '8%' }}></i></div>
-            <div className="mission-row-v1012"><span>Bądź aktywny</span><b>{Math.min(communityStats.total, 3)}/3</b><em>+1</em></div>
-            <div className="mission-bar-v1012"><i style={{ width: `${Math.min(100, (communityStats.total / 3) * 100)}%` }}></i></div>
+          <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
+            <div className="pro-missions-head-v1012"><strong>Misje dzienne</strong><button type="button">24h</button></div>
+            {dailyMissionRows.map(mission => (
+              <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
+                <div className="mission-row-v1012">
+                  <span>{mission.title}</span>
+                  <b>{mission.current}</b>
+                  <em>+1</em>
+                </div>
+                <div className="mission-bar-v1012"><i style={{ width: `${Math.max(8, mission.progress)}%` }}></i></div>
+                <button
+                  type="button"
+                  className="daily-mission-claim-v1022"
+                  disabled={!mission.done || mission.claimed}
+                  onClick={() => claimCommunityReward(mission)}
+                >
+                  {mission.claimed ? getRewardUnlockLabel(mission.key) : mission.done ? 'Odbierz +1' : 'Zrób misję'}
+                </button>
+              </div>
+            ))}
           </div>
         </aside>
 
@@ -9135,13 +9294,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             </div>
           ) : activeTab === 'rewards' ? (
             <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014">
-              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 żeton</b> • reset pon. 01:00</span></div>
+              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 żeton</b> • limit raz na 24h</span></div>
               {rewardRows.map(reward => (
                 <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={reward.key}>
                   <span>{reward.icon}</span>
                   <div><strong>{reward.title}</strong><small>{reward.desc}</small><div className="reward-progress-v5"><i style={{ width: `${Math.max(4, reward.progress)}%` }}></i></div></div>
                   <em>{reward.current}</em>
-                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? 'Odebrano' : reward.done ? 'Odbierz +1 żeton' : '+1 żeton'}</button>
+                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Odbierz +1 żeton' : '+1 żeton'}</button>
                 </div>
               ))}
             </div>
@@ -9169,11 +9328,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     )
                   }) : <div className="community-empty-v1008"><strong>Brak wiadomości w tym kanale.</strong><span>Napisz pierwszą wiadomość na #{activeChannelMeta.label}.</span></div>}
                 </div>
-                <div className="pro-chat-input-v1012">
+                <div className="pro-chat-input-v1012 chat-input-active-v1023">
                   <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && chatText.trim()) sendChatMessage() }} placeholder={`Napisz wiadomość w #${activeChannelMeta.label}...`} />
-                  <button type="button">😊</button>
-                  <button type="button">📎</button>
-                  <button type="button" disabled={busy || !chatText.trim()} onClick={sendChatMessage}>➤</button>
+                  <div className="chat-tools-v1023">
+                    <button type="button" title="Dodaj emoji" onClick={() => addChatEmoji('😊')}>😊</button>
+                    <button type="button" title="Załącznik" onClick={addChatAttachmentMarker}>📎</button>
+                  </div>
+                  <button type="button" className="chat-send-v1023" disabled={busy || !chatText.trim()} onClick={sendChatMessage}>➤</button>
                 </div>
               </div>
 
@@ -9200,7 +9361,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top społeczność</h3><button type="button" onClick={() => setActiveTab('channels')}>Ranking</button></div>
+            <div className="sidecard-head-v5"><h3>🏆 Top społeczność</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <small className="sidecard-sub-v5">Ranking tygodniowy</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
@@ -9212,7 +9373,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
             </div>
-            <button type="button" className="side-btn-v5" onClick={() => setActiveTab('channels')}>Zobacz pełny ranking</button>
+            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież ranking</button>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
@@ -9220,12 +9381,16 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
-                const name = item.username || communityNameFromEmail(item.email)
+                const name = item.username || item.display_name || item.name || communityNameFromEmail(item.email)
+                const planLabel = isPremiumProfile(item) ? 'PREMIUM' : 'FREE'
                 return (
-                  <div className="suggested-row-v5" key={item.id || index}>
-                    <span className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</span>
-                    <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{name}</button><small>{isPremiumProfile(item) ? 'Top typer' : 'Użytkownik'}</small></div>
-                    <button type="button" className={isCommunityFollowing(item) ? 'is-following' : ''} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
+                  <div className="suggested-row-v5 suggested-row-v1020" key={item.id || item.email || index}>
+                    <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
+                    <div className="suggested-info-v1020">
+                      <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
+                      <small>{planLabel} • kliknij profil</small>
+                    </div>
+                    <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>
                 )
               })}
@@ -9237,7 +9402,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             {rewardRows.slice(0, 3).map(reward => (
               <button type="button" key={reward.key} className={`mini-reward-row-v1017 ${reward.claimed ? 'is-claimed' : ''}`} onClick={() => setActiveTab('rewards')}>
                 <span>{reward.icon}</span>
-                <div><strong>{reward.title}</strong><small>{reward.claimed ? 'Odebrano' : reward.done ? 'Gotowe do odbioru' : reward.current}</small></div>
+                <div><strong>{reward.title}</strong><small>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Gotowe do odbioru' : reward.current}</small></div>
                 <b>+1</b>
               </button>
             ))}
@@ -9245,36 +9410,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         </aside>
       </div>
 
-      <div className="community-pro-bottom-v1012">
-        <div className="glass-community-v5 bottom-card-v5">
-          <div className="bottom-card-head-v5"><h3>Aktywność kanału</h3><button type="button" onClick={() => setActiveTab('channels')}>Zmień kanał →</button></div>
-          <div className="drops-grid-v5">
-            <div className="drop-box-v5 warm"><span>AKTYWNY KANAŁ</span><strong>#{activeChannelMeta.label}</strong><p>{filteredChatMessages.length} wiadomości • {filteredPosts.length} postów</p><div className="drop-progress-v5"><i style={{width:`${Math.min(100, Math.max(8, (filteredChatMessages.length + filteredPosts.length) * 12))}%`}}></i></div><button type="button" onClick={() => setActiveTab('feed')}>Wejdź do kanału</button></div>
-            <div className="drop-box-v5 cool"><span>NAGRODA TYGODNIA</span><strong>Każda nagroda = 1 żeton</strong><p>Reset w poniedziałek o 01:00</p><div className="drop-progress-v5"><i style={{width:'72%'}}></i></div><div className="drop-footer-v5"><b>1 Coin</b><small>za aktywność</small></div></div>
-          </div>
-        </div>
 
-        <div className="glass-community-v5 bottom-card-v5">
-          <div className="bottom-card-head-v5"><h3>Top społeczność tygodnia</h3><button type="button" onClick={() => setActiveTab('channels')}>Zobacz ranking →</button></div>
-          <div className="community-rank-v5 compact-rank-v1012">
-            {communityRanking.slice(0, 5).map((item, index) => (
-              <div className="community-rank-row-v5" key={item.user_id || item.email || index}>
-                <span className={`mini-place-v5 p${index + 1}`}>{index + 1}</span>
-                <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button></div>
-                <b>{Number(item.community_points || 0)} Coin</b>
-              </div>
-            ))}
-            {!communityRanking.length ? <div className="empty-mini">Brak danych.</div> : null}
-          </div>
-        </div>
-
-        <div className="glass-community-v5 bottom-card-v5 reward-card-v5">
-          <div className="bottom-card-head-v5"><h3>Twój progres nagród</h3><button type="button" onClick={() => setActiveTab('rewards')}>Zobacz nagrody →</button></div>
-          <div className="reward-level-v5"><div><span>Poziom społeczności</span><strong>{communityStats.total >= 3 ? 'Aktywny' : 'Start'}</strong></div><b>{communityStats.total} / 3</b></div>
-          <div className="reward-progress-v5"><i style={{width:`${Math.min(100, (communityStats.total / 3) * 100)}%`}}></i></div>
-          <div className="reward-next-v5"><div><span>Następna nagroda</span><strong>1 żeton</strong><small>Odbierz w zakładce Nagrody</small></div><div className="coin-badge-v5">1</div></div>
-        </div>
-      </div>
     </section>
   )
 }
