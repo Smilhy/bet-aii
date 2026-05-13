@@ -1,45 +1,30 @@
 WERSJA 966
 
-Naprawa pobierania kursów API-FOOTBALL w zakładce Dodaj typ.
+Żywe statystyki profilu.
 
-Co było nie tak:
-1. W trybie konkretnej ligi / league-today backend pobierał mecze z API-FOOTBALL,
-   ale celowo zwracał markets: [] i hasRealOdds: false.
-   Efekt: mecze były, ale przy 1 / X / 2 były kreski.
-2. Cache Supabase mógł zwracać stare mecze bez uderzenia do API,
-   dlatego w panelu API-Sports nie schodziły requesty/credit.
-3. Frontend nie pokazywał jasno informacji, ile meczów dostało kursy.
+Zrobione:
+1. Zakładka Statystyki nie korzysta już ze stałych/importowanych tabel.
+2. Tabele liczą się dynamicznie z typów danego użytkownika:
+   - Statystyki typów kuponów: Publiczny / Płatny
+   - Statystyki dla sportów
+   - Statystyki zakresów kursów
+   - Statystyki godzin dodawania kuponów
+   - Statystyki poszczególnych miesięcy
+3. Każdy użytkownik ma swoje statystyki na podstawie swoich typów.
+4. Statystyki przeliczają się po dodaniu lub rozliczeniu typu.
+5. Właściciel profilu zapisuje snapshot statystyk:
+   - lokalnie w localStorage,
+   - globalnie w Supabase w tabeli tipster_stats_snapshots.
+6. Dodano SQL:
+   supabase/version_966_tipster_live_stats_snapshots.sql
 
-Co zmieniono:
-1. League-today pobiera teraz kursy przez API-FOOTBALL /odds?fixture=ID.
-2. Przy ręcznym kliknięciu ligi / wyszukiwaniu frontend wysyła forceRefresh=1,
-   więc Netlify function uderza w API zamiast brać stary cache.
-3. Backend akceptuje więcej nazw zmiennych środowiskowych:
-   - APISPORTS_KEY
-   - API_SPORTS_KEY
-   - API_FOOTBALL_KEY
-   - API_FOOTBALL
-   - VITE_APISPORTS_KEY
-   - VITE_API_FOOTBALL_KEY
-4. Status nad listą pokazuje informację:
-   X/Y meczów ma kursy z /odds.
-
-Ważne:
-API-FOOTBALL Pro może zwrócić mecz, ale nie zawsze zwraca kursy dla każdego fixture.
-Jeżeli /odds nie ma kursów dla danego meczu, UI pokaże kreskę.
-To nie jest wtedy błąd frontu — dostawca nie ma kursów dla tego spotkania.
-
-Sprawdź w Netlify:
-Site settings -> Environment variables:
-APISPORTS_KEY = Twój klucz z API-Sports
-
-Po zmianie ENV:
-- redeploy strony,
-- najlepiej Clear cache and deploy site.
+WAŻNE:
+Uruchom SQL version_966_tipster_live_stats_snapshots.sql w Supabase, żeby snapshot statystyk zapisywał się globalnie w bazie.
 
 Start z wersji:
 - betai_wersja_965_WYNIKI_DATA_PRZED_MECZEM.zip
 
 Pliki zmienione:
 - src/main.jsx
-- netlify/functions/get-sports-events.js
+- src/styles.css
+- supabase/version_966_tipster_live_stats_snapshots.sql

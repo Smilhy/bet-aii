@@ -759,7 +759,7 @@ exports.handler = async function(event) {
   }
 
 
-  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || process.env.API_FOOTBALL || process.env.VITE_APISPORTS_KEY || process.env.VITE_API_FOOTBALL_KEY || ''
+  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || ''
 
   const getApiSportsConfigs = () => {
     // FOOTBALL PRO MODE: po zakupie API-FOOTBALL Pro korzystamy tylko z piłki nożnej,
@@ -1140,7 +1140,7 @@ exports.handler = async function(event) {
         ...fixture,
         markets,
         hasRealOdds: markets.length > 0,
-        oddsMessage: markets.length ? '' : 'API-FOOTBALL /odds nie zwróciło kursów dla tego fixture.'
+        oddsMessage: markets.length ? '' : 'API-FOOTBALL nie ma jeszcze kursów dla tego meczu.'
       })
     }
     if (fixtures.length > enriched.length) enriched.push(...fixtures.slice(enriched.length))
@@ -1272,12 +1272,10 @@ exports.handler = async function(event) {
       })
       .slice(0, countOnly ? 1000 : 500)
 
-    // WERSJA 966:
-    // League-today też musi dociągać kursy. Wcześniej celowo zwracaliśmy markets: [],
-    // więc lista pokazywała mecze, ale 1/X/2 miało kreski i API-FOOTBALL nie zużywało requestów na /odds.
-    // Dla konkretnej ligi robimy odds po fixture, bo to jest dokładniejsze niż skanowanie całej daty.
+    // W trybie listy ligi nie pobieramy kursów automatycznie.
+    // Lista ma zużyć tylko 1 request na fixtures; kursy można dociągnąć dopiero po wejściu w konkretny mecz.
     const oddsEnriched = mode === 'league-today'
-      ? await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures)
+      ? { fixtures: baseFixtures.map(fixture => ({ ...fixture, markets: [], hasRealOdds: false, oddsMessage: '' })), errors: [] }
       : await enrichFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures, dateKeys)
     const fixtures = oddsEnriched.fixtures
     errors.push(...oddsEnriched.errors)
@@ -1366,11 +1364,8 @@ exports.handler = async function(event) {
           daysAhead: 0,
           count: countOnly ? apiSports.fixtures.length : undefined,
           fixtures: countOnly ? [] : apiSports.fixtures,
-          oddsMessage: apiSports.fixtures?.length
-            ? `${apiSports.fixtures.filter(item => Array.isArray(item.markets) && item.markets.length).length}/${apiSports.fixtures.length} meczów ma kursy z /odds.`
-            : '',
           message: apiSports.fixtures.length
-            ? `Dzisiejsze mecze ligi ${league} pobrane z API-FOOTBALL razem z próbą pobrania kursów /odds.`
+            ? `Dzisiejsze mecze ligi ${league} pobrane z API-FOOTBALL.`
             : `Dziś brak meczów w lidze ${league}. ${apiSports.message || ''}`.trim()
         })
       }

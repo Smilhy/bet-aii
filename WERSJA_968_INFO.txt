@@ -1,0 +1,22 @@
+WERSJA 968
+
+Poprawka plików po błędzie SQL:
+ERROR 42P13: cannot change return type of existing function
+
+Zrobione:
+1. Poprawiono:
+   supabase/version_967_profile_bio_persistence.sql
+2. Dodano też nowy plik:
+   supabase/version_968_profile_bio_persistence_fix.sql
+3. SQL najpierw usuwa starą funkcję:
+   drop function if exists public.betai_public_profiles_for_ui();
+4. Dopiero potem tworzy nową funkcję z bio/description/about.
+
+Logika aplikacji z wersji 967 zostaje:
+- opis profilu zapisuje się do bio/description/about,
+- profil publiczny pobiera opis innych użytkowników,
+- cache profilu przechowuje opis,
+- fallback localStorage zostaje.
+
+Start z wersji:
+- betai_wersja_967_OPIS_PROFILU_ZAPIS_I_WIDOCZNOSC.zip
