@@ -35524,3 +35524,182 @@ button.betfolio-fetch-btn{
   color:#dffffb !important;
   font-weight:1000 !important;
 }
+
+
+/* WERSJA 961 — czytelny wykres wyników jak panel liniowy 90D */
+.profile-results-chart-v961{
+  padding:18px 20px 20px !important;
+  border-radius:18px !important;
+  background:
+    radial-gradient(circle at 88% 28%, rgba(22,255,154,.10), transparent 30%),
+    linear-gradient(180deg, rgba(5,22,43,.96), rgba(3,13,27,.98)) !important;
+  border:1px solid rgba(49,116,164,.36) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 14px 34px rgba(0,0,0,.18) !important;
+}
+
+.profile-results-chart-head-v961{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  margin-bottom:12px !important;
+}
+
+.profile-results-chart-head-v961 > div{
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+
+.profile-results-chart-head-v961 h3{
+  margin:0 !important;
+  color:#f1f8ff !important;
+  font-size:15px !important;
+  font-weight:950 !important;
+  letter-spacing:.01em !important;
+}
+
+.profile-chart-info-v961{
+  width:18px !important;
+  height:18px !important;
+  border-radius:50% !important;
+  border:1px solid rgba(169,201,223,.45) !important;
+  background:rgba(255,255,255,.04) !important;
+  color:#8da5ba !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  padding:0 !important;
+}
+
+.profile-chart-mode-v961{
+  min-height:34px !important;
+  padding:0 14px !important;
+  border-radius:10px !important;
+  border:1px solid rgba(88,124,154,.30) !important;
+  background:rgba(3,13,27,.78) !important;
+  color:#c7d5e3 !important;
+  font-weight:800 !important;
+  font-size:12px !important;
+}
+
+.profile-results-range-v961{
+  display:flex !important;
+  gap:8px !important;
+  margin-bottom:12px !important;
+}
+
+.profile-results-range-v961 button{
+  min-width:44px !important;
+  height:28px !important;
+  border-radius:9px !important;
+  border:1px solid rgba(70,103,133,.42) !important;
+  background:rgba(5,20,40,.72) !important;
+  color:#8fa4b7 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+
+.profile-results-range-v961 button.active{
+  color:#dff7ff !important;
+  border-color:#00a7ff !important;
+  background:linear-gradient(180deg, rgba(15,141,255,.62), rgba(0,89,190,.45)) !important;
+  box-shadow:0 0 0 1px rgba(42,196,255,.20), 0 0 16px rgba(42,196,255,.42) !important;
+}
+
+.profile-results-chart-stage-v961{
+  position:relative !important;
+  height:255px !important;
+  padding-left:62px !important;
+  padding-bottom:30px !important;
+  border-radius:12px !important;
+  overflow:hidden !important;
+  background:
+    linear-gradient(rgba(92,140,170,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92,140,170,.10) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(4,18,36,.66), rgba(1,8,18,.82)) !important;
+  background-size:100% 37px, 12.5% 100%, 100% 100% !important;
+  border:1px solid rgba(53,86,116,.18) !important;
+}
+
+.profile-results-yaxis-v961{
+  position:absolute !important;
+  left:12px !important;
+  top:10px !important;
+  bottom:31px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:space-between !important;
+  color:#8aa0b4 !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+}
+
+.profile-results-grid-v961{
+  position:absolute !important;
+  left:62px !important;
+  right:10px !important;
+  top:10px !important;
+  bottom:31px !important;
+}
+
+.profile-results-svg-v961{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  overflow:visible !important;
+}
+
+.profile-results-area-v961{
+  opacity:.9 !important;
+}
+
+.profile-results-line-v961{
+  vector-effect:non-scaling-stroke !important;
+}
+
+.profile-results-svg-v961 circle{
+  vector-effect:non-scaling-stroke !important;
+  stroke:#071421 !important;
+  stroke-width:.55 !important;
+  fill:#20e78a !important;
+}
+
+.profile-results-svg-v961 circle.loss{
+  fill:#e83f4f !important;
+}
+
+.profile-results-svg-v961 circle.win{
+  fill:#20e78a !important;
+}
+
+.profile-results-xaxis-v961{
+  position:absolute !important;
+  left:62px !important;
+  right:10px !important;
+  bottom:7px !important;
+  display:flex !important;
+  justify-content:space-between !important;
+  color:#93a8ba !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+}
+
+.profile-v4-results-page .profile-v4-table-card{
+  margin-top:14px !important;
+}
+
+@media(max-width:800px){
+  .profile-results-chart-stage-v961{
+    padding-left:50px !important;
+    height:220px !important;
+  }
+  .profile-results-grid-v961,
+  .profile-results-xaxis-v961{
+    left:50px !important;
+  }
+  .profile-results-chart-head-v961{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+}

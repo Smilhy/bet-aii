@@ -14798,60 +14798,73 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </section>
             ) : (
             <section className="profile-v4-page profile-v4-results-page">
-              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-live-balance-card-v949">
-                <div className="profile-v3-card-head profile-live-balance-head-v949">
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961">
+                <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wyniki — przebieg bilansu</h3>
+                    <h3>Wyniki — przebieg bilansu (PLN)</h3>
+                    <button type="button" className="profile-chart-info-v961" title="Wykres pokazuje narastający bilans z rozliczonych typów.">i</button>
                   </div>
-                  <div className="profile-live-balance-status-v949"><i></i> LIVE</div>
+                  <button type="button" className="profile-chart-mode-v961">Bilans kumulacyjny ▾</button>
                 </div>
-                <div className="profile-live-balance-toolbar-v949">
-                  <span><b>{settledTips}</b> rozliczone</span>
-                  <span className="good"><b>{wonTips}</b> wygrane</span>
-                  <span className="bad"><b>{lostTips}</b> przegrane</span>
-                  <span className={profitAmount >= 0 ? 'good' : 'bad'}><b>{profitAmount >= 0 ? '+' : ''}{profitAmount.toFixed(2)} zł</b> bilans</span>
+
+                <div className="profile-results-range-v961" aria-label="Zakres wykresu">
+                  <button type="button">7D</button>
+                  <button type="button">30D</button>
+                  <button type="button" className="active">90D</button>
+                  <button type="button">1R</button>
+                  <button type="button">Wszystko</button>
                 </div>
-                <div className="profile-live-balance-stage-v949">
-                  <div className="profile-live-balance-ylabels-v949">
-                    <span>{profitAmount >= 0 ? `+${profitAmount.toFixed(0)} zł` : `${profitAmount.toFixed(0)} zł`}</span>
-                    <span>0 zł</span>
-                    <span>{profitAmount >= 0 ? 'start' : 'minus'}</span>
+
+                <div className="profile-results-chart-stage-v961">
+                  <div className="profile-results-yaxis-v961">
+                    <span>{profitAmount >= 0 ? `${Math.max(100000, Math.ceil(profitAmount / 10000) * 10000).toFixed(0)}.00` : '100000.00'}</span>
+                    <span>{profitAmount >= 0 ? `${Math.max(50000, Math.ceil(profitAmount / 20000) * 5000).toFixed(0)}.00` : '50000.00'}</span>
+                    <span>0.00</span>
+                    <span>-20000.00</span>
                   </div>
-                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart profile-live-balance-chart-v949">
-                    <defs>
-                      <linearGradient id="profileBalanceFill" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(0,255,148,.38)" />
-                        <stop offset="55%" stopColor="rgba(0,255,214,.12)" />
-                        <stop offset="100%" stopColor="rgba(0,255,148,0)" />
-                      </linearGradient>
-                      <linearGradient id="profileBalanceStrokeV949" x1="0" x2="1" y1="0" y2="0">
-                        <stop offset="0%" stopColor="#17f7c7" />
-                        <stop offset="48%" stopColor="#38f8ff" />
-                        <stop offset="100%" stopColor="#18ff88" />
-                      </linearGradient>
-                      <filter id="profileBalanceGlowV949">
-                        <feGaussianBlur stdDeviation="2.8" result="coloredBlur" />
-                        <feMerge>
-                          <feMergeNode in="coloredBlur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <polygon className="profile-live-balance-area-v949" points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFill)" />
-                    <polyline className="profile-live-balance-line-shadow-v949" points={linePoints} fill="none" stroke="rgba(32,255,191,.18)" strokeWidth="5.2" />
-                    <polyline className="profile-live-balance-line-v949" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV949)" strokeWidth="2.4" filter="url(#profileBalanceGlowV949)" />
-                    {(linePoints || '').split(' ').filter(Boolean).slice(-8).map((point, index) => {
-                      const [x, y] = point.split(',').map(Number)
-                      if (!Number.isFinite(x) || !Number.isFinite(y)) return null
-                      return <circle key={`${point}-${index}`} className="profile-live-balance-dot-v949" cx={x} cy={y} r={index === 7 ? 1.45 : 1.05} />
-                    })}
-                  </svg>
-                  <div className="profile-live-balance-scan-v949"></div>
-                </div>
-                <div className="profile-live-balance-footer-v949">
-                  <span>Start</span>
-                  <span>Ostatnie rozliczenia</span>
-                  <span>Teraz</span>
+
+                  <div className="profile-results-grid-v961">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
+                      <defs>
+                        <linearGradient id="profileBalanceFillV961" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stopColor="rgba(30,255,152,.34)" />
+                          <stop offset="55%" stopColor="rgba(30,255,152,.13)" />
+                          <stop offset="100%" stopColor="rgba(30,255,152,0)" />
+                        </linearGradient>
+                        <linearGradient id="profileBalanceStrokeV961" x1="0" x2="1" y1="0" y2="0">
+                          <stop offset="0%" stopColor="#e83f4f" />
+                          <stop offset="28%" stopColor="#e83f4f" />
+                          <stop offset="36%" stopColor="#20e78a" />
+                          <stop offset="100%" stopColor="#20e78a" />
+                        </linearGradient>
+                        <filter id="profileBalanceGlowV961">
+                          <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
+                          <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFillV961)" />
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.7" filter="url(#profileBalanceGlowV961)" />
+                      {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
+                        const [x, y] = point.split(',').map(Number)
+                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+                        if (arr.length > 42 && index % Math.ceil(arr.length / 38) !== 0 && index !== arr.length - 1) return null
+                        return <circle key={`${point}-${index}`} className={index < Math.max(3, Math.floor(arr.length * .34)) ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
+                      })}
+                    </svg>
+                  </div>
+
+                  <div className="profile-results-xaxis-v961">
+                    <span>10/05</span>
+                    <span>24/05</span>
+                    <span>07/06</span>
+                    <span>21/06</span>
+                    <span>05/07</span>
+                    <span>19/07</span>
+                    <span>02/08</span>
+                  </div>
                 </div>
               </section>
               <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">

@@ -1,0 +1,23 @@
+WERSJA 961
+
+Zmieniono wygląd wykresu w zakładce Mój profil -> Wyniki.
+
+Zrobione:
+1. Wykres dostał wygląd jak z referencji:
+   - tytuł „Wyniki — przebieg bilansu (PLN)”
+   - przyciski zakresu 7D / 30D / 90D / 1R / Wszystko
+   - dropdown „Bilans kumulacyjny”
+   - czytelna siatka
+   - oś Y z wartościami
+   - oś X z datami
+   - zielona/czerwona linia i punkty
+   - delikatne wypełnienie pod linią
+2. Usunięto poprzedni „żywy” wykres z dużym skokiem, który był mało czytelny.
+3. Logika danych zostaje bez zmian — zmieniony jest wygląd i czytelność wykresu.
+
+Start z wersji:
+- betai_wersja_960_FIX_LICZNIK_OBSERWOWANI_NA_ZYWO.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
