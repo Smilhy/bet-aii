@@ -11646,6 +11646,15 @@ function LeaderboardView({
   const [sidebarTab, setSidebarTab] = useState('top')
   const [periodFilter, setPeriodFilter] = useState('all')
   const [sportFilter, setSportFilter] = useState('all')
+  const [claimedChallenges, setClaimedChallenges] = useState(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const uid = String(user?.id || user?.email || 'guest')
+      return JSON.parse(window.localStorage.getItem(`betai_ranking_claimed_v1000_${uid}`) || '{}')
+    } catch (_) {
+      return {}
+    }
+  })
 
   const allRows = buildLiveLeaderboardRows(ranking, tips).map(row => {
     const rowName = formatRankingName(row)
@@ -11696,6 +11705,25 @@ function LeaderboardView({
   const currentUserKey = String(user?.id || '').toLowerCase()
   const currentUserRow = leaderboardRows.find(row => row.rowKeys.includes(currentUserKey)) || leaderboardRows.find(row => normalizeEmail(row.email) === normalizeEmail(user?.email || ''))
 
+  const rankingClaimPeriod = new Date().toISOString().slice(0, 10)
+  const isChallengeClaimed = (key) => Boolean(claimedChallenges?.[`${key}_${rankingClaimPeriod}`])
+  const markChallengeClaimed = (key) => {
+    const claimKey = `${key}_${rankingClaimPeriod}`
+    setClaimedChallenges(prev => {
+      const next = { ...(prev || {}), [claimKey]: true }
+      try {
+        const uid = String(user?.id || user?.email || 'guest')
+        window.localStorage.setItem(`betai_ranking_claimed_v1000_${uid}`, JSON.stringify(next))
+      } catch (_) {}
+      return next
+    })
+  }
+  const handleChallengeRewardClick = async (challenge) => {
+    if (!challenge?.done || isChallengeClaimed(challenge.key)) return
+    const result = await onChallengeReward?.(challenge)
+    if (result !== false) markChallengeClaimed(challenge.key)
+  }
+
   const buildChallengeRows = () => {
     const winrate = Number(currentUserRow?.winrate || 0)
     const wins = Number(currentUserRow?.wins || 0)
@@ -11732,7 +11760,7 @@ function LeaderboardView({
         done: roi >= 20
       }
     ]
-    return challenges.map(item => ({ ...item, reward: '+1 żeton', width: `${Math.max(3, Math.min(100, item.value))}%` }))
+    return challenges.map(item => ({ ...item, claimed: isChallengeClaimed(item.key), reward: '+1 żeton', width: `${Math.max(3, Math.min(100, item.value))}%` }))
   }
 
   const challengeRows = buildChallengeRows()
@@ -11884,11 +11912,11 @@ function LeaderboardView({
               <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nagroda za każde: <b>1 żeton</b></span></div>
               <div className="challenge-list-v4">
                 {challengeRows.map((row) => (
-                  <div className={`challenge-item-v4 ${row.done ? 'is-done' : ''}`} key={row.key}>
+                  <div className={`challenge-item-v4 ${row.done ? 'is-done' : ''} ${row.claimed ? 'is-claimed' : ''}`} key={row.key}>
                     <div className="challenge-icon-v4">{row.icon}</div>
                     <div className="challenge-copy-v4"><strong>{row.title}</strong><small>{row.desc}</small></div>
                     <div className="challenge-progress-v4"><span>{row.label}</span><div className="challenge-bar-v4"><i style={{width: row.width}}></i></div></div>
-                    <button type="button" className="challenge-reward-v4" onClick={() => onChallengeReward?.(row)}>{row.done ? `Odbierz ${row.reward}` : row.reward}</button>
+                    <button type="button" className="challenge-reward-v4" disabled={!row.done || row.claimed} onClick={() => handleChallengeRewardClick(row)}>{row.claimed ? 'Odebrano' : row.done ? `Odbierz ${row.reward}` : row.reward}</button>
                   </div>
                 ))}
               </div>
@@ -18500,7 +18528,7 @@ function App() {
         if (error) throw error
         if (data && data.claimed === false) {
           showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie była już odebrana.' })
-          return
+          return true
         }
       } else {
         const next = Number(tokenBalance || 0) + 1
@@ -18511,6 +18539,7 @@ function App() {
       await fetchNotifications(userId)
       await fetchCurrentTokenBalance()
       showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
+      return true
     } catch (error) {
       console.warn('claimRankingChallengeReward fallback', error)
       const next = Number(tokenBalance || 0) + 1
@@ -18528,6 +18557,7 @@ function App() {
         source: 'local'
       }, ...(prev || [])])
       showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton lokalnie. Uruchom SQL 999, żeby zapisywać w bazie.` })
+      return true
     }
   }
 
