@@ -1,0 +1,22 @@
+WERSJA 971
+
+Naprawa statystyk po resecie.
+
+Problem:
+- Po resecie profiles.imported_* istnieją, ale mają wartości 0.
+- Aplikacja traktowała te zera jako źródło prawdy.
+- Efekt: Mój profil liczył świeże typy, ale karta typu i ranking brały zerowe imported_* i pokazywały:
+  Yield 0%, Typy 0, Profit +0.00 zł.
+
+Zrobione:
+1. getImportedProfileStats nie uznaje już pustych imported_* = 0 za prawdziwe statystyki.
+2. Jeśli imported_* są wyzerowane, aplikacja przechodzi na świeże statystyki liczone z realnych typów.
+3. Karta typu i Top typerzy mają po resecie liczyć aktualne typy.
+4. Po dodaniu nowego typu licznik typów, yield i profit są liczone z realnych rekordów.
+5. Jeżeli typ jest oczekujący, profit nadal może być 0 — dopiero rozliczenie wygrana/przegrana zmienia bilans.
+
+Start z wersji:
+- betai_wersja_970_RESET_SQL_FIX_WIDOKI.zip
+
+Pliki zmienione:
+- src/main.jsx

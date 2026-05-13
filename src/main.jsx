@@ -396,23 +396,44 @@ function buildAuthorStatsFromTips(tips = []) {
 
 function getImportedProfileStats(profile) {
   if (!profile) return null
-  const totalTips = Number(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
-  const hasImported =
-    profile.imported_yield !== undefined ||
-    profile.imported_total_tips !== undefined ||
-    profile.imported_profit !== undefined ||
-    profile.total_tips !== undefined
-  if (!hasImported && totalTips <= 0) return null
+
+  const importedTotalTips = Number(profile.imported_total_tips ?? 0) || 0
+  const fallbackTotalTips = Number(profile.total_tips ?? profile.tips_count ?? 0) || 0
+  const totalTips = importedTotalTips || fallbackTotalTips
+  const wonTips = Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0
+  const lostTips = Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0
+  const pendingTips = Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0
+  const totalStaked = Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0
+  const profit = Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
+  const avgOdds = Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0
+  const highestOdds = Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0
+  const yieldValue = Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0
+
+  // Po resecie imported_* istnieje w profilu, ale wszystko ma wartość 0.
+  // To NIE może być traktowane jako źródło prawdy, bo blokuje świeże statystyki liczone z realnych typów.
+  const hasRealImportedStats =
+    totalTips > 0 ||
+    wonTips > 0 ||
+    lostTips > 0 ||
+    pendingTips > 0 ||
+    totalStaked > 0 ||
+    profit !== 0 ||
+    avgOdds > 0 ||
+    highestOdds > 0 ||
+    yieldValue !== 0
+
+  if (!hasRealImportedStats) return null
+
   return {
-    yield: Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0,
+    yield: yieldValue,
     totalTips,
-    wonTips: Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0,
-    lostTips: Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0,
-    pendingTips: Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0,
-    totalStaked: Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0,
-    profit: Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0,
-    avgOdds: Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0,
-    highestOdds: Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0,
+    wonTips,
+    lostTips,
+    pendingTips,
+    totalStaked,
+    profit,
+    avgOdds,
+    highestOdds,
   }
 }
 
