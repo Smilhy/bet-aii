@@ -1,0 +1,20 @@
+WERSJA 985 — OPINIE PROFILU
+
+Dodane:
+1. Aktywna zakładka Opinie w profilu.
+2. Formularz dodania opinii:
+   - ocena 1-5 gwiazdek,
+   - komentarz,
+   - zapis do Supabase.
+3. Lista opinii profilu.
+4. Podsumowanie ocen i paski 5/4/3/2/1.
+5. Realtime — opinie pojawiają się bez F5.
+6. SQL:
+   supabase/version_985_profile_reviews_ratings.sql
+
+Nie rusza CORE LOCK v983:
+- statystyki typów,
+- ranking/top typerzy,
+- nazwy profili,
+- przypisywanie typów,
+- realtime typów.

@@ -14382,6 +14382,115 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     setBioDraft(user?.bio || user?.description || user?.about || fallbackBio)
   }, [user?.bio, user?.description, user?.about, fallbackBio])
 
+  const [profileReviews, setProfileReviews] = useState([])
+  const [profileReviewRating, setProfileReviewRating] = useState(5)
+  const [profileReviewHover, setProfileReviewHover] = useState(0)
+  const [profileReviewComment, setProfileReviewComment] = useState('')
+  const [profileReviewSaving, setProfileReviewSaving] = useState(false)
+  const [profileReviewStatus, setProfileReviewStatus] = useState('')
+
+  const targetProfileIdForReviews = viewedIdKey || profile.id || user?.id || ''
+  const viewerIdForReview = viewerProfile?.id || ''
+  const viewerNameForReview = resolveRealProfileUsername(viewerProfile || {}) || 'Użytkownik'
+  const viewerEmailForReview = normalizeEmail(viewerProfile?.email || '')
+
+  async function loadProfileReviews() {
+    if (!isSupabaseConfigured || !supabase || !targetProfileIdForReviews) {
+      setProfileReviews([])
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profile_reviews')
+        .select('id,profile_id,reviewer_id,reviewer_name,reviewer_email,rating,comment,is_approved,created_at,updated_at')
+        .eq('profile_id', targetProfileIdForReviews)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (error) throw error
+      setProfileReviews(Array.isArray(data) ? data : [])
+      setProfileReviewStatus('')
+    } catch (error) {
+      console.warn('profile reviews load skipped', error)
+      setProfileReviewStatus('Opinie profilu wymagają uruchomienia SQL wersji 985.')
+      setProfileReviews([])
+    }
+  }
+
+  useEffect(() => {
+    loadProfileReviews()
+  }, [targetProfileIdForReviews])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !targetProfileIdForReviews) return undefined
+    const channel = supabase
+      .channel(`betai-profile-reviews-${targetProfileIdForReviews}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profile_reviews', filter: `profile_id=eq.${targetProfileIdForReviews}` }, () => {
+        loadProfileReviews()
+      })
+      .subscribe()
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [targetProfileIdForReviews])
+
+  async function submitProfileReview() {
+    const cleanComment = String(profileReviewComment || '').trim()
+    const selectedRating = Math.max(1, Math.min(5, Number(profileReviewRating) || 5))
+
+    if (!targetProfileIdForReviews) {
+      setProfileReviewStatus('Nie znaleziono profilu do oceny.')
+      return
+    }
+    if (!viewerIdForReview) {
+      setProfileReviewStatus('Zaloguj się, aby dodać opinię.')
+      return
+    }
+    if (cleanComment.length < 3) {
+      setProfileReviewStatus('Napisz krótką opinię, minimum 3 znaki.')
+      return
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      setProfileReviewStatus('Supabase nie jest skonfigurowane.')
+      return
+    }
+
+    setProfileReviewSaving(true)
+    setProfileReviewStatus('Zapisywanie opinii...')
+    try {
+      const payload = {
+        profile_id: targetProfileIdForReviews,
+        reviewer_id: viewerIdForReview,
+        reviewer_name: viewerNameForReview,
+        reviewer_email: viewerEmailForReview,
+        rating: selectedRating,
+        comment: cleanComment.slice(0, 500),
+        is_approved: true,
+        updated_at: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('profile_reviews')
+        .upsert(payload, { onConflict: 'profile_id,reviewer_id' })
+
+      if (error) throw error
+
+      setProfileReviewComment('')
+      setProfileReviewRating(5)
+      setProfileReviewStatus('Opinia została zapisana.')
+      onToast?.({ type: 'success', title: 'Opinia zapisana', message: 'Twoja opinia pojawiła się na profilu.' })
+      await loadProfileReviews()
+    } catch (error) {
+      console.warn('profile review save error', error)
+      setProfileReviewStatus(formatAppErrorMessage(error?.message || 'Nie udało się zapisać opinii.'))
+      onToast?.({ type: 'error', title: 'Błąd opinii', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać opinii.') })
+    } finally {
+      setProfileReviewSaving(false)
+    }
+  }
+
   const chooseAvatar = () => {
     avatarInputRef.current?.click()
   }
@@ -14509,8 +14618,18 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const importedProfit = Number(profileStatsSource?.imported_profit || 0) || 0
   const importedAvgOdds = Number(profileStatsSource?.imported_avg_odds || 0) || 0
   const importedHighestOdds = Number(profileStatsSource?.imported_highest_odds || 0) || 0
-  const importedTipsAmount = Number(profileStatsSource?.imported_tips_amount || 0) || 0
-  const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || 'zł').trim() || 'zł'
+  // CORE LOCK v986: Napiwki NIE są profitami ani liczbą typów.
+  // imported_tips_amount było wcześniej używane jako licznik/statystyka typów, więc nie wolno go pokazywać jako napiwek.
+  const realTipsSupportAmount = Number(
+    profileStatsSource?.support_tips_amount ??
+    profileStatsSource?.community_tips_amount ??
+    profileStatsSource?.received_tips_amount ??
+    user?.support_tips_amount ??
+    user?.community_tips_amount ??
+    user?.received_tips_amount ??
+    0
+  ) || 0
+  const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || profileStatsSource?.tips_currency || 'zł').trim() || 'zł'
 
   const liveTotalTips = liveTipsForStats.length
   const liveWonTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'won').length
@@ -14539,7 +14658,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
   const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(profileStatsSource?.imported_yield || 0) || 0)
-  const tipsSupportAmount = importedTipsAmount + (Number(user?.tips_earnings || user?.tips_total || user?.tips_income || 0) || 0)
+  // CORE LOCK v986: pokazujemy wyłącznie realne wsparcie/napiwki, domyślnie 0.00 zł.
+  const tipsSupportAmount = Math.max(0, realTipsSupportAmount)
 
   const statsCards = [
     { label: 'Yield', value: `${roi}%`, sub: roi > 0 ? 'Zwrot na plus' : roi < 0 ? 'Zwrot na minus' : 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
@@ -14742,13 +14862,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
   if (!recentActivityRows.length) recentActivityRows.push(['Brak typów', 'Dodaj pierwszy typ, aby zbudować aktywność profilu', createdLabel])
 
-  const profileRatingAverage = Number(user?.rating_avg || user?.average_rating || user?.rating || 0) || 0
-  const profileRatingCount = Number(user?.rating_count || user?.reviews_count || 0) || 0
-  const ratingDistribution = user?.rating_distribution && typeof user.rating_distribution === 'object'
-    ? user.rating_distribution
-    : {}
+  const approvedProfileReviews = Array.isArray(profileReviews) ? profileReviews.filter(review => review.is_approved !== false) : []
+  const profileRatingCount = approvedProfileReviews.length
+  const profileRatingAverage = profileRatingCount
+    ? Math.round((approvedProfileReviews.reduce((total, review) => total + (Number(review.rating) || 0), 0) / profileRatingCount) * 10) / 10
+    : 0
   const ratingBars = [5,4,3,2,1].map(score => {
-    const count = Number(ratingDistribution[score] ?? ratingDistribution[String(score)] ?? 0) || 0
+    const count = approvedProfileReviews.filter(review => Number(review.rating) === score).length
     const width = profileRatingCount ? Math.round((count / profileRatingCount) * 100) : 0
     return { label: `${score} ★`, count, width }
   })
@@ -15007,7 +15127,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)} zł` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)} zł` : '',
     }
   })
-  const reviewRows = Array.isArray(user?.reviews) ? user.reviews : []
+  const reviewRows = approvedProfileReviews
 
   const profileTipStats = {
     yieldLabel: `${roi}%`,
@@ -15411,7 +15531,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           )}
 
           {profileTab === 'opinions' && (
-            <section className="profile-v4-page profile-v4-opinions-page">
+            <section className="profile-v4-page profile-v4-opinions-page profile-reviews-v985">
               <div className="glass-profile-v3 profile-v3-card profile-v4-opinion-summary">
                 <div>
                   <small>Podsumowanie opinii</small>
@@ -15424,14 +15544,56 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   ))}
                 </div>
               </div>
-              <section className="glass-profile-v3 profile-v3-card profile-v4-reviews-list">
+
+              <section className="glass-profile-v3 profile-v3-card profile-review-form-v985">
+                <div className="profile-v3-card-head">
+                  <h3>Dodaj opinię</h3>
+                  <span>{viewerIdForReview ? `Jako ${viewerNameForReview}` : 'Wymagane logowanie'}</span>
+                </div>
+                <div className="profile-review-stars-v985" aria-label="Ocena profilu">
+                  {[1,2,3,4,5].map(score => {
+                    const activeScore = profileReviewHover || profileReviewRating
+                    return (
+                      <button
+                        key={score}
+                        type="button"
+                        className={score <= activeScore ? 'active' : ''}
+                        onMouseEnter={() => setProfileReviewHover(score)}
+                        onMouseLeave={() => setProfileReviewHover(0)}
+                        onClick={() => setProfileReviewRating(score)}
+                        title={`${score} gwiazdek`}
+                      >
+                        ★
+                      </button>
+                    )
+                  })}
+                  <strong>{profileReviewRating}/5</strong>
+                </div>
+                <textarea
+                  value={profileReviewComment}
+                  onChange={(event) => setProfileReviewComment(event.target.value.slice(0, 500))}
+                  placeholder="Napisz opinię o tym typerze..."
+                  maxLength={500}
+                />
+                <div className="profile-review-form-actions-v985">
+                  <small>{profileReviewStatus || `${profileReviewComment.length}/500 znaków`}</small>
+                  <button type="button" onClick={submitProfileReview} disabled={profileReviewSaving || !viewerIdForReview}>
+                    {profileReviewSaving ? 'Zapisuję...' : 'Dodaj opinię'}
+                  </button>
+                </div>
+              </section>
+
+              <section className="glass-profile-v3 profile-v3-card profile-v4-reviews-list profile-reviews-list-v985">
                 <div className="profile-v3-card-head"><h3>Opinie</h3><span>{reviewRows.length} pozycji</span></div>
                 {reviewRows.length ? reviewRows.map((review, index) => (
                   <article key={review.id || index}>
-                    <strong>{review.author_name || 'Użytkownik'}</strong>
+                    <div>
+                      <strong>{review.reviewer_name || review.author_name || 'Użytkownik'}</strong>
+                      <small>{new Date(review.created_at || Date.now()).toLocaleDateString('pl-PL')} • {Number(review.rating || 0).toFixed(0)}/5 ★</small>
+                    </div>
                     <span>{review.comment || review.body || ''}</span>
                   </article>
-                )) : <div className="profile-live-tip-empty">Nie masz jeszcze opinii.</div>}
+                )) : <div className="profile-live-tip-empty">Nie ma jeszcze opinii dla tego profilu.</div>}
               </section>
             </section>
           )}

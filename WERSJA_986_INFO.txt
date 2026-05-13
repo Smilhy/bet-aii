@@ -1,0 +1,17 @@
+WERSJA 986 — NAPIWKI ZERO / TYLKO REALNE WSPARCIE
+
+Naprawiono:
+- kafelek Napiwki nie bierze już wartości z imported_tips_amount,
+- nie bierze też tips_earnings/tips_total/tips_income,
+- domyślnie pokazuje 0.00 zł,
+- napiwki są osobnym realnym wsparciem, nie statystyką typów.
+
+SQL:
+- supabase/version_986_reset_fake_tips_support.sql
+
+SQL:
+- dodaje pola support_tips_amount/community_tips_amount/received_tips_amount,
+- zeruje fałszywe napiwki wszystkim profilom,
+- nie rusza profit/yield/typów/rankingu.
+
+CORE LOCK v983 bez zmian.

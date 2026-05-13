@@ -35814,3 +35814,102 @@ button.betfolio-fetch-btn{
 .profile-v4-stats-page > div[class*="summary-grid"][class*="stats-top"]{
   display:none !important;
 }
+
+
+/* WERSJA 985 — Opinie profilu */
+.profile-reviews-v985{
+  display:grid;
+  gap:18px;
+}
+.profile-review-form-v985 textarea{
+  width:100%;
+  min-height:110px;
+  resize:vertical;
+  border-radius:18px;
+  border:1px solid rgba(0,229,255,.22);
+  background:rgba(2,12,24,.78);
+  color:#eaffff;
+  padding:14px 16px;
+  outline:none;
+  box-shadow:inset 0 0 18px rgba(0,229,255,.04);
+}
+.profile-review-form-v985 textarea:focus{
+  border-color:rgba(0,229,255,.55);
+  box-shadow:0 0 22px rgba(0,229,255,.14), inset 0 0 18px rgba(0,229,255,.07);
+}
+.profile-review-stars-v985{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:10px 0 14px;
+}
+.profile-review-stars-v985 button{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(8,25,45,.88);
+  color:#50647b;
+  font-size:21px;
+  cursor:pointer;
+  transition:.18s ease;
+}
+.profile-review-stars-v985 button.active{
+  color:#ffd84a;
+  border-color:rgba(255,216,74,.55);
+  background:linear-gradient(135deg, rgba(255,216,74,.28), rgba(0,229,255,.12));
+  box-shadow:0 0 18px rgba(255,216,74,.18);
+}
+.profile-review-stars-v985 strong{
+  margin-left:8px;
+  color:#eaffff;
+}
+.profile-review-form-actions-v985{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-top:12px;
+}
+.profile-review-form-actions-v985 small{
+  color:#9eb4c9;
+}
+.profile-review-form-actions-v985 button{
+  border:0;
+  border-radius:14px;
+  padding:12px 22px;
+  font-weight:900;
+  cursor:pointer;
+  color:#00131b;
+  background:linear-gradient(135deg,#26f0dc,#2296ff);
+  box-shadow:0 0 22px rgba(0,229,255,.22);
+}
+.profile-review-form-actions-v985 button:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.profile-reviews-list-v985 article{
+  display:grid;
+  gap:8px;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid rgba(0,229,255,.12);
+  background:rgba(4,17,31,.7);
+  margin-bottom:12px;
+}
+.profile-reviews-list-v985 article div{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+.profile-reviews-list-v985 article strong{
+  color:#eaffff;
+}
+.profile-reviews-list-v985 article small{
+  color:#ffd84a;
+}
+.profile-reviews-list-v985 article span{
+  color:#bdd0df;
+  line-height:1.45;
+}
