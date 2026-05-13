@@ -14425,6 +14425,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     if (date.toDateString() === yesterday.toDateString()) return 'Wczoraj'
     return date.toLocaleDateString('pl-PL')
   }
+  const formatProfileDateTime = (value) => {
+    if (!value) return { date: 'Brak daty', time: '—' }
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return { date: 'Brak daty', time: '—' }
+    return {
+      date: date.toLocaleDateString('pl-PL'),
+      time: date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+    }
+  }
+  const getTipEventDateTime = (tip) => formatProfileDateTime(
+    tip?.match_time ||
+    tip?.event_time ||
+    tip?.start_time ||
+    tip?.match_date ||
+    tip?.event_date ||
+    tip?.created_at
+  )
   const lastActivityLabel = formatProfileDate(latestActivityRaw)
   const lastTipAt = latestTip?.created_at ? new Date(latestTip.created_at) : null
   const isActive30d = Boolean(lastTipAt && !Number.isNaN(lastTipAt.getTime()) && Date.now() - lastTipAt.getTime() <= 30 * 24 * 60 * 60 * 1000)
@@ -14992,12 +15009,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <span>Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.</span>
                 </div>
                 <div className="profile-v4-results-table profile-v4-results-table-v945">
-                  <div><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
+                  <div><b>Mecz</b><b>Data / godzina</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
                   {resultTipRows.length ? resultTipRows.map(tip => {
                     const canRequestSettlement = profileIsOwnForViewer && ['Oczekujący', 'Odrzucony'].includes(tip.statusLabel)
+                    const eventDateTime = getTipEventDateTime(tip.rawTip || tip)
                     return (
                       <div key={tip.id}>
                         <span>{tip.home} — {tip.away}</span>
+                        <span className="profile-result-date-time-v964"><b>{eventDateTime.date}</b><small>{eventDateTime.time}</small></span>
                         <span>{tip.pick}</span>
                         <span>{tip.odds}</span>
                         <span>{tip.stake.toFixed(2)} zł</span>

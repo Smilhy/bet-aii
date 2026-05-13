@@ -35735,3 +35735,30 @@ button.betfolio-fetch-btn{
 
 
 /* WERSJA 963 — follow zapis lokalny + globalny */
+
+
+/* WERSJA 964 — data i godzina zdarzenia w tabeli wyników */
+.profile-v4-results-table-v945 > div{
+  grid-template-columns: 1.35fr .72fr 1.1fr .45fr .55fr .62fr .9fr !important;
+}
+.profile-result-date-time-v964{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:3px !important;
+  color:#d8f7ff !important;
+  font-weight:950 !important;
+}
+.profile-result-date-time-v964 b{
+  font-size:12px !important;
+  color:#dff9ff !important;
+}
+.profile-result-date-time-v964 small{
+  font-size:11px !important;
+  color:#7f96aa !important;
+  font-weight:900 !important;
+}
+@media(max-width:900px){
+  .profile-v4-results-table-v945 > div{
+    grid-template-columns: 1fr !important;
+  }
+}

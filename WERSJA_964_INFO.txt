@@ -1,0 +1,25 @@
+WERSJA 964
+
+Dodano datę i godzinę zdarzenia w tabeli wyników.
+
+Zrobione:
+1. W zakładce Mój profil -> Wyniki dodano kolumnę:
+   Data / godzina
+2. Data/godzina jest pobierana z:
+   - match_time
+   - event_time
+   - start_time
+   - match_date
+   - event_date
+   - fallback: created_at
+3. Kolumna ma osobny styl:
+   - data na górze,
+   - godzina pod spodem.
+4. Zmieniono układ tabeli wyników, żeby zmieścić nową kolumnę.
+
+Start z wersji:
+- betai_wersja_963_FOLLOW_ZAPIS_GLOBALNY_I_LOKALNY.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
