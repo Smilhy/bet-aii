@@ -14018,7 +14018,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
   const profileIsFollowing = Boolean(
     !profileIsOwnForViewer &&
-    ((viewedIdKey && followingTipsters?.has?.(viewedIdKey)) || (viewedUsernameKey && followingTipsters?.has?.(viewedUsernameKey)))
+    (
+      (viewedIdKey && (followingTipsters?.has?.(viewedIdKey) || followingTipsters?.has?.(String(viewedIdKey).toLowerCase()))) ||
+      (viewedUsernameKey && (followingTipsters?.has?.(viewedUsernameKey) || followingTipsters?.has?.(String(viewedUsernameKey).toLowerCase()))) ||
+      (email && (followingTipsters?.has?.(email) || followingTipsters?.has?.(String(email).toLowerCase()))) ||
+      (email && followingTipsters?.has?.(String(email).split('@')[0]))
+    )
   )
   const profileSubscriptionKeys = [viewedIdKey, viewedUsernameKey, username, email, normalizeEmail(email).split('@')[0]].filter(Boolean).map(value => String(value).toLowerCase())
   const activeProfileSubscription = (tipsterSubscriptions || []).find(sub => {
@@ -14115,6 +14120,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('free')
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
+  const [profileChartRange, setProfileChartRange] = useState('90d')
+  const [profileChartMode, setProfileChartMode] = useState('cumulative')
   const [localSettlementPatches, setLocalSettlementPatches] = useState({})
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
@@ -14516,7 +14523,115 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     { label: '09/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
     { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
   ]
-  const balanceChartRows = [...importedMonthStatsRows].reverse().map(row => ({ label: row.label, value: row.profit }))
+  const profileChartRanges = [
+    { key: '7d', label: '7D', days: 7 },
+    { key: '30d', label: '30D', days: 30 },
+    { key: '90d', label: '90D', days: 90 },
+    { key: '1y', label: '1R', days: 365 },
+    { key: 'all', label: 'Wszystko', days: null },
+  ]
+  const profileChartModes = [
+    { key: 'cumulative', label: 'Bilans kumulacyjny' },
+    { key: 'period', label: 'Bilans okresowy' },
+    { key: 'roi', label: 'ROI / Yield' },
+  ]
+
+  const parseMonthLabelDate = (label) => {
+    const [month, year] = String(label || '').split('/').map(Number)
+    if (!month || !year) return null
+    return new Date(year, Math.max(0, month - 1), 1)
+  }
+
+  const formatChartDateLabel = (dateLike) => {
+    const date = dateLike instanceof Date ? dateLike : new Date(dateLike)
+    if (!Number.isFinite(date.getTime())) return ''
+    return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
+  }
+
+  const importedChartRows = [...importedMonthStatsRows].reverse()
+    .map(row => {
+      const date = parseMonthLabelDate(row.label)
+      return {
+        key: `imported-${row.label}`,
+        label: row.label,
+        date,
+        profit: Number(row.profit || 0),
+        stake: Number(row.stake || 0),
+        source: 'imported'
+      }
+    })
+    .filter(row => row.date)
+
+  const liveChartRows = allProfileTipCards
+    .filter(tip => ['Wygrany', 'Przegrany', 'Zwrot'].includes(tip.statusLabel))
+    .map(tip => {
+      const date = new Date(tip.created_at || tip.match_time || Date.now())
+      const stake = Number(tip.stake || 0) || 0
+      const odds = Number(tip.odds || 0) || 0
+      const profit = tip.statusLabel === 'Wygrany'
+        ? stake * Math.max(0, odds - 1)
+        : tip.statusLabel === 'Przegrany'
+          ? -stake
+          : 0
+      return {
+        key: `live-${tip.id}`,
+        label: formatChartDateLabel(date),
+        date,
+        profit,
+        stake,
+        source: 'live'
+      }
+    })
+    .filter(row => Number.isFinite(row.date?.getTime?.()))
+
+  const allBalanceRows = [...importedChartRows, ...liveChartRows]
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+
+  const selectedChartRange = profileChartRanges.find(item => item.key === profileChartRange) || profileChartRanges[2]
+  const lastChartDate = allBalanceRows.length ? allBalanceRows[allBalanceRows.length - 1].date : new Date()
+  const chartCutoff = selectedChartRange.days
+    ? new Date(lastChartDate.getTime() - selectedChartRange.days * 86400000)
+    : null
+  const rangedBalanceRows = (chartCutoff ? allBalanceRows.filter(row => row.date >= chartCutoff) : allBalanceRows).length
+    ? (chartCutoff ? allBalanceRows.filter(row => row.date >= chartCutoff) : allBalanceRows)
+    : allBalanceRows.slice(-1)
+
+  let cumulativeValue = 0
+  const chartPointRows = rangedBalanceRows.map((row, index) => {
+    cumulativeValue += Number(row.profit || 0)
+    const value = profileChartMode === 'period'
+      ? Number(row.profit || 0)
+      : profileChartMode === 'roi'
+        ? (Number(row.stake || 0) ? Math.round((Number(row.profit || 0) / Number(row.stake || 0)) * 100) : 0)
+        : cumulativeValue
+    return {
+      ...row,
+      index,
+      value
+    }
+  })
+
+  const chartValues = chartPointRows.map(row => Number(row.value || 0))
+  const chartMinRaw = Math.min(0, ...chartValues)
+  const chartMaxRaw = Math.max(1, ...chartValues)
+  const chartPadding = Math.max(10, Math.round((chartMaxRaw - chartMinRaw) * 0.10))
+  const chartMin = chartMinRaw - chartPadding
+  const chartMax = chartMaxRaw + chartPadding
+  const chartSpan = Math.max(1, chartMax - chartMin)
+  const chartLinePoints = chartPointRows.map((row, index) => {
+    const x = chartPointRows.length <= 1 ? 0 : (index / (chartPointRows.length - 1)) * 100
+    const y = 100 - ((Number(row.value || 0) - chartMin) / chartSpan) * 100
+    return `${x},${Math.max(4, Math.min(96, y))}`
+  }).join(' ')
+  const chartYLabels = [
+    chartMax,
+    chartMin + chartSpan * 0.66,
+    chartMin + chartSpan * 0.33,
+    chartMin
+  ].map(value => profileChartMode === 'roi' ? `${Math.round(value)}%` : `${Math.round(value).toLocaleString('pl-PL')}.00`)
+  const chartXLabels = chartPointRows.length > 7
+    ? chartPointRows.filter((_, index) => index === 0 || index === chartPointRows.length - 1 || index % Math.ceil(chartPointRows.length / 5) === 0).slice(0, 7)
+    : chartPointRows
   const purchasedSingleCards = (Array.isArray(tips) ? tips : [])
     .map(normalizeTipRow)
     .filter(tip => unlockedTips?.has?.(String(tip.id)) || unlockedTips?.has?.(tip.id))
@@ -14551,12 +14666,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const rejectedResultsCount = allProfileTipCards.filter(tip => tip.statusLabel === 'Odrzucony').length
   const autoResultsCount = allProfileTipCards.filter(tip => String(tip.settlementSource || '').includes('auto')).length
   const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
-  const linePoints = balanceChartRows.map((row, index) => {
-    const maxValue = Math.max(...balanceChartRows.map(item => Number(item.value || 0)), 1)
-    const x = balanceChartRows.length <= 1 ? 0 : (index / (balanceChartRows.length - 1)) * 100
-    const y = 100 - ((Number(row.value || 0) / maxValue) * 100)
-    return `${x},${Math.max(0, Math.min(100, y))}`
-  }).join(' ')
+  const linePoints = chartLinePoints || '0,96 100,96'
   const historyEvents = sortedUserTips.slice(0, 8).map(tip => {
     const normalized = normalizeTipRow(tip)
     const card = buildProfileTipCard(normalized)
@@ -14804,23 +14914,27 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <h3>Wyniki — przebieg bilansu (PLN)</h3>
                     <button type="button" className="profile-chart-info-v961" title="Wykres pokazuje narastający bilans z rozliczonych typów.">i</button>
                   </div>
-                  <button type="button" className="profile-chart-mode-v961">Bilans kumulacyjny ▾</button>
+                  <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
+                    {profileChartModes.map(mode => <option key={mode.key} value={mode.key}>{mode.label}</option>)}
+                  </select>
                 </div>
 
                 <div className="profile-results-range-v961" aria-label="Zakres wykresu">
-                  <button type="button">7D</button>
-                  <button type="button">30D</button>
-                  <button type="button" className="active">90D</button>
-                  <button type="button">1R</button>
-                  <button type="button">Wszystko</button>
+                  {profileChartRanges.map(range => (
+                    <button
+                      key={range.key}
+                      type="button"
+                      className={profileChartRange === range.key ? 'active' : ''}
+                      onClick={() => setProfileChartRange(range.key)}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="profile-results-chart-stage-v961">
                   <div className="profile-results-yaxis-v961">
-                    <span>{profitAmount >= 0 ? `${Math.max(100000, Math.ceil(profitAmount / 10000) * 10000).toFixed(0)}.00` : '100000.00'}</span>
-                    <span>{profitAmount >= 0 ? `${Math.max(50000, Math.ceil(profitAmount / 20000) * 5000).toFixed(0)}.00` : '50000.00'}</span>
-                    <span>0.00</span>
-                    <span>-20000.00</span>
+                    {chartYLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
                   </div>
 
                   <div className="profile-results-grid-v961">
@@ -14851,19 +14965,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         const [x, y] = point.split(',').map(Number)
                         if (!Number.isFinite(x) || !Number.isFinite(y)) return null
                         if (arr.length > 42 && index % Math.ceil(arr.length / 38) !== 0 && index !== arr.length - 1) return null
-                        return <circle key={`${point}-${index}`} className={index < Math.max(3, Math.floor(arr.length * .34)) ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
+                        const row = chartPointRows[index] || {}
+                        return <circle key={`${point}-${index}`} className={Number(row.value || 0) < 0 ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
                       })}
                     </svg>
                   </div>
 
                   <div className="profile-results-xaxis-v961">
-                    <span>10/05</span>
-                    <span>24/05</span>
-                    <span>07/06</span>
-                    <span>21/06</span>
-                    <span>05/07</span>
-                    <span>19/07</span>
-                    <span>02/08</span>
+                    {chartXLabels.map((row, index) => <span key={`${row.key || row.label}-${index}`}>{formatChartDateLabel(row.date) || row.label}</span>)}
                   </div>
                 </div>
               </section>
@@ -16588,6 +16697,55 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
   )
 }
 
+function getFollowStorageKey(userId) {
+  return `betai_following_tipsters_${String(userId || 'guest')}`
+}
+
+function readLocalFollowingTipsters(userId) {
+  if (typeof window === 'undefined' || !userId) return new Set()
+  try {
+    const raw = window.localStorage.getItem(getFollowStorageKey(userId))
+    const parsed = raw ? JSON.parse(raw) : []
+    return new Set(Array.isArray(parsed) ? parsed.map(value => String(value).toLowerCase()).filter(Boolean) : [])
+  } catch (_) {
+    return new Set()
+  }
+}
+
+function writeLocalFollowingTipsters(userId, values) {
+  if (typeof window === 'undefined' || !userId) return
+  try {
+    const list = [...(values || [])].map(value => String(value).toLowerCase()).filter(Boolean)
+    window.localStorage.setItem(getFollowStorageKey(userId), JSON.stringify([...new Set(list)]))
+  } catch (_) {}
+}
+
+function addLocalFollowingTipster(userId, keys = []) {
+  const current = readLocalFollowingTipsters(userId)
+  keys.map(value => String(value || '').toLowerCase()).filter(Boolean).forEach(key => current.add(key))
+  writeLocalFollowingTipsters(userId, current)
+  return current
+}
+
+function removeLocalFollowingTipster(userId, keys = []) {
+  const current = readLocalFollowingTipsters(userId)
+  keys.map(value => String(value || '').toLowerCase()).filter(Boolean).forEach(key => current.delete(key))
+  writeLocalFollowingTipsters(userId, current)
+  return current
+}
+
+function mergeFollowingSets(...sets) {
+  const merged = new Set()
+  sets.forEach(setLike => {
+    ;[...(setLike || [])].forEach(value => {
+      const clean = String(value || '').toLowerCase()
+      if (clean) merged.add(clean)
+    })
+  })
+  return merged
+}
+
+
 function isTipVisibleInActiveFeed(tip) {
   const normalized = normalizeTipRow(tip || {})
   const status = String(normalized.status || 'pending').toLowerCase()
@@ -17144,23 +17302,31 @@ function App() {
   }, [sessionUser?.id])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
-    if (!isSupabaseConfigured || !supabase || !userId) {
+    if (!userId) {
       setFollowingTipsters(new Set())
       return
     }
 
-    const { data, error } = await supabase
-      .from('tipster_follows')
-      .select('tipster_id')
-      .eq('follower_id', userId)
+    const localSet = readLocalFollowingTipsters(userId)
+    let remoteSet = new Set()
 
-    if (error) {
-      console.error('fetchFollowingTipsters error', error)
-      setFollowingTipsters(new Set())
-      return
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('tipster_follows')
+          .select('tipster_id')
+          .eq('follower_id', userId)
+
+        if (error) throw error
+        remoteSet = new Set((data || []).map(row => String(row.tipster_id).toLowerCase()).filter(Boolean))
+      } catch (error) {
+        console.warn('fetchFollowingTipsters remote skipped', error)
+      }
     }
 
-    setFollowingTipsters(new Set((data || []).map(row => String(row.tipster_id))))
+    const merged = mergeFollowingSets(localSet, remoteSet)
+    writeLocalFollowingTipsters(userId, merged)
+    setFollowingTipsters(merged)
   }
 
 
@@ -17190,9 +17356,25 @@ function App() {
           stats[followerId].following += 1
         }
       })
+      const localSet = readLocalFollowingTipsters(sessionUser?.id)
+      if (sessionUser?.id && localSet.size) {
+        const viewerKey = String(sessionUser.id)
+        stats[viewerKey] = stats[viewerKey] || { followers: 0, following: 0 }
+        stats[viewerKey].following = Math.max(Number(stats[viewerKey].following || 0), localSet.size)
+      }
       setFollowStats(stats)
     } catch (error) {
       console.warn('fetchFollowStats skipped', error)
+      const localSet = readLocalFollowingTipsters(sessionUser?.id)
+      if (sessionUser?.id && localSet.size) {
+        setFollowStats(prev => ({
+          ...(prev || {}),
+          [String(sessionUser.id)]: {
+            ...(prev?.[String(sessionUser.id)] || {}),
+            following: localSet.size
+          }
+        }))
+      }
     }
   }
 
@@ -17452,25 +17634,26 @@ function App() {
       return
     }
 
-    const localKey = rawTargetKey || (id ? String(id).toLowerCase() : '')
-    if (!localKey && !id) {
+    const idKey = id ? String(id).toLowerCase() : ''
+    const localKey = rawTargetKey || idKey
+    const localNameKey = rawTargetLocalKey || ''
+    const followKeys = [...new Set([idKey, localKey, localNameKey].map(value => String(value || '').toLowerCase()).filter(Boolean))]
+    if (!followKeys.length) {
       showToast({ type: 'error', title: 'Follow', message: 'Nie udało się odczytać nazwy typera.' })
       return
     }
 
-    const alreadyFollowing = Boolean(
-      (id && followingTipsters.has(id)) ||
-      (localKey && followingTipsters.has(localKey))
-    )
+    const alreadyFollowing = followKeys.some(key => followingTipsters.has(key))
+
+    if (alreadyFollowing) removeLocalFollowingTipster(sessionUser.id, followKeys)
+    else addLocalFollowingTipster(sessionUser.id, followKeys)
 
     setFollowingTipsters(prev => {
-      const next = new Set(prev)
+      const next = new Set([...(prev || [])].map(value => String(value).toLowerCase()))
       if (alreadyFollowing) {
-        if (id) next.delete(id)
-        if (localKey) next.delete(localKey)
+        followKeys.forEach(key => next.delete(key))
       } else {
-        if (id) next.add(id)
-        if (localKey) next.add(localKey)
+        followKeys.forEach(key => next.add(key))
       }
       return next
     })
@@ -17501,19 +17684,8 @@ function App() {
           if (error) throw error
         }
       } catch (error) {
-        setFollowingTipsters(prev => {
-          const next = new Set(prev)
-          if (alreadyFollowing) {
-            if (id) next.add(id)
-            if (localKey) next.add(localKey)
-          } else {
-            if (id) next.delete(id)
-            if (localKey) next.delete(localKey)
-          }
-          return next
-        })
-        showToast({ type: 'error', title: 'Follow', message: formatAppErrorMessage(error.message) })
-        return
+        console.warn('follow remote save skipped', error)
+        showToast({ type: 'warning', title: 'Follow zapisany lokalnie', message: 'Decyzja została zapamiętana w tej przeglądarce. Uruchom SQL/RLS tipster_follows, żeby działało między urządzeniami.' })
       }
     }
 

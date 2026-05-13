@@ -1,0 +1,29 @@
+WERSJA 962
+
+Wykres w zakładce Mój profil -> Wyniki jest teraz aktywny.
+
+Zrobione:
+1. Przyciski zakresu działają:
+   - 7D
+   - 30D
+   - 90D
+   - 1R
+   - Wszystko
+2. Dropdown działa:
+   - Bilans kumulacyjny
+   - Bilans okresowy
+   - ROI / Yield
+3. Po kliknięciu zakresu wykres przelicza punkty, oś X i oś Y.
+4. Po zmianie trybu wykres przelicza wartości:
+   - kumulacyjnie,
+   - okresowo,
+   - procentowo ROI/Yield.
+5. Punkty czerwone/zielone zależą od wartości punktu.
+6. Dodano hover i żywe zachowanie przycisków.
+
+Start z wersji:
+- betai_wersja_961_CZYTELNY_WYKRES_WYNIKOW_90D.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

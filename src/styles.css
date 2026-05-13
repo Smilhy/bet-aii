@@ -35703,3 +35703,35 @@ button.betfolio-fetch-btn{
     flex-direction:column !important;
   }
 }
+
+
+/* WERSJA 962 — aktywny wykres wyników */
+.profile-chart-mode-v961{
+  cursor:pointer !important;
+  outline:none !important;
+  appearance:auto !important;
+}
+.profile-chart-mode-v961 option{
+  background:#071421 !important;
+  color:#dff7ff !important;
+}
+.profile-results-range-v961 button{
+  cursor:pointer !important;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease !important;
+}
+.profile-results-range-v961 button:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(42,196,255,.55) !important;
+  box-shadow:0 0 14px rgba(42,196,255,.18) !important;
+}
+.profile-results-svg-v961{
+  transition:opacity .18s ease !important;
+}
+.profile-results-line-v961,
+.profile-results-area-v961,
+.profile-results-svg-v961 circle{
+  transition:all .22s ease !important;
+}
+
+
+/* WERSJA 963 — follow zapis lokalny + globalny */

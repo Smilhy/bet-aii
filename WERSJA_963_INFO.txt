@@ -1,0 +1,30 @@
+WERSJA 963
+
+Naprawa zapisywania Obserwuj / Obserwujesz dla całej strony.
+
+Problem:
+- kliknięcie działało od razu,
+- ale po odświeżeniu licznik i obserwowanie wracały,
+- bo aplikacja przy starcie czytała tylko Supabase i czyściła lokalny stan.
+
+Zrobione:
+1. Obserwowanie zapisuje się zawsze lokalnie w localStorage per zalogowany użytkownik.
+2. Po odświeżeniu aplikacja łączy:
+   - zapis lokalny,
+   - zapis z Supabase tipster_follows.
+3. Jeśli Supabase/RLS nie pozwala zapisać, decyzja nie znika po odświeżeniu tej przeglądarki.
+4. Jeśli Supabase jest poprawnie ustawiony, zapis działa globalnie między kontami/urządzeniami.
+5. Liczniki Społeczność uwzględniają lokalne obserwowania.
+6. Dodano SQL:
+   supabase/version_963_tipster_follows_persistence.sql
+
+WAŻNE:
+Żeby zapis był naprawdę globalny, uruchom SQL version_963_tipster_follows_persistence.sql w Supabase.
+
+Start z wersji:
+- betai_wersja_962_AKTYWNY_WYKRES_WYNIKOW.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
+- supabase/version_963_tipster_follows_persistence.sql
