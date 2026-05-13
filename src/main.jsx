@@ -348,13 +348,18 @@ function readTipStakeValue(tip) {
 }
 
 function readTipProfitValue(tip) {
-  const explicit = tip?.profit ?? tip?.profit_amount ?? tip?.result_profit ?? tip?.payout_profit
-  if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
   const stake = readTipStakeValue(tip)
   const odds = Number(tip?.odds ?? tip?.course ?? 0) || 0
-  const status = normalizeTipSettlementStatus(tip?.status ?? tip?.result)
+  const status = normalizeTipSettlementStatus(tip?.status ?? tip?.result ?? tip?.result_status)
+
+  // Po resecie profit w bazie może mieć domyślne 0.
+  // Dla rozliczonego typu NIE wolno traktować profit=0 jako prawdy, bo wygrany typ z kursem 1.21 musi dać +21 zł.
   if (status === 'won') return stake * Math.max(odds - 1, 0)
   if (status === 'lost') return -stake
+  if (status === 'void') return 0
+
+  const explicit = tip?.profit ?? tip?.profit_amount ?? tip?.result_profit ?? tip?.payout_profit
+  if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
   return 0
 }
 
@@ -438,20 +443,43 @@ function getImportedProfileStats(profile) {
 }
 
 function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
-  if (importedStats && Number(importedStats.totalTips || 0) > 0) return importedStats
-  const totalStaked = Number(dynamicStats?.totalStaked || 0)
-  const profit = Number(dynamicStats?.profit || 0)
-  return {
-    yield: totalStaked > 0 ? (profit / totalStaked) * 100 : 0,
+  const dynamicTotalStaked = Number(dynamicStats?.totalStaked || 0)
+  const dynamicProfit = Number(dynamicStats?.profit || 0)
+  const dynamicFinal = {
+    yield: dynamicTotalStaked > 0 ? (dynamicProfit / dynamicTotalStaked) * 100 : 0,
     totalTips: Number(dynamicStats?.totalTips || 0) || 0,
     wonTips: Number(dynamicStats?.wonTips || 0) || 0,
     lostTips: Number(dynamicStats?.lostTips || 0) || 0,
     pendingTips: Number(dynamicStats?.pendingTips || 0) || 0,
-    totalStaked,
-    profit,
+    totalStaked: dynamicTotalStaked,
+    profit: dynamicProfit,
     avgOdds: Number(dynamicStats?.avgOddsCount || 0) > 0 ? Number(dynamicStats.avgOddsSum || 0) / Number(dynamicStats.avgOddsCount || 1) : 0,
     highestOdds: Number(dynamicStats?.highestOdds || 0) || 0,
   }
+
+  if (!importedStats || Number(importedStats.totalTips || 0) <= 0) return dynamicFinal
+
+  const importedTotalStaked = Number(importedStats.totalStaked || 0)
+  const importedProfit = Number(importedStats.profit || 0)
+  const importedLooksStaleAfterReset =
+    Number(importedStats.totalTips || 0) > 0 &&
+    importedTotalStaked <= 0 &&
+    importedProfit === 0 &&
+    Number(importedStats.avgOdds || 0) <= 0 &&
+    (dynamicFinal.totalStaked > 0 || dynamicFinal.avgOdds > 0 || dynamicFinal.profit !== 0)
+
+  if (importedLooksStaleAfterReset) {
+    return {
+      ...importedStats,
+      ...dynamicFinal,
+      totalTips: Math.max(Number(importedStats.totalTips || 0), Number(dynamicFinal.totalTips || 0)),
+      wonTips: Math.max(Number(importedStats.wonTips || 0), Number(dynamicFinal.wonTips || 0)),
+      lostTips: Math.max(Number(importedStats.lostTips || 0), Number(dynamicFinal.lostTips || 0)),
+      pendingTips: Math.max(Number(importedStats.pendingTips || 0), Number(dynamicFinal.pendingTips || 0)),
+    }
+  }
+
+  return importedStats
 }
 
 function compactNumberLabel(value, decimals = 2) {
@@ -529,24 +557,15 @@ function buildRankingFromTips(tips = []) {
     current.total_tips += 1
 
     const odds = Number(normalized.odds || normalized.course || 0) || 0
-    const stake = Number(normalized.stake || normalized.amount || normalized.stawka || normalized.bet_amount || 0) || 0
-    const explicitProfit = normalized.profit ?? normalized.result_profit ?? normalized.profit_amount ?? normalized.payout_profit
-    const st = String(normalized.status || normalized.result || normalized.result_status || '').toLowerCase()
+    const stake = readTipStakeValue(normalized)
+    const settlementStatus = normalizeTipSettlementStatus(normalized.status ?? normalized.result ?? normalized.result_status)
+    const profit = readTipProfitValue(normalized)
 
-    let profit = 0
-    if (explicitProfit !== undefined && explicitProfit !== null && String(explicitProfit) !== '') {
-      profit = Number(explicitProfit) || 0
-    } else if (['won','win','wygrany','wygrana'].includes(st)) {
-      profit = stake > 0 ? stake * Math.max(odds - 1, 0) : 0
-    } else if (['lost','loss','lose','przegrany','przegrana'].includes(st)) {
-      profit = stake > 0 ? -stake : 0
-    }
-
-    if (['won','win','wygrany','wygrana'].includes(st)) current.wins += 1
-    else if (['lost','loss','lose','przegrany','przegrana'].includes(st)) current.losses += 1
+    if (settlementStatus === 'won') current.wins += 1
+    else if (settlementStatus === 'lost') current.losses += 1
     else current.pending += 1
 
-    if (['won','win','wygrany','wygrana','lost','loss','lose','przegrany','przegrana'].includes(st)) {
+    if (settlementStatus === 'won' || settlementStatus === 'lost') {
       current.total_staked += stake
     }
     current.earnings += profit
@@ -1115,7 +1134,8 @@ function applyProfileAvatarToTip(tip, profileMap) {
     imported_avg_odds: profile.imported_avg_odds ?? tip.imported_avg_odds,
     imported_highest_odds: profile.imported_highest_odds ?? tip.imported_highest_odds,
     imported_tips_currency: profile.imported_tips_currency ?? tip.imported_tips_currency,
-    author_visible_stats: importedStats || tip.author_visible_stats || getImportedProfileStats(tip)
+    author_imported_stats: importedStats || getImportedProfileStats(tip) || null,
+    author_visible_stats: tip.author_visible_stats || importedStats || getImportedProfileStats(tip)
   }
 }
 
@@ -14618,13 +14638,17 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const getProfileTipStake = (tip = {}) => Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
   const getProfileTipOdds = (tip = {}) => Math.max(0, Number(tip.odds || tip.course || 0) || 0)
   const getProfileTipProfit = (tip = {}) => {
-    const explicit = tip.profit ?? tip.result_profit ?? tip.profit_amount ?? tip.pnl
-    if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
-    const status = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel)
+    const status = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
     const stake = getProfileTipStake(tip)
     const odds = getProfileTipOdds(tip)
+
+    // Profit=0 w rekordzie nie może blokować wyliczenia dla wygranej/przegranej.
     if (status === 'won') return stake * Math.max(0, odds - 1)
     if (status === 'lost') return -stake
+    if (status === 'void') return 0
+
+    const explicit = tip.profit ?? tip.result_profit ?? tip.profit_amount ?? tip.pnl
+    if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
     return 0
   }
   const getProfileTipSport = (tip = {}) => {
@@ -17437,10 +17461,19 @@ function App() {
       console.warn('global tip avatar hydration skipped', allProfileAvatarError)
     }
 
-    sourceTips = sourceTips.map(tip => ({
-      ...tip,
-      author_visible_stats: getImportedProfileStats(tip) || tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)
-    }))
+    const finalAuthorDynamicStatsMap = buildAuthorStatsFromTips(sourceTips)
+    sourceTips = sourceTips.map(tip => {
+      const dynamicStats =
+        finalAuthorDynamicStatsMap.get(getTipAuthorStatsKey(tip)) ||
+        finalAuthorDynamicStatsMap.get(String(tip.author_id || tip.user_id || '').toLowerCase()) ||
+        finalAuthorDynamicStatsMap.get(normalizeEmail(tip.author_email || tip.email || tip.user_email)) ||
+        finalAuthorDynamicStatsMap.get(normalizeEmail(tip.author_name || tip.username))
+      const importedStats = getImportedProfileStats(tip) || tip.author_imported_stats || null
+      return {
+        ...tip,
+        author_visible_stats: finalizeAuthorStats(dynamicStats, importedStats)
+      }
+    })
     let activeSubs = []
     if (userId) {
       const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')

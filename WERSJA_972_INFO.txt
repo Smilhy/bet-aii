@@ -1,0 +1,28 @@
+WERSJA 972
+
+Naprawa statystyk w Dashboardzie, karcie typu i prawej kolumnie Top typerzy.
+
+Problem:
+- Mój profil liczył poprawnie.
+- Dashboard i Top typerzy czasem brały zerowe/stare statystyki imported_* z profiles.
+- Po resecie lub częściowym SQL było np. Typy/Wygrane, ale Profit/Yield dalej 0.
+
+Zrobione:
+1. Jeśli imported_* mają liczniki, ale pieniądze/stawki są puste, aplikacja używa świeżych statystyk z realnych typów.
+2. Karta typu dostaje author_visible_stats przeliczone po pełnym wzbogaceniu profilu/autora.
+3. Ranking z typów używa tych samych funkcji:
+   - normalizeTipSettlementStatus
+   - readTipStakeValue
+   - readTipProfitValue
+4. Dodano bezpieczny SQL:
+   supabase/version_972_persist_tip_stats_safe.sql
+
+Ten SQL zapisuje statystyki do profiles.imported_* po insert/update/delete typu.
+Nie używa nieistniejących kolumn bet_amount/course.
+
+Start z wersji:
+- betai_wersja_971_STATYSTYKI_PO_RESECIE_LICZA_Z_TYPOW.zip
+
+Pliki zmienione:
+- src/main.jsx
+- supabase/version_972_persist_tip_stats_safe.sql
