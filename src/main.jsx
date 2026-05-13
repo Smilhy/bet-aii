@@ -18527,9 +18527,15 @@ function App() {
         })
         if (error) throw error
         if (data && data.claimed === false) {
+          const existingBalance = Number(data.new_balance ?? data.balance ?? tokenBalance ?? 0) || 0
+          setTokenBalance(existingBalance)
+          try { localStorage.setItem('betai_tokens_' + email, String(existingBalance)) } catch (_) {}
           showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie była już odebrana.' })
           return true
         }
+        const nextBalance = Number(data?.new_balance ?? data?.balance ?? (Number(tokenBalance || 0) + 1)) || 0
+        setTokenBalance(nextBalance)
+        try { localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
       } else {
         const next = Number(tokenBalance || 0) + 1
         setTokenBalance(next)
@@ -18537,7 +18543,8 @@ function App() {
       }
       try { localStorage.setItem(`betai_${rewardKey}_${userId}`, '1') } catch (_) {}
       await fetchNotifications(userId)
-      await fetchCurrentTokenBalance()
+      // Nie nadpisujemy od razu świeżo dodanego salda starym cache/RLS fallbackiem.
+      window.setTimeout(() => { try { fetchCurrentTokenBalance() } catch (_) {} }, 1200)
       showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
       return true
     } catch (error) {

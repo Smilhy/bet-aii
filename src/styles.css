@@ -39197,3 +39197,115 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1000 */
+
+
+/* ==========================================================================
+   WERSJA 1001 — REWARD PERSIST VISUAL STABILITY
+   ========================================================================== */
+
+.ranking-live-v999 .challenge-item-v4.is-claimed .challenge-progress-v4 span{
+  color:#9fb8c8 !important;
+}
+
+.ranking-live-v999 .challenge-item-v4.is-claimed .challenge-bar-v4 i{
+  background:linear-gradient(90deg, rgba(32,242,210,.45), rgba(80,170,255,.38)) !important;
+}
+
+/* KONIEC WERSJI 1001 */
+
+
+/* ==========================================================================
+   WERSJA 1002 — RANKING GOLD PROFIT GLOW
+   UI ONLY. NIE RUSZA LOGIKI / SQL / API / FUNCTIONS.
+   ========================================================================== */
+
+.ranking-live-v999 .ranking-v4-row .profit-v4,
+.ranking-live-v999 .top-tipster-row-v4 > b,
+.ranking-live-v999 .hall-laurels-v4 small,
+.ranking-live-v999 .hall-copy-v4 small{
+  color:#ffd76a !important;
+  font-weight:1000 !important;
+  text-shadow:
+    0 0 8px rgba(255,215,106,.36),
+    0 0 18px rgba(255,184,48,.22),
+    0 0 32px rgba(255,145,30,.10) !important;
+}
+
+.ranking-live-v999 .ranking-v4-row .profit-v4,
+.ranking-live-v999 .top-tipster-row-v4 > b{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:4px !important;
+  isolation:isolate !important;
+  animation:betaiGoldProfitPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.ranking-live-v999 .ranking-v4-row .profit-v4::before,
+.ranking-live-v999 .top-tipster-row-v4 > b::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-7px -10px !important;
+  z-index:-1 !important;
+  border-radius:999px !important;
+  background:
+    radial-gradient(circle, rgba(255,215,106,.18), rgba(255,184,48,.06) 44%, transparent 72%) !important;
+  opacity:.72 !important;
+  filter:blur(2px) !important;
+  pointer-events:none !important;
+  animation:betaiGoldAuraPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.ranking-live-v999 .ranking-v4-row .profit-v4::after,
+.ranking-live-v999 .top-tipster-row-v4 > b::after{
+  content:"✦" !important;
+  margin-left:4px !important;
+  color:#ffe18a !important;
+  font-size:11px !important;
+  opacity:.85 !important;
+  text-shadow:0 0 10px rgba(255,215,106,.55) !important;
+}
+
+.ranking-live-v999 .ranking-v4-row:hover .profit-v4,
+.ranking-live-v999 .top-tipster-row-v4:hover > b{
+  color:#fff1a8 !important;
+  text-shadow:
+    0 0 10px rgba(255,230,140,.60),
+    0 0 26px rgba(255,190,40,.38),
+    0 0 42px rgba(255,145,30,.18) !important;
+}
+
+/* Profit w bocznym module i galerii — złoty akcent bez zmiany reszty tekstu */
+.ranking-live-v999 .top-tipsters-list-v4 .top-tipster-row-v4 > b{
+  min-width:82px !important;
+  text-align:right !important;
+}
+
+.ranking-live-v999 .hall-laurels-v4 small{
+  opacity:1 !important;
+}
+
+@keyframes betaiGoldProfitPulse1002{
+  0%, 100%{
+    transform:translateY(0);
+    filter:saturate(1);
+  }
+  50%{
+    transform:translateY(-.5px);
+    filter:saturate(1.22);
+  }
+}
+
+@keyframes betaiGoldAuraPulse1002{
+  0%, 100%{
+    opacity:.42;
+    transform:scale(.96);
+  }
+  50%{
+    opacity:.88;
+    transform:scale(1.04);
+  }
+}
+
+/* KONIEC WERSJI 1002 */
