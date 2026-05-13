@@ -38273,3 +38273,592 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 995 */
+
+
+/* ==========================================================================
+   WERSJA 996 — PORTFEL ULTRA PRO UI ONLY
+   CSS ONLY — NIE RUSZA LOGIKI / STRIPE / SUPABASE / FUNKCJI
+   ========================================================================== */
+
+.wallet-ultra-page{
+  --wallet-cyan:#19e8ff;
+  --wallet-cyan-2:#22f2d2;
+  --wallet-blue:#5aa8ff;
+  --wallet-violet:#7985ff;
+  --wallet-border:rgba(58,215,255,.16);
+  --wallet-panel:linear-gradient(180deg, rgba(8,27,52,.84), rgba(4,16,31,.92));
+  --wallet-panel-soft:linear-gradient(180deg, rgba(8,24,45,.72), rgba(4,16,31,.84));
+  position:relative;
+}
+
+.wallet-ultra-page::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(24,231,255,.07), transparent 20%),
+    radial-gradient(circle at 86% 10%, rgba(84,166,255,.08), transparent 22%),
+    radial-gradient(circle at 70% 100%, rgba(34,242,210,.05), transparent 26%);
+}
+
+.wallet-ultra-page .wallet-v2-layout,
+.wallet-ultra-page .wallet-v2-main{position:relative;z-index:1;}
+
+.wallet-ultra-page .glass-v2-panel{
+  background:
+    radial-gradient(circle at 100% 0%, rgba(24,231,255,.06), transparent 28%),
+    linear-gradient(180deg, rgba(8,27,52,.84), rgba(4,16,31,.92)) !important;
+  border:1px solid rgba(54,214,255,.14) !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04), 0 0 26px rgba(24,231,255,.04) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero{
+  min-height:340px !important;
+  margin:8px 0 24px !important;
+  padding:38px 44px !important;
+  border-radius:30px !important;
+  background:
+    radial-gradient(circle at 77% 52%, rgba(79,130,255,.22), transparent 30%),
+    radial-gradient(circle at 85% 18%, rgba(24,231,255,.11), transparent 18%),
+    linear-gradient(135deg, rgba(8,24,47,.97), rgba(5,20,40,.96)) !important;
+  border:1px solid rgba(61,224,255,.18) !important;
+  box-shadow:0 34px 86px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05), 0 0 30px rgba(24,231,255,.05) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-copy h2{
+  font-size:66px !important;
+  letter-spacing:-.065em !important;
+  line-height:.93 !important;
+  margin-bottom:16px !important;
+  text-shadow:0 16px 40px rgba(0,0,0,.34), 0 0 18px rgba(24,231,255,.06) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-copy p{
+  max-width:690px !important;
+  font-size:18px !important;
+  color:#d7e8f4 !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-features{gap:18px 24px !important;}
+.wallet-ultra-page .wallet-v2-hero-features div{
+  min-width:188px !important;
+  padding:14px 14px 14px 0 !important;
+}
+.wallet-ultra-page .wallet-v2-hero-features i{
+  width:40px !important;
+  height:40px !important;
+  border-radius:14px !important;
+  background:rgba(24,231,255,.09) !important;
+  border:1px solid rgba(24,231,255,.16) !important;
+  color:#19e8ff !important;
+  box-shadow:0 0 24px rgba(24,231,255,.10) !important;
+}
+.wallet-ultra-page .wallet-v2-hero-features strong{font-size:13px !important; color:#f2fdff !important;}
+.wallet-ultra-page .wallet-v2-hero-features small{color:#9fb8ca !important;}
+
+.wallet-ultra-page .wallet-v2-hero-visual{min-height:250px !important;}
+.wallet-ultra-page .wallet-v2-hero-orbit{opacity:.88 !important;}
+.wallet-ultra-page .wallet-v2-hero-coin{
+  box-shadow:0 0 0 1px rgba(47,222,255,.24),0 0 55px rgba(24,211,255,.16),inset 0 0 28px rgba(40,220,255,.10),0 24px 48px rgba(0,0,0,.24) !important;
+}
+.wallet-ultra-page .wallet-v2-hero-card{
+  backdrop-filter:blur(8px) !important;
+  -webkit-backdrop-filter:blur(8px) !important;
+  background:linear-gradient(180deg, rgba(12,35,67,.76), rgba(8,22,43,.84)) !important;
+}
+.wallet-ultra-page .wallet-v2-hero-card-main{transform:rotate(-7deg) !important;}
+.wallet-ultra-page .wallet-v2-hero-card-deposit{transform:rotate(-2deg) !important;}
+.wallet-ultra-page .wallet-v2-hero-card-withdraw{transform:rotate(4deg) !important;}
+
+.wallet-ultra-page .wallet-stripe-connect-card{
+  margin:0 0 16px !important;
+  min-height:128px !important;
+  padding:24px 28px !important;
+  border-radius:26px !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(24,231,255,.07), transparent 26%),
+    linear-gradient(180deg, rgba(7,25,45,.82), rgba(4,16,31,.90)) !important;
+  border-color:rgba(55,214,255,.14) !important;
+}
+.wallet-ultra-page .wallet-stripe-connect-head h3{font-size:20px !important;}
+.wallet-ultra-page .wallet-stripe-connect-card p{font-size:15px !important;}
+.wallet-ultra-page .wallet-stripe-connect-card > button{
+  min-width:228px !important;
+  min-height:60px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg, #25ddff, #37c4ff 40%, #5aa8ff) !important;
+  box-shadow:0 18px 36px rgba(43,152,255,.26), 0 0 18px rgba(37,221,255,.08) !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:12px !important;
+  padding:14px 16px !important;
+  margin-bottom:18px !important;
+  border-radius:24px !important;
+}
+.wallet-ultra-page .wallet-v2-tabs button{
+  min-height:48px !important;
+  padding:0 18px !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg, rgba(16,41,74,.70), rgba(8,24,44,.84)) !important;
+  border:1px solid rgba(74,172,255,.14) !important;
+  color:#d5e6f2 !important;
+  font-weight:900 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 10px 22px rgba(0,0,0,.12) !important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease !important;
+}
+.wallet-ultra-page .wallet-v2-tabs button:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(61,224,255,.26) !important;
+  box-shadow:0 14px 28px rgba(0,0,0,.16), 0 0 18px rgba(24,231,255,.06) !important;
+}
+.wallet-ultra-page .wallet-v2-tabs button.active{
+  color:#05111b !important;
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff, #7a84ff) !important;
+  border-color:transparent !important;
+  box-shadow:0 18px 36px rgba(32,242,210,.18), 0 0 20px rgba(47,217,255,.10) !important;
+}
+.wallet-ultra-page .wallet-v2-tabs .wallet-v2-admin-tab{
+  background:linear-gradient(180deg, rgba(73,8,17,.82), rgba(53,6,12,.90)) !important;
+  border-color:rgba(255,87,118,.18) !important;
+}
+.wallet-ultra-page .wallet-v2-tabs .wallet-v2-admin-tab.is-unlocked{
+  background:linear-gradient(180deg, rgba(91,15,24,.82), rgba(70,8,15,.90)) !important;
+}
+
+.wallet-ultra-page .wallet-v2-topstats{
+  gap:18px !important;
+  margin-bottom:18px !important;
+}
+.wallet-ultra-page .wallet-v2-stat{
+  min-height:118px !important;
+  padding:16px 18px !important;
+  border-radius:22px !important;
+  position:relative !important;
+  overflow:hidden !important;
+}
+.wallet-ultra-page .wallet-v2-stat::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg, rgba(255,255,255,.03), transparent 35%, transparent 68%, rgba(24,231,255,.04));
+}
+.wallet-ultra-page .wallet-v2-stat:nth-child(1){
+  background:radial-gradient(circle at 100% 0%, rgba(34,242,210,.10), transparent 26%), linear-gradient(180deg, rgba(6,48,42,.92), rgba(5,27,34,.96)) !important;
+  border-color:rgba(38,224,188,.22) !important;
+}
+.wallet-ultra-page .wallet-v2-stat:nth-child(2){
+  background:radial-gradient(circle at 100% 0%, rgba(24,231,255,.08), transparent 26%), linear-gradient(180deg, rgba(8,34,58,.92), rgba(6,22,41,.96)) !important;
+}
+.wallet-ultra-page .wallet-v2-stat:nth-child(3){
+  background:radial-gradient(circle at 100% 0%, rgba(122,132,255,.10), transparent 26%), linear-gradient(180deg, rgba(13,32,59,.92), rgba(7,20,38,.96)) !important;
+  border-color:rgba(116,133,255,.18) !important;
+}
+.wallet-ultra-page .wallet-v2-stat-top{
+  align-items:center !important;
+  justify-content:space-between !important;
+}
+.wallet-ultra-page .wallet-v2-stat-top span{
+  font-size:12px !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  font-weight:1000 !important;
+  color:#bfd6e6 !important;
+}
+.wallet-ultra-page .wallet-v2-stat-top i{
+  width:34px !important;
+  height:34px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  background:rgba(24,231,255,.08) !important;
+  border:1px solid rgba(24,231,255,.14) !important;
+  color:#1ce8ff !important;
+  font-style:normal !important;
+}
+.wallet-ultra-page .wallet-v2-stat strong{font-size:18px !important;}
+.wallet-ultra-page .wallet-v2-stat small{color:#9db6c8 !important;}
+
+.wallet-ultra-page .wallet-v2-midgrid,
+.wallet-ultra-page .wallet-v2-bottomgrid{gap:18px !important;}
+.wallet-ultra-page .wallet-v2-card{
+  border-radius:24px !important;
+  padding:18px !important;
+}
+.wallet-ultra-page .wallet-v2-card-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+}
+.wallet-ultra-page .wallet-v2-card-head h3{
+  font-size:22px !important;
+  color:#f2fdff !important;
+  letter-spacing:-.03em !important;
+}
+.wallet-ultra-page .wallet-v2-card-head button,
+.wallet-ultra-page .wallet-v2-card-head span{
+  font-weight:900 !important;
+}
+
+.wallet-ultra-page .wallet-v2-action-grid{gap:14px !important;}
+.wallet-ultra-page .wallet-v2-action-grid button{
+  min-height:88px !important;
+  padding:18px !important;
+  border-radius:18px !important;
+  border:1px solid rgba(57,214,255,.12) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(24,231,255,.05), transparent 28%),
+    linear-gradient(180deg, rgba(8,28,52,.84), rgba(5,18,34,.90)) !important;
+}
+.wallet-ultra-page .wallet-v2-action-grid button b{
+  width:40px !important;
+  height:40px !important;
+  border-radius:14px !important;
+  background:rgba(24,231,255,.09) !important;
+  border:1px solid rgba(24,231,255,.15) !important;
+  color:#20f2d2 !important;
+  box-shadow:0 0 18px rgba(24,231,255,.08) !important;
+}
+.wallet-ultra-page .wallet-v2-action-grid button strong{font-size:15px !important;color:#eef9ff !important;}
+.wallet-ultra-page .wallet-v2-action-grid button small{color:#91acc2 !important;}
+
+.wallet-ultra-page .wallet-v2-history-list{gap:12px !important;}
+.wallet-ultra-page .wallet-v2-history-item{
+  min-height:66px !important;
+  padding:14px 14px !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg, rgba(8,26,49,.74), rgba(5,17,33,.84)) !important;
+  border:1px solid rgba(56,214,255,.10) !important;
+}
+.wallet-ultra-page .wallet-v2-history-item .history-icon{
+  width:38px !important;
+  height:38px !important;
+  border-radius:12px !important;
+  background:rgba(24,231,255,.08) !important;
+  border:1px solid rgba(24,231,255,.13) !important;
+}
+
+.wallet-ultra-page .wallet-v2-methods-card{padding-bottom:20px !important;}
+.wallet-ultra-page .wallet-v2-sub{
+  color:#93afc4 !important;
+  font-weight:900 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  font-size:11px !important;
+}
+.wallet-ultra-page .wallet-v2-payment-grid-live{gap:12px !important;}
+.wallet-ultra-page .wallet-v2-payment-grid-live > button.wallet-pay-method{
+  min-height:96px !important;
+  border-radius:16px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(24,231,255,.06), transparent 28%),
+    linear-gradient(180deg, rgba(8,28,53,.82), rgba(5,18,34,.90)) !important;
+}
+.wallet-ultra-page .wallet-v2-payment-grid-live > button.wallet-pay-method.is-active{
+  border-color:rgba(35,235,255,.20) !important;
+}
+.wallet-ultra-page .wallet-v2-payment-grid-live > button.wallet-pay-method.is-active:hover{
+  box-shadow:0 18px 36px rgba(0,0,0,.18), 0 0 22px rgba(31,225,247,.08) !important;
+}
+.wallet-ultra-page .pay-logo{
+  box-shadow:0 0 18px rgba(24,231,255,.06) !important;
+}
+.wallet-ultra-page .wallet-v2-primary-btn{
+  min-height:54px !important;
+  border-radius:16px !important;
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff, #7a84ff) !important;
+  color:#06111b !important;
+  font-weight:1000 !important;
+  box-shadow:0 18px 36px rgba(32,242,210,.18), 0 0 20px rgba(47,217,255,.10) !important;
+}
+.wallet-ultra-page .wallet-v2-primary-btn:hover{
+  transform:translateY(-1px) !important;
+}
+
+.wallet-ultra-page .wallet-v2-invoice-list,
+.wallet-ultra-page .wallet-v2-empty-documents,
+.wallet-ultra-page .earnings-empty-v2{
+  border-radius:18px !important;
+}
+.wallet-ultra-page .invoice-item{
+  border-radius:16px !important;
+  background:linear-gradient(180deg, rgba(8,26,49,.72), rgba(4,17,33,.82)) !important;
+  border:1px solid rgba(56,214,255,.10) !important;
+}
+.wallet-ultra-page .subscription-badge-v2{
+  border-radius:18px !important;
+  background:linear-gradient(180deg, rgba(8,28,52,.76), rgba(5,18,34,.86)) !important;
+  border:1px solid rgba(56,214,255,.12) !important;
+}
+.wallet-ultra-page .premium-round{
+  box-shadow:0 0 20px rgba(24,231,255,.08) !important;
+}
+.wallet-ultra-page .sub-feature-list li{
+  border-bottom-color:rgba(56,214,255,.08) !important;
+}
+.wallet-ultra-page .earnings-topline select{
+  min-height:46px !important;
+  border-radius:14px !important;
+  background:rgba(5,18,34,.90) !important;
+}
+.wallet-ultra-page .earnings-live-stats span,
+.wallet-ultra-page .earnings-live-last span{
+  border-radius:14px !important;
+  background:linear-gradient(180deg, rgba(9,27,48,.74), rgba(5,17,31,.82)) !important;
+}
+
+@media (max-width: 1450px){
+  .wallet-ultra-page .wallet-v2-hero-copy h2{font-size:56px !important;}
+}
+@media (max-width: 1100px){
+  .wallet-ultra-page .wallet-v2-hero{padding:28px !important;}
+}
+@media (max-width: 900px){
+  .wallet-ultra-page .wallet-v2-tabs{padding:12px !important;}
+  .wallet-ultra-page .wallet-v2-tabs button{flex:1 1 100% !important;}
+  .wallet-ultra-page .wallet-v2-hero-copy h2{font-size:42px !important;}
+}
+
+/* KONIEC WERSJI 996 */
+
+
+/* ==========================================================================
+   WERSJA 997 — FIX DODAJ TYP: ROZWIJANIE KRAJÓW / LIG
+   CSS ONLY. NIE RUSZA JS / LOGIKI / API / NETLIFY FUNCTIONS.
+   ========================================================================== */
+
+/*
+  Przyczyna:
+  W wersji UI dla Dodaj typ styl został nadany na wrapper .football-country-node
+  i dostał overflow:hidden. To przycinało listę lig po rozwinięciu kraju.
+
+  Naprawa:
+  Wrapper kraju ma być przezroczysty i overflow:visible.
+  Styl premium idzie na realny przycisk: .football-country-node > button.
+*/
+
+.add-tip-betfolio-page .football-country-tree{
+  position:relative !important;
+  z-index:10 !important;
+  max-height:560px !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding-right:4px !important;
+  padding-bottom:10px !important;
+}
+
+.add-tip-betfolio-page .football-country-node{
+  display:grid !important;
+  gap:7px !important;
+  position:relative !important;
+  overflow:visible !important;
+  min-height:auto !important;
+  height:auto !important;
+  padding:0 !important;
+  margin:0 0 7px !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  pointer-events:auto !important;
+  isolation:auto !important;
+}
+
+.add-tip-betfolio-page .football-country-node::before,
+.add-tip-betfolio-page .football-country-node::after{
+  display:none !important;
+  content:none !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button{
+  position:relative !important;
+  z-index:2 !important;
+  overflow:hidden !important;
+  width:100% !important;
+  min-height:44px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  padding:0 13px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(78,169,255,.14) !important;
+  background:
+    linear-gradient(180deg, rgba(33,48,84,.86), rgba(23,36,66,.92)) !important;
+  color:#dcecff !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 22px rgba(0,0,0,.14) !important;
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background:linear-gradient(90deg, rgba(255,255,255,.045), transparent 38%, rgba(24,231,255,.04)) !important;
+  z-index:0 !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button > *{
+  position:relative !important;
+  z-index:1 !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(61,221,255,.28) !important;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.18),
+    0 0 18px rgba(24,231,255,.06),
+    inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button.is-active,
+.add-tip-betfolio-page .football-country-node > button.country-active{
+  background:
+    linear-gradient(135deg, rgba(24,231,255,.18), rgba(104,118,255,.18)) !important;
+  border-color:rgba(62,224,255,.36) !important;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.20),
+    0 0 20px rgba(24,231,255,.08),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.add-tip-betfolio-page .football-country-label{
+  display:flex !important;
+  align-items:center !important;
+  gap:9px !important;
+  min-width:0 !important;
+  flex:1 1 auto !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#dcecff !important;
+  font-weight:900 !important;
+}
+
+.add-tip-betfolio-page .football-country-flag{
+  flex:0 0 auto !important;
+  width:20px !important;
+  height:14px !important;
+  border-radius:3px !important;
+  object-fit:cover !important;
+  box-shadow:0 0 10px rgba(0,0,0,.22) !important;
+}
+
+.add-tip-betfolio-page .football-country-region-icon{
+  flex:0 0 auto !important;
+  font-style:normal !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button b{
+  position:relative !important;
+  z-index:1 !important;
+  flex:0 0 auto !important;
+  width:22px !important;
+  height:22px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  color:#9fc4dc !important;
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.045) !important;
+}
+
+/* Lista lig po rozwinięciu kraju */
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list{
+  position:relative !important;
+  z-index:20 !important;
+  display:grid !important;
+  gap:6px !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+  padding:7px 0 4px 12px !important;
+  margin:0 0 2px 10px !important;
+  border-left:1px solid rgba(24,231,255,.18) !important;
+  animation:betaiLeagueOpen997 .16s ease-out both !important;
+  pointer-events:auto !important;
+}
+
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button{
+  position:relative !important;
+  z-index:21 !important;
+  width:100% !important;
+  min-height:38px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  padding:0 12px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(78,169,255,.10) !important;
+  background:
+    linear-gradient(180deg, rgba(13,35,63,.78), rgba(8,24,45,.88)) !important;
+  color:#cfe3f4 !important;
+  font-weight:850 !important;
+  text-align:left !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button:hover{
+  border-color:rgba(61,221,255,.26) !important;
+  color:#f1fdff !important;
+  transform:translateX(2px) !important;
+}
+
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.is-active,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.league-active{
+  color:#06111b !important;
+  background:linear-gradient(135deg, #20f2d2, #2dd8ff, #7b84ff) !important;
+  border-color:transparent !important;
+  box-shadow:0 10px 22px rgba(24,231,255,.16) !important;
+}
+
+/* Główna główka sportu nadal zostaje premium, ale nie blokuje kliknięć */
+.add-tip-betfolio-page .sport-accordion-head{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:3 !important;
+}
+
+.add-tip-betfolio-page .sport-accordion-head::before{
+  pointer-events:none !important;
+}
+
+/* Nadpisujemy niebezpieczne stare stylowanie wrapperów */
+.add-tip-betfolio-page .sport-accordion-children{
+  overflow:visible !important;
+  pointer-events:auto !important;
+}
+
+.add-tip-betfolio-page .sports-accordion-list{
+  overflow:visible !important;
+  pointer-events:auto !important;
+}
+
+@keyframes betaiLeagueOpen997{
+  from{
+    opacity:0;
+    transform:translateY(-4px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* KONIEC WERSJI 997 */
