@@ -7014,6 +7014,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         allLeagues: overrides.allLeagues ? '1' : '0',
         mode: overrides.mode || footballViewMode || 'league-today',
         query: overrides.query || '',
+        forceRefresh: isSilentRefresh ? '0' : '1',
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
@@ -7039,7 +7040,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
               : `dzisiejszych meczów ligi ${requestedLeague}`
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.`)
+          const oddsInfo = data.oddsMessage || data.oddsSourceMessage || data.message || ''
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.${oddsInfo ? ` Kursy: ${oddsInfo}` : ''}`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
         } else {
           setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
@@ -15009,14 +15011,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <span>Typy automatyczne rozlicza system po wyniku meczu. Ręczna przegrana rozlicza się od razu, a wygrana i zwrot czekają na zatwierdzenie admina.</span>
                 </div>
                 <div className="profile-v4-results-table profile-v4-results-table-v945">
-                  <div><b>Mecz</b><b>Data / godzina</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
+                  <div><b>Data / godzina</b><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
                   {resultTipRows.length ? resultTipRows.map(tip => {
                     const canRequestSettlement = profileIsOwnForViewer && ['Oczekujący', 'Odrzucony'].includes(tip.statusLabel)
                     const eventDateTime = getTipEventDateTime(tip.rawTip || tip)
                     return (
                       <div key={tip.id}>
-                        <span>{tip.home} — {tip.away}</span>
                         <span className="profile-result-date-time-v964"><b>{eventDateTime.date}</b><small>{eventDateTime.time}</small></span>
+                        <span>{tip.home} — {tip.away}</span>
                         <span>{tip.pick}</span>
                         <span>{tip.odds}</span>
                         <span>{tip.stake.toFixed(2)} zł</span>

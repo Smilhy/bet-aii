@@ -35739,7 +35739,7 @@ button.betfolio-fetch-btn{
 
 /* WERSJA 964 — data i godzina zdarzenia w tabeli wyników */
 .profile-v4-results-table-v945 > div{
-  grid-template-columns: 1.35fr .72fr 1.1fr .45fr .55fr .62fr .9fr !important;
+  grid-template-columns: .72fr 1.35fr 1.1fr .45fr .55fr .62fr .9fr !important;
 }
 .profile-result-date-time-v964{
   display:flex !important;

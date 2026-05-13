@@ -1,0 +1,15 @@
+W Netlify ustaw:
+
+APISPORTS_KEY=twoj_klucz_api_sports
+
+Opcjonalne aliasy też są obsługiwane:
+API_SPORTS_KEY
+API_FOOTBALL_KEY
+API_FOOTBALL
+VITE_APISPORTS_KEY
+VITE_API_FOOTBALL_KEY
+
+Najlepiej użyj APISPORTS_KEY.
+
+Po ustawieniu:
+Deploys -> Trigger deploy -> Clear cache and deploy site.
