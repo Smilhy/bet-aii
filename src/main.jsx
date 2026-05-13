@@ -9124,14 +9124,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             </div>
           </div>
 
-          <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>Wydarzenia live</h3><button type="button">Zobacz wszystkie</button></div>
-            <div className="events-list-v5">
-              <div className="event-row-v5"><span className="event-thumb-v5 e1"></span><div><strong>Q&A z AI Master</strong><small>Analizy i typy na żywo</small><em>{Math.max(activeUsersCount * 24, 24)} ogląda</em></div><b>LIVE</b></div>
-              <div className="event-row-v5"><span className="event-thumb-v5 e2"></span><div><strong>Typer Talk: Premier League</strong><small>Dyskusja społeczności</small><em>{Math.max(posts.length * 18, 18)} ogląda</em></div><b>LIVE</b></div>
-              <div className="event-row-v5"><span className="event-thumb-v5 e3"></span><div><strong>Misja specjalna</strong><small>Zgarnij nagrody!</small><em>{Math.max(communityStats.myPosts + communityStats.myComments, 1)} aktywnych</em></div><b>LIVE</b></div>
-            </div>
-          </div>
         </aside>
       </div>
 
