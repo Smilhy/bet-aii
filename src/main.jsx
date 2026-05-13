@@ -1,3 +1,33 @@
+/*
+===============================================================================
+CORE LOCK v983 — NIE RUSZAĆ BEZ WYRAŹNEJ PROŚBY PAWŁA
+===============================================================================
+
+Zamrożone obszary:
+1. Tożsamość profilu:
+   - public_slug / email / id mają pierwszeństwo,
+   - "user", "użytkownik", "uzytkownik" nie są prawdziwymi nickami.
+2. Przypisywanie typów:
+   - author_id/user_id -> email -> nazwa tylko jeśli nie jest generic.
+3. Statystyki:
+   - Typy = wszystkie typy.
+   - Pending = nierozliczone.
+   - Profit/Bilans = tylko rozliczone.
+   - Stawka do Yield/ROI = tylko rozliczone.
+   - Pending nie wchodzi do Yield/ROI.
+   - Wygrana = stake * (odds - 1).
+   - Przegrana = -stake.
+   - Zwrot/pending = 0.
+4. Ranking / Top typerzy:
+   - korzysta z tej samej tożsamości i tych samych imported_* statystyk.
+5. Realtime:
+   - tips INSERT/UPDATE/DELETE odświeża UI bez F5,
+   - profiles UPDATE odświeża statystyki i ranking bez F5.
+
+Każda przyszła zmiana UI/layout/kolorów/przycisków NIE może zmieniać powyższej logiki.
+===============================================================================
+*/
+
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
@@ -823,11 +853,13 @@ function isVisibleTipForUser(tip, userId, unlockedSet) {
   return false
 }
 
+// CORE LOCK v983: generic nazwy nie są prawdziwym nickiem profilu.
 function isGenericProfileName(value) {
   const clean = String(value || '').trim().toLowerCase()
   return ['user', 'użytkownik', 'uzytkownik'].includes(clean)
 }
 
+// CORE LOCK v983: jedna kolejność ustalania nazwy profilu dla całej strony.
 function resolveRealProfileUsername(user) {
   const email = normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
   const emailLocal = email ? email.split('@')[0] : ''
@@ -915,6 +947,7 @@ function getProfileAvatarUrl(user) {
   )
 }
 
+// CORE LOCK v983: mapowanie profili po ID/email/public_slug, bez generic username.
 function addProfileToMap(profileMap, profile = {}) {
   if (!profileMap || !profile) return
   const emailKey = normalizeEmail(profile.email || profile.user_email || profile.author_email)
@@ -931,6 +964,7 @@ function addProfileToMap(profileMap, profile = {}) {
   if (usernameKey && !isGenericProfileName(usernameKey)) profileMap.set(usernameKey, profile)
 }
 
+// CORE LOCK v983: znajdowanie profilu bez mieszania użytkowników po nazwie 'user'.
 function findProfileFromMap(profileMap, source = {}) {
   if (!profileMap || !source) return null
   const emailKey = normalizeEmail(source.email || source.author_email || source.user_email)
@@ -1555,6 +1589,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   )
 }
 
+// CORE LOCK v983: Top typerzy nie mogą pokazywać technicznego 'Użytkownik', jeśli jest stabilny profil.
 function formatRankingName(row) {
   // 🔒 v982: jedna zasada nazwy w rankingach/top typerach.
   // Nie pokazujemy technicznego "user/użytkownik", jeśli mamy public_slug/email/display.
@@ -17605,6 +17640,7 @@ function App() {
       return incomingTip
     }
 
+    // CORE LOCK v983: realtime tips/profiles — auto-refresh bez F5, nie usuwać.
     const channel = supabase
       .channel(`betai-live-tip-center-${sessionUser.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
