@@ -1,0 +1,14 @@
+WERSJA 999 — RANKING LIVE LOGIC
+
+Dodane:
+- ranking klikalny po użytkowniku,
+- avatary w tabeli rankingu i prawej kolumnie,
+- zakładki rankingu i prawej kolumny działają,
+- follow/obserwuj podpięty pod istniejącą logikę toggleFollowTipster,
+- rangi/odznaki liczone z miejsca, profitu, ROI, wygranych i liczby typów,
+- wyzwania liczone z realnych statystyk użytkownika,
+- nagroda za wyzwanie ustawiona na 1 żeton,
+- RPC claim_ranking_challenge_reward dodaje żeton i powiadomienie,
+- SQL tworzy tipster_follows, challenge claims, powiadomienia i widok rankingu.
+
+Baza: wersja 998, więc zachowane są wszystkie wcześniejsze poprawki i netlify/functions.

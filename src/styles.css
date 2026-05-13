@@ -38929,3 +38929,187 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 998 */
+
+
+/* ==========================================================================
+   WERSJA 999 — RANKING LIVE LOGIC + PREMIUM UI
+   CSS ONLY dla wyglądu, logika jest w main.jsx.
+   ========================================================================== */
+
+.ranking-live-v999 .ranking-v4-tabs button,
+.ranking-live-v999 .sidebar-tabs-v4 button,
+.ranking-live-v999 .sidebar-head-link-v4,
+.ranking-live-v999 .full-ranking-btn-v4,
+.ranking-live-v999 .hall-btn-v4{
+  cursor:pointer !important;
+}
+
+.ranking-live-v999 .ranking-v4-row.ranking-v999-clickable{
+  width:100% !important;
+  border:0 !important;
+  text-align:left !important;
+  cursor:pointer !important;
+  color:inherit !important;
+}
+
+.ranking-live-v999 .ranking-v4-row.ranking-v999-clickable:hover{
+  transform:translateY(-1px) !important;
+  background:
+    radial-gradient(circle at 98% 50%, rgba(24,231,255,.10), transparent 24%),
+    linear-gradient(180deg, rgba(8,31,55,.92), rgba(4,18,34,.95)) !important;
+  box-shadow:
+    0 14px 32px rgba(0,0,0,.22),
+    0 0 18px rgba(24,231,255,.06),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.ranking-live-v999 .tipster-photo-v4.has-avatar,
+.ranking-live-v999 .mini-avatar-v4.has-avatar{
+  overflow:hidden !important;
+  background:rgba(2,16,27,.72) !important;
+  border:1px solid rgba(24,231,255,.42) !important;
+  box-shadow:
+    0 0 0 3px rgba(24,231,255,.07),
+    0 0 18px rgba(24,231,255,.14) !important;
+}
+
+.ranking-live-v999 .tipster-photo-v4.has-avatar img,
+.ranking-live-v999 .mini-avatar-v4.has-avatar img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  display:block !important;
+}
+
+.ranking-live-v999 .tipster-cell-v4 b,
+.ranking-live-v999 .top-tipster-row-v4 strong{
+  color:#f2fdff !important;
+}
+
+.ranking-live-v999 .follow-btn-v4{
+  min-width:106px !important;
+  min-height:38px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(24,231,255,.18) !important;
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff, #7a84ff) !important;
+  color:#06111b !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 22px rgba(32,242,210,.12) !important;
+}
+
+.ranking-live-v999 .follow-btn-v4.is-following{
+  color:#20f2d2 !important;
+  background:rgba(4,20,34,.72) !important;
+  border-color:rgba(32,242,210,.35) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.ranking-live-v999 .badges-cell-v4 i{
+  width:24px !important;
+  height:24px !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  background:rgba(24,231,255,.06) !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  margin-right:4px !important;
+  font-style:normal !important;
+}
+
+.ranking-live-v999 .sidebar-head-link-v4{
+  width:100% !important;
+  border:0 !important;
+  background:transparent !important;
+  text-align:right !important;
+  color:#20f2d2 !important;
+  font-weight:1000 !important;
+}
+
+.ranking-live-v999 .sidebar-tabs-v4 button{
+  transition:.16s ease !important;
+}
+
+.ranking-live-v999 .sidebar-tabs-v4 button:not(.active):hover,
+.ranking-live-v999 .ranking-v4-tabs button:not(.active):hover{
+  color:#f2fdff !important;
+  border-color:rgba(24,231,255,.22) !important;
+}
+
+.ranking-live-v999 .hall-laurels-v4{
+  display:grid !important;
+  gap:8px !important;
+}
+
+.ranking-live-v999 .hall-laurels-v4 button{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  width:100% !important;
+  padding:8px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  background:rgba(3,17,29,.28) !important;
+  color:inherit !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+
+.ranking-live-v999 .hall-laurels-v4 button:hover{
+  border-color:rgba(24,231,255,.26) !important;
+  background:rgba(24,231,255,.06) !important;
+}
+
+.ranking-live-v999 .challenge-item-v4.is-done{
+  border-color:rgba(32,242,136,.26) !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(32,242,136,.08), transparent 28%),
+    linear-gradient(180deg, rgba(7,32,42,.88), rgba(4,18,31,.92)) !important;
+}
+
+.ranking-live-v999 .challenge-reward-v4{
+  border:0 !important;
+  cursor:pointer !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+  background:rgba(32,242,210,.08) !important;
+  color:#20f2d2 !important;
+  font-weight:1000 !important;
+  text-align:center !important;
+}
+
+.ranking-live-v999 .challenge-item-v4.is-done .challenge-reward-v4{
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff) !important;
+  color:#06111b !important;
+  box-shadow:0 12px 24px rgba(32,242,210,.14) !important;
+}
+
+.ranking-live-v999 .referrals-main-v999{
+  padding:24px !important;
+  border-radius:24px !important;
+  display:grid !important;
+  gap:14px !important;
+}
+
+.ranking-live-v999 .referrals-main-v999 h3{
+  margin:0 !important;
+  color:#f2fdff !important;
+  font-size:28px !important;
+  letter-spacing:-.03em !important;
+}
+
+.ranking-live-v999 .referrals-main-v999 p{
+  margin:0 !important;
+  color:#9fb8ca !important;
+  font-weight:800 !important;
+}
+
+.ranking-live-v999 .referral-code-v4.big{
+  max-width:520px !important;
+}
+
+.ranking-live-v999 .referral-code-v4 button{
+  cursor:pointer !important;
+}
+
+/* KONIEC WERSJI 999 */

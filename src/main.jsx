@@ -11610,79 +11610,251 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   )
 }
 
-function LeaderboardView({ tips = [], ranking = [], onOpenTipster = null }) {
-  const leaderboardRows = buildLiveLeaderboardRows(ranking, tips)
-  const topTyperRows = leaderboardRows.slice(0, 3)
-  const challengeRows = [
-    ['Król trafień', 'Osiągnij 85% skuteczności w typach', '67%', '+100 AI Tokenów', '67%'],
-    ['Seria zwycięstw', 'Wygraj 10 typów z rzędu', '6/10', '+150 AI Tokenów', '60%'],
-    ['Value Hunter', 'Osiągnij ROI powyżej 20%', '15.2%', '+200 AI Tokenów', '15%'],
-  ]
+
+function getLiveRankingBadges(row = {}) {
+  const rank = Number(row.liveRank || 0)
+  const profit = Number(row.profit ?? row.earnings ?? row.total_earnings ?? 0) || 0
+  const roi = Number(row.roi ?? row.yield ?? 0) || 0
+  const wins = Number(row.wins || 0) || 0
+  const total = Number(row.totalTips || row.total_tips || 0) || 0
+  const badges = []
+  if (rank === 1) badges.push({ icon: '🥇', label: 'Lider profitu' })
+  else if (rank === 2) badges.push({ icon: '🥈', label: 'Drugie miejsce' })
+  else if (rank === 3) badges.push({ icon: '🥉', label: 'Trzecie miejsce' })
+  if (profit > 0) badges.push({ icon: '💰', label: 'Profit na plusie' })
+  if (roi >= 20) badges.push({ icon: '📈', label: 'ROI powyżej 20%' })
+  if (wins >= 10) badges.push({ icon: '🏆', label: 'Minimum 10 wygranych' })
+  if (total >= 10) badges.push({ icon: '🎯', label: 'Aktywny typer' })
+  if (!badges.length) badges.push({ icon: '📊', label: 'Uczestnik rankingu' })
+  return badges.slice(0, 3)
+}
+
+function LeaderboardView({
+  tips = [],
+  ranking = [],
+  onOpenTipster = null,
+  onFollowTipster = null,
+  followingTipsters = new Set(),
+  followStats = {},
+  user = null,
+  onToast = null,
+  referralData = null,
+  onRefreshRanking = null,
+  onChallengeReward = null
+}) {
+  const [activeTab, setActiveTab] = useState('ranking')
+  const [sidebarTab, setSidebarTab] = useState('top')
+  const [periodFilter, setPeriodFilter] = useState('all')
+  const [sportFilter, setSportFilter] = useState('all')
+
+  const allRows = buildLiveLeaderboardRows(ranking, tips).map(row => {
+    const rowName = formatRankingName(row)
+    const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
+    const rowKeys = [
+      rowRef,
+      row.tipster_id,
+      row.id,
+      row.user_id,
+      row.author_id,
+      row.email,
+      row.username,
+      rowName,
+      rowName ? String(rowName).split('@')[0] : ''
+    ].map(value => String(value || '').toLowerCase()).filter(Boolean)
+    const statsByKey = rowKeys.reduce((found, key) => found || followStats?.[key], null) || {}
+    const followers = Math.max(Number(row.followers || 0), Number(statsByKey.followers || 0))
+    return {
+      ...row,
+      rowName,
+      rowRef,
+      rowKeys,
+      followers,
+      isFollowing: rowKeys.some(key => followingTipsters?.has?.(key)),
+      avatarUrl: getProfileAvatarUrl(row),
+      displayBadges: getLiveRankingBadges(row)
+    }
+  })
+
+  const filteredRows = allRows
+    .filter(row => {
+      if (sportFilter === 'all') return true
+      const sport = String(row.sport || row.preferred_sport || row.discipline || '').toLowerCase()
+      return sport.includes(sportFilter)
+    })
+    .filter(row => {
+      if (periodFilter === 'month') return true
+      if (periodFilter === 'week') return true
+      return true
+    })
+
+  const leaderboardRows = filteredRows
+    .sort((a,b) => Number(b.profit ?? b.earnings ?? 0) - Number(a.profit ?? a.earnings ?? 0))
+    .map((row, idx) => ({ ...row, liveRank: idx + 1 }))
+
+  const topTyperRows = leaderboardRows.slice(0, 5)
+  const monthlyRows = leaderboardRows.slice(0, 5)
+  const currentUserKey = String(user?.id || '').toLowerCase()
+  const currentUserRow = leaderboardRows.find(row => row.rowKeys.includes(currentUserKey)) || leaderboardRows.find(row => normalizeEmail(row.email) === normalizeEmail(user?.email || ''))
+
+  const buildChallengeRows = () => {
+    const winrate = Number(currentUserRow?.winrate || 0)
+    const wins = Number(currentUserRow?.wins || 0)
+    const roi = Number(currentUserRow?.roi || currentUserRow?.yield || 0)
+    const challenges = [
+      {
+        key: 'weekly_accuracy_85',
+        icon: '📈',
+        title: 'Król trafień',
+        desc: 'Osiągnij 85% skuteczności w typach',
+        value: Math.min(100, Math.max(0, winrate)),
+        label: `${Math.round(winrate)}%`,
+        targetLabel: '85%',
+        done: winrate >= 85
+      },
+      {
+        key: 'weekly_win_streak_10',
+        icon: '🏆',
+        title: 'Seria zwycięstw',
+        desc: 'Wygraj 10 typów w zestawieniu',
+        value: Math.min(100, (wins / 10) * 100),
+        label: `${wins}/10`,
+        targetLabel: '10',
+        done: wins >= 10
+      },
+      {
+        key: 'weekly_roi_20',
+        icon: '⭐',
+        title: 'Value Hunter',
+        desc: 'Osiągnij ROI powyżej 20%',
+        value: Math.min(100, Math.max(0, (roi / 20) * 100)),
+        label: `${Number(roi || 0).toFixed(1)}%`,
+        targetLabel: '20%',
+        done: roi >= 20
+      }
+    ]
+    return challenges.map(item => ({ ...item, reward: '+1 żeton', width: `${Math.max(3, Math.min(100, item.value))}%` }))
+  }
+
+  const challengeRows = buildChallengeRows()
+  const referralCount = Number(referralData?.referrals_count || referralData?.buyers_count || 0)
+  const referralCode = String(referralData?.referral_code || user?.username || user?.email?.split('@')?.[0] || 'BETAI').toUpperCase()
+  const referralProgress = Math.min(100, (referralCount / 10) * 100)
   const referralBonuses = [
-    ['10 poleceń', '+10 AI Tokenów', true],
-    ['50 poleceń', '+50 AI Tokenów', true],
-    ['150 poleceń', '+150 AI Tokenów', true],
-    ['300 poleceń', '+400 AI Tokenów', false],
+    ['10 poleceń', '+1 żeton', referralCount >= 10],
+    ['50 poleceń', '+1 żeton', referralCount >= 50],
+    ['150 poleceń', '+1 żeton', referralCount >= 150],
+    ['300 poleceń', '+1 żeton', referralCount >= 300],
   ]
 
+  const openRow = (row) => onOpenTipster?.(row.rowRef, row.rowName)
+  const followRow = (event, row) => {
+    event.stopPropagation()
+    onFollowTipster?.(row.rowRef, row.rowName)
+  }
+  const copyReferral = async () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const link = `${origin}/?ref=${encodeURIComponent(referralCode)}`
+    try {
+      await navigator.clipboard?.writeText(link)
+      onToast?.({ type: 'success', title: 'Polecenia', message: 'Link polecający skopiowany.' })
+    } catch (_) {
+      onToast?.({ type: 'info', title: 'Polecenia', message: link })
+    }
+  }
+
+  const renderAvatar = (row, className = 'tipster-photo-v4') => {
+    const avatarUrl = row.avatarUrl || getProfileAvatarUrl(row)
+    return (
+      <i className={`${className} ${avatarUrl ? 'has-avatar' : ''} ${row.liveRank <= 3 ? 'top' : ''}`}>
+        {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" /> : row.rowName.slice(0, 2).toUpperCase()}
+      </i>
+    )
+  }
+
+  const renderRankingTable = (rows) => (
+    <div className="glass-ranking-v4 ranking-v4-table-card">
+      <div className="ranking-v4-table">
+        <div className="ranking-v4-row head">
+          <span>#</span>
+          <span>Typer</span>
+          <span>WIN RATE</span>
+          <span>YIELD</span>
+          <span>TYPY</span>
+          <span>OBSERWUJĄCY</span>
+          <span>PROFIT</span>
+          <span>RANGI</span>
+          <span></span>
+        </div>
+        {rows.map((row, idx) => (
+          <button type="button" className="ranking-v4-row ranking-v999-clickable" key={row.tipster_id || row.id || idx} onClick={() => openRow(row)}>
+            <span className={`place-badge-v4 p${row.liveRank}`}>{row.liveRank}</span>
+            <span className="tipster-cell-v4">
+              {renderAvatar(row)}
+              <div>
+                <b>{row.rowName}</b>
+                <small className={`status-tag-v4 ${isPremiumAccount(row.plan || row.subscription_status) ? 'pro' : 'vip'}`}>{isPremiumAccount(row.plan || row.subscription_status) ? 'PREMIUM' : 'TYPER'}</small>
+              </div>
+            </span>
+            <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
+            <span>{Number(row.roi || row.yield || 0).toFixed(2)}%</span>
+            <span>{Number(row.totalTips || row.total_tips || 0)}</span>
+            <span>{Number(row.followers || 0)}</span>
+            <span className="profit-v4">{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</span>
+            <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
+            <span>
+              <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
+                {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}
+              </button>
+            </span>
+          </button>
+        ))}
+        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00 zł</span><span>-</span><span></span></div>}
+      </div>
+      <button type="button" className="full-ranking-btn-v4" onClick={() => onRefreshRanking?.()}>Odśwież ranking</button>
+    </div>
+  )
+
+  const mainRows =
+    activeTab === 'top' ? leaderboardRows.slice(0, 10) :
+    activeTab === 'month' ? monthlyRows :
+    leaderboardRows
+
   return (
-    <section className="leaderboard-page ranking-static-v4">
+    <section className="leaderboard-page ranking-static-v4 ranking-live-v999">
       <div className="ranking-v4-layout">
         <div className="ranking-v4-main">
           <div className="ranking-v4-header">
             <div>
               <h1>Ranking</h1>
-              <p>Żywa tabela typerów — miejsca aktualizują się automatycznie według profitu i yield.</p>
+              <p>Żywa tabela typerów — wszyscy zarejestrowani użytkownicy, miejsca według profitu.</p>
             </div>
             <div className="ranking-v4-filters">
-              <button type="button">Wszystkie sporty ⌄</button>
-              <button type="button">🗓 Tydzień ⌄</button>
+              <button type="button" onClick={() => setSportFilter(sportFilter === 'all' ? 'piłka' : 'all')}>{sportFilter === 'all' ? 'Wszystkie sporty' : 'Piłka nożna'} ⌄</button>
+              <button type="button" onClick={() => setPeriodFilter(periodFilter === 'week' ? 'all' : 'week')}>{periodFilter === 'week' ? 'Tydzień' : 'Cały okres'} ⌄</button>
             </div>
           </div>
 
           <div className="glass-ranking-v4 ranking-v4-tabs">
-            <button type="button" className="active">Ranking</button>
-            <button type="button">Top typerzy</button>
-            <button type="button">Polecenia</button>
-            <button type="button">Liderzy miesiąca</button>
+            <button type="button" className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>Ranking</button>
+            <button type="button" className={activeTab === 'top' ? 'active' : ''} onClick={() => setActiveTab('top')}>Top typerzy</button>
+            <button type="button" className={activeTab === 'referrals' ? 'active' : ''} onClick={() => setActiveTab('referrals')}>Polecenia</button>
+            <button type="button" className={activeTab === 'month' ? 'active' : ''} onClick={() => setActiveTab('month')}>Liderzy miesiąca</button>
           </div>
 
-          <div className="glass-ranking-v4 ranking-v4-table-card">
-            <div className="ranking-v4-table">
-              <div className="ranking-v4-row head">
-                <span>#</span>
-                <span>Typer</span>
-                <span>WIN RATE</span>
-                <span>YIELD</span>
-                <span>TYPY</span>
-                <span>OBSERWUJĄCY</span>
-                <span>PROFIT</span>
-                <span>ODZNAKI</span>
-                <span></span>
+          {activeTab === 'referrals' ? (
+            <div className="glass-ranking-v4 referrals-main-v999">
+              <h3>Program poleceń</h3>
+              <p>Udostępnij link i zbieraj aktywnych użytkowników. Nagrody w tej wersji są ustawione na 1 żeton.</p>
+              <div className="referral-code-v4 big">
+                <span>Kod polecający</span>
+                <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
               </div>
-              {leaderboardRows.map((row, idx) => (
-                <div className="ranking-v4-row" key={row.tipster_id || row.id || idx}>
-                  <span className={`place-badge-v4 p${row.liveRank}`}>{row.liveRank}</span>
-                  <span className="tipster-cell-v4">
-                    <i className={`tipster-photo-v4 ${idx < 3 ? 'top' : ''}`}>{formatRankingName(row).slice(0,2).toUpperCase()}</i>
-                    <div>
-                      <b>{formatRankingName(row)}</b>
-                      <small className={`status-tag-v4 ${isPremiumAccount(row.plan || row.subscription_status) ? 'pro' : 'vip'}`}>{isPremiumAccount(row.plan || row.subscription_status) ? 'PREMIUM' : 'TYPER'}</small>
-                    </div>
-                  </span>
-                  <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
-                  <span>{Number(row.roi || 0).toFixed(2)}%</span>
-                  <span>{Number(row.totalTips || row.total_tips || 0)}</span>
-                  <span>{Number(row.followers || 0)}</span>
-                  <span className="profit-v4">+{formatMoney(row.earnings || row.total_earnings || 0)}</span>
-                  <span className="badges-cell-v4">{row.liveRank === 1 ? <><i>🥇</i><i>🏆</i><i>⭐</i></> : row.liveRank === 2 ? <><i>🥈</i><i>⭐</i><i>📈</i></> : row.liveRank === 3 ? <><i>🥉</i><i>⭐</i><i>📊</i></> : <><i>📊</i><i>⚡</i><i>✓</i></>}</span>
-                  <span><button type="button" className="follow-btn-v4">Obserwuj</button></span>
-                </div>
-              ))}
-              {!leaderboardRows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00 zł</span><span>-</span><span></span></div>}
+              <div className="referral-progress-v4">
+                <div className="progress-head-v4"><span>Postęp do bonusu</span><b>{referralCount} / 10</b></div>
+                <div className="progress-bar-v4"><i style={{ width: `${referralProgress}%` }}></i></div>
+              </div>
             </div>
-            <button type="button" className="full-ranking-btn-v4">Zobacz pełny ranking</button>
-          </div>
+          ) : renderRankingTable(mainRows)}
 
           <div className="ranking-v4-bottom-grid">
             <div className="glass-ranking-v4 ranking-v4-card hall-card-v4">
@@ -11693,7 +11865,10 @@ function LeaderboardView({ tips = [], ranking = [], onOpenTipster = null }) {
                   <p>Najlepsi typerzy i najwyższy profit.</p>
                   <div className="hall-laurels-v4">
                     {leaderboardRows.slice(0, 3).map((row) => (
-                      <span key={row.tipster_id || row.liveRank}>{formatRankingName(row)}<br/><small>Yield {Number(row.roi || 0).toFixed(2)}% • Profit +{formatMoney(row.earnings || row.total_earnings || 0)}</small></span>
+                      <button type="button" key={row.tipster_id || row.liveRank} onClick={() => openRow(row)}>
+                        {renderAvatar(row, 'mini-avatar-v4')}
+                        <span>{row.rowName}<br/><small>Yield {Number(row.roi || row.yield || 0).toFixed(2)}% • Profit {Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</small></span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -11702,22 +11877,22 @@ function LeaderboardView({ tips = [], ranking = [], onOpenTipster = null }) {
                   <div className="ball-v4">⚽</div>
                 </div>
               </div>
-              <button type="button" className="hall-btn-v4">Zobacz całą galerię</button>
+              <button type="button" className="hall-btn-v4" onClick={() => setActiveTab('top')}>Zobacz całą galerię</button>
             </div>
 
             <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
-              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nowe wyzwania za: <b>4d 12h 33m</b></span></div>
+              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nagroda za każde: <b>1 żeton</b></span></div>
               <div className="challenge-list-v4">
-                {challengeRows.map((row, idx) => (
-                  <div className="challenge-item-v4" key={idx}>
-                    <div className="challenge-icon-v4">{idx===0?'📈':idx===1?'🏆':'⭐'}</div>
-                    <div className="challenge-copy-v4"><strong>{row[0]}</strong><small>{row[1]}</small></div>
-                    <div className="challenge-progress-v4"><span>{row[2]}</span><div className="challenge-bar-v4"><i style={{width: row[4]}}></i></div></div>
-                    <div className="challenge-reward-v4">{row[3]}</div>
+                {challengeRows.map((row) => (
+                  <div className={`challenge-item-v4 ${row.done ? 'is-done' : ''}`} key={row.key}>
+                    <div className="challenge-icon-v4">{row.icon}</div>
+                    <div className="challenge-copy-v4"><strong>{row.title}</strong><small>{row.desc}</small></div>
+                    <div className="challenge-progress-v4"><span>{row.label}</span><div className="challenge-bar-v4"><i style={{width: row.width}}></i></div></div>
+                    <button type="button" className="challenge-reward-v4" onClick={() => onChallengeReward?.(row)}>{row.done ? `Odbierz ${row.reward}` : row.reward}</button>
                   </div>
                 ))}
               </div>
-              <button type="button" className="hall-btn-v4 alt">Zobacz wszystkie wyzwania</button>
+              <button type="button" className="hall-btn-v4 alt" onClick={() => onToast?.({ type: 'info', title: 'Wyzwania', message: 'Wyzwania są liczone na żywo z Twojego rankingu.' })}>Zobacz wszystkie wyzwania</button>
             </div>
           </div>
         </div>
@@ -11725,51 +11900,53 @@ function LeaderboardView({ tips = [], ranking = [], onOpenTipster = null }) {
         <aside className="ranking-v4-sidebar">
           <div className="glass-ranking-v4 sidebar-card-v4">
             <div className="sidebar-tabs-v4">
-              <button type="button" className="active">Top typerzy</button>
-              <button type="button">Polecenia</button>
-              <button type="button">Liderzy miesiąca</button>
+              <button type="button" className={sidebarTab === 'top' ? 'active' : ''} onClick={() => setSidebarTab('top')}>Top typerzy</button>
+              <button type="button" className={sidebarTab === 'referrals' ? 'active' : ''} onClick={() => setSidebarTab('referrals')}>Polecenia</button>
+              <button type="button" className={sidebarTab === 'month' ? 'active' : ''} onClick={() => setSidebarTab('month')}>Liderzy miesiąca</button>
             </div>
-            <div className="sidebar-head-link-v4">Zobacz wszystkich</div>
-            <div className="top-tipsters-list-v4">
-              {topTyperRows.map((row, idx) => {
-                const rowName = formatRankingName(row)
-                const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
-                return (
-                <button type="button" className="top-tipster-row-v4 top-tipster-clickable-v974" key={row.tipster_id || row.id || idx} onClick={() => onOpenTipster?.(rowRef, rowName)} title={`Otwórz profil typera ${rowName}`}>
-                  <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
-                  <i className={`mini-avatar-v4 ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
-                    {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : rowName.slice(0,2).toUpperCase()}
-                  </i>
-                  <div><strong>{rowName}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || 0).toFixed(2)}%</small></div>
-                  <b>+{formatMoney(row.earnings || row.total_earnings || 0)}</b>
-                </button>
-                )
-              })}
-            </div>
+            <button type="button" className="sidebar-head-link-v4" onClick={() => setActiveTab(sidebarTab === 'month' ? 'month' : sidebarTab === 'referrals' ? 'referrals' : 'top')}>Zobacz wszystkich</button>
+            {sidebarTab === 'referrals' ? (
+              <div className="referral-code-v4">
+                <span>Kod polecający</span>
+                <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
+              </div>
+            ) : (
+              <div className="top-tipsters-list-v4">
+                {(sidebarTab === 'month' ? monthlyRows : topTyperRows).map((row, idx) => (
+                  <button type="button" className="top-tipster-row-v4 top-tipster-clickable-v974" key={row.tipster_id || row.id || idx} onClick={() => openRow(row)} title={`Otwórz profil typera ${row.rowName}`}>
+                    <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
+                    {renderAvatar(row, 'mini-avatar-v4')}
+                    <div><strong>{row.rowName}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || row.yield || 0).toFixed(2)}%</small></div>
+                    <b>{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</b>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4">
             <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
             <div className="referral-code-v4">
               <span>Kod polecający</span>
-              <div><strong>SMILLHYTV</strong><button type="button">⧉</button></div>
+              <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
             </div>
             <div className="referral-progress-v4">
-              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>78 / 150</b></div>
-              <div className="progress-bar-v4"><i style={{width:'52%'}}></i></div>
+              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>{referralCount} / 10</b></div>
+              <div className="progress-bar-v4"><i style={{width:`${referralProgress}%`}}></i></div>
             </div>
             <div className="referral-bonuses-v4">
               {referralBonuses.map((item, idx) => (
                 <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b><i>{item[2] ? '✓' : '○'}</i></div>
               ))}
             </div>
-            <button type="button" className="hall-btn-v4 alt">Pobierz link polecający</button>
+            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
           </div>
         </aside>
       </div>
     </section>
   )
 }
+
 
 
 function getBetaiGuestSessionId() {
@@ -17516,16 +17693,26 @@ function App() {
       let profileRows = []
 
       try {
-        const { data, error } = await supabase.from('tipster_ranking_live').select('*').order('profit', { ascending: false }).limit(100)
+        const { data, error } = await supabase.from('betai_live_ranking_v999').select('*').order('profit', { ascending: false }).limit(1000)
         if (!error && Array.isArray(data)) rankingRows = data
-        else if (error) console.warn('tipster_ranking_live skipped', error)
+        else if (error) console.warn('betai_live_ranking_v999 skipped', error)
       } catch (error) {
-        console.warn('tipster_ranking_live exception skipped', error)
+        console.warn('betai_live_ranking_v999 exception skipped', error)
       }
 
       if (!rankingRows.length) {
         try {
-          const { data, error } = await supabase.from('tipster_ranking').select('*').limit(100)
+          const { data, error } = await supabase.from('tipster_ranking_live').select('*').order('profit', { ascending: false }).limit(1000)
+          if (!error && Array.isArray(data)) rankingRows = data
+          else if (error) console.warn('tipster_ranking_live skipped', error)
+        } catch (error) {
+          console.warn('tipster_ranking_live exception skipped', error)
+        }
+      }
+
+      if (!rankingRows.length) {
+        try {
+          const { data, error } = await supabase.from('tipster_ranking').select('*').limit(1000)
           if (!error && Array.isArray(data)) rankingRows = data
           else if (error) console.warn('tipster_ranking skipped', error)
         } catch (error) {
@@ -17573,7 +17760,7 @@ function App() {
       const finalRows = buildLiveLeaderboardRows(
         mergeRankingRows(profileRankingRows, rankingRows, buildRankingFromTips(tipRows)),
         tipRows.length ? tipRows : tips
-      ).slice(0, 10)
+      )
 
       setRealRanking(finalRows)
     } catch (error) {
@@ -18278,6 +18465,70 @@ function App() {
 
     fetchFollowStats()
     showToast({ type: 'success', title: 'Follow', message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera.' })
+  }
+
+  async function claimRankingChallengeReward(challenge) {
+    const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const userId = sessionUser?.id
+    if (!userId || !email) {
+      showToast({ type: 'error', title: 'Wyzwania', message: 'Zaloguj się, aby odebrać nagrodę.' })
+      return
+    }
+    if (!challenge?.done) {
+      showToast({ type: 'info', title: 'Wyzwania', message: 'Najpierw osiągnij cel wyzwania.' })
+      return
+    }
+
+    const period = new Date().toISOString().slice(0, 10)
+    const rewardKey = `ranking_challenge_${challenge.key}_${period}`
+    try {
+      const localClaimed = localStorage.getItem(`betai_${rewardKey}_${userId}`)
+      if (localClaimed) {
+        showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie została już odebrana.' })
+        return
+      }
+    } catch (_) {}
+
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.rpc('claim_ranking_challenge_reward', {
+          p_user_id: userId,
+          p_email: email,
+          p_challenge_key: challenge.key,
+          p_challenge_title: challenge.title
+        })
+        if (error) throw error
+        if (data && data.claimed === false) {
+          showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie była już odebrana.' })
+          return
+        }
+      } else {
+        const next = Number(tokenBalance || 0) + 1
+        setTokenBalance(next)
+        localStorage.setItem('betai_tokens_' + email, String(next))
+      }
+      try { localStorage.setItem(`betai_${rewardKey}_${userId}`, '1') } catch (_) {}
+      await fetchNotifications(userId)
+      await fetchCurrentTokenBalance()
+      showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
+    } catch (error) {
+      console.warn('claimRankingChallengeReward fallback', error)
+      const next = Number(tokenBalance || 0) + 1
+      setTokenBalance(next)
+      try {
+        localStorage.setItem('betai_tokens_' + email, String(next))
+        localStorage.setItem(`betai_${rewardKey}_${userId}`, '1')
+      } catch (_) {}
+      setNotifications(prev => [{
+        id: `local_${rewardKey}`,
+        title: 'Wyzwanie ukończone',
+        message: `${challenge.title}: otrzymujesz 1 żeton.`,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        source: 'local'
+      }, ...(prev || [])])
+      showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton lokalnie. Uruchom SQL 999, żeby zapisywać w bazie.` })
+    }
   }
 
   async function markAllNotificationsRead() {
@@ -19779,7 +20030,19 @@ function App() {
         )}
 
         {view === 'leaderboard' && (
-          <LeaderboardView tips={tips} ranking={realRanking} onOpenTipster={openTipsterProfile} />
+          <LeaderboardView
+            tips={tips}
+            ranking={realRanking}
+            onOpenTipster={openTipsterProfile}
+            onFollowTipster={toggleFollowTipster}
+            followingTipsters={followingTipsters}
+            followStats={followStats}
+            user={effectiveAccountProfile || sessionUser}
+            onToast={showToast}
+            referralData={referralData}
+            onRefreshRanking={fetchRealRanking}
+            onChallengeReward={claimRankingChallengeReward}
+          />
         )}
 
         {view === 'articles' && (
