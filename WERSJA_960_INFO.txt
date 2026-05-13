@@ -1,0 +1,20 @@
+WERSJA 960
+
+Naprawa licznika Społeczność po kliknięciu Obserwuj / Obserwujesz.
+
+Problem:
+- przycisk zmieniał status na Obserwujesz,
+- ale w prawym panelu Mój profil dalej było 0 / 0.
+
+Zrobione:
+1. Przekazano followStats do własnego profilu.
+2. Licznik Obserwowani na własnym profilu ma teraz fallback z aktualnego Set followingTipsters.
+3. Po kliknięciu Obserwuj licznik na własnym profilu powinien zmienić się od razu.
+4. Dla cudzego profilu Obserwujący pokazuje minimum 1, jeśli aktualny użytkownik obserwuje ten profil.
+5. Logika Supabase z wersji 958 zostaje bez zmian.
+
+Start z wersji:
+- betai_wersja_959_USUNIETE_KAFELKI_WYNIKI_PROFIL.zip
+
+Pliki zmienione:
+- src/main.jsx

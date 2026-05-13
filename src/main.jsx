@@ -14298,8 +14298,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     return null
   })()
-  const followersCount = Number(profileFollowStats?.followers ?? user?.followers_count ?? user?.followers ?? 0) || 0
-  const followingCount = Number(profileFollowStats?.following ?? user?.following_count ?? user?.following ?? 0) || 0
+  const baseFollowersCount = Number(profileFollowStats?.followers ?? user?.followers_count ?? user?.followers ?? 0) || 0
+  const baseFollowingCount = Number(profileFollowStats?.following ?? user?.following_count ?? user?.following ?? 0) || 0
+  const localFollowingCount = profileIsOwnForViewer ? Number(followingTipsters?.size || 0) : 0
+  const followersCount = Math.max(baseFollowersCount, (!profileIsOwnForViewer && profileIsFollowing ? 1 : 0))
+  const followingCount = Math.max(baseFollowingCount, localFollowingCount)
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
   const profileBio = user?.bio || user?.description || user?.about || fallbackBio
@@ -19030,6 +19033,7 @@ function App() {
             onSubscribeToTipster={setSelectedProfileSub}
             tipsterSubscriptions={tipsterSubscriptions}
             followingTipsters={followingTipsters}
+            followStats={followStats}
             onToggleFollow={toggleFollowTipster}
             onAvatarUpdated={(nextAvatarUrl) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
