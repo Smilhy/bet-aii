@@ -891,7 +891,10 @@ async function fetchBetaiPublicProfiles() {
   // Najpierw RPC SECURITY DEFINER — omija RLS i daje publiczny avatar każdego użytkownika.
   try {
     const { data, error } = await supabase.rpc('betai_public_profiles_for_ui')
-    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
+    if (!error && Array.isArray(data)) {
+      const statsRows = await fetchBetaiProfilesWithStats()
+      return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
+    }
     if (error) console.warn('betai_public_profiles_for_ui rpc skipped', error)
   } catch (error) {
     console.warn('betai_public_profiles_for_ui rpc exception skipped', error)
@@ -900,7 +903,10 @@ async function fetchBetaiPublicProfiles() {
   // Fallback: widok publiczny.
   try {
     const { data, error } = await supabase.from('betai_public_profiles_for_ui_view').select('*').limit(1000)
-    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
+    if (!error && Array.isArray(data)) {
+      const statsRows = await fetchBetaiProfilesWithStats()
+      return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
+    }
     if (error) console.warn('betai_public_profiles_for_ui view skipped', error)
   } catch (error) {
     console.warn('betai_public_profiles_for_ui view exception skipped', error)
@@ -908,8 +914,10 @@ async function fetchBetaiPublicProfiles() {
 
   // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
   try {
-    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,preferred_sport,created_at,updated_at').limit(1000)
-    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(data)
+    const statsRows = await fetchBetaiProfilesWithStats()
+    const { data, error } = await supabase.from('profiles').select('id,email,username,avatar_url').limit(1000)
+    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
+    if (statsRows.length) return mergeBetaiProfilesWithCache(statsRows)
     if (error) console.warn('profiles avatar fallback skipped', error)
   } catch (error) {
     console.warn('profiles avatar fallback exception skipped', error)
@@ -924,7 +932,79 @@ function buildBetaiProfileMap(profiles = []) {
   return profileMap
 }
 
-const BETAI_PUBLIC_AVATAR_CACHE_KEY = 'betai_public_profile_cache_v967'
+function mergeProfilesPreferStats(...groups) {
+  const map = new Map()
+  const aliases = new Map()
+
+  const profileAliases = (profile = {}) => {
+    const out = []
+    const id = String(profile.id || profile.user_id || profile.author_id || '').toLowerCase()
+    const email = normalizeEmail(profile.email || profile.user_email || profile.author_email)
+    const username = normalizeEmail(profile.username || profile.user_name || profile.author_name)
+    if (id) out.push(`id:${id}`)
+    if (email) {
+      out.push(`email:${email}`)
+      out.push(`user:${email.split('@')[0]}`)
+    }
+    if (username && !isGenericProfileName(username)) out.push(`user:${username}`)
+    return [...new Set(out)]
+  }
+
+  const score = (profile = {}) => {
+    let value = 0
+    if (getProfileAvatarUrl(profile)) value += 5
+    if (profile.imported_total_tips !== undefined || profile.imported_profit !== undefined || profile.stats_imported_at) value += 100
+    if (Number(profile.imported_total_tips || profile.total_tips || 0) > 0) value += 50
+    if (Number(profile.imported_profit || profile.profit || 0) !== 0) value += 20
+    if (profile.bio || profile.description || profile.about) value += 5
+    return value
+  }
+
+  groups.flat().filter(Boolean).forEach(profile => {
+    const keys = profileAliases(profile)
+    if (!keys.length) return
+    let key = keys.find(item => aliases.has(item))
+    key = key ? aliases.get(key) : keys[0]
+    keys.forEach(item => aliases.set(item, key))
+    const previous = map.get(key) || {}
+    const preferred = score(profile) >= score(previous) ? profile : previous
+    const other = preferred === profile ? previous : profile
+    map.set(key, {
+      ...other,
+      ...preferred,
+      avatar_url: getProfileAvatarUrl(preferred) || getProfileAvatarUrl(other) || '',
+      imported_yield: preferred.imported_yield ?? other.imported_yield,
+      imported_total_tips: preferred.imported_total_tips ?? other.imported_total_tips,
+      imported_won_tips: preferred.imported_won_tips ?? other.imported_won_tips,
+      imported_lost_tips: preferred.imported_lost_tips ?? other.imported_lost_tips,
+      imported_pending_tips: preferred.imported_pending_tips ?? other.imported_pending_tips,
+      imported_total_staked: preferred.imported_total_staked ?? other.imported_total_staked,
+      imported_profit: preferred.imported_profit ?? other.imported_profit,
+      imported_avg_odds: preferred.imported_avg_odds ?? other.imported_avg_odds,
+      imported_highest_odds: preferred.imported_highest_odds ?? other.imported_highest_odds,
+      imported_tips_amount: preferred.imported_tips_amount ?? other.imported_tips_amount,
+      imported_tips_currency: preferred.imported_tips_currency ?? other.imported_tips_currency,
+      stats_imported_at: preferred.stats_imported_at ?? other.stats_imported_at,
+    })
+  })
+
+  return Array.from(map.values())
+}
+
+async function fetchBetaiProfilesWithStats() {
+  if (!isSupabaseConfigured || !supabase) return []
+  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
+  try {
+    const { data, error } = await supabase.from('profiles').select(columns).limit(1000)
+    if (!error && Array.isArray(data)) return data
+    if (error) console.warn('profiles stats select skipped', error)
+  } catch (error) {
+    console.warn('profiles stats select exception skipped', error)
+  }
+  return []
+}
+
+const BETAI_PUBLIC_AVATAR_CACHE_KEY = 'betai_public_avatar_cache_v912'
 
 function readBetaiPublicAvatarCache() {
   try {
@@ -939,33 +1019,25 @@ function writeBetaiPublicAvatarCache(items = []) {
     const byKey = new Map()
     ;(readBetaiPublicAvatarCache() || []).forEach(item => {
       const key = normalizeEmail(item.email || item.username || item.id)
-      if (key) byKey.set(key, item)
+      if (key && getProfileAvatarUrl(item)) byKey.set(key, item)
     })
     ;(items || []).forEach(item => {
       const avatar = getProfileAvatarUrl(item)
       const email = normalizeEmail(item.email || item.user_email || item.author_email)
       const username = normalizeEmail(item.username || item.user_name || item.author_name)
       const id = String(item.id || item.user_id || item.author_id || '').toLowerCase()
-      const bio = String(item.bio || item.description || item.about || item.profile_bio || item.author_bio || '').trim()
-      if (!avatar && !bio && !email && !username && !id) return
+      if (!avatar) return
       const saved = {
-        ...(byKey.get(id) || byKey.get(email) || byKey.get(username) || {}),
         id: id || item.id || '',
         email: email || '',
         username: username || (email ? email.split('@')[0] : ''),
-        public_slug: item.public_slug || item.slug || username || '',
-        avatar_url: avatar || item.avatar_url || '',
-        bio: bio || item.bio || '',
-        description: bio || item.description || item.bio || '',
-        about: bio || item.about || item.bio || '',
-        preferred_sport: item.preferred_sport || item.sport || '',
-        updated_at: item.updated_at || new Date().toISOString()
+        avatar_url: avatar
       }
       if (email) byKey.set(email, saved)
       if (username) byKey.set(username, saved)
       if (id) byKey.set(id, saved)
     })
-    localStorage.setItem(BETAI_PUBLIC_AVATAR_CACHE_KEY, JSON.stringify(Array.from(byKey.values()).slice(-300)))
+    localStorage.setItem(BETAI_PUBLIC_AVATAR_CACHE_KEY, JSON.stringify(Array.from(byKey.values()).slice(-200)))
   } catch (_) {}
 }
 
@@ -973,9 +1045,8 @@ function cacheBetaiCurrentUserAvatar(user) {
   const avatar = getProfileAvatarUrl(user)
   const email = normalizeEmail(user?.email || user?.user_email || user?.author_email)
   const username = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || user?.raw_user_meta_data?.username || user?.raw_user_meta_data?.name)
-  const bio = String(user?.bio || user?.description || user?.about || user?.user_metadata?.bio || user?.raw_user_meta_data?.bio || '').trim()
-  if (!avatar && !bio && (!email && !username)) return
-  writeBetaiPublicAvatarCache([{ id: user?.id || '', email, username, avatar_url: avatar, bio, description: bio, about: bio, preferred_sport: user?.preferred_sport || user?.sport || '' }])
+  if (!avatar || (!email && !username)) return
+  writeBetaiPublicAvatarCache([{ id: user?.id || '', email, username, avatar_url: avatar }])
 }
 
 function mergeBetaiProfilesWithCache(profiles = []) {
@@ -989,14 +1060,7 @@ function mergeBetaiProfilesWithCache(profiles = []) {
       const profileAvatar = getProfileAvatarUrl(profile)
       // Cache ma wyższy priorytet, bo w bazie stare rekordy były nadpisane avatarem innego usera.
       if (cachedAvatar) profile.avatar_url = cachedAvatar
-      const cachedBio = String(item.bio || item.description || item.about || '').trim()
-      if (cachedBio && !(profile.bio || profile.description || profile.about)) {
-        profile.bio = cachedBio
-        profile.description = cachedBio
-        profile.about = cachedBio
-      }
-      if (item.preferred_sport && !profile.preferred_sport) profile.preferred_sport = item.preferred_sport
-    } else if (cachedAvatar || item.bio || item.description || item.about) {
+    } else if (cachedAvatar) {
       all.push(item)
       addProfileToMap(existing, item)
     }
@@ -1009,19 +1073,28 @@ function applyProfileAvatarToTip(tip, profileMap) {
   if (!profile) return tip
   const profileAvatar = getProfileAvatarUrl(profile)
   const profileName = profile.username || profile.user_name || (profile.email ? String(profile.email).split('@')[0] : '')
+  const importedStats = getImportedProfileStats(profile)
   return {
     ...tip,
+    author_id: tip.author_id || profile.id || tip.user_id || null,
+    user_id: tip.user_id || profile.id || tip.author_id || null,
     author_name: profileName || resolveRealProfileUsername(tip),
     username: profileName || tip.username,
     author_email: tip.author_email || profile.email || null,
     author_avatar_url: profileAvatar || tip.author_avatar_url || tip.avatar_url || null,
     avatar_url: profileAvatar || tip.avatar_url || tip.author_avatar_url || null,
     profile_avatar_url: profileAvatar || tip.profile_avatar_url || null,
-    author_bio: profile.bio || profile.description || profile.about || tip.author_bio || tip.profile_bio || null,
-    profile_bio: profile.bio || profile.description || profile.about || tip.profile_bio || tip.author_bio || null,
-    profile_description: profile.description || profile.bio || profile.about || tip.profile_description || null,
-    profile_about: profile.about || profile.bio || profile.description || tip.profile_about || null,
-    preferred_sport: profile.preferred_sport || tip.preferred_sport || tip.sport || null
+    imported_yield: profile.imported_yield ?? tip.imported_yield,
+    imported_total_tips: profile.imported_total_tips ?? tip.imported_total_tips,
+    imported_won_tips: profile.imported_won_tips ?? tip.imported_won_tips,
+    imported_lost_tips: profile.imported_lost_tips ?? tip.imported_lost_tips,
+    imported_pending_tips: profile.imported_pending_tips ?? tip.imported_pending_tips,
+    imported_total_staked: profile.imported_total_staked ?? tip.imported_total_staked,
+    imported_profit: profile.imported_profit ?? tip.imported_profit,
+    imported_avg_odds: profile.imported_avg_odds ?? tip.imported_avg_odds,
+    imported_highest_odds: profile.imported_highest_odds ?? tip.imported_highest_odds,
+    imported_tips_currency: profile.imported_tips_currency ?? tip.imported_tips_currency,
+    author_visible_stats: importedStats || tip.author_visible_stats || getImportedProfileStats(tip)
   }
 }
 
@@ -7035,6 +7108,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         allLeagues: overrides.allLeagues ? '1' : '0',
         mode: overrides.mode || footballViewMode || 'league-today',
         query: overrides.query || '',
+        forceRefresh: isSilentRefresh ? '0' : '1',
       })
       const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_ai=${Date.now()}`)
       const data = await response.json().catch(() => ({}))
@@ -7060,7 +7134,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
               : `dzisiejszych meczów ligi ${requestedLeague}`
-          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.`)
+          const oddsInfo = data.oddsMessage || data.oddsSourceMessage || data.message || ''
+          setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.${oddsInfo ? ` Kursy: ${oddsInfo}` : ''}`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
         } else {
           setLiveFixturesStatus(`LIVE API: odświeżono automatycznie. Aktualnie ${fixtures.length} realnych meczów bez limitu 2 dni.`)
@@ -8134,6 +8209,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const isOwnTip = isSameProfileIdentity(currentUser, tipIdentity) || Boolean(
     currentUsername && String(currentUsername).toLowerCase() === String(author).toLowerCase()
   )
+  const effectiveIsLocked = isLocked && !isOwnTip
   const authorAvatarUrl = getProfileAvatarUrl({ avatar_url: tip.author_avatar_url || tip.avatar_url || tip.profile_avatar_url, author_avatar_url: tip.author_avatar_url, profile_avatar_url: tip.profile_avatar_url }) || (isOwnTip ? getProfileAvatarUrl(currentUser) : '')
   const actorKey = String(currentUser?.id || currentUser?.email || currentUsername || 'guest').toLowerCase()
   const actorLabel = currentUsername || author || 'Gość'
@@ -8292,7 +8368,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }
 
   return (
-    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${isLocked ? 'locked' : 'unlocked'}`}>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
           {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
@@ -8327,7 +8403,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       <div className="profile-ticket-v6-field">
         <small>TYP</small>
-        <strong>{isLocked ? 'Typ premium' : cardPick}</strong>
+        <strong>{effectiveIsLocked ? 'Typ premium' : cardPick}</strong>
         <span>{isPremium ? 'Singiel' : 'Darmowy typ'}</span>
       </div>
 
@@ -8339,12 +8415,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       <div className="profile-ticket-v6-field odds">
         <small>KURS</small>
-        <strong>{isLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</strong>
+        <strong>{effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</strong>
       </div>
 
-      <div className={`profile-ticket-v6-analysis ${isLocked ? 'locked' : ''}`}>
+      <div className={`profile-ticket-v6-analysis ${effectiveIsLocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
-        <p>{isLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : cardAnalysis}</p>
+        <p>{effectiveIsLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : cardAnalysis}</p>
         <button type="button">Czytaj więcej⌄</button>
       </div>
 
@@ -8362,7 +8438,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           )}
         </div>
         <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
-        {isLocked ? (
+        {effectiveIsLocked ? (
           <>
             <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
             <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
@@ -13763,6 +13839,7 @@ function ProfileLiveTipCard({
     (currentEmailKey && authorNameKey && currentEmailKey.split('@')[0] === authorNameKey) ||
     (authorEmailKey && currentProfileKey && authorEmailKey.split('@')[0] === currentProfileKey)
   )
+  const effectiveIsUnlocked = isUnlocked || isOwnTip
   const showFollowButton = Boolean(canFollowAuthor && !isOwnTip)
   const profileFollowLookupKey = normalizeEmail(profileTipAuthor || displayName || profileTipIdentity.username || '')
   const profileTipsterId = profileTipIdentity.id || profileTipIdentity.author_id || profileTipIdentity.user_id
@@ -13863,7 +13940,7 @@ function ProfileLiveTipCard({
   }
 
   return (
-    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${isUnlocked ? 'unlocked' : 'locked'}`}>
+    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${effectiveIsUnlocked ? 'unlocked' : 'locked'}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${avatarUrl ? 'has-avatar' : ''}`} style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}>
           {avatarUrl ? '' : initials}
@@ -13895,7 +13972,7 @@ function ProfileLiveTipCard({
 
       <div className="profile-ticket-v6-field">
         <small>TYP</small>
-        <strong>{tip.premium && !isUnlocked ? 'Typ premium' : tip.pick}</strong>
+        <strong>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : tip.pick}</strong>
         <span>{tip.premium ? 'Singiel' : 'Darmowy typ'}</span>
       </div>
 
@@ -13907,12 +13984,12 @@ function ProfileLiveTipCard({
 
       <div className="profile-ticket-v6-field odds">
         <small>KURS</small>
-        <strong>{tip.premium && !isUnlocked ? '—' : tip.odds}</strong>
+        <strong>{tip.premium && !effectiveIsUnlocked ? '—' : tip.odds}</strong>
       </div>
 
-      <div className={`profile-ticket-v6-analysis ${tip.premium && !isUnlocked ? 'locked' : ''}`}>
+      <div className={`profile-ticket-v6-analysis ${tip.premium && !effectiveIsUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
-        <p>{tip.premium && !isUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+        <p>{tip.premium && !effectiveIsUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
         <button type="button">Czytaj więcej⌄</button>
       </div>
 
@@ -13930,7 +14007,7 @@ function ProfileLiveTipCard({
           )}
         </div>
         <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
-        {tip.premium && !isUnlocked ? (
+        {tip.premium && !effectiveIsUnlocked ? (
           <>
             <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>
             <strong>{formatMoney(tip.price)}</strong>
@@ -14154,8 +14231,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }, [user?.avatar_url, user?.user_metadata?.avatar_url])
 
   useEffect(() => {
-    setBioDraft(profileBio)
-  }, [profileBio])
+    setBioDraft(user?.bio || user?.description || user?.about || fallbackBio)
+  }, [user?.bio, user?.description, user?.about, fallbackBio])
 
   const chooseAvatar = () => {
     avatarInputRef.current?.click()
@@ -14211,74 +14288,25 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const saveBio = async () => {
     const cleanBio = String(bioDraft || '').trim().slice(0, 220)
-    const profileKeys = [
-      String(user?.id || profile?.id || ''),
-      normalizeEmail(user?.email || email || ''),
-      normalizeEmail(username || user?.username || ''),
-    ].filter(Boolean)
-
-    const persistLocalBio = () => {
-      try {
-        profileKeys.forEach(key => window.localStorage?.setItem(`betai_profile_bio_${key}`, cleanBio))
-      } catch (_) {}
-      writeBetaiPublicAvatarCache([{
-        id: user?.id || profile?.id || '',
-        email: user?.email || email || '',
-        username: username || user?.username || '',
-        avatar_url: avatarUrl || user?.avatar_url || '',
-        bio: cleanBio,
-        description: cleanBio,
-        about: cleanBio,
-        preferred_sport: user?.preferred_sport || user?.sport || ''
-      }])
-    }
-
-    if (!user?.id) {
-      persistLocalBio()
-      setBioDraft(cleanBio)
-      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
-      setBioEditing(false)
-      onToast?.({ type: 'warning', title: 'Opis zapisany lokalnie', message: 'Brak ID profilu — opis zapamiętany w tej przeglądarce.' })
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      onToast?.({ type: 'error', title: 'Opis profilu', message: 'Nie udało się połączyć z profilem użytkownika.' })
       return
     }
-
     setBioSaving(true)
-    persistLocalBio()
     try {
-      if (isSupabaseConfigured && supabase) {
-        const payload = {
-          id: user.id,
-          email: user.email || email || null,
-          username: username || user.username || (user.email ? String(user.email).split('@')[0] : 'user'),
-          bio: cleanBio,
-          description: cleanBio,
-          about: cleanBio,
-          updated_at: new Date().toISOString()
-        }
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ bio: cleanBio })
+        .eq('id', user.id)
+      if (profileError) throw profileError
 
-        let { error: profileError } = await supabase
-          .from('profiles')
-          .upsert(payload, { onConflict: 'id' })
-
-        if (profileError) {
-          const retryPayload = { id: user.id, email: payload.email, username: payload.username, bio: cleanBio, updated_at: payload.updated_at }
-          const retry = await supabase.from('profiles').upsert(retryPayload, { onConflict: 'id' })
-          profileError = retry.error
-        }
-
-        if (profileError) throw profileError
-        await supabase.auth.updateUser({ data: { bio: cleanBio, description: cleanBio, about: cleanBio } }).catch(() => null)
-      }
-
+      await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
       setBioDraft(cleanBio)
       onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
       setBioEditing(false)
-      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zapisany i będzie widoczny dla innych użytkowników.' })
+      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
     } catch (error) {
-      setBioDraft(cleanBio)
-      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
-      setBioEditing(false)
-      onToast?.({ type: 'warning', title: 'Opis zapisany lokalnie', message: 'Nie udało się zapisać w Supabase. Uruchom SQL wersji 967 dla profiles/RLS.' })
+      onToast?.({ type: 'error', title: 'Błąd opisu', message: formatAppErrorMessage(error.message) })
     } finally {
       setBioSaving(false)
     }
@@ -14382,20 +14410,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const followingCount = Math.max(baseFollowingCount, localFollowingCount)
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
-  const profileBio = (() => {
-    const keys = [
-      String(profile.id || user?.id || ''),
-      normalizeEmail(email),
-      normalizeEmail(username),
-    ].filter(Boolean)
-    for (const key of keys) {
-      try {
-        const saved = window.localStorage?.getItem(`betai_profile_bio_${key}`)
-        if (saved) return saved
-      } catch (_) {}
-    }
-    return user?.bio || user?.description || user?.about || fallbackBio
-  })()
+  const profileBio = user?.bio || user?.description || user?.about || fallbackBio
   const preferredSport = user?.preferred_sport || user?.sport || 'Nie ustawiono'
 
   const toTipRow = (tip, fallbackPremium = false) => {
@@ -14579,140 +14594,50 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     : []
 
 
-  const liveStatsCards = allProfileTipCards.map(card => {
-    const raw = card.rawTip || {}
-    const odds = Math.max(0, Number(card.odds || raw.odds || raw.course || 0) || 0)
-    const stake = Math.max(0, Number(card.stake || raw.stake || raw.bet_amount || raw.amount || 0) || 0)
-    const statusLabel = String(card.statusLabel || 'Oczekujący')
-    const isWon = statusLabel === 'Wygrany'
-    const isLost = statusLabel === 'Przegrany'
-    const isVoid = statusLabel === 'Zwrot'
-    const isSettled = isWon || isLost || isVoid
-    const profit = isWon ? stake * Math.max(0, odds - 1) : isLost ? -stake : 0
-    const createdDate = new Date(raw.created_at || raw.inserted_at || raw.updated_at || raw.match_time || raw.event_time || raw.start_time || Date.now())
-    const eventDate = new Date(raw.match_time || raw.event_time || raw.start_time || raw.match_date || raw.event_date || raw.created_at || Date.now())
-    const sportLabel = raw.sport || raw.sport_name || raw.category || raw.discipline || card.sport || 'Piłka nożna'
-    return {
-      ...card,
-      raw,
-      odds,
-      stake,
-      statusLabel,
-      isWon,
-      isLost,
-      isVoid,
-      isSettled,
-      profit,
-      createdDate: Number.isNaN(createdDate.getTime()) ? new Date() : createdDate,
-      eventDate: Number.isNaN(eventDate.getTime()) ? new Date() : eventDate,
-      sportLabel,
-      typeLabel: card.premium ? 'Płatny' : 'Publiczny',
-    }
-  })
-
-  const summarizeRows = (items, labelGetter) => {
-    const map = new Map()
-    items.forEach(item => {
-      const label = labelGetter(item) || 'Inne'
-      if (!map.has(label)) {
-        map.set(label, { label, coupons: 0, stake: 0, profit: 0, oddsSum: 0, oddsCount: 0, stakeSum: 0 })
-      }
-      const row = map.get(label)
-      row.coupons += 1
-      row.stake += Number(item.stake || 0)
-      row.profit += Number(item.profit || 0)
-      if (Number(item.odds || 0) > 0) {
-        row.oddsSum += Number(item.odds || 0)
-        row.oddsCount += 1
-      }
-      row.stakeSum += Number(item.stake || 0)
-    })
-    return [...map.values()].map(row => ({
-      label: row.label,
-      coupons: row.coupons,
-      stake: row.stake,
-      profit: row.profit,
-      yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
-      avgOdds: row.oddsCount > 0 ? row.oddsSum / row.oddsCount : 0,
-      avgStake: row.coupons > 0 ? row.stakeSum / row.coupons : 0,
-    }))
-  }
-
-  const getOddsRangeLabel = (odds) => {
-    const value = Number(odds || 0)
-    if (value <= 0) return 'Brak kursu'
-    if (value <= 1.50) return '1.01 - 1.50'
-    if (value <= 2.00) return '1.51 - 2.00'
-    if (value <= 3.00) return '2.01 - 3.00'
-    if (value <= 5.00) return '3.01 - 5.00'
-    if (value <= 8.00) return '5.01 - 8.00'
-    if (value <= 9.99) return '8.01 - 9.99'
-    return '10.00+'
-  }
-
-  const getHourBucketLabel = (date) => {
-    const hour = Number(date?.getHours?.() || 0)
-    if (hour < 8) return '00:00 - 07:59'
-    if (hour < 12) return '08:00 - 11:59'
-    if (hour < 17) return '12:00 - 16:59'
-    if (hour < 20) return '17:00 - 19:59'
-    return '20:00 - 23:59'
-  }
-
-  const getMonthLabel = (date) => {
-    const safeDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date()
-    return safeDate.toLocaleDateString('pl-PL', { month: '2-digit', year: 'numeric' }).replace('.', '')
-  }
-
-  const ensureRows = (rows, fallbackLabel = 'Brak danych') => rows.length ? rows : [{
-    label: fallbackLabel,
-    coupons: 0,
-    stake: 0,
-    profit: 0,
-    yield: 0,
-    avgOdds: 0,
-    avgStake: 0,
-  }]
-
-  const importedTypeStatsRows = ensureRows(summarizeRows(liveStatsCards, item => item.typeLabel))
-    .sort((a, b) => String(a.label).localeCompare(String(b.label), 'pl'))
-  const importedSportStatsRows = ensureRows(summarizeRows(liveStatsCards, item => item.sportLabel))
-    .sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
-  const importedOddsStatsRows = ensureRows(summarizeRows(liveStatsCards, item => getOddsRangeLabel(item.odds)))
-    .sort((a, b) => {
-      const order = ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+', 'Brak kursu', 'Brak danych']
-      return order.indexOf(a.label) - order.indexOf(b.label)
-    })
-  const importedHourStatsRows = ensureRows(summarizeRows(liveStatsCards, item => getHourBucketLabel(item.createdDate)))
-    .sort((a, b) => {
-      const order = ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59', 'Brak danych']
-      return order.indexOf(a.label) - order.indexOf(b.label)
-    })
-
-  const monthRowsRaw = summarizeRows(liveStatsCards, item => getMonthLabel(item.eventDate))
-    .map(row => ({ ...row, sortDate: parseMonthLabelDate(row.label) || new Date(0) }))
-    .sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
-  const importedMonthStatsRows = ensureRows(monthRowsRaw.slice(0, 12), getMonthLabel(new Date()))
-  const liveStatsUpdatedAt = new Date().toISOString()
-  const profileStatsSnapshot = {
-    totalTips,
-    wonTips,
-    lostTips,
-    pendingTips,
-    settledTips,
-    totalStaked: totalStakedAmount,
-    profit: profitAmount,
-    yield: roi,
-    avgOdds: avgOddsNumber,
-    highestOdds: highestOddsNumber,
-    typeStats: importedTypeStatsRows,
-    sportStats: importedSportStatsRows,
-    oddsStats: importedOddsStatsRows,
-    hourStats: importedHourStatsRows,
-    monthStats: importedMonthStatsRows,
-    updatedAt: liveStatsUpdatedAt,
-  }
-
+  const importedTypeStatsRows = [
+    { label: 'Publiczny', coupons: 190, profit: 2207.34, yield: 36.00, avgOdds: 1.80, avgStake: 325.81 },
+    { label: 'Płatny', coupons: 499, profit: 57848.55, yield: 41.00, avgOdds: 1.94, avgStake: 282.36 },
+  ]
+  const importedSportStatsRows = [
+    { label: 'MMA', coupons: 47, stake: 33073.99, profit: 75029.02, yield: 227.00 },
+    { label: 'Baseball', coupons: 26, stake: 5215.00, profit: 4107.70, yield: 79.00 },
+    { label: 'Krykiet', coupons: 2, stake: 50.00, profit: 16.80, yield: 34.00 },
+    { label: 'Koszykówka', coupons: 20, stake: 3428.00, profit: 622.39, yield: 18.00 },
+    { label: 'Piłka nożna', coupons: 497, stake: 109473.34, profit: 5903.54, yield: 5.00 },
+    { label: 'Tenis', coupons: 103, stake: 21423.67, profit: 546.54, yield: 3.00 },
+    { label: 'Darts', coupons: 4, stake: 50.00, profit: 0.70, yield: 1.00 },
+    { label: 'Hokej', coupons: 30, stake: 8036.00, profit: -45.60, yield: -1.00 },
+    { label: 'Boks', coupons: 5, stake: 3020.00, profit: -650.00, yield: -22.00 },
+    { label: 'Snooker', coupons: 22, stake: 19030.00, profit: -5611.20, yield: -29.00 },
+  ]
+  const importedOddsStatsRows = [
+    { label: '1.01 - 1.50', coupons: 136, profit: 1392.96, yield: 3.00, avgOdds: 1.45, avgStake: 347.82 },
+    { label: '1.51 - 2.00', coupons: 448, profit: 9163.29, yield: 8.00, avgOdds: 1.71, avgStake: 251.25 },
+    { label: '2.01 - 3.00', coupons: 71, profit: 9091.58, yield: 37.00, avgOdds: 2.26, avgStake: 342.20 },
+    { label: '3.01 - 5.00', coupons: 27, profit: 1892.06, yield: 13.00, avgOdds: 3.58, avgStake: 541.41 },
+    { label: '5.01 - 8.00', coupons: 1, profit: 4100.00, yield: 410.00, avgOdds: 5.10, avgStake: 1000.00 },
+    { label: '8.01 - 9.99', coupons: 1, profit: 7290.00, yield: 729.00, avgOdds: 8.29, avgStake: 1000.00 },
+    { label: '10.00+', coupons: 2, profit: 46990.00, yield: 4652.00, avgOdds: 36.40, avgStake: 505.00 },
+  ]
+  const importedHourStatsRows = [
+    { label: '00:00 - 07:59', coupons: 114, profit: 60871.45, yield: 153.00, avgOdds: 2.36, avgStake: 349.57 },
+    { label: '08:00 - 11:59', coupons: 52, profit: 1564.82, yield: 14.00, avgOdds: 1.73, avgStake: 220.58 },
+    { label: '12:00 - 16:59', coupons: 167, profit: -5910.06, yield: -23.00, avgOdds: 1.77, avgStake: 155.08 },
+    { label: '17:00 - 19:59', coupons: 215, profit: 12269.92, yield: 18.00, avgOdds: 1.79, avgStake: 323.05 },
+    { label: '20:00 - 23:59', coupons: 141, profit: 1123.76, yield: 20.00, avgOdds: 1.91, avgStake: 398.04 },
+  ]
+  const importedMonthStatsRows = [
+    { label: '05/2026', coupons: 55, stake: 19340.00, profit: 2049.10, yield: 11.00 },
+    { label: '04/2026', coupons: 251, stake: 74481.00, profit: 5850.88, yield: 8.00 },
+    { label: '03/2026', coupons: 272, stake: 105496.00, profit: 70296.40, yield: 67.00 },
+    { label: '02/2026', coupons: 58, stake: 3165.00, profit: 1593.26, yield: 50.00 },
+    { label: '01/2026', coupons: 53, stake: 318.00, profit: 130.25, yield: 41.00 },
+    { label: '12/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '11/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '10/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '09/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+    { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
+  ]
   const profileChartRanges = [
     { key: '7d', label: '7D', days: 7 },
     { key: '30d', label: '30D', days: 30 },
@@ -14876,63 +14801,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`,
     profitValue: profitAmount,
   }
-
-  useEffect(() => {
-    if (!profileIsOwnForViewer || !profile?.id) return
-    const storageKey = `betai_profile_stats_snapshot_${profile.id}`
-    try {
-      window.localStorage?.setItem(storageKey, JSON.stringify(profileStatsSnapshot))
-    } catch (_) {}
-
-    if (!isSupabaseConfigured || !supabase) return
-    const timer = setTimeout(async () => {
-      try {
-        await supabase
-          .from('tipster_stats_snapshots')
-          .upsert({
-            tipster_id: profile.id,
-            total_tips: Number(profileStatsSnapshot.totalTips || 0),
-            won_tips: Number(profileStatsSnapshot.wonTips || 0),
-            lost_tips: Number(profileStatsSnapshot.lostTips || 0),
-            pending_tips: Number(profileStatsSnapshot.pendingTips || 0),
-            settled_tips: Number(profileStatsSnapshot.settledTips || 0),
-            total_staked: Number(profileStatsSnapshot.totalStaked || 0),
-            profit: Number(profileStatsSnapshot.profit || 0),
-            yield_percent: Number(profileStatsSnapshot.yield || 0),
-            avg_odds: Number(profileStatsSnapshot.avgOdds || 0),
-            highest_odds: Number(profileStatsSnapshot.highestOdds || 0),
-            type_stats: profileStatsSnapshot.typeStats,
-            sport_stats: profileStatsSnapshot.sportStats,
-            odds_stats: profileStatsSnapshot.oddsStats,
-            hour_stats: profileStatsSnapshot.hourStats,
-            month_stats: profileStatsSnapshot.monthStats,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'tipster_id' })
-      } catch (error) {
-        console.warn('tipster stats snapshot save skipped', error)
-      }
-    }, 650)
-
-    return () => clearTimeout(timer)
-  }, [
-    profileIsOwnForViewer,
-    profile?.id,
-    totalTips,
-    wonTips,
-    lostTips,
-    pendingTips,
-    settledTips,
-    totalStakedAmount,
-    profitAmount,
-    roi,
-    avgOddsNumber,
-    highestOddsNumber,
-    JSON.stringify(importedTypeStatsRows),
-    JSON.stringify(importedSportStatsRows),
-    JSON.stringify(importedOddsStatsRows),
-    JSON.stringify(importedHourStatsRows),
-    JSON.stringify(importedMonthStatsRows),
-  ])
 
   const renderProfileTipCard = (tip) => (
     <ProfileLiveTipCard
@@ -15241,14 +15109,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <div className="profile-v4-results-table profile-v4-results-table-v945">
                   <div><b>Data / godzina</b><b>Mecz</b><b>Typ</b><b>Kurs</b><b>Stawka</b><b>Wynik</b><b>Akcja</b></div>
                   {resultTipRows.length ? resultTipRows.map(tip => {
+                    const sourceRowTip = tip.rawTip || tip
                     const canRequestSettlement = profileIsOwnForViewer && ['Oczekujący', 'Odrzucony'].includes(tip.statusLabel)
-                    const eventDateTime = getTipEventDateTime(tip.rawTip || tip)
+                    const eventDateTime = getTipEventDateTime(sourceRowTip)
+                    const rowIsPremium = isTipPremium(sourceRowTip)
+                    const rowHasSingleUnlock = Boolean((sourceRowTip?.id || tip.id) && unlockedTips?.has?.(sourceRowTip?.id || tip.id))
+                    const rowHasProfileSub = hasActiveTipsterSubscription(sourceRowTip, tipsterSubscriptions)
+                    const rowIsUnlocked = profileIsOwnForViewer || !rowIsPremium || rowHasSingleUnlock || rowHasProfileSub
                     return (
                       <div key={tip.id}>
                         <span className="profile-result-date-time-v964"><b>{eventDateTime.date}</b><small>{eventDateTime.time}</small></span>
                         <span>{tip.home} — {tip.away}</span>
-                        <span>{tip.pick}</span>
-                        <span>{tip.odds}</span>
+                        <span>{rowIsUnlocked ? tip.pick : 'Typ premium'}</span>
+                        <span>{rowIsUnlocked ? tip.odds : '—'}</span>
                         <span>{tip.stake.toFixed(2)} zł</span>
                         <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : tip.statusLabel === 'Zwrot' ? 'void' : tip.statusLabel === 'Czeka na admina' ? 'admin' : 'wait'}>{tip.statusLabel}</em>
                         <span className="manual-settle-actions-v945">
@@ -15285,10 +15158,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <article className="success"><small>Yield</small><strong>{roi}%</strong></article>
                 <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount.toFixed(2)}</strong></article>
                 <article><small>Zainwestowane pieniądze</small><strong>{totalStakedAmount.toFixed(2)}</strong></article>
-              </div>
-              <div className="profile-live-stats-note-v966">
-                <strong>Statystyki live</strong>
-                <span>Każda tabela liczy się z typów tego profilu. Dane są zapisywane jako snapshot w bazie i odświeżają się po dodaniu albo rozliczeniu typu.</span>
               </div>
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
                 <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
@@ -17512,7 +17381,7 @@ function App() {
 
     sourceTips = sourceTips.map(tip => ({
       ...tip,
-      author_visible_stats: tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)
+      author_visible_stats: getImportedProfileStats(tip) || tip.author_visible_stats || finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), null)
     }))
     let activeSubs = []
     if (userId) {
@@ -17766,7 +17635,7 @@ function App() {
     if (rawRef && uuidLike.test(rawRef)) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id,email,username,public_slug,avatar_url,bio,description,about,preferred_sport,created_at,updated_at')
+        .select('id,email,username,public_slug,avatar_url')
         .eq('id', rawRef)
         .maybeSingle()
       if (!error && data?.id) return data
@@ -17787,7 +17656,7 @@ function App() {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email,username,public_slug,avatar_url,bio,description,about,preferred_sport,created_at,updated_at')
+      .select('id,email,username,public_slug,avatar_url')
       .limit(500)
 
     if (error) {
@@ -18578,10 +18447,7 @@ function App() {
         subscription_status: effectivePremium ? 'active' : (effectiveProfile.subscription_status || 'free'),
         current_period_end: effectiveProfile.current_period_end || null,
         avatar_url: effectiveProfile.avatar_url || null,
-        bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null,
-        description: effectiveProfile.description || effectiveProfile.bio || effectiveProfile.about || null,
-        about: effectiveProfile.about || effectiveProfile.bio || effectiveProfile.description || null,
-        preferred_sport: effectiveProfile.preferred_sport || effectiveProfile.sport || null
+        bio: effectiveProfile.bio || effectiveProfile.description || effectiveProfile.about || null
       }, { onConflict: 'id' })
     } catch (syncError) {
       console.warn('Profile sync skipped:', syncError)

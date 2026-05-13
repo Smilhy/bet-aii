@@ -1,39 +1,27 @@
 WERSJA 967
 
-Naprawa zapisywania i wyświetlania opisu profilu „o sobie”.
+Poprawka widoczności typów premium dla właściciela profilu.
 
-Problem:
-- użytkownik zmieniał opis,
-- opis czasem był widoczny tylko u właściciela albo tylko do odświeżenia,
-- profil innego użytkownika pokazywał fallback: „profil typera, statystyki i typy”.
+Logika:
+1. Właściciel typu widzi swój typ premium odkodowany.
+2. Obcy użytkownik bez zakupu/subskrypcji widzi blokadę:
+   - Typ premium
+   - kurs —
+   - zablokowana analiza
+   - przycisk Kup singiel
+3. Użytkownik po zakupie singla albo aktywnej subskrypcji profilu widzi premium odkodowane.
+4. Ta sama logika działa na:
+   - Dashboard / feed
+   - Mój profil -> Typy
+   - Mój profil -> Wyniki
 
-Zrobione:
-1. Zapis opisu zapisuje teraz:
-   - bio,
-   - description,
-   - about,
-   - auth metadata,
-   - localStorage jako fallback.
-2. Publiczne pobieranie profili pobiera też:
-   - bio,
-   - description,
-   - about,
-   - preferred_sport,
-   - created_at,
-   - updated_at.
-3. Cache profili przechowuje już nie tylko avatar, ale też opis profilu.
-4. Typy dostają author_bio/profile_bio z profilu, więc profil po kliknięciu nicku ma prawdziwy opis.
-5. Jeśli Supabase/RLS blokuje zapis, opis zostaje lokalnie i pojawia się ostrzeżenie.
-6. Dodano SQL:
-   supabase/version_967_profile_bio_persistence.sql
-
-WAŻNE:
-Uruchom SQL version_967_profile_bio_persistence.sql w Supabase, żeby opis zapisywał się globalnie i był widoczny dla innych użytkowników.
+Naprawione:
+- właściciel nie widzi już własnych typów premium jako zablokowanych,
+- w Wynikach właściciel widzi pełny typ,
+- w Wynikach obcy bez dostępu nie widzi odkodowanego typu premium.
 
 Start z wersji:
-- betai_wersja_966_ZYWE_STATYSTYKI_PROFILU_DB.zip
+- betai_wersja_966_API_FOOTBALL_KURSY_ODDS_FIX.zip
 
 Pliki zmienione:
 - src/main.jsx
-- src/styles.css
-- supabase/version_967_profile_bio_persistence.sql

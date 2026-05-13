@@ -35762,33 +35762,3 @@ button.betfolio-fetch-btn{
     grid-template-columns: 1fr !important;
   }
 }
-
-
-/* WERSJA 966 — żywe statystyki profilu */
-.profile-live-stats-note-v966{
-  display:flex !important;
-  align-items:center !important;
-  gap:10px !important;
-  flex-wrap:wrap !important;
-  margin:12px 0 14px !important;
-  padding:11px 14px !important;
-  border-radius:16px !important;
-  border:1px solid rgba(33,230,214,.16) !important;
-  background:linear-gradient(90deg,rgba(33,230,214,.10),rgba(5,18,32,.54)) !important;
-  color:#9fb8ca !important;
-  font-size:12px !important;
-  font-weight:850 !important;
-}
-.profile-live-stats-note-v966 strong{
-  color:#dffffb !important;
-  font-weight:1000 !important;
-}
-.profile-v4-stats-grid .profile-v4-table-card{
-  min-height:unset !important;
-}
-
-
-/* WERSJA 967 — trwały opis profilu */
-.profile-v3-bio-click{
-  white-space:pre-wrap !important;
-}

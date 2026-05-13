@@ -1,22 +1,37 @@
 WERSJA 968
 
-Poprawka plików po błędzie SQL:
-ERROR 42P13: cannot change return type of existing function
+Naprawa spójności statystyk dla całej strony.
+
+Problem:
+- Mój profil pokazywał statystyki z profilu, np. 698 typów / +80717.59 zł.
+- Karta typu i ranking pokazywały inne/stare dane, np. 689 typów / +79910.89 zł.
+- Czyli różne miejsca strony brały statystyki z różnych źródeł.
 
 Zrobione:
-1. Poprawiono:
-   supabase/version_967_profile_bio_persistence.sql
-2. Dodano też nowy plik:
-   supabase/version_968_profile_bio_persistence_fix.sql
-3. SQL najpierw usuwa starą funkcję:
-   drop function if exists public.betai_public_profiles_for_ui();
-4. Dopiero potem tworzy nową funkcję z bio/description/about.
+1. Jedno źródło prawdy dla statystyk typera:
+   public.profiles imported_* / profile stats.
+2. Karta typu pobiera statystyki autora z profilu:
+   - yield
+   - total tips
+   - won/lost/pending
+   - profit
+   - avg odds
+   - highest odds
+3. Ranking pobiera te same statystyki z profilu.
+4. Dashboard/feed pobiera te same statystyki.
+5. Mój profil i profil publiczny dalej pokazują te same wartości.
+6. Stare statystyki zapisane w rekordzie typu nie nadpisują już profilu.
+7. Funkcja public profiles łączy:
+   - RPC/view publiczne,
+   - tabelę profiles ze statystykami,
+   - cache avatarów.
+8. Logika działa dla każdego użytkownika, nie tylko smilhytv.
 
-Logika aplikacji z wersji 967 zostaje:
-- opis profilu zapisuje się do bio/description/about,
-- profil publiczny pobiera opis innych użytkowników,
-- cache profilu przechowuje opis,
-- fallback localStorage zostaje.
+Efekt:
+Jeśli w Mój profil jest 698 typów i +80717.59 zł, to karta typu oraz ranking mają pokazać te same wartości.
 
 Start z wersji:
-- betai_wersja_967_OPIS_PROFILU_ZAPIS_I_WIDOCZNOSC.zip
+- betai_wersja_967_WLASCICIEL_WIDZI_PREMIUM_ODKODOWANE.zip
+
+Pliki zmienione:
+- src/main.jsx
