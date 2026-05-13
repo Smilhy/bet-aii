@@ -1,0 +1,20 @@
+WERSJA 959
+
+Zakładka Mój profil -> Wyniki:
+1. Usunięto górny rząd kafelków:
+   - Wszystkie rozliczone
+   - Wygrane
+   - Przegrane
+   - Nierozliczone
+   - Yield
+   - Bilans
+2. Usunięto napis pod tytułem wykresu:
+   - „Animowany wykres formy i zmian profitu”
+3. Zostaje wykres i tabela wyników.
+4. Dane/statystyki nie zostały usunięte z logiki — usunięty jest tylko widok zaznaczony na czerwono.
+
+Start z wersji:
+- betai_wersja_958_FIX_SPOLECZNOSC_OBSERWUJACY_OBSERWOWANI.zip
+
+Pliki zmienione:
+- src/main.jsx

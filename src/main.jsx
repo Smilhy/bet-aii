@@ -2155,7 +2155,7 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
 }
 
 
-function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], followingTipsters, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
+function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], followingTipsters, followStats = {}, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
   const [profile, setProfile] = useState(null)
   const [tipsterTips, setTipsterTips] = useState([])
   const [stats, setStats] = useState(null)
@@ -2391,6 +2391,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
           unlockedTips={unlockedTips}
           tipsterSubscriptions={tipsterSubscriptions}
           followingTipsters={followingTipsters}
+          followStats={followStats}
           onToggleFollow={onToggleFollow}
           userPlan={targetProfileUser.plan || targetProfileUser.subscription_status || 'premium'}
           stripeConnectStatus={{}}
@@ -14001,7 +14002,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
@@ -14283,8 +14284,22 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
     { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} ${importedTipsCurrency}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
   ]
-  const followersCount = Number(user?.followers_count || user?.followers || 0) || 0
-  const followingCount = Number(user?.following_count || user?.following || 0) || 0
+  const profileFollowStats = (() => {
+    const keys = [
+      String(profile.id || user?.id || ''),
+      normalizeEmail(username),
+      normalizeEmail(email),
+      normalizeEmail(email).split('@')[0],
+    ].filter(Boolean)
+    for (const key of keys) {
+      const direct = followStats?.[key]
+      const lower = followStats?.[String(key).toLowerCase()]
+      if (direct || lower) return direct || lower
+    }
+    return null
+  })()
+  const followersCount = Number(profileFollowStats?.followers ?? user?.followers_count ?? user?.followers ?? 0) || 0
+  const followingCount = Number(profileFollowStats?.following ?? user?.following_count ?? user?.following ?? 0) || 0
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
   const profileBio = user?.bio || user?.description || user?.about || fallbackBio
@@ -14780,19 +14795,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </section>
             ) : (
             <section className="profile-v4-page profile-v4-results-page">
-              <div className="profile-v4-summary-grid">
-                <article><small>Wszystkie rozliczone</small><strong>{settledTips}</strong></article>
-                <article className="success"><small>Wygrane</small><strong>{wonTips}</strong></article>
-                <article className="danger"><small>Przegrane</small><strong>{lostTips}</strong></article>
-                <article className="warning"><small>Nierozliczone</small><strong>{pendingTips}</strong></article>
-                <article className={roi >= 0 ? 'success' : 'danger'}><small>Yield</small><strong>{roi}%</strong></article>
-                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount >= 0 ? '+' : ''}{profitAmount.toFixed(2)} zł</strong></article>
-              </div>
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-live-balance-card-v949">
                 <div className="profile-v3-card-head profile-live-balance-head-v949">
                   <div>
                     <h3>Wyniki — przebieg bilansu</h3>
-                    <span>Animowany wykres formy i zmian profitu</span>
                   </div>
                   <div className="profile-live-balance-status-v949"><i></i> LIVE</div>
                 </div>
@@ -16625,6 +16631,7 @@ function App() {
   const [wallet, setWallet] = useState(0)
   const [unlockedTips, setUnlockedTips] = useState(() => new Set())
   const [followingTipsters, setFollowingTipsters] = useState(() => new Set())
+  const [followStats, setFollowStats] = useState({})
   const [notifications, setNotifications] = useState([])
   const [notifyPanelOpen, setNotifyPanelOpen] = useState(false)
   const [notifyPanelStyle, setNotifyPanelStyle] = useState(null)
@@ -17140,6 +17147,40 @@ function App() {
     setFollowingTipsters(new Set((data || []).map(row => String(row.tipster_id))))
   }
 
+
+  async function fetchFollowStats() {
+    if (!isSupabaseConfigured || !supabase) {
+      setFollowStats({})
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tipster_follows')
+        .select('follower_id,tipster_id')
+
+      if (error) throw error
+
+      const stats = {}
+      ;(data || []).forEach(row => {
+        const followerId = String(row.follower_id || '')
+        const tipsterId = String(row.tipster_id || '')
+        if (tipsterId) {
+          stats[tipsterId] = stats[tipsterId] || { followers: 0, following: 0 }
+          stats[tipsterId].followers += 1
+        }
+        if (followerId) {
+          stats[followerId] = stats[followerId] || { followers: 0, following: 0 }
+          stats[followerId].following += 1
+        }
+      })
+      setFollowStats(stats)
+    } catch (error) {
+      console.warn('fetchFollowStats skipped', error)
+    }
+  }
+
+
   async function fetchNotifications(userId = sessionUser?.id) {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
@@ -17418,6 +17459,21 @@ function App() {
       return next
     })
 
+    setFollowStats(prev => {
+      const next = { ...(prev || {}) }
+      const targetKey = id || localKey
+      const viewerKey = String(sessionUser.id || '')
+      if (targetKey) {
+        const current = next[targetKey] || { followers: 0, following: 0 }
+        next[targetKey] = { ...current, followers: Math.max(0, Number(current.followers || 0) + (alreadyFollowing ? -1 : 1)) }
+      }
+      if (viewerKey) {
+        const current = next[viewerKey] || { followers: 0, following: 0 }
+        next[viewerKey] = { ...current, following: Math.max(0, Number(current.following || 0) + (alreadyFollowing ? -1 : 1)) }
+      }
+      return next
+    })
+
     const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && id && uuidLike.test(id) && !isOwnById)
     if (canPersistInSupabase) {
       try {
@@ -17445,6 +17501,7 @@ function App() {
       }
     }
 
+    fetchFollowStats()
     showToast({ type: 'success', title: 'Follow', message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera.' })
   }
 
@@ -17503,6 +17560,7 @@ function App() {
       fetchUnlockedTips(sessionUser.id)
       fetchPaymentHistory(sessionUser.id)
       fetchFollowingTipsters(sessionUser.id)
+        fetchFollowStats()
       fetchNotifications(sessionUser.id)
     } else {
       setUnlockedTips(new Set())
@@ -18949,6 +19007,7 @@ function App() {
             unlockedTips={unlockedTips}
             currentUser={effectiveAccountProfile || sessionUser}
             followingTipsters={followingTipsters}
+            followStats={followStats}
             onToggleFollow={toggleFollowTipster}
             onOpenTipster={openTipsterProfile}
             onUnlock={unlockTip}
@@ -19016,6 +19075,7 @@ function App() {
             currentUser={effectiveAccountProfile}
             allTips={tips}
             followingTipsters={followingTipsters}
+            followStats={followStats}
             onToggleFollow={toggleFollowTipster}
             onUnlock={unlockTip}
             onSubscribeToTipster={setSelectedProfileSub}
