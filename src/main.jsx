@@ -8918,8 +8918,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       <div className="community-v5-header glass-community-v5 community-pro-hero-v1012">
         <div>
           <span className="community-kicker-v1008">BET+AI SOCIAL LIVE</span>
-          <h1>Krok 9 / Społeczność</h1>
+          <h1>Społeczność</h1>
           <p>Rozmawiaj, dziel się typami i zdobywaj nagrody z aktywną społecznością Bet+AI.</p>
+          <div className="community-hero-badges-v1014"><span>💬 Czat</span><span>🏆 Ranking</span><span>🎁 1 żeton</span></div>
         </div>
         <div className="community-v5-online-wrap">
           <div className="community-v5-online-copy">
@@ -8940,9 +8941,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       <div className="community-v5-tabs glass-community-v5 community-pro-tabs-v1012">
         <button type="button" className={activeTab === 'feed' ? 'active' : ''} onClick={() => setActiveTab('feed')}>💬 Czat live</button>
-        <button type="button" className={activeTab === 'channels' ? 'active' : ''} onClick={() => setActiveTab('feed')}>🎚️ Kanały</button>
+        <button type="button" className={activeTab === 'channels' ? 'active' : ''} onClick={() => setActiveTab('channels')}>🎚️ Kanały</button>
         <button type="button" className={activeTab === 'posts' ? 'active' : ''} onClick={() => setActiveTab('posts')}>📰 Posty</button>
-        <button type="button" className={activeTab === 'drops' ? 'active' : ''} onClick={() => setActiveTab('feed')}>🎚️ Dropy</button>
+        <button type="button" className={activeTab === 'drops' ? 'active' : ''} onClick={() => setActiveTab('drops')}>🎁 Dropy</button>
         <button type="button" className={activeTab === 'rewards' ? 'active' : ''} onClick={() => setActiveTab('rewards')}>🏆 Nagrody</button>
       </div>
 
@@ -8972,8 +8973,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <main className="community-pro-center-v1012">
           {activeTab === 'ranking' ? (
-            <div className="glass-community-v5 community-ranking-live-v1008">
+            <div className="glass-community-v5 community-ranking-live-v1008 community-tab-panel-v1014">
               <div className="bottom-card-head-v5"><h3>Ranking społeczności</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
+              <p className="community-panel-sub-v1014">Ranking jest liczony z realnej aktywności społeczności. Każda aktywność = 1 Coin.</p>
               <div className="community-rank-v5">
                 {communityRanking.length ? communityRanking.map((item, index) => (
                   <div className="community-rank-row-v5" key={item.user_id || item.email || index}>
@@ -8984,8 +8986,36 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 )) : <div className="community-empty-v1008">Brak aktywności. Pierwsze posty utworzą ranking.</div>}
               </div>
             </div>
+          ) : activeTab === 'channels' ? (
+            <div className="glass-community-v5 community-tab-panel-v1014 channels-tab-v1014">
+              <div className="bottom-card-head-v5"><h3>Kanały społeczności</h3><button type="button" onClick={() => setActiveTab('feed')}>Przejdź do czatu</button></div>
+              <p className="community-panel-sub-v1014">Kanały porządkują rozmowy i feed. Na razie działają bezpiecznie na tej samej logice postów, bez ruszania bazy.</p>
+              <div className="community-channel-grid-v1014">
+                {channelRows.map((row, index) => (
+                  <button type="button" key={row[1]} onClick={() => setActiveTab('feed')} className={index === 0 ? 'active' : ''}>
+                    <span>{row[0]}</span>
+                    <strong>{row[1]}</strong>
+                    <small>{row[2]} aktywności</small>
+                    <em>Otwórz</em>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : activeTab === 'drops' ? (
+            <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014 drops-tab-v1014">
+              <div className="bottom-card-head-v5"><h3>Dropy społeczności</h3><span>Każdy drop: <b>1 żeton</b></span></div>
+              <p className="community-panel-sub-v1014">Dropy korzystają z tej samej bezpiecznej logiki nagród, więc odebranie zapisuje się w Supabase i nie resetuje po deployu.</p>
+              {rewardRows.map(reward => (
+                <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={`drop_${reward.key}`}>
+                  <span>{reward.icon}</span>
+                  <div><strong>{reward.title}</strong><small>{reward.desc}</small><div className="reward-progress-v5"><i style={{ width: `${Math.max(4, reward.progress)}%` }}></i></div></div>
+                  <em>{reward.current}</em>
+                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? 'Odebrano' : reward.done ? 'Odbierz +1 żeton' : '+1 żeton'}</button>
+                </div>
+              ))}
+            </div>
           ) : activeTab === 'rewards' ? (
-            <div className="glass-community-v5 community-rewards-live-v1008">
+            <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014">
               <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 żeton</b></span></div>
               {rewardRows.map(reward => (
                 <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={reward.key}>
@@ -8996,9 +9026,67 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 </div>
               ))}
             </div>
+          ) : activeTab === 'posts' ? (
+            <div className="community-pro-feed-v1012 posts-tab-v1014">
+              <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
+                <div className="composer-v5-head">
+                  <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
+                  <div><strong>Dodaj post społeczności</strong><small>Posty są realne i zapisują się w Supabase.</small></div>
+                </div>
+                <div className="composer-v5-row">
+                  <input value={postText} onChange={event => setPostText(event.target.value)} placeholder="Napisz post społeczności..." />
+                  <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
+                </div>
+              </div>
+
+              {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">Ładuję posty...</div> : null}
+              {!loadingCommunity && !mainPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>Brak postów społeczności.</strong><span>Opublikuj pierwszy realny wpis.</span></div> : null}
+
+              {mainPosts.map((post) => {
+                const postComments = commentsByPost[post.id] || []
+                const avatar = post.avatar_url || post.profile_avatar_url
+                const author = post.author_name || post.username || nameFromEmail(post.author_email)
+                return (
+                  <article className="glass-community-v5 feed-card-v5 pro-post-card-v1012 pro-post-card-v1014" key={post.id}>
+                    <div className="feed-card-head-v5">
+                      <div className="feed-author-v5">
+                        <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
+                        <div><strong>{author}</strong><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small></div></div>
+                      </div>
+                      <button type="button">⋮</button>
+                    </div>
+                    <p className="feed-text-v5">{post.body}</p>
+                    <div className="feed-actions-v5">
+                      <button type="button" onClick={() => toggleLike(post)}>👍 {Number(post.likes_count || 0)}</button>
+                      <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}>💬 {Number(post.comments_count || postComments.length || 0)}</button>
+                      <button type="button">↗</button>
+                      <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>Komentarze ({Number(post.comments_count || postComments.length || 0)})</button>
+                    </div>
+                    {expandedComments[post.id] ? (
+                      <div className="community-comments-v1008">
+                        {postComments.length ? postComments.map(comment => {
+                          const cAvatar = comment.avatar_url || comment.profile_avatar_url
+                          const cName = comment.author_name || comment.username || nameFromEmail(comment.author_email)
+                          return (
+                            <div className="reply-preview-v5" key={comment.id}>
+                              <span className={`reply-avatar-v5 ${cAvatar ? 'has-avatar' : ''}`}>{cAvatar ? <img src={cAvatar} alt="" /> : String(cName || 'U').slice(0,2).toUpperCase()}</span>
+                              <div><div className="feed-meta-v5"><strong>{cName}</strong><small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small></div><p>{comment.body}</p></div>
+                            </div>
+                          )
+                        }) : <div className="community-no-comments-v1008">Brak komentarzy. Dodaj pierwszy.</div>}
+                        <div className="community-comment-form-v1008">
+                          <input value={commentDrafts[post.id] || ''} onChange={event => setCommentDrafts(prev => ({ ...prev, [post.id]: event.target.value }))} placeholder="Dodaj komentarz..." />
+                          <button type="button" disabled={!String(commentDrafts[post.id] || '').trim()} onClick={() => addComment(post)}>Wyślij</button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
           ) : (
             <>
-              <div className="glass-community-v5 pro-chat-panel-v1012">
+              <div className="glass-community-v5 pro-chat-panel-v1012 pro-chat-panel-v1014">
                 <div className="pro-chat-head-v1012">
                   <h3># ogólny <span>• {Math.max(activeUsersCount, 1)} online</span></h3>
                   <button type="button">🔗</button>
@@ -9028,7 +9116,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               </div>
 
               <div className="community-pro-feed-v1012">
-                <div className="glass-community-v5 composer-v5 pro-composer-v1012">
+                <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
                   <div className="composer-v5-head">
                     <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
                     <div><strong>Co nowego w społeczności?</strong><small>Posty są realne i zapisują się w Supabase.</small></div>
@@ -9042,12 +9130,12 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">Ładuję społeczność...</div> : null}
                 {!loadingCommunity && !mainPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>Brak postów społeczności.</strong><span>Opublikuj pierwszy realny wpis — wtedy feed, ranking i nagrody zaczną żyć.</span></div> : null}
 
-                {mainPosts.map((post) => {
+                {mainPosts.slice(0, 4).map((post) => {
                   const postComments = commentsByPost[post.id] || []
                   const avatar = post.avatar_url || post.profile_avatar_url
                   const author = post.author_name || post.username || nameFromEmail(post.author_email)
                   return (
-                    <article className="glass-community-v5 feed-card-v5 pro-post-card-v1012" key={post.id}>
+                    <article className="glass-community-v5 feed-card-v5 pro-post-card-v1012 pro-post-card-v1014" key={post.id}>
                       <div className="feed-card-head-v5">
                         <div className="feed-author-v5">
                           <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
@@ -9060,27 +9148,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                         <button type="button" onClick={() => toggleLike(post)}>👍 {Number(post.likes_count || 0)}</button>
                         <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}>💬 {Number(post.comments_count || postComments.length || 0)}</button>
                         <button type="button">↗</button>
-                        <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>Zobacz wszystkie komentarze ({Number(post.comments_count || postComments.length || 0)})</button>
+                        <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>Zobacz komentarze ({Number(post.comments_count || postComments.length || 0)})</button>
                       </div>
-
-                      {expandedComments[post.id] ? (
-                        <div className="community-comments-v1008">
-                          {postComments.length ? postComments.map(comment => {
-                            const cAvatar = comment.avatar_url || comment.profile_avatar_url
-                            const cName = comment.author_name || comment.username || nameFromEmail(comment.author_email)
-                            return (
-                              <div className="reply-preview-v5" key={comment.id}>
-                                <span className={`reply-avatar-v5 ${cAvatar ? 'has-avatar' : ''}`}>{cAvatar ? <img src={cAvatar} alt="" /> : String(cName || 'U').slice(0,2).toUpperCase()}</span>
-                                <div><div className="feed-meta-v5"><strong>{cName}</strong><small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small></div><p>{comment.body}</p></div>
-                              </div>
-                            )
-                          }) : <div className="community-no-comments-v1008">Brak komentarzy. Dodaj pierwszy.</div>}
-                          <div className="community-comment-form-v1008">
-                            <input value={commentDrafts[post.id] || ''} onChange={event => setCommentDrafts(prev => ({ ...prev, [post.id]: event.target.value }))} placeholder="Dodaj komentarz..." />
-                            <button type="button" disabled={!String(commentDrafts[post.id] || '').trim()} onClick={() => addComment(post)}>Wyślij</button>
-                          </div>
-                        </div>
-                      ) : null}
                     </article>
                   )
                 })}

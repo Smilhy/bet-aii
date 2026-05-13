@@ -40277,3 +40277,240 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1012 */
+
+
+/* ==========================================================================
+   WERSJA 1014 — SPOŁECZNOŚĆ SAFE ULTRA PRO UI + ŻYWE ZAKŁADKI BEZ RUSZANIA LOGIKI
+   ========================================================================== */
+
+.community-pro-v1012 .community-pro-hero-v1012{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:170px !important;
+  padding:30px 34px !important;
+  background:
+    radial-gradient(circle at 68% 48%, rgba(32,242,210,.14), transparent 18%),
+    radial-gradient(circle at 86% 32%, rgba(47,217,255,.15), transparent 22%),
+    radial-gradient(circle at 96% 78%, rgba(122,132,255,.10), transparent 20%),
+    linear-gradient(135deg, rgba(7,25,45,.96), rgba(2,10,22,.98) 48%, rgba(4,41,55,.90)) !important;
+  border:1px solid rgba(24,231,255,.22) !important;
+  box-shadow:
+    0 28px 80px rgba(0,0,0,.34),
+    0 0 34px rgba(24,231,255,.08),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg, rgba(32,242,210,.18), transparent 28%),
+    radial-gradient(circle at 74% 38%, rgba(32,242,210,.20) 0 3px, transparent 4px),
+    radial-gradient(circle at 82% 56%, rgba(47,217,255,.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 91% 28%, rgba(32,242,210,.17) 0 3px, transparent 4px);
+  opacity:.75;
+  pointer-events:none;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012::after{
+  content:"";
+  position:absolute;
+  right:54px;
+  top:26px;
+  width:420px;
+  height:130px;
+  border-radius:34px;
+  border:1px solid rgba(32,242,210,.14);
+  background:
+    radial-gradient(circle at 20% 42%, rgba(32,242,210,.22), transparent 20%),
+    radial-gradient(circle at 66% 50%, rgba(255,215,106,.18), transparent 21%),
+    linear-gradient(135deg, rgba(8,46,68,.52), rgba(5,17,34,.15));
+  box-shadow:0 0 34px rgba(32,242,210,.10), inset 0 1px 0 rgba(255,255,255,.07);
+  transform:skewX(-8deg);
+  opacity:.85;
+  pointer-events:none;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012 > div{
+  position:relative;
+  z-index:2;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012 h1{
+  font-size:54px !important;
+  line-height:.95 !important;
+  letter-spacing:-.07em !important;
+  margin:4px 0 12px !important;
+  color:#f4fbff !important;
+  text-shadow:0 0 24px rgba(24,231,255,.18), 0 10px 32px rgba(0,0,0,.26) !important;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012 p{
+  max-width:560px !important;
+  color:#c7dbe9 !important;
+  font-size:17px !important;
+  line-height:1.36 !important;
+}
+
+.community-hero-badges-v1014{
+  display:flex;
+  gap:8px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+
+.community-hero-badges-v1014 span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:32px;
+  padding:0 12px;
+  border-radius:999px;
+  color:#dffcff;
+  font-weight:1000;
+  font-size:12px;
+  background:rgba(24,231,255,.08);
+  border:1px solid rgba(24,231,255,.16);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.community-pro-tabs-v1012{
+  background:linear-gradient(180deg, rgba(8,32,52,.86), rgba(3,15,27,.94)) !important;
+  border-color:rgba(24,231,255,.18) !important;
+}
+
+.community-pro-tabs-v1012 button{
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease !important;
+}
+
+.community-pro-tabs-v1012 button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(32,242,210,.24) !important;
+}
+
+.community-tab-panel-v1014{
+  padding:18px !important;
+  border-radius:22px !important;
+}
+
+.community-panel-sub-v1014{
+  margin:0 0 14px !important;
+  color:#9fb8c8 !important;
+  font-weight:800 !important;
+}
+
+.community-channel-grid-v1014{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.community-channel-grid-v1014 button{
+  min-height:92px;
+  display:grid;
+  grid-template-columns:48px 1fr auto;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:4px 12px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(24,231,255,.14);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(32,242,210,.08), transparent 26%),
+    linear-gradient(180deg, rgba(7,28,50,.82), rgba(3,14,27,.94));
+  color:#eaf8ff;
+  text-align:left;
+  cursor:pointer;
+}
+
+.community-channel-grid-v1014 button:hover,
+.community-channel-grid-v1014 button.active{
+  border-color:rgba(32,242,210,.34);
+  box-shadow:0 0 24px rgba(32,242,210,.10);
+}
+
+.community-channel-grid-v1014 span{
+  grid-row:1 / span 2;
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  color:#20f2d2;
+  background:linear-gradient(135deg, rgba(32,242,210,.16), rgba(47,217,255,.08));
+  border:1px solid rgba(32,242,210,.20);
+  font-weight:1000;
+}
+
+.community-channel-grid-v1014 strong{
+  font-size:16px;
+}
+
+.community-channel-grid-v1014 small{
+  color:#9fb8c8;
+  font-weight:800;
+}
+
+.community-channel-grid-v1014 em{
+  grid-row:1 / span 2;
+  font-style:normal;
+  color:#031321;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff);
+  padding:8px 12px;
+  border-radius:13px;
+  font-weight:1000;
+  box-shadow:0 12px 24px rgba(32,242,210,.12);
+}
+
+.composer-pro-v1014,
+.pro-post-card-v1014,
+.pro-chat-panel-v1014{
+  box-shadow:
+    0 20px 54px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+
+.pro-post-card-v1014{
+  min-height:auto !important;
+}
+
+.pro-post-card-v1014 .feed-actions-v5{
+  justify-content:flex-start !important;
+}
+
+.pro-post-card-v1014 .feed-actions-v5 button:last-child{
+  margin-left:auto;
+  color:#20f2d2 !important;
+}
+
+.drops-tab-v1014 .community-reward-row-v1008{
+  border-color:rgba(255,215,106,.18) !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(255,215,106,.055), transparent 26%),
+    linear-gradient(180deg, rgba(8,30,52,.82), rgba(3,14,27,.94)) !important;
+}
+
+.drops-tab-v1014 .community-reward-row-v1008 > span{
+  color:#ffd76a !important;
+  text-shadow:0 0 16px rgba(255,215,106,.30) !important;
+}
+
+.community-pro-right-v1012 .sidecard-v5:last-child{
+  margin-bottom:0 !important;
+}
+
+@media (max-width: 900px){
+  .community-channel-grid-v1014{
+    grid-template-columns:1fr;
+  }
+  .community-pro-v1012 .community-pro-hero-v1012 h1{
+    font-size:40px !important;
+  }
+  .community-pro-v1012 .community-pro-hero-v1012::after{
+    opacity:.35;
+    right:-80px;
+  }
+}
+
+/* KONIEC WERSJI 1014 */
