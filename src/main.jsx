@@ -955,7 +955,7 @@ async function fetchBetaiPublicProfiles() {
   // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
   try {
     const statsRows = await fetchBetaiProfilesWithStats()
-    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status').limit(1000)
+    const { data, error } = await supabase.from('profiles').select('id,email,username,avatar_url').limit(1000)
     if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
     if (statsRows.length) return mergeBetaiProfilesWithCache(statsRows)
     if (error) console.warn('profiles avatar fallback skipped', error)
@@ -2425,31 +2425,6 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     loadTipsterProfile()
     return () => { cancelled = true }
   }, [tipsterId, lookupTipsterKey])
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase || !profile?.id) return undefined
-    const channel = supabase
-      .channel(`betai-profile-bio-public-${profile.id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${profile.id}` }, payload => {
-        const nextProfile = payload?.new || {}
-        setProfile(prev => prev ? ({ ...prev, ...nextProfile }) : nextProfile)
-        setTipsterTips(prev => (prev || []).map(tip => ({
-          ...tip,
-          profile_bio: nextProfile.bio ?? nextProfile.description ?? nextProfile.about ?? tip.profile_bio,
-          author_bio: nextProfile.bio ?? nextProfile.description ?? nextProfile.about ?? tip.author_bio,
-          profile_description: nextProfile.description ?? nextProfile.bio ?? tip.profile_description,
-          author_description: nextProfile.description ?? nextProfile.bio ?? tip.author_description,
-          profile_about: nextProfile.about ?? nextProfile.bio ?? tip.profile_about,
-          author_about: nextProfile.about ?? nextProfile.bio ?? tip.author_about,
-          author_avatar_url: nextProfile.avatar_url || tip.author_avatar_url,
-          avatar_url: nextProfile.avatar_url || tip.avatar_url
-        })))
-      })
-      .subscribe()
-    return () => {
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [profile?.id])
 
   const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
@@ -14374,34 +14349,17 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     setBioSaving(true)
     try {
-      const bioPatch = {
-        bio: cleanBio,
-        description: cleanBio,
-        about: cleanBio,
-        updated_at: new Date().toISOString()
-      }
-
       const { error: profileError } = await supabase
         .from('profiles')
-        .update(bioPatch)
+        .update({ bio: cleanBio })
         .eq('id', user.id)
       if (profileError) throw profileError
 
-      await supabase.auth.updateUser({ data: { bio: cleanBio, description: cleanBio, about: cleanBio } }).catch(() => null)
+      await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
       setBioDraft(cleanBio)
-      onProfileUpdated?.(bioPatch)
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('betai:profile-bio-updated', {
-          detail: {
-            id: user.id,
-            email: user.email || user.author_email || '',
-            username: user.username || user.public_slug || user.author_name || '',
-            ...bioPatch
-          }
-        }))
-      }
+      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
       setBioEditing(false)
-      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany globalnie.' })
+      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
     } catch (error) {
       onToast?.({ type: 'error', title: 'Błąd opisu', message: formatAppErrorMessage(error.message) })
     } finally {
@@ -14434,14 +14392,26 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || 'zł').trim() || 'zł'
 
   const liveTotalTips = liveTipsForStats.length
-  const liveWonTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'won').length
-  const liveLostTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'lost').length
+  const liveWonTips = liveTipsForStats.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveLostTips = liveTipsForStats.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
   const liveSettledTips = liveWonTips + liveLostTips
   const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips)
-  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + getProfileTipOdds(tip), 0) / liveTipsForStats.length) : 0
-  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipSettledStake(tip), 0)
-  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipProfit(tip), 0)
-  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, getProfileTipOdds(tip)), 0)
+  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / liveTipsForStats.length) : 0
+  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    if (!['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum
+    return sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+  }, 0)
+  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => {
+    const status = String(tip.status || '').toLowerCase()
+    const stake = Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+    const odds = Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+    if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) return sum + (stake * Math.max(0, odds - 1))
+    if (['lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum - stake
+    return sum
+  }, 0)
+  const liveTotalStakedAmount = liveTipsForStats.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
+  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
 
   // Statystyki historyczne z poprzedniej platformy stanowią bazę.
   // Nowe typy dodane PO dacie importu dopisują się automatycznie do kafelków.
@@ -14450,7 +14420,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const lostTips = importedLostTips + liveLostTips
   const settledTips = wonTips + lostTips
   const pendingTips = importedPendingTips + livePendingTips
-  const totalStakedAmount = importedTotalStaked + liveSettledStake
+  const totalStakedAmount = importedTotalStaked + liveTotalStakedAmount
   const profitAmount = importedProfit + liveProfitAmount
   const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
   const avgOddsNumber = totalTips
@@ -14681,19 +14651,18 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const getProfileTipStake = (tip = {}) => Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
   const getProfileTipOdds = (tip = {}) => Math.max(0, Number(tip.odds || tip.course || 0) || 0)
-  const getProfileTipSettlement = (tip = {}) => normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
-  const isProfileTipSettled = (tip = {}) => ['won', 'lost'].includes(getProfileTipSettlement(tip))
-  const getProfileTipSettledStake = (tip = {}) => isProfileTipSettled(tip) ? getProfileTipStake(tip) : 0
   const getProfileTipProfit = (tip = {}) => {
-    const status = getProfileTipSettlement(tip)
+    const status = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
     const stake = getProfileTipStake(tip)
     const odds = getProfileTipOdds(tip)
 
-    // STAŁA ZASADA STATYSTYK:
-    // pending NIE wchodzi do bilansu, profitu, stawki ROI/Yield.
-    // Wygrana = stawka * (kurs - 1), przegrana = -stawka, zwrot/pending = 0.
+    // Profit=0 w rekordzie nie może blokować wyliczenia dla wygranej/przegranej.
     if (status === 'won') return stake * Math.max(0, odds - 1)
     if (status === 'lost') return -stake
+    if (status === 'void') return 0
+
+    const explicit = tip.profit ?? tip.result_profit ?? tip.profit_amount ?? tip.pnl
+    if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
     return 0
   }
   const getProfileTipSport = (tip = {}) => {
@@ -14736,26 +14705,21 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const map = new Map()
     ;(items || []).forEach(tip => {
       const label = groupBy(tip)
-      const current = map.get(label) || { label, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const current = map.get(label) || { label, coupons: 0, stake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
       const stake = getProfileTipStake(tip)
-      const settledStake = getProfileTipSettledStake(tip)
       const odds = getProfileTipOdds(tip)
       current.coupons += 1
-      current.allStake += stake
-      current.stake += settledStake
-      current.stakeSum += settledStake
-      if (isProfileTipSettled(tip)) current.settledCoupons += 1
+      current.stake += stake
+      current.stakeSum += stake
       current.profit += getProfileTipProfit(tip)
       if (odds > 0) current.oddsSum += odds
       map.set(label, current)
     })
     const rows = Array.from(map.values()).map(row => ({
       ...row,
-      // Yield/ROI zawsze liczymy tylko od stawek rozliczonych.
-      // Pending nie może obniżać ani zawyżać wyniku.
       yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
       avgOdds: row.coupons ? row.oddsSum / row.coupons : 0,
-      avgStake: row.settledCoupons ? row.stakeSum / row.settledCoupons : 0
+      avgStake: row.coupons ? row.stakeSum / row.coupons : 0
     }))
     if (order.length) {
       const pos = new Map(order.map((label, index) => [label, index]))
@@ -15048,15 +15012,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
                     </div>
                   </div>
-                ) : profileIsOwnForViewer ? (
+                ) : (
                   <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
                     {profileBio}
                     <span>✎</span>
                   </button>
-                ) : (
-                  <div className="profile-v3-bio-click profile-v3-bio-readonly-v975" title="Opis profilu typera">
-                    {profileBio}
-                  </div>
                 )}
                 <div className="profile-v3-actions">
                   {isPublicProfile && !profileIsOwnForViewer ? (
@@ -15287,6 +15247,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'stats' && (
             <section className="profile-v4-page profile-v4-stats-page">
+              <div className="profile-v4-summary-grid profile-v4-stats-top">
+                <article><small>Postawione kupony</small><strong>{totalTips}</strong></article>
+                <article><small>Wygrane / przegrane</small><strong>{wonTips} / {lostTips}</strong></article>
+                <article className="warning"><small>Nierozliczone kupony</small><strong>{pendingTips}</strong></article>
+                <article className="success"><small>Yield</small><strong>{roi}%</strong></article>
+                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount.toFixed(2)}</strong></article>
+                <article><small>Zainwestowane pieniądze</small><strong>{totalStakedAmount.toFixed(2)}</strong></article>
+              </div>
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
                 <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
                 <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart cyan">
@@ -15302,10 +15270,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </section>
               <div className="profile-v4-stats-grid">
                 <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
                 <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
                 <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
               </div>
             </section>
           )}
@@ -17772,7 +17740,7 @@ function App() {
     if (rawRef && uuidLike.test(rawRef)) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
+        .select('id,email,username,public_slug,avatar_url')
         .eq('id', rawRef)
         .maybeSingle()
       if (!error && data?.id) return data
@@ -17793,7 +17761,7 @@ function App() {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
+      .select('id,email,username,public_slug,avatar_url')
       .limit(500)
 
     if (error) {
@@ -18877,69 +18845,6 @@ function App() {
     window.clearTimeout(window.__betaiToastTimer)
     window.__betaiToastTimer = window.setTimeout(() => setToast(null), 3500)
   }
-
-  function applyGlobalProfileBioPatch(profilePatch = {}) {
-    const nextBio = profilePatch.bio ?? profilePatch.description ?? profilePatch.about
-    const profileId = String(profilePatch.id || profilePatch.user_id || '').toLowerCase()
-    const profileEmail = normalizeEmail(profilePatch.email || profilePatch.user_email || profilePatch.author_email || '')
-    const profileUsername = normalizeEmail(profilePatch.username || profilePatch.public_slug || profilePatch.author_name || '')
-    const profileEmailLocal = profileEmail ? profileEmail.split('@')[0] : ''
-
-    const matchesProfile = (source = {}) => {
-      const sourceId = String(source.id || source.user_id || source.author_id || source.tipster_id || '').toLowerCase()
-      const sourceEmail = normalizeEmail(source.email || source.author_email || source.user_email || '')
-      const sourceName = normalizeEmail(source.username || source.author_name || source.user_name || source.public_slug || '')
-      const sourceEmailLocal = sourceEmail ? sourceEmail.split('@')[0] : ''
-      return Boolean(
-        (profileId && sourceId && profileId === sourceId) ||
-        (profileEmail && sourceEmail && profileEmail === sourceEmail) ||
-        (profileEmailLocal && sourceEmailLocal && profileEmailLocal === sourceEmailLocal) ||
-        (profileUsername && sourceName && profileUsername === sourceName)
-      )
-    }
-
-    setAccountProfile(prev => prev && matchesProfile(prev) ? ({ ...prev, ...profilePatch }) : prev)
-    setSessionUser(prev => prev && matchesProfile(prev) ? ({
-      ...prev,
-      ...profilePatch,
-      user_metadata: { ...(prev.user_metadata || {}), bio: nextBio, description: nextBio, about: nextBio }
-    }) : prev)
-
-    setTips(prev => (prev || []).map(tip => matchesProfile(tip) ? ({
-      ...tip,
-      profile_bio: nextBio ?? tip.profile_bio,
-      author_bio: nextBio ?? tip.author_bio,
-      bio: nextBio ?? tip.bio,
-      profile_description: profilePatch.description ?? nextBio ?? tip.profile_description,
-      author_description: profilePatch.description ?? nextBio ?? tip.author_description,
-      profile_about: profilePatch.about ?? nextBio ?? tip.profile_about,
-      author_about: profilePatch.about ?? nextBio ?? tip.author_about,
-      author_avatar_url: profilePatch.avatar_url || tip.author_avatar_url,
-      profile_avatar_url: profilePatch.avatar_url || tip.profile_avatar_url,
-      avatar_url: profilePatch.avatar_url || tip.avatar_url
-    }) : tip))
-
-    setRealRanking(prev => (prev || []).map(row => matchesProfile(row) ? ({ ...row, ...profilePatch }) : row))
-  }
-
-  useEffect(() => {
-    const onLocalProfileBio = (event) => applyGlobalProfileBioPatch(event.detail || {})
-    window.addEventListener('betai:profile-bio-updated', onLocalProfileBio)
-    return () => window.removeEventListener('betai:profile-bio-updated', onLocalProfileBio)
-  }, [])
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel('betai-profiles-global-bio-v975')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        applyGlobalProfileBioPatch(payload?.new || {})
-      })
-      .subscribe()
-    return () => {
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [sessionUser?.id])
 
   function unlockTip(tip) {
     if (!sessionUser?.id) {

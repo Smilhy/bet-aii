@@ -35791,26 +35791,3 @@ button.betfolio-fetch-btn{
 .top-tipster-clickable-v974:hover{
   box-shadow:0 0 0 1px rgba(34,211,238,.35), 0 10px 24px rgba(0,213,255,.14);
 }
-
-/* WERSJA 975 — opis profilu czytelny i nieedytowalny na cudzym profilu */
-.profile-v3-bio-readonly-v975{
-  cursor:default !important;
-  pointer-events:none;
-}
-.profile-v3-bio-readonly-v975::after{
-  content:'';
-}
-
-
-/* WERSJA 977 — awaryjne ukrycie zdublowanego rzędu kart w zakładce Statystyki */
-.profile-v4-stats-page > .profile-v4-summary-grid.profile-v4-stats-top{
-  display:none !important;
-}
-
-
-/* WERSJA 978 — blokada starego zdublowanego rzędu kart w Statystykach */
-.profile-v4-stats-page > .profile-v4-summary-grid,
-.profile-v4-stats-page > .profile-v4-stats-top,
-.profile-v4-stats-page > div[class*="summary-grid"][class*="stats-top"]{
-  display:none !important;
-}
