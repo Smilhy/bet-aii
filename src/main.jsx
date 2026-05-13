@@ -14594,50 +14594,87 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     : []
 
 
-  const importedTypeStatsRows = [
-    { label: 'Publiczny', coupons: 190, profit: 2207.34, yield: 36.00, avgOdds: 1.80, avgStake: 325.81 },
-    { label: 'Płatny', coupons: 499, profit: 57848.55, yield: 41.00, avgOdds: 1.94, avgStake: 282.36 },
-  ]
-  const importedSportStatsRows = [
-    { label: 'MMA', coupons: 47, stake: 33073.99, profit: 75029.02, yield: 227.00 },
-    { label: 'Baseball', coupons: 26, stake: 5215.00, profit: 4107.70, yield: 79.00 },
-    { label: 'Krykiet', coupons: 2, stake: 50.00, profit: 16.80, yield: 34.00 },
-    { label: 'Koszykówka', coupons: 20, stake: 3428.00, profit: 622.39, yield: 18.00 },
-    { label: 'Piłka nożna', coupons: 497, stake: 109473.34, profit: 5903.54, yield: 5.00 },
-    { label: 'Tenis', coupons: 103, stake: 21423.67, profit: 546.54, yield: 3.00 },
-    { label: 'Darts', coupons: 4, stake: 50.00, profit: 0.70, yield: 1.00 },
-    { label: 'Hokej', coupons: 30, stake: 8036.00, profit: -45.60, yield: -1.00 },
-    { label: 'Boks', coupons: 5, stake: 3020.00, profit: -650.00, yield: -22.00 },
-    { label: 'Snooker', coupons: 22, stake: 19030.00, profit: -5611.20, yield: -29.00 },
-  ]
-  const importedOddsStatsRows = [
-    { label: '1.01 - 1.50', coupons: 136, profit: 1392.96, yield: 3.00, avgOdds: 1.45, avgStake: 347.82 },
-    { label: '1.51 - 2.00', coupons: 448, profit: 9163.29, yield: 8.00, avgOdds: 1.71, avgStake: 251.25 },
-    { label: '2.01 - 3.00', coupons: 71, profit: 9091.58, yield: 37.00, avgOdds: 2.26, avgStake: 342.20 },
-    { label: '3.01 - 5.00', coupons: 27, profit: 1892.06, yield: 13.00, avgOdds: 3.58, avgStake: 541.41 },
-    { label: '5.01 - 8.00', coupons: 1, profit: 4100.00, yield: 410.00, avgOdds: 5.10, avgStake: 1000.00 },
-    { label: '8.01 - 9.99', coupons: 1, profit: 7290.00, yield: 729.00, avgOdds: 8.29, avgStake: 1000.00 },
-    { label: '10.00+', coupons: 2, profit: 46990.00, yield: 4652.00, avgOdds: 36.40, avgStake: 505.00 },
-  ]
-  const importedHourStatsRows = [
-    { label: '00:00 - 07:59', coupons: 114, profit: 60871.45, yield: 153.00, avgOdds: 2.36, avgStake: 349.57 },
-    { label: '08:00 - 11:59', coupons: 52, profit: 1564.82, yield: 14.00, avgOdds: 1.73, avgStake: 220.58 },
-    { label: '12:00 - 16:59', coupons: 167, profit: -5910.06, yield: -23.00, avgOdds: 1.77, avgStake: 155.08 },
-    { label: '17:00 - 19:59', coupons: 215, profit: 12269.92, yield: 18.00, avgOdds: 1.79, avgStake: 323.05 },
-    { label: '20:00 - 23:59', coupons: 141, profit: 1123.76, yield: 20.00, avgOdds: 1.91, avgStake: 398.04 },
-  ]
-  const importedMonthStatsRows = [
-    { label: '05/2026', coupons: 55, stake: 19340.00, profit: 2049.10, yield: 11.00 },
-    { label: '04/2026', coupons: 251, stake: 74481.00, profit: 5850.88, yield: 8.00 },
-    { label: '03/2026', coupons: 272, stake: 105496.00, profit: 70296.40, yield: 67.00 },
-    { label: '02/2026', coupons: 58, stake: 3165.00, profit: 1593.26, yield: 50.00 },
-    { label: '01/2026', coupons: 53, stake: 318.00, profit: 130.25, yield: 41.00 },
-    { label: '12/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
-    { label: '11/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
-    { label: '10/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
-    { label: '09/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
-    { label: '08/2025', coupons: 0, stake: 0, profit: 0, yield: 0 },
-  ]
+  const getProfileTipStake = (tip = {}) => Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+  const getProfileTipOdds = (tip = {}) => Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+  const getProfileTipProfit = (tip = {}) => {
+    const explicit = tip.profit ?? tip.result_profit ?? tip.profit_amount ?? tip.pnl
+    if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
+    const status = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel)
+    const stake = getProfileTipStake(tip)
+    const odds = getProfileTipOdds(tip)
+    if (status === 'won') return stake * Math.max(0, odds - 1)
+    if (status === 'lost') return -stake
+    return 0
+  }
+  const getProfileTipSport = (tip = {}) => {
+    const raw = String(tip.sport || tip.sport_name || tip.category || tip.league_sport || '').trim()
+    if (raw) return raw
+    const league = String(tip.league || tip.league_name || '').toLowerCase()
+    if (league.includes('nba') || league.includes('kosz')) return 'Koszykówka'
+    if (league.includes('nhl') || league.includes('hokej')) return 'Hokej'
+    if (league.includes('tenis') || league.includes('tennis')) return 'Tenis'
+    return 'Piłka nożna'
+  }
+  const getProfileTipAccessLabel = (tip = {}) => isTipPremium(tip) ? 'Płatny' : 'Publiczny'
+  const getProfileTipHourBucket = (tip = {}) => {
+    const value = tip.match_time || tip.event_time || tip.start_time || tip.created_at
+    const date = new Date(value || Date.now())
+    const hour = Number.isFinite(date.getTime()) ? date.getHours() : 0
+    if (hour < 8) return '00:00 - 07:59'
+    if (hour < 12) return '08:00 - 11:59'
+    if (hour < 17) return '12:00 - 16:59'
+    if (hour < 20) return '17:00 - 19:59'
+    return '20:00 - 23:59'
+  }
+  const getProfileTipOddsBucket = (tip = {}) => {
+    const odds = getProfileTipOdds(tip)
+    if (odds <= 1.5) return '1.01 - 1.50'
+    if (odds <= 2) return '1.51 - 2.00'
+    if (odds <= 3) return '2.01 - 3.00'
+    if (odds <= 5) return '3.01 - 5.00'
+    if (odds <= 8) return '5.01 - 8.00'
+    if (odds < 10) return '8.01 - 9.99'
+    return '10.00+'
+  }
+  const getProfileTipMonth = (tip = {}) => {
+    const value = tip.match_time || tip.event_time || tip.start_time || tip.created_at
+    const date = new Date(value || Date.now())
+    if (!Number.isFinite(date.getTime())) return 'Brak daty'
+    return date.toLocaleDateString('pl-PL', { month: '2-digit', year: 'numeric' }).replace('.', '/')
+  }
+  const buildLiveStatRows = (items = [], groupBy, order = []) => {
+    const map = new Map()
+    ;(items || []).forEach(tip => {
+      const label = groupBy(tip)
+      const current = map.get(label) || { label, coupons: 0, stake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const stake = getProfileTipStake(tip)
+      const odds = getProfileTipOdds(tip)
+      current.coupons += 1
+      current.stake += stake
+      current.stakeSum += stake
+      current.profit += getProfileTipProfit(tip)
+      if (odds > 0) current.oddsSum += odds
+      map.set(label, current)
+    })
+    const rows = Array.from(map.values()).map(row => ({
+      ...row,
+      yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
+      avgOdds: row.coupons ? row.oddsSum / row.coupons : 0,
+      avgStake: row.coupons ? row.stakeSum / row.coupons : 0
+    }))
+    if (order.length) {
+      const pos = new Map(order.map((label, index) => [label, index]))
+      return rows.sort((a, b) => (pos.get(a.label) ?? 999) - (pos.get(b.label) ?? 999))
+    }
+    return rows.sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
+  }
+  const activeStatsTips = userTips.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
+  const liveTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipAccessLabel, ['Publiczny', 'Płatny'])
+  const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
+  const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])
+  const liveHourStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipHourBucket, ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59'])
+  const liveMonthStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipMonth).map(row => ({ ...row, label: row.label }))
+
   const profileChartRanges = [
     { key: '7d', label: '7D', days: 7 },
     { key: '30d', label: '30D', days: 30 },
@@ -14663,7 +14700,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
   }
 
-  const importedChartRows = [...importedMonthStatsRows].reverse()
+  const importedChartRows = [...liveMonthStatsRows].reverse()
     .map(row => {
       const date = parseMonthLabelDate(row.label)
       return {
@@ -15173,11 +15210,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </svg>
               </section>
               <div className="profile-v4-stats-grid">
-                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={importedSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
-                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={importedHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={importedMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
               </div>
             </section>
           )}

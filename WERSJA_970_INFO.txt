@@ -1,0 +1,22 @@
+WERSJA 970
+
+Poprawka SQL resetu.
+
+Problem:
+- Supabase zwrócił błąd:
+  ERROR: 42809: "tipster_ranking" is not a table
+- To znaczy, że tipster_ranking jest widokiem, a nie tabelą.
+- TRUNCATE działa tylko na tabelach.
+
+Zrobione:
+1. Poprawiono SQL resetu.
+2. SQL sprawdza teraz pg_class.
+3. TRUNCATE robi tylko dla prawdziwych tabel relkind r/p.
+4. Widoki są pomijane bez błędu.
+5. Plik dodany:
+   supabase/version_970_reset_tips_and_stats_fix.sql
+6. Dla zgodności podmieniony też:
+   supabase/version_969_reset_tips_and_stats.sql
+
+Start z wersji:
+- betai_wersja_969_RESET_I_ZYWE_STATYSTYKI.zip
