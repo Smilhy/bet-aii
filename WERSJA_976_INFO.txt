@@ -1,0 +1,26 @@
+WERSJA 976
+
+Usunięto zdublowany blok statystyk z zakładki Statystyki.
+
+Problem:
+- Na górze profilu jest już główny baner "Twoje statystyki".
+- W zakładce Statystyki był drugi podobny rząd:
+  Postawione kupony / Wygrane-Przegrane / Nierozliczone / Yield / Bilans / Zainwestowane.
+- To dublowało informacje i zaśmiecało widok.
+
+Zrobione:
+1. Usunięto zdublowany rząd kart z zakładki Statystyki.
+2. Zostawiono:
+   - wykres salda,
+   - statystyki typów kuponów,
+   - statystyki sportów,
+   - zakresy kursów,
+   - godziny dodawania,
+   - miesięczne statystyki.
+3. Główne podsumowanie zostaje tylko w banerze "Twoje statystyki" nad zakładkami.
+
+Start z wersji:
+- betai_wersja_975_OPISY_PROFILU_REALTIME_GLOBAL.zip
+
+Pliki zmienione:
+- src/main.jsx

@@ -14434,26 +14434,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const importedTipsCurrency = String(profileStatsSource?.imported_tips_currency || 'zł').trim() || 'zł'
 
   const liveTotalTips = liveTipsForStats.length
-  const liveWonTips = liveTipsForStats.filter(tip => ['won', 'win', 'wygrany', 'wygrana'].includes(String(tip.status || '').toLowerCase())).length
-  const liveLostTips = liveTipsForStats.filter(tip => ['lost', 'loss', 'przegrany', 'przegrana'].includes(String(tip.status || '').toLowerCase())).length
+  const liveWonTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'won').length
+  const liveLostTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'lost').length
   const liveSettledTips = liveWonTips + liveLostTips
   const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips)
-  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 0), 0) / liveTipsForStats.length) : 0
-  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    if (!['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum
-    return sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
-  }, 0)
-  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => {
-    const status = String(tip.status || '').toLowerCase()
-    const stake = Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
-    const odds = Math.max(0, Number(tip.odds || tip.course || 0) || 0)
-    if (['won', 'win', 'wygrany', 'wygrana'].includes(status)) return sum + (stake * Math.max(0, odds - 1))
-    if (['lost', 'loss', 'przegrany', 'przegrana'].includes(status)) return sum - stake
-    return sum
-  }, 0)
-  const liveTotalStakedAmount = liveTipsForStats.reduce((sum, tip) => sum + Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0), 0)
-  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, Number(tip.odds || tip.course || 0) || 0), 0)
+  const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + getProfileTipOdds(tip), 0) / liveTipsForStats.length) : 0
+  const liveSettledStake = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipSettledStake(tip), 0)
+  const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipProfit(tip), 0)
+  const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, getProfileTipOdds(tip)), 0)
 
   // Statystyki historyczne z poprzedniej platformy stanowią bazę.
   // Nowe typy dodane PO dacie importu dopisują się automatycznie do kafelków.
@@ -14462,7 +14450,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const lostTips = importedLostTips + liveLostTips
   const settledTips = wonTips + lostTips
   const pendingTips = importedPendingTips + livePendingTips
-  const totalStakedAmount = importedTotalStaked + liveTotalStakedAmount
+  const totalStakedAmount = importedTotalStaked + liveSettledStake
   const profitAmount = importedProfit + liveProfitAmount
   const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
   const avgOddsNumber = totalTips
@@ -14693,18 +14681,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const getProfileTipStake = (tip = {}) => Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
   const getProfileTipOdds = (tip = {}) => Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+  const getProfileTipSettlement = (tip = {}) => normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
+  const isProfileTipSettled = (tip = {}) => ['won', 'lost'].includes(getProfileTipSettlement(tip))
+  const getProfileTipSettledStake = (tip = {}) => isProfileTipSettled(tip) ? getProfileTipStake(tip) : 0
   const getProfileTipProfit = (tip = {}) => {
-    const status = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
+    const status = getProfileTipSettlement(tip)
     const stake = getProfileTipStake(tip)
     const odds = getProfileTipOdds(tip)
 
-    // Profit=0 w rekordzie nie może blokować wyliczenia dla wygranej/przegranej.
+    // STAŁA ZASADA STATYSTYK:
+    // pending NIE wchodzi do bilansu, profitu, stawki ROI/Yield.
+    // Wygrana = stawka * (kurs - 1), przegrana = -stawka, zwrot/pending = 0.
     if (status === 'won') return stake * Math.max(0, odds - 1)
     if (status === 'lost') return -stake
-    if (status === 'void') return 0
-
-    const explicit = tip.profit ?? tip.result_profit ?? tip.profit_amount ?? tip.pnl
-    if (explicit !== undefined && explicit !== null && String(explicit) !== '') return Number(explicit) || 0
     return 0
   }
   const getProfileTipSport = (tip = {}) => {
@@ -14747,21 +14736,26 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const map = new Map()
     ;(items || []).forEach(tip => {
       const label = groupBy(tip)
-      const current = map.get(label) || { label, coupons: 0, stake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const current = map.get(label) || { label, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
       const stake = getProfileTipStake(tip)
+      const settledStake = getProfileTipSettledStake(tip)
       const odds = getProfileTipOdds(tip)
       current.coupons += 1
-      current.stake += stake
-      current.stakeSum += stake
+      current.allStake += stake
+      current.stake += settledStake
+      current.stakeSum += settledStake
+      if (isProfileTipSettled(tip)) current.settledCoupons += 1
       current.profit += getProfileTipProfit(tip)
       if (odds > 0) current.oddsSum += odds
       map.set(label, current)
     })
     const rows = Array.from(map.values()).map(row => ({
       ...row,
+      // Yield/ROI zawsze liczymy tylko od stawek rozliczonych.
+      // Pending nie może obniżać ani zawyżać wyniku.
       yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
       avgOdds: row.coupons ? row.oddsSum / row.coupons : 0,
-      avgStake: row.coupons ? row.stakeSum / row.coupons : 0
+      avgStake: row.settledCoupons ? row.stakeSum / row.settledCoupons : 0
     }))
     if (order.length) {
       const pos = new Map(order.map((label, index) => [label, index]))
@@ -15293,14 +15287,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'stats' && (
             <section className="profile-v4-page profile-v4-stats-page">
-              <div className="profile-v4-summary-grid profile-v4-stats-top">
-                <article><small>Postawione kupony</small><strong>{totalTips}</strong></article>
-                <article><small>Wygrane / przegrane</small><strong>{wonTips} / {lostTips}</strong></article>
-                <article className="warning"><small>Nierozliczone kupony</small><strong>{pendingTips}</strong></article>
-                <article className="success"><small>Yield</small><strong>{roi}%</strong></article>
-                <article className={profitAmount >= 0 ? 'success' : 'danger'}><small>Bilans</small><strong>{profitAmount.toFixed(2)}</strong></article>
-                <article><small>Zainwestowane pieniądze</small><strong>{totalStakedAmount.toFixed(2)}</strong></article>
-              </div>
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
                 <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
                 <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart cyan">
@@ -15316,10 +15302,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </section>
               <div className="profile-v4-stats-grid">
                 <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka', 'Wygrana', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
                 <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
                 <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Zainwestowane', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
               </div>
             </section>
           )}

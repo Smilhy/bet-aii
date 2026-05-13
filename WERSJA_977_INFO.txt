@@ -1,0 +1,30 @@
+WERSJA 977
+
+Poprawka dokładnie tego elementu ze screena.
+
+Usunięte/ukryte tylko:
+- Postawione kupony
+- Wygrane / Przegrane
+- Nierozliczone kupony
+- Yield
+- Bilans
+- Zainwestowane pieniądze
+
+Zostaje bez zmian:
+- Wykres salda
+- Statystyki typów kuponów
+- Statystyki sportów
+- Statystyki zakresów kursów
+- Statystyki godzin
+- Statystyki miesięczne
+
+Technicznie:
+- w src/main.jsx tego bloku już nie ma,
+- w src/styles.css dodane awaryjne display:none dla .profile-v4-stats-top,
+  żeby po deployu ten rząd zniknął nawet przy cache/starym renderze.
+
+Start z wersji:
+- betai_wersja_976_STATYSTYKI_BEZ_DUBLA.zip
+
+Pliki zmienione:
+- src/styles.css
