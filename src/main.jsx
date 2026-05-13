@@ -955,7 +955,7 @@ async function fetchBetaiPublicProfiles() {
   // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
   try {
     const statsRows = await fetchBetaiProfilesWithStats()
-    const { data, error } = await supabase.from('profiles').select('id,email,username,avatar_url').limit(1000)
+    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status').limit(1000)
     if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
     if (statsRows.length) return mergeBetaiProfilesWithCache(statsRows)
     if (error) console.warn('profiles avatar fallback skipped', error)
@@ -2425,6 +2425,31 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     loadTipsterProfile()
     return () => { cancelled = true }
   }, [tipsterId, lookupTipsterKey])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase || !profile?.id) return undefined
+    const channel = supabase
+      .channel(`betai-profile-bio-public-${profile.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${profile.id}` }, payload => {
+        const nextProfile = payload?.new || {}
+        setProfile(prev => prev ? ({ ...prev, ...nextProfile }) : nextProfile)
+        setTipsterTips(prev => (prev || []).map(tip => ({
+          ...tip,
+          profile_bio: nextProfile.bio ?? nextProfile.description ?? nextProfile.about ?? tip.profile_bio,
+          author_bio: nextProfile.bio ?? nextProfile.description ?? nextProfile.about ?? tip.author_bio,
+          profile_description: nextProfile.description ?? nextProfile.bio ?? tip.profile_description,
+          author_description: nextProfile.description ?? nextProfile.bio ?? tip.author_description,
+          profile_about: nextProfile.about ?? nextProfile.bio ?? tip.profile_about,
+          author_about: nextProfile.about ?? nextProfile.bio ?? tip.author_about,
+          author_avatar_url: nextProfile.avatar_url || tip.author_avatar_url,
+          avatar_url: nextProfile.avatar_url || tip.avatar_url
+        })))
+      })
+      .subscribe()
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [profile?.id])
 
   const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
   const username = (profile?.username || profile?.public_slug || profile?.email || tipsterTips?.[0]?.author_name || lookupTipsterKey || 'Tipster').split('@')[0]
@@ -14349,17 +14374,34 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     setBioSaving(true)
     try {
+      const bioPatch = {
+        bio: cleanBio,
+        description: cleanBio,
+        about: cleanBio,
+        updated_at: new Date().toISOString()
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ bio: cleanBio })
+        .update(bioPatch)
         .eq('id', user.id)
       if (profileError) throw profileError
 
-      await supabase.auth.updateUser({ data: { bio: cleanBio } }).catch(() => null)
+      await supabase.auth.updateUser({ data: { bio: cleanBio, description: cleanBio, about: cleanBio } }).catch(() => null)
       setBioDraft(cleanBio)
-      onProfileUpdated?.({ bio: cleanBio, description: cleanBio, about: cleanBio })
+      onProfileUpdated?.(bioPatch)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('betai:profile-bio-updated', {
+          detail: {
+            id: user.id,
+            email: user.email || user.author_email || '',
+            username: user.username || user.public_slug || user.author_name || '',
+            ...bioPatch
+          }
+        }))
+      }
       setBioEditing(false)
-      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany.' })
+      onToast?.({ type: 'success', title: 'Opis zapisany', message: 'Opis profilu został zaktualizowany globalnie.' })
     } catch (error) {
       onToast?.({ type: 'error', title: 'Błąd opisu', message: formatAppErrorMessage(error.message) })
     } finally {
@@ -15012,11 +15054,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <button type="button" className="primary" onClick={saveBio} disabled={bioSaving}>{bioSaving ? 'Zapisuję...' : 'Zapisz opis'}</button>
                     </div>
                   </div>
-                ) : (
+                ) : profileIsOwnForViewer ? (
                   <button type="button" className="profile-v3-bio-click" onClick={() => setBioEditing(true)} title="Kliknij, aby zmienić opis profilu">
                     {profileBio}
                     <span>✎</span>
                   </button>
+                ) : (
+                  <div className="profile-v3-bio-click profile-v3-bio-readonly-v975" title="Opis profilu typera">
+                    {profileBio}
+                  </div>
                 )}
                 <div className="profile-v3-actions">
                   {isPublicProfile && !profileIsOwnForViewer ? (
@@ -17740,7 +17786,7 @@ function App() {
     if (rawRef && uuidLike.test(rawRef)) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id,email,username,public_slug,avatar_url')
+        .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
         .eq('id', rawRef)
         .maybeSingle()
       if (!error && data?.id) return data
@@ -17761,7 +17807,7 @@ function App() {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email,username,public_slug,avatar_url')
+      .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
       .limit(500)
 
     if (error) {
@@ -18845,6 +18891,69 @@ function App() {
     window.clearTimeout(window.__betaiToastTimer)
     window.__betaiToastTimer = window.setTimeout(() => setToast(null), 3500)
   }
+
+  function applyGlobalProfileBioPatch(profilePatch = {}) {
+    const nextBio = profilePatch.bio ?? profilePatch.description ?? profilePatch.about
+    const profileId = String(profilePatch.id || profilePatch.user_id || '').toLowerCase()
+    const profileEmail = normalizeEmail(profilePatch.email || profilePatch.user_email || profilePatch.author_email || '')
+    const profileUsername = normalizeEmail(profilePatch.username || profilePatch.public_slug || profilePatch.author_name || '')
+    const profileEmailLocal = profileEmail ? profileEmail.split('@')[0] : ''
+
+    const matchesProfile = (source = {}) => {
+      const sourceId = String(source.id || source.user_id || source.author_id || source.tipster_id || '').toLowerCase()
+      const sourceEmail = normalizeEmail(source.email || source.author_email || source.user_email || '')
+      const sourceName = normalizeEmail(source.username || source.author_name || source.user_name || source.public_slug || '')
+      const sourceEmailLocal = sourceEmail ? sourceEmail.split('@')[0] : ''
+      return Boolean(
+        (profileId && sourceId && profileId === sourceId) ||
+        (profileEmail && sourceEmail && profileEmail === sourceEmail) ||
+        (profileEmailLocal && sourceEmailLocal && profileEmailLocal === sourceEmailLocal) ||
+        (profileUsername && sourceName && profileUsername === sourceName)
+      )
+    }
+
+    setAccountProfile(prev => prev && matchesProfile(prev) ? ({ ...prev, ...profilePatch }) : prev)
+    setSessionUser(prev => prev && matchesProfile(prev) ? ({
+      ...prev,
+      ...profilePatch,
+      user_metadata: { ...(prev.user_metadata || {}), bio: nextBio, description: nextBio, about: nextBio }
+    }) : prev)
+
+    setTips(prev => (prev || []).map(tip => matchesProfile(tip) ? ({
+      ...tip,
+      profile_bio: nextBio ?? tip.profile_bio,
+      author_bio: nextBio ?? tip.author_bio,
+      bio: nextBio ?? tip.bio,
+      profile_description: profilePatch.description ?? nextBio ?? tip.profile_description,
+      author_description: profilePatch.description ?? nextBio ?? tip.author_description,
+      profile_about: profilePatch.about ?? nextBio ?? tip.profile_about,
+      author_about: profilePatch.about ?? nextBio ?? tip.author_about,
+      author_avatar_url: profilePatch.avatar_url || tip.author_avatar_url,
+      profile_avatar_url: profilePatch.avatar_url || tip.profile_avatar_url,
+      avatar_url: profilePatch.avatar_url || tip.avatar_url
+    }) : tip))
+
+    setRealRanking(prev => (prev || []).map(row => matchesProfile(row) ? ({ ...row, ...profilePatch }) : row))
+  }
+
+  useEffect(() => {
+    const onLocalProfileBio = (event) => applyGlobalProfileBioPatch(event.detail || {})
+    window.addEventListener('betai:profile-bio-updated', onLocalProfileBio)
+    return () => window.removeEventListener('betai:profile-bio-updated', onLocalProfileBio)
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined
+    const channel = supabase
+      .channel('betai-profiles-global-bio-v975')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        applyGlobalProfileBioPatch(payload?.new || {})
+      })
+      .subscribe()
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [sessionUser?.id])
 
   function unlockTip(tip) {
     if (!sessionUser?.id) {

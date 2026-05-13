@@ -35791,3 +35791,12 @@ button.betfolio-fetch-btn{
 .top-tipster-clickable-v974:hover{
   box-shadow:0 0 0 1px rgba(34,211,238,.35), 0 10px 24px rgba(0,213,255,.14);
 }
+
+/* WERSJA 975 — opis profilu czytelny i nieedytowalny na cudzym profilu */
+.profile-v3-bio-readonly-v975{
+  cursor:default !important;
+  pointer-events:none;
+}
+.profile-v3-bio-readonly-v975::after{
+  content:'';
+}
