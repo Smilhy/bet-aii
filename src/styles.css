@@ -37233,3 +37233,136 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 991 */
+
+
+/* ==========================================================================
+   WERSJA 992 — AVATAR ONLINE DOT + CHECK PRZY NICKU
+   CSS ONLY. NIE RUSZA JS/LOGIKI/CORE LOCK.
+   ========================================================================== */
+
+/* Avatar jak na screenie: zdjęcie/logo w kole, zielona kropka online u góry,
+   mały przycisk edycji na dole. */
+.profile-v3-avatar.profile-v3-avatar-editable{
+  overflow: visible !important;
+  border-radius: 50% !important;
+  border: 2px solid rgba(0,229,255,.35) !important;
+  box-shadow:
+    0 0 0 6px rgba(0,229,255,.045),
+    0 0 34px rgba(0,229,255,.22),
+    0 18px 40px rgba(0,0,0,.32) !important;
+}
+
+/* Warstwa obrazka wewnątrz koła — nie przykrywa avatara */
+.profile-v3-avatar.profile-v3-avatar-editable.has-avatar{
+  background-image: var(--avatar-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  color: transparent !important;
+}
+
+/* Delikatny połysk na avatarze, ale obraz zostaje widoczny */
+.profile-v3-avatar.profile-v3-avatar-editable.has-avatar::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  border-radius:50% !important;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%, rgba(0,229,255,.08)) !important;
+  z-index:1 !important;
+  pointer-events:none !important;
+}
+
+/* Zielona kropka LIVE / aktywny — góra prawa przy avatarze */
+.profile-v3-avatar.profile-v3-avatar-editable::after{
+  content:"" !important;
+  position:absolute !important;
+  right:-2px !important;
+  top:9px !important;
+  width:19px !important;
+  height:19px !important;
+  border-radius:50% !important;
+  background: linear-gradient(135deg, #54ff68, #11d96d) !important;
+  border:3px solid rgba(2,13,24,.96) !important;
+  box-shadow:
+    0 0 0 4px rgba(84,255,104,.10),
+    0 0 20px rgba(84,255,104,.72) !important;
+  z-index:6 !important;
+  pointer-events:none !important;
+}
+
+/* Mała ikonka edycji/akcji na dole avatara */
+.profile-v3-avatar.profile-v3-avatar-editable > span{
+  position:absolute !important;
+  right:-2px !important;
+  bottom:3px !important;
+  z-index:7 !important;
+  width:31px !important;
+  height:31px !important;
+  border-radius:50% !important;
+  display:grid !important;
+  place-items:center !important;
+  background: linear-gradient(135deg, #20f2d2, #2195ff) !important;
+  color:#00131b !important;
+  border:3px solid rgba(2,13,24,.98) !important;
+  box-shadow:
+    0 0 18px rgba(0,229,255,.34),
+    inset 0 1px 0 rgba(255,255,255,.28) !important;
+  font-size:13px !important;
+  font-weight:1000 !important;
+}
+
+/* Check / weryfikacja przy nicku — dokładnie obok nazwy */
+.profile-v3-name-line h1{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+
+.profile-v3-name-line h1::after{
+  content:"✓" !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  width:22px !important;
+  height:22px !important;
+  border-radius:50% !important;
+  margin-left:2px !important;
+  color:#002025 !important;
+  background: linear-gradient(135deg, #20f2d2, #18e7ff) !important;
+  box-shadow:
+    0 0 16px rgba(0,229,255,.38),
+    inset 0 1px 0 rgba(255,255,255,.35) !important;
+  font-size:14px !important;
+  font-weight:1000 !important;
+  line-height:1 !important;
+  transform: translateY(1px);
+}
+
+/* Wyrównanie headera po zmianie avatara */
+.profile-v3-user-row{
+  align-items:flex-start !important;
+}
+
+.profile-v3-user-copy{
+  padding-top:4px !important;
+}
+
+/* Ikony w statystykach — trzymamy na środku po prawej jak w referencji */
+.profile-stats-cards-grid .profile-stat-card::after{
+  right:16px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  opacity:.55 !important;
+}
+
+.profile-stats-cards-grid .profile-stat-card:nth-child(1)::after{
+  font-size:38px !important;
+}
+.profile-stats-cards-grid .profile-stat-card:nth-child(4)::after{
+  font-size:30px !important;
+}
+.profile-stats-cards-grid .profile-stat-card:nth-child(10)::after{
+  font-size:40px !important;
+}
+
+/* KONIEC WERSJI 992 */

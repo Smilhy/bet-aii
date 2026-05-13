@@ -1,0 +1,30 @@
+WERSJA 993 — PRZYWRÓCONE NETLIFY FUNCTIONS + UI 992
+
+Naprawa po błędnej paczce clean:
+- przywrócono folder netlify/functions,
+- wraca wyszukiwanie meczów w Dodaj typ,
+- wracają funkcje API:
+  get-sports-events,
+  refresh-fixture-cache,
+  generate-ai-picks,
+  generate-live-ai-picks,
+  settle-live-ai-picks,
+  stripe functions itd.
+
+Zachowane:
+- UI z wersji 992:
+  avatar online dot,
+  check przy nicku,
+  ikonki/kafelki statystyk,
+  opis profilu.
+
+Nie ruszone:
+- logika profili,
+- statystyki,
+- typy,
+- ranking,
+- opinie,
+- realtime,
+- CORE LOCK v983.
+
+To jest poprawna paczka Netlify z backend functions.
