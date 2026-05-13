@@ -39865,3 +39865,415 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1010 */
+
+
+/* ==========================================================================
+   WERSJA 1012 — SPOŁECZNOŚĆ PREMIUM LAYOUT JAK MOCKUP
+   ========================================================================== */
+
+.community-pro-v1012{
+  --pro-bg:rgba(5,20,36,.86);
+  --pro-line:rgba(24,231,255,.14);
+  --pro-mint:#20f2d2;
+  --pro-cyan:#19e8ff;
+  --pro-gold:#ffd76a;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012{
+  min-height:118px !important;
+  padding:24px 28px !important;
+  border-radius:22px !important;
+}
+
+.community-pro-v1012 .community-pro-hero-v1012 h1{
+  font-size:30px !important;
+  letter-spacing:-.04em !important;
+}
+
+.community-pro-tabs-v1012{
+  height:auto !important;
+  padding:8px !important;
+  margin:12px 0 !important;
+  border-radius:16px !important;
+}
+
+.community-pro-tabs-v1012 button{
+  min-width:120px !important;
+  border-radius:12px !important;
+}
+
+.community-pro-grid-v1012{
+  display:grid !important;
+  grid-template-columns:250px minmax(520px, 1fr) 360px !important;
+  gap:12px !important;
+  align-items:start !important;
+}
+
+.community-pro-left-v1012,
+.community-pro-center-v1012,
+.community-pro-right-v1012{
+  display:grid !important;
+  gap:12px !important;
+}
+
+.pro-left-card-v1012,
+.pro-chat-panel-v1012,
+.community-pro-feed-v1012 .composer-v5,
+.community-pro-right-v1012 .sidecard-v5,
+.community-pro-bottom-v1012 .bottom-card-v5{
+  border-radius:18px !important;
+}
+
+.pro-left-head-v1012{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 12px 10px;
+  border-bottom:1px solid rgba(24,231,255,.10);
+}
+
+.pro-left-head-v1012 strong,
+.pro-chat-head-v1012 h3{
+  color:#f2fdff;
+  font-weight:1000;
+}
+
+.pro-left-head-v1012 span{
+  color:#20f2d2;
+  font-size:12px;
+  font-weight:900;
+}
+
+.pro-left-head-v1012 i{
+  display:inline-block;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#27ff75;
+  margin-right:6px;
+  box-shadow:0 0 10px rgba(39,255,117,.75);
+}
+
+.pro-channel-list-v1012{
+  display:grid;
+  padding:8px;
+  gap:5px;
+}
+
+.pro-channel-list-v1012 button{
+  display:grid;
+  grid-template-columns:22px 1fr auto;
+  gap:8px;
+  align-items:center;
+  min-height:36px;
+  padding:0 10px;
+  border-radius:10px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#9fb8c8;
+  text-align:left;
+  cursor:pointer;
+}
+
+.pro-channel-list-v1012 button.active,
+.pro-channel-list-v1012 button:hover{
+  background:linear-gradient(135deg, rgba(32,242,210,.16), rgba(24,231,255,.08));
+  border-color:rgba(32,242,210,.22);
+  color:#eaf8ff;
+}
+
+.pro-channel-list-v1012 span{
+  color:#8ea7bc;
+  font-weight:1000;
+}
+
+.pro-channel-list-v1012 b{
+  font-size:13px;
+}
+
+.pro-channel-list-v1012 em{
+  font-style:normal;
+  color:#93aabd;
+  font-size:12px;
+}
+
+.pro-missions-v1012{
+  padding:12px !important;
+  border-color:rgba(255,215,106,.34) !important;
+  box-shadow:0 0 26px rgba(255,215,106,.10), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.pro-missions-head-v1012{
+  display:flex;
+  justify-content:space-between;
+  color:#ffd76a;
+  margin-bottom:10px;
+}
+
+.pro-missions-head-v1012 button{
+  background:transparent;
+  border:0;
+  color:#ffd76a;
+  cursor:pointer;
+}
+
+.mission-row-v1012{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:8px;
+  align-items:center;
+  font-size:12px;
+  color:#d8ebf8;
+  margin-top:8px;
+}
+
+.mission-row-v1012 b{
+  color:#20f2d2;
+}
+
+.mission-row-v1012 em{
+  color:#ffd76a;
+  font-style:normal;
+  font-weight:1000;
+}
+
+.mission-bar-v1012{
+  height:8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.10);
+  overflow:hidden;
+  margin-top:5px;
+}
+
+.mission-bar-v1012 i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#ffd76a,#20f2d2);
+}
+
+.pro-chat-panel-v1012{
+  padding:0 !important;
+  min-height:520px;
+  display:grid;
+  grid-template-rows:auto auto 1fr auto;
+  overflow:hidden;
+}
+
+.pro-chat-head-v1012{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(24,231,255,.10);
+}
+
+.pro-chat-head-v1012 h3{
+  margin:0;
+  font-size:16px;
+}
+
+.pro-chat-head-v1012 h3 span{
+  color:#20f2d2;
+  font-size:12px;
+}
+
+.pro-chat-head-v1012 button{
+  background:rgba(24,231,255,.08);
+  border:1px solid rgba(24,231,255,.14);
+  color:#dff7ff;
+  border-radius:10px;
+  width:34px;
+  height:34px;
+}
+
+.pro-pin-v1012{
+  margin:10px 12px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:linear-gradient(135deg, rgba(32,242,210,.14), rgba(24,231,255,.06));
+  border:1px solid rgba(32,242,210,.22);
+  display:grid;
+  gap:3px;
+}
+
+.pro-pin-v1012 b{
+  color:#20f2d2;
+  font-size:13px;
+}
+
+.pro-pin-v1012 span{
+  color:#9fb8c8;
+  font-size:12px;
+}
+
+.pro-chat-list-v1012{
+  display:grid;
+  gap:12px;
+  padding:10px 12px 14px;
+  align-content:start;
+}
+
+.pro-chat-message-v1012{
+  display:grid;
+  grid-template-columns:42px 1fr;
+  gap:10px;
+}
+
+.pro-chat-avatar-v1012{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:linear-gradient(135deg,#20f2d2,#268dff);
+  border:1px solid rgba(24,231,255,.28);
+  font-weight:1000;
+  color:#031321;
+}
+
+.pro-chat-avatar-v1012 img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.pro-chat-meta-v1012{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.pro-chat-meta-v1012 strong{
+  color:#f2fdff;
+}
+
+.pro-chat-meta-v1012 em{
+  font-style:normal;
+  color:#20f2d2;
+  font-size:10px;
+  font-weight:1000;
+  padding:2px 7px;
+  border-radius:999px;
+  background:rgba(32,242,210,.12);
+}
+
+.pro-chat-meta-v1012 small{
+  color:#718ba0;
+}
+
+.pro-chat-message-v1012 p{
+  color:#d7eaf7;
+  margin:4px 0 8px;
+}
+
+.pro-chat-actions-v1012{
+  display:flex;
+  gap:8px;
+}
+
+.pro-chat-actions-v1012 span{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(24,231,255,.10);
+  color:#cbe2f2;
+  border-radius:8px;
+  padding:3px 8px;
+  font-size:12px;
+}
+
+.pro-chat-input-v1012{
+  display:grid;
+  grid-template-columns:1fr 36px 36px 42px;
+  gap:8px;
+  padding:10px 12px;
+  border-top:1px solid rgba(24,231,255,.10);
+}
+
+.pro-chat-input-v1012 input{
+  min-height:42px;
+  border-radius:12px;
+  border:1px solid rgba(24,231,255,.13);
+  background:rgba(2,12,22,.72);
+  color:#eaf8ff;
+  padding:0 12px;
+}
+
+.pro-chat-input-v1012 button{
+  border-radius:12px;
+  border:1px solid rgba(24,231,255,.14);
+  background:rgba(24,231,255,.08);
+  color:#eaf8ff;
+  cursor:pointer;
+}
+
+.pro-chat-input-v1012 button:last-child{
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff);
+  color:#031321;
+  font-weight:1000;
+}
+
+.community-pro-feed-v1012{
+  display:grid;
+  gap:12px;
+}
+
+.pro-composer-v1012{
+  padding:14px !important;
+}
+
+.pro-post-card-v1012{
+  min-height:auto !important;
+  padding:16px !important;
+}
+
+.pro-post-card-v1012 .feed-actions-v5{
+  justify-content:flex-start !important;
+}
+
+.pro-post-card-v1012 .feed-actions-v5 button:last-child{
+  margin-left:auto;
+  color:#20f2d2 !important;
+}
+
+.community-pro-right-v1012{
+  align-content:start;
+}
+
+.community-pro-right-v1012 .sidecard-v5{
+  padding:14px !important;
+}
+
+.community-pro-right-v1012 .event-row-v5 b{
+  background:#ff3d55 !important;
+  color:#fff !important;
+  border-radius:6px !important;
+  padding:4px 7px !important;
+  font-size:10px !important;
+}
+
+.community-pro-bottom-v1012{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+
+.compact-rank-v1012 .community-rank-row-v5{
+  grid-template-columns:42px 1fr auto;
+}
+
+@media (max-width: 1400px){
+  .community-pro-grid-v1012{
+    grid-template-columns:220px minmax(480px,1fr) 320px !important;
+  }
+}
+
+@media (max-width: 1100px){
+  .community-pro-grid-v1012,
+  .community-pro-bottom-v1012{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* KONIEC WERSJI 1012 */
