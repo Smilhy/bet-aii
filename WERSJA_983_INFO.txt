@@ -1,0 +1,23 @@
+WERSJA 983
+
+Auto-refresh typów i statystyk bez ręcznego odświeżania strony.
+
+Nie rusza matematyki statystyk ani logiki nazw.
+
+Zrobione:
+1. Realtime na tips:
+   - INSERT: nowy typ pojawia się od razu,
+   - UPDATE: rozliczenie typu aktualizuje listę od razu,
+   - DELETE: typ znika od razu.
+2. Realtime na profiles:
+   - po triggerze statystyk profil/ranking/karty dostają nowe imported_*.
+3. Po zmianie typu aplikacja robi miękki refresh:
+   - fetchTips,
+   - fetchRealRanking.
+4. Dodałem fallback polling co 15 sekund tylko gdy karta jest widoczna.
+5. Dodałem refresh po powrocie na kartę/focus.
+6. SQL:
+   supabase/version_983_realtime_auto_refresh_tips_stats.sql
+
+Bazowane na wersji:
+- betai_wersja_982_NAZWY_PROFILI_TOP_TYPERZY_LOCK.zip

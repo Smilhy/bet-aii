@@ -17581,31 +17581,113 @@ function App() {
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id) return undefined
 
+    let refreshTimer = null
+    const scheduleFullRefresh = () => {
+      window.clearTimeout(refreshTimer)
+      refreshTimer = window.setTimeout(() => {
+        fetchTips(sessionUser?.id)
+        fetchRealRanking()
+      }, 450)
+    }
+
+    const hydrateIncomingTip = (rawTip = {}) => {
+      let incomingTip = normalizeTipRow(rawTip || {})
+      if (!incomingTip?.id) return null
+      if (isSameProfileIdentity(effectiveAccountProfile || sessionUser, incomingTip)) {
+        incomingTip = normalizeTipRow({
+          ...incomingTip,
+          author_name: getProfileUsername(effectiveAccountProfile || sessionUser) || incomingTip.author_name,
+          author_email: (effectiveAccountProfile || sessionUser)?.email || incomingTip.author_email,
+          author_avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.author_avatar_url,
+          avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.avatar_url
+        })
+      }
+      return incomingTip
+    }
+
     const channel = supabase
       .channel(`betai-live-tip-center-${sessionUser.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tips' }, (payload) => {
-        let incomingTip = normalizeTipRow(payload?.new || {})
-        if (!incomingTip?.id) return
-        if (isSameProfileIdentity(effectiveAccountProfile || sessionUser, incomingTip)) {
-          incomingTip = normalizeTipRow({
-            ...incomingTip,
-            author_name: getProfileUsername(effectiveAccountProfile || sessionUser) || incomingTip.author_name,
-            author_email: (effectiveAccountProfile || sessionUser)?.email || incomingTip.author_email,
-            author_avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.author_avatar_url,
-            avatar_url: getProfileAvatarUrl(effectiveAccountProfile || sessionUser) || incomingTip.avatar_url
-          })
-        }
+        const incomingTip = hydrateIncomingTip(payload?.new || {})
+        if (!incomingTip) return
 
         setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
         showLiveTipPopup(incomingTip)
+        scheduleFullRefresh()
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tips' }, (payload) => {
+        const incomingTip = hydrateIncomingTip(payload?.new || {})
+        if (!incomingTip) return
+
+        // v983: rozliczenie typu ma wejść w UI od razu, bez F5.
+        setTips(prev => prev.map(item => String(item.id) === String(incomingTip.id) ? { ...item, ...incomingTip } : item))
+        scheduleFullRefresh()
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tips' }, (payload) => {
+        const deletedId = payload?.old?.id
+        if (deletedId) setTips(prev => prev.filter(item => String(item.id) !== String(deletedId)))
+        scheduleFullRefresh()
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const updatedProfile = payload?.new || {}
+        if (!updatedProfile?.id) return
+
+        setTips(prev => prev.map(tip => {
+          const matches = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '') === String(updatedProfile.id) ||
+            (updatedProfile.email && normalizeEmail(tip.author_email || tip.email || tip.user_email) === normalizeEmail(updatedProfile.email)) ||
+            (updatedProfile.public_slug && normalizeEmail(tip.author_name || tip.username) === normalizeEmail(updatedProfile.public_slug)) ||
+            (updatedProfile.username && !isGenericProfileName(updatedProfile.username) && normalizeEmail(tip.author_name || tip.username) === normalizeEmail(updatedProfile.username))
+
+          if (!matches) return tip
+          const importedStats = getImportedProfileStats(updatedProfile)
+          return {
+            ...tip,
+            author_name: resolveRealProfileUsername(updatedProfile),
+            author_email: updatedProfile.email || tip.author_email,
+            author_avatar_url: getProfileAvatarUrl(updatedProfile) || tip.author_avatar_url,
+            avatar_url: getProfileAvatarUrl(updatedProfile) || tip.avatar_url,
+            imported_yield: updatedProfile.imported_yield ?? tip.imported_yield,
+            imported_total_tips: updatedProfile.imported_total_tips ?? tip.imported_total_tips,
+            imported_won_tips: updatedProfile.imported_won_tips ?? tip.imported_won_tips,
+            imported_lost_tips: updatedProfile.imported_lost_tips ?? tip.imported_lost_tips,
+            imported_pending_tips: updatedProfile.imported_pending_tips ?? tip.imported_pending_tips,
+            imported_total_staked: updatedProfile.imported_total_staked ?? tip.imported_total_staked,
+            imported_profit: updatedProfile.imported_profit ?? tip.imported_profit,
+            imported_avg_odds: updatedProfile.imported_avg_odds ?? tip.imported_avg_odds,
+            imported_highest_odds: updatedProfile.imported_highest_odds ?? tip.imported_highest_odds,
+            imported_tips_currency: updatedProfile.imported_tips_currency ?? tip.imported_tips_currency,
+            author_imported_stats: importedStats || tip.author_imported_stats,
+            author_visible_stats: importedStats || tip.author_visible_stats
+          }
+        }))
+
+        if (String(updatedProfile.id) === String((effectiveAccountProfile || sessionUser)?.id)) {
+          setAccountProfile(prev => prev ? ({ ...prev, ...updatedProfile }) : updatedProfile)
+        }
+
         fetchRealRanking()
       })
       .subscribe()
 
+    const softPoll = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchTips(sessionUser?.id)
+      }
+    }, 15000)
+
+    const onFocusRefresh = () => {
+      fetchTips(sessionUser?.id)
+      fetchRealRanking()
+    }
+    window.addEventListener('focus', onFocusRefresh)
+
     return () => {
+      window.clearTimeout(refreshTimer)
+      window.clearInterval(softPoll)
+      window.removeEventListener('focus', onFocusRefresh)
       try { supabase.removeChannel(channel) } catch (_) {}
     }
-  }, [sessionUser?.id])
+  }, [sessionUser?.id, effectiveAccountProfile?.id, effectiveAccountProfile?.email])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
     if (!userId) {
