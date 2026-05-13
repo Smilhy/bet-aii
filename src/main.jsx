@@ -2212,7 +2212,7 @@ function LiveChatPanel({ user }) {
 }
 
 
-function Rightbar({ ranking = [], tips = [], user = null }) {
+function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }) {
   cacheBetaiCurrentUserAvatar(user)
   const currentAvatar = getProfileAvatarUrl(user)
   const currentEmail = normalizeEmail(user?.email)
@@ -2258,14 +2258,23 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
       <LiveChatPanel user={user} />
       <section className="panel real-ranking-panel">
         <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
-        {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => (
-          <div className={`rank ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`} key={row.tipster_id || row.id || row.email || row.username || index}>
+        {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => {
+          const rowName = formatRankingName(row)
+          const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
+          return (
+          <button
+            type="button"
+            className={`rank rank-clickable-v974 ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`}
+            key={row.tipster_id || row.id || row.email || row.username || index}
+            onClick={() => onOpenTipster?.(rowRef, rowName)}
+            title={`Otwórz profil typera ${rowName}`}
+          >
             <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
             <div className={`mini-avatar ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
-              {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : formatRankingName(row).slice(0, 2).toUpperCase()}
+              {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : rowName.slice(0, 2).toUpperCase()}
             </div>
             <div>
-              <b>{formatRankingName(row)}</b>
+              <b>{rowName}</b>
               <small>Yield: {Number(row.roi || row.yield || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
               <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)} • Przegrane: {Number(row.losses || 0)}</small>
             </div>
@@ -2273,8 +2282,9 @@ function Rightbar({ ranking = [], tips = [], user = null }) {
               <em>Profit</em>
               <span>{Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}</span>
             </strong>
-          </div>
-        )) : (
+          </button>
+          )
+        }) : (
           <div className="empty-mini">Brak danych rankingu. Dodaj typy i wyniki, aby ranking się naliczył.</div>
         )}
       </section>
@@ -11506,7 +11516,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   )
 }
 
-function LeaderboardView({ tips = [], ranking = [] }) {
+function LeaderboardView({ tips = [], ranking = [], onOpenTipster = null }) {
   const leaderboardRows = buildLiveLeaderboardRows(ranking, tips)
   const topTyperRows = leaderboardRows.slice(0, 3)
   const challengeRows = [
@@ -11627,16 +11637,20 @@ function LeaderboardView({ tips = [], ranking = [] }) {
             </div>
             <div className="sidebar-head-link-v4">Zobacz wszystkich</div>
             <div className="top-tipsters-list-v4">
-              {topTyperRows.map((row, idx) => (
-                <div className="top-tipster-row-v4" key={row.tipster_id || row.id || idx}>
+              {topTyperRows.map((row, idx) => {
+                const rowName = formatRankingName(row)
+                const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
+                return (
+                <button type="button" className="top-tipster-row-v4 top-tipster-clickable-v974" key={row.tipster_id || row.id || idx} onClick={() => onOpenTipster?.(rowRef, rowName)} title={`Otwórz profil typera ${rowName}`}>
                   <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
                   <i className={`mini-avatar-v4 ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
-                    {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : formatRankingName(row).slice(0,2).toUpperCase()}
+                    {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : rowName.slice(0,2).toUpperCase()}
                   </i>
-                  <div><strong>{formatRankingName(row)}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || 0).toFixed(2)}%</small></div>
+                  <div><strong>{rowName}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || 0).toFixed(2)}%</small></div>
                   <b>+{formatMoney(row.earnings || row.total_earnings || 0)}</b>
-                </div>
-              ))}
+                </button>
+                )
+              })}
             </div>
           </div>
 
@@ -19342,7 +19356,7 @@ function App() {
         )}
 
         {view === 'leaderboard' && (
-          <LeaderboardView tips={tips} ranking={realRanking} />
+          <LeaderboardView tips={tips} ranking={realRanking} onOpenTipster={openTipsterProfile} />
         )}
 
         {view === 'articles' && (
@@ -19558,7 +19572,7 @@ function App() {
         )}
       </main>
 
-      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} />}
+      {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />}
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
