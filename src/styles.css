@@ -39512,3 +39512,291 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1007 */
+
+
+/* ==========================================================================
+   WERSJA 1008 — SPOŁECZNOŚĆ LIVE ULTRA PRO
+   UI + real community logic in main.jsx.
+   ========================================================================== */
+
+.community-live-v1008{
+  --c-cyan:#19e8ff;
+  --c-mint:#20f2d2;
+  --c-gold:#ffd76a;
+  --c-panel:rgba(5,20,36,.82);
+  position:relative;
+}
+
+.community-live-v1008 .community-kicker-v1008{
+  display:inline-flex;
+  margin-bottom:8px;
+  color:var(--c-mint);
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-shadow:0 0 14px rgba(32,242,210,.22);
+}
+
+.community-live-v1008 .community-v5-header{
+  border-radius:28px !important;
+  padding:28px 32px !important;
+  background:
+    radial-gradient(circle at 82% 32%, rgba(24,231,255,.12), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(104,118,255,.10), transparent 22%),
+    linear-gradient(180deg, rgba(7,26,47,.92), rgba(3,14,27,.96)) !important;
+  border:1px solid rgba(24,231,255,.16) !important;
+  box-shadow:0 26px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.community-live-v1008 .community-v5-header h1{
+  font-size:42px !important;
+  letter-spacing:-.055em !important;
+  margin:0 0 8px !important;
+}
+
+.community-live-v1008 .community-v5-header p{
+  color:#a9c4d8 !important;
+  font-weight:800 !important;
+}
+
+.community-live-v1008 .community-v5-tabs{
+  border-radius:22px !important;
+  padding:10px !important;
+  gap:10px !important;
+  background:linear-gradient(180deg, rgba(6,28,48,.82), rgba(3,15,27,.92)) !important;
+}
+
+.community-live-v1008 .community-v5-tabs button{
+  min-height:44px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  color:#cfe3f3 !important;
+  background:rgba(5,20,36,.52) !important;
+  cursor:pointer !important;
+}
+
+.community-live-v1008 .community-v5-tabs button.active{
+  color:#051018 !important;
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff, #7a84ff) !important;
+  box-shadow:0 16px 32px rgba(32,242,210,.16), 0 0 18px rgba(24,231,255,.10) !important;
+}
+
+.community-live-v1008 .glass-community-v5{
+  background:
+    radial-gradient(circle at 100% 0%, rgba(24,231,255,.055), transparent 24%),
+    linear-gradient(180deg, rgba(6,25,43,.84), rgba(3,13,25,.94)) !important;
+  border:1px solid rgba(24,231,255,.14) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.community-live-v1008 .composer-v5{
+  border-radius:24px !important;
+  padding:18px !important;
+}
+
+.community-live-v1008 .composer-v5-row input,
+.community-live-v1008 .community-comment-form-v1008 input{
+  background:rgba(3,14,27,.72) !important;
+  border:1px solid rgba(24,231,255,.12) !important;
+  color:#eaf8ff !important;
+  border-radius:16px !important;
+  min-height:48px !important;
+}
+
+.community-live-v1008 .composer-v5-row button,
+.community-live-v1008 .community-comment-form-v1008 button,
+.community-live-v1008 .community-reward-row-v1008 button{
+  border:0 !important;
+  border-radius:16px !important;
+  min-height:48px !important;
+  padding:0 18px !important;
+  font-weight:1000 !important;
+  color:#06111b !important;
+  background:linear-gradient(135deg, #20f2d2, #2fd9ff, #7a84ff) !important;
+  box-shadow:0 14px 28px rgba(32,242,210,.14) !important;
+  cursor:pointer !important;
+}
+
+.community-live-v1008 button:disabled{
+  opacity:.55 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.8) !important;
+}
+
+.community-live-v1008 .feed-card-v5{
+  border-radius:24px !important;
+  padding:18px !important;
+  overflow:hidden !important;
+}
+
+.community-live-v1008 .feed-card-v5:hover{
+  border-color:rgba(24,231,255,.26) !important;
+  box-shadow:0 22px 52px rgba(0,0,0,.26), 0 0 22px rgba(24,231,255,.06) !important;
+}
+
+.community-live-v1008 .feed-avatar-v5,
+.community-live-v1008 .composer-avatar-v5,
+.community-live-v1008 .suggested-avatar-v5,
+.community-live-v1008 .reply-avatar-v5,
+.community-live-v1008 .community-v5-avatars i{
+  overflow:hidden !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid rgba(24,231,255,.30) !important;
+  box-shadow:0 0 16px rgba(24,231,255,.14) !important;
+}
+
+.community-live-v1008 .feed-avatar-v5.has-avatar img,
+.community-live-v1008 .composer-avatar-v5.has-avatar img,
+.community-live-v1008 .suggested-avatar-v5.has-avatar img,
+.community-live-v1008 .reply-avatar-v5.has-avatar img,
+.community-live-v1008 .community-v5-avatars i.has-avatar img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  display:block !important;
+}
+
+.community-live-v1008 .feed-badge-v5.free{
+  color:#20f2d2 !important;
+  background:rgba(32,242,210,.10) !important;
+  border:1px solid rgba(32,242,210,.18) !important;
+}
+
+.community-live-v1008 .feed-badge-v5.premium{
+  color:#ff7bf2 !important;
+  background:rgba(255,123,242,.10) !important;
+  border:1px solid rgba(255,123,242,.18) !important;
+}
+
+.community-live-v1008 .feed-actions-v5{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  margin-top:14px !important;
+}
+
+.community-live-v1008 .feed-actions-v5 button{
+  border:1px solid rgba(24,231,255,.12) !important;
+  background:rgba(3,17,30,.62) !important;
+  color:#20f2d2 !important;
+  border-radius:12px !important;
+  padding:9px 12px !important;
+  font-weight:900 !important;
+  cursor:pointer !important;
+}
+
+.community-live-v1008 .community-comments-v1008{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid rgba(24,231,255,.10);
+}
+
+.community-live-v1008 .community-comment-form-v1008{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+}
+
+.community-live-v1008 .community-empty-v1008{
+  padding:28px !important;
+  border-radius:22px !important;
+  color:#a9c4d8 !important;
+  display:grid;
+  gap:6px;
+  text-align:center;
+}
+
+.community-live-v1008 .community-empty-v1008 strong{
+  color:#f2fdff !important;
+  font-size:18px !important;
+}
+
+.community-live-v1008 .community-ranking-live-v1008,
+.community-live-v1008 .community-rewards-live-v1008{
+  border-radius:24px !important;
+  padding:18px !important;
+}
+
+.community-live-v1008 .community-reward-row-v1008{
+  display:grid;
+  grid-template-columns:52px 1fr auto auto;
+  gap:14px;
+  align-items:center;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid rgba(24,231,255,.10);
+  background:linear-gradient(180deg, rgba(8,28,50,.72), rgba(4,16,30,.86));
+  margin-top:12px;
+}
+
+.community-live-v1008 .community-reward-row-v1008 > span{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:rgba(24,231,255,.08);
+  border:1px solid rgba(24,231,255,.14);
+}
+
+.community-live-v1008 .community-reward-row-v1008.is-done{
+  border-color:rgba(32,242,210,.24);
+  box-shadow:0 0 20px rgba(32,242,210,.06);
+}
+
+.community-live-v1008 .community-reward-row-v1008.is-claimed button{
+  color:#9fb8c8 !important;
+  background:rgba(125,145,160,.12) !important;
+  box-shadow:none !important;
+}
+
+.community-live-v1008 .side-leader-row-v5 b,
+.community-live-v1008 .community-rank-row-v5 b,
+.community-live-v1008 .reward-side-v1008 b{
+  color:#ffd76a !important;
+  text-shadow:0 0 12px rgba(255,215,106,.30), 0 0 24px rgba(255,184,48,.16) !important;
+}
+
+.community-live-v1008 .sidecard-v5{
+  border-radius:24px !important;
+}
+
+.community-live-v1008 .suggested-row-v5 button{
+  display:none !important;
+}
+
+@media (max-width: 1000px){
+  .community-live-v1008 .community-reward-row-v1008{
+    grid-template-columns:44px 1fr;
+  }
+  .community-live-v1008 .community-reward-row-v1008 em,
+  .community-live-v1008 .community-reward-row-v1008 button{
+    grid-column:2;
+  }
+}
+
+/* KONIEC WERSJI 1008 */
+
+
+/* ==========================================================================
+   WERSJA 1009 — SPOŁECZNOŚĆ: KAŻDA AKTYWNOŚĆ = 1 COIN
+   ========================================================================== */
+
+.community-live-v1008 .community-rank-row-v5 b,
+.community-live-v1008 .side-leader-row-v5 b{
+  white-space:nowrap !important;
+}
+
+.community-live-v1008 .community-rank-row-v5 b::after,
+.community-live-v1008 .side-leader-row-v5 b::after{
+  content:" ✦" !important;
+  color:#ffe18a !important;
+  font-size:10px !important;
+  text-shadow:0 0 10px rgba(255,215,106,.55) !important;
+}
+
+/* KONIEC WERSJI 1009 */
