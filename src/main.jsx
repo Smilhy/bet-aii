@@ -16565,6 +16565,29 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
     </div>
   )
 }
+
+function isTipVisibleInActiveFeed(tip) {
+  const normalized = normalizeTipRow(tip || {})
+  const status = String(normalized.status || 'pending').toLowerCase()
+  const approvalStatus = String(normalized.admin_approval_status || normalized.manual_settlement_status || '').toLowerCase()
+  const result = String(normalized.result || normalized.manual_settlement_result || normalized.admin_approved_result || '').toLowerCase()
+
+  const settledStatuses = new Set([
+    'won', 'win', 'wygrany', 'wygrana',
+    'lost', 'loss', 'przegrany', 'przegrana',
+    'void', 'push', 'zwrot',
+    'cancelled', 'canceled', 'anulowany',
+    'rejected'
+  ])
+
+  // Typ w trakcie zatwierdzania też znika z dashboardu, żeby nikt nie kupił zakończonego kuponu.
+  if (approvalStatus === 'pending' || approvalStatus === 'pending_admin') return false
+  if (settledStatuses.has(status)) return false
+  if (settledStatuses.has(result)) return false
+
+  return true
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())

@@ -1,0 +1,18 @@
+WERSJA 957
+
+Naprawa błędu po logowaniu:
+- isTipVisibleInActiveFeed is not defined
+
+Błąd był w wersji 956: dashboard używał funkcji filtrującej aktywne typy, ale funkcja nie była dostępna w pliku.
+W 957 funkcja została dodana globalnie przed App(), więc aplikacja startuje poprawnie.
+
+Logika z 956 zostaje:
+- dashboard pokazuje tylko aktywne typy,
+- rozstrzygnięte typy znikają z feedu,
+- typy w trakcie zatwierdzania admina też znikają z feedu.
+
+Start z wersji:
+- betai_wersja_956_DASHBOARD_TYLKO_AKTYWNE_TYPY.zip
+
+Pliki zmienione:
+- src/main.jsx
