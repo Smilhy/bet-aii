@@ -39421,3 +39421,94 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1005 */
+
+
+/* ==========================================================================
+   WERSJA 1006 — DASHBOARD RIGHTBAR PROFIT GOLD + WALLET HISTORY POLISH
+   UI ONLY + drobne etykiety historii w main.jsx.
+   ========================================================================== */
+
+/* Realne klasy prawej kolumny dashboardu */
+.rightbar .real-ranking-panel .ranking-profit-box,
+.rightbar .real-ranking-panel .ranking-profit-box span,
+.rightbar .real-ranking-panel .ranking-profit-box.ranking-profit-positive span,
+.rightbar .real-ranking-panel .rank .ranking-profit-box span{
+  color:#ffd76a !important;
+  font-weight:1000 !important;
+  text-shadow:
+    0 0 8px rgba(255,215,106,.42),
+    0 0 18px rgba(255,184,48,.28),
+    0 0 32px rgba(255,145,30,.14) !important;
+}
+
+.rightbar .real-ranking-panel .ranking-profit-box{
+  position:relative !important;
+  isolation:isolate !important;
+  overflow:visible !important;
+  animation:betaiGoldProfitPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.rightbar .real-ranking-panel .ranking-profit-box::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:8px -8px 0 -8px !important;
+  z-index:-1 !important;
+  border-radius:999px !important;
+  background:
+    radial-gradient(circle, rgba(255,215,106,.20), rgba(255,184,48,.07) 45%, transparent 74%) !important;
+  opacity:.78 !important;
+  filter:blur(2px) !important;
+  pointer-events:none !important;
+  animation:betaiGoldAuraPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.rightbar .real-ranking-panel .ranking-profit-box span::after{
+  content:" ✦" !important;
+  color:#ffe18a !important;
+  font-size:11px !important;
+  opacity:.9 !important;
+  text-shadow:0 0 10px rgba(255,215,106,.58) !important;
+}
+
+.rightbar .real-ranking-panel .ranking-profit-box em{
+  color:#dce7ee !important;
+  opacity:.95 !important;
+}
+
+/* Wallet: nagrody rankingowe w historii jako dodatnie złoto */
+.wallet-v2-history-item .history-icon{
+  font-style:normal !important;
+}
+
+.wallet-v2-history-item b.positive{
+  color:#20f2d2 !important;
+}
+
+.wallet-v2-history-item:has(.history-icon){
+  transition:border-color .16s ease, box-shadow .16s ease !important;
+}
+
+/* KONIEC WERSJI 1006 */
+
+
+/* ==========================================================================
+   WERSJA 1007 — RANKING FREE BADGE FIX
+   UI/LABEL ONLY. NIE RUSZA STATYSTYK / TYPÓW / PROFITU / TOKENÓW.
+   ========================================================================== */
+
+.ranking-live-v999 .status-tag-v4.free,
+.ranking-static-v4 .status-tag-v4.free,
+.status-tag-v4.free{
+  color:#22f2d2 !important;
+  background:linear-gradient(135deg, rgba(34,242,210,.16), rgba(24,231,255,.08)) !important;
+  border:1px solid rgba(34,242,210,.24) !important;
+  box-shadow:0 0 14px rgba(34,242,210,.08) !important;
+}
+
+.ranking-live-v999 .status-tag-v4.pro,
+.ranking-static-v4 .status-tag-v4.pro,
+.status-tag-v4.pro{
+  color:#22f2d2 !important;
+}
+
+/* KONIEC WERSJI 1007 */

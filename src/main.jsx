@@ -9520,7 +9520,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         userEmail
           ? supabase
               .from('betai_token_transactions')
-              .select('id,delta_tokens,reason,ref_type,ref_data,created_at')
+              .select('id,delta_tokens,reason,ref_type,ref_id,ref_data,created_at')
               .eq('email', userEmail)
               .order('created_at', { ascending: false })
               .limit(100)
@@ -9583,6 +9583,11 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         else if (reason === 'token_exchange_to_wallet') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
         else if (reason === 'live_chat_daily_leader') { title = 'Nagroda lidera czatu'; icon = '🏆' }
         else if (reason === 'live_chat_daily_message') { title = 'Bonus za aktywność'; icon = '💬' }
+        else if (reason.startsWith('ranking_challenge') || String(row.ref_type || '').toLowerCase() === 'ranking_challenge') {
+          const challengeName = String(reason).replace('ranking_challenge:', '').replaceAll('_', ' ')
+          title = challengeName && challengeName !== 'ranking challenge' ? `Nagroda rankingowa: ${challengeName}` : 'Nagroda rankingowa'
+          icon = '🏆'
+        }
         if (reason === 'live_chat_tip_sent' && refData?.to_email) title = `Tip wysłany do ${String(refData.to_email).split('@')[0]}`
         if (reason === 'live_chat_tip_received' && refData?.from_email) title = `Tip od ${String(refData.from_email).split('@')[0]}`
         return {
@@ -11629,6 +11634,16 @@ function getLiveRankingBadges(row = {}) {
   return badges.slice(0, 3)
 }
 
+
+function getAccountPlanBadgeLabel(row = {}) {
+  const planValue = row?.plan ?? row?.subscription_status ?? row?.status ?? row?.account_type ?? ''
+  return isPremiumAccount(planValue) || isPremiumProfile(row) ? 'PREMIUM' : 'FREE'
+}
+
+function getAccountPlanBadgeClass(row = {}) {
+  return getAccountPlanBadgeLabel(row) === 'PREMIUM' ? 'pro' : 'free'
+}
+
 function LeaderboardView({
   tips = [],
   ranking = [],
@@ -11820,7 +11835,7 @@ function LeaderboardView({
               {renderAvatar(row)}
               <div>
                 <b>{row.rowName}</b>
-                <small className={`status-tag-v4 ${isPremiumAccount(row.plan || row.subscription_status) ? 'pro' : 'vip'}`}>{isPremiumAccount(row.plan || row.subscription_status) ? 'PREMIUM' : 'TYPER'}</small>
+                <small className={`status-tag-v4 ${getAccountPlanBadgeClass(row)}`}>{getAccountPlanBadgeLabel(row)}</small>
               </div>
             </span>
             <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
@@ -18590,6 +18605,10 @@ function App() {
       }
       setNotifications(prev => [localRewardNotification, ...(prev || []).filter(item => String(item.id) !== String(localRewardNotification.id))])
       try { showReceivedTipFromNotification(localRewardNotification, false) } catch (_) {}
+      try {
+        window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
+        window.dispatchEvent(new CustomEvent('betai:notification-created', { detail: localRewardNotification }))
+      } catch (_) {}
 
       await fetchNotifications(userId)
       // Opóźniony refresh nie może cofnąć salda, bo fetchCurrentTokenBalance respektuje reward lock.
