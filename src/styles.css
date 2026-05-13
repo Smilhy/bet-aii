@@ -40514,3 +40514,302 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1014 */
+
+
+/* ==========================================================================
+   WERSJA 1016 — SPOŁECZNOŚĆ PROFILE CLICK + ACTIVE CHANNELS + FOLLOW + REWARDS UX
+   ========================================================================== */
+
+.community-pro-v1012 .community-pro-hero-v1012{
+  padding-bottom:76px !important;
+}
+
+.community-pro-v1012 .community-v5-online-wrap{
+  position:absolute !important;
+  right:32px !important;
+  bottom:22px !important;
+  top:auto !important;
+  z-index:4 !important;
+  min-width:360px !important;
+  justify-content:flex-end !important;
+  padding:12px 14px !important;
+  border-radius:24px !important;
+  background:linear-gradient(135deg, rgba(5,32,50,.70), rgba(6,18,34,.42)) !important;
+  border:1px solid rgba(24,231,255,.12) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.community-tabs-v1016{
+  justify-content:flex-start !important;
+}
+
+.community-tabs-v1016 button{
+  min-width:140px !important;
+}
+
+.community-name-btn-v1016{
+  display:inline-flex;
+  align-items:center;
+  border:0;
+  background:transparent;
+  color:#f3fbff;
+  font:inherit;
+  font-weight:1000;
+  padding:0;
+  cursor:pointer;
+  text-align:left;
+  text-shadow:0 0 14px rgba(24,231,255,.08);
+}
+
+.community-name-btn-v1016:hover{
+  color:#20f2d2;
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:3px;
+}
+
+.feed-name-v1016{
+  font-size:14px;
+}
+
+.pro-channel-list-v1012 button{
+  cursor:pointer !important;
+  transition:transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease !important;
+}
+
+.pro-channel-list-v1012 button:hover{
+  transform:translateX(2px);
+}
+
+.pro-channel-list-v1012 button.active{
+  box-shadow:0 0 22px rgba(32,242,210,.10), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.suggested-row-v5{
+  grid-template-columns:42px 1fr auto !important;
+}
+
+.suggested-row-v5 > em{
+  display:none !important;
+}
+
+.suggested-row-v5 button:not(.community-name-btn-v1016){
+  border:0 !important;
+  min-width:98px !important;
+  height:34px !important;
+  border-radius:12px !important;
+  color:#031321 !important;
+  font-weight:1000 !important;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff) !important;
+  cursor:pointer !important;
+  box-shadow:0 10px 22px rgba(32,242,210,.12) !important;
+}
+
+.suggested-row-v5 button.is-following:not(.community-name-btn-v1016){
+  color:#20f2d2 !important;
+  background:rgba(32,242,210,.08) !important;
+  border:1px solid rgba(32,242,210,.28) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.community-rewards-live-v1008 .community-reward-row-v1008{
+  grid-template-columns:54px 1fr 64px 170px !important;
+  gap:14px !important;
+}
+
+.community-rewards-live-v1008 .community-reward-row-v1008 > span{
+  width:48px !important;
+  height:48px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:16px !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,.16), transparent 24%),
+    linear-gradient(135deg, rgba(32,242,210,.14), rgba(47,217,255,.08)) !important;
+  border:1px solid rgba(32,242,210,.20) !important;
+  box-shadow:0 0 22px rgba(32,242,210,.08), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+.community-rewards-live-v1008 .community-reward-row-v1008 button{
+  min-height:44px !important;
+  border-radius:14px !important;
+  font-weight:1000 !important;
+}
+
+.community-rewards-live-v1008 .community-reward-row-v1008.is-claimed button,
+.community-rewards-live-v1008 .community-reward-row-v1008 button:disabled{
+  opacity:.62 !important;
+  cursor:not-allowed !important;
+}
+
+.community-rewards-live-v1008 .reward-progress-v5{
+  height:10px !important;
+}
+
+.community-rewards-live-v1008 .bottom-card-head-v5 span b{
+  color:#ffd76a !important;
+  text-shadow:0 0 18px rgba(255,215,106,.28) !important;
+}
+
+@media (max-width: 1200px){
+  .community-pro-v1012 .community-v5-online-wrap{
+    position:relative !important;
+    right:auto !important;
+    bottom:auto !important;
+    min-width:0 !important;
+    margin-top:18px !important;
+  }
+  .community-pro-v1012 .community-pro-hero-v1012{
+    padding-bottom:30px !important;
+  }
+}
+
+/* KONIEC WERSJI 1016 */
+
+
+/* ==========================================================================
+   WERSJA 1017 — SPOŁECZNOŚĆ 10/10 LIVE CHANNELS + CHAT + REWARDS
+   ========================================================================== */
+
+.community-10-v1017 .community-v5-avatars button{
+  width:34px !important;
+  height:34px !important;
+  border-radius:50% !important;
+  border:1px solid rgba(24,231,255,.28) !important;
+  background:linear-gradient(135deg,#20f2d2,#268dff) !important;
+  color:#031321 !important;
+  font-size:11px !important;
+  font-weight:1000 !important;
+  display:grid !important;
+  place-items:center !important;
+  overflow:hidden !important;
+  margin-left:-6px !important;
+  cursor:pointer !important;
+  box-shadow:0 0 18px rgba(24,231,255,.16) !important;
+}
+
+.community-10-v1017 .community-v5-avatars button img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+}
+
+.community-10-v1017 .live-chat-real-v1017{
+  min-height:420px !important;
+}
+
+.community-10-v1017 .pro-chat-list-v1012{
+  max-height:360px !important;
+  overflow:auto !important;
+  scrollbar-width:thin !important;
+}
+
+.community-10-v1017 .pro-chat-input-v1012 input{
+  font-weight:800 !important;
+}
+
+.community-10-v1017 .suggested-avatar-v5{
+  cursor:pointer !important;
+}
+
+.community-10-v1017 .reward-mini-v1017{
+  display:grid !important;
+  gap:10px !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017{
+  display:grid !important;
+  grid-template-columns:46px 1fr auto !important;
+  gap:10px !important;
+  align-items:center !important;
+  width:100% !important;
+  border:1px solid rgba(24,231,255,.12) !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(255,215,106,.07), transparent 25%),
+    linear-gradient(180deg, rgba(7,30,50,.74), rgba(3,14,27,.92)) !important;
+  border-radius:16px !important;
+  padding:10px !important;
+  color:#eaf8ff !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017:hover{
+  border-color:rgba(255,215,106,.30) !important;
+  box-shadow:0 0 24px rgba(255,215,106,.10) !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017 > span{
+  width:42px !important;
+  height:42px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:14px !important;
+  background:linear-gradient(135deg, rgba(32,242,210,.16), rgba(255,215,106,.08)) !important;
+  border:1px solid rgba(32,242,210,.18) !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017 strong{
+  display:block !important;
+  font-weight:1000 !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017 small{
+  color:#9fb8c8 !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017 b{
+  color:#ffd76a !important;
+  text-shadow:0 0 18px rgba(255,215,106,.28) !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017.is-claimed{
+  opacity:.72 !important;
+}
+
+.community-10-v1017 .feed-meta-v5 em{
+  font-style:normal !important;
+  color:#20f2d2 !important;
+  font-size:11px !important;
+  font-weight:1000 !important;
+  padding:2px 8px !important;
+  border-radius:999px !important;
+  background:rgba(32,242,210,.08) !important;
+}
+
+.community-10-v1017 .community-empty-v1008{
+  min-height:120px !important;
+  display:grid !important;
+  place-items:center !important;
+  text-align:center !important;
+  padding:20px !important;
+  border-radius:18px !important;
+  color:#9fb8c8 !important;
+}
+
+.community-10-v1017 .community-empty-v1008 strong{
+  color:#f1fbff !important;
+  display:block !important;
+  margin-bottom:4px !important;
+}
+
+.community-10-v1017 .community-reward-row-v1008.is-claimed{
+  opacity:.76 !important;
+}
+
+.community-10-v1017 .community-reward-row-v1008.is-claimed button{
+  color:#9fb8c8 !important;
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button.active b,
+.community-10-v1017 .pro-channel-list-v1012 button:hover b{
+  color:#f3fbff !important;
+}
+
+.community-10-v1017 .community-channel-grid-v1014 button.active strong{
+  color:#20f2d2 !important;
+}
+
+/* KONIEC WERSJI 1017 */
