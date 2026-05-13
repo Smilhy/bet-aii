@@ -17557,6 +17557,23 @@ function App() {
     receivedTipHideTimerRef.current = setTimeout(() => setReceivedTipPopup(null), 4550)
   }
 
+  function persistTokenBalanceNoRollback(email, balance, reason = 'manual') {
+    const walletEmail = normalizeEmail(email || sessionUser?.email || accountProfile?.email || '')
+    const cleanBalance = Math.max(0, Number(balance || 0) || 0)
+    if (!walletEmail) return cleanBalance
+    setTokenBalance(prev => Math.max(Number(prev || 0) || 0, cleanBalance))
+    try {
+      const currentLocal = Number(localStorage.getItem('betai_tokens_' + walletEmail) || '0') || 0
+      const finalBalance = Math.max(currentLocal, cleanBalance)
+      localStorage.setItem('betai_tokens_' + walletEmail, String(finalBalance))
+      localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason }))
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason } }))
+      return finalBalance
+    } catch (_) {
+      return cleanBalance
+    }
+  }
+
   async function fetchCurrentTokenBalance() {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!email) return 0
@@ -18246,19 +18263,10 @@ function App() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('betai_token_wallets')
-          .select('balance')
-          .eq('email', email)
-          .maybeSingle()
-        if (!error && data) setTokenBalance(Number(data.balance || 0) || 0)
-        else {
-          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-          setTokenBalance(localTokens)
-        }
+        await fetchCurrentTokenBalance()
       } catch (error) {
         const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-        setTokenBalance(localTokens)
+        setTokenBalance(Math.max(Number(tokenBalance || 0) || 0, localTokens))
       }
     }
 
@@ -18303,7 +18311,10 @@ function App() {
         showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Miło Cię widzieć! Dodaliśmy 100 żetonów na start.' })
       } else {
         const balance = Number(existing.balance || 0) || 0
-        setTokenBalance(balance)
+        const localBalance = (() => { try { return Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0 } catch (_) { return 0 } })()
+        const displayBalance = Math.max(balance, localBalance, Number(tokenBalance || 0) || 0)
+        setTokenBalance(displayBalance)
+        try { localStorage.setItem('betai_tokens_' + email, String(displayBalance)) } catch (_) {}
         if (!existing.welcome_bonus_claimed) {
           const next = balance + 100
           await supabase.from('betai_token_wallets').update({ balance: next, welcome_bonus_claimed: true, updated_at: new Date().toISOString() }).eq('email', email)
@@ -18555,22 +18566,15 @@ function App() {
         if (error) throw error
         if (data && data.claimed === false) {
           const existingBalance = Number(data.new_balance ?? data.balance ?? tokenBalance ?? 0) || 0
-          setTokenBalance(existingBalance)
-          try { localStorage.setItem('betai_tokens_' + email, String(existingBalance)) } catch (_) {}
+          persistTokenBalanceNoRollback(email, existingBalance, challenge.key)
           showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie była już odebrana.' })
           return true
         }
         const nextBalance = Number(data?.new_balance ?? data?.balance ?? (Number(tokenBalance || 0) + 1)) || 0
-        setTokenBalance(nextBalance)
-        try {
-          localStorage.setItem('betai_tokens_' + email, String(nextBalance))
-          localStorage.setItem('betai_reward_balance_lock_' + email, JSON.stringify({ balance: nextBalance, until: Date.now() + 45000, reason: challenge.key }))
-        } catch (_) {}
+        persistTokenBalanceNoRollback(email, nextBalance, challenge.key)
       } else {
         const next = Number(tokenBalance || 0) + 1
-        setTokenBalance(next)
-        localStorage.setItem('betai_tokens_' + email, String(next))
-        localStorage.setItem('betai_reward_balance_lock_' + email, JSON.stringify({ balance: next, until: Date.now() + 45000, reason: challenge.key }))
+        persistTokenBalanceNoRollback(email, next, challenge.key)
       }
       try { localStorage.setItem(`betai_${rewardKey}_${userId}`, '1') } catch (_) {}
 

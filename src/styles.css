@@ -39329,3 +39329,95 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1003 */
+
+
+/* ==========================================================================
+   WERSJA 1005 — DASHBOARD RIGHTBAR TOP TYPERZY GOLD PROFIT
+   UI ONLY. NIE RUSZA LOGIKI / SQL / API / FUNCTIONS.
+   ========================================================================== */
+
+/* Dashboard: prawa kolumna Top typerzy — profit taki sam jak w rankingu */
+.dashboard-rightbar .top-tipster-row-v4 > b,
+.rightbar .top-tipster-row-v4 > b,
+.dashboard-side .top-tipster-row-v4 > b,
+.dashboard-rightbar [class*="top"][class*="tipster"] b:last-child,
+.rightbar [class*="top"][class*="tipster"] b:last-child,
+.dashboard-rightbar [class*="profit"],
+.rightbar [class*="profit"],
+.betai-rightbar [class*="profit"],
+.dashboard-right-column [class*="profit"]{
+  color:#ffd76a !important;
+  font-weight:1000 !important;
+  text-shadow:
+    0 0 8px rgba(255,215,106,.36),
+    0 0 18px rgba(255,184,48,.22),
+    0 0 32px rgba(255,145,30,.10) !important;
+}
+
+/* Konkretne sekcje top typerów dashboardu — mocniejsze trafienie po strukturze */
+.dashboard-rightbar .top-tipster-row-v4 > b,
+.rightbar .top-tipster-row-v4 > b,
+.top-tipsters-widget .top-tipster-row-v4 > b,
+.top-tipsters-list-v4 .top-tipster-row-v4 > b,
+.aside-card .top-tipster-row-v4 > b,
+.dashboard-aside .top-tipster-row-v4 > b{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:4px !important;
+  isolation:isolate !important;
+  animation:betaiGoldProfitPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.dashboard-rightbar .top-tipster-row-v4 > b::before,
+.rightbar .top-tipster-row-v4 > b::before,
+.top-tipsters-widget .top-tipster-row-v4 > b::before,
+.top-tipsters-list-v4 .top-tipster-row-v4 > b::before,
+.aside-card .top-tipster-row-v4 > b::before,
+.dashboard-aside .top-tipster-row-v4 > b::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-7px -10px !important;
+  z-index:-1 !important;
+  border-radius:999px !important;
+  background:
+    radial-gradient(circle, rgba(255,215,106,.18), rgba(255,184,48,.06) 44%, transparent 72%) !important;
+  opacity:.72 !important;
+  filter:blur(2px) !important;
+  pointer-events:none !important;
+  animation:betaiGoldAuraPulse1002 2.35s ease-in-out infinite !important;
+}
+
+.dashboard-rightbar .top-tipster-row-v4 > b::after,
+.rightbar .top-tipster-row-v4 > b::after,
+.top-tipsters-widget .top-tipster-row-v4 > b::after,
+.top-tipsters-list-v4 .top-tipster-row-v4 > b::after,
+.aside-card .top-tipster-row-v4 > b::after,
+.dashboard-aside .top-tipster-row-v4 > b::after{
+  content:"✦" !important;
+  margin-left:4px !important;
+  color:#ffe18a !important;
+  font-size:11px !important;
+  opacity:.85 !important;
+  text-shadow:0 0 10px rgba(255,215,106,.55) !important;
+}
+
+/* Starsze klasy dashboardu / widgetu Top typerzy */
+.top-tipsters-card [class*="profit"],
+.top-tipsters-panel [class*="profit"],
+.top-tipsters-box [class*="profit"],
+.top-typers-card [class*="profit"],
+.top-typers-panel [class*="profit"],
+.top-typers-box [class*="profit"],
+.dashboard-top-tipsters [class*="profit"],
+.dashboard-top-typers [class*="profit"]{
+  color:#ffd76a !important;
+  font-weight:1000 !important;
+  text-shadow:
+    0 0 8px rgba(255,215,106,.36),
+    0 0 18px rgba(255,184,48,.22),
+    0 0 32px rgba(255,145,30,.10) !important;
+}
+
+/* KONIEC WERSJI 1005 */
