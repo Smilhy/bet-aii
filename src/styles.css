@@ -36066,20 +36066,6 @@ button.betfolio-fetch-btn{
   color: #b9d3e2 !important;
 }
 
-/* Avatar premium glow */
-.profile-v3-avatar,
-.profile-v4-avatar,
-.profile-avatar-v3,
-.profile-avatar-v4,
-.profile-hero-avatar,
-.profile-avatar{
-  border: 1px solid rgba(32,242,210,.55) !important;
-  box-shadow:
-    0 0 0 7px rgba(0,229,255,.045),
-    0 0 34px rgba(0,229,255,.30),
-    inset 0 0 28px rgba(0,229,255,.10) !important;
-  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.14), rgba(2,12,22,.86)) !important;
-}
 
 /* Przyciski w profilu */
 .profile-v3-hero button,
@@ -36508,4 +36494,227 @@ button.betfolio-fetch-btn{
   .profile-stat-card{
     min-height: 84px;
   }
+}
+
+
+/* ==========================================================================
+   WERSJA 989 — FIX AVATAR + OPIS + KOLORY STATYSTYK
+   TYLKO CSS. NIE RUSZA LOGIKI / CORE LOCK / STATYSTYK / REALTIME.
+   ========================================================================== */
+
+/* AVATAR FIX — pokazuj prawdziwy obrazek avatara, nie przykrywaj go tłem. */
+.profile-v3-avatar,
+.profile-v4-avatar,
+.profile-avatar-v3,
+.profile-avatar-v4,
+.profile-hero-avatar,
+.profile-avatar,
+[class*="avatar"]{
+  background-color: transparent !important;
+  background-size: cover !important;
+  background-position: center !important;
+  overflow: hidden !important;
+}
+
+.profile-v3-avatar img,
+.profile-v4-avatar img,
+.profile-avatar-v3 img,
+.profile-avatar-v4 img,
+.profile-hero-avatar img,
+.profile-avatar img,
+[class*="avatar"] img{
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
+  z-index: 2 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.profile-v3-avatar::before,
+.profile-v4-avatar::before,
+.profile-avatar-v3::before,
+.profile-avatar-v4::before,
+.profile-hero-avatar::before,
+.profile-avatar::before,
+[class*="avatar"]::before,
+.profile-v3-avatar::after,
+.profile-v4-avatar::after,
+.profile-avatar-v3::after,
+.profile-avatar-v4::after,
+.profile-hero-avatar::after,
+.profile-avatar::after,
+[class*="avatar"]::after{
+  pointer-events: none !important;
+}
+
+.profile-v3-avatar,
+.profile-v4-avatar,
+.profile-avatar-v3,
+.profile-avatar-v4,
+.profile-hero-avatar,
+.profile-avatar{
+  border: 1px solid rgba(32,242,210,.55) !important;
+  box-shadow:
+    0 0 0 7px rgba(0,229,255,.045),
+    0 0 34px rgba(0,229,255,.24) !important;
+}
+
+/* OPIS PROFILU — większy box, czytelniejszy, przyciski mają zejść niżej. */
+.profile-v3-hero p,
+.profile-v4-hero p,
+.profile-header-v3 p,
+.profile-header-v4 p,
+.profile-hero-card p,
+.profile-main-hero p,
+.profile-bio,
+.profile-bio-text,
+.profile-description,
+.profile-about,
+[class*="bio"],
+[class*="description"]{
+  max-width: 720px !important;
+  min-height: 68px !important;
+  padding: 14px 18px !important;
+  line-height: 1.48 !important;
+  border-radius: 18px !important;
+  color: #dff8ff !important;
+  background:
+    linear-gradient(135deg, rgba(32,242,210,.16), rgba(33,149,255,.14)) !important;
+  border: 1px solid rgba(0,229,255,.24) !important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.05) !important;
+  text-shadow: none !important;
+}
+
+/* Nie łap opisów w sidebarach/listach/opiniach jako bio box. */
+.side-card-v3 p,
+.profile-v4-rating-bars p,
+.profile-reviews-list-v985 p,
+.profile-live-tip-card p,
+.tip-card p,
+.profile-review-form-v985 p,
+.profile-v4-reviews-list p{
+  max-width: unset !important;
+  min-height: unset !important;
+  padding: unset !important;
+  border-radius: unset !important;
+  background: unset !important;
+  border: unset !important;
+  box-shadow: unset !important;
+}
+
+.profile-v3-hero .profile-actions,
+.profile-v4-hero .profile-actions,
+.profile-header-v3 .profile-actions,
+.profile-header-v4 .profile-actions,
+.profile-hero-card .profile-actions,
+.profile-main-hero .profile-actions,
+[class*="profile"] [class*="actions"]{
+  margin-top: 22px !important;
+}
+
+.profile-v3-hero button,
+.profile-v4-hero button,
+.profile-header-v3 button,
+.profile-header-v4 button,
+.profile-hero-card button,
+.profile-main-hero button{
+  margin-top: 8px;
+}
+
+/* KOLOROWE RAMKI STATYSTYK — wg kolejności kafelków. */
+.profile-stats-grid > *:nth-child(1),
+.profile-stats-row > *:nth-child(1),
+.profile-v3-stats > *:nth-child(1),
+.profile-v4-stats > *:nth-child(1){
+  border-color: rgba(32,242,136,.50) !important;
+  background: linear-gradient(145deg, rgba(7,55,36,.82), rgba(2,17,26,.78)) !important;
+  box-shadow: 0 0 24px rgba(32,242,136,.08), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.profile-stats-grid > *:nth-child(2),
+.profile-stats-row > *:nth-child(2),
+.profile-v3-stats > *:nth-child(2),
+.profile-v4-stats > *:nth-child(2){
+  border-color: rgba(32,242,136,.46) !important;
+  background: linear-gradient(145deg, rgba(8,61,39,.84), rgba(2,18,27,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(3),
+.profile-stats-row > *:nth-child(3),
+.profile-v3-stats > *:nth-child(3),
+.profile-v4-stats > *:nth-child(3){
+  border-color: rgba(33,149,255,.42) !important;
+  background: linear-gradient(145deg, rgba(9,40,70,.86), rgba(3,15,29,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(4),
+.profile-stats-row > *:nth-child(4),
+.profile-v3-stats > *:nth-child(4),
+.profile-v4-stats > *:nth-child(4){
+  border-color: rgba(32,242,136,.44) !important;
+  background: linear-gradient(145deg, rgba(7,55,36,.82), rgba(2,17,26,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(5),
+.profile-stats-row > *:nth-child(5),
+.profile-v3-stats > *:nth-child(5),
+.profile-v4-stats > *:nth-child(5){
+  border-color: rgba(255,71,120,.44) !important;
+  background: linear-gradient(145deg, rgba(64,13,32,.80), rgba(3,15,29,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(6),
+.profile-stats-row > *:nth-child(6),
+.profile-v3-stats > *:nth-child(6),
+.profile-v4-stats > *:nth-child(6){
+  border-color: rgba(255,185,47,.48) !important;
+  background: linear-gradient(145deg, rgba(75,48,10,.80), rgba(3,15,29,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(7),
+.profile-stats-row > *:nth-child(7),
+.profile-v3-stats > *:nth-child(7),
+.profile-v4-stats > *:nth-child(7),
+.profile-stats-grid > *:nth-child(8),
+.profile-stats-row > *:nth-child(8),
+.profile-v3-stats > *:nth-child(8),
+.profile-v4-stats > *:nth-child(8),
+.profile-stats-grid > *:nth-child(9),
+.profile-stats-row > *:nth-child(9),
+.profile-v3-stats > *:nth-child(9),
+.profile-v4-stats > *:nth-child(9){
+  border-color: rgba(24,231,255,.35) !important;
+  background: linear-gradient(145deg, rgba(8,36,60,.86), rgba(3,15,29,.78)) !important;
+}
+
+.profile-stats-grid > *:nth-child(10),
+.profile-stats-row > *:nth-child(10),
+.profile-v3-stats > *:nth-child(10),
+.profile-v4-stats > *:nth-child(10){
+  border-color: rgba(32,242,136,.42) !important;
+  background: linear-gradient(145deg, rgba(7,55,36,.72), rgba(3,15,29,.78)) !important;
+}
+
+.profile-stats-grid > *,
+.profile-stats-row > *,
+.profile-v3-stats > *,
+.profile-v4-stats > *{
+  min-height: 98px !important;
+}
+
+.profile-v3-hero p *,
+.profile-v4-hero p *,
+.profile-header-v3 p *,
+.profile-header-v4 p *,
+.profile-bio *,
+.profile-description *{
+  color: inherit !important;
+  background: transparent !important;
 }

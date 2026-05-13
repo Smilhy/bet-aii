@@ -1,0 +1,21 @@
+WERSJA 989 — AVATAR + OPIS + KOLORY STATYSTYK
+
+Naprawione:
+1. Avatar znowu jest widoczny — usunięto agresywne tło z v988.
+2. Opis profilu ma większą, czytelniejszą ramkę.
+3. Przyciski w hero są niżej i lepiej wyrównane.
+4. Kafelki statystyk mają kolorowe ramki:
+   - Yield/Profit/Wygrane/Napiwki: zielone,
+   - Typy/Stawki/Śr. kurs/Max kurs: niebiesko-cyan,
+   - Przegrane: czerwone,
+   - Pending: bursztynowe.
+
+Nie ruszone:
+- logika profili,
+- typy,
+- statystyki,
+- ranking,
+- opinie,
+- napiwki,
+- realtime,
+- CORE LOCK v983.
