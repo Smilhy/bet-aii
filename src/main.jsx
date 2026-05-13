@@ -8666,6 +8666,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [activeCommunityChannel, setActiveCommunityChannel] = useState('ogolny')
   const [postText, setPostText] = useState('')
   const [chatText, setChatText] = useState('')
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
+  const [chatAttachment, setChatAttachment] = useState(null)
   const [commentDrafts, setCommentDrafts] = useState({})
   const [expandedComments, setExpandedComments] = useState({})
   const [openPostMenuId, setOpenPostMenuId] = useState(null)
@@ -8706,10 +8708,18 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const getRewardUnlockLabel = (rewardKey) => {
     const claim = rewardClaims?.[rewardKey]
     const ts = new Date(claim?.created_at || 0).getTime()
-    if (!Number.isFinite(ts) || !ts) return 'Odebrano'
-    const left = Math.max(0, (ts + 24 * 60 * 60 * 1000) - Date.now())
-    const hours = Math.ceil(left / (60 * 60 * 1000))
-    return hours > 1 ? `Za ${hours}h` : 'Za mniej niż 1h'
+    if (!Number.isFinite(ts) || !ts) return 'Za 24h'
+    return 'Za 24h'
+  }
+
+  const getCommunityDisplayName = (item = {}) => {
+    const direct = item.username || item.display_name || item.full_name || item.name || item.author_name
+    if (direct && String(direct).trim() && String(direct).trim().toLowerCase() !== 'użytkownik') return String(direct).trim()
+    const emailName = communityNameFromEmail(item.email || item.author_email || '')
+    if (emailName && emailName !== 'Użytkownik') return emailName
+    const id = String(item.id || item.user_id || item.author_id || '')
+    if (id) return `Użytkownik ${id.slice(0, 4).toUpperCase()}`
+    return 'Użytkownik'
   }
 
 
@@ -8728,13 +8738,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const openCommunityProfile = (item = {}) => {
     const ref = item.author_id || item.id || item.user_id || item.email || item.author_email || item.username || item.author_name
-    const name = item.author_name || item.username || item.name || communityNameFromEmail(item.email || item.author_email)
+    const name = getCommunityDisplayName(item)
     onOpenTipster?.(ref, name)
   }
 
   const toggleCommunityFollow = (item = {}) => {
     const ref = item.id || item.user_id || item.author_id || item.email || item.author_email || item.username || item.author_name
-    const name = item.username || item.author_name || item.name || communityNameFromEmail(item.email || item.author_email)
+    const name = getCommunityDisplayName(item)
     onFollowTipster?.(ref, name)
   }
 
@@ -8948,8 +8958,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   async function sendChatMessage() {
     const clean = String(chatText || '').trim()
-    if (!clean) {
-      onToast?.({ type: 'info', title: 'Czat live', message: 'Wpisz wiadomość.' })
+    if (!clean && !chatAttachment) {
+      onToast?.({ type: 'info', title: 'Czat live', message: 'Wpisz wiadomość albo dodaj plik.' })
       return
     }
     if (!user?.id || !userEmail) {
@@ -8959,17 +8969,22 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!isSupabaseConfigured || !supabase) return
     setBusy(true)
     try {
+      const attachmentText = chatAttachment
+        ? `\n\n[attachment:${JSON.stringify({ name: chatAttachment.name, type: chatAttachment.type, size: chatAttachment.size, dataUrl: chatAttachment.dataUrl })}]`
+        : ''
       const { error } = await supabase.from('community_chat_messages').insert({
         channel_key: activeCommunityChannel,
         author_id: user.id,
         author_email: userEmail,
         author_name: userName,
         avatar_url: userAvatar || '',
-        body: clean,
+        body: `${clean}${attachmentText}`.trim(),
         created_at: new Date().toISOString()
       })
       if (error) throw error
       setChatText('')
+      setChatAttachment(null)
+      setEmojiPickerOpen(false)
       await loadCommunity()
     } catch (error) {
       console.error('send community chat error', error)
@@ -9049,20 +9064,54 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     }
   }
 
+  const emojiOptionsV1025 = ['🔥','🎯','💎','👏','😅','😮','🎉','🚀','👀','🙂','👍','💗']
+
   const addChatEmoji = (emoji = '😊') => {
     setChatText(prev => {
       const base = String(prev || '')
       return base ? `${base} ${emoji}` : emoji
     })
+    setEmojiPickerOpen(false)
   }
 
-  const addChatAttachmentMarker = () => {
-    setChatText(prev => {
-      const base = String(prev || '').trim()
-      const marker = '📎 Załącznik'
-      return base ? `${base} ${marker}` : marker
-    })
-    onToast?.({ type: 'info', title: 'Czat live', message: `Dodano znacznik załącznika w kanale #${activeChannelMeta.label}.` })
+  const handleChatFileSelect = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const maxSize = 2.5 * 1024 * 1024
+    if (file.size > maxSize) {
+      onToast?.({ type: 'error', title: 'Czat live', message: 'Plik jest za duży. Maksymalnie 2.5 MB.' })
+      event.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setChatAttachment({
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        dataUrl: String(reader.result || '')
+      })
+      onToast?.({ type: 'success', title: 'Czat live', message: `Dodano plik: ${file.name}` })
+    }
+    reader.onerror = () => {
+      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się wczytać pliku.' })
+    }
+    reader.readAsDataURL(file)
+    event.target.value = ''
+  }
+
+  const parseChatBodyParts = (body = '') => {
+    const raw = String(body || '')
+    const markerIndex = raw.indexOf('[attachment:')
+    if (markerIndex === -1) return { text: raw, attachment: null }
+    const text = raw.slice(0, markerIndex).trim()
+    const match = raw.slice(markerIndex).match(/^\[attachment:(.*)\]$/s)
+    if (!match) return { text: raw, attachment: null }
+    try {
+      return { text, attachment: JSON.parse(match[1]) }
+    } catch (_) {
+      return { text: raw, attachment: null }
+    }
   }
 
   async function deleteCommunityPost(post) {
@@ -9322,19 +9371,49 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                         <span className={`pro-chat-avatar-v1012 ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initials}</span>
                         <div>
                           <div className="pro-chat-meta-v1012"><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(row)}>{author}</button><em>{getAccountPlanBadgeLabel(row)}</em><small>{row.created_at ? new Date(row.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small></div>
-                          <p>{row.body}</p>
+                          {(() => {
+                            const parts = parseChatBodyParts(row.body)
+                            return (
+                              <>
+                                {parts.text ? <p>{parts.text}</p> : null}
+                                {parts.attachment ? (
+                                  <div className="chat-attachment-preview-v1025">
+                                    {String(parts.attachment.type || '').startsWith('image/') ? <img src={parts.attachment.dataUrl} alt={parts.attachment.name || 'załącznik'} /> : <span>📎</span>}
+                                    <div><strong>{parts.attachment.name || 'Załącznik'}</strong><small>{Math.max(1, Math.round(Number(parts.attachment.size || 0) / 1024))} KB</small></div>
+                                  </div>
+                                ) : null}
+                              </>
+                            )
+                          })()}
                         </div>
                       </div>
                     )
                   }) : <div className="community-empty-v1008"><strong>Brak wiadomości w tym kanale.</strong><span>Napisz pierwszą wiadomość na #{activeChannelMeta.label}.</span></div>}
                 </div>
-                <div className="pro-chat-input-v1012 chat-input-active-v1023">
-                  <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && chatText.trim()) sendChatMessage() }} placeholder={`Napisz wiadomość w #${activeChannelMeta.label}...`} />
-                  <div className="chat-tools-v1023">
-                    <button type="button" title="Dodaj emoji" onClick={() => addChatEmoji('😊')}>😊</button>
-                    <button type="button" title="Załącznik" onClick={addChatAttachmentMarker}>📎</button>
+                <div className="chat-composer-shell-v1025">
+                  {emojiPickerOpen ? (
+                    <div className="emoji-picker-v1025">
+                      {emojiOptionsV1025.map(emoji => <button type="button" key={emoji} onClick={() => addChatEmoji(emoji)}>{emoji}</button>)}
+                    </div>
+                  ) : null}
+                  {chatAttachment ? (
+                    <div className="chat-selected-file-v1025">
+                      {String(chatAttachment.type || '').startsWith('image/') ? <img src={chatAttachment.dataUrl} alt={chatAttachment.name} /> : <span>📎</span>}
+                      <div><strong>{chatAttachment.name}</strong><small>{Math.max(1, Math.round(Number(chatAttachment.size || 0) / 1024))} KB</small></div>
+                      <button type="button" onClick={() => setChatAttachment(null)}>×</button>
+                    </div>
+                  ) : null}
+                  <div className="pro-chat-input-v1012 chat-input-active-v1023">
+                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={`Napisz wiadomość w #${activeChannelMeta.label}...`} />
+                    <div className="chat-tools-v1023">
+                      <button type="button" title="Dodaj emoji" onClick={() => setEmojiPickerOpen(prev => !prev)}>😊</button>
+                      <label title="Dodaj plik">
+                        📎
+                        <input type="file" accept="image/*,.pdf,.txt,.doc,.docx" onChange={handleChatFileSelect} />
+                      </label>
+                    </div>
+                    <button type="button" className="chat-send-v1023" disabled={busy || (!chatText.trim() && !chatAttachment)} onClick={sendChatMessage}>➤</button>
                   </div>
-                  <button type="button" className="chat-send-v1023" disabled={busy || !chatText.trim()} onClick={sendChatMessage}>➤</button>
                 </div>
               </div>
 
@@ -9381,7 +9460,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
-                const name = item.username || item.display_name || item.name || communityNameFromEmail(item.email)
+                const name = getCommunityDisplayName(item)
                 const planLabel = isPremiumProfile(item) ? 'PREMIUM' : 'FREE'
                 return (
                   <div className="suggested-row-v5 suggested-row-v1020" key={item.id || item.email || index}>
@@ -9395,17 +9474,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 )
               })}
             </div>
-          </div>
-
-          <div className="glass-community-v5 sidecard-v5 reward-mini-v1017">
-            <div className="sidecard-head-v5"><h3>🎁 Nagrody</h3><button type="button" onClick={() => setActiveTab('rewards')}>Zobacz</button></div>
-            {rewardRows.slice(0, 3).map(reward => (
-              <button type="button" key={reward.key} className={`mini-reward-row-v1017 ${reward.claimed ? 'is-claimed' : ''}`} onClick={() => setActiveTab('rewards')}>
-                <span>{reward.icon}</span>
-                <div><strong>{reward.title}</strong><small>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Gotowe do odbioru' : reward.current}</small></div>
-                <b>+1</b>
-              </button>
-            ))}
           </div>
         </aside>
       </div>

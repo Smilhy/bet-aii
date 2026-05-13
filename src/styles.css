@@ -41144,3 +41144,324 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1024 */
+
+
+/* ==========================================================================
+   WERSJA 1025 — EMOJI PICKER + WYBÓR PLIKU W CZACIE
+   ========================================================================== */
+
+.chat-composer-shell-v1025{
+  position:relative !important;
+  display:grid !important;
+  gap:8px !important;
+}
+
+.emoji-picker-v1025{
+  position:absolute !important;
+  right:72px !important;
+  bottom:58px !important;
+  width:268px !important;
+  display:grid !important;
+  grid-template-columns:repeat(6,1fr) !important;
+  gap:8px !important;
+  padding:12px !important;
+  border-radius:18px !important;
+  border:1px solid rgba(32,242,210,.24) !important;
+  background:linear-gradient(180deg, rgba(6,30,48,.98), rgba(2,12,24,.98)) !important;
+  box-shadow:0 18px 48px rgba(0,0,0,.45), 0 0 28px rgba(24,231,255,.12) !important;
+  z-index:20 !important;
+}
+
+.emoji-picker-v1025 button{
+  width:36px !important;
+  height:36px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:12px !important;
+  border:1px solid rgba(24,231,255,.14) !important;
+  background:rgba(24,231,255,.08) !important;
+  cursor:pointer !important;
+  font-size:19px !important;
+  transition:transform .14s ease, box-shadow .14s ease !important;
+}
+
+.emoji-picker-v1025 button:hover{
+  transform:translateY(-2px) scale(1.06) !important;
+  box-shadow:0 0 18px rgba(32,242,210,.18) !important;
+}
+
+.chat-tools-v1023 label{
+  width:40px !important;
+  height:40px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:13px !important;
+  border:1px solid rgba(24,231,255,.14) !important;
+  background:rgba(24,231,255,.08) !important;
+  cursor:pointer !important;
+  color:#dffcff !important;
+}
+
+.chat-tools-v1023 label input{
+  display:none !important;
+}
+
+.chat-tools-v1023 label:hover{
+  transform:translateY(-1px) scale(1.03) !important;
+  box-shadow:0 0 20px rgba(32,242,210,.18) !important;
+  border-color:rgba(32,242,210,.34) !important;
+}
+
+.chat-selected-file-v1025,
+.chat-attachment-preview-v1025{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  max-width:420px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(24,231,255,.18) !important;
+  background:rgba(24,231,255,.07) !important;
+  padding:8px !important;
+  color:#eaf8ff !important;
+}
+
+.chat-selected-file-v1025 img,
+.chat-attachment-preview-v1025 img{
+  width:76px !important;
+  height:56px !important;
+  object-fit:cover !important;
+  border-radius:12px !important;
+  border:1px solid rgba(32,242,210,.22) !important;
+}
+
+.chat-selected-file-v1025 > span,
+.chat-attachment-preview-v1025 > span{
+  width:48px !important;
+  height:48px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:12px !important;
+  background:rgba(32,242,210,.10) !important;
+}
+
+.chat-selected-file-v1025 strong,
+.chat-attachment-preview-v1025 strong{
+  display:block !important;
+  font-size:12px !important;
+  color:#f2fbff !important;
+}
+
+.chat-selected-file-v1025 small,
+.chat-attachment-preview-v1025 small{
+  color:#9fb8c8 !important;
+  font-weight:800 !important;
+}
+
+.chat-selected-file-v1025 > button{
+  margin-left:auto !important;
+  width:30px !important;
+  height:30px !important;
+  border-radius:10px !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  background:rgba(255,255,255,.07) !important;
+  color:#f2fbff !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+}
+
+.chat-attachment-preview-v1025{
+  margin-top:8px !important;
+}
+
+/* KONIEC WERSJI 1025 */
+
+
+/* ==========================================================================
+   WERSJA 1026 — LEPSZE DOPASOWANIE MENU 3 KROPEK W POSTACH
+   ========================================================================== */
+
+.pro-post-card-v1012,
+.pro-post-card-v1014{
+  position:relative !important;
+  overflow:visible !important;
+  isolation:isolate !important;
+}
+
+.feed-card-head-v5{
+  position:relative !important;
+  z-index:2 !important;
+}
+
+.post-menu-wrap-v1024{
+  position:relative !important;
+  z-index:60 !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:flex-start !important;
+  min-width:42px !important;
+  flex:0 0 42px !important;
+}
+
+.post-menu-trigger-v1024{
+  display:grid !important;
+  place-items:center !important;
+  line-height:1 !important;
+}
+
+.post-menu-v1024{
+  right:0 !important;
+  top:calc(100% + 8px) !important;
+  width:188px !important;
+  z-index:80 !important;
+  overflow:hidden !important;
+  animation:postMenuDropV1026 .14s ease-out !important;
+}
+
+.post-menu-v1024 button{
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  white-space:nowrap !important;
+}
+
+@keyframes postMenuDropV1026{
+  from{opacity:0;transform:translateY(-6px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* KONIEC WERSJI 1026 */
+
+
+/* ==========================================================================
+   WERSJA 1027 — STATUS ZA 24H WSZĘDZIE + POLECANI UŻYTKOWNICY FIX
+   ========================================================================== */
+
+.community-10-v1017 .suggested-list-v5{
+  display:grid !important;
+  gap:10px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020{
+  display:grid !important;
+  grid-template-columns:52px minmax(0,1fr) 112px !important;
+  align-items:center !important;
+  gap:11px !important;
+  min-height:76px !important;
+  padding:11px !important;
+  border-radius:18px !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  background:linear-gradient(180deg, rgba(6,25,42,.72), rgba(2,12,24,.88)) !important;
+  overflow:hidden !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5{
+  grid-column:1 !important;
+  width:52px !important;
+  height:52px !important;
+  min-width:52px !important;
+  max-width:52px !important;
+  border-radius:17px !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  overflow:hidden !important;
+  background:radial-gradient(circle at 30% 20%, #e8ffff, #20dff2 48%, #1b87ff) !important;
+  border:1px solid rgba(32,242,210,.36) !important;
+  color:#031321 !important;
+  font-size:13px !important;
+  font-weight:1000 !important;
+  box-shadow:0 0 18px rgba(32,242,210,.12) !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5 img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  display:block !important;
+}
+
+.community-10-v1017 .suggested-info-v1020{
+  grid-column:2 !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+  display:grid !important;
+  align-content:center !important;
+  gap:3px !important;
+}
+
+.community-10-v1017 .suggested-name-v1020{
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:14px !important;
+  line-height:1.15 !important;
+  color:#f2fbff !important;
+  text-decoration:none !important;
+}
+
+.community-10-v1017 .suggested-name-v1020:hover{
+  color:#20f2d2 !important;
+  text-decoration:underline !important;
+  text-underline-offset:3px !important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small{
+  display:block !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#91aec1 !important;
+  font-size:10.5px !important;
+  font-weight:900 !important;
+  letter-spacing:.02em !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020{
+  grid-column:3 !important;
+  width:112px !important;
+  min-width:112px !important;
+  max-width:112px !important;
+  height:38px !important;
+  border:0 !important;
+  border-radius:13px !important;
+  background:linear-gradient(135deg,#20f2d2,#2fd9ff,#7684ff) !important;
+  color:#031321 !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 24px rgba(32,242,210,.14) !important;
+  text-align:center !important;
+  padding:0 !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020.is-following{
+  color:#20f2d2 !important;
+  background:rgba(32,242,210,.08) !important;
+  border:1px solid rgba(32,242,210,.32) !important;
+  box-shadow:none !important;
+}
+
+.community-10-v1017 .locked-24h-v1027,
+.community-10-v1017 .daily-mission-claim-v1022:disabled,
+.community-10-v1017 .community-reward-row-v1008.is-claimed button{
+  font-weight:1000 !important;
+}
+
+.community-10-v1017 .mini-reward-row-v1017.is-claimed b,
+.community-10-v1017 .community-reward-row-v1008.is-claimed em{
+  color:#ffd76a !important;
+  text-shadow:0 0 18px rgba(255,215,106,.28) !important;
+}
+
+.community-10-v1017 .daily-mission-item-v1022.is-claimed .daily-mission-claim-v1022,
+.community-10-v1017 .community-reward-row-v1008.is-claimed button{
+  color:#9fb8c8 !important;
+  background:rgba(255,255,255,.055) !important;
+}
+
+/* KONIEC WERSJI 1027 */
