@@ -36977,3 +36977,259 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 990 */
+
+
+/* ==========================================================================
+   WERSJA 991 — CSS ONLY SAFE FIX: AVATAR + BIO + REAL STAT ICONS
+   NIE RUSZA JS/LOGIKI. TYLKO WYGLĄD.
+   ========================================================================== */
+
+/* 1) AVATAR — realny obraz z --avatar-image, bez przykrywania gradientem */
+.profile-v3-avatar.profile-v3-avatar-editable.has-avatar{
+  background-image: var(--avatar-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  color: transparent !important;
+}
+
+.profile-v3-avatar.profile-v3-avatar-editable.has-avatar::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  border-radius:inherit !important;
+  background: linear-gradient(135deg, rgba(0,229,255,.10), transparent 52%, rgba(32,242,210,.10)) !important;
+  z-index:1 !important;
+  pointer-events:none !important;
+}
+
+.profile-v3-avatar.profile-v3-avatar-editable.has-avatar::after{
+  content:"" !important;
+  position:absolute !important;
+  right:2px !important;
+  top:8px !important;
+  width:18px !important;
+  height:18px !important;
+  border-radius:50% !important;
+  background:#4bf967 !important;
+  box-shadow:0 0 0 4px rgba(75,249,103,.10), 0 0 18px rgba(75,249,103,.55) !important;
+  z-index:4 !important;
+}
+
+.profile-v3-avatar.profile-v3-avatar-editable > span{
+  position:absolute !important;
+  right:0 !important;
+  bottom:0 !important;
+  z-index:5 !important;
+  display:grid !important;
+  place-items:center !important;
+  width:28px !important;
+  height:28px !important;
+  border-radius:50% !important;
+  color:#00131b !important;
+  background:linear-gradient(135deg,#20f2d2,#2195ff) !important;
+  border:2px solid rgba(1,11,20,.95) !important;
+  box-shadow:0 0 16px rgba(0,229,255,.28) !important;
+}
+
+.profile-v3-avatar.profile-v3-avatar-editable:not(.has-avatar){
+  background:
+    radial-gradient(circle at 30% 20%, rgba(41,238,255,.96), rgba(24,157,255,.92) 62%, rgba(3,26,46,.95) 100%) !important;
+  color:#eaffff !important;
+}
+
+/* 2) OPIS PROFILU — jedna większa, czytelna ramka dla właściciela i obcych */
+.profile-v3-bio-click,
+.profile-v3-bio-readonly-v975{
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  width:min(680px, 100%) !important;
+  max-width:680px !important;
+  min-height:62px !important;
+  margin-top:14px !important;
+  margin-bottom:14px !important;
+  padding:13px 16px !important;
+  border-radius:17px !important;
+  border:1px solid rgba(0,229,255,.28) !important;
+  background:
+    linear-gradient(135deg, rgba(32,242,210,.20), rgba(33,149,255,.17) 58%, rgba(6,25,45,.62)) !important;
+  box-shadow:
+    0 18px 36px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 0 26px rgba(0,229,255,.08) !important;
+  color:#eaffff !important;
+  line-height:1.42 !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  text-align:left !important;
+}
+
+.profile-v3-bio-click span{
+  flex:0 0 auto !important;
+  color:#20f2d2 !important;
+  opacity:.9 !important;
+}
+
+.profile-v3-actions{
+  margin-top:12px !important;
+}
+
+/* 3) KAFELKI STATYSTYK — realne selektory i grafiki jak na dashboardzie */
+.profile-stats-cards-section{
+  border-color:rgba(0,229,255,.18) !important;
+  background:
+    radial-gradient(circle at 93% 0%, rgba(0,229,255,.13), transparent 30%),
+    linear-gradient(145deg, rgba(7, 27, 45, .86), rgba(2, 13, 24, .78)) !important;
+}
+
+.profile-stats-cards-grid{
+  grid-template-columns: repeat(10, minmax(116px, 1fr)) !important;
+  gap:12px !important;
+}
+
+.profile-stat-card{
+  position:relative !important;
+  isolation:isolate !important;
+  overflow:hidden !important;
+  min-height:104px !important;
+  padding:16px 58px 14px 15px !important;
+  border-radius:17px !important;
+  border:1px solid rgba(0,229,255,.24) !important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(0,229,255,.13), transparent 34%),
+    linear-gradient(145deg, rgba(7,31,50,.84), rgba(3,14,28,.82)) !important;
+  box-shadow:
+    0 14px 28px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+
+.profile-stat-card::before{
+  content:"" !important;
+  position:absolute !important;
+  right:-32px !important;
+  top:-36px !important;
+  width:118px !important;
+  height:118px !important;
+  border-radius:999px !important;
+  background:radial-gradient(circle, rgba(0,229,255,.20), rgba(0,229,255,.04) 46%, transparent 70%) !important;
+  filter:blur(.2px) !important;
+  opacity:.88 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+}
+
+.profile-stat-card::after{
+  position:absolute !important;
+  right:13px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:45px !important;
+  height:45px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:16px !important;
+  font-size:30px !important;
+  line-height:1 !important;
+  opacity:.54 !important;
+  z-index:1 !important;
+  pointer-events:none !important;
+  color:rgba(32,242,210,.92) !important;
+  text-shadow:0 0 14px rgba(0,229,255,.32), 0 0 30px rgba(0,229,255,.16) !important;
+  background:radial-gradient(circle, rgba(0,229,255,.10), transparent 68%) !important;
+  filter:none !important;
+  inset:auto !important;
+}
+
+.profile-stat-card small,
+.profile-stat-card strong,
+.profile-stat-card span{
+  position:relative !important;
+  z-index:2 !important;
+}
+
+.profile-stat-card small{
+  color:#a9c1d4 !important;
+  font-size:11px !important;
+  letter-spacing:.11em !important;
+}
+
+.profile-stat-card strong{
+  color:#f3feff !important;
+  font-size:20px !important;
+  text-shadow:0 0 16px rgba(0,229,255,.10) !important;
+}
+
+.profile-stat-card span{
+  color:#9fb8c9 !important;
+  font-size:11px !important;
+}
+
+/* kolorowe ramki/tła wg kolejności */
+.profile-stats-cards-grid .profile-stat-card:nth-child(1),
+.profile-stats-cards-grid .profile-stat-card:nth-child(2),
+.profile-stats-cards-grid .profile-stat-card:nth-child(4),
+.profile-stats-cards-grid .profile-stat-card:nth-child(10){
+  border-color:rgba(32,242,136,.45) !important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(32,242,136,.16), transparent 35%),
+    linear-gradient(145deg, rgba(7,55,36,.82), rgba(2,17,26,.80)) !important;
+}
+
+.profile-stats-cards-grid .profile-stat-card:nth-child(5){
+  border-color:rgba(255,71,120,.48) !important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(255,71,120,.14), transparent 35%),
+    linear-gradient(145deg, rgba(64,13,32,.80), rgba(3,15,29,.80)) !important;
+}
+
+.profile-stats-cards-grid .profile-stat-card:nth-child(6){
+  border-color:rgba(255,185,47,.52) !important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(255,185,47,.15), transparent 35%),
+    linear-gradient(145deg, rgba(75,48,10,.80), rgba(3,15,29,.80)) !important;
+}
+
+.profile-stats-cards-grid .profile-stat-card:nth-child(3),
+.profile-stats-cards-grid .profile-stat-card:nth-child(7),
+.profile-stats-cards-grid .profile-stat-card:nth-child(8),
+.profile-stats-cards-grid .profile-stat-card:nth-child(9){
+  border-color:rgba(24,231,255,.38) !important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(24,231,255,.14), transparent 35%),
+    linear-gradient(145deg, rgba(8,36,60,.84), rgba(3,15,29,.80)) !important;
+}
+
+/* konkretne grafiki w kafelkach */
+.profile-stats-cards-grid .profile-stat-card:nth-child(1)::after{content:"◔" !important;font-size:40px !important;color:#20f2d2 !important;opacity:.78 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(2)::after{content:"₿" !important;color:#20f288 !important;opacity:.52 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(3)::after{content:"↗" !important;font-size:38px !important;color:#18e7ff !important;opacity:.54 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(4)::after{content:"🏆" !important;font-size:29px !important;color:#20f288 !important;opacity:.50 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(5)::after{content:"☹" !important;font-size:34px !important;color:#ff4778 !important;opacity:.47 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(6)::after{content:"◷" !important;font-size:39px !important;color:#ffb92f !important;opacity:.58 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(7)::after{content:"◎" !important;font-size:40px !important;color:#18e7ff !important;opacity:.55 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(8)::after{content:"⌁" !important;font-size:42px !important;color:#5babff !important;opacity:.55 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(9)::after{content:"↗" !important;font-size:38px !important;color:#18e7ff !important;opacity:.58 !important;}
+.profile-stats-cards-grid .profile-stat-card:nth-child(10)::after{content:"♡" !important;font-size:42px !important;color:#20f288 !important;opacity:.62 !important;}
+
+/* węższe ekrany */
+@media (max-width: 1500px){
+  .profile-stats-cards-grid{
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1280px){
+  .profile-stat-card{
+    padding-right:48px !important;
+  }
+  .profile-stat-card::after{
+    right:8px !important;
+    width:38px !important;
+    height:38px !important;
+    font-size:25px !important;
+  }
+}
+
+/* KONIEC WERSJI 991 */
