@@ -35913,3 +35913,599 @@ button.betfolio-fetch-btn{
   color:#bdd0df;
   line-height:1.45;
 }
+
+
+/* ==========================================================================
+   WERSJA 988 — MÓJ PROFIL ULTRA PRO UI / GLASS DASHBOARD MATCH
+   TYLKO WYGLĄD. NIE RUSZA CORE LOCK v983, STATYSTYK, TYPÓW, OPINII ANI REALTIME.
+   ========================================================================== */
+
+:root{
+  --profile988-bg: #020b12;
+  --profile988-panel: rgba(5, 20, 35, .72);
+  --profile988-panel-2: rgba(7, 31, 50, .64);
+  --profile988-line: rgba(0, 238, 255, .18);
+  --profile988-line-strong: rgba(0, 238, 255, .38);
+  --profile988-cyan: #18e7ff;
+  --profile988-teal: #20f2d2;
+  --profile988-blue: #2686ff;
+  --profile988-green: #20f288;
+  --profile988-red: #ff4778;
+  --profile988-amber: #ffb92f;
+  --profile988-text: #eefcff;
+  --profile988-muted: #8faabe;
+  --profile988-shadow: 0 24px 70px rgba(0, 0, 0, .46), inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+/* Cała przestrzeń profilu — bardziej dashboardowa, głębsza i spójna */
+.profile-ultra-pro-v988,
+.profile-v3-shell,
+.profile-v4-shell,
+.profile-page,
+.profile-v3-page,
+.profile-v4-page{
+  --card-radius-v988: 24px;
+}
+
+.profile-v3-main,
+.profile-v4-main,
+.profile-page-main,
+.profile-v3-wrap,
+.profile-v4-wrap{
+  position: relative;
+}
+
+.profile-v3-main::before,
+.profile-v4-main::before,
+.profile-page-main::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 28% 6%, rgba(0,229,255,.10), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(38,134,255,.12), transparent 30%),
+    radial-gradient(circle at 44% 78%, rgba(32,242,210,.06), transparent 34%);
+  z-index: 0;
+}
+
+/* Uniwersalne szkło dla paneli profilu */
+.glass-profile-v3,
+.profile-v3-card,
+.profile-v4-page,
+.profile-v4-chart-card,
+.profile-v4-opinion-summary,
+.profile-v4-reviews-list,
+.profile-review-form-v985,
+.profile-pricing-locked-v955,
+.profile-v4-filter-row,
+.profile-v4-results-page > section,
+.profile-v4-stats-page > section,
+.profile-v4-history-page > section{
+  background:
+    linear-gradient(145deg, rgba(7, 27, 45, .86), rgba(2, 13, 24, .78)) !important;
+  border: 1px solid rgba(0, 229, 255, .16) !important;
+  box-shadow: var(--profile988-shadow) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-radius: var(--card-radius-v988) !important;
+  overflow: hidden;
+}
+
+.glass-profile-v3::before,
+.profile-v3-card::before,
+.profile-v4-page::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(110deg, rgba(255,255,255,.055), transparent 22%, transparent 70%, rgba(0,229,255,.035)),
+    radial-gradient(circle at 90% 0%, rgba(0,229,255,.16), transparent 36%);
+  opacity:.8;
+}
+
+/* Header profilu — hero jak dashboard premium */
+.profile-v3-hero,
+.profile-v4-hero,
+.profile-header-v3,
+.profile-header-v4,
+.profile-hero-card,
+.profile-main-hero{
+  position: relative;
+  border-radius: 28px !important;
+  border: 1px solid rgba(0, 229, 255, .22) !important;
+  background:
+    radial-gradient(circle at 82% 40%, rgba(0, 229, 255, .17), transparent 30%),
+    radial-gradient(circle at 18% 22%, rgba(32, 242, 210, .12), transparent 28%),
+    linear-gradient(135deg, rgba(6, 28, 46, .92), rgba(1, 12, 22, .90)) !important;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,255,255,.03) inset,
+    0 0 55px rgba(0, 229, 255, .08) !important;
+  overflow: hidden;
+}
+
+.profile-v3-hero::after,
+.profile-v4-hero::after,
+.profile-header-v3::after,
+.profile-header-v4::after,
+.profile-hero-card::after,
+.profile-main-hero::after{
+  content:"";
+  position:absolute;
+  right: 6%;
+  top: 8%;
+  width: 360px;
+  height: 220px;
+  pointer-events:none;
+  opacity:.42;
+  background:
+    radial-gradient(circle at 52% 38%, rgba(24,231,255,.38), transparent 18%),
+    radial-gradient(circle at 52% 68%, rgba(24,231,255,.18), transparent 24%),
+    linear-gradient(90deg, transparent, rgba(0,229,255,.08), transparent);
+  filter: blur(1px);
+}
+
+.profile-v3-hero h1,
+.profile-v4-hero h1,
+.profile-header-v3 h1,
+.profile-header-v4 h1,
+.profile-hero-card h1,
+.profile-main-hero h1{
+  color: var(--profile988-text) !important;
+  letter-spacing: -.04em;
+  text-shadow: 0 0 22px rgba(0,229,255,.18);
+}
+
+.profile-v3-hero p,
+.profile-v4-hero p,
+.profile-header-v3 p,
+.profile-header-v4 p,
+.profile-hero-card p{
+  color: #b9d3e2 !important;
+}
+
+/* Avatar premium glow */
+.profile-v3-avatar,
+.profile-v4-avatar,
+.profile-avatar-v3,
+.profile-avatar-v4,
+.profile-hero-avatar,
+.profile-avatar{
+  border: 1px solid rgba(32,242,210,.55) !important;
+  box-shadow:
+    0 0 0 7px rgba(0,229,255,.045),
+    0 0 34px rgba(0,229,255,.30),
+    inset 0 0 28px rgba(0,229,255,.10) !important;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.14), rgba(2,12,22,.86)) !important;
+}
+
+/* Przyciski w profilu */
+.profile-v3-hero button,
+.profile-v4-hero button,
+.profile-header-v3 button,
+.profile-header-v4 button,
+.profile-hero-card button,
+.profile-main-hero button,
+.profile-v3-card button,
+.profile-v4-page button{
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.profile-v3-hero button:hover,
+.profile-v4-hero button:hover,
+.profile-header-v3 button:hover,
+.profile-header-v4 button:hover,
+.profile-v3-card button:hover,
+.profile-v4-page button:hover{
+  transform: translateY(-1px);
+}
+
+/* Główne CTA */
+.profile-v3-hero button:first-of-type,
+.profile-v4-hero button:first-of-type,
+.profile-header-v3 button:first-of-type,
+.profile-header-v4 button:first-of-type,
+.profile-main-hero button:first-of-type{
+  background: linear-gradient(135deg, #20f2d2, #228cff) !important;
+  color: #00131b !important;
+  border: 0 !important;
+  box-shadow: 0 0 28px rgba(0,229,255,.28), inset 0 1px 0 rgba(255,255,255,.25) !important;
+  font-weight: 900 !important;
+}
+
+/* Badge/pille */
+.profile-v3-badges span,
+.profile-v4-badges span,
+.profile-badge,
+.profile-role-pill,
+.profile-plan-badge,
+.profile-status-badge{
+  border: 1px solid rgba(255,255,255,.12) !important;
+  background: rgba(4, 17, 31, .72) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 0 16px rgba(0,229,255,.05);
+  border-radius: 999px !important;
+}
+
+/* Sekcja statystyk */
+.profile-v3-stats,
+.profile-v4-stats,
+.profile-stats-grid,
+.profile-stats-row{
+  gap: 14px !important;
+}
+
+.profile-v3-stat-card,
+.profile-v4-stat-card,
+.profile-stat-card,
+.profile-stats-grid > *,
+.profile-stats-row > *,
+.profile-v3-stat,
+.profile-v4-stat{
+  position: relative;
+  min-height: 92px;
+  border-radius: 18px !important;
+  border: 1px solid rgba(0, 229, 255, .18) !important;
+  background:
+    radial-gradient(circle at 84% 22%, rgba(0,229,255,.12), transparent 38%),
+    linear-gradient(145deg, rgba(7, 31, 50, .86), rgba(3, 14, 28, .78)) !important;
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+  overflow: hidden;
+}
+
+.profile-v3-stat-card::after,
+.profile-v4-stat-card::after,
+.profile-stat-card::after,
+.profile-stats-grid > *::after,
+.profile-stats-row > *::after{
+  content:"";
+  position:absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(0,229,255,.18), transparent 68%);
+  opacity:.9;
+}
+
+.profile-v3-stat-card strong,
+.profile-v4-stat-card strong,
+.profile-stat-card strong,
+.profile-stats-grid strong,
+.profile-stats-row strong,
+.profile-v3-stat-card b,
+.profile-v4-stat-card b,
+.profile-stat-card b{
+  color: #f4feff !important;
+  letter-spacing: -.02em;
+  text-shadow: 0 0 16px rgba(0,229,255,.10);
+}
+
+.profile-v3-stat-card small,
+.profile-v4-stat-card small,
+.profile-stat-card small,
+.profile-v3-stat-card span,
+.profile-v4-stat-card span,
+.profile-stat-card span{
+  color: #9eb9ca !important;
+}
+
+/* Semantyczne kolory — bez zmiany logiki */
+.profile-v3-stat-card.success,
+.profile-v4-stat-card.success,
+.profile-stat-card.success,
+.profile-stats-grid .success{
+  border-color: rgba(32,242,136,.28) !important;
+  background: linear-gradient(145deg, rgba(7, 55, 36, .82), rgba(2, 17, 26, .78)) !important;
+}
+
+.profile-v3-stat-card.danger,
+.profile-v4-stat-card.danger,
+.profile-stat-card.danger,
+.profile-stats-grid .danger{
+  border-color: rgba(255,71,120,.28) !important;
+  background: linear-gradient(145deg, rgba(65, 13, 32, .78), rgba(2, 17, 28, .78)) !important;
+}
+
+.profile-v3-stat-card.warning,
+.profile-v4-stat-card.warning,
+.profile-stat-card.warning,
+.profile-stats-grid .warning{
+  border-color: rgba(255,185,47,.34) !important;
+  background: linear-gradient(145deg, rgba(75, 48, 10, .78), rgba(2, 17, 28, .78)) !important;
+}
+
+/* Tabbar — ultra pro glass pills */
+.profile-v3-tabs,
+.profile-v4-tabs,
+.profile-tabs,
+.profile-tab-bar,
+.profile-tabs-row{
+  position: relative;
+  padding: 14px !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(0,229,255,.16) !important;
+  background:
+    linear-gradient(145deg, rgba(8, 30, 51, .78), rgba(2, 13, 25, .84)) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04) !important;
+  gap: 12px !important;
+}
+
+.profile-v3-tabs button,
+.profile-v4-tabs button,
+.profile-tabs button,
+.profile-tab-bar button,
+.profile-tabs-row button{
+  min-height: 48px;
+  padding: 0 22px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(130, 190, 220, .15) !important;
+  color: #c7dceb !important;
+  background:
+    linear-gradient(180deg, rgba(17, 45, 73, .66), rgba(4, 16, 31, .72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 10px 22px rgba(0,0,0,.24) !important;
+  font-weight: 900 !important;
+}
+
+.profile-v3-tabs button.active,
+.profile-v4-tabs button.active,
+.profile-tabs button.active,
+.profile-tab-bar button.active,
+.profile-tabs-row button.active{
+  color: #00131b !important;
+  background: linear-gradient(135deg, #20f2d2, #2195ff 58%, #6c7cff) !important;
+  border-color: rgba(0,229,255,.70) !important;
+  box-shadow:
+    0 0 28px rgba(0,229,255,.35),
+    0 0 0 1px rgba(255,255,255,.16) inset !important;
+}
+
+/* Filtry typów */
+.profile-v4-filter-row,
+.profile-v4-filter-row-paid-access{
+  padding: 14px !important;
+  gap: 12px !important;
+}
+
+.filter-pill-v872{
+  min-height: 48px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, rgba(17,45,73,.72), rgba(4,16,31,.78)) !important;
+  border: 1px solid rgba(0,229,255,.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 22px rgba(0,0,0,.24) !important;
+}
+
+.filter-pill-v872.active{
+  background: linear-gradient(135deg, #20f2d2, #2195ff) !important;
+  color: #00131b !important;
+  box-shadow: 0 0 28px rgba(0,229,255,.32) !important;
+}
+
+/* Karty typów w profilu */
+.profile-all-tips-list{
+  gap: 18px !important;
+}
+
+.profile-live-tip-card,
+.profile-tip-card,
+.tip-card,
+.profile-all-tips-list > article,
+.profile-all-tips-list > div{
+  border-radius: 22px !important;
+  border: 1px solid rgba(0,229,255,.15) !important;
+  background:
+    linear-gradient(145deg, rgba(5, 22, 40, .88), rgba(2, 12, 24, .80)) !important;
+  box-shadow: 0 20px 44px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+/* Wyniki/statystyki: wykresy i tabele */
+.profile-v4-chart-card,
+.profile-results-chart,
+.profile-stats-chart,
+.profile-v4-results-page svg,
+.profile-v4-stats-page svg{
+  filter: drop-shadow(0 0 18px rgba(0,229,255,.12));
+}
+
+.profile-v4-stats-page table,
+.profile-v4-results-page table,
+.profile-stat-table,
+.profile-results-table{
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden;
+  border-radius: 18px !important;
+  border: 1px solid rgba(0,229,255,.12) !important;
+  background: rgba(2, 12, 24, .52) !important;
+}
+
+.profile-v4-stats-page th,
+.profile-v4-results-page th,
+.profile-stat-table th,
+.profile-results-table th{
+  background: rgba(12, 38, 60, .76) !important;
+  color: #eafdff !important;
+  font-weight: 900 !important;
+  letter-spacing: .01em;
+}
+
+.profile-v4-stats-page td,
+.profile-v4-results-page td,
+.profile-stat-table td,
+.profile-results-table td{
+  border-top: 1px solid rgba(255,255,255,.055) !important;
+  color: #b9d0df !important;
+}
+
+.profile-v4-stats-page tr:hover td,
+.profile-v4-results-page tr:hover td{
+  background: rgba(0,229,255,.045) !important;
+}
+
+/* Historia */
+.profile-v4-history-page article,
+.profile-history-item,
+.history-event{
+  border-radius: 18px !important;
+  border: 1px solid rgba(0,229,255,.13) !important;
+  background: linear-gradient(145deg, rgba(7, 30, 49, .72), rgba(3, 13, 24, .72)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+/* Opinie — dopasowanie do dashboardu */
+.profile-reviews-v985,
+.profile-v4-opinions-page{
+  gap: 18px !important;
+}
+
+.profile-v4-opinion-summary{
+  display: grid;
+  gap: 18px;
+}
+
+.profile-v4-rating-bars label{
+  min-height: 32px;
+}
+
+.profile-v4-rating-bars i{
+  height: 9px !important;
+  border-radius: 999px !important;
+  background: rgba(148, 181, 205, .12) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.profile-v4-rating-bars i b{
+  background: linear-gradient(90deg, #20f2d2, #2195ff) !important;
+  box-shadow: 0 0 16px rgba(0,229,255,.24);
+}
+
+.profile-review-form-v985 textarea{
+  background:
+    linear-gradient(145deg, rgba(2, 13, 25, .82), rgba(4, 18, 34, .72)) !important;
+  border: 1px solid rgba(0,229,255,.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), inset 0 0 22px rgba(0,229,255,.035) !important;
+}
+
+.profile-reviews-list-v985 article{
+  border: 1px solid rgba(0,229,255,.14) !important;
+  background: linear-gradient(145deg, rgba(7, 28, 45, .80), rgba(3, 14, 26, .80)) !important;
+}
+
+/* Cennik subskrypcji */
+.profile-pricing-locked-v955,
+.tipster-pricing-settings,
+.profile-pricing-card,
+.profile-pricing-grid > *{
+  border-radius: 22px !important;
+  border: 1px solid rgba(0,229,255,.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0,229,255,.10), transparent 36%),
+    linear-gradient(145deg, rgba(7, 30, 49, .82), rgba(3, 13, 25, .82)) !important;
+  box-shadow: var(--profile988-shadow) !important;
+}
+
+/* Puste stany — wygląd intencjonalny */
+.profile-live-tip-empty,
+.profile-empty-state,
+.profile-empty,
+.profile-no-data{
+  border-radius: 20px !important;
+  border: 1px dashed rgba(0,229,255,.18) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0,229,255,.08), transparent 42%),
+    rgba(2, 13, 25, .48) !important;
+  color: #a9c1d2 !important;
+  padding: 30px !important;
+}
+
+/* Prawa kolumna profilu / side cards jeśli widoczne */
+.profile-v3-sidebar .side-card-v3,
+.profile-v4-shared-sidebar .side-card-v3,
+.side-card-v3{
+  border-radius: 22px !important;
+  border: 1px solid rgba(0,229,255,.16) !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(0,229,255,.12), transparent 34%),
+    linear-gradient(145deg, rgba(7, 30, 49, .82), rgba(3, 13, 25, .82)) !important;
+  box-shadow: 0 20px 48px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.side-card-head-v3 h3{
+  color: #f0fdff !important;
+}
+
+.side-card-head-v3 span,
+.key-list-v3 span,
+.community-v3 span{
+  color: #8faabe !important;
+}
+
+.key-list-v3 b,
+.community-v3 b{
+  color: #f4feff !important;
+}
+
+/* Subtelne scrollbars w profilu */
+.profile-v3-main ::-webkit-scrollbar,
+.profile-v4-main ::-webkit-scrollbar,
+.profile-page-main ::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+
+.profile-v3-main ::-webkit-scrollbar-thumb,
+.profile-v4-main ::-webkit-scrollbar-thumb,
+.profile-page-main ::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, rgba(32,242,210,.75), rgba(33,149,255,.55));
+  border-radius: 999px;
+}
+
+.profile-v3-main ::-webkit-scrollbar-track,
+.profile-v4-main ::-webkit-scrollbar-track,
+.profile-page-main ::-webkit-scrollbar-track{
+  background: rgba(255,255,255,.035);
+}
+
+/* Responsywność */
+@media (max-width: 1100px){
+  .profile-v3-tabs,
+  .profile-v4-tabs,
+  .profile-tabs,
+  .profile-tab-bar,
+  .profile-tabs-row{
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+  }
+
+  .profile-v3-tabs button,
+  .profile-v4-tabs button,
+  .profile-tabs button,
+  .profile-tab-bar button,
+  .profile-tabs-row button{
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 780px){
+  .profile-v3-hero,
+  .profile-v4-hero,
+  .profile-header-v3,
+  .profile-header-v4,
+  .profile-hero-card,
+  .profile-main-hero{
+    border-radius: 22px !important;
+  }
+
+  .profile-v3-stat-card,
+  .profile-v4-stat-card,
+  .profile-stat-card{
+    min-height: 84px;
+  }
+}
