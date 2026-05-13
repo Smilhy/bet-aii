@@ -8679,9 +8679,22 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   const userEmail = normalizeEmail(user?.email || '')
-  const userName = user?.user_metadata?.username || user?.user_metadata?.name || user?.username || nameFromEmail(userEmail) || 'Użytkownik'
+  const userName = user?.user_metadata?.username || user?.user_metadata?.name || user?.username || communityNameFromEmail(userEmail) || 'Użytkownik'
   const userAvatar = getProfileAvatarUrl(user)
   const userInitials = String(userName || userEmail || 'U').slice(0, 2).toUpperCase()
+
+  const communityNameFromEmail = (value = '') => {
+    const raw = String(value || '').trim()
+    if (!raw) return 'Użytkownik'
+    if (!raw.includes('@')) return raw
+    const local = raw.split('@')[0] || 'Użytkownik'
+    return local
+      .replace(/[._-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, ch => ch.toUpperCase()) || 'Użytkownik'
+  }
+
 
   const channelDefs = [
     { key: 'ogolny', label: 'ogólny', icon: '#' },
@@ -8698,13 +8711,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const openCommunityProfile = (item = {}) => {
     const ref = item.author_id || item.id || item.user_id || item.email || item.author_email || item.username || item.author_name
-    const name = item.author_name || item.username || item.name || nameFromEmail(item.email || item.author_email)
+    const name = item.author_name || item.username || item.name || communityNameFromEmail(item.email || item.author_email)
     onOpenTipster?.(ref, name)
   }
 
   const toggleCommunityFollow = (item = {}) => {
     const ref = item.id || item.user_id || item.author_id || item.email || item.author_email || item.username || item.author_name
-    const name = item.username || item.author_name || item.name || nameFromEmail(item.email || item.author_email)
+    const name = item.username || item.author_name || item.name || communityNameFromEmail(item.email || item.author_email)
     onFollowTipster?.(ref, name)
   }
 
@@ -8717,7 +8730,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       item.author_email,
       item.username,
       item.author_name,
-      nameFromEmail(item.email || item.author_email || '')
+      communityNameFromEmail(item.email || item.author_email || '')
     ].map(value => normalizeEmail(value || '')).filter(Boolean)
     return keys.some(key => followingTipsters?.has?.(key))
   }
@@ -9009,7 +9022,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const renderPostCard = (post) => {
     const postComments = commentsByPost[post.id] || []
     const avatar = post.avatar_url || post.profile_avatar_url
-    const author = post.author_name || post.username || nameFromEmail(post.author_email)
+    const author = post.author_name || post.username || communityNameFromEmail(post.author_email)
     return (
       <article className="glass-community-v5 feed-card-v5 pro-post-card-v1012 pro-post-card-v1014" key={post.id}>
         <div className="feed-card-head-v5">
@@ -9030,7 +9043,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           <div className="community-comments-v1008">
             {postComments.length ? postComments.map(comment => {
               const cAvatar = comment.avatar_url || comment.profile_avatar_url
-              const cName = comment.author_name || comment.username || nameFromEmail(comment.author_email)
+              const cName = comment.author_name || comment.username || communityNameFromEmail(comment.author_email)
               return (
                 <div className="reply-preview-v5" key={comment.id}>
                   <span className={`reply-avatar-v5 ${cAvatar ? 'has-avatar' : ''}`}>{cAvatar ? <img src={cAvatar} alt="" /> : String(cName || 'U').slice(0,2).toUpperCase()}</span>
@@ -9066,7 +9079,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           <div className="community-v5-avatars">
             {onlineUsers.slice(0, 7).map((item, index) => {
               const avatar = getProfileAvatarUrl(item)
-              const name = item.username || nameFromEmail(item.email)
+              const name = item.username || communityNameFromEmail(item.email)
               return <button type="button" className={avatar ? 'has-avatar' : ''} key={item.id || index} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
             })}
             {activeUsersCount > 7 ? <em>+{activeUsersCount - 7}</em> : <em>+1</em>}
@@ -9143,7 +9156,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url
-                    const author = row.author_name || row.username || nameFromEmail(row.author_email)
+                    const author = row.author_name || row.username || communityNameFromEmail(row.author_email)
                     const initials = String(author || 'U').slice(0, 2).toUpperCase()
                     return (
                       <div className="pro-chat-message-v1012" key={row.id}>
@@ -9193,7 +9206,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || nameFromEmail(item.email)}</button><small>{Number(item.posts_count || 0)} postów • {Number(item.comments_count || 0)} kom.</small></div>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small>{Number(item.posts_count || 0)} postów • {Number(item.comments_count || 0)} kom.</small></div>
                   <b>{Number(item.community_points || 0)} Coin</b>
                 </div>
               ))}
@@ -9207,7 +9220,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
-                const name = item.username || nameFromEmail(item.email)
+                const name = item.username || communityNameFromEmail(item.email)
                 return (
                   <div className="suggested-row-v5" key={item.id || index}>
                     <span className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</span>
@@ -9247,7 +9260,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             {communityRanking.slice(0, 5).map((item, index) => (
               <div className="community-rank-row-v5" key={item.user_id || item.email || index}>
                 <span className={`mini-place-v5 p${index + 1}`}>{index + 1}</span>
-                <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || nameFromEmail(item.email)}</button></div>
+                <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button></div>
                 <b>{Number(item.community_points || 0)} Coin</b>
               </div>
             ))}
