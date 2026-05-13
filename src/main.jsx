@@ -17560,27 +17560,52 @@ function App() {
   async function fetchCurrentTokenBalance() {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!email) return 0
+
+    const getRewardLock = () => {
+      try {
+        const raw = localStorage.getItem('betai_reward_balance_lock_' + email)
+        const lock = raw ? JSON.parse(raw) : null
+        if (lock && Number(lock.until || 0) > Date.now()) return lock
+      } catch (_) {}
+      return null
+    }
+
+    const applyTokenBalance = (candidateBalance, source = 'remote') => {
+      const cleanCandidate = Math.max(0, Number(candidateBalance || 0) || 0)
+      const localBalance = (() => {
+        try { return Math.max(0, Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0) } catch (_) { return 0 }
+      })()
+      const lock = getRewardLock()
+      const lockedBalance = Math.max(0, Number(lock?.balance || 0) || 0)
+
+      // Po odebraniu wyzwania nie pozwalamy staremu refreshowi cofnąć Coin.
+      const finalBalance = lock
+        ? Math.max(cleanCandidate, localBalance, lockedBalance, Number(tokenBalance || 0) || 0)
+        : Math.max(cleanCandidate, localBalance)
+
+      setTokenBalance(finalBalance)
+      try { localStorage.setItem('betai_tokens_' + email, String(finalBalance)) } catch (_) {}
+      return finalBalance
+    }
+
     try {
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase
           .from('betai_token_wallets')
-          .select('balance')
+          .select('balance,updated_at')
           .eq('email', email)
           .maybeSingle()
         if (!error && data) {
-          const nextBalance = Number(data.balance || 0) || 0
-          setTokenBalance(nextBalance)
-          try { localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
-          return nextBalance
+          return applyTokenBalance(Number(data.balance || 0) || 0, 'remote')
         }
       }
     } catch (error) {
       console.warn('token balance realtime refresh skipped', error)
     }
+
     try {
       const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-      setTokenBalance(localTokens)
-      return localTokens
+      return applyTokenBalance(localTokens, 'local')
     } catch (_) {
       return 0
     }
@@ -17592,6 +17617,7 @@ function App() {
     const sentBy = String(row.sender_username || row.from_username || row.sent_by || '').trim()
     const match = body.match(/^(.+?)\s+wysłał\s+Ci/i) || body.match(/^(.+?)\s+wyslal\s+Ci/i)
     if (match?.[1]) return match[1].trim()
+    if (title.toLowerCase().includes('wyzwanie')) return 'Bet+AI Wyzwania'
     if (sentBy && sentBy.toLowerCase() !== 'betai') return sentBy
     const titleMatch = title.match(/od\s+(.+)$/i)
     if (titleMatch?.[1]) return titleMatch[1].trim()
@@ -17601,8 +17627,9 @@ function App() {
   function isTipNotification(row = {}) {
     const title = String(row.title || '').toLowerCase()
     const body = String(row.body || row.message || '').toLowerCase()
-    const reward = Number(row.reward_tokens || 0) || 0
-    return reward > 0 && (title.includes('tip') || body.includes('wysłał ci') || body.includes('wyslal ci') || body.includes('żeton') || body.includes('zeton'))
+    const reward = Number(row.reward_tokens || row.delta_tokens || 0) || 0
+    const isRewardMessage = title.includes('wyzwanie') || body.includes('otrzymujesz 1 żeton') || body.includes('otrzymujesz 1 zeton') || body.includes('ranking_challenge')
+    return (reward > 0 || isRewardMessage) && (title.includes('tip') || title.includes('wyzwanie') || body.includes('wysłał ci') || body.includes('wyslal ci') || body.includes('żeton') || body.includes('zeton'))
   }
 
   function showReceivedTipFromNotification(row = {}, silent = false) {
@@ -18535,15 +18562,33 @@ function App() {
         }
         const nextBalance = Number(data?.new_balance ?? data?.balance ?? (Number(tokenBalance || 0) + 1)) || 0
         setTokenBalance(nextBalance)
-        try { localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+        try {
+          localStorage.setItem('betai_tokens_' + email, String(nextBalance))
+          localStorage.setItem('betai_reward_balance_lock_' + email, JSON.stringify({ balance: nextBalance, until: Date.now() + 45000, reason: challenge.key }))
+        } catch (_) {}
       } else {
         const next = Number(tokenBalance || 0) + 1
         setTokenBalance(next)
         localStorage.setItem('betai_tokens_' + email, String(next))
+        localStorage.setItem('betai_reward_balance_lock_' + email, JSON.stringify({ balance: next, until: Date.now() + 45000, reason: challenge.key }))
       }
       try { localStorage.setItem(`betai_${rewardKey}_${userId}`, '1') } catch (_) {}
+
+      const localRewardNotification = {
+        id: `ranking_reward_${rewardKey}`,
+        title: 'Wyzwanie ukończone',
+        body: `${challenge.title}: otrzymujesz 1 żeton.`,
+        message: `${challenge.title}: otrzymujesz 1 żeton.`,
+        reward_tokens: 1,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        source: 'ranking'
+      }
+      setNotifications(prev => [localRewardNotification, ...(prev || []).filter(item => String(item.id) !== String(localRewardNotification.id))])
+      try { showReceivedTipFromNotification(localRewardNotification, false) } catch (_) {}
+
       await fetchNotifications(userId)
-      // Nie nadpisujemy od razu świeżo dodanego salda starym cache/RLS fallbackiem.
+      // Opóźniony refresh nie może cofnąć salda, bo fetchCurrentTokenBalance respektuje reward lock.
       window.setTimeout(() => { try { fetchCurrentTokenBalance() } catch (_) {} }, 1200)
       showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
       return true
