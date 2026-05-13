@@ -1,0 +1,14 @@
+WERSJA 1011 — NAGRODY RANKINGOWE ZAPISANE W BAZIE + RESET PONIEDZIAŁEK 01:00
+
+Naprawione:
+- przyciski Odebrano nie resetują się po deployu nowej paczki,
+- aplikacja czyta betai_ranking_challenge_claims z Supabase,
+- jeśli nagroda była odebrana w tym tygodniu, zostaje Odebrano,
+- Coin zostaje zapisany w betai_token_wallets,
+- transakcja zostaje w historii portfela,
+- reset nowych nagród jest co tydzień w poniedziałek o 01:00,
+- każda nagroda rankingowa nadal daje 1 żeton.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1011_weekly_reward_claims_monday_1am_lock.sql
+2. Wgraj paczkę 1011 na Netlify.

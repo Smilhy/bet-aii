@@ -17767,6 +17767,7 @@ function App() {
   const mailButtonRef = useRef(null)
   const [tokenBalance, setTokenBalance] = useState(0)
   const [realRanking, setRealRanking] = useState([])
+  const [rankingChallengeClaims, setRankingChallengeClaims] = useState([])
   const [referralData, setReferralData] = useState({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
   const [referralLoading, setReferralLoading] = useState(false)
   const [aiLiveGenerating, setAiLiveGenerating] = useState(false)
@@ -18784,6 +18785,29 @@ function App() {
     showToast({ type: 'success', title: 'Follow', message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera.' })
   }
 
+  useEffect(() => {
+    if (sessionUser?.id) fetchRankingChallengeClaims(sessionUser.id)
+  }, [sessionUser?.id])
+
+  async function fetchRankingChallengeClaims(userId = sessionUser?.id) {
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      setRankingChallengeClaims([])
+      return []
+    }
+    try {
+      const { data, error } = await supabase
+        .from('betai_ranking_challenge_claims')
+        .select('challenge_key,period_key,created_at,reward_tokens')
+        .eq('user_id', userId)
+      if (error) throw error
+      setRankingChallengeClaims(Array.isArray(data) ? data : [])
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      console.warn('ranking challenge claims skipped', error)
+      return []
+    }
+  }
+
   async function claimRankingChallengeReward(challenge) {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     const userId = sessionUser?.id
@@ -18796,15 +18820,23 @@ function App() {
       return
     }
 
-    const period = new Date().toISOString().slice(0, 10)
+    const getRankingRewardPeriodKey = () => {
+      const shifted = new Date(Date.now() - 60 * 60 * 1000)
+      const day = shifted.getUTCDay() || 7
+      shifted.setUTCDate(shifted.getUTCDate() + 4 - day)
+      const yearStart = new Date(Date.UTC(shifted.getUTCFullYear(), 0, 1))
+      const week = Math.ceil((((shifted - yearStart) / 86400000) + 1) / 7)
+      return `${shifted.getUTCFullYear()}-${String(week).padStart(2, '0')}`
+    }
+    const period = getRankingRewardPeriodKey()
     const rewardKey = `ranking_challenge_${challenge.key}_${period}`
-    try {
-      const localClaimed = localStorage.getItem(`betai_${rewardKey}_${userId}`)
-      if (localClaimed) {
-        showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie została już odebrana.' })
-        return
-      }
-    } catch (_) {}
+    const alreadyClaimedInDb = (rankingChallengeClaims || []).some(row =>
+      String(row.challenge_key) === String(challenge.key) && String(row.period_key) === String(period)
+    )
+    if (alreadyClaimedInDb) {
+      showToast({ type: 'info', title: 'Wyzwania', message: 'Nagroda za to wyzwanie została już odebrana w tym tygodniu.' })
+      return true
+    }
 
     try {
       if (isSupabaseConfigured && supabase) {
@@ -18847,6 +18879,7 @@ function App() {
       } catch (_) {}
 
       await fetchNotifications(userId)
+      await fetchRankingChallengeClaims(userId)
       // Opóźniony refresh nie może cofnąć salda, bo fetchCurrentTokenBalance respektuje reward lock.
       window.setTimeout(() => { try { fetchCurrentTokenBalance() } catch (_) {} }, 1200)
       showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
@@ -20383,6 +20416,7 @@ function App() {
             referralData={referralData}
             onRefreshRanking={fetchRealRanking}
             onChallengeReward={claimRankingChallengeReward}
+            userChallengeClaims={rankingChallengeClaims}
           />
         )}
 
