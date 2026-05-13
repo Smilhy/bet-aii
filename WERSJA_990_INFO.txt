@@ -1,0 +1,28 @@
+WERSJA 990 — IKONY/GRAFIKI W KAFELKACH STATYSTYK
+
+Dodane:
+- dekoracyjne ikonki/grafiki w kafelkach statystyk:
+  Yield: ring/progress
+  Profit: moneta
+  Typy: trend
+  Wygrane: puchar
+  Przegrane: ikona minus/strata
+  Pending: zegar
+  Stawki: żeton
+  Śr. kurs: wykres
+  Max kurs: trend up
+  Napiwki: serce
+
+To jest CSS-only:
+- src/styles.css
+- supabase/version_990_stat_cards_icons_ui_only.sql informacyjny no-op
+
+Nie ruszone:
+- logika profili,
+- typy,
+- statystyki,
+- ranking,
+- opinie,
+- napiwki,
+- realtime,
+- CORE LOCK v983.

@@ -36718,3 +36718,262 @@ button.betfolio-fetch-btn{
   color: inherit !important;
   background: transparent !important;
 }
+
+/* ==========================================================================
+   WERSJA 990 — IKONY / GRAFIKI W KAFELKACH STATYSTYK
+   UI ONLY. NIE RUSZA LOGIKI / CORE LOCK / STATYSTYK / REALTIME.
+   ========================================================================== */
+
+/*
+  Cel:
+  - kafelki statystyk mają wyglądać jak dashboard premium,
+  - dodajemy dekoracyjne ikony po prawej stronie kafelków,
+  - wszystko CSS-only, bez zmiany danych i bez zmiany obliczeń.
+*/
+
+.profile-stats-grid > *,
+.profile-stats-row > *,
+.profile-v3-stats > *,
+.profile-v4-stats > *,
+.profile-v3-stat-card,
+.profile-v4-stat-card,
+.profile-stat-card{
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+/* neonowy refleks tła */
+.profile-stats-grid > *::before,
+.profile-stats-row > *::before,
+.profile-v3-stats > *::before,
+.profile-v4-stats > *::before,
+.profile-v3-stat-card::before,
+.profile-v4-stat-card::before,
+.profile-stat-card::before{
+  content:"";
+  position:absolute;
+  inset:-40% -20% auto auto;
+  width:120px;
+  height:120px;
+  border-radius:999px;
+  background:
+    radial-gradient(circle, rgba(24,231,255,.20), rgba(24,231,255,.05) 42%, transparent 70%);
+  filter: blur(.5px);
+  opacity:.70;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* główna ikona / grafika w kaflu */
+.profile-stats-grid > *::after,
+.profile-stats-row > *::after,
+.profile-v3-stats > *::after,
+.profile-v4-stats > *::after,
+.profile-v3-stat-card::after,
+.profile-v4-stat-card::after,
+.profile-stat-card::after{
+  position:absolute !important;
+  right:16px !important;
+  top:50% !important;
+  transform: translateY(-50%) !important;
+  width:54px !important;
+  height:54px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:18px !important;
+  font-size:31px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  opacity:.42 !important;
+  pointer-events:none !important;
+  z-index:1 !important;
+  color:rgba(32,242,210,.90) !important;
+  text-shadow:
+    0 0 14px rgba(32,242,210,.35),
+    0 0 34px rgba(0,229,255,.18) !important;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0,229,255,.12), transparent 64%) !important;
+  box-shadow:
+    inset 0 0 18px rgba(0,229,255,.06),
+    0 0 18px rgba(0,229,255,.08) !important;
+}
+
+/* tekst nad dekoracją */
+.profile-stats-grid > * > *,
+.profile-stats-row > * > *,
+.profile-v3-stats > * > *,
+.profile-v4-stats > * > *,
+.profile-v3-stat-card > *,
+.profile-v4-stat-card > *,
+.profile-stat-card > *{
+  position:relative;
+  z-index:2;
+}
+
+/* zostaw miejsce na ikonę po prawej */
+.profile-stats-grid > *,
+.profile-stats-row > *,
+.profile-v3-stats > *,
+.profile-v4-stats > *,
+.profile-v3-stat-card,
+.profile-v4-stat-card,
+.profile-stat-card{
+  padding-right:72px !important;
+}
+
+/* 1. Yield — ring/progress */
+.profile-stats-grid > *:nth-child(1)::after,
+.profile-stats-row > *:nth-child(1)::after,
+.profile-v3-stats > *:nth-child(1)::after,
+.profile-v4-stats > *:nth-child(1)::after{
+  content:"◔";
+  color:rgba(32,242,210,.95) !important;
+  opacity:.72 !important;
+  font-size:42px !important;
+}
+
+/* 2. Profit — monety + trend */
+.profile-stats-grid > *:nth-child(2)::after,
+.profile-stats-row > *:nth-child(2)::after,
+.profile-v3-stats > *:nth-child(2)::after,
+.profile-v4-stats > *:nth-child(2)::after{
+  content:"₿";
+  color:rgba(32,242,136,.92) !important;
+  opacity:.48 !important;
+}
+
+/* 3. Typy — trend line */
+.profile-stats-grid > *:nth-child(3)::after,
+.profile-stats-row > *:nth-child(3)::after,
+.profile-v3-stats > *:nth-child(3)::after,
+.profile-v4-stats > *:nth-child(3)::after{
+  content:"↗";
+  color:rgba(24,231,255,.90) !important;
+  opacity:.48 !important;
+  font-size:42px !important;
+}
+
+/* 4. Wygrane — puchar */
+.profile-stats-grid > *:nth-child(4)::after,
+.profile-stats-row > *:nth-child(4)::after,
+.profile-v3-stats > *:nth-child(4)::after,
+.profile-v4-stats > *:nth-child(4)::after{
+  content:"🏆";
+  color:rgba(32,242,136,.95) !important;
+  opacity:.46 !important;
+  font-size:34px !important;
+}
+
+/* 5. Przegrane — tarcza / X */
+.profile-stats-grid > *:nth-child(5)::after,
+.profile-stats-row > *:nth-child(5)::after,
+.profile-v3-stats > *:nth-child(5)::after,
+.profile-v4-stats > *:nth-child(5)::after{
+  content:"☹";
+  color:rgba(255,71,120,.92) !important;
+  opacity:.42 !important;
+  font-size:38px !important;
+}
+
+/* 6. Pending — zegar */
+.profile-stats-grid > *:nth-child(6)::after,
+.profile-stats-row > *:nth-child(6)::after,
+.profile-v3-stats > *:nth-child(6)::after,
+.profile-v4-stats > *:nth-child(6)::after{
+  content:"◷";
+  color:rgba(255,185,47,.95) !important;
+  opacity:.52 !important;
+  font-size:42px !important;
+}
+
+/* 7. Stawki — żetony/monety */
+.profile-stats-grid > *:nth-child(7)::after,
+.profile-stats-row > *:nth-child(7)::after,
+.profile-v3-stats > *:nth-child(7)::after,
+.profile-v4-stats > *:nth-child(7)::after{
+  content:"◎";
+  color:rgba(24,231,255,.92) !important;
+  opacity:.52 !important;
+  font-size:42px !important;
+}
+
+/* 8. Śr. kurs — wykres */
+.profile-stats-grid > *:nth-child(8)::after,
+.profile-stats-row > *:nth-child(8)::after,
+.profile-v3-stats > *:nth-child(8)::after,
+.profile-v4-stats > *:nth-child(8)::after{
+  content:"⌁";
+  color:rgba(91,171,255,.94) !important;
+  opacity:.50 !important;
+  font-size:44px !important;
+}
+
+/* 9. Max kurs — strzałka/trend */
+.profile-stats-grid > *:nth-child(9)::after,
+.profile-stats-row > *:nth-child(9)::after,
+.profile-v3-stats > *:nth-child(9)::after,
+.profile-v4-stats > *:nth-child(9)::after{
+  content:"↗";
+  color:rgba(24,231,255,.95) !important;
+  opacity:.55 !important;
+  font-size:42px !important;
+}
+
+/* 10. Napiwki — serce */
+.profile-stats-grid > *:nth-child(10)::after,
+.profile-stats-row > *:nth-child(10)::after,
+.profile-v3-stats > *:nth-child(10)::after,
+.profile-v4-stats > *:nth-child(10)::after{
+  content:"♡";
+  color:rgba(32,242,136,.95) !important;
+  opacity:.60 !important;
+  font-size:44px !important;
+}
+
+/* dodatkowa cienka linia neonowa na dole kafla */
+.profile-stats-grid > *,
+.profile-stats-row > *,
+.profile-v3-stats > *,
+.profile-v4-stats > *,
+.profile-v3-stat-card,
+.profile-v4-stat-card,
+.profile-stat-card{
+  background-blend-mode: screen, normal !important;
+}
+
+.profile-stats-grid > * .stat-card-icon,
+.profile-stats-row > * .stat-card-icon,
+.profile-v3-stats > * .stat-card-icon,
+.profile-v4-stats > * .stat-card-icon{
+  display:none !important;
+}
+
+/* mniejsze ekrany — ikonki mniej dominujące */
+@media (max-width: 1280px){
+  .profile-stats-grid > *::after,
+  .profile-stats-row > *::after,
+  .profile-v3-stats > *::after,
+  .profile-v4-stats > *::after,
+  .profile-v3-stat-card::after,
+  .profile-v4-stat-card::after,
+  .profile-stat-card::after{
+    right:10px !important;
+    width:42px !important;
+    height:42px !important;
+    font-size:26px !important;
+    opacity:.34 !important;
+  }
+
+  .profile-stats-grid > *,
+  .profile-stats-row > *,
+  .profile-v3-stats > *,
+  .profile-v4-stats > *,
+  .profile-v3-stat-card,
+  .profile-v4-stat-card,
+  .profile-stat-card{
+    padding-right:54px !important;
+  }
+}
+
+/* KONIEC WERSJI 990 */
