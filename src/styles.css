@@ -35470,3 +35470,57 @@ button.betfolio-fetch-btn{
 .profile-active-tips-note-v954 span{
   color:#93aabd !important;
 }
+
+
+/* WERSJA 955 — cennik tylko dla właściciela + komunikat blokady */
+.profile-pricing-locked-v955{
+  padding:24px !important;
+  border-radius:22px !important;
+  display:grid !important;
+  gap:10px !important;
+}
+.profile-pricing-locked-v955 h3{
+  margin:0 !important;
+  color:#fff !important;
+  font-size:22px !important;
+}
+.profile-pricing-locked-v955 p{
+  margin:0 !important;
+  color:#a9bed0 !important;
+  font-weight:850 !important;
+}
+.profile-pricing-locked-v955 button{
+  width:max-content !important;
+  min-height:40px !important;
+  padding:0 16px !important;
+  border:0 !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#21e6d6,#2f8dff) !important;
+  color:#03121b !important;
+  font-weight:1000 !important;
+  cursor:pointer !important;
+}
+.tipster-pricing-settings input[type="number"]{
+  color:#fff !important;
+}
+
+
+/* WERSJA 956 — dashboard pokazuje tylko aktywne typy */
+.dashboard-active-feed-note-v956{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  margin:10px 0 12px !important;
+  padding:11px 14px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(33,230,214,.16) !important;
+  background:linear-gradient(90deg,rgba(33,230,214,.10),rgba(5,18,32,.54)) !important;
+  color:#9fb8ca !important;
+  font-size:12px !important;
+  font-weight:850 !important;
+}
+.dashboard-active-feed-note-v956 strong{
+  color:#dffffb !important;
+  font-weight:1000 !important;
+}

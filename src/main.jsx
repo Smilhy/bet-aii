@@ -1145,6 +1145,171 @@ const TIPSTER_PLAN_OPTIONS = [
   { key: 'year', label: '1 rok', durationDays: 365, defaultPrice: 350 }
 ]
 
+function normalizeTipsterPlanRows(rows = []) {
+  return TIPSTER_PLAN_OPTIONS.map(option => {
+    const row = Array.isArray(rows) ? rows.find(item => item.plan_key === option.key || item.key === option.key) : null
+    return row
+      ? {
+          ...option,
+          label: row.label || option.label,
+          durationDays: Number(row.duration_days ?? row.durationDays ?? option.durationDays),
+          price: Number(row.price ?? option.defaultPrice),
+          active: row.active !== false
+        }
+      : { ...option, price: option.defaultPrice, active: true }
+  })
+}
+
+function getTipsterPricingKeys(source = {}) {
+  const values = [
+    source?.id,
+    source?.tipster_id,
+    source?.author_id,
+    source?.user_id,
+    source?.created_by,
+    source?.owner_id,
+    source?.email,
+    source?.author_email,
+    source?.user_email,
+    source?.username,
+    source?.author_name,
+    source?.public_slug,
+  ]
+  const keys = new Set()
+  values.forEach(value => {
+    const clean = normalizeEmail(value)
+    if (!clean) return
+    keys.add(clean)
+    if (clean.includes('@')) keys.add(clean.split('@')[0])
+    if (clean.startsWith('lookup:')) {
+      const decoded = normalizeEmail(decodeURIComponent(clean.slice('lookup:'.length)))
+      if (decoded) {
+        keys.add(decoded)
+        if (decoded.includes('@')) keys.add(decoded.split('@')[0])
+      }
+    }
+  })
+  return [...keys].filter(Boolean)
+}
+
+function readLocalTipsterPlans(keys = []) {
+  if (typeof window === 'undefined') return null
+  for (const key of keys) {
+    try {
+      const raw = window.localStorage.getItem(`betai_tipster_plans_${key}`)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length) return normalizeTipsterPlanRows(parsed)
+    } catch (_) {}
+  }
+  return null
+}
+
+function writeLocalTipsterPlans(keys = [], plans = []) {
+  if (typeof window === 'undefined') return
+  const cleanPlans = normalizeTipsterPlanRows(plans)
+  keys.filter(Boolean).forEach(key => {
+    try { window.localStorage.setItem(`betai_tipster_plans_${key}`, JSON.stringify(cleanPlans)) } catch (_) {}
+  })
+}
+
+async function resolveTipsterPricingIdentity(source = {}) {
+  const baseKeys = getTipsterPricingKeys(source)
+  const identity = {
+    id: source?.id || source?.tipster_id || source?.author_id || source?.user_id || null,
+    email: source?.email || source?.author_email || source?.user_email || '',
+    username: source?.username || source?.author_name || source?.public_slug || '',
+    keys: baseKeys
+  }
+
+  if (!isSupabaseConfigured || !supabase) return identity
+  const candidateKeys = baseKeys.map(normalizeEmail).filter(Boolean)
+  if (!candidateKeys.length) return identity
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id,email,username,public_slug')
+      .limit(500)
+
+    if (error) throw error
+
+    const profile = (data || []).find(row => {
+      const rowKeys = getTipsterPricingKeys(row)
+      return rowKeys.some(key => candidateKeys.includes(key))
+    })
+
+    if (profile?.id) {
+      const merged = {
+        id: profile.id,
+        email: profile.email || identity.email,
+        username: profile.username || profile.public_slug || identity.username,
+      }
+      return {
+        ...merged,
+        keys: [...new Set([...baseKeys, ...getTipsterPricingKeys(merged), ...getTipsterPricingKeys(profile)])]
+      }
+    }
+  } catch (error) {
+    console.warn('resolveTipsterPricingIdentity skipped', error)
+  }
+
+  return identity
+}
+
+async function loadTipsterPlansForSource(source = {}) {
+  const identity = await resolveTipsterPricingIdentity(source)
+  const keys = identity.keys || getTipsterPricingKeys(source)
+
+  if (isSupabaseConfigured && supabase) {
+    const idsToTry = [...new Set([identity.id, source?.tipster_id, source?.author_id, source?.user_id, ...keys].filter(Boolean).map(String))]
+    for (const id of idsToTry) {
+      try {
+        const { data, error } = await supabase
+          .from('tipster_plans')
+          .select('plan_key,label,duration_days,price,active')
+          .eq('tipster_id', id)
+          .eq('active', true)
+        if (!error && Array.isArray(data) && data.length) {
+          const plans = normalizeTipsterPlanRows(data)
+          writeLocalTipsterPlans(keys, plans)
+          return plans
+        }
+      } catch (_) {}
+    }
+  }
+
+  return readLocalTipsterPlans(keys) || normalizeTipsterPlanRows([])
+}
+
+async function saveTipsterPlansForSource(source = {}, plans = []) {
+  const identity = await resolveTipsterPricingIdentity(source)
+  const keys = identity.keys || getTipsterPricingKeys(source)
+  const cleanPlans = normalizeTipsterPlanRows(plans)
+  writeLocalTipsterPlans(keys, cleanPlans)
+
+  if (!isSupabaseConfigured || !supabase || !identity.id) {
+    return { savedRemote: false, plans: cleanPlans }
+  }
+
+  const rows = cleanPlans.map(plan => ({
+    tipster_id: identity.id,
+    plan_key: plan.key,
+    label: plan.label,
+    duration_days: Number(plan.durationDays),
+    price: Number(plan.price || 0),
+    active: Boolean(plan.active)
+  }))
+
+  const { error } = await supabase
+    .from('tipster_plans')
+    .upsert(rows, { onConflict: 'tipster_id,plan_key' })
+
+  if (error) throw error
+  writeLocalTipsterPlans([...(keys || []), identity.id, identity.username, identity.email], cleanPlans)
+  return { savedRemote: true, plans: cleanPlans }
+}
+
 function hasActiveTipsterSubscription(tip, subscriptions = []) {
   const authorId = getTipAuthorId(tip)
   if (!authorId) return false
@@ -12724,31 +12889,16 @@ function TipsterPricingSettings({ user, onToast }) {
   useEffect(() => {
     let active = true
     async function loadPlans() {
-      if (!user?.id || !isSupabaseConfigured || !supabase) return
+      if (!user?.id && !user?.email && !user?.username) return
       setLoading(true)
       try {
-        const { data, error } = await supabase
-          .from('tipster_plans')
-          .select('plan_key,label,duration_days,price,active')
-          .eq('tipster_id', user.id)
-
-        if (error) throw error
+        const loadedPlans = await loadTipsterPlansForSource(user)
         if (!active) return
-
-        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
-          const row = Array.isArray(data) ? data.find(item => item.plan_key === option.key) : null
-          return row
-            ? {
-                ...option,
-                label: row.label || option.label,
-                durationDays: Number(row.duration_days || option.durationDays),
-                price: Number(row.price ?? option.defaultPrice),
-                active: row.active !== false
-              }
-            : { ...option, price: option.defaultPrice, active: true }
-        }))
+        setPlans(loadedPlans)
       } catch (error) {
         console.warn('tipster plans load skipped', error)
+        const localPlans = readLocalTipsterPlans(getTipsterPricingKeys(user))
+        if (active && localPlans) setPlans(localPlans)
       } finally {
         if (active) setLoading(false)
       }
@@ -12762,25 +12912,17 @@ function TipsterPricingSettings({ user, onToast }) {
   }
 
   const savePlans = async () => {
-    if (!user?.id || !isSupabaseConfigured || !supabase) {
+    if (!user?.id && !user?.email && !user?.username) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Nie udało się zapisać cennika.' })
       return
     }
     setSaving(true)
     try {
-      const rows = plans.map(plan => ({
-        tipster_id: user.id,
-        plan_key: plan.key,
-        label: plan.label,
-        duration_days: Number(plan.durationDays),
-        price: Number(plan.price || 0),
-        active: Boolean(plan.active)
-      }))
-      const { error } = await supabase.from('tipster_plans').upsert(rows, { onConflict: 'tipster_id,plan_key' })
-      if (error) throw error
-      onToast?.({ type: 'success', title: 'Cennik zapisany', message: 'Ceny subskrypcji profilu zostały zaktualizowane.' })
+      await saveTipsterPlansForSource(user, plans)
+      onToast?.({ type: 'success', title: 'Cennik zapisany', message: 'Ceny zostały zapisane i będą widoczne dla kupujących po odświeżeniu/ponownym wejściu.' })
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd cennika', message: formatAppErrorMessage(error.message) })
+      writeLocalTipsterPlans(getTipsterPricingKeys(user), plans)
+      onToast?.({ type: 'warning', title: 'Cennik zapisany lokalnie', message: 'Nie udało się zapisać w Supabase. Sprawdź SQL/RLS tabeli tipster_plans.' })
     } finally {
       setSaving(false)
     }
@@ -12823,27 +12965,31 @@ function TipsterPricingSettings({ user, onToast }) {
 
 function ProfileSubscriptionModal({ tip, user, onClose }) {
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(p => ({ ...p, price: p.defaultPrice })))
+  const [pricingIdentity, setPricingIdentity] = useState(null)
   const [loadingKey, setLoadingKey] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     async function loadPlans() {
-      const tipsterId = getTipAuthorId(tip)
-      if (!tipsterId || !isSupabaseConfigured || !supabase) return
-      const { data } = await supabase.from('tipster_plans').select('*').eq('tipster_id', tipsterId).eq('active', true)
-      if (Array.isArray(data) && data.length) {
-        setPlans(TIPSTER_PLAN_OPTIONS.map(option => {
-          const row = data.find(item => item.plan_key === option.key)
-          return row ? { ...option, label: row.label || option.label, durationDays: Number(row.duration_days || option.durationDays), price: Number(row.price || option.defaultPrice) } : { ...option, price: option.defaultPrice }
-        }))
+      if (!tip) return
+      const source = {
+        ...tip,
+        id: getTipAuthorId(tip),
+        tipster_id: getTipAuthorId(tip),
+        username: tip?.author_name || tip?.username,
+        email: tip?.author_email || tip?.email
       }
+      const identity = await resolveTipsterPricingIdentity(source)
+      setPricingIdentity(identity)
+      const loadedPlans = await loadTipsterPlansForSource(source)
+      setPlans((loadedPlans || []).filter(plan => plan.active !== false))
     }
     loadPlans()
-  }, [tip?.id])
+  }, [tip?.id, tip?.author_id, tip?.user_id, tip?.tipster_id, tip?.author_name, tip?.author_email])
 
   if (!tip) return null
-  const tipsterId = getTipAuthorId(tip)
-  const tipsterName = tip.author_name || 'Typer'
+  const tipsterId = pricingIdentity?.id || getTipAuthorId(tip)
+  const tipsterName = pricingIdentity?.username || tip.author_name || tip.username || 'Typer'
 
   async function buy(plan) {
     setError('')
@@ -14572,7 +14718,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
             <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
             <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> Opinie</button>
-            <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
+            {profileIsOwnForViewer ? (
+              <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
+            ) : null}
           </div>
 
           {profileTab === 'tips' && (
@@ -14825,8 +14973,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             </section>
           )}
 
-          {profileTab === 'pricing' && (
+          {profileTab === 'pricing' && profileIsOwnForViewer && (
             <TipsterPricingSettings user={user} onToast={onToast} />
+          )}
+          {profileTab === 'pricing' && !profileIsOwnForViewer && (
+            <section className="glass-profile-v3 profile-v3-card profile-pricing-locked-v955">
+              <h3>Cennik subskrypcji jest dostępny tylko dla właściciela profilu</h3>
+              <p>Inni użytkownicy mogą kupić dostęp przez przycisk subskrypcji, ale nie mogą edytować cennika typera.</p>
+              <button type="button" onClick={() => setProfileTab('tips')}>Wróć do typów</button>
+            </section>
           )}
 
           {profileTab === 'overview' && (
@@ -18418,7 +18573,9 @@ function App() {
     setDmPanelOpen(prev => !prev)
   }
 
-  const userOnlyTips = tips.filter(isUserTip).map(normalizeTipRow)
+  const allUserTips = tips.filter(isUserTip).map(normalizeTipRow)
+  const userOnlyTips = allUserTips.filter(isTipVisibleInActiveFeed)
+  const hiddenSettledDashboardTipsCount = allUserTips.length - userOnlyTips.length
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const feedCounts = {
@@ -18873,6 +19030,13 @@ function App() {
               <button type="button" className="feed-add-tip-btn" onClick={() => setView('add')}>+ Dodaj typ</button>
             </div>
 
+
+            {hiddenSettledDashboardTipsCount > 0 ? (
+              <div className="dashboard-active-feed-note-v956">
+                <strong>Aktywne typy</strong>
+                <span>Rozstrzygnięte albo zgłoszone do rozliczenia typy znikają z dashboardu i zostają w historii/Wynikach, żeby nikt nie kupił zakończonego kuponu.</span>
+              </div>
+            ) : null}
 
             <div className="feed">
               {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (

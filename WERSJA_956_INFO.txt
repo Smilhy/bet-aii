@@ -1,0 +1,24 @@
+WERSJA 956
+
+Dashboard pokazuje tylko aktywne typy.
+
+Zrobione:
+1. Z dashboardu znikają typy rozstrzygnięte:
+   - won / win / wygrany
+   - lost / loss / przegrany
+   - void / push / zwrot
+   - rejected / cancelled
+2. Z dashboardu znikają też typy oczekujące na admina:
+   - admin_approval_status = pending
+   - manual_settlement_status = pending_admin
+3. Dzięki temu użytkownik nie kupi typu, który jest już zakończony albo w trakcie rozliczania.
+4. Liczniki filtrów dashboardu pokazują tylko aktywne typy.
+5. Rozstrzygnięte typy nadal zostają w profilu / Wyniki / historii — nie są usuwane z bazy.
+6. Dodano notkę pod filtrami dashboardu, kiedy część typów została ukryta jako rozstrzygnięta.
+
+Start z wersji:
+- betai_wersja_955_CENNIK_TYLKO_WLASCICIEL_ZAPIS_CEN.zip
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
