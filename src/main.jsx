@@ -8754,7 +8754,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       if (rankingResult.error) console.warn('community ranking skipped', rankingResult.error)
       if (profilesResult.error) console.warn('community profiles skipped', profilesResult.error)
 
-      const loadedPosts = Array.isArray(postsResult.data) ? postsResult.data : []
+      const loadedPostsRaw = Array.isArray(postsResult.data) ? postsResult.data : []
+      const loadedPosts = Array.from(new Map(loadedPostsRaw.map(row => [String(row.id), row])).values())
       setPosts(loadedPosts)
 
       const rankRows = Array.isArray(rankingResult.data) ? rankingResult.data : []
@@ -8794,7 +8795,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         .order('created_at', { ascending: true })
       if (error) throw error
       const grouped = {}
-      ;(data || []).forEach(row => {
+      Array.from(new Map((data || []).map(row => [String(row.id), row])).values()).forEach(row => {
         grouped[row.post_id] = grouped[row.post_id] || []
         grouped[row.post_id].push(row)
       })

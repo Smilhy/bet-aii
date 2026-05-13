@@ -1,0 +1,11 @@
+WERSJA 1010 — SPOŁECZNOŚĆ FIX
+
+Naprawione:
+- podwójne posty przez JOIN profiles: widoki używają teraz lateral join z limit 1,
+- frontend dodatkowo deduplikuje posty po id,
+- komentarze też deduplikowane po id,
+- ikonki nagród w prawej kolumnie są większe, szklane, złote i czytelne.
+
+Wymagane:
+1. Uruchom SQL supabase/version_1010_community_dedupe_views_reward_icons.sql
+2. Wgraj paczkę 1010 na Netlify.

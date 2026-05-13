@@ -39800,3 +39800,68 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1009 */
+
+
+/* ==========================================================================
+   WERSJA 1010 — SPOŁECZNOŚĆ DEDUPE + REWARD ICONS PRO
+   ========================================================================== */
+
+.community-live-v1008 .reward-side-v1008 .event-thumb-v5,
+.community-live-v1008 .events-list-v5 .reward-side-v1008 .event-thumb-v5{
+  width:52px !important;
+  height:52px !important;
+  min-width:52px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:18px !important;
+  font-size:24px !important;
+  line-height:1 !important;
+  color:#fff4bf !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,.20), transparent 24%),
+    radial-gradient(circle at 80% 80%, rgba(255,215,106,.22), transparent 34%),
+    linear-gradient(135deg, rgba(14,55,78,.96), rgba(7,25,45,.98)) !important;
+  border:1px solid rgba(255,215,106,.26) !important;
+  box-shadow:
+    0 0 0 1px rgba(24,231,255,.05),
+    0 12px 28px rgba(0,0,0,.22),
+    0 0 24px rgba(255,215,106,.12),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+  text-shadow:0 0 12px rgba(255,215,106,.42) !important;
+}
+
+.community-live-v1008 .reward-side-v1008{
+  align-items:center !important;
+  border:1px solid rgba(24,231,255,.10) !important;
+  border-radius:18px !important;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(255,215,106,.06), transparent 28%),
+    linear-gradient(180deg, rgba(7,26,46,.82), rgba(3,14,26,.92)) !important;
+}
+
+.community-live-v1008 .reward-side-v1008 b{
+  min-width:34px !important;
+  height:28px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  color:#271800 !important;
+  background:linear-gradient(135deg,#ffd76a,#ffb739) !important;
+  text-shadow:none !important;
+  box-shadow:0 0 16px rgba(255,215,106,.28) !important;
+}
+
+.community-live-v1008 .feed-card-v5{
+  min-height:132px !important;
+}
+
+.community-live-v1008 .feed-actions-v5{
+  justify-content:space-between !important;
+}
+
+.community-live-v1008 .feed-actions-v5 button:first-child,
+.community-live-v1008 .feed-actions-v5 button:nth-child(2){
+  min-width:68px !important;
+}
+
+/* KONIEC WERSJI 1010 */
