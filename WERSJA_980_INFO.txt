@@ -1,0 +1,35 @@
+WERSJA 980
+
+Reset od zera + jedna logika dla każdego użytkownika.
+
+Dodany SQL:
+- supabase/version_980_reset_tips_stats_from_zero_logic_lock.sql
+
+SQL robi:
+1. Czyści public.tips.
+2. Czyści odblokowania/kupione typy, jeśli tabele istnieją.
+3. Zeruje imported_* w profiles.
+4. Naprawia generic username typu "user", jeśli można wziąć nick z public_slug/email.
+5. Zakłada jedną funkcję recalculate_profile_tip_stats.
+6. Zakłada trigger na public.tips.
+7. Po każdym nowym typie/rozliczeniu statystyki zapisują się do profiles.imported_*.
+
+Stała logika:
+- Typy = wszystkie typy.
+- Pending = nierozliczone.
+- Profit/Bilans = tylko rozliczone.
+- Stawka do Yield/ROI = tylko rozliczone.
+- Pending nie wchodzi do Yield/ROI.
+- Wygrana = stake * (odds - 1).
+- Przegrana = -stake.
+- Zwrot/pending = 0.
+
+Nie usuwa:
+- kont,
+- profili,
+- opisów,
+- avatarów,
+- obserwujących,
+- salda,
+- coinów,
+- chatu.
