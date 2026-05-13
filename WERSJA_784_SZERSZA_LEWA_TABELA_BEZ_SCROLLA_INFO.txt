@@ -1,5 +1,0 @@
-WERSJA 784
-- Poszerzona lewa tabela / kolumna w zakładce Dodaj typ.
-- Usunięty poziomy scroll w liście państw / lig.
-- Długie nazwy mieszczą się lepiej, a gdy są za długie, przycinają się estetycznie bez paska poziomego.
-- Pozostałe funkcje bez zmian.

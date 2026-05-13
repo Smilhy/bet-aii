@@ -1,1 +1,0 @@
-Wersja 524: hero banner — zatuszowanie prawej części zmniejszone o około 70%, ramka/kolumna statystyk powiększona o około 50%, poprawione przycinanie tekstu i powiększone ikony/liczby statystyk.

@@ -1,7 +1,0 @@
-Wersja 512
-- Dodano live widget opinii w lewym dolnym rogu.
-- Każdy może dodać ocenę 1-5 gwiazdek i komentarz.
-- Opinie zapisują się na stałe w Supabase w tabeli public.site_reviews.
-- Widget pokazuje średnią ocenę, liczbę opinii i ostatnie komentarze.
-- Działa live z pollingiem i Realtime po włączeniu tabeli w Supabase Replication.
-- Dodano plik SQL: SUPABASE_SITE_REVIEWS_512.sql.

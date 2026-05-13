@@ -1,5 +1,0 @@
-Wersja 516
-- Dodano pełną responsywność od telefonów po 4K.
-- Dopracowano ekran logowania/rejestracji dla mobile, tabletów, 800x600, laptopów, desktopów i 4K.
-- Dopracowano dashboard po zalogowaniu: sidebar, topbar, karty, gridy, tabele i pływające widgety.
-- Zabezpieczono przed poziomym przewijaniem i nachodzeniem elementów.

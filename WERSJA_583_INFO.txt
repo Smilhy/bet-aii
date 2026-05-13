@@ -1,1 +1,0 @@
-WERSJA 583: typy użytkownika mają Analiza użytkownika, a oznaczenia AI są tylko dla prawdziwych typów AI. Naprawiony też błąd logowania.

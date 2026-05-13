@@ -1,8 +1,0 @@
-WERSJA 837
-- Usunięto dużą ramkę „Moje konto Stripe” z zakładki Przegląd profilu.
-- Przycisk Stripe przeniesiono do prawego górnego rogu głównego baneru profilu.
-- Tekst przycisku nadal zmienia się zależnie od statusu:
-  • Podłącz Stripe
-  • Dokończ Stripe
-  • Zarządzaj Stripe
-- Nowego SQL nie trzeba.

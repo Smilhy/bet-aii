@@ -1,5 +1,0 @@
-WERSJA 918
-- Naprawione JSX: Obserwuj jest wstawiane PO buttonie Premium/Darmowy.
-- Ranking prawy na 4 miejsca.
-- Profit badge poprawiony.
-- Liczba wstawek Obserwuj po access badge: 2

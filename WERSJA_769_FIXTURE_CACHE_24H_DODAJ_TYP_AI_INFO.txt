@@ -1,7 +1,0 @@
-WERSJA 769 — zapis meczów 24h
-- Bazuje na ostatniej przesłanej wersji 765
-- "Dodaj typ": zapis i odczyt meczów z Supabase przez 24h
-- "Typy AI": korzystają z tego samego endpointu get-sports-events, więc pobrane tam mecze także trafiają do tego samego cache 24h
-- Gdy API-Football ma limit lub chwilowo nie odpowiada, strona pokazuje wcześniej zapisane mecze z cache
-- Uwaga: zakładka "Typy AI" już zapisuje same typy AI w tabeli tips; ta poprawka dodaje zapis meczów, z których te typy są budowane
-- Do wdrożenia: uruchom BETAI_SQL_769_FIXTURE_CACHE_24H_DODAJ_TYP_AI.sql w Supabase SQL Editor, potem wrzuć ZIP na Netlify

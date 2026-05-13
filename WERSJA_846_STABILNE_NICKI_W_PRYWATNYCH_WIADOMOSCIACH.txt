@@ -1,7 +1,0 @@
-WERSJA 846
-- Przywrócono stabilne nicki w panelu prywatnych wiadomości.
-- Panel nie tworzy już nazw typu „Użytkownik 4C913A” z fragmentu UUID.
-- Prawdziwy username ma zawsze pierwszeństwo.
-- Jeśli username chwilowo jest pusty, fallbackiem jest stały login z emaila, a nie losowa nazwa.
-- Dla istniejących rozmów dodano resolver UUID -> profil przez funkcję SECURITY DEFINER.
-- Wymagany SQL: BETAI_SQL_846_STALE_NICKI_PRYWATNYCH_WIADOMOSCI.sql

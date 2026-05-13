@@ -1,4 +1,0 @@
-WERSJA 817
-- Do przycisku w karcie Portfela „Zarządzaj subskrypcją” został podpięty dokładnie wskazany link Stripe Checkout.
-- Kliknięcie przycisku prowadzi bezpośrednio do podanego URL Stripe.
-- Zachowane wszystkie poprzednie poprawki z wersji 816.

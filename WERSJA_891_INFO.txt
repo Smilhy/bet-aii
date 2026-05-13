@@ -1,6 +1,0 @@
-WERSJA 891
-- Badge/przycisk DARMOWY przesunięty prawie do samej dolnej ramki lewej kolumny.
-- Badge/przycisk PREMIUM działa identycznie — też jest na dole.
-- Ustawienie jest wymuszone absolute bottom, więc nie zależy od długości nicku/statystyk.
-- Zostają poprawki z wersji 890.
-- SQL nie jest potrzebny.

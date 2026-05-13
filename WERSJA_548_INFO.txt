@@ -1,5 +1,0 @@
-WERSJA 548
-- Zakładka Żywa zmieniona na Na żywo.
-- Dodany pasek/ramka z pilnymi wiadomościami między czerwonym alertem a treścią.
-- Pasek slajduje tylko pilne wiadomości.
-- Paczka lekka: bez node_modules i bez dist.

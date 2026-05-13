@@ -1,6 +1,0 @@
-WERSJA 892
-- smilhytv jest traktowany w frontendzie jako admin i Premium lifetime.
-- smilhytv może wybierać i publikować typy płatne/premium.
-- Poprawiono wykrywanie admina po username, email local-part oraz roli admin.
-- Usunięto mylący dopisek o author_id z błędu publikacji.
-- Dodano SQL BETAI_SQL_892_SMILHYTV_ADMIN_PREMIUM_LIFETIME.sql do uruchomienia w Supabase, żeby baza też uznawała smilhytv jako premium/admin.

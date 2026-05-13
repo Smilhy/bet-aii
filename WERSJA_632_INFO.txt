@@ -1,3 +1,0 @@
-Wersja 632:
-- Lewa ramka statystyk przesunięta dalej do lewej strony, przy samej krawędzi jak wcześniej.
-- Pozostałe zmiany z wersji 631 zostawione bez zmian.

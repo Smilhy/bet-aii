@@ -1,3 +1,0 @@
-WERSJA 772
-- Usunięty przycisk „Dodaj własny typ” z nagłówka ekranu rynków w zakładce Dodaj typ.
-- Pozostałe funkcje z wersji 771 bez zmian.

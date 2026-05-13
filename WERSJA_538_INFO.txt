@@ -1,5 +1,0 @@
-Wersja 538:
-- Dodano w zakładce Artykuły nową podzakładkę „Żywa”.
-- „Żywa” pobiera wiadomości przez funkcję Netlify sportpl-articles ze Sport.pl.
-- Dodano auto-odświeżanie co 10 minut oraz wykrywanie ważnych wiadomości/pilnych tematów.
-- Najnowsze artykuły i hero w sekcji Artykuły są teraz zasilane świeżymi danymi Sport.pl, z fallbackiem gdy źródło chwilowo nie odpowie.

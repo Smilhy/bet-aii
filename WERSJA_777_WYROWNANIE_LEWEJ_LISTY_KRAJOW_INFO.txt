@@ -1,4 +1,0 @@
-WERSJA 777
-- Podniesiona lewa kolumna w zakładce Dodaj typ.
-- Lista krajów / lig została wyrównana wyżej, żeby była bardziej na równo z centralną sekcją „Dodaj nowy typ”.
-- Pozostałe funkcje bez zmian.

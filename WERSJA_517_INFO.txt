@@ -1,4 +1,0 @@
-Wersja 517
-- przełącznik języka pokazuje tylko aktualnie wybraną flagę
-- po kliknięciu rozwija się lista wszystkich flag/języków
-- ukryto stałe wyświetlanie wszystkich flag w topbarze i na ekranie logowania

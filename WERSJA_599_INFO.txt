@@ -1,2 +1,0 @@
-WERSJA 599
-Okno wsparcia: czarne teksty w nagłówku i dymce powitalnej, przyciski jak Wyloguj, usunięty komunikat o SUPABASE_SUPPORT_CHAT_510.sql.

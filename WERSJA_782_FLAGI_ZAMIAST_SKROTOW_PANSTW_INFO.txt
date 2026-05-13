@@ -1,6 +1,0 @@
-WERSJA 782
-- W liście państw w zakładce Dodaj typ skróty typu „AL”, „SA” nie są już pokazywane.
-- Zamiast skrótu wyświetla się flaga państwa + pełna nazwa kraju.
-- Działa też dla wpisów, które miały wcześniej prefiks literowy.
-- Przykład: „AL Albania” -> „🇦🇱 Albania”, „SA Arabia Saudyjska” -> „🇸🇦 Arabia Saudyjska”.
-- Pozostałe funkcje bez zmian.

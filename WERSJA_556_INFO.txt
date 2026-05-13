@@ -1,6 +1,0 @@
-WERSJA 556
-- Zmniejszona ramka wyszukiwania w topbarze, żeby było więcej miejsca dla przycisków.
-- Uporządkowany układ topbar z większą przestrzenią na akcje po prawej stronie.
-- Ujednolicony kolor/styl dla przycisków: język, powiadomienia, wiadomości, profil i saldo/żetony.
-- Przyciski są teraz w jednym ciemnym, premium stylu zgodnym z referencją.
-- Paczka lekka: bez node_modules i bez dist.

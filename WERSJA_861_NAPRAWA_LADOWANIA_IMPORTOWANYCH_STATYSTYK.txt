@@ -1,5 +1,0 @@
-WERSJA 861
-- Naprawiono ładowanie importowanych statystyk z profilu.
-- Zamiast ręcznej listy kolumn profil jest pobierany przez select('*'), więc nowe pola imported_* są pobierane razem z profilem.
-- To usuwa problem, gdy baza ma już dane, ale frontend dalej widział tylko stare 2 typy.
-- SQL nie jest potrzebny, bo dane są już zapisane w bazie.

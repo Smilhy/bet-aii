@@ -1,9 +1,0 @@
-WERSJA 901
-- Zablokowano wyświetlanie i zapisywanie nicku "user" w kartach typów.
-- normalizeTipRow używa teraz resolveRealProfileUsername i bierze prawdziwy username z profilu/emaila.
-- TipCard nie pokaże już "user", jeśli istnieje username/email autora.
-- fetchTips dociąga profiles nie tylko po id, ale też po emailu i username.
-- Przy dodawaniu typu username nie może być generic "user".
-- Dodano SQL BETAI_SQL_901_LOCK_REAL_USERNAMES_IN_TIPS.sql:
-  • naprawia stare typy z author_name='user',
-  • dodaje trigger, który blokuje ponowne zapisywanie author_name/username jako user.

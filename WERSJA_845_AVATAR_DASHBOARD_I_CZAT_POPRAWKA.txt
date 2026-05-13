@@ -1,8 +1,0 @@
-WERSJA 845
-- Naprawiono avatar w kartach typów na Dashboardzie i w live chacie.
-- Dashboard rozpoznaje własne typy po ID, emailu i nicku, więc dla Twoich typów bierze aktualny avatar profilu.
-- Avatar w kartach typów jest renderowany jako prawdziwe <img>, a nie tylko tło CSS.
-- Czat dociąga avatar_url starych wiadomości z profiles po emailu.
-- Starsze własne wiadomości bez avatara dostają aktualny avatar profilu.
-- Czat rozpoznaje własne wiadomości także po nicku, nie tylko po emailu.
-- SQL nie jest potrzebny.

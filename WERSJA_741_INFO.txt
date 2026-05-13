@@ -1,8 +1,0 @@
-BET+AI v741 FREE AI SPORT MAPPING FIX
-
-- Typy AI są teraz posegregowane według aktywnej zakładki sportu.
-- Kliknięcie MMA/Siatkówka/Koszykówka/Hokej czyści stare wyniki i pobiera tylko dany sport.
-- Wyniki z poprzedniej zakładki nie mieszają się już na ekranie.
-- Dodano normalizację sportów: Siatkówka, Piłka ręczna, Rugby, NFL, AFL, Piłka nożna, Koszykówka, Hokej, Baseball, MMA.
-- Nadal działa darmowo tylko na APISPORTS_KEY.
-- Bez OpenAI API i bez The Odds API.

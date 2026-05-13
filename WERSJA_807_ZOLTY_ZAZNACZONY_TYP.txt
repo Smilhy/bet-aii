@@ -1,4 +1,0 @@
-WERSJA 807
-- Zaznaczony typ / wybrany kurs ma teraz żółty styl jak przycisk „Darmowy”.
-- Dotyczy zaznaczonej opcji w rynkach oraz aktywnego kursu.
-- Zawiera też poprawki z wersji 806.

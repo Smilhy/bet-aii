@@ -1,9 +1,0 @@
-BET+AI — WERSJA 695
-
-Drobna poprawka w Dodaj typ:
-- usunięty napis „ANALIZA WYGENEROWANA PRZEZ AI” z punktu 9. Analiza AI,
-- zostaje tylko samo pole z treścią analizy.
-
-SQL:
-- brak nowego SQL.
-- wystarczy wgrać wersję 695.

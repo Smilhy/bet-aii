@@ -1,7 +1,0 @@
-WERSJA 911
-- Naprawiono przyczynę avatarów widocznych tylko dla zalogowanego właściciela.
-- Problemem było RLS na profiles: konto buchajson1988 nie widziało profilu smilhytv.
-- Dodano frontendowy fallback RPC betai_public_profiles_for_ui().
-- Typy, live chat i ranking pobierają avatary z publicznej funkcji SECURITY DEFINER.
-- Ranking pokazuje teraz obrazek avatara, nie tylko inicjały.
-- Dodano SQL BETAI_SQL_911_PUBLIC_AVATARS_RLS_FIX.sql.

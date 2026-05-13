@@ -1,5 +1,0 @@
-WERSJA 794
-- Zielone ramki zmienione na ciemniejsze, bardziej eleganckie i spójne z layoutem.
-- Zmniejszona czcionka w karcie meczu.
-- Nazwa meczu w ramce ma teraz format: „Legia Warszawa - Lech Poznań”.
-- Pozostałe funkcje bez zmian.

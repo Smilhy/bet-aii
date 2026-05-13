@@ -1,9 +1,0 @@
-WERSJA 908
-- Naprawiono główną przyczynę niewidocznych avatarów innych użytkowników.
-- Frontend odpytywał profiles o kolumnę profile_avatar_url, której w Twojej bazie nie ma.
-- Przez ten błąd Supabase pomijał hydrację avatarów innych autorów.
-- Teraz frontend pobiera tylko istniejące profiles.avatar_url.
-- Dodano SQL BETAI_SQL_908_SAFE_AVATARS_EVERYONE_NO_PROFILE_AVATAR_URL.sql:
-  • synchronizuje avatary typów z profiles.avatar_url,
-  • synchronizuje avatary live chat z profiles.avatar_url,
-  • zakłada bezpieczne triggery na przyszłość.

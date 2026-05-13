@@ -1,4 +1,0 @@
-Wersja 523
-- dopasowano kolor wypełnienia ramek realnych statystyk hero do kafelka MECZÓW DZIŚ
-- statystyki mają teraz bardziej niebiesko-cyjanowy glass look, spójny z banerem
-- zostawiono szerokość ramek, krótszą maskę i mocną poświatę hero

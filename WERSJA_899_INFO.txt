@@ -1,6 +1,0 @@
-WERSJA 899
-- Komentarze znowu można otworzyć z ikonki komentarza.
-- Dodano przycisk X w prawym rogu panelu komentarzy.
-- Dodano zamykanie komentarzy klawiszem Escape.
-- Panel komentarzy ma poprawiony wygląd i nie powinien wyglądać jak brzydkie białe napisy.
-- Zostają poprawki z wersji 898/897.

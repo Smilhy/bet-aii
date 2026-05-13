@@ -1,9 +1,0 @@
-WERSJA 929
-
-Poprawka:
-1. Po kliknięciu „Obserwujesz”, żeby przestać obserwować, status zmienia się od razu bez odświeżania strony.
-2. Problem był w tym, że po cofnięciu obserwowania usuwany był tylko ID użytkownika, ale zostawał zapasowy klucz/nazwa użytkownika w stanie aplikacji.
-3. Teraz przy unfollow usuwane są oba klucze, więc przycisk natychmiast wraca z „✓ Obserwujesz” na „Obserwuj”.
-
-Pliki zmienione:
-- src/main.jsx

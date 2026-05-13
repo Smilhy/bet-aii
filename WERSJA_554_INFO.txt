@@ -1,6 +1,0 @@
-WERSJA 554
-- Zmieniona globalna kolorystyka całej aplikacji po zalogowaniu.
-- Dashboard i wszystkie zakładki mają nowy styl inspirowany dostarczonymi screenami.
-- Nowy topbar, sidebar, karty, przyciski i panele w bardziej premium, turkusowo-granatowym klimacie.
-- Zachowane działanie aplikacji i poprzednie funkcje.
-- Paczka lekka: bez node_modules i bez dist.

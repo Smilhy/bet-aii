@@ -1,3 +1,0 @@
-WERSJA 885
-- Usunięto kartę „Ostatnia aktywność” z prawej kolumny w profilu.
-- Bez zmian w bazie / SQL niepotrzebny.

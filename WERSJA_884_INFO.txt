@@ -1,6 +1,0 @@
-WERSJA 884
-- Usunięto licznik "2 pozycji" z zakładki Typy.
-- Usunięto przycisk "Filtry".
-- Dodatkowo ponownie usunięto zakładkę "Przegląd" z JSX.
-- Dodatkowo zabezpieczono CSS-em ukrycie "Zobacz typ" i ikonki zapisu, jeśli były z cache.
-- SQL nie jest potrzebny.

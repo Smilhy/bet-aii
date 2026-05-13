@@ -1,4 +1,0 @@
-WERSJA 856
-- Usunąłem stare kafelki statystyk z nagłówka profilu.
-- Nie usuwałem żadnej logiki ani obliczeń pod spodem: ROI, win rate, liczba typów, saldo, ranking itd. nadal są w kodzie i można je wykorzystać do nowych kafelków.
-- SQL nie jest potrzebny.

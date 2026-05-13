@@ -1,5 +1,0 @@
-WERSJA 778
-- Prawa kolumna z kuponem jest ukryta na starcie w zakładce Dodaj typ.
-- Pojawia się dopiero po kliknięciu konkretnego typu / kursu.
-- Gdy prawa kolumna jest ukryta, środkowa sekcja rozszerza się szerzej.
-- Pozostałe funkcje bez zmian.

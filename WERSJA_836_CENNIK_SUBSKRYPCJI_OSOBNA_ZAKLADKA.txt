@@ -1,5 +1,0 @@
-WERSJA 836
-- Przeniesiono „Cennik subskrypcji profilu” z zakładki „Przegląd” do nowej zakładki:
-  • 💳 Cennik subskrypcji
-- W zakładce „Przegląd” cennik już się nie wyświetla.
-- Nowa zakładka pokazuje tylko edycję cennika subskrypcji profilu.

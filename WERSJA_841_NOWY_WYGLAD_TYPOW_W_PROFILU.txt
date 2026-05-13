@@ -1,7 +1,0 @@
-WERSJA 841
-- Podmieniono wygląd typów w Mój profil na nowy styl zgodny z przesłanymi przykładami.
-- Darmowe typy mają pełny widok: mecz, typ, kurs, stawkę, analizę i przycisk „Zobacz typ”.
-- Typy Premium mają zablokowany widok: ukryty typ/kurs, blokadę analizy i przyciski zakupu.
-- Zakładka „Typy” w profilu została ożywiona i pokazuje wszystkie typy w nowym stylu.
-- W Przeglądzie nadal widać ostatnie Premium i ostatnie FREE, ale już w nowym wyglądzie.
-- Nowego SQL nie trzeba.

@@ -1,6 +1,0 @@
-WERSJA 813
-- Saldo główne w Portfelu jest teraz realne i pobierane dla aktualnie zalogowanego użytkownika przez istniejący walletBalance.
-- Saldo żetonów w Portfelu jest teraz realne i pobierane dla aktualnie zalogowanego użytkownika przez istniejący tokenBalance.
-- Wartość żetonów jest liczona według przelicznika: 1000 żetonów = 1 zł.
-- Gdy zalogowany jest buchajson1988, widzi własne saldo; po zalogowaniu smilhytv widzi własne saldo.
-- Zmieniono także kwotę Saldo w banerze hero na realną wartość konta.

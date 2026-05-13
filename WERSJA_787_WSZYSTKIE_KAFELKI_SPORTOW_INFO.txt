@@ -1,6 +1,0 @@
-WERSJA 787
-- Dodane kafelki pozostałych sportów w lewej kolumnie:
-  Tenis, Koszykówka, Hokej, MMA, E-sport, Siatkówka, Boks, Piłka ręczna,
-  Krykiet, Rugby, Rugby League, Baseball i Dart.
-- Na razie są to kafelki wizualne / przygotowane pod późniejsze podłączenie danych.
-- Piłka nożna nadal działa tak jak dotychczas.

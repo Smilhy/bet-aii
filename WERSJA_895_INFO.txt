@@ -1,8 +1,0 @@
-WERSJA 895
-- Naprawiono nick "user" na kartach typów: jeśli DB zwróci generic user, karta bierze realny username z profiles albo z aktualnego konta.
-- Nowe typy po dodaniu od razu pokazują prawdziwy nick i avatar autora.
-- Realtime INSERT dla własnego typu podmienia autora na realny profil.
-- Topbar pokazuje realny avatar przez <img>, nie tylko CSS background.
-- Live chat dociąga avatar po emailu/nicku z profiles oraz fallbackowo z tips.author_avatar_url.
-- Dodano mocniejszy CSS dla avatarów w topbarze i czacie.
-- Dodano bezpieczny SQL 893 SAFE do paczki.

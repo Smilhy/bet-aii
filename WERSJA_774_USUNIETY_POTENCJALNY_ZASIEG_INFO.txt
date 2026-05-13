@@ -1,3 +1,0 @@
-WERSJA 774
-- Usunięta sekcja „Potencjalny zasięg” z prawej kolumny w zakładce Dodaj typ.
-- Pozostałe funkcje z wersji 773 bez zmian.

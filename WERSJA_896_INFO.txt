@@ -1,6 +1,0 @@
-WERSJA 896
-- Naprawiono avatar w górnym pasku obok portfela/coin.
-- Topbar ma teraz własne effectiveTopbarAvatarUrl z getProfileAvatarUrl(effectiveAccountProfile || sessionUser).
-- Avatar jest renderowany jako normalny <img> oraz jako background fallback przez CSS var.
-- Dzięki temu ma pokazywać avatar każdemu użytkownikowi, nie tylko w sidebarze/profilu.
-- Dodano dodatkowe CSS wymuszające widoczność obrazka w topbarze.

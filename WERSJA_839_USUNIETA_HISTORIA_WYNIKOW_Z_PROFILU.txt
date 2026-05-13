@@ -1,5 +1,0 @@
-WERSJA 839
-- Usunięto z Mój profil → Przegląd blok:
-  • Historia wyników
-- Pozostałe elementy profilu zostają bez zmian.
-- Nowego SQL nie trzeba.

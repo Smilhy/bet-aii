@@ -1,7 +1,0 @@
-WERSJA 551
-- Stary hero dashboardu został usunięty.
-- Dodany nowy hero slider oparty o dostarczone screeny.
-- Slajdy auto-zmieniają się w pętli co 6 sekund.
-- Dodane klikalne kropki oraz strzałki nawigacji.
-- Obrazy slajdów zostały dopasowane do ramki hero.
-- Paczka lekka: bez node_modules i bez dist.

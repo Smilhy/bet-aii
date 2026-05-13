@@ -1,6 +1,0 @@
-WERSJA 902
-- W zakładce Mój profil / dodane typy panel komentarzy ma teraz taki sam układ jak dashboard.
-- Dodano X do zamykania komentarzy w profilu.
-- Dodano zamykanie komentarzy klawiszem Escape w profilu.
-- Dodano przycisk "Dodaj komentarz" obok inputa w profilu.
-- Poprawiono CSS panelu komentarzy w profilu.

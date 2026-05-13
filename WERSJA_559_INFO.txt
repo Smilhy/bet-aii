@@ -1,6 +1,0 @@
-WERSJA 559
-
-Poprawka logo:
-- usunięto źle wstawione poprzednie logo w lewym górnym rogu
-- wstawiono wyczyszczone logo z przesłanego obrazka
-- przygotowano logo jako czysty asset z usuniętym tłem, żeby wyglądało poprawnie w sidebarze

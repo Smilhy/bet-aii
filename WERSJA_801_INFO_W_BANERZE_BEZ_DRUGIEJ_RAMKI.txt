@@ -1,8 +1,0 @@
-WERSJA 801
-- Usunięta cała dodatkowa ramka pod bannerem meczu.
-- Informacje o meczu zostały przeniesione do górnego bannera:
-  * nazwa meczu,
-  * data,
-  * godzina,
-  * liga.
-- Przycisk „Wróć do meczów” został również przeniesiony do bannera, żeby nic nie zniknęło funkcjonalnie.

@@ -1,7 +1,0 @@
-WERSJA 568
-
-Zmiany:
-- powrót do układu z wersji 566
-- środkowa kolumna została lekko zwężona razem z bannerem i wyszukiwaniem
-- prawa kolumna została delikatnie poszerzona o około 5%
-- kolory zostały bez zmian

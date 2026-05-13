@@ -1,5 +1,0 @@
-WERSJA 886
-- Przycisk/badge DARMOWY oraz PREMIUM został obniżony w lewej części karty.
-- Badge jest teraz przy dolnej ramce, na wysokości ikon like / komentarz / udostępnij.
-- Działa w Mój profil i na dashboardzie.
-- SQL nie jest potrzebny.

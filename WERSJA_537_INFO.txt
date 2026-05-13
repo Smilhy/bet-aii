@@ -1,4 +1,0 @@
-Wersja 537
-- Zmieniono nazwę zakładki Artykuły na Artykuły/TV Live.
-- Zawartość zakładki została zastąpiona statycznym widokiem inspirowanym screenshotem.
-- Odtworzono środkową i prawą kolumnę w stylu ultra-pro / glass / sharpen.

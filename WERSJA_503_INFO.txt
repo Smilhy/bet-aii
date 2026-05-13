@@ -1,4 +1,0 @@
-Wersja 503
-- Dodano poprawiony plik SQL SUPABASE_RUN_ONCE_FIX_REGISTER_503.sql.
-- Komunikat błędu w aplikacji wskazuje teraz plik 503 zamiast starego 500.
-- SQL usuwa stary trigger trigger_create_profile oraz funkcję create_profile_for_new_user, które blokowały rejestrację.

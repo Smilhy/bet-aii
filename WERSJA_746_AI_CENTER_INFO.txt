@@ -1,7 +1,0 @@
-WERSJA 746 — AI CENTER UI REBUILD
-- Zakładka Typy AI zrobiona od nowa jako jedno centrum.
-- W jednej zakładce: Live typy, Analiza, Mecze Result, Statystyki, Ligi.
-- Prawa kolumna zmienia się po kliknięciu typu.
-- Wygląd przebudowany na dark glass/neon UI jak w przesłanych screenach.
-- Nadal działa darmowo na APISPORTS_KEY; bez OpenAI i bez The Odds API.
-- Build sprawdzony poprawnie.

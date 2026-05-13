@@ -1,3 +1,0 @@
-WERSJA 871
-- Dodatkowo ustawione białe napisy w zakładce Typy.
-- Wybielone teksty w kartach typów, filtrach i nagłówkach sekcji.

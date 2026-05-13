@@ -1,5 +1,0 @@
-WERSJA 783
-- Poprawione flagi: nie używam już emoji, które na Windowsie wyświetlały się jako skróty AL, DZ, SA.
-- Lista państw pokazuje teraz prawdziwe obrazki flag + pełne nazwy krajów.
-- Mocniej podniesiona lewa kolumna i prawa kolumna po pojawieniu się, aby były na równi z górą środkowej sekcji.
-- Pozostałe funkcje bez zmian.

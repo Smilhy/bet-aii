@@ -1,6 +1,0 @@
-WERSJA 553
-- Hero dashboardu został lepiej dopasowany do ramki, żeby nie ucinało tekstów banerów.
-- Dodany bardziej szklisty / LED / premium wygląd dla hero.
-- Usunięte kropki slajdera; zostawione tylko strzałki po bokach.
-- Slajdy nadal zmieniają się automatycznie w pętli.
-- Paczka lekka: bez node_modules i bez dist.

@@ -1,7 +1,0 @@
-WERSJA 570
-
-Zmiany:
-- dodatkowo rozciągnięto całą prawą kolumnę o około 5%
-- lewa kolumna bez zmian
-- środkowa kolumna, hero i wyszukiwanie bez zmian
-- kolory bez zmian

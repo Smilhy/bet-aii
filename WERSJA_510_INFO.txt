@@ -1,6 +1,0 @@
-Wersja 510
-- Dodano live czat pomocy w prawym dolnym rogu.
-- Wiadomości użytkowników trafiają tylko do admina smilhytv / smilhytv@gmail.com.
-- Admin widzi rozmowy i może odpisywać live.
-- Styl czatu dopasowany do kolorystyki strony: dark navy / teal / cyan / emerald.
-- Dodano plik SQL: SUPABASE_SUPPORT_CHAT_510.sql.

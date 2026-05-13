@@ -1,7 +1,0 @@
-WERSJA 883
-- Usunięto zakładkę Przegląd z profilu.
-- Usunięto przycisk "Zobacz typ" z kart typów.
-- Usunięto ikonę zapisu/bookmark z prawego dolnego rogu karty.
-- Zmniejszono i skompaktowano kolumnę ANALIZA, żeby nie nachodziła na prawą część karty.
-- Zostawiono przycisk "Kup singiel" dla zablokowanych typów premium.
-- SQL nie jest potrzebny.

@@ -1,5 +1,0 @@
-WERSJA 915
-- Dodano przycisk "Obserwuj" pod odznaką Premium/Darmowy na kartach typów.
-- Przycisk ma styl jak na screenie: cienka turkusowa ramka, ciemne tło, tekst Obserwuj.
-- Przycisk nie otwiera typu przypadkowo, bo zatrzymuje propagację kliknięcia.
-- Dodatkowo wysyła event betai:follow-tipster, jeżeli obecna funkcja follow nie jest podpięta w danym miejscu.

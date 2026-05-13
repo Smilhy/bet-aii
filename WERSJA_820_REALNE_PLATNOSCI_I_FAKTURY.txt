@@ -1,9 +1,0 @@
-WERSJA 820
-- Usunięte fejkowe faktury z Portfela.
-- Karta „Płatności i faktury” pokazuje tylko prawdziwe płatności z tabeli payments zalogowanego użytkownika.
-- Ostatnie 3 realne dokumenty są widoczne w Portfelu.
-- „Pobierz” pojawia się tylko, gdy istnieje prawdziwy link faktury Stripe.
-- Gdy dokumentu Stripe nie ma, pokazuje się uczciwie „Brak faktury”.
-- „Zobacz wszystkie faktury” otwiera pełną listę prawdziwych płatności.
-- Webhook Stripe zapisuje invoice_number, invoice_pdf_url i invoice_url dla kolejnych zakupów Premium.
-- Do paczki dodano SQL: BETAI_SQL_820_REALNE_PLATNOSCI_I_FAKTURY.sql.

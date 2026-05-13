@@ -1,7 +1,0 @@
-WERSJA 898
-- Usunięto/ukryto rozwijany panel komentarzy pod kartą typu.
-- Nie pokazuje już na dashboardzie napisów:
-  "Komentarze: ... łącznie", inputa komentarza, przycisku "Dodaj komentarz",
-  autora komentarza i treści komentarzy.
-- Zostaje tylko ikonka komentarza z licznikiem w dolnym pasku karty.
-- Zostają poprawki z wersji 897.

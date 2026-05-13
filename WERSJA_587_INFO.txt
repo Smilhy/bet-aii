@@ -1,1 +1,0 @@
-WERSJA 587: ciemny wyglad modali zakupu singla i subskrypcji profilu.

@@ -1,2 +1,0 @@
-WERSJA 595
-Zmiana widocznej etykiety TIPSTER na TYPER w kartach typów oraz dodatkowe poprawki widocznych napisów tipster -> typer.

@@ -1,3 +1,0 @@
-Wersja 533
-- Usunięte całkowicie z menu bocznego zakładki: Powiadomienia, Płatności, Subskrypcja, Zarobki, Wypłaty.
-- Dodane zabezpieczenie: jeśli któraś z tych zakładek była aktywna, aplikacja wraca na Dashboard.

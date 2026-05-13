@@ -1,8 +1,0 @@
-WERSJA 865
-- Zmieniono wygląd kart typów w profilu na poziomy układ jak na screenie 1.
-- Zachowano realną logikę premium/free, komentarzy, reakcji i odblokowania singla.
-- Dodano obsługę realnych herbów:
-  • nowe typy zapisują home_logo / away_logo,
-  • zapisują też home_team_id / away_team_id,
-  • jeśli jest ID drużyny, frontend potrafi zbudować prawdziwy URL herbu API-Sports.
-- SQL do uruchomienia: BETAI_SQL_865_REALNE_HERBY_TYPY.sql

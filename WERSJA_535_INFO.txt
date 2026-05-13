@@ -1,4 +1,0 @@
-Wersja 535
-- Zakładka Top typerzy została podłączona do nowego widoku.
-- Wnętrze zakładki zostało zastąpione statycznym ekranem w stylu screenshotu.
-- Odtworzono środkową i prawą kolumnę, ultra-pro / glass / sharpen.

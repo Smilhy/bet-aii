@@ -1,6 +1,0 @@
-WERSJA 894
-- Naprawiono brak avatara w górnym pasku przy koncie/portfelu.
-- buildEffectiveAccountProfile przenosi teraz avatar_url/profile_avatar_url z profilu i metadata sesji.
-- Topbar używa getProfileAvatarUrl(effectiveAccountProfile), więc pokazuje ten sam avatar co profil/sidebar/karty.
-- Dodano mocniejsze CSS dla avatarów w topbarze, wiadomościach i live chacie.
-- SQL 893 zostaje bez zmian.

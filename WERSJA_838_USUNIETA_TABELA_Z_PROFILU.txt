@@ -1,7 +1,0 @@
-WERSJA 838
-- Usunięto z zakładki Przegląd w Mój profil blok pokazany na screenie:
-  • Statystyki miesiąca
-  • O mnie
-  • Ostatnie analizy
-- Pozostałe elementy profilu zostają bez zmian.
-- Nowego SQL nie trzeba.

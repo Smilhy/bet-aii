@@ -1,5 +1,0 @@
-WERSJA 555
-- Podmieniony przycisk portfela w topbarze na dzielony układ: Saldo | Żetony.
-- Styl inspirowany przesłanym screenem.
-- Kliknięcie nadal otwiera widok Portfel.
-- Paczka lekka: bez node_modules i bez dist.

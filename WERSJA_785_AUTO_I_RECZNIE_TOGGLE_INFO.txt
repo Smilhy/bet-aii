@@ -1,9 +1,0 @@
-WERSJA 785
-- Dodane dwa przełączniki w środkowej sekcji:
-  1) Dodaj typ automatycznie
-  2) Dodaj typ ręcznie
-- Działają jak przełącznik typu zaloguj / zarejestruj — aktywny przycisk zmienia cały widok środkowej kolumny.
-- Tryb automatyczny pokazuje obecny system wyszukiwania meczów i kursów.
-- Tryb ręczny pokazuje formularz: Sport, Kraj, Liga, Wydarzenie, Data wydarzenia, Typ, Kurs.
-- Kliknięcie „Dodaj zakład” w trybie ręcznym dodaje typ do kuponu po prawej, a potem można go opublikować tym samym przyciskiem co zwykle.
-- Pozostałe funkcje bez zmian.

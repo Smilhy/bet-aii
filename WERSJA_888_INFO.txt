@@ -1,6 +1,0 @@
-WERSJA 888
-- Poszerzono lewą kolumnę karty, żeby nick buchajson1988 z niebieskim znaczkiem nie nachodził.
-- Zwężono kolumnę ANALIZA, żeby zrobić miejsce dla nicku/autora.
-- Badge DARMOWY/PREMIUM ustawiono na sam dół lewej ramki karty.
-- Dodano zabezpieczenie przed dublowaniem niebieskiego znaczka przy nicku.
-- SQL nie jest potrzebny.

@@ -1,6 +1,0 @@
-WERSJA 792
-- Dodany hero banner w zakładce „Dodaj typ”.
-- Baner jest prosty, szklisty i spójny z obecnym wyglądem strony.
-- Zawiera tytuł, krótki opis oraz trzy zalety: szybkie wyszukiwanie, setki rynków, analiza AI.
-- Po prawej dodana futurystyczna grafika z piłką i kartą typu wykonana w CSS.
-- Pozostałe funkcje strony bez zmian.

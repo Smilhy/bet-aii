@@ -1,2 +1,0 @@
-WERSJA 598
-Zmiana kolorów modala opinii: przycisk Dodaj opinię ciemny, gwiazdki niebiesko/turkusowe, napis Live oceny użytkowników czarny i czytelny.

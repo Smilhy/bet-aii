@@ -1,5 +1,0 @@
-WERSJA 788
-- Zmieniony napis pod nagłówkiem „Dodaj nowy typ”.
-- Zamiast „API-FOOTBALL PRO — realne mecze i kursy” jest:
-  „Automatyczne pobieranie meczów i kursów”.
-- Pozostałe funkcje bez zmian.

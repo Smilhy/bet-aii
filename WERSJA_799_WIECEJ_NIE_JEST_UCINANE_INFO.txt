@@ -1,4 +1,0 @@
-WERSJA 799
-- Poprawione ucinanie przycisku „Więcej”.
-- Lekko zmniejszone napisy i boxy kursów.
-- Ustawiony sztywny układ w jednym rzędzie, żeby wszystko mieściło się poprawnie.

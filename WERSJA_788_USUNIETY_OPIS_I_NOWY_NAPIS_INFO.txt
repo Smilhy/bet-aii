@@ -1,5 +1,0 @@
-WERSJA 788
-- Usunięty tekst: „Wybierz wydarzenie i rynek, a następnie skonfiguruj swój typ.”
-- Zmieniony napis pod nagłówkiem:
-  „API-FOOTBALL PRO — realne mecze i kursy” -> „Automatyczne pobieranie meczów i kursów”.
-- Pozostałe funkcje bez zmian.

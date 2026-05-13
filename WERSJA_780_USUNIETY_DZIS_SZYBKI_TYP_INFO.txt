@@ -1,3 +1,0 @@
-WERSJA 780
-- Usunięty przycisk „Dziś — szybki typ” z lewej kolumny w zakładce Dodaj typ.
-- Pozostałe funkcje bez zmian.

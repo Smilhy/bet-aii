@@ -1,5 +1,0 @@
-Wersja 485
-- Lewa kolumna pozostawiona bez zmian.
-- Prawa kolumna została wyśrodkowana poziomo i lekko przesunięta w dół.
-- Zachowano pełny obraz po prawej stronie, bez ucinania.
-- Dostosowano ustawienie prawego panelu do wzoru: bardziej centralnie i niżej.

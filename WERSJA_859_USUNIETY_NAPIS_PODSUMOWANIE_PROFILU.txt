@@ -1,3 +1,0 @@
-WERSJA 859
-- Usunięto napis: "Duże, czytelne podsumowanie profilu" z sekcji statystyk na profilu.
-- Bez zmian w logice.

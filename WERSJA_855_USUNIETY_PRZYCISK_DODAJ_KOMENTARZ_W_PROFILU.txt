@@ -1,5 +1,0 @@
-WERSJA 855
-- Usunięto przycisk „Dodaj komentarz” z komentarzy na typie w profilu.
-- Komentarz dodaje się teraz Enterem z pola tekstowego.
-- Pole komentarza zajmuje całą szerokość.
-- SQL nie jest potrzebny.

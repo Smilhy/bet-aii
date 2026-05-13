@@ -1,5 +1,0 @@
-WERSJA 840
-- Przeniesiono ramkę „Osiągnięcia / Odznaki” z głównej części profilu do prawej kolumny.
-- Odznaki dopasowano do węższego panelu: mniejsze ikonki i układ 3x2.
-- Główna część profilu nie zostawia już pustej prawej kolumny po przeniesieniu odznak.
-- Nowego SQL nie trzeba.

@@ -1,1 +1,0 @@
-Wersja 736 FREE START: wymaga tylko APISPORTS_KEY. Bez ODDS_API_KEY i bez OPENAI_API_KEY. Mecze z API-Sports, typy i analiza lokalnym algorytmem. Po deployu: Clear cache and deploy site, potem Ctrl+F5.
