@@ -11995,15 +11995,50 @@ function AiEventCard({ tip }) {
   )
 }
 
+
+const BETAI_SPORT_META_V1051 = {
+  'Wszystkie': { icon: '✦', label: 'Wszystkie' },
+  'Piłka nożna': { icon: '⚽', label: 'Piłka nożna' },
+  'Tenis': { icon: '🎾', label: 'Tenis' },
+  'Koszykówka': { icon: '🏀', label: 'Koszykówka' },
+  'Hokej': { icon: '🏒', label: 'Hokej' },
+  'E-sport': { icon: '🎮', label: 'E-sport' },
+  'Siatkówka': { icon: '🏐', label: 'Siatkówka' },
+  'MMA': { icon: '🥊', label: 'MMA' },
+  'Baseball': { icon: '⚾', label: 'Baseball' }
+}
+
+function getBetAiSportMetaV1051(sport = '') {
+  return BETAI_SPORT_META_V1051[sport] || { icon: '✦', label: sport || 'Sport' }
+}
+
+function getBetAiKickoffStateV1051(rawDate) {
+  const t = rawDate ? new Date(rawDate).getTime() : 0
+  if (!t || Number.isNaN(t)) return 'prematch'
+  const now = Date.now()
+  const diff = t - now
+  if (diff > 0) return 'prematch'
+  if (diff > -135 * 60 * 1000) return 'live'
+  return 'finished'
+}
+
+function getBetAiKickoffLabelV1051(state = 'prematch') {
+  if (state === 'live') return 'LIVE'
+  if (state === 'finished') return 'Zakończony'
+  return 'Pre-match'
+}
+
+
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const SPORTS = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
+  const SPORTS = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const [activeSport, setActiveSport] = useState('Wszystkie')
   const [activePanel, setActivePanel] = useState('live')
+  const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
   const [liveCards, setLiveCards] = useState([])
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
-  const [statusText, setStatusText] = useState('Gotowe. Kliknij „Odśwież live AI”, żeby pobrać realne mecze z API-Sports.')
+  const [statusText, setStatusText] = useState('Gotowe. Główny tryb to pre-match. Kliknij „Odśwież AI”, żeby pobrać najbliższe mecze z API-Sports.')
   const [lastRefresh, setLastRefresh] = useState('')
 
   const normalizeSport = (value = '') => {
@@ -12012,6 +12047,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     if (v.includes('basket') || v.includes('nba') || v.includes('kosz')) return 'Koszykówka'
     if (v.includes('volley') || v.includes('siat')) return 'Siatkówka'
     if (v.includes('hockey') || v.includes('hokej') || v.includes('nhl')) return 'Hokej'
+    if (v.includes('esport') || v.includes('e-sport') || v.includes('csgo') || v.includes('cs2') || v.includes('lol') || v.includes('dota')) return 'E-sport'
     if (v.includes('mma') || v.includes('ufc')) return 'MMA'
     if (v.includes('baseball') || v.includes('mlb')) return 'Baseball'
     if (v.includes('handball') || v.includes('ręczna') || v.includes('reczna')) return 'Piłka ręczna'
@@ -12100,6 +12136,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         status: t.status || t.result || 'pending',
         scoreHome: Number(t.live_score_home || 0),
         scoreAway: Number(t.live_score_away || 0),
+        kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at),
         source: 'Supabase Journal',
         formHome: 74,
         formAway: 67,
@@ -12120,9 +12157,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const q = search.trim().toLowerCase()
     return allCards
       .filter(c => activeSport === 'Wszystkie' || c.sport === activeSport)
+      .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction}`.toLowerCase().includes(q))
-      .sort((a, b) => Number(b.aiScore || 0) - Number(a.aiScore || 0))
-  }, [allCards, activeSport, search])
+      .sort((a, b) => {
+        const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
+        return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState)) || Number(b.aiScore || 0) - Number(a.aiScore || 0)
+      })
+  }, [allCards, activeSport, matchMode, search])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
@@ -12221,10 +12262,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function fetchLiveAiPicks() {
     setLoadingAi(true)
-    setStatusText('Pobieram realne mecze z API-Sports i buduję lokalne typy AI...')
+    setStatusText('Pobieram mecze pre-match/live z API-Sports i buduję lokalne typy AI...')
     try {
       const sportsToFetch = activeSport === 'Wszystkie'
-        ? ['Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
+        ? ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
         : [activeSport]
       const collected = []
       for (const sport of sportsToFetch) {
@@ -12242,7 +12283,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLiveCards(clean)
       setSelectedId(clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(clean.length ? `Pobrano ${clean.length} realnych typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie.` : 'API nie zwróciło meczów dla tego filtra. Spróbuj inny sport albo później.')
+      setStatusText(clean.length ? `Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie.` : 'API nie zwróciło meczów dla tego filtra. Spróbuj inny sport albo później.')
       saveCardsToJournal(clean)
     } catch (err) {
       setStatusText(`Błąd Typów AI: ${err?.message || err}`)
@@ -12257,10 +12298,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div>
           <span className="ai-center-eyebrow-v747">BET+AI FREE MODEL • API-SPORTS</span>
           <h1>Typy AI Centrum</h1>
-          <p>Jedna zakładka: live typy, analiza klikniętego meczu, dziennik wyników, statystyki modelu i podział lig.</p>
+          <p>Jedna zakładka: pre-match typy, live jako dodatek, analiza klikniętego meczu, dziennik wyników, statystyki modelu i podział lig.</p>
         </div>
         <div className="ai-center-actions-v747">
-          <button type="button" onClick={fetchLiveAiPicks} disabled={loadingAi || liveGenerating}>{loadingAi || liveGenerating ? 'Pobieram...' : '⟳ Odśwież live AI'}</button>
+          <button type="button" onClick={fetchLiveAiPicks} disabled={loadingAi || liveGenerating}>{loadingAi || liveGenerating ? 'Pobieram...' : '⟳ Odśwież AI'}</button>
           <button type="button" className="ghost" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}</button>
         </div>
       </div>
@@ -12275,8 +12316,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       <div className="ai-filter-bar-v747">
         <div className="ai-sport-tabs-v747">
-          {SPORTS.map(sport => (
-            <button key={sport} type="button" className={activeSport === sport ? 'active' : ''} onClick={() => { setActiveSport(sport); setSelectedId('') }}>{sport}</button>
+          {SPORTS.map(sport => {
+            const meta = getBetAiSportMetaV1051(sport)
+            const count = sport === 'Wszystkie' ? allCards.length : allCards.filter(card => card.sport === sport).length
+            return (
+              <button key={sport} type="button" className={activeSport === sport ? 'active sport-card-v1051' : 'sport-card-v1051'} onClick={() => { setActiveSport(sport); setSelectedId('') }}>
+                <span className="sport-icon-v1051">{meta.icon}</span>
+                <span className="sport-copy-v1051"><b>{meta.label}</b><small>{count}</small></span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="ai-mode-tabs-v1051">
+          {[['prematch','Pre-match'], ['live','Na żywo'], ['all','Wszystkie']].map(([key,label]) => (
+            <button key={key} type="button" className={matchMode === key ? 'active' : ''} onClick={() => { setMatchMode(key); setSelectedId('') }}>
+              {label}{key === 'live' ? <em>LIVE</em> : null}
+            </button>
           ))}
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj meczu, ligi, sportu..." />
@@ -12296,13 +12351,18 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-live-list-v747">
               {visibleCards.map(card => (
                 <button type="button" key={card.id} className={`ai-pick-card-v747 ${selectedCard?.id === card.id ? 'selected' : ''}`} onClick={() => { setSelectedId(card.id); setActivePanel('live') }}>
-                  <div className="pick-top-v747"><span>{card.sport}</span><em>{card.league}</em><b>{card.aiScore}%</b></div>
+                  <div className="pick-top-v747">
+                    <span className="pick-sport-v1051"><i>{getBetAiSportMetaV1051(card.sport).icon}</i>{card.sport}</span>
+                    <em>{card.league}</em>
+                    <b>{card.aiScore}%</b>
+                  </div>
                   <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
-                  <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className="status">{card.status}</span></div>
+                  <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className={`kickoff-badge-v1051 ${card.kickoffState || 'prematch'}`}>{getBetAiKickoffLabelV1051(card.kickoffState)}</span></div>
                   <div className="pick-bottom-v747"><div><small>TYP MODELU</small><b>{card.prediction}</b></div><div><small>Kurs</small><b>{card.odds}</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div></div>
+                  <p className="pick-explain-v1051">{card.analysis}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Kliknij „Odśwież live AI”. Jeśli dalej pusto, wybierz Siatkówka/Koszykówka/Hokej, bo tam API-Sports najczęściej zwraca darmowe mecze.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Kliknij „Odśwież AI”. Domyślnie widzisz pre-match. Jeżeli pusto, przełącz na „Wszystkie” albo wybierz inny sport.</p></div>}
             </div>
           )}
 
@@ -12336,7 +12396,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               <div className="ai-analysis-card-v747 featured">
                 <span className="label">WYBRANY TYP</span>
                 <h2>{selectedCard.home} vs {selectedCard.away}</h2>
-                <p>{selectedCard.sport} • {selectedCard.league} • {selectedCard.date}</p>
+                <p>{selectedCard.sport} • {selectedCard.league} • {selectedCard.date} • {getBetAiKickoffLabelV1051(selectedCard.kickoffState)}</p>
                 <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}%</strong><span>AI SCORE</span></div>
                 <div className="selected-pick-v747"><small>Typ modelu</small><b>{selectedCard.prediction}</b><em>{selectedCard.market} • kurs {selectedCard.odds}</em></div>
               </div>
@@ -12360,7 +12420,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               </div>
             </>
           ) : (
-            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Odśwież live AI i kliknij dowolny mecz.</p></div>
+            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Odśwież AI i kliknij dowolny mecz.</p></div>
           )}
         </aside>
         )}
