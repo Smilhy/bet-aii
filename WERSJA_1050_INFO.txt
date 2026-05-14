@@ -1,0 +1,18 @@
+WERSJA 1050 — TYPY AI CENTRUM + STATYSTYKI
+
+Naprawione/dodane:
+- przywrócony pełny layout Typy AI Centrum,
+- karty live typów, panel analizy, ryzyko, EV, ciekawostka AI,
+- zakładka Statystyki z KPI, ROI, hit rate, profit evolution, win/loss, kursy, streak, drawdown, ligi i typy zakładów,
+- zakładka Ligi pokazuje zapisane ligi i statystyki,
+- AI pobiera więcej sportów: piłka, koszykówka, tenis, hokej, siatkówka, MMA, baseball,
+- typy AI zapisują curiosity/analizę/ryzyko/score/EV,
+- SQL tworzy ai_leagues_catalog i widok ai_tips_stats_summary,
+- nowe ligi dopisują się automatycznie z tabeli tips,
+- nie ruszono Admin Finanse, Admin Wypłaty, Stripe ani auto-settle.
+
+Wymagane:
+1. Odpal SQL:
+   supabase/version_1050_ai_tips_stats_center.sql
+2. Wgraj paczkę na Netlify.
+3. Wejdź Typy AI, kliknij Odśwież live AI, potem Statystyki.

@@ -11996,7 +11996,7 @@ function AiEventCard({ tip }) {
 }
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const SPORTS = ['Wszystkie', 'Piłka nożna']
+  const SPORTS = ['Wszystkie', 'Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
   const [activeSport, setActiveSport] = useState('Wszystkie')
   const [activePanel, setActivePanel] = useState('live')
   const [search, setSearch] = useState('')
@@ -12073,7 +12073,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       formHome: hashNumber(seed + home, 61, 88),
       formAway: hashNumber(seed + away, 54, 82),
       confidenceText: base >= 84 ? 'MOCNY SYGNAŁ' : base >= 74 ? 'DOBRY TYP' : 'OBSERWUJ',
-      analysis: `Model wybrał rynek „${market}”, bo dla tego meczu najwyższy score daje strona: ${pickSide}. Algorytm bierze pod uwagę sport, ligę, stabilność rynku, modelowy kurs, ryzyko i wartość EV.`,
+      curiosity: `${league}: model dopisuje tę ligę do katalogu statystyk i będzie osobno liczył skuteczność, ROI oraz ryzyko dla tego rynku.`,
+      analysis: `Model wybrał rynek „${market}”, bo dla tego meczu najwyższy score daje strona: ${pickSide}. Szacowane ryzyko: ${risk}. EV: ${ev >= 0 ? '+' : ''}${ev}%. Algorytm bierze pod uwagę sport, ligę, stabilność rynku, modelowy kurs, ryzyko, formę stron i wartość EV. Ciekawostka: ${league} będzie zapisana w statystykach ligi, jeśli wcześniej jej nie było.`,
     }
   }
 
@@ -12190,6 +12191,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       risk_level: card.risk,
       analysis: card.analysis,
       ai_analysis: card.analysis,
+      curiosity: card.curiosity,
       live_score_home: Number(card.scoreHome || 0),
       live_score_away: Number(card.scoreAway || 0),
       status: 'pending',
@@ -12201,6 +12203,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }))
     try {
       await supabase.from('tips').upsert(payload, { onConflict: 'ai_external_key,market,selection' })
+      const leagues = Array.from(new Map(cards.map(card => [`${card.sport}|||${card.league}`, {
+        sport: card.sport,
+        league: card.league,
+        country: card.country || 'API-Sports',
+        last_seen: new Date().toISOString(),
+        tips_count: 1
+      }])).values())
+      if (leagues.length) {
+        await supabase.from('ai_leagues_catalog').upsert(leagues, { onConflict: 'sport,league' }).catch(() => {})
+      }
       if (typeof onRefresh === 'function') onRefresh()
     } catch (err) {
       console.warn('AI journal save skipped:', err?.message || err)
@@ -12212,7 +12224,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     setStatusText('Pobieram realne mecze z API-Sports i buduję lokalne typy AI...')
     try {
       const sportsToFetch = activeSport === 'Wszystkie'
-        ? ['Piłka nożna']
+        ? ['Piłka nożna', 'Koszykówka', 'Tenis', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
         : [activeSport]
       const collected = []
       for (const sport of sportsToFetch) {
@@ -12332,6 +12344,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               <div className="ai-analysis-card-v747">
                 <h3>Analiza AI</h3>
                 <p>{selectedCard.analysis}</p>
+                {selectedCard.curiosity ? <div className="ai-curiosity-v1050"><b>Ciekawostka AI</b><span>{selectedCard.curiosity}</span></div> : null}
                 <div className="analysis-grid-v747"><div><span>Ryzyko</span><b>{selectedCard.risk}</b></div><div><span>EV</span><b>{selectedCard.ev >= 0 ? '+' : ''}{selectedCard.ev}%</b></div><div><span>Źródło</span><b>{selectedCard.source}</b></div></div>
               </div>
 
