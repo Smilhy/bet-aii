@@ -15318,11 +15318,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     username,
     author_email: email,
     email,
-    plan: user?.plan || userPlan || (premium ? 'premium' : 'free'),
-    status: user?.status || (premium ? 'premium' : 'free'),
-    subscription_status: user?.subscription_status || (premium ? 'active' : 'free'),
-    is_premium: Boolean(premium),
-    can_sell_subscriptions: Boolean(canMonetizeProfile),
+    plan: user?.plan || userPlan || (isPremiumSellerProfile(user, userPlan) ? 'premium' : 'free'),
+    status: user?.status || (isPremiumSellerProfile(user, userPlan) ? 'premium' : 'free'),
+    subscription_status: user?.subscription_status || (isPremiumSellerProfile(user, userPlan) ? 'active' : 'free'),
+    is_premium: Boolean(isPremiumSellerProfile(user, userPlan)),
+    can_sell_subscriptions: Boolean(isPremiumSellerProfile(user, userPlan) || isAdminUser(user) || Boolean(user?.is_admin)),
     duration_days: 30
   }
   const handlePremiumProfileTabClick = () => {
