@@ -1,0 +1,32 @@
+WERSJA 1043 — ADMIN WYPŁATY HARDENING 100%
+
+Zrobione:
+- zabezpieczone Netlify functions:
+  approve-payout.js
+  send-real-stripe-payout.js
+  send-tipster-payout.js
+  process-payouts.js
+- dodany helper:
+  netlify/functions/_admin-payout-security.js
+- approve/send wymaga admin JWT albo ADMIN_API_SECRET/CRON_SECRET,
+- process-payouts wymaga Netlify scheduled header albo PAYOUT_CRON_SECRET/CRON_SECRET/ADMIN_API_SECRET,
+- jeśli nie ustawisz sekretu, ręczne odpalenie procesu z URL dostanie 401,
+- transfery Stripe są idempotentne po payout id,
+- status przechodzi pending -> processing -> paid,
+- błędy przechodzą w failed i zapisują stripe_error,
+- reject_tipster_payout zabezpieczony admin guardem,
+- RLS dla payout_requests/user_stripe_accounts/admin_logs,
+- frontend wysyła Authorization Bearer z sesji Supabase do admin funkcji,
+- Admin finanse i Admin wypłaty zostają oddzielne.
+
+Wymagane:
+1. Odpal SQL:
+   supabase/version_1043_admin_payouts_hardening.sql
+2. W Netlify dodaj najlepiej:
+   PAYOUT_CRON_SECRET=losowy_długi_token
+   ADMIN_API_SECRET=losowy_długi_token
+3. Wgraj paczkę na Netlify.
+4. Test:
+   - Admin wypłaty powinien dalej pokazywać listę.
+   - Ręczny URL process-payouts bez sekretu powinien zwrócić 401.
+   - Z panelu admina approve działa, bo frontend daje Bearer token.

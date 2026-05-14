@@ -17303,6 +17303,7 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
           <span>Tylko administrator</span>
           <h1>Finanse platformy</h1>
           <p>Prawdziwy raport Bet+AI: przychód platformy, obrót marketplace, zobowiązania wobec typerów, wpłaty i ostatnie operacje.</p>
+          {report?.generated_at ? <small className="admin-finance-generated-v1042">Ostatnie odświeżenie: {new Date(report.generated_at).toLocaleString('pl-PL')}</small> : null}
         </div>
         <button type="button" onClick={onRefresh}>Odśwież raport</button>
       </div>
@@ -19865,6 +19866,17 @@ function App() {
 
   
 
+
+  async function getAdminBearerHeaders(extraHeaders = {}) {
+    const headers = { ...extraHeaders }
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data?.session?.access_token
+      if (token) headers.Authorization = `Bearer ${token}`
+    } catch (_) {}
+    return headers
+  }
+
   async function runPayoutCron() {
     if (!sessionUser?.id || !isAdminUser(sessionUser)) {
       showToast({ type: 'error', title: 'Brak uprawnień', message: 'Tylko admin może uruchomić cron wypłat.' })
@@ -19873,7 +19885,10 @@ function App() {
 
     try {
       showToast({ type: 'info', title: 'Cron wypłat', message: 'Uruchamiam testowe przetwarzanie pending wypłat...' })
-      const response = await fetch('/.netlify/functions/process-payouts', { method: 'POST' })
+      const response = await fetch('/.netlify/functions/process-payouts', {
+        method: 'POST',
+        headers: await getAdminBearerHeaders({ 'Content-Type': 'application/json' })
+      })
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
@@ -19908,7 +19923,7 @@ function App() {
       if (status !== 'rejected') {
         const response = await fetch('/.netlify/functions/approve-payout', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAdminBearerHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ request_id: requestId, admin_user_id: sessionUser.id })
         })
 
@@ -20265,19 +20280,29 @@ function App() {
         return
       }
 
+      const row = Array.isArray(data) ? (data[0] || {}) : data
+      if (row?.ok === false || row?.admin_denied) {
+        showToast?.({ type: 'error', title: 'Brak dostępu', message: row?.error || 'Raport finansowy jest dostępny tylko dla administratora.' })
+        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
+        return
+      }
+
       setAdminFinanceReport({
-        platform_commission: Number(data.platform_commission || 0),
-        premium_revenue: Number(data.premium_revenue || 0),
-        total_platform_revenue: Number(data.total_platform_revenue || Number(data.platform_commission || 0) + Number(data.premium_revenue || 0)),
-        total_sales: Number(data.total_sales || 0),
-        gross_sales: Number(data.gross_sales || 0),
-        tipster_earnings: Number(data.tipster_earnings || 0),
-        total_payouts: Number(data.total_payouts || 0),
-        pending_payouts: Number(data.pending_payouts || 0),
-        available_to_payout: Number(data.available_to_payout || 0),
-        wallet_topups: Number(data.wallet_topups || 0),
-        active_premium_users: Number(data.active_premium_users || 0),
-        transactions: Array.isArray(data.transactions) ? data.transactions : []
+        ok: row.ok !== false,
+        source: row.source || 'supabase-rpc',
+        generated_at: row.generated_at || new Date().toISOString(),
+        platform_commission: Number(row.platform_commission || 0),
+        premium_revenue: Number(row.premium_revenue || 0),
+        total_platform_revenue: Number(row.total_platform_revenue || Number(row.platform_commission || 0) + Number(row.premium_revenue || 0)),
+        total_sales: Number(row.total_sales || 0),
+        gross_sales: Number(row.gross_sales || 0),
+        tipster_earnings: Number(row.tipster_earnings || 0),
+        total_payouts: Number(row.total_payouts || 0),
+        pending_payouts: Number(row.pending_payouts || 0),
+        available_to_payout: Number(row.available_to_payout || 0),
+        wallet_topups: Number(row.wallet_topups || 0),
+        active_premium_users: Number(row.active_premium_users || 0),
+        transactions: Array.isArray(row.transactions) ? row.transactions : []
       })
     } catch (error) {
       console.error('fetchAdminFinanceReport error', error)

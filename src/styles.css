@@ -42449,3 +42449,17 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1040 */
+
+
+/* ==========================================================================
+   WERSJA 1042 — ADMIN FINANSE REAL REPORT
+   ========================================================================== */
+
+.admin-finance-generated-v1042{
+  display:block !important;
+  margin-top:8px !important;
+  color:#8fb8c8 !important;
+  font-weight:800 !important;
+}
+
+/* KONIEC WERSJI 1042 */

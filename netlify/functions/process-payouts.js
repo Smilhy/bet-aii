@@ -1,5 +1,6 @@
+
 const Stripe = require('stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { response, supabaseAdmin, safeInsert, safeUpdatePayout } = require('./_admin-payout-security');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
@@ -9,38 +10,38 @@ exports.config = {
   schedule: process.env.PAYOUT_CRON_SCHEDULE || '0 * * * *'
 };
 
-function supabaseAdmin() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
-  return createClient(url, key);
-}
-
-function response(code, body) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
-}
-
 function isAuthorized(event) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
+  const cronSecret = process.env.PAYOUT_CRON_SECRET || process.env.CRON_SECRET || process.env.ADMIN_API_SECRET || '';
+  const isScheduled = event.headers['x-netlify-scheduled-function'] === 'true' || event.headers['X-Netlify-Scheduled-Function'] === 'true';
+  if (isScheduled) return true;
+  if (!cronSecret) return false;
   const auth = event.headers.authorization || event.headers.Authorization || '';
-  const token = auth.replace(/^Bearer\s+/i, '') || event.queryStringParameters?.secret;
-  return token === cronSecret;
+  const bearer = auth.replace(/^Bearer\s+/i, '');
+  const querySecret = event.queryStringParameters?.secret || '';
+  const headerSecret = event.headers['x-admin-secret'] || event.headers['X-Admin-Secret'] || '';
+  return [bearer, querySecret, headerSecret].some(token => token && token === cronSecret);
 }
 
 async function markFailed(supabase, payout, message) {
   const now = new Date().toISOString();
   await supabase
     .from('payout_requests')
-    .update({ status: 'failed', stripe_status: 'failed', stripe_error: String(message || '').slice(0, 500), processed_at: now, updated_at: now })
-    .eq('id', payout.id);
+    .update({
+      status: 'failed',
+      stripe_status: 'failed',
+      stripe_error: String(message || '').slice(0, 500),
+      processed_at: now,
+      updated_at: now
+    })
+    .eq('id', payout.id)
+    .in('status', ['processing', 'pending']);
 
-  await supabase.from('admin_logs').insert({
+  await safeInsert(supabase, 'admin_logs', {
     admin_user_id: null,
     action: 'auto_payout_failed',
     target_table: 'payout_requests',
     target_id: payout.id,
-    metadata: { error: message, user_id: payout.user_id, amount: payout.amount }
+    metadata: { error: String(message || ''), user_id: payout.user_id, amount: payout.amount }
   });
 }
 
@@ -49,15 +50,11 @@ async function processSinglePayout(supabase, payout) {
   if (amount < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
 
   const processingTime = new Date().toISOString();
-  const { data: lockedRows, error: lockError } = await supabase
-    .from('payout_requests')
-    .update({ status: 'processing', stripe_status: 'processing', updated_at: processingTime })
-    .eq('id', payout.id)
-    .eq('status', 'pending')
-    .select('id');
-
-  if (lockError) throw lockError;
-  if (!lockedRows?.length) throw new Error('PAYOUT_ALREADY_LOCKED_OR_PROCESSED');
+  await safeUpdatePayout(supabase, payout.id, {
+    status: 'processing',
+    stripe_status: 'processing',
+    updated_at: processingTime
+  }, 'pending');
 
   const { data: accountRow, error: accountError } = await supabase
     .from('user_stripe_accounts')
@@ -73,14 +70,16 @@ async function processSinglePayout(supabase, payout) {
   await supabase.from('user_stripe_accounts').upsert({
     user_id: payout.user_id,
     stripe_account_id: account.id,
-    charges_enabled: !!account.charges_enabled,
-    payouts_enabled: !!account.payouts_enabled,
+    charges_enabled: Boolean(account.charges_enabled),
+    payouts_enabled: Boolean(account.payouts_enabled),
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
   if (!account.payouts_enabled) throw new Error('STRIPE_PAYOUTS_NOT_ENABLED');
 
   const amountMinor = Math.round(amount * 100);
+  if (!amountMinor || amountMinor < 100) throw new Error('INVALID_PAYOUT_AMOUNT');
+
   const transfer = await stripe.transfers.create({
     amount: amountMinor,
     currency: (payout.currency || 'pln').toLowerCase(),
@@ -94,30 +93,25 @@ async function processSinglePayout(supabase, payout) {
 
   const now = new Date().toISOString();
 
-  const { error: updateError } = await supabase
-    .from('payout_requests')
-    .update({
-      status: 'paid',
-      stripe_transfer_id: transfer.id,
-      stripe_status: 'transferred',
-      processed_at: now,
-      updated_at: now
-    })
-    .eq('id', payout.id)
-    .eq('status', 'processing');
+  await safeUpdatePayout(supabase, payout.id, {
+    status: 'paid',
+    stripe_transfer_id: transfer.id,
+    stripe_status: 'transferred',
+    processed_at: now,
+    updated_at: now
+  }, 'processing');
 
-  if (updateError) throw updateError;
-
-  await supabase.from('wallet_transactions').insert({
+  await safeInsert(supabase, 'wallet_transactions', {
     user_id: payout.user_id,
     amount: -amount,
     type: 'payout',
     status: 'completed',
     provider: 'stripe',
-    provider_session_id: transfer.id
+    provider_session_id: transfer.id,
+    created_at: now
   });
 
-  await supabase.from('admin_logs').insert({
+  await safeInsert(supabase, 'admin_logs', {
     admin_user_id: null,
     action: 'auto_approve_payout_stripe_transfer',
     target_table: 'payout_requests',
@@ -135,7 +129,8 @@ async function processSinglePayout(supabase, payout) {
 
 exports.handler = async (event) => {
   if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { error: 'Method not allowed' });
-  if (!isAuthorized(event)) return response(401, { error: 'Unauthorized' });
+  if (!process.env.STRIPE_SECRET_KEY) return response(500, { error: 'Missing STRIPE_SECRET_KEY' });
+  if (!isAuthorized(event)) return response(401, { error: 'Unauthorized: set PAYOUT_CRON_SECRET/CRON_SECRET or use Netlify scheduled function' });
 
   const supabase = supabaseAdmin();
 
@@ -155,15 +150,19 @@ exports.handler = async (event) => {
       try {
         results.push(await processSinglePayout(supabase, payout));
       } catch (err) {
-        const message = err.message || 'AUTO_PAYOUT_FAILED';
-        await markFailed(supabase, payout, message);
-        results.push({ id: payout.id, ok: false, error: message });
+        await markFailed(supabase, payout, err.message || err);
+        results.push({ id: payout.id, ok: false, error: err.message || String(err) });
       }
     }
 
-    return response(200, { ok: true, processed: results.length, results });
+    return response(200, {
+      ok: true,
+      processed: results.filter(r => r.ok).length,
+      failed: results.filter(r => !r.ok).length,
+      results
+    });
   } catch (error) {
-    console.error('process-payouts error:', error);
+    console.error('process-payouts hardening error:', error);
     return response(500, { error: error.message || 'PROCESS_PAYOUTS_FAILED' });
   }
 };

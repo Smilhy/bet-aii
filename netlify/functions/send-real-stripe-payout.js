@@ -1,37 +1,71 @@
+
 const Stripe = require('stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { response, supabaseAdmin, requireAdmin, safeInsert, safeUpdatePayout } = require('./_admin-payout-security');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
 
-function supabaseAdmin() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Missing Supabase env');
-  return createClient(url, key);
-}
+async function markFailed(supabase, payout, message, adminUserId = null) {
+  const now = new Date().toISOString();
+  if (!supabase || !payout?.id) return;
+  await supabase
+    .from('payout_requests')
+    .update({
+      status: 'failed',
+      stripe_status: 'failed',
+      stripe_error: String(message || '').slice(0, 500),
+      processed_at: now,
+      updated_at: now
+    })
+    .eq('id', payout.id)
+    .in('status', ['processing', 'pending']);
 
-function response(code, body) {
-  return { statusCode: code, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  await safeInsert(supabase, 'admin_logs', {
+    admin_user_id: adminUserId,
+    action: 'payout_failed',
+    target_table: 'payout_requests',
+    target_id: payout.id,
+    metadata: { error: String(message || ''), user_id: payout.user_id, amount: payout.amount }
+  });
 }
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
+  if (!process.env.STRIPE_SECRET_KEY) return response(500, { error: 'Missing STRIPE_SECRET_KEY' });
+
+  let supabase = null;
+  let payout = null;
+  let admin = null;
 
   try {
-    const { request_id, admin_user_id } = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    const { request_id } = body;
     if (!request_id) return response(400, { error: 'Missing request_id' });
 
-    const supabase = supabaseAdmin();
+    supabase = supabaseAdmin();
+    admin = await requireAdmin(event, supabase, body);
+    if (!admin.ok) return response(admin.statusCode || 403, { error: admin.error });
 
-    const { data: payout, error: payoutError } = await supabase
+    const { data: payoutRow, error: payoutError } = await supabase
       .from('payout_requests')
       .select('*')
       .eq('id', request_id)
       .maybeSingle();
 
     if (payoutError) throw payoutError;
+    payout = payoutRow;
     if (!payout) throw new Error('PAYOUT_NOT_FOUND');
     if (payout.status !== 'pending') throw new Error('PAYOUT_ALREADY_PROCESSED');
+    if (Number(payout.amount || 0) < MIN_PAYOUT_AMOUNT) throw new Error(`MIN_PAYOUT_${MIN_PAYOUT_AMOUNT}_PLN`);
+
+    const processingTime = new Date().toISOString();
+    await safeUpdatePayout(supabase, payout.id, {
+      status: 'processing',
+      stripe_status: 'processing',
+      approved_by: admin.admin_user_id,
+      approved_at: processingTime,
+      updated_at: processingTime
+    }, 'pending');
 
     const { data: accountRow, error: accountError } = await supabase
       .from('user_stripe_accounts')
@@ -47,8 +81,8 @@ exports.handler = async (event) => {
     await supabase.from('user_stripe_accounts').upsert({
       user_id: payout.user_id,
       stripe_account_id: account.id,
-      charges_enabled: !!account.charges_enabled,
-      payouts_enabled: !!account.payouts_enabled,
+      charges_enabled: Boolean(account.charges_enabled),
+      payouts_enabled: Boolean(account.payouts_enabled),
       updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' });
 
@@ -58,51 +92,40 @@ exports.handler = async (event) => {
     const amountMinor = Math.round(amount * 100);
     if (!amountMinor || amountMinor < 100) throw new Error('INVALID_PAYOUT_AMOUNT');
 
-    let transfer;
-    try {
-      transfer = await stripe.transfers.create({
-        amount: amountMinor,
-        currency: (payout.currency || 'pln').toLowerCase(),
-        destination: account.id,
-        metadata: {
-          payout_request_id: payout.id,
-          user_id: payout.user_id,
-          admin_user_id: admin_user_id || ''
-        }
-      }, { idempotencyKey: `betai_payout_${payout.id}` });
-    } catch (e) {
-      if (String(e.message || '').toLowerCase().includes('insufficient')) {
-        throw new Error('INSUFFICIENT_STRIPE_BALANCE');
+    const transfer = await stripe.transfers.create({
+      amount: amountMinor,
+      currency: (payout.currency || 'pln').toLowerCase(),
+      destination: account.id,
+      metadata: {
+        payout_request_id: payout.id,
+        user_id: payout.user_id,
+        admin_user_id: admin.admin_user_id || '',
+        source: 'betai_admin_payout'
       }
-      throw new Error(`STRIPE_TRANSFER_FAILED: ${e.message}`);
-    }
+    }, { idempotencyKey: `betai_payout_${payout.id}` });
 
     const now = new Date().toISOString();
 
-    const { error: updateError } = await supabase
-      .from('payout_requests')
-      .update({
-        status: 'paid',
-        stripe_transfer_id: transfer.id,
-        stripe_status: 'transferred',
-        processed_at: now,
-        updated_at: now
-      })
-      .eq('id', payout.id);
+    await safeUpdatePayout(supabase, payout.id, {
+      status: 'paid',
+      stripe_transfer_id: transfer.id,
+      stripe_status: 'transferred',
+      processed_at: now,
+      updated_at: now
+    }, 'processing');
 
-    if (updateError) throw updateError;
-
-    await supabase.from('wallet_transactions').insert({
+    await safeInsert(supabase, 'wallet_transactions', {
       user_id: payout.user_id,
       amount: -amount,
       type: 'payout',
       status: 'completed',
       provider: 'stripe',
-      provider_session_id: transfer.id
+      provider_session_id: transfer.id,
+      created_at: now
     });
 
-    await supabase.from('admin_logs').insert({
-      admin_user_id: admin_user_id || null,
+    await safeInsert(supabase, 'admin_logs', {
+      admin_user_id: admin.admin_user_id,
       action: 'approve_payout_stripe_transfer',
       target_table: 'payout_requests',
       target_id: payout.id,
@@ -110,13 +133,15 @@ exports.handler = async (event) => {
         amount,
         user_id: payout.user_id,
         stripe_transfer_id: transfer.id,
-        stripe_account_id: account.id
+        stripe_account_id: account.id,
+        via: admin.via
       }
     });
 
     return response(200, { ok: true, status: 'paid', transfer_id: transfer.id });
   } catch (error) {
-    console.error('approve-payout error:', error);
+    if (supabase && payout) await markFailed(supabase, payout, error.message || error, admin?.admin_user_id || null);
+    console.error('send-real-stripe-payout hardening error:', error);
     return response(500, { error: error.message || 'APPROVE_PAYOUT_FAILED' });
   }
 };
