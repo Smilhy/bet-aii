@@ -17406,7 +17406,7 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
               <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
               <span><strong>{getTxLabel(row)}</strong><small>{row.type || row.source || '—'}</small></span>
               <span className="admin-finance-user-cell-v1044">
-                <strong>{row.display_user || row.username || row.user_email || row.user_id || '—'}</strong>
+                <strong>{row.display_user || row.user_username || row.username || row.user_email || row.user_id || '—'}</strong>
                 {row.raw_user_id || row.user_id ? <small>{row.raw_user_id || row.user_id}</small> : null}
               </span>
               <span className="amount">{formatMoney(row.amount)}</span>
@@ -20312,7 +20312,7 @@ function App() {
 
       const transactions = rawTransactions.map(tx => {
         const profile = usersById[String(tx?.user_id || '')]
-        const displayUser = profile?.username || profile?.display_name || profile?.full_name || profile?.email || tx?.username || tx?.user_email || tx?.user_id || '—'
+        const displayUser = tx?.display_user || tx?.user_username || tx?.username || profile?.username || profile?.display_name || profile?.full_name || profile?.email || tx?.user_email || tx?.user_id || '—'
 
         return {
           ...tx,

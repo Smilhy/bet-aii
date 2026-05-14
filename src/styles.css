@@ -42498,3 +42498,9 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1044 */
+
+
+/* WERSJA 1045 — ADMIN FINANSE: RPC USERNAME */
+.admin-finance-user-cell-v1044 strong{
+  color:#ffffff !important;
+}
