@@ -1254,6 +1254,57 @@ function isPremiumProfile(profile) {
   return premiumFlag && hasFuturePremiumEnd(profile.current_period_end)
 }
 
+
+function isPremiumSellerProfile(profile, fallbackPlan = '') {
+  if (!profile) return false
+  if (isAdminUser(profile) || isGuaranteedPremiumIdentity(profile) || isSmilhytvLifetimePremium(profile)) return true
+
+  const values = [
+    fallbackPlan,
+    profile.plan,
+    profile.account_plan,
+    profile.user_plan,
+    profile.membership,
+    profile.tier,
+    profile.role,
+    profile.status,
+    profile.profile_status,
+    profile.subscription_status,
+    profile.stripe_status,
+    profile.premium_status,
+    profile.badge,
+    profile.badge_label,
+    profile.label,
+  ].map(value => String(value || '').toLowerCase())
+
+  const premiumWord = values.some(value =>
+    value === 'premium' ||
+    value === 'premium_active' ||
+    value === 'pro' ||
+    value === 'vip' ||
+    value === 'admin' ||
+    value === 'active' ||
+    value === 'trialing' ||
+    value.includes('premium')
+  )
+
+  const premiumFlag = Boolean(
+    profile.is_premium ||
+    profile.premium ||
+    profile.has_premium ||
+    profile.isPremium ||
+    profile.premium_active ||
+    profile.can_sell_subscriptions ||
+    profile.canSellSubscriptions ||
+    profile.can_monetize_profile ||
+    profile.canMonetizeProfile
+  )
+
+  if (premiumWord || premiumFlag) return true
+
+  return isPremiumProfile(profile) || isPremiumAccount(fallbackPlan)
+}
+
 function hasUnlimitedTipAccess(user, plan = 'free') {
   return isAdminUser(user) || isGuaranteedPremiumIdentity(user) || isSmilhytvLifetimePremium(user) || isPremiumProfile(user) || isPremiumAccount(plan)
 }
@@ -14055,7 +14106,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 }
 
 function TipsterPricingSettings({ user, onToast }) {
-  const canSellProfileSubscriptions = isPremiumProfile(user) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const canSellProfileSubscriptions = isPremiumSellerProfile(user, user?.plan || user?.subscription_status || user?.status)
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(option => ({
     ...option,
     price: option.defaultPrice,
@@ -14177,7 +14228,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
       }
       const identity = await resolveTipsterPricingIdentity(source)
       setPricingIdentity(identity)
-      const sellerPremium = isPremiumProfile(identity) || isPremiumProfile(source) || isPremiumAccount(identity?.plan || identity?.subscription_status || identity?.status || source?.plan || source?.subscription_status || source?.status)
+      const sellerPremium = isPremiumSellerProfile(identity, identity?.plan || source?.plan || source?.subscription_status || source?.status) || isPremiumSellerProfile(source, source?.plan || source?.subscription_status || source?.status)
       if (!sellerPremium) {
         setPlans([])
         return
@@ -14191,7 +14242,7 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
   if (!tip) return null
   const tipsterId = pricingIdentity?.id || getTipAuthorId(tip)
   const tipsterName = pricingIdentity?.username || tip.author_name || tip.username || 'Typer'
-  const sellerCanSellSubscriptions = isPremiumProfile(pricingIdentity) || isPremiumProfile(tip) || isPremiumAccount(pricingIdentity?.plan || pricingIdentity?.subscription_status || pricingIdentity?.status || tip?.plan || tip?.subscription_status || tip?.status)
+  const sellerCanSellSubscriptions = isPremiumSellerProfile(pricingIdentity, pricingIdentity?.plan || pricingIdentity?.subscription_status || pricingIdentity?.status) || isPremiumSellerProfile(tip, tip?.plan || tip?.subscription_status || tip?.status)
 
   if (!sellerCanSellSubscriptions) {
     return (
@@ -15259,11 +15310,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? new Date(activeProfileSubscription.expires_at).toLocaleDateString('pl-PL')
     : ''
   const profileSubPurchasePayload = {
+    ...user,
     author_id: viewedIdKey || viewedUsernameKey || username,
     user_id: viewedIdKey || viewedUsernameKey || username,
     tipster_id: viewedIdKey || viewedUsernameKey || username,
     author_name: username,
+    username,
     author_email: email,
+    email,
+    plan: user?.plan || userPlan || (premium ? 'premium' : 'free'),
+    status: user?.status || (premium ? 'premium' : 'free'),
+    subscription_status: user?.subscription_status || (premium ? 'active' : 'free'),
+    is_premium: Boolean(premium),
+    can_sell_subscriptions: Boolean(canMonetizeProfile),
     duration_days: 30
   }
   const handlePremiumProfileTabClick = () => {
@@ -15333,7 +15392,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
   const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Brak danych'
   const admin = isAdminUser(user) || Boolean(user?.is_admin)
-  const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const premium = isPremiumSellerProfile(user, userPlan) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const canMonetizeProfile = Boolean(admin || premium)
   const profileAccessUnlocked = Boolean(profileIsOwnForViewer || profileSubscriptionActive || !canMonetizeProfile)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'

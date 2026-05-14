@@ -42438,3 +42438,14 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1037 */
+
+
+/* ==========================================================================
+   WERSJA 1040 — POPRAWKA ROZPOZNAWANIA PREMIUM W SUBSKRYPCJI PROFILU
+   ========================================================================== */
+
+.profile-sub-modal-blocked-v1037 b{
+  color:#22f5df !important;
+}
+
+/* KONIEC WERSJI 1040 */
