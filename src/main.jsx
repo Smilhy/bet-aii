@@ -8785,6 +8785,22 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     )
   }
 
+  const canModerateCommunityPost = (post = {}) => {
+    return Boolean(isOwnPost(post) || isAdminUser(user))
+  }
+
+  const getCappedCommunityPoints = (item = {}) => {
+    const postsPoint = Number.isFinite(Number(item.rewarded_post_days))
+      ? Number(item.rewarded_post_days || 0)
+      : Math.min(Number(item.posts_count || 0), 1)
+    return Math.max(0,
+      postsPoint +
+      Number(item.comments_count || 0) +
+      Number(item.chat_count || 0) +
+      Number(item.likes_received || 0)
+    )
+  }
+
   const communityStats = useMemo(() => {
     const myPosts = posts.filter(row => normalizeEmail(row.author_email) === userEmail || String(row.author_id || '') === String(user?.id || '')).length
     const myComments = Object.values(commentsByPost || {}).flat().filter(row => normalizeEmail(row.author_email) === userEmail || String(row.author_id || '') === String(user?.id || '')).length
@@ -8863,7 +8879,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setChatMessages(Array.from(new Map(loadedChatRaw.map(row => [String(row.id), row])).values()))
 
       const rankRowsRaw = Array.isArray(rankingResult.data) ? rankingResult.data : []
-      const rankRows = Array.from(new Map(rankRowsRaw.map(row => [String(row.user_id || row.email || row.username), row])).values())
+      const rankRows = Array.from(new Map(rankRowsRaw.map(row => [String(row.user_id || row.email || row.username), {
+        ...row,
+        community_points: getCappedCommunityPoints(row)
+      }])).values()).sort((a, b) => Number(b.community_points || 0) - Number(a.community_points || 0))
       setCommunityRanking(rankRows)
 
       const profiles = Array.isArray(profilesResult.data) ? profilesResult.data : []
@@ -9126,7 +9145,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setBusy(true)
       await supabase.from('community_reactions').delete().eq('post_id', post.id)
       await supabase.from('community_comments').delete().eq('post_id', post.id)
-      const { error } = await supabase.from('community_posts').delete().eq('id', post.id).eq('author_id', user.id)
+      const deleteQuery = supabase.from('community_posts').delete().eq('id', post.id)
+      const { error } = isAdminUser(user)
+        ? await deleteQuery
+        : await deleteQuery.eq('author_id', user.id)
       if (error) throw error
       setOpenPostMenuId(null)
       onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został usunięty.' })
@@ -9215,8 +9237,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <button type="button" className="post-menu-trigger-v1024" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
             {openPostMenuId === post.id ? (
               <div className="post-menu-v1024">
+                <button type="button" onClick={() => { openCommunityProfile(post); setOpenPostMenuId(null) }}>👤 Otwórz profil</button>
+                <button type="button" onClick={() => { try { navigator.clipboard?.writeText(`${window.location.origin}${window.location.pathname}#community-post-${post.id}`) } catch (_) {} ; onToast?.({ type: 'success', title: 'Społeczność', message: 'Link do posta skopiowany.' }); setOpenPostMenuId(null) }}>🔗 Kopiuj link</button>
                 {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ Edytuj post</button> : null}
-                {isOwnPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń post</button> : null}
+                {canModerateCommunityPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń post</button> : null}
                 {!isOwnPost(post) ? <button type="button" onClick={() => reportCommunityPost(post)}>🚩 Zgłoś post</button> : null}
                 <button type="button" onClick={() => setOpenPostMenuId(null)}>Zamknij</button>
               </div>
@@ -9450,8 +9474,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small>{Number(item.posts_count || 0)} postów • punkt za post 1/doba</small></div>
-                  <b>{Number(item.community_points || 0)} Coin</b>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>Posty: {Number(item.posts_count || 0)}</span><span>Limit: 1/doba</span></small></div>
+                  <b>{getCappedCommunityPoints(item)} Coin</b>
                 </div>
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
@@ -18183,6 +18207,17 @@ function App() {
       localStorage.setItem('betai_tokens_' + walletEmail, String(finalBalance))
       localStorage.setItem('betai_reward_balance_lock_' + walletEmail, JSON.stringify({ balance: finalBalance, until: Date.now() + 90000, reason }))
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: walletEmail, balance: finalBalance, reason } }))
+      try {
+        if (isSupabaseConfigured && supabase) {
+          supabase.from('betai_token_wallets').upsert({
+            email: walletEmail,
+            user_id: sessionUser?.id || null,
+            balance: finalBalance,
+            welcome_bonus_claimed: true,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'email' }).then(({ error }) => { if (error) console.warn('wallet persist skipped', error) })
+        }
+      } catch (_) {}
       return finalBalance
     } catch (_) {
       return cleanBalance
@@ -18781,7 +18816,26 @@ function App() {
         if (error) throw error
         remoteSet = new Set((data || []).map(row => String(row.tipster_id).toLowerCase()).filter(Boolean))
       } catch (error) {
-        console.warn('fetchFollowingTipsters remote skipped', error)
+        console.warn('fetchFollowingTipsters remote uuid skipped', error)
+      }
+
+      try {
+        const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+        let keyQuery = supabase
+          .from('betai_tipster_follow_keys_v1033')
+          .select('tipster_id,tipster_key,tipster_name,tipster_email')
+        if (email) keyQuery = keyQuery.or(`follower_id.eq.${userId},follower_email.eq.${email}`)
+        else keyQuery = keyQuery.eq('follower_id', userId)
+        const { data: keyRows, error: keyError } = await keyQuery
+        if (keyError) throw keyError
+        ;(keyRows || []).forEach(row => {
+          ;[row.tipster_id, row.tipster_key, row.tipster_name, row.tipster_email]
+            .map(value => String(value || '').toLowerCase().trim())
+            .filter(Boolean)
+            .forEach(key => remoteSet.add(key))
+        })
+      } catch (error) {
+        console.warn('fetchFollowingTipsters remote key skipped', error)
       }
     }
 
@@ -19128,22 +19182,48 @@ function App() {
       return next
     })
 
-    const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && id && uuidLike.test(id) && !isOwnById)
+    const canPersistInSupabase = Boolean(isSupabaseConfigured && supabase && !isOwnById)
     if (canPersistInSupabase) {
       try {
-        if (alreadyFollowing) {
-          const { error } = await supabase.from('tipster_follows').delete().eq('follower_id', sessionUser.id).eq('tipster_id', id)
-          if (error) throw error
-        } else {
-          const { error } = await supabase.from('tipster_follows').upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
-          if (error) throw error
+        if (id && uuidLike.test(id)) {
+          if (alreadyFollowing) {
+            const { error } = await supabase.from('tipster_follows').delete().eq('follower_id', sessionUser.id).eq('tipster_id', id)
+            if (error) throw error
+          } else {
+            const { error } = await supabase.from('tipster_follows').upsert({ follower_id: sessionUser.id, tipster_id: id }, { onConflict: 'follower_id,tipster_id' })
+            if (error) throw error
+          }
+        }
+
+        const followerEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+        const tipsterKey = String(localKey || idKey || rawTargetKey || authorName || tipsterId || '').toLowerCase().trim()
+        if (tipsterKey) {
+          if (alreadyFollowing) {
+            let deleteQuery = supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_id', sessionUser.id)
+            if (id) deleteQuery = deleteQuery.eq('tipster_id', id)
+            else deleteQuery = deleteQuery.eq('tipster_key', tipsterKey)
+            const { error } = await deleteQuery
+            if (error) throw error
+          } else {
+            const { error } = await supabase.from('betai_tipster_follow_keys_v1033').upsert({
+              follower_id: sessionUser.id,
+              follower_email: followerEmail,
+              tipster_id: id || null,
+              tipster_key: tipsterKey,
+              tipster_name: String(authorName || tipsterKey || '').trim(),
+              tipster_email: String(authorName || '').includes('@') ? normalizeEmail(authorName) : null,
+              created_at: new Date().toISOString()
+            }, { onConflict: 'follower_id,tipster_key' })
+            if (error) throw error
+          }
         }
       } catch (error) {
-        console.warn('follow remote save skipped', error)
-        showToast({ type: 'warning', title: 'Follow zapisany lokalnie', message: 'Decyzja została zapamiętana w tej przeglądarce. Uruchom SQL/RLS tipster_follows, żeby działało między urządzeniami.' })
+        console.warn('follow remote save failed', error)
+        showToast({ type: 'error', title: 'Follow nie zapisany', message: 'Supabase nie zapisał obserwowania. Odpal SQL 1033, żeby follow miał pamięć po deployu.' })
       }
     }
 
+    await fetchFollowingTipsters(sessionUser.id)
     fetchFollowStats()
     showToast({ type: 'success', title: 'Follow', message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera.' })
   }
@@ -19321,8 +19401,10 @@ function App() {
       fetchUnlockedTips(sessionUser.id)
       fetchPaymentHistory(sessionUser.id)
       fetchFollowingTipsters(sessionUser.id)
-        fetchFollowStats()
+      fetchRankingChallengeClaims(sessionUser.id)
+      fetchFollowStats()
       fetchNotifications(sessionUser.id)
+      fetchCurrentTokenBalance()
     } else {
       setUnlockedTips(new Set())
       setFollowingTipsters(new Set())

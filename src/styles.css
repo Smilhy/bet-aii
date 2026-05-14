@@ -41937,3 +41937,118 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1030 */
+
+
+/* ==========================================================================
+   WERSJA 1032 — PRAWA KOLUMNA SZERZEJ + MENU AKCJI + FRONT CAP POSTÓW
+   ========================================================================== */
+
+.community-10-v1017 .community-pro-grid-v1012{
+  grid-template-columns: 224px minmax(0, 1fr) 315px !important;
+  gap: 14px !important;
+}
+
+@media (min-width: 1500px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns: 224px minmax(820px, 1fr) 315px !important;
+  }
+}
+
+@media (min-width: 1700px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns: 230px minmax(930px, 1fr) 320px !important;
+  }
+}
+
+.community-10-v1017 .community-pro-right-v1012{
+  width:315px !important;
+  min-width:315px !important;
+  max-width:320px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020{
+  grid-template-columns: 52px minmax(0,1fr) 104px !important;
+  min-height:72px !important;
+  gap:10px !important;
+  padding:10px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5{
+  width:52px !important;
+  height:52px !important;
+  min-width:52px !important;
+  max-width:52px !important;
+  border-radius:16px !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020{
+  width:104px !important;
+  min-width:104px !important;
+  max-width:104px !important;
+  height:36px !important;
+  font-size:11.5px !important;
+}
+
+.community-10-v1017 .suggested-name-v1020{
+  font-size:14px !important;
+  font-weight:1000 !important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small{
+  display:flex !important;
+  align-items:center !important;
+  gap:6px !important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small b{
+  color:#20f2d2 !important;
+  background:rgba(32,242,210,.10) !important;
+  padding:2px 6px !important;
+  border-radius:999px !important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small span{
+  color:#91aec1 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.community-10-v1017 .side-leader-row-v5 small{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:5px !important;
+}
+
+.community-10-v1017 .side-leader-row-v5 small span{
+  padding:2px 6px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.05) !important;
+  color:#9fb8c8 !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+}
+
+.community-10-v1017 .post-menu-v1024{
+  width:216px !important;
+  top:42px !important;
+  right:0 !important;
+  z-index:900 !important;
+}
+
+.community-10-v1017 .post-menu-v1024 button{
+  min-height:38px !important;
+}
+
+@media (max-width: 1280px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns:1fr !important;
+  }
+  .community-10-v1017 .community-pro-right-v1012{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+}
+
+/* KONIEC WERSJI 1032 */

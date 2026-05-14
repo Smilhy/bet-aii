@@ -1,0 +1,13 @@
+WERSJA 1032 — PRAWA KOLUMNA + MENU + BLOKADA POST COIN
+
+Zrobione:
+- prawa kolumna poszerzona, a środek nadal ma dużo miejsca,
+- Polecani użytkownicy mają czytelny avatar/nick/status/przycisk Obserwuj,
+- menu 3 kropek ma profil, kopiuj link, edytuj, usuń, zgłoś,
+- admin może usuwać posty przez menu,
+- frontend sam przelicza ranking z limitem postów 1/doba, nawet jeśli cache Supabase zwróci stare community_points,
+- SQL utrwala widok z rewarded_post_days.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1032_community_post_cap_and_admin_delete.sql
+2. Wgraj paczkę 1032 na Netlify.
