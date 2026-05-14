@@ -1,0 +1,9 @@
+WERSJA 1044 — ADMIN FINANSE: NICKI ZAMIAST UUID
+
+Naprawione:
+- w Admin finanse / Ostatnie operacje finansowe zamiast samego UUID pokazuje się nick użytkownika,
+- kolejność wyświetlania: username -> display_name -> full_name -> email -> UUID,
+- UUID zostaje jako mały techniczny identyfikator pod spodem,
+- nie ruszono Admin wypłaty, Stripe, auto-settle, API-Football ani społeczności.
+
+SQL 1044 jest informacyjny — nie trzeba odpalać.
