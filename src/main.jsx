@@ -9474,7 +9474,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>Posty: {Number(item.posts_count || 0)}</span><span>Limit: 1/doba</span></small></div>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{Number(item.posts_count || 0)} postów</span><span>limit 1/doba</span></small></div>
                   <b>{getCappedCommunityPoints(item)} Coin</b>
                 </div>
               ))}
@@ -9495,7 +9495,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small><b>{planLabel}</b><span>kliknij profil</span></small>
+                      <small><b>{planLabel}</b><span>Profil użytkownika</span></small>
                     </div>
                     <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>

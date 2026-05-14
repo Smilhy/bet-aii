@@ -1,0 +1,11 @@
+WERSJA 1034 — PRAWA KOLUMNA NAPRAWDĘ SZEROKA
+
+Zrobione:
+- prawa kolumna ma stałe 410-430px,
+- środkowa kolumna oddaje miejsce,
+- Polecani użytkownicy: avatar / nick / status / Obserwuj są czytelne,
+- tekst nie ścina się do jednej litery,
+- Top społeczność też ma czytelniejszy układ,
+- nie ruszono logiki Supabase, follow, nagród ani Coin.
+
+SQL 1034 jest tylko informacyjny.
