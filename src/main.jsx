@@ -5571,6 +5571,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
+  const [footballMatchCounts, setFootballMatchCounts] = useState({ countries: {}, leagues: {}, total: 0, source: '' })
+  const [footballMatchCountsLoading, setFootballMatchCountsLoading] = useState(false)
   const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
   const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
   const [addTipMode, setAddTipMode] = useState('auto')
@@ -6599,6 +6601,65 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return footballLeagueMap[country] || ['1 Liga', '2 Liga', 'Puchar kraju', 'Liga kobiet']
   }
 
+  const normalizeCountKey = (value) => String(value || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+  const getCountryMatchCount = (country) => {
+    const counts = footballMatchCounts?.countries || {}
+    return Number(counts[country] ?? counts[normalizeFootballCountryName(country)] ?? counts[normalizeCountKey(country)] ?? 0)
+  }
+
+  const getLeagueMatchCount = (country, league) => {
+    const leagues = footballMatchCounts?.leagues || {}
+    const directKey = `${normalizeFootballCountryName(country)}|||${league}`
+    const normalizedKey = `${normalizeCountKey(country)}|||${normalizeCountKey(league)}`
+    return Number(leagues[directKey] ?? leagues[normalizedKey] ?? leagues[league] ?? leagues[normalizeCountKey(league)] ?? 0)
+  }
+
+  async function fetchFootballMatchCountsFromCache(force = false) {
+    const todayKey = getTodayLocalKey()
+    const cacheKey = `betai_football_country_league_counts_v1036_${todayKey}`
+    if (!force) {
+      try {
+        const cachedRaw = localStorage.getItem(cacheKey)
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw)
+          if (cached && typeof cached === 'object') {
+            setFootballMatchCounts(cached)
+            return cached
+          }
+        }
+      } catch (error) {
+        console.warn('football count cache read skipped', error)
+      }
+    }
+
+    setFootballMatchCountsLoading(true)
+    try {
+      const params = new URLSearchParams({ date: todayKey })
+      const response = await fetch(`/.netlify/functions/get-fixture-counts-cache?${params.toString()}`)
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać liczników meczów.')
+      const nextCounts = {
+        countries: data.countries || {},
+        leagues: data.leagues || {},
+        total: Number(data.total || 0),
+        source: data.source || 'cache'
+      }
+      setFootballMatchCounts(nextCounts)
+      try { localStorage.setItem(cacheKey, JSON.stringify(nextCounts)) } catch (_) {}
+      return nextCounts
+    } catch (error) {
+      console.warn('football match counts skipped', error)
+      return footballMatchCounts
+    } finally {
+      setFootballMatchCountsLoading(false)
+    }
+  }
+
   function selectSidebarCountry(nextCountry) {
     setOpenSidebarSport('Piłka nożna')
 
@@ -6977,6 +7038,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setSportDayCountsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (addTipMode !== 'auto') return
+    fetchFootballMatchCountsFromCache(false)
+  }, [addTipMode, sportCountsDate])
 
   function handleTopSportButtonClick(item) {
     if (!item?.name) return
@@ -7829,12 +7895,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const isCountryActive = currentCountry === country
                     const isCountryOpen = openFootballCountry === country
                     const countryLeagues = getFootballLeaguesForCountry(country)
+                    const countryCount = getCountryMatchCount(country)
                     return (
-                      <div className="football-country-node" key={country}>
+                      <div className={`football-country-node ${countryCount > 0 ? 'has-matches-v1036' : 'no-matches-v1036'}`} key={country}>
                         <button
                           type="button"
-                          className={isCountryActive ? 'is-active country-active' : ''}
+                          className={`${isCountryActive ? 'is-active country-active' : ''} ${countryCount > 0 ? 'has-count-v1036' : 'zero-count-v1036'}`}
                           onClick={() => selectSidebarCountry(country)}
+                          title={countryCount > 0 ? `${cleanCountry}: ${countryCount} meczów dziś` : `${cleanCountry}: brak meczów dziś w cache`}
                         >
                           <span className="football-country-label">
                             {flagCode ? (
@@ -7842,23 +7910,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                             ) : (
                               <i className="football-country-region-icon">{footballCountryIcons[cleanCountry] || footballCountryIcons[country] || '🌍'}</i>
                             )}
-                            {cleanCountry}
+                            <span className="country-name-v1036">{cleanCountry}</span>
                           </span>
+                          <span className={`match-count-badge-v1036 ${countryCount > 0 ? 'is-live' : 'is-zero'}`}>{footballMatchCountsLoading ? '…' : countryCount}</span>
                           <b>{isCountryOpen ? '⌃' : '⌄'}</b>
                         </button>
 
                         {isCountryOpen && (
                           <div className="sport-accordion-children level-two football-leagues-list">
-                            {countryLeagues.map(label => (
+                            {countryLeagues.map(label => {
+                              const leagueCount = getLeagueMatchCount(country, label)
+                              return (
                               <button
                                 type="button"
                                 key={`${country}-${label}`}
-                                className={currentLeague === label ? 'is-active league-active' : ''}
+                                className={`${currentLeague === label ? 'is-active league-active' : ''} ${leagueCount > 0 ? 'has-count-v1036' : 'zero-count-v1036'}`}
                                 onClick={() => selectSidebarLeague('Piłka nożna', country, label)}
+                                title={leagueCount > 0 ? `${label}: ${leagueCount} meczów dziś` : `${label}: brak meczów dziś w cache`}
                               >
-                                {label}
+                                <span className="league-name-v1036">{label}</span>
+                                <span className={`match-count-badge-v1036 league-count-v1036 ${leagueCount > 0 ? 'is-live' : 'is-zero'}`}>{footballMatchCountsLoading ? '…' : leagueCount}</span>
                               </button>
-                            ))}
+                            )})}
                           </div>
                         )}
                       </div>
