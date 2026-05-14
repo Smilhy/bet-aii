@@ -1,0 +1,17 @@
+WERSJA 1048 — ADMIN WYPŁATY: NICKI Z RPC
+
+Naprawione:
+- Admin wypłaty nie czyta już samego payout_requests z frontu jako głównego źródła.
+- Najpierw woła RPC get_admin_payout_requests().
+- RPC działa jako security definer i może znaleźć użytkownika po:
+  1. profiles.username/display_name/full_name/email
+  2. auth.users.email/raw_user_meta_data
+  3. fallback UUID
+- W tabeli Użytkownik pokazuje nick, a UUID małym tekstem pod spodem.
+- Nie ruszono Stripe, Admin finanse, auto-settle ani społeczności.
+
+Wymagane:
+1. Odpal SQL:
+   supabase/version_1048_admin_payouts_rpc_usernames.sql
+2. Wgraj paczkę na Netlify.
+3. Odśwież Admin wypłaty.

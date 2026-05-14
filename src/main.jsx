@@ -17654,7 +17654,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
             <div className="admin-payout-live-row" key={request.id}>
               <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
               <span className="admin-payout-user-cell-v1047">
-                <strong>{request.display_user || request.username || request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
+                <strong>{request.display_user || request.user_username || request.username || request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
                 <small>{request.raw_user_id || request.user_id || '—'}</small>
               </span>
               <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
@@ -19854,6 +19854,28 @@ function App() {
     if (!userProfile?.isAdmin || !isSupabaseConfigured || !supabase) {
       setAdminPayoutRequests([])
       return
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_admin_payout_requests')
+
+      if (error) {
+        console.warn('get_admin_payout_requests RPC error, falling back to table', error)
+        throw error
+      }
+
+      const rows = Array.isArray(data) ? data : []
+      setAdminPayoutRequests(rows.map(row => ({
+        ...row,
+        display_user: row.display_user || row.user_username || row.username || row.user_email || row.email || row.user_id || '—',
+        username: row.user_username || row.username || null,
+        display_name: row.user_display_name || row.display_name || row.user_full_name || null,
+        user_email: row.user_email_resolved || row.user_email || row.email || null,
+        raw_user_id: row.raw_user_id || row.user_id || null
+      })))
+      return
+    } catch (_) {
+      // Fallback dla starszej bazy bez RPC
     }
 
     const { data, error } = await supabase
