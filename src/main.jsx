@@ -12216,14 +12216,20 @@ function buildBetAiFallbackMatchesV1053() {
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const SPORTS = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
-  const [activeSport, setActiveSport] = useState('Wszystkie')
+  const LOCKED_SPORTS_V1055 = ['Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
+  const isLockedSportV1055 = sport => LOCKED_SPORTS_V1055.includes(sport)
+  const [activeSport, setActiveSport] = useState('Piłka nożna')
   const [activePanel, setActivePanel] = useState('live')
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
+  const [minOdds, setMinOdds] = useState(1.35)
+  const [maxOdds, setMaxOdds] = useState(3.20)
+  const [minProb, setMinProb] = useState(62)
+  const [minEv, setMinEv] = useState(0)
   const [liveCards, setLiveCards] = useState([])
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
-  const [statusText, setStatusText] = useState('Gotowe. Główny tryb to pre-match. Kliknij „Odśwież AI”, żeby pobrać najbliższe mecze z API-Sports.')
+  const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są oznaczone jako Wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
@@ -12243,22 +12249,63 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return min + Math.abs(h) % (max - min + 1)
   }
 
+
+  const buildFootballMarketCandidates = (m, seed, home, away) => {
+    const mk = (market, selection, oddsBase, probBase, note, riskBias = 0) => {
+      const h = hashNumber(`${seed}-${market}-${selection}`, -8, 12)
+      const odds = Number((oddsBase + (h / 100)).toFixed(2))
+      const probability = Math.max(48, Math.min(92, Math.round(probBase + hashNumber(`${seed}-${market}-p`, -7, 7))))
+      const fairOdds = probability > 0 ? 100 / probability : odds
+      const ev = Math.round(((odds / fairOdds) - 1) * 100)
+      const score = Math.max(55, Math.min(93, Math.round(probability * 0.72 + Math.max(-8, Math.min(20, ev)) * 0.85 + 18 - riskBias)))
+      const risk = odds > 2.45 || probability < 62 ? 'Podwyższone' : score >= 82 && ev >= 5 ? 'Niskie' : 'Średnie'
+      return { market, selection, odds, probability, ev, score, risk, note }
+    }
+
+    return [
+      mk('1X2 / zwycięzca', `${home} wygra`, 1.62, 61, 'Model widzi przewagę gospodarzy w rynku zwycięzcy.', 2),
+      mk('1X2 / zwycięzca', `${away} wygra`, 1.82, 56, 'Model porównuje kurs z szansą drużyny gości.', 3),
+      mk('Podwójna szansa', `${home} lub remis`, 1.38, 74, 'Bezpieczniejszy wariant przy stabilnym faworycie.', -2),
+      mk('Podwójna szansa', `${away} lub remis`, 1.46, 68, 'Niższe ryzyko niż czysty zwycięzca gości.', -1),
+      mk('Suma goli', 'Powyżej 1.5 gola', 1.34, 78, 'Rynek goli ma wysokie prawdopodobieństwo, ale zwykle niższe value.', -2),
+      mk('Suma goli', 'Powyżej 2.5 gola', 1.74, 59, 'Model szuka value w tempie meczu i profilu bramkowym.', 2),
+      mk('Suma goli', 'Poniżej 3.5 gola', 1.42, 72, 'Bezpieczniejszy rynek przy umiarkowanym tempie spotkania.', -1),
+      mk('BTTS', 'Obie strzelą — Tak', 1.78, 57, 'Model ocenia potencjał ofensywny obu stron.', 2),
+      mk('BTTS', 'Obie strzelą — Nie', 1.85, 54, 'Opcja dla meczu z przewagą jednej strony albo słabszym atakiem gości.', 3),
+      mk('Handicap', `${home} +0.5`, 1.36, 76, 'Wariant defensywny, gdy model widzi małe ryzyko porażki gospodarzy.', -2),
+      mk('Handicap', `${away} +0.5`, 1.52, 66, 'Wariant defensywny dla gości przy kursie z akceptowalnym value.', 0),
+    ]
+  }
+
+  const chooseBestFootballMarket = (m, seed, home, away) => {
+    const candidates = buildFootballMarketCandidates(m, seed, home, away)
+    const inRange = candidates.filter(x =>
+      Number(x.odds) >= Number(minOdds) &&
+      Number(x.odds) <= Number(maxOdds) &&
+      Number(x.probability) >= Number(minProb) &&
+      Number(x.ev) >= Number(minEv)
+    )
+    const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= Number(minOdds) && Number(x.odds) <= Number(maxOdds))
+    const finalPool = pool.length ? pool : candidates
+    return finalPool.sort((a, b) =>
+      (Number(b.ev) - Number(a.ev)) ||
+      (Number(b.score) - Number(a.score)) ||
+      (Number(b.probability) - Number(a.probability))
+    )[0]
+  }
+
   const buildCardFromMatch = (match, index = 0, forcedSport = '') => {
     const m = match || {}
     const home = m.home || m.home_team || m.team_home || m.homeTeam || 'Gospodarze'
     const away = m.away || m.away_team || m.team_away || m.awayTeam || 'Goście'
-    const sport = detectBetAiSportV1052(m, forcedSport || m.sport || m.sportName || m.sport_key || 'Piłka nożna')
-    const league = m.league || m.league_name || m.competition || m.country || sport
+    const sport = 'Piłka nożna'
+    const league = m.league || m.league_name || m.competition || m.country || 'Piłka nożna'
     const eventTime = m.commence_time || m.event_time || m.kickoff_time || m.match_time || m.date || new Date(Date.now() + (index + 4) * 60 * 60 * 1000).toISOString()
     const kickoffState = getBetAiKickoffStateV1051(eventTime)
     const seed = `${sport}-${league}-${home}-${away}-${eventTime}`
-    const odds = Number(m.odds || m.course || (1.52 + (hashNumber(seed + 'odds', 0, 62) / 100))).toFixed(2)
-    const quality = buildBetAiQualityV1052(seed, odds, league, sport === 'Piłka nożna' ? '1X2 / zwycięzca' : 'Moneyline', kickoffState)
-    const pickSide = hashNumber(seed + 'side', 0, 100) >= 43 ? home : away
-    const market = sport === 'Piłka nożna' ? '1X2 / zwycięzca' : sport === 'Hokej' ? 'Moneyline / OT' : sport === 'MMA' ? 'Zwycięzca walki' : sport === 'Koszykówka' ? 'Moneyline / handicap' : 'Moneyline'
+    const best = chooseBestFootballMarket(m, seed, home, away)
     const forms = getBetAiFormPairV1052(seed)
     const id = String(m.id || m.fixture_id || m.external_fixture_id || seed)
-    const prediction = `${pickSide} wygra`
     const card = {
       id,
       sport,
@@ -12269,12 +12316,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       matchName: `${home} vs ${away}`,
       date: formatDate(eventTime),
       rawDate: eventTime,
-      market,
-      prediction,
-      odds,
-      aiScore: quality.aiScore,
-      ev: quality.ev,
-      risk: quality.risk,
+      market: best.market,
+      prediction: best.selection,
+      odds: Number(best.odds).toFixed(2),
+      aiScore: best.score,
+      probability: best.probability,
+      ev: best.ev,
+      risk: best.risk,
       status: 'pending',
       scoreHome: Number(m.live_score_home || m.score_home || 0),
       scoreAway: Number(m.live_score_away || m.score_away || 0),
@@ -12282,10 +12330,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       source: m.fallback ? 'Bet+AI fallback' : 'API-Sports',
       formHome: forms.home,
       formAway: forms.away,
-      confidenceText: quality.aiScore >= 86 && quality.ev >= 10 ? 'TOP VALUE' : quality.aiScore >= 80 ? 'DOBRY TYP' : 'OBSERWUJ',
+      confidenceText: best.score >= 86 && best.ev >= 10 ? 'TOP VALUE' : best.score >= 80 ? 'DOBRY TYP' : 'OBSERWUJ',
+      marketNote: best.note,
     }
-    card.curiosity = getBetAiCuriosityV1052(card)
-    card.analysis = `Model wybrał rynek „${market}” i typ „${prediction}”. ${getBetAiShortInsightV1052(card)} Dane wejściowe: liga, termin meczu, kurs, stabilność rynku, profil ryzyka i forma stron.`
+    card.curiosity = `${league}: AI porównało rynki 1X2, podwójną szansę, gole, BTTS i handicap. Wybrano rynek z najlepszym stosunkiem prawdopodobieństwa do kursu.`
+    card.analysis = `Najlepszy rynek według aktualnych widełek: „${best.market}” → „${best.selection}”. Prawdopodobieństwo modelu: ${best.probability}%, kurs: ${Number(best.odds).toFixed(2)}, EV: ${best.ev >= 0 ? '+' : ''}${best.ev}%. ${best.note}`
     return card
   }
 
@@ -12294,7 +12343,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(t => String(t.ai_source || t.source || '').includes('ai') || String(t.source || '').includes('live_ai'))
       .map((t, index) => ({
         id: String(t.ai_external_key || t.id || index),
-        sport: detectBetAiSportV1052(t, t.sport || t.sport_key || 'Piłka nożna'),
+        sport: 'Piłka nożna',
         league: t.league || t.league_name || t.country || 'Liga',
         country: t.country || 'Baza',
         home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
@@ -12332,9 +12381,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allCards
-      .filter(c => activeSport === 'Wszystkie' || c.sport === activeSport)
+      .filter(c => activeSport === 'Wszystkie' || activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
-      .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction}`.toLowerCase().includes(q))
+      .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
+      .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
+      .filter(c => Number(c.ev || 0) >= Number(minEv))
+      .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction} ${c.market}`.toLowerCase().includes(q))
       .sort((a, b) => {
         const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
         const evA = Number(a.ev || 0)
@@ -12346,7 +12398,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           || (evB - evA)
           || Number(b.aiScore || 0) - Number(a.aiScore || 0)
       })
-  }, [allCards, activeSport, matchMode, search])
+  }, [allCards, activeSport, matchMode, search, minOdds, maxOdds, minProb, minEv])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
@@ -12445,11 +12497,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function fetchLiveAiPicks() {
     setLoadingAi(true)
-    setStatusText('Pobieram mecze pre-match/live z API-Sports i buduję lokalne typy AI...')
+    setStatusText('Pobieram mecze piłkarskie i wybieram najlepsze rynki według Twoich widełek...')
     try {
-      const sportsToFetch = activeSport === 'Wszystkie'
-        ? ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
-        : [activeSport]
+      const sportsToFetch = ['Piłka nożna']
 
       const collected = []
       const debug = []
@@ -12523,14 +12573,26 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-banner-image-v1052" aria-label="Typy AI premium banner">
-        <img src="/typy-ai-premium-banner-v1052.png" alt="Typy AI — premium pre-match analytics" />
+      <div className="ai-premium-hero-v1054" aria-label="Typy AI premium hero">
+        <div className="ai-premium-hero-copy-v1054">
+          <span className="ai-hero-pill-v1054">PRE-MATCH AI • PIŁKA NOŻNA</span>
+          <h1>Typy <em>AI</em></h1>
+          <p>Model wybiera najlepszy rynek dla meczu: 1X2, podwójna szansa, gole, BTTS albo handicap. Ty ustawiasz widełki kursu, prawdopodobieństwa i EV.</p>
+          <div className="ai-hero-badges-v1054">
+            <span>AI Score</span><span>Value EV</span><span>Ryzyko</span><span>Najlepszy rynek</span>
+          </div>
+        </div>
+        <div className="ai-premium-hero-art-v1054">
+          <div className="ai-brain-v1054">AI</div>
+          <div className="ai-ball-v1054">⚽</div>
+          <div className="ai-chart-v1054"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
       </div>
       <div className="ai-center-hero-v747 ai-center-hero-compact-v1052">
         <div>
-          <span className="ai-center-eyebrow-v747">BET+AI FREE MODEL • API-SPORTS</span>
+          <span className="ai-center-eyebrow-v747">BET+AI MODEL • FOOTBALL PRE-MATCH</span>
           <h1>Typy AI</h1>
-          <p>Jedna zakładka: premium pre-match typy AI, live jako dodatek, value, ryzyko, forma i pełne statystyki modelu.</p>
+          <p>Piłka nożna: AI wybiera najlepszy rynek według kursu, prawdopodobieństwa, EV i ryzyka.</p>
         </div>
         <div className="ai-center-actions-v747">
           <button type="button" onClick={fetchLiveAiPicks} disabled={loadingAi || liveGenerating}>{loadingAi || liveGenerating ? 'Pobieram...' : '⟳ Odśwież AI'}</button>
@@ -12550,11 +12612,29 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-sport-tabs-v747">
           {SPORTS.map(sport => {
             const meta = getBetAiSportMetaV1051(sport)
+            const locked = isLockedSportV1055(sport)
             const count = sport === 'Wszystkie' ? allCards.length : allCards.filter(card => card.sport === sport).length
             return (
-              <button key={sport} type="button" className={activeSport === sport ? 'active sport-card-v1051' : 'sport-card-v1051'} onClick={() => { setActiveSport(sport); setSelectedId('') }}>
-                <span className="sport-icon-v1051">{meta.icon}</span>
-                <span className="sport-copy-v1051"><b>{meta.label}</b><small>{count}</small></span>
+              <button
+                key={sport}
+                type="button"
+                disabled={locked}
+                className={`${activeSport === sport ? 'active ' : ''}${locked ? 'locked-sport-v1055 ' : ''}sport-card-v1051`}
+                onClick={() => {
+                  if (locked) {
+                    setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną, żeby nie mieszać sportów.`)
+                    return
+                  }
+                  setActiveSport(sport === 'Wszystkie' ? 'Piłka nożna' : sport)
+                  setSelectedId('')
+                }}
+              >
+                <span className="sport-icon-v1051">{locked ? '🔒' : meta.icon}</span>
+                <span className="sport-copy-v1051">
+                  <b>{meta.label}</b>
+                  <small>{locked ? 'Wkrótce' : count}</small>
+                </span>
+                {locked ? <em className="soon-badge-v1055">Wkrótce</em> : null}
               </button>
             )
           })}
@@ -12566,7 +12646,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </button>
           ))}
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj meczu, ligi, sportu..." />
+        <div className="ai-range-panel-v1054">
+          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
+          <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
+          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="45" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
+          <label><span>EV min</span><b>{minEv >= 0 ? '+' : ''}{minEv}%</b><input type="range" min="-10" max="25" step="1" value={minEv} onChange={e => setMinEv(Number(e.target.value))} /></label>
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj meczu, ligi, rynku..." />
       </div>
 
       <div className="ai-center-status-v747">{statusText}{lastRefresh ? ` • ${lastRefresh}` : ''}</div>
@@ -12590,7 +12676,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                   <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
                   <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className={`kickoff-badge-v1051 ${card.kickoffState || 'prematch'}`}>{getBetAiKickoffLabelV1051(card.kickoffState)}</span></div>
-                  <div className="pick-bottom-v747"><div><small>TYP MODELU</small><b>{card.prediction}</b></div><div><small>Kurs</small><b>{card.odds}</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div></div>
+                  <div className="pick-bottom-v747 pick-bottom-v1054"><div><small>NAJLEPSZY RYNEK</small><b>{card.prediction}</b><em>{card.market}</em></div><div><small>Kurs</small><b>{card.odds}</b></div><div><small>Prawdop.</small><b>{card.probability || card.aiScore}%</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div></div>
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
@@ -12630,7 +12716,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <h2>{selectedCard.home} vs {selectedCard.away}</h2>
                 <p>{selectedCard.sport} • {selectedCard.league} • {selectedCard.date} • {getBetAiKickoffLabelV1051(selectedCard.kickoffState)}</p>
                 <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}%</strong><span>AI SCORE</span></div>
-                <div className="selected-pick-v747"><small>Typ modelu</small><b>{selectedCard.prediction}</b><em>{selectedCard.market} • kurs {selectedCard.odds}</em></div>
+                <div className="selected-pick-v747"><small>Najlepszy rynek</small><b>{selectedCard.prediction}</b><em>{selectedCard.market} • kurs {selectedCard.odds}</em></div>
               </div>
 
               <div className="ai-analysis-card-v747">

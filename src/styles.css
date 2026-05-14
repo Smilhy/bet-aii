@@ -43846,3 +43846,292 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1053 */
+
+
+/* ==========================================================================
+   WERSJA 1054 — FOOTBALL ONLY + MARKET ENGINE + SLIDERS + HTML HERO
+   ========================================================================== */
+
+.ai-banner-image-v1052{ display:none !important; }
+
+.ai-premium-hero-v1054{
+  min-height:260px !important;
+  margin:0 0 18px !important;
+  padding:30px 36px !important;
+  border-radius:28px !important;
+  border:1px solid rgba(34,245,223,.24) !important;
+  background:
+    radial-gradient(circle at 78% 38%, rgba(34,245,223,.24), transparent 24%),
+    radial-gradient(circle at 55% 85%, rgba(91,140,255,.13), transparent 25%),
+    linear-gradient(135deg, rgba(3,18,31,.98), rgba(0,8,16,.99)) !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr) !important;
+  gap:22px !important;
+  align-items:center !important;
+  overflow:hidden !important;
+  position:relative !important;
+  box-shadow:0 28px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.04) !important;
+}
+
+.ai-premium-hero-v1054:before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(110deg, transparent 0 44%, rgba(34,245,223,.08) 45%, transparent 50%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.032) 0 1px, transparent 1px 95px) !important;
+  opacity:.8 !important;
+}
+
+.ai-premium-hero-copy-v1054,
+.ai-premium-hero-art-v1054{
+  position:relative !important;
+  z-index:1 !important;
+}
+
+.ai-hero-pill-v1054{
+  display:inline-flex !important;
+  align-items:center !important;
+  padding:9px 13px !important;
+  border-radius:999px !important;
+  color:#22f5df !important;
+  background:rgba(34,245,223,.08) !important;
+  border:1px solid rgba(34,245,223,.24) !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  letter-spacing:.08em !important;
+}
+
+.ai-premium-hero-copy-v1054 h1{
+  margin:18px 0 8px !important;
+  font-size:64px !important;
+  line-height:.95 !important;
+  letter-spacing:-.06em !important;
+  font-weight:1000 !important;
+  color:#fff !important;
+}
+
+.ai-premium-hero-copy-v1054 h1 em{
+  color:#22f5df !important;
+  font-style:normal !important;
+  text-shadow:0 0 28px rgba(34,245,223,.34) !important;
+}
+
+.ai-premium-hero-copy-v1054 p{
+  margin:0 !important;
+  max-width:720px !important;
+  color:#b8d4df !important;
+  font-size:18px !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+
+.ai-hero-badges-v1054{
+  margin-top:20px !important;
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:10px !important;
+}
+
+.ai-hero-badges-v1054 span{
+  padding:11px 14px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(34,245,223,.18) !important;
+  background:rgba(6,25,40,.86) !important;
+  color:#dffcff !important;
+  font-weight:1000 !important;
+  box-shadow:0 0 22px rgba(34,245,223,.08) !important;
+}
+
+.ai-premium-hero-art-v1054{
+  min-height:220px !important;
+  display:grid !important;
+  place-items:center !important;
+}
+
+.ai-brain-v1054{
+  width:190px !important;
+  height:190px !important;
+  border-radius:44% 56% 48% 52% !important;
+  display:grid !important;
+  place-items:center !important;
+  color:#eaffff !important;
+  font-size:58px !important;
+  font-weight:1000 !important;
+  background:
+    radial-gradient(circle, rgba(34,245,223,.34), rgba(10,71,91,.36) 48%, rgba(2,10,20,.7) 72%),
+    repeating-linear-gradient(45deg, rgba(34,245,223,.22) 0 2px, transparent 2px 13px) !important;
+  border:2px solid rgba(34,245,223,.55) !important;
+  box-shadow:0 0 70px rgba(34,245,223,.28), inset 0 0 34px rgba(34,245,223,.22) !important;
+}
+
+.ai-ball-v1054{
+  position:absolute !important;
+  left:18% !important;
+  bottom:28px !important;
+  width:74px !important;
+  height:74px !important;
+  border-radius:999px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:rgba(34,245,223,.08) !important;
+  border:1px solid rgba(34,245,223,.24) !important;
+  font-size:42px !important;
+  box-shadow:0 0 35px rgba(34,245,223,.18) !important;
+}
+
+.ai-chart-v1054{
+  position:absolute !important;
+  right:32px !important;
+  bottom:32px !important;
+  height:120px !important;
+  display:flex !important;
+  gap:9px !important;
+  align-items:flex-end !important;
+}
+
+.ai-chart-v1054 i{
+  width:18px !important;
+  border-radius:7px 7px 0 0 !important;
+  background:linear-gradient(180deg,#22f5df,#1b75ff) !important;
+  box-shadow:0 0 20px rgba(34,245,223,.28) !important;
+}
+
+.ai-chart-v1054 i:nth-child(1){height:34px!important}
+.ai-chart-v1054 i:nth-child(2){height:54px!important}
+.ai-chart-v1054 i:nth-child(3){height:78px!important}
+.ai-chart-v1054 i:nth-child(4){height:96px!important}
+.ai-chart-v1054 i:nth-child(5){height:118px!important}
+
+.ai-filter-bar-v747{
+  grid-template-columns: minmax(220px,.42fr) auto minmax(420px,1fr) minmax(240px,.6fr) !important;
+}
+
+.ai-range-panel-v1054{
+  display:grid !important;
+  grid-template-columns:repeat(4, minmax(96px, 1fr)) !important;
+  gap:10px !important;
+  padding:8px !important;
+  border-radius:18px !important;
+  background:rgba(3,15,27,.7) !important;
+  border:1px solid rgba(34,245,223,.1) !important;
+}
+
+.ai-range-panel-v1054 label{
+  min-width:0 !important;
+  display:grid !important;
+  gap:4px !important;
+}
+
+.ai-range-panel-v1054 span{
+  color:#85a9b9 !important;
+  font-size:10px !important;
+  font-weight:1000 !important;
+  text-transform:uppercase !important;
+}
+
+.ai-range-panel-v1054 b{
+  color:#22f5df !important;
+  font-size:13px !important;
+  font-weight:1000 !important;
+}
+
+.ai-range-panel-v1054 input[type="range"]{
+  width:100% !important;
+  accent-color:#22f5df !important;
+}
+
+.ai-sport-tabs-v747{
+  grid-template-columns:repeat(2, minmax(104px, 1fr)) !important;
+}
+
+.pick-bottom-v1054{
+  grid-template-columns:1.4fr .35fr .35fr .35fr !important;
+}
+
+.pick-bottom-v1054 em{
+  display:block !important;
+  color:#7fa6b7 !important;
+  font-style:normal !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  margin-top:3px !important;
+}
+
+@media (max-width: 1280px){
+  .ai-premium-hero-v1054{ grid-template-columns:1fr !important; }
+  .ai-filter-bar-v747{ grid-template-columns:1fr !important; }
+  .ai-range-panel-v1054{ grid-template-columns:repeat(2, minmax(0,1fr)) !important; }
+}
+
+@media (max-width: 720px){
+  .ai-premium-hero-copy-v1054 h1{ font-size:44px !important; }
+  .ai-premium-hero-v1054{ padding:22px !important; }
+  .ai-range-panel-v1054{ grid-template-columns:1fr !important; }
+  .pick-bottom-v1054{ grid-template-columns:1fr 1fr !important; }
+}
+
+/* KONIEC WERSJI 1054 */
+
+
+/* ==========================================================================
+   WERSJA 1055 — SPORTY ZOSTAJĄ, ALE ZABLOKOWANE JAKO WKRÓTCE
+   ========================================================================== */
+
+.ai-sport-tabs-v747{
+  grid-template-columns:repeat(9, minmax(104px, 1fr)) !important;
+}
+
+.sport-card-v1051.locked-sport-v1055{
+  position:relative !important;
+  opacity:.72 !important;
+  cursor:not-allowed !important;
+  filter:saturate(.65) !important;
+  background:linear-gradient(135deg, rgba(9,22,36,.78), rgba(3,10,20,.94)) !important;
+  border-color:rgba(124,148,161,.16) !important;
+}
+
+.sport-card-v1051.locked-sport-v1055 .sport-icon-v1051{
+  color:#8da7b6 !important;
+  border-color:rgba(141,167,182,.22) !important;
+  background:rgba(141,167,182,.08) !important;
+  box-shadow:none !important;
+}
+
+.sport-card-v1051.locked-sport-v1055 .sport-copy-v1051 b{
+  color:#b7cad4 !important;
+}
+
+.sport-card-v1051.locked-sport-v1055 .sport-copy-v1051 small{
+  color:#ffd166 !important;
+}
+
+.soon-badge-v1055{
+  position:absolute !important;
+  right:7px !important;
+  top:7px !important;
+  padding:3px 6px !important;
+  border-radius:999px !important;
+  font-size:9px !important;
+  line-height:1 !important;
+  font-style:normal !important;
+  font-weight:1000 !important;
+  color:#ffd166 !important;
+  background:rgba(255,209,102,.11) !important;
+  border:1px solid rgba(255,209,102,.24) !important;
+}
+
+@media (max-width:1500px){
+  .ai-sport-tabs-v747{
+    grid-template-columns:repeat(5, minmax(104px, 1fr)) !important;
+  }
+}
+
+@media (max-width:880px){
+  .ai-sport-tabs-v747{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+  }
+}
+
+/* KONIEC WERSJI 1055 */
