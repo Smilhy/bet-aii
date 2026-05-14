@@ -12222,10 +12222,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [activePanel, setActivePanel] = useState('live')
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
-  const [minOdds, setMinOdds] = useState(1.35)
-  const [maxOdds, setMaxOdds] = useState(3.20)
-  const [minProb, setMinProb] = useState(62)
-  const [minEv, setMinEv] = useState(0)
+  const [minOdds, setMinOdds] = useState(1.25)
+  const [maxOdds, setMaxOdds] = useState(3.50)
+  const [minProb, setMinProb] = useState(55)
+  const [minEv, setMinEv] = useState(-8)
   const [liveCards, setLiveCards] = useState([])
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
@@ -12381,7 +12381,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allCards
-      .filter(c => activeSport === 'Wszystkie' || activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
+      .filter(c => (activeSport === 'Wszystkie' || activeSport === 'Piłka nożna') ? c.sport === 'Piłka nożna' : c.sport === activeSport)
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
       .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
@@ -12552,7 +12552,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           .sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0))
         setStatusText(`API nie zwróciło dziś realnych meczów dla filtra (${debug.join(', ') || '0'}). Pokazuję awaryjny widok AI, żeby panel i statystyki działały. Spróbuj odświeżyć później.`)
       } else {
-        setStatusText(`Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie.`)
+        setStatusText(`Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie. Ustaw widełki kursu, prawdopodobieństwa i EV.`)
       }
 
       setLiveCards(clean)
@@ -12651,6 +12651,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
           <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="45" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
           <label><span>EV min</span><b>{minEv >= 0 ? '+' : ''}{minEv}%</b><input type="range" min="-10" max="25" step="1" value={minEv} onChange={e => setMinEv(Number(e.target.value))} /></label>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMinEv(-8); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj meczu, ligi, rynku..." />
       </div>
@@ -12680,7 +12681,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Kliknij „Odśwież AI”. Domyślnie widzisz pre-match. Jeżeli pusto, przełącz na „Wszystkie” albo wybierz inny sport.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Jeżeli lista jest pusta, obniż prawdopodobieństwo/EV albo kliknij Reset filtrów. Typy są pobrane, ale mogą nie mieścić się w Twoich widełkach.</p></div>}
             </div>
           )}
 
