@@ -120,6 +120,11 @@ exports.handler = async (event) => {
       }
     }
 
+    const fixtureIdValue = tip.fixture_id || tip.api_fixture_id || tip.external_fixture_id || null
+    const isApiBackedTip = Boolean(fixtureIdValue && !String(fixtureIdValue).startsWith('manual-'))
+    const initialSettlementStatus = isApiBackedTip ? 'pending' : 'pending_admin_review'
+    const settlementSource = isApiBackedTip ? 'api-football' : 'manual_admin_review'
+
     const payload = {
       author_id: user.id,
       user_id: user.id,
@@ -129,6 +134,12 @@ exports.handler = async (event) => {
       team_home: toText(tip.team_home),
       team_away: toText(tip.team_away),
       match_time: tip.match_time || null,
+      fixture_id: fixtureIdValue,
+      api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      tip_source: settlementSource,
+      settlement_source: settlementSource,
+      settlement_status: initialSettlementStatus,
       bet_type: toText(tip.bet_type || tip.prediction),
       odds: toNumber(tip.odds, 0),
       analysis: toText(tip.analysis),
@@ -137,7 +148,7 @@ exports.handler = async (event) => {
       ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
       price: accessType === 'premium' ? Math.max(0, toNumber(tip.price, 0)) : 0,
-      status: 'pending',
+      status: initialSettlementStatus,
       tags: Array.isArray(tip.tags) ? tip.tags.map(tag => String(tag).trim()).filter(Boolean) : [],
       notify_followers: tip.notify_followers !== false
     }
@@ -166,6 +177,12 @@ exports.handler = async (event) => {
       team_away: payload.team_away,
       match: `${payload.team_home} vs ${payload.team_away}`,
       match_time: payload.match_time,
+      fixture_id: fixtureIdValue,
+      api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      tip_source: settlementSource,
+      settlement_source: settlementSource,
+      settlement_status: initialSettlementStatus,
       bet_type: payload.bet_type,
       prediction: payload.bet_type,
       odds: payload.odds,
@@ -175,7 +192,7 @@ exports.handler = async (event) => {
       ai_analysis: payload.ai_analysis,
       access_type: payload.access_type,
       price: payload.price,
-      status: 'pending',
+      status: initialSettlementStatus,
       tags: payload.tags,
       notify_followers: payload.notify_followers
     }

@@ -7644,6 +7644,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })()
     const finalAccessType = form.accessType === 'premium' ? 'premium' : 'free'
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+    const fixtureIdValue = publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null
+    const isApiBackedTip = addTipMode !== 'manual' && fixtureIdValue && !String(fixtureIdValue).startsWith('manual-')
+    const initialSettlementStatus = isApiBackedTip ? 'pending' : 'pending_admin_review'
+    const settlementSource = isApiBackedTip ? 'api-football' : 'manual_admin_review'
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -7654,7 +7658,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
-      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      fixture_id: fixtureIdValue,
+      api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      tip_source: settlementSource,
+      settlement_source: settlementSource,
+      settlement_status: initialSettlementStatus,
       home_team_id: publishMatch.homeTeamId || null,
       away_team_id: publishMatch.awayTeamId || null,
       home_logo: publishMatch.homeLogo || null,
@@ -7679,7 +7688,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       price: priceValue,
       single_price: priceValue,
       tip_price: priceValue,
-      status: 'pending',
+      status: initialSettlementStatus,
       created_at: new Date().toISOString(),
     }
     const tipPayloadBasic = {
@@ -7691,7 +7700,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
-      fixture_id: publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null,
+      fixture_id: fixtureIdValue,
+      api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
+      tip_source: settlementSource,
+      settlement_source: settlementSource,
+      settlement_status: initialSettlementStatus,
       home_team_id: publishMatch.homeTeamId || null,
       away_team_id: publishMatch.awayTeamId || null,
       home_logo: publishMatch.homeLogo || null,
@@ -7704,7 +7718,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       access_type: finalAccessType,
       is_premium: finalAccessType === 'premium',
       price: priceValue,
-      status: 'pending',
+      status: initialSettlementStatus,
       created_at: new Date().toISOString(),
     }
     const tipPayloadMinimal = {
@@ -7767,8 +7781,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         type: 'success',
         title: 'Typ opublikowany',
         message: finalAccessType === 'premium'
-          ? `Twój tip premium został dodany do dashboardu i profilu. Cena singla: ${priceValue.toFixed(2)} zł.`
-          : `Twój darmowy tip został dodany do dashboardu i profilu.${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
+          ? `Twój tip premium został dodany do dashboardu i profilu. ${isApiBackedTip ? 'Rozliczenie automatyczne po FT.' : 'Typ ręczny trafił do sprawdzenia przez admina.'} Cena singla: ${priceValue.toFixed(2)} zł.`
+          : `Twój darmowy tip został dodany do dashboardu i profilu.${isApiBackedTip ? ' Zostanie rozliczony automatycznie po zakończeniu meczu.' : ' Typ ręczny trafił do sprawdzenia przez admina.'}${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
       onTipSaved?.(normalizeTipRow({
         ...savedRow,
