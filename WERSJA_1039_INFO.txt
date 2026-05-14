@@ -1,0 +1,10 @@
+WERSJA 1039 — FIX DIAGNOSTYKI AUTO-SETTLE
+
+Naprawione:
+- diagnose-auto-settle nie pyta już o kolumnę tips.type,
+- błąd "column tips.type does not exist" znika,
+- auto-settle z 1038 zostaje bez zmian.
+
+Po deployu sprawdź:
+https://twoja-domena.netlify.app/.netlify/functions/diagnose-auto-settle
+https://twoja-domena.netlify.app/.netlify/functions/auto-settle-tips?limit=20&dryRun=1

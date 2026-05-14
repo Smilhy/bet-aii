@@ -28,7 +28,7 @@ exports.handler = async (event) => {
     const supabase = getSupabaseAdmin()
     const { data, error } = await supabase
       .from('tips')
-      .select('id,created_at,status,settlement_status,result_status,result,fixture_id,api_fixture_id,external_fixture_id,team_home,team_away,bet_type,prediction,market,type,odds,stake,settled_at,settled_by,fixture_status,settlement_note')
+      .select('id,created_at,status,settlement_status,result_status,result,fixture_id,api_fixture_id,external_fixture_id,team_home,team_away,bet_type,prediction,market,odds,stake,settled_at,settled_by,fixture_status,settlement_note')
       .order('created_at', { ascending: false })
       .limit(20)
 
