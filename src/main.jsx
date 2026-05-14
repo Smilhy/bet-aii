@@ -12577,7 +12577,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-premium-hero-copy-v1054">
           <span className="ai-hero-pill-v1054">PRE-MATCH AI • PIŁKA NOŻNA</span>
           <h1>Typy <em>AI</em></h1>
-          <p>Model wybiera najlepszy rynek dla meczu: 1X2, podwójna szansa, gole, BTTS albo handicap. Ty ustawiasz widełki kursu, prawdopodobieństwa i EV.</p>
+          <p>Zaawansowany model AI analizuje dane przedmeczowe, kursy, value, ryzyko i formę, aby wskazać najlepszy rynek dla meczu.</p>
           <div className="ai-hero-badges-v1054">
             <span>AI Score</span><span>Value EV</span><span>Ryzyko</span><span>Najlepszy rynek</span>
           </div>
@@ -12619,7 +12619,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 key={sport}
                 type="button"
                 disabled={locked}
-                className={`${activeSport === sport ? 'active ' : ''}${locked ? 'locked-sport-v1055 ' : ''}sport-card-v1051`}
+                className={`${activeSport === sport ? 'active ' : ''}${locked ? 'locked-sport-v1055 ' : ''}sport-card-v1051 sport-card-premium-v1057`}
                 onClick={() => {
                   if (locked) {
                     setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną, żeby nie mieszać sportów.`)
@@ -12629,9 +12629,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   setSelectedId('')
                 }}
               >
-                <span className="sport-icon-v1051">{locked ? '🔒' : meta.icon}</span>
+                <span className="sport-icon-v1051">{meta.icon}</span>
                 <span className="sport-copy-v1051">
-                  <b>{meta.label}</b>
+                  <b>{meta.label}{locked ? <i className="sport-lock-inline-v1057">🔒</i> : null}</b>
                   <small>{locked ? 'Wkrótce' : count}</small>
                 </span>
                 {locked ? <em className="soon-badge-v1055">Wkrótce</em> : null}
@@ -12681,7 +12681,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Jeżeli lista jest pusta, obniż prawdopodobieństwo/EV albo kliknij Reset filtrów. Typy są pobrane, ale mogą nie mieścić się w Twoich widełkach.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Spróbuj zmienić ustawienia filtrów albo kliknij Reset filtrów.</p></div>}
             </div>
           )}
 
