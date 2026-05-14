@@ -17438,6 +17438,9 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     amountNumber: Number(request.amount || 0),
     searchText: String([
       request.id,
+      request.display_user,
+      request.username,
+      request.display_name,
       request.user_id,
       request.user_email,
       request.email,
@@ -17650,9 +17653,9 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
           {filteredRequests.length ? filteredRequests.map(request => (
             <div className="admin-payout-live-row" key={request.id}>
               <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
-              <span>
-                <strong>{request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
-                <small>{request.user_id || '—'}</small>
+              <span className="admin-payout-user-cell-v1047">
+                <strong>{request.display_user || request.username || request.user_email || request.email || (request.user_id ? request.user_id.slice(0, 8) + '…' : '—')}</strong>
+                <small>{request.raw_user_id || request.user_id || '—'}</small>
               </span>
               <span>{request.created_at ? new Date(request.created_at).toLocaleString('pl-PL') : '—'}</span>
               <span className="amount">{formatMoney(request.amountNumber)}</span>
@@ -19864,10 +19867,41 @@ function App() {
       return
     }
 
-    setAdminPayoutRequests(data || [])
+    const rows = Array.isArray(data) ? data : []
+    const userIds = [...new Set(rows.map(row => row?.user_id).filter(Boolean))]
+    let usersById = {}
+
+    if (userIds.length) {
+      try {
+        const { data: users } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, full_name, email')
+          .in('id', userIds)
+
+        usersById = Object.fromEntries((users || []).map(profile => [
+          String(profile.id),
+          profile
+        ]))
+      } catch (profileError) {
+        console.warn('fetchAdminPayoutRequests usernames resolve error', profileError)
+      }
+    }
+
+    setAdminPayoutRequests(rows.map(row => {
+      const profile = usersById[String(row?.user_id || '')]
+      const displayUser = profile?.username || profile?.display_name || profile?.full_name || profile?.email || row?.user_email || row?.email || row?.user_id || '—'
+
+      return {
+        ...row,
+        username: profile?.username || row?.username || null,
+        display_name: profile?.display_name || profile?.full_name || null,
+        user_email: profile?.email || row?.user_email || row?.email || null,
+        display_user: displayUser,
+        raw_user_id: row?.user_id || null
+      }
+    }))
   }
 
-  
 
 
   async function getAdminBearerHeaders(extraHeaders = {}) {

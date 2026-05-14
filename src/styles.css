@@ -42504,3 +42504,38 @@ button.betfolio-fetch-btn{
 .admin-finance-user-cell-v1044 strong{
   color:#ffffff !important;
 }
+
+
+/* ==========================================================================
+   WERSJA 1047 — ADMIN WYPŁATY: NICKI ZAMIAST UUID
+   ========================================================================== */
+
+.admin-payout-user-cell-v1047{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:3px !important;
+  min-width:0 !important;
+}
+
+.admin-payout-user-cell-v1047 strong{
+  max-width:260px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#e9fbff !important;
+  font-weight:1000 !important;
+}
+
+.admin-payout-user-cell-v1047 small{
+  max-width:260px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:10px !important;
+  color:#6f95a8 !important;
+  opacity:.72 !important;
+  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* KONIEC WERSJI 1047 */
