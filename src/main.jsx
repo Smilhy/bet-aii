@@ -8668,6 +8668,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [chatText, setChatText] = useState('')
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false)
   const [chatAttachment, setChatAttachment] = useState(null)
+  const [chatImagePreview, setChatImagePreview] = useState(null)
   const [commentDrafts, setCommentDrafts] = useState({})
   const [expandedComments, setExpandedComments] = useState({})
   const [openPostMenuId, setOpenPostMenuId] = useState(null)
@@ -8713,10 +8714,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   }
 
   const getCommunityDisplayName = (item = {}) => {
-    const direct = item.username || item.display_name || item.full_name || item.name || item.author_name
-    if (direct && String(direct).trim() && String(direct).trim().toLowerCase() !== 'użytkownik') return String(direct).trim()
-    const emailName = communityNameFromEmail(item.email || item.author_email || '')
+    const rawDirect = item.username || item.display_name || item.full_name || item.name || item.author_name || item.handle
+    const direct = String(rawDirect || '').trim()
+    if (direct && direct.toLowerCase() !== 'użytkownik' && !/^[a-z]{1,2}$/i.test(direct)) return direct
+    const emailRaw = item.email || item.author_email || ''
+    const emailName = communityNameFromEmail(emailRaw)
     if (emailName && emailName !== 'Użytkownik') return emailName
+    if (direct) return direct.toUpperCase()
     const id = String(item.id || item.user_id || item.author_id || '')
     if (id) return `Użytkownik ${id.slice(0, 4).toUpperCase()}`
     return 'Użytkownik'
@@ -8790,9 +8794,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   }, [posts, commentsByPost, chatMessages, userEmail, user?.id])
 
   const rewardRows = [
-    { key: 'first_post', icon: '📝', title: 'Pierwszy post społeczności', desc: 'Opublikuj minimum jeden realny post.', done: communityStats.myPosts >= 1, progress: Math.min(100, communityStats.myPosts * 100), current: `${communityStats.myPosts}/1`, reward: 1 },
+    { key: 'first_post', icon: '📝', title: 'Pierwszy post społeczności', desc: 'Opublikuj minimum jeden realny post.', done: communityStats.myPosts >= 1, progress: Math.min(100, communityStats.myPosts * 100), current: `${Math.min(communityStats.myPosts, 1)}/1`, reward: 1 },
     { key: 'first_comment', icon: '💬', title: 'Pierwszy komentarz', desc: 'Dodaj komentarz pod postem.', done: communityStats.myComments >= 1, progress: Math.min(100, communityStats.myComments * 100), current: `${communityStats.myComments}/1`, reward: 1 },
-    { key: 'first_chat', icon: '📡', title: 'Pierwsza wiadomość live', desc: 'Napisz wiadomość na czacie live.', done: communityStats.myChat >= 1, progress: Math.min(100, communityStats.myChat * 100), current: `${communityStats.myChat}/1`, reward: 1 },
+    { key: 'first_chat', icon: '📡', title: 'Pierwsza wiadomość live', desc: 'Napisz wiadomość na czacie live.', done: communityStats.myChat >= 1, progress: Math.min(100, communityStats.myChat * 100), current: `${Math.min(communityStats.myChat, 1)}/1`, reward: 1 },
     { key: 'social_value', icon: '💚', title: 'Value społeczności', desc: 'Zdobądź minimum 3 reakcje pod swoimi postami.', done: communityStats.myLikes >= 3, progress: Math.min(100, (communityStats.myLikes / 3) * 100), current: `${communityStats.myLikes}/3`, reward: 1 }
   ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
 
@@ -9378,7 +9382,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                                 {parts.text ? <p>{parts.text}</p> : null}
                                 {parts.attachment ? (
                                   <div className="chat-attachment-preview-v1025">
-                                    {String(parts.attachment.type || '').startsWith('image/') ? <img src={parts.attachment.dataUrl} alt={parts.attachment.name || 'załącznik'} /> : <span>📎</span>}
+                                    {String(parts.attachment.type || '').startsWith('image/') ? <button type="button" className="chat-image-open-v1029" onClick={() => setChatImagePreview(parts.attachment)}><img src={parts.attachment.dataUrl} alt={parts.attachment.name || 'załącznik'} /></button> : <span>📎</span>}
                                     <div><strong>{parts.attachment.name || 'Załącznik'}</strong><small>{Math.max(1, Math.round(Number(parts.attachment.size || 0) / 1024))} KB</small></div>
                                   </div>
                                 ) : null}
@@ -9467,7 +9471,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small>{planLabel} • kliknij profil</small>
+                      <small><b>{planLabel}</b><span>kliknij profil</span></small>
                     </div>
                     <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>
@@ -9478,6 +9482,16 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         </aside>
       </div>
 
+
+      {chatImagePreview ? (
+        <div className="chat-image-modal-v1029" onClick={() => setChatImagePreview(null)}>
+          <div onClick={event => event.stopPropagation()}>
+            <button type="button" onClick={() => setChatImagePreview(null)}>×</button>
+            <img src={chatImagePreview.dataUrl} alt={chatImagePreview.name || 'podgląd'} />
+            <strong>{chatImagePreview.name || 'Zdjęcie'}</strong>
+          </div>
+        </div>
+      ) : null}
 
     </section>
   )

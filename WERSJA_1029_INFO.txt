@@ -1,0 +1,21 @@
+WERSJA 1029 — COMMUNITY POLISH FINAL
+
+Naprawione:
+- Polecani użytkownicy: avatar / nick / status / Obserwuj są osobno i nie nachodzą na siebie.
+- Nick i avatar otwierają profil.
+- Przycisk Obserwuj/Obserwujesz jest osobnym przyciskiem.
+- Menu 3 kropek ma lepsze pozycjonowanie, z-index i nie powinno się ucinać.
+- Podgląd zdjęcia w czacie jest większy.
+- Kliknięcie zdjęcia otwiera duży podgląd.
+- Liczniki nagród typu pierwsza wiadomość/post są ograniczone do 1/1.
+- Opisy nagród nie sklejają się z tytułami.
+
+Nie ruszone:
+- Supabase reward 24h z 1021,
+- portfel,
+- historia,
+- powiadomienia,
+- ranking,
+- logika postów i czatu.
+
+SQL 1029 jest tylko informacyjny.
