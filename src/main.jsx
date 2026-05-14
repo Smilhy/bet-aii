@@ -9445,12 +9445,12 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
             <div className="sidecard-head-v5"><h3>🏆 Top społeczność</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
-            <small className="sidecard-sub-v5">Ranking tygodniowy</small>
+            <small className="sidecard-sub-v5">Ranking tygodniowy • posty punktowane 1/doba</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small>{Number(item.posts_count || 0)} postów • {Number(item.comments_count || 0)} kom.</small></div>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small>{Number(item.posts_count || 0)} postów • punkt za post 1/doba</small></div>
                   <b>{Number(item.community_points || 0)} Coin</b>
                 </div>
               ))}

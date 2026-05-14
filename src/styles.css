@@ -41760,3 +41760,180 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1029 */
+
+
+/* ==========================================================================
+   WERSJA 1030 — SPOŁECZNOŚĆ SZERSZE RAMKI / BEZ UCINANIA MENU
+   ========================================================================== */
+
+/* Cały układ społeczności: więcej miejsca na środek */
+.community-10-v1017 .community-pro-grid-v1012{
+  grid-template-columns: 224px minmax(0, 1fr) 250px !important;
+  gap: 14px !important;
+  align-items:start !important;
+}
+
+/* Przy dużych ekranach zwężamy prawą kolumnę i oddajemy miejsce postom */
+@media (min-width: 1500px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns: 224px minmax(920px, 1fr) 250px !important;
+  }
+}
+
+@media (min-width: 1700px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns: 230px minmax(1050px, 1fr) 252px !important;
+  }
+}
+
+/* Centrum nie może się ściskać ani ucinać dropdownów */
+.community-10-v1017 .community-pro-center-v1012,
+.community-10-v1017 .community-pro-feed-v1012,
+.community-10-v1017 .pro-chat-panel-v1012,
+.community-10-v1017 .composer-v5,
+.community-10-v1017 .feed-card-v5,
+.community-10-v1017 .pro-post-card-v1012,
+.community-10-v1017 .pro-post-card-v1014{
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+/* Karty postów i composer bardziej przestronne */
+.community-10-v1017 .pro-post-card-v1012,
+.community-10-v1017 .pro-post-card-v1014,
+.community-10-v1017 .composer-pro-v1014,
+.community-10-v1017 .pro-chat-panel-v1012{
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  border-radius: 22px !important;
+}
+
+/* Górny czat: więcej miejsca na załączniki */
+.community-10-v1017 .pro-chat-list-v1012{
+  padding-right: 10px !important;
+  overflow-x: visible !important;
+}
+
+.community-10-v1017 .chat-attachment-preview-v1025{
+  max-width: min(680px, 78%) !important;
+  min-width: 360px !important;
+  padding: 10px !important;
+}
+
+.community-10-v1017 .chat-attachment-preview-v1025 img{
+  width: 118px !important;
+  height: 86px !important;
+  border-radius: 14px !important;
+}
+
+.community-10-v1017 .chat-selected-file-v1025{
+  max-width: min(680px, 86%) !important;
+}
+
+/* Input czatu nie ma zjadać ikon */
+.community-10-v1017 .chat-input-active-v1023{
+  grid-template-columns: minmax(0, 1fr) auto 52px !important;
+  gap: 9px !important;
+}
+
+.community-10-v1017 .pro-chat-input-v1012 input{
+  min-width:0 !important;
+}
+
+/* Post card — akcje mają więcej miejsca */
+.community-10-v1017 .feed-actions-v5{
+  display:grid !important;
+  grid-template-columns: 110px 110px 110px minmax(150px, auto) !important;
+  align-items:center !important;
+  gap: 12px !important;
+}
+
+.community-10-v1017 .feed-actions-v5 button:last-child{
+  justify-self:end !important;
+  min-width:150px !important;
+}
+
+/* Menu 3 kropek: szerzej, wyżej i bez ucinania */
+.community-10-v1017 .post-menu-wrap-v1024{
+  z-index: 300 !important;
+  position: relative !important;
+}
+
+.community-10-v1017 .post-menu-v1024{
+  width: 210px !important;
+  right: 0 !important;
+  top: 44px !important;
+  z-index: 500 !important;
+  overflow: visible !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+}
+
+.community-10-v1017 .post-menu-v1024 button{
+  min-height: 40px !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+
+/* Karta z otwartym menu ma mieć priorytet nad następną kartą */
+.community-10-v1017 .feed-card-v5:has(.post-menu-v1024),
+.community-10-v1017 .pro-post-card-v1012:has(.post-menu-v1024),
+.community-10-v1017 .pro-post-card-v1014:has(.post-menu-v1024){
+  z-index: 250 !important;
+}
+
+/* Prawa kolumna: nie ściskać środka */
+.community-10-v1017 .community-pro-right-v1012{
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+}
+
+/* Polecani użytkownicy w węższej prawej kolumnie nadal czytelni */
+.community-10-v1017 .suggested-row-v1020{
+  grid-template-columns: 46px minmax(0, 1fr) 86px !important;
+  gap: 8px !important;
+  min-height: 68px !important;
+  padding: 9px !important;
+}
+
+.community-10-v1017 .suggested-row-v1020 .suggested-avatar-v5{
+  width:46px !important;
+  height:46px !important;
+  min-width:46px !important;
+  max-width:46px !important;
+}
+
+.community-10-v1017 .suggested-follow-v1020{
+  width:86px !important;
+  min-width:86px !important;
+  max-width:86px !important;
+  height:34px !important;
+  font-size:11px !important;
+}
+
+.community-10-v1017 .suggested-name-v1020{
+  font-size:13px !important;
+}
+
+/* Mobile / mniejsze szerokości: wraca bezpieczny layout */
+@media (max-width: 1280px){
+  .community-10-v1017 .community-pro-grid-v1012{
+    grid-template-columns: 1fr !important;
+  }
+  .community-10-v1017 .community-pro-right-v1012{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+  .community-10-v1017 .feed-actions-v5{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* KONIEC WERSJI 1030 */

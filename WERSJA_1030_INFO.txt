@@ -1,0 +1,12 @@
+WERSJA 1030 — SZERSZE RAMKI SPOŁECZNOŚCI
+
+Zrobione:
+- poszerzony środkowy obszar społeczności,
+- zwężona prawa kolumna, żeby posty i czat miały więcej miejsca,
+- karty postów, composer i chat mają więcej paddingu,
+- menu 3 kropek ma większą szerokość i wyższy z-index,
+- karty nie ucinają dropdowna,
+- załączniki/zdjęcia w czacie mają większy preview,
+- nie ruszono logiki Supabase, nagród, portfela, misji ani chatu.
+
+SQL 1030 jest tylko informacyjny — nie trzeba odpalać.
