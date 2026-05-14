@@ -43770,3 +43770,79 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1052 */
+
+
+/* ==========================================================================
+   WERSJA 1053 — HERO DOPASOWANY + FETCH/FALLBACK TYPY AI
+   ========================================================================== */
+
+.ai-banner-image-v1052{
+  position:relative !important;
+  height:clamp(250px, 24vw, 390px) !important;
+  padding:0 !important;
+  background:
+    radial-gradient(circle at 75% 50%, rgba(34,245,223,.12), transparent 34%),
+    linear-gradient(135deg, #020b14, #031d2b) !important;
+}
+
+.ai-banner-image-v1052 img{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  display:block !important;
+  background:#020b14 !important;
+}
+
+.ai-banner-image-v1052:after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  border-radius:inherit !important;
+  box-shadow:inset 0 0 0 1px rgba(34,245,223,.18), inset 0 -80px 100px rgba(0,0,0,.12) !important;
+}
+
+.ai-center-hero-compact-v1052{
+  margin-top:0 !important;
+  background:
+    linear-gradient(135deg, rgba(6,34,52,.96), rgba(3,13,24,.98)),
+    radial-gradient(circle at 70% 30%, rgba(34,245,223,.12), transparent 24%) !important;
+}
+
+.ai-center-status-v747{
+  min-height:44px !important;
+  display:flex !important;
+  align-items:center !important;
+}
+
+.ai-empty-v747{
+  min-height:140px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.ai-pick-card-v747 .pick-top-v747{
+  display:grid !important;
+  grid-template-columns:1fr auto auto !important;
+}
+
+.ai-pick-card-v747 .pick-meta-v747{
+  display:grid !important;
+  grid-template-columns:1fr 1fr auto !important;
+}
+
+@media (max-width: 920px){
+  .ai-banner-image-v1052{
+    height:230px !important;
+  }
+  .ai-banner-image-v1052 img{
+    object-fit:cover !important;
+    object-position:center center !important;
+  }
+}
+
+/* KONIEC WERSJI 1053 */

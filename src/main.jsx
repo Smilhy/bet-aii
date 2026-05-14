@@ -12126,6 +12126,94 @@ function getBetAiFormPairV1052(seedText = '') {
 }
 
 
+
+
+function extractBetAiFixturesV1053(payload = {}) {
+  const buckets = [
+    payload.fixtures,
+    payload.events,
+    payload.items,
+    payload.data,
+    payload.matches,
+    payload.response,
+    payload.results,
+    payload?.data?.fixtures,
+    payload?.data?.events,
+    payload?.data?.response,
+    payload?.payload?.fixtures,
+    payload?.payload?.events
+  ]
+
+  const flat = []
+  const pushItem = item => {
+    if (!item) return
+    if (Array.isArray(item)) {
+      item.forEach(pushItem)
+      return
+    }
+    if (typeof item !== 'object') return
+
+    const fixture = item.fixture || item.event || item.match || item.game || null
+    const teams = item.teams || {}
+    const goals = item.goals || item.score || {}
+    const league = item.league || item.competition || {}
+
+    const normalized = {
+      ...item,
+      id: item.id || fixture?.id || item.fixture_id || item.external_fixture_id,
+      home: item.home || item.home_team || item.team_home || item.homeTeam || teams?.home?.name || item.localteam_name,
+      away: item.away || item.away_team || item.team_away || item.awayTeam || teams?.away?.name || item.visitorteam_name,
+      league: typeof league === 'string' ? league : (league?.name || item.league_name || item.competition_name),
+      country: item.country || league?.country,
+      date: item.date || item.event_time || item.kickoff_time || item.match_time || fixture?.date || item.starting_at,
+      commence_time: item.commence_time || fixture?.date || item.starting_at,
+      live_score_home: item.live_score_home ?? item.score_home ?? goals?.home ?? item.home_score,
+      live_score_away: item.live_score_away ?? item.score_away ?? goals?.away ?? item.away_score,
+      sport: item.sport || item.sport_name || item.sport_key
+    }
+
+    if (normalized.home || normalized.away || normalized.league || normalized.id) flat.push(normalized)
+  }
+
+  buckets.forEach(pushItem)
+  return flat.filter((item, index, arr) => {
+    const key = String(item.id || `${item.home}-${item.away}-${item.date}-${item.league}`)
+    return key && arr.findIndex(other => String(other.id || `${other.home}-${other.away}-${other.date}-${other.league}`) === key) === index
+  })
+}
+
+function buildBetAiFallbackMatchesV1053() {
+  const now = Date.now()
+  const hour = 60 * 60 * 1000
+  const rows = [
+    ['Piłka nożna','Premier League','Manchester City','Arsenal', 28, 1.72],
+    ['Piłka nożna','La Liga','Real Madrid','Villarreal', 31, 1.58],
+    ['Piłka nożna','Serie A','Inter','Atalanta', 34, 1.63],
+    ['Piłka nożna','Major League Soccer','Real Salt Lake','Colorado Rapids', 38, 1.71],
+    ['Tenis','ATP','Carlos Alcaraz','Jannik Sinner', 22, 1.68],
+    ['Koszykówka','NBA','Boston Celtics','Miami Heat', 18, 1.90],
+    ['Hokej','NHL','Toronto Maple Leafs','Boston Bruins', 26, 1.86],
+    ['Siatkówka','PlusLiga','ZAKSA Kędzierzyn','Jastrzębski Węgiel', 30, 1.74],
+    ['MMA','UFC','Jan Błachowicz','Rywal', 42, 1.92],
+    ['Baseball','MLB','New York Yankees','Boston Red Sox', 36, 1.79],
+    ['E-sport','CS2 Pro League','NAVI','FaZe Clan', 24, 1.83],
+  ]
+
+  return rows.map(([sport, league, home, away, hours, odds], index) => ({
+    id: `fallback-ai-v1053-${index}`,
+    sport,
+    league,
+    country: 'Fallback AI',
+    home,
+    away,
+    date: new Date(now + hours * hour).toISOString(),
+    odds,
+    source: 'Bet+AI Fallback',
+    fallback: true
+  }))
+}
+
+
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const SPORTS = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const [activeSport, setActiveSport] = useState('Wszystkie')
@@ -12156,45 +12244,49 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   const buildCardFromMatch = (match, index = 0, forcedSport = '') => {
-    const home = match.home || match.home_team || match.team_home || match.homeTeam || 'Gospodarze'
-    const away = match.away || match.away_team || match.team_away || match.awayTeam || 'Goście'
-    const sport = normalizeSport(forcedSport || match.sport || match.sportName || match.league || match.country)
-    const league = match.league || match.league_name || match.competition || match.country || sport
-    const eventTime = match.commence_time || match.event_time || match.kickoff_time || match.match_time || match.date || new Date().toISOString()
+    const m = match || {}
+    const home = m.home || m.home_team || m.team_home || m.homeTeam || 'Gospodarze'
+    const away = m.away || m.away_team || m.team_away || m.awayTeam || 'Goście'
+    const sport = detectBetAiSportV1052(m, forcedSport || m.sport || m.sportName || m.sport_key || 'Piłka nożna')
+    const league = m.league || m.league_name || m.competition || m.country || sport
+    const eventTime = m.commence_time || m.event_time || m.kickoff_time || m.match_time || m.date || new Date(Date.now() + (index + 4) * 60 * 60 * 1000).toISOString()
+    const kickoffState = getBetAiKickoffStateV1051(eventTime)
     const seed = `${sport}-${league}-${home}-${away}-${eventTime}`
-    const base = hashNumber(seed, 64, 91)
-    const odds = (1.52 + (hashNumber(seed + 'odds', 0, 62) / 100)).toFixed(2)
-    const ev = hashNumber(seed + 'ev', -4, 28)
+    const odds = Number(m.odds || m.course || (1.52 + (hashNumber(seed + 'odds', 0, 62) / 100))).toFixed(2)
+    const quality = buildBetAiQualityV1052(seed, odds, league, sport === 'Piłka nożna' ? '1X2 / zwycięzca' : 'Moneyline', kickoffState)
     const pickSide = hashNumber(seed + 'side', 0, 100) >= 43 ? home : away
-    const market = sport === 'Piłka nożna' ? '1X2 / zwycięzca' : sport === 'Hokej' ? 'Moneyline / OT' : sport === 'MMA' ? 'Zwycięzca walki' : 'Moneyline'
-    const risk = base >= 84 ? 'Niskie' : base >= 74 ? 'Średnie' : 'Podwyższone'
-    const id = String(match.id || match.fixture_id || match.external_fixture_id || seed)
-    return {
+    const market = sport === 'Piłka nożna' ? '1X2 / zwycięzca' : sport === 'Hokej' ? 'Moneyline / OT' : sport === 'MMA' ? 'Zwycięzca walki' : sport === 'Koszykówka' ? 'Moneyline / handicap' : 'Moneyline'
+    const forms = getBetAiFormPairV1052(seed)
+    const id = String(m.id || m.fixture_id || m.external_fixture_id || seed)
+    const prediction = `${pickSide} wygra`
+    const card = {
       id,
       sport,
       league,
-      country: match.country || 'API-Sports',
+      country: m.country || 'API-Sports',
       home,
       away,
       matchName: `${home} vs ${away}`,
       date: formatDate(eventTime),
       rawDate: eventTime,
       market,
-      prediction: `${pickSide} wygra`,
+      prediction,
       odds,
-      aiScore: base,
-      ev,
-      risk,
+      aiScore: quality.aiScore,
+      ev: quality.ev,
+      risk: quality.risk,
       status: 'pending',
-      scoreHome: Number(match.live_score_home || match.score_home || 0),
-      scoreAway: Number(match.live_score_away || match.score_away || 0),
-      source: 'API-Sports',
-      formHome: hashNumber(seed + home, 61, 88),
-      formAway: hashNumber(seed + away, 54, 82),
-      confidenceText: base >= 84 ? 'MOCNY SYGNAŁ' : base >= 74 ? 'DOBRY TYP' : 'OBSERWUJ',
-      curiosity: getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(m, sportFallback), league, risk }),
-      analysis: `Model wybrał rynek „${market}” i typ „${prediction}”. ${getBetAiShortInsightV1052({ aiScore: base, ev })} Dane wejściowe: liga, termin meczu, kurs, stabilność rynku, profil ryzyka i forma stron.`,
+      scoreHome: Number(m.live_score_home || m.score_home || 0),
+      scoreAway: Number(m.live_score_away || m.score_away || 0),
+      kickoffState,
+      source: m.fallback ? 'Bet+AI fallback' : 'API-Sports',
+      formHome: forms.home,
+      formAway: forms.away,
+      confidenceText: quality.aiScore >= 86 && quality.ev >= 10 ? 'TOP VALUE' : quality.aiScore >= 80 ? 'DOBRY TYP' : 'OBSERWUJ',
     }
+    card.curiosity = getBetAiCuriosityV1052(card)
+    card.analysis = `Model wybrał rynek „${market}” i typ „${prediction}”. ${getBetAiShortInsightV1052(card)} Dane wejściowe: liga, termin meczu, kurs, stabilność rynku, profil ryzyka i forma stron.`
+    return card
   }
 
   const dbCards = useMemo(() => {
@@ -12358,26 +12450,72 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const sportsToFetch = activeSport === 'Wszystkie'
         ? ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'Siatkówka', 'MMA', 'Baseball']
         : [activeSport]
+
       const collected = []
+      const debug = []
+
       for (const sport of sportsToFetch) {
-        try {
-          const url = `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&country=${encodeURIComponent('Wszystkie')}&league=${encodeURIComponent('Wszystkie ligi')}&daysAhead=7&realOnly=1&allLeagues=1`
-          const res = await fetch(url, { cache: 'no-store' })
-          const json = await res.json().catch(() => ({}))
-          const fixtures = json.fixtures || json.events || json.items || json.data || []
-          fixtures.slice(0, activeSport === 'Wszystkie' ? 8 : 30).forEach((m, idx) => collected.push(buildCardFromMatch(m, idx, sport)))
-        } catch (err) {
-          console.warn('Sport fetch failed', sport, err)
+        const urls = [
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&country=${encodeURIComponent('Wszystkie')}&league=${encodeURIComponent('Wszystkie ligi')}&daysAhead=14&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&daysAhead=14&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&days=14`,
+          `/.netlify/functions/get-sports-events?type=${encodeURIComponent(sport)}&daysAhead=14`
+        ]
+
+        let sportFixtures = []
+        for (const url of urls) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' })
+            const json = await res.json().catch(() => ({}))
+            const fixtures = extractBetAiFixturesV1053(json)
+            debug.push(`${sport}:${fixtures.length}`)
+            if (fixtures.length) {
+              sportFixtures = fixtures
+              break
+            }
+          } catch (err) {
+            console.warn('Sport fetch failed', sport, err)
+          }
         }
+
+        sportFixtures
+          .slice(0, activeSport === 'Wszystkie' ? 14 : 42)
+          .forEach((m, idx) => collected.push(buildCardFromMatch(m, idx, sport)))
       }
-      const clean = collected.filter(Boolean).sort((a,b) => b.aiScore - a.aiScore).slice(0, 60)
+
+      let clean = collected
+        .filter(Boolean)
+        .filter(card => card.home && card.away && card.home !== 'Gospodarze' && card.away !== 'Goście')
+        .sort((a, b) => {
+          const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
+          return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
+            || ((Number(b.ev || 0) > 0 ? 1 : 0) - (Number(a.ev || 0) > 0 ? 1 : 0))
+            || Number(b.ev || 0) - Number(a.ev || 0)
+            || Number(b.aiScore || 0) - Number(a.aiScore || 0)
+        })
+        .slice(0, 80)
+
+      if (!clean.length) {
+        clean = buildBetAiFallbackMatchesV1053()
+          .filter(m => activeSport === 'Wszystkie' || m.sport === activeSport)
+          .map((m, idx) => buildCardFromMatch(m, idx, m.sport))
+          .sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0))
+        setStatusText(`API nie zwróciło dziś realnych meczów dla filtra (${debug.join(', ') || '0'}). Pokazuję awaryjny widok AI, żeby panel i statystyki działały. Spróbuj odświeżyć później.`)
+      } else {
+        setStatusText(`Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie.`)
+      }
+
       setLiveCards(clean)
       setSelectedId(clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(clean.length ? `Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie.` : 'API nie zwróciło meczów dla tego filtra. Spróbuj inny sport albo później.')
-      saveCardsToJournal(clean)
+      saveCardsToJournal(clean.filter(card => card.source !== 'Bet+AI fallback'))
     } catch (err) {
-      setStatusText(`Błąd Typów AI: ${err?.message || err}`)
+      const fallback = buildBetAiFallbackMatchesV1053()
+        .filter(m => activeSport === 'Wszystkie' || m.sport === activeSport)
+        .map((m, idx) => buildCardFromMatch(m, idx, m.sport))
+      setLiveCards(fallback)
+      setSelectedId(fallback[0]?.id || '')
+      setStatusText(`Błąd API Typów AI: ${err?.message || err}. Pokazuję awaryjny widok AI, żeby panel nie był pusty.`)
     } finally {
       setLoadingAi(false)
     }
