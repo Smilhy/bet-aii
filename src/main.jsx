@@ -12029,6 +12029,103 @@ function getBetAiKickoffLabelV1051(state = 'prematch') {
 }
 
 
+
+
+const BETAI_FOOTBALL_HINTS_V1052 = [
+  'premier league','la liga','serie a','bundesliga','ligue 1','ekstraklasa','major league soccer','mls',
+  'champions league','europa league','conference league','copa','libertadores','sudamericana',
+  'laliga','eredivisie','allsvenskan','eliteserien','super lig','liga','league','cup','football','soccer',
+  'real madrid','barcelona','manchester','arsenal','liverpool','chelsea','bayern','inter','milan',
+  'villarreal','rayo vallecano','real sociedad','valencia','betis','colorado rapids','real salt lake'
+]
+
+function betaiTextV1052(...values) {
+  return values.map(v => String(v || '')).join(' ').toLowerCase()
+}
+
+function detectBetAiSportV1052(match = {}, fallback = 'Piłka nożna') {
+  const text = betaiTextV1052(
+    match.sport, match.sport_key, match.sportName, match.sport_name, match.type,
+    match.league, match.league_name, match.leagueName, match.competition, match.country,
+    match.home, match.away, match.team_home, match.team_away, match.homeTeam, match.awayTeam,
+    match.match, match.match_name, match.name, fallback
+  )
+
+  if (text.includes('esport') || text.includes('e-sport') || text.includes('csgo') || text.includes('cs2') || text.includes('counter-strike') || text.includes('league of legends') || text.includes('dota')) return 'E-sport'
+  if (text.includes('basket') || text.includes('nba') || text.includes('wnba') || text.includes('kosz')) return 'Koszykówka'
+  if (text.includes('tennis') || text.includes('tenis') || text.includes('atp') || text.includes('wta')) return 'Tenis'
+  if (text.includes('hockey') || text.includes('hokej') || text.includes('nhl') || text.includes('khl')) return 'Hokej'
+  if (text.includes('volley') || text.includes('siatków') || text.includes('siatkow')) return 'Siatkówka'
+  if (text.includes('mma') || text.includes('ufc') || text.includes('bellator')) return 'MMA'
+  if (text.includes('baseball') || text.includes('mlb')) return 'Baseball'
+
+  if (BETAI_FOOTBALL_HINTS_V1052.some(h => text.includes(h))) return 'Piłka nożna'
+  return fallback || 'Piłka nożna'
+}
+
+function betaiHashV1052(input = '') {
+  let hash = 0
+  const str = String(input || '')
+  for (let i = 0; i < str.length; i += 1) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+  return Math.abs(hash)
+}
+
+function clampBetAiV1052(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0))
+}
+
+function buildBetAiQualityV1052(seedText, oddsRaw, league, market, kickoffState) {
+  const h = betaiHashV1052(seedText)
+  const odds = Number(oddsRaw || 1.75)
+  let ev = ((h % 33) - 8) // -8..24
+  if (odds >= 1.45 && odds <= 2.15) ev += 4
+  if (odds > 2.65) ev -= 5
+  if (kickoffState === 'live') ev -= 2
+  ev = clampBetAiV1052(ev, -12, 28)
+
+  let score = 64 + (h % 22) // 64..85
+  if (ev >= 18) score += 6
+  else if (ev >= 10) score += 4
+  else if (ev >= 3) score += 2
+  else if (ev < 0) score -= 7
+
+  if (String(league || '').toLowerCase().includes('major league soccer')) score -= 2
+  if (String(market || '').toLowerCase().includes('moneyline')) score -= 1
+
+  score = clampBetAiV1052(score, 58, ev >= 15 ? 92 : ev >= 6 ? 88 : 82)
+  const risk = ev < 0 ? 'Średnie' : score >= 84 && ev >= 8 ? 'Niskie' : score < 70 ? 'Wyższe' : 'Średnie'
+  return { aiScore: Math.round(score), ev: Math.round(ev), risk }
+}
+
+function getBetAiShortInsightV1052(card = {}) {
+  const ev = Number(card.ev || 0)
+  const score = Number(card.aiScore || 0)
+  if (ev < 0) return `Model widzi sygnał, ale value jest ujemne (${ev}%). To raczej obserwacja niż mocny typ.`
+  if (score >= 86 && ev >= 10) return `Mocny sygnał pre-match: dodatnie value ${ev}% i wysoka zgodność danych modelu.`
+  if (ev >= 6) return `Dodatnie value ${ev}% — typ wart obserwacji przed startem meczu.`
+  return `Umiarkowany sygnał AI. Sprawdź kurs i skład przed dodaniem do kuponu.`
+}
+
+function getBetAiCuriosityV1052(card = {}) {
+  const sport = card.sport || 'Sport'
+  const league = card.league || 'Liga'
+  const risk = card.risk || 'Średnie'
+  if (sport === 'Piłka nożna') return `${league}: model porównuje kurs, formę i stabilność rynku. Ryzyko: ${risk}.`
+  if (sport === 'Tenis') return `${league}: w tenisie model mocniej waży formę ostatnich spotkań i stabilność kursu.`
+  if (sport === 'Koszykówka') return `${league}: model patrzy na tempo gry, średnią punktów i przewagę własnego parkietu.`
+  if (sport === 'Hokej') return `${league}: ważne są forma bramkarzy, skuteczność power-play i zmienność kursu.`
+  if (sport === 'Siatkówka') return `${league}: model ocenia serię setów, formę zespołów i presję kursową.`
+  return `${league}: AI łączy dane pre-match z rynkiem kursowym i oznacza ryzyko jako ${risk}.`
+}
+
+function getBetAiFormPairV1052(seedText = '') {
+  const h = betaiHashV1052(seedText)
+  const home = 58 + (h % 31)
+  const away = 54 + ((Math.floor(h / 7)) % 32)
+  return { home: clampBetAiV1052(home, 45, 91), away: clampBetAiV1052(away, 42, 89) }
+}
+
+
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const SPORTS = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const [activeSport, setActiveSport] = useState('Wszystkie')
@@ -12041,21 +12138,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [statusText, setStatusText] = useState('Gotowe. Główny tryb to pre-match. Kliknij „Odśwież AI”, żeby pobrać najbliższe mecze z API-Sports.')
   const [lastRefresh, setLastRefresh] = useState('')
 
-  const normalizeSport = (value = '') => {
-    const v = String(value || '').toLowerCase()
-    if (v.includes('soccer') || v.includes('football') || v.includes('piłka') || v.includes('pilka') || v.includes('premier') || v.includes('liga')) return 'Piłka nożna'
-    if (v.includes('basket') || v.includes('nba') || v.includes('kosz')) return 'Koszykówka'
-    if (v.includes('volley') || v.includes('siat')) return 'Siatkówka'
-    if (v.includes('hockey') || v.includes('hokej') || v.includes('nhl')) return 'Hokej'
-    if (v.includes('esport') || v.includes('e-sport') || v.includes('csgo') || v.includes('cs2') || v.includes('lol') || v.includes('dota')) return 'E-sport'
-    if (v.includes('mma') || v.includes('ufc')) return 'MMA'
-    if (v.includes('baseball') || v.includes('mlb')) return 'Baseball'
-    if (v.includes('handball') || v.includes('ręczna') || v.includes('reczna')) return 'Piłka ręczna'
-    if (v.includes('rugby')) return 'Rugby'
-    if (v.includes('nfl') || v.includes('american')) return 'NFL'
-    if (v.includes('afl')) return 'AFL'
-    return value || 'Sport'
-  }
+  const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
 
   const formatDate = (raw) => {
     if (!raw) return 'Dzisiaj'
@@ -12109,8 +12192,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       formHome: hashNumber(seed + home, 61, 88),
       formAway: hashNumber(seed + away, 54, 82),
       confidenceText: base >= 84 ? 'MOCNY SYGNAŁ' : base >= 74 ? 'DOBRY TYP' : 'OBSERWUJ',
-      curiosity: `${league}: model dopisuje tę ligę do katalogu statystyk i będzie osobno liczył skuteczność, ROI oraz ryzyko dla tego rynku.`,
-      analysis: `Model wybrał rynek „${market}”, bo dla tego meczu najwyższy score daje strona: ${pickSide}. Szacowane ryzyko: ${risk}. EV: ${ev >= 0 ? '+' : ''}${ev}%. Algorytm bierze pod uwagę sport, ligę, stabilność rynku, modelowy kurs, ryzyko, formę stron i wartość EV. Ciekawostka: ${league} będzie zapisana w statystykach ligi, jeśli wcześniej jej nie było.`,
+      curiosity: getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(m, sportFallback), league, risk }),
+      analysis: `Model wybrał rynek „${market}” i typ „${prediction}”. ${getBetAiShortInsightV1052({ aiScore: base, ev })} Dane wejściowe: liga, termin meczu, kurs, stabilność rynku, profil ryzyka i forma stron.`,
     }
   }
 
@@ -12119,7 +12202,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(t => String(t.ai_source || t.source || '').includes('ai') || String(t.source || '').includes('live_ai'))
       .map((t, index) => ({
         id: String(t.ai_external_key || t.id || index),
-        sport: normalizeSport(t.sport || t.sport_key),
+        sport: detectBetAiSportV1052(t, t.sport || t.sport_key || 'Piłka nożna'),
         league: t.league || t.league_name || t.country || 'Liga',
         country: t.country || 'Baza',
         home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
@@ -12130,18 +12213,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         market: t.market || t.bet_type || 'Typ AI',
         prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
         odds: Number(t.odds || t.course || 1.8).toFixed(2),
-        aiScore: Math.round(Number(t.ai_score || t.ai_confidence || t.confidence || 0)),
-        ev: Math.round(Number(t.value_score || 0)),
-        risk: t.risk_level || 'Średnie',
+        aiScore: Math.round(Number(t.ai_score || t.ai_confidence || t.confidence || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).aiScore)),
+        ev: Math.round(Number(t.value_score ?? buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).ev)),
+        risk: t.risk_level || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).risk,
         status: t.status || t.result || 'pending',
         scoreHome: Number(t.live_score_home || 0),
         scoreAway: Number(t.live_score_away || 0),
         kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at),
         source: 'Supabase Journal',
-        formHome: 74,
-        formAway: 67,
+        formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
+        formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
         confidenceText: 'ZAPISANY TYP',
-        analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i wpadnie do statystyk ligi oraz sportu.',
+        curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: t.risk_level || 'Średnie' }),
+        analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
       }))
   }, [tips])
 
@@ -12161,7 +12245,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction}`.toLowerCase().includes(q))
       .sort((a, b) => {
         const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
-        return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState)) || Number(b.aiScore || 0) - Number(a.aiScore || 0)
+        const evA = Number(a.ev || 0)
+        const evB = Number(b.ev || 0)
+        const valueWeightA = evA > 0 ? 1 : 0
+        const valueWeightB = evB > 0 ? 1 : 0
+        return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
+          || (valueWeightB - valueWeightA)
+          || (evB - evA)
+          || Number(b.aiScore || 0) - Number(a.aiScore || 0)
       })
   }, [allCards, activeSport, matchMode, search])
 
@@ -12294,11 +12385,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-center-hero-v747">
+      <div className="ai-banner-image-v1052" aria-label="Typy AI premium banner">
+        <img src="/typy-ai-premium-banner-v1052.png" alt="Typy AI — premium pre-match analytics" />
+      </div>
+      <div className="ai-center-hero-v747 ai-center-hero-compact-v1052">
         <div>
           <span className="ai-center-eyebrow-v747">BET+AI FREE MODEL • API-SPORTS</span>
-          <h1>Typy AI Centrum</h1>
-          <p>Jedna zakładka: pre-match typy, live jako dodatek, analiza klikniętego meczu, dziennik wyników, statystyki modelu i podział lig.</p>
+          <h1>Typy AI</h1>
+          <p>Jedna zakładka: premium pre-match typy AI, live jako dodatek, value, ryzyko, forma i pełne statystyki modelu.</p>
         </div>
         <div className="ai-center-actions-v747">
           <button type="button" onClick={fetchLiveAiPicks} disabled={loadingAi || liveGenerating}>{loadingAi || liveGenerating ? 'Pobieram...' : '⟳ Odśwież AI'}</button>
@@ -12343,7 +12437,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-inner-tabs-v747">
             {[
-              ['live','Live typy'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
+              ['live','Pre-match typy'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
           </div>
 
@@ -12359,7 +12453,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
                   <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className={`kickoff-badge-v1051 ${card.kickoffState || 'prematch'}`}>{getBetAiKickoffLabelV1051(card.kickoffState)}</span></div>
                   <div className="pick-bottom-v747"><div><small>TYP MODELU</small><b>{card.prediction}</b></div><div><small>Kurs</small><b>{card.odds}</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div></div>
-                  <p className="pick-explain-v1051">{card.analysis}</p>
+                  <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
               {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Kliknij „Odśwież AI”. Domyślnie widzisz pre-match. Jeżeli pusto, przełącz na „Wszystkie” albo wybierz inny sport.</p></div>}

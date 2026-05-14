@@ -43662,3 +43662,111 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1051 */
+
+
+/* ==========================================================================
+   WERSJA 1052 — TYPY AI QUALITY FIX + PREMIUM BANNER
+   ========================================================================== */
+
+.ai-banner-image-v1052{
+  width:100% !important;
+  margin:0 0 18px !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(34,245,223,.22) !important;
+  background:linear-gradient(135deg, rgba(3,20,33,.98), rgba(1,8,16,.98)) !important;
+  box-shadow:0 24px 70px rgba(0,0,0,.42), 0 0 0 1px rgba(34,245,223,.06) inset !important;
+}
+
+.ai-banner-image-v1052 img{
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+  max-height:360px !important;
+  object-fit:cover !important;
+}
+
+.ai-center-hero-compact-v1052{
+  min-height:92px !important;
+  padding:18px 22px !important;
+  margin-bottom:14px !important;
+}
+
+.ai-center-hero-compact-v1052 h1{
+  font-size:30px !important;
+}
+
+.ai-center-hero-compact-v1052 p{
+  margin-top:6px !important;
+  font-size:14px !important;
+}
+
+.ai-pick-card-v747{
+  display:grid !important;
+  grid-template-columns:minmax(0, 1fr) !important;
+}
+
+.pick-top-v747 b{
+  font-size:22px !important;
+}
+
+.pick-bottom-v747{
+  display:grid !important;
+  grid-template-columns:1.4fr .45fr .45fr !important;
+}
+
+.pick-bottom-v747 > div{
+  min-width:0 !important;
+}
+
+.pick-bottom-v747 b{
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.kickoff-badge-v1051.prematch{
+  color:#22f5df !important;
+  border-color:rgba(34,245,223,.35) !important;
+}
+
+.pick-explain-v1051{
+  font-size:12px !important;
+  color:#a9c8d6 !important;
+}
+
+.ai-curiosity-v1050{
+  background:rgba(34,245,223,.07) !important;
+  border-color:rgba(34,245,223,.18) !important;
+}
+
+.ai-curiosity-v1050 b{
+  color:#22f5df !important;
+}
+
+.ai-curiosity-v1050 span{
+  color:#bddce8 !important;
+}
+
+.ai-analysis-grid-v1052-note{
+  color:#91b4c4 !important;
+}
+
+/* value consistency colors */
+.pick-bottom-v747 .positive,
+.analysis-grid-v747 b.positive{
+  color:#12df8a !important;
+}
+
+.pick-bottom-v747 .negative,
+.analysis-grid-v747 b.negative{
+  color:#ff6b83 !important;
+}
+
+@media (max-width: 920px){
+  .ai-banner-image-v1052 img{
+    min-height:210px !important;
+  }
+}
+
+/* KONIEC WERSJI 1052 */
