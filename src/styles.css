@@ -42403,3 +42403,38 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1036 */
+
+
+/* ==========================================================================
+   WERSJA 1037 — FREE NIE SPRZEDAJE SUBSKRYPCJI PROFILU
+   ========================================================================== */
+
+.profile-action-disabled-v1037{
+  opacity:.72 !important;
+  cursor:not-allowed !important;
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  color:#9eb5c5 !important;
+}
+
+.tipster-pricing-locked-free-v1037{
+  border-color:rgba(255,211,87,.22) !important;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255,211,87,.10), transparent 35%),
+    rgba(4,18,30,.82) !important;
+}
+
+.tipster-pricing-locked-free-v1037 p{
+  color:#b8c7d2 !important;
+  max-width:760px !important;
+}
+
+.profile-sub-modal-blocked-v1037{
+  border-color:rgba(255,211,87,.22) !important;
+}
+
+.profile-sub-modal-blocked-v1037 p{
+  color:#b8c7d2 !important;
+}
+
+/* KONIEC WERSJI 1037 */

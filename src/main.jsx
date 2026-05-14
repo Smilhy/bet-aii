@@ -14055,6 +14055,7 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 }
 
 function TipsterPricingSettings({ user, onToast }) {
+  const canSellProfileSubscriptions = isPremiumProfile(user) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const [plans, setPlans] = useState(TIPSTER_PLAN_OPTIONS.map(option => ({
     ...option,
     price: option.defaultPrice,
@@ -14066,6 +14067,7 @@ function TipsterPricingSettings({ user, onToast }) {
   useEffect(() => {
     let active = true
     async function loadPlans() {
+      if (!canSellProfileSubscriptions) return
       if (!user?.id && !user?.email && !user?.username) return
       setLoading(true)
       try {
@@ -14089,6 +14091,10 @@ function TipsterPricingSettings({ user, onToast }) {
   }
 
   const savePlans = async () => {
+    if (!canSellProfileSubscriptions) {
+      onToast?.({ type: 'premium', title: 'Premium wymagane', message: 'Konto FREE nie może sprzedawać subskrypcji profilu. Kup Premium, aby odblokować cennik i płatny dostęp.' })
+      return
+    }
     if (!user?.id && !user?.email && !user?.username) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Nie udało się zapisać cennika.' })
       return
@@ -14103,6 +14109,19 @@ function TipsterPricingSettings({ user, onToast }) {
     } finally {
       setSaving(false)
     }
+  }
+
+  if (!canSellProfileSubscriptions) {
+    return (
+      <div className="glass-profile-v3 tipster-pricing-settings tipster-pricing-locked-free-v1037">
+        <div className="profile-v3-card-head">
+          <h3>Cennik subskrypcji profilu</h3>
+          <span>Premium wymagane</span>
+        </div>
+        <p>Konto FREE nie może sprzedawać subskrypcji profilu, blokować wyników ani ukrywać statystyk. Kup Premium, żeby odblokować płatny profil typera.</p>
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))}>Kup Premium</button>
+      </div>
+    )
   }
 
   return (
@@ -14158,6 +14177,11 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
       }
       const identity = await resolveTipsterPricingIdentity(source)
       setPricingIdentity(identity)
+      const sellerPremium = isPremiumProfile(identity) || isPremiumProfile(source) || isPremiumAccount(identity?.plan || identity?.subscription_status || identity?.status || source?.plan || source?.subscription_status || source?.status)
+      if (!sellerPremium) {
+        setPlans([])
+        return
+      }
       const loadedPlans = await loadTipsterPlansForSource(source)
       setPlans((loadedPlans || []).filter(plan => plan.active !== false))
     }
@@ -14167,6 +14191,20 @@ function ProfileSubscriptionModal({ tip, user, onClose }) {
   if (!tip) return null
   const tipsterId = pricingIdentity?.id || getTipAuthorId(tip)
   const tipsterName = pricingIdentity?.username || tip.author_name || tip.username || 'Typer'
+  const sellerCanSellSubscriptions = isPremiumProfile(pricingIdentity) || isPremiumProfile(tip) || isPremiumAccount(pricingIdentity?.plan || pricingIdentity?.subscription_status || pricingIdentity?.status || tip?.plan || tip?.subscription_status || tip?.status)
+
+  if (!sellerCanSellSubscriptions) {
+    return (
+      <div className="payment-backdrop">
+        <div className="payment-modal profile-sub-modal profile-sub-modal-blocked-v1037">
+          <div className="payment-icon">🔒</div>
+          <h2>Subskrypcja niedostępna</h2>
+          <p>Użytkownik <b>{tipsterName}</b> ma konto FREE. Konta FREE nie mogą sprzedawać subskrypcji profilu ani blokować wyników/statystyk.</p>
+          <button className="payment-secondary" onClick={onClose}>Zamknij</button>
+        </div>
+      </div>
+    )
+  }
 
   async function buy(plan) {
     setError('')
@@ -15229,7 +15267,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     duration_days: 30
   }
   const handlePremiumProfileTabClick = () => {
-    if (profileSubscriptionActive) {
+    if (!canMonetizeProfile || profileAccessUnlocked) {
       setProfileTipsFilter('premium')
       return
     }
@@ -15283,13 +15321,21 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       onToast?.({ type: 'error', title: isSelfLoss ? 'Błąd rozliczenia' : 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać rozliczenia. Uruchom SQL wersji 945.') })
     }
   }
-  const handleProfileSubscribeClick = () => onSubscribeToTipster?.(profileSubPurchasePayload)
+  const handleProfileSubscribeClick = () => {
+    if (!canMonetizeProfile) {
+      onToast?.({ type: 'warning', title: 'Subskrypcja niedostępna', message: 'Ten użytkownik ma konto FREE, więc nie może sprzedawać subskrypcji profilu.' })
+      return
+    }
+    onSubscribeToTipster?.(profileSubPurchasePayload)
+  }
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
   const createdLabel = profileCreatedAt ? new Date(profileCreatedAt).toLocaleDateString('pl-PL') : 'Brak danych'
   const admin = isAdminUser(user) || Boolean(user?.is_admin)
   const premium = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
+  const canMonetizeProfile = Boolean(admin || premium)
+  const profileAccessUnlocked = Boolean(profileIsOwnForViewer || profileSubscriptionActive || !canMonetizeProfile)
   const roleLabel = admin ? 'ADMIN' : premium ? 'PREMIUM' : 'FREE'
   const avatarInputRef = useRef(null)
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || user?.user_metadata?.avatar_url || '')
@@ -16200,7 +16246,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <button type="button" className="primary">Mój profil</button>
                   )}
                   <button type="button">▢ Wiadomości</button>
-                  <button type="button">🏆 Wsparcie tipami</button>
+                  {canMonetizeProfile ? <button type="button" onClick={handleProfileSubscribeClick}>🏆 Wsparcie tipami</button> : <button type="button" className="profile-action-disabled-v1037" title="Konto FREE nie może sprzedawać subskrypcji">FREE bez sprzedaży</button>}
                 </div>
               </div>
             </div>
@@ -16230,7 +16276,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <button type="button" className={profileTab === 'stats' ? 'active' : ''} onClick={() => setProfileTab('stats')}><span>▮▮</span> Statystyki</button>
             <button type="button" className={profileTab === 'history' ? 'active' : ''} onClick={() => setProfileTab('history')}><span>◷</span> Historia</button>
             <button type="button" className={profileTab === 'opinions' ? 'active' : ''} onClick={() => setProfileTab('opinions')}><span>☁</span> Opinie</button>
-            {profileIsOwnForViewer ? (
+            {profileIsOwnForViewer && canMonetizeProfile ? (
               <button type="button" className={profileTab === 'pricing' ? 'active' : ''} onClick={() => setProfileTab('pricing')}><span>▣</span> Cennik subskrypcji</button>
             ) : null}
           </div>
@@ -16240,7 +16286,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
               <div className="profile-v4-filter-row profile-v4-filter-row-paid-access">
                 <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
-                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileSubscriptionActive ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileSubscriptionActive ? premiumCards.length : '🔒'}</b></button>
+                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileAccessUnlocked ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileAccessUnlocked ? premiumCards.length : '🔒'}</b></button>
                 {profileIsOwnForViewer ? (
                   <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>Kupione single</span><b>{purchasedSingleCards.length}</b></button>
                 ) : null}
@@ -16255,7 +16301,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <span>{profileSubscriptionTimeLabel}{profileSubscriptionExpiresLabel ? ` • ważne do ${profileSubscriptionExpiresLabel}` : ''}</span>
                 </div>
               ) : null}
-              {!profileIsOwnForViewer && !profileSubscriptionActive && premiumCards.length > 0 ? (
+              {!profileIsOwnForViewer && canMonetizeProfile && !profileAccessUnlocked && premiumCards.length > 0 ? (
                 <div className="profile-premium-tab-lock-note">
                   <strong>Zakładka Premium jest zablokowana.</strong>
                   <span>Kup subskrypcję profilu na 30 dni, aby zobaczyć i rozszyfrować typy premium tego typera. Po 30 dniach dostęp automatycznie wygaśnie i trzeba będzie przedłużyć subskrypcję.</span>
@@ -16271,14 +16317,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               ) : profileVisibleTipCards.length ? (
                 <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
               ) : (
-                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileSubscriptionActive ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.'}</div>
+                <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileAccessUnlocked ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.'}</div>
               )}
             </section>
           )}
 
 
           {profileTab === 'results' && (
-            !profileIsOwnForViewer && !profileSubscriptionActive ? (
+            !profileIsOwnForViewer && canMonetizeProfile && !profileAccessUnlocked ? (
               <section className="profile-v4-page profile-v4-results-page profile-results-locked-v950">
                 <div className="profile-results-locked-box-v950">
                   <div className="profile-results-locked-icon-v950">🔒</div>
@@ -16529,7 +16575,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             </section>
           )}
 
-          {profileTab === 'pricing' && profileIsOwnForViewer && (
+          {profileTab === 'pricing' && profileIsOwnForViewer && canMonetizeProfile && (
             <TipsterPricingSettings user={user} onToast={onToast} />
           )}
           {profileTab === 'pricing' && !profileIsOwnForViewer && (
