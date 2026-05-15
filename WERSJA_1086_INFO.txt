@@ -1,0 +1,5 @@
+Wersja 1086 - safety repack
+- Kod z wersji 1085 sprawdzony lokalnie: npm ci + npm run build przechodzi poprawnie.
+- Paczka bez node_modules i bez dist.
+- Netlify zostaje na npm ci, bo package-lock.json jest obecny.
+- Jeśli Netlify pokazuje "Waiting for other deploys", trzeba anulować wiszące deploye w kolejce Netlify.
