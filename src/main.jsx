@@ -12777,13 +12777,36 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
 
+  function getBetAiWarsawDatePartsV1089(value = new Date()) {
+    const d = value instanceof Date ? value : new Date(value)
+    if (Number.isNaN(d.getTime())) return null
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Warsaw',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).formatToParts(d).reduce((acc, part) => {
+      if (part.type !== 'literal') acc[part.type] = part.value
+      return acc
+    }, {})
+    return parts
+  }
+
+  function getBetAiWarsawDateKeyV1089(value = new Date()) {
+    const parts = getBetAiWarsawDatePartsV1089(value)
+    if (!parts) return ''
+    return `${parts.year}-${parts.month}-${parts.day}`
+  }
+
   function getBetAiOffsetLocalDateV1081(offsetDays = 0) {
-    const d = new Date()
-    d.setDate(d.getDate() + Number(offsetDays || 0))
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${y}-${m}-${day}`
+    // Typy AI mają dzień roboczy według Polski. Nowy skan dnia startuje po 00:01,
+    // więc między 00:00 a 00:00:59 dalej traktujemy to jako poprzedni dzień.
+    const base = new Date(Date.now() - 60 * 1000)
+    base.setUTCDate(base.getUTCDate() + Number(offsetDays || 0))
+    return getBetAiWarsawDateKeyV1089(base)
   }
 
   function getBetAiTodayLocalDateV1078() {
@@ -12809,13 +12832,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   function getBetAiCardLocalDateV1078(card) {
     const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
     if (!raw) return ''
-    const d = new Date(raw)
-    if (!Number.isNaN(d.getTime())) {
-      const y = d.getFullYear()
-      const m = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${y}-${m}-${day}`
-    }
+    const warsawKey = getBetAiWarsawDateKeyV1089(raw)
+    if (warsawKey) return warsawKey
     return String(raw).slice(0, 10)
   }
 
@@ -12878,16 +12896,18 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   async function loadSavedAiTipsFromDb(mode = aiDayMode) {
     if (!isSupabaseConfigured || !supabase) return []
     const today = getBetAiSelectedLocalDateV1081(mode)
-    const tomorrow = getBetAiNextLocalDateV1081(mode)
 
     try {
+      // Pobieramy szersze okno, bo event_time bywa zapisany w UTC.
+      // Potem filtrujemy już twardo po dacie Europe/Warsaw, żeby zakładka "dziś"
+      // nie pokazywała meczów z jutra, np. 16.05 podczas dnia 15.05.
       const { data, error } = await supabase
         .from('tips')
         .select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
         .gte('event_time', `${today}T00:00:00`)
-        .lt('event_time', `${tomorrow}T00:00:00`)
         .order('event_time', { ascending: true })
+        .limit(500)
 
       if (error) throw error
 
@@ -12937,7 +12957,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel}, wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
+      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -13066,7 +13086,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLiveCards(cardsToPersist)
       setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel}. Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
+      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
       await saveCardsToJournal(cardsToPersist)
       markBetAiDailyScanDoneV1086(mode, cardsToPersist.length)
