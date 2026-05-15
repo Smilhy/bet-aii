@@ -18802,11 +18802,62 @@ function TopTipstersView() {
     )
   }
 
+  const addAvatarHint = (map, key, avatar) => {
+    const cleanKey = normalizeEmail(key)
+    const cleanAvatar = String(avatar || '').trim()
+    if (!cleanKey || !cleanAvatar) return
+    map.set(cleanKey, cleanAvatar)
+  }
+
+  const fetchTopTipsterAvatarHints = async () => {
+    const map = new Map()
+    if (!isSupabaseConfigured || !supabase) return map
+    const selects = [
+      'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url',
+      'user_id,user_email,user_name,avatar_url',
+      'author_id,author_email,author_name,author_avatar_url',
+      'username,avatar_url',
+    ]
+    for (const columns of selects) {
+      try {
+        const { data, error } = await supabase.from('tips').select(columns).limit(2000)
+        if (error || !Array.isArray(data)) continue
+        data.forEach(row => {
+          const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
+          ;[row.author_id, row.user_id, row.author_email, row.user_email, row.author_name, row.user_name, row.username].forEach(key => addAvatarHint(map, key, avatar))
+        })
+        if (map.size) break
+      } catch (_) {}
+    }
+    return map
+  }
+
+  const attachRealAvatarToProfile = (profile = {}, avatarHints = new Map()) => {
+    const keys = [
+      profile.id,
+      profile.user_id,
+      profile.author_id,
+      profile.email,
+      profile.user_email,
+      profile.author_email,
+      profile.username,
+      profile.user_name,
+      profile.author_name,
+      profile.public_slug,
+      profile.display_name,
+      profile.full_name,
+      resolveRealProfileUsername(profile),
+    ]
+    const hintedAvatar = keys.map(key => avatarHints.get(normalizeEmail(key))).find(Boolean)
+    return hintedAvatar ? { ...profile, avatar_url: hintedAvatar, profile_avatar_url: hintedAvatar } : profile
+  }
+
   const loadRealTopTipsters = async () => {
     setLoadingProfiles(true)
     try {
       const rows = await fetchBetaiPublicProfiles()
-      setProfiles((rows || []).filter(profile => {
+      const avatarHints = await fetchTopTipsterAvatarHints()
+      setProfiles((rows || []).map(profile => attachRealAvatarToProfile(profile, avatarHints)).filter(profile => {
         const name = resolveRealProfileUsername(profile)
         return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
       }))
@@ -18890,6 +18941,8 @@ function TopTipstersView() {
       success: `${hitRate}%`,
       roi: `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`,
       profit: formatMoney(profit),
+      profitValue: profit,
+      totalTipsValue: totalTips,
       picks: String(totalTips),
       chart: `${hitRate}%`,
       price: premium ? 'Subskrypcja' : 'Darmowe',
@@ -18907,7 +18960,7 @@ function TopTipstersView() {
     return (profiles || [])
       .filter(profile => !isBlockedTopTipsterProfile(profile))
       .map((profile, idx) => buildRealTipster(profile, idx))
-      .sort((a, b) => b.sortScore - a.sortScore)
+      .sort((a, b) => (b.profitValue - a.profitValue) || (b.totalTipsValue - a.totalTipsValue) || (b.sortScore - a.sortScore))
       .map((item, idx) => ({ ...item, rank: idx + 1 }))
   }, [profiles])
 
