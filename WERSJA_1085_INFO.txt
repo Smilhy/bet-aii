@@ -1,1 +1,0 @@
-Wersja 1085: paczka deployment oczyszczona z node_modules/dist, poprawiony szybki build Netlify przez npm ci. Kod aplikacji jak 1084.
