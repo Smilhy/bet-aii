@@ -19373,6 +19373,58 @@ function mergeFollowingSets(...sets) {
 }
 
 
+function parseBetaiKickoffTime(value) {
+  if (value === null || value === undefined) return NaN
+  const raw = String(value || '').trim()
+  if (!raw) return NaN
+
+  const iso = Date.parse(raw)
+  if (Number.isFinite(iso)) return iso
+
+  const polish = raw.match(/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?[^0-9]*(\d{1,2})[:.](\d{2})/)
+  if (polish) {
+    const day = Number(polish[1])
+    const month = Number(polish[2])
+    let year = polish[3] ? Number(polish[3]) : new Date().getFullYear()
+    if (year < 100) year += 2000
+    const hour = Number(polish[4])
+    const minute = Number(polish[5])
+    const ts = new Date(year, month - 1, day, hour, minute, 0, 0).getTime()
+    return Number.isFinite(ts) ? ts : NaN
+  }
+
+  return NaN
+}
+
+function getTipKickoffTimestamp(tip = {}) {
+  const candidates = [
+    tip.match_time,
+    tip.event_time,
+    tip.kickoff_time,
+    tip.start_time,
+    tip.fixture_date,
+    tip.date_time,
+    tip.date
+  ]
+  for (const value of candidates) {
+    const ts = parseBetaiKickoffTime(value)
+    if (Number.isFinite(ts)) return ts
+  }
+  return NaN
+}
+
+function isTipAlreadyStarted(tip = {}, now = Date.now()) {
+  const fixtureStatus = String(tip.fixture_status || tip.status_short || tip.api_status || '').trim().toUpperCase()
+  if (['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'FT', 'AET', 'PEN'].includes(fixtureStatus)) return true
+
+  const ts = getTipKickoffTimestamp(tip)
+  if (!Number.isFinite(ts)) return false
+
+  // Dashboard i marketplace nie mogą sprzedawać kuponu po starcie meczu.
+  // Dajemy tylko minutę tolerancji na różnice zegara między API/Netlify/przeglądarką.
+  return ts <= now + 60_000
+}
+
 function isTipVisibleInActiveFeed(tip) {
   const normalized = normalizeTipRow(tip || {})
   const status = String(normalized.status || 'pending').toLowerCase()
@@ -19392,12 +19444,18 @@ function isTipVisibleInActiveFeed(tip) {
   if (settledStatuses.has(status)) return false
   if (settledStatuses.has(result)) return false
 
+  // v1102: kupon po starcie meczu znika z Dashboardu/marketplace, nawet jeżeli auto-rozliczenie
+  // jeszcze nie zdążyło zmienić pending -> won/lost. Zostaje w profilu/Wynikach/Historii.
+  if (isTipAlreadyStarted(normalized)) return false
+
   return true
 }
 
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
+  const autoSettleRunningRef = useRef(false)
+  const autoSettleLastRunRef = useRef(0)
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState('all')
   const [topSearch, setTopSearch] = useState('')
@@ -19848,6 +19906,38 @@ function App() {
     }
   }
 
+
+  async function runUserTipsAutoSettlement({ force = false } = {}) {
+    if (!sessionUser?.id) return null
+    if (autoSettleRunningRef.current) return null
+
+    const now = Date.now()
+    if (!force && now - Number(autoSettleLastRunRef.current || 0) < 4 * 60 * 1000) return null
+
+    autoSettleRunningRef.current = true
+    autoSettleLastRunRef.current = now
+    try {
+      const response = await fetch('/.netlify/functions/auto-settle-tips?limit=500', { method: 'GET' })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Nie udało się automatycznie rozliczyć typów użytkowników')
+      const settledCount = Array.isArray(data.settled) ? data.settled.length : Number(data.settled || 0)
+      const failedCount = Array.isArray(data.failed) ? data.failed.length : 0
+      if (settledCount > 0) {
+        showToast({ type: 'success', title: 'Rozliczono typy', message: `Automatycznie rozliczono ${settledCount} zakończonych kuponów.` })
+        await fetchTips(sessionUser?.id)
+        fetchRealRanking()
+      } else if (failedCount > 0) {
+        console.warn('auto-settle tips failed rows', data.failed)
+      }
+      return data
+    } catch (error) {
+      console.warn('auto-settle user tips skipped', error)
+      return null
+    } finally {
+      autoSettleRunningRef.current = false
+    }
+  }
+
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
       setTips([])
@@ -20154,6 +20244,28 @@ function App() {
       try { supabase.removeChannel(channel) } catch (_) {}
     }
   }, [sessionUser?.id, effectiveAccountProfile?.id, effectiveAccountProfile?.email])
+
+  useEffect(() => {
+    if (!sessionUser?.id) return undefined
+
+    const viewsThatNeedSettlement = new Set(['dashboard', 'profile', 'unlockedTips'])
+    const run = () => {
+      if (document.visibilityState === 'visible' && viewsThatNeedSettlement.has(view)) {
+        runUserTipsAutoSettlement({ force: false })
+      }
+    }
+
+    const first = window.setTimeout(run, 1800)
+    const interval = window.setInterval(run, 4 * 60 * 1000)
+    const onFocus = () => run()
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [sessionUser?.id, view])
 
   async function fetchFollowingTipsters(userId = sessionUser?.id) {
     if (!userId) {

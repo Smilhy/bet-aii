@@ -1,0 +1,7 @@
+Wersja 1102
+- Poprawka tylko dla Dashboard / aktywne typy użytkowników / auto-rozliczanie.
+- Typ po starcie meczu znika z Dashboardu/marketplace, żeby nikt nie kupił zakończonego lub rozpoczętego kuponu.
+- Dodane automatyczne wywołanie funkcji auto-settle-tips dla zakończonych typów użytkowników.
+- Funkcja auto-settle-tips sprawdza do 500 pendingów z fixture_id.
+- Nie ruszano logiki: Dodaj typ, Mój profil, Typy AI, Mecze Result, Ligi, Ranking, Top typerzy.
+- Paczka bez package-lock.json, node_modules i dist.

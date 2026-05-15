@@ -209,7 +209,7 @@ async function fetchCandidateTips(supabase, limit, specificId = '') {
   return (data || []).filter(isPendingTip)
 }
 
-async function runAutoSettle({ limit = 80, dryRun = false, specificId = '' } = {}) {
+async function runAutoSettle({ limit = 500, dryRun = false, specificId = '' } = {}) {
   const supabase = getSupabaseAdmin()
   const tips = await fetchCandidateTips(supabase, limit, specificId)
 
@@ -288,15 +288,15 @@ exports.handler = async (event) => {
 
   try {
     const qs = event.queryStringParameters || {}
-    const limit = Math.max(1, Math.min(200, Number(qs.limit || 80) || 80))
+    const limit = Math.max(1, Math.min(500, Number(qs.limit || 500) || 500))
     const dryRun = String(qs.dryRun || '') === '1'
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1038', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1102', dryRun, ...result })
   } catch (error) {
-    console.error('auto-settle-tips v1038 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1038', error: String(error.message || error) })
+    console.error('auto-settle-tips v1102 error:', error)
+    return json(500, { ok: false, function: 'auto-settle-tips-v1102', error: String(error.message || error) })
   }
 }
 
