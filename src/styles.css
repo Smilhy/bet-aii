@@ -45774,3 +45774,79 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1069 */
+
+
+/* ==========================================================================
+   WERSJA 1070 — HERO NO ZOOM, ASSET 2048x276
+   ========================================================================== */
+
+/*
+  Problem: object-fit: cover zoomował obraz, bo asset miał inne proporcje.
+  Fix: nowy asset ma dokładnie 2048x276, a img używa fill/100% bez cover zoomu.
+*/
+
+.ai-exact-hero-v1062,
+.ai-exact-hero-v1065,
+.ai-exact-hero-v1067,
+.ai-exact-hero-v1068,
+.ai-exact-hero-v1069,
+.ai-exact-hero-v1070{
+  width:100% !important;
+  height:276px !important;
+  min-height:276px !important;
+  max-height:276px !important;
+  margin:0 0 14px !important;
+  padding:0 !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(34,245,223,.28) !important;
+  background:#020b14 !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(34,245,223,.08) !important;
+}
+
+.ai-exact-hero-v1062 img,
+.ai-exact-hero-v1065 img,
+.ai-exact-hero-v1067 img,
+.ai-exact-hero-v1068 img,
+.ai-exact-hero-v1069 img,
+.ai-exact-hero-v1070 img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:fill !important;
+  object-position:center center !important;
+}
+
+/* responsive: dalej bez crop/zoom */
+@media (max-width:1200px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067,
+  .ai-exact-hero-v1068,
+  .ai-exact-hero-v1069,
+  .ai-exact-hero-v1070{
+    height:240px !important;
+    min-height:240px !important;
+    max-height:240px !important;
+  }
+}
+
+@media (max-width:760px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067,
+  .ai-exact-hero-v1068,
+  .ai-exact-hero-v1069,
+  .ai-exact-hero-v1070{
+    height:190px !important;
+    min-height:190px !important;
+    max-height:190px !important;
+    border-radius:20px !important;
+  }
+}
+
+/* KONIEC WERSJI 1070 */
