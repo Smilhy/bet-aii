@@ -19807,7 +19807,7 @@ function App() {
         .from('tips')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50),
+        .limit(80),
       userId
         ? supabase.from('unlocked_tips').select('tip_id').eq('user_id', userId)
         : Promise.resolve({ data: [], error: null })
@@ -19826,6 +19826,73 @@ function App() {
     setUnlockedTips(unlockedSet)
 
     let sourceTips = (tipsData || []).map(normalizeTipRow)
+
+    // v1100: Mój profil nie może zależeć od globalnego limitu ostatnich typów.
+    // Wcześniej pobieraliśmy tylko najnowsze globalne rekordy, więc konto smilhytv
+    // miało kafelki ze statystyk importu, ale tabele Typy/Wyniki/Historia były puste,
+    // jeśli jego realne typy nie mieściły się w ostatnich 50 rekordach globalnie.
+    // Teraz zawsze dokładamy własne typy aktualnie zalogowanego profilu i dopiero potem
+    // robimy deduplikację. To nie dotyka Top typerów ani cudzych profili.
+    try {
+      const currentProfile = effectiveAccountProfile || sessionUser || {}
+      const currentEmail = normalizeEmail(currentProfile.email || sessionUser?.email || '')
+      const currentUsername = normalizeEmail(
+        currentProfile.username ||
+        currentProfile.public_slug ||
+        currentProfile.user_metadata?.username ||
+        currentProfile.user_metadata?.name ||
+        (currentEmail ? currentEmail.split('@')[0] : '')
+      )
+      const ownQueries = []
+      const pushOwnQuery = (column, value) => {
+        const clean = String(value || '').trim()
+        if (!clean) return
+        ownQueries.push(
+          supabase
+            .from('tips')
+            .select('*')
+            .eq(column, clean)
+            .order('created_at', { ascending: false })
+            .limit(500)
+        )
+      }
+
+      if (userId) {
+        pushOwnQuery('author_id', userId)
+        pushOwnQuery('user_id', userId)
+        pushOwnQuery('tipster_id', userId)
+      }
+      if (currentEmail) {
+        pushOwnQuery('author_email', currentEmail)
+        pushOwnQuery('user_email', currentEmail)
+        pushOwnQuery('email', currentEmail)
+      }
+      if (currentUsername && !isGenericProfileName(currentUsername)) {
+        pushOwnQuery('author_name', currentUsername)
+        pushOwnQuery('username', currentUsername)
+        pushOwnQuery('public_slug', currentUsername)
+      }
+
+      if (ownQueries.length) {
+        const ownResults = await Promise.allSettled(ownQueries)
+        const ownRows = ownResults.flatMap(result => {
+          if (result.status !== 'fulfilled') return []
+          const payload = result.value || {}
+          if (payload.error) return []
+          return Array.isArray(payload.data) ? payload.data : []
+        })
+        if (ownRows.length) {
+          const byId = new Map()
+          ;[...ownRows.map(normalizeTipRow), ...sourceTips].forEach(tip => {
+            const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.team_home || tip.home_team || ''}-${tip.team_away || tip.away_team || ''}-${tip.pick || tip.prediction || ''}`)
+            if (key) byId.set(key, tip)
+          })
+          sourceTips = Array.from(byId.values()).sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
+        }
+      }
+    } catch (ownTipsError) {
+      console.warn('own profile tips hydration skipped', ownTipsError)
+    }
     const authorDynamicStatsMap = buildAuthorStatsFromTips(sourceTips)
     try {
       const authorIds = [...new Set(sourceTips.map(tip => getTipAuthorId(tip)).filter(Boolean).map(String))]
