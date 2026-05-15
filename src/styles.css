@@ -46070,3 +46070,28 @@ button.betfolio-fetch-btn{
 /* UI zostaje praktycznie bez zmian. */
 
 /* KONIEC WERSJI 1078 */
+
+
+/* V1095: liczniki znalezionych/zapisanych meczów w zakładkach Typy AI */
+.ai-tab-count-v1095{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:24px !important;
+  height:22px !important;
+  margin-left:7px !important;
+  padding:0 7px !important;
+  border-radius:999px !important;
+  background:rgba(34,245,223,.16) !important;
+  border:1px solid rgba(34,245,223,.28) !important;
+  color:#8ffaf0 !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+}
+
+.ai-inner-tabs-v747 button.active .ai-tab-count-v1095{
+  background:rgba(6,21,33,.22) !important;
+  border-color:rgba(6,21,33,.25) !important;
+  color:#061521 !important;
+}

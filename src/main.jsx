@@ -12620,7 +12620,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           || (evB - evA)
           || Number(b.aiScore || 0) - Number(a.aiScore || 0)
       })
-  }, [allCards, activeSport, matchMode, search, minOdds, maxOdds, minProb, minEv])
+  }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb, minEv])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
@@ -12637,6 +12637,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards])
+
+  const aiTabCounters = useMemo(() => {
+    const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
+    const today = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'today') && isBetAiPrematchAvailableV1091(card)).length
+    const tomorrow = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'tomorrow') && isBetAiPrematchAvailableV1091(card)).length
+    const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
+    const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
+    return {
+      today,
+      tomorrow,
+      results: resultCards.length,
+      stats: allCards.length,
+      leagues,
+      pending,
+    }
+  }, [allCards, resultCards, activeSport])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -13272,11 +13288,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś</button>
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro</button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
             {[
-              ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
-            ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
+              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats], ['leagues','Ligi', aiTabCounters.leagues]
+            ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
     <input
