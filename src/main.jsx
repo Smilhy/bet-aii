@@ -12615,24 +12615,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             )
           })}
         </div>
-        <div className="ai-mode-actions-row-v1060">
-        <div className="ai-mode-tabs-v1051">
-          {[['prematch','Pre-match'], ['live','Na żywo'], ['all','Wszystkie']].map(([key,label]) => (
-            <button key={key} type="button" className={`${matchMode === key ? 'active ' : ''}glass-mode-v1066`} onClick={() => { setMatchMode(key); setSelectedId('') }}>
-              {label}{key === 'live' ? <em>LIVE</em> : null}
-            </button>
-          ))}
-        </div>
-</div>
-        <div className="ai-range-panel-v1054">
+<div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
           <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="45" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
           <label><span>EV min</span><b>{minEv >= 0 ? '+' : ''}{minEv}%</b><input type="range" min="-10" max="25" step="1" value={minEv} onChange={e => setMinEv(Number(e.target.value))} /></label>
           <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMinEv(-8); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj meczu, ligi, rynku..." />
-      </div>
+</div>
 
       <div className="ai-center-status-v747">{statusText}{lastRefresh ? ` • ${lastRefresh}` : ''}</div>
 
@@ -12644,6 +12634,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               ['live','Pre-match typy'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
           </div>
+  <div className="ai-search-compact-v1073">
+    <input
+      type="search"
+      placeholder="Szukaj..."
+      value={searchTerm}
+      onChange={e => setSearchTerm(e.target.value)}
+    />
+  </div>
   <div className="ai-actions-inline-v1071">
     <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
       ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}

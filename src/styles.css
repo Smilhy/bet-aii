@@ -45933,3 +45933,114 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1071 */
+
+
+/* ==========================================================================
+   WERSJA 1072 — USUNIĘTE PRZYCISKI PRE-MATCH / NA ŻYWO / WSZYSTKIE
+   ========================================================================== */
+
+/*
+  Usuwamy górne przełączniki trybu:
+  Pre-match / Na żywo / Wszystkie.
+  Dolne zakładki Pre-match typy / Mecze Result / Statystyki / Ligi zostają.
+*/
+
+.ai-mode-actions-row-v1060,
+.ai-mode-tabs-v1051{
+  display:none !important;
+}
+
+/* jeżeli filtr bar miał przez to pusty odstęp, zacieśniamy */
+.ai-filter-bar-v747{
+  gap:14px !important;
+}
+
+/* KONIEC WERSJI 1072 */
+
+
+/* ==========================================================================
+   WERSJA 1073 — MAŁE SZUKANIE OBOK LIGI
+   ========================================================================== */
+
+/*
+  Usunięte wielkie pole "Szukaj meczu, ligi, rynku..."
+  Przeniesione jako mały input obok zakładek:
+  Pre-match typy / Mecze Result / Statystyki / Ligi
+  i przed przyciskami Odśwież AI / Rozlicz zakończone.
+*/
+
+.ai-filter-bar-v747 > input,
+.ai-filter-bar-v747 input[placeholder="Szukaj meczu, ligi, rynku..."]{
+  display:none !important;
+}
+
+.ai-league-tabs-actions-v1071{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+}
+
+.ai-league-tabs-actions-v1071 > div:first-child{
+  flex:0 1 auto !important;
+}
+
+.ai-search-compact-v1073{
+  flex:1 1 300px !important;
+  max-width:420px !important;
+  min-width:220px !important;
+}
+
+.ai-search-compact-v1073 input{
+  width:100% !important;
+  height:46px !important;
+  padding:0 16px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(34,245,223,.18) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02)),
+    rgba(3,17,28,.82) !important;
+  color:#eaffff !important;
+  font-weight:850 !important;
+  outline:none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 10px 24px rgba(0,0,0,.18) !important;
+  backdrop-filter:blur(14px) !important;
+  -webkit-backdrop-filter:blur(14px) !important;
+}
+
+.ai-search-compact-v1073 input::placeholder{
+  color:rgba(185,215,228,.62) !important;
+}
+
+.ai-search-compact-v1073 input:focus{
+  border-color:rgba(34,245,223,.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 0 0 3px rgba(34,245,223,.08),
+    0 14px 30px rgba(0,0,0,.22) !important;
+}
+
+@media (max-width: 1250px){
+  .ai-league-tabs-actions-v1071{
+    flex-wrap:wrap !important;
+  }
+  .ai-search-compact-v1073{
+    order:2 !important;
+    flex:1 1 100% !important;
+    max-width:none !important;
+  }
+  .ai-actions-inline-v1071{
+    order:3 !important;
+    width:100% !important;
+  }
+}
+
+@media (max-width: 760px){
+  .ai-search-compact-v1073{
+    min-width:0 !important;
+  }
+}
+
+/* KONIEC WERSJI 1073 */
