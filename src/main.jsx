@@ -12623,15 +12623,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </button>
           ))}
         </div>
-          <div className="ai-actions-inline-v1060">
-            <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
-              ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
-            </button>
-            <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
-              {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
-            </button>
-          </div>
-        </div>
+</div>
         <div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
@@ -12646,11 +12638,21 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       <div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
-          <div className="ai-inner-tabs-v747">
+          <div className="ai-league-tabs-actions-v1071">
+<div className="ai-inner-tabs-v747">
             {[
               ['live','Pre-match typy'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
           </div>
+  <div className="ai-actions-inline-v1071">
+    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
+      ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
+    </button>
+    <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
+      {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
+    </button>
+  </div>
+</div>
 
           {activePanel === 'live' && (
             <div className="ai-live-list-v747">

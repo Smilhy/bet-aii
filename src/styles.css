@@ -45850,3 +45850,86 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1070 */
+
+
+/* ==========================================================================
+   WERSJA 1071 — PRZYCISKI AKCJI OBOK ZAKŁADEK LIGI / PRE-MATCH
+   ========================================================================== */
+
+.ai-mode-actions-row-v1060 > .ai-actions-inline-v1060{
+  display:none !important;
+}
+
+.ai-league-tabs-actions-v1071{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  width:100% !important;
+  margin:0 0 12px !important;
+}
+
+.ai-league-tabs-actions-v1071 > div:first-child{
+  margin:0 !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+}
+
+.ai-actions-inline-v1071{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:12px !important;
+  flex:0 0 auto !important;
+}
+
+.ai-actions-inline-v1071 .ai-refresh-btn-v747,
+.ai-actions-inline-v1071 .ai-settle-btn-v747{
+  min-height:48px !important;
+  padding:0 24px !important;
+  border-radius:17px !important;
+  font-weight:1000 !important;
+  white-space:nowrap !important;
+  backdrop-filter:blur(16px) !important;
+  -webkit-backdrop-filter:blur(16px) !important;
+}
+
+.ai-actions-inline-v1071 .ai-refresh-btn-v747{
+  background:
+    linear-gradient(135deg, rgba(42,238,255,.35), rgba(63,146,255,.28)),
+    rgba(8,24,38,.58) !important;
+  color:#f4ffff !important;
+  border:1px solid rgba(83,240,255,.38) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 12px 26px rgba(0,0,0,.24),
+    0 0 18px rgba(42,238,255,.12) !important;
+}
+
+.ai-actions-inline-v1071 .ai-settle-btn-v747{
+  background:
+    linear-gradient(135deg, rgba(19,255,187,.24), rgba(18,164,133,.18)),
+    rgba(8,24,38,.54) !important;
+  color:#dbfff6 !important;
+  border:1px solid rgba(70,255,190,.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 12px 26px rgba(0,0,0,.24),
+    0 0 18px rgba(19,255,187,.10) !important;
+}
+
+@media (max-width: 1100px){
+  .ai-league-tabs-actions-v1071{
+    flex-direction:column !important;
+    align-items:stretch !important;
+  }
+  .ai-actions-inline-v1071{
+    justify-content:stretch !important;
+  }
+  .ai-actions-inline-v1071 .ai-refresh-btn-v747,
+  .ai-actions-inline-v1071 .ai-settle-btn-v747{
+    flex:1 1 0 !important;
+  }
+}
+
+/* KONIEC WERSJI 1071 */
