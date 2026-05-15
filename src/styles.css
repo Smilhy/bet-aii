@@ -46070,18 +46070,3 @@ button.betfolio-fetch-btn{
 /* UI zostaje praktycznie bez zmian. */
 
 /* KONIEC WERSJI 1078 */
-
-
-/* ==========================================================================
-   WERSJA 1082 — TYPY AI NA DZIŚ + TYPY NA JUTRO
-   ========================================================================== */
-
-.ai-inner-tabs-v747{
-  flex-wrap:wrap !important;
-}
-
-.ai-inner-tabs-v747 button{
-  white-space:nowrap !important;
-}
-
-/* KONIEC WERSJI 1082 */
