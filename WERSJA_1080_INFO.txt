@@ -1,0 +1,7 @@
+Wersja 1080:
+- Naprawiony runtime error w Typach AI: Cannot access 'Je' before initialization.
+- Funkcje dat przeniesione na deklaracje function, żeby nie wpadały w TDZ po minifikacji Vite.
+- Dodana zakładka/przełącznik: Typy AI na dziś / Typy AI na jutro.
+- Pobieranie i zapis typów AI działa osobno dla dziś i jutra.
+- Poprawione zakresy dat wysyłane do /.netlify/functions/get-sports-events: date/day/from/to.
+- Build lokalny: npm run build OK.
