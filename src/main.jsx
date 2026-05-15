@@ -12235,6 +12235,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
 
+  const DAILY_AI_PICK_LIMIT_V1086 = 20
+  const DAILY_AI_MIN_SCORE_V1086 = 60
+  const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1086'
+
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
 
   const formatDate = (raw) => {
@@ -12647,6 +12651,45 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return getBetAiCardLocalDateV1078(card) === getBetAiTodayLocalDateV1078()
   }
 
+  function getBetAiDailyStorageKeyV1086(mode = aiDayMode) {
+    return `${DAILY_AI_STORAGE_KEY_PREFIX_V1086}:${getBetAiSelectedLocalDateV1081(mode)}`
+  }
+
+  function markBetAiDailyScanDoneV1086(mode = aiDayMode, count = 0) {
+    try {
+      window.localStorage.setItem(getBetAiDailyStorageKeyV1086(mode), JSON.stringify({ date: getBetAiSelectedLocalDateV1081(mode), count, at: new Date().toISOString() }))
+    } catch (_) {}
+  }
+
+  function getBetAiDailyScanDoneV1086(mode = aiDayMode) {
+    try {
+      const raw = window.localStorage.getItem(getBetAiDailyStorageKeyV1086(mode))
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      return parsed?.date === getBetAiSelectedLocalDateV1081(mode) ? parsed : null
+    } catch (_) { return null }
+  }
+
+  function rankBetAiCardsForDailyJournalV1086(cards = []) {
+    const seenMatch = new Set()
+    return (cards || [])
+      .filter(Boolean)
+      .filter(card => Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086)
+      .sort((a, b) => {
+        const scoreA = Number(a.aiScore || 0) * 2 + Number(a.ev || 0) * 1.5 + Number(a.probability || 0)
+        const scoreB = Number(b.aiScore || 0) * 2 + Number(b.ev || 0) * 1.5 + Number(b.probability || 0)
+        return scoreB - scoreA || getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b)
+      })
+      .filter(card => {
+        const key = String(card.externalFixtureId || card.id || `${card.home}-${card.away}-${card.rawDate}`)
+        if (seenMatch.has(key)) return false
+        seenMatch.add(key)
+        return true
+      })
+      .slice(0, DAILY_AI_PICK_LIMIT_V1086)
+      .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+  }
+
   async function loadSavedAiTipsFromDb(mode = aiDayMode) {
     if (!isSupabaseConfigured || !supabase) return []
     const today = getBetAiSelectedLocalDateV1081(mode)
@@ -12694,11 +12737,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }
 
-  async function fetchLiveAiPicks(mode = aiDayMode) {
+  async function fetchLiveAiPicks(mode = aiDayMode, options = {}) {
     setLoadingAi(true)
     const dayLabel = getBetAiDayLabelV1081(mode)
-    setStatusText(`Pobieram mecze AI na ${dayLabel}...`)
+    const force = Boolean(options?.force)
+    setStatusText(`Sprawdzam zapisane typy AI na ${dayLabel}...`)
     try {
+      const savedBefore = await loadSavedAiTipsFromDb(mode)
+      if (savedBefore.length && !force) {
+        setLiveCards([])
+        setSelectedId(savedBefore[0]?.id || '')
+        const scanInfo = getBetAiDailyScanDoneV1086(mode)
+        setStatusText(`Wczytano ${savedBefore.length} zapisanych typów AI na ${dayLabel}. Nie pobieram ponownie, żeby typy nie znikały i nie zmieniały się po odświeżeniu.${scanInfo?.at ? ` Ostatni skan: ${new Date(scanInfo.at).toLocaleString('pl-PL')}.` : ''}`)
+        return
+      }
+
+      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel}, wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -12723,10 +12777,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           let duplicatePagesInRow = 0
           let page = 0
 
-          while (page <= 100) {
+          while (page <= 25) {
             const url = page === 0 ? baseUrl : `${baseUrl}&page=${page}`
             const beforeCount = sportFixtures.length
-            const result = await fetchJsonWithTimeoutV1079(url, page === 0 ? 9000 : 6500)
+            const result = await fetchJsonWithTimeoutV1079(url, page === 0 ? 8500 : 4500)
 
             if (!result.ok) {
               debug.push(`p${page}:${result.status}`)
@@ -12821,13 +12875,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      setLiveCards(clean)
-      setSelectedId(clean[0]?.id || '')
-      setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Pobrano ${clean.length} typów AI na ${dayLabel}. Lista od najwcześniejszej do najpóźniejszej godziny.`)
+      const topCards = rankBetAiCardsForDailyJournalV1086(clean.filter(card => card.source !== 'Bet+AI fallback'))
+      const cardsToPersist = topCards.length ? topCards : clean.filter(card => card.source !== 'Bet+AI fallback').slice(0, DAILY_AI_PICK_LIMIT_V1086)
 
-      await saveCardsToJournal(clean.filter(card => card.source !== 'Bet+AI fallback'))
-      await loadSavedAiTipsFromDb(mode)
+      setLiveCards(cardsToPersist)
+      setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
+      setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel}. Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
+
+      await saveCardsToJournal(cardsToPersist)
+      markBetAiDailyScanDoneV1086(mode, cardsToPersist.length)
+      const savedAfter = await loadSavedAiTipsFromDb(mode)
+      if (savedAfter.length) {
+        setLiveCards([])
+        setSelectedId(savedAfter[0]?.id || '')
+        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+      }
     } catch (err) {
       const saved = await loadSavedAiTipsFromDb(mode)
       if (saved.length) {
@@ -12845,9 +12908,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   useEffect(() => {
-    loadSavedAiTipsFromDb(aiDayMode).finally(() => {
-      fetchLiveAiPicks(aiDayMode)
-    })
+    let alive = true
+    setLoadingAi(true)
+    loadSavedAiTipsFromDb(aiDayMode).then(saved => {
+      if (!alive) return null
+      if (saved.length) {
+        setLiveCards([])
+        setSelectedId(saved[0]?.id || '')
+        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Tabela jest stała — nie szukam ponownie po odświeżeniu.`)
+        return null
+      }
+      return fetchLiveAiPicks(aiDayMode)
+    }).finally(() => { if (alive) setLoadingAi(false) })
+    return () => { alive = false }
   }, [aiDayMode])
 
   return (

@@ -5,6 +5,8 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const API_SPORTS_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
+exports.config = { schedule: process.env.BETAI_DAILY_AI_CRON || '1 0 * * *' }
+
 function json(statusCode, body) {
   return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
 }
@@ -153,7 +155,7 @@ function normalizeApiSportsEvent(item, cfg) {
 
 async function fetchAllRealEvents(event) {
   if (!API_SPORTS_KEY) throw new Error('Brak APISPORTS_KEY / API_FOOTBALL_KEY w Netlify Environment Variables.')
-  const days = clamp(Number(process.env.REAL_AI_LOOKAHEAD_DAYS || event?.queryStringParameters?.days || 3), 1, 14)
+  const days = clamp(Number(event?.queryStringParameters?.days || process.env.REAL_AI_LOOKAHEAD_DAYS || 1), 1, 14)
   const chosen = selectedSportKeys(event)
   const dates = []
   for (let i = 0; i < days; i++) dates.push(isoDate(new Date(Date.now() + i * 24 * 60 * 60 * 1000)))
@@ -245,6 +247,7 @@ async function buildRow(ev) {
   const pick = chooseModelPick(ev)
   const matchName = `${ev.home} vs ${ev.away}`
   const base = {
+    ai_external_key: `daily-ai-${ev.sport}-${ev.external_fixture_id}-${String(ev.event_time || '').slice(0,10)}-${pick.market}-${pick.selection}`.replace(/\s+/g, '-').toLowerCase(),
     external_fixture_id: ev.external_fixture_id,
     league_id: null,
     author_name: 'BetAI MultiSport AI',
@@ -294,7 +297,7 @@ exports.handler = async function (event) {
   try {
     if (!SUPABASE_URL || !SERVICE_KEY) return json(500, { error: 'Missing Supabase env: SUPABASE_URL/VITE_SUPABASE_URL albo SUPABASE_SERVICE_ROLE_KEY.' })
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
-    const days = clamp(Number(process.env.REAL_AI_LOOKAHEAD_DAYS || event?.queryStringParameters?.days || 3), 1, 14)
+    const days = clamp(Number(event?.queryStringParameters?.days || process.env.REAL_AI_LOOKAHEAD_DAYS || 1), 1, 14)
     let events = []
     let errors = []
     let apisChecked = []
@@ -310,7 +313,7 @@ exports.handler = async function (event) {
       errors = errors.concat(live.errors || [])
       apisChecked = live.apisChecked
     }
-    const maxPicks = Number(process.env.REAL_AI_MAX_PICKS_PER_SCAN || 24)
+    const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
     const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
@@ -330,11 +333,35 @@ exports.handler = async function (event) {
       return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
     }
 
-    await supabase.from('tips').delete().eq('ai_source', 'real_ai_engine').eq('source', 'live_ai_engine').catch?.(() => {})
-    const { data, error } = await supabase.from('tips').insert(strongestRows).select('id,status')
-    if (error) throw error
-    await supabase.from('ai_pick_runs').insert({ source: '737-free-apisports-only', picks_created: data?.length || 0, status: 'success', finished_at: nowIso() }).catch?.(() => {})
-    return json(200, { inserted: data?.length || 0, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: '737-free-apisports-only', warnings: errors.slice(0, 12) })
+    let saved = 0
+    try {
+      const { data, error } = await supabase.from('tips').upsert(strongestRows, { onConflict: 'ai_external_key' }).select('id,status')
+      if (error) throw error
+      saved = data?.length || strongestRows.length
+    } catch (upsertError) {
+      for (const row of strongestRows) {
+        try {
+          const { data: existing } = await supabase
+            .from('tips')
+            .select('id,status,result')
+            .eq('ai_external_key', row.ai_external_key)
+            .limit(1)
+          const existingId = existing?.[0]?.id
+          if (existingId) {
+            const settled = ['won','lost','void','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
+            const updateRow = settled ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k))) : row
+            await supabase.from('tips').update(updateRow).eq('id', existingId)
+          } else {
+            await supabase.from('tips').insert(row)
+          }
+          saved += 1
+        } catch (rowError) {
+          errors.push(`save ${row.match_name}: ${rowError.message || rowError}`)
+        }
+      }
+    }
+    await supabase.from('ai_pick_runs').insert({ source: '1086-daily-stable-scan', picks_created: saved, status: 'success', finished_at: nowIso() }).catch?.(() => {})
+    return json(200, { inserted: saved, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: '1086-daily-stable-scan', message: 'Skan dzienny zapisuje TOP typy bez usuwania wcześniejszych rekordów.', warnings: errors.slice(0, 12) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'MultiSport AI Engine error' })
