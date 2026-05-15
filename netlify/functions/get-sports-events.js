@@ -35,6 +35,9 @@ exports.handler = async function(event) {
 
   const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Europe/Warsaw'
   const FIXTURE_CACHE_HOURS = Math.max(1, Math.min(72, Number(process.env.FIXTURE_CACHE_HOURS || 24) || 24))
+  // Dodaj typ ma pokazywać pełną listę meczów z API, a nie TOP-y z Typów AI.
+  // Limit zostawiamy tylko techniczny, żeby nie zabić Netlify/UI przy tysiącach rekordów.
+  const MAX_FIXTURES_RETURN = Math.max(500, Math.min(5000, Number(process.env.MAX_FIXTURES_RETURN || 2500) || 2500))
   const getSupabaseAdmin = () => {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -82,7 +85,7 @@ exports.handler = async function(event) {
         .select('fixture_json')
         .gt('expires_at', now)
         .order('commence_time', { ascending: true })
-        .limit(2000)
+        .limit(MAX_FIXTURES_RETURN)
       if (futureOnly) q = q.gt('commence_time', now)
       const { data, error } = await q
       if (error) throw error
@@ -745,14 +748,14 @@ exports.handler = async function(event) {
       const fixturesForKey = await fetchOddsForSportKey(oddsKey, sportKey, rangeDays, requestedDay)
       collected.push(...fixturesForKey)
       // Przy widoku wszystkich sportów nie mielimy limitu bez końca; jak już mamy dużo realnych eventów, wystarczy do UI.
-      if (requestedAllSports && collected.length >= 240) break
+      if (requestedAllSports && collected.length >= MAX_FIXTURES_RETURN) break
     }
 
     if (!collected.length && rangeDays < 365) {
       for (const sportKey of sportKeys) {
         const fixturesForKey = await fetchOddsForSportKey(oddsKey, sportKey, 365, requestedDay)
         collected.push(...fixturesForKey)
-        if (requestedAllSports && collected.length >= 240) break
+        if (requestedAllSports && collected.length >= MAX_FIXTURES_RETURN) break
       }
     }
 
@@ -765,7 +768,7 @@ exports.handler = async function(event) {
         seen.add(key)
         return true
       })
-      .slice(0, countOnly ? 1000 : 240)
+      .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
 
     return { sportKeys, fixtures }
   }
@@ -1097,7 +1100,7 @@ exports.handler = async function(event) {
         seen.add(key)
         return true
       })
-      .slice(0, 240)
+      .slice(0, MAX_FIXTURES_RETURN)
 
     return { fixtures, errors }
   }
@@ -1282,7 +1285,7 @@ exports.handler = async function(event) {
         seen.add(key)
         return true
       })
-      .slice(0, countOnly ? 1000 : 500)
+      .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
 
     // WERSJA 966:
     // League-today też musi dociągać kursy. Wcześniej celowo zwracaliśmy markets: [],
@@ -1322,7 +1325,7 @@ exports.handler = async function(event) {
             source: 'supabase-fixture-cache',
             cacheHit: true,
             cacheHours: FIXTURE_CACHE_HOURS,
-            fixtures: cachedFixtures.slice(0, 240),
+            fixtures: cachedFixtures.slice(0, MAX_FIXTURES_RETURN),
             message: `Cache: znaleziono ${cachedFixtures.length} zapisanych meczów z ostatnich ${FIXTURE_CACHE_HOURS} h.`
           })
         }
@@ -1339,7 +1342,7 @@ exports.handler = async function(event) {
       if (cachedFixtures.length) {
         const fixtures = cachedFixtures
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
-          .slice(0, countOnly ? 1000 : 500)
+          .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
         return {
           statusCode: 200,
           headers,
@@ -1424,7 +1427,7 @@ exports.handler = async function(event) {
             seen.add(key)
             return true
           })
-          .slice(0, countOnly ? 1000 : 160)
+          .slice(0, countOnly ? MAX_FIXTURES_RETURN : MAX_FIXTURES_RETURN)
 
         if (fixtures.length) {
           if (countOnly) return { statusCode: 200, headers, body: JSON.stringify({ ok: true, demo: false, source: 'odds-api', sportKeys, allLeagues, daysAhead, futureOnly: true, count: fixtures.length, fixtures: [] }) }
@@ -1452,7 +1455,7 @@ exports.handler = async function(event) {
             source: 'supabase-fixture-cache-fallback',
             cacheHit: true,
             cacheHours: FIXTURE_CACHE_HOURS,
-            fixtures: cachedFallback.slice(0, 500),
+            fixtures: cachedFallback.slice(0, MAX_FIXTURES_RETURN),
             message: `API chwilowo niedostępne lub limit wyczerpany — pokazuję zapisane mecze z ostatnich ${FIXTURE_CACHE_HOURS} h.`
           })
         }

@@ -58,6 +58,7 @@ exports.handler = async (event) => {
 
     const countries = {}
     const leagues = {}
+    const countryLeagues = {}
     let total = 0
 
     ;(data || []).forEach(row => {
@@ -72,6 +73,11 @@ exports.handler = async (event) => {
       countries[country] = (countries[country] || 0) + 1
       countries[normalize(country)] = (countries[normalize(country)] || 0) + 1
 
+      ;[country, normalize(country)].filter(Boolean).forEach(key => {
+        if (!countryLeagues[key]) countryLeagues[key] = []
+        if (!countryLeagues[key].includes(league)) countryLeagues[key].push(league)
+      })
+
       const directKey = `${country}|||${league}`
       const normalizedKey = `${normalize(country)}|||${normalize(league)}`
       leagues[directKey] = (leagues[directKey] || 0) + 1
@@ -80,13 +86,16 @@ exports.handler = async (event) => {
       leagues[normalize(league)] = (leagues[normalize(league)] || 0) + 1
     })
 
+    Object.keys(countryLeagues).forEach(key => countryLeagues[key].sort((a, b) => a.localeCompare(b, 'pl')))
+
     return json(200, {
       ok: true,
       source: 'supabase-fixture-cache-counts',
       date: targetDate,
       total,
       countries,
-      leagues
+      leagues,
+      countryLeagues
     })
   } catch (error) {
     console.error('get-fixture-counts-cache error:', error)

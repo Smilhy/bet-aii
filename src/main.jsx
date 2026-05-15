@@ -5622,7 +5622,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
-  const [footballMatchCounts, setFootballMatchCounts] = useState({ countries: {}, leagues: {}, total: 0, source: '' })
+  const [footballMatchCounts, setFootballMatchCounts] = useState({ countries: {}, leagues: {}, countryLeagues: {}, total: 0, source: '' })
   const [footballMatchCountsLoading, setFootballMatchCountsLoading] = useState(false)
   const [sportDayCountsLoading, setSportDayCountsLoading] = useState(false)
   const [sportCountsDate, setSportCountsDate] = useState(() => getTodayLocalKey())
@@ -6648,8 +6648,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     ]
 }
   const getFootballLeaguesForCountry = (country) => {
-    if (countryMap?.[country]) return Object.keys(countryMap[country])
-    return footballLeagueMap[country] || ['1 Liga', '2 Liga', 'Puchar kraju', 'Liga kobiet']
+    const cleanCountry = normalizeFootballCountryName(country)
+    const countryLeagueMap = footballMatchCounts?.countryLeagues || {}
+    const cachedLeagues = [
+      ...(countryLeagueMap[country] || []),
+      ...(countryLeagueMap[cleanCountry] || []),
+      ...(countryLeagueMap[normalizeCountKey(country)] || []),
+      ...(countryLeagueMap[normalizeCountKey(cleanCountry)] || []),
+    ].filter(Boolean)
+    const staticLeagues = countryMap?.[country]
+      ? Object.keys(countryMap[country])
+      : (footballLeagueMap[country] || footballLeagueMap[cleanCountry] || [])
+    const merged = [...new Set([...cachedLeagues, ...staticLeagues])]
+    return merged.length ? merged : ['1 Liga', '2 Liga', 'Puchar kraju', 'Liga kobiet']
   }
 
   const normalizeCountKey = (value) => String(value || '')
@@ -6668,6 +6679,36 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const directKey = `${normalizeFootballCountryName(country)}|||${league}`
     const normalizedKey = `${normalizeCountKey(country)}|||${normalizeCountKey(league)}`
     return Number(leagues[directKey] ?? leagues[normalizedKey] ?? leagues[league] ?? leagues[normalizeCountKey(league)] ?? 0)
+  }
+
+
+  function buildFootballCountsFromFixtures(fixtures = [], source = 'loaded-fixtures') {
+    const countries = {}
+    const leagues = {}
+    const countryLeagues = {}
+    const seen = new Set()
+    ;(Array.isArray(fixtures) ? fixtures : []).forEach(item => {
+      if (!item) return
+      const country = String(item.country || 'Świat').trim() || 'Świat'
+      const cleanCountry = normalizeFootballCountryName(country)
+      const league = String(item.league || 'Liga').trim() || 'Liga'
+      const eventKey = String(item.apiFixtureId || item.id || `${country}|${league}|${item.home}|${item.away}|${item.commence_time || item.date || ''}`).toLowerCase()
+      if (seen.has(eventKey)) return
+      seen.add(eventKey)
+      ;[country, cleanCountry, normalizeCountKey(country), normalizeCountKey(cleanCountry)].filter(Boolean).forEach(key => {
+        countries[key] = (countries[key] || 0) + 1
+        if (!countryLeagues[key]) countryLeagues[key] = []
+        if (!countryLeagues[key].includes(league)) countryLeagues[key].push(league)
+      })
+      const directKey = `${cleanCountry}|||${league}`
+      const normalizedKey = `${normalizeCountKey(cleanCountry)}|||${normalizeCountKey(league)}`
+      leagues[directKey] = (leagues[directKey] || 0) + 1
+      leagues[normalizedKey] = (leagues[normalizedKey] || 0) + 1
+      leagues[league] = (leagues[league] || 0) + 1
+      leagues[normalizeCountKey(league)] = (leagues[normalizeCountKey(league)] || 0) + 1
+    })
+    Object.keys(countryLeagues).forEach(key => countryLeagues[key].sort((a, b) => a.localeCompare(b, 'pl')))
+    return { countries, leagues, countryLeagues, total: seen.size, source }
   }
 
   async function fetchFootballMatchCountsFromCache(force = false) {
@@ -6697,6 +6738,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const nextCounts = {
         countries: data.countries || {},
         leagues: data.leagues || {},
+        countryLeagues: data.countryLeagues || {},
         total: Number(data.total || 0),
         source: data.source || 'cache'
       }
@@ -7304,7 +7346,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setSidebarSearch('')
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus('Pobieram wszystkie dzisiejsze mecze piłki nożnej...')
+    setLiveFixturesStatus('Pobieram wszystkie dzisiejsze mecze piłki nożnej bez sztucznego limitu UI. Po pobraniu uzupełnię kraje i ligi po lewej...')
     updateForm({
       sport: 'Piłka nożna',
       country: 'Wszystkie',
@@ -7386,13 +7428,20 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         ? rawFixtures
         : rawFixtures.filter(matchStartsAfterBuffer)
       setLiveFixtures(fixtures)
+      if (String(overrides.sport || form.sport || '').toLowerCase().includes('piłka') || String(overrides.sport || form.sport || '').toLowerCase().includes('pilka')) {
+        const loadedCounts = buildFootballCountsFromFixtures(fixtures, data.source || 'live-api')
+        if (loadedCounts.total > 0) {
+          setFootballMatchCounts(loadedCounts)
+          try { localStorage.setItem(`betai_football_country_league_counts_v1036_${overrides.date || liveDate || getTodayLocalKey()}`, JSON.stringify(loadedCounts)) } catch (_) {}
+        }
+      }
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
       if (fixtures.length) {
         applyMatchToForm(fixtures[0])
         const sourceLabel = data.demo ? 'TRYB DEMO' : (String(data.source || '').includes('api-sports') ? 'API-SPORTS' : 'LIVE API')
         if (!isSilentRefresh) {
           const scopeLabel = overrides.mode === 'all-today'
-            ? 'wszystkich dzisiejszych meczów piłki nożnej'
+            ? 'wszystkich dzisiejszych meczów piłki nożnej oraz uzupełniono kraje/ligi po lewej'
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
               : `dzisiejszych meczów ligi ${requestedLeague}`
