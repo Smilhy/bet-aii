@@ -473,6 +473,108 @@ function getImportedProfileStats(profile) {
   }
 }
 
+
+function buildImportedProfileSyntheticTips(profile = {}) {
+  const total = Math.max(0, Number(profile?.imported_total_tips || 0) || 0)
+  if (!total) return []
+
+  const won = Math.max(0, Math.min(total, Number(profile?.imported_won_tips || 0) || 0))
+  const lost = Math.max(0, Math.min(total - won, Number(profile?.imported_lost_tips || 0) || 0))
+  const pending = Math.max(0, total - won - lost)
+  const settledCount = Math.max(1, won + lost)
+  const totalStaked = Math.max(0, Number(profile?.imported_total_staked || 0) || 0)
+  const avgStake = totalStaked > 0 ? totalStaked / settledCount : 100
+  const importedProfit = Number(profile?.imported_profit || 0) || 0
+  const avgOdds = Math.max(1.01, Number(profile?.imported_avg_odds || 0) || 2)
+  const highestOdds = Math.max(avgOdds, Number(profile?.imported_highest_odds || 0) || avgOdds)
+  const username = resolveRealProfileUsername(profile)
+  const email = normalizeEmail(profile?.email || '')
+  const authorId = String(profile?.id || '')
+  const importedAt = profile?.stats_imported_at || profile?.updated_at || profile?.created_at || '2026-05-15T00:00:00.000Z'
+  const baseDate = new Date(importedAt)
+  const safeBaseMs = Number.isFinite(baseDate.getTime()) ? baseDate.getTime() : Date.now()
+
+  const rows = []
+  const makeRow = (index, status, stake, odds, profitAmount) => ({
+    id: `imported-${authorId || username || 'profile'}-${index}`,
+    user_id: authorId || null,
+    author_id: authorId || null,
+    author_email: email,
+    author_name: username,
+    username,
+    source: 'imported_profile_stats',
+    sport: 'Piłka nożna',
+    league: 'Archiwum profilu',
+    home_team: `Archiwalny typ ${index + 1}`,
+    away_team: 'Bet+AI',
+    pick: status === 'pending' ? 'Typ oczekujący z importu' : 'Typ rozliczony z importu',
+    bet_type: status === 'pending' ? 'Typ oczekujący z importu' : 'Typ rozliczony z importu',
+    odds,
+    stake,
+    bet_amount: stake,
+    amount: stake,
+    status,
+    result: status,
+    profit_amount: profitAmount,
+    result_profit: profitAmount,
+    ai_confidence: 0,
+    confidence: 0,
+    is_premium: false,
+    access_type: 'free',
+    created_at: new Date(safeBaseMs - (total - index) * 86400000).toISOString(),
+    match_time: new Date(safeBaseMs - (total - index) * 86400000).toISOString(),
+    analysis: 'Pozycja odtworzona z zaimportowanych statystyk profilu, żeby Mój profil, statystyki i historia nie były puste po migracji.'
+  })
+
+  let rowIndex = 0
+  const wonProfitTotal = importedProfit + (lost * avgStake)
+  const wonProfitEach = won > 0 ? wonProfitTotal / won : 0
+  const wonOdds = won > 0 && avgStake > 0 ? Math.max(1.01, 1 + (wonProfitEach / avgStake)) : avgOdds
+  for (let i = 0; i < won; i += 1) {
+    rows.push(makeRow(rowIndex, 'won', avgStake, i === 0 ? highestOdds : wonOdds, wonProfitEach))
+    rowIndex += 1
+  }
+  for (let i = 0; i < lost; i += 1) {
+    rows.push(makeRow(rowIndex, 'lost', avgStake, avgOdds, -avgStake))
+    rowIndex += 1
+  }
+  for (let i = 0; i < pending; i += 1) {
+    rows.push(makeRow(rowIndex, 'pending', 0, avgOdds, 0))
+    rowIndex += 1
+  }
+
+  return rows
+}
+
+function mergeProfileWithSmilhtvStatsFallback(profile = {}) {
+  const username = normalizeEmail(resolveRealProfileUsername(profile))
+  const email = normalizeEmail(profile?.email || profile?.author_email || '')
+  const isSmilhtv = username === 'smilhytv' || email === 'smilhytv@gmail.com'
+  if (!isSmilhtv) return profile || {}
+
+  const hasStats = Number(profile?.imported_total_tips || 0) > 0 || Number(profile?.imported_total_staked || 0) > 0 || Number(profile?.imported_profit || 0) !== 0
+  if (hasStats) return profile || {}
+
+  return {
+    ...(profile || {}),
+    username: profile?.username || 'smilhytv',
+    public_slug: profile?.public_slug || 'smilhytv',
+    email: profile?.email || 'smilhytv@gmail.com',
+    imported_yield: 50,
+    imported_total_tips: 7,
+    imported_won_tips: 5,
+    imported_lost_tips: 1,
+    imported_pending_tips: 1,
+    imported_total_staked: 600,
+    imported_profit: 301,
+    imported_avg_odds: 2.05,
+    imported_highest_odds: 3.10,
+    imported_tips_amount: 0,
+    imported_tips_currency: 'zł',
+    stats_imported_at: '2026-05-15T00:00:00.000Z'
+  }
+}
+
 function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
   const dynamicTotalStaked = Number(dynamicStats?.totalStaked || 0)
   const dynamicProfit = Number(dynamicStats?.profit || 0)
@@ -914,6 +1016,18 @@ function getPublicProfileOverride(profileLike = {}) {
       subscription_status: 'admin',
       is_admin: true,
       preferred_sport: 'Piłka nożna',
+      imported_yield: 50,
+      imported_total_tips: 7,
+      imported_won_tips: 5,
+      imported_lost_tips: 1,
+      imported_pending_tips: 1,
+      imported_total_staked: 600,
+      imported_profit: 301,
+      imported_avg_odds: 2.05,
+      imported_highest_odds: 3.10,
+      imported_tips_amount: 0,
+      imported_tips_currency: 'zł',
+      stats_imported_at: '2026-05-15T00:00:00.000Z',
     }
   }
   return {}
@@ -16677,7 +16791,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       (email && authorEmail === email) ||
       (usernameCanMatch && authorName === usernameKey)
   }).map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
-  const profileStatsSource = user || {}
+  const profileStatsSource = mergeProfileWithSmilhtvStatsFallback(user || {})
+  const importedSyntheticProfileTips = buildImportedProfileSyntheticTips(profileStatsSource)
+  const profileTipsWithImportedArchive = [...importedSyntheticProfileTips, ...userTips]
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
   const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
   const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
@@ -16842,7 +16958,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
   }
 
-  const allProfileTipCards = userTips.map(buildProfileTipCard)
+  const allProfileTipCards = profileTipsWithImportedArchive.map(buildProfileTipCard)
   const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący')
   const premiumCards = activeProfileTipCards.filter(tip => tip.premium).slice(0, 3)
   const freeCards = activeProfileTipCards.filter(tip => !tip.premium).slice(0, 3)
@@ -16866,7 +16982,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
   const rankingPosition = Number(user?.ranking_position || user?.rank || ownRankingRow?.liveRank || 0) || 0
 
-  const sortedUserTips = [...userTips].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
+  const sortedUserTips = [...profileTipsWithImportedArchive].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
   const latestTip = sortedUserTips[0] || null
   const latestActivityRaw = latestTip?.created_at || user?.last_sign_in_at || user?.updated_at || profileCreatedAt || ''
   const formatProfileDate = (value) => {
@@ -16962,6 +17078,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const getProfileTipSettledStake = (tip = {}) => isProfileTipSettled(tip) ? getProfileTipStake(tip) : 0
   const getProfileTipProfit = (tip = {}) => {
     const status = getProfileTipSettlement(tip)
+    const explicitProfit = tip?.profit_amount ?? tip?.result_profit ?? tip?.profit ?? tip?.payout_profit
+    if (explicitProfit !== undefined && explicitProfit !== null && String(explicitProfit) !== '') {
+      const numericProfit = Number(explicitProfit)
+      if (Number.isFinite(numericProfit)) return numericProfit
+    }
     const stake = getProfileTipStake(tip)
     const odds = getProfileTipOdds(tip)
 
@@ -17039,7 +17160,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     return rows.sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
   }
-  const activeStatsTips = userTips.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
+  const activeStatsTips = profileTipsWithImportedArchive.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
   const liveTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipAccessLabel, ['Publiczny', 'Płatny'])
   const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
   const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])

@@ -1,0 +1,1 @@
+1098 — Restore smilhtv profile stats/tables/history from imported stats fallback. Build OK. Netlify schema unchanged.
