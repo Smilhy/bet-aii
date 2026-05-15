@@ -1,0 +1,4 @@
+WERSJA 1097 - RESTORE PROFIL STATS
+- rollback zmian z 1096 w zakladce Top typerzy, ktore mogly mieszać widoki
+- przywrocona stabilna baza 1095 z licznikami Typy AI
+- zachowany schemat Netlify: bez package-lock.json, bez node_modules, bez dist
