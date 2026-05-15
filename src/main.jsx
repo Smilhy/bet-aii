@@ -18778,80 +18778,134 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 }
 
 function TopTipstersView() {
-  const categories = [
-    ['Wszystkie', '324', 'grid'],
-    ['Piłka nożna', '212', 'football'],
-    ['Tenis', '45', 'tennis'],
-    ['Koszykówka', '28', 'basketball'],
-    ['Hokej', '16', 'hockey'],
-    ['Esport', '23', 'esport'],
-    ['Siatkówka', '18', 'volleyball'],
-    ['Baseball', '12', 'baseball'],
-    ['Dart', '9', 'dart'],
-  ]
+  const [profiles, setProfiles] = useState([])
+  const [loadingProfiles, setLoadingProfiles] = useState(true)
 
-  const tipsters = [
-    {
-      rank: 1,
-      name: 'StatKing',
-      subtitle: 'Profesjonalny analityk',
-      rating: '4.92',
-      votes: '1248',
-      success: '87%',
-      roi: '+32.4%',
-      profit: '+3,240 zł',
-      picks: '284',
-      chart: '87%',
-      price: '49 zł',
-      followers: '1,248 obserwujących',
-      spec: ['⚽', '🎾', '🏒', '⚙', '+2'],
-      avatar: 'SK'
-    },
-    {
-      rank: 2,
-      name: 'BetMind',
-      subtitle: 'Ekspert od Value Betów',
-      rating: '4.78',
-      votes: '982',
-      success: '91%',
-      roi: '+41.7%',
-      profit: '+4,170 zł',
-      picks: '196',
-      chart: '91%',
-      price: '79 zł',
-      followers: '982 obserwujących',
-      spec: ['⚽', '🎾', '⚽', '⚙', '+3'],
-      avatar: 'BM'
-    },
-    {
-      rank: 3,
-      name: 'FootyLogic',
-      subtitle: 'Statystyka i analiza',
-      rating: '4.71',
-      votes: '756',
-      success: '84%',
-      roi: '+28.1%',
-      profit: '+2,980 zł',
-      picks: '241',
-      chart: '84%',
-      price: '59 zł',
-      followers: '756 obserwujących',
-      spec: ['⚽', '📊', '🏆', '⚙', '+1'],
-      avatar: 'FL'
-    },
+  const isBlockedTopTipsterProfile = (profile = {}) => {
+    const values = [
+      profile.username,
+      profile.public_slug,
+      profile.display_name,
+      profile.full_name,
+      profile.profile_name,
+      profile.email,
+    ].map(v => normalizeEmail(v)).filter(Boolean)
+    return values.some(value =>
+      value === 'bet-ai-model' ||
+      value === 'u-ytkownik' ||
+      value === 'użytkownik' ||
+      value === 'uzytkownik' ||
+      value.includes('bet-ai-model')
+    )
+  }
+
+  const loadRealTopTipsters = async () => {
+    setLoadingProfiles(true)
+    try {
+      const rows = await fetchBetaiPublicProfiles()
+      setProfiles((rows || []).filter(profile => {
+        const name = resolveRealProfileUsername(profile)
+        return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
+      }))
+    } catch (error) {
+      console.warn('top typerzy real profiles load failed', error)
+      setProfiles([])
+    } finally {
+      setLoadingProfiles(false)
+    }
+  }
+
+  useEffect(() => {
+    loadRealTopTipsters()
+    if (!isSupabaseConfigured || !supabase) return undefined
+    const channel = supabase
+      .channel('top-typerzy-real-profiles-v1104')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadRealTopTipsters())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tips' }, () => loadRealTopTipsters())
+      .subscribe()
+    return () => {
+      try { supabase.removeChannel(channel) } catch (_) {}
+    }
+  }, [])
+
+  const toNumber = (value, fallback = 0) => {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : fallback
+  }
+  const formatMoney = (value) => `${toNumber(value, 0) >= 0 ? '+' : ''}${toNumber(value, 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`
+  const initialsFor = (name = '') => {
+    const clean = String(name || 'U').replace('@', '').trim()
+    const parts = clean.split(/[\s._-]+/).filter(Boolean)
+    return (parts.length > 1 ? parts[0][0] + parts[1][0] : clean.slice(0, 2)).toUpperCase()
+  }
+  const isPremiumProfile = (profile = {}) => {
+    const plan = normalizeEmail(profile.plan || profile.subscription_status || profile.account_type || profile.role)
+    return plan.includes('premium') || plan.includes('pro') || plan.includes('paid') || BETAI_PREMIUM_USERNAMES.includes(normalizeEmail(profile.username)) || BETAI_PREMIUM_EMAILS.includes(normalizeEmail(profile.email))
+  }
+  const buildRealTipster = (profile, idx) => {
+    const name = resolveRealProfileUsername(profile)
+    const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
+    const won = toNumber(profile.imported_won_tips ?? profile.won_tips ?? profile.won, 0)
+    const lost = toNumber(profile.imported_lost_tips ?? profile.lost_tips ?? profile.lost, 0)
+    const settled = won + lost
+    const hitRate = settled > 0 ? Math.round((won / settled) * 100) : 0
+    const roi = toNumber(profile.imported_yield ?? profile.roi ?? profile.yield, 0)
+    const profit = toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
+    const followers = toNumber(profile.followers_count ?? profile.followers, 0)
+    const premium = isPremiumProfile(profile)
+    return {
+      rank: idx + 1,
+      id: profile.id || profile.user_id || profile.email || name,
+      name,
+      subtitle: profile.bio || profile.description || profile.about || 'Zweryfikowany typer Bet+AI',
+      rating: (4 + Math.min(0.99, Math.max(0, hitRate || 70) / 100)).toFixed(2),
+      votes: String(Math.max(totalTips, followers, 0)),
+      success: `${hitRate}%`,
+      roi: `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`,
+      profit: formatMoney(profit),
+      picks: String(totalTips),
+      chart: `${hitRate}%`,
+      price: premium ? 'Subskrypcja' : 'Darmowe',
+      followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
+      spec: ['⚽', '📊', '🎯', premium ? '👑' : '🎁'],
+      avatar: initialsFor(name),
+      avatarUrl: getProfileAvatarUrl(profile),
+      premium,
+      sortScore: (profit * 0.3) + (roi * 20) + (hitRate * 10) + totalTips,
+    }
+  }
+
+  const realTipsters = useMemo(() => {
+    return (profiles || [])
+      .filter(profile => !isBlockedTopTipsterProfile(profile))
+      .map((profile, idx) => buildRealTipster(profile, idx))
+      .sort((a, b) => b.sortScore - a.sortScore)
+      .map((item, idx) => ({ ...item, rank: idx + 1 }))
+  }, [profiles])
+
+  const categories = [
+    ['Wszystkie', String(realTipsters.length), 'grid'],
+    ['Piłka nożna', String(realTipsters.length), 'football'],
+    ['Tenis', '0', 'tennis'],
+    ['Koszykówka', '0', 'basketball'],
+    ['Hokej', '0', 'hockey'],
+    ['Esport', '0', 'esport'],
+    ['Siatkówka', '0', 'volleyball'],
+    ['Baseball', '0', 'baseball'],
+    ['Dart', '0', 'dart'],
   ]
 
   const marketStats = [
-    ['Tipsterzy', '248'],
-    ['Typy dziś', '1,248'],
-    ['Skuteczność', '85%'],
-    ['ROI rynku', '+18.7%'],
+    ['Typerzy', String(realTipsters.length)],
+    ['Typy aktywne', String(realTipsters.reduce((sum, item) => sum + toNumber(item.picks, 0), 0))],
+    ['Premium', String(realTipsters.filter(item => item.premium).length)],
+    ['Darmowe', String(realTipsters.filter(item => !item.premium).length)],
   ]
 
   const steps = [
-    ['1', 'Wybierz typera', 'Sprawdź statystyki i wybierz najlepszego typera.'],
-    ['2', 'Kup dostęp', 'Zyskaj dostęp do premium typów i analiz.'],
-    ['3', 'Wygrywaj więcej', 'Korzystaj z wiedzy i zwiększaj zyski!'],
+    ['1', 'Wybierz typera', 'Sprawdź realne konto i jego statystyki.'],
+    ['2', 'Kup subskrypcję albo darmowy dostęp', 'Premium ma przycisk subskrypcji, darmowe konta są oznaczone jako Darmowe.'],
+    ['3', 'Obserwuj wyniki', 'Nowi użytkownicy dopisują się automatycznie z Supabase.'],
   ]
 
   return (
@@ -18863,7 +18917,7 @@ function TopTipstersView() {
               <span>MARKETPLACE TYPÓW I ANALIZ</span>
               <h1>Kupuj sprawdzone typy
                 <br />i analizy od <em>najlepszych</em></h1>
-              <p>Zweryfikowani typerzy, skuteczne analizy i typy, które dają przewagę.</p>
+              <p>Realne konta użytkowników Bet+AI, bez testowych/fake typerów.</p>
             </div>
             <div className="market-hero-art-v7" aria-hidden="true">
               <div className="art-card-v7 chart"></div>
@@ -18885,47 +18939,49 @@ function TopTipstersView() {
 
           <div className="market-v7-filters">
             <div className="glass-market-v7 filter-v7"><small>Sport</small><strong>Wszystkie</strong><span>⌄</span></div>
-            <div className="glass-market-v7 filter-v7"><small>Ligą</small><strong>Wszystkie</strong><span>⌄</span></div>
-            <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Popularne</strong><span>⌄</span></div>
-            <div className="glass-market-v7 filter-v7 accent"><b>⭐ Tylko Premium</b></div>
-            <div className="glass-market-v7 filter-v7 accent"><b>☰ Więcej filtrów</b></div>
+            <div className="glass-market-v7 filter-v7"><small>Liga</small><strong>Wszystkie</strong><span>⌄</span></div>
+            <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Realne konta</strong><span>⌄</span></div>
+            <div className="glass-market-v7 filter-v7 accent"><b>⭐ Premium + Darmowe</b></div>
+            <div className="glass-market-v7 filter-v7 accent"><b>↻ Auto z Supabase</b></div>
           </div>
 
           <div className="market-v7-section-head">
             <h2>NAJLEPSI TYPERZY</h2>
-            <button type="button">Zobacz wszystkich</button>
+            <button type="button" onClick={loadRealTopTipsters}>Odśwież</button>
           </div>
 
           <div className="market-v7-list">
-            {tipsters.map((tipster, idx) => (
-              <article className="glass-market-v7 seller-card-v7" key={idx}>
+            {loadingProfiles && <div className="glass-market-v7 seller-card-v7"><strong>Ładuję realne konta...</strong></div>}
+            {!loadingProfiles && !realTipsters.length && <div className="glass-market-v7 seller-card-v7"><strong>Brak realnych kont do pokazania.</strong><p>Po rejestracji użytkownika profil dopisze się automatycznie z Supabase.</p></div>}
+            {!loadingProfiles && realTipsters.map((tipster, idx) => (
+              <article className="glass-market-v7 seller-card-v7" key={tipster.id || idx}>
                 <div className="seller-main-v7">
                   <div className="seller-profile-v7">
-                    <div className={`seller-avatar-v7 a${idx + 1}`}>{tipster.avatar}</div>
+                    <div className={`seller-avatar-v7 a${(idx % 3) + 1}`} style={tipster.avatarUrl ? { backgroundImage: `url(${tipster.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : undefined}>{tipster.avatar}</div>
                     <div className="seller-copy-v7">
                       <div className="seller-title-row-v7">
-                        <span className={`rank-pill-v7 r${tipster.rank}`}>{tipster.rank}</span>
+                        <span className={`rank-pill-v7 r${Math.min(tipster.rank, 3)}`}>{tipster.rank}</span>
                         <h3>{tipster.name}</h3>
                         <i>✓</i>
                       </div>
                       <p>{tipster.subtitle}</p>
-                      <div className="seller-rating-v7">⭐ {tipster.rating} <span>({tipster.votes})</span> <em>PREMIUM</em></div>
+                      <div className="seller-rating-v7">⭐ {tipster.rating} <span>({tipster.votes})</span> <em>{tipster.premium ? 'PREMIUM' : 'DARMOWE'}</em></div>
                     </div>
                   </div>
 
                   <div className="seller-stats-row-v7">
                     <div><small>Skuteczność</small><b>{tipster.success}</b></div>
-                    <div><small>ROI (30 dni)</small><b>{tipster.roi}</b></div>
-                    <div><small>Zysk (30 dni)</small><b>{tipster.profit}</b></div>
+                    <div><small>ROI</small><b>{tipster.roi}</b></div>
+                    <div><small>Zysk</small><b>{tipster.profit}</b></div>
                     <div><small>Typy</small><b>{tipster.picks}</b></div>
                   </div>
                 </div>
 
                 <div className="seller-chart-v7">
-                  <small>Skuteczność (30 dni)</small>
+                  <small>Skuteczność</small>
                   <div className="sparkline-v7">
                     <svg viewBox="0 0 240 78" preserveAspectRatio="none">
-                      <path d={idx===0 ? 'M0,48 L18,54 L36,42 L54,58 L72,38 L90,33 L108,22 L126,35 L144,18 L162,30 L180,20 L198,25 L216,14 L240,8' : idx===1 ? 'M0,44 L18,46 L36,41 L54,43 L72,29 L90,38 L108,24 L126,30 L144,20 L162,26 L180,19 L198,21 L216,16 L240,10' : 'M0,50 L18,42 L36,48 L54,31 L72,40 L90,26 L108,35 L126,30 L144,33 L162,18 L180,27 L198,23 L216,16 L240,9'} />
+                      <path d={idx % 3 === 0 ? 'M0,48 L18,54 L36,42 L54,58 L72,38 L90,33 L108,22 L126,35 L144,18 L162,30 L180,20 L198,25 L216,14 L240,8' : idx % 3 === 1 ? 'M0,44 L18,46 L36,41 L54,43 L72,29 L90,38 L108,24 L126,30 L144,20 L162,26 L180,19 L198,21 L216,16 L240,10' : 'M0,50 L18,42 L36,48 L54,31 L72,40 L90,26 L108,35 L126,30 L144,33 L162,18 L180,27 L198,23 L216,16 L240,9'} />
                     </svg>
                   </div>
                   <div className="chart-meta-v7">
@@ -18938,8 +18994,8 @@ function TopTipstersView() {
                 </div>
 
                 <div className="seller-cta-v7">
-                  <div className="price-v7"><strong>{tipster.price}</strong><span>/ 30 dni</span></div>
-                  <button type="button" className="buy-btn-v7">Kup tip</button>
+                  <div className="price-v7"><strong>{tipster.price}</strong><span>{tipster.premium ? '/ dostęp' : '/ dostęp'}</span></div>
+                  <button type="button" className="buy-btn-v7">{tipster.premium ? 'Kup subskrypcję' : 'Darmowe'}</button>
                   <div className="cta-bottom-v7">
                     <button type="button" className="follow-btn-v7">Obserwuj</button>
                     <span>{tipster.followers}</span>
@@ -18962,22 +19018,6 @@ function TopTipstersView() {
               ))}
             </div>
             <button type="button" className="outline-wide-v7">📈 Zobacz statystyki rynku</button>
-          </div>
-
-          <div className="glass-market-v7 side-market-card-v7">
-            <div className="side-head-line-v7"><h3>AI ANALIZA MECZU</h3><span>AI</span></div>
-            <div className="match-side-v7">
-              <div className="mini-team-v7"><i className="team-logo-v7 rm">RM</i><strong>Real Madryt</strong></div>
-              <span>vs</span>
-              <div className="mini-team-v7"><i className="team-logo-v7 bm">BM</i><strong>Bayern Monachium</strong></div>
-            </div>
-            <div className="match-meta-v7">Liga Mistrzów • Dzisiaj, 21:00</div>
-            <div className="ai-prediction-v7">
-              <small>AI przewiduje:</small>
-              <strong>Powyżej 2.5 gola</strong>
-              <div className="prediction-meter-v7"><span>Pewność: 81%</span><b>81%</b><i style={{width:'81%'}}></i></div>
-            </div>
-            <button type="button" className="outline-wide-v7">Zobacz pełną analizę →</button>
           </div>
 
           <div className="glass-market-v7 side-market-card-v7">
