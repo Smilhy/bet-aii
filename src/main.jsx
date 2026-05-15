@@ -12385,7 +12385,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
 
     return Array.from(map.values())
-      .filter(card => isBetAiSelectedDayCardV1080(card, aiDayMode))
+      .filter(card => isBetAiSelectedDayCardV1081(card, aiDayMode))
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
   }, [liveCards, savedAiCards, dbCards, aiDayMode])
 
@@ -12508,7 +12508,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
 
-  function getBetAiOffsetLocalDateV1080(offsetDays = 0) {
+  function getBetAiOffsetLocalDateV1081(offsetDays = 0) {
     const d = new Date()
     d.setDate(d.getDate() + Number(offsetDays || 0))
     const y = d.getFullYear()
@@ -12518,22 +12518,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   function getBetAiTodayLocalDateV1078() {
-    return getBetAiOffsetLocalDateV1080(0)
+    return getBetAiOffsetLocalDateV1081(0)
   }
 
   function getBetAiTomorrowLocalDateV1078() {
-    return getBetAiOffsetLocalDateV1080(1)
+    return getBetAiOffsetLocalDateV1081(1)
   }
 
-  function getBetAiSelectedLocalDateV1080(mode = aiDayMode) {
+  function getBetAiSelectedLocalDateV1081(mode = aiDayMode) {
     return mode === 'tomorrow' ? getBetAiTomorrowLocalDateV1078() : getBetAiTodayLocalDateV1078()
   }
 
-  function getBetAiNextLocalDateV1080(mode = aiDayMode) {
-    return mode === 'tomorrow' ? getBetAiOffsetLocalDateV1080(2) : getBetAiTomorrowLocalDateV1078()
+  function getBetAiNextLocalDateV1081(mode = aiDayMode) {
+    return mode === 'tomorrow' ? getBetAiOffsetLocalDateV1081(2) : getBetAiTomorrowLocalDateV1078()
   }
 
-  function getBetAiDayLabelV1080(mode = aiDayMode) {
+  function getBetAiDayLabelV1081(mode = aiDayMode) {
     return mode === 'tomorrow' ? 'jutro' : 'dziś'
   }
 
@@ -12559,8 +12559,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return 9999999999999
   }
 
-  function isBetAiSelectedDayCardV1080(card, mode = aiDayMode) {
-    return getBetAiCardLocalDateV1078(card) === getBetAiSelectedLocalDateV1080(mode)
+  function isBetAiSelectedDayCardV1081(card, mode = aiDayMode) {
+    return getBetAiCardLocalDateV1078(card) === getBetAiSelectedLocalDateV1081(mode)
   }
 
   function isBetAiTodayCardV1078(card) {
@@ -12569,30 +12569,30 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function loadSavedAiTipsFromDb(mode = aiDayMode) {
     if (!isSupabaseConfigured || !supabase) return []
-    const targetDate = getBetAiSelectedLocalDateV1080(mode)
-    const nextDate = getBetAiNextLocalDateV1080(mode)
+    const today = getBetAiSelectedLocalDateV1081(mode)
+    const tomorrow = getBetAiNextLocalDateV1081(mode)
 
     try {
       const { data, error } = await supabase
         .from('tips')
         .select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
-        .gte('event_time', `${targetDate}T00:00:00`)
-        .lt('event_time', `${nextDate}T00:00:00`)
+        .gte('event_time', `${today}T00:00:00`)
+        .lt('event_time', `${tomorrow}T00:00:00`)
         .order('event_time', { ascending: true })
 
       if (error) throw error
 
       const mapped = (data || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
-        .filter(card => getBetAiCardLocalDateV1078(card) === targetDate)
+        .filter(card => getBetAiCardLocalDateV1078(card) === today)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiCards(mapped)
       if (mapped.length && !selectedId) setSelectedId(mapped[0].id)
       return mapped
     } catch (err) {
-      console.warn('AI saved today tips load skipped:', err?.message || err)
+      console.warn('AI saved tips load skipped:', err?.message || err)
       return []
     }
   }
@@ -12616,22 +12616,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function fetchLiveAiPicks(mode = aiDayMode) {
     setLoadingAi(true)
-    const dayLabel = getBetAiDayLabelV1080(mode)
+    const dayLabel = getBetAiDayLabelV1081(mode)
     setStatusText(`Pobieram mecze AI na ${dayLabel}...`)
     try {
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
-      const targetDate = getBetAiSelectedLocalDateV1080(mode)
-      const nextDate = getBetAiNextLocalDateV1080(mode)
+      const today = getBetAiSelectedLocalDateV1081(mode)
+      const tomorrow = getBetAiNextLocalDateV1081(mode)
 
       for (const sport of sportsToFetch) {
         const todayUrls = [
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${targetDate}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&day=${targetDate}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${targetDate}&to=${nextDate}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${targetDate}T00:00:00&to=${nextDate}T00:00:00&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&daysAhead=${mode === 'tomorrow' ? 2 : 1}&realOnly=1&allLeagues=1`
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&day=${today}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}&to=${tomorrow}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}T00:00:00&to=${tomorrow}T00:00:00&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&daysAhead=0&mode=today&realOnly=1&allLeagues=1`
         ]
 
         const seenFixtures = new Set()
@@ -12716,14 +12716,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
         sportFixtures.forEach((m, idx) => {
           const card = buildCardFromMatch(m, idx, sport)
-          if (card && getBetAiCardLocalDateV1078(card) === targetDate) collected.push(card)
+          if (card && getBetAiCardLocalDateV1078(card) === today) collected.push(card)
         })
       }
 
       const clean = collected
         .filter(Boolean)
         .filter(card => card.home && card.away && card.home !== 'Gospodarze' && card.away !== 'Goście')
-        .filter(card => getBetAiCardLocalDateV1078(card) === targetDate)
+        .filter(card => getBetAiCardLocalDateV1078(card) === today)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       if (!clean.length) {
@@ -12731,13 +12731,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         if (saved.length) {
           setLiveCards([])
           setSelectedId(saved[0]?.id || '')
-          setStatusText(`Nie pobrałem nowych meczów z API, ale wczytałem ${saved.length} zapisanych typów na ${dayLabel} z bazy.`)
+          setStatusText(`Nie pobrałem nowych meczów z API, ale wczytałem ${saved.length} zapisanych typów na dziś z bazy.`)
           return
         }
 
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Brak meczów AI na ${dayLabel} z API. Endpoint zwrócił: ${debug.slice(0, 12).join(', ') || '0'}.`)
+        setStatusText(`Brak meczów z API. Endpoint zwrócił: ${debug.slice(0, 12).join(', ') || '0'}.`)
         return
       }
 
@@ -12753,11 +12753,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (saved.length) {
         setLiveCards([])
         setSelectedId(saved[0]?.id || '')
-        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Wczytuję zapisane typy na ${dayLabel} z bazy.`)
+        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Wczytuję zapisane typy z bazy.`)
       } else {
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Brak zapisanych typów na ${dayLabel}.`)
+        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Brak zapisanych typów dla wybranego dnia.`)
       }
     } finally {
       setLoadingAi(false)
@@ -12765,10 +12765,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   useEffect(() => {
-    setLiveCards([])
-    setSavedAiCards([])
-    setSelectedId('')
-    if (!aiBootDoneRef.current) aiBootDoneRef.current = true
     loadSavedAiTipsFromDb(aiDayMode).finally(() => {
       fetchLiveAiPicks(aiDayMode)
     })
@@ -12829,11 +12825,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 <div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
-<div className="ai-day-tabs-v1080">
-  <button type="button" className={aiDayMode === 'today' ? 'active' : ''} onClick={() => setAiDayMode('today')}>Typy AI na dziś</button>
-  <button type="button" className={aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => setAiDayMode('tomorrow')}>Typy AI na jutro</button>
-</div>
 <div className="ai-inner-tabs-v747">
+            <button type="button" className={aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setSelectedId('') }}>Typy AI na dziś</button>
+            <button type="button" className={aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setSelectedId('') }}>Typy AI na jutro</button>
             {[
               ['live', aiDayMode === 'tomorrow' ? 'Lista jutro' : 'Lista dziś'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}

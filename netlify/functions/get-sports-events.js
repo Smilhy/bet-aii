@@ -5,14 +5,26 @@ exports.handler = async function(event) {
   const sport = String(qs.sport || 'Piłka nożna')
   const country = String(qs.country || '')
   const league = String(qs.league || '')
-  const date = String(qs.date || new Date().toISOString().slice(0, 10))
   const mode = String(qs.mode || '').trim().toLowerCase()
   const query = String(qs.query || '').trim()
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const forceRefresh = String(qs.forceRefresh || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
-  const daysAhead = Math.max(0, Math.min(365, Number(qs.daysAhead ?? 365) || 365))
+  const addDaysToPlainDate = (dateKey, addDays) => {
+    const [year, month, day] = String(dateKey || '').split('-').map(Number)
+    if (!year || !month || !day) return ''
+    const d = new Date(Date.UTC(year, month - 1, day + addDays, 12, 0, 0))
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+  }
+  const normalizeDateParam = (value) => String(value || '').slice(0, 10)
+  const rawStartDate = normalizeDateParam(qs.date || qs.day || qs.from || new Date().toISOString().slice(0, 10))
+  const rawEndDate = normalizeDateParam(qs.to || '')
+  const date = rawStartDate
+  const explicitRangeDays = rawEndDate && rawEndDate >= rawStartDate
+    ? Math.max(0, Math.round((Date.parse(`${rawEndDate}T12:00:00Z`) - Date.parse(`${rawStartDate}T12:00:00Z`)) / 86400000))
+    : null
+  const daysAhead = Math.max(0, Math.min(365, Number(qs.days ?? qs.daysAhead ?? explicitRangeDays ?? 365) || 0))
   const requestedSportText = String(sport || '').trim()
   const requestedAllSports = ['wszystkie', 'wszystkie sporty', 'all', 'all sports', '*'].includes(requestedSportText.toLowerCase())
 
