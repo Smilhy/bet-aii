@@ -18780,6 +18780,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 function TopTipstersView() {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
+  const [selectedTopSport, setSelectedTopSport] = useState('Wszystkie')
 
   const isBlockedTopTipsterProfile = (profile = {}) => {
     const values = [
@@ -18842,6 +18843,29 @@ function TopTipstersView() {
     const plan = normalizeEmail(profile.plan || profile.subscription_status || profile.account_type || profile.role)
     return plan.includes('premium') || plan.includes('pro') || plan.includes('paid') || BETAI_PREMIUM_USERNAMES.includes(normalizeEmail(profile.username)) || BETAI_PREMIUM_EMAILS.includes(normalizeEmail(profile.email))
   }
+  const normalizeTopSport = (value = '') => {
+    const raw = String(Array.isArray(value) ? value[0] : value || '').toLowerCase()
+    if (raw.includes('pił') || raw.includes('pil') || raw.includes('football') || raw.includes('soccer')) return 'Piłka nożna'
+    if (raw.includes('tenis') || raw.includes('tennis')) return 'Tenis'
+    if (raw.includes('kosz') || raw.includes('basket')) return 'Koszykówka'
+    if (raw.includes('hoke') || raw.includes('hockey')) return 'Hokej'
+    if (raw.includes('esport') || raw.includes('e-sport') || raw.includes('gaming')) return 'Esport'
+    if (raw.includes('siatk') || raw.includes('volley')) return 'Siatkówka'
+    if (raw.includes('baseball')) return 'Baseball'
+    if (raw.includes('dart')) return 'Dart'
+    return 'Piłka nożna'
+  }
+
+  const getProfileTopSport = (profile = {}) => normalizeTopSport(
+    profile.preferred_sport ||
+    profile.main_sport ||
+    profile.sport ||
+    profile.favorite_sport ||
+    profile.specialization ||
+    profile.category ||
+    profile.sports
+  )
+
   const buildRealTipster = (profile, idx) => {
     const name = resolveRealProfileUsername(profile)
     const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
@@ -18853,6 +18877,7 @@ function TopTipstersView() {
     const profit = toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
     const followers = toNumber(profile.followers_count ?? profile.followers, 0)
     const premium = isPremiumProfile(profile)
+    const topSport = getProfileTopSport(profile)
     return {
       rank: idx + 1,
       id: profile.id || profile.user_id || profile.email || name,
@@ -18871,6 +18896,7 @@ function TopTipstersView() {
       avatar: initialsFor(name),
       avatarUrl: getProfileAvatarUrl(profile),
       premium,
+      sport: topSport,
       sortScore: (profit * 0.3) + (roi * 20) + (hitRate * 10) + totalTips,
     }
   }
@@ -18883,17 +18909,27 @@ function TopTipstersView() {
       .map((item, idx) => ({ ...item, rank: idx + 1 }))
   }, [profiles])
 
-  const categories = [
-    ['Wszystkie', String(realTipsters.length), 'grid'],
-    ['Piłka nożna', String(realTipsters.length), 'football'],
-    ['Tenis', '0', 'tennis'],
-    ['Koszykówka', '0', 'basketball'],
-    ['Hokej', '0', 'hockey'],
-    ['Esport', '0', 'esport'],
-    ['Siatkówka', '0', 'volleyball'],
-    ['Baseball', '0', 'baseball'],
-    ['Dart', '0', 'dart'],
+  const sportCategoryDefs = [
+    ['Wszystkie', 'grid'],
+    ['Piłka nożna', 'football'],
+    ['Tenis', 'tennis'],
+    ['Koszykówka', 'basketball'],
+    ['Hokej', 'hockey'],
+    ['Esport', 'esport'],
+    ['Siatkówka', 'volleyball'],
+    ['Baseball', 'baseball'],
+    ['Dart', 'dart'],
   ]
+
+  const countTopSport = (sportName) => sportName === 'Wszystkie'
+    ? realTipsters.length
+    : realTipsters.filter(item => item.sport === sportName).length
+
+  const categories = sportCategoryDefs.map(([label, icon]) => [label, String(countTopSport(label)), icon])
+
+  const filteredTipsters = selectedTopSport === 'Wszystkie'
+    ? realTipsters
+    : realTipsters.filter(item => item.sport === selectedTopSport)
 
   const marketStats = [
     ['Typerzy', String(realTipsters.length)],
@@ -18929,16 +18965,25 @@ function TopTipstersView() {
           </div>
 
           <div className="market-v7-cats">
-            {categories.map((item, idx) => (
-              <div className={`glass-market-v7 cat-box-v7 ${idx === 0 ? 'active' : ''}`} key={idx}>
-                <i className={`cat-icon-v7 ${item[2]}`}></i>
-                <div><strong>{item[0]}</strong><span>{item[1]}</span></div>
-              </div>
-            ))}
+            {categories.map((item) => {
+              const isActive = selectedTopSport === item[0]
+              return (
+                <button
+                  type="button"
+                  className={`glass-market-v7 cat-box-v7 ${isActive ? 'active' : ''}`}
+                  key={item[0]}
+                  onClick={() => setSelectedTopSport(item[0])}
+                  aria-pressed={isActive}
+                >
+                  <i className={`cat-icon-v7 ${item[2]}`}></i>
+                  <div><strong>{item[0]}</strong><span>{item[1]}</span></div>
+                </button>
+              )
+            })}
           </div>
 
           <div className="market-v7-filters">
-            <div className="glass-market-v7 filter-v7"><small>Sport</small><strong>Wszystkie</strong><span>⌄</span></div>
+            <button type="button" className="glass-market-v7 filter-v7" onClick={() => setSelectedTopSport('Wszystkie')}><small>Sport</small><strong>{selectedTopSport}</strong><span>⌄</span></button>
             <div className="glass-market-v7 filter-v7"><small>Liga</small><strong>Wszystkie</strong><span>⌄</span></div>
             <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Realne konta</strong><span>⌄</span></div>
             <div className="glass-market-v7 filter-v7 accent"><b>⭐ Premium + Darmowe</b></div>
@@ -18952,8 +18997,8 @@ function TopTipstersView() {
 
           <div className="market-v7-list">
             {loadingProfiles && <div className="glass-market-v7 seller-card-v7"><strong>Ładuję realne konta...</strong></div>}
-            {!loadingProfiles && !realTipsters.length && <div className="glass-market-v7 seller-card-v7"><strong>Brak realnych kont do pokazania.</strong><p>Po rejestracji użytkownika profil dopisze się automatycznie z Supabase.</p></div>}
-            {!loadingProfiles && realTipsters.map((tipster, idx) => (
+            {!loadingProfiles && !filteredTipsters.length && <div className="glass-market-v7 seller-card-v7"><strong>Brak realnych kont dla wybranego sportu.</strong><p>Po rejestracji użytkownika albo zmianie specjalizacji profil dopisze się automatycznie z Supabase.</p></div>}
+            {!loadingProfiles && filteredTipsters.map((tipster, idx) => (
               <article className="glass-market-v7 seller-card-v7" key={tipster.id || idx}>
                 <div className="seller-main-v7">
                   <div className="seller-profile-v7">
