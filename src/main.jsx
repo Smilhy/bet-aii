@@ -39,6 +39,47 @@ const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 
+const BETAI_BLOCKED_TEST_PROFILE_SLUGS = new Set([
+  'bet-ai-model',
+  'bet-ai',
+  'ai-model',
+  'u-ytkownik',
+  'uzytkownik',
+  'uzytkownik-test',
+  'test-user',
+  'test-typer',
+])
+
+function normalizeProfileSlugForBlock(value) {
+  return normalizePublicSlug(String(value || '').replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l').replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ż/g, 'z').replace(/ź/g, 'z'))
+}
+
+function isBlockedTestProfile(value) {
+  if (!value) return false
+  if (typeof value === 'string') {
+    const slug = normalizeProfileSlugForBlock(value)
+    return BETAI_BLOCKED_TEST_PROFILE_SLUGS.has(slug) || slug.startsWith('fallback-ai')
+  }
+  const keys = [
+    value.id,
+    value.tipster_id,
+    value.user_id,
+    value.author_id,
+    value.username,
+    value.public_slug,
+    value.display_name,
+    value.profile_name,
+    value.author_name,
+    value.name,
+    value.email,
+    value.author_email,
+    value.user_email,
+    value.source,
+  ]
+  return keys.some(isBlockedTestProfile)
+}
+
+
 var userPlan = 'free'; // global anti-crash fallback
 
 const BETAI_LANGUAGES = ['pl', 'en', 'de', 'es', 'ru']
@@ -769,7 +810,7 @@ function buildLiveLeaderboardRows(ranking = [], tips = []) {
     buildRankingFromTips(tips),
     buildRankingRowsFromTipCards(tips)
   )
-  return sortRankingRows(rows).map((row, index) => {
+  return sortRankingRows(rows).filter(row => !isBlockedTestProfile(row)).map((row, index) => {
     const wins = normalizeRankingWins(row)
     const losses = normalizeRankingLosses(row)
     const totalTips = normalizeRankingTipsCount(row)
@@ -805,7 +846,7 @@ function normalizeTipRow(row = {}) {
     author_id: row.author_id || row.user_id || row.created_by || row.owner_id || null,
     user_id: row.user_id || row.author_id || row.created_by || row.owner_id || null,
     author_name: resolveRealProfileUsername({
-      username: isGenericProfileName(row.author_name) ? (row.username || row.author_username || row.profile_username) : (row.author_name || row.username || row.author_username || row.profile_username),
+      username: isBlockedTestProfile(row) ? '' : (isGenericProfileName(row.author_name) ? (row.username || row.author_username || row.profile_username) : (row.author_name || row.username || row.author_username || row.profile_username)),
       author_name: isGenericProfileName(row.author_name) ? (row.username || row.author_username || row.profile_username) : row.author_name,
       email: row.author_email || row.email || row.user_email,
       author_email: row.author_email || row.email || row.user_email
@@ -857,7 +898,7 @@ function isVisibleTipForUser(tip, userId, unlockedSet) {
 // CORE LOCK v983: generic nazwy nie są prawdziwym nickiem profilu.
 function isGenericProfileName(value) {
   const clean = String(value || '').trim().toLowerCase()
-  return ['user', 'użytkownik', 'uzytkownik'].includes(clean)
+  return ['user', 'użytkownik', 'uzytkownik', 'u-ytkownik', 'bet-ai-model'].includes(clean) || isBlockedTestProfile(value)
 }
 
 // CORE LOCK v983: jedna kolejność ustalania nazwy profilu dla całej strony.
@@ -2357,7 +2398,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
     .map(row => ({ ...row, username: formatRankingName(row), public_slug: row.public_slug || normalizePublicSlug(formatRankingName(row)) }))
     .filter(row => {
       const name = formatRankingName(row)
-      return name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
+      return !isBlockedTestProfile(row) && !isBlockedTestProfile(name) && name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
     })
     .slice(0, 4)
 
@@ -2421,11 +2462,12 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     ? decodeURIComponent(tipsterRefValue.slice('lookup:'.length))
     : ''
   const normalizedLookupTipsterKey = normalizeEmail(lookupTipsterKey)
+  const blockedTestProfileOpen = isBlockedTestProfile(tipsterId) || isBlockedTestProfile(lookupTipsterKey)
 
   useEffect(() => {
     let cancelled = false
     async function loadTipsterProfile() {
-      if (!tipsterId || !isSupabaseConfigured || !supabase) return
+      if (!tipsterId || blockedTestProfileOpen || !isSupabaseConfigured || !supabase) return
       setLoading(true)
       try {
         if (lookupTipsterKey) {
@@ -2444,7 +2486,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
               normalizedLookupTipsterKey.split('@')[0] === clean
           }
 
-          const foundProfile = (profilesData || []).find(profile =>
+          const foundProfile = (profilesData || []).filter(profile => !isBlockedTestProfile(profile)).find(profile =>
             matchesKey(profile.id) ||
             matchesKey(profile.email) ||
             matchesKey(profile.username) ||
@@ -2452,6 +2494,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
           ) || null
 
           const normalizedTipsterTips = (allTipsData || [])
+            .filter(rawTip => !isBlockedTestProfile(rawTip))
             .filter(rawTip => {
               const tip = normalizeTipRow(rawTip)
               return matchesKey(tip.author_id) ||
@@ -2558,6 +2601,15 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
       try { supabase.removeChannel(channel) } catch (_) {}
     }
   }, [profile?.id])
+
+  if (blockedTestProfileOpen || isBlockedTestProfile(profile) || isBlockedTestProfile(tipsterTips?.[0])) {
+    return (
+      <section className="tipster-profile-as-real-profile">
+        <button className="back-btn public-profile-back" onClick={onBack}>← Powrót do feedu</button>
+        <div className="empty-state">To konto testowe zostało usunięte z aplikacji.</div>
+      </section>
+    )
+  }
 
   const profileId = profile?.id || tipsterTips?.[0]?.author_id || tipsterTips?.[0]?.user_id || tipsterId
   const normalizeProfileMatchKey = (value) => normalizeEmail(String(value || '').startsWith('lookup:') ? decodeURIComponent(String(value).slice(7)) : value)
@@ -13443,7 +13495,7 @@ function LeaderboardView({
   const [sportFilter, setSportFilter] = useState('all')
   const [claimedChallenges, setClaimedChallenges] = useState({})
 
-  const allRows = buildLiveLeaderboardRows(ranking, tips).map(row => {
+  const allRows = buildLiveLeaderboardRows(ranking, tips).filter(row => !isBlockedTestProfile(row)).map(row => {
     const rowName = formatRankingName(row)
     const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
     const rowKeys = [
@@ -19693,7 +19745,7 @@ function App() {
         console.warn('ranking public profiles exception skipped', error)
       }
 
-      const profileRankingRows = profileRows.map(profile => {
+      const profileRankingRows = profileRows.filter(profile => !isBlockedTestProfile(profile)).map(profile => {
         const imported = getImportedProfileStats(profile)
         const profit = Number(imported?.profit ?? profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
         const totalTips = Number(imported?.totalTips ?? profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
@@ -19716,9 +19768,11 @@ function App() {
         }
       })
 
+      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row))
+      const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row))
       const finalRows = buildLiveLeaderboardRows(
-        mergeRankingRows(profileRankingRows, rankingRows, buildRankingFromTips(tipRows)),
-        tipRows.length ? tipRows : tips
+        mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(cleanTipRows)),
+        cleanTipRows.length ? cleanTipRows : (tips || []).filter(row => !isBlockedTestProfile(row))
       )
 
       setRealRanking(finalRows)
