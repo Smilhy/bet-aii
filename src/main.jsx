@@ -12829,7 +12829,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <button type="button" className={aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setSelectedId('') }}>Typy AI na dziś</button>
             <button type="button" className={aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setSelectedId('') }}>Typy AI na jutro</button>
             {[
-              ['live', aiDayMode === 'tomorrow' ? 'Lista jutro' : 'Lista dziś'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
+              ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
           </div>
   <div className="ai-search-compact-v1073">
