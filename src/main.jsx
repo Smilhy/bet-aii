@@ -12215,7 +12215,7 @@ function buildBetAiFallbackMatchesV1053() {
 
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const SPORTS = ['Wszystkie', 'Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
+  const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const LOCKED_SPORTS_V1055 = ['Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const isLockedSportV1055 = sport => LOCKED_SPORTS_V1055.includes(sport)
   const [activeSport, setActiveSport] = useState('Piłka nożna')
@@ -12229,7 +12229,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [liveCards, setLiveCards] = useState([])
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
-  const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są oznaczone jako Wkrótce.')
+  const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
@@ -12381,7 +12381,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allCards
-      .filter(c => (activeSport === 'Wszystkie' || activeSport === 'Piłka nożna') ? c.sport === 'Piłka nożna' : c.sport === activeSport)
+      .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
       .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
@@ -12613,28 +12613,28 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           {SPORTS.map(sport => {
             const meta = getBetAiSportMetaV1051(sport)
             const locked = isLockedSportV1055(sport)
-            const count = sport === 'Wszystkie' ? allCards.length : allCards.filter(card => card.sport === sport).length
+            const count = allCards.filter(card => card.sport === sport).length
             return (
               <button
                 key={sport}
                 type="button"
                 disabled={locked}
-                className={`${activeSport === sport ? 'active ' : ''}${locked ? 'locked-sport-v1055 ' : ''}sport-card-v1051 sport-card-premium-v1057`}
+                className={`${sport === 'Piłka nożna' ? 'active ' : ''}${locked ? 'locked-sport-v1059 ' : ''}sport-tile-static-v1059`}
                 onClick={() => {
                   if (locked) {
-                    setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną, żeby nie mieszać sportów.`)
+                    setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną.`)
                     return
                   }
-                  setActiveSport(sport === 'Wszystkie' ? 'Piłka nożna' : sport)
+                  setActiveSport('Piłka nożna')
                   setSelectedId('')
                 }}
               >
-                <span className="sport-icon-v1051">{meta.icon}</span>
-                <span className="sport-copy-v1051">
-                  <b>{meta.label}{locked ? <i className="sport-lock-inline-v1057">🔒</i> : null}</b>
+                <span className="sport-static-icon-v1059">{meta.icon}</span>
+                <span className="sport-static-copy-v1059">
+                  <b>{meta.label}</b>
                   <small>{locked ? 'Wkrótce' : count}</small>
                 </span>
-                {locked ? <em className="soon-badge-v1055">Wkrótce</em> : null}
+                {locked ? <i className="sport-static-lock-v1059">🔒</i> : null}
               </button>
             )
           })}
