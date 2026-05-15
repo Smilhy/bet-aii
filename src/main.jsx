@@ -18910,22 +18910,25 @@ function TopTipstersView() {
   }, [profiles])
 
   const sportCategoryDefs = [
-    ['Wszystkie', 'grid'],
-    ['Piłka nożna', 'football'],
-    ['Tenis', 'tennis'],
-    ['Koszykówka', 'basketball'],
-    ['Hokej', 'hockey'],
-    ['Esport', 'esport'],
-    ['Siatkówka', 'volleyball'],
-    ['Baseball', 'baseball'],
-    ['Dart', 'dart'],
+    { label: 'Wszystkie', icon: 'grid', enabled: true, soon: false },
+    { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
+    { label: 'Tenis', icon: '🎾', enabled: false, soon: true },
+    { label: 'Koszykówka', icon: '🏀', enabled: false, soon: true },
+    { label: 'Hokej', icon: '🏒', enabled: false, soon: true },
+    { label: 'Esport', icon: '🎮', enabled: false, soon: true },
+    { label: 'Siatkówka', icon: '🏐', enabled: false, soon: true },
+    { label: 'Baseball', icon: '⚾', enabled: false, soon: true },
+    { label: 'Dart', icon: '🎯', enabled: false, soon: true },
   ]
 
   const countTopSport = (sportName) => sportName === 'Wszystkie'
     ? realTipsters.length
     : realTipsters.filter(item => item.sport === sportName).length
 
-  const categories = sportCategoryDefs.map(([label, icon]) => [label, String(countTopSport(label)), icon])
+  const categories = sportCategoryDefs.map((item) => ({
+    ...item,
+    count: String(countTopSport(item.label)),
+  }))
 
   const filteredTipsters = selectedTopSport === 'Wszystkie'
     ? realTipsters
@@ -18966,27 +18969,35 @@ function TopTipstersView() {
 
           <div className="market-v7-cats">
             {categories.map((item) => {
-              const isActive = selectedTopSport === item[0]
+              const isActive = selectedTopSport === item.label
+              const isDisabled = !item.enabled
               return (
                 <button
                   type="button"
-                  className={`glass-market-v7 cat-box-v7 ${isActive ? 'active' : ''}`}
-                  key={item[0]}
-                  onClick={() => setSelectedTopSport(item[0])}
+                  className={`glass-market-v7 cat-box-v7 ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  key={item.label}
+                  onClick={() => {
+                    if (!isDisabled) setSelectedTopSport(item.label)
+                  }}
                   aria-pressed={isActive}
+                  aria-disabled={isDisabled}
                 >
-                  <i className={`cat-icon-v7 ${item[2]}`}></i>
-                  <div><strong>{item[0]}</strong><span>{item[1]}</span></div>
+                  <div className={`cat-icon-v7 ${item.icon === 'grid' ? 'grid' : ''}`} aria-hidden="true">
+                    {item.icon !== 'grid' ? <span className="cat-icon-emoji-v7">{item.icon}</span> : null}
+                    {isDisabled ? <span className="cat-lock-v7">🔒</span> : null}
+                  </div>
+                  <div className="cat-copy-v7">
+                    <strong>{item.label}</strong>
+                    <span>{item.count}</span>
+                    {item.soon ? <em>Wkrótce</em> : null}
+                  </div>
                 </button>
               )
             })}
           </div>
 
           <div className="market-v7-filters">
-            <button type="button" className="glass-market-v7 filter-v7" onClick={() => setSelectedTopSport('Wszystkie')}><small>Sport</small><strong>{selectedTopSport}</strong><span>⌄</span></button>
-            <div className="glass-market-v7 filter-v7"><small>Liga</small><strong>Wszystkie</strong><span>⌄</span></div>
             <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Realne konta</strong><span>⌄</span></div>
-            <div className="glass-market-v7 filter-v7 accent"><b>⭐ Premium + Darmowe</b></div>
             <div className="glass-market-v7 filter-v7 accent"><b>↻ Auto z Supabase</b></div>
           </div>
 
