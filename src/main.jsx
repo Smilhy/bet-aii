@@ -12588,18 +12588,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-chart-v1054"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
       </div>
-      <div className="ai-center-hero-v747 ai-center-hero-compact-v1052">
-        <div>
-          <span className="ai-center-eyebrow-v747">BET+AI MODEL • FOOTBALL PRE-MATCH</span>
-          <h1>Typy AI</h1>
-          <p>Piłka nożna: AI wybiera najlepszy rynek według kursu, prawdopodobieństwa, EV i ryzyka.</p>
-        </div>
-        <div className="ai-center-actions-v747">
-          <button type="button" onClick={fetchLiveAiPicks} disabled={loadingAi || liveGenerating}>{loadingAi || liveGenerating ? 'Pobieram...' : '⟳ Odśwież AI'}</button>
-          <button type="button" className="ghost" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}</button>
-        </div>
-      </div>
-
       <div className="ai-kpi-grid-v747">
         <div><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
         <div><span>Śr. AI score</span><strong>{stats.avgScore}%</strong><small>jakość selekcji</small></div>
@@ -12639,12 +12627,22 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             )
           })}
         </div>
+        <div className="ai-mode-actions-row-v1060">
         <div className="ai-mode-tabs-v1051">
           {[['prematch','Pre-match'], ['live','Na żywo'], ['all','Wszystkie']].map(([key,label]) => (
             <button key={key} type="button" className={matchMode === key ? 'active' : ''} onClick={() => { setMatchMode(key); setSelectedId('') }}>
               {label}{key === 'live' ? <em>LIVE</em> : null}
             </button>
           ))}
+        </div>
+          <div className="ai-actions-inline-v1060">
+            <button type="button" className="ai-refresh-btn-v747" onClick={fetchLiveAiPicks} disabled={loadingAi}>
+              ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
+            </button>
+            <button type="button" className="ai-settle-btn-v747" onClick={settleFinishedAiTips}>
+              ✓ Rozlicz zakończone
+            </button>
+          </div>
         </div>
         <div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>

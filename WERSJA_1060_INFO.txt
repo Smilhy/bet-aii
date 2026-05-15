@@ -1,0 +1,18 @@
+WERSJA 1060 — TYPY AI ACTIONS NEXT TO MODES
+
+Zrobione:
+- Kafelków sportów NIE ruszano.
+- Usunięty szeroki panel:
+  BET+AI MODEL • FOOTBALL PRE-MATCH / Typy AI / opis / przyciski.
+- Przyciski:
+  * Odśwież AI
+  * Rozlicz zakończone
+  przeniesione obok przełączników:
+  * Pre-match
+  * Na żywo
+  * Wszystkie
+- Logika przycisków została zachowana.
+- Brak zmian w bazie.
+
+SQL marker:
+supabase/version_1060_typy_ai_actions_next_to_modes.sql
