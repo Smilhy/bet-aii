@@ -12426,6 +12426,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [minEv, setMinEv] = useState(-8)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
+  const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
   const aiBootDoneRef = useRef(false)
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
@@ -12585,7 +12586,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const allCards = useMemo(() => {
     const map = new Map()
-    ;[...liveCards, ...savedAiCards, ...dbCards].forEach(card => {
+    ;[...liveCards, ...savedAiCards, ...savedAiJournalCards, ...dbCards].forEach(card => {
       const key = `${card.id}|||${card.market}|||${card.prediction}`
       if (!map.has(key)) map.set(key, card)
     })
@@ -12595,7 +12596,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     // ma pokazywać cały dziennik, a nie tylko dzień aktualnie kliknięty w "Typy AI".
     return Array.from(map.values())
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
-  }, [liveCards, savedAiCards, dbCards])
+  }, [liveCards, savedAiCards, savedAiJournalCards, dbCards])
 
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -12626,10 +12627,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [visibleCards, selectedId])
 
   const resultCards = useMemo(() => {
-    return allCards
+    const map = new Map()
+    ;[...savedAiJournalCards, ...savedAiCards, ...dbCards, ...liveCards].forEach(card => {
+      if (!card) return
+      const key = `${card.externalFixtureId || card.id}|||${card.market}|||${card.prediction}`
+      if (!map.has(key)) map.set(key, card)
+    })
+    return Array.from(map.values())
       .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
-  }, [allCards])
+  }, [savedAiJournalCards, savedAiCards, dbCards, liveCards])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -12936,6 +12943,35 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
   }
 
+  async function loadSavedAiJournalFromDbV1094() {
+    if (!isSupabaseConfigured || !supabase) return []
+    try {
+      // V1094: Mecze Result ma być niezależne od klikniętej zakładki dziś/jutro.
+      // Dlatego ładujemy jeden wspólny dziennik wszystkich zapisanych typów AI,
+      // a nie tylko ostatnio aktywny dzień.
+      const { data, error } = await supabase
+        .from('tips')
+        .select('*')
+        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
+        .order('event_time', { ascending: true })
+        .limit(1000)
+
+      if (error) throw error
+
+      const mapped = (data || [])
+        .map((row, index) => mapAiTipRowToCard(row, index))
+        .filter(Boolean)
+        .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+
+      setSavedAiJournalCards(mapped)
+      return mapped
+    } catch (err) {
+      console.warn('AI full journal load skipped:', err?.message || err)
+      return []
+    }
+  }
+
+
   async function loadSavedAiTipsFromDb(mode = aiDayMode) {
     if (!isSupabaseConfigured || !supabase) return []
     const today = getBetAiSelectedLocalDateV1081(mode)
@@ -13133,6 +13169,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
       await saveCardsToJournal(cardsToPersist)
+      await loadSavedAiJournalFromDbV1094()
       markBetAiDailyScanDoneV1086(mode, cardsToPersist.length)
       const savedAfter = await loadSavedAiTipsFromDb(mode)
       if (savedAfter.length) {
@@ -13159,6 +13196,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   useEffect(() => {
     let alive = true
     setLoadingAi(true)
+    loadSavedAiJournalFromDbV1094()
     loadSavedAiTipsFromDb(aiDayMode).then(saved => {
       if (!alive) return null
       if (saved.length) {
@@ -13171,6 +13209,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
   }, [aiDayMode])
+
+  useEffect(() => {
+    if (activePanel === 'results' || activePanel === 'stats' || activePanel === 'leagues') {
+      loadSavedAiJournalFromDbV1094()
+    }
+  }, [activePanel])
 
   return (
     <section className="ai-center-page-v747">
