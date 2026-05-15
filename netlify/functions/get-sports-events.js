@@ -5,14 +5,26 @@ exports.handler = async function(event) {
   const sport = String(qs.sport || 'Piłka nożna')
   const country = String(qs.country || '')
   const league = String(qs.league || '')
-  const date = String(qs.date || new Date().toISOString().slice(0, 10))
+  const fromParam = String(qs.from || '').slice(0, 10)
+  const toParam = String(qs.to || '').slice(0, 10)
+  const date = String(qs.date || qs.day || fromParam || new Date().toISOString().slice(0, 10)).slice(0, 10)
   const mode = String(qs.mode || '').trim().toLowerCase()
   const query = String(qs.query || '').trim()
   const realOnly = String(qs.realOnly || '') === '1'
   const countOnly = String(qs.countOnly || '') === '1'
   const forceRefresh = String(qs.forceRefresh || '') === '1'
   const allLeagues = String(qs.allLeagues || '') === '1' || String(league || '').toLowerCase().includes('wszystkie')
-  const daysAhead = Math.max(0, Math.min(365, Number(qs.daysAhead ?? 365) || 365))
+  const dayDiff = (fromKey, toKey) => {
+    const a = Date.parse(`${fromKey}T12:00:00Z`)
+    const b = Date.parse(`${toKey}T12:00:00Z`)
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return 0
+    return Math.max(0, Math.round((b - a) / (24 * 60 * 60 * 1000)))
+  }
+  const explicitDaysAhead = qs.daysAhead ?? qs.days
+  const inferredDaysAhead = explicitDaysAhead !== undefined
+    ? Number(explicitDaysAhead)
+    : (fromParam && toParam ? dayDiff(fromParam, toParam) : 0)
+  const daysAhead = Math.max(0, Math.min(365, Number(inferredDaysAhead) || 0))
   const requestedSportText = String(sport || '').trim()
   const requestedAllSports = ['wszystkie', 'wszystkie sporty', 'all', 'all sports', '*'].includes(requestedSportText.toLowerCase())
 

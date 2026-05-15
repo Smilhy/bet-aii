@@ -21984,7 +21984,7 @@ function App() {
 
             <div className="feed">
               {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
-                <div className="empty-state">{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</div>
+                <div className="empty-state">Brak typów do wyświetlenia.</div>
               )}
             </div>
 
