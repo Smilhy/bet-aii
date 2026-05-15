@@ -18923,9 +18923,9 @@ function TopTipstersView() {
   ]
 
   const sortOptions = [
-    { value: 'all', label: 'Realne konta' },
-    { value: 'premium', label: 'Płatne konta' },
-    { value: 'free', label: 'Darmowe konta' },
+    { value: 'all', label: 'Wszystkie konta' },
+    { value: 'premium', label: 'Konta płatne' },
+    { value: 'free', label: 'Konta darmowe' },
   ]
 
   const countTopSport = (sportName) => realTipsters.filter(item => item.sport === sportName).length
@@ -18992,8 +18992,8 @@ function TopTipstersView() {
                 >
                   <div className={`cat-icon-v7 ${item.icon === 'grid' ? 'grid' : ''}`} aria-hidden="true">
                     {item.icon !== 'grid' ? <span className="cat-icon-emoji-v7">{item.icon}</span> : null}
-                    {isDisabled ? <span className="cat-lock-v7">🔒</span> : null}
                   </div>
+                  {isDisabled ? <span className="cat-lock-v7">🔒</span> : null}
                   <div className="cat-copy-v7">
                     <strong>{item.label}</strong>
                     <span>{item.count}</span>
@@ -19014,7 +19014,7 @@ function TopTipstersView() {
               >
                 <div>
                   <small>Sortuj</small>
-                  <strong>{sortOptions.find(option => option.value === topAccountFilter)?.label || 'Realne konta'}</strong>
+                  <strong>{sortOptions.find(option => option.value === topAccountFilter)?.label || 'Wszystkie konta'}</strong>
                 </div>
                 <span>⌄</span>
               </button>
