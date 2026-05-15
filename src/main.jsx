@@ -12590,14 +12590,17 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (!map.has(key)) map.set(key, card)
     })
 
+    // V1093: jedna wspólna lista zapisanych typów.
+    // Nie filtrujemy jej po aktywnym dniu, bo zakładka "Mecze Result"
+    // ma pokazywać cały dziennik, a nie tylko dzień aktualnie kliknięty w "Typy AI".
     return Array.from(map.values())
-      .filter(card => isBetAiSelectedDayCardV1081(card, aiDayMode))
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
-  }, [liveCards, savedAiCards, dbCards, aiDayMode])
+  }, [liveCards, savedAiCards, dbCards])
 
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allCards
+      .filter(card => isBetAiSelectedDayCardV1081(card, aiDayMode))
       .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
       .filter(c => isBetAiPrematchAvailableV1091(c))
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
@@ -12623,7 +12626,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [visibleCards, selectedId])
 
   const resultCards = useMemo(() => {
-    return allCards.filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+    return allCards
+      .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+      .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
   }, [allCards])
 
   useEffect(() => {
@@ -13271,7 +13276,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               <div className="ai-table-title-v747"><h3>Mecze Result</h3><span>Dziennik każdego typu AI</span></div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
-                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id); setActivePanel('live') }}>
+                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id) }}>
                   <span>{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span>{card.home}</span><span>{card.scoreHome} - {card.scoreAway}</span><span>{card.away}</span><span>{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{card.status}</span>
                 </div>
               )) : <div className="ai-result-table-v747"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">pending</span></div>}
