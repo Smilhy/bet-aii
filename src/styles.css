@@ -45192,3 +45192,372 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1062 */
+
+
+/* ==========================================================================
+   WERSJA 1063 — BANER HERO KOMPAKTOWY, NIE ZJADA EKRANU
+   ========================================================================== */
+
+/* Kafelków sportów nie ruszamy. Zmniejszamy TYLKO hero. */
+.ai-exact-hero-v1062{
+  height:clamp(220px, 24vw, 360px) !important;
+  max-height:360px !important;
+  min-height:220px !important;
+  margin:0 0 14px !important;
+  border-radius:26px !important;
+  overflow:hidden !important;
+  background:#020b14 !important;
+}
+
+.ai-exact-hero-v1062 img{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  display:block !important;
+}
+
+/* Delikatnie ciaśniej pod banerem */
+.ai-kpi-grid-v747{
+  margin-top:0 !important;
+  gap:12px !important;
+}
+
+.ai-center-page-v747{
+  gap:14px !important;
+}
+
+/* Na dużych monitorach dalej kompaktowo */
+@media (min-width: 1600px){
+  .ai-exact-hero-v1062{
+    height:340px !important;
+    max-height:340px !important;
+  }
+}
+
+/* Na mniejszych ekranach nie robi się klocek */
+@media (max-width: 1200px){
+  .ai-exact-hero-v1062{
+    height:260px !important;
+  }
+}
+
+@media (max-width: 760px){
+  .ai-exact-hero-v1062{
+    height:210px !important;
+    border-radius:20px !important;
+  }
+}
+
+/* KONIEC WERSJI 1063 */
+
+
+/* ==========================================================================
+   WERSJA 1064 — USUNIĘTY NAPIS PREMIUM AI Z BANERA
+   ========================================================================== */
+
+/* Kafelków i logiki nie ruszamy. To tylko poprawka assetu hero. */
+.ai-exact-hero-v1062{
+  background:#020b14 !important;
+}
+
+/* KONIEC WERSJI 1064 */
+
+
+/* ==========================================================================
+   WERSJA 1065 — NOWY BANER 3:1 DOPASOWANY DO TYPY AI
+   ========================================================================== */
+
+/* Kafelków sportów nie ruszamy. Zmieniony tylko hero asset i dopasowanie. */
+.ai-exact-hero-v1062,
+.ai-exact-hero-v1065{
+  width:100% !important;
+  height:clamp(250px, 20.5vw, 340px) !important;
+  min-height:250px !important;
+  max-height:340px !important;
+  margin:0 0 14px !important;
+  padding:0 !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(34,245,223,.28) !important;
+  background:#020b14 !important;
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.40),
+    inset 0 0 0 1px rgba(34,245,223,.08) !important;
+}
+
+.ai-exact-hero-v1062 img,
+.ai-exact-hero-v1065 img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+}
+
+/* Trochę ciaśniej pod banerem */
+.ai-kpi-grid-v747{
+  margin-top:0 !important;
+}
+
+@media (min-width: 1700px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065{
+    height:320px !important;
+    max-height:320px !important;
+  }
+}
+
+@media (max-width: 1200px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065{
+    height:260px !important;
+  }
+}
+
+@media (max-width: 760px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065{
+    height:210px !important;
+    min-height:210px !important;
+    border-radius:20px !important;
+  }
+}
+
+/* KONIEC WERSJI 1065 */
+
+
+/* ==========================================================================
+   WERSJA 1066 — KOLOROWE STATYSTYKI + SZKLISTE PRZYCISKI
+   ========================================================================== */
+
+/* Kafelków sportów nie ruszamy. Zmieniamy tylko KPI/statystyki i przyciski. */
+
+.ai-kpi-grid-premium-v1066,
+.ai-kpi-grid-v747{
+  display:grid !important;
+  grid-template-columns:repeat(5, minmax(0, 1fr)) !important;
+  gap:14px !important;
+}
+
+.ai-kpi-grid-premium-v1066 > div,
+.ai-kpi-card-v1066{
+  position:relative !important;
+  min-height:112px !important;
+  overflow:hidden !important;
+  border-radius:22px !important;
+  padding:18px 18px 16px !important;
+  border:1px solid rgba(80,236,255,.16) !important;
+  background:
+    radial-gradient(circle at 82% 36%, var(--stat-glow-v1066, rgba(0,255,255,.18)), transparent 34%),
+    linear-gradient(135deg, var(--stat-grad-a-v1066, rgba(0,255,255,.10)), var(--stat-grad-b-v1066, rgba(0,128,255,.06))),
+    linear-gradient(180deg, rgba(6,16,28,.94), rgba(4,10,20,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 12px 30px rgba(0,0,0,.28) !important;
+}
+
+.ai-kpi-grid-premium-v1066 > div::before,
+.ai-kpi-card-v1066::before{
+  content:"" !important;
+  position:absolute !important;
+  right:14px !important;
+  bottom:12px !important;
+  width:44px !important;
+  height:44px !important;
+  border-radius:15px !important;
+  background:var(--stat-icon-bg-v1066, rgba(0,255,255,.09)) !important;
+  box-shadow:inset 0 0 20px rgba(255,255,255,.045), 0 0 24px var(--stat-glow-soft-v1066, rgba(0,255,255,.10)) !important;
+  opacity:.95 !important;
+}
+
+.ai-kpi-grid-premium-v1066 > div::after,
+.ai-kpi-card-v1066::after{
+  position:absolute !important;
+  right:25px !important;
+  bottom:21px !important;
+  font-size:23px !important;
+  line-height:1 !important;
+  color:var(--stat-value-v1066, #32f4ff) !important;
+  opacity:.82 !important;
+  filter:drop-shadow(0 0 10px var(--stat-glow-soft-v1066, rgba(0,255,255,.16))) !important;
+}
+
+.ai-kpi-card--types-v1066::after{ content:"↗" !important; }
+.ai-kpi-card--score-v1066::after{ content:"◉" !important; }
+.ai-kpi-card--ev-v1066::after{ content:"₿" !important; font-weight:1000 !important; }
+.ai-kpi-card--winrate-v1066::after{ content:"🏆" !important; font-size:20px !important; }
+.ai-kpi-card--pending-v1066::after{ content:"◷" !important; }
+
+.ai-kpi-grid-premium-v1066 span,
+.ai-kpi-card-v1066 span{
+  position:relative !important;
+  z-index:1 !important;
+  display:block !important;
+  margin:0 0 10px !important;
+  color:rgba(218,235,244,.82) !important;
+  font-size:13px !important;
+  font-weight:1000 !important;
+  letter-spacing:.06em !important;
+  text-transform:uppercase !important;
+}
+
+.ai-kpi-grid-premium-v1066 strong,
+.ai-kpi-card-v1066 strong{
+  position:relative !important;
+  z-index:1 !important;
+  display:block !important;
+  margin:0 0 8px !important;
+  color:var(--stat-value-v1066, #32f4ff) !important;
+  font-size:26px !important;
+  line-height:1 !important;
+  font-weight:1000 !important;
+  text-shadow:0 0 18px var(--stat-glow-soft-v1066, rgba(0,255,255,.12)) !important;
+}
+
+.ai-kpi-grid-premium-v1066 small,
+.ai-kpi-card-v1066 small{
+  position:relative !important;
+  z-index:1 !important;
+  display:block !important;
+  color:rgba(176,205,219,.78) !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+
+/* warianty kolorów jak w dashboardzie */
+.ai-kpi-card--types-v1066{
+  --stat-grad-a-v1066:rgba(35,169,255,.20);
+  --stat-grad-b-v1066:rgba(25,90,255,.08);
+  --stat-glow-v1066:rgba(35,169,255,.25);
+  --stat-glow-soft-v1066:rgba(35,169,255,.18);
+  --stat-value-v1066:#58d7ff;
+  --stat-icon-bg-v1066:rgba(35,169,255,.13);
+  border-color:rgba(35,169,255,.34) !important;
+}
+
+.ai-kpi-card--score-v1066{
+  --stat-grad-a-v1066:rgba(0,255,225,.20);
+  --stat-grad-b-v1066:rgba(30,160,255,.08);
+  --stat-glow-v1066:rgba(0,255,225,.25);
+  --stat-glow-soft-v1066:rgba(0,255,225,.18);
+  --stat-value-v1066:#35ffe0;
+  --stat-icon-bg-v1066:rgba(0,255,225,.13);
+  border-color:rgba(0,255,225,.30) !important;
+}
+
+.ai-kpi-card--ev-v1066{
+  --stat-grad-a-v1066:rgba(0,255,163,.18);
+  --stat-grad-b-v1066:rgba(0,153,110,.08);
+  --stat-glow-v1066:rgba(0,255,163,.25);
+  --stat-glow-soft-v1066:rgba(0,255,163,.18);
+  --stat-value-v1066:#32ffb6;
+  --stat-icon-bg-v1066:rgba(0,255,163,.13);
+  border-color:rgba(0,255,163,.30) !important;
+}
+
+.ai-kpi-card--winrate-v1066{
+  --stat-grad-a-v1066:rgba(68,255,153,.18);
+  --stat-grad-b-v1066:rgba(0,160,110,.08);
+  --stat-glow-v1066:rgba(68,255,153,.25);
+  --stat-glow-soft-v1066:rgba(68,255,153,.18);
+  --stat-value-v1066:#65ffaf;
+  --stat-icon-bg-v1066:rgba(68,255,153,.13);
+  border-color:rgba(68,255,153,.30) !important;
+}
+
+.ai-kpi-card--pending-v1066{
+  --stat-grad-a-v1066:rgba(255,186,61,.20);
+  --stat-grad-b-v1066:rgba(180,110,0,.08);
+  --stat-glow-v1066:rgba(255,186,61,.27);
+  --stat-glow-soft-v1066:rgba(255,186,61,.18);
+  --stat-value-v1066:#ffc85a;
+  --stat-icon-bg-v1066:rgba(255,186,61,.14);
+  border-color:rgba(255,186,61,.34) !important;
+}
+
+/* Szkliste przyciski: akcje i tryby */
+.glass-btn-v1066,
+.ai-actions-inline-v1060 .ai-refresh-btn-v747,
+.ai-actions-inline-v1060 .ai-settle-btn-v747,
+.glass-mode-v1066,
+.ai-mode-tabs-v1051 button{
+  position:relative !important;
+  min-height:48px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(120,234,255,.22) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03)),
+    rgba(10,24,36,.52) !important;
+  color:#eafcff !important;
+  font-weight:1000 !important;
+  letter-spacing:.01em !important;
+  backdrop-filter:blur(16px) !important;
+  -webkit-backdrop-filter:blur(16px) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 10px 24px rgba(0,0,0,.22),
+    0 0 0 1px rgba(70,230,255,.05) !important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease !important;
+}
+
+.glass-btn-v1066:hover,
+.ai-actions-inline-v1060 .ai-refresh-btn-v747:hover,
+.ai-actions-inline-v1060 .ai-settle-btn-v747:hover,
+.ai-mode-tabs-v1051 button:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(80,245,255,.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.11),
+    0 14px 30px rgba(0,0,0,.28),
+    0 0 18px rgba(60,225,255,.18) !important;
+}
+
+.glass-primary-v1066,
+.ai-actions-inline-v1060 .ai-refresh-btn-v747{
+  background:
+    linear-gradient(135deg, rgba(42,238,255,.35), rgba(63,146,255,.28)),
+    rgba(8,24,38,.58) !important;
+  color:#f4ffff !important;
+  border-color:rgba(83,240,255,.38) !important;
+}
+
+.glass-success-v1066,
+.ai-actions-inline-v1060 .ai-settle-btn-v747{
+  background:
+    linear-gradient(135deg, rgba(19,255,187,.24), rgba(18,164,133,.18)),
+    rgba(8,24,38,.54) !important;
+  color:#dbfff6 !important;
+  border-color:rgba(70,255,190,.30) !important;
+}
+
+.ai-mode-tabs-v1051 button.active{
+  background:
+    linear-gradient(135deg, rgba(42,238,255,.34), rgba(91,140,255,.28)),
+    rgba(8,24,38,.62) !important;
+  color:#ffffff !important;
+  border-color:rgba(34,245,223,.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 12px 28px rgba(0,0,0,.24),
+    0 0 22px rgba(34,245,223,.18) !important;
+}
+
+@media (max-width: 1100px){
+  .ai-kpi-grid-premium-v1066,
+  .ai-kpi-grid-v747{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 680px){
+  .ai-kpi-grid-premium-v1066,
+  .ai-kpi-grid-v747{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* KONIEC WERSJI 1066 */

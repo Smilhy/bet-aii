@@ -12573,15 +12573,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-exact-hero-v1062" aria-label="Typy AI Premium Hero">
-        <img src="/typy-ai-hero-v1062.png" alt="Typy AI — premium AI sports analytics" />
+      <div className="ai-exact-hero-v1062 ai-exact-hero-v1065" aria-label="Typy AI Premium Hero">
+        <img src="/typy-ai-hero-v1065.png" alt="Typy AI — premium AI sports analytics" />
       </div>
-      <div className="ai-kpi-grid-v747">
-        <div><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
-        <div><span>Śr. AI score</span><strong>{stats.avgScore}%</strong><small>jakość selekcji</small></div>
-        <div><span>Śr. EV</span><strong>{stats.avgEv >= 0 ? '+' : ''}{stats.avgEv}%</strong><small>wartość modelowa</small></div>
-        <div><span>Win rate</span><strong>{stats.hitRate}%</strong><small>{stats.won}W / {stats.lost}L</small></div>
-        <div><span>Pending</span><strong>{stats.pending}</strong><small>czeka na wynik</small></div>
+      <div className="ai-kpi-grid-v747 ai-kpi-grid-premium-v1066">
+        <div className="ai-kpi-card-v1066 ai-kpi-card--types-v1066"><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
+        <div className="ai-kpi-card-v1066 ai-kpi-card--score-v1066"><span>Śr. AI score</span><strong>{stats.avgScore}%</strong><small>jakość selekcji</small></div>
+        <div className="ai-kpi-card-v1066 ai-kpi-card--ev-v1066"><span>Śr. EV</span><strong>{stats.avgEv >= 0 ? '+' : ''}{stats.avgEv}%</strong><small>wartość modelowa</small></div>
+        <div className="ai-kpi-card-v1066 ai-kpi-card--winrate-v1066"><span>Win rate</span><strong>{stats.hitRate}%</strong><small>{stats.won}W / {stats.lost}L</small></div>
+        <div className="ai-kpi-card-v1066 ai-kpi-card--pending-v1066"><span>Pending</span><strong>{stats.pending}</strong><small>czeka na wynik</small></div>
       </div>
 
       <div className="ai-filter-bar-v747">
@@ -12618,16 +12618,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-mode-actions-row-v1060">
         <div className="ai-mode-tabs-v1051">
           {[['prematch','Pre-match'], ['live','Na żywo'], ['all','Wszystkie']].map(([key,label]) => (
-            <button key={key} type="button" className={matchMode === key ? 'active' : ''} onClick={() => { setMatchMode(key); setSelectedId('') }}>
+            <button key={key} type="button" className={`${matchMode === key ? 'active ' : ''}glass-mode-v1066`} onClick={() => { setMatchMode(key); setSelectedId('') }}>
               {label}{key === 'live' ? <em>LIVE</em> : null}
             </button>
           ))}
         </div>
           <div className="ai-actions-inline-v1060">
-            <button type="button" className="ai-refresh-btn-v747" onClick={fetchLiveAiPicks} disabled={loadingAi}>
+            <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
               ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
             </button>
-            <button type="button" className="ai-settle-btn-v747" onClick={onSettle} disabled={settleGenerating}>
+            <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
               {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
             </button>
           </div>
