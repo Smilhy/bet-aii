@@ -12573,8 +12573,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-exact-hero-v1062 ai-exact-hero-v1065 ai-exact-hero-v1067" aria-label="Typy AI Premium Hero">
-        <img src="/typy-ai-hero-v1067.png" alt="Typy AI — premium AI sports analytics" />
+      <div className="ai-exact-hero-v1062 ai-exact-hero-v1065 ai-exact-hero-v1067 ai-exact-hero-v1068" aria-label="Typy AI Premium Hero">
+        <img src="/typy-ai-hero-v1068.png" alt="Typy AI — premium AI sports analytics" />
       </div>
       <div className="ai-kpi-grid-v747 ai-kpi-grid-premium-v1066">
         <div className="ai-kpi-card-v1066 ai-kpi-card--types-v1066"><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
