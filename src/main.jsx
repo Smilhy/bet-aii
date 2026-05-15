@@ -12579,9 +12579,25 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
 
+
+  const fetchJsonWithTimeoutV1079 = async (url, timeoutMs = 8500) => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+      if (!res.ok) return { ok: false, status: res.status, json: null }
+      const json = await res.json().catch(() => ({}))
+      return { ok: true, status: res.status, json }
+    } catch (err) {
+      return { ok: false, status: err?.name === 'AbortError' ? 'timeout' : 'error', json: null }
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
   async function fetchLiveAiPicks() {
     setLoadingAi(true)
-    setStatusText('Pobieram wszystkie dzisiejsze mecze piłkarskie i układam je od najwcześniejszej godziny...')
+    setStatusText('Pobieram dzisiejsze mecze AI...')
     try {
       const sportsToFetch = ['Piłka nożna']
       const collected = []
@@ -12599,43 +12615,82 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         ]
 
         const seenFixtures = new Set()
+        const seenPageSignatures = new Set()
         const sportFixtures = []
 
         for (const baseUrl of todayUrls) {
-          const urls = [baseUrl]
-          for (let page = 1; page <= 100; page += 1) {
-            urls.push(`${baseUrl}&page=${page}`)
+          let emptyPagesInRow = 0
+          let duplicatePagesInRow = 0
+          let page = 0
+
+          while (page <= 100) {
+            const url = page === 0 ? baseUrl : `${baseUrl}&page=${page}`
+            const beforeCount = sportFixtures.length
+            const result = await fetchJsonWithTimeoutV1079(url, page === 0 ? 9000 : 6500)
+
+            if (!result.ok) {
+              debug.push(`p${page}:${result.status}`)
+              // Nie mielimy wiecznie po timeoutach/błędach.
+              if (page > 0) break
+              page += 1
+              continue
+            }
+
+            const fixtures = extractBetAiFixturesV1053(result.json)
+            debug.push(`p${page}:${fixtures.length}`)
+
+            const pageSignature = fixtures
+              .map(f => {
+                const home = f.home || f.home_team || f.team_home || f.homeTeam || ''
+                const away = f.away || f.away_team || f.team_away || f.awayTeam || ''
+                const date = f.commence_time || f.event_time || f.kickoff_time || f.match_time || f.date || ''
+                const id = f.id || f.fixture_id || f.external_fixture_id || `${home}-${away}-${date}`
+                return String(id)
+              })
+              .join('|')
+
+            if (page > 0 && pageSignature && seenPageSignatures.has(pageSignature)) {
+              duplicatePagesInRow += 1
+              if (duplicatePagesInRow >= 1) break
+            } else if (pageSignature) {
+              seenPageSignatures.add(pageSignature)
+              duplicatePagesInRow = 0
+            }
+
+            if (!fixtures.length) {
+              emptyPagesInRow += 1
+              if (page > 0 || emptyPagesInRow >= 1) break
+              page += 1
+              continue
+            }
+
+            fixtures.forEach(fixture => {
+              const home = fixture.home || fixture.home_team || fixture.team_home || fixture.homeTeam || ''
+              const away = fixture.away || fixture.away_team || fixture.team_away || fixture.awayTeam || ''
+              const date = fixture.commence_time || fixture.event_time || fixture.kickoff_time || fixture.match_time || fixture.date || ''
+              const id = fixture.id || fixture.fixture_id || fixture.external_fixture_id || `${home}-${away}-${date}`
+              const key = String(id || `${home}-${away}-${date}`)
+
+              if (!seenFixtures.has(key) && home && away) {
+                seenFixtures.add(key)
+                sportFixtures.push(fixture)
+              }
+            })
+
+            const added = sportFixtures.length - beforeCount
+
+            // Jeżeli strona paginacji nic nowego nie dodała, endpoint najpewniej powtarza dane.
+            if (page > 0 && added === 0) break
+
+            page += 1
           }
 
-          for (const url of urls) {
-            try {
-              const res = await fetch(url, { cache: 'no-store' })
-              if (!res.ok) {
-                debug.push(`http${res.status}`)
-                continue
-              }
-
-              const json = await res.json().catch(() => ({}))
-              const fixtures = extractBetAiFixturesV1053(json)
-              debug.push(`${fixtures.length}`)
-
-              fixtures.forEach(fixture => {
-                const home = fixture.home || fixture.home_team || fixture.team_home || fixture.homeTeam || ''
-                const away = fixture.away || fixture.away_team || fixture.team_away || fixture.awayTeam || ''
-                const date = fixture.commence_time || fixture.event_time || fixture.kickoff_time || fixture.match_time || fixture.date || ''
-                const id = fixture.id || fixture.fixture_id || fixture.external_fixture_id || `${home}-${away}-${date}`
-                const key = String(id || `${home}-${away}-${date}`)
-
-                if (!seenFixtures.has(key) && home && away) {
-                  seenFixtures.add(key)
-                  sportFixtures.push(fixture)
-                }
-              })
-
-              if (url.includes('&page=') && fixtures.length === 0) break
-            } catch (err) {
-              console.warn('Today sport fetch failed', sport, err)
-            }
+          // Jeżeli pierwszy wariant endpointu zwrócił dużo sensownych meczów,
+          // nie trzeba mielić wszystkich wariantów. To nie jest limit wyników,
+          // tylko ochrona przed powtarzaniem tych samych endpointów.
+          if (sportFixtures.length > 0) {
+            // próbujemy jeszcze kolejne endpointy tylko jeśli obecny zwrócił mało
+            if (sportFixtures.length >= 20) break
           }
         }
 
@@ -12645,7 +12700,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         })
       }
 
-      let clean = collected
+      const clean = collected
         .filter(Boolean)
         .filter(card => card.home && card.away && card.home !== 'Gospodarze' && card.away !== 'Goście')
         .filter(card => getBetAiCardLocalDateV1078(card) === today)
@@ -12655,20 +12710,21 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         const saved = await loadSavedAiTipsFromDb()
         if (saved.length) {
           setLiveCards([])
-          setStatusText(`API nie pobrało nowych meczów, ale wczytałem ${saved.length} zapisanych typów na dziś z bazy.`)
+          setSelectedId(saved[0]?.id || '')
+          setStatusText(`Nie pobrałem nowych meczów z API, ale wczytałem ${saved.length} zapisanych typów na dziś z bazy.`)
           return
         }
 
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Brak dzisiejszych meczów z API (${debug.join(', ') || '0'}). Spróbuj później albo sprawdź endpoint API-Sports.`)
+        setStatusText(`Brak dzisiejszych meczów z API. Endpoint zwrócił: ${debug.slice(0, 12).join(', ') || '0'}.`)
         return
       }
 
       setLiveCards(clean)
       setSelectedId(clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Pobrano ${clean.length} dzisiejszych typów AI. Lista jest ułożona od najwcześniejszej godziny do najpóźniejszej.`)
+      setStatusText(`Pobrano ${clean.length} dzisiejszych typów AI. Lista od najwcześniejszej do najpóźniejszej godziny.`)
 
       await saveCardsToJournal(clean.filter(card => card.source !== 'Bet+AI fallback'))
       await loadSavedAiTipsFromDb()
@@ -12676,6 +12732,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const saved = await loadSavedAiTipsFromDb()
       if (saved.length) {
         setLiveCards([])
+        setSelectedId(saved[0]?.id || '')
         setStatusText(`Błąd API Typów AI: ${err?.message || err}. Wczytuję zapisane typy na dziś z bazy.`)
       } else {
         setLiveCards([])
@@ -12765,7 +12822,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   </div>
   <div className="ai-actions-inline-v1071">
     <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież dziś'}
+      ⟳ {loadingAi ? 'Pobieram...' : 'Odśwież dziś'}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
