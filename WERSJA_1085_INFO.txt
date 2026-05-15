@@ -1,0 +1,5 @@
+Wersja 1085
+- start z 1084
+- usuniety package-lock.json, zeby Netlify dzialal jak w paczce 1082/1083
+- zostawione: zapis Typy AI do bazy, Mecze Result, Ligi i Statystyki
+- bez node_modules i bez dist
