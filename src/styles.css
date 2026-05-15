@@ -45699,3 +45699,78 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1068 */
+
+
+/* ==========================================================================
+   WERSJA 1069 — HERO TOP CROP FIX
+   ========================================================================== */
+
+/*
+  Problem:
+  Banner 3:1 był w kontenerze 276px i object-fit: cover centrował obraz,
+  przez co ucinało górę napisu "Typy AI".
+
+  Fix:
+  Zostaje ten sam baner, ta sama wysokość, ale crop idzie od góry.
+  Dzięki temu tytuł i tekst są widoczne.
+*/
+
+.ai-exact-hero-v1062,
+.ai-exact-hero-v1065,
+.ai-exact-hero-v1067,
+.ai-exact-hero-v1068,
+.ai-exact-hero-v1069{
+  height:276px !important;
+  min-height:276px !important;
+  max-height:276px !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+}
+
+.ai-exact-hero-v1062 img,
+.ai-exact-hero-v1065 img,
+.ai-exact-hero-v1067 img,
+.ai-exact-hero-v1068 img,
+.ai-exact-hero-v1069 img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center top !important;
+  display:block !important;
+}
+
+/* Na mniejszych ekranach nadal nie ucina góry */
+@media (max-width:1200px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067,
+  .ai-exact-hero-v1068,
+  .ai-exact-hero-v1069{
+    height:240px !important;
+    min-height:240px !important;
+    max-height:240px !important;
+  }
+
+  .ai-exact-hero-v1062 img,
+  .ai-exact-hero-v1065 img,
+  .ai-exact-hero-v1067 img,
+  .ai-exact-hero-v1068 img,
+  .ai-exact-hero-v1069 img{
+    object-position:center top !important;
+  }
+}
+
+@media (max-width:760px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067,
+  .ai-exact-hero-v1068,
+  .ai-exact-hero-v1069{
+    height:190px !important;
+    min-height:190px !important;
+    max-height:190px !important;
+    border-radius:20px !important;
+  }
+}
+
+/* KONIEC WERSJI 1069 */
