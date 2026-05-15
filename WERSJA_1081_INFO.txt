@@ -1,0 +1,23 @@
+WERSJA 1081 — TYPY AI TODAY WIDE FETCH BUFFER
+
+Zrobione:
+- Nadal pokazuje tylko mecze na dzisiejszą datę lokalną.
+- Pobieranie z API jest szersze:
+  * wczoraj
+  * dzisiaj
+  * jutro
+  * daysAhead 1/2/3
+  * zakres od wczoraj 00:00 do jutro 23:59
+- Po pobraniu wszystko jest filtrowane lokalnie do dzisiaj.
+- To naprawia przypadek, gdzie API-Sports/Netlify zwraca część meczów w UTC i przez to wypadają z dzisiejszej daty.
+- Nadal bez sztucznego limitu listy wyników.
+- Dalej jest zabezpieczenie przed wiecznym mieleniem.
+- Zapisuje typy do istniejącej tabeli tips.
+- Kafelków sportów nie ruszano.
+- Banera nie ruszano.
+- UI nie ruszano.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/JS.
+Marker opcjonalny:
+supabase/version_1081_typy_ai_today_wide_fetch_buffer.sql
