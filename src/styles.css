@@ -46044,3 +46044,19 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1073 */
+
+
+/* ==========================================================================
+   WERSJA 1075 — USUNIĘTY PASEK STATUSU "POBRANO TYPÓW AI"
+   ========================================================================== */
+
+.ai-center-status-v747{
+  display:none !important;
+}
+
+/* zacieśnienie miejsca po status barze */
+.ai-center-grid-v747{
+  margin-top:0 !important;
+}
+
+/* KONIEC WERSJI 1075 */

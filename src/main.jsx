@@ -12623,10 +12623,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMinEv(-8); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
-
-      <div className="ai-center-status-v747">{statusText}{lastRefresh ? ` • ${lastRefresh}` : ''}</div>
-
-      <div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>
+<div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
