@@ -1,0 +1,23 @@
+WERSJA 1078 — TYPY AI NA DZIŚ / FULL DAY / SORTED
+
+Zrobione:
+- Zakładka działa jako "Typy AI na dziś".
+- Pokazuje tylko mecze z dzisiejszej daty lokalnej.
+- Po północy automatycznie używa nowej daty dzisiejszej.
+- Pobiera dzisiejszy zakres od 00:00 do przed północą.
+- Bez sztucznych limitów listy.
+- Paginacja idzie page=1..100 i kończy daną paginację dopiero na pustej stronie.
+- Lista jest sortowana po czasie meczu:
+  najwcześniejszy mecz -> najpóźniejszy mecz.
+- Typy są zapisywane do istniejącej tabeli tips.
+- Po zapisie są ponownie wczytywane z bazy, tylko na dziś.
+- Jeżeli API nie zwróci dzisiejszych meczów, pokazuje zapisane dzisiejsze typy z bazy.
+- Nie dobiera jutra/30 dni.
+- Kafelków sportów nie ruszano.
+- Banera nie ruszano.
+- Wyglądu nie ruszano poza tekstem zakładki.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. Używana jest istniejąca tabela tips.
+Marker opcjonalny:
+supabase/version_1078_typy_ai_today_only_full_day_sorted.sql

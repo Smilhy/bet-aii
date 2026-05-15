@@ -12227,6 +12227,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [minProb, setMinProb] = useState(55)
   const [minEv, setMinEv] = useState(-8)
   const [liveCards, setLiveCards] = useState([])
+  const [savedAiCards, setSavedAiCards] = useState([])
+  const aiBootDoneRef = useRef(false)
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
@@ -12338,45 +12340,53 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return card
   }
 
+
+  const mapAiTipRowToCard = (t, index = 0) => ({
+    id: String(t.ai_external_key || t.id || index),
+    sport: 'Piłka nożna',
+    league: t.league || t.league_name || t.country || 'Liga',
+    country: t.country || 'Baza',
+    home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
+    away: t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away',
+    matchName: t.match_name || t.match || `${t.team_home || 'Home'} vs ${t.team_away || 'Away'}`,
+    date: formatDate(t.event_time || t.kickoff_time || t.match_time || t.created_at),
+    rawDate: t.event_time || t.kickoff_time || t.match_time || t.created_at,
+    market: t.market || t.bet_type || 'Typ AI',
+    prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
+    odds: Number(t.odds || t.course || 1.8).toFixed(2),
+    aiScore: Math.round(Number(t.ai_score || t.ai_confidence || t.confidence || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).aiScore)),
+    probability: Math.round(Number(t.probability || t.ai_score || t.ai_confidence || 60)),
+    ev: Math.round(Number(t.value_score ?? buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).ev)),
+    risk: t.risk_level || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).risk,
+    status: t.status || t.result || 'pending',
+    scoreHome: Number(t.live_score_home || 0),
+    scoreAway: Number(t.live_score_away || 0),
+    kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at),
+    source: 'Supabase Journal',
+    formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
+    formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
+    confidenceText: 'ZAPISANY TYP',
+    curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: t.risk_level || 'Średnie' }),
+    analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
+  })
+
   const dbCards = useMemo(() => {
     return (tips || [])
       .filter(t => String(t.ai_source || t.source || '').includes('ai') || String(t.source || '').includes('live_ai'))
-      .map((t, index) => ({
-        id: String(t.ai_external_key || t.id || index),
-        sport: 'Piłka nożna',
-        league: t.league || t.league_name || t.country || 'Liga',
-        country: t.country || 'Baza',
-        home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
-        away: t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away',
-        matchName: t.match_name || t.match || `${t.team_home || 'Home'} vs ${t.team_away || 'Away'}`,
-        date: formatDate(t.event_time || t.kickoff_time || t.match_time || t.created_at),
-        rawDate: t.event_time || t.kickoff_time || t.match_time || t.created_at,
-        market: t.market || t.bet_type || 'Typ AI',
-        prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
-        odds: Number(t.odds || t.course || 1.8).toFixed(2),
-        aiScore: Math.round(Number(t.ai_score || t.ai_confidence || t.confidence || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).aiScore)),
-        ev: Math.round(Number(t.value_score ?? buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).ev)),
-        risk: t.risk_level || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).risk,
-        status: t.status || t.result || 'pending',
-        scoreHome: Number(t.live_score_home || 0),
-        scoreAway: Number(t.live_score_away || 0),
-        kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at),
-        source: 'Supabase Journal',
-        formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
-        formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
-        confidenceText: 'ZAPISANY TYP',
-        curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: t.risk_level || 'Średnie' }),
-        analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
-      }))
+      .map((t, index) => mapAiTipRowToCard(t, index))
   }, [tips])
 
   const allCards = useMemo(() => {
     const map = new Map()
-    ;[...liveCards, ...dbCards].forEach(card => {
-      if (!map.has(card.id)) map.set(card.id, card)
+    ;[...liveCards, ...savedAiCards, ...dbCards].forEach(card => {
+      const key = `${card.id}|||${card.market}|||${card.prediction}`
+      if (!map.has(key)) map.set(key, card)
     })
+
     return Array.from(map.values())
-  }, [liveCards, dbCards])
+      .filter(card => isBetAiTodayCardV1078(card))
+      .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+  }, [liveCards, savedAiCards, dbCards])
 
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -12436,7 +12446,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function saveCardsToJournal(cards = []) {
     if (!isSupabaseConfigured || !supabase || !cards.length) return
-    const payload = cards.slice(0, 40).map(card => ({
+    const payload = cards.map(card => ({
       ai_external_key: String(card.id),
       ai_source: 'real_ai_engine',
       source: 'live_ai_engine',
@@ -12495,81 +12505,195 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }
 
+
+
+  const getBetAiTodayLocalDateV1078 = () => {
+    const d = new Date()
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
+  const getBetAiTomorrowLocalDateV1078 = () => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
+  const getBetAiCardLocalDateV1078 = card => {
+    const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
+    if (!raw) return ''
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+    return String(raw).slice(0, 10)
+  }
+
+  const getBetAiTimeValueV1078 = card => {
+    const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) return d.getTime()
+    const time = String(card?.date || raw || '').match(/(\d{1,2}):(\d{2})/)
+    if (time) return Number(time[1]) * 60 + Number(time[2])
+    return 9999999999999
+  }
+
+  const isBetAiTodayCardV1078 = card => getBetAiCardLocalDateV1078(card) === getBetAiTodayLocalDateV1078()
+
+  async function loadSavedAiTipsFromDb() {
+    if (!isSupabaseConfigured || !supabase) return []
+    const today = getBetAiTodayLocalDateV1078()
+    const tomorrow = getBetAiTomorrowLocalDateV1078()
+
+    try {
+      const { data, error } = await supabase
+        .from('tips')
+        .select('*')
+        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
+        .gte('event_time', `${today}T00:00:00`)
+        .lt('event_time', `${tomorrow}T00:00:00`)
+        .order('event_time', { ascending: true })
+
+      if (error) throw error
+
+      const mapped = (data || [])
+        .map((row, index) => mapAiTipRowToCard(row, index))
+        .filter(card => getBetAiCardLocalDateV1078(card) === today)
+        .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+
+      setSavedAiCards(mapped)
+      if (mapped.length && !selectedId) setSelectedId(mapped[0].id)
+      return mapped
+    } catch (err) {
+      console.warn('AI saved today tips load skipped:', err?.message || err)
+      return []
+    }
+  }
+
+
   async function fetchLiveAiPicks() {
     setLoadingAi(true)
-    setStatusText('Pobieram mecze piłkarskie i wybieram najlepsze rynki według Twoich widełek...')
+    setStatusText('Pobieram wszystkie dzisiejsze mecze piłkarskie i układam je od najwcześniejszej godziny...')
     try {
       const sportsToFetch = ['Piłka nożna']
-
       const collected = []
       const debug = []
+      const today = getBetAiTodayLocalDateV1078()
+      const tomorrow = getBetAiTomorrowLocalDateV1078()
 
       for (const sport of sportsToFetch) {
-        const urls = [
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&country=${encodeURIComponent('Wszystkie')}&league=${encodeURIComponent('Wszystkie ligi')}&daysAhead=14&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&daysAhead=14&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&days=14`,
-          `/.netlify/functions/get-sports-events?type=${encodeURIComponent(sport)}&daysAhead=14`
+        const todayUrls = [
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&day=${today}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}&to=${today}&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}T00:00:00&to=${tomorrow}T00:00:00&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&daysAhead=1&realOnly=1&allLeagues=1`
         ]
 
-        let sportFixtures = []
-        for (const url of urls) {
-          try {
-            const res = await fetch(url, { cache: 'no-store' })
-            const json = await res.json().catch(() => ({}))
-            const fixtures = extractBetAiFixturesV1053(json)
-            debug.push(`${sport}:${fixtures.length}`)
-            if (fixtures.length) {
-              sportFixtures = fixtures
-              break
+        const seenFixtures = new Set()
+        const sportFixtures = []
+
+        for (const baseUrl of todayUrls) {
+          const urls = [baseUrl]
+          for (let page = 1; page <= 100; page += 1) {
+            urls.push(`${baseUrl}&page=${page}`)
+          }
+
+          for (const url of urls) {
+            try {
+              const res = await fetch(url, { cache: 'no-store' })
+              if (!res.ok) {
+                debug.push(`http${res.status}`)
+                continue
+              }
+
+              const json = await res.json().catch(() => ({}))
+              const fixtures = extractBetAiFixturesV1053(json)
+              debug.push(`${fixtures.length}`)
+
+              fixtures.forEach(fixture => {
+                const home = fixture.home || fixture.home_team || fixture.team_home || fixture.homeTeam || ''
+                const away = fixture.away || fixture.away_team || fixture.team_away || fixture.awayTeam || ''
+                const date = fixture.commence_time || fixture.event_time || fixture.kickoff_time || fixture.match_time || fixture.date || ''
+                const id = fixture.id || fixture.fixture_id || fixture.external_fixture_id || `${home}-${away}-${date}`
+                const key = String(id || `${home}-${away}-${date}`)
+
+                if (!seenFixtures.has(key) && home && away) {
+                  seenFixtures.add(key)
+                  sportFixtures.push(fixture)
+                }
+              })
+
+              if (url.includes('&page=') && fixtures.length === 0) break
+            } catch (err) {
+              console.warn('Today sport fetch failed', sport, err)
             }
-          } catch (err) {
-            console.warn('Sport fetch failed', sport, err)
           }
         }
 
-        sportFixtures
-          .slice(0, activeSport === 'Wszystkie' ? 14 : 42)
-          .forEach((m, idx) => collected.push(buildCardFromMatch(m, idx, sport)))
+        sportFixtures.forEach((m, idx) => {
+          const card = buildCardFromMatch(m, idx, sport)
+          if (card && getBetAiCardLocalDateV1078(card) === today) collected.push(card)
+        })
       }
 
       let clean = collected
         .filter(Boolean)
         .filter(card => card.home && card.away && card.home !== 'Gospodarze' && card.away !== 'Goście')
-        .sort((a, b) => {
-          const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
-          return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
-            || ((Number(b.ev || 0) > 0 ? 1 : 0) - (Number(a.ev || 0) > 0 ? 1 : 0))
-            || Number(b.ev || 0) - Number(a.ev || 0)
-            || Number(b.aiScore || 0) - Number(a.aiScore || 0)
-        })
-        .slice(0, 80)
+        .filter(card => getBetAiCardLocalDateV1078(card) === today)
+        .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       if (!clean.length) {
-        clean = buildBetAiFallbackMatchesV1053()
-          .filter(m => activeSport === 'Wszystkie' || m.sport === activeSport)
-          .map((m, idx) => buildCardFromMatch(m, idx, m.sport))
-          .sort((a, b) => Number(b.ev || 0) - Number(a.ev || 0))
-        setStatusText(`API nie zwróciło dziś realnych meczów dla filtra (${debug.join(', ') || '0'}). Pokazuję awaryjny widok AI, żeby panel i statystyki działały. Spróbuj odświeżyć później.`)
-      } else {
-        setStatusText(`Pobrano ${clean.length} typów AI. Kliknij mecz, prawa analiza zmieni się automatycznie. Ustaw widełki kursu, prawdopodobieństwa i EV.`)
+        const saved = await loadSavedAiTipsFromDb()
+        if (saved.length) {
+          setLiveCards([])
+          setStatusText(`API nie pobrało nowych meczów, ale wczytałem ${saved.length} zapisanych typów na dziś z bazy.`)
+          return
+        }
+
+        setLiveCards([])
+        setSelectedId('')
+        setStatusText(`Brak dzisiejszych meczów z API (${debug.join(', ') || '0'}). Spróbuj później albo sprawdź endpoint API-Sports.`)
+        return
       }
 
       setLiveCards(clean)
       setSelectedId(clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      saveCardsToJournal(clean.filter(card => card.source !== 'Bet+AI fallback'))
+      setStatusText(`Pobrano ${clean.length} dzisiejszych typów AI. Lista jest ułożona od najwcześniejszej godziny do najpóźniejszej.`)
+
+      await saveCardsToJournal(clean.filter(card => card.source !== 'Bet+AI fallback'))
+      await loadSavedAiTipsFromDb()
     } catch (err) {
-      const fallback = buildBetAiFallbackMatchesV1053()
-        .filter(m => activeSport === 'Wszystkie' || m.sport === activeSport)
-        .map((m, idx) => buildCardFromMatch(m, idx, m.sport))
-      setLiveCards(fallback)
-      setSelectedId(fallback[0]?.id || '')
-      setStatusText(`Błąd API Typów AI: ${err?.message || err}. Pokazuję awaryjny widok AI, żeby panel nie był pusty.`)
+      const saved = await loadSavedAiTipsFromDb()
+      if (saved.length) {
+        setLiveCards([])
+        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Wczytuję zapisane typy na dziś z bazy.`)
+      } else {
+        setLiveCards([])
+        setSelectedId('')
+        setStatusText(`Błąd API Typów AI: ${err?.message || err}. Brak zapisanych typów na dziś.`)
+      }
     } finally {
       setLoadingAi(false)
     }
   }
+
+  useEffect(() => {
+    if (aiBootDoneRef.current) return
+    aiBootDoneRef.current = true
+    loadSavedAiTipsFromDb().finally(() => {
+      fetchLiveAiPicks()
+    })
+  }, [])
 
   return (
     <section className="ai-center-page-v747">
@@ -12628,7 +12752,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
             {[
-              ['live','Pre-match typy'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
+              ['live','Typy AI na dziś'], ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
           </div>
   <div className="ai-search-compact-v1073">
@@ -12641,7 +12765,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   </div>
   <div className="ai-actions-inline-v1071">
     <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicks} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
+      ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież dziś'}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
@@ -12664,7 +12788,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów w tym filtrze.</b><p>Spróbuj zmienić ustawienia filtrów albo kliknij Reset filtrów.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów AI na dziś.</b><p>Dzisiejsze mecze pojawią się automatycznie po pobraniu z API.</p></div>}
             </div>
           )}
 
@@ -12722,7 +12846,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               </div>
             </>
           ) : (
-            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Odśwież AI i kliknij dowolny mecz.</p></div>
+            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Odśwież dziś i kliknij dowolny mecz.</p></div>
           )}
         </aside>
         )}
@@ -21728,7 +21852,7 @@ function App() {
 
             <div className="feed">
               {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
-                <div className="empty-state">Brak typów w tym filtrze.</div>
+                <div className="empty-state">Brak typów AI na dziś.</div>
               )}
             </div>
 
