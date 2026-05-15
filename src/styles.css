@@ -45561,3 +45561,73 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1066 */
+
+
+/* ==========================================================================
+   WERSJA 1067 — HERO NIE UCINA NAPISU TYPY AI
+   ========================================================================== */
+
+/* Kafelków sportów nie ruszamy. Poprawiony tylko banner hero. */
+.ai-exact-hero-v1062,
+.ai-exact-hero-v1065,
+.ai-exact-hero-v1067{
+  width:100% !important;
+  height:clamp(250px, 18.5vw, 315px) !important;
+  min-height:250px !important;
+  max-height:315px !important;
+  margin:0 0 14px !important;
+  padding:0 !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(34,245,223,.28) !important;
+  background:#020b14 !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(34,245,223,.08) !important;
+}
+
+.ai-exact-hero-v1062 img,
+.ai-exact-hero-v1065 img,
+.ai-exact-hero-v1067 img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center 42% !important;
+}
+
+/* Lekko mniej ramki nad/ pod hero */
+.ai-kpi-grid-v747{
+  margin-top:0 !important;
+}
+
+@media (min-width:1700px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067{
+    height:300px !important;
+    max-height:300px !important;
+  }
+}
+
+@media (max-width:1200px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067{
+    height:245px !important;
+  }
+}
+
+@media (max-width:760px){
+  .ai-exact-hero-v1062,
+  .ai-exact-hero-v1065,
+  .ai-exact-hero-v1067{
+    height:205px !important;
+    min-height:205px !important;
+    border-radius:20px !important;
+  }
+}
+
+/* KONIEC WERSJI 1067 */
