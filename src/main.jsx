@@ -18780,7 +18780,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 function TopTipstersView() {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
-  const [selectedTopSport, setSelectedTopSport] = useState('Wszystkie')
+  const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
 
   const isBlockedTopTipsterProfile = (profile = {}) => {
     const values = [
@@ -18910,7 +18910,6 @@ function TopTipstersView() {
   }, [profiles])
 
   const sportCategoryDefs = [
-    { label: 'Wszystkie', icon: 'grid', enabled: true, soon: false },
     { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
     { label: 'Tenis', icon: '🎾', enabled: false, soon: true },
     { label: 'Koszykówka', icon: '🏀', enabled: false, soon: true },
