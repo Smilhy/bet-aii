@@ -12376,16 +12376,48 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .map((t, index) => mapAiTipRowToCard(t, index))
   }, [tips])
 
+
   const allCards = useMemo(() => {
+    const todayDate = (() => {
+      const d = new Date()
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    })()
+
+    const cardDate = card => {
+      const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
+      if (!raw) return ''
+      const d = new Date(raw)
+      if (!Number.isNaN(d.getTime())) {
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        return `${y}-${m}-${day}`
+      }
+      return String(raw).slice(0, 10)
+    }
+
+    const timeValue = card => {
+      const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
+      const d = new Date(raw)
+      if (!Number.isNaN(d.getTime())) return d.getTime()
+      const time = String(card?.date || raw || '').match(/(\d{1,2}):(\d{2})/)
+      if (time) return Number(time[1]) * 60 + Number(time[2])
+      return 9999999999999
+    }
+
     const map = new Map()
-    ;[...liveCards, ...savedAiCards, ...dbCards].forEach(card => {
-      const key = `${card.id}|||${card.market}|||${card.prediction}`
+    ;[...(liveCards || []), ...(savedAiCards || []), ...(dbCards || [])].forEach(card => {
+      if (!card) return
+      const key = `${card.id || card.matchName || card.home}-${card.market || ''}-${card.prediction || ''}`
       if (!map.has(key)) map.set(key, card)
     })
 
     return Array.from(map.values())
-      .filter(card => isBetAiTodayCardV1078(card))
-      .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+      .filter(card => cardDate(card) === todayDate)
+      .sort((a, b) => timeValue(a) - timeValue(b))
   }, [liveCards, savedAiCards, dbCards])
 
   const visibleCards = useMemo(() => {
@@ -12570,7 +12602,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiCards(mapped)
-      if (mapped.length && !selectedId) setSelectedId(mapped[0].id)
+      if (mapped.length) setSelectedId(prev => prev || mapped[0].id)
       return mapped
     } catch (err) {
       console.warn('AI saved today tips load skipped:', err?.message || err)
@@ -12747,9 +12779,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   useEffect(() => {
     if (aiBootDoneRef.current) return
     aiBootDoneRef.current = true
-    loadSavedAiTipsFromDb().finally(() => {
-      fetchLiveAiPicks()
-    })
+    Promise.resolve()
+      .then(() => loadSavedAiTipsFromDb())
+      .catch(err => console.warn('AI boot load failed', err))
+      .finally(() => {
+        fetchLiveAiPicks().catch(err => {
+          console.warn('AI boot fetch failed', err)
+          setLoadingAi(false)
+        })
+      })
   }, [])
 
   return (
