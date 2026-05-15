@@ -1,0 +1,17 @@
+WERSJA 1074 — TYPY AI SEARCH VARIABLE FIX
+
+Naprawione:
+- Błąd wejścia do zakładki Typy AI:
+  searchTerm is not defined
+- Małe pole szukania używa teraz poprawnych zmiennych:
+  search
+  setSearch
+- Kafelków sportów nie ruszano.
+- Banera nie ruszano.
+- Przyciski zostają obok dolnych zakładek.
+- Logiki filtrowania nie ruszano.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/JSX fix.
+Marker opcjonalny:
+supabase/version_1074_typy_ai_search_variable_fix.sql

@@ -12638,8 +12638,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     <input
       type="search"
       placeholder="Szukaj..."
-      value={searchTerm}
-      onChange={e => setSearchTerm(e.target.value)}
+      value={search}
+      onChange={e => setSearch(e.target.value)}
     />
   </div>
   <div className="ai-actions-inline-v1071">
