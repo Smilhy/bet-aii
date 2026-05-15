@@ -1,0 +1,5 @@
+Wersja 1090:
+- Zmieniono etykiety AI Score na Ocena AI.
+- Punktacja jakości typu pokazuje teraz format /100 zamiast %, żeby nie mylić jej z prawdopodobieństwem.
+- Prawdopodobieństwo rynku dalej zostaje jako procent.
+- Zachowany działający schemat Netlify: bez package-lock.json, bez node_modules, bez dist.

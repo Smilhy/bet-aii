@@ -919,6 +919,8 @@ exports.handler = async function(event) {
     const parts = toDateParts(isoDate)
     const leagueName = firstText(item?.league?.name, item?.competition?.name, item?.category?.name, item?.event?.name, cfg.sportName)
     const countryName = firstText(item?.league?.country, item?.country?.name, item?.country, country)
+    const statusShort = firstText(item?.fixture?.status?.short, item?.status?.short, item?.status)
+    const statusLong = firstText(item?.fixture?.status?.long, item?.status?.long, item?.status_text)
     return {
       id: firstText(item?.fixture?.id, item?.game?.id, item?.fight?.id, item?.id, `${cfg.key}-${index}-${home}-${away}-${isoDate}`).replace(/\s+/g, '-'),
       sport: cfg.sportName,
@@ -930,6 +932,9 @@ exports.handler = async function(event) {
       date: parts.date,
       time: parts.time,
       commence_time: isoDate,
+      status_short: statusShort,
+      status_long: statusLong,
+      status_elapsed: item?.fixture?.status?.elapsed ?? item?.status?.elapsed ?? null,
       source: 'api-football',
       apiFixtureId: firstText(item?.fixture?.id, item?.id),
       homeTeamId: firstText(item?.teams?.home?.id, item?.home?.id),
@@ -1329,12 +1334,12 @@ exports.handler = async function(event) {
       dayResponses.flat()
         .map((item, index) => mapApiSportsItemToFixture(item, index, cfg))
         .filter(item => {
-          // Dla "league-today" pokazujemy WSZYSTKIE dzisiejsze mecze ligi,
-          // nie tylko przyszłe. Inaczej po rozpoczęciu pierwszego spotkania UI wygląda jak zepsute.
-          if (mode === 'league-today') return true
+          // Nie pokazujemy meczów rozpoczętych. Zakładki i Dodaj typ mają oferować tylko pre-match.
+          const short = String(item.status_short || '').toUpperCase()
+          if (['1H','HT','2H','ET','BT','P','LIVE','FT','AET','PEN'].includes(short)) return false
           const kickMs = Date.parse(item.commence_time || '')
           if (!Number.isFinite(kickMs)) return true
-          return kickMs > Date.now() + 60 * 1000
+          return kickMs > Date.now() + 2 * 60 * 1000
         })
         .filter(item => allLeagues || matchesRequestedFootballScope(item))
         .filter(matchesRequestedFootballText)

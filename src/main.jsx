@@ -12089,7 +12089,7 @@ function AiResultsView({ tips = [] }) {
         <div>
           <span>AI MODEL JOURNAL</span>
           <h1>Mecze Result</h1>
-          <p>Każdy typ wygenerowany przez Typy AI trafia tutaj: sport, liga, mecz, predykcja, kurs, AI Score i wynik po rozliczeniu.</p>
+          <p>Każdy typ wygenerowany przez Typy AI trafia tutaj: sport, liga, mecz, predykcja, kurs, ocena AI i wynik po rozliczeniu.</p>
         </div>
         <div className="ai-results-kpis-v745">
           <b>{filteredRows.length}</b><small>typów w dzienniku</small>
@@ -12114,7 +12114,7 @@ function AiResultsView({ tips = [] }) {
 
       <div className="ai-results-table-wrap-v745">
         <div className="ai-results-table-v745">
-          <div className="head"><b>DATE</b><b>SPORT</b><b>DIVISION</b><b>HOME TEAM</b><b>SCORE</b><b>AWAY TEAM</b><b>PREDICTION</b><b>ODDS</b><b>AI</b><b>RESULT</b></div>
+          <div className="head"><b>DATE</b><b>SPORT</b><b>DIVISION</b><b>HOME TEAM</b><b>SCORE</b><b>AWAY TEAM</b><b>PREDICTION</b><b>ODDS</b><b>OCENA AI</b><b>RESULT</b></div>
           {filteredRows.length ? filteredRows.map(row => (
             <div key={row.id}>
               <span>{row.dateNum}<small>{row.time}</small></span>
@@ -12125,7 +12125,7 @@ function AiResultsView({ tips = [] }) {
               <span>{row.away}</span>
               <span>{row.prediction}</span>
               <span>{row.odds}</span>
-              <span>{row.aiScore ? `${row.aiScore}%` : '-'}</span>
+              <span>{row.aiScore ? `${row.aiScore}/100` : '-'}</span>
               <em className={row.result.toLowerCase()}>{row.result}</em>
             </div>
           )) : (
@@ -12197,13 +12197,22 @@ function getBetAiSportMetaV1051(sport = '') {
   return BETAI_SPORT_META_V1051[sport] || { icon: '✦', label: sport || 'Sport' }
 }
 
-function getBetAiKickoffStateV1051(rawDate) {
+function getBetAiKickoffStateV1051(rawDate, meta = {}) {
+  const short = String(meta?.status_short || meta?.statusShort || meta?.fixture_status_short || '').trim().toUpperCase()
+  const long = String(meta?.status_long || meta?.statusLong || meta?.fixture_status || meta?.status || '').trim().toLowerCase()
+
+  // API-FOOTBALL: NS/TBD/PST = przed meczem, 1H/HT/2H/ET/... = rozpoczęty, FT/AET/PEN = zakończony.
+  if (['FT', 'AET', 'PEN'].includes(short) || long.includes('match finished') || long.includes('finished')) return 'finished'
+  if (['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'LIVE'].includes(short) || long.includes('half') || long.includes('live') || long.includes('progress')) return 'live'
+  if (['NS', 'TBD', 'PST', 'CANC', 'ABD'].includes(short)) return 'prematch'
+
   const t = rawDate ? new Date(rawDate).getTime() : 0
   if (!t || Number.isNaN(t)) return 'prematch'
   const now = Date.now()
   const diff = t - now
-  if (diff > 0) return 'prematch'
-  if (diff > -135 * 60 * 1000) return 'live'
+  // Nie proponujemy meczów, które już wystartowały lub startują praktycznie teraz.
+  if (diff > 2 * 60 * 1000) return 'prematch'
+  if (diff > -150 * 60 * 1000) return 'live'
   return 'finished'
 }
 
@@ -12354,6 +12363,9 @@ function extractBetAiFixturesV1053(payload = {}) {
       commence_time: item.commence_time || fixture?.date || item.starting_at,
       live_score_home: item.live_score_home ?? item.score_home ?? goals?.home ?? item.home_score,
       live_score_away: item.live_score_away ?? item.score_away ?? goals?.away ?? item.away_score,
+      status_short: item.status_short || item.statusShort || fixture?.status?.short || item.status?.short || item.status,
+      status_long: item.status_long || item.statusLong || fixture?.status?.long || item.status?.long || item.status_text,
+      status_elapsed: item.status_elapsed ?? item.elapsed ?? fixture?.status?.elapsed ?? item.status?.elapsed,
       sport: item.sport || item.sport_name || item.sport_key
     }
 
@@ -12493,7 +12505,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const sport = 'Piłka nożna'
     const league = m.league || m.league_name || m.competition || m.country || 'Piłka nożna'
     const eventTime = m.commence_time || m.event_time || m.kickoff_time || m.match_time || m.date || new Date(Date.now() + (index + 4) * 60 * 60 * 1000).toISOString()
-    const kickoffState = getBetAiKickoffStateV1051(eventTime)
+    const kickoffState = getBetAiKickoffStateV1051(eventTime, m)
     const seed = `${sport}-${league}-${home}-${away}-${eventTime}`
     const best = chooseBestFootballMarket(m, seed, home, away)
     const forms = getBetAiFormPairV1052(seed)
@@ -12520,6 +12532,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       status: 'pending',
       scoreHome: Number(m.live_score_home || m.score_home || 0),
       scoreAway: Number(m.live_score_away || m.score_away || 0),
+      statusShort: m.status_short || m.statusShort || '',
+      statusLong: m.status_long || m.statusLong || '',
       kickoffState,
       source: m.fallback ? 'Bet+AI fallback' : 'API-Sports',
       formHome: forms.home,
@@ -12554,7 +12568,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     status: t.status || t.result || 'pending',
     scoreHome: Number(t.live_score_home || 0),
     scoreAway: Number(t.live_score_away || 0),
-    kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at),
+    kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
     source: 'Supabase Journal',
     formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
     formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
@@ -12585,6 +12599,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const q = search.trim().toLowerCase()
     return allCards
       .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
+      .filter(c => isBetAiPrematchAvailableV1091(c))
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
       .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
@@ -12606,6 +12621,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
   }, [visibleCards, selectedId])
+
+  const resultCards = useMemo(() => {
+    return allCards.filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+  }, [allCards])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -12638,7 +12657,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [allCards])
 
   async function saveCardsToJournal(cards = []) {
-    if (!isSupabaseConfigured || !supabase || !cards.length) return
+    const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
+    if (!isSupabaseConfigured || !supabase || !cardsToSave.length) return
 
     const nowIso = new Date().toISOString()
     const buildPayload = (card) => ({
@@ -12686,7 +12706,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       updated_at: nowIso,
     })
 
-    const payload = cards.map(buildPayload)
+    const payload = cardsToSave.map(buildPayload)
 
     const saveTipsOneByOne = async () => {
       let saved = 0
@@ -12725,12 +12745,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
 
     const saveLeagueCatalog = async () => {
-      const grouped = Array.from(new Map(cards.map(card => [`${card.sport}|||${card.league}`, {
+      const grouped = Array.from(new Map(cardsToSave.map(card => [`${card.sport}|||${card.league}`, {
         sport: card.sport,
         league: card.league,
         country: card.country || 'API-Sports',
         last_seen: nowIso,
-        tips_count: cards.filter(c => c.sport === card.sport && c.league === card.league).length
+        tips_count: cardsToSave.filter(c => c.sport === card.sport && c.league === card.league).length
       }])).values())
       if (!grouped.length) return
 
@@ -12850,6 +12870,23 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return getBetAiCardLocalDateV1078(card) === getBetAiSelectedLocalDateV1081(mode)
   }
 
+  function isBetAiSettledStatusV1091(card) {
+    return ['won','lost','void','win','loss','push'].includes(String(card?.status || card?.result || '').toLowerCase())
+  }
+
+  function isBetAiPrematchAvailableV1091(card) {
+    if (!card || isBetAiSettledStatusV1091(card)) return true
+    if ((card.kickoffState || 'prematch') !== 'prematch') return false
+    const raw = card.rawDate || card.event_time || card.kickoff_time || card.match_time || ''
+    const t = raw ? new Date(raw).getTime() : 0
+    if (!t || Number.isNaN(t)) return true
+    return t > Date.now() + 2 * 60 * 1000
+  }
+
+  function isBetAiStartedPendingV1091(card) {
+    return !isBetAiSettledStatusV1091(card) && !isBetAiPrematchAvailableV1091(card)
+  }
+
   function isBetAiTodayCardV1078(card) {
     return getBetAiCardLocalDateV1078(card) === getBetAiTodayLocalDateV1078()
   }
@@ -12877,6 +12914,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const seenMatch = new Set()
     return (cards || [])
       .filter(Boolean)
+      .filter(card => isBetAiPrematchAvailableV1091(card))
       .filter(card => Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086)
       .sort((a, b) => {
         const scoreA = Number(a.aiScore || 0) * 2 + Number(a.ev || 0) * 1.5 + Number(a.probability || 0)
@@ -13063,6 +13101,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .filter(Boolean)
         .filter(card => card.home && card.away && card.home !== 'Gospodarze' && card.away !== 'Goście')
         .filter(card => getBetAiCardLocalDateV1078(card) === today)
+        .filter(card => isBetAiPrematchAvailableV1091(card))
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       if (!clean.length) {
@@ -13135,7 +13174,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       </div>
       <div className="ai-kpi-grid-v747 ai-kpi-grid-premium-v1066">
         <div className="ai-kpi-card-v1066 ai-kpi-card--types-v1066"><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
-        <div className="ai-kpi-card-v1066 ai-kpi-card--score-v1066"><span>Śr. AI score</span><strong>{stats.avgScore}%</strong><small>jakość selekcji</small></div>
+        <div className="ai-kpi-card-v1066 ai-kpi-card--score-v1066"><span>Śr. ocena AI</span><strong>{stats.avgScore}/100</strong><small>jakość selekcji</small></div>
         <div className="ai-kpi-card-v1066 ai-kpi-card--ev-v1066"><span>Śr. EV</span><strong>{stats.avgEv >= 0 ? '+' : ''}{stats.avgEv}%</strong><small>wartość modelowa</small></div>
         <div className="ai-kpi-card-v1066 ai-kpi-card--winrate-v1066"><span>Win rate</span><strong>{stats.hitRate}%</strong><small>{stats.won}W / {stats.lost}L</small></div>
         <div className="ai-kpi-card-v1066 ai-kpi-card--pending-v1066"><span>Pending</span><strong>{stats.pending}</strong><small>czeka na wynik</small></div>
@@ -13184,8 +13223,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setSelectedId('') }}>Typy AI na dziś</button>
-            <button type="button" className={aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setSelectedId('') }}>Typy AI na jutro</button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś</button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro</button>
             {[
               ['results','Mecze Result'], ['stats','Statystyki'], ['leagues','Ligi']
             ].map(([key,label]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label}</button>)}
@@ -13215,7 +13254,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <div className="pick-top-v747">
                     <span className="pick-sport-v1051"><i>{getBetAiSportMetaV1051(card.sport).icon}</i>{card.sport}</span>
                     <em>{card.league}</em>
-                    <b>{card.aiScore}%</b>
+                    <b>{card.aiScore}/100</b>
                   </div>
                   <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
                   <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className={`kickoff-badge-v1051 ${card.kickoffState || 'prematch'}`}>{getBetAiKickoffLabelV1051(card.kickoffState)}</span></div>
@@ -13231,7 +13270,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747">
               <div className="ai-table-title-v747"><h3>Mecze Result</h3><span>Dziennik każdego typu AI</span></div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
-              {allCards.length ? allCards.map(card => (
+              {resultCards.length ? resultCards.map(card => (
                 <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id); setActivePanel('live') }}>
                   <span>{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span>{card.home}</span><span>{card.scoreHome} - {card.scoreAway}</span><span>{card.away}</span><span>{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{card.status}</span>
                 </div>
@@ -13244,7 +13283,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           {activePanel === 'leagues' && (
             <div className="ai-table-card-v747">
               <div className="ai-table-title-v747"><h3>Ligi i sporty</h3><span>Każdy typ dopisywany do statystyk ligi</span></div>
-              <div className="ai-league-table-v747 head"><span>Sport</span><span>Liga</span><span>Typy</span><span>Won</span><span>Lost</span><span>Pending</span><span>Avg AI</span></div>
+              <div className="ai-league-table-v747 head"><span>Sport</span><span>Liga</span><span>Typy</span><span>Won</span><span>Lost</span><span>Pending</span><span>Śr. ocena</span></div>
               {leagueRows.map(row => <div className="ai-league-table-v747" key={`${row.sport}-${row.league}`}><span>{row.sport}</span><span>{row.league}</span><span>{row.total}</span><span>{row.won}</span><span>{row.lost}</span><span>{row.pending}</span><span>{row.avg}%</span></div>)}
             </div>
           )}
@@ -13258,7 +13297,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <span className="label">WYBRANY TYP</span>
                 <h2>{selectedCard.home} vs {selectedCard.away}</h2>
                 <p>{selectedCard.sport} • {selectedCard.league} • {selectedCard.date} • {getBetAiKickoffLabelV1051(selectedCard.kickoffState)}</p>
-                <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}%</strong><span>AI SCORE</span></div>
+                <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}/100</strong><span>OCENA AI</span></div>
                 <div className="selected-pick-v747"><small>Najlepszy rynek</small><b>{selectedCard.prediction}</b><em>{selectedCard.market} • kurs {selectedCard.odds}</em></div>
               </div>
 
