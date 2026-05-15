@@ -34,19 +34,49 @@ function cfgForTip(tip) {
   const text = norm(`${tip.sport || ''} ${tip.league || ''} ${tip.league_name || ''}`)
   return SPORT_RESULT_APIS.find(c => c.match.some(x => text.includes(x))) || SPORT_RESULT_APIS[0]
 }
+function tipDateKey(tip) {
+  const raw = tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at || ''
+  const d = new Date(raw)
+  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  return String(raw || '').slice(0, 10)
+}
+function itemTeams(item = {}) {
+  const home = item?.teams?.home?.name || item?.teams?.home || item?.home?.name || item?.team?.home?.name || item?.fighters?.first?.name || item?.fighters?.home?.name || ''
+  const away = item?.teams?.away?.name || item?.teams?.visitors?.name || item?.teams?.away || item?.away?.name || item?.team?.away?.name || item?.fighters?.second?.name || item?.fighters?.away?.name || ''
+  return { home: String(home || ''), away: String(away || '') }
+}
+function sameMatchByNames(tip, item) {
+  const teams = itemTeams(item)
+  const home = tip.team_home || String(tip.match_name || '').split(' vs ')[0]
+  const away = tip.team_away || String(tip.match_name || '').split(' vs ')[1]
+  return includesName(teams.home, home) && includesName(teams.away, away)
+}
 async function fetchApiSportsResult(tip) {
   const cfg = cfgForTip(tip)
-  const id = tip.external_fixture_id
-  if (!id) return { cfg, item: null }
-  const url = `${cfg.host}${cfg.path}?id=${encodeURIComponent(id)}`
-  const res = await fetch(url, { headers: { 'x-apisports-key': APISPORTS_KEY } })
-  const text = await res.text()
-  let data = null
-  try { data = JSON.parse(text) } catch { data = null }
-  if (!res.ok) throw new Error(`${cfg.type} result API ${res.status}: ${text.slice(0, 160)}`)
-  const errors = data?.errors && typeof data.errors === 'object' ? Object.keys(data.errors) : []
-  if (errors.length) throw new Error(`${cfg.type} result API errors: ${JSON.stringify(data.errors).slice(0, 200)}`)
-  return { cfg, item: Array.isArray(data?.response) ? data.response[0] : null }
+  const directId = tip.external_fixture_id || tip.ai_external_key
+  const headers = { 'x-apisports-key': APISPORTS_KEY }
+
+  async function request(url) {
+    const res = await fetch(url, { headers })
+    const text = await res.text()
+    let data = null
+    try { data = JSON.parse(text) } catch { data = null }
+    if (!res.ok) throw new Error(`${cfg.type} result API ${res.status}: ${text.slice(0, 160)}`)
+    const errors = data?.errors && typeof data.errors === 'object' ? Object.keys(data.errors).filter(k => data.errors[k]) : []
+    if (errors.length) throw new Error(`${cfg.type} result API errors: ${JSON.stringify(data.errors).slice(0, 200)}`)
+    return Array.isArray(data?.response) ? data.response : []
+  }
+
+  if (directId && /^\d+$/.test(String(directId))) {
+    const rows = await request(`${cfg.host}${cfg.path}?id=${encodeURIComponent(directId)}`)
+    if (rows[0]) return { cfg, item: rows[0] }
+  }
+
+  // Fallback dla starszych zapisów bez external_fixture_id: szukamy po dacie i nazwach drużyn.
+  const date = tipDateKey(tip)
+  if (!date) return { cfg, item: null }
+  const rows = await request(`${cfg.host}${cfg.path}?date=${encodeURIComponent(date)}`)
+  return { cfg, item: rows.find(row => sameMatchByNames(tip, row)) || null }
 }
 function getStatus(item, cfg) {
   const raw = item?.fixture?.status?.short || item?.fixture?.status?.long || item?.game?.status?.short || item?.game?.status?.long || item?.status?.short || item?.status?.long || item?.status || item?.fight?.status || ''
@@ -84,6 +114,16 @@ function resolvePick(tip, homeScore, awayScore) {
   if (under) return total < Number(under[1].replace(',', '.')) ? 'won' : 'lost'
   if (pick.includes('btts yes') || pick.includes('obie strzelą') || pick.includes('obie strzela')) return (homeScore > 0 && awayScore > 0) ? 'won' : 'lost'
   if (pick.includes('btts no')) return (homeScore === 0 || awayScore === 0) ? 'won' : 'lost'
+  const handicap = pick.match(/([+-]\s*\d+(?:[.,]\d+)?)/)
+  if (handicap && (market.includes('handicap') || pick.includes('+') || pick.includes('-'))) {
+    const line = Number(handicap[1].replace(/\s+/g, '').replace(',', '.'))
+    if (Number.isFinite(line)) {
+      const adjustedHome = n(homeScore) + (isHome ? line : 0)
+      const adjustedAway = n(awayScore) + (isAway ? line : 0)
+      if (isHome) return adjustedHome > n(awayScore) ? 'won' : adjustedHome === n(awayScore) ? 'void' : 'lost'
+      if (isAway) return adjustedAway > n(homeScore) ? 'won' : adjustedAway === n(homeScore) ? 'void' : 'lost'
+    }
+  }
   if (pick.includes('nie przegra') || market.includes('double') || market.includes('podwójna') || market.includes('podwojna')) {
     if (homeScore === awayScore) return 'won'
     if (isHome) return homeScore > awayScore ? 'won' : 'lost'
@@ -110,7 +150,6 @@ exports.handler = async function () {
       .eq('ai_source', 'real_ai_engine')
       .eq('source', 'live_ai_engine')
       .in('status', ['pending','live'])
-      .not('external_fixture_id', 'is', null)
       .order('event_time', { ascending: true })
       .limit(150)
     if (error) throw error
@@ -135,6 +174,8 @@ exports.handler = async function () {
           live_score_home: n(score.home),
           live_score_away: n(score.away),
           live_status: statusRaw || 'FT',
+          result_status: status,
+          settlement_source: 'auto_ai_result_api',
           settled_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }

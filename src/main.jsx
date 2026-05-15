@@ -12308,9 +12308,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const seed = `${sport}-${league}-${home}-${away}-${eventTime}`
     const best = chooseBestFootballMarket(m, seed, home, away)
     const forms = getBetAiFormPairV1052(seed)
-    const id = String(m.id || m.fixture_id || m.external_fixture_id || seed)
+    const id = String(m.apiFixtureId || m.fixture_id || m.external_fixture_id || m.id || seed)
+    const externalFixtureId = String(m.apiFixtureId || m.fixture_id || m.external_fixture_id || m.id || '').trim()
     const card = {
       id,
+      externalFixtureId,
       sport,
       league,
       country: m.country || 'API-Sports',
@@ -12343,7 +12345,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
   const mapAiTipRowToCard = (t, index = 0) => ({
-    id: String(t.ai_external_key || t.id || index),
+    id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
+    externalFixtureId: String(t.external_fixture_id || t.ai_external_key || ''),
     sport: 'Piłka nożna',
     league: t.league || t.league_name || t.country || 'Liga',
     country: t.country || 'Baza',
@@ -12447,8 +12450,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function saveCardsToJournal(cards = []) {
     if (!isSupabaseConfigured || !supabase || !cards.length) return
-    const payload = cards.map(card => ({
+
+    const nowIso = new Date().toISOString()
+    const buildPayload = (card) => ({
       ai_external_key: String(card.id),
+      external_fixture_id: String(card.externalFixtureId || card.apiFixtureId || card.fixture_id || card.id || ''),
       ai_source: 'real_ai_engine',
       source: 'live_ai_engine',
       ai_model_version: 'Bet+AI Free Center v1',
@@ -12471,9 +12477,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       prediction: card.prediction,
       odds: Number(card.odds || 1.8),
       stake: 100,
-      profit: 0,
+      profit: Number(card.profit || 0),
       ai_score: Number(card.aiScore || 0),
       ai_confidence: Number(card.aiScore || 0),
+      probability: Number(card.probability || card.aiScore || 0),
       value_score: Number(card.ev || 0),
       risk_level: card.risk,
       analysis: card.analysis,
@@ -12481,29 +12488,102 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       curiosity: card.curiosity,
       live_score_home: Number(card.scoreHome || 0),
       live_score_away: Number(card.scoreAway || 0),
-      status: 'pending',
-      result: 'pending',
+      status: String(card.status || 'pending').toLowerCase(),
+      result: String(card.result || card.status || 'pending').toLowerCase(),
       access_type: 'free',
       access: 'free',
       is_premium: false,
       price: 0,
-    }))
-    try {
-      await supabase.from('tips').upsert(payload, { onConflict: 'ai_external_key,market,selection' })
-      const leagues = Array.from(new Map(cards.map(card => [`${card.sport}|||${card.league}`, {
+      updated_at: nowIso,
+    })
+
+    const payload = cards.map(buildPayload)
+
+    const saveTipsOneByOne = async () => {
+      let saved = 0
+      for (const row of payload) {
+        const key = String(row.ai_external_key || '')
+        const market = String(row.market || '')
+        const selection = String(row.selection || '')
+        try {
+          const { data: existing, error: findErr } = await supabase
+            .from('tips')
+            .select('id,status,result')
+            .eq('ai_external_key', key)
+            .eq('market', market)
+            .eq('selection', selection)
+            .limit(1)
+          if (findErr) throw findErr
+          const existingId = existing?.[0]?.id
+          if (existingId) {
+            // Nie cofamy już rozliczonych meczów na pending. Aktualizujemy tylko stałe dane i wynik live.
+            const alreadySettled = ['won','lost','void','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
+            const updatePayload = alreadySettled
+              ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k)))
+              : row
+            const { error: upErr } = await supabase.from('tips').update(updatePayload).eq('id', existingId)
+            if (upErr) throw upErr
+          } else {
+            const { error: insErr } = await supabase.from('tips').insert(row)
+            if (insErr) throw insErr
+          }
+          saved += 1
+        } catch (err) {
+          console.warn('AI journal row save skipped:', row.match_name, err?.message || err)
+        }
+      }
+      return saved
+    }
+
+    const saveLeagueCatalog = async () => {
+      const grouped = Array.from(new Map(cards.map(card => [`${card.sport}|||${card.league}`, {
         sport: card.sport,
         league: card.league,
         country: card.country || 'API-Sports',
-        last_seen: new Date().toISOString(),
-        tips_count: 1
+        last_seen: nowIso,
+        tips_count: cards.filter(c => c.sport === card.sport && c.league === card.league).length
       }])).values())
-      if (leagues.length) {
-        await supabase.from('ai_leagues_catalog').upsert(leagues, { onConflict: 'sport,league' }).catch(() => {})
+      if (!grouped.length) return
+
+      // Najpierw szybki upsert, a gdy baza nie ma constraintu sport+league, fallback update/insert.
+      const up = await supabase.from('ai_leagues_catalog').upsert(grouped, { onConflict: 'sport,league' })
+      if (!up.error) return
+
+      for (const row of grouped) {
+        try {
+          const { data: existing } = await supabase
+            .from('ai_leagues_catalog')
+            .select('id,tips_count')
+            .eq('sport', row.sport)
+            .eq('league', row.league)
+            .limit(1)
+          const existingId = existing?.[0]?.id
+          if (existingId) {
+            await supabase.from('ai_leagues_catalog').update({
+              country: row.country,
+              last_seen: row.last_seen,
+              tips_count: Math.max(Number(existing?.[0]?.tips_count || 0), Number(row.tips_count || 1))
+            }).eq('id', existingId)
+          } else {
+            await supabase.from('ai_leagues_catalog').insert(row)
+          }
+        } catch (err) {
+          console.warn('AI league catalog save skipped:', row.league, err?.message || err)
+        }
       }
-      if (typeof onRefresh === 'function') onRefresh()
-    } catch (err) {
-      console.warn('AI journal save skipped:', err?.message || err)
     }
+
+    try {
+      const upsertResult = await supabase.from('tips').upsert(payload, { onConflict: 'ai_external_key,market,selection' })
+      if (upsertResult.error) throw upsertResult.error
+    } catch (err) {
+      console.warn('AI journal bulk upsert fallback:', err?.message || err)
+      await saveTipsOneByOne()
+    }
+
+    await saveLeagueCatalog()
+    setStatusText(`Zapisano ${payload.length} typów AI w bazie. Mecze Result, Ligi i Statystyki będą korzystać z tych danych na stałe.`)
+    if (typeof onRefresh === 'function') await onRefresh()
   }
 
 
@@ -12873,11 +12953,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747">
               <div className="ai-table-title-v747"><h3>Mecze Result</h3><span>Dziennik każdego typu AI</span></div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
-              {visibleCards.map(card => (
-                <div key={card.id} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id); setActivePanel('live') }}>
+              {allCards.length ? allCards.map(card => (
+                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id); setActivePanel('live') }}>
                   <span>{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span>{card.home}</span><span>{card.scoreHome} - {card.scoreAway}</span><span>{card.away}</span><span>{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{card.status}</span>
                 </div>
-              ))}
+              )) : <div className="ai-result-table-v747"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">pending</span></div>}
             </div>
           )}
 
