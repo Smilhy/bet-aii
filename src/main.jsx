@@ -18781,6 +18781,8 @@ function TopTipstersView() {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
+  const [topAccountFilter, setTopAccountFilter] = useState('all')
+  const [sortOpen, setSortOpen] = useState(false)
 
   const isBlockedTopTipsterProfile = (profile = {}) => {
     const values = [
@@ -18849,10 +18851,10 @@ function TopTipstersView() {
     if (raw.includes('tenis') || raw.includes('tennis')) return 'Tenis'
     if (raw.includes('kosz') || raw.includes('basket')) return 'Koszykówka'
     if (raw.includes('hoke') || raw.includes('hockey')) return 'Hokej'
-    if (raw.includes('esport') || raw.includes('e-sport') || raw.includes('gaming')) return 'Esport'
+    if (raw.includes('esport') || raw.includes('e-sport') || raw.includes('gaming')) return 'E-sport'
     if (raw.includes('siatk') || raw.includes('volley')) return 'Siatkówka'
+    if (raw.includes('mma')) return 'MMA'
     if (raw.includes('baseball')) return 'Baseball'
-    if (raw.includes('dart')) return 'Dart'
     return 'Piłka nożna'
   }
 
@@ -18914,30 +18916,37 @@ function TopTipstersView() {
     { label: 'Tenis', icon: '🎾', enabled: false, soon: true },
     { label: 'Koszykówka', icon: '🏀', enabled: false, soon: true },
     { label: 'Hokej', icon: '🏒', enabled: false, soon: true },
-    { label: 'Esport', icon: '🎮', enabled: false, soon: true },
+    { label: 'E-sport', icon: '🎮', enabled: false, soon: true },
     { label: 'Siatkówka', icon: '🏐', enabled: false, soon: true },
+    { label: 'MMA', icon: '🥊', enabled: false, soon: true },
     { label: 'Baseball', icon: '⚾', enabled: false, soon: true },
-    { label: 'Dart', icon: '🎯', enabled: false, soon: true },
   ]
 
-  const countTopSport = (sportName) => sportName === 'Wszystkie'
-    ? realTipsters.length
-    : realTipsters.filter(item => item.sport === sportName).length
+  const sortOptions = [
+    { value: 'all', label: 'Realne konta' },
+    { value: 'premium', label: 'Płatne konta' },
+    { value: 'free', label: 'Darmowe konta' },
+  ]
+
+  const countTopSport = (sportName) => realTipsters.filter(item => item.sport === sportName).length
 
   const categories = sportCategoryDefs.map((item) => ({
     ...item,
     count: String(countTopSport(item.label)),
   }))
 
-  const filteredTipsters = selectedTopSport === 'Wszystkie'
-    ? realTipsters
-    : realTipsters.filter(item => item.sport === selectedTopSport)
+  const sportFilteredTipsters = realTipsters.filter(item => item.sport === selectedTopSport)
+  const filteredTipsters = sportFilteredTipsters.filter(item => {
+    if (topAccountFilter === 'premium') return item.premium
+    if (topAccountFilter === 'free') return !item.premium
+    return true
+  })
 
   const marketStats = [
-    ['Typerzy', String(realTipsters.length)],
-    ['Typy aktywne', String(realTipsters.reduce((sum, item) => sum + toNumber(item.picks, 0), 0))],
-    ['Premium', String(realTipsters.filter(item => item.premium).length)],
-    ['Darmowe', String(realTipsters.filter(item => !item.premium).length)],
+    ['Typerzy', String(filteredTipsters.length)],
+    ['Typy aktywne', String(filteredTipsters.reduce((sum, item) => sum + toNumber(item.picks, 0), 0))],
+    ['Premium', String(filteredTipsters.filter(item => item.premium).length)],
+    ['Darmowe', String(filteredTipsters.filter(item => !item.premium).length)],
   ]
 
   const steps = [
@@ -18996,7 +19005,37 @@ function TopTipstersView() {
           </div>
 
           <div className="market-v7-filters">
-            <div className="glass-market-v7 filter-v7"><small>Sortuj</small><strong>Realne konta</strong><span>⌄</span></div>
+            <div className={`glass-market-v7 filter-v7 filter-v7-sort ${sortOpen ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="filter-v7-trigger"
+                onClick={() => setSortOpen(value => !value)}
+                aria-expanded={sortOpen}
+              >
+                <div>
+                  <small>Sortuj</small>
+                  <strong>{sortOptions.find(option => option.value === topAccountFilter)?.label || 'Realne konta'}</strong>
+                </div>
+                <span>⌄</span>
+              </button>
+              {sortOpen ? (
+                <div className="filter-v7-menu">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={topAccountFilter === option.value ? 'active' : ''}
+                      onClick={() => {
+                        setTopAccountFilter(option.value)
+                        setSortOpen(false)
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <div className="glass-market-v7 filter-v7 accent"><b>↻ Auto z Supabase</b></div>
           </div>
 
