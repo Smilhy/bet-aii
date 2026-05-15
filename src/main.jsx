@@ -12534,7 +12534,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
 
-  const getBetAiTodayLocalDateV1078 = () => {
+  function getBetAiTodayLocalDateV1078() {
     const d = new Date()
     const y = d.getFullYear()
     const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -12543,7 +12543,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
 
-  const getBetAiYesterdayLocalDateV1081 = () => {
+  function getBetAiYesterdayLocalDateV1081() {
     const d = new Date()
     d.setDate(d.getDate() - 1)
     const y = d.getFullYear()
@@ -12552,7 +12552,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return `${y}-${m}-${day}`
   }
 
-  const getBetAiTomorrowLocalDateV1078 = () => {
+  function getBetAiTomorrowLocalDateV1078() {
     const d = new Date()
     d.setDate(d.getDate() + 1)
     const y = d.getFullYear()
@@ -12561,7 +12561,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return `${y}-${m}-${day}`
   }
 
-  const getBetAiCardLocalDateV1078 = card => {
+  function getBetAiCardLocalDateV1078(card) {
     const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
     if (!raw) return ''
     const d = new Date(raw)
@@ -12574,7 +12574,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return String(raw).slice(0, 10)
   }
 
-  const getBetAiTimeValueV1078 = card => {
+  function getBetAiTimeValueV1078(card) {
     const raw = card?.rawDate || card?.event_time || card?.kickoff_time || card?.match_time || card?.date || ''
     const d = new Date(raw)
     if (!Number.isNaN(d.getTime())) return d.getTime()
@@ -12583,14 +12583,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return 9999999999999
   }
 
-  const isBetAiTodayCardV1078 = card => getBetAiCardLocalDateV1078(card) === getBetAiTodayLocalDateV1078()
+  function isBetAiTodayCardV1078(card) { return getBetAiCardLocalDateV1078(card) === getBetAiTodayLocalDateV1078() }
 
 
-  const getBetAiTargetDateV1082 = (mode = aiDayMode) => (
-    mode === 'tomorrow' ? getBetAiTomorrowLocalDateV1078() : getBetAiTodayLocalDateV1078()
-  )
+  function getBetAiTargetDateV1082(mode = aiDayMode) {
+    return mode === 'tomorrow' ? getBetAiTomorrowLocalDateV1078() : getBetAiTodayLocalDateV1078()
+  }
 
-  const getBetAiAfterTargetDateV1082 = (mode = aiDayMode) => {
+  function getBetAiAfterTargetDateV1082(mode = aiDayMode) {
     const base = getBetAiTargetDateV1082(mode)
     const d = new Date(`${base}T12:00:00`)
     d.setDate(d.getDate() + 1)
@@ -12600,7 +12600,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return `${y}-${m}-${day}`
   }
 
-  const getBetAiBeforeTargetDateV1082 = (mode = aiDayMode) => {
+  function getBetAiBeforeTargetDateV1082(mode = aiDayMode) {
     const base = getBetAiTargetDateV1082(mode)
     const d = new Date(`${base}T12:00:00`)
     d.setDate(d.getDate() - 1)
