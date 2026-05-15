@@ -5739,10 +5739,103 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     "Łotwa",
     "Świat"
 ]
+  const footballCountryCanonicalMap = {
+    england: 'Anglia',
+    scotland: 'Szkocja',
+    wales: 'Walia',
+    'northern ireland': 'Irlandia Północna',
+    ireland: 'Irlandia',
+    poland: 'Polska',
+    germany: 'Niemcy',
+    spain: 'Hiszpania',
+    italy: 'Włochy',
+    france: 'Francja',
+    netherlands: 'Holandia',
+    portugal: 'Portugalia',
+    belgium: 'Belgia',
+    brazil: 'Brazylia',
+    argentina: 'Argentyna',
+    japan: 'Japonia',
+    turkey: 'Turcja',
+    colombia: 'Kolumbia',
+    ecuador: 'Ekwador',
+    bolivia: 'Boliwia',
+    chile: 'Chile',
+    peru: 'Peru',
+    paraguay: 'Paragwaj',
+    uruguay: 'Urugwaj',
+    venezuela: 'Wenezuela',
+    mexico: 'Meksyk',
+    canada: 'Kanada',
+    'united states': 'USA',
+    usa: 'USA',
+    australia: 'Australia',
+    austria: 'Austria',
+    denmark: 'Dania',
+    sweden: 'Szwecja',
+    norway: 'Norwegia',
+    finland: 'Finlandia',
+    switzerland: 'Szwajcaria',
+    romania: 'Rumunia',
+    bulgaria: 'Bułgaria',
+    serbia: 'Serbia',
+    croatia: 'Chorwacja',
+    slovenia: 'Słowenia',
+    slovakia: 'Słowacja',
+    czechia: 'Czechy',
+    'czech republic': 'Czechy',
+    greece: 'Grecja',
+    cyprus: 'Cypr',
+    israel: 'Izrael',
+    korea: 'Korea Południowa',
+    'south korea': 'Korea Południowa',
+    china: 'Chiny',
+    thailand: 'Tajlandia',
+    vietnam: 'Wietnam',
+    malaysia: 'Malezja',
+    singapore: 'Singapur',
+    indonesia: 'Indonezja',
+    india: 'Indie',
+    morocco: 'Maroko',
+    egypt: 'Egipt',
+    algeria: 'Algieria',
+    cameroon: 'Kamerun',
+    kenya: 'Kenia',
+    'south africa': 'Republika Południowej Afryki',
+    iceland: 'Islandia',
+    lithuania: 'Litwa',
+    latvia: 'Łotwa',
+    estonia: 'Estonia',
+    ukraine: 'Ukraina',
+    belarus: 'Białoruś',
+    armenia: 'Armenia',
+    azerbaijan: 'Azerbejdżan',
+    georgia: 'Gruzja',
+    kazakhstan: 'Kazachstan',
+    honduras: 'Honduras',
+    panama: 'Panama',
+    'costa rica': 'Kostaryka',
+    guatemala: 'Gwatemala',
+    malta: 'Malta',
+    'north macedonia': 'Macedonia',
+    macedonia: 'Macedonia',
+    montenegro: 'Czarnogóra',
+    bosnia: 'Bośnia',
+    kosovo: 'Kosowa',
+    kosova: 'Kosowa',
+    'faroe islands': 'Wyspy Owcze',
+    world: 'Świat',
+  }
+
   const normalizeFootballCountryName = (value) => {
     const raw = String(value || '').trim()
-    const cleaned = raw.replace(/^[A-Z]{2,3}\s+/, '').trim()
-    return cleaned || raw
+    const cleaned = raw.replace(/^[A-Z]{2,3}\s+/, '').trim() || raw
+    const lookup = cleaned
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+    return footballCountryCanonicalMap[lookup] || cleaned || raw
   }
 
   const footballCountryFlagCodes = {
@@ -6676,11 +6769,52 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   const getLeagueMatchCount = (country, league) => {
     const leagues = footballMatchCounts?.leagues || {}
-    const directKey = `${normalizeFootballCountryName(country)}|||${league}`
-    const normalizedKey = `${normalizeCountKey(country)}|||${normalizeCountKey(league)}`
+    const cleanCountry = normalizeFootballCountryName(country)
+    const directKey = `${cleanCountry}|||${league}`
+    const normalizedKey = `${normalizeCountKey(cleanCountry)}|||${normalizeCountKey(league)}`
     return Number(leagues[directKey] ?? leagues[normalizedKey] ?? leagues[league] ?? leagues[normalizeCountKey(league)] ?? 0)
   }
 
+  function normalizeFootballCountsData(input = {}) {
+    const countries = {}
+    const leagues = {}
+    const countryLeagues = {}
+    Object.entries(input.countries || {}).forEach(([key, value]) => {
+      const clean = normalizeFootballCountryName(key)
+      ;[clean, normalizeCountKey(clean)].filter(Boolean).forEach(alias => {
+        countries[alias] = Math.max(Number(countries[alias] || 0), Number(value || 0))
+      })
+    })
+    Object.entries(input.countryLeagues || {}).forEach(([key, value]) => {
+      const clean = normalizeFootballCountryName(key)
+      const list = Array.isArray(value) ? value : []
+      ;[clean, normalizeCountKey(clean)].filter(Boolean).forEach(alias => {
+        countryLeagues[alias] = [...new Set([...(countryLeagues[alias] || []), ...list])].sort((a, b) => a.localeCompare(b, 'pl'))
+      })
+    })
+    Object.entries(input.leagues || {}).forEach(([key, value]) => {
+      const rawValue = Number(value || 0)
+      const parts = String(key).split('|||')
+      if (parts.length >= 2) {
+        const cleanCountry = normalizeFootballCountryName(parts[0])
+        const league = parts.slice(1).join('|||')
+        const directKey = `${cleanCountry}|||${league}`
+        const normalizedKey = `${normalizeCountKey(cleanCountry)}|||${normalizeCountKey(league)}`
+        leagues[directKey] = Math.max(Number(leagues[directKey] || 0), rawValue)
+        leagues[normalizedKey] = Math.max(Number(leagues[normalizedKey] || 0), rawValue)
+      } else {
+        leagues[key] = Math.max(Number(leagues[key] || 0), rawValue)
+        leagues[normalizeCountKey(key)] = Math.max(Number(leagues[normalizeCountKey(key)] || 0), rawValue)
+      }
+    })
+    return {
+      countries,
+      leagues,
+      countryLeagues,
+      total: Number(input.total || 0),
+      source: input.source || 'normalized'
+    }
+  }
 
   function buildFootballCountsFromFixtures(fixtures = [], source = 'loaded-fixtures') {
     const countries = {}
@@ -6713,15 +6847,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   async function fetchFootballMatchCountsFromCache(force = false) {
     const todayKey = getTodayLocalKey()
-    const cacheKey = `betai_football_country_league_counts_v1036_${todayKey}`
+    const cacheKey = `betai_football_country_league_counts_v1088_${todayKey}`
     if (!force) {
       try {
         const cachedRaw = localStorage.getItem(cacheKey)
         if (cachedRaw) {
           const cached = JSON.parse(cachedRaw)
           if (cached && typeof cached === 'object') {
-            setFootballMatchCounts(cached)
-            return cached
+            const normalizedCached = normalizeFootballCountsData(cached)
+            setFootballMatchCounts(normalizedCached)
+            return normalizedCached
           }
         }
       } catch (error) {
@@ -6735,13 +6870,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       const response = await fetch(`/.netlify/functions/get-fixture-counts-cache?${params.toString()}`)
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'Nie udało się pobrać liczników meczów.')
-      const nextCounts = {
+      const nextCounts = normalizeFootballCountsData({
         countries: data.countries || {},
         leagues: data.leagues || {},
         countryLeagues: data.countryLeagues || {},
         total: Number(data.total || 0),
         source: data.source || 'cache'
-      }
+      })
       setFootballMatchCounts(nextCounts)
       try { localStorage.setItem(cacheKey, JSON.stringify(nextCounts)) } catch (_) {}
       return nextCounts
@@ -7228,10 +7363,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   function applyMatchToForm(match) {
     const nextMarket = match?.markets?.[0] || noRealMarket
     if (!match) return
-    if (match.country) setOpenFootballCountry(match.country)
+    const cleanMatchCountry = normalizeFootballCountryName(match.country || currentCountry)
+    if (cleanMatchCountry) setOpenFootballCountry(cleanMatchCountry)
     updateForm({
       sport: match.sport || form.sport,
-      country: match.country || currentCountry,
+      country: cleanMatchCountry || currentCountry,
       matchId: match.id || `${match.home}-${match.away}`,
       league: match.league || currentLeague,
       market: nextMarket.market,
@@ -7432,7 +7568,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const loadedCounts = buildFootballCountsFromFixtures(fixtures, data.source || 'live-api')
         if (loadedCounts.total > 0) {
           setFootballMatchCounts(loadedCounts)
-          try { localStorage.setItem(`betai_football_country_league_counts_v1036_${overrides.date || liveDate || getTodayLocalKey()}`, JSON.stringify(loadedCounts)) } catch (_) {}
+          try { localStorage.setItem(`betai_football_country_league_counts_v1088_${overrides.date || liveDate || getTodayLocalKey()}`, JSON.stringify(loadedCounts)) } catch (_) {}
         }
       }
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
