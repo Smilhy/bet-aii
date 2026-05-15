@@ -1,0 +1,14 @@
+WERSJA 1084 — FIX TYPY AI / aiDayMode / pobieranie dat
+
+Naprawione:
+1. Błąd po odświeżeniu strony: "aiDayMode is not defined".
+   Przyczyną był tekst pustego dashboardu poza komponentem Typy AI, który odwoływał się do lokalnego stanu aiDayMode.
+
+2. Pobieranie meczów dla Typów AI:
+   Backend get-sports-events respektuje teraz parametry day, from/to oraz days.
+   Zapytania z zakładki Typy AI na dziś/jutro nie powinny już wpadać w zły dzień ani pusty zakres.
+
+3. Build sprawdzony komendą npm run build — zakończony sukcesem.
+
+Uwaga:
+Ostrzeżenia o duplikatach tłumaczeń i dużym bundle JS są stare i nie blokują działania aplikacji.

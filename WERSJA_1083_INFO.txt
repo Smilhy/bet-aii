@@ -1,0 +1,7 @@
+WERSJA 1083 — FIX błędu startowego aplikacji
+
+Naprawiono błąd runtime: "Cannot access 't' before initialization".
+Przyczyna: helpery dat Typów AI (today/tomorrow) były zadeklarowane jako const poniżej miejsca, gdzie useMemo wykonywał je już podczas pierwszego renderu.
+Zmiana: helpery dat zostały przerobione na hoistowane deklaracje function, dzięki czemu są dostępne przy pierwszym renderze.
+
+Build Vite wykonany poprawnie.
