@@ -45146,3 +45146,49 @@ button.betfolio-fetch-btn{
 }
 
 /* KONIEC WERSJI 1060 */
+
+
+/* ==========================================================================
+   WERSJA 1062 — DOKŁADNY BANER HERO ZE SCREENA, DOPASOWANY IDEALNIE
+   ========================================================================== */
+
+/* Stare generowane hero ukrywamy, żeby nie dublowało banera */
+.ai-premium-hero-v1054,
+.ai-banner-image-v1052{
+  display:none !important;
+}
+
+.ai-exact-hero-v1062{
+  width:100% !important;
+  margin:0 0 18px !important;
+  padding:0 !important;
+  border-radius:32px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(34,245,223,.28) !important;
+  background:#020b14 !important;
+  box-shadow:
+    0 26px 90px rgba(0,0,0,.42),
+    0 0 0 1px rgba(34,245,223,.08) inset !important;
+}
+
+.ai-exact-hero-v1062 img{
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+  max-width:100% !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+}
+
+/* Bez dodatkowego pustego miejsca pod hero */
+.ai-kpi-grid-v747{
+  margin-top:0 !important;
+}
+
+@media (max-width: 900px){
+  .ai-exact-hero-v1062{
+    border-radius:22px !important;
+  }
+}
+
+/* KONIEC WERSJI 1062 */

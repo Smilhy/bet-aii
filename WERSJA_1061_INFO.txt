@@ -1,0 +1,15 @@
+WERSJA 1061 — TYPY AI SETTLE BUTTON RUNTIME FIX
+
+Naprawione:
+- Błąd wejścia do zakładki:
+  settleFinishedAiTips is not defined
+- Przycisk "Rozlicz zakończone" używa istniejącego handlera:
+  onSettle
+- Dodany stan disabled podczas rozliczania.
+- Kafelków sportów nie ruszano.
+- Brak zmian w bazie.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/runtime fix.
+Marker opcjonalny:
+supabase/version_1061_typy_ai_settle_button_runtime_fix.sql

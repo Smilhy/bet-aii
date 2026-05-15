@@ -12573,20 +12573,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-premium-hero-v1054" aria-label="Typy AI premium hero">
-        <div className="ai-premium-hero-copy-v1054">
-          <span className="ai-hero-pill-v1054">PRE-MATCH AI • PIŁKA NOŻNA</span>
-          <h1>Typy <em>AI</em></h1>
-          <p>Zaawansowany model AI analizuje dane przedmeczowe, kursy, value, ryzyko i formę, aby wskazać najlepszy rynek dla meczu.</p>
-          <div className="ai-hero-badges-v1054">
-            <span>AI Score</span><span>Value EV</span><span>Ryzyko</span><span>Najlepszy rynek</span>
-          </div>
-        </div>
-        <div className="ai-premium-hero-art-v1054">
-          <div className="ai-brain-v1054">AI</div>
-          <div className="ai-ball-v1054">⚽</div>
-          <div className="ai-chart-v1054"><i></i><i></i><i></i><i></i><i></i></div>
-        </div>
+      <div className="ai-exact-hero-v1062" aria-label="Typy AI Premium Hero">
+        <img src="/typy-ai-hero-v1062.png" alt="Typy AI — premium AI sports analytics" />
       </div>
       <div className="ai-kpi-grid-v747">
         <div><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
@@ -12639,8 +12627,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <button type="button" className="ai-refresh-btn-v747" onClick={fetchLiveAiPicks} disabled={loadingAi}>
               ⟳ {loadingAi ? 'Odświeżam...' : 'Odśwież AI'}
             </button>
-            <button type="button" className="ai-settle-btn-v747" onClick={settleFinishedAiTips}>
-              ✓ Rozlicz zakończone
+            <button type="button" className="ai-settle-btn-v747" onClick={onSettle} disabled={settleGenerating}>
+              {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
             </button>
           </div>
         </div>
@@ -21836,3 +21824,6 @@ window.addEventListener('betai-tip-received', (e) => {
   const username = e?.detail?.from || 'Użytkownik';
   window.showBetAITipAlert(username);
 });
+
+
+// WERSJA 1061 RUNTIME FIX: przycisk Rozlicz zakończone używa istniejącego handlera onSettle.
