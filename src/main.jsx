@@ -18777,7 +18777,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   )
 }
 
-function TopTipstersView() {
+function TopTipstersView({ tips = [], ranking = [], user = null }) {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
@@ -18805,28 +18805,63 @@ function TopTipstersView() {
   const addAvatarHint = (map, key, avatar) => {
     const cleanKey = normalizeEmail(key)
     const cleanAvatar = String(avatar || '').trim()
-    if (!cleanKey || !cleanAvatar) return
-    map.set(cleanKey, cleanAvatar)
+    if (!cleanKey || !cleanAvatar || isGenericProfileName(cleanKey)) return
+    // Pierwsze dopasowanie ma pierwszeństwo: najpierw dane już poprawione w innych zakładkach,
+    // potem dopiero fallback z Supabase. Dzięki temu Top typerzy nie podmienią realnego avatara na stary/fake zapis z tips.
+    if (!map.has(cleanKey)) map.set(cleanKey, cleanAvatar)
+    if (cleanKey.includes('@')) {
+      const localKey = normalizeEmail(cleanKey.split('@')[0])
+      if (localKey && !isGenericProfileName(localKey) && !map.has(localKey)) map.set(localKey, cleanAvatar)
+    }
+  }
+
+  const addAvatarHintsFromRow = (map, row = {}) => {
+    const avatar = getProfileAvatarUrl(row)
+    if (!avatar) return
+    ;[
+      row.id,
+      row.user_id,
+      row.author_id,
+      row.tipster_id,
+      row.email,
+      row.user_email,
+      row.author_email,
+      row.username,
+      row.user_name,
+      row.author_name,
+      row.public_slug,
+      row.slug,
+      row.display_name,
+      row.profile_name,
+      row.name,
+      resolveRealProfileUsername(row),
+    ].forEach(key => addAvatarHint(map, key, avatar))
+  }
+
+  const buildTopTipsterAvatarHintsFromLoadedData = () => {
+    const map = new Map()
+    ;(tips || []).forEach(row => addAvatarHintsFromRow(map, row))
+    ;(ranking || []).forEach(row => addAvatarHintsFromRow(map, row))
+    cacheBetaiCurrentUserAvatar(user)
+    addAvatarHintsFromRow(map, user || {})
+    ;(readBetaiPublicAvatarCache() || []).forEach(row => addAvatarHintsFromRow(map, row))
+    return map
   }
 
   const fetchTopTipsterAvatarHints = async () => {
-    const map = new Map()
+    const map = buildTopTipsterAvatarHintsFromLoadedData()
     if (!isSupabaseConfigured || !supabase) return map
     const selects = [
-      'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url',
-      'user_id,user_email,user_name,avatar_url',
-      'author_id,author_email,author_name,author_avatar_url',
-      'username,avatar_url',
+      'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url,created_at',
+      'user_id,user_email,user_name,avatar_url,created_at',
+      'author_id,author_email,author_name,author_avatar_url,created_at',
+      'username,avatar_url,created_at',
     ]
     for (const columns of selects) {
       try {
-        const { data, error } = await supabase.from('tips').select(columns).limit(2000)
+        const { data, error } = await supabase.from('tips').select(columns).order('created_at', { ascending: false }).limit(2000)
         if (error || !Array.isArray(data)) continue
-        data.forEach(row => {
-          const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
-          ;[row.author_id, row.user_id, row.author_email, row.user_email, row.author_name, row.user_name, row.username].forEach(key => addAvatarHint(map, key, avatar))
-        })
-        if (map.size) break
+        data.forEach(row => addAvatarHintsFromRow(map, row))
       } catch (_) {}
     }
     return map
@@ -18837,6 +18872,7 @@ function TopTipstersView() {
       profile.id,
       profile.user_id,
       profile.author_id,
+      profile.tipster_id,
       profile.email,
       profile.user_email,
       profile.author_email,
@@ -18844,12 +18880,15 @@ function TopTipstersView() {
       profile.user_name,
       profile.author_name,
       profile.public_slug,
+      profile.slug,
       profile.display_name,
+      profile.profile_name,
       profile.full_name,
       resolveRealProfileUsername(profile),
     ]
     const hintedAvatar = keys.map(key => avatarHints.get(normalizeEmail(key))).find(Boolean)
-    return hintedAvatar ? { ...profile, avatar_url: hintedAvatar, profile_avatar_url: hintedAvatar } : profile
+    const realAvatar = hintedAvatar || getProfileAvatarUrl(profile)
+    return realAvatar ? { ...profile, avatar_url: realAvatar, profile_avatar_url: realAvatar, author_avatar_url: realAvatar } : profile
   }
 
   const loadRealTopTipsters = async () => {
@@ -18873,14 +18912,14 @@ function TopTipstersView() {
     loadRealTopTipsters()
     if (!isSupabaseConfigured || !supabase) return undefined
     const channel = supabase
-      .channel('top-typerzy-real-profiles-v1104')
+      .channel('top-typerzy-real-profiles-v1107')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadRealTopTipsters())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tips' }, () => loadRealTopTipsters())
       .subscribe()
     return () => {
       try { supabase.removeChannel(channel) } catch (_) {}
     }
-  }, [])
+  }, [JSON.stringify((tips || []).map(tip => [tip.id, tip.author_avatar_url, tip.avatar_url, tip.profile_avatar_url])), JSON.stringify((ranking || []).map(row => [row.id || row.tipster_id, row.avatar_url, row.author_avatar_url, row.profile_avatar_url])), user?.id, user?.email, user?.avatar_url, user?.user_metadata?.avatar_url])
 
   const toNumber = (value, fallback = 0) => {
     const n = Number(value)
@@ -22656,7 +22695,7 @@ function App() {
         )}
 
         {view === 'topTipsters' && (
-          <TopTipstersView />
+          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} />
         )}
 
         {view === 'notifications' && (
