@@ -10118,7 +10118,15 @@ function ArticlesView() {
 
   const heroArticle = articleHeroSlides[articleHeroIndex % Math.max(articleHeroSlides.length, 1)] || articleHeroSlides[0]
 
-  const urgentHeroSlides = (importantNews.length ? importantNews : liveArticles.slice(0, 5)).map((item, index) => ({
+  const urgentHeroSource = (() => {
+    const importantWithImages = importantNews.filter(item => getSportPlImageSrc(item))
+    if (importantWithImages.length) return importantWithImages.slice(0, 5)
+    const liveWithImages = liveArticles.filter(item => getSportPlImageSrc(item))
+    if (liveWithImages.length) return liveWithImages.slice(0, 5)
+    return (importantNews.length ? importantNews : liveArticles).slice(0, 5)
+  })()
+
+  const urgentHeroSlides = urgentHeroSource.map((item, index) => ({
     tag: item.category || 'PILNE',
     title: item.title || 'Sport.pl — ważna wiadomość',
     excerpt: item.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.',

@@ -47060,3 +47060,19 @@ button.betfolio-fetch-btn{
   .article-preview-image-v1137 { max-height: 240px; border-radius: 22px 22px 0 0; }
   .article-preview-content-v1137 { padding: 20px; }
 }
+
+
+/* WERSJA 1138 — Artykuły: poprawione obrazy banera i polskie znaki z funkcji Sport.pl */
+.sportpl-important-hero-v550.has-image-v550{
+  background:#020b13!important;
+}
+.sportpl-important-hero-v550.has-image-v550::after{
+  background:linear-gradient(90deg, rgba(2,10,18,.88) 0%, rgba(2,10,18,.72) 42%, rgba(2,10,18,.20) 76%, rgba(2,10,18,.08) 100%)!important;
+}
+.sportpl-important-hero-bg-v550 img{
+  opacity:1!important;
+  object-position:center center!important;
+}
+.sportpl-live-item-v538.image-error-v540 .sportpl-live-media-v540:before{
+  content:''!important;
+}

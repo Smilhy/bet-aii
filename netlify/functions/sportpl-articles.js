@@ -194,6 +194,35 @@ function parseRss(xml = '') {
   return out
 }
 
+function getResponseCharset(response, fallback = 'utf-8') {
+  const contentType = response?.headers?.get?.('content-type') || ''
+  const match = contentType.match(/charset=([^;]+)/i)
+  return (match?.[1] || fallback).trim().replace(/^['\"]|['\"]$/g, '')
+}
+
+function sniffHtmlCharset(buffer, fallback = 'utf-8') {
+  try {
+    const head = Buffer.from(buffer).subarray(0, 4096).toString('latin1')
+    const match = head.match(/charset=["']?([^"'\s/>;]+)/i)
+    return (match?.[1] || fallback).trim()
+  } catch (_) {
+    return fallback
+  }
+}
+
+function decodeBufferText(buffer, charset = 'utf-8') {
+  const label = String(charset || 'utf-8').toLowerCase().replace(/_/g, '-')
+  const candidates = [label, label.includes('iso-8859') ? 'windows-1250' : '', 'utf-8', 'windows-1250', 'iso-8859-2'].filter(Boolean)
+  for (const encoding of candidates) {
+    try {
+      const decoded = new TextDecoder(encoding).decode(buffer)
+      const bad = (decoded.match(/�/g) || []).length
+      if (!bad || encoding !== 'utf-8') return decoded
+    } catch (_) {}
+  }
+  return Buffer.from(buffer).toString('utf8')
+}
+
 async function fetchText(url, accept = 'text/html,application/xhtml+xml') {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 9000)
@@ -201,14 +230,16 @@ async function fetchText(url, accept = 'text/html,application/xhtml+xml') {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 BetAI-Live/541',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 BetAI-Live/1138',
         'Accept': accept,
         'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
         'Referer': 'https://www.sport.pl/'
       }
     })
     if (!response.ok) throw new Error(`Sport.pl HTTP ${response.status}`)
-    return response.text()
+    const buffer = await response.arrayBuffer()
+    const charset = sniffHtmlCharset(buffer, getResponseCharset(response, 'utf-8'))
+    return decodeBufferText(buffer, charset)
   } finally {
     clearTimeout(timeout)
   }
