@@ -18922,27 +18922,36 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
   const fetchTopTipsterAvatarHints = async (profileRows = []) => {
     const map = buildTopTipsterAvatarHintsFromLoadedData()
-    ;(profileRows || []).forEach(row => addAvatarHintsFromRow(map, row))
+    const profileAvatarRows = []
+    const tipAvatarRows = []
+    ;(profileRows || []).forEach(row => {
+      addAvatarHintsFromRow(map, row)
+      profileAvatarRows.push(row)
+    })
+    ;(tips || []).forEach(row => tipAvatarRows.push(row))
+    ;(ranking || []).forEach(row => profileAvatarRows.push(row))
     if (!isSupabaseConfigured || !supabase) return map
 
     // Najważniejsze: pobierz avatary bezpośrednio z publicznych profili, bo inne zakładki używają właśnie profilu/cache,
     // a stare rekordy w tips potrafią mieć puste albo nieaktualne avatary.
     const profileSelects = [
-      'id,email,username,public_slug,avatar_url,profile_avatar_url,updated_at,created_at',
+      'id,email,username,public_slug,avatar_url,profile_avatar_url,author_avatar_url,photo_url,picture,image_url,updated_at,created_at',
+      'id,email,username,public_slug,avatar_url,updated_at,created_at',
       'id,email,username,avatar_url,updated_at,created_at',
     ]
     for (const columns of profileSelects) {
       try {
         const { data, error } = await supabase.from('profiles').select(columns).order('updated_at', { ascending: false }).limit(1000)
         if (error || !Array.isArray(data)) continue
-        data.forEach(row => addAvatarHintsFromRow(map, row))
+        data.forEach(row => {
+          profileAvatarRows.push(row)
+          addAvatarHintsFromRow(map, row)
+        })
       } catch (_) {}
     }
 
-    const storageHints = await fetchTopTipsterStorageAvatars(profileRows)
-    storageHints.forEach((avatar, key) => { if (!map.has(key)) map.set(key, avatar) })
-
     const selects = [
+      'author_id,user_id,tipster_id,author_email,user_email,email,author_name,user_name,username,public_slug,author_avatar_url,avatar_url,profile_avatar_url,photo_url,picture,image_url,created_at,updated_at',
       'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url,created_at',
       'user_id,user_email,user_name,avatar_url,created_at',
       'author_id,author_email,author_name,author_avatar_url,created_at',
@@ -18952,31 +18961,79 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       try {
         const { data, error } = await supabase.from('tips').select(columns).order('created_at', { ascending: false }).limit(2000)
         if (error || !Array.isArray(data)) continue
-        data.forEach(row => addAvatarHintsFromRow(map, row))
+        data.forEach(row => {
+          tipAvatarRows.push(row)
+          addAvatarHintsFromRow(map, row)
+        })
       } catch (_) {}
     }
+
+    // v1124: dopnij Top typerów do tego samego avatara, który widzisz po kliknięciu w profil użytkownika.
+    // Dla każdego nicku szukamy realnego avatara po ID/email/nick/public_slug w profiles oraz w jego typach.
+    ;(profileRows || []).forEach(profile => {
+      const avatar = findProfilePageAvatarForTopTipster(profile, profileAvatarRows, tipAvatarRows)
+      if (!avatar) return
+      getTopAvatarLookupKeys(profile).forEach(key => addAvatarHint(map, key, avatar))
+    })
+
+    const storageHints = await fetchTopTipsterStorageAvatars((profileRows || []).map(row => attachRealAvatarToProfile(row, map)))
+    storageHints.forEach((avatar, key) => { if (!map.has(key)) map.set(key, avatar) })
+
     return map
   }
 
-  const attachRealAvatarToProfile = (profile = {}, avatarHints = new Map()) => {
-    const keys = [
-      profile.id,
-      profile.user_id,
-      profile.author_id,
-      profile.tipster_id,
-      profile.email,
-      profile.user_email,
-      profile.author_email,
-      profile.username,
-      profile.user_name,
-      profile.author_name,
-      profile.public_slug,
-      profile.slug,
-      profile.display_name,
-      profile.profile_name,
-      profile.full_name,
-      resolveRealProfileUsername(profile),
+  const getTopAvatarLookupKeys = (row = {}) => {
+    const values = [
+      row.id,
+      row.user_id,
+      row.author_id,
+      row.tipster_id,
+      row.profile_id,
+      row.email,
+      row.user_email,
+      row.author_email,
+      row.username,
+      row.user_name,
+      row.author_name,
+      row.public_slug,
+      row.slug,
+      row.display_name,
+      row.profile_name,
+      row.name,
+      resolveRealProfileUsername(row),
     ]
+    const keys = []
+    values.forEach(value => {
+      const clean = normalizeEmail(value)
+      if (!clean || isGenericProfileName(clean)) return
+      keys.push(clean)
+      if (clean.includes('@')) keys.push(clean.split('@')[0])
+    })
+    return [...new Set(keys.filter(Boolean))]
+  }
+
+  const rowMatchesTopAvatarKeys = (row = {}, wantedKeys = new Set()) => {
+    if (!row || !wantedKeys?.size) return false
+    const rowKeys = getTopAvatarLookupKeys(row)
+    return rowKeys.some(key => wantedKeys.has(key) || wantedKeys.has(String(key || '').split('@')[0]))
+  }
+
+  const findProfilePageAvatarForTopTipster = (profile = {}, profileRows = [], tipRows = []) => {
+    const wantedKeys = new Set(getTopAvatarLookupKeys(profile))
+    if (!wantedKeys.size) return ''
+
+    // Dokładnie ta sama logika co po wejściu w profil: najpierw profiles.avatar_url, potem avatar z typów autora.
+    const profileMatch = (profileRows || []).find(row => rowMatchesTopAvatarKeys(row, wantedKeys) && getProfileAvatarUrl(row))
+    if (profileMatch) return getProfileAvatarUrl(profileMatch)
+
+    const tipMatch = (tipRows || []).find(row => rowMatchesTopAvatarKeys(row, wantedKeys) && getProfileAvatarUrl(row))
+    if (tipMatch) return getProfileAvatarUrl(tipMatch)
+
+    return ''
+  }
+
+  const attachRealAvatarToProfile = (profile = {}, avatarHints = new Map()) => {
+    const keys = getTopAvatarLookupKeys(profile)
     const hintedAvatar = keys.map(key => avatarHints.get(normalizeEmail(key))).find(Boolean)
     const realAvatar = hintedAvatar || getProfileAvatarUrl(profile)
     return realAvatar ? { ...profile, avatar_url: realAvatar, profile_avatar_url: realAvatar, author_avatar_url: realAvatar } : profile
