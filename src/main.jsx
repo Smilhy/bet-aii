@@ -18848,9 +18848,61 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     return map
   }
 
-  const fetchTopTipsterAvatarHints = async () => {
+  const fetchPublicStorageAvatarForProfile = async (profile = {}) => {
+    if (!isSupabaseConfigured || !supabase?.storage || !profile?.id) return ''
+    try {
+      const folder = String(profile.id)
+      const { data, error } = await supabase.storage.from('avatars').list(folder, { limit: 20, sortBy: { column: 'created_at', order: 'desc' } })
+      if (error || !Array.isArray(data) || !data.length) return ''
+      const file = data.find(item => /\.(png|jpe?g|webp|gif)$/i.test(item?.name || '')) || data[0]
+      if (!file?.name) return ''
+      const path = `${folder}/${file.name}`
+      const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
+      return publicData?.publicUrl || ''
+    } catch (_) {
+      return ''
+    }
+  }
+
+  const fetchTopTipsterStorageAvatars = async (rows = []) => {
+    const map = new Map()
+    if (!isSupabaseConfigured || !supabase?.storage) return map
+    const candidates = (rows || [])
+      .filter(row => row?.id && !getProfileAvatarUrl(row))
+      .slice(0, 30)
+    for (const profile of candidates) {
+      const avatar = await fetchPublicStorageAvatarForProfile(profile)
+      if (!avatar) continue
+      addAvatarHint(map, profile.id, avatar)
+      addAvatarHint(map, profile.email, avatar)
+      addAvatarHint(map, profile.username, avatar)
+      addAvatarHint(map, profile.public_slug, avatar)
+    }
+    return map
+  }
+
+  const fetchTopTipsterAvatarHints = async (profileRows = []) => {
     const map = buildTopTipsterAvatarHintsFromLoadedData()
+    ;(profileRows || []).forEach(row => addAvatarHintsFromRow(map, row))
     if (!isSupabaseConfigured || !supabase) return map
+
+    // Najważniejsze: pobierz avatary bezpośrednio z publicznych profili, bo inne zakładki używają właśnie profilu/cache,
+    // a stare rekordy w tips potrafią mieć puste albo nieaktualne avatary.
+    const profileSelects = [
+      'id,email,username,public_slug,avatar_url,profile_avatar_url,updated_at,created_at',
+      'id,email,username,avatar_url,updated_at,created_at',
+    ]
+    for (const columns of profileSelects) {
+      try {
+        const { data, error } = await supabase.from('profiles').select(columns).order('updated_at', { ascending: false }).limit(1000)
+        if (error || !Array.isArray(data)) continue
+        data.forEach(row => addAvatarHintsFromRow(map, row))
+      } catch (_) {}
+    }
+
+    const storageHints = await fetchTopTipsterStorageAvatars(profileRows)
+    storageHints.forEach((avatar, key) => { if (!map.has(key)) map.set(key, avatar) })
+
     const selects = [
       'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url,created_at',
       'user_id,user_email,user_name,avatar_url,created_at',
@@ -18895,7 +18947,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     setLoadingProfiles(true)
     try {
       const rows = await fetchBetaiPublicProfiles()
-      const avatarHints = await fetchTopTipsterAvatarHints()
+      const avatarHints = await fetchTopTipsterAvatarHints(rows || [])
       setProfiles((rows || []).map(profile => attachRealAvatarToProfile(profile, avatarHints)).filter(profile => {
         const name = resolveRealProfileUsername(profile)
         return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
@@ -18912,7 +18964,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     loadRealTopTipsters()
     if (!isSupabaseConfigured || !supabase) return undefined
     const channel = supabase
-      .channel('top-typerzy-real-profiles-v1107')
+      .channel('top-typerzy-real-profiles-v1109')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadRealTopTipsters())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tips' }, () => loadRealTopTipsters())
       .subscribe()
