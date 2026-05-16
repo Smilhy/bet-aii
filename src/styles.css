@@ -46668,3 +46668,21 @@ button.betfolio-fetch-btn{
 .top-follow-btn-v1119:not(.is-following){
   color:#eafcff!important;
 }
+
+
+/* WERSJA 1121 — Top typerzy: stabilny stan Obserwuj/Obserwujesz bez migania */
+.top-follow-btn-v1119 .follow-icon-v1119{
+  transform:none!important;
+}
+.top-follow-btn-v1119.is-following:hover .follow-icon-v1119{
+  transform:none!important;
+}
+.top-follow-btn-v1119.is-following:hover .follow-label-v1119::after{
+  content:' — kliknij, aby cofnąć';
+  font-size:10px;
+  font-weight:900;
+  opacity:.9;
+}
+@media (max-width: 900px){
+  .top-follow-btn-v1119.is-following:hover .follow-label-v1119::after{content:'';}
+}

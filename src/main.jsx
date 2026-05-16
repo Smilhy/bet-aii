@@ -19445,7 +19445,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
   const toggleTopTipsterFollow = (tipster = {}) => {
     if (typeof onToggleFollow !== 'function') return
     const targetId = tipster.tipster_id || tipster.user_id || tipster.author_id || tipster.profileRef || tipster.id || tipster.name
-    onToggleFollow(targetId, tipster.name || tipster.username || tipster.email || targetId)
+    const displayName = tipster.name || tipster.username || tipster.email || targetId
+    onToggleFollow(targetId, displayName, getTopTipsterFollowKeys(tipster))
   }
 
   return (
@@ -21224,7 +21225,7 @@ function App() {
     try { window.scrollTo({ top: 0, behavior: 'smooth' }) } catch (_) {}
   }
 
-  async function toggleFollowTipster(tipsterId, authorName) {
+  async function toggleFollowTipster(tipsterId, authorName, extraFollowKeys = []) {
     if (!sessionUser?.id) {
       showToast({ type: 'error', title: 'Zaloguj się', message: 'Musisz być zalogowany, aby obserwować typera.' })
       return
@@ -21235,6 +21236,12 @@ function App() {
     const currentEmailLocalKey = currentEmailKey ? currentEmailKey.split('@')[0] : ''
     const rawTargetKey = normalizeEmail(authorName || tipsterId || '')
     const rawTargetLocalKey = rawTargetKey ? rawTargetKey.split('@')[0] : ''
+    const extraFollowKeysList = (Array.isArray(extraFollowKeys) ? extraFollowKeys : [extraFollowKeys])
+      .map(value => normalizeEmail(value || ''))
+      .filter(Boolean)
+    const extraFollowLocalKeys = extraFollowKeysList
+      .map(value => value.includes('@') ? value.split('@')[0] : '')
+      .filter(Boolean)
     const uuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
     const isOwnByName = Boolean(
@@ -21263,7 +21270,7 @@ function App() {
     const idKey = id ? String(id).toLowerCase() : ''
     const localKey = rawTargetKey || idKey
     const localNameKey = rawTargetLocalKey || ''
-    const followKeys = [...new Set([idKey, localKey, localNameKey].map(value => String(value || '').toLowerCase()).filter(Boolean))]
+    const followKeys = [...new Set([idKey, localKey, localNameKey, ...extraFollowKeysList, ...extraFollowLocalKeys].map(value => String(value || '').toLowerCase()).filter(Boolean))]
     if (!followKeys.length) {
       showToast({ type: 'error', title: 'Follow', message: 'Nie udało się odczytać nazwy typera.' })
       return
@@ -21316,11 +21323,24 @@ function App() {
         const tipsterKey = String(localKey || idKey || rawTargetKey || authorName || tipsterId || '').toLowerCase().trim()
         if (tipsterKey) {
           if (alreadyFollowing) {
-            let deleteQuery = supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_id', sessionUser.id)
-            if (id) deleteQuery = deleteQuery.eq('tipster_id', id)
-            else deleteQuery = deleteQuery.eq('tipster_key', tipsterKey)
-            const { error } = await deleteQuery
-            if (error) throw error
+            const deleteKeys = [...new Set([tipsterKey, ...followKeys].map(value => String(value || '').toLowerCase().trim()).filter(Boolean))]
+            const deleteAttempts = []
+            if (id) {
+              deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_id', sessionUser.id).eq('tipster_id', id))
+              if (followerEmail) deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_email', followerEmail).eq('tipster_id', id))
+            }
+            if (deleteKeys.length) {
+              deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_id', sessionUser.id).in('tipster_key', deleteKeys))
+              deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_id', sessionUser.id).in('tipster_name', deleteKeys))
+              if (followerEmail) {
+                deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_email', followerEmail).in('tipster_key', deleteKeys))
+                deleteAttempts.push(supabase.from('betai_tipster_follow_keys_v1033').delete().eq('follower_email', followerEmail).in('tipster_name', deleteKeys))
+              }
+            }
+            for (const attempt of deleteAttempts) {
+              const { error } = await attempt
+              if (error) throw error
+            }
           } else {
             const { error } = await supabase.from('betai_tipster_follow_keys_v1033').upsert({
               follower_id: sessionUser.id,
@@ -21341,6 +21361,17 @@ function App() {
     }
 
     await fetchFollowingTipsters(sessionUser.id)
+    if (alreadyFollowing) {
+      removeLocalFollowingTipster(sessionUser.id, followKeys)
+      setFollowingTipsters(prev => {
+        const next = new Set([...(prev || [])].map(value => String(value).toLowerCase()))
+        followKeys.forEach(key => next.delete(key))
+        return next
+      })
+    } else {
+      addLocalFollowingTipster(sessionUser.id, followKeys)
+      setFollowingTipsters(prev => new Set([...(prev || []), ...followKeys].map(value => String(value).toLowerCase())))
+    }
     fetchFollowStats()
     showToast({ type: 'success', title: 'Follow', message: alreadyFollowing ? 'Przestałeś obserwować typera.' : 'Obserwujesz typera.' })
   }
