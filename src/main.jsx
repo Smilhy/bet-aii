@@ -18819,6 +18819,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set(), followStats = {} }) {
   const [profiles, setProfiles] = useState([])
   const [topAvatarOverrides, setTopAvatarOverrides] = useState({})
+  const [publicTopAvatarRows, setPublicTopAvatarRows] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
   const [topAccountFilter, setTopAccountFilter] = useState('all')
@@ -18973,16 +18974,22 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     // Wystarczy raz odpalić SQL z paczki, wtedy avatary są pobierane bez zgadywania po tips/rankingu.
     // v1126: obsługujemy też starszą nazwę funkcji, którą mogłeś wkleić ręcznie w Supabase.
     // Najważniejsza funkcja to betai_public_profile_avatars_for_ui — ona czyta profiles + auth.users metadata.
+    const publicAvatarRowsFromRpc = []
     for (const rpcName of ['betai_public_profile_avatars_for_ui', 'get_public_tipster_avatars']) {
       try {
         const { data, error } = await supabase.rpc(rpcName)
         if (!error && Array.isArray(data)) {
           data.forEach(row => {
             profileAvatarRows.push(row)
+            publicAvatarRowsFromRpc.push(row)
             addAvatarHintsFromRow(map, row)
           })
         }
       } catch (_) {}
+    }
+
+    if (publicAvatarRowsFromRpc.length) {
+      setPublicTopAvatarRows(publicAvatarRowsFromRpc)
     }
 
     const profileSelects = [
@@ -19101,6 +19108,19 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return out
   }
 
+  const findTopAvatarInPublicRows = (profile = {}) => {
+    const wantedKeys = new Set(getTopAvatarLookupKeys(profile))
+    if (!wantedKeys.size || !Array.isArray(publicTopAvatarRows) || !publicTopAvatarRows.length) return ''
+    const wantedName = normalizeEmail(resolveRealProfileUsername(profile))
+    const match = publicTopAvatarRows.find(row => {
+      const rowKeys = getTopAvatarLookupKeys(row)
+      if (rowKeys.some(key => wantedKeys.has(key))) return true
+      const rowName = normalizeEmail(resolveRealProfileUsername(row))
+      return rowName && wantedName && rowName === wantedName
+    })
+    return match ? getProfileAvatarUrl(match) : ''
+  }
+
   const findTopAvatarOverrideForProfile = (profile = {}) => {
     const keys = getTopAvatarLookupKeys(profile)
     for (const key of keys) {
@@ -19111,6 +19131,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
         if (local && topAvatarOverrides?.[local]) return topAvatarOverrides[local]
       }
     }
+    const publicRowAvatar = findTopAvatarInPublicRows(profile)
+    if (publicRowAvatar) return publicRowAvatar
     const name = normalizeEmail(resolveRealProfileUsername(profile))
     if (name && topAvatarOverrides?.[name]) return topAvatarOverrides[name]
     return ''
@@ -19499,7 +19521,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
           })
         }
       })
-  }, [profiles, topAvatarOverrides])
+  }, [profiles, topAvatarOverrides, publicTopAvatarRows])
 
   const sportCategoryDefs = [
     { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
@@ -19703,7 +19725,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
               <article className="glass-market-v7 seller-card-v7" key={tipster.id || idx}>
                 <div className="seller-main-v7">
                   <div className="seller-profile-v7">
-                    <button type="button" className={`seller-avatar-v7 seller-avatar-button-v1111 a${(idx % 3) + 1}`} onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika" style={tipster.avatarUrl ? { backgroundImage: `url(${tipster.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : undefined}>{tipster.avatar}</button>
+                    <button type="button" className={`seller-avatar-v7 seller-avatar-button-v1111 a${(idx % 3) + 1} ${tipster.avatarUrl ? 'has-real-avatar-v1128' : ''}`} onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika">{tipster.avatarUrl ? <img src={tipster.avatarUrl} alt={tipster.name} loading="lazy" referrerPolicy="no-referrer" /> : tipster.avatar}</button>
                     <div className="seller-copy-v7">
                       <div className="seller-title-row-v7">
                         <span className={`rank-pill-v7 r${Math.min(tipster.rank, 3)}`}>{tipster.rank}</span>

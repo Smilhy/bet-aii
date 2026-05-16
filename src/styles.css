@@ -46698,3 +46698,18 @@ button.betfolio-fetch-btn{
 .top-follow-btn-v1119.is-following .follow-label-v1119::after{
   content:''!important;
 }
+
+/* WERSJA 1128 — Top typerzy: realny avatar jako obrazek, nie gradient z inicjałami */
+.seller-avatar-v7.has-real-avatar-v1128 {
+  padding: 0 !important;
+  overflow: hidden !important;
+  color: transparent !important;
+  background: rgba(8, 22, 32, 0.9) !important;
+}
+.seller-avatar-v7.has-real-avatar-v1128 img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: inherit !important;
+}
