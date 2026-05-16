@@ -1660,9 +1660,53 @@ const staticTips = []
 
 
 
+// 🔒 SIDEBAR LOCK v1129 — NIE RUSZAĆ UKŁADU ZAKŁADEK BEZ WYRAŹNEJ PROŚBY PAWŁA.
+// Te pozycje trzymają stałą kolejność menu, żeby kolejne poprawki Top typerów/profili
+// nie rozjechały lewego panelu ani aktywnej zakładki.
+const LOCKED_SIDEBAR_ITEMS_V1129 = Object.freeze([
+  Object.freeze({ id: 'dashboard', label: '⌂ Dashboard', activeViews: Object.freeze(['dashboard']), clearTipster: true }),
+  Object.freeze({ id: 'add', label: '＋ Dodaj typ', activeViews: Object.freeze(['add']) }),
+  Object.freeze({ id: 'wallet', label: '💼 Portfel', activeViews: Object.freeze(['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings']) }),
+  Object.freeze({ id: 'profile', label: '👤 Mój profil', activeViews: Object.freeze(['profile']) }),
+  Object.freeze({ id: 'unlockedTips', label: '🔓 Kupione single', activeViews: Object.freeze(['unlockedTips']) }),
+  Object.freeze({ id: 'leaderboard', label: '🏆 Ranking', activeViews: Object.freeze(['leaderboard']) }),
+  Object.freeze({ id: 'referrals', label: '👥 Społeczność', activeViews: Object.freeze(['referrals']) }),
+  Object.freeze({ id: 'aiPicks', label: '🧠 Typy AI', activeViews: Object.freeze(['aiPicks']) }),
+  Object.freeze({ id: 'topTipsters', label: '♕ Top typerzy', activeViews: Object.freeze(['topTipsters']) }),
+  Object.freeze({ id: 'articles', label: '📰 Artykuły/TV Live', activeViews: Object.freeze(['articles']) }),
+  Object.freeze({ id: 'rewardsBonuses', label: '🎁 Nagrody/Bonusy', activeViews: Object.freeze(['rewardsBonuses']) })
+])
+
+const LOCKED_ADMIN_SIDEBAR_ITEMS_V1129 = Object.freeze([
+  Object.freeze({ id: 'adminFinance', label: '📊 Admin finanse', activeViews: Object.freeze(['adminFinance']) }),
+  Object.freeze({ id: 'adminCoupons', label: '🧾 Kupony admin', activeViews: Object.freeze(['adminCoupons']) }),
+  Object.freeze({ id: 'adminPayouts', label: '🏦 Admin wypłaty', activeViews: Object.freeze(['adminPayouts']) })
+])
+
+function LockedSidebarMenuButton({ item, view, setView }) {
+  const activeViews = Array.isArray(item.activeViews) ? item.activeViews : [item.id]
+  const handleClick = () => {
+    if (item.clearTipster) window.dispatchEvent(new CustomEvent('betai:clear-selected-tipster'))
+    setView(item.id)
+  }
+
+  return (
+    <button className={activeViews.includes(view) ? 'active' : ''} onClick={handleClick}>
+      {item.label}
+    </button>
+  )
+}
+
 function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notificationsCount = 0, onTopUp, user, userPlan = 'free', onLogout }) {
   const profile = getUserProfileView(user)
   const openPremiumCheckout = () => window.dispatchEvent(new CustomEvent('betai:start-premium-checkout'))
+  const lockedMenuItems = isAdminUser(user)
+    ? [
+        ...LOCKED_SIDEBAR_ITEMS_V1129.slice(0, 7),
+        ...LOCKED_ADMIN_SIDEBAR_ITEMS_V1129,
+        ...LOCKED_SIDEBAR_ITEMS_V1129.slice(7)
+      ]
+    : LOCKED_SIDEBAR_ITEMS_V1129
 
   return (
     <div className="sidebar-stack">
@@ -1688,21 +1732,10 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
         </div>
 
-        <nav className="menu">
-          <button className={view === 'dashboard' ? 'active' : ''} onClick={() => { window.dispatchEvent(new CustomEvent('betai:clear-selected-tipster')); setView('dashboard') }}>⌂ Dashboard</button>
-          <button className={view === 'add' ? 'active' : ''} onClick={() => setView('add')}>＋ Dodaj typ</button>
-          <button className={['wallet', 'deposits', 'payouts', 'payments', 'subscriptions', 'earnings'].includes(view) ? 'active' : ''} onClick={() => setView('wallet')}>💼 Portfel</button>
-          <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>👤 Mój profil</button>
-          <button className={view === 'unlockedTips' ? 'active' : ''} onClick={() => setView('unlockedTips')}>🔓 Kupione single</button>
-          <button className={view === 'leaderboard' ? 'active' : ''} onClick={() => setView('leaderboard')}>🏆 Ranking</button>
-          <button className={view === 'referrals' ? 'active' : ''} onClick={() => setView('referrals')}>👥 Społeczność</button>
-          {isAdminUser(user) && <button className={view === 'adminFinance' ? 'active' : ''} onClick={() => setView('adminFinance')}>📊 Admin finanse</button>}
-          {isAdminUser(user) && <button className={view === 'adminCoupons' ? 'active' : ''} onClick={() => setView('adminCoupons')}>🧾 Kupony admin</button>}
-          {isAdminUser(user) && <button className={view === 'adminPayouts' ? 'active' : ''} onClick={() => setView('adminPayouts')}>🏦 Admin wypłaty</button>}
-          <button className={view === 'aiPicks' ? 'active' : ''} onClick={() => setView('aiPicks')}>🧠 Typy AI</button>
-          <button className={view === 'topTipsters' ? 'active' : ''} onClick={() => setView('topTipsters')}>♕ Top typerzy</button>
-          <button className={view === 'articles' ? 'active' : ''} onClick={() => setView('articles')}>📰 Artykuły/TV Live</button>
-          <button className={view === 'rewardsBonuses' ? 'active' : ''} onClick={() => setView('rewardsBonuses')}>🎁 Nagrody/Bonusy</button>
+        <nav className="menu" data-sidebar-lock="v1129">
+          {lockedMenuItems.map(item => (
+            <LockedSidebarMenuButton key={item.id} item={item} view={view} setView={setView} />
+          ))}
         </nav>
       </aside>
 
@@ -10147,17 +10180,17 @@ function ArticlesView() {
   }
 
   const tvRows = [
-    ['18:30', 'CANAL+ SPORT', 'Manchester City – Arsenal', 'Premier League'],
-    ['20:45', 'ELEVEN SPORTS 2', 'Inter – Juventus', 'Serie A'],
-    ['21:00', 'polsat sport premium', 'Real Madryt – Betis', 'LaLiga'],
-    ['21:00', 'TVP SPORT', 'Lech – Legia', 'PKO BP Ekstraklasa'],
-    ['23:15', 'CANAL+ SPORT', 'NBA Lakers – Nuggets', 'Playoffs'],
+    { time: '18:30', sport: '⚽', match: 'Manchester City – Arsenal', league: 'Premier League', status: 'LIVE CENTER', source: 'Oficjalny nadawca / aplikacja ligi', note: 'Wynik, status meczu i legalna ścieżka oglądania', url: 'https://www.premierleague.com/broadcast-schedules' },
+    { time: '20:45', sport: '⚽', match: 'Inter – Juventus', league: 'Serie A', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca Serie A', note: 'Bez playerów i bez pirackich linków', url: 'https://www.legaseriea.it/en' },
+    { time: '21:00', sport: '⚽', match: 'Real Madryt – Betis', league: 'LaLiga', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca LaLiga', note: 'Sprawdź legalną transmisję w swoim kraju', url: 'https://www.laliga.com/en-GB/where-to-watch-laliga' },
+    { time: '21:00', sport: '⚽', match: 'Lech – Legia', league: 'Ekstraklasa', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca rozgrywek', note: 'Centrum meczowe bez streamu na stronie', url: 'https://www.ekstraklasa.org/' },
+    { time: '23:15', sport: '🏀', match: 'Lakers – Nuggets', league: 'NBA', status: 'NOCNY LIVE', source: 'NBA League Pass / oficjalny nadawca', note: 'Informacja o meczu i legalnym oglądaniu', url: 'https://www.nba.com/watch' },
   ]
 
-  const ppvRows = [
-    ['Usyk vs Fury', 'Walka o wszystkie pasy', '49.00 zł', 'PPV'],
-    ['UFC 302', 'Makhachev vs Poirier', '49.00 zł', 'PPV'],
-    ['KSW 94', 'Stadion Narodowy, Warszawa', '39.00 zł', 'PPV'],
+  const legalLiveInfoRows = [
+    ['✅ Legalne źródła', 'Prowadzimy użytkownika do oficjalnego nadawcy, ligi albo aplikacji sportowej.'],
+    ['📊 Centrum meczu', 'Na stronie pokazujemy mecz, godzinę, wynik live, status i podstawowe informacje.'],
+    ['🚫 Bez ryzyka', 'Nie ma iframe, playerów ani linków do nieautoryzowanych streamów.'],
   ]
 
   const liveChatUsers = [
@@ -10201,7 +10234,7 @@ function ArticlesView() {
         <div className="tvlive-main-v8">
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
             <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Na żywo</button>
-            <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV / PPV</button>
+            <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV Live</button>
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
 
@@ -10318,29 +10351,32 @@ function ArticlesView() {
 
             <div className="tvlive-side-stack-v8">
               <div className="glass-tvlive-v8 schedule-card-v8">
-                <div className="card-head-v8"><h3>TV / Na żywo</h3><button type="button">Zobacz pełen program</button></div>
+                <div className="card-head-v8"><h3>TV Live / legalnie</h3><button type="button">Centrum meczowe</button></div>
                 <div className="mini-tabs-v8"><button type="button" className="active">Dziś</button><button type="button">Jutro</button><button type="button">Śr 17.05</button></div>
-                <div className="schedule-list-v8">
+                <div className="schedule-list-v8 legal-tv-list-v1130">
                   {tvRows.map((row, idx) => (
-                    <div className="schedule-row-v8" key={idx}>
-                      <span>{row[0]}</span>
-                      <div><strong>{row[2]}</strong><small>{row[3]}</small></div>
-                      <em>{row[1]}</em>
-                      <b>NA ŻYWO</b>
+                    <div className="schedule-row-v8 legal-tv-row-v1130" key={idx}>
+                      <span>{row.time}</span>
+                      <div>
+                        <strong>{row.sport} {row.match}</strong>
+                        <small>{row.league} • {row.note}</small>
+                      </div>
+                      <em>{row.source}</em>
+                      <button type="button" onClick={() => row.url && window.open(row.url, '_blank', 'noopener,noreferrer')}>{row.status}</button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="glass-tvlive-v8 ppv-card-v8">
-                <div className="card-head-v8"><h3>PPV / Wydarzenia premium</h3><button type="button">Zobacz wszystkie</button></div>
-                <div className="ppv-list-v8">
-                  {ppvRows.map((row, idx) => (
-                    <div className="ppv-row-v8" key={idx}>
+              <div className="glass-tvlive-v8 ppv-card-v8 legal-safe-card-v1130">
+                <div className="card-head-v8"><h3>Bezpieczne TV Live</h3><button type="button">Legal only</button></div>
+                <div className="ppv-list-v8 legal-info-list-v1130">
+                  {legalLiveInfoRows.map((row, idx) => (
+                    <div className="ppv-row-v8 legal-info-row-v1130" key={idx}>
                       <div className={`ppv-thumb-v8 t${idx+1}`}></div>
                       <div><strong>{row[0]}</strong><small>{row[1]}</small></div>
-                      <span>{row[2]}</span>
-                      <b>{row[3]}</b>
+                      <span>OK</span>
+                      <b>LIVE</b>
                     </div>
                   ))}
                 </div>
@@ -10349,7 +10385,28 @@ function ArticlesView() {
           </div> : null}
 
           {activeArticleTab !== 'live' ? <>
-          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV / PPV — program i transmisje' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Na żywo</button></div>
+          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV Live — legalne transmisje i centrum meczowe' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Na żywo</button></div>
+          {activeArticleTab === 'tv' ? (
+            <div className="glass-tvlive-v8 legal-tv-center-v1130">
+              <div className="legal-tv-center-head-v1130">
+                <span>BETAI TV LIVE</span>
+                <h2>Centrum transmisji bez ryzykownych streamów</h2>
+                <p>Pokazujemy, co gra dzisiaj, status meczu i legalną ścieżkę oglądania. Na stronie nie ma playerów, iframe ani linków do nieautoryzowanych transmisji.</p>
+              </div>
+              <div className="legal-tv-match-grid-v1130">
+                {tvRows.map((row, idx) => (
+                  <article className="legal-tv-match-card-v1130" key={`${row.match}-${idx}`}>
+                    <div className="legal-tv-match-top-v1130"><span>{row.time}</span><b>{row.status}</b></div>
+                    <h3>{row.sport} {row.match}</h3>
+                    <p>{row.league}</p>
+                    <small>{row.note}</small>
+                    <button type="button" onClick={() => row.url && window.open(row.url, '_blank', 'noopener,noreferrer')}>Sprawdź legalne źródło</button>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="article-grid-v8">
             {sportPlCards.map((item, idx) => (
               <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
