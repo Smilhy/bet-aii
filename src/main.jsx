@@ -18881,6 +18881,40 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     return map
   }
 
+  const buildTopTipsterRowsFromExistingRanking = () => {
+    // Najpewniejsze źródło avatarów to te same dane, z których korzysta zakładka Ranking / inne widoki.
+    // W poprzednich wersjach Top typerzy budowali listę głównie z profiles i dlatego, jeśli RLS/RPC nie oddał avatar_url,
+    // karta kończyła z inicjałami typu BU/SM. Teraz dokładamy realne wiersze z rankingu/tipów jako równorzędne profile.
+    return buildLiveLeaderboardRows(ranking || [], tips || []).map(row => {
+      const name = formatRankingName(row) || resolveRealProfileUsername(row)
+      return {
+        ...row,
+        id: row.tipster_id || row.id || row.user_id || row.author_id || row.email || name,
+        user_id: row.user_id || row.tipster_id || row.author_id || row.id || null,
+        author_id: row.author_id || row.tipster_id || row.user_id || row.id || null,
+        username: name,
+        public_slug: row.public_slug || row.slug || normalizePublicSlug(name),
+        email: row.email || row.author_email || row.user_email || '',
+        avatar_url: getProfileAvatarUrl(row),
+        profile_avatar_url: getProfileAvatarUrl(row),
+        author_avatar_url: getProfileAvatarUrl(row),
+        bio: row.bio || row.description || row.about || 'Zweryfikowany typer Bet+AI',
+        preferred_sport: row.preferred_sport || row.sport || row.discipline || 'Piłka nożna',
+        plan: row.plan || row.subscription_status || row.account_type || '',
+        subscription_status: row.subscription_status || row.plan || row.account_type || '',
+        followers_count: row.followers_count ?? row.followers ?? 0,
+        imported_yield: normalizeRankingYield(row),
+        imported_total_tips: normalizeRankingTipsCount(row),
+        imported_won_tips: normalizeRankingWins(row),
+        imported_lost_tips: normalizeRankingLosses(row),
+        imported_profit: normalizeRankingProfit(row),
+      }
+    }).filter(row => {
+      const name = resolveRealProfileUsername(row)
+      return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(row)
+    })
+  }
+
   const fetchTopTipsterAvatarHints = async (profileRows = []) => {
     const map = buildTopTipsterAvatarHintsFromLoadedData()
     ;(profileRows || []).forEach(row => addAvatarHintsFromRow(map, row))
@@ -18946,32 +18980,35 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
   const loadRealTopTipsters = async () => {
     setLoadingProfiles(true)
     try {
-      const rows = await fetchBetaiPublicProfiles()
-      const avatarHints = await fetchTopTipsterAvatarHints(rows || [])
-      setProfiles((rows || []).map(profile => attachRealAvatarToProfile(profile, avatarHints)).filter(profile => {
+      const rankingProfileRows = buildTopTipsterRowsFromExistingRanking()
+      const publicProfileRows = await fetchBetaiPublicProfiles()
+      const mergedRows = mergeProfilesPreferStats(publicProfileRows || [], rankingProfileRows || [])
+      const avatarHints = await fetchTopTipsterAvatarHints(mergedRows || [])
+      setProfiles((mergedRows || []).map(profile => attachRealAvatarToProfile(profile, avatarHints)).filter(profile => {
         const name = resolveRealProfileUsername(profile)
         return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
       }))
     } catch (error) {
       console.warn('top typerzy real profiles load failed', error)
-      setProfiles([])
+      const fallbackRows = buildTopTipsterRowsFromExistingRanking()
+      setProfiles(fallbackRows.filter(profile => {
+        const name = resolveRealProfileUsername(profile)
+        return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
+      }))
     } finally {
       setLoadingProfiles(false)
     }
   }
 
   useEffect(() => {
+    // Odświeżanie Top typerów tylko co 10 minut + ręczny przycisk "Odśwież".
+    // Nie podpinamy już realtime na każde INSERT/UPDATE, bo przy aktywnej stronie potrafiło to mielić co chwilę.
     loadRealTopTipsters()
-    if (!isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel('top-typerzy-real-profiles-v1109')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadRealTopTipsters())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tips' }, () => loadRealTopTipsters())
-      .subscribe()
-    return () => {
-      try { supabase.removeChannel(channel) } catch (_) {}
-    }
-  }, [JSON.stringify((tips || []).map(tip => [tip.id, tip.author_avatar_url, tip.avatar_url, tip.profile_avatar_url])), JSON.stringify((ranking || []).map(row => [row.id || row.tipster_id, row.avatar_url, row.author_avatar_url, row.profile_avatar_url])), user?.id, user?.email, user?.avatar_url, user?.user_metadata?.avatar_url])
+    const timer = window.setInterval(() => {
+      loadRealTopTipsters()
+    }, 10 * 60 * 1000)
+    return () => window.clearInterval(timer)
+  }, [user?.id, user?.email])
 
   const toNumber = (value, fallback = 0) => {
     const n = Number(value)
