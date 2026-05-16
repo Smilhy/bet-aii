@@ -1,6 +1,0 @@
-WERSJA 1146 — auto wykrywanie ekranu i rozdzielczości na bazie v1143.
-- Dodany detektor viewportu, DPR i realnej rozdzielczości w index.html.
-- Layout skaluje się przez klasy: phone/tablet/laptop/desktop oraz FHD/QHD/4K/ultrawide.
-- 27 cali 2K ze skalowaniem Windows jest traktowany jako QHD, nie jako mały laptop.
-- Login i aplikacja nie powinny ucinać ramek na różnych monitorach.
-- Logika Top typerzy, avatary, follow, artykuły i live score nie została zmieniona.
