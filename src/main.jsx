@@ -977,14 +977,34 @@ function getProfileAvatarUrl(user) {
     user?.author_avatar_url ||
     user?.profile_avatar_url ||
     user?.photo_url ||
+    user?.photoURL ||
+    user?.photo ||
+    user?.picture_url ||
+    user?.pictureUrl ||
     user?.picture ||
+    user?.profile_image ||
+    user?.profileImage ||
     user?.image_url ||
+    user?.imageUrl ||
+    user?.image ||
+    user?.avatar ||
+    user?.url ||
     user?.user_metadata?.avatar_url ||
-    user?.user_metadata?.picture ||
     user?.user_metadata?.photo_url ||
+    user?.user_metadata?.photoURL ||
+    user?.user_metadata?.picture_url ||
+    user?.user_metadata?.picture ||
+    user?.user_metadata?.profile_image ||
+    user?.user_metadata?.image_url ||
+    user?.user_metadata?.avatar ||
     user?.raw_user_meta_data?.avatar_url ||
-    user?.raw_user_meta_data?.picture ||
     user?.raw_user_meta_data?.photo_url ||
+    user?.raw_user_meta_data?.photoURL ||
+    user?.raw_user_meta_data?.picture_url ||
+    user?.raw_user_meta_data?.picture ||
+    user?.raw_user_meta_data?.profile_image ||
+    user?.raw_user_meta_data?.image_url ||
+    user?.raw_user_meta_data?.avatar ||
     ''
   )
 }
@@ -1196,6 +1216,18 @@ function cacheBetaiCurrentUserAvatar(user) {
   const username = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name || user?.raw_user_meta_data?.username || user?.raw_user_meta_data?.name)
   if (!avatar || (!email && !username)) return
   writeBetaiPublicAvatarCache([{ id: user?.id || '', email, username, avatar_url: avatar }])
+}
+
+
+function cacheBetaiPublicProfileAvatar(profileLike = {}) {
+  const avatar = getProfileAvatarUrl(profileLike)
+  if (!avatar) return
+  writeBetaiPublicAvatarCache([{
+    id: profileLike?.id || profileLike?.user_id || profileLike?.author_id || profileLike?.tipster_id || '',
+    email: normalizeEmail(profileLike?.email || profileLike?.user_email || profileLike?.author_email || ''),
+    username: normalizeEmail(profileLike?.username || profileLike?.public_slug || profileLike?.author_name || profileLike?.name || resolveRealProfileUsername(profileLike)),
+    avatar_url: avatar,
+  }])
 }
 
 function mergeBetaiProfilesWithCache(profiles = []) {
@@ -2711,6 +2743,8 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     imported_tips_currency: profile?.imported_tips_currency || 'zł',
     stats_imported_at: profile?.stats_imported_at || new Date(Date.now() + 3650 * 86400000).toISOString(),
   }
+  try { cacheBetaiPublicProfileAvatar(targetProfileUser) } catch (_) {}
+
   const normalizedProfileTips = combinedProfileTips.map(raw => {
     const tip = normalizeTipRow(raw)
     return {
@@ -18934,6 +18968,18 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
     // Najważniejsze: pobierz avatary bezpośrednio z publicznych profili, bo inne zakładki używają właśnie profilu/cache,
     // a stare rekordy w tips potrafią mieć puste albo nieaktualne avatary.
+    // v1125: najpewniejszy kanał dla Top typerów — publiczna funkcja z avatarami profili.
+    // Wystarczy raz odpalić SQL z paczki, wtedy avatary są pobierane bez zgadywania po tips/rankingu.
+    try {
+      const { data, error } = await supabase.rpc('betai_public_profile_avatars_for_ui')
+      if (!error && Array.isArray(data)) {
+        data.forEach(row => {
+          profileAvatarRows.push(row)
+          addAvatarHintsFromRow(map, row)
+        })
+      }
+    } catch (_) {}
+
     const profileSelects = [
       'id,email,username,public_slug,avatar_url,profile_avatar_url,author_avatar_url,photo_url,picture,image_url,updated_at,created_at',
       'id,email,username,public_slug,avatar_url,updated_at,created_at',
@@ -21326,6 +21372,7 @@ function App() {
 
   async function openTipsterProfile(tipsterRef, authorName) {
     const profile = await resolveTipsterProfile(tipsterRef, authorName)
+    try { cacheBetaiPublicProfileAvatar(profile || {}) } catch (_) {}
     const id = profile?.id ? String(profile.id) : null
 
     const fallbackLookup = String(authorName || tipsterRef || '').trim()
