@@ -46520,6 +46520,26 @@ button.betfolio-fetch-btn{
   background:rgba(255,255,255,.055)!important;
   border:1px solid rgba(255,255,255,.08)!important;
   box-shadow:0 8px 18px rgba(0,0,0,.2)!important;
+  cursor:help!important;
+  transform:translateZ(0) scale(1)!important;
+  transform-origin:center center!important;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease!important;
+  will-change:transform!important;
+}
+.achievement-list-v1115 .achievement-badge-v1115:hover{
+  transform:translateZ(0) scale(1.32)!important;
+  z-index:5!important;
+  box-shadow:0 12px 28px rgba(0,238,225,.22),0 0 18px rgba(0,238,225,.20)!important;
+  border-color:rgba(32,229,223,.62)!important;
+  filter:saturate(1.15) brightness(1.08)!important;
+}
+.achievement-list-v1115 .achievement-badge-v1115:active{
+  transform:translateZ(0) scale(1.18)!important;
+}
+@media (prefers-reduced-motion:reduce){
+  .achievement-list-v1115 .achievement-badge-v1115{transition:none!important;}
+  .achievement-list-v1115 .achievement-badge-v1115:hover,
+  .achievement-list-v1115 .achievement-badge-v1115:active{transform:none!important;}
 }
 .achievement-badge-v1115.gold{background:linear-gradient(135deg,rgba(255,207,64,.24),rgba(148,94,10,.18))!important;border-color:rgba(255,207,64,.34)!important;}
 .achievement-badge-v1115.orange{background:linear-gradient(135deg,rgba(255,133,44,.24),rgba(128,49,9,.18))!important;border-color:rgba(255,133,44,.34)!important;}
