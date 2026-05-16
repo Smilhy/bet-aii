@@ -18782,7 +18782,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   )
 }
 
-function TopTipstersView({ tips = [], ranking = [], user = null, followingTipsters = new Set(), followStats = {}, onToggleFollow = null, onOpenTipster = null, onSubscribeToTipster = null }) {
+function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set() }) {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
@@ -19182,36 +19182,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
     return [...new Set(normalized.filter(Boolean))]
   }
 
-  const getTopFollowTokens = (tipster = {}) => getTopTipsterIdentityTokens(tipster).map(value => String(value || '').toLowerCase()).filter(Boolean)
-
-  const isTopTipsterFollowing = (tipster = {}) => {
-    const set = new Set([...(followingTipsters || [])].map(value => String(value || '').toLowerCase()))
-    return getTopFollowTokens(tipster).some(key => set.has(key))
-  }
-
-  const getTopFollowStat = (tipster = {}) => {
-    const keys = getTopFollowTokens(tipster)
-    for (const key of keys) {
-      const direct = followStats?.[key]
-      if (direct) return direct
-      const lower = followStats?.[String(key).toLowerCase()]
-      if (lower) return lower
-    }
-    return null
-  }
-
-  const getTopFollowersCount = (tipster = {}) => {
-    const base = Number(tipster.followersValue ?? tipster.followers_count ?? tipster.followers ?? 0) || 0
-    const stat = getTopFollowStat(tipster)
-    const remote = Number(stat?.followers ?? 0) || 0
-    return Math.max(base, remote, isTopTipsterFollowing(tipster) ? 1 : 0)
-  }
-
-  const toggleTopTipsterFollow = (tipster = {}) => {
-    if (typeof onToggleFollow !== 'function') return
-    onToggleFollow(tipster.tipster_id || tipster.user_id || tipster.author_id || tipster.profileRef || tipster.id || tipster.name, tipster.name || tipster.username || tipster.email)
-  }
-
   const getTopTipIdentityTokens = (tip = {}) => {
     const normalizedTip = normalizeTipRow(tip)
     const tokens = [
@@ -19339,7 +19309,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
       recentForm,
       price: priceLabel,
       priceSubLabel,
-      followersValue: followers,
       followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
       achievements: [],
       avatar: initialsFor(name),
@@ -19372,7 +19341,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
           })
         }
       })
-  }, [profiles, followingTipsters, followStats])
+  }, [profiles])
 
   const sportCategoryDefs = [
     { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
@@ -19444,6 +19413,39 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
         subscription_status: 'premium'
       })
     }
+  }
+
+
+  const getTopTipsterFollowKeys = (tipster = {}) => {
+    const values = [
+      tipster.tipster_id,
+      tipster.user_id,
+      tipster.author_id,
+      tipster.profileRef,
+      tipster.id,
+      tipster.name,
+      tipster.username,
+      tipster.email,
+      tipster.author_email,
+    ]
+    const keys = values
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+    keys.forEach(key => {
+      if (key.includes('@')) keys.push(key.split('@')[0])
+    })
+    return [...new Set(keys)]
+  }
+
+  const isTopTipsterFollowing = (tipster = {}) => {
+    const activeSet = followingTipsters instanceof Set ? followingTipsters : new Set(followingTipsters || [])
+    return getTopTipsterFollowKeys(tipster).some(key => activeSet.has(key) || activeSet.has(String(key).toLowerCase()))
+  }
+
+  const toggleTopTipsterFollow = (tipster = {}) => {
+    if (typeof onToggleFollow !== 'function') return
+    const targetId = tipster.tipster_id || tipster.user_id || tipster.author_id || tipster.profileRef || tipster.id || tipster.name
+    onToggleFollow(targetId, tipster.name || tipster.username || tipster.email || targetId)
   }
 
   return (
@@ -19564,8 +19566,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
 
                 <div className="seller-chart-v7">
                   <div className="success-head-v1117">
-                    <small>Skuteczność</small>
-                    <b>{tipster.chart}</b>
+                    <small>Skuteczność <b>{tipster.chart}</b></small>
                   </div>
                   <div className="recent-form-v1114" aria-label={`Ostatnie 6 typów: ${(tipster.recentForm || []).map(item => item.label).join(' ')}`}>
                     {(tipster.recentForm || []).map((item, formIdx) => (
@@ -19589,14 +19590,22 @@ function TopTipstersView({ tips = [], ranking = [], user = null, followingTipste
                   ) : null}
                   <button type="button" className={`buy-btn-v7 ${tipster.premium ? '' : 'free-access-v1113'}`} onClick={() => openTopTipsterSubscription(tipster)}>{tipster.premium ? 'Kup subskrypcję' : 'Darmowe'}</button>
                   <div className="cta-bottom-v7">
-                    <button
-                      type="button"
-                      className={`follow-btn-v7 top-follow-btn-v1118 ${isTopTipsterFollowing(tipster) ? 'active' : ''}`}
-                      onClick={() => toggleTopTipsterFollow(tipster)}
-                    >
-                      {isTopTipsterFollowing(tipster) ? '✓ Obserwujesz' : 'Obserwuj'}
-                    </button>
-                    <span>{getTopFollowersCount(tipster).toLocaleString('pl-PL')} obserwujących</span>
+                    {(() => {
+                      const isFollowing = isTopTipsterFollowing(tipster)
+                      return (
+                        <button
+                          type="button"
+                          className={`follow-btn-v7 top-follow-btn-v1119 ${isFollowing ? 'is-following' : ''}`}
+                          onClick={() => toggleTopTipsterFollow(tipster)}
+                          aria-label={isFollowing ? 'Przestań obserwować typera' : 'Obserwuj typera'}
+                          title={isFollowing ? 'Kliknij, żeby przestać obserwować' : 'Kliknij, żeby obserwować'}
+                        >
+                          <span className="follow-icon-v1119" aria-hidden="true">{isFollowing ? '↺' : '+'}</span>
+                          <span>{isFollowing ? 'Obserwujesz' : 'Obserwuj'}</span>
+                        </button>
+                      )
+                    })()}
+                    <span>{tipster.followers}</span>
                   </div>
                 </div>
               </article>
@@ -23107,7 +23116,7 @@ function App() {
         )}
 
         {view === 'topTipsters' && (
-          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} followingTipsters={followingTipsters} followStats={followStats} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onSubscribeToTipster={setSelectedProfileSub} />
+          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} onSubscribeToTipster={setSelectedProfileSub} onToggleFollow={toggleFollowTipster} followingTipsters={followingTipsters} />
         )}
 
         {view === 'notifications' && (
