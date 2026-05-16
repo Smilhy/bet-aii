@@ -1,0 +1,14 @@
+WERSJA 1145 — AUTO WYKRYWANIE ROZDZIELCZOŚCI / RESPONSIVE ENGINE
+
+Zmiany:
+- dodane automatyczne wykrywanie aktualnego viewportu, DPR i realnej rozdzielczości ekranu,
+- html dostaje klasy typu betai-phone, betai-tablet, betai-laptop, betai-desktop oraz betai-res-qhd / qhd-scaled / fhd itd.,
+- monitor 27 cali 2K z Windows scaling nie jest już traktowany jak losowy mały ekran,
+- layout dobiera szerokości sidebar/main/rightbar według wykrytej rozdzielczości,
+- dla 1680x1050 / 16:10 i skalowanego 2K chowany jest prawy panel, żeby nie zjadało ramek,
+- ekran logowania skaluje się do aktualnego okna i nie wychodzi bokiem,
+- pływające elementy logowania są ukryte tam, gdzie mogą ucinać ramki,
+- bez zmian w logice: Top typerzy, avatary, follow, cennik, artykuły, live score/API.
+
+Nie trzeba SQL.
+Netlify build: npm install && npm run build.

@@ -7,6 +7,66 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <title>Bet+AI — Dashboard</title>
+
+  <script>
+    (function(){
+      function setBetaiResolutionClass(){
+        var root = document.documentElement;
+        var sw = Math.max(screen.width || 0, screen.height || 0);
+        var sh = Math.min(screen.width || 0, screen.height || 0);
+        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+        var dpr = window.devicePixelRatio || 1;
+        var physicalW = Math.round(vw * dpr);
+        var physicalH = Math.round(vh * dpr);
+        var maxPhysical = Math.max(physicalW, physicalH, sw);
+        var minPhysical = Math.min(physicalW || sh, physicalH || sh, sh || physicalH);
+        var ratio = vw / Math.max(vh,1);
+
+        var type = 'desktop';
+        if (vw <= 640) type = 'phone';
+        else if (vw <= 1024) type = 'tablet';
+        else if (vw <= 1440) type = 'laptop';
+        else type = 'desktop';
+
+        var res = 'desktop';
+        if (vw <= 480) res = 'phone-small';
+        else if (vw <= 760) res = 'phone-hd';
+        else if (vw <= 1100) res = 'tablet';
+        else if (vw <= 1390) res = 'hd';
+        else if (vw <= 1719) res = 'fhd-scaled';
+        else if (vw <= 2199) res = 'fhd';
+        else if (vw <= 2999) res = 'qhd';
+        else if (vw <= 4096) res = 'uhd';
+        else res = 'ultrawide';
+
+        // Gdy Windows skaluje monitor 2K/4K, CSS viewport bywa 1600-1800.
+        // Wykrywamy to po devicePixelRatio i fizycznych pikselach, żeby strona nie zachowywała się jak mały laptop.
+        if (dpr >= 1.2 && maxPhysical >= 2400 && vw >= 1500) res = 'qhd-scaled';
+        if (dpr >= 1.5 && maxPhysical >= 3000 && vw >= 1500) res = 'uhd-scaled';
+
+        root.dataset.betaiDevice = type;
+        root.dataset.betaiResolution = res;
+        root.dataset.betaiViewport = vw + 'x' + vh;
+        root.dataset.betaiScreen = Math.round(maxPhysical) + 'x' + Math.round(minPhysical);
+        root.style.setProperty('--betai-vw', String(vw));
+        root.style.setProperty('--betai-vh', String(vh));
+        root.style.setProperty('--betai-dpr', String(dpr));
+        root.style.setProperty('--betai-ratio', String(ratio.toFixed(4)));
+
+        root.classList.remove(
+          'betai-phone','betai-tablet','betai-laptop','betai-desktop',
+          'betai-res-phone-small','betai-res-phone-hd','betai-res-tablet','betai-res-hd',
+          'betai-res-fhd-scaled','betai-res-fhd','betai-res-qhd','betai-res-qhd-scaled',
+          'betai-res-uhd','betai-res-uhd-scaled','betai-res-ultrawide'
+        );
+        root.classList.add('betai-' + type, 'betai-res-' + res);
+      }
+      setBetaiResolutionClass();
+      window.addEventListener('resize', setBetaiResolutionClass, { passive:true });
+      window.addEventListener('orientationchange', function(){ setTimeout(setBetaiResolutionClass, 80); }, { passive:true });
+    })();
+  </script>
   <link rel="preload" as="image" href="/auth-brand-470-transparent.png" fetchpriority="high">
   <link rel="preload" as="image" href="/auth-right-484.png" fetchpriority="high">
 
