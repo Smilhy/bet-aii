@@ -18782,7 +18782,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   )
 }
 
-function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set() }) {
+function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set(), followStats = {} }) {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
@@ -19257,6 +19257,22 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return achievements.slice(0, 4)
   }
 
+  const formatFollowersLabel = (count) => {
+    const value = Math.max(0, Number(count || 0) || 0)
+    if (value === 1) return 'obserwujący'
+    return 'obserwujących'
+  }
+
+  const getVisibleTopFollowersCount = (tipster = {}, isFollowing = false) => {
+    const keys = getTopTipsterFollowKeys(tipster)
+    const statsValue = keys.reduce((max, key) => {
+      const stat = followStats?.[key] || followStats?.[String(key || '').toLowerCase()]
+      return Math.max(max, Number(stat?.followers || 0) || 0)
+    }, 0)
+    const baseValue = Math.max(Number(tipster.followersValue || 0) || 0, statsValue)
+    return Math.max(0, isFollowing ? Math.max(baseValue, 1) : baseValue)
+  }
+
   const buildRealTipster = (profile, idx) => {
     const name = resolveRealProfileUsername(profile)
     const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
@@ -19266,7 +19282,13 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     const hitRate = settled > 0 ? Math.round((won / settled) * 100) : 0
     const roi = toNumber(profile.imported_yield ?? profile.roi ?? profile.yield, 0)
     const profit = toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
-    const followers = toNumber(profile.followers_count ?? profile.followers, 0)
+    const baseFollowers = toNumber(profile.followers_count ?? profile.followers, 0)
+    const identityTokens = getTopTipsterIdentityTokens(profile)
+    const statsFollowers = identityTokens.reduce((max, key) => {
+      const stat = followStats?.[key] || followStats?.[String(key || '').toLowerCase()]
+      return Math.max(max, Number(stat?.followers || 0) || 0)
+    }, 0)
+    const followers = Math.max(baseFollowers, statsFollowers)
     const premium = isPremiumSellerProfile(profile, profile.plan || profile.subscription_status || profile.status || profile.account_type) || isPremiumProfile(profile)
     const topSport = getProfileTopSport(profile)
     const activePlans = getActiveTopTipsterPlans(profile)
@@ -19309,7 +19331,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       recentForm,
       price: priceLabel,
       priceSubLabel,
-      followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
+      followers: `${followers.toLocaleString('pl-PL')} ${formatFollowersLabel(followers)}`,
+      followersValue: followers,
       achievements: [],
       avatar: initialsFor(name),
       avatarUrl: getProfileAvatarUrl(profile),
@@ -19606,7 +19629,11 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                         </button>
                       )
                     })()}
-                    <span>{tipster.followers}</span>
+                    {(() => {
+                      const isFollowing = isTopTipsterFollowing(tipster)
+                      const count = getVisibleTopFollowersCount(tipster, isFollowing)
+                      return <span>{count.toLocaleString('pl-PL')} {formatFollowersLabel(count)}</span>
+                    })()}
                   </div>
                 </div>
               </article>
@@ -20964,8 +20991,42 @@ function App() {
 
 
   async function fetchFollowStats() {
+    const addFollowerStat = (stats, key, followerUnique) => {
+      const cleanKey = normalizeEmail(key || '')
+      if (!cleanKey) return
+      stats[cleanKey] = stats[cleanKey] || { followers: 0, following: 0, _followers: new Set() }
+      if (followerUnique) stats[cleanKey]._followers.add(String(followerUnique).toLowerCase())
+      stats[cleanKey].followers = Math.max(Number(stats[cleanKey].followers || 0) || 0, stats[cleanKey]._followers.size)
+    }
+
+    const finishStats = (stats) => {
+      Object.keys(stats).forEach(key => {
+        if (stats[key]?._followers) {
+          stats[key] = {
+            followers: Math.max(Number(stats[key].followers || 0) || 0, stats[key]._followers.size),
+            following: Number(stats[key].following || 0) || 0
+          }
+        }
+      })
+      const localSet = readLocalFollowingTipsters(sessionUser?.id)
+      if (sessionUser?.id && localSet.size) {
+        const viewerKey = String(sessionUser.id)
+        stats[viewerKey] = stats[viewerKey] || { followers: 0, following: 0 }
+        stats[viewerKey].following = Math.max(Number(stats[viewerKey].following || 0), localSet.size)
+        ;[...localSet].forEach(key => {
+          const cleanKey = normalizeEmail(key || '')
+          if (!cleanKey) return
+          stats[cleanKey] = stats[cleanKey] || { followers: 0, following: 0 }
+          stats[cleanKey].followers = Math.max(Number(stats[cleanKey].followers || 0) || 0, 1)
+        })
+      }
+      return stats
+    }
+
+    const stats = {}
+
     if (!isSupabaseConfigured || !supabase) {
-      setFollowStats({})
+      setFollowStats(finishStats(stats))
       return
     }
 
@@ -20976,39 +21037,41 @@ function App() {
 
       if (error) throw error
 
-      const stats = {}
       ;(data || []).forEach(row => {
-        const followerId = String(row.follower_id || '')
-        const tipsterId = String(row.tipster_id || '')
-        if (tipsterId) {
-          stats[tipsterId] = stats[tipsterId] || { followers: 0, following: 0 }
-          stats[tipsterId].followers += 1
-        }
+        const followerId = String(row.follower_id || '').toLowerCase()
+        const tipsterId = String(row.tipster_id || '').toLowerCase()
+        if (tipsterId) addFollowerStat(stats, tipsterId, followerId)
         if (followerId) {
           stats[followerId] = stats[followerId] || { followers: 0, following: 0 }
           stats[followerId].following += 1
         }
       })
-      const localSet = readLocalFollowingTipsters(sessionUser?.id)
-      if (sessionUser?.id && localSet.size) {
-        const viewerKey = String(sessionUser.id)
-        stats[viewerKey] = stats[viewerKey] || { followers: 0, following: 0 }
-        stats[viewerKey].following = Math.max(Number(stats[viewerKey].following || 0), localSet.size)
-      }
-      setFollowStats(stats)
     } catch (error) {
-      console.warn('fetchFollowStats skipped', error)
-      const localSet = readLocalFollowingTipsters(sessionUser?.id)
-      if (sessionUser?.id && localSet.size) {
-        setFollowStats(prev => ({
-          ...(prev || {}),
-          [String(sessionUser.id)]: {
-            ...(prev?.[String(sessionUser.id)] || {}),
-            following: localSet.size
-          }
-        }))
-      }
+      console.warn('fetchFollowStats uuid skipped', error)
     }
+
+    try {
+      const { data: keyRows, error: keyError } = await supabase
+        .from('betai_tipster_follow_keys_v1033')
+        .select('follower_id,follower_email,tipster_id,tipster_key,tipster_name,tipster_email')
+
+      if (keyError) throw keyError
+
+      ;(keyRows || []).forEach(row => {
+        const followerUnique = normalizeEmail(row.follower_id || row.follower_email || '')
+        const keys = [row.tipster_id, row.tipster_key, row.tipster_name, row.tipster_email]
+        keys.forEach(key => addFollowerStat(stats, key, followerUnique))
+        const followerId = String(row.follower_id || '').toLowerCase()
+        if (followerId) {
+          stats[followerId] = stats[followerId] || { followers: 0, following: 0 }
+          stats[followerId].following += 1
+        }
+      })
+    } catch (error) {
+      console.warn('fetchFollowStats keys skipped', error)
+    }
+
+    setFollowStats(finishStats(stats))
   }
 
 
@@ -21293,15 +21356,17 @@ function App() {
 
     setFollowStats(prev => {
       const next = { ...(prev || {}) }
-      const targetKey = id || localKey
       const viewerKey = String(sessionUser.id || '')
-      if (targetKey) {
-        const current = next[targetKey] || { followers: 0, following: 0 }
-        next[targetKey] = { ...current, followers: Math.max(0, Number(current.followers || 0) + (alreadyFollowing ? -1 : 1)) }
-      }
+      const delta = alreadyFollowing ? -1 : 1
+      followKeys.forEach(key => {
+        const cleanKey = String(key || '').toLowerCase().trim()
+        if (!cleanKey) return
+        const current = next[cleanKey] || { followers: 0, following: 0 }
+        next[cleanKey] = { ...current, followers: Math.max(0, Number(current.followers || 0) + delta) }
+      })
       if (viewerKey) {
         const current = next[viewerKey] || { followers: 0, following: 0 }
-        next[viewerKey] = { ...current, following: Math.max(0, Number(current.following || 0) + (alreadyFollowing ? -1 : 1)) }
+        next[viewerKey] = { ...current, following: Math.max(0, Number(current.following || 0) + delta) }
       }
       return next
     })
@@ -23147,7 +23212,7 @@ function App() {
         )}
 
         {view === 'topTipsters' && (
-          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} onSubscribeToTipster={setSelectedProfileSub} onToggleFollow={toggleFollowTipster} followingTipsters={followingTipsters} />
+          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} onSubscribeToTipster={setSelectedProfileSub} onToggleFollow={toggleFollowTipster} followingTipsters={followingTipsters} followStats={followStats} />
         )}
 
         {view === 'notifications' && (
