@@ -10025,6 +10025,10 @@ function ArticlesView() {
   const [scoreSportFilter, setScoreSportFilter] = useState('all')
   const [scoreQuery, setScoreQuery] = useState('')
   const [scoreDay, setScoreDay] = useState('today')
+  const [realLiveScores, setRealLiveScores] = useState([])
+  const [realLiveLoading, setRealLiveLoading] = useState(false)
+  const [realLiveError, setRealLiveError] = useState('')
+  const [realLiveUpdatedAt, setRealLiveUpdatedAt] = useState(null)
   const [previewArticle, setPreviewArticle] = useState(null)
   const [brokenSportPlImages, setBrokenSportPlImages] = useState({})
   const articleHeroSwipeStart = useRef(null)
@@ -10069,6 +10073,73 @@ function ArticlesView() {
       if (intervalId) window.clearInterval(intervalId)
     }
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    let intervalId = null
+
+    const loadRealLiveScores = async () => {
+      if (activeArticleTab !== 'scores') return
+      try {
+        setRealLiveLoading(true)
+        setRealLiveError('')
+        const params = new URLSearchParams({
+          day: scoreDay,
+          sport: scoreSportFilter === 'all' ? 'all' : scoreSportFilter,
+          t: String(Date.now()),
+        })
+        const response = await fetch(`/.netlify/functions/live-scores?${params.toString()}`, { cache: 'no-store' })
+        const payload = await response.json().catch(() => ({}))
+        if (!isMounted) return
+        const matches = Array.isArray(payload?.matches) ? payload.matches : []
+        setRealLiveScores(matches)
+        setRealLiveUpdatedAt(payload?.updatedAt || new Date().toISOString())
+        if (!payload?.ok && payload?.error) setRealLiveError(payload.error)
+        else if (payload?.missingKey || payload?.error) setRealLiveError(payload.error || 'Brak klucza API do realnych wyników live.')
+        else if (payload?.message) setRealLiveError(payload.message)
+      } catch (error) {
+        if (!isMounted) return
+        setRealLiveScores([])
+        setRealLiveError(error.message || 'Nie udało się pobrać realnych wyników live.')
+      } finally {
+        if (isMounted) setRealLiveLoading(false)
+      }
+    }
+
+    loadRealLiveScores()
+    if (activeArticleTab === 'scores') {
+      intervalId = window.setInterval(loadRealLiveScores, 60 * 1000)
+    }
+    return () => {
+      isMounted = false
+      if (intervalId) window.clearInterval(intervalId)
+    }
+  }, [activeArticleTab, scoreDay, scoreSportFilter])
+
+  const refreshRealLiveScores = async () => {
+    try {
+      setRealLiveLoading(true)
+      setRealLiveError('')
+      const params = new URLSearchParams({
+        day: scoreDay,
+        sport: scoreSportFilter === 'all' ? 'all' : scoreSportFilter,
+        t: String(Date.now()),
+      })
+      const response = await fetch(`/.netlify/functions/live-scores?${params.toString()}`, { cache: 'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      const matches = Array.isArray(payload?.matches) ? payload.matches : []
+      setRealLiveScores(matches)
+      setRealLiveUpdatedAt(payload?.updatedAt || new Date().toISOString())
+      if (!payload?.ok && payload?.error) setRealLiveError(payload.error)
+      else if (payload?.missingKey || payload?.error) setRealLiveError(payload.error || 'Brak klucza API do realnych wyników live.')
+      else if (payload?.message) setRealLiveError(payload.message)
+    } catch (error) {
+      setRealLiveScores([])
+      setRealLiveError(error.message || 'Nie udało się pobrać realnych wyników live.')
+    } finally {
+      setRealLiveLoading(false)
+    }
+  }
 
   const articleCards = [
     {
@@ -10375,11 +10446,11 @@ function ArticlesView() {
   ]
 
   const normalizedScoreQuery = scoreQuery.trim().toLowerCase()
-  const filteredLiveScores = liveScores.filter(match => {
+  const liveScoreSource = realLiveScores
+  const filteredLiveScores = liveScoreSource.filter(match => {
     const sportOk = scoreSportFilter === 'all' || match.sport === scoreSportFilter
-    const dayOk = scoreDay === 'all' || match.day === scoreDay
-    const queryOk = !normalizedScoreQuery || `${match.country} ${match.league} ${match.home.name} ${match.away.name}`.toLowerCase().includes(normalizedScoreQuery)
-    return sportOk && dayOk && queryOk
+    const queryOk = !normalizedScoreQuery || `${match.country} ${match.league} ${match.home?.name || ''} ${match.away?.name || ''}`.toLowerCase().includes(normalizedScoreQuery)
+    return sportOk && queryOk
   })
 
   const groupedLiveScores = filteredLiveScores.reduce((acc, match) => {
@@ -10479,9 +10550,9 @@ function ArticlesView() {
                 <div>
                   <span>BETAI LIVESCORE</span>
                   <h3>Wyniki live</h3>
-                  <p>Tablica w stylu Flashscore/LiveScore: ligi, status, wynik, strzelcy, statystyki i kursy w jednym miejscu.</p>
+                  <p>Realne mecze z API-SPORTS/API-Football. Odświeżanie automatyczne co 60 sekund.</p>
                 </div>
-                <button type="button" onClick={() => setScoreDay('today')}>⟳ Odśwież</button>
+                <button type="button" onClick={refreshRealLiveScores} disabled={realLiveLoading}>{realLiveLoading ? '⟳ Pobieram...' : '⟳ Odśwież'}</button>
               </div>
 
               <div className="flashscore-toolbar-v1132">
@@ -10502,6 +10573,12 @@ function ArticlesView() {
                 ))}
               </div>
 
+              <div className="flashscore-live-status-v1142">
+                <span>{realLiveUpdatedAt ? `Ostatnia aktualizacja: ${new Date(realLiveUpdatedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}` : 'Realne wyniki live'}</span>
+                {realLiveLoading ? <b>Pobieram realne mecze...</b> : null}
+                {realLiveError ? <em>{realLiveError}</em> : null}
+              </div>
+
               <div className="flashscore-list-v1132">
                 {Object.entries(groupedLiveScores).map(([leagueName, matches]) => (
                   <section className="flashscore-league-v1132" key={leagueName}>
@@ -10514,26 +10591,26 @@ function ArticlesView() {
                         <button type="button" className="flashscore-star-v1132" aria-label="Dodaj do ulubionych">☆</button>
                         <div className="flashscore-time-v1132"><b>{match.status}</b><small>{match.minute}</small></div>
                         <div className="flashscore-teams-v1132">
-                          <div><i>{match.home.logo}</i><strong>{match.home.name}</strong><span>{match.home.score}</span></div>
-                          <div><i>{match.away.logo}</i><strong>{match.away.name}</strong><span>{match.away.score}</span></div>
+                          <div><i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo}</i><strong>{match.home?.name}</strong><span>{match.home?.score}</span></div>
+                          <div><i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo}</i><strong>{match.away?.name}</strong><span>{match.away?.score}</span></div>
                         </div>
                         <div className="flashscore-events-v1132">
-                          <small>{match.home.scorers.join(' • ') || '—'}</small>
-                          <small>{match.away.scorers.join(' • ') || '—'}</small>
+                          <small>{(match.home?.scorers || []).join(' • ') || '—'}</small>
+                          <small>{(match.away?.scorers || []).join(' • ') || '—'}</small>
                         </div>
                         <div className="flashscore-stats-v1132">
-                          <span>Posiadanie <b>{match.stats.possession}</b></span>
-                          <span>Strzały/forma <b>{match.stats.shots}</b></span>
-                          <span>Rzuty/extra <b>{match.stats.corners}</b></span>
+                          <span>Źródło <b>{match.source === 'api-football' ? 'API-Football' : 'Live API'}</b></span>
+                          <span>Stadion <b>{match.stats?.shots || '—'}</b></span>
+                          <span>Sędzia <b>{match.stats?.corners || '—'}</b></span>
                         </div>
                         <div className="flashscore-odds-v1132">
-                          <i>{match.odds[0]}</i><i>{match.odds[1]}</i><i>{match.odds[2]}</i><em>{match.trend}</em>
+                          <i>{match.odds?.[0] || '-'}</i><i>{match.odds?.[1] || '-'}</i><i>{match.odds?.[2] || '-'}</i><em>{match.trend}</em>
                         </div>
                       </article>
                     ))}
                   </section>
                 ))}
-                {!filteredLiveScores.length ? <div className="flashscore-empty-v1132">Brak meczów dla wybranego filtra.</div> : null}
+                {!filteredLiveScores.length && !realLiveLoading ? <div className="flashscore-empty-v1132">Brak realnych meczów dla wybranego filtra albo brakuje klucza API w Netlify.</div> : null}
               </div>
             </div>
           ) : null}
