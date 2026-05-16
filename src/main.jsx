@@ -1052,7 +1052,7 @@ async function fetchBetaiPublicProfiles() {
   // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
   try {
     const statsRows = await fetchBetaiProfilesWithStats()
-    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status').limit(1000)
+    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,rating_avg,rating_count,reviews_count').limit(1000)
     if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
     if (statsRows.length) return mergeBetaiProfilesWithCache(statsRows)
     if (error) console.warn('profiles avatar fallback skipped', error)
@@ -1129,6 +1129,11 @@ function mergeProfilesPreferStats(...groups) {
       imported_tips_amount: preferred.imported_tips_amount ?? other.imported_tips_amount,
       imported_tips_currency: preferred.imported_tips_currency ?? other.imported_tips_currency,
       stats_imported_at: preferred.stats_imported_at ?? other.stats_imported_at,
+      rating_avg: preferred.rating_avg ?? other.rating_avg,
+      rating_count: preferred.rating_count ?? other.rating_count,
+      reviews_count: preferred.reviews_count ?? other.reviews_count,
+      top_review_rating_avg: preferred.top_review_rating_avg ?? other.top_review_rating_avg,
+      top_review_rating_count: preferred.top_review_rating_count ?? other.top_review_rating_count,
     })
   })
 
@@ -1137,7 +1142,7 @@ function mergeProfilesPreferStats(...groups) {
 
 async function fetchBetaiProfilesWithStats() {
   if (!isSupabaseConfigured || !supabase) return []
-  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
+  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
   try {
     const { data, error } = await supabase.from('profiles').select(columns).limit(1000)
     if (!error && Array.isArray(data)) return data
@@ -18977,6 +18982,66 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return realAvatar ? { ...profile, avatar_url: realAvatar, profile_avatar_url: realAvatar, author_avatar_url: realAvatar } : profile
   }
 
+  const isUuidLike = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim())
+
+  const getTopTipsterProfileId = (profile = {}) => {
+    return [profile.id, profile.user_id, profile.author_id, profile.tipster_id, profile.profile_id]
+      .find(value => isUuidLike(value)) || ''
+  }
+
+  const fetchTopTipsterReviewStats = async (rows = []) => {
+    const map = new Map()
+    ;(rows || []).forEach(profile => {
+      const profileId = getTopTipsterProfileId(profile)
+      const ratingAvg = Number(profile.rating_avg ?? profile.profile_rating_avg ?? profile.review_rating_avg ?? 0) || 0
+      const ratingCount = Number(profile.rating_count ?? profile.reviews_count ?? profile.profile_rating_count ?? profile.review_rating_count ?? 0) || 0
+      if (profileId && ratingCount > 0) map.set(profileId, { avg: ratingAvg, count: ratingCount })
+    })
+
+    if (!isSupabaseConfigured || !supabase) return map
+    const ids = [...new Set((rows || []).map(getTopTipsterProfileId).filter(Boolean))]
+    if (!ids.length) return map
+
+    try {
+      const { data, error } = await supabase
+        .from('profile_reviews')
+        .select('profile_id,rating,is_approved')
+        .in('profile_id', ids)
+        .eq('is_approved', true)
+        .limit(5000)
+
+      if (error || !Array.isArray(data)) return map
+      const buckets = new Map()
+      data.forEach(review => {
+        const profileId = String(review.profile_id || '')
+        const ratingValue = Number(review.rating || 0)
+        if (!profileId || !Number.isFinite(ratingValue) || ratingValue <= 0) return
+        const prev = buckets.get(profileId) || { sum: 0, count: 0 }
+        prev.sum += ratingValue
+        prev.count += 1
+        buckets.set(profileId, prev)
+      })
+      buckets.forEach((bucket, profileId) => {
+        map.set(profileId, { avg: Math.round((bucket.sum / bucket.count) * 100) / 100, count: bucket.count })
+      })
+    } catch (error) {
+      console.warn('top typerzy review stats skipped', error)
+    }
+    return map
+  }
+
+  const attachRealReviewStatsToProfile = (profile = {}, reviewStats = new Map()) => {
+    const profileId = getTopTipsterProfileId(profile)
+    const remoteStats = profileId ? reviewStats.get(profileId) : null
+    const avg = Number(remoteStats?.avg ?? profile.rating_avg ?? profile.profile_rating_avg ?? profile.review_rating_avg ?? 0) || 0
+    const count = Number(remoteStats?.count ?? profile.rating_count ?? profile.reviews_count ?? profile.profile_rating_count ?? profile.review_rating_count ?? 0) || 0
+    return {
+      ...profile,
+      top_review_rating_avg: count > 0 ? avg : 0,
+      top_review_rating_count: count > 0 ? count : 0,
+    }
+  }
+
   const loadRealTopTipsters = async () => {
     setLoadingProfiles(true)
     try {
@@ -18984,10 +19049,14 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       const publicProfileRows = await fetchBetaiPublicProfiles()
       const mergedRows = mergeProfilesPreferStats(publicProfileRows || [], rankingProfileRows || [])
       const avatarHints = await fetchTopTipsterAvatarHints(mergedRows || [])
-      setProfiles((mergedRows || []).map(profile => attachRealAvatarToProfile(profile, avatarHints)).filter(profile => {
-        const name = resolveRealProfileUsername(profile)
-        return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
-      }))
+      const reviewStats = await fetchTopTipsterReviewStats(mergedRows || [])
+      setProfiles((mergedRows || [])
+        .map(profile => attachRealAvatarToProfile(profile, avatarHints))
+        .map(profile => attachRealReviewStatsToProfile(profile, reviewStats))
+        .filter(profile => {
+          const name = resolveRealProfileUsername(profile)
+          return name && !isGenericProfileName(name) && !isBlockedTopTipsterProfile(profile)
+        }))
     } catch (error) {
       console.warn('top typerzy real profiles load failed', error)
       const fallbackRows = buildTopTipsterRowsFromExistingRanking()
@@ -19065,8 +19134,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       profileRef: profile.id || profile.user_id || profile.author_id || profile.tipster_id || profile.public_slug || profile.email || name,
       name,
       subtitle: profile.bio || profile.description || profile.about || 'Zweryfikowany typer Bet+AI',
-      rating: (4 + Math.min(0.99, Math.max(0, hitRate || 70) / 100)).toFixed(2),
-      votes: String(Math.max(totalTips, followers, 0)),
+      rating: (Number(profile.top_review_rating_avg ?? profile.rating_avg ?? 0) || 0).toFixed(2),
+      votes: String(Number(profile.top_review_rating_count ?? profile.rating_count ?? profile.reviews_count ?? 0) || 0),
       success: `${hitRate}%`,
       roi: `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`,
       profit: formatMoney(profit),
