@@ -19232,6 +19232,31 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return [...matchedTips, ...Array.from({ length: Math.max(0, 6 - matchedTips.length) }, () => normalizeTopFormItem('pending'))].slice(0, 6)
   }
 
+  const buildTopTipsterAchievements = ({ rank = 0, hitRate = 0, roi = 0, profit = 0, totalTips = 0, rating = 0, votes = 0, recentForm = [], premium = false } = {}) => {
+    const recentWins = (recentForm || []).filter(item => item?.status === 'won').length
+    const achievements = []
+
+    if (rank === 1) achievements.push({ icon: '👑', title: '#1 · 2026', desc: 'Lider rankingu', tone: 'gold' })
+    else if (rank > 1 && rank <= 3) achievements.push({ icon: '🏆', title: `TOP ${rank}`, desc: 'Top 3 rankingu', tone: 'gold' })
+
+    if (recentWins >= 5) achievements.push({ icon: '🔥', title: 'Forma 5/6', desc: 'Minimum 5 wygranych z ostatnich 6', tone: 'orange' })
+    else if (recentWins >= 4) achievements.push({ icon: '🔥', title: 'Forma 4/6', desc: 'Minimum 4 wygrane z ostatnich 6', tone: 'orange' })
+
+    if (hitRate >= 80 && totalTips >= 5) achievements.push({ icon: '🎯', title: 'Snajper 80%', desc: 'Skuteczność minimum 80%', tone: 'cyan' })
+    else if (hitRate >= 70 && totalTips >= 5) achievements.push({ icon: '🎯', title: 'Snajper 70%', desc: 'Skuteczność minimum 70%', tone: 'cyan' })
+
+    if (profit >= 300) achievements.push({ icon: '💰', title: 'Profit +300 zł', desc: 'Zysk minimum +300 zł', tone: 'green' })
+    else if (profit >= 100) achievements.push({ icon: '💰', title: 'Profit +100 zł', desc: 'Zysk minimum +100 zł', tone: 'green' })
+
+    if (roi >= 60 && totalTips >= 3) achievements.push({ icon: '📈', title: 'ROI Master', desc: 'ROI minimum +60%', tone: 'cyan' })
+    else if (roi >= 50 && totalTips >= 3) achievements.push({ icon: '📈', title: 'ROI +50%', desc: 'ROI minimum +50%', tone: 'cyan' })
+
+    if (rating >= 4.8 && votes >= 3) achievements.push({ icon: '⭐', title: 'Zaufany', desc: 'Ocena minimum 4.8 i 3 opinie', tone: 'gold' })
+    if (premium) achievements.push({ icon: '💎', title: 'Premium typer', desc: 'Sprzedaje płatne typy', tone: 'violet' })
+
+    return achievements.slice(0, 4)
+  }
+
   const buildRealTipster = (profile, idx) => {
     const name = resolveRealProfileUsername(profile)
     const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
@@ -19248,6 +19273,9 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     const mainPlan = getMainTopTipsterPlan(activePlans)
     const priceLabel = premium && mainPlan ? `od ${formatTopPlanPrice(mainPlan.price)}` : (premium ? 'Subskrypcja' : 'Darmowe')
     const priceSubLabel = premium && mainPlan ? `/${mainPlan.label}` : '/ dostęp'
+    const reviewRating = Number(profile.top_review_rating_avg ?? profile.rating_avg ?? 0) || 0
+    const reviewVotes = Number(profile.top_review_rating_count ?? profile.rating_count ?? profile.reviews_count ?? 0) || 0
+    const recentForm = buildRecentFormForProfile(profile)
     return {
       rank: idx + 1,
       id: profile.id || profile.user_id || profile.email || name,
@@ -19265,20 +19293,24 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       top_subscription_plans: activePlans,
       name,
       subtitle: profile.bio || profile.description || profile.about || 'Zweryfikowany typer Bet+AI',
-      rating: (Number(profile.top_review_rating_avg ?? profile.rating_avg ?? 0) || 0).toFixed(2),
-      votes: String(Number(profile.top_review_rating_count ?? profile.rating_count ?? profile.reviews_count ?? 0) || 0),
+      rating: reviewRating.toFixed(2),
+      votes: String(reviewVotes),
+      ratingValue: reviewRating,
+      votesValue: reviewVotes,
       success: `${hitRate}%`,
+      hitRateValue: hitRate,
       roi: `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`,
+      roiValue: roi,
       profit: formatMoney(profit),
       profitValue: profit,
       totalTipsValue: totalTips,
       picks: String(totalTips),
       chart: `${hitRate}%`,
-      recentForm: buildRecentFormForProfile(profile),
+      recentForm,
       price: priceLabel,
       priceSubLabel,
       followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
-      spec: ['⚽', '📊', '🎯', premium ? '👑' : '🎁'],
+      achievements: [],
       avatar: initialsFor(name),
       avatarUrl: getProfileAvatarUrl(profile),
       premium,
@@ -19292,7 +19324,23 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       .filter(profile => !isBlockedTopTipsterProfile(profile))
       .map((profile, idx) => buildRealTipster(profile, idx))
       .sort((a, b) => (b.profitValue - a.profitValue) || (b.totalTipsValue - a.totalTipsValue) || (b.sortScore - a.sortScore))
-      .map((item, idx) => ({ ...item, rank: idx + 1 }))
+      .map((item, idx) => {
+        const rankedItem = { ...item, rank: idx + 1 }
+        return {
+          ...rankedItem,
+          achievements: buildTopTipsterAchievements({
+            rank: rankedItem.rank,
+            hitRate: rankedItem.hitRateValue,
+            roi: rankedItem.roiValue,
+            profit: rankedItem.profitValue,
+            totalTips: rankedItem.totalTipsValue,
+            rating: rankedItem.ratingValue,
+            votes: rankedItem.votesValue,
+            recentForm: rankedItem.recentForm,
+            premium: rankedItem.premium,
+          })
+        }
+      })
   }, [profiles])
 
   const sportCategoryDefs = [
@@ -19492,10 +19540,12 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                   </div>
                   <div className="chart-meta-v7">
                     <b>{tipster.chart}</b>
-                    <span>Specjalizacja</span>
+                    <span>Osiągnięcia</span>
                   </div>
-                  <div className="spec-list-v7">
-                    {tipster.spec.map((s, i) => <i key={i}>{s}</i>)}
+                  <div className="spec-list-v7 achievement-list-v1115">
+                    {tipster.achievements?.length ? tipster.achievements.map((badge, i) => (
+                      <i key={`${badge.title}-${i}`} className={`achievement-badge-v1115 ${badge.tone || ''}`} title={`${badge.title} — ${badge.desc}`}>{badge.icon}</i>
+                    )) : <em className="no-achievement-v1115">Brak osiągnięć</em>}
                   </div>
                 </div>
 

@@ -46497,3 +46497,39 @@ button.betfolio-fetch-btn{
   .recent-form-v1114{min-height:42px!important;gap:6px!important;}
   .form-pill-v1114{width:28px!important;height:28px!important;min-width:28px!important;font-size:13px!important;}
 }
+
+/* WERSJA 1115 — Top typerzy: żywe osiągnięcia zamiast stałych ikonek specjalizacji */
+.achievement-list-v1115{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-height:28px!important;
+  flex-wrap:wrap!important;
+}
+.achievement-list-v1115 .achievement-badge-v1115{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  border-radius:50%!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:14px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:0 8px 18px rgba(0,0,0,.2)!important;
+}
+.achievement-badge-v1115.gold{background:linear-gradient(135deg,rgba(255,207,64,.24),rgba(148,94,10,.18))!important;border-color:rgba(255,207,64,.34)!important;}
+.achievement-badge-v1115.orange{background:linear-gradient(135deg,rgba(255,133,44,.24),rgba(128,49,9,.18))!important;border-color:rgba(255,133,44,.34)!important;}
+.achievement-badge-v1115.cyan{background:linear-gradient(135deg,rgba(32,229,223,.22),rgba(23,83,102,.18))!important;border-color:rgba(32,229,223,.30)!important;}
+.achievement-badge-v1115.green{background:linear-gradient(135deg,rgba(0,242,169,.22),rgba(17,105,77,.18))!important;border-color:rgba(0,242,169,.30)!important;}
+.achievement-badge-v1115.violet{background:linear-gradient(135deg,rgba(156,102,255,.24),rgba(63,38,124,.18))!important;border-color:rgba(156,102,255,.34)!important;}
+.no-achievement-v1115{
+  color:#7890a1!important;
+  font-size:11px!important;
+  font-style:normal!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
