@@ -1,0 +1,9 @@
+Wersja 1127 — Top typerzy realne avatary po Supabase RPC
+
+Zmiana tylko w Top typerzy:
+- frontend bierze avatary z public.get_public_tipster_avatars() / betai_public_profile_avatars_for_ui()
+- dopasowuje po user_id, username, public_slug, email i lokalnej części emaila
+- jeśli użytkownik nie ma avatara, zostaje fallback z inicjałami
+- nie ruszano menu, cennika, follow, osiągnięć ani układu strony
+
+SQL Supabase już masz odpalony poprawnie — funkcja zwraca avatar_url.

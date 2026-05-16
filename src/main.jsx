@@ -18818,6 +18818,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
 function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null, onToggleFollow = null, followingTipsters = new Set(), followStats = {} }) {
   const [profiles, setProfiles] = useState([])
+  const [topAvatarOverrides, setTopAvatarOverrides] = useState({})
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
   const [topAccountFilter, setTopAccountFilter] = useState('all')
@@ -18970,15 +18971,19 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     // a stare rekordy w tips potrafią mieć puste albo nieaktualne avatary.
     // v1125: najpewniejszy kanał dla Top typerów — publiczna funkcja z avatarami profili.
     // Wystarczy raz odpalić SQL z paczki, wtedy avatary są pobierane bez zgadywania po tips/rankingu.
-    try {
-      const { data, error } = await supabase.rpc('betai_public_profile_avatars_for_ui')
-      if (!error && Array.isArray(data)) {
-        data.forEach(row => {
-          profileAvatarRows.push(row)
-          addAvatarHintsFromRow(map, row)
-        })
-      }
-    } catch (_) {}
+    // v1126: obsługujemy też starszą nazwę funkcji, którą mogłeś wkleić ręcznie w Supabase.
+    // Najważniejsza funkcja to betai_public_profile_avatars_for_ui — ona czyta profiles + auth.users metadata.
+    for (const rpcName of ['betai_public_profile_avatars_for_ui', 'get_public_tipster_avatars']) {
+      try {
+        const { data, error } = await supabase.rpc(rpcName)
+        if (!error && Array.isArray(data)) {
+          data.forEach(row => {
+            profileAvatarRows.push(row)
+            addAvatarHintsFromRow(map, row)
+          })
+        }
+      } catch (_) {}
+    }
 
     const profileSelects = [
       'id,email,username,public_slug,avatar_url,profile_avatar_url,author_avatar_url,photo_url,picture,image_url,updated_at,created_at',
@@ -19085,6 +19090,32 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return realAvatar ? { ...profile, avatar_url: realAvatar, profile_avatar_url: realAvatar, author_avatar_url: realAvatar } : profile
   }
 
+  const buildTopAvatarOverrideObject = (avatarHints = new Map()) => {
+    const out = {}
+    if (!(avatarHints instanceof Map)) return out
+    avatarHints.forEach((avatar, key) => {
+      const cleanKey = normalizeEmail(key)
+      const cleanAvatar = String(avatar || '').trim()
+      if (cleanKey && cleanAvatar) out[cleanKey] = cleanAvatar
+    })
+    return out
+  }
+
+  const findTopAvatarOverrideForProfile = (profile = {}) => {
+    const keys = getTopAvatarLookupKeys(profile)
+    for (const key of keys) {
+      const clean = normalizeEmail(key)
+      if (clean && topAvatarOverrides?.[clean]) return topAvatarOverrides[clean]
+      if (clean?.includes('@')) {
+        const local = normalizeEmail(clean.split('@')[0])
+        if (local && topAvatarOverrides?.[local]) return topAvatarOverrides[local]
+      }
+    }
+    const name = normalizeEmail(resolveRealProfileUsername(profile))
+    if (name && topAvatarOverrides?.[name]) return topAvatarOverrides[name]
+    return ''
+  }
+
   const isUuidLike = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim())
 
   const getTopTipsterProfileId = (profile = {}) => {
@@ -19152,6 +19183,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       const publicProfileRows = await fetchBetaiPublicProfiles()
       const mergedRows = mergeProfilesPreferStats(publicProfileRows || [], rankingProfileRows || [])
       const avatarHints = await fetchTopTipsterAvatarHints(mergedRows || [])
+      setTopAvatarOverrides(buildTopAvatarOverrideObject(avatarHints))
       const reviewStats = await fetchTopTipsterReviewStats(mergedRows || [])
       const hydratedRows = []
       for (const row of (mergedRows || [])) {
@@ -19438,7 +19470,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       followersValue: followers,
       achievements: [],
       avatar: initialsFor(name),
-      avatarUrl: getProfileAvatarUrl(profile),
+      avatarUrl: findTopAvatarOverrideForProfile(profile) || getProfileAvatarUrl(profile),
       premium,
       sport: topSport,
       sortScore: (profit * 0.3) + (roi * 20) + (hitRate * 10) + totalTips,
@@ -19467,7 +19499,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
           })
         }
       })
-  }, [profiles])
+  }, [profiles, topAvatarOverrides])
 
   const sportCategoryDefs = [
     { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
