@@ -10006,6 +10006,9 @@ function ArticlesView() {
   const [importantNews, setImportantNews] = useState([])
   const [articleHeroIndex, setArticleHeroIndex] = useState(0)
   const [urgentTickerIndex, setUrgentTickerIndex] = useState(0)
+  const [scoreSportFilter, setScoreSportFilter] = useState('all')
+  const [scoreQuery, setScoreQuery] = useState('')
+  const [scoreDay, setScoreDay] = useState('today')
   const articleHeroSwipeStart = useRef(null)
   const urgentHeroSwipeStart = useRef(null)
 
@@ -10221,12 +10224,86 @@ function ArticlesView() {
     ['INT', 'Inter vs Juventus', 'Typ: Inter wygra lub remis', '64%'],
   ]
 
-  const liveScores = [
-    ['PREMIER LEAGUE', 'Tottenham', 'Liverpool', '2 : 1', '86′', ['23′ Son', '45+1′ Maddison'], ['17′ Salah'], ['2.45', '3.40', '2.80'], '+123'],
-    ['SERIE A', 'Inter', 'Juventus', '1 : 0', 'HT', ['15′ Lautaro (k)'], ['37′ Bremer'], ['1.90', '3.50', '4.20'], '+98'],
-    ['LALIGA', 'Barcelona', 'Real Sociedad', '3 : 2', '62′', ['12′ Lewandowski', '34′ Gündoğan', '58′ Yamal'], ['49′ Kubo'], ['1.90', '4.20', '5.20'], '+112'],
-    ['BUNDESLIGA', 'Leverkusen', 'Bayern', '1 : 1', '71′', ['18′ Wirtz'], ['45+2′ Kane'], ['2.10', '3.60', '2.40'], '+107'],
+  const liveScoreSports = [
+    { id: 'all', label: 'Wszystkie' },
+    { id: 'football', label: '⚽ Piłka nożna' },
+    { id: 'tennis', label: '🎾 Tenis' },
+    { id: 'basketball', label: '🏀 Koszykówka' },
+    { id: 'hockey', label: '🏒 Hokej' },
+    { id: 'volleyball', label: '🏐 Siatkówka' },
   ]
+
+  const liveScoreDays = [
+    { id: 'yesterday', label: 'Wczoraj' },
+    { id: 'today', label: 'Dzisiaj' },
+    { id: 'tomorrow', label: 'Jutro' },
+  ]
+
+  const liveScores = [
+    {
+      id: 'pl-tot-liv', sport: 'football', day: 'today', country: 'Anglia', league: 'Premier League', status: 'LIVE', minute: '86′',
+      home: { name: 'Tottenham', score: 2, logo: 'TOT', scorers: ['23′ Son', '45+1′ Maddison'] },
+      away: { name: 'Liverpool', score: 1, logo: 'LIV', scorers: ['17′ Salah'] },
+      odds: ['2.45', '3.40', '2.80'], stats: { possession: '44% / 56%', shots: '9 / 13', corners: '4 / 6' }, trend: '+123'
+    },
+    {
+      id: 'sa-int-juv', sport: 'football', day: 'today', country: 'Włochy', league: 'Serie A', status: 'HT', minute: 'Przerwa',
+      home: { name: 'Inter', score: 1, logo: 'INT', scorers: ['15′ Lautaro (k)'] },
+      away: { name: 'Juventus', score: 0, logo: 'JUV', scorers: ['37′ Bremer'] },
+      odds: ['1.90', '3.50', '4.20'], stats: { possession: '53% / 47%', shots: '7 / 4', corners: '3 / 2' }, trend: '+98'
+    },
+    {
+      id: 'lal-bar-rso', sport: 'football', day: 'today', country: 'Hiszpania', league: 'LaLiga', status: 'LIVE', minute: '62′',
+      home: { name: 'Barcelona', score: 3, logo: 'BAR', scorers: ['12′ Lewandowski', '34′ Gündoğan', '58′ Yamal'] },
+      away: { name: 'Real Sociedad', score: 2, logo: 'RSO', scorers: ['49′ Kubo'] },
+      odds: ['1.90', '4.20', '5.20'], stats: { possession: '61% / 39%', shots: '16 / 8', corners: '8 / 3' }, trend: '+112'
+    },
+    {
+      id: 'bund-lev-bay', sport: 'football', day: 'today', country: 'Niemcy', league: 'Bundesliga', status: 'LIVE', minute: '71′',
+      home: { name: 'Leverkusen', score: 1, logo: 'LEV', scorers: ['18′ Wirtz'] },
+      away: { name: 'Bayern', score: 1, logo: 'BAY', scorers: ['45+2′ Kane'] },
+      odds: ['2.10', '3.60', '2.40'], stats: { possession: '48% / 52%', shots: '10 / 12', corners: '5 / 5' }, trend: '+107'
+    },
+    {
+      id: 'ten-atp-1', sport: 'tennis', day: 'today', country: 'ATP', league: 'ATP Finals', status: 'LIVE', minute: 'Set 2',
+      home: { name: 'Sinner', score: '6 3', logo: 'SIN', scorers: ['Asy: 7', 'Breaki: 2'] },
+      away: { name: 'Alcaraz', score: '4 2', logo: 'ALC', scorers: ['Asy: 4', 'Breaki: 1'] },
+      odds: ['1.42', '-', '2.80'], stats: { possession: '1. serwis 68% / 61%', shots: 'Winner 24 / 18', corners: 'BP 3/6 / 1/4' }, trend: '+76'
+    },
+    {
+      id: 'nba-lal-den', sport: 'basketball', day: 'today', country: 'USA', league: 'NBA', status: 'LIVE', minute: 'Q3 04:12',
+      home: { name: 'Lakers', score: 82, logo: 'LAL', scorers: ['James 24 pkt', 'Davis 18 pkt'] },
+      away: { name: 'Nuggets', score: 79, logo: 'DEN', scorers: ['Jokić 22 pkt', 'Murray 17 pkt'] },
+      odds: ['1.78', '-', '2.05'], stats: { possession: 'Zbiórki 34 / 31', shots: 'FG 48% / 46%', corners: '3PT 9 / 11' }, trend: '+88'
+    },
+    {
+      id: 'nhl-col-stl', sport: 'hockey', day: 'today', country: 'USA', league: 'NHL', status: 'LIVE', minute: 'P2 13:44',
+      home: { name: 'Colorado Avalanche', score: 2, logo: 'COL', scorers: ['08′ MacKinnon', '22′ Makar'] },
+      away: { name: 'St. Louis Blues', score: 1, logo: 'STL', scorers: ['17′ Thomas'] },
+      odds: ['1.66', '4.80', '3.10'], stats: { possession: 'Strzały 21 / 15', shots: 'Kary 2 / 4', corners: 'Faceoff 52% / 48%' }, trend: '+64'
+    },
+    {
+      id: 'plusliga-zaw-war', sport: 'volleyball', day: 'tomorrow', country: 'Polska', league: 'PlusLiga', status: '20:30', minute: 'Zapowiedź',
+      home: { name: 'Zawiercie', score: '-', logo: 'ZAW', scorers: ['Start 20:30'] },
+      away: { name: 'Warszawa', score: '-', logo: 'WAR', scorers: ['Transmisja u oficjalnego nadawcy'] },
+      odds: ['1.72', '-', '2.12'], stats: { possession: 'Forma 4W / 3W', shots: 'H2H 3-2', corners: 'Typy aktywne 12' }, trend: '+41'
+    },
+  ]
+
+  const normalizedScoreQuery = scoreQuery.trim().toLowerCase()
+  const filteredLiveScores = liveScores.filter(match => {
+    const sportOk = scoreSportFilter === 'all' || match.sport === scoreSportFilter
+    const dayOk = scoreDay === 'all' || match.day === scoreDay
+    const queryOk = !normalizedScoreQuery || `${match.country} ${match.league} ${match.home.name} ${match.away.name}`.toLowerCase().includes(normalizedScoreQuery)
+    return sportOk && dayOk && queryOk
+  })
+
+  const groupedLiveScores = filteredLiveScores.reduce((acc, match) => {
+    const key = `${match.country} • ${match.league}`
+    if (!acc[key]) acc[key] = []
+    acc[key].push(match)
+    return acc
+  }, {})
 
   return (
     <section className="tvlive-page-v8">
@@ -10422,21 +10499,70 @@ function ArticlesView() {
 
           </> : null}
 
-          <div className="glass-tvlive-v8 livescore-wrap-v8">
-            <div className="card-head-v8"><h3>Wyniki live</h3><button type="button">⚙ Ustawienia</button></div>
-            <div className="scores-tabs-v8"><button type="button" className="active">Wszystkie</button><button type="button">⚽ Piłka nożna</button><button type="button">🎾 Tenis</button><button type="button">🏀 Koszykówka</button><button type="button">🏒 Hokej</button><button type="button">🏐 Siatkówka</button><button type="button">🎯 Dart</button></div>
-            <div className="livescore-grid-v8">
-              {liveScores.map((row, idx) => (
-                <div className="live-card-v8" key={idx}>
-                  <div className="live-card-head-v8"><span>{row[0]}</span><b>{row[4]}</b></div>
-                  <div className="live-teams-v8"><strong>{row[1]}</strong><b>{row[3]}</b><strong>{row[2]}</strong></div>
-                  <div className="live-events-v8"><span>{row[5].join(' • ')}</span><span>{row[6].join(' • ')}</span></div>
-                  <div className="odds-row-v8"><i>{row[7][0]}</i><i>{row[7][1]}</i><i>{row[7][2]}</i><em>{row[8]}</em></div>
+          {activeArticleTab === 'scores' ? (
+            <div className="glass-tvlive-v8 livescore-wrap-v8 flashscore-board-v1132">
+              <div className="flashscore-header-v1132">
+                <div>
+                  <span>BETAI LIVESCORE</span>
+                  <h3>Wyniki live</h3>
+                  <p>Tablica w stylu Flashscore/LiveScore: ligi, status, wynik, strzelcy, statystyki i kursy w jednym miejscu.</p>
                 </div>
-              ))}
+                <button type="button" onClick={() => setScoreDay('today')}>⟳ Odśwież</button>
+              </div>
+
+              <div className="flashscore-toolbar-v1132">
+                <div className="flashscore-days-v1132">
+                  {liveScoreDays.map(day => (
+                    <button type="button" key={day.id} className={scoreDay === day.id ? 'active' : ''} onClick={() => setScoreDay(day.id)}>{day.label}</button>
+                  ))}
+                </div>
+                <label className="flashscore-search-v1132">
+                  <span>🔎</span>
+                  <input value={scoreQuery} onChange={(event) => setScoreQuery(event.target.value)} placeholder="Szukaj drużyny albo ligi..." />
+                </label>
+              </div>
+
+              <div className="scores-tabs-v8 flashscore-sports-v1132">
+                {liveScoreSports.map(sport => (
+                  <button type="button" key={sport.id} className={scoreSportFilter === sport.id ? 'active' : ''} onClick={() => setScoreSportFilter(sport.id)}>{sport.label}</button>
+                ))}
+              </div>
+
+              <div className="flashscore-list-v1132">
+                {Object.entries(groupedLiveScores).map(([leagueName, matches]) => (
+                  <section className="flashscore-league-v1132" key={leagueName}>
+                    <div className="flashscore-league-head-v1132">
+                      <strong>{leagueName}</strong>
+                      <span>{matches.length} mecz{matches.length === 1 ? '' : 'e'}</span>
+                    </div>
+                    {matches.map(match => (
+                      <article className="flashscore-match-v1132" key={match.id}>
+                        <button type="button" className="flashscore-star-v1132" aria-label="Dodaj do ulubionych">☆</button>
+                        <div className="flashscore-time-v1132"><b>{match.status}</b><small>{match.minute}</small></div>
+                        <div className="flashscore-teams-v1132">
+                          <div><i>{match.home.logo}</i><strong>{match.home.name}</strong><span>{match.home.score}</span></div>
+                          <div><i>{match.away.logo}</i><strong>{match.away.name}</strong><span>{match.away.score}</span></div>
+                        </div>
+                        <div className="flashscore-events-v1132">
+                          <small>{match.home.scorers.join(' • ') || '—'}</small>
+                          <small>{match.away.scorers.join(' • ') || '—'}</small>
+                        </div>
+                        <div className="flashscore-stats-v1132">
+                          <span>Posiadanie <b>{match.stats.possession}</b></span>
+                          <span>Strzały/forma <b>{match.stats.shots}</b></span>
+                          <span>Rzuty/extra <b>{match.stats.corners}</b></span>
+                        </div>
+                        <div className="flashscore-odds-v1132">
+                          <i>{match.odds[0]}</i><i>{match.odds[1]}</i><i>{match.odds[2]}</i><em>{match.trend}</em>
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+                ))}
+                {!filteredLiveScores.length ? <div className="flashscore-empty-v1132">Brak meczów dla wybranego filtra.</div> : null}
+              </div>
             </div>
-            <button type="button" className="more-live-v8">⌄ Pokaż więcej meczów na żywo</button>
-          </div>
+          ) : null}
         </div>
 
         <aside className="tvlive-sidebar-v8">
