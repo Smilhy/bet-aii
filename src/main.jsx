@@ -9985,11 +9985,33 @@ function getSportPlInitials(title = '') {
   return (words[0]?.[0] || 'S').toUpperCase() + (words[1]?.[0] || 'P').toUpperCase()
 }
 
+const BETAI_NEWS_FALLBACK_IMAGES_V1139 = [
+  '/betai-hero-live-1.png',
+  '/betai-hero-live-2.png',
+  '/betai-hero-live-3.png',
+  '/betai-hero-live-4.png',
+  '/betai-hero-live-5.png',
+  '/betai-hero-live-6.png'
+]
+
+function getSportPlFallbackImage(index = 0) {
+  const safeIndex = Math.abs(Number(index) || 0) % BETAI_NEWS_FALLBACK_IMAGES_V1139.length
+  return BETAI_NEWS_FALLBACK_IMAGES_V1139[safeIndex]
+}
+
 function getSportPlImageSrc(item = {}) {
   const raw = item.imageProxy || item.image || ''
   if (!raw) return ''
   if (String(raw).startsWith('/.netlify/functions/')) return raw
   return `/.netlify/functions/sportpl-articles?image=${encodeURIComponent(raw)}`
+}
+
+function getSportPlDisplayImage(item = {}, index = 0) {
+  return getSportPlImageSrc(item) || getSportPlFallbackImage(index)
+}
+
+function getSportPlRawImage(item = {}) {
+  return item.image || item.rawImage || ''
 }
 
 function isImportantSportPlNews(item = {}) {
@@ -10091,8 +10113,9 @@ function ArticlesView() {
     meta: getSportPlRelativeTime(item.publishedAt),
     icon: getSportPlInitials(item.title),
     url: item.url,
-    image: getSportPlImageSrc(item),
-    rawImage: item.image || '',
+    image: getSportPlDisplayImage(item, index),
+    rawImage: getSportPlRawImage(item),
+    fallbackImage: getSportPlFallbackImage(index),
     isImportant: isImportantSportPlNews(item),
     index
   })) : articleCards
@@ -10104,24 +10127,29 @@ function ArticlesView() {
     meta: getSportPlRelativeTime(item.publishedAt),
     icon: getSportPlInitials(item.title),
     url: item.url,
-    image: getSportPlImageSrc(item),
-    rawImage: item.image || '',
+    image: getSportPlDisplayImage(item, index),
+    rawImage: getSportPlRawImage(item),
+    fallbackImage: getSportPlFallbackImage(index),
     isImportant: isImportantSportPlNews(item),
     index
   })) : articleCards.map((item, index) => ({
     ...item,
     excerpt: item.body,
-    image: '',
+    image: getSportPlFallbackImage(index),
     rawImage: '',
+    fallbackImage: getSportPlFallbackImage(index),
     index
   }))
 
   const heroArticle = articleHeroSlides[articleHeroIndex % Math.max(articleHeroSlides.length, 1)] || articleHeroSlides[0]
 
   const urgentHeroSource = (() => {
-    const importantWithImages = importantNews.filter(item => getSportPlImageSrc(item))
+    // v1139: najpierw bierzemy newsy z prawdziwym obrazkiem, ale zawsze dokładamy fallback,
+    // żeby baner nigdy nie był pusty, nawet gdy Sport.pl chwilowo zablokuje pojedynczą grafikę.
+    const hasRealImage = (item) => Boolean(item?.image || item?.imageProxy)
+    const importantWithImages = importantNews.filter(hasRealImage)
     if (importantWithImages.length) return importantWithImages.slice(0, 5)
-    const liveWithImages = liveArticles.filter(item => getSportPlImageSrc(item))
+    const liveWithImages = liveArticles.filter(hasRealImage)
     if (liveWithImages.length) return liveWithImages.slice(0, 5)
     return (importantNews.length ? importantNews : liveArticles).slice(0, 5)
   })()
@@ -10133,8 +10161,9 @@ function ArticlesView() {
     meta: getSportPlRelativeTime(item.publishedAt),
     icon: getSportPlInitials(item.title),
     url: item.url,
-    image: getSportPlImageSrc(item),
-    rawImage: item.image || '',
+    image: getSportPlDisplayImage(item, index),
+    rawImage: getSportPlRawImage(item),
+    fallbackImage: getSportPlFallbackImage(index),
     isImportant: true,
     index
   }))
@@ -10347,7 +10376,7 @@ function ArticlesView() {
               >
                 {urgentHeroArticle?.image ? (
                   <div className="sportpl-important-hero-bg-v550">
-                    <img src={urgentHeroArticle.image} data-original-src={urgentHeroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-important-hero-v550')?.classList.add('image-error-v550'); event.currentTarget.remove() }} />
+                    <img src={urgentHeroArticle.image} data-original-src={urgentHeroArticle.rawImage || ''} data-fallback-src={urgentHeroArticle.fallbackImage || getSportPlFallbackImage(urgentHeroArticle.index)} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); const fallback = event.currentTarget.getAttribute('data-fallback-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } if (fallback && event.currentTarget.src !== new URL(fallback, window.location.origin).href) { event.currentTarget.src = fallback; return } event.currentTarget.closest('.sportpl-important-hero-v550')?.classList.add('image-error-v550'); }} />
                   </div>
                 ) : null}
                 <div className="sportpl-important-strip-v550"><span>NAJWAŻNIEJSZE WIADOMOŚCI</span></div>
@@ -10383,14 +10412,15 @@ function ArticlesView() {
                   meta: getSportPlRelativeTime(item.publishedAt),
                   icon: getSportPlInitials(item.title),
                   url: item.url,
-                  image: getSportPlImageSrc(item),
-                  rawImage: item.image || '',
+                  image: getSportPlDisplayImage(item, index + 4),
+                  rawImage: getSportPlRawImage(item),
+                  fallbackImage: getSportPlFallbackImage(index + 4),
                   isImportant: isImportantSportPlNews(item),
                   index: index + 4
                 }))).slice(0, 12).map((item, idx) => (
                   <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''} ${item.image ? 'has-image-v540' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => openArticlePreview(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openArticlePreview(item) }}>
                     <div className="sportpl-live-media-v540">
-                      {item.image ? <img src={item.image} data-original-src={item.rawImage || ''} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); event.currentTarget.remove() }} /> : <span>{item.icon}</span>}
+                      {item.image ? <img src={item.image} data-original-src={item.rawImage || ''} data-fallback-src={item.fallbackImage || getSportPlFallbackImage(item.index || idx)} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); const fallback = event.currentTarget.getAttribute('data-fallback-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } if (fallback && event.currentTarget.src !== new URL(fallback, window.location.origin).href) { event.currentTarget.src = fallback; return } event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); }} /> : <span>{item.icon}</span>}
                     </div>
                     <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
                     <h3>{item.title}</h3>
@@ -10525,7 +10555,7 @@ function ArticlesView() {
             <button type="button" className="article-preview-close-v1137" onClick={closeArticlePreview} aria-label="Zamknij podgląd">×</button>
             {previewArticle.image ? (
               <div className="article-preview-image-v1137">
-                <img src={previewArticle.image} data-original-src={previewArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.remove() }} />
+                <img src={previewArticle.image} data-original-src={previewArticle.rawImage || ''} data-fallback-src={previewArticle.fallbackImage || getSportPlFallbackImage(previewArticle.index || 0)} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); const fallback = event.currentTarget.getAttribute('data-fallback-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } if (fallback && event.currentTarget.src !== new URL(fallback, window.location.origin).href) { event.currentTarget.src = fallback; return } event.currentTarget.remove() }} />
               </div>
             ) : null}
             <div className="article-preview-content-v1137">
