@@ -18782,7 +18782,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   )
 }
 
-function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null }) {
+function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null, onSubscribeToTipster = null }) {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
@@ -19050,7 +19050,13 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       const mergedRows = mergeProfilesPreferStats(publicProfileRows || [], rankingProfileRows || [])
       const avatarHints = await fetchTopTipsterAvatarHints(mergedRows || [])
       const reviewStats = await fetchTopTipsterReviewStats(mergedRows || [])
-      setProfiles((mergedRows || [])
+      const hydratedRows = []
+      for (const row of (mergedRows || [])) {
+        let topPlans = []
+        try { topPlans = await loadTipsterPlansForSource(row) } catch (_) { topPlans = [] }
+        hydratedRows.push({ ...row, top_subscription_plans: topPlans })
+      }
+      setProfiles(hydratedRows
         .map(profile => attachRealAvatarToProfile(profile, avatarHints))
         .map(profile => attachRealReviewStatsToProfile(profile, reviewStats))
         .filter(profile => {
@@ -19084,6 +19090,15 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     return Number.isFinite(n) ? n : fallback
   }
   const formatMoney = (value) => `${toNumber(value, 0) >= 0 ? '+' : ''}${toNumber(value, 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`
+  const formatTopPlanPrice = (value) => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+  const getActiveTopTipsterPlans = (profile = {}) => {
+    const sourcePlans = Array.isArray(profile.top_subscription_plans) ? profile.top_subscription_plans : (Array.isArray(profile.subscription_plans) ? profile.subscription_plans : [])
+    return normalizeTipsterPlanRows(sourcePlans).filter(plan => plan.active !== false && Number(plan.price || 0) > 0)
+  }
+  const getMainTopTipsterPlan = (plans = []) => {
+    const active = (plans || []).filter(plan => plan.active !== false && Number(plan.price || 0) > 0)
+    return active.find(plan => plan.key === 'month') || active[0] || null
+  }
   const initialsFor = (name = '') => {
     const clean = String(name || 'U').replace('@', '').trim()
     const parts = clean.split(/[\s._-]+/).filter(Boolean)
@@ -19126,12 +19141,27 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     const roi = toNumber(profile.imported_yield ?? profile.roi ?? profile.yield, 0)
     const profit = toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
     const followers = toNumber(profile.followers_count ?? profile.followers, 0)
-    const premium = isPremiumProfile(profile)
+    const premium = isPremiumSellerProfile(profile, profile.plan || profile.subscription_status || profile.status || profile.account_type) || isPremiumProfile(profile)
     const topSport = getProfileTopSport(profile)
+    const activePlans = getActiveTopTipsterPlans(profile)
+    const mainPlan = getMainTopTipsterPlan(activePlans)
+    const priceLabel = premium && mainPlan ? `od ${formatTopPlanPrice(mainPlan.price)}` : (premium ? 'Subskrypcja' : 'Darmowe')
+    const priceSubLabel = premium && mainPlan ? `/${mainPlan.label}` : '/ dostęp'
     return {
       rank: idx + 1,
       id: profile.id || profile.user_id || profile.email || name,
       profileRef: profile.id || profile.user_id || profile.author_id || profile.tipster_id || profile.public_slug || profile.email || name,
+      user_id: profile.user_id || profile.id || profile.author_id || profile.tipster_id || null,
+      author_id: profile.author_id || profile.user_id || profile.id || profile.tipster_id || null,
+      tipster_id: profile.tipster_id || profile.id || profile.user_id || profile.author_id || null,
+      email: profile.email || profile.author_email || profile.user_email || '',
+      author_email: profile.author_email || profile.email || profile.user_email || '',
+      username: name,
+      author_name: name,
+      public_slug: profile.public_slug || profile.slug || normalizePublicSlug(name),
+      plan: premium ? 'premium' : (profile.plan || profile.subscription_status || profile.status || 'free'),
+      subscription_status: premium ? 'premium' : (profile.subscription_status || profile.plan || profile.status || 'free'),
+      top_subscription_plans: activePlans,
       name,
       subtitle: profile.bio || profile.description || profile.about || 'Zweryfikowany typer Bet+AI',
       rating: (Number(profile.top_review_rating_avg ?? profile.rating_avg ?? 0) || 0).toFixed(2),
@@ -19143,7 +19173,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       totalTipsValue: totalTips,
       picks: String(totalTips),
       chart: `${hitRate}%`,
-      price: premium ? 'Subskrypcja' : 'Darmowe',
+      price: priceLabel,
+      priceSubLabel,
       followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
       spec: ['⚽', '📊', '🎯', premium ? '👑' : '🎁'],
       avatar: initialsFor(name),
@@ -19209,6 +19240,28 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
   const openTopTipsterProfile = (tipster = {}) => {
     if (typeof onOpenTipster === 'function') {
       onOpenTipster(tipster.profileRef || tipster.id || tipster.name, tipster.name)
+    }
+  }
+
+  const openTopTipsterSubscription = (tipster = {}) => {
+    if (!tipster?.premium) {
+      openTopTipsterProfile(tipster)
+      return
+    }
+    if (typeof onSubscribeToTipster === 'function') {
+      onSubscribeToTipster({
+        ...tipster,
+        id: tipster.tipster_id || tipster.user_id || tipster.author_id || tipster.profileRef || tipster.id,
+        tipster_id: tipster.tipster_id || tipster.user_id || tipster.author_id || tipster.profileRef || tipster.id,
+        user_id: tipster.user_id || tipster.tipster_id || tipster.author_id || tipster.profileRef || tipster.id,
+        author_id: tipster.author_id || tipster.tipster_id || tipster.user_id || tipster.profileRef || tipster.id,
+        username: tipster.name,
+        author_name: tipster.name,
+        email: tipster.email || tipster.author_email || '',
+        author_email: tipster.author_email || tipster.email || '',
+        plan: 'premium',
+        subscription_status: 'premium'
+      })
     }
   }
 
@@ -19345,8 +19398,13 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                 </div>
 
                 <div className="seller-cta-v7">
-                  <div className="price-v7"><strong>{tipster.price}</strong><span>{tipster.premium ? '/ dostęp' : '/ dostęp'}</span></div>
-                  <button type="button" className="buy-btn-v7">{tipster.premium ? 'Kup subskrypcję' : 'Darmowe'}</button>
+                  <div className="price-v7"><strong>{tipster.price}</strong><span>{tipster.priceSubLabel || '/ dostęp'}</span></div>
+                  {tipster.premium && tipster.top_subscription_plans?.length ? (
+                    <div className="top-plan-mini-list-v1113" title="Cennik ustawiony przez użytkownika">
+                      {tipster.top_subscription_plans.slice(0, 4).map(plan => <span key={plan.key}>{plan.label}: <b>{formatTopPlanPrice(plan.price)}</b></span>)}
+                    </div>
+                  ) : null}
+                  <button type="button" className={`buy-btn-v7 ${tipster.premium ? '' : 'free-access-v1113'}`} onClick={() => openTopTipsterSubscription(tipster)}>{tipster.premium ? 'Kup subskrypcję' : 'Darmowe'}</button>
                   <div className="cta-bottom-v7">
                     <button type="button" className="follow-btn-v7">Obserwuj</button>
                     <span>{tipster.followers}</span>
@@ -22860,7 +22918,7 @@ function App() {
         )}
 
         {view === 'topTipsters' && (
-          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />
+          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} onSubscribeToTipster={setSelectedProfileSub} />
         )}
 
         {view === 'notifications' && (

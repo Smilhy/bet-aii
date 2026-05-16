@@ -46422,3 +46422,30 @@ button.betfolio-fetch-btn{
   transform: translateY(-1px) scale(1.02);
   filter: brightness(1.08);
 }
+
+/* WERSJA 1113 — Top typerzy: cennik subskrypcji ustawiony przez użytkownika */
+.top-plan-mini-list-v1113 {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(31, 225, 225, .18);
+  border-radius: 12px;
+  background: rgba(2, 18, 28, .45);
+  color: #9fb5c3;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.top-plan-mini-list-v1113 span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+}
+.top-plan-mini-list-v1113 b {
+  color: #20e5df;
+  font-weight: 900;
+}
+.buy-btn-v7.free-access-v1113 {
+  cursor: pointer;
+}
