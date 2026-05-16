@@ -17689,7 +17689,7 @@ img,video,canvas,svg{max-width:100%;}
 .live-tab-pulse-v539:before{content:'';position:absolute;inset:-2px;border-radius:inherit;border:1px solid rgba(255,55,95,.22);animation:sportplRing539 1.7s ease-in-out infinite;pointer-events:none}
 .live-tab-pulse-v539:after{content:'';width:7px;height:7px;border-radius:999px;background:#ff375f;box-shadow:0 0 16px rgba(255,55,95,.95);display:inline-block;margin-left:8px;animation:sportplPulse538 1.05s ease-in-out infinite}
 .sportpl-live-panel-v539{position:relative!important;animation:sportplPanelIn539 .38s ease-out both!important}
-.sportpl-live-panel-v539:before{content:'LIVE SPORT.PL';position:absolute;right:22px;top:18px;font-size:11px;font-weight:1000;letter-spacing:.18em;color:rgba(20,234,216,.24);pointer-events:none}
+.sportpl-live-panel-v539:before{content:none!important;display:none!important}
 .sportpl-live-status-v538{display:flex!important;flex-direction:column!important;gap:8px!important;align-items:flex-end!important}
 .sportpl-refresh-v539{border:1px solid rgba(20,234,216,.28)!important;background:rgba(20,234,216,.11)!important;color:#20f0da!important;border-radius:12px!important;padding:8px 10px!important;font-size:11px!important;font-weight:1000!important;cursor:pointer!important;transition:transform .16s ease, background .16s ease!important}
 .sportpl-refresh-v539:hover{transform:translateY(-1px)!important;background:rgba(20,234,216,.18)!important}
@@ -46912,3 +46912,151 @@ button.betfolio-fetch-btn{
 .tvlive-page-v8 .flashscore-empty-v1132{padding:22px!important;text-align:center!important;color:#91a8b1!important;font-weight:1000!important;border:1px dashed rgba(255,255,255,.10)!important;border-radius:16px!important}
 @media(max-width:1500px){.tvlive-page-v8 .flashscore-match-v1132{grid-template-columns:34px 74px minmax(220px,1.2fr) minmax(170px,1fr) 1fr!important}.tvlive-page-v8 .flashscore-odds-v1132{grid-column:3/-1!important}}
 @media(max-width:900px){.tvlive-page-v8 .flashscore-toolbar-v1132{align-items:stretch!important}.tvlive-page-v8 .flashscore-search-v1132{min-width:0!important;width:100%!important}.tvlive-page-v8 .flashscore-match-v1132{grid-template-columns:34px 64px minmax(0,1fr)!important}.tvlive-page-v8 .flashscore-events-v1132,.tvlive-page-v8 .flashscore-stats-v1132,.tvlive-page-v8 .flashscore-odds-v1132{grid-column:3!important}.tvlive-page-v8 .flashscore-teams-v1132 span{font-size:20px!important}.tvlive-page-v8 .flashscore-header-v1132{flex-direction:column!important}}
+
+
+/* WERSJA 1136 — ukrycie podpisów i statusu live feed bez ruszania logiki */
+.sportpl-live-head-v538{display:none!important;}
+.sportpl-live-panel-v539:before{content:none!important;display:none!important;}
+
+/* v1137: artykuły otwierane na stronie BetAI jako bezpieczny podgląd */
+.sportpl-live-item-foot-v538 b,
+.sportpl-live-item-foot-v538 a {
+  display: none !important;
+}
+.sportpl-live-item-foot-v538 {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+.sportpl-live-item-foot-v538 button {
+  border: 1px solid rgba(35, 244, 231, .28);
+  background: rgba(35, 244, 231, .08);
+  color: #23f4e7;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sportpl-live-item-foot-v538 button:hover {
+  background: rgba(35, 244, 231, .18);
+  transform: translateY(-1px);
+}
+.article-preview-backdrop-v1137 {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(0, 8, 14, .78);
+  backdrop-filter: blur(14px);
+}
+.article-preview-modal-v1137 {
+  position: relative;
+  width: min(920px, 96vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid rgba(35, 244, 231, .24);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(3, 24, 35, .98), rgba(0, 10, 18, .98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .55), 0 0 42px rgba(35, 244, 231, .10);
+}
+.article-preview-close-v1137 {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(0, 0, 0, .52);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.article-preview-image-v1137 {
+  width: 100%;
+  max-height: 360px;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  background: rgba(255, 255, 255, .04);
+}
+.article-preview-image-v1137 img {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(.78);
+}
+.article-preview-content-v1137 {
+  padding: 26px;
+}
+.article-preview-meta-v1137 {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  color: #23f4e7;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.article-preview-meta-v1137 small {
+  color: rgba(222, 238, 246, .62);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.article-preview-content-v1137 h2 {
+  margin: 0 0 14px;
+  color: #fff;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: .98;
+  letter-spacing: -.04em;
+}
+.article-preview-content-v1137 p {
+  color: rgba(225, 238, 246, .86);
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 780px;
+}
+.article-preview-note-v1137 {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(35, 244, 231, .18);
+  background: rgba(35, 244, 231, .06);
+  color: rgba(225, 238, 246, .76);
+  font-weight: 800;
+}
+.article-preview-actions-v1137 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+.article-preview-actions-v1137 button {
+  border: 1px solid rgba(255, 255, 255, .13);
+  background: rgba(255, 255, 255, .06);
+  color: #fff;
+  border-radius: 16px;
+  padding: 13px 18px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+.article-preview-actions-v1137 .primary-v1137 {
+  border-color: rgba(35, 244, 231, .55);
+  background: linear-gradient(135deg, #23f4e7, #15c2e7);
+  color: #001018;
+}
+@media (max-width: 720px) {
+  .article-preview-backdrop-v1137 { padding: 12px; align-items: flex-end; }
+  .article-preview-modal-v1137 { width: 100%; max-height: 92vh; border-radius: 22px; }
+  .article-preview-image-v1137 { max-height: 240px; border-radius: 22px 22px 0 0; }
+  .article-preview-content-v1137 { padding: 20px; }
+}

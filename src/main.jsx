@@ -10009,6 +10009,7 @@ function ArticlesView() {
   const [scoreSportFilter, setScoreSportFilter] = useState('all')
   const [scoreQuery, setScoreQuery] = useState('')
   const [scoreDay, setScoreDay] = useState('today')
+  const [previewArticle, setPreviewArticle] = useState(null)
   const articleHeroSwipeStart = useRef(null)
   const urgentHeroSwipeStart = useRef(null)
 
@@ -10182,6 +10183,19 @@ function ArticlesView() {
     if (Math.abs(diff) > 45) moveUrgentHero(diff < 0 ? 1 : -1)
   }
 
+  const openArticlePreview = (article) => {
+    if (!article) return
+    setPreviewArticle(article)
+  }
+
+  const closeArticlePreview = () => setPreviewArticle(null)
+
+  const getArticlePreviewText = (article = {}) => {
+    const text = String(article.excerpt || article.body || '').trim()
+    if (text) return text
+    return 'Krótki podgląd artykułu jest dostępny na stronie BetAI. Pełną treść otworzysz u źródła.'
+  }
+
   const tvRows = [
     { time: '18:30', sport: '⚽', match: 'Manchester City – Arsenal', league: 'Premier League', status: 'LIVE CENTER', source: 'Oficjalny nadawca / aplikacja ligi', note: 'Wynik, status meczu i legalna ścieżka oglądania', url: 'https://www.premierleague.com/broadcast-schedules' },
     { time: '20:45', sport: '⚽', match: 'Inter – Juventus', league: 'Serie A', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca Serie A', note: 'Bez playerów i bez pirackich linków', url: 'https://www.legaseriea.it/en' },
@@ -10328,18 +10342,17 @@ function ArticlesView() {
                     <img src={urgentHeroArticle.image} data-original-src={urgentHeroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-important-hero-v550')?.classList.add('image-error-v550'); event.currentTarget.remove() }} />
                   </div>
                 ) : null}
-                <div className="sportpl-important-strip-v550"><span>NAJWAŻNIEJSZE WIADOMOŚCI</span><b>{urgentTickerIndex + 1}/{urgentHeroSlides.length || 1}</b><em>tylko pilne • auto co 5,5 s</em></div>
+                <div className="sportpl-important-strip-v550"><span>NAJWAŻNIEJSZE WIADOMOŚCI</span></div>
                 <div className="sportpl-important-copy-v550">
                   <div className="sportpl-important-badge-v550">PILNE</div>
                   <small>{urgentHeroArticle?.tag || 'SPORT.PL'}</small>
                   <h1>{urgentHeroArticle?.title || 'Ważna wiadomość sportowa'}</h1>
                   <p>{urgentHeroArticle?.excerpt || 'Kliknij, aby przeczytać pełny ważny artykuł na Sport.pl.'}</p>
                   <div className="sportpl-important-actions-v550">
-                    <button type="button" onClick={() => urgentHeroArticle?.url && window.open(urgentHeroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
+                    <button type="button" onClick={() => openArticlePreview(urgentHeroArticle)}>Czytaj artykuł</button>
                     <button type="button" className="ghost-v550" onClick={() => moveUrgentHero(1)}>Następna wiadomość</button>
                   </div>
                 </div>
-                <div className="sportpl-important-logo-v550">SPORT.PL</div>
                 <div className="sportpl-important-nav-v550">
                   <button type="button" aria-label="Poprzednia pilna wiadomość" onClick={() => moveUrgentHero(-1)}>‹</button>
                   <div className="sportpl-important-dots-v550">
@@ -10352,18 +10365,7 @@ function ArticlesView() {
               </div>
             ) : null}
             <div className="glass-tvlive-v8 sportpl-live-panel-v538 sportpl-live-panel-v539">
-              <div className="sportpl-live-head-v538">
-                <div>
-                  <span>SPORT.PL LIVE FEED</span>
-                  <h2>Zakładka Na żywo</h2>
-                  <p>Pobiera najnowsze informacje ze Sport.pl i automatycznie sprawdza ważne wiadomości co 10 minut. Kafelki są klikalne i otwierają pełny artykuł.</p>
-                </div>
-                <div className="sportpl-live-status-v538">
-                  <b>{liveLoading ? 'ŁADOWANIE' : 'LIVE'}</b>
-                  <small>Ostatnio: {lastLiveUpdate ? getSportPlRelativeTime(lastLiveUpdate) : 'start'}</small>
-                  <button type="button" className="sportpl-refresh-v539" onClick={() => window.location.reload()}>Odśwież teraz</button>
-                </div>
-              </div>
+              {/* v1136: nagłówek/status Sport.pl ukryty wizualnie; logika pobierania i odświeżania zostaje bez zmian */}
               {liveError ? <div className="sportpl-error-v538">{liveError}</div> : null}
               <div className="sportpl-live-grid-v538">
                 {sportPlCards.concat(liveArticles.slice(4, 12).map((item, index) => ({
@@ -10378,14 +10380,14 @@ function ArticlesView() {
                   isImportant: isImportantSportPlNews(item),
                   index: index + 4
                 }))).slice(0, 12).map((item, idx) => (
-                  <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''} ${item.image ? 'has-image-v540' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
+                  <article className={`sportpl-live-item-v538 ${item.isImportant ? 'important' : ''} ${item.image ? 'has-image-v540' : ''}`} key={`${item.url || item.title}-${idx}`} onClick={() => openArticlePreview(item)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openArticlePreview(item) }}>
                     <div className="sportpl-live-media-v540">
                       {item.image ? <img src={item.image} data-original-src={item.rawImage || ''} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.sportpl-live-item-v538')?.classList.add('image-error-v540'); event.currentTarget.remove() }} /> : <span>{item.icon}</span>}
                     </div>
                     <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
                     <h3>{item.title}</h3>
                     <p>{item.body}</p>
-                    <div className="sportpl-live-item-foot-v538"><b>{item.icon}</b><em>Sport.pl ↗</em></div>
+                    <div className="sportpl-live-item-foot-v538"><button type="button" onClick={(event) => { event.stopPropagation(); openArticlePreview(item) }}>Podgląd artykułu</button></div>
                   </article>
                 ))}
               </div>
@@ -10394,110 +10396,9 @@ function ArticlesView() {
             </>
           ) : null}
 
-          {activeArticleTab !== 'live' ? <div className="tvlive-top-grid-v8">
-            <div
-              className={`glass-tvlive-v8 tvlive-hero-v8 article-hero-slider-v543 ${heroArticle?.image ? 'has-sportpl-hero-image-v543' : ''}`}
-              onPointerDown={(event) => { articleHeroSwipeStart.current = event.clientX }}
-              onPointerUp={handleArticleHeroPointerUp}
-            >
-              {heroArticle?.image ? (
-                <div className="article-hero-bg-v543">
-                  <img src={heroArticle.image} data-original-src={heroArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.closest('.article-hero-slider-v543')?.classList.add('image-error-v543'); event.currentTarget.remove() }} />
-                </div>
-              ) : null}
-              <div className="article-hero-live-strip-v543"><span>LIVE SPORT.PL</span><b>{articleHeroIndex + 1}/{articleHeroSlides.length || 1}</b><em>auto co 5,5 s</em></div>
-              <div className="hero-badge-v8">{heroArticle?.isImportant ? 'PILNE' : heroArticle?.tag || 'TRENDING'}</div>
-              <div className="hero-copy-v8">
-                <h1 key={heroArticle?.title}>{heroArticle?.title || 'Mecz na szczycie Premier League: City kontra Arsenal'}</h1>
-                <p>{heroArticle?.excerpt || 'Zapowiedź hitu kolejki, kluczowe statystyki, kontuzje i typy AI na to spotkanie.'}</p>
-                <button type="button" onClick={() => heroArticle?.url && window.open(heroArticle.url, '_blank', 'noopener,noreferrer')}>Czytaj artykuł</button>
-              </div>
-              <div className="hero-vs-v8 article-hero-logo-v543">{heroArticle?.image ? 'SPORT.PL' : 'VS'}</div>
-              <div className="hero-player-v8 left">{heroArticle?.icon || 'SP'}</div>
-              <div className="hero-player-v8 right">LIVE</div>
-              <div className="hero-nav-v8">
-                <button type="button" aria-label="Poprzednia wiadomość" onClick={() => moveArticleHero(-1)}>‹</button>
-                <div className="hero-dots-v8">
-                  {articleHeroSlides.map((_, index) => (
-                    <button type="button" aria-label={`Wiadomość ${index + 1}`} className={articleHeroIndex === index ? 'active' : ''} key={index} onClick={() => setArticleHeroIndex(index)} />
-                  ))}
-                </div>
-                <button type="button" aria-label="Następna wiadomość" onClick={() => moveArticleHero(1)}>›</button>
-              </div>
-            </div>
+          {/* v1134: usunięto stary panel TV/articles z tej sekcji. */}
 
-            <div className="tvlive-side-stack-v8">
-              <div className="glass-tvlive-v8 schedule-card-v8">
-                <div className="card-head-v8"><h3>TV Live / legalnie</h3><button type="button">Centrum meczowe</button></div>
-                <div className="mini-tabs-v8"><button type="button" className="active">Dziś</button><button type="button">Jutro</button><button type="button">Śr 17.05</button></div>
-                <div className="schedule-list-v8 legal-tv-list-v1130">
-                  {tvRows.map((row, idx) => (
-                    <div className="schedule-row-v8 legal-tv-row-v1130" key={idx}>
-                      <span>{row.time}</span>
-                      <div>
-                        <strong>{row.sport} {row.match}</strong>
-                        <small>{row.league} • {row.note}</small>
-                      </div>
-                      <em>{row.source}</em>
-                      <button type="button" onClick={() => row.url && window.open(row.url, '_blank', 'noopener,noreferrer')}>{row.status}</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="glass-tvlive-v8 ppv-card-v8 legal-safe-card-v1130">
-                <div className="card-head-v8"><h3>Bezpieczne TV Live</h3><button type="button">Legal only</button></div>
-                <div className="ppv-list-v8 legal-info-list-v1130">
-                  {legalLiveInfoRows.map((row, idx) => (
-                    <div className="ppv-row-v8 legal-info-row-v1130" key={idx}>
-                      <div className={`ppv-thumb-v8 t${idx+1}`}></div>
-                      <div><strong>{row[0]}</strong><small>{row[1]}</small></div>
-                      <span>OK</span>
-                      <b>LIVE</b>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div> : null}
-
-          {activeArticleTab !== 'live' ? <>
-          <div className="section-head-v8"><h2>{activeArticleTab === 'tv' ? 'TV Live — legalne transmisje i centrum meczowe' : activeArticleTab === 'scores' ? 'Wyniki live — aktywne mecze' : 'Najnowsze artykuły'}</h2><button type="button" onClick={() => setActiveArticleTab('live')}>Otwórz Na żywo</button></div>
-          {activeArticleTab === 'tv' ? (
-            <div className="glass-tvlive-v8 legal-tv-center-v1130">
-              <div className="legal-tv-center-head-v1130">
-                <span>BETAI TV LIVE</span>
-                <h2>Centrum transmisji bez ryzykownych streamów</h2>
-                <p>Pokazujemy, co gra dzisiaj, status meczu i legalną ścieżkę oglądania. Na stronie nie ma playerów, iframe ani linków do nieautoryzowanych transmisji.</p>
-              </div>
-              <div className="legal-tv-match-grid-v1130">
-                {tvRows.map((row, idx) => (
-                  <article className="legal-tv-match-card-v1130" key={`${row.match}-${idx}`}>
-                    <div className="legal-tv-match-top-v1130"><span>{row.time}</span><b>{row.status}</b></div>
-                    <h3>{row.sport} {row.match}</h3>
-                    <p>{row.league}</p>
-                    <small>{row.note}</small>
-                    <button type="button" onClick={() => row.url && window.open(row.url, '_blank', 'noopener,noreferrer')}>Sprawdź legalne źródło</button>
-                  </article>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="article-grid-v8">
-            {sportPlCards.map((item, idx) => (
-              <article className="glass-tvlive-v8 article-card-v8" key={item.url || idx} onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}>
-                <div className={`article-cover-v8 c${(idx % 4)+1} ${item.image ? 'has-sportpl-image-v541' : ''}`} style={item.image ? { backgroundImage: `linear-gradient(180deg, rgba(2,8,14,.12), rgba(2,8,14,.72)), url(${item.image})` } : undefined}><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small><strong>{item.image ? 'SPORT.PL' : item.icon}</strong></div>
-                <div className="article-body-v8">
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
-                  <div className="article-foot-v8"><span>{item.isImportant ? '🚨 Ważne' : '🔥 Sport.pl'}</span><span>↗ Czytaj</span></div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          </> : null}
+          {/* v1134: usunięto dodatkowy panel kart/newsów nad Wyniki live. */}
 
           {activeArticleTab === 'scores' ? (
             <div className="glass-tvlive-v8 livescore-wrap-v8 flashscore-board-v1132">
@@ -10610,6 +10511,33 @@ function ArticlesView() {
           </div>
         </aside>
       </div>
+      {previewArticle ? (
+        <div className="article-preview-backdrop-v1137" role="dialog" aria-modal="true" aria-label="Podgląd artykułu" onClick={closeArticlePreview}>
+          <div className="article-preview-modal-v1137" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="article-preview-close-v1137" onClick={closeArticlePreview} aria-label="Zamknij podgląd">×</button>
+            {previewArticle.image ? (
+              <div className="article-preview-image-v1137">
+                <img src={previewArticle.image} data-original-src={previewArticle.rawImage || ''} alt="" referrerPolicy="no-referrer" onError={(event) => { const original = event.currentTarget.getAttribute('data-original-src'); if (original && event.currentTarget.src !== original) { event.currentTarget.removeAttribute('data-original-src'); event.currentTarget.src = original; return } event.currentTarget.remove() }} />
+              </div>
+            ) : null}
+            <div className="article-preview-content-v1137">
+              <div className="article-preview-meta-v1137">
+                <span>{previewArticle.tag || 'Wiadomość'}</span>
+                <small>{previewArticle.meta || ''}</small>
+              </div>
+              <h2>{previewArticle.title || 'Artykuł sportowy'}</h2>
+              <p>{getArticlePreviewText(previewArticle)}</p>
+              <div className="article-preview-note-v1137">
+                Podgląd na BetAI pokazuje zajawkę i skrót. Pełną treść otworzysz u źródła.
+              </div>
+              <div className="article-preview-actions-v1137">
+                <button type="button" onClick={closeArticlePreview}>Zamknij</button>
+                {previewArticle.url ? <button type="button" className="primary-v1137" onClick={() => window.open(previewArticle.url, '_blank', 'noopener,noreferrer')}>Otwórz pełny artykuł</button> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }
