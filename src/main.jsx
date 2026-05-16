@@ -19131,6 +19131,107 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     profile.sports
   )
 
+  const normalizeTopFormStatus = (value) => {
+    const raw = String(value || '').trim().toLowerCase()
+    if (!raw) return 'pending'
+    if (['w', 'win', 'won', 'wygrana', 'wygrany', 'wygrał', 'wygral', 'green', 'success'].includes(raw) || raw.includes('won') || raw.includes('win')) return 'won'
+    if (['l', 'loss', 'lost', 'lose', 'przegrana', 'przegrany', 'przegrał', 'przegral', 'red', 'failed'].includes(raw) || raw.includes('lost') || raw.includes('loss') || raw.includes('lose')) return 'lost'
+    if (['void', 'push', 'zwrot', 'return', 'cancelled', 'canceled', 'anulowany'].includes(raw)) return 'void'
+    return 'pending'
+  }
+
+  const normalizeTopFormItem = (value) => {
+    const status = normalizeTopFormStatus(value)
+    if (status === 'won') return { status: 'won', label: 'W', title: 'Wygrany typ' }
+    if (status === 'lost') return { status: 'lost', label: 'L', title: 'Przegrany typ' }
+    if (status === 'void') return { status: 'void', label: '•', title: 'Zwrot' }
+    return { status: 'pending', label: '•', title: 'Brak rozliczenia' }
+  }
+
+  const parseTopFormFromProfile = (profile = {}) => {
+    const source = profile.recent_form || profile.last_results || profile.recent_results || profile.form || profile.results || profile.last_six_results
+    if (!source) return []
+    if (Array.isArray(source)) return source.map(item => normalizeTopFormItem(typeof item === 'object' ? (item.status || item.result || item.value || item.type) : item)).slice(0, 6)
+    return String(source).split(/[\s,;|/-]+/).filter(Boolean).map(item => normalizeTopFormItem(item)).slice(0, 6)
+  }
+
+  const getTopTipsterIdentityTokens = (profile = {}) => {
+    const tokens = [
+      profile.id,
+      profile.user_id,
+      profile.author_id,
+      profile.tipster_id,
+      profile.profileRef,
+      profile.email,
+      profile.author_email,
+      profile.user_email,
+      profile.username,
+      profile.author_name,
+      profile.name,
+      profile.public_slug,
+      profile.slug,
+      resolveRealProfileUsername(profile),
+    ]
+    const normalized = []
+    tokens.forEach(value => {
+      const clean = normalizeEmail(value)
+      if (!clean || isGenericProfileName(clean)) return
+      normalized.push(clean)
+      if (clean.includes('@')) normalized.push(clean.split('@')[0])
+    })
+    return [...new Set(normalized.filter(Boolean))]
+  }
+
+  const getTopTipIdentityTokens = (tip = {}) => {
+    const normalizedTip = normalizeTipRow(tip)
+    const tokens = [
+      normalizedTip.author_id,
+      normalizedTip.user_id,
+      normalizedTip.tipster_id,
+      normalizedTip.created_by,
+      normalizedTip.owner_id,
+      normalizedTip.author_email,
+      normalizedTip.user_email,
+      normalizedTip.email,
+      normalizedTip.author_name,
+      normalizedTip.username,
+      normalizedTip.author_username,
+      normalizedTip.profile_username,
+      normalizedTip.public_slug,
+      normalizedTip.author_slug,
+      normalizedTip.profile_slug,
+      resolveRealProfileUsername(normalizedTip),
+    ]
+    const normalized = []
+    tokens.forEach(value => {
+      const clean = normalizeEmail(value)
+      if (!clean || isGenericProfileName(clean)) return
+      normalized.push(clean)
+      if (clean.includes('@')) normalized.push(clean.split('@')[0])
+    })
+    return [...new Set(normalized.filter(Boolean))]
+  }
+
+  const getTopTipSortTime = (tip = {}) => {
+    const raw = tip.settled_at || tip.result_at || tip.updated_at || tip.event_time || tip.match_time || tip.created_at
+    const time = raw ? new Date(raw).getTime() : 0
+    return Number.isFinite(time) ? time : 0
+  }
+
+  const buildRecentFormForProfile = (profile = {}) => {
+    const directForm = parseTopFormFromProfile(profile)
+    if (directForm.length) return [...directForm, ...Array.from({ length: Math.max(0, 6 - directForm.length) }, () => normalizeTopFormItem('pending'))].slice(0, 6)
+
+    const profileTokens = new Set(getTopTipsterIdentityTokens(profile))
+    const matchedTips = (tips || [])
+      .filter(tip => getTopTipIdentityTokens(tip).some(token => profileTokens.has(token)))
+      .sort((a, b) => getTopTipSortTime(b) - getTopTipSortTime(a))
+      .slice(0, 6)
+      .map(tip => normalizeTopFormItem(tip.result || tip.status || tip.result_status || tip.live_status))
+
+    return [...matchedTips, ...Array.from({ length: Math.max(0, 6 - matchedTips.length) }, () => normalizeTopFormItem('pending'))].slice(0, 6)
+  }
+
   const buildRealTipster = (profile, idx) => {
     const name = resolveRealProfileUsername(profile)
     const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
@@ -19173,6 +19274,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       totalTipsValue: totalTips,
       picks: String(totalTips),
       chart: `${hitRate}%`,
+      recentForm: buildRecentFormForProfile(profile),
       price: priceLabel,
       priceSubLabel,
       followers: `${followers.toLocaleString('pl-PL')} obserwujących`,
@@ -19383,10 +19485,10 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
                 <div className="seller-chart-v7">
                   <small>Skuteczność</small>
-                  <div className="sparkline-v7">
-                    <svg viewBox="0 0 240 78" preserveAspectRatio="none">
-                      <path d={idx % 3 === 0 ? 'M0,48 L18,54 L36,42 L54,58 L72,38 L90,33 L108,22 L126,35 L144,18 L162,30 L180,20 L198,25 L216,14 L240,8' : idx % 3 === 1 ? 'M0,44 L18,46 L36,41 L54,43 L72,29 L90,38 L108,24 L126,30 L144,20 L162,26 L180,19 L198,21 L216,16 L240,10' : 'M0,50 L18,42 L36,48 L54,31 L72,40 L90,26 L108,35 L126,30 L144,33 L162,18 L180,27 L198,23 L216,16 L240,9'} />
-                    </svg>
+                  <div className="recent-form-v1114" aria-label={`Ostatnie 6 typów: ${(tipster.recentForm || []).map(item => item.label).join(' ')}`}>
+                    {(tipster.recentForm || []).map((item, formIdx) => (
+                      <span key={formIdx} className={`form-pill-v1114 ${item.status}`} title={item.title}>{item.label}</span>
+                    ))}
                   </div>
                   <div className="chart-meta-v7">
                     <b>{tipster.chart}</b>
