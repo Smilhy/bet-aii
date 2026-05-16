@@ -19600,8 +19600,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                           aria-label={isFollowing ? 'Przestań obserwować typera' : 'Obserwuj typera'}
                           title={isFollowing ? 'Kliknij, żeby przestać obserwować' : 'Kliknij, żeby obserwować'}
                         >
-                          <span className="follow-icon-v1119" aria-hidden="true">{isFollowing ? '↺' : '+'}</span>
-                          <span>{isFollowing ? 'Obserwujesz' : 'Obserwuj'}</span>
+                          <span className="follow-icon-v1119" aria-hidden="true">{isFollowing ? '✓' : '+'}</span>
+                          <span className="follow-label-v1119">{isFollowing ? 'Obserwujesz' : 'Obserwuj'}</span>
                         </button>
                       )
                     })()}

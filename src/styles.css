@@ -46633,3 +46633,38 @@ button.betfolio-fetch-btn{
   font-weight:1000!important;
 }
 .success-head-v1117 > b{display:none!important;}
+
+
+/* WERSJA 1120 — Top typerzy: czytelny przycisk Obserwujesz */
+.top-follow-btn-v1119.is-following{
+  background:linear-gradient(90deg,#21eadb,#14c8dc)!important;
+  border-color:rgba(33,234,219,.9)!important;
+  color:#03181d!important;
+  text-shadow:none!important;
+  box-shadow:0 10px 22px rgba(24,229,219,.18)!important;
+}
+.top-follow-btn-v1119.is-following .follow-icon-v1119,
+.top-follow-btn-v1119.is-following .follow-label-v1119,
+.top-follow-btn-v1119.is-following span{
+  color:#03181d!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  font-weight:1000!important;
+}
+.top-follow-btn-v1119.is-following:hover{
+  background:linear-gradient(90deg,#ff5577,#ff8b58)!important;
+  border-color:rgba(255,126,126,.9)!important;
+  color:#fff!important;
+  box-shadow:0 0 18px rgba(255,91,126,.25)!important;
+}
+.top-follow-btn-v1119.is-following:hover .follow-icon-v1119,
+.top-follow-btn-v1119.is-following:hover .follow-label-v1119,
+.top-follow-btn-v1119.is-following:hover span{
+  color:#fff!important;
+}
+.top-follow-btn-v1119.is-following:hover .follow-icon-v1119{
+  transform:rotate(0deg) scale(1.1)!important;
+}
+.top-follow-btn-v1119:not(.is-following){
+  color:#eafcff!important;
+}
