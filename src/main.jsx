@@ -19532,16 +19532,16 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                 </div>
 
                 <div className="seller-chart-v7">
-                  <small>Skuteczność</small>
+                  <div className="success-head-v1117">
+                    <small>Skuteczność</small>
+                    <b>{tipster.chart}</b>
+                  </div>
                   <div className="recent-form-v1114" aria-label={`Ostatnie 6 typów: ${(tipster.recentForm || []).map(item => item.label).join(' ')}`}>
                     {(tipster.recentForm || []).map((item, formIdx) => (
                       <span key={formIdx} className={`form-pill-v1114 ${item.status}`} title={item.title}>{item.label}</span>
                     ))}
                   </div>
-                  <div className="chart-meta-v7">
-                    <b>{tipster.chart}</b>
-                    <span>Osiągnięcia</span>
-                  </div>
+                  <div className="achievement-head-v1117">Osiągnięcia</div>
                   <div className="spec-list-v7 achievement-list-v1115">
                     {tipster.achievements?.length ? tipster.achievements.map((badge, i) => (
                       <i key={`${badge.title}-${i}`} className={`achievement-badge-v1115 ${badge.tone || ''}`} title={`${badge.title} — ${badge.desc}`}>{badge.icon}</i>

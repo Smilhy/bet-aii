@@ -46553,3 +46553,31 @@ button.betfolio-fetch-btn{
   font-weight:800!important;
   white-space:nowrap!important;
 }
+
+/* WERSJA 1117 — Top typerzy: procent skuteczności przy nagłówku, opis osiągnięć nad ikonami */
+.success-head-v1117{
+  display:flex!important;
+  align-items:baseline!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:8px!important;
+}
+.success-head-v1117 small{
+  margin-bottom:0!important;
+}
+.success-head-v1117 b{
+  color:#18ead8!important;
+  font-size:18px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+}
+.achievement-head-v1117{
+  color:#8fa6b7!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  margin:0 0 8px!important;
+}
+.seller-chart-v7 .recent-form-v1114{
+  min-height:48px!important;
+  margin-bottom:12px!important;
+}
