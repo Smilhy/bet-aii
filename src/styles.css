@@ -46558,8 +46558,8 @@ button.betfolio-fetch-btn{
 .success-head-v1117{
   display:flex!important;
   align-items:baseline!important;
-  justify-content:space-between!important;
-  gap:12px!important;
+  justify-content:flex-start!important;
+  gap:6px!important;
   margin-bottom:8px!important;
 }
 .success-head-v1117 small{
@@ -46580,4 +46580,28 @@ button.betfolio-fetch-btn{
 .seller-chart-v7 .recent-form-v1114{
   min-height:48px!important;
   margin-bottom:12px!important;
+}
+
+
+/* WERSJA 1118 — Top typerzy: żywe obserwowanie / odobserwowanie */
+.top-follow-btn-v1118{
+  transition:transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, color .16s ease!important;
+}
+.top-follow-btn-v1118:hover{
+  transform:translateY(-1px) scale(1.03)!important;
+  border-color:rgba(31,234,223,.55)!important;
+  box-shadow:0 0 18px rgba(31,234,223,.18)!important;
+}
+.top-follow-btn-v1118.active{
+  color:#041018!important;
+  background:linear-gradient(135deg,#22f2df,#1dbdd9)!important;
+  border-color:rgba(31,234,223,.75)!important;
+  box-shadow:0 8px 26px rgba(31,234,223,.18)!important;
+}
+.top-follow-btn-v1118.active:hover{
+  transform:translateY(-1px) scale(1.03)!important;
+  filter:brightness(1.04)!important;
+}
+.cta-bottom-v7 span{
+  white-space:nowrap!important;
 }
