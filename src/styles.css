@@ -46670,19 +46670,31 @@ button.betfolio-fetch-btn{
 }
 
 
-/* WERSJA 1121 — Top typerzy: stabilny stan Obserwuj/Obserwujesz bez migania */
+/* WERSJA 1123 — Top typerzy: prosty toggle bez czerwonego hovera */
 .top-follow-btn-v1119 .follow-icon-v1119{
   transform:none!important;
 }
-.top-follow-btn-v1119.is-following:hover .follow-icon-v1119{
-  transform:none!important;
+.top-follow-btn-v1119.is-following{
+  background:linear-gradient(90deg,#21eadb,#14c8dc)!important;
+  border-color:rgba(33,234,219,.9)!important;
+  color:#03181d!important;
+  text-shadow:none!important;
+  box-shadow:0 10px 22px rgba(24,229,219,.18)!important;
+}
+.top-follow-btn-v1119.is-following:hover{
+  background:linear-gradient(90deg,#21eadb,#14c8dc)!important;
+  border-color:rgba(33,234,219,1)!important;
+  color:#03181d!important;
+  box-shadow:0 0 20px rgba(24,229,219,.25)!important;
+}
+.top-follow-btn-v1119.is-following:hover .follow-icon-v1119,
+.top-follow-btn-v1119.is-following:hover .follow-label-v1119,
+.top-follow-btn-v1119.is-following:hover span{
+  color:#03181d!important;
 }
 .top-follow-btn-v1119.is-following:hover .follow-label-v1119::after{
-  content:' — kliknij, aby cofnąć';
-  font-size:10px;
-  font-weight:900;
-  opacity:.9;
+  content:''!important;
 }
-@media (max-width: 900px){
-  .top-follow-btn-v1119.is-following:hover .follow-label-v1119::after{content:'';}
+.top-follow-btn-v1119.is-following .follow-label-v1119::after{
+  content:''!important;
 }

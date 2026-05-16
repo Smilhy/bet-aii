@@ -21031,6 +21031,20 @@ function App() {
     }
 
     try {
+      const { data: rpcRows, error: rpcError } = await supabase.rpc('betai_get_tipster_follow_stats_v1123')
+      if (rpcError) throw rpcError
+      ;(rpcRows || []).forEach(row => {
+        const key = normalizeEmail(row.tipster_key || row.key || '')
+        const followers = Number(row.followers || row.followers_count || 0) || 0
+        if (!key) return
+        stats[key] = stats[key] || { followers: 0, following: 0 }
+        stats[key].followers = Math.max(Number(stats[key].followers || 0) || 0, followers)
+      })
+    } catch (error) {
+      console.warn('fetchFollowStats rpc skipped', error)
+    }
+
+    try {
       const { data, error } = await supabase
         .from('tipster_follows')
         .select('follower_id,tipster_id')
