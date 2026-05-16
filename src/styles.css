@@ -46394,3 +46394,31 @@ button.betfolio-fetch-btn{
   text-align:left!important;
   padding:0 14px!important;
 }
+
+/* WERSJA 1111 — Top typerzy: klik w nick/avatar otwiera profil użytkownika */
+.seller-name-link-v1111 {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 900;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.seller-name-link-v1111:hover {
+  color: #20e7e7;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.seller-avatar-button-v1111 {
+  border: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.seller-avatar-button-v1111:hover {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.08);
+}

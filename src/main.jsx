@@ -18777,7 +18777,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   )
 }
 
-function TopTipstersView({ tips = [], ranking = [], user = null }) {
+function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster = null }) {
   const [profiles, setProfiles] = useState([])
   const [loadingProfiles, setLoadingProfiles] = useState(true)
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
@@ -19062,6 +19062,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     return {
       rank: idx + 1,
       id: profile.id || profile.user_id || profile.email || name,
+      profileRef: profile.id || profile.user_id || profile.author_id || profile.tipster_id || profile.public_slug || profile.email || name,
       name,
       subtitle: profile.bio || profile.description || profile.about || 'Zweryfikowany typer Bet+AI',
       rating: (4 + Math.min(0.99, Math.max(0, hitRate || 70) / 100)).toFixed(2),
@@ -19135,6 +19136,12 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
     ['2', 'Kup subskrypcję albo darmowy dostęp', 'Premium ma przycisk subskrypcji, darmowe konta są oznaczone jako Darmowe.'],
     ['3', 'Obserwuj wyniki', 'Nowi użytkownicy dopisują się automatycznie z Supabase.'],
   ]
+
+  const openTopTipsterProfile = (tipster = {}) => {
+    if (typeof onOpenTipster === 'function') {
+      onOpenTipster(tipster.profileRef || tipster.id || tipster.name, tipster.name)
+    }
+  }
 
   return (
     <section className="market-static-v7">
@@ -19232,11 +19239,11 @@ function TopTipstersView({ tips = [], ranking = [], user = null }) {
               <article className="glass-market-v7 seller-card-v7" key={tipster.id || idx}>
                 <div className="seller-main-v7">
                   <div className="seller-profile-v7">
-                    <div className={`seller-avatar-v7 a${(idx % 3) + 1}`} style={tipster.avatarUrl ? { backgroundImage: `url(${tipster.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : undefined}>{tipster.avatar}</div>
+                    <button type="button" className={`seller-avatar-v7 seller-avatar-button-v1111 a${(idx % 3) + 1}`} onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika" style={tipster.avatarUrl ? { backgroundImage: `url(${tipster.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : undefined}>{tipster.avatar}</button>
                     <div className="seller-copy-v7">
                       <div className="seller-title-row-v7">
                         <span className={`rank-pill-v7 r${Math.min(tipster.rank, 3)}`}>{tipster.rank}</span>
-                        <h3>{tipster.name}</h3>
+                        <button type="button" className="seller-name-link-v1111" onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika">{tipster.name}</button>
                         <i>✓</i>
                       </div>
                       <p>{tipster.subtitle}</p>
@@ -22784,7 +22791,7 @@ function App() {
         )}
 
         {view === 'topTipsters' && (
-          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} />
+          <TopTipstersView tips={tips} ranking={realRanking} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />
         )}
 
         {view === 'notifications' && (
