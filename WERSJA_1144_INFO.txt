@@ -1,8 +1,0 @@
-WERSJA 1144 — poprawka responsywności logowania dla monitorów 16:10 / 1680x1050
-
-- naprawiono zjadanie ramek na monitorze 1680x1050,
-- artboard logowania jest skalowany do szerokości i wysokości viewportu,
-- usunięto wymuszone przesunięcie loginu w prawo, które powodowało ucinanie,
-- poprawiono pozycje paneli bocznych / social / support, żeby nie wypadały poza ekran,
-- na telefonach i wąskich ekranach wraca układ mobilny bez poziomego scrolla,
-- bez zmian w logice: Top typerzy, avatary, follow, cennik, artykuły i API live score.
