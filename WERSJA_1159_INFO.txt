@@ -1,0 +1,16 @@
+BetAI wersja 1159 - AI TOP3 future-only, NETLIFY SAFE
+
+Baza: 1157 (stabilna wg uzytkownika)
+Zmiany: tylko src/main.jsx - poprawka ramki AI Typy dnia:
+- TOP 3 mecze
+- tylko mecze przyszle
+- minimum 5 minut do startu
+- bez meczow live/zakonczonych/rozstrzygnietych
+
+NIE RUSZANE:
+- package.json
+- package-lock.json (nie dodany)
+- .npmrc
+- netlify.toml
+- komendy builda
+- zaleznosci npm
