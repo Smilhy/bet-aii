@@ -2450,7 +2450,7 @@ function LiveChatPanel({ user }) {
 
 
 
-// V1156 — prawa ramka Dashboard: realne TOP 3 AI typy dnia zapisane po dacie.
+// V1157 — prawa ramka Dashboard: TOP 3 AI typy dnia, najpierw baza/cache, potem API/generator.
 // Nie dotyka logiki innych zakładek: cache jest tylko dla tej ramki Dashboardu.
 const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1156_'
 
@@ -2493,6 +2493,96 @@ function saveBetAiRightDailyAiCacheV1156(dayKey, picks = []) {
       picks: (picks || []).slice(0, 3)
     }))
   } catch (_) {}
+}
+
+
+function getBetAiRightTipDayKeyV1157(value) {
+  try {
+    const d = value instanceof Date ? value : new Date(value || Date.now())
+    if (Number.isNaN(d.getTime())) return ''
+    return getBetAiWarsawDayKeyV1156(d)
+  } catch (_) {
+    return ''
+  }
+}
+
+function mapBetAiRightSavedTipV1157(row = {}, index = 0, dayKey = getBetAiWarsawDayKeyV1156()) {
+  const home = row.team_home || row.home || row.home_team || row.fixture_json?.home || ''
+  const away = row.team_away || row.away || row.away_team || row.fixture_json?.away || ''
+  if (!home || !away) return null
+  const rawDate = row.event_time || row.kickoff_time || row.match_time || row.fixture_date || row.created_at || ''
+  return {
+    id: String(row.ai_external_key || row.external_fixture_id || row.id || `${home}-${away}-${rawDate}`),
+    dayKey,
+    matchName: row.match_name || row.match || `${home} vs ${away}`,
+    home,
+    away,
+    league: row.league_name || row.league || row.competition || 'Football',
+    date: rawDate,
+    market: row.market || row.bet_type || 'Typ AI',
+    pick: row.selection || row.pick || row.prediction || 'Najmocniejszy typ AI',
+    odds: Number(row.odds || 1.75).toFixed(2),
+    confidence: Math.round(Number(row.ai_confidence || row.ai_score || row.probability || row.model_probability || 68)),
+  }
+}
+
+async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
+  if (!isSupabaseConfigured || !supabase) return []
+  try {
+    const nextDay = getBetAiNextWarsawDayKeyV1156(dayKey)
+    const { data, error } = await supabase
+      .from('tips')
+      .select('*')
+      .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
+      .gte('event_time', `${dayKey}T00:00:00`)
+      .lt('event_time', `${nextDay}T23:59:59`)
+      .order('ai_confidence', { ascending: false, nullsFirst: false })
+      .limit(80)
+    if (error) throw error
+    const seen = new Set()
+    return (data || [])
+      .map((row, index) => mapBetAiRightSavedTipV1157(row, index, dayKey))
+      .filter(Boolean)
+      .filter(pick => getBetAiRightTipDayKeyV1157(pick.date || Date.now()) === dayKey)
+      .filter(pick => {
+        const key = String(pick.id || `${pick.home}-${pick.away}-${pick.date}`)
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))
+      .slice(0, 3)
+  } catch (err) {
+    console.warn('right daily AI saved tips load skipped:', err?.message || err)
+    return []
+  }
+}
+
+async function triggerBetAiRightDailyGeneratorV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
+  const attemptKey = `betai_right_daily_ai_generate_attempt_v1157_${dayKey}`
+  try {
+    // Jeżeli już próbowaliśmy w tej karcie, nie mielimy endpointu co sekundę.
+    const previous = localStorage.getItem(attemptKey)
+    if (previous) return { skipped: true }
+  } catch (_) {}
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 18000)
+  try {
+    const res = await fetch('/.netlify/functions/generate-live-ai-picks?days=1&limit=3', {
+      method: 'POST',
+      cache: 'no-store',
+      signal: controller.signal
+    })
+    const json = await res.json().catch(() => ({}))
+    if (res.ok && Number(json.inserted || 0) > 0) {
+      try { localStorage.setItem(attemptKey, JSON.stringify({ at: new Date().toISOString(), inserted: Number(json.inserted || 0) })) } catch (_) {}
+    }
+    return { ok: res.ok, json }
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) }
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 function extractBetAiRightFixturesV1156(payload = {}) {
@@ -2596,26 +2686,38 @@ function DailyAiPicksRightPanelV1156() {
       }
 
       setLoading(true)
-      setNotice('Skanuję mecze na dziś...')
+      setNotice('Sprawdzam zapisane typy AI na dziś...')
       try {
+        const savedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
+        if (savedFromDb.length) {
+          saveBetAiRightDailyAiCacheV1156(today, savedFromDb)
+          if (!alive) return
+          setPicks(savedFromDb)
+          setNotice(`TOP ${savedFromDb.length} wczytane z bazy na ${today}`)
+          return
+        }
+
+        setNotice('Brak zapisanych — pobieram mecze na dziś...')
         const tomorrow = getBetAiNextWarsawDayKeyV1156(today)
         const urls = [
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&from=${today}&to=${tomorrow}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&daysAhead=0&mode=today&realOnly=1&allLeagues=1`
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&mode=today&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&day=${today}&mode=today&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&from=${today}&to=${tomorrow}&daysAhead=1&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&daysAhead=1&realOnly=1&allLeagues=1`,
+          `/.netlify/functions/get-sports-events?sport=football&date=${today}&mode=today&realOnly=1&allLeagues=1`
         ]
         let fixtures = []
         for (const url of urls) {
           const controller = new AbortController()
-          const timer = setTimeout(() => controller.abort(), 8500)
+          const timer = setTimeout(() => controller.abort(), 9000)
           try {
-            const res = await fetch(url, { signal: controller.signal })
+            const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
             clearTimeout(timer)
             if (!res.ok) continue
             const json = await res.json()
             fixtures = extractBetAiRightFixturesV1156(json)
               .filter(isBetAiRightPrematchV1156)
-              .filter(m => getBetAiWarsawDayKeyV1156(new Date(m.date || Date.now())) === today)
+              .filter(m => getBetAiWarsawDayKeyV1156(new Date(m.date || m.commence_time || Date.now())) === today)
             if (fixtures.length) break
           } catch (_) {
             clearTimeout(timer)
@@ -2639,11 +2741,23 @@ function DailyAiPicksRightPanelV1156() {
           if (!alive) return
           setPicks(top)
           setNotice(`TOP ${top.length} zapisane na ${today}`)
-        } else {
-          if (!alive) return
-          setPicks([])
-          setNotice('Brak meczów API na dziś')
+          return
         }
+
+        setNotice('API nie zwróciło meczów — uruchamiam dzienny generator AI...')
+        await triggerBetAiRightDailyGeneratorV1157(today)
+        const generatedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
+        if (generatedFromDb.length) {
+          saveBetAiRightDailyAiCacheV1156(today, generatedFromDb)
+          if (!alive) return
+          setPicks(generatedFromDb)
+          setNotice(`TOP ${generatedFromDb.length} wygenerowane i zapisane na ${today}`)
+          return
+        }
+
+        if (!alive) return
+        setPicks([])
+        setNotice('Brak meczów API na dziś')
       } finally {
         if (alive) setLoading(false)
       }
