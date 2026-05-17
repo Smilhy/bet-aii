@@ -47990,3 +47990,278 @@ button,input,select,textarea{
     overflow-x:hidden!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1149 — SIDE WIDGETS SAFE AREA LOCK
+   Poprawka: na monitorach 1680x1050 / 16:10 boczne widgety
+   nie mogą być zjadane przez krawędzie ekranu.
+   Nie rusza npm, package.json, package-lock.json ani netlify.toml.
+   ========================================================= */
+@media (min-width:1101px) and (max-width:1900px){
+  .auth609-screen.auth1148-auto-fit{
+    overflow:hidden!important;
+  }
+
+  /* Lewy panel LIVE: w całości w ekranie, nie na samej krawędzi */
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:fixed!important;
+    left:12px!important;
+    right:auto!important;
+    top:50%!important;
+    bottom:auto!important;
+    width:188px!important;
+    max-width:188px!important;
+    min-width:188px!important;
+    transform:translateY(-50%) scale(.92)!important;
+    transform-origin:left center!important;
+    border-radius:20px!important;
+    border-left:1px solid rgba(58,225,255,.25)!important;
+    z-index:120!important;
+  }
+
+  /* Prawy panel social: nie chowamy go na 1680, tylko zmniejszamy i cofamy od krawędzi */
+  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
+    display:flex!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:fixed!important;
+    right:12px!important;
+    left:auto!important;
+    top:50%!important;
+    bottom:auto!important;
+    transform:translateY(-50%) scale(.86)!important;
+    transform-origin:right center!important;
+    z-index:125!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth627-social-link{
+    width:78px!important;
+    min-height:46px!important;
+    border-radius:16px!important;
+    border-right:1px solid rgba(63,232,255,.24)!important;
+    padding:7px 7px!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth627-social-link b{
+    font-size:7.8px!important;
+  }
+
+  /* Opinie i chat: cofnięte do środka, żeby nie były obcinane */
+  .auth609-screen.auth1148-auto-fit .reviews512{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:fixed!important;
+    right:82px!important;
+    bottom:12px!important;
+    left:auto!important;
+    transform:scale(.88)!important;
+    transform-origin:bottom right!important;
+    z-index:126!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .support510{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:fixed!important;
+    right:12px!important;
+    bottom:12px!important;
+    left:auto!important;
+    transform:scale(.88)!important;
+    transform-origin:bottom right!important;
+    z-index:127!important;
+  }
+}
+
+@media (min-width:1101px) and (max-width:1700px){
+  /* Nadpisuje stare 1148, które chowało social media na 1680px */
+  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
+    display:flex!important;
+    right:10px!important;
+    transform:translateY(-50%) scale(.78)!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
+    display:block!important;
+    left:8px!important;
+    width:176px!important;
+    max-width:176px!important;
+    min-width:176px!important;
+    transform:translateY(-50%) scale(.84)!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card{
+    min-height:48px!important;
+    padding:7px 8px!important;
+    gap:7px!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card b{
+    font-size:16px!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card small{
+    font-size:7.7px!important;
+    line-height:1.08!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .reviews512{
+    right:72px!important;
+    bottom:10px!important;
+    transform:scale(.80)!important;
+  }
+
+  .auth609-screen.auth1148-auto-fit .support510{
+    right:10px!important;
+    bottom:10px!important;
+    transform:scale(.80)!important;
+  }
+}
+
+@media (min-width:1101px) and (max-width:1450px){
+  /* Dopiero przy naprawdę małych laptopach chowamy boczne panele, żeby nie zasłaniały logowania. */
+  .auth609-screen.auth1148-auto-fit .auth627-social-dock,
+  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
+    display:none!important;
+  }
+}
+
+/* =========================================================
+   WERSJA 1150 — EXACT 2560x1440 ZOOM SCALE MODE
+   Cel: 1 do 1 jak na bazowym monitorze 2560x1440, ale automatycznie
+   pomniejszone na 1680x1050 (~0.656 = prawie 67% zoom), 1920x1080,
+   laptopach i tabletach. Bez zmian npm/package/netlify.
+   ========================================================= */
+html, body, #root{
+  overflow-x:hidden!important;
+}
+
+/* Zalogowana aplikacja: działa jak automatyczny zoom przeglądarki.
+   Layout liczy się szeroko jak 2560px, potem wizualnie zmniejsza do ekranu. */
+.app-shell.betai1150-exact-scale{
+  --betai1150-scale-safe: var(--betai1150-scale, 1);
+  width:calc(100vw / var(--betai1150-scale-safe))!important;
+  max-width:none!important;
+  min-width:2560px!important;
+  display:grid!important;
+  grid-template-columns:270px minmax(0,1fr) 360px!important;
+  gap:24px!important;
+  padding:22px 28px!important;
+  margin:0!important;
+  transform-origin:top left!important;
+  zoom:var(--betai1150-scale-safe)!important;
+}
+
+.app-shell.betai1150-exact-scale .rightbar{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  padding:98px 22px 30px 0!important;
+}
+
+.app-shell.betai1150-exact-scale .sidebar,
+.app-shell.betai1150-exact-scale .sidebar-stack{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+.app-shell.betai1150-exact-scale .main{
+  min-width:0!important;
+  width:100%!important;
+  max-width:none!important;
+}
+
+.app-shell.betai1150-exact-scale .topbar{
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  height:58px!important;
+  margin-bottom:34px!important;
+}
+
+.app-shell.betai1150-exact-scale .top-actions{
+  margin-left:auto!important;
+  flex-wrap:nowrap!important;
+}
+
+@supports not (zoom: 1){
+  .app-shell.betai1150-exact-scale{
+    zoom:1!important;
+    transform:scale(var(--betai1150-scale-safe))!important;
+    width:calc(100vw / var(--betai1150-scale-safe))!important;
+  }
+}
+
+/* Ekran logowania: ten sam tryb — baza 2560x1440, skala około 67% na 1680x1050. */
+.auth609-screen.auth1148-auto-fit{
+  width:100vw!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  padding:0!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  background:#020914!important;
+}
+
+.auth609-screen.auth1148-auto-fit .auth609-artboard{
+  width:2048px!important;
+  min-width:2048px!important;
+  max-width:none!important;
+  height:1152px!important;
+  min-height:1152px!important;
+  max-height:none!important;
+  flex:0 0 2048px!important;
+  margin:0!important;
+  aspect-ratio:auto!important;
+  transform:scale(var(--auth1148-fit-scale, 1))!important;
+  transform-origin:center center!important;
+  will-change:transform!important;
+}
+
+.auth609-screen.auth1148-auto-fit .auth609-reference{
+  display:block!important;
+  width:2048px!important;
+  height:1152px!important;
+  max-width:none!important;
+  object-fit:fill!important;
+}
+
+.auth609-screen.auth1148-auto-fit .auth609-overlay{
+  position:absolute!important;
+  inset:0!important;
+  width:2048px!important;
+  height:1152px!important;
+  min-height:0!important;
+  padding:0!important;
+  background:transparent!important;
+}
+
+.auth609-screen.auth1148-auto-fit .auth609-left-panel{
+  position:absolute!important;
+  left:48px!important;
+  top:18px!important;
+  width:619px!important;
+  height:1084px!important;
+  margin:0!important;
+}
+
+/* W exact mode nie chowamy bocznych elementów — skalują się razem z widokiem. */
+.auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+.auth609-screen.auth1148-auto-fit .auth627-social-dock{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}

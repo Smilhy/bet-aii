@@ -14807,17 +14807,12 @@ function AuthView({ onAuth }) {
       const vw = Math.max(320, window.innerWidth || 320)
       const vh = Math.max(320, window.innerHeight || 320)
 
-      if (vw <= 1100) {
-        setAuthAutoFit({ scale: 1, mode: 'mobile' })
-        return
-      }
-
-      const DESIGN_WIDTH = 2048
-      const DESIGN_HEIGHT = 1152
-      const SAFE_GAP = vw >= 2200 ? 0 : 16
+      const DESIGN_WIDTH = 2560
+      const DESIGN_HEIGHT = 1440
+      const SAFE_GAP = 0
       const widthScale = (vw - SAFE_GAP) / DESIGN_WIDTH
       const heightScale = (vh - SAFE_GAP) / DESIGN_HEIGHT
-      const nextScale = Math.max(0.48, Math.min(1, widthScale, heightScale))
+      const nextScale = Math.max(0.32, Math.min(1, widthScale, heightScale))
       const roundedScale = Math.round(nextScale * 10000) / 10000
 
       setAuthAutoFit(prev => (
@@ -23519,6 +23514,25 @@ function App() {
   }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
 
+  const [betai1150Scale, setBetai1150Scale] = useState(1)
+
+  useEffect(() => {
+    function updateBetai1150Scale() {
+      const vw = Math.max(320, window.innerWidth || 320)
+      const nextScale = Math.max(0.32, Math.min(1, vw / 2560))
+      const roundedScale = Math.round(nextScale * 10000) / 10000
+      setBetai1150Scale(prev => prev === roundedScale ? prev : roundedScale)
+    }
+
+    updateBetai1150Scale()
+    window.addEventListener('resize', updateBetai1150Scale)
+    window.addEventListener('orientationchange', updateBetai1150Scale)
+    return () => {
+      window.removeEventListener('resize', updateBetai1150Scale)
+      window.removeEventListener('orientationchange', updateBetai1150Scale)
+    }
+  }, [])
+
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
   const hasExpandedDashboardTips = dashboardVisibleTips > 3
@@ -23538,7 +23552,11 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div
+      className={`app-shell betai1150-exact-scale ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`}
+      style={{ '--betai1150-scale': betai1150Scale }}
+      data-betai-lang={appLang}
+    >
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
