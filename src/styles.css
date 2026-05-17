@@ -47653,3 +47653,33 @@ html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .main{
   font-weight:800!important;
   text-align:center!important;
 }
+
+/* BETAI 1160 — right column scroll fix for 1159
+   CSS-only: prawa kolumna Dashboardu ma własny scroll, żeby AI Typy dnia
+   było widoczne do końca na 1680x1050 i mniejszych ekranach.
+   Nie rusza logiki AI, chatu, rankingu ani auth. */
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar{
+  height:calc((100vh / var(--betai-exact-scale)) - 44px)!important;
+  max-height:calc((100vh / var(--betai-exact-scale)) - 44px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-right:6px!important;
+  padding-bottom:90px!important;
+  overscroll-behavior:contain!important;
+  scrollbar-gutter:stable!important;
+}
+
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar > *:last-child{
+  margin-bottom:70px!important;
+}
+
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156{
+  margin-bottom:70px!important;
+}
+
+/* Gdy exact-scale nie jest aktywny, też nie ucinaj prawej kolumny. */
+.app-shell:not(.no-rightbar-page) .rightbar{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+}
