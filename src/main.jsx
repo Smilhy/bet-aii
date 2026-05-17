@@ -9489,7 +9489,6 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
               <button type="button" onClick={reportDashboardTip}>⚠ Zgłoś wpis</button>
-              <button type="button" onClick={settleDashboardTip}>✓ Rozlicz</button>
               <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button>
               <button type="button" onClick={shareDashboardTip}>↗ Udostępnij</button>
             </div>
@@ -17024,7 +17023,6 @@ function ProfileLiveTipCard({
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
               <button type="button" onClick={reportTip}>⚠ Zgłoś wpis</button>
-              <button type="button" onClick={settleTip}>✓ Rozlicz</button>
               <button type="button" onClick={addAnalysis}>📝 Dodaj analizę</button>
               <button type="button" onClick={shareTip}>↗ Udostępnij</button>
             </div>
