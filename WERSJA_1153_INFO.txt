@@ -1,0 +1,6 @@
+WERSJA 1153 — Dashboard Only Rightbar Layout Lock
+
+Baza: 1151 clean1143 left anchored exact scale.
+Zmiany tylko w CSS dla Dashboardu po zalogowaniu, gdy exact-scale jest aktywny.
+Nie ruszano package.json, package-lock.json, netlify.toml, npm ani build command.
+Cel: naprawić ucinanie prawej kolumny/live chat na 1680x1050 i tabletach bez psucia loginu oraz innych zakładek.

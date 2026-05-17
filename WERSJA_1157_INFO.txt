@@ -1,0 +1,18 @@
+WERSJA 1157 — AI Typy dnia FIX pobierania
+
+Baza: 1156/1153.
+Zakres zmian: tylko prawa ramka Dashboardu "AI Typy dnia".
+
+Zmiany:
+- najpierw czyta lokalny cache dziennej ramki,
+- potem próbuje wczytać zapisane AI typy z Supabase/tips na dzisiejszą datę,
+- jeśli brak zapisanych typów, próbuje pobrać dzisiejsze mecze z get-sports-events kilkoma wariantami parametrów,
+- jeśli endpoint nie zwróci meczów, uruchamia istniejący generator /.netlify/functions/generate-live-ai-picks?days=1&limit=3 i ponownie czyta zapisane typy,
+- zapisuje TOP 3 po dacie w localStorage, żeby po odświeżeniu nic nie znikało.
+
+Nie ruszano:
+- auth/logowania,
+- chatu,
+- rankingu,
+- innych zakładek,
+- package.json/package-lock/netlify.toml.

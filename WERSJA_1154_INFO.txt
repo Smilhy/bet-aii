@@ -1,0 +1,7 @@
+Wersja 1154 — ukrycie ramki "Aktywne typy" na Dashboardzie.
+
+Zmiana tylko wizualna/CSS:
+- ukryto .dashboard-active-feed-note-v956
+- nie ruszano logiki rozstrzygania typów
+- nie ruszano automatycznego przenoszenia do Historii/Wyników
+- nie ruszano Supabase, auth, chatu, rankingu, package.json ani netlify.toml
