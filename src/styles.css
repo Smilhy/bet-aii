@@ -47778,3 +47778,110 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     min-width:26px!important;
   }
 }
+
+/* BETAI 1163 — AI Typy dnia: dopasowanie herbów w jednej linii z nazwami
+   Tylko wygląd ramki. Nie rusza pobierania typów, logowania, chatu ani rankingu. */
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:12px!important;
+  align-items:center!important;
+  padding:14px 14px!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-pick-body-v1163{
+  min-width:0!important;
+  display:block!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-matchline-v1163{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 0 4px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-team-name-v1163{
+  display:inline-block!important;
+  min-width:0!important;
+  max-width:118px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#f4fbff!important;
+  font-size:15px!important;
+  line-height:1.15!important;
+  font-weight:950!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  flex:0 0 28px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  position:static!important;
+  margin:0!important;
+  transform:none!important;
+  background:rgba(5,18,28,.88)!important;
+  border:1px solid rgba(45,212,255,.36)!important;
+  box-shadow:0 0 14px rgba(45,212,255,.14)!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  padding:3px!important;
+  display:block!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo b{
+  font-size:10px!important;
+  color:#8ff9ff!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-vs-inline-v1163{
+  flex:0 0 auto!important;
+  font-size:11px!important;
+  color:#9fb8c8!important;
+  opacity:.95!important;
+  margin:0 1px!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 small{
+  padding-left:35px!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .tiny-progress{
+  margin-left:35px!important;
+  width:calc(100% - 35px)!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 > strong{
+  min-width:44px!important;
+  text-align:right!important;
+  align-self:center!important;
+}
+@media(max-width:900px){
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-team-name-v1163{
+    max-width:92px!important;
+    font-size:14px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo{
+    width:25px!important;
+    height:25px!important;
+    min-width:25px!important;
+    flex-basis:25px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 small{
+    padding-left:32px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .tiny-progress{
+    margin-left:32px!important;
+    width:calc(100% - 32px)!important;
+  }
+}

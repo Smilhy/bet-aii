@@ -2845,14 +2845,15 @@ function DailyAiPicksRightPanelV1156() {
       {loading && !picks.length ? (
         <div className="empty-mini">Ładowanie TOP 3 przyszłych typów AI na dziś...</div>
       ) : picks.length ? picks.map((pick, index) => (
-        <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162" key={`${pick.id}-${index}`}>
-          <div className="ai-day-teams-v1162" aria-hidden="true">
-            <TipTeamLogo logo={pick.homeLogo || pick.home_logo} teamId={pick.homeTeamId || pick.home_team_id} name={pick.home} />
-            <span className="ai-day-vs-dot-v1162">vs</span>
-            <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
-          </div>
-          <div>
-            <b>{pick.home} <span>vs</span> {pick.away}</b>
+        <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163" key={`${pick.id}-${index}`}>
+          <div className="ai-day-pick-body-v1163">
+            <div className="ai-day-matchline-v1163">
+              <TipTeamLogo logo={pick.homeLogo || pick.home_logo} teamId={pick.homeTeamId || pick.home_team_id} name={pick.home} />
+              <b className="ai-day-team-name-v1163">{pick.home}</b>
+              <span className="ai-day-vs-dot-v1162 ai-day-vs-inline-v1163">vs</span>
+              <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
+              <b className="ai-day-team-name-v1163">{pick.away}</b>
+            </div>
             <small>{pick.league}</small>
             <small>Typ: {pick.pick} • Kurs: {Number(pick.odds || 0).toFixed(2)}</small>
             <div className="tiny-progress"><i style={{width:`${Math.max(5, Math.min(100, Number(pick.confidence || 0)))}%`}}></i></div>
