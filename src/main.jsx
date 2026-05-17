@@ -9397,6 +9397,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
   async function addDashboardAnalysis() {
     setMenuOpen(false)
+    if (!isOwnTip) {
+      onToast?.({ type: 'error', title: 'Brak uprawnień', message: 'Analizę może dodać tylko właściciel tego typu.' })
+      return
+    }
     const nextAnalysis = window.prompt('Dodaj analizę do typu:', cardAnalysis || '')
     if (!nextAnalysis) return
     try {
@@ -9489,7 +9493,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
               <button type="button" onClick={reportDashboardTip}>⚠ Zgłoś wpis</button>
-              <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button>
+              {isOwnTip ? <button type="button" onClick={addDashboardAnalysis}>📝 Dodaj analizę</button> : null}
               <button type="button" onClick={shareDashboardTip}>↗ Udostępnij</button>
             </div>
           )}
@@ -16934,6 +16938,10 @@ function ProfileLiveTipCard({
 
   async function addAnalysis() {
     setMenuOpen(false)
+    if (!isOwnTip) {
+      onToast?.({ type: 'error', title: 'Brak uprawnień', message: 'Analizę może dodać tylko właściciel tego typu.' })
+      return
+    }
     const nextAnalysis = window.prompt('Dodaj analizę do typu:', tip?.analysis || sourceTip?.analysis || '')
     if (!nextAnalysis) return
     try {
@@ -17023,7 +17031,7 @@ function ProfileLiveTipCard({
           {menuOpen && (
             <div className="profile-ticket-v6-menu">
               <button type="button" onClick={reportTip}>⚠ Zgłoś wpis</button>
-              <button type="button" onClick={addAnalysis}>📝 Dodaj analizę</button>
+              {isOwnTip ? <button type="button" onClick={addAnalysis}>📝 Dodaj analizę</button> : null}
               <button type="button" onClick={shareTip}>↗ Udostępnij</button>
             </div>
           )}
