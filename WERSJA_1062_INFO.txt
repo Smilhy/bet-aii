@@ -1,0 +1,21 @@
+WERSJA 1062 — TYPY AI EXACT HERO BANNER FIT
+
+Zrobione:
+- Nie generowano nowego banera.
+- Użyto dokładnie obrazu ze screena jako asset:
+  public/typy-ai-hero-v1062.png
+- Baner jest ustawiony w zakładce Typy AI jako pełny hero.
+- Dopasowanie:
+  * width: 100%
+  * height: auto
+  * object-fit: contain
+  * bez rozciągania
+  * bez ucinania
+- Kafelków sportów nie ruszano.
+- Przyciski i logika z 1061 zostają.
+- Brak zmian w bazie.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI.
+Marker opcjonalny:
+supabase/version_1062_typy_ai_exact_hero_banner_fit.sql

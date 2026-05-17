@@ -1,0 +1,25 @@
+WERSJA 1038 — AUTO-SETTLE HARD FIX + DIAGNOSTYKA
+
+Naprawione:
+- auto-settle szuka fixture_id, api_fixture_id i external_fixture_id,
+- nie pomija rekordów, które mają status oczekujący/pending/open/active,
+- działa co 5 minut,
+- można odpalić ręcznie:
+  /.netlify/functions/auto-settle-tips?limit=20
+- można zrobić test bez zapisu:
+  /.netlify/functions/auto-settle-tips?limit=20&dryRun=1
+- diagnostyka:
+  /.netlify/functions/diagnose-auto-settle
+- obsługuje aliasy ENV:
+  API_FOOTBALL_KEY, API_SPORTS_KEY, APISPORTS_KEY, APIFOOTBALL_KEY
+- nie ruszono UI premium/free poza tym co było w 1037.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1038_auto_settle_hard_fix_diagnostics.sql
+2. Wgraj paczkę 1038 na Netlify.
+3. Po deployu wejdź w:
+   /.netlify/functions/diagnose-auto-settle
+4. Potem test:
+   /.netlify/functions/auto-settle-tips?limit=20&dryRun=1
+5. Jeśli wynik wygląda dobrze:
+   /.netlify/functions/auto-settle-tips?limit=20

@@ -1,0 +1,5 @@
+WERSJA 1140
+- Usunięto banery BetAI jako fallback obrazków w Artykuły/TV Live.
+- Jeśli Sport.pl nie odda obrazka, karta nie pokaże własnego banera BetAI.
+- Logika newsów, podglądu artykułu i polskie znaki zostają.
+- Nie ruszano Top typerzy, menu, follow, cennika ani osiągnięć.

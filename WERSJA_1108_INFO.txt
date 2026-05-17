@@ -1,0 +1,7 @@
+WERSJA 1108 — poprawka deploy Netlify
+
+- Nie ruszano wyglądu strony ani menu.
+- Zostawiono poprawkę realnych avatarów w Top typerach.
+- Usunięto package-lock.json wygenerowany lokalnie, żeby Netlify nie próbował pobierać paczek z prywatnego/internalnego registry.
+- Uproszczono netlify.toml: Netlify instaluje paczki tylko raz, a build robi tylko npm run build.
+- Dodano .npmrc wymuszające publiczny registry npm.

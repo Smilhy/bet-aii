@@ -1,0 +1,6 @@
+Wersja 1088
+- Naprawiono licznik krajów i lig w zakładce Dodaj typ.
+- Kraje z API po angielsku, np. Ecuador, Colombia, England, są mapowane na polskie nazwy w menu.
+- Wyniki wyszukiwania aktualizują lewy panel kraj/ligę.
+- Po kliknięciu meczu ustawiany jest właściwy kraj i liga, jeśli istnieją w menu.
+- Zachowany działający schemat Netlify: bez package-lock.json, node_modules i dist.

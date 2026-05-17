@@ -1,0 +1,1 @@
+Wersja 1091: Typy AI nie pokazują i nie zapisują meczów rozpoczętych. Mecze Result ukrywa nierozliczone mecze, które już wystartowały, żeby nie wyglądały jak pre-match pending. Dodano obsługę statusów API-FOOTBALL i zachowano schemat Netlify bez package-lock/node_modules/dist.

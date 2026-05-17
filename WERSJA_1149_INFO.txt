@@ -1,0 +1,5 @@
+Wersja 1149
+- baza: ostatnia dobrze dzialajaca v1143 przeslana przez uzytkownika
+- dodane auto wykrywanie ekranu i skalowanie UI do wzorca 2K/QHD 2560x1440
+- zachowane package.json i package-lock.json, zeby Netlify nie wywalal ENOENT package.json
+- logika aplikacji bez zmian

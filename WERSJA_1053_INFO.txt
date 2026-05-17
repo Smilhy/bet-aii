@@ -1,0 +1,19 @@
+WERSJA 1053 — TYPY AI FETCH + HERO FIX
+
+Naprawione:
+- Baner nie powinien być ucięty: obraz jest teraz dopasowany przez contain i stałą wysokość hero.
+- Naprawiony runtime bug w buildCardFromMatch po 1052.
+- Fetch Typów AI jest odporniejszy:
+  * próbuje kilku URL-i do funkcji get-sports-events,
+  * czyta różne struktury odpowiedzi: fixtures, events, items, data, response, payload,
+  * normalizuje fixture/event/match/teams/league/date.
+- Jeśli API zwróci 0, panel nie zostaje martwy:
+  * pokazuje awaryjny widok AI,
+  * nie zapisuje fallbacków do Supabase,
+  * status jasno mówi, że API nie zwróciło realnych meczów.
+- Pre-match dalej jest główny.
+- Live zostaje jako filtr dodatkowy.
+- Nie ruszono finansów, wypłat, Stripe, portfela ani auto-settle.
+
+Opcjonalny SQL:
+supabase/version_1053_typy_ai_fetch_hero_fix.sql

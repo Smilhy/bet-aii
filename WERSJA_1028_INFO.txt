@@ -1,0 +1,8 @@
+WERSJA 1028 — USUNIĘTA DUPLIKACJA NAGRÓD
+
+Zrobione:
+- usunięta prawa tabelka/karta Nagrody w społeczności,
+- zakładka Nagrody zostaje i nadal działa,
+- logika Supabase, odbiór, 24h blokada i portfel nie ruszone.
+
+SQL 1028 nie jest potrzebny.

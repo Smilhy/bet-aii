@@ -1,0 +1,5 @@
+Wersja 1131
+- Usunięto panel "Wyniki live" z zakładki "Na żywo" w Artykuły/TV Live.
+- Panel wyników zostaje dostępny tylko po kliknięciu zakładki "Wyniki live".
+- Nie ruszano Top typerzy, avatarów, follow, cennika, osiągnięć ani zablokowanego menu.
+- Bez nowego SQL Supabase.

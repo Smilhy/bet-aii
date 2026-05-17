@@ -1,0 +1,9 @@
+WERSJA 1023 — AKTYWNE PRZYCISKI CZATU
+
+Zrobione:
+- przycisk emoji dodaje emoji do pola wiadomości,
+- przycisk załącznika dodaje znacznik załącznika do wiadomości,
+- działa w każdym kanale, bo korzysta z aktualnego activeCommunityChannel,
+- enter i przycisk wyślij dalej wysyłają wiadomość do aktywnego kanału.
+
+SQL 1023 jest tylko informacyjny — nie trzeba odpalać.

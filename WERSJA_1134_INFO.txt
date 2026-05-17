@@ -1,0 +1,4 @@
+WERSJA 1134
+- Usunięto dodatkowe kafelki/news cards z zakładki Wyniki live.
+- W zakładce Wyniki live zostaje tylko panel BetAI Livescore / Flashscore.
+- Nie ruszano Top typerzy, menu, avatarów, follow, cennika ani osiągnięć.

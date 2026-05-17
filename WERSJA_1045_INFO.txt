@@ -1,0 +1,15 @@
+WERSJA 1045 — ADMIN FINANSE: NICKI Z RPC
+
+Naprawione:
+- Admin finanse nie pokazuje już samego UUID jako głównej nazwy użytkownika,
+- nick/display_user jest doklejany po stronie Supabase RPC security definer,
+- frontend respektuje display_user z backendu,
+- UUID zostaje tylko jako mały identyfikator techniczny pod spodem.
+
+Wymagane:
+1. Odpal SQL:
+   supabase/version_1045_admin_finance_rpc_usernames.sql
+2. Wgraj paczkę na Netlify.
+3. W Admin finanse kliknij Odśwież raport.
+
+Jeśli dalej pokaże UUID, oznacza to, że w profiles dla tego user_id nie ma username/display_name/email.

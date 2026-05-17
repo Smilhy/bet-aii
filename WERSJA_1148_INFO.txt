@@ -1,9 +1,0 @@
-Wersja 1148 — auto wykrywanie ekranu i skalowanie 1:1 jak 27 cali 2K.
-
-Baza: v1143.
-- dodano skrypt public/betai-resolution-lock-v1148.js,
-- wykrywa viewport, devicePixelRatio, fizyczną rozdzielczość i proporcje,
-- ustawia zmienne CSS i klasy rozdzielczości,
-- desktop / laptop / tablet / telefon dostaje przeskalowany layout z wzorca 2560×1440,
-- telefon/tablet dostaje widok desktopowy przeskalowany zamiast rozbijania menu i ramek,
-- nie ruszono logiki Top typerzy, avatarów, follow, cennika, artykułów ani API live.

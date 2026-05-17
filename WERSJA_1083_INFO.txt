@@ -1,0 +1,1 @@
+Wersja 1083: usunięto przycisk zakładki "Lista dziś/Lista jutro" z Typy AI. Start z wersji 1082 działającej na Netlify.

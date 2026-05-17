@@ -1,0 +1,18 @@
+WERSJA 1056 — NAPRAWA SUWAKÓW I DOMYŚLNYCH FILTRÓW
+
+Naprawione:
+- Domyślne filtry nie są już za ostre:
+  * Kurs min: 1.25
+  * Kurs max: 3.50
+  * Prawdopodobieństwo min: 55%
+  * EV min: -8%
+- Dodany przycisk Reset filtrów.
+- Suwaki przeniesione do czytelnego panelu i nie nachodzą na kafelki.
+- Kafelki sportów nie nachodzą na siebie.
+- Zablokowane sporty dalej mają kłódkę i Wkrótce.
+- Naprawione filtrowanie activeSport z nawiasami, żeby nie gubiło typów.
+- Jeżeli lista jest pusta, komunikat mówi, żeby obniżyć widełki albo kliknąć Reset filtrów.
+
+SQL:
+supabase/version_1056_typy_ai_filters_layout_defaults_fix.sql
+To tylko marker wersji, bez zmian w bazie.

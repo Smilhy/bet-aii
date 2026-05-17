@@ -1,0 +1,1 @@
+1092: Naprawa aktywnych zakładek Typy AI — tylko jedna zakładka aktywna naraz; klik dziś/jutro przełącza panel na live.

@@ -1,0 +1,15 @@
+WERSJA 1007 — FREE BADGE W RANKINGU
+
+Naprawione:
+- użytkownik bez Premium w rankingu ma badge FREE,
+- użytkownik z aktywnym Premium dalej ma PREMIUM,
+- zmiana jest tylko w etykietach/wyglądzie rankingu.
+
+Nie ruszone:
+- statystyki,
+- profit,
+- typy,
+- wyzwania,
+- tokeny,
+- powiadomienia,
+- Netlify Functions.

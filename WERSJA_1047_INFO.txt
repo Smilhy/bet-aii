@@ -1,0 +1,10 @@
+WERSJA 1047 — ADMIN WYPŁATY: NICKI ZAMIAST UUID
+
+Naprawione:
+- w Admin wypłaty / Zgłoszenia wypłat zamiast samego UUID pokazuje się nick użytkownika,
+- kolejność wyświetlania: username -> display_name -> full_name -> email -> UUID,
+- UUID zostaje jako mały techniczny identyfikator pod spodem,
+- wyszukiwarka wypłat szuka też po nicku/display_name/email,
+- nie ruszono Stripe, Admin finanse, auto-settle, API-Football ani społeczności.
+
+SQL 1047 jest informacyjny — nie trzeba odpalać.

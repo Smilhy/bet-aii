@@ -1,0 +1,24 @@
+WERSJA 1054 — TYPY AI FOOTBALL ONLY + MARKET ENGINE + SLIDERS
+
+Naprawione:
+- Wyłączone mieszanie sportów. Na razie tylko Piłka nożna.
+- Usunięty obrazkowy baner, który wyglądał źle. Teraz hero jest czysty HTML/CSS i nie ucina tekstu.
+- AI nie wybiera już tylko 1X2.
+- Dla każdego meczu model porównuje rynki:
+  * 1X2 / zwycięzca
+  * Podwójna szansa
+  * Suma goli
+  * BTTS
+  * Handicap
+- Dodane suwaki:
+  * Kurs min
+  * Kurs max
+  * Prawdopodobieństwo min
+  * EV min
+- Typy są filtrowane według Twoich widełek.
+- Karta pokazuje najlepszy rynek, kurs, prawdopodobieństwo i EV.
+- Pre-match zostaje główny, Live tylko jako dodatkowy filtr.
+- Nie ruszono Admin finansów, Admin wypłat, Stripe, portfela ani auto-settle.
+
+SQL opcjonalny:
+supabase/version_1054_typy_ai_football_markets_filters.sql

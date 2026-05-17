@@ -1,0 +1,1 @@
+Wersja 1081: start z paczki 1079. Naprawa TDZ Cannot access before initialization w Typy AI przez hoist funkcji dat, poprawione pobieranie meczow dzis/jutro, dodana zakladka Typy AI na jutro. Build OK.

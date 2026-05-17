@@ -1,0 +1,16 @@
+WERSJA 1069 — TYPY AI HERO TOP CROP FIX
+
+Naprawione:
+- Baner zostaje ten sam.
+- Wysokość zostaje 276px.
+- Zmieniony crop:
+  object-position: center top
+- Dzięki temu napis "Typy AI" nie powinien być ucięty od góry.
+- Kafelków sportów nie ruszano.
+- Statystyk i przycisków nie ruszano.
+- Logiki nie ruszano.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/CSS.
+Marker opcjonalny:
+supabase/version_1069_typy_ai_hero_top_crop_fix.sql
