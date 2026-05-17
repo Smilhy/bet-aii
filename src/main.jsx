@@ -14800,6 +14800,42 @@ function AuthView({ onAuth }) {
     ? '/auth-frame-reference-609.png'
     : `/auth-frame-reference-609-${authLang}.png`
 
+  const [authAutoFit, setAuthAutoFit] = useState(() => ({ scale: 1, mode: 'desktop' }))
+
+  useEffect(() => {
+    function updateAuthAutoFit() {
+      const vw = Math.max(320, window.innerWidth || 320)
+      const vh = Math.max(320, window.innerHeight || 320)
+
+      if (vw <= 1100) {
+        setAuthAutoFit({ scale: 1, mode: 'mobile' })
+        return
+      }
+
+      const DESIGN_WIDTH = 2048
+      const DESIGN_HEIGHT = 1152
+      const SAFE_GAP = vw >= 2200 ? 0 : 16
+      const widthScale = (vw - SAFE_GAP) / DESIGN_WIDTH
+      const heightScale = (vh - SAFE_GAP) / DESIGN_HEIGHT
+      const nextScale = Math.max(0.48, Math.min(1, widthScale, heightScale))
+      const roundedScale = Math.round(nextScale * 10000) / 10000
+
+      setAuthAutoFit(prev => (
+        prev.scale === roundedScale && prev.mode === 'desktop'
+          ? prev
+          : { scale: roundedScale, mode: 'desktop' }
+      ))
+    }
+
+    updateAuthAutoFit()
+    window.addEventListener('resize', updateAuthAutoFit)
+    window.addEventListener('orientationchange', updateAuthAutoFit)
+    return () => {
+      window.removeEventListener('resize', updateAuthAutoFit)
+      window.removeEventListener('orientationchange', updateAuthAutoFit)
+    }
+  }, [])
+
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : fallback
@@ -15216,7 +15252,11 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div className="auth609-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
+    <div
+      className={`auth609-screen auth1148-auto-fit ${authAutoFit.mode === 'mobile' ? 'auth1148-mobile' : 'auth1148-desktop'}`}
+      style={{ '--auth1148-fit-scale': authAutoFit.scale }}
+      aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}
+    >
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
