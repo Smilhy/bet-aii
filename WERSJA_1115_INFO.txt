@@ -1,0 +1,18 @@
+WERSJA 1115 — Top typerzy: żywe osiągnięcia
+
+Zmiany:
+- Nie ruszane menu ani układ strony.
+- W Top typerzy zamiast stałych ikonek specjalizacji są żywe osiągnięcia.
+- Logika osiągnięć bierze realne statystyki: ranking, ostatnie 6 typów, skuteczność, profit, ROI, opinie i premium.
+- Maksymalnie 4 ikonki na karcie, żeby nie robić bałaganu.
+- Tooltip na ikonie pokazuje nazwę i warunek odznaki.
+- Odświeżanie Top typerzy dalej co 10 minut + ręczny przycisk Odśwież.
+
+Przykładowe odznaki:
+👑 #1 · 2026 / 🏆 TOP 3
+🔥 Forma 4/6 albo 5/6
+🎯 Snajper 70% albo 80%
+💰 Profit +100 zł albo +300 zł
+📈 ROI +50% / ROI Master
+⭐ Zaufany
+💎 Premium typer

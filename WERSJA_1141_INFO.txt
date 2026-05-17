@@ -1,0 +1,7 @@
+WERSJA 1141
+- Artykuły/TV Live: naprawione pilne banery bez pustych czarnych miejsc.
+- Hero PILNE bierze tylko wiadomości z działającym obrazkiem.
+- Jeśli obrazek Sport.pl padnie, karta nie pokazuje już pustego banera ani banera BetAI.
+- Dodane zapamiętywanie zepsutych obrazków w widoku, żeby slider nie wracał do pustych grafik.
+- Logika pobierania newsów i podglądu artykułu została.
+- Nie ruszano Top typerzy, menu, avatarów, follow, cennika ani osiągnięć.

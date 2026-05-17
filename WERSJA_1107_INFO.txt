@@ -1,0 +1,1 @@
+Wersja 1107: Top typerzy korzysta z realnych avatarów już załadowanych w innych zakładkach (tips/ranking/profil/cache) i nie podmienia ich na stare/fake avatary z zapisów tips. Nie ruszano układu menu ani innych modułów.
