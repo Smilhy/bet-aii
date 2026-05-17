@@ -47598,3 +47598,58 @@ html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .main{
     grid-template-columns:270px minmax(0,1fr) 510px!important;
   }
 }
+
+/* BETAI VERSION 1154 — hide dashboard active-tips notice only
+   Visual-only change. Settlement/auto-result logic remains unchanged. */
+.dashboard-active-feed-note-v956{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+
+/* BETAI 1155 — ukryj napis/przycisk "Ranking real" w panelu Top typerzy.
+   Tylko CSS: nie rusza logiki rankingu, danych ani kliknięć profili. */
+.rightbar .real-ranking-panel .panel-head a,
+.rightbar .real-ranking-panel .panel-head button,
+.real-ranking-panel .panel-head a,
+.real-ranking-panel .panel-head button,
+.wallet-v2-card-head.side-card-head button,
+.card-head-v8 button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Gdy link znika, nagłówek ma zostać ładnie ułożony. */
+.rightbar .real-ranking-panel .panel-head,
+.real-ranking-panel .panel-head {
+  justify-content: flex-start !important;
+}
+
+/* V1156 — Dashboard prawa ramka: zapisane TOP 3 AI Typy dnia, tylko wygląd ramki */
+.ai-day-panel-real-v1156 .panel-head a{
+  pointer-events:none!important;
+  opacity:.72!important;
+  font-size:11px!important;
+  letter-spacing:.06em!important;
+}
+.ai-pick-real-v1156 small{
+  display:block!important;
+  line-height:1.25!important;
+}
+.ai-day-cache-note-v1156{
+  margin-top:10px!important;
+  padding:8px 10px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(31,226,174,.14)!important;
+  background:rgba(31,226,174,.055)!important;
+  color:#8fead3!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  text-align:center!important;
+}

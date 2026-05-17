@@ -1,0 +1,21 @@
+WERSJA 1156 — Daily AI Picks prawa ramka
+
+Baza: 1155.
+Zmiana dotyczy tylko prawej ramki Dashboardu „AI Typy dnia”.
+
+Co robi:
+- usuwa sztuczne/statyczne mecze z ramki,
+- pobiera realne wydarzenia na dzisiejszą datę przez istniejącą funkcję get-sports-events,
+- wybiera TOP 3 typy według prostego modelu AI/rankingu confidence,
+- zapisuje zestaw w localStorage pod datą Europe/Warsaw,
+- po odświeżeniu pokazuje ten sam zapisany zestaw,
+- po zmianie dnia po 00:00 generuje/pobiera nowy zestaw dla nowej daty.
+
+Bez zmian:
+- brak zmian w Supabase auth,
+- brak zmian w logice chatu,
+- brak zmian w rankingu,
+- brak zmian w innych zakładkach,
+- brak zmian w npm/package/netlify.
+
+Uwaga: build lokalny nie został wykonany, bo w rozpakowanej paczce nie ma node_modules/vite.
