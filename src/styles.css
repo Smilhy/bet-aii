@@ -47923,3 +47923,60 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     gap:6px!important;
   }
 }
+
+/* BETAI 1165 — AI Typy dnia: drugi herb przy drugim teamie, bez wielkiej szpary
+   Tylko CSS prawej ramki. Logika typów, cache, auth, chat, ranking, npm bez zmian. */
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-matchline-v1163{
+  display:grid!important;
+  grid-template-columns:28px minmax(0,max-content) 22px minmax(0,max-content) 28px!important;
+  justify-content:start!important;
+  justify-items:start!important;
+  align-items:center!important;
+  column-gap:7px!important;
+  row-gap:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-team-name-v1163,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-home-name-v1164,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-away-name-v1164{
+  display:block!important;
+  min-width:0!important;
+  max-width:142px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  text-align:left!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-vs-inline-v1163{
+  justify-self:center!important;
+  width:22px!important;
+  min-width:22px!important;
+  margin:0!important;
+  text-align:center!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo{
+  justify-self:center!important;
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  max-width:28px!important;
+}
+@media(max-width:900px){
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-matchline-v1163{
+    grid-template-columns:25px minmax(0,max-content) 20px minmax(0,max-content) 25px!important;
+    column-gap:6px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-team-name-v1163,
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-home-name-v1164,
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-away-name-v1164{
+    max-width:112px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo{
+    width:25px!important;
+    height:25px!important;
+    min-width:25px!important;
+    max-width:25px!important;
+  }
+}
