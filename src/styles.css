@@ -47723,3 +47723,58 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
   overflow-y:visible!important;
   overflow-x:hidden!important;
 }
+
+
+/* BETAI 1162 — herby drużyn w ramce AI Typy dnia
+   Tylko wygląd prawej ramki: używa tych samych logo co karty typów,
+   bez ruszania logowania, chatu, rankingu, Supabase auth ani npm. */
+.ai-pick-real-v1162{
+  grid-template-columns:78px 1fr auto!important;
+  gap:12px!important;
+  align-items:center!important;
+}
+.ai-day-teams-v1162{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  min-width:72px!important;
+}
+.ai-day-teams-v1162 .profile-ticket-v6-team-logo{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  border-radius:999px!important;
+  background:rgba(5,18,28,.88)!important;
+  border:1px solid rgba(45,212,255,.36)!important;
+  box-shadow:0 0 14px rgba(45,212,255,.14)!important;
+  overflow:hidden!important;
+}
+.ai-day-teams-v1162 .profile-ticket-v6-team-logo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  padding:3px!important;
+  display:block!important;
+}
+.ai-day-teams-v1162 .profile-ticket-v6-team-logo b{
+  font-size:11px!important;
+  color:#8ff9ff!important;
+}
+.ai-day-vs-dot-v1162{
+  color:#9fb8c8!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+}
+@media(max-width:900px){
+  .ai-pick-real-v1162{
+    grid-template-columns:70px 1fr auto!important;
+    gap:10px!important;
+  }
+  .ai-day-teams-v1162 .profile-ticket-v6-team-logo{
+    width:26px!important;
+    height:26px!important;
+    min-width:26px!important;
+  }
+}

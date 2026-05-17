@@ -2453,7 +2453,7 @@ function LiveChatPanel({ user }) {
 // V1158 — prawa ramka Dashboard: TOP 3 AI typy dnia, tylko mecze przyszłe.
 // Nie pokazuje meczów live/zakończonych ani takich, które startują za mniej niż 5 minut.
 // Cache jest tylko dla tej ramki Dashboardu i nie dotyka logiki innych zakładek.
-const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1158_'
+const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1162_'
 const BETAI_RIGHT_DAILY_AI_MIN_START_MS_V1158 = 5 * 60 * 1000
 
 function getBetAiWarsawDayKeyV1156(value = new Date()) {
@@ -2502,6 +2502,10 @@ function normalizeBetAiRightDailyAiPickV1158(pick = {}, dayKey = getBetAiWarsawD
     home,
     away,
     date,
+    homeLogo: pick.homeLogo || pick.home_logo || pick.team_home_logo || pick.homeTeamLogo || pick.home_team_logo || pick.fixture_json?.homeLogo || pick.fixture_json?.home_logo || null,
+    awayLogo: pick.awayLogo || pick.away_logo || pick.team_away_logo || pick.awayTeamLogo || pick.away_team_logo || pick.fixture_json?.awayLogo || pick.fixture_json?.away_logo || null,
+    homeTeamId: pick.homeTeamId || pick.home_team_id || pick.team_home_id || pick.home_id || pick.fixture_json?.homeTeamId || pick.fixture_json?.home_team_id || null,
+    awayTeamId: pick.awayTeamId || pick.away_team_id || pick.team_away_id || pick.away_id || pick.fixture_json?.awayTeamId || pick.fixture_json?.away_team_id || null,
     matchName: pick.matchName || pick.match_name || `${home} vs ${away}`,
     league: pick.league || pick.league_name || pick.competition || 'Football',
     market: pick.market || 'Typ AI',
@@ -2568,6 +2572,10 @@ function mapBetAiRightSavedTipV1157(row = {}, index = 0, dayKey = getBetAiWarsaw
     matchName: row.match_name || row.match || `${home} vs ${away}`,
     home,
     away,
+    homeLogo: row.home_logo || row.homeLogo || row.team_home_logo || row.fixture_json?.homeLogo || row.fixture_json?.home_logo || null,
+    awayLogo: row.away_logo || row.awayLogo || row.team_away_logo || row.fixture_json?.awayLogo || row.fixture_json?.away_logo || null,
+    homeTeamId: row.home_team_id || row.homeTeamId || row.team_home_id || row.fixture_json?.homeTeamId || row.fixture_json?.home_team_id || null,
+    awayTeamId: row.away_team_id || row.awayTeamId || row.team_away_id || row.fixture_json?.awayTeamId || row.fixture_json?.away_team_id || null,
     league: row.league_name || row.league || row.competition || 'Football',
     date: rawDate,
     market: row.market || row.bet_type || 'Typ AI',
@@ -2658,6 +2666,10 @@ function extractBetAiRightFixturesV1156(payload = {}) {
       id: item.id || item.fixture_id || item.external_fixture_id || fixture?.id || `${home}-${away}-${date}`,
       home,
       away,
+      homeLogo: item.homeLogo || item.home_logo || item.team_home_logo || homeObj.logo || homeObj.image || homeObj.logo_url || null,
+      awayLogo: item.awayLogo || item.away_logo || item.team_away_logo || awayObj.logo || awayObj.image || awayObj.logo_url || null,
+      homeTeamId: item.homeTeamId || item.home_team_id || item.team_home_id || homeObj.id || homeObj.team_id || null,
+      awayTeamId: item.awayTeamId || item.away_team_id || item.team_away_id || awayObj.id || awayObj.team_id || null,
       league: item.league_name || item.league || item.competition || league.name || item.country || 'Football',
       date,
       status_short: item.status_short || item.statusShort || fixture?.status?.short || item.status?.short || item.status,
@@ -2707,6 +2719,10 @@ function buildBetAiRightPickV1156(match = {}, index = 0, dayKey = getBetAiWarsaw
     matchName: `${home} vs ${away}`,
     home,
     away,
+    homeLogo: match.homeLogo || match.home_logo || null,
+    awayLogo: match.awayLogo || match.away_logo || null,
+    homeTeamId: match.homeTeamId || match.home_team_id || null,
+    awayTeamId: match.awayTeamId || match.away_team_id || null,
     league,
     date: match.date || '',
     market: selected.market,
@@ -2829,8 +2845,12 @@ function DailyAiPicksRightPanelV1156() {
       {loading && !picks.length ? (
         <div className="empty-mini">Ładowanie TOP 3 przyszłych typów AI na dziś...</div>
       ) : picks.length ? picks.map((pick, index) => (
-        <div className="ai-pick ai-pick-real-v1156" key={`${pick.id}-${index}`}>
-          <div className="club ai-club">AI</div>
+        <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162" key={`${pick.id}-${index}`}>
+          <div className="ai-day-teams-v1162" aria-hidden="true">
+            <TipTeamLogo logo={pick.homeLogo || pick.home_logo} teamId={pick.homeTeamId || pick.home_team_id} name={pick.home} />
+            <span className="ai-day-vs-dot-v1162">vs</span>
+            <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
+          </div>
           <div>
             <b>{pick.home} <span>vs</span> {pick.away}</b>
             <small>{pick.league}</small>
