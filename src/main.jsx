@@ -14800,37 +14800,6 @@ function AuthView({ onAuth }) {
     ? '/auth-frame-reference-609.png'
     : `/auth-frame-reference-609-${authLang}.png`
 
-  const [authAutoFit, setAuthAutoFit] = useState(() => ({ scale: 1, mode: 'desktop' }))
-
-  useEffect(() => {
-    function updateAuthAutoFit() {
-      const vw = Math.max(320, window.innerWidth || 320)
-      const vh = Math.max(320, window.innerHeight || 320)
-
-      const DESIGN_WIDTH = 2560
-      const DESIGN_HEIGHT = 1440
-      const SAFE_GAP = 0
-      const widthScale = (vw - SAFE_GAP) / DESIGN_WIDTH
-      const heightScale = (vh - SAFE_GAP) / DESIGN_HEIGHT
-      const nextScale = Math.max(0.32, Math.min(1, widthScale, heightScale))
-      const roundedScale = Math.round(nextScale * 10000) / 10000
-
-      setAuthAutoFit(prev => (
-        prev.scale === roundedScale && prev.mode === 'desktop'
-          ? prev
-          : { scale: roundedScale, mode: 'desktop' }
-      ))
-    }
-
-    updateAuthAutoFit()
-    window.addEventListener('resize', updateAuthAutoFit)
-    window.addEventListener('orientationchange', updateAuthAutoFit)
-    return () => {
-      window.removeEventListener('resize', updateAuthAutoFit)
-      window.removeEventListener('orientationchange', updateAuthAutoFit)
-    }
-  }, [])
-
   function normalizeLiveCount(value, fallback = 0) {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : fallback
@@ -15247,11 +15216,7 @@ function AuthView({ onAuth }) {
   ]), [])
 
   return (
-    <div
-      className={`auth609-screen auth1148-auto-fit ${authAutoFit.mode === 'mobile' ? 'auth1148-mobile' : 'auth1148-desktop'}`}
-      style={{ '--auth1148-fit-scale': authAutoFit.scale }}
-      aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}
-    >
+    <div className="auth609-screen" aria-label={t.authPanelLabel || 'Bet+AI authentication panel'}>
       <div className="auth620-language-corner">
         <BetaiLanguageSwitch lang={authLang} onChange={setLanguage} floating ariaLabel={t.languageLabel} />
       </div>
@@ -23514,25 +23479,6 @@ function App() {
   }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
 
-  const [betai1150Scale, setBetai1150Scale] = useState(1)
-
-  useEffect(() => {
-    function updateBetai1150Scale() {
-      const vw = Math.max(320, window.innerWidth || 320)
-      const nextScale = Math.max(0.32, Math.min(1, vw / 2560))
-      const roundedScale = Math.round(nextScale * 10000) / 10000
-      setBetai1150Scale(prev => prev === roundedScale ? prev : roundedScale)
-    }
-
-    updateBetai1150Scale()
-    window.addEventListener('resize', updateBetai1150Scale)
-    window.addEventListener('orientationchange', updateBetai1150Scale)
-    return () => {
-      window.removeEventListener('resize', updateBetai1150Scale)
-      window.removeEventListener('orientationchange', updateBetai1150Scale)
-    }
-  }, [])
-
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
   const hasExpandedDashboardTips = dashboardVisibleTips > 3
@@ -23552,11 +23498,7 @@ function App() {
   }
 
   return (
-    <div
-      className={`app-shell betai1150-exact-scale ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`}
-      style={{ '--betai1150-scale': betai1150Scale }}
-      data-betai-lang={appLang}
-    >
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
@@ -23898,7 +23840,37 @@ function App() {
   )
 }
 
-createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>)
+
+
+function BetaiExactScaleProvider({ children }) {
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+    const root = document.documentElement
+    const apply = () => {
+      const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
+      const scale = Math.min(1, Math.max(0.30, width / 2560))
+      if (width >= 2500) {
+        root.style.removeProperty('--betai-exact-scale')
+        root.removeAttribute('data-betai-exact-scale')
+        return
+      }
+      root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
+      root.setAttribute('data-betai-exact-scale', 'on')
+    }
+    apply()
+    window.addEventListener('resize', apply)
+    window.addEventListener('orientationchange', apply)
+    return () => {
+      window.removeEventListener('resize', apply)
+      window.removeEventListener('orientationchange', apply)
+      root.style.removeProperty('--betai-exact-scale')
+      root.removeAttribute('data-betai-exact-scale')
+    }
+  }, [])
+  return children
+}
+
+createRoot(document.getElementById('root')).render(<ErrorBoundary><BetaiExactScaleProvider><App /></BetaiExactScaleProvider></ErrorBoundary>)
 
 
 // BETAI TIP ALERT SYSTEM

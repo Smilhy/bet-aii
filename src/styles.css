@@ -47467,801 +47467,86 @@ button,input,select,textarea{
   .tvlive-page-v8 .sportpl-important-hero-v550 h1{font-size:28px!important;}
 }
 
-/* =========================================================
-   WERSJA 1144 — RESPONSIVE MASTER LOCK / 2560x1440 jako wzór
-   Cel: ten sam układ premium na 27" 2560x1440, bez nachodzenia i ucinania
-   na laptopach, tabletach, telefonach i innych monitorach.
-   Zmiana CSS-only — bez ruszania Supabase, Netlify Functions ani logiki JS.
-   ========================================================= */
-:root{
-  --betai-sidebar-fluid:clamp(208px,12.8vw,270px);
-  --betai-rightbar-fluid:clamp(300px,17vw,360px);
-  --betai-shell-gap-fluid:clamp(12px,1.05vw,24px);
-  --betai-page-pad-fluid:clamp(10px,1vw,28px);
-  --betai-content-max:1180px;
-  --betai-banner-max:1068px;
-}
-
-html{
-  width:100%;
-  max-width:100%;
-  overflow-x:hidden!important;
-  -webkit-text-size-adjust:100%;
-  text-size-adjust:100%;
-}
-body,#root{
-  width:100%;
-  max-width:100%;
-  min-width:0!important;
-  overflow-x:hidden!important;
-}
-img,svg,video,canvas,iframe{
-  max-width:100%;
-  height:auto;
-}
-button,input,select,textarea{
-  max-width:100%;
-}
-
-/* Każda kolumna grida może się kurczyć — usuwa nachodzenie ramek */
-.app-shell,
-.app-shell *{
-  min-width:0;
-}
-.app-shell{
-  width:100%!important;
-  max-width:100vw!important;
-  grid-template-columns:var(--betai-sidebar-fluid) minmax(0,1fr) var(--betai-rightbar-fluid)!important;
-  gap:var(--betai-shell-gap-fluid)!important;
-  padding-left:var(--betai-page-pad-fluid)!important;
-  padding-right:var(--betai-page-pad-fluid)!important;
-  margin:0 auto!important;
-  overflow-x:clip!important;
-}
-.main{
-  width:100%!important;
-  max-width:100%!important;
-  min-width:0!important;
-  overflow:visible!important;
-}
-.sidebar,
-.rightbar{
-  min-width:0!important;
-  max-width:100%!important;
-}
-.rightbar{
-  width:auto!important;
-  padding-right:0!important;
-}
-
-/* Strony bez prawego panelu mają trzymać równą, centralną ramę */
-.app-shell.no-rightbar-page{
-  grid-template-columns:var(--betai-sidebar-fluid) minmax(0,1fr)!important;
-}
-.app-shell.no-rightbar-page .main > *,
-.add-page,
-.wallet-panel,
-.wallet-ultra-page,
-.profile-page,
-.profile-ultra-page,
-.leaderboard-page,
-.articles-page,
-.referrals-view,
-.subscription-ultra-page,
-.notifications-page,
-.earnings-page,
-.payout-page,
-.payments-page,
-.admin-finance-page,
-.admin-payout-page,
-.ai-premium-dashboard,
-.ai-center-page,
-.tvlive-page-v8{
-  width:100%!important;
-  max-width:min(var(--betai-content-max),100%)!important;
-  min-width:0!important;
-}
-.ultra-page-banner,
-.app-shell.no-rightbar-page .ultra-page-banner,
-.app-shell.no-rightbar-page .sportpl-important-hero-v550,
-.app-shell.no-rightbar-page .articles-hero,
-.app-shell.no-rightbar-page .ranking-colorloop-hero,
-.app-shell.no-rightbar-page .wallet-v2-hero,
-.app-shell.no-rightbar-page .profile-v3-hero,
-.app-shell.no-rightbar-page .profile-v4-hero,
-.app-shell.no-rightbar-page .subscription-ultra-hero,
-.app-shell.no-rightbar-page .payments-live-hero,
-.app-shell.no-rightbar-page .payout-live-hero,
-.app-shell.no-rightbar-page .earnings-live-hero{
-  width:100%!important;
-  max-width:min(var(--betai-banner-max),100%)!important;
-  min-width:0!important;
-}
-
-/* Bezpieczne łamanie tekstów, żeby długie nazwy, maile, ligi i drużyny nie wypychały ramek */
-.page-title,
-.feed-section,
-.tip-card,
-.panel,
-.rank,
-.result,
-.ai-pick,
-.wallet-panel,
-.leaderboard-row,
-.payments-row,
-.earnings-row,
-.payout-row,
-.admin-finance-row,
-.admin-payout-row,
-.profile-v3-hero,
-.profile-v4-hero,
-.tvlive-page-v8,
-.flashscore-match-v1132,
-.legal-tv-row-v1130,
-.article-preview-content-v1137{
-  overflow-wrap:anywhere;
-  word-break:normal;
-}
-
-/* Siatki nie mogą trzymać sztywnej szerokości większej niż ekran */
-.feed-section,
-.tip-grid,
-.skeleton-grid,
-.leaderboard-table,
-.payments-table,
-.earnings-table,
-.payout-table,
-.admin-finance-table,
-.admin-payout-table,
-.ai-result-table-v747,
-.ai-league-table-v747,
-.my-profile-table-head,
-.my-profile-table-row,
-.tvlive-page-v8 .flashscore-list-v1132,
-.tvlive-page-v8 .legal-tv-list-v1130{
-  width:100%!important;
-  max-width:100%!important;
-  min-width:0!important;
-}
-
-/* Szerokie wiersze/tabele: na średnich ekranach zostają czytelne, na telefonach składają się niżej */
-.leaderboard-row,
-.payments-row,
-.earnings-row,
-.payout-row,
-.admin-finance-row,
-.admin-payout-row,
-.my-profile-table-head,
-.my-profile-table-row,
-.tvlive-page-v8 .flashscore-match-v1132,
-.tvlive-page-v8 .legal-tv-row-v1130{
-  max-width:100%!important;
-}
-
-/* Topbar: wyszukiwarka i akcje nie wypychają layoutu */
-.topbar{
-  width:100%!important;
-  max-width:100%!important;
-  min-width:0!important;
-}
-.search,.top-search-field{
-  flex:1 1 280px!important;
-  width:100%!important;
-  min-width:0!important;
-  max-width:100%!important;
-}
-.top-actions{
-  min-width:0!important;
-  flex:0 1 auto!important;
-}
-
-/* 27 cali / 2560x1440 i duże monitory — zachowujemy docelowy układ 3 kolumn */
-@media (min-width:1920px){
-  .app-shell:not(.no-rightbar-page){
-    grid-template-columns:270px minmax(0,1fr) 360px!important;
-    gap:24px!important;
-    padding-left:28px!important;
-    padding-right:28px!important;
-  }
-  .app-shell.no-rightbar-page{
-    grid-template-columns:270px minmax(0,1fr)!important;
-  }
-  .rightbar{display:flex!important;}
-  .main{justify-self:stretch!important;}
-}
-
-/* Monitory 1600–1919 — nadal premium, ale prawy panel trochę mniejszy */
-@media (min-width:1541px) and (max-width:1919px){
-  .app-shell:not(.no-rightbar-page){
-    grid-template-columns:clamp(235px,14vw,260px) minmax(0,1fr) clamp(300px,18vw,335px)!important;
-  }
-  .rightbar{display:flex!important;}
-}
-
-/* 1366/1440/1536 i większość laptopów — chowamy prawą kolumnę, żeby centrum nie było ściskane */
-@media (max-width:1540px){
-  .app-shell,
-  .app-shell.no-rightbar-page{
-    grid-template-columns:clamp(198px,16vw,238px) minmax(0,1fr)!important;
-    gap:12px!important;
-    padding:12px!important;
-  }
-  .rightbar{display:none!important;}
-  .main{max-width:100%!important;}
-  .topbar{gap:12px!important;}
-}
-
-/* Małe laptopy i tablety poziomo */
-@media (max-width:1180px){
-  .app-shell,
-  .app-shell.no-rightbar-page{
-    grid-template-columns:190px minmax(0,1fr)!important;
-    gap:10px!important;
-    padding:10px!important;
-  }
-  .sidebar{padding-left:10px!important;padding-right:10px!important;}
-  .brand{font-size:clamp(28px,3.4vw,36px)!important;}
-  .top-actions{flex-wrap:wrap!important;justify-content:flex-end!important;gap:8px!important;}
-  .tip-grid,.profile-split,.profile-v3-layout,.wallet-v2-grid,.subscription-grid,.payments-live-grid,.earnings-grid,.payout-grid{
-    grid-template-columns:1fr!important;
-  }
-}
-
-/* Tablety pionowo / telefony duże — jeden słupek, zero poziomego scrolla */
-@media (max-width:900px){
-  .app-shell,
-  .app-shell.no-rightbar-page{
-    display:block!important;
-    padding:10px!important;
-    width:100%!important;
-    max-width:100vw!important;
-    overflow-x:hidden!important;
-  }
-  .sidebar,
-  .sidebar-stack,
-  .sidebar-main-box{
-    position:relative!important;
-    top:auto!important;
-    left:auto!important;
-    height:auto!important;
-    max-height:none!important;
-    width:100%!important;
-    max-width:100%!important;
-    margin:0 0 12px 0!important;
-    overflow:visible!important;
-  }
-  .main{padding:0!important;width:100%!important;max-width:100%!important;}
-  .menu{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .menu button,.menu a{font-size:13px!important;text-align:center!important;white-space:normal!important;}
-  .topbar{height:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;}
-  .top-actions{width:100%!important;margin-left:0!important;justify-content:space-between!important;}
-  .top-actions > *{flex:1 1 auto!important;}
-  .two-cols,.access-grid,.match-inputs,.tip-grid,.skeleton-grid,
-  .profile-stats-grid,.profile-money-card,.leaderboard-stats,
-  .ai-stats-grid,.ai-v6-grid,.community-pro-grid-v1012,
-  .tvlive-page-v8 .sportpl-live-grid-v538,
-  .tvlive-page-v8 .legal-tv-match-grid-v1130{
-    grid-template-columns:1fr!important;
-  }
-  .match-inputs span{display:none!important;}
-  .tip-header,.tip-footer,.feed-title,.panel-head{
-    flex-wrap:wrap!important;
-    gap:10px!important;
-  }
-  .bet-row{grid-template-columns:1fr!important;}
-  .bet-row div+div{border-left:0!important;border-top:1px solid var(--border)!important;}
-}
-
-/* Telefony */
-@media (max-width:640px){
-  .app-shell{padding:8px!important;}
-  .menu{grid-template-columns:1fr 1fr!important;gap:7px!important;}
-  .page-title h1{font-size:clamp(25px,8vw,34px)!important;line-height:1.05!important;}
-  .page-title p{font-size:14px!important;}
-  .tip-form,.tip-card,.panel,.wallet-panel,.leaderboard-table,.payments-table,.earnings-table,.payout-table{
-    border-radius:16px!important;
-    padding-left:clamp(12px,4vw,18px)!important;
-    padding-right:clamp(12px,4vw,18px)!important;
-  }
-  .toast{left:10px!important;right:10px!important;min-width:0!important;max-width:none!important;}
-  .leaderboard-row,
-  .payments-row,
-  .earnings-row,
-  .payout-row,
-  .admin-finance-row,
-  .admin-payout-row,
-  .my-profile-table-head,
-  .my-profile-table-row{
-    display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:7px!important;
-    align-items:start!important;
-  }
-  .tvlive-page-v8 .flashscore-match-v1132,
-  .tvlive-page-v8 .legal-tv-row-v1130{
-    grid-template-columns:1fr!important;
-  }
-  .tvlive-page-v8 .flashscore-match-v1132 > *,
-  .tvlive-page-v8 .legal-tv-row-v1130 > *{
-    grid-column:auto!important;
-  }
-}
-
-/* Bardzo małe telefony */
-@media (max-width:380px){
-  .app-shell{padding:6px!important;}
-  .menu{grid-template-columns:1fr!important;}
-  .top-actions{gap:6px!important;}
-  .top-actions > *{flex:1 1 100%!important;}
-  .brand{font-size:28px!important;}
-  .page-title h1{font-size:25px!important;}
-}
 
 /* =========================================================
-   WERSJA 1147 — AUTH MONITOR FIT LOCK
-   Poprawka tylko CSS: ekran logowania nie może wychodzić poza monitor
-   na rozdzielczościach mniejszych niż wzorcowe 2560x1440.
-   Nie rusza package.json, package-lock.json, netlify.toml ani npm.
+   WERSJA 1151 — EXACT LEFT-ANCHORED SCALE FROM CLEAN 1143
+   Baza 2560x1440 zostaje nietknięta. Poniżej 2500px cały UI
+   skaluje się od lewego górnego rogu jak zoom przeglądarki.
    ========================================================= */
-@media (min-width:1101px) and (max-width:2300px){
-  .auth609-screen{
-    overflow-x:hidden!important;
-    justify-content:flex-start!important;
-  }
-  .auth609-artboard{
-    width:min(1800px, calc(100vw - 280px))!important;
-    min-width:0!important;
-    height:auto!important;
-    min-height:0!important;
-    margin-left:160px!important;
-    margin-right:0!important;
-  }
-  .auth609-reference{
-    width:100%!important;
-    height:100%!important;
-    object-fit:contain!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1700px){
-  .auth609-artboard{
-    width:calc(100vw - 150px)!important;
-    margin-left:74px!important;
-  }
-  .auth609-screen .auth627-social-dock{
-    transform:translateY(-50%) scale(.88)!important;
-    transform-origin:right center!important;
-  }
-  .auth609-screen .reviews512{
-    right:82px!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1450px){
-  .auth609-artboard{
-    width:calc(100vw - 72px)!important;
-    margin-left:36px!important;
-  }
-  .auth609-screen .auth623-side-live.auth624-side-live{
-    display:none!important;
-  }
-  .auth609-screen .auth627-social-dock{
-    display:none!important;
-  }
-  .auth609-screen .reviews512{
-    right:78px!important;
-    bottom:16px!important;
-  }
-  .auth609-screen .support510{
-    right:16px!important;
-    bottom:16px!important;
-  }
-}
-
-@media (min-width:1101px) and (max-height:820px){
-  .auth609-screen{
-    align-items:center!important;
-    padding-top:4px!important;
-    padding-bottom:4px!important;
-  }
-  .auth609-artboard{
-    width:min(calc((100vh - 8px) * 1.77777778), calc(100vw - 150px))!important;
-  }
-}
-
-/* =========================================================
-   WERSJA 1148 — AUTO FIT ALL DEVICES
-   Automatyczne skalowanie desktopu 2048x1152 do realnego viewportu.
-   2560x1440 zostaje wzorem: skala 1 i centrowanie jak u właściciela.
-   1680x1050, 1920x1080, 1600x900 itd. nie ucinają prawej strony.
-   Nie rusza npm, package.json, package-lock.json ani netlify.toml.
-   ========================================================= */
-@media (min-width:1101px){
-  html, body, #root{
-    width:100%!important;
-    min-width:0!important;
-    max-width:100vw!important;
-    overflow-x:hidden!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit{
-    width:100vw!important;
-    height:100vh!important;
-    min-height:100vh!important;
-    padding:0!important;
-    margin:0!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    overflow:hidden!important;
-    background:#020914!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth609-artboard{
-    width:2048px!important;
-    min-width:2048px!important;
-    max-width:none!important;
-    height:1152px!important;
-    min-height:1152px!important;
-    max-height:none!important;
-    flex:0 0 2048px!important;
-    margin:0!important;
-    aspect-ratio:auto!important;
-    transform:scale(var(--auth1148-fit-scale, 1))!important;
-    transform-origin:center center!important;
-    will-change:transform!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth609-reference{
-    display:block!important;
-    width:2048px!important;
-    height:1152px!important;
-    max-width:none!important;
-    object-fit:fill!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth609-overlay{
-    position:absolute!important;
-    inset:0!important;
-    width:2048px!important;
-    height:1152px!important;
-    min-height:0!important;
-    padding:0!important;
-    background:transparent!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth609-left-panel{
-    position:absolute!important;
-    left:48px!important;
-    top:18px!important;
-    width:619px!important;
-    height:1084px!important;
-    margin:0!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth620-language-corner,
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock,
-  .auth609-screen.auth1148-auto-fit .reviews512,
-  .auth609-screen.auth1148-auto-fit .support510{
-    transform:scale(var(--auth1148-fit-scale, 1))!important;
-    transform-origin:top right!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .reviews512,
-  .auth609-screen.auth1148-auto-fit .support510{
-    transform-origin:bottom right!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1900px){
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
-    right:10px!important;
-  }
-  .auth609-screen.auth1148-auto-fit .reviews512{
-    right:76px!important;
-    bottom:12px!important;
-  }
-  .auth609-screen.auth1148-auto-fit .support510{
-    right:12px!important;
-    bottom:12px!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1700px){
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
-    display:none!important;
-  }
-  .auth609-screen.auth1148-auto-fit .auth620-language-corner{
-    top:10px!important;
-    right:10px!important;
-  }
-  .auth609-screen.auth1148-auto-fit .reviews512{
-    right:74px!important;
-    bottom:10px!important;
-  }
-  .auth609-screen.auth1148-auto-fit .support510{
-    right:10px!important;
-    bottom:10px!important;
-  }
-}
-
-@media (max-width:1100px){
-  .auth609-screen.auth1148-auto-fit{
-    overflow-x:hidden!important;
-  }
-}
-
-/* =========================================================
-   WERSJA 1149 — SIDE WIDGETS SAFE AREA LOCK
-   Poprawka: na monitorach 1680x1050 / 16:10 boczne widgety
-   nie mogą być zjadane przez krawędzie ekranu.
-   Nie rusza npm, package.json, package-lock.json ani netlify.toml.
-   ========================================================= */
-@media (min-width:1101px) and (max-width:1900px){
-  .auth609-screen.auth1148-auto-fit{
-    overflow:hidden!important;
-  }
-
-  /* Lewy panel LIVE: w całości w ekranie, nie na samej krawędzi */
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    position:fixed!important;
-    left:12px!important;
-    right:auto!important;
-    top:50%!important;
-    bottom:auto!important;
-    width:188px!important;
-    max-width:188px!important;
-    min-width:188px!important;
-    transform:translateY(-50%) scale(.92)!important;
-    transform-origin:left center!important;
-    border-radius:20px!important;
-    border-left:1px solid rgba(58,225,255,.25)!important;
-    z-index:120!important;
-  }
-
-  /* Prawy panel social: nie chowamy go na 1680, tylko zmniejszamy i cofamy od krawędzi */
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
-    display:flex!important;
-    visibility:visible!important;
-    opacity:1!important;
-    position:fixed!important;
-    right:12px!important;
-    left:auto!important;
-    top:50%!important;
-    bottom:auto!important;
-    transform:translateY(-50%) scale(.86)!important;
-    transform-origin:right center!important;
-    z-index:125!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth627-social-link{
-    width:78px!important;
-    min-height:46px!important;
-    border-radius:16px!important;
-    border-right:1px solid rgba(63,232,255,.24)!important;
-    padding:7px 7px!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth627-social-link b{
-    font-size:7.8px!important;
-  }
-
-  /* Opinie i chat: cofnięte do środka, żeby nie były obcinane */
-  .auth609-screen.auth1148-auto-fit .reviews512{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    position:fixed!important;
-    right:82px!important;
-    bottom:12px!important;
-    left:auto!important;
-    transform:scale(.88)!important;
-    transform-origin:bottom right!important;
-    z-index:126!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .support510{
-    display:block!important;
-    visibility:visible!important;
-    opacity:1!important;
-    position:fixed!important;
-    right:12px!important;
-    bottom:12px!important;
-    left:auto!important;
-    transform:scale(.88)!important;
-    transform-origin:bottom right!important;
-    z-index:127!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1700px){
-  /* Nadpisuje stare 1148, które chowało social media na 1680px */
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock{
-    display:flex!important;
-    right:10px!important;
-    transform:translateY(-50%) scale(.78)!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
-    display:block!important;
-    left:8px!important;
-    width:176px!important;
-    max-width:176px!important;
-    min-width:176px!important;
-    transform:translateY(-50%) scale(.84)!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card{
-    min-height:48px!important;
-    padding:7px 8px!important;
-    gap:7px!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card b{
-    font-size:16px!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live .auth623-side-card small{
-    font-size:7.7px!important;
-    line-height:1.08!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .reviews512{
-    right:72px!important;
-    bottom:10px!important;
-    transform:scale(.80)!important;
-  }
-
-  .auth609-screen.auth1148-auto-fit .support510{
-    right:10px!important;
-    bottom:10px!important;
-    transform:scale(.80)!important;
-  }
-}
-
-@media (min-width:1101px) and (max-width:1450px){
-  /* Dopiero przy naprawdę małych laptopach chowamy boczne panele, żeby nie zasłaniały logowania. */
-  .auth609-screen.auth1148-auto-fit .auth627-social-dock,
-  .auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
-    display:none!important;
-  }
-}
-
-/* =========================================================
-   WERSJA 1150 — EXACT 2560x1440 ZOOM SCALE MODE
-   Cel: 1 do 1 jak na bazowym monitorze 2560x1440, ale automatycznie
-   pomniejszone na 1680x1050 (~0.656 = prawie 67% zoom), 1920x1080,
-   laptopach i tabletach. Bez zmian npm/package/netlify.
-   ========================================================= */
-html, body, #root{
-  overflow-x:hidden!important;
-}
-
-/* Zalogowana aplikacja: działa jak automatyczny zoom przeglądarki.
-   Layout liczy się szeroko jak 2560px, potem wizualnie zmniejsza do ekranu. */
-.app-shell.betai1150-exact-scale{
-  --betai1150-scale-safe: var(--betai1150-scale, 1);
-  width:calc(100vw / var(--betai1150-scale-safe))!important;
-  max-width:none!important;
-  min-width:2560px!important;
-  display:grid!important;
-  grid-template-columns:270px minmax(0,1fr) 360px!important;
-  gap:24px!important;
-  padding:22px 28px!important;
-  margin:0!important;
-  transform-origin:top left!important;
-  zoom:var(--betai1150-scale-safe)!important;
-}
-
-.app-shell.betai1150-exact-scale .rightbar{
-  display:flex!important;
-  visibility:visible!important;
-  opacity:1!important;
-  width:100%!important;
-  padding:98px 22px 30px 0!important;
-}
-
-.app-shell.betai1150-exact-scale .sidebar,
-.app-shell.betai1150-exact-scale .sidebar-stack{
-  display:flex!important;
-  visibility:visible!important;
-  opacity:1!important;
-}
-
-.app-shell.betai1150-exact-scale .main{
-  min-width:0!important;
-  width:100%!important;
-  max-width:none!important;
-}
-
-.app-shell.betai1150-exact-scale .topbar{
-  flex-direction:row!important;
-  flex-wrap:nowrap!important;
-  height:58px!important;
-  margin-bottom:34px!important;
-}
-
-.app-shell.betai1150-exact-scale .top-actions{
-  margin-left:auto!important;
-  flex-wrap:nowrap!important;
-}
-
-@supports not (zoom: 1){
-  .app-shell.betai1150-exact-scale{
-    zoom:1!important;
-    transform:scale(var(--betai1150-scale-safe))!important;
-    width:calc(100vw / var(--betai1150-scale-safe))!important;
-  }
-}
-
-/* Ekran logowania: ten sam tryb — baza 2560x1440, skala około 67% na 1680x1050. */
-.auth609-screen.auth1148-auto-fit{
+html[data-betai-exact-scale="on"],
+html[data-betai-exact-scale="on"] body{
   width:100vw!important;
-  height:100vh!important;
-  min-height:100vh!important;
-  padding:0!important;
-  margin:0!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  overflow:hidden!important;
+  min-width:100vw!important;
+  max-width:100vw!important;
+  overflow-x:hidden!important;
   background:#020914!important;
 }
-
-.auth609-screen.auth1148-auto-fit .auth609-artboard{
+html[data-betai-exact-scale="on"] #root{
+  width:calc(100vw / var(--betai-exact-scale))!important;
+  min-width:calc(100vw / var(--betai-exact-scale))!important;
+  max-width:none!important;
+  min-height:calc(100vh / var(--betai-exact-scale))!important;
+  transform:scale(var(--betai-exact-scale))!important;
+  transform-origin:top left!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+html[data-betai-exact-scale="on"] .app-shell{
+  width:calc(100vw / var(--betai-exact-scale))!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  grid-template-columns:270px minmax(0,1fr) 340px!important;
+  gap:22px!important;
+  padding:22px!important;
+}
+html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page{
+  grid-template-columns:270px minmax(0,1fr)!important;
+}
+html[data-betai-exact-scale="on"] .rightbar{
+  display:flex!important;
+}
+html[data-betai-exact-scale="on"] .sidebar,
+html[data-betai-exact-scale="on"] .rightbar{
+  top:22px!important;
+  height:calc((100vh / var(--betai-exact-scale)) - 44px)!important;
+}
+html[data-betai-exact-scale="on"] .main{
+  overflow:hidden!important;
+}
+html[data-betai-exact-scale="on"] .auth609-screen{
+  width:calc(100vw / var(--betai-exact-scale))!important;
+  min-width:calc(100vw / var(--betai-exact-scale))!important;
+  min-height:calc(100vh / var(--betai-exact-scale))!important;
+  justify-content:flex-start!important;
+  align-items:flex-start!important;
+  overflow:visible!important;
+  padding:0!important;
+}
+html[data-betai-exact-scale="on"] .auth609-artboard{
   width:2048px!important;
   min-width:2048px!important;
-  max-width:none!important;
   height:1152px!important;
   min-height:1152px!important;
-  max-height:none!important;
+  max-width:none!important;
+  margin-left:255px!important;
+  margin-right:0!important;
   flex:0 0 2048px!important;
-  margin:0!important;
-  aspect-ratio:auto!important;
-  transform:scale(var(--auth1148-fit-scale, 1))!important;
-  transform-origin:center center!important;
-  will-change:transform!important;
 }
-
-.auth609-screen.auth1148-auto-fit .auth609-reference{
-  display:block!important;
+html[data-betai-exact-scale="on"] .auth609-reference,
+html[data-betai-exact-scale="on"] .auth609-overlay{
   width:2048px!important;
   height:1152px!important;
   max-width:none!important;
-  object-fit:fill!important;
 }
-
-.auth609-screen.auth1148-auto-fit .auth609-overlay{
-  position:absolute!important;
-  inset:0!important;
-  width:2048px!important;
-  height:1152px!important;
-  min-height:0!important;
-  padding:0!important;
-  background:transparent!important;
+html[data-betai-exact-scale="on"] .auth627-social-dock,
+html[data-betai-exact-scale="on"] .site-reviews-widget,
+html[data-betai-exact-scale="on"] .auth-support-chat-guest,
+html[data-betai-exact-scale="on"] [class*="review"],
+html[data-betai-exact-scale="on"] [class*="chat"]{
+  transform-origin:top left!important;
 }
-
-.auth609-screen.auth1148-auto-fit .auth609-left-panel{
-  position:absolute!important;
-  left:48px!important;
-  top:18px!important;
-  width:619px!important;
-  height:1084px!important;
-  margin:0!important;
-}
-
-/* W exact mode nie chowamy bocznych elementów — skalują się razem z widokiem. */
-.auth609-screen.auth1148-auto-fit .auth623-side-live.auth624-side-live{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-}
-
-.auth609-screen.auth1148-auto-fit .auth627-social-dock{
-  display:flex!important;
-  visibility:visible!important;
-  opacity:1!important;
+@media (min-width:2500px){
+  html #root{transform:none!important;}
 }
