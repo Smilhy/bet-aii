@@ -1,0 +1,15 @@
+WERSJA 1067 — TYPY AI HERO CROP POSITION FIX
+
+Naprawione:
+- Baner hero nie powinien już ucinać napisu Typy AI od góry.
+- Asset został przycięty z czarnego marginesu:
+  public/typy-ai-hero-v1067.png
+- Hero zostaje niskie/kompaktowe.
+- Kafelków sportów nie ruszano.
+- Statystyk i glass buttonów z 1066 nie ruszano.
+- Logiki nie ruszano.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/obraz.
+Marker opcjonalny:
+supabase/version_1067_typy_ai_hero_crop_position_fix.sql

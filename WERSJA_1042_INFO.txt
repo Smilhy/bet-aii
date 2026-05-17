@@ -1,0 +1,24 @@
+WERSJA 1042 — ADMIN FINANSE REAL REPORT + ADMIN GUARD
+
+Zrobione:
+- twardy admin guard w RPC get_admin_finance_report(),
+- zwykły użytkownik po ręcznym RPC dostaje admin_denied,
+- raport liczy Premium z payments,
+- raport liczy marketplace 80/20 z payments,
+- raport liczy wpłaty portfela z wallet_transactions,
+- raport liczy wypłaty/pending z payout_requests,
+- raport liczy aktywne konta Premium z profiles,
+- ostatnie operacje finansowe są scalone z payments / wallet_transactions / payout_requests,
+- kompatybilność z brakującymi tabelami/kolumnami: funkcja sprawdza istniejące kolumny,
+- Admin Finanse pokazuje czas ostatniego odświeżenia,
+- Admin Wypłaty zostawione osobno i nieuszkodzone.
+
+Wymagane:
+1. Odpal SQL:
+   supabase/version_1042_admin_finance_real_report_and_guard.sql
+2. Wgraj paczkę na Netlify.
+3. Wejdź w Admin finanse i kliknij Odśwież raport.
+
+Uwaga:
+- jeśli płatności Stripe nie zapisują się jeszcze do tabeli payments albo wallet_transactions, panel pokaże zera, ale już bezpiecznie.
+- raport będzie pokazywał realne dane dopiero z tych tabel, do których webhooki zapisują transakcje.

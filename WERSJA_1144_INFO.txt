@@ -1,0 +1,12 @@
+WERSJA 1144 — Responsive Master Lock / 2560x1440 jako wzór
+
+Zrobione:
+- 27 cali 2560x1440 zostaje układem wzorcowym z trzema kolumnami.
+- Na monitorach 1600–1919 px układ nadal ma prawy panel, ale płynnie go zwęża.
+- Na laptopach 1366/1440/1536 px prawy panel jest chowany, żeby główna rama nie była ściskana ani ucinana.
+- Na tabletach i telefonach aplikacja przechodzi w jeden słupek, menu składa się w siatkę, a topbar nie wypycha strony.
+- Dodano globalne zabezpieczenie przed poziomym rozjeżdżaniem: min-width:0, max-width:100%, overflow-x lock, płynne gridy i łamanie długich tekstów.
+- Poprawiono zachowanie szerokich tabel/wierszy: ranking, płatności, zarobki, wypłaty, admin, profil i Wyniki live.
+- Zmiana CSS-only: nie ruszano Supabase, Netlify Functions, Stripe, API ani logiki React.
+
+Wgraj całą paczkę na Netlify jak poprzednie wersje.

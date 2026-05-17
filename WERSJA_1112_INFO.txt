@@ -1,0 +1,8 @@
+WERSJA 1112 — Top typerzy: realne oceny z profilu
+
+- Zakładka Top typerzy nie wylicza już gwiazdek z win rate / skuteczności.
+- Ocena i liczba opinii są pobierane z realnych opinii profilu: profile_reviews / rating_avg / rating_count.
+- Jeśli profil nie ma opinii, pokazuje realnie 0.00 (0), a nie sztuczną ocenę.
+- Klik w nick/avatar dalej otwiera profil użytkownika.
+- Auto-odświeżanie Top typerów zostaje raz na 10 minut.
+- Menu i wygląd strony bez zmian.

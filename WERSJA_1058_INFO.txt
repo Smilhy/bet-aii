@@ -1,0 +1,15 @@
+WERSJA 1058 — TYPY AI TILES + FILTERS FINAL
+
+Zrobione:
+- Usunięty kafel 'Wszystkie'.
+- Kafle sportów są większe i mają więcej miejsca.
+- Piłka nożna jest aktywna.
+- Pozostałe sporty zostają widoczne jako Wkrótce.
+- Nie ma duplikowania Wkrótce.
+- Jest tylko jedna kłódka przy nazwie sportu.
+- Ikony sportów zostają.
+- Layout filtrów i suwaków dopracowany pod premium mockup.
+- Brak zmian w bazie.
+
+SQL marker:
+supabase/version_1058_typy_ai_tiles_filters_final.sql

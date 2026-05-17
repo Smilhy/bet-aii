@@ -1,0 +1,16 @@
+WERSJA 1018 — HOTFIX SPOŁECZNOŚĆ
+
+Naprawione:
+- błąd aplikacji po kliknięciu Społeczność: nameFromEmail is not defined.
+
+Nie ruszone:
+- logika Supabase z 1017,
+- chat,
+- kanały,
+- nagrody,
+- ranking,
+- portfel,
+- profil,
+- typy.
+
+SQL 1018 jest tylko informacyjny — nie trzeba odpalać.

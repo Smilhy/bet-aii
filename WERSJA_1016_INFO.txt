@@ -1,0 +1,15 @@
+WERSJA 1016 — SPOŁECZNOŚĆ: PROFILE, KANAŁY, FOLLOW, NAGRODY
+
+Zrobione:
+- każdy nick w społeczności można kliknąć i otworzyć profil,
+- lewa kolumna kanałów jest aktywna wizualnie i przełącza aktywny kanał czatu,
+- panel aktywnych użytkowników przeniesiony na dół banera,
+- w prawej kolumnie zamiast FREE/PREMIUM jest żywy przycisk Obserwuj/Obserwujesz,
+- przycisk Obserwuj korzysta z istniejącej logiki follow,
+- usunięte zakładki Posty i Dropy z górnych przycisków,
+- zostają: Czat live, Kanały, Nagrody,
+- nagrody społeczności mają zapis w Supabase i reset tygodniowy poniedziałek 01:00.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1016_community_rewards_weekly_follow_ready.sql
+2. Wgraj paczkę 1016 na Netlify.

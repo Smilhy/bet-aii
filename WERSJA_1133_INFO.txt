@@ -1,0 +1,5 @@
+Wersja 1133
+- Usunięto panel TV Live/legalnie oraz Bezpieczne TV Live z zakładki Artykuły/TV Live.
+- Zakładka Wyniki live zostaje jako centrum wyników w stylu Flashscore/LiveScore.
+- Nie ruszano Top typerzy, avatarów, follow, cennika, osiągnięć ani menu.
+- Bez nowego SQL Supabase.

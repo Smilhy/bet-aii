@@ -1,0 +1,9 @@
+WERSJA 1000 — RANKING FIX
+
+Naprawione:
+- ciemna tabela rankingu zamiast białego tła,
+- przyciski wierszy rankingu nie łapią domyślnego backgroundu,
+- po odebraniu wyzwania przycisk zmienia się na Odebrano i jest nieaktywny,
+- odebranie wyzwania dalej zapisuje +1 żeton przez SQL/RPC i odświeża stan tokenów.
+
+Baza: wystarczy SQL 999. Plik SQL 1000 jest informacyjny/no-op.

@@ -1,0 +1,12 @@
+WERSJA 1031 — BLOKADA NABIJANIA COIN ZA POSTY
+
+Zrobione:
+- można pisać dowolną liczbę postów,
+- ranking aktywności nalicza za posty maksymalnie 1 Coin/punkt na dobę,
+- realna liczba postów nadal jest widoczna,
+- community_points używa rewarded_post_days zamiast surowego posts_count,
+- dodany widok kontrolny community_post_daily_reward_audit_v1031.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1031_community_daily_post_reward_cap.sql
+2. Wgraj paczkę 1031 na Netlify.

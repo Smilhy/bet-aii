@@ -1,0 +1,14 @@
+WERSJA 1033 — TRWAŁA PAMIĘĆ FOLLOW / NAGRÓD / COIN
+
+Naprawione:
+- Obserwowanie zapisuje się w Supabase także po stabilnym kluczu/nazwie typera, nie tylko po UUID.
+- Po nowym deployu Ranking pobiera obserwowanych z Supabase.
+- Po zalogowaniu aplikacja od razu pobiera claimy nagród rankingowych z Supabase.
+- Po zalogowaniu aplikacja od razu pobiera saldo Coin z betai_token_wallets.
+- persistTokenBalanceNoRollback zapisuje saldo również do Supabase.
+- Nie ma już sytuacji, że po nowej paczce UI wraca do stanu bez pamięci, jeśli SQL 1033 jest odpalony.
+
+Wymagane:
+1. Odpal SQL: supabase/version_1033_persistent_follow_rewards_wallet.sql
+2. Wgraj paczkę 1033 na Netlify.
+3. Po deployu wyloguj/zaloguj albo odśwież stronę.

@@ -1,0 +1,11 @@
+WERSJA 1086 — STABLE DAILY AI SCAN
+
+- Start z działającej paczki 1085 bez zmiany stylu Netlify.
+- Typy AI najpierw czytają zapisane typy z Supabase.
+- Jeśli dla danego dnia są już zapisane typy, aplikacja NIE skanuje ponownie po odświeżeniu strony.
+- Pierwszy skan dnia pobiera szeroko mecze, wybiera TOP 20 najlepszych typów AI i zapisuje je do Supabase.
+- Mecze Result pokazuje zapisane typy na stałe.
+- Ligi i Statystyki liczą dane z zapisanych typów.
+- generate-live-ai-picks nie kasuje już wcześniejszych rekordów; zapisuje/upsertuje TOP typy.
+- Dodany schedule Netlify: codzienny skan o 00:01 (konfigurowalny BETAI_DAILY_AI_CRON).
+- Bez package-lock.json, bez node_modules, bez dist w paczce ZIP.

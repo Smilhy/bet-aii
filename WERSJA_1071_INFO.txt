@@ -1,0 +1,23 @@
+WERSJA 1071 — TYPY AI ACTIONS NEXT TO LEAGUE TABS
+
+Zrobione:
+- Przyciski:
+  * Odśwież AI
+  * Rozlicz zakończone
+  przeniesione obok dolnych zakładek:
+  * Pre-match typy
+  * Mecze Result
+  * Statystyki
+  * Ligi
+- Górny układ filtrów zostaje bez tych przycisków.
+- Kafelków sportów nie ruszano.
+- Banera nie ruszano.
+- Logiki przycisków nie ruszano:
+  * fetchLiveAiPicks
+  * onSettle
+- Brak zmian w bazie.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/JSX/CSS.
+Marker opcjonalny:
+supabase/version_1071_typy_ai_actions_next_to_league_tabs.sql

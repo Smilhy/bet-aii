@@ -1,0 +1,12 @@
+WERSJA 1037 — FREE NIE SPRZEDAJE SUBSKRYPCJI PROFILU
+
+Naprawione:
+- konto FREE nie może sprzedawać subskrypcji profilu,
+- konto FREE nie może blokować wyników/statystyk paywallem,
+- przycisk Wsparcie tipami/Kup subskrypcję działa tylko dla profili Premium/Admin,
+- Cennik subskrypcji profilu pokazuje się właścicielowi tylko, jeśli ma Premium/Admin,
+- próba otwarcia subskrypcji profilu FREE pokazuje komunikat, że subskrypcja jest niedostępna,
+- profile FREE mają wyniki/statystyki widoczne bez paywalla,
+- nie ruszono API-Football, cache, rozliczania, społeczności ani portfela.
+
+SQL 1037 jest informacyjny — nie trzeba odpalać.

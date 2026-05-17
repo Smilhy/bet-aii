@@ -1,0 +1,22 @@
+WERSJA 1072 — TYPY AI REMOVE MODE BUTTONS
+
+Zrobione:
+- Usunięte przyciski:
+  * Pre-match
+  * Na żywo
+  * Wszystkie
+- Dolne zakładki zostają:
+  * Pre-match typy
+  * Mecze Result
+  * Statystyki
+  * Ligi
+- Przyciski Odśwież AI i Rozlicz zakończone zostają obok dolnych zakładek.
+- Kafelków sportów nie ruszano.
+- Banera nie ruszano.
+- Logiki nie ruszano.
+- Brak zmian w bazie.
+
+SQL:
+NIE TRZEBA WKLEJAĆ. To tylko UI/JSX/CSS.
+Marker opcjonalny:
+supabase/version_1072_typy_ai_remove_mode_buttons.sql

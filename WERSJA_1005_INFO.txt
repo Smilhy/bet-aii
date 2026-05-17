@@ -1,0 +1,8 @@
+WERSJA 1005 — DASHBOARD TOP TYPERZY GOLD PROFIT
+
+Zmiana tylko wyglądu:
+- profit w prawej kolumnie dashboardu / Top typerzy ma ten sam złoty kolor jak w rankingu,
+- dodany subtelny pulsujący glow i iskra,
+- brak zmian logiki, SQL, tokenów, powiadomień i Netlify Functions.
+
+Baza: wersja 1004.

@@ -1,0 +1,10 @@
+WERSJA 1040 — POPRAWKA PREMIUM DLA SUBSKRYPCJI PROFILU
+
+Naprawione:
+- profil z badge/plan/status/subscription_status/is_premium = premium jest traktowany jako Premium,
+- buchajson1988 z Premium może otworzyć modal kupna subskrypcji,
+- FREE nadal nie może sprzedawać subskrypcji profilu,
+- smilhytv/admin działa jak wcześniej,
+- nie ruszono API-Football, auto-settle, cache ani społeczności.
+
+SQL 1040 jest informacyjny — nie trzeba odpalać.
