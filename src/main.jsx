@@ -2453,7 +2453,7 @@ function LiveChatPanel({ user }) {
 // V1158 — prawa ramka Dashboard: TOP 3 AI typy dnia, tylko mecze przyszłe.
 // Nie pokazuje meczów live/zakończonych ani takich, które startują za mniej niż 5 minut.
 // Cache jest tylko dla tej ramki Dashboardu i nie dotyka logiki innych zakładek.
-const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1162_'
+const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_locked_v1164_'
 const BETAI_RIGHT_DAILY_AI_MIN_START_MS_V1158 = 5 * 60 * 1000
 
 function getBetAiWarsawDayKeyV1156(value = new Date()) {
@@ -2530,13 +2530,65 @@ function filterBetAiRightDailyAiPicksV1158(picks = [], dayKey = getBetAiWarsawDa
     .slice(0, 3)
 }
 
-function readBetAiRightDailyAiCacheV1156(dayKey) {
+function readBetAiRightDailyAiCacheV1156(dayKey, lockMode = false) {
   try {
-    const raw = localStorage.getItem(`${BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156}${dayKey}`)
-    const parsed = raw ? JSON.parse(raw) : null
-    return Array.isArray(parsed?.picks) ? filterBetAiRightDailyAiPicksV1158(parsed.picks, dayKey) : []
+    const keys = [
+      `${BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156}${dayKey}`,
+      `betai_right_daily_ai_picks_v1162_${dayKey}`,
+      `betai_right_daily_ai_picks_v1156_${dayKey}`,
+      `betai_right_daily_ai_picks_v1157_${dayKey}`,
+      `betai_right_daily_ai_picks_v1158_${dayKey}`,
+      `betai_right_daily_ai_picks_v1159_${dayKey}`,
+    ]
+    for (const key of keys) {
+      const raw = localStorage.getItem(key)
+      const parsed = raw ? JSON.parse(raw) : null
+      if (Array.isArray(parsed?.picks) && parsed.picks.length) {
+        const normalized = parsed.picks
+          .map(p => normalizeBetAiRightDailyAiPickForCacheV1164(p, dayKey))
+          .filter(Boolean)
+          .slice(0, 3)
+        if (normalized.length) {
+          if (key !== `${BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156}${dayKey}`) {
+            saveBetAiRightDailyAiCacheV1156(dayKey, normalized)
+          }
+          // LOCK MODE: jeżeli TOP 3 już zapisane na dzisiejszą datę,
+          // nie filtrujemy i nie nadpisujemy ich przy każdym refreshu.
+          if (lockMode && normalized.length >= 3) return normalized
+          return filterBetAiRightDailyAiPicksV1158(normalized, dayKey)
+        }
+      }
+    }
+    return []
   } catch (_) {
     return []
+  }
+}
+
+function normalizeBetAiRightDailyAiPickForCacheV1164(pick = {}, dayKey = getBetAiWarsawDayKeyV1156()) {
+  if (!pick || typeof pick !== 'object') return null
+  const date = pick.date || pick.event_time || pick.kickoff_time || pick.match_time || ''
+  const home = pick.home || pick.team_home || pick.home_team || ''
+  const away = pick.away || pick.team_away || pick.away_team || ''
+  if (!home || !away || !date) return null
+  if (String(pick.dayKey || dayKey) !== dayKey && getBetAiRightTipDayKeyV1157(date) !== dayKey) return null
+  return {
+    ...pick,
+    id: String(pick.id || pick.ai_external_key || `${home}-${away}-${date}`),
+    dayKey,
+    home,
+    away,
+    date,
+    homeLogo: pick.homeLogo || pick.home_logo || pick.team_home_logo || pick.homeTeamLogo || pick.home_team_logo || pick.fixture_json?.homeLogo || pick.fixture_json?.home_logo || null,
+    awayLogo: pick.awayLogo || pick.away_logo || pick.team_away_logo || pick.awayTeamLogo || pick.away_team_logo || pick.fixture_json?.awayLogo || pick.fixture_json?.away_logo || null,
+    homeTeamId: pick.homeTeamId || pick.home_team_id || pick.team_home_id || pick.home_id || pick.fixture_json?.homeTeamId || pick.fixture_json?.home_team_id || null,
+    awayTeamId: pick.awayTeamId || pick.away_team_id || pick.team_away_id || pick.away_id || pick.fixture_json?.awayTeamId || pick.fixture_json?.away_team_id || null,
+    matchName: pick.matchName || pick.match_name || `${home} vs ${away}`,
+    league: pick.league || pick.league_name || pick.competition || 'Football',
+    market: pick.market || 'Typ AI',
+    pick: pick.pick || pick.selection || pick.prediction || 'Najmocniejszy typ AI',
+    odds: Number(pick.odds || 1.75).toFixed(2),
+    confidence: Math.round(Number(pick.confidence || pick.ai_confidence || pick.ai_score || pick.probability || 68)),
   }
 }
 
@@ -2545,6 +2597,7 @@ function saveBetAiRightDailyAiCacheV1156(dayKey, picks = []) {
     localStorage.setItem(`${BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156}${dayKey}`, JSON.stringify({
       dayKey,
       savedAt: new Date().toISOString(),
+      locked: true,
       picks: (picks || []).slice(0, 3)
     }))
   } catch (_) {}
@@ -2734,8 +2787,8 @@ function buildBetAiRightPickV1156(match = {}, index = 0, dayKey = getBetAiWarsaw
 
 function DailyAiPicksRightPanelV1156() {
   const [dayKey, setDayKey] = useState(getBetAiWarsawDayKeyV1156())
-  const [picks, setPicks] = useState(() => readBetAiRightDailyAiCacheV1156(getBetAiWarsawDayKeyV1156()))
-  const [loading, setLoading] = useState(!readBetAiRightDailyAiCacheV1156(getBetAiWarsawDayKeyV1156()).length)
+  const [picks, setPicks] = useState(() => readBetAiRightDailyAiCacheV1156(getBetAiWarsawDayKeyV1156(), true))
+  const [loading, setLoading] = useState(!readBetAiRightDailyAiCacheV1156(getBetAiWarsawDayKeyV1156(), true).length)
   const [notice, setNotice] = useState('')
 
   useEffect(() => {
@@ -2743,7 +2796,7 @@ function DailyAiPicksRightPanelV1156() {
     async function loadDailyPicks() {
       const today = getBetAiWarsawDayKeyV1156()
       setDayKey(today)
-      const cached = readBetAiRightDailyAiCacheV1156(today)
+      const cached = readBetAiRightDailyAiCacheV1156(today, true)
       if (cached.length >= 3) {
         setPicks(cached.slice(0, 3))
         setLoading(false)
@@ -2811,15 +2864,13 @@ function DailyAiPicksRightPanelV1156() {
           return
         }
 
-        setNotice(`Mam ${collected.length}/3 — jednorazowo uruchamiam dzienny generator AI...`)
-        await triggerBetAiRightDailyGeneratorV1157(today)
-        const generatedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
-        collected = filterBetAiRightDailyAiPicksV1158([...collected, ...generatedFromDb], today)
         if (collected.length) {
+          // Zapisujemy to, co znaleźliśmy, ale nie mielimy generatora w pętli.
+          // Jeżeli API nie dało pełnych 3 przyszłych meczów, nie blokujemy Dashboardu.
           saveBetAiRightDailyAiCacheV1156(today, collected)
           if (!alive) return
           setPicks(collected.slice(0, 3))
-          setNotice(collected.length >= 3 ? `TOP 3 wygenerowane i zapisane na ${today}` : `Znaleziono tylko ${collected.length}/3 przyszłe mecze na dziś`)
+          setNotice(`Zapisano ${collected.length}/3 najmocniejsze przyszłe typy na ${today}`)
           return
         }
 
@@ -2849,10 +2900,10 @@ function DailyAiPicksRightPanelV1156() {
           <div className="ai-day-pick-body-v1163">
             <div className="ai-day-matchline-v1163">
               <TipTeamLogo logo={pick.homeLogo || pick.home_logo} teamId={pick.homeTeamId || pick.home_team_id} name={pick.home} />
-              <b className="ai-day-team-name-v1163">{pick.home}</b>
+              <b className="ai-day-team-name-v1163 ai-day-home-name-v1164">{pick.home}</b>
               <span className="ai-day-vs-dot-v1162 ai-day-vs-inline-v1163">vs</span>
+              <b className="ai-day-team-name-v1163 ai-day-away-name-v1164">{pick.away}</b>
               <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
-              <b className="ai-day-team-name-v1163">{pick.away}</b>
             </div>
             <small>{pick.league}</small>
             <small>Typ: {pick.pick} • Kurs: {Number(pick.odds || 0).toFixed(2)}</small>

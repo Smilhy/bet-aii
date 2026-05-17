@@ -47885,3 +47885,41 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     width:calc(100% - 32px)!important;
   }
 }
+
+/* BETAI 1164 — AI Typy dnia: stały układ herbów i brak skakania TOP 3
+   Herb gospodarza przed pierwszą drużyną, herb gościa za drugą drużyną.
+   Tylko prawa ramka; bez zmian w auth/chat/ranking/npm. */
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-matchline-v1163{
+  display:grid!important;
+  grid-template-columns:28px minmax(72px,1fr) auto minmax(72px,1fr) 28px!important;
+  gap:7px!important;
+  align-items:center!important;
+  overflow:visible!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-home-name-v1164{
+  text-align:left!important;
+  max-width:none!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-away-name-v1164{
+  text-align:left!important;
+  max-width:none!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .profile-ticket-v6-team-logo{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  max-width:28px!important;
+  flex:none!important;
+  place-self:center!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-vs-inline-v1163{
+  justify-self:center!important;
+  min-width:18px!important;
+  text-align:center!important;
+}
+@media(max-width:900px){
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-real-v1163 .ai-day-matchline-v1163{
+    grid-template-columns:25px minmax(58px,1fr) auto minmax(58px,1fr) 25px!important;
+    gap:6px!important;
+  }
+}
