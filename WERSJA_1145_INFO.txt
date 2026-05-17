@@ -1,0 +1,11 @@
+WERSJA 1145 - NETLIFY SAFE RESPONSIVE MASTER LOCK
+
+Ta wersja zawiera poprawki responsive z 1144 oraz bezpieczniejszą konfigurację Netlify:
+- instalacja przez npm ci zamiast zwykłego npm install
+- wyłączone audit/fund/progress, żeby Netlify szybciej przechodził etap "Installing npm packages"
+- zachowany build: vite build
+- zachowany publish: dist
+- zachowane functions: netlify/functions
+- bez zmian w Supabase, Stripe ani logice aplikacji
+
+Jeśli Netlify zatrzyma się na "Installing npm packages", to nie jest błąd kodu strony, tylko etap instalacji paczek. Ta wersja ma wymusić szybszą i czystą instalację.
