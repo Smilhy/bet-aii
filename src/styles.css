@@ -47630,26 +47630,3 @@ html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .main{
 .real-ranking-panel .panel-head {
   justify-content: flex-start !important;
 }
-
-/* V1156 — Dashboard prawa ramka: zapisane TOP 3 AI Typy dnia, tylko wygląd ramki */
-.ai-day-panel-real-v1156 .panel-head a{
-  pointer-events:none!important;
-  opacity:.72!important;
-  font-size:11px!important;
-  letter-spacing:.06em!important;
-}
-.ai-pick-real-v1156 small{
-  display:block!important;
-  line-height:1.25!important;
-}
-.ai-day-cache-note-v1156{
-  margin-top:10px!important;
-  padding:8px 10px!important;
-  border-radius:12px!important;
-  border:1px solid rgba(31,226,174,.14)!important;
-  background:rgba(31,226,174,.055)!important;
-  color:#8fead3!important;
-  font-size:11px!important;
-  font-weight:800!important;
-  text-align:center!important;
-}
