@@ -23840,7 +23840,37 @@ function App() {
   )
 }
 
-createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>)
+
+
+function BetaiExactScaleProvider({ children }) {
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+    const root = document.documentElement
+    const apply = () => {
+      const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
+      const scale = Math.min(1, Math.max(0.30, width / 2560))
+      if (width >= 2500) {
+        root.style.removeProperty('--betai-exact-scale')
+        root.removeAttribute('data-betai-exact-scale')
+        return
+      }
+      root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
+      root.setAttribute('data-betai-exact-scale', 'on')
+    }
+    apply()
+    window.addEventListener('resize', apply)
+    window.addEventListener('orientationchange', apply)
+    return () => {
+      window.removeEventListener('resize', apply)
+      window.removeEventListener('orientationchange', apply)
+      root.style.removeProperty('--betai-exact-scale')
+      root.removeAttribute('data-betai-exact-scale')
+    }
+  }, [])
+  return children
+}
+
+createRoot(document.getElementById('root')).render(<ErrorBoundary><BetaiExactScaleProvider><App /></BetaiExactScaleProvider></ErrorBoundary>)
 
 
 // BETAI TIP ALERT SYSTEM
