@@ -2450,9 +2450,11 @@ function LiveChatPanel({ user }) {
 
 
 
-// V1157 — prawa ramka Dashboard: TOP 3 AI typy dnia, najpierw baza/cache, potem API/generator.
-// Nie dotyka logiki innych zakładek: cache jest tylko dla tej ramki Dashboardu.
-const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1156_'
+// V1158 — prawa ramka Dashboard: TOP 3 AI typy dnia, tylko mecze przyszłe.
+// Nie pokazuje meczów live/zakończonych ani takich, które startują za mniej niż 5 minut.
+// Cache jest tylko dla tej ramki Dashboardu i nie dotyka logiki innych zakładek.
+const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_v1158_'
+const BETAI_RIGHT_DAILY_AI_MIN_START_MS_V1158 = 5 * 60 * 1000
 
 function getBetAiWarsawDayKeyV1156(value = new Date()) {
   try {
@@ -2475,11 +2477,60 @@ function getBetAiNextWarsawDayKeyV1156(dayKey = getBetAiWarsawDayKeyV1156()) {
   return getBetAiWarsawDayKeyV1156(date)
 }
 
+function isBetAiRightFutureKickoffV1158(value, minMs = BETAI_RIGHT_DAILY_AI_MIN_START_MS_V1158) {
+  try {
+    const t = value ? new Date(value).getTime() : 0
+    if (!t || Number.isNaN(t)) return false
+    return t > Date.now() + minMs
+  } catch (_) {
+    return false
+  }
+}
+
+function normalizeBetAiRightDailyAiPickV1158(pick = {}, dayKey = getBetAiWarsawDayKeyV1156()) {
+  if (!pick || typeof pick !== 'object') return null
+  const date = pick.date || pick.event_time || pick.kickoff_time || pick.match_time || ''
+  const home = pick.home || pick.team_home || pick.home_team || ''
+  const away = pick.away || pick.team_away || pick.away_team || ''
+  if (!home || !away || !date) return null
+  if (getBetAiRightTipDayKeyV1157(date) !== dayKey) return null
+  if (!isBetAiRightFutureKickoffV1158(date)) return null
+  return {
+    ...pick,
+    id: String(pick.id || pick.ai_external_key || `${home}-${away}-${date}`),
+    dayKey,
+    home,
+    away,
+    date,
+    matchName: pick.matchName || pick.match_name || `${home} vs ${away}`,
+    league: pick.league || pick.league_name || pick.competition || 'Football',
+    market: pick.market || 'Typ AI',
+    pick: pick.pick || pick.selection || pick.prediction || 'Najmocniejszy typ AI',
+    odds: Number(pick.odds || 1.75).toFixed(2),
+    confidence: Math.round(Number(pick.confidence || pick.ai_confidence || pick.ai_score || pick.probability || 68)),
+  }
+}
+
+function filterBetAiRightDailyAiPicksV1158(picks = [], dayKey = getBetAiWarsawDayKeyV1156()) {
+  const seen = new Set()
+  return (picks || [])
+    .map(p => normalizeBetAiRightDailyAiPickV1158(p, dayKey))
+    .filter(Boolean)
+    .filter(pick => {
+      const key = String(pick.id || `${pick.home}-${pick.away}-${pick.date}`)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))
+    .slice(0, 3)
+}
+
 function readBetAiRightDailyAiCacheV1156(dayKey) {
   try {
     const raw = localStorage.getItem(`${BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156}${dayKey}`)
     const parsed = raw ? JSON.parse(raw) : null
-    return Array.isArray(parsed?.picks) ? parsed.picks.slice(0, 3) : []
+    return Array.isArray(parsed?.picks) ? filterBetAiRightDailyAiPicksV1158(parsed.picks, dayKey) : []
   } catch (_) {
     return []
   }
@@ -2510,7 +2561,7 @@ function mapBetAiRightSavedTipV1157(row = {}, index = 0, dayKey = getBetAiWarsaw
   const home = row.team_home || row.home || row.home_team || row.fixture_json?.home || ''
   const away = row.team_away || row.away || row.away_team || row.fixture_json?.away || ''
   if (!home || !away) return null
-  const rawDate = row.event_time || row.kickoff_time || row.match_time || row.fixture_date || row.created_at || ''
+  const rawDate = row.event_time || row.kickoff_time || row.match_time || row.fixture_date || ''
   return {
     id: String(row.ai_external_key || row.external_fixture_id || row.id || `${home}-${away}-${rawDate}`),
     dayKey,
@@ -2535,7 +2586,7 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
       .select('*')
       .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
       .gte('event_time', `${dayKey}T00:00:00`)
-      .lt('event_time', `${nextDay}T23:59:59`)
+      .lt('event_time', `${nextDay}T00:00:00`)
       .order('ai_confidence', { ascending: false, nullsFirst: false })
       .limit(80)
     if (error) throw error
@@ -2543,7 +2594,8 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
     return (data || [])
       .map((row, index) => mapBetAiRightSavedTipV1157(row, index, dayKey))
       .filter(Boolean)
-      .filter(pick => getBetAiRightTipDayKeyV1157(pick.date || Date.now()) === dayKey)
+      .filter(pick => getBetAiRightTipDayKeyV1157(pick.date || '') === dayKey)
+      .filter(pick => isBetAiRightFutureKickoffV1158(pick.date))
       .filter(pick => {
         const key = String(pick.id || `${pick.home}-${pick.away}-${pick.date}`)
         if (seen.has(key)) return false
@@ -2626,11 +2678,9 @@ function betAiRightHashV1156(value = '') {
 function isBetAiRightPrematchV1156(match = {}) {
   const short = String(match.status_short || '').toUpperCase()
   const long = String(match.status_long || '').toLowerCase()
-  if (['FT','AET','PEN'].includes(short) || long.includes('finished')) return false
-  if (['1H','HT','2H','ET','BT','P','SUSP','INT','LIVE'].includes(short) || long.includes('live') || long.includes('progress')) return false
-  const t = match.date ? new Date(match.date).getTime() : 0
-  if (!t || Number.isNaN(t)) return true
-  return t > Date.now() + 2 * 60 * 1000
+  if (['FT','AET','PEN','CANC','ABD','AWD','WO'].includes(short) || long.includes('finished') || long.includes('ended')) return false
+  if (['1H','HT','2H','ET','BT','P','SUSP','INT','LIVE'].includes(short) || long.includes('live') || long.includes('progress') || long.includes('half')) return false
+  return isBetAiRightFutureKickoffV1158(match.date || match.commence_time || match.event_time || match.kickoff_time || match.match_time)
 }
 
 function buildBetAiRightPickV1156(match = {}, index = 0, dayKey = getBetAiWarsawDayKeyV1156()) {
@@ -2678,26 +2728,27 @@ function DailyAiPicksRightPanelV1156() {
       const today = getBetAiWarsawDayKeyV1156()
       setDayKey(today)
       const cached = readBetAiRightDailyAiCacheV1156(today)
-      if (cached.length) {
-        setPicks(cached)
+      if (cached.length >= 3) {
+        setPicks(cached.slice(0, 3))
         setLoading(false)
-        setNotice(`Zapisane na ${today}`)
+        setNotice(`TOP 3 zapisane na ${today}`)
         return
       }
 
       setLoading(true)
-      setNotice('Sprawdzam zapisane typy AI na dziś...')
+      setNotice(cached.length ? `Mam ${cached.length}/3 — dobieram kolejne przyszłe mecze...` : 'Sprawdzam zapisane typy AI na dziś...')
       try {
         const savedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
-        if (savedFromDb.length) {
-          saveBetAiRightDailyAiCacheV1156(today, savedFromDb)
+        let collected = filterBetAiRightDailyAiPicksV1158([...cached, ...savedFromDb], today)
+        if (collected.length >= 3) {
+          saveBetAiRightDailyAiCacheV1156(today, collected)
           if (!alive) return
-          setPicks(savedFromDb)
-          setNotice(`TOP ${savedFromDb.length} wczytane z bazy na ${today}`)
+          setPicks(collected.slice(0, 3))
+          setNotice(`TOP 3 wczytane z bazy na ${today}`)
           return
         }
 
-        setNotice('Brak zapisanych — pobieram mecze na dziś...')
+        setNotice(`Mam ${collected.length}/3 — pobieram przyszłe mecze na dziś...`)
         const tomorrow = getBetAiNextWarsawDayKeyV1156(today)
         const urls = [
           `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&mode=today&realOnly=1&allLeagues=1`,
@@ -2725,7 +2776,7 @@ function DailyAiPicksRightPanelV1156() {
         }
 
         const seen = new Set()
-        const top = fixtures
+        const topFromApi = fixtures
           .filter(m => {
             const key = String(m.id || `${m.home}-${m.away}-${m.date}`)
             if (seen.has(key)) return false
@@ -2733,31 +2784,32 @@ function DailyAiPicksRightPanelV1156() {
             return true
           })
           .map((m, index) => buildBetAiRightPickV1156(m, index, today))
-          .sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))
-          .slice(0, 3)
 
-        if (top.length) {
-          saveBetAiRightDailyAiCacheV1156(today, top)
+        collected = filterBetAiRightDailyAiPicksV1158([...collected, ...topFromApi], today)
+
+        if (collected.length >= 3) {
+          saveBetAiRightDailyAiCacheV1156(today, collected)
           if (!alive) return
-          setPicks(top)
-          setNotice(`TOP ${top.length} zapisane na ${today}`)
+          setPicks(collected.slice(0, 3))
+          setNotice(`TOP 3 zapisane na ${today}`)
           return
         }
 
-        setNotice('API nie zwróciło meczów — uruchamiam dzienny generator AI...')
+        setNotice(`Mam ${collected.length}/3 — jednorazowo uruchamiam dzienny generator AI...`)
         await triggerBetAiRightDailyGeneratorV1157(today)
         const generatedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
-        if (generatedFromDb.length) {
-          saveBetAiRightDailyAiCacheV1156(today, generatedFromDb)
+        collected = filterBetAiRightDailyAiPicksV1158([...collected, ...generatedFromDb], today)
+        if (collected.length) {
+          saveBetAiRightDailyAiCacheV1156(today, collected)
           if (!alive) return
-          setPicks(generatedFromDb)
-          setNotice(`TOP ${generatedFromDb.length} wygenerowane i zapisane na ${today}`)
+          setPicks(collected.slice(0, 3))
+          setNotice(collected.length >= 3 ? `TOP 3 wygenerowane i zapisane na ${today}` : `Znaleziono tylko ${collected.length}/3 przyszłe mecze na dziś`)
           return
         }
 
         if (!alive) return
         setPicks([])
-        setNotice('Brak meczów API na dziś')
+        setNotice('Brak przyszłych meczów na dziś — bez live i zakończonych')
       } finally {
         if (alive) setLoading(false)
       }
@@ -2775,7 +2827,7 @@ function DailyAiPicksRightPanelV1156() {
     <section className="panel ai-day-panel-right ai-day-panel-real-v1156">
       <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
-        <div className="empty-mini">Ładowanie TOP 3 typów AI na dziś...</div>
+        <div className="empty-mini">Ładowanie TOP 3 przyszłych typów AI na dziś...</div>
       ) : picks.length ? picks.map((pick, index) => (
         <div className="ai-pick ai-pick-real-v1156" key={`${pick.id}-${index}`}>
           <div className="club ai-club">AI</div>
@@ -2788,9 +2840,9 @@ function DailyAiPicksRightPanelV1156() {
           <strong>{Number(pick.confidence || 0)}%</strong>
         </div>
       )) : (
-        <div className="empty-mini">Brak zapisanych typów AI na dziś. Ramka spróbuje ponownie po odświeżeniu.</div>
+        <div className="empty-mini">Brak zapisanych typów AI na dziś. Bez meczów live/zakończonych. Spróbuje ponownie po odświeżeniu.</div>
       )}
-      <div className="ai-day-cache-note-v1156">{notice || 'Odświeżenie po 00:00'}</div>
+      <div className="ai-day-cache-note-v1156">{notice || 'Odświeżenie po 00:00 • tylko mecze min. 5 min przed startem'}</div>
     </section>
   )
 }

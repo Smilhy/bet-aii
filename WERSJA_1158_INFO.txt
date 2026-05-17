@@ -1,0 +1,15 @@
+WERSJA 1158 — AI Typy dnia TOP 3 future-only
+
+Baza: 1157.
+Zakres zmian: tylko prawa ramka Dashboardu „AI Typy dnia”.
+
+Zasady:
+- pokazuje maksymalnie 3 typy AI na bieżący dzień,
+- nie pokazuje meczów zakończonych,
+- nie pokazuje meczów live / rozpoczętych,
+- nie pokazuje meczów startujących za mniej niż 5 minut,
+- jeżeli cache/baza ma mniej niż 3 przyszłe typy, próbuje dobrać brakujące mecze,
+- cache jest po dacie i tylko dla tej ramki,
+- nie ruszano auth, chatu, rankingu, portfela, innych zakładek, Supabase client, netlify.toml ani package.json.
+
+Build lokalny: npm run build przeszedł poprawnie.
