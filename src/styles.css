@@ -47683,3 +47683,43 @@ html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .a
   overflow-x:hidden!important;
   overscroll-behavior:contain!important;
 }
+
+/* BETAI 1161 — usuń wewnętrzny scroll prawej kolumny
+   CSS-only: prawa kolumna i live chat rozwijają się normalnie w dół,
+   a przewijanie odbywa się głównym scrollem strony/przeglądarki.
+   Nie rusza AI typów, chatu, rankingu, logowania, Supabase ani npm. */
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar,
+.app-shell:not(.no-rightbar-page) .rightbar{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:visible!important;
+  overflow-x:visible!important;
+  overscroll-behavior:auto!important;
+  scrollbar-gutter:auto!important;
+  padding-right:0!important;
+  padding-bottom:30px!important;
+  position:relative!important;
+  top:auto!important;
+  align-self:start!important;
+}
+
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar > *:last-child,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156,
+.app-shell:not(.no-rightbar-page) .rightbar > *:last-child,
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156{
+  margin-bottom:30px!important;
+}
+
+/* Live chat bez własnego wysokiego przewijania — panel ma się wydłużać,
+   a użytkownik zjeżdża normalnym scrollem strony. */
+html[data-betai-exact-scale="on"] .rightbar .live-chat-messages,
+html[data-betai-exact-scale="on"] .rightbar .betai-chat-messages-final,
+html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
+.rightbar .live-chat-messages,
+.rightbar .betai-chat-messages-final,
+.rightbar .livechat226-messages{
+  max-height:none!important;
+  overflow-y:visible!important;
+  overflow-x:hidden!important;
+}
