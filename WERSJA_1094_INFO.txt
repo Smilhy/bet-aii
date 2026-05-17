@@ -1,5 +1,0 @@
-Wersja 1094
-- Naprawiono Mecze Result: pokazuje jeden wspólny dziennik zapisanych typów, niezależnie od kliknięcia Typy AI na dziś / jutro.
-- Dodano osobne ładowanie pełnego dziennika z Supabase.
-- Klikanie dziś/jutro nie nadpisuje już listy Mecze Result.
-- Zachowany schemat Netlify: bez package-lock.json, bez node_modules, bez dist.

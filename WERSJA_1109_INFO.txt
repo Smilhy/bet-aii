@@ -1,5 +1,0 @@
-Wersja 1109
-- NIE ruszano menu ani układu strony.
-- Poprawka dotyczy tylko zakładki Top typerzy.
-- Top typerzy pobierają avatary z realnych profili Supabase oraz awaryjnie z publicznego bucketu avatars po ID użytkownika.
-- Zachowany fix Netlify z wersji 1108: bez node_modules i bez package-lock.json.

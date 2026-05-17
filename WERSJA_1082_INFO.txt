@@ -1,6 +1,0 @@
-Wersja 1082 zbudowana od paczki 1079.
-- Naprawiony błąd Cannot access ... before initialization w Typy AI.
-- Dodana zakładka/przełącznik Typy AI: dziś / jutro.
-- Poprawione pobieranie meczów dla dziś i jutra.
-- Przywrócony oryginalny netlify.toml z 1079: npm install zamiast npm ci.
-- Usunięty package-lock.json, żeby deploy zachowywał się jak wcześniejsze działające paczki.

@@ -1,5 +1,0 @@
-Wersja 1110
-- Poprawka Top typerzy: avatary są teraz brane także z tych samych danych, które zasilają Ranking / inne zakładki, a nie tylko z profiles.
-- Dzięki temu jeśli Supabase RPC/RLS nie zwróci avatar_url z profiles, Top typerzy nadal użyją realnego avatara z ranking/tips.
-- Odświeżanie Top typerzy ustawione na 10 minut + ręczny przycisk Odśwież, bez ciągłego realtime na każdą zmianę.
-- Nie zmieniano menu ani wyglądu strony.

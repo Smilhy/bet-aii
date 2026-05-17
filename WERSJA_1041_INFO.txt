@@ -1,9 +1,0 @@
-WERSJA 1041 — PROFILE TDZ FIX
-
-Naprawione:
-- błąd po kliknięciu w nick/profil:
-  "Cannot access 'W' before initialization"
-- przyczyna: zmienna premium była użyta przed inicjalizacją w payloadzie subskrypcji profilu.
-- nie ruszono API-Football, auto-settle, cache, społeczności, portfela ani SQL.
-
-SQL 1041 jest informacyjny — nie trzeba odpalać.

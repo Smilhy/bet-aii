@@ -1,7 +1,0 @@
-Wersja 1100 - FIX Mój profil smilhytv realne typy
-
-- Nie dodaje fake/archiwalnych typow.
-- Mój profil nie zalezy juz od globalnego limitu ostatnich typow.
-- fetchTips pobiera globalne typy + osobno typy aktualnego zalogowanego profilu po author_id/user_id/email/username.
-- Naprawia przypadek: kafelki statystyk sa, ale tabele Typy/Wyniki/Historia puste dla smilhytv, gdy jego typy nie miescily sie w najnowszych globalnych rekordach.
-- Bez package-lock.json, bez node_modules, bez dist.

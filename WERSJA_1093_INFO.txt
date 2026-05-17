@@ -1,6 +1,0 @@
-WERSJA 1093
-- Naprawa zakładki Mecze Result: dziennik pokazuje wszystkie zapisane typy AI, niezależnie od tego czy wcześniej kliknięto Typy AI na dziś czy Typy AI na jutro.
-- Typy AI na dziś/jutro nadal filtrują konkretny dzień.
-- Mecze Result nie filtruje się już po aktywnym aiDayMode.
-- Kliknięcie rekordu w Mecze Result nie przełącza już automatycznie z powrotem na Typy AI.
-- Zachowany schemat Netlify: bez package-lock.json, bez node_modules, bez dist.

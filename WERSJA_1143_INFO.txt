@@ -1,8 +1,0 @@
-Wersja 1143 — globalny responsive lock.
-
-- Dopasowanie layoutu do telefonów, tabletów, laptopów i monitorów.
-- Ograniczenie poziomego rozjeżdżania ramek.
-- Na laptopach chowamy prawy panel, żeby główna treść nie była ucinana.
-- Na telefonach menu i topbar składają się w czytelny układ.
-- Artykuły/TV Live, Wyniki live i szerokie karty mają ograniczone szerokości i płynne siatki.
-- Nie ruszano logiki Top typerzy, avatarów, follow, cennika, artykułów ani live API.
