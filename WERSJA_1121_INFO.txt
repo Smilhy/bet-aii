@@ -1,1 +1,0 @@
-Wersja 1121: poprawiony follow toggle w Top typerach — odobserwowanie nie wraca po sekundzie, stabilny stan przycisku i czytelny hover.

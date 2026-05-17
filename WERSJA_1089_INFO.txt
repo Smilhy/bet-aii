@@ -1,6 +1,0 @@
-Bet+AI wersja 1089
-- Naprawiono datę w Typy AI: zakładka "Typy AI na dziś" używa dnia Europe/Warsaw.
-- Nowy dzień AI przełącza się dopiero po 00:01 czasu polskiego.
-- Mecze z jutra (np. 16.05) nie powinny wpadać do zakładki "dzisiaj" podczas 15.05.
-- Zapisane typy z bazy są filtrowane po dacie Europe/Warsaw, żeby stare błędne rekordy nie mieszały widoku.
-- Zachowano działający schemat Netlify: bez package-lock.json, node_modules i dist.

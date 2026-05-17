@@ -1,9 +1,0 @@
-WERSJA 1012 — SPOŁECZNOŚĆ JAK MOCKUP
-
-Poprawione:
-- układ jak pierwszy screen: lewa kolumna kanałów, live chat, centrum feed, prawa kolumna, dolne karty,
-- dodane misje dzienne, pinned message, wydarzenia live, dropy i progres,
-- zachowana realna logika postów/komentarzy/reakcji/rankingu/nagród,
-- bez zmian w SQL wymaganych ponad 1008/1009/1010/1011.
-
-SQL 1012 jest no-op informacyjny.
