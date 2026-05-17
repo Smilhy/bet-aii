@@ -47550,3 +47550,49 @@ html[data-betai-exact-scale="on"] [class*="chat"]{
 @media (min-width:2500px){
   html #root{transform:none!important;}
 }
+
+/* =========================================================
+   WERSJA 1152 — DASHBOARD ONLY: RIGHTBAR SAFE FIT
+   Baza 1151 zostaje nietknieta. Login, Portfel, Profil i inne
+   zakladki bez zmian. Poprawka tylko dla dashboardu z prawa kolumna
+   przy skalowaniu 1680x1050, aby live chat/top typerzy nie byly ucinane.
+   ========================================================= */
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page){
+  grid-template-columns:270px minmax(0,1fr) 340px!important;
+  column-gap:22px!important;
+  padding-right:22px!important;
+  box-sizing:border-box!important;
+}
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar{
+  width:340px!important;
+  min-width:340px!important;
+  max-width:340px!important;
+  flex:0 0 340px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .panel,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .betai-right-chat-final,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .livechat226-card{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar *{
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .live-chat-bubble,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .livechat226-bubble{
+  max-width:calc(100% - 44px)!important;
+}
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .main{
+  min-width:0!important;
+  max-width:none!important;
+  overflow:hidden!important;
+}

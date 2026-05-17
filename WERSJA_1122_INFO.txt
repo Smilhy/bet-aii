@@ -1,7 +1,0 @@
-Wersja 1122 - Top typerzy follow licznik i pamięć
-
-- poprawiony licznik obserwujących w Top typerzy: +1 po Obserwuj, -1 po odobserwowaniu
-- poprawna odmiana: 1 obserwujący / 0 obserwujących / 2 obserwujących
-- stan follow zapisuje się lokalnie i w Supabase przez istniejącą tabelę kluczy follow
-- liczniki są liczone z tipster_follows oraz betai_tipster_follow_keys_v1033
-- zostawione bez zmian: wygląd strony, menu, cenniki, osiągnięcia, forma 6 meczy
