@@ -47980,3 +47980,79 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     max-width:25px!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1176 — 1920x1080 / 24 cale: FULL WIDTH TABS ONLY
+   Potwierdzony błąd: starsze reguły dla no-rightbar-page dawały
+   max-width 1440/1660 oraz max-width 1068/1280 dla podstron.
+   Na Full HD powodowało to kończenie zakładek w połowie ekranu.
+   NIE dotyka 2560x1440 ani 1680x1050.
+   ========================================================= */
+@media (min-width:1800px) and (max-width:2200px){
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page,
+  .app-shell.no-rightbar-page{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    grid-template-columns:270px minmax(0,1fr)!important;
+  }
+
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .main,
+  .app-shell.no-rightbar-page .main{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    overflow:visible!important;
+  }
+
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .add-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .wallet-panel,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .wallet-ultra-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .profile-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .profile-ultra-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .leaderboard-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .articles-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .referrals-view,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .notifications-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .payments-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .subscription-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .subscription-ultra-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .earnings-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .payout-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .admin-finance-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .admin-payout-page,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .admin-payout-page-pro,
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .ai-premium-dashboard,
+  .app-shell.no-rightbar-page .add-page,
+  .app-shell.no-rightbar-page .wallet-panel,
+  .app-shell.no-rightbar-page .wallet-ultra-page,
+  .app-shell.no-rightbar-page .profile-page,
+  .app-shell.no-rightbar-page .profile-ultra-page,
+  .app-shell.no-rightbar-page .leaderboard-page,
+  .app-shell.no-rightbar-page .articles-page,
+  .app-shell.no-rightbar-page .referrals-view,
+  .app-shell.no-rightbar-page .notifications-page,
+  .app-shell.no-rightbar-page .payments-page,
+  .app-shell.no-rightbar-page .subscription-page,
+  .app-shell.no-rightbar-page .subscription-ultra-page,
+  .app-shell.no-rightbar-page .earnings-page,
+  .app-shell.no-rightbar-page .payout-page,
+  .app-shell.no-rightbar-page .admin-finance-page,
+  .app-shell.no-rightbar-page .admin-payout-page,
+  .app-shell.no-rightbar-page .admin-payout-page-pro,
+  .app-shell.no-rightbar-page .ai-premium-dashboard{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  html[data-betai-exact-scale="on"] .app-shell.no-rightbar-page .ultra-page-banner,
+  .app-shell.no-rightbar-page .ultra-page-banner{
+    width:100%!important;
+    max-width:100%!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+}
