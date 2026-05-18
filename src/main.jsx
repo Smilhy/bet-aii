@@ -23771,10 +23771,15 @@ function App() {
     const top = Math.min((rect?.bottom || 72) + 10, Math.max(72, viewportHeight - 120))
 
     // 27 cali / 2560x1440 zostaje nietknięte.
-    // Dla mniejszych monitorów popupy topbara mają być na środku u góry,
-    // żeby nie uciekały w lewy bok po skalowaniu layoutu.
+    // Dla mniejszych monitorów popup ma być przypięty do ikony z topbara
+    // i wycentrowany względem dzwonka/koperty, a nie liczony od lewej krawędzi layoutu.
+    // To naprawia 1680x1050, gdzie panel uciekał za bardzo w lewo.
     if (viewportWidth && viewportWidth <= 2200) {
-      const left = Math.max(14, Math.round((viewportWidth - width) / 2))
+      const anchorCenter = rect ? ((rect.left || 0) + ((rect.width || 0) / 2)) : (viewportWidth / 2)
+      const left = Math.min(
+        Math.max(14, Math.round(anchorCenter - (width / 2))),
+        Math.max(14, viewportWidth - width - 14)
+      )
       return { top: `${top}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
     }
 
