@@ -23764,13 +23764,28 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
+  const getSafeTopbarPanelStyle = (rect, maxWidth, minWidth) => {
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+    const width = Math.min(maxWidth, Math.max(minWidth, viewportWidth - 28))
+    const top = Math.min((rect?.bottom || 72) + 10, Math.max(72, viewportHeight - 120))
+
+    // 27 cali / 2560x1440 zostaje nietknięte.
+    // Dla mniejszych monitorów popupy topbara mają być na środku u góry,
+    // żeby nie uciekały w lewy bok po skalowaniu layoutu.
+    if (viewportWidth && viewportWidth <= 2200) {
+      const left = Math.max(14, Math.round((viewportWidth - width) / 2))
+      return { top: `${top}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
+    }
+
+    const left = Math.min(Math.max(14, (rect?.right || viewportWidth) - width), Math.max(14, viewportWidth - width - 14))
+    return { top: `${top}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
+  }
+
   function toggleNotifyPanel() {
     const rect = notifyButtonRef.current?.getBoundingClientRect?.()
     if (rect) {
-      const width = Math.min(460, Math.max(320, window.innerWidth - 28))
-      const left = Math.min(Math.max(14, rect.right - width), Math.max(14, window.innerWidth - width - 14))
-      const top = Math.min(rect.bottom + 10, window.innerHeight - 120)
-      setNotifyPanelStyle({ top: `${top}px`, left: `${left}px`, right: 'auto' })
+      setNotifyPanelStyle(getSafeTopbarPanelStyle(rect, 460, 320))
     }
     setDmPanelOpen(false)
     setNotifyPanelOpen(prev => !prev)
@@ -23780,10 +23795,7 @@ function App() {
   function toggleDmPanel() {
     const rect = mailButtonRef.current?.getBoundingClientRect?.()
     if (rect) {
-      const width = Math.min(860, Math.max(360, window.innerWidth - 28))
-      const left = Math.min(Math.max(14, rect.right - width), Math.max(14, window.innerWidth - width - 14))
-      const top = Math.min(rect.bottom + 10, window.innerHeight - 120)
-      setDmPanelStyle({ top: `${top}px`, left: `${left}px`, right: 'auto' })
+      setDmPanelStyle(getSafeTopbarPanelStyle(rect, 860, 360))
     }
     setNotifyPanelOpen(false)
     setDmPanelOpen(prev => !prev)
