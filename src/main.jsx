@@ -15718,7 +15718,7 @@ function AuthView({ onAuth }) {
   const auth627SocialLinks = useMemo(() => ([
     { key: 'telegram', label: 'Telegram', href: 'https://t.me/', icon: <IconTelegram />, className: 'is-telegram' },
     { key: 'discord', label: 'Discord', href: 'https://discord.com/', icon: <IconDiscord />, className: 'is-discord' },
-    { key: 'instagram', label: 'Instagram', href: 'https://instagram.com/', icon: <IconInstagram />, className: 'is-instagram' },
+    { key: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/betaiofficial/', icon: <IconInstagram />, className: 'is-instagram' },
     { key: 'x', label: 'X', href: 'https://x.com/BetAIofficial', icon: <IconX />, className: 'is-x' },
     { key: 'facebook', label: 'Facebook', href: 'https://facebook.com/', icon: <IconFacebook />, className: 'is-facebook' },
     { key: 'tiktok', label: 'TikTok', href: 'https://tiktok.com/', icon: <IconTikTok />, className: 'is-tiktok' }
