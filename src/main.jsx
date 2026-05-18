@@ -23764,36 +23764,21 @@ function App() {
     }
   }, [view, sessionUser?.id])
 
-  const getSafeTopbarPanelStyle = (rect, maxWidth, minWidth, panelType = 'default') => {
+  const getSafeTopbarPanelStyle = (rect, maxWidth, minWidth) => {
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
-    const physicalScreenWidth = typeof window !== 'undefined' && window.screen ? window.screen.width : viewportWidth
-    const responsiveWidthSignal = Math.min(viewportWidth || physicalScreenWidth || 0, physicalScreenWidth || viewportWidth || 0)
     const width = Math.min(maxWidth, Math.max(minWidth, viewportWidth - 28))
     const baseTop = (rect?.bottom || 72) + 10
     const top = Math.min(baseTop, Math.max(72, viewportHeight - 120))
 
     // 27 cali / 2560x1440 zostaje nietknięte.
-    // Dla 1680x1050 / 1920x1080 wykrywamy też fizyczną szerokość ekranu,
-    // bo przy zoomie 67% window.innerWidth potrafi wyglądać jak duży ekran.
-    if (responsiveWidthSignal && responsiveWidthSignal <= 2200) {
-      const verticalNudge = panelType === 'notify' ? 26 : 18
-
-      if (panelType === 'notify' && rect) {
-        // Powiadomienia: przycisk X ma wypaść pod dzwonkiem, tylko niżej.
-        // Nie używamy ustawienia z koperty, bo dzwonek jest jedną ikonę wcześniej.
-        const closeButtonOffsetFromRight = 44
-        const desiredLeft = Math.round((rect.left || 0) - width + closeButtonOffsetFromRight + ((rect.width || 0) / 2))
-        const left = Math.min(
-          Math.max(14, desiredLeft),
-          Math.max(14, viewportWidth - width - 14)
-        )
-        const adjustedTop = Math.min(top + verticalNudge, Math.max(72, viewportHeight - 120))
-        return { top: `${adjustedTop}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
-      }
-
+    // Dla mniejszych monitorów popup ma być przypięty do ikon topbara,
+    // ale mocniej przesunięty w prawo i odrobinę niżej, bo na 1680x1050
+    // poprzednie centrowanie nadal wyglądało jak przyklejone za bardzo do lewej.
+    if (viewportWidth && viewportWidth <= 2200) {
       const anchorCenter = rect ? ((rect.left || 0) + ((rect.width || 0) / 2)) : (viewportWidth / 2)
       const horizontalNudge = 130
+      const verticalNudge = 18
       const left = Math.min(
         Math.max(14, Math.round(anchorCenter - (width / 2) + horizontalNudge)),
         Math.max(14, viewportWidth - width - 14)
@@ -23809,7 +23794,7 @@ function App() {
   function toggleNotifyPanel() {
     const rect = notifyButtonRef.current?.getBoundingClientRect?.()
     if (rect) {
-      setNotifyPanelStyle(getSafeTopbarPanelStyle(rect, 460, 320, 'notify'))
+      setNotifyPanelStyle(getSafeTopbarPanelStyle(rect, 460, 320))
     }
     setDmPanelOpen(false)
     setNotifyPanelOpen(prev => !prev)
@@ -24356,12 +24341,19 @@ function BetaiExactScaleProvider({ children }) {
     const root = document.documentElement
     const apply = () => {
       const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
-      const scale = Math.min(1, Math.max(0.30, width / 2560))
-      if (width >= 2500) {
+      const height = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 320)
+
+      // Desktop/laptop: zachowujemy efekt projektu 2K, ale tylko tam, gdzie ma to sens.
+      // Tablet/telefon dostają prawdziwy responsywny układ zamiast pomniejszonego desktopu.
+      if (width < 1180 || width >= 2500) {
         root.style.removeProperty('--betai-exact-scale')
         root.removeAttribute('data-betai-exact-scale')
         return
       }
+
+      const scaleByWidth = width / 2560
+      const scaleByHeight = height / 1440
+      const scale = Math.min(1, Math.max(0.52, Math.min(scaleByWidth, scaleByHeight * 1.06)))
       root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
       root.setAttribute('data-betai-exact-scale', 'on')
     }
