@@ -48353,3 +48353,68 @@ html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-foo
     display:none!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1179 — poprawka po 1178: statystyki poza artboardem,
+   w tej samej osi co social, bez nachodzenia na logowanie
+   ========================================================= */
+html body .auth609-screen .auth627-social-dock{
+  left:34px!important;
+  top:86px!important;
+  width:182px!important;
+  max-width:182px!important;
+  bottom:auto!important;
+  right:auto!important;
+  transform:none!important;
+  z-index:120!important;
+}
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+  position:fixed!important;
+  left:34px!important;
+  right:auto!important;
+  top:452px!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:182px!important;
+  max-width:182px!important;
+  min-width:182px!important;
+  padding:10px!important;
+  box-sizing:border-box!important;
+  border-radius:18px!important;
+  border:1px solid rgba(58,225,255,.25)!important;
+  z-index:118!important;
+}
+html body .auth609-screen .auth627-social-link{
+  width:182px!important;
+  max-width:182px!important;
+  min-height:50px!important;
+  height:50px!important;
+}
+@media (max-width:1700px){
+  html body .auth609-screen .auth627-social-dock{
+    left:18px!important;
+    top:78px!important;
+    width:164px!important;
+    max-width:164px!important;
+  }
+  html body .auth609-screen .auth627-social-link{
+    width:164px!important;
+    max-width:164px!important;
+    min-height:46px!important;
+    height:46px!important;
+  }
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    left:18px!important;
+    top:414px!important;
+    width:164px!important;
+    max-width:164px!important;
+    min-width:164px!important;
+    padding:9px!important;
+  }
+}
+@media (max-width:1280px){
+  html body .auth609-screen .auth627-social-dock,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    display:none!important;
+  }
+}
