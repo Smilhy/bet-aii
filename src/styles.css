@@ -47980,3 +47980,152 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     max-width:25px!important;
   }
 }
+
+/* =====================================================
+   BETAI 1168 — ALL TABS RESPONSIVE WIDTH LOCK
+   Cel: wszystkie zakładki po zalogowaniu mają wypełniać
+   dostępną szerokość tak jak Dashboard, bez pustej prawej
+   połowy na 1920x1080 i laptopach. CSS only.
+   Nie rusza logiki, Supabase, Stripe, auth, chat, ranking, npm.
+   ===================================================== */
+@media (min-width: 901px){
+  .app-shell.no-rightbar-page{
+    display:grid!important;
+    grid-template-columns:270px minmax(0,1fr)!important;
+    width:min(100%,2050px)!important;
+    max-width:2050px!important;
+    margin:0 auto!important;
+    gap:24px!important;
+    padding-left:22px!important;
+    padding-right:22px!important;
+  }
+  .app-shell.no-rightbar-page .sidebar{
+    width:270px!important;
+    min-width:270px!important;
+  }
+  .app-shell.no-rightbar-page .main{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+  }
+  .app-shell.no-rightbar-page .topbar{
+    width:100%!important;
+    max-width:none!important;
+  }
+  .app-shell.no-rightbar-page .main > section,
+  .app-shell.no-rightbar-page .main > div,
+  .app-shell.no-rightbar-page .main > form{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    align-self:stretch!important;
+  }
+  .app-shell.no-rightbar-page .add-page,
+  .app-shell.no-rightbar-page .leaderboard-page,
+  .app-shell.no-rightbar-page .notifications-page,
+  .app-shell.no-rightbar-page .wallet-panel,
+  .app-shell.no-rightbar-page .wallet-ultra-page,
+  .app-shell.no-rightbar-page .wallet-subpage,
+  .app-shell.no-rightbar-page .deposits-page,
+  .app-shell.no-rightbar-page .profile-page,
+  .app-shell.no-rightbar-page .profile-ultra-page,
+  .app-shell.no-rightbar-page .profile-v4-page,
+  .app-shell.no-rightbar-page .unlocked-tips-page-v951,
+  .app-shell.no-rightbar-page .ai-center-page-v747,
+  .app-shell.no-rightbar-page .ai-results-page-v745,
+  .app-shell.no-rightbar-page .stats-pro-page,
+  .app-shell.no-rightbar-page .ai-pro-page,
+  .app-shell.no-rightbar-page .ai-deep-page,
+  .app-shell.no-rightbar-page .tvlive-page-v8,
+  .app-shell.no-rightbar-page .rewards-ultra-page,
+  .app-shell.no-rightbar-page .payments-page,
+  .app-shell.no-rightbar-page .payments-live-page,
+  .app-shell.no-rightbar-page .subscription-page,
+  .app-shell.no-rightbar-page .subscription-live-page,
+  .app-shell.no-rightbar-page .subscription-ultra-page,
+  .app-shell.no-rightbar-page .earnings-page,
+  .app-shell.no-rightbar-page .earnings-live-page,
+  .app-shell.no-rightbar-page .payout-page,
+  .app-shell.no-rightbar-page .payout-live-page,
+  .app-shell.no-rightbar-page .admin-payout-page,
+  .app-shell.no-rightbar-page .admin-payout-page-pro,
+  .app-shell.no-rightbar-page .admin-payout-live-page,
+  .app-shell.no-rightbar-page .admin-finance-page,
+  .app-shell.no-rightbar-page .admin-finance-live-page,
+  .app-shell.no-rightbar-page .admin-coupon-approval-page-v945,
+  .app-shell.no-rightbar-page .referrals-view,
+  .app-shell.no-rightbar-page .pro-section{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+  .app-shell.no-rightbar-page .profile-ultra-stats,
+  .app-shell.no-rightbar-page .profile-ultra-money,
+  .app-shell.no-rightbar-page .leaderboard-stats,
+  .app-shell.no-rightbar-page .wallet-grid,
+  .app-shell.no-rightbar-page .payout-grid,
+  .app-shell.no-rightbar-page .admin-finance-grid,
+  .app-shell.no-rightbar-page .ai-top-grid,
+  .app-shell.no-rightbar-page .stats-pro-grid,
+  .app-shell.no-rightbar-page .pricing-grid{
+    width:100%!important;
+    max-width:none!important;
+  }
+  .app-shell.no-rightbar-page .payments-table,
+  .app-shell.no-rightbar-page .earnings-table-card,
+  .app-shell.no-rightbar-page .payout-table,
+  .app-shell.no-rightbar-page .leaderboard-table,
+  .app-shell.no-rightbar-page .admin-payout-table,
+  .app-shell.no-rightbar-page .earnings-table,
+  .app-shell.no-rightbar-page table{
+    width:100%!important;
+    max-width:none!important;
+  }
+}
+@media (min-width:901px) and (max-width:1500px){
+  .app-shell.no-rightbar-page{
+    grid-template-columns:250px minmax(0,1fr)!important;
+    gap:18px!important;
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+  .app-shell.no-rightbar-page .sidebar{
+    width:250px!important;
+    min-width:250px!important;
+  }
+}
+@media (min-width:901px) and (max-width:1280px){
+  .app-shell.no-rightbar-page{
+    grid-template-columns:230px minmax(0,1fr)!important;
+    gap:14px!important;
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  .app-shell.no-rightbar-page .sidebar{
+    width:230px!important;
+    min-width:230px!important;
+  }
+}
+@media (max-width:900px){
+  .app-shell.no-rightbar-page{
+    display:block!important;
+    width:100%!important;
+    max-width:none!important;
+    padding:14px!important;
+  }
+  .app-shell.no-rightbar-page .main,
+  .app-shell.no-rightbar-page .main > section,
+  .app-shell.no-rightbar-page .main > div,
+  .app-shell.no-rightbar-page .main > form{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+}
