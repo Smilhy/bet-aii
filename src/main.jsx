@@ -15639,6 +15639,22 @@ function AuthView({ onAuth }) {
     )
   }
 
+  function IconFacebook() {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M13.62 22v-8.01h2.69l.4-3.12h-3.09V8.88c0-.9.25-1.52 1.54-1.52h1.64V4.57c-.28-.04-1.25-.12-2.38-.12-2.35 0-3.95 1.43-3.95 4.07v2.35H7.8v3.12h2.67V22h3.15Z"/>
+      </svg>
+    )
+  }
+
+  function IconTikTok() {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M14.9 3c.27 1.53 1.17 3 2.5 4.02 1.02.78 2.17 1.22 3.6 1.34v2.84a8.1 8.1 0 0 1-3.15-.64v5.43c0 3.24-2.63 5.87-5.88 5.87A5.87 5.87 0 0 1 6.1 16c0-3.24 2.63-5.87 5.87-5.87.27 0 .53.02.8.06v2.92a3.1 3.1 0 0 0-.8-.11A2.98 2.98 0 0 0 9 16c0 1.64 1.34 2.98 2.97 2.98 1.65 0 2.92-1.27 2.92-2.98V3h.01Z"/>
+      </svg>
+    )
+  }
+
 
 
   const submitLabel = mode === 'login' ? t.submitLogin : t.submitRegister
@@ -15681,7 +15697,9 @@ function AuthView({ onAuth }) {
     { key: 'telegram', label: 'Telegram', href: 'https://t.me/', icon: <IconTelegram />, className: 'is-telegram' },
     { key: 'discord', label: 'Discord', href: 'https://discord.com/', icon: <IconDiscord />, className: 'is-discord' },
     { key: 'instagram', label: 'Instagram', href: 'https://instagram.com/', icon: <IconInstagram />, className: 'is-instagram' },
-    { key: 'x', label: 'X', href: 'https://x.com/', icon: <IconX />, className: 'is-x' }
+    { key: 'x', label: 'X', href: 'https://x.com/', icon: <IconX />, className: 'is-x' },
+    { key: 'facebook', label: 'Facebook', href: 'https://facebook.com/', icon: <IconFacebook />, className: 'is-facebook' },
+    { key: 'tiktok', label: 'TikTok', href: 'https://tiktok.com/', icon: <IconTikTok />, className: 'is-tiktok' }
   ]), [])
 
   return (

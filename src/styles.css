@@ -48056,3 +48056,143 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     margin-right:0!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 1177 — lewa kolumna auth zgodna z makietą:
+   social media po lewej nad statystykami, ta sama szerokość
+   ========================================================= */
+.auth609-screen{
+  --auth1177-left-column-left: 28px;
+  --auth1177-left-column-width: 192px;
+  --auth1177-left-column-bottom: 112px;
+  --auth1177-left-stats-height: 286px;
+  --auth1177-left-stack-gap: 22px;
+}
+
+.auth609-screen .auth627-social-dock{
+  position:fixed!important;
+  left:var(--auth1177-left-column-left)!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:calc(var(--auth1177-left-column-bottom) + var(--auth1177-left-stats-height) + var(--auth1177-left-stack-gap))!important;
+  transform:none!important;
+  width:var(--auth1177-left-column-width)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  z-index:86!important;
+}
+
+.auth609-screen .auth627-social-link{
+  width:100%!important;
+  min-height:52px!important;
+  padding:0 18px!important;
+  border-radius:18px!important;
+  border-right:1px solid rgba(63,232,255,.24)!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  background:
+    radial-gradient(circle at 20% 12%,rgba(61,242,225,.16),transparent 34%),
+    linear-gradient(180deg,rgba(7,24,39,.72),rgba(2,9,18,.84))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -10px 24px rgba(0,0,0,.16),
+    0 12px 28px rgba(0,0,0,.30),
+    0 0 18px rgba(24,220,226,.10)!important;
+}
+
+.auth609-screen .auth627-social-link:hover{
+  transform:translateX(4px)!important;
+  border-color:rgba(50,239,217,.42)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 14px 30px rgba(0,0,0,.34),
+    0 0 22px rgba(64,216,255,.16)!important;
+}
+
+.auth609-screen .auth627-social-icon,
+.auth609-screen .auth627-social-icon svg{
+  width:22px!important;
+  height:22px!important;
+  flex:0 0 22px!important;
+}
+
+.auth609-screen .auth627-social-link b{
+  font-size:13px!important;
+  line-height:1!important;
+  letter-spacing:-.01em!important;
+  font-weight:800!important;
+  color:#f1fbff!important;
+}
+
+.auth609-screen .auth627-social-link.is-facebook{color:#74b3ff!important;}
+.auth609-screen .auth627-social-link.is-tiktok{color:#f3fbff!important;}
+
+.auth609-screen .auth623-side-live.auth624-side-live{
+  position:fixed!important;
+  left:var(--auth1177-left-column-left)!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:var(--auth1177-left-column-bottom)!important;
+  transform:none!important;
+  width:var(--auth1177-left-column-width)!important;
+  max-width:var(--auth1177-left-column-width)!important;
+  padding:10px!important;
+  border-radius:22px!important;
+  border-left:1px solid rgba(58,225,255,.25)!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-list{
+  gap:8px!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:50px!important;
+  padding:8px 10px!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b{
+  font-size:18px!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small{
+  font-size:8.8px!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head{
+  justify-content:flex-end!important;
+  margin-bottom:8px!important;
+}
+
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-foot{
+  margin-top:8px!important;
+}
+
+@media (max-width: 1600px){
+  .auth609-screen{
+    --auth1177-left-column-left: 18px;
+    --auth1177-left-column-width: 176px;
+    --auth1177-left-column-bottom: 106px;
+    --auth1177-left-stats-height: 278px;
+    --auth1177-left-stack-gap: 18px;
+  }
+  .auth609-screen .auth627-social-link{
+    min-height:48px!important;
+    padding:0 15px!important;
+    gap:12px!important;
+  }
+  .auth609-screen .auth627-social-link b{font-size:12px!important;}
+  .auth609-screen .auth627-social-icon,
+  .auth609-screen .auth627-social-icon svg{width:20px!important;height:20px!important;flex-basis:20px!important;}
+}
+
+@media (max-width: 1280px){
+  .auth609-screen .auth627-social-dock,
+  .auth609-screen .auth623-side-live.auth624-side-live{
+    display:none!important;
+  }
+}
