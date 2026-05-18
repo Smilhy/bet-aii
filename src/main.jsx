@@ -24341,12 +24341,19 @@ function BetaiExactScaleProvider({ children }) {
     const root = document.documentElement
     const apply = () => {
       const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
-      const scale = Math.min(1, Math.max(0.30, width / 2560))
-      if (width >= 2500) {
+      const height = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 320)
+
+      // Desktop/laptop: zachowujemy efekt projektu 2K, ale tylko tam, gdzie ma to sens.
+      // Tablet/telefon dostają prawdziwy responsywny układ zamiast pomniejszonego desktopu.
+      if (width < 1180 || width >= 2500) {
         root.style.removeProperty('--betai-exact-scale')
         root.removeAttribute('data-betai-exact-scale')
         return
       }
+
+      const scaleByWidth = width / 2560
+      const scaleByHeight = height / 1440
+      const scale = Math.min(1, Math.max(0.52, Math.min(scaleByWidth, scaleByHeight * 1.06)))
       root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
       root.setAttribute('data-betai-exact-scale', 'on')
     }
