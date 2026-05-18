@@ -23768,19 +23768,23 @@ function App() {
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
     const width = Math.min(maxWidth, Math.max(minWidth, viewportWidth - 28))
-    const top = Math.min((rect?.bottom || 72) + 10, Math.max(72, viewportHeight - 120))
+    const baseTop = (rect?.bottom || 72) + 10
+    const top = Math.min(baseTop, Math.max(72, viewportHeight - 120))
 
     // 27 cali / 2560x1440 zostaje nietknięte.
-    // Dla mniejszych monitorów popup ma być przypięty do ikony z topbara
-    // i wycentrowany względem dzwonka/koperty, a nie liczony od lewej krawędzi layoutu.
-    // To naprawia 1680x1050, gdzie panel uciekał za bardzo w lewo.
+    // Dla mniejszych monitorów popup ma być przypięty do ikon topbara,
+    // ale mocniej przesunięty w prawo i odrobinę niżej, bo na 1680x1050
+    // poprzednie centrowanie nadal wyglądało jak przyklejone za bardzo do lewej.
     if (viewportWidth && viewportWidth <= 2200) {
       const anchorCenter = rect ? ((rect.left || 0) + ((rect.width || 0) / 2)) : (viewportWidth / 2)
+      const horizontalNudge = 130
+      const verticalNudge = 18
       const left = Math.min(
-        Math.max(14, Math.round(anchorCenter - (width / 2))),
+        Math.max(14, Math.round(anchorCenter - (width / 2) + horizontalNudge)),
         Math.max(14, viewportWidth - width - 14)
       )
-      return { top: `${top}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
+      const adjustedTop = Math.min(top + verticalNudge, Math.max(72, viewportHeight - 120))
+      return { top: `${adjustedTop}px`, left: `${left}px`, right: 'auto', width: `${width}px` }
     }
 
     const left = Math.min(Math.max(14, (rect?.right || viewportWidth) - width), Math.max(14, viewportWidth - width - 14))
