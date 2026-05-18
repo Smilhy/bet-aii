@@ -48436,3 +48436,23 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
     top:370px!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 1182 — lewa kolumna auth niżej, z zachowanym odstępem
+   między social a statystykami + link X do BetAIofficial
+   ========================================================= */
+html body .auth609-screen .auth627-social-dock{
+  top:116px!important;
+}
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+  top:482px!important;
+}
+@media (max-width:1700px){
+  html body .auth609-screen .auth627-social-dock{
+    top:108px!important;
+  }
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    top:444px!important;
+  }
+}
