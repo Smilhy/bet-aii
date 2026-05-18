@@ -48196,3 +48196,160 @@ html[data-betai-exact-scale="on"] .rightbar .livechat226-messages,
     display:none!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1178 — lewa kolumna auth jak na screenie referencyjnym:
+   social u góry po lewej, statystyki pod socialami, jedna oś
+   ========================================================= */
+html body .auth609-screen .auth627-social-dock{
+  position:fixed!important;
+  left:34px!important;
+  right:auto!important;
+  top:86px!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:182px!important;
+  max-width:182px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  z-index:90!important;
+  pointer-events:auto!important;
+}
+
+html body .auth609-screen .auth627-social-link{
+  width:182px!important;
+  max-width:182px!important;
+  min-height:50px!important;
+  height:50px!important;
+  padding:0 16px!important;
+  box-sizing:border-box!important;
+  border-radius:16px!important;
+  border:1px solid rgba(63,232,255,.24)!important;
+  border-right:1px solid rgba(63,232,255,.24)!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  text-align:left!important;
+}
+
+html body .auth609-screen .auth627-social-link:hover{
+  transform:translateX(3px)!important;
+}
+
+html body .auth609-screen .auth627-social-icon,
+html body .auth609-screen .auth627-social-icon svg{
+  width:21px!important;
+  height:21px!important;
+  flex:0 0 21px!important;
+}
+
+html body .auth609-screen .auth627-social-link b{
+  font-size:12px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  color:#f2fbff!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live{
+  position:fixed!important;
+  left:34px!important;
+  right:auto!important;
+  top:452px!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:182px!important;
+  max-width:182px!important;
+  min-width:182px!important;
+  padding:10px!important;
+  box-sizing:border-box!important;
+  border-radius:18px!important;
+  border:1px solid rgba(58,225,255,.25)!important;
+  border-left:1px solid rgba(58,225,255,.25)!important;
+  z-index:88!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head{
+  justify-content:flex-end!important;
+  margin-bottom:8px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-list{
+  gap:7px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:48px!important;
+  padding:8px 9px!important;
+  gap:8px!important;
+  border-radius:13px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon{
+  width:26px!important;
+  height:26px!important;
+  flex:0 0 26px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon svg{
+  width:15px!important;
+  height:15px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b{
+  font-size:17px!important;
+  line-height:.95!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small{
+  font-size:8.2px!important;
+  line-height:1.1!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-foot{
+  font-size:7px!important;
+  line-height:1.2!important;
+  margin-top:7px!important;
+}
+
+@media (max-width: 1700px){
+  html body .auth609-screen .auth627-social-dock{
+    left:18px!important;
+    top:78px!important;
+    width:164px!important;
+    max-width:164px!important;
+    gap:7px!important;
+  }
+  html body .auth609-screen .auth627-social-link{
+    width:164px!important;
+    max-width:164px!important;
+    min-height:46px!important;
+    height:46px!important;
+    padding:0 13px!important;
+    gap:11px!important;
+  }
+  html body .auth609-screen .auth627-social-link b{font-size:11px!important;}
+  html body .auth609-screen .auth627-social-icon,
+  html body .auth609-screen .auth627-social-icon svg{
+    width:19px!important;
+    height:19px!important;
+    flex-basis:19px!important;
+  }
+  html body .auth609-screen .auth623-side-live.auth624-side-live{
+    left:18px!important;
+    top:414px!important;
+    width:164px!important;
+    max-width:164px!important;
+    min-width:164px!important;
+    padding:9px!important;
+  }
+}
+
+@media (max-width: 1280px){
+  html body .auth609-screen .auth627-social-dock,
+  html body .auth609-screen .auth623-side-live.auth624-side-live{
+    display:none!important;
+  }
+}
