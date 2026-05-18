@@ -23783,10 +23783,10 @@ function App() {
         // Powiadomienia: przycisk X ma wypaść pod dzwonkiem, tylko niżej.
         // Nie używamy ustawienia z koperty, bo dzwonek jest jedną ikonę wcześniej.
         const closeButtonOffsetFromRight = 44
-        // 1174: na 1680x1050 panel powiadomień był za bardzo w lewo.
+        // 1175: przesunięcie panelu powiadomień mocniej w prawo, tak aby X był bliżej dzwonka.
         // Wiadomości z koperty zostają bez zmian; tylko dzwonek przesuwamy mocniej w prawo,
         // tak aby prawy górny X panelu wypadał bliżej ikony dzwonka, tylko niżej.
-        const notifyShiftRight = 310
+        const notifyShiftRight = 430
         const desiredLeft = Math.round((rect.left || 0) - width + closeButtonOffsetFromRight + ((rect.width || 0) / 2) + notifyShiftRight)
         const left = Math.min(
           Math.max(14, desiredLeft),
