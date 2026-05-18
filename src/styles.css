@@ -48418,3 +48418,21 @@ html body .auth609-screen .auth627-social-link{
     display:none!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1181 — lewa kolumna auth lekko niżej / bardziej wyśrodkowana
+   ========================================================= */
+html body .auth609-screen .auth627-social-dock{
+  top:112px!important;
+}
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+  top:380px!important;
+}
+@media (max-width:1700px){
+  html body .auth609-screen .auth627-social-dock{
+    top:105px!important;
+  }
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    top:370px!important;
+  }
+}
