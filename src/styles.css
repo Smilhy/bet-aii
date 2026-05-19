@@ -48543,3 +48543,33 @@ html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-car
   letter-spacing:-0.01em!important;
 }
 
+
+
+/* =========================================================
+   WERSJA 1191 — MOCNE POWIĘKSZENIE NAPISÓW W LEWYM PANELU
+   Wymuszone na końcu pliku CSS, żeby było widoczne.
+   ========================================================= */
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-card small{
+  font-size:16px!important;
+  line-height:1.12!important;
+  font-weight:800!important;
+  letter-spacing:-0.02em!important;
+  color:#d7e8f2!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:76px!important;
+  padding-top:12px!important;
+  padding-bottom:12px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card b{
+  margin-bottom:3px!important;
+}
+

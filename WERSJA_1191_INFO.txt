@@ -1,0 +1,7 @@
+WERSJA 1191
+Mocno powiększono napisy w lewym panelu statystyk do 16px:
+- Zarejestrowanych użytkowników
+- Skuteczność AI
+- Aktywni teraz
+- Typów dzisiaj
+Zostawiono link Facebook z wersji 1190.
