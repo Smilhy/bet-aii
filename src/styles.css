@@ -48576,15 +48576,14 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
 
 
 /* =========================================================
-   WERSJA 1192 — BALANS NAPISÓW W LEWYM PANELU
-   Cofnięcie z 16px na 14px, żeby tekst mieścił się ładnie w kartach.
+   WERSJA 1193 — NAPISY W LEWYM PANELU USTAWIONE NA 13PX
    ========================================================= */
 html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
 html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small,
 .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
 .auth623-side-live.auth624-side-live .auth623-side-card small,
 .auth623-side-card small{
-  font-size:14px!important;
+  font-size:13px!important;
   line-height:1.18!important;
   font-weight:750!important;
   letter-spacing:-0.015em!important;
