@@ -1,0 +1,5 @@
+WERSJA 1202
+- Poprawiono gwiazdki w panelu opinii.
+- Gwiazdki nieaktywne / 0 = białe.
+- Gwiazdki aktywne / wybrana ocena / max = zielone.
+- Reszta bez zmian względem wersji 1201.
