@@ -49326,3 +49326,212 @@ html body .auth609-screen .reviews512-fab i{
   }
 }
 
+
+
+/* =========================================================
+   WERSJA 1201 — LAPTOP 15" 1920x1080 + WINDOWS SKALOWANIE 125%
+   Jeżeli Windows ma skalowanie 125%, przeglądarka często pokazuje
+   viewport około 1536x864 zamiast pełnych 1920x1080.
+   Dlatego 1200 mogło nie zadziałać u kolegi.
+   Ta wersja dodaje osobny mocny wariant dla 1360–1699px szerokości.
+   ========================================================= */
+
+@media (min-width: 1360px) and (max-width: 1699px) and (min-height: 740px) and (max-height: 950px){
+  html,
+  body,
+  #root{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    overflow:hidden!important;
+  }
+
+  html body .auth609-screen{
+    width:100vw!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    overflow:auto!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    padding:0!important;
+  }
+
+  /* Dla laptopa 15" z Windows 125%: większy niż matematyczne dopasowanie.
+     Może pojawić się lekki scroll, ale tekst będzie realnie czytelniejszy. */
+  html body .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    transform:scale(.82)!important;
+    transform-origin:top left!important;
+    margin-left:0!important;
+    margin-top:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body .auth609-reference,
+  html body .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  /* Realnie większe fonty formularza — mocne wymuszenie */
+  html body .auth609-form-fixed .auth481-label{
+    font-size:20px!important;
+    line-height:1.15!important;
+    font-weight:900!important;
+  }
+
+  html body .auth609-form-fixed .auth481-input{
+    font-size:22px!important;
+    font-weight:850!important;
+  }
+
+  html body .auth609-tabs-fixed .auth481-tab{
+    font-size:22px!important;
+    font-weight:950!important;
+  }
+
+  html body .auth609-submit-fixed{
+    font-size:22px!important;
+    font-weight:950!important;
+  }
+
+  html body .auth609-subtitle-main{
+    font-size:20px!important;
+    font-weight:800!important;
+  }
+
+  html body .auth609-status-line,
+  html body .auth609-secure-note,
+  html body .auth609-remember-toggle,
+  html body .auth609-forgot-link{
+    font-size:18px!important;
+    font-weight:800!important;
+  }
+
+  /* Social — widoczne większe napisy */
+  html body .auth609-screen .auth627-social-dock{
+    left:14px!important;
+    top:96px!important;
+    width:190px!important;
+    max-width:190px!important;
+    gap:10px!important;
+    z-index:130!important;
+  }
+
+  html body .auth609-screen .auth627-social-link{
+    width:190px!important;
+    max-width:190px!important;
+    min-height:52px!important;
+    height:52px!important;
+    padding:0 15px!important;
+    gap:13px!important;
+    border-radius:16px!important;
+  }
+
+  html body .auth609-screen .auth627-social-link b{
+    font-size:15px!important;
+    line-height:1!important;
+    font-weight:900!important;
+  }
+
+  html body .auth609-screen .auth627-social-icon svg{
+    width:22px!important;
+    height:22px!important;
+    flex-basis:22px!important;
+  }
+
+  /* LIVE — mocniej większe niż 1200 */
+  html body .auth609-screen .auth623-side-live.auth624-side-live,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    left:12px!important;
+    top:410px!important;
+    width:204px!important;
+    max-width:204px!important;
+    padding:13px 11px!important;
+    border-radius:21px!important;
+    transform:none!important;
+    z-index:125!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card{
+    min-height:72px!important;
+    padding:11px 11px!important;
+    border-radius:17px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card b{
+    font-size:25px!important;
+    line-height:1!important;
+    margin-bottom:3px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small{
+    font-size:14px!important;
+    line-height:1.15!important;
+    font-weight:800!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-icon{
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon svg,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-icon svg{
+    width:19px!important;
+    height:19px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head{
+    justify-content:flex-end!important;
+    padding:0 4px 9px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head em,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head em{
+    margin-left:auto!important;
+    margin-right:0!important;
+    font-size:11px!important;
+    height:26px!important;
+    padding:0 11px!important;
+  }
+
+  /* Opinie i support — większe przyciski i panele */
+  html body .auth609-screen .reviews512{
+    right:92px!important;
+    bottom:18px!important;
+    z-index:140!important;
+  }
+
+  html body .auth609-screen .support510{
+    right:18px!important;
+    bottom:18px!important;
+    z-index:145!important;
+  }
+
+  html body .auth609-screen .reviews512-fab,
+  html body .auth609-screen .support510-fab{
+    transform:scale(1)!important;
+    transform-origin:bottom right!important;
+  }
+}
+
+/* Dokładny przypadek typowy dla 1920x1080 przy Windows 125% */
+@media (width: 1536px) and (height: 864px){
+  html body .auth609-artboard{
+    transform:scale(.82)!important;
+    margin-left:0!important;
+  }
+}
+
