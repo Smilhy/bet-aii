@@ -1,5 +1,0 @@
-WERSJA 1 - FIX PO LOGOWANIU
-
-Naprawiono błąd aplikacji po zalogowaniu: "t is not defined".
-Zmiana jest minimalna: usunięto przypadkowo wklejony panel statystyk LIVE z komponentu Sidebar, który używał zmiennych dostępnych tylko na ekranie logowania.
-Ekran logowania i pozostałe pliki paczki zostały zachowane.
