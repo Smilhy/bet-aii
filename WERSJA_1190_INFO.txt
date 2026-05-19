@@ -1,0 +1,6 @@
+WERSJA 1190
+Zmiany:
+- Powiększono napisy w lewym panelu: Zarejestrowanych użytkowników, Skuteczność AI, Aktywni teraz, Typów dzisiaj.
+- Ustawiono je na 13px, czyli jak opis 'Załóż konto w mniej niż 30 sekund.'
+- Zmieniono link Facebook na: https://www.facebook.com/profile.php?id=61589851062672
+Logika strony bez zmian.

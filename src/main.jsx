@@ -15698,7 +15698,7 @@ function AuthView({ onAuth }) {
     { key: 'discord', label: 'Discord', href: 'https://discord.gg/hskNFGcz', icon: <IconDiscord />, className: 'is-discord' },
     { key: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/betaiofficial/', icon: <IconInstagram />, className: 'is-instagram' },
     { key: 'x', label: 'X', href: 'https://x.com/BetAIofficial', icon: <IconX />, className: 'is-x' },
-    { key: 'facebook', label: 'Facebook', href: 'https://facebook.com/', icon: <IconFacebook />, className: 'is-facebook' },
+    { key: 'facebook', label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61589851062672', icon: <IconFacebook />, className: 'is-facebook' },
     { key: 'tiktok', label: 'TikTok', href: 'https://www.tiktok.com/@betaiofficial', icon: <IconTikTok />, className: 'is-tiktok' }
   ]), [])
 

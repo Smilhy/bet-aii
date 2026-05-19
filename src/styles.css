@@ -48518,3 +48518,28 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
 .auth617-feature-card strong{
   letter-spacing:-.01em!important;
 }
+
+
+/* =========================================================
+   WERSJA 1189 — UKRYCIE NAPISU AUTO-ODŚWIEŻANIE W LEWYM PANELU
+   Ukrywa tekst stopki pod statystykami live, bez ruszania logiki.
+   ========================================================= */
+.auth623-side-foot{
+  display:none!important;
+}
+
+
+
+/* =========================================================
+   WERSJA 1190 — POWIĘKSZENIE NAPISÓW W LEWYM PANELU + LINK FB
+   Napisy pod liczbami mają rozmiar jak opis w dolnych kartach benefitów.
+   ========================================================= */
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-card small{
+  font-size:13px!important;
+  line-height:1.25!important;
+  font-weight:700!important;
+  letter-spacing:-0.01em!important;
+}
+

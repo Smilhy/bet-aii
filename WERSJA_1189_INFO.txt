@@ -1,0 +1,3 @@
+WERSJA 1189
+Ukryto napis stopki w lewym panelu statystyk: Auto-odświeżanie co 30 s / ostatnia aktualizacja.
+Logika strony bez zmian.
