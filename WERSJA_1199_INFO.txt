@@ -1,0 +1,7 @@
+WERSJA 1199
+Dopasowanie pod laptop 15 cali / 1920x1080.
+- Skala głównego artboardu 2048x1152 ustawiona na 0.90625.
+- Widok mieści się w 1920x1080 bez poziomego scrolla.
+- Social dock i lewy panel live dopasowane do tej rozdzielczości.
+- LIVE badge zostaje po prawej.
+- Zachowane poprawki z 1198: opinie premium, support premium, linki social, RLS frontend support.
