@@ -14855,8 +14855,9 @@ function SupportChatWidget({ user }) {
   const [loading, setLoading] = useState(false)
   const [selectedKey, setSelectedKey] = useState('')
   const email = normalizeEmail(user?.email)
-  const adminMode = isAdminUser(user) || email === adminEmail
   const userName = user?.username || user?.user_metadata?.username || user?.user_metadata?.name || (email ? email.split('@')[0] : 'Użytkownik')
+  const adminIdentity = normalizeEmail(userName)
+  const adminMode = email === adminEmail || adminIdentity === 'smilhytv'
 
   const conversationKey = (message) => normalizeEmail(message?.user_email || message?.sender_email || '') || String(message?.user_id || message?.sender_id || '')
   const conversations = useMemo(() => {
@@ -14903,8 +14904,10 @@ function SupportChatWidget({ user }) {
         .order('created_at', { ascending: false })
         .limit(adminMode ? 120 : 80)
 
-      if (!adminMode) {
-        query = query.or(`user_id.eq.${user.id},user_email.eq.${email}`)
+      if (adminMode) {
+        query = query.eq('admin_email', adminEmail)
+      } else {
+        query = query.or(`user_id.eq.${user.id},user_email.eq.${email}`).eq('admin_email', adminEmail)
       }
 
       const { data, error } = await query
@@ -15028,7 +15031,7 @@ function SupportChatWidget({ user }) {
             {!visibleMessages.length ? (
               <div className="support510-welcome">
                 <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
-                <span>Wiadomość trafia tylko do admina: smilhytv / smilhytv@gmail.com</span>
+                <span>Wiadomość trafia wyłącznie do: smilhytv / smilhytv@gmail.com</span>
               </div>
             ) : visibleMessages.map(message => {
               const mine = normalizeEmail(message.sender_email) === email
@@ -15137,7 +15140,7 @@ function AuthSupportChatGuest() {
           <header className="support510-head">
             <div>
               <strong>Wsparcie BetAI</strong>
-              <span><i /> Live pomoc — wiadomość trafia do admina</span>
+              <span><i /> Live pomoc — wiadomość trafia tylko do smilhytv</span>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
           </header>
@@ -15145,7 +15148,7 @@ function AuthSupportChatGuest() {
           <div className="support510-body">
             <div className="support510-welcome">
               <strong>Cześć! Jak mogę Ci dzisiaj pomóc?</strong>
-              <span>Twoja wiadomość trafi tylko do: smilhytv / smilhytv@gmail.com</span>
+              <span>Twoja wiadomość trafi wyłącznie do: smilhytv / smilhytv@gmail.com</span>
             </div>
           </div>
 

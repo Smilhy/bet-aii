@@ -48617,3 +48617,154 @@ html body .auth609-screen .auth627-social-link b,
   letter-spacing:-0.01em!important;
 }
 
+
+
+/* =========================================================
+   WERSJA 1196 — SUPPORT CHAT PREMIUM DARK + ADMIN ONLY UI
+   Zmiana jasnoniebieskiego chatu na ciemny premium glass jak pola input.
+   Logika frontendu: panel admina tylko smilhytv / smilhytv@gmail.com.
+   ========================================================= */
+html body .support510-panel,
+html body .auth609-screen .support510-panel,
+html body .support510-guest .support510-panel,
+html body .auth609-screen .support510-guest .support510-panel{
+  border:1px solid rgba(40,210,230,.34)!important;
+  background:
+    radial-gradient(circle at 22% 0%,rgba(31,218,220,.14),transparent 34%),
+    radial-gradient(circle at 88% 10%,rgba(32,155,190,.10),transparent 40%),
+    linear-gradient(180deg,rgba(4,16,29,.98),rgba(1,8,18,.995))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -28px 54px rgba(0,0,0,.28),
+    0 30px 90px rgba(0,0,0,.58),
+    0 0 42px rgba(22,205,220,.14)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(132%)!important;
+  backdrop-filter:blur(22px) saturate(132%)!important;
+}
+
+html body .support510-head,
+html body .auth609-screen .support510-head{
+  min-height:96px!important;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(41,238,229,.18),transparent 38%),
+    linear-gradient(180deg,rgba(8,31,45,.98),rgba(3,17,31,.98))!important;
+  color:#eaffff!important;
+  border-bottom:1px solid rgba(47,219,229,.28)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 28px rgba(0,0,0,.22)!important;
+}
+
+html body .support510-head strong,
+html body .auth609-screen .support510-head strong{
+  color:#f4feff!important;
+  text-shadow:0 0 16px rgba(36,224,228,.16)!important;
+}
+
+html body .support510-head span,
+html body .auth609-screen .support510-head span{
+  color:#a8c9d5!important;
+}
+
+html body .support510-head i,
+html body .auth609-screen .support510-head i{
+  background:#23f3d5!important;
+  box-shadow:0 0 0 5px rgba(35,243,213,.12),0 0 18px rgba(35,243,213,.48)!important;
+}
+
+html body .support510-head button,
+html body .auth609-screen .support510-head button{
+  border:1px solid rgba(47,219,229,.28)!important;
+  background:
+    radial-gradient(circle at 25% 15%,rgba(55,234,230,.18),transparent 36%),
+    linear-gradient(180deg,rgba(8,39,55,.92),rgba(3,20,34,.98))!important;
+  color:#7cf9f0!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 10px 22px rgba(0,0,0,.20)!important;
+}
+
+html body .support510-welcome,
+html body .auth609-screen .support510-welcome,
+html body .support510-msg.mine,
+html body .auth609-screen .support510-msg.mine{
+  background:
+    radial-gradient(circle at 18% 0%,rgba(42,232,224,.16),transparent 38%),
+    linear-gradient(180deg,rgba(8,34,49,.96),rgba(3,19,33,.98))!important;
+  border:1px solid rgba(47,219,229,.24)!important;
+  color:#effdff!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 30px rgba(0,0,0,.22),
+    0 0 22px rgba(42,221,224,.10)!important;
+}
+
+html body .support510-welcome strong,
+html body .auth609-screen .support510-welcome strong{
+  color:#ffffff!important;
+}
+
+html body .support510-welcome span,
+html body .auth609-screen .support510-welcome span,
+html body .support510-msg.mine span,
+html body .auth609-screen .support510-msg.mine span{
+  color:#9dbfcb!important;
+}
+
+html body .support510-guest-fields input,
+html body .auth609-screen .support510-guest-fields input,
+html body .support510-compose,
+html body .auth609-screen .support510-compose{
+  border-color:rgba(47,219,229,.30)!important;
+  background:
+    radial-gradient(circle at 20% 8%,rgba(34,218,220,.10),transparent 34%),
+    linear-gradient(180deg,rgba(4,17,31,.94),rgba(2,10,20,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 12px 28px rgba(0,0,0,.28),
+    0 0 18px rgba(34,218,220,.08)!important;
+}
+
+html body .support510-guest-fields input::placeholder,
+html body .auth609-screen .support510-guest-fields input::placeholder,
+html body .support510-compose textarea::placeholder,
+html body .auth609-screen .support510-compose textarea::placeholder{
+  color:#87aabb!important;
+}
+
+html body .support510-compose button,
+html body .auth609-screen .support510-compose button{
+  border:1px solid rgba(58,236,226,.36)!important;
+  background:
+    radial-gradient(circle at 28% 12%,rgba(255,255,255,.18),transparent 34%),
+    linear-gradient(180deg,#2decd9,#119fb0)!important;
+  color:#03141b!important;
+  box-shadow:0 0 20px rgba(31,230,214,.22), inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+
+html body .support510-powered b,
+html body .auth609-screen .support510-powered b{
+  color:#23f3d5!important;
+  text-shadow:0 0 14px rgba(35,243,213,.38)!important;
+}
+
+
+
+/* =========================================================
+   WERSJA 1197 — PRZENIESIENIE BADGE LIVE NA LEWĄ STRONĘ
+   Badge zostaje na tej samej wysokości, tylko z prawej strony na lewą.
+   ========================================================= */
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head,
+.auth623-side-live.auth624-side-live .auth623-side-head{
+  justify-content:flex-start!important;
+  text-align:left!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head em,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head em,
+.auth623-side-live.auth624-side-live .auth623-side-head em{
+  margin-left:0!important;
+  margin-right:auto!important;
+}
+

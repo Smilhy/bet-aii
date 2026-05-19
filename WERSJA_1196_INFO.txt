@@ -1,0 +1,7 @@
+WERSJA 1196
+Zmiany:
+- Czat supportu: jasny niebieski zamieniony na ciemny premium glass/teal jak pola input.
+- Frontend: panel admina supportu tylko dla smilhytv albo smilhytv@gmail.com.
+- Query support_messages ograniczone do admin_email = smilhytv@gmail.com.
+- Komunikaty doprecyzowane: wiadomość trafia tylko do smilhytv / smilhytv@gmail.com.
+UWAGA: pełne bezpieczeństwo wymaga też RLS/polityk w Supabase po stronie bazy.
