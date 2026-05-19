@@ -1,0 +1,15 @@
+Ta paczka jest przygotowana jako statyczny deploy.
+
+Wazne:
+1. W Netlify ustaw Build command na puste albo na:
+   echo Static deploy - no npm install
+2. Publish directory ustaw na:
+   .
+3. Nie ustawiaj: npm install && npm run build
+4. W paczce celowo nie ma package.json, package-lock.json, node_modules ani .npmrc.
+5. Foldery public, src, supabase i netlify zostaly zachowane.
+
+Jesli w logu dalej widzisz:
+npm install && npm run build
+To znaczy, ze Netlify ma stara komende ustawiona w panelu strony:
+Site configuration -> Build & deploy -> Build settings -> Edit settings.
