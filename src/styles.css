@@ -49121,3 +49121,208 @@ html body .auth609-screen .reviews512-fab i{
   }
 }
 
+
+
+/* =========================================================
+   WERSJA 1200 — LAPTOP 15" 1920x1080 CZYTELNY / WIĘKSZE UI
+   Kolega zgłosił, że na 15" 1920x1080 tekst jest za mały.
+   Ten wariant NIE ściska już całej strony tak mocno jak 1199.
+   Priorytet: czytelność, większy obraz i większe napisy.
+   ========================================================= */
+
+@media (min-width: 1700px) and (max-width: 1935px) and (min-height: 900px) and (max-height: 1100px){
+  html,
+  body,
+  #root{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    overflow:hidden!important;
+  }
+
+  html body .auth609-screen{
+    width:100vw!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    overflow:auto!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    padding:0!important;
+  }
+
+  /* Większy podgląd niż 1199:
+     1199 było 0.90625 — było za małe.
+     1200 daje 0.965, czyli ok. +6.5% większe UI.
+  */
+  html body .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    transform:scale(.965)!important;
+    transform-origin:top left!important;
+    margin-left:0!important;
+    margin-top:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body .auth609-reference,
+  html body .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  /* Lewy pasek social większy i czytelniejszy */
+  html body .auth609-screen .auth627-social-dock{
+    left:18px!important;
+    top:120px!important;
+    width:176px!important;
+    max-width:176px!important;
+    gap:9px!important;
+    z-index:130!important;
+  }
+
+  html body .auth609-screen .auth627-social-link{
+    width:176px!important;
+    max-width:176px!important;
+    min-height:48px!important;
+    height:48px!important;
+    padding:0 14px!important;
+    gap:12px!important;
+    border-radius:15px!important;
+  }
+
+  html body .auth609-screen .auth627-social-link b{
+    font-size:13.5px!important;
+    line-height:1!important;
+    font-weight:850!important;
+  }
+
+  html body .auth609-screen .auth627-social-icon svg{
+    width:20px!important;
+    height:20px!important;
+    flex-basis:20px!important;
+  }
+
+  /* Panel statystyk większy / czytelniejszy */
+  html body .auth609-screen .auth623-side-live.auth624-side-live,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    left:12px!important;
+    top:455px!important;
+    width:190px!important;
+    max-width:190px!important;
+    padding:12px 10px!important;
+    border-radius:20px!important;
+    transform:none!important;
+    z-index:125!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head{
+    justify-content:flex-end!important;
+    padding:0 4px 8px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head em,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head em{
+    margin-left:auto!important;
+    margin-right:0!important;
+    font-size:10.5px!important;
+    height:25px!important;
+    padding:0 10px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-list,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-list{
+    gap:9px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card{
+    min-height:66px!important;
+    padding:10px 10px!important;
+    border-radius:16px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card b{
+    font-size:22px!important;
+    line-height:1!important;
+    margin-bottom:2px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small{
+    font-size:12.5px!important;
+    line-height:1.14!important;
+    font-weight:760!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-icon{
+    width:30px!important;
+    height:30px!important;
+    flex:0 0 30px!important;
+  }
+
+  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-icon svg,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-icon svg{
+    width:17px!important;
+    height:17px!important;
+  }
+
+  /* Formularz logowania też delikatnie czytelniejszy */
+  html body .auth609-form-fixed .auth481-label{
+    font-size:17px!important;
+  }
+
+  html body .auth609-form-fixed .auth481-input{
+    font-size:19px!important;
+  }
+
+  html body .auth609-submit-fixed,
+  html body .auth609-tabs-fixed .auth481-tab{
+    font-size:19px!important;
+  }
+
+  html body .auth609-subtitle-main,
+  html body .auth609-secure-note,
+  html body .auth609-status-line{
+    font-size:16.5px!important;
+  }
+
+  /* Czaty/opinie zostają dostępne, ale nie zasłaniają za dużo */
+  html body .auth609-screen .reviews512{
+    right:88px!important;
+    bottom:16px!important;
+    z-index:140!important;
+  }
+
+  html body .auth609-screen .support510{
+    right:18px!important;
+    bottom:16px!important;
+    z-index:145!important;
+  }
+
+  html body .auth609-screen .reviews512-fab,
+  html body .auth609-screen .support510-fab{
+    transform:scale(.95)!important;
+    transform-origin:bottom right!important;
+  }
+
+  html body .auth609-screen .reviews512-panel,
+  html body .auth609-screen .support510-panel{
+    max-height:calc(100vh - 44px)!important;
+  }
+}
+
+/* Dokładnie 1920x1080 — wymuszenie wersji czytelnej */
+@media (width: 1920px) and (height: 1080px){
+  html body .auth609-artboard{
+    transform:scale(.965)!important;
+    margin-left:0!important;
+  }
+}
+
