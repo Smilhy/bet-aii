@@ -1,0 +1,18 @@
+BET+AI WERSJA 1 - FULL ZRODLOWE BEZ NPM
+
+Ta paczka ma pelne foldery z projektu:
+- netlify
+- public
+- src
+- supabase
+
+Ale w ROOT nie ma package.json / netlify.toml / .npmrc, dlatego Netlify nie powinien startowac kroku:
+Installing npm packages
+
+Root paczki zawiera gotowy build statyczny z folderu dist.
+Wgrywaj jako: Netlify -> Deploy manually / Drag and drop.
+
+Nie przenos plikow z folderu _BACKUP_BUILD_FILES_NIE_WRZUCAC_DO_ROOT do glownego folderu, bo wtedy Netlify znowu wlaczy npm install.
+
+Naprawa w tej wersji:
+- usuniety blad po zalogowaniu: t is not defined
