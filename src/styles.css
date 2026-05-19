@@ -48768,3 +48768,170 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
   margin-right:auto!important;
 }
 
+
+/* =========================================================
+   WERSJA 1198 — LIVE BADGE Z POWROTEM NA PRAWO + OPINIE PREMIUM
+   ========================================================= */
+
+/* LIVE badge z powrotem po prawej stronie */
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head,
+.auth623-side-live.auth624-side-live .auth623-side-head{
+  justify-content:flex-end!important;
+  text-align:right!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-head em,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-head em,
+.auth623-side-live.auth624-side-live .auth623-side-head em{
+  margin-left:auto!important;
+  margin-right:0!important;
+}
+
+/* Opinie — premium dark teal jak support chat */
+html body .reviews512-panel,
+html body .auth609-screen .reviews512-panel{
+  border:1px solid rgba(40,210,230,.34)!important;
+  background:
+    radial-gradient(circle at 22% 0%,rgba(31,218,220,.14),transparent 34%),
+    radial-gradient(circle at 88% 10%,rgba(32,155,190,.10),transparent 40%),
+    linear-gradient(180deg,rgba(4,16,29,.98),rgba(1,8,18,.995))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -28px 54px rgba(0,0,0,.28),
+    0 30px 90px rgba(0,0,0,.58),
+    0 0 42px rgba(22,205,220,.14)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(132%)!important;
+  backdrop-filter:blur(22px) saturate(132%)!important;
+}
+
+html body .reviews512-head,
+html body .auth609-screen .reviews512-head{
+  background:
+    radial-gradient(circle at 18% 0%,rgba(41,238,229,.18),transparent 38%),
+    linear-gradient(180deg,rgba(8,31,45,.98),rgba(3,17,31,.98))!important;
+  color:#eaffff!important;
+  border-bottom:1px solid rgba(47,219,229,.28)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 28px rgba(0,0,0,.22)!important;
+}
+html body .reviews512-head strong,
+html body .auth609-screen .reviews512-head strong{
+  color:#f4feff!important;
+  text-shadow:0 0 16px rgba(36,224,228,.16)!important;
+}
+html body .reviews512-head span,
+html body .auth609-screen .reviews512-head span{
+  color:#a8c9d5!important;
+}
+html body .reviews512-head span i,
+html body .auth609-screen .reviews512-head span i{
+  background:#23f3d5!important;
+  box-shadow:0 0 0 5px rgba(35,243,213,.12),0 0 18px rgba(35,243,213,.48)!important;
+}
+html body .reviews512-head button,
+html body .auth609-screen .reviews512-head button{
+  border:1px solid rgba(47,219,229,.28)!important;
+  background:
+    radial-gradient(circle at 25% 15%,rgba(55,234,230,.18),transparent 36%),
+    linear-gradient(180deg,rgba(8,39,55,.92),rgba(3,20,34,.98))!important;
+  color:#7cf9f0!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 10px 22px rgba(0,0,0,.20)!important;
+}
+
+html body .reviews512-summary > div,
+html body .auth609-screen .reviews512-summary > div,
+html body .reviews512-guest-fields input,
+html body .auth609-screen .reviews512-guest-fields input,
+html body .reviews512-form textarea,
+html body .auth609-screen .reviews512-form textarea,
+html body .reviews512-item,
+html body .auth609-screen .reviews512-item,
+html body .reviews512-empty,
+html body .auth609-screen .reviews512-empty{
+  border-color:rgba(47,219,229,.30)!important;
+  background:
+    radial-gradient(circle at 20% 8%,rgba(34,218,220,.10),transparent 34%),
+    linear-gradient(180deg,rgba(4,17,31,.94),rgba(2,10,20,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 12px 28px rgba(0,0,0,.28),
+    0 0 18px rgba(34,218,220,.08)!important;
+}
+
+html body .reviews512-score b,
+html body .auth609-screen .reviews512-score b,
+html body .reviews512-summary > div > strong,
+html body .auth609-screen .reviews512-summary > div > strong,
+html body .reviews512-item strong,
+html body .auth609-screen .reviews512-item strong{
+  color:#f5feff!important;
+}
+html body .reviews512-summary > div > span,
+html body .auth609-screen .reviews512-summary > div > span,
+html body .reviews512-item p,
+html body .auth609-screen .reviews512-item p,
+html body .reviews512-item > span,
+html body .auth609-screen .reviews512-item > span,
+html body .reviews512-empty,
+html body .auth609-screen .reviews512-empty,
+html body .reviews512-powered,
+html body .auth609-screen .reviews512-powered{
+  color:#9dbfcb!important;
+}
+html body .reviews512-guest-fields input::placeholder,
+html body .auth609-screen .reviews512-guest-fields input::placeholder,
+html body .reviews512-form textarea::placeholder,
+html body .auth609-screen .reviews512-form textarea::placeholder{
+  color:#87aabb!important;
+}
+
+html body .reviews512-stars button,
+html body .auth609-screen .reviews512-stars button,
+html body .reviews512-fab-stars,
+html body .auth609-screen .reviews512-fab-stars{
+  color:#67dcff!important;
+  text-shadow:0 0 12px rgba(69,229,244,.28)!important;
+}
+html body .reviews512-stars button.active,
+html body .auth609-screen .reviews512-stars button.active{
+  color:#25f3da!important;
+  text-shadow:0 0 16px rgba(37,243,218,.48)!important;
+}
+
+html body .reviews512-form > button,
+html body .auth609-screen .reviews512-form > button{
+  border:1px solid rgba(58,236,226,.36)!important;
+  background:
+    radial-gradient(circle at 28% 12%,rgba(255,255,255,.18),transparent 34%),
+    linear-gradient(180deg,#2decd9,#119fb0)!important;
+  color:#03141b!important;
+  box-shadow:0 0 20px rgba(31,230,214,.22), inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+html body .reviews512-form > button:hover:not(:disabled),
+html body .auth609-screen .reviews512-form > button:hover:not(:disabled){
+  filter:brightness(1.04)!important;
+}
+
+html body .reviews512-powered b,
+html body .auth609-screen .reviews512-powered b{
+  color:#23f3d5!important;
+  text-shadow:0 0 14px rgba(35,243,213,.38)!important;
+}
+
+html body .reviews512-fab,
+html body .auth609-screen .reviews512-fab{
+  border-color:rgba(47,219,229,.32)!important;
+  background:
+    radial-gradient(circle at 20% 8%,rgba(34,218,220,.12),transparent 34%),
+    linear-gradient(180deg,rgba(4,17,31,.94),rgba(2,10,20,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 34px rgba(0,0,0,.34),
+    0 0 22px rgba(34,218,220,.12)!important;
+}
+html body .reviews512-fab i,
+html body .auth609-screen .reviews512-fab i{
+  background:#23f3d5!important;
+  box-shadow:0 0 0 0 rgba(35,243,213,.42)!important;
+}
