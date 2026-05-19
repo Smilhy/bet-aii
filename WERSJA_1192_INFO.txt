@@ -1,0 +1,3 @@
+WERSJA 1192
+Zmniejszono napisy w lewym panelu statystyk do 14px.
+Link Facebook bez zmian.

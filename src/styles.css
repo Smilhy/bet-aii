@@ -48573,3 +48573,33 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
   margin-bottom:3px!important;
 }
 
+
+
+/* =========================================================
+   WERSJA 1192 — BALANS NAPISÓW W LEWYM PANELU
+   Cofnięcie z 16px na 14px, żeby tekst mieścił się ładnie w kartach.
+   ========================================================= */
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-live.auth624-side-live .auth623-side-card small,
+.auth623-side-card small{
+  font-size:14px!important;
+  line-height:1.18!important;
+  font-weight:750!important;
+  letter-spacing:-0.015em!important;
+  color:#c8dbe7!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card{
+  min-height:68px!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b,
+html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card b{
+  margin-bottom:2px!important;
+}
+
