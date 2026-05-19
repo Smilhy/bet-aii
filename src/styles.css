@@ -48482,3 +48482,39 @@ html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624
     font-size:9px!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1186 — AUTH PREMIUM CLARITY
+   Delikatne wyostrzenie i poprawa czytelności podglądu po prawej.
+   Bez zmian logiki, tylko warstwa wizualna.
+   ========================================================= */
+.auth609-reference{
+  image-rendering:auto!important;
+  -webkit-user-drag:none!important;
+  backface-visibility:hidden!important;
+  transform:translateZ(0)!important;
+  filter:contrast(1.07) saturate(1.08) brightness(1.025)!important;
+}
+.auth609-artboard{
+  filter:drop-shadow(0 26px 70px rgba(0,0,0,.50))!important;
+}
+.auth609-artboard::before{
+  border:1px solid rgba(94,232,255,.34)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(9,38,65,.36),
+    inset 0 0 46px rgba(64,216,255,.075),
+    0 0 0 1px rgba(0,0,0,.30),
+    0 0 40px rgba(64,216,255,.15)!important;
+}
+.auth609-artboard::after{
+  opacity:.72!important;
+}
+.auth617-feature-card{
+  background:linear-gradient(180deg, rgba(6,20,33,.94), rgba(3,12,22,.98))!important;
+  border:1px solid rgba(53,211,245,.14)!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.auth617-feature-card strong{
+  letter-spacing:-.01em!important;
+}
