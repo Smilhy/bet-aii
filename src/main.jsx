@@ -1737,28 +1737,6 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
             <LockedSidebarMenuButton key={item.id} item={item} view={view} setView={setView} />
           ))}
         </nav>
-      <aside className="auth623-side-live auth624-side-live auth1179-left-stats-outside" aria-label={t.liveBadge}>
-        <div className="auth623-side-head auth624-side-head">
-          <em><i />{t.liveBadge}</em>
-        </div>
-
-        <div className="auth623-side-list">
-          {liveStatsCards.map(card => (
-            <div className={`auth623-side-card ${card.accentClass}`} key={card.key}>
-              <span className="auth623-side-icon">{card.icon}</span>
-              <div>
-                <b>{liveStats.loading ? '...' : card.value}</b>
-                <small>{card.label}</small>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="auth623-side-foot">
-          <span className="auth623-pulse" />
-          <span>{t.liveRefresh} • {t.lastUpdate} {liveStats.updatedAt ? new Date(liveStats.updatedAt).toLocaleTimeString(authLang === 'pl' ? 'pl-PL' : authLang) : '--:--'}</span>
-        </div>
-      </aside>
       </aside>
 
       <div className="premium-box sidebar-premium-detached">
