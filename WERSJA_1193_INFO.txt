@@ -1,3 +1,0 @@
-WERSJA 1193
-Napisy w lewym panelu ustawione na 13px.
-Link Facebook bez zmian.
