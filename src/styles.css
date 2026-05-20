@@ -50613,3 +50613,120 @@ html body .auth609-screen .auth609-forgot-link{
   }
 }
 
+
+
+/* =========================================================
+   WERSJA 1211 — 1680x1050 CLEAN MODE
+   Wniosek po screenie: na 1680x1050 social/LIVE po lewej niszczą login,
+   nachodzą na logo i robią bałagan. Dla tej rozdzielczości ukrywamy je,
+   tak jak na telefonie/tablecie. 27" 2K zostaje bez zmian.
+   ========================================================= */
+
+@media (min-width: 1600px) and (max-width: 1849px){
+  html,
+  body,
+  #root{
+    width:100%!important;
+    height:100%!important;
+    overflow:hidden!important;
+  }
+
+  html body .auth609-screen{
+    width:100vw!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    overflow:hidden!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    padding:0!important;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(35,243,213,.08), transparent 32%),
+      radial-gradient(circle at 80% 50%, rgba(38,180,255,.06), transparent 34%),
+      linear-gradient(180deg,#020914 0%,#010713 100%)!important;
+  }
+
+  /* Bez ucinania z lewej i bez agresywnego cropu.
+     Układ ma być czysty, stabilny i nie nachodzić na login. */
+  html body .auth609-screen .auth609-artboard,
+  html body .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    aspect-ratio:auto!important;
+    transform:scale(.91)!important;
+    transform-origin:top left!important;
+    margin-left:0!important;
+    margin-top:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body .auth609-screen .auth609-reference,
+  html body .auth609-screen .auth609-overlay,
+  html body .auth609-reference,
+  html body .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  /* Najważniejsza zmiana: na 1680x1050 usuwamy boczny social i LIVE,
+     bo na tej szerokości wchodzą na logo/login. */
+  html body .auth609-screen .auth627-social-dock,
+  html body .auth609-screen .auth623-side-live.auth624-side-live,
+  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  /* Login ma być czysty i niezakryty */
+  html body .auth609-screen .auth609-left-panel{
+    pointer-events:auto!important;
+    z-index:90!important;
+  }
+
+  html body .auth609-screen .auth609-panel-shell-fixed{
+    overflow:hidden!important;
+  }
+
+  /* Zachowujemy większą czytelność formularza */
+  html body .auth609-screen .auth609-form-fixed .auth481-label{
+    font-size:15px!important;
+    font-weight:900!important;
+  }
+
+  html body .auth609-screen .auth609-form-fixed .auth481-input{
+    font-size:16px!important;
+    font-weight:800!important;
+  }
+
+  html body .auth609-screen .auth609-tabs-fixed .auth481-tab,
+  html body .auth609-screen .auth609-submit-fixed{
+    font-size:17px!important;
+    font-weight:950!important;
+  }
+
+  /* Opinie/czat zostają w prawym dolnym rogu ekranu */
+  html body .auth609-screen .reviews512{
+    position:fixed!important;
+    right:86px!important;
+    bottom:14px!important;
+    z-index:920!important;
+  }
+
+  html body .auth609-screen .support510{
+    position:fixed!important;
+    right:14px!important;
+    bottom:14px!important;
+    z-index:925!important;
+  }
+
+  html body .auth609-screen .reviews512-fab,
+  html body .auth609-screen .support510-fab{
+    transform:scale(.9)!important;
+    transform-origin:bottom right!important;
+  }
+}
+
