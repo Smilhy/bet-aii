@@ -1,7 +1,0 @@
-WERSJA 1215 — 1680x1050 ZOOM 67 + FONT PLUS
-Baza: 1205.
-- 27 cali / 2K bez zmian.
-- Tylko zakres 1600-1849px.
-- Login: pełny układ jak przy zoomie 67%, ale lekko większy przez scale .82.
-- Dashboard: globalny zoom .72 tylko dla tej szerokości.
-- Fonty lekko podbite tylko na tej rozdzielczości.
