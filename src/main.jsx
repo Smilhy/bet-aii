@@ -35,47 +35,40 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
 /* =========================================================
-   WERSJA 1239 — LAPTOP DETECT FIX
-   Drugi bezpieczny watcher: jeżeli viewport/screen wygląda jak laptop FHD,
-   wymusza auto 90% także po logowaniu i po zmianie widoku.
+   WERSJA 1240 — LAPTOP 15.6 / 1920x1080 BROWSER ZOOM 90 FINAL
+   Zasada: użytkownik ma 100% w przeglądarce, a strona na laptopie wygląda jak 90%.
    ========================================================= */
 if (typeof window !== 'undefined') {
-  const BETAI_LAPTOP90_FORCE_1239 = () => {
+  const BETAI_LAPTOP_BROWSER90_FINAL_1240 = () => {
     const html = document.documentElement
-    const body = document.body
     const vw = window.innerWidth || html.clientWidth || 0
     const sw = window.screen?.width || 0
     const sh = window.screen?.height || 0
 
-    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599
-    const isRealFhdScreen = ((sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) || (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100))
+    // Tylko laptop/FHD oraz laptop z Windows scaling.
+    // Nie dotyka gotowych: 1680x1050 ani 2K.
+    const viewportFhd = vw >= 1850 && vw <= 2199
+    const viewportFhd125 = vw >= 1450 && vw <= 1599
+    const screenFhd = (
+      (sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) ||
+      (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100)
+    )
 
-    const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
-      && !(vw >= 2200)
-      && !(vw >= 1600 && vw <= 1849)
+    const isProtected1680 = vw >= 1600 && vw <= 1849
+    const isProtected2k = vw >= 2200
 
-    if (shouldApply) {
-      html.classList.add('betai-laptop-browser90-v1233')
-      html.classList.add('betai-laptop90-force-v1239')
-      if (body) {
-        body.style.setProperty('zoom', '90%', 'important')
-        body.style.setProperty('width', '111.111111vw', 'important')
-        body.style.setProperty('min-width', '111.111111vw', 'important')
-        body.style.setProperty('height', '111.111111vh', 'important')
-        body.style.setProperty('min-height', '111.111111vh', 'important')
-        body.style.setProperty('overflow', 'hidden', 'important')
-      }
+    if ((viewportFhd || viewportFhd125 || screenFhd) && !isProtected1680 && !isProtected2k) {
+      html.classList.add('betai-laptop-browser90-final-v1240')
     } else {
-      html.classList.remove('betai-laptop90-force-v1239')
+      html.classList.remove('betai-laptop-browser90-final-v1240')
     }
   }
 
-  BETAI_LAPTOP90_FORCE_1239()
-  window.addEventListener('resize', BETAI_LAPTOP90_FORCE_1239, { passive: true })
-  window.addEventListener('orientationchange', BETAI_LAPTOP90_FORCE_1239, { passive: true })
-  window.addEventListener('load', BETAI_LAPTOP90_FORCE_1239, { passive: true })
-  setInterval(BETAI_LAPTOP90_FORCE_1239, 1200)
+  BETAI_LAPTOP_BROWSER90_FINAL_1240()
+  window.addEventListener('resize', BETAI_LAPTOP_BROWSER90_FINAL_1240, { passive: true })
+  window.addEventListener('orientationchange', BETAI_LAPTOP_BROWSER90_FINAL_1240, { passive: true })
+  window.addEventListener('load', BETAI_LAPTOP_BROWSER90_FINAL_1240, { passive: true })
+  setInterval(BETAI_LAPTOP_BROWSER90_FINAL_1240, 1000)
 }
 
 
@@ -101,7 +94,7 @@ if (typeof window !== 'undefined') {
     // - 2K: gotowe.
     const isLaptopFhdViewport = vw >= 1850 && vw <= 2199
     const isLaptop125Viewport = vw >= 1450 && vw <= 1599
-    const isRealFhdScreen = ((sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) || (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100))
+    const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
       && !(vw >= 2200)
@@ -111,11 +104,11 @@ if (typeof window !== 'undefined') {
       html.classList.add('betai-laptop-browser90-v1233')
       html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
       if (body) {
-        body.style.setProperty('zoom', '90%', 'important')
-        body.style.setProperty('width', '111.111111vw', 'important')
-        body.style.setProperty('min-width', '111.111111vw', 'important')
-        body.style.setProperty('height', '111.111111vh', 'important')
-        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('zoom', '100%', 'important')
+        body.style.setProperty('width', '100vw', 'important')
+        body.style.setProperty('min-width', '100vw', 'important')
+        body.style.setProperty('height', '100vh', 'important')
+        body.style.setProperty('min-height', '100vh', 'important')
         body.style.setProperty('overflow', 'hidden', 'important')
       }
     } else {

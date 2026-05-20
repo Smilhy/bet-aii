@@ -1,9 +1,0 @@
-WERSJA 1236 — LAPTOP 15.6 / 1920x1080 FONT +2PX SAFE
-Baza: 1233.
-- Auto 90% dla laptopa z 1233 zostaje.
-- Fonty podbite o +2px tylko pod klasą html.betai-laptop-browser90-v1233.
-- To jest 1235 + jeszcze 1 rozmiar czcionki.
-- Nie ma uniwersalnego #root * calc, żeby nie rozlewać zmian na inne ekrany.
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
-- 20 cali / 1680x1050 bez zmian.
