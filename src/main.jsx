@@ -33,6 +33,66 @@ import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
+
+/* =========================================================
+   WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
+   To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
+   27/32 cale 2K i 1680x1050 są poza zakresem.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_LAPTOP_BROWSER90_1233 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const vw = window.innerWidth || html.clientWidth || 0
+    const vh = window.innerHeight || html.clientHeight || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+
+    // 15.6 laptop FHD może być widziany jako:
+    // - viewport 1920x1080 przy 100% Windows,
+    // - viewport około 1536x864 przy Windows 125%.
+    // NIE dotykamy:
+    // - 1680x1050: gotowe,
+    // - 2K: gotowe.
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 900 && vh <= 1200
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930
+    const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
+
+    const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
+      && !(vw >= 2200)
+      && !(vw >= 1600 && vw <= 1849)
+
+    if (shouldApply) {
+      html.classList.add('betai-laptop-browser90-v1233')
+      html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
+      if (body) {
+        body.style.setProperty('zoom', '90%', 'important')
+        body.style.setProperty('width', '111.111111vw', 'important')
+        body.style.setProperty('min-width', '111.111111vw', 'important')
+        body.style.setProperty('height', '111.111111vh', 'important')
+        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('overflow', 'hidden', 'important')
+      }
+    } else {
+      html.classList.remove('betai-laptop-browser90-v1233')
+      html.style.removeProperty('--betai-laptop-zoom-1233')
+      if (body) {
+        body.style.removeProperty('zoom')
+        body.style.removeProperty('width')
+        body.style.removeProperty('min-width')
+        body.style.removeProperty('height')
+        body.style.removeProperty('min-height')
+        body.style.removeProperty('overflow')
+      }
+    }
+  }
+
+  BETAI_LAPTOP_BROWSER90_1233()
+  window.addEventListener('resize', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
+  window.addEventListener('orientationchange', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
+  window.addEventListener('load', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];

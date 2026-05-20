@@ -1,9 +1,0 @@
-WERSJA 1232 — LAPTOP 15.6 / 1920x1080 AUTO 90% + FONT +2PX
-Baza: 1231.
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
-- 20 cali / 1680x1050 bez zmian.
-- Laptop 15.6 / 1920x1080: zmieniono auto zoom z 75% na 90%.
-- Font +2px z wersji 1231 zostaje.
-- Użytkownik ma mieć zoom przeglądarki 100%.
-- Działa dla zakresów 1850-2199px oraz 1450-1599px.
