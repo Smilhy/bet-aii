@@ -1,0 +1,7 @@
+WERSJA 1218 — 1680x1050 TRUE AUTO 67 ROOT
+Baza: 1205.
+- 27 cali / 2K bez zmian.
+- Działa tylko dla szerokości 1600-1849px.
+- Użytkownik ma mieć zoom przeglądarki 100%.
+- #root dostaje wirtualny rozmiar 149.253731vw/vh i transform scale(.67), czyli strona sama działa jak ręczny zoom 67%.
+- Obejmuje login i cały dashboard po zalogowaniu.

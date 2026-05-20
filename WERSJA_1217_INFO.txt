@@ -1,7 +1,0 @@
-WERSJA 1217 — 1680x1050 AUTO 67% EXACT
-Baza: 1205.
-- 27 cali / 2K bez zmian.
-- Działa tylko dla szerokości 1600-1849px.
-- Użytkownik ma mieć zoom przeglądarki 100%.
-- Login i dashboard automatycznie emulują efekt ręcznego zoomu 67%.
-- Nie dodano powiększania fontów; najpierw odtwarzamy dokładnie działający efekt 67%.
