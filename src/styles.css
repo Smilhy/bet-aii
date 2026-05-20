@@ -50037,3 +50037,30 @@ html body .auth609-screen .auth609-forgot-link{
   }
 }
 
+
+
+/* =========================================================
+   WERSJA 1223 — 1680x1050 DASHBOARD 110 / LOGIN 67
+   BAZA: 1222.
+   USTALENIE PO TEŚCIE:
+   - Login na 1680 zostaje w trybie 67%.
+   - Dashboard po zalogowaniu wygląda najlepiej jak przy dodatkowym zoomie 110%.
+   - 27 cali / 2K bez zmian.
+   ========================================================= */
+
+@media (min-width: 1600px) and (max-width: 1849px){
+  /*
+    Root dalej robi bazowe 67%.
+    Dla zalogowanego dashboardu dokładamy +10% tylko na .app-shell.
+    Efekt wizualny: 0.67 * 1.10 = 0.737, czyli dokładnie to co widziałeś przy zoomie 110%.
+  */
+  html body #root .app-shell{
+    width:135.685210vw!important;
+    min-width:135.685210vw!important;
+    min-height:135.685210vh!important;
+    max-width:none!important;
+    transform:scale(1.10)!important;
+    transform-origin:top left!important;
+  }
+}
+

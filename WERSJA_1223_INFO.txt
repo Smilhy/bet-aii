@@ -1,0 +1,6 @@
+WERSJA 1223 — 1680x1050 DASHBOARD 110 / LOGIN 67
+Baza: 1222.
+- 27 cali / 2K bez zmian.
+- Login na 1680 zostaje w globalnym trybie 67%.
+- Dashboard po zalogowaniu ma dodatkowe +10%, czyli efekt jak przy ręcznym zoomie 110%.
+- Działa tylko dla szerokości 1600-1849px.
