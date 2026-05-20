@@ -1,0 +1,8 @@
+WERSJA 1234 — LAPTOP 15.6 REAL 90% + FONT +1PX
+Baza: 1233.
+- Laptop 15.6 / 1920x1080 real browser 90% z 1233 zapisany jako dobry.
+- Dla tego laptopowego trybu dodano font +1px na całej stronie, wszystkich zakładkach i tekstach.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
+- Zmiana jest ograniczona klasą html.betai-laptop-browser90-v1233.
