@@ -50082,40 +50082,44 @@ html body .auth609-screen .auth609-forgot-link{
 
 
 /* =========================================================
-   WERSJA 1226 — 1680x1050 LOGIN JAK 75% / DASHBOARD ZOSTAJE
+   WERSJA 1227 — LOGIN 67 DOKŁADNIE / DASHBOARD OK
    BAZA: 1224.
    USTALENIE:
-   - Dashboard na 1680x1050 zostaje jak w 1224, bo jest OK.
-   - Login ma wyglądać tak, jak po ręcznym ustawieniu przeglądarki na 75%.
+   - 27 cali / 2K: bez zmian.
+   - Dashboard na 1680x1050: zostaje jak w 1224.
+   - Login na 1680x1050: ma wyglądać dokładnie jak po ręcznym ustawieniu
+     zoomu przeglądarki na 67%.
    - Użytkownik ma mieć zoom przeglądarki 100%.
-   - 27 cali / 2K bez zmian.
    ========================================================= */
 
 @media (min-width: 1600px) and (max-width: 1849px){
   /*
-    TYLKO LOGIN:
-    :not(:has(.app-shell)) = widok niezalogowany.
-    Dashboard ma .app-shell i korzysta dalej z reguł 1224.
+    FINALNE NADPISANIE TYLKO DLA LOGINU.
+    Nie ruszamy dashboardu, bo dashboard ma .app-shell.
+    Wcześniejsze próby psuły login, bo ruszały artboard i marginesy.
+    Teraz robimy najprościej: emulujemy browser zoom 67% na loginie,
+    bez dodatkowego scale/margin-left na artboardzie.
   */
 
   html body #root:not(:has(.app-shell)){
-    width:199.004975vw!important;
-    min-width:199.004975vw!important;
+    zoom:.67!important;
+    width:149.253731vw!important;
+    min-width:149.253731vw!important;
     max-width:none!important;
-    height:199.004975vh!important;
-    min-height:199.004975vh!important;
+    height:149.253731vh!important;
+    min-height:149.253731vh!important;
     max-height:none!important;
-    transform:scale(.5025)!important;
-    transform-origin:top left!important;
+    transform:none!important;
     overflow:hidden!important;
     background:#020914!important;
   }
 
   html body #root:not(:has(.app-shell)) .auth609-screen{
-    width:199.004975vw!important;
-    min-width:199.004975vw!important;
-    height:199.004975vh!important;
-    min-height:199.004975vh!important;
+    zoom:1!important;
+    width:149.253731vw!important;
+    min-width:149.253731vw!important;
+    height:149.253731vh!important;
+    min-height:149.253731vh!important;
     padding:0!important;
     overflow:hidden!important;
     align-items:flex-start!important;
@@ -50130,9 +50134,9 @@ html body .auth609-screen .auth609-forgot-link{
     height:1152px!important;
     min-height:1152px!important;
     aspect-ratio:auto!important;
-    transform:scale(1.18)!important;
+    transform:none!important;
     transform-origin:top left!important;
-    margin-left:170px!important;
+    margin-left:150px!important;
     margin-top:0!important;
     margin-right:0!important;
     flex:0 0 auto!important;
@@ -50191,7 +50195,7 @@ html body .auth609-screen .auth609-forgot-link{
     visibility:visible!important;
     pointer-events:auto!important;
     left:1024px!important;
-    bottom:38px!important;
+    bottom:-110px!important;
     width:1760px!important;
     transform:translateX(-50%)!important;
   }
