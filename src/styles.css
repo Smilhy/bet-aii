@@ -50040,26 +50040,41 @@ html body .auth609-screen .auth609-forgot-link{
 
 
 /* =========================================================
-   WERSJA 1223 — 1680x1050 DASHBOARD 110 / LOGIN 67
+   WERSJA 1224 — 1680x1050 DASHBOARD JAK BROWSER 110%
    BAZA: 1222.
-   USTALENIE PO TEŚCIE:
-   - Login na 1680 zostaje w trybie 67%.
-   - Dashboard po zalogowaniu wygląda najlepiej jak przy dodatkowym zoomie 110%.
+   USTALENIE:
+   - Login zostaje jak w 1222: automatyczne 67%.
+   - Dashboard po zalogowaniu ma wyglądać tak, jak gdy ręcznie ustawiasz przeglądarkę na 110%.
    - 27 cali / 2K bez zmian.
    ========================================================= */
 
 @media (min-width: 1600px) and (max-width: 1849px){
   /*
-    Root dalej robi bazowe 67%.
-    Dla zalogowanego dashboardu dokładamy +10% tylko na .app-shell.
-    Efekt wizualny: 0.67 * 1.10 = 0.737, czyli dokładnie to co widziałeś przy zoomie 110%.
+    Kiedy użytkownik jest zalogowany, w środku #root pojawia się .app-shell.
+    Wtedy nadpisujemy globalne 67% na 73.7%, bo:
+    67% * 110% = 73.7%.
+    To ma dać dokładnie efekt, który widzisz ręcznie po kliknięciu 110% w przeglądarce.
   */
-  html body #root .app-shell{
+  html body #root:has(.app-shell){
+    width:135.685210vw!important;
+    min-width:135.685210vw!important;
+    max-width:none!important;
+    height:135.685210vh!important;
+    min-height:135.685210vh!important;
+    max-height:none!important;
+    transform:scale(.737)!important;
+    transform-origin:top left!important;
+    overflow:hidden!important;
+    background:#020914!important;
+  }
+
+  html body #root:has(.app-shell) .app-shell{
     width:135.685210vw!important;
     min-width:135.685210vw!important;
     min-height:135.685210vh!important;
     max-width:none!important;
-    transform:scale(1.10)!important;
+    transform:none!important;
+    zoom:1!important;
     transform-origin:top left!important;
   }
 }
