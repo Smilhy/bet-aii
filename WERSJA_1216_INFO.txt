@@ -1,7 +1,0 @@
-WERSJA 1216 — 1680x1050 AUTO ZOOM 67 + FONT PLUS
-Baza: 1205.
-- 27 cali / 2K bez zmian.
-- Działa tylko dla szerokości 1600-1849px.
-- Użytkownik ma mieć zoom przeglądarki 100%.
-- Login i dashboard emulują efekt zoomu przeglądarki ok. 67-70% automatycznie.
-- Fonty podbite tylko dla tej rozdzielczości.

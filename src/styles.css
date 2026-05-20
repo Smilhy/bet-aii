@@ -49882,13 +49882,12 @@ html body .auth609-screen .auth609-forgot-link{
 
 
 /* =========================================================
-   WERSJA 1216 — 1680x1050 AUTO ZOOM 67 + FONT PLUS
+   WERSJA 1217 — 1680x1050 AUTO 67% EXACT
    BAZA: 1205.
-   ZASADA:
-   - 27 cali / 2K NIE RUSZAMY.
-   - Tylko zakres 1600–1849px, czyli monitor 1680x1050 / okolice 20 cali.
-   - Strona sama emuluje efekt przeglądarkowego zoomu, użytkownik ma mieć 100%.
-   - Dajemy trochę większą czytelność niż czyste 67%: auto-zoom 70% + większe fonty.
+   CEL:
+   - Użytkownik ma mieć zoom przeglądarki 100%.
+   - Strona dla 1680x1050 sama ma wyglądać tak, jak wyglądała ręcznie przy zoomie 67%.
+   - 27 cali / 2K bez zmian.
    ========================================================= */
 
 @media (min-width: 1600px) and (max-width: 1849px){
@@ -49900,14 +49899,12 @@ html body .auth609-screen .auth609-forgot-link{
     overflow:hidden!important;
   }
 
-  /* =========================
-     LOGIN — automatyczny zoom komponentu, a nie ręczny zoom przeglądarki
-     ========================= */
+  /* LOGIN — automatyczny odpowiednik zoomu 67% */
   html body .auth609-screen{
-    zoom:.70!important;
-    width:calc(100vw * 1.428571)!important;
-    height:calc(100vh * 1.428571)!important;
-    min-height:calc(100vh * 1.428571)!important;
+    zoom:.67!important;
+    width:calc(100vw / .67)!important;
+    height:calc(100vh / .67)!important;
+    min-height:calc(100vh / .67)!important;
     padding:0!important;
     overflow:hidden!important;
     align-items:flex-start!important;
@@ -49915,6 +49912,9 @@ html body .auth609-screen .auth609-forgot-link{
     background:#020914!important;
   }
 
+  /* Po ręcznym zoomie 67% viewport CSS wpadał w wariant 2K,
+     więc tutaj wymuszamy zachowanie jak dla dużego ekranu:
+     pełna makieta, bez cropu, z odsunięciem od lewej. */
   html body .auth609-screen .auth609-artboard,
   html body .auth609-artboard{
     width:2048px!important;
@@ -49923,10 +49923,11 @@ html body .auth609-screen .auth609-forgot-link{
     height:1152px!important;
     min-height:1152px!important;
     aspect-ratio:auto!important;
-    transform:scale(1.13)!important;
+    transform:scale(1.16)!important;
     transform-origin:top left!important;
-    margin-left:42px!important;
+    margin-left:150px!important;
     margin-top:0!important;
+    margin-right:0!important;
     flex:0 0 auto!important;
   }
 
@@ -49939,7 +49940,7 @@ html body .auth609-screen .auth609-forgot-link{
     max-width:none!important;
   }
 
-  /* Social/LIVE jak w dobrym widoku przy 67%, ale automatycznie */
+  /* Lewa kolumna jak przy ręcznym zoomie — widoczna, ale nie nachodzi na login */
   html body .auth609-screen .auth627-social-dock{
     display:flex!important;
     visibility:visible!important;
@@ -49963,9 +49964,9 @@ html body .auth609-screen .auth609-forgot-link{
   }
 
   html body .auth609-screen .auth627-social-link b{
-    font-size:14px!important;
+    font-size:13px!important;
     line-height:1!important;
-    font-weight:950!important;
+    font-weight:900!important;
   }
 
   html body .auth609-screen .auth623-side-live.auth624-side-live,
@@ -49979,39 +49980,6 @@ html body .auth609-screen .auth609-forgot-link{
     max-width:188px!important;
     transform:none!important;
     z-index:88!important;
-  }
-
-  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card b,
-  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card b{
-    font-size:24px!important;
-  }
-
-  html body .auth609-screen .auth623-side-live.auth624-side-live .auth623-side-card small,
-  html body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live .auth623-side-card small{
-    font-size:12px!important;
-    line-height:1.08!important;
-  }
-
-  html body .auth609-screen .auth609-subtitle-main{
-    font-size:18px!important;
-  }
-
-  html body .auth609-screen .auth609-tabs-fixed .auth481-tab,
-  html body .auth609-screen .auth609-submit-fixed{
-    font-size:20px!important;
-  }
-
-  html body .auth609-screen .auth609-form-fixed .auth481-label{
-    font-size:16px!important;
-  }
-
-  html body .auth609-screen .auth609-form-fixed .auth481-input{
-    font-size:18px!important;
-  }
-
-  html body .auth609-screen .auth609-remember-toggle,
-  html body .auth609-screen .auth609-forgot-link{
-    font-size:15px!important;
   }
 
   html body .auth609-screen .auth617-feature-strip{
@@ -50040,58 +50008,18 @@ html body .auth609-screen .auth609-forgot-link{
 
   html body .auth609-screen .reviews512-fab,
   html body .auth609-screen .support510-fab{
-    transform:scale(.96)!important;
+    transform:scale(1)!important;
     transform-origin:bottom right!important;
   }
 
-  /* =========================
-     DASHBOARD PO ZALOGOWANIU — automatyczny zoom przy 100% w przeglądarce
-     ========================= */
+  /* DASHBOARD PO ZALOGOWANIU — automatyczny odpowiednik zoomu 67% */
   html body .app-shell{
-    zoom:.70!important;
-    width:calc(100vw * 1.428571)!important;
-    min-width:calc(100vw * 1.428571)!important;
-    min-height:calc(100vh * 1.428571)!important;
+    zoom:.67!important;
+    width:calc(100vw / .67)!important;
+    min-width:calc(100vw / .67)!important;
+    min-height:calc(100vh / .67)!important;
     transform:none!important;
     transform-origin:top left!important;
-  }
-
-  /* Font plus tylko na 1680 — delikatnie większe niż czyste 67/70 */
-  html body .app-shell,
-  html body .app-shell button,
-  html body .app-shell input,
-  html body .app-shell textarea,
-  html body .app-shell select{
-    font-size:16px!important;
-  }
-
-  html body .app-shell .menu button,
-  html body .app-shell .sidebar,
-  html body .app-shell .topbar,
-  html body .app-shell .rightbar,
-  html body .app-shell .live-chat,
-  html body .app-shell .tip-card,
-  html body .app-shell .ultra-page-banner,
-  html body .app-shell .marketplace-card{
-    font-size:16px!important;
-  }
-
-  html body .app-shell small,
-  html body .app-shell .muted,
-  html body .app-shell .pill{
-    font-size:13px!important;
-  }
-
-  html body .app-shell h1{
-    font-size:36px!important;
-  }
-
-  html body .app-shell h2{
-    font-size:28px!important;
-  }
-
-  html body .app-shell h3{
-    font-size:22px!important;
   }
 }
 
