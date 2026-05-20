@@ -1,9 +1,0 @@
-WERSJA 1240 — LAPTOP 15.6 / 1920x1080 BROWSER ZOOM 90 FINAL
-Baza: paczka użytkownika 1235.
-- Chodzi o zoom w przeglądarce: 100% - 10% = 90%.
-- Użytkownik ma zostawić przeglądarkę na 100%.
-- Strona na laptopie FHD ma sama wyglądać jak przy ręcznym zoomie 90%.
-- Zastosowane globalnie na #root, czyli obejmuje login i dashboard.
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
-- 20 cali / 1680x1050 bez zmian.

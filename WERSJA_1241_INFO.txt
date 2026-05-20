@@ -1,0 +1,8 @@
+WERSJA 1241 — LAPTOP 15.6 / 1920x1080 BROWSER 90 BEZ PODWOJNEGO SCALE
+Baza: 1235.
+- Poprawka po 1240: usunieto podwojne skalowanie #root.
+- Efekt 90% jest tylko przez body zoom:90%.
+- #root, login i dashboard maja zoom:1 i odpowiedni wirtualny viewport 111.111vw/vh.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
