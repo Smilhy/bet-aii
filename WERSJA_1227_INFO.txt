@@ -1,7 +1,0 @@
-WERSJA 1227 — LOGIN 67 DOKLADNIE / DASHBOARD OK
-Baza: 1224.
-- 27 cali / 2K bez zmian.
-- Dashboard na 1680x1050 zostaje jak w 1224.
-- Login na 1680x1050 emuluje ręczny zoom przeglądarki 67%, ale użytkownik zostaje na 100%.
-- Finalne nadpisanie działa tylko dla #root bez .app-shell, więc nie rusza dashboardu.
-- Nie ma dodatkowego scale na auth609-artboard, żeby nie powstawało nachodzenie i zjadanie dołu.

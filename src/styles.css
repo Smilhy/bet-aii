@@ -50082,23 +50082,19 @@ html body .auth609-screen .auth609-forgot-link{
 
 
 /* =========================================================
-   WERSJA 1227 — LOGIN 67 DOKŁADNIE / DASHBOARD OK
+   WERSJA 1228 — FINAL 1680 LOGIN 67 GAP / DASHBOARD OK
    BAZA: 1224.
    USTALENIE:
    - 27 cali / 2K: bez zmian.
-   - Dashboard na 1680x1050: zostaje jak w 1224.
-   - Login na 1680x1050: ma wyglądać dokładnie jak po ręcznym ustawieniu
-     zoomu przeglądarki na 67%.
-   - Użytkownik ma mieć zoom przeglądarki 100%.
+   - Dashboard 1680x1050: zostaje jak w 1224, bo jest OK.
+   - Login 1680x1050: ma wyglądać jak ręczny zoom 67% ze screena wzorcowego.
+   - Poprawka: przesunięcie login/artboard w prawo, żeby social + statystyki miały przerwę.
    ========================================================= */
 
 @media (min-width: 1600px) and (max-width: 1849px){
   /*
-    FINALNE NADPISANIE TYLKO DLA LOGINU.
-    Nie ruszamy dashboardu, bo dashboard ma .app-shell.
-    Wcześniejsze próby psuły login, bo ruszały artboard i marginesy.
-    Teraz robimy najprościej: emulujemy browser zoom 67% na loginie,
-    bez dodatkowego scale/margin-left na artboardzie.
+    TYLKO LOGIN.
+    Dashboard ma .app-shell, więc te reguły go nie dotykają.
   */
 
   html body #root:not(:has(.app-shell)){
@@ -50127,6 +50123,11 @@ html body .auth609-screen .auth609-forgot-link{
     background:#020914!important;
   }
 
+  /*
+    To jest najważniejsze:
+    zostawiamy skalę loginu jak przy 67%, ale przesuwamy całą makietę w prawo,
+    żeby lewa kolumna social/statystyki miała przerwę od panelu logowania.
+  */
   html body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
     width:2048px!important;
     min-width:2048px!important;
@@ -50136,7 +50137,7 @@ html body .auth609-screen .auth609-forgot-link{
     aspect-ratio:auto!important;
     transform:none!important;
     transform-origin:top left!important;
-    margin-left:150px!important;
+    margin-left:240px!important;
     margin-top:0!important;
     margin-right:0!important;
     flex:0 0 auto!important;
