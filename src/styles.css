@@ -49882,88 +49882,56 @@ html body .auth609-screen .auth609-forgot-link{
 
 
 /* =========================================================
-   WERSJA 1218 — 1680x1050 TRUE AUTO 67 ROOT
-   BAZA: 1205.
-   CEL:
-   - 27 cali / 2K zostaje bez zmian.
-   - Na 1680x1050 użytkownik ma mieć zoom przeglądarki 100%.
-   - Strona sama zachowuje się jak ręczny zoom 67%.
-   - Robimy to na #root, czyli skaluje LOGIN i CAŁY DASHBOARD.
+   WERSJA 1220 — AUTO RESPONSIVE SCALE CSS
+   Koniec ręcznego 67% per monitor.
+   Skala jest liczona w JS i zapisywana jako CSS variables.
+   27 cali / 2K: nie dotykamy, bo media działa tylko do 2199px.
    ========================================================= */
 
-@media (min-width: 1600px) and (max-width: 1849px){
-  html,
-  body{
-    width:100%!important;
-    height:100%!important;
-    min-width:0!important;
-    margin:0!important;
-    padding:0!important;
+/* LOGIN + DASHBOARD — tylko ekrany mniejsze niż 2K master */
+@media (min-width: 768px) and (max-width: 2199px){
+  html[data-betai-auto-scale="on"],
+  html[data-betai-auto-scale="on"] body{
     overflow:hidden!important;
     background:#020914!important;
   }
 
-  /*
-    To jest prawdziwa emulacja zoomu:
-    - #root dostaje wirtualną szerokość 100vw / 0.67
-    - potem jest skalowany transformem 0.67
-    - efekt: użytkownik zostaje na 100% zoom, ale widzi układ jak przy 67%
-  */
-  html body #root{
-    width:149.253731vw!important;
-    min-width:149.253731vw!important;
-    max-width:none!important;
-    height:149.253731vh!important;
-    min-height:149.253731vh!important;
-    max-height:none!important;
-    transform:scale(.67)!important;
-    transform-origin:top left!important;
-    overflow:hidden!important;
-    background:#020914!important;
-  }
-
-  /* LOGIN — wirtualny ekran jak przy zoomie 67% */
-  html body #root .auth609-screen{
-    width:149.253731vw!important;
-    min-width:149.253731vw!important;
-    height:149.253731vh!important;
-    min-height:149.253731vh!important;
-    padding:0!important;
+  /* LOGIN: automatyczne dopasowanie makiety 2048x1152 do ekranu */
+  html[data-betai-auto-scale="on"] body .auth609-screen{
+    width:100vw!important;
+    height:100vh!important;
+    min-height:100vh!important;
     overflow:hidden!important;
     align-items:flex-start!important;
     justify-content:flex-start!important;
+    padding:0!important;
     background:#020914!important;
   }
 
-  /*
-    Przy ręcznym zoomie 67% CSS viewport robi się ok. 2507px.
-    2507 / 2048 = ok. 1.224.
-    Po skali root .67 daje to wizualnie ok. 0.82, czyli pełny ekran 1680.
-  */
-  html body #root .auth609-screen .auth609-artboard{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth609-artboard{
     width:2048px!important;
     min-width:2048px!important;
     max-width:none!important;
     height:1152px!important;
     min-height:1152px!important;
     aspect-ratio:auto!important;
-    transform:scale(1.224)!important;
-    transform-origin:top left!important;
-    margin-left:0!important;
-    margin-top:0!important;
-    margin-right:0!important;
     flex:0 0 auto!important;
+    transform:scale(var(--betai-login-scale, 1))!important;
+    transform-origin:top left!important;
+    margin-left:var(--betai-login-left, 0px)!important;
+    margin-top:var(--betai-login-top, 0px)!important;
+    margin-right:0!important;
   }
 
-  html body #root .auth609-screen .auth609-reference,
-  html body #root .auth609-screen .auth609-overlay{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth609-reference,
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth609-overlay{
     width:2048px!important;
     height:1152px!important;
     max-width:none!important;
   }
 
-  /* Przywracamy pełny lewy panel social/LIVE jak w działającym widoku 67% */
-  html body #root .auth609-screen .auth627-social-dock{
+  /* Przy automatycznej skali przywracamy elementy, których stare łatki mogły dotknąć */
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth627-social-dock{
     display:flex!important;
     visibility:visible!important;
     position:absolute!important;
@@ -49975,7 +49943,7 @@ html body .auth609-screen .auth609-forgot-link{
     z-index:90!important;
   }
 
-  html body #root .auth609-screen .auth627-social-link{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth627-social-link{
     width:174px!important;
     max-width:174px!important;
     min-height:47px!important;
@@ -49985,14 +49953,14 @@ html body .auth609-screen .auth609-forgot-link{
     border-radius:14px!important;
   }
 
-  html body #root .auth609-screen .auth627-social-link b{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth627-social-link b{
     font-size:13px!important;
     line-height:1!important;
     font-weight:900!important;
   }
 
-  html body #root .auth609-screen .auth623-side-live.auth624-side-live,
-  html body #root .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth623-side-live.auth624-side-live,
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
     display:block!important;
     visibility:visible!important;
     position:absolute!important;
@@ -50004,7 +49972,7 @@ html body .auth609-screen .auth609-forgot-link{
     z-index:88!important;
   }
 
-  html body #root .auth609-screen .auth617-feature-strip{
+  html[data-betai-auto-scale="on"] body .auth609-screen .auth617-feature-strip{
     display:grid!important;
     visibility:visible!important;
     pointer-events:auto!important;
@@ -50014,25 +49982,36 @@ html body .auth609-screen .auth609-forgot-link{
     transform:translateX(-50%)!important;
   }
 
-  /* Chat/opinie zostają w prawym dolnym rogu wirtualnego ekranu */
-  html body #root .auth609-screen .reviews512{
+  html[data-betai-auto-scale="on"] body .auth609-screen .reviews512{
+    position:fixed!important;
     right:86px!important;
     bottom:14px!important;
     z-index:220!important;
   }
 
-  html body #root .auth609-screen .support510{
+  html[data-betai-auto-scale="on"] body .auth609-screen .support510{
+    position:fixed!important;
     right:14px!important;
     bottom:14px!important;
     z-index:225!important;
   }
 
-  /* DASHBOARD PO ZALOGOWANIU — daje mu wirtualną szerokość jak przy 67% */
-  html body #root .app-shell{
-    width:149.253731vw!important;
-    min-width:149.253731vw!important;
-    min-height:149.253731vh!important;
+  /* DASHBOARD: automatyczne skalowanie całej aplikacji po zalogowaniu */
+  html[data-betai-auto-scale="on"] body .app-shell{
+    width:var(--betai-app-virtual-width, 100vw)!important;
+    min-width:var(--betai-app-virtual-width, 100vw)!important;
+    min-height:var(--betai-app-virtual-height, 100vh)!important;
     max-width:none!important;
+    transform:scale(var(--betai-app-scale, 1))!important;
+    transform-origin:top left!important;
+  }
+}
+
+/* Tablet i telefon — zostawiamy responsywne uproszczenia z wcześniejszych wersji, bez silnika auto scale */
+@media (max-width: 767px){
+  html[data-betai-auto-scale="on"] body .app-shell,
+  html[data-betai-auto-scale="on"] body .auth609-artboard{
+    transform:none!important;
   }
 }
 

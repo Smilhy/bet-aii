@@ -33,6 +33,58 @@ import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
+
+/* =========================================================
+   WERSJA 1220 — AUTO RESPONSIVE SCALE ENGINE
+   Automatyczne wyliczanie skali zamiast ręcznego dopasowania monitorów.
+   27 cali / 2K zostaje bez zmian, bo engine działa tylko poniżej 2200px szerokości.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_AUTO_RESPONSIVE_1220 = () => {
+    const vw = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1)
+    const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1)
+    const root = document.documentElement
+
+    // 2K / 27 cali i większe zostawiamy bez ruszania
+    if (vw >= 2200) {
+      root.style.removeProperty('--betai-login-scale')
+      root.style.removeProperty('--betai-login-left')
+      root.style.removeProperty('--betai-login-top')
+      root.style.removeProperty('--betai-app-scale')
+      root.style.removeProperty('--betai-app-virtual-width')
+      root.style.removeProperty('--betai-app-virtual-height')
+      root.dataset.betaiAutoScale = 'off-2k'
+      return
+    }
+
+    // Login: master screen 2048x1152, dopasowanie automatyczne do viewportu
+    const loginMasterW = 2048
+    const loginMasterH = 1152
+    const loginScale = Math.min(1, vw / loginMasterW, vh / loginMasterH)
+    const loginLeft = Math.max(0, (vw - loginMasterW * loginScale) / 2)
+    const loginTop = Math.max(0, (vh - loginMasterH * loginScale) / 2)
+
+    root.style.setProperty('--betai-login-scale', String(loginScale))
+    root.style.setProperty('--betai-login-left', `${loginLeft}px`)
+    root.style.setProperty('--betai-login-top', `${loginTop}px`)
+
+    // Dashboard: szeroki design z 2K, automatycznie robi efekt podobny do zoomu,
+    // ale wyliczany z viewportu, a nie na sztywno per monitor.
+    const appMasterW = 2500
+    const appMasterH = 1400
+    const appScale = Math.min(1, vw / appMasterW, vh / appMasterH)
+
+    root.style.setProperty('--betai-app-scale', String(appScale))
+    root.style.setProperty('--betai-app-virtual-width', `${vw / appScale}px`)
+    root.style.setProperty('--betai-app-virtual-height', `${vh / appScale}px`)
+    root.dataset.betaiAutoScale = 'on'
+  }
+
+  BETAI_AUTO_RESPONSIVE_1220()
+  window.addEventListener('resize', BETAI_AUTO_RESPONSIVE_1220, { passive: true })
+  window.addEventListener('orientationchange', BETAI_AUTO_RESPONSIVE_1220, { passive: true })
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];

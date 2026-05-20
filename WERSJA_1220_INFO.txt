@@ -1,0 +1,8 @@
+WERSJA 1220 — AUTO RESPONSIVE SCALE ALL DEVICES
+Baza: 1205.
+- 27 cali / 2K bez zmian: engine wyłącza się od 2200px szerokości.
+- Usunięto podejście ręczne typu konkretne 67% dla jednego monitora.
+- Dodano JS engine, który automatycznie liczy skalę z aktualnego viewportu.
+- Login dopasowuje master 2048x1152 do ekranu.
+- Dashboard po zalogowaniu dostaje automatyczną skalę względem szerokiego mastera 2500x1400.
+- Użytkownik ma używać zoomu przeglądarki 100%.
