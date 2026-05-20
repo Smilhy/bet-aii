@@ -1,0 +1,7 @@
+WERSJA 1208
+Poprawka po screenie 1680x1050: patch 1207 nie odpalił, bo media query miało warunek wysokości.
+Przeglądarka odejmuje pasek adresu, więc viewport miał niższą wysokość niż 980px.
+- Teraz reguła działa po samej szerokości 1600-1849px.
+- Wymuszone scale(1.08), margin-left:-285px.
+- Social/LIVE/opinie fixed względem viewportu.
+- 27 cali 2K bez zmian.
