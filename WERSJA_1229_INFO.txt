@@ -1,0 +1,6 @@
+WERSJA 1229 — 1680x1050 FONT +1PX
+Baza: 1228.
+- 27 cali / 2K bez zmian.
+- 20 cali / 1680x1050 zostaje z układem 1228.
+- Dla zakresu 1600-1849px dodano override font-size +1px dla wykrytych px fontów w CSS.
+- Nie ruszano skali, pozycji, social/LIVE ani dashboard layoutu.
