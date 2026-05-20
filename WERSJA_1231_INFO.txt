@@ -1,0 +1,8 @@
+WERSJA 1231 — LAPTOP 15.6 / 1920x1080 FONT +2PX
+Baza: 1230.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
+- Laptop 15.6 / 1920x1080 zostaje w auto 75%.
+- Czcionki na całej stronie laptopowej podbite o +2px.
+- Dotyczy zakresów 1850-2199px oraz 1450-1599px.

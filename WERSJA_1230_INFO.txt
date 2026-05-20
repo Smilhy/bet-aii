@@ -1,0 +1,9 @@
+WERSJA 1230 — LAPTOP 15.6 1920x1080 AUTO 75%
+Baza: 1229.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
+- Laptop 15.6 cala / 1920x1080 dostaje automatyczny efekt jak ręczny zoom 75%.
+- Działa dla viewportu 1850-2199px oraz dla laptopowego 125% viewportu 1450-1599px.
+- Login i dashboard są objęte tą samą zasadą 75%.
+- Użytkownik ma mieć zoom przeglądarki 100%.
