@@ -59321,3 +59321,165 @@ html body .auth609-screen .auth609-forgot-link{
   html body #root h3{font-size:calc(1em + 2px)!important;}
 }
 
+
+
+/* =========================================================
+   WERSJA 1232 — LAPTOP 15.6 / 1920x1080 = AUTO 90%
+   BAZA: 1231.
+   USTALENIE OD KOLEGI:
+   - Na laptopie przy 100% jest fatalnie.
+   - Po ręcznym zoomie 90% jest idealnie.
+   - Użytkownik ma mieć zoom przeglądarki 100%, a strona sama ma wyglądać jak 90%.
+   - 27 cali / 2K: NIE RUSZAĆ.
+   - 32 cale / 2K: NIE RUSZAĆ.
+   - 20 cali / 1680x1050: NIE RUSZAĆ.
+   ========================================================= */
+
+/* Laptop 15.6 / 1920x1080 viewport */
+@media (min-width: 1850px) and (max-width: 2199px){
+  html,
+  body{
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    background:#020914!important;
+  }
+
+  /*
+    Finalnie laptop ma dostać auto 90%, nie 75%.
+    Wirtualny rozmiar = 100 / .90 = 111.111111%.
+  */
+  html body #root{
+    zoom:.90!important;
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    max-width:none!important;
+    height:111.111111vh!important;
+    min-height:111.111111vh!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    background:#020914!important;
+    transform:none!important;
+    transform-origin:top left!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen{
+    zoom:1!important;
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    height:111.111111vh!important;
+    min-height:111.111111vh!important;
+    padding:0!important;
+    overflow:hidden!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    background:#020914!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    aspect-ratio:auto!important;
+    transform:none!important;
+    transform-origin:top left!important;
+    margin-left:150px!important;
+    margin-top:0!important;
+    margin-right:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference,
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  html body #root .app-shell{
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    min-height:111.111111vh!important;
+    max-width:none!important;
+    transform:none!important;
+    zoom:1!important;
+  }
+}
+
+/* Laptop 15.6 / Windows 125% viewport ok. 1536x864 */
+@media (min-width: 1450px) and (max-width: 1599px){
+  html,
+  body{
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    background:#020914!important;
+  }
+
+  html body #root{
+    zoom:.90!important;
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    max-width:none!important;
+    height:111.111111vh!important;
+    min-height:111.111111vh!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    background:#020914!important;
+    transform:none!important;
+    transform-origin:top left!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen{
+    zoom:1!important;
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    height:111.111111vh!important;
+    min-height:111.111111vh!important;
+    padding:0!important;
+    overflow:hidden!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    background:#020914!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    aspect-ratio:auto!important;
+    transform:none!important;
+    transform-origin:top left!important;
+    margin-left:150px!important;
+    margin-top:0!important;
+    margin-right:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference,
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  html body #root .app-shell{
+    width:111.111111vw!important;
+    min-width:111.111111vw!important;
+    min-height:111.111111vh!important;
+    max-width:none!important;
+    transform:none!important;
+    zoom:1!important;
+  }
+}
+
