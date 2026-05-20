@@ -1,0 +1,6 @@
+WERSJA 1209
+Balans dla 1680x1050 po tym jak 1208 za mocno obciął login z lewej.
+- 27 cali 2K bez zmian.
+- 1680x1050: scale 1.03 zamiast 1.08.
+- margin-left -38px zamiast -285px.
+- Social/LIVE zmniejszone, żeby nie wchodziły na panel.
