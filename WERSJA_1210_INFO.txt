@@ -1,7 +1,0 @@
-WERSJA 1210
-Bezpieczna poprawka 1680x1050 po tym jak crop w 1208/1209 ucinał login.
-- 27 cali 2K bez zmian.
-- 1680x1050: scale .91, margin-left 0.
-- Brak agresywnego cropu z lewej.
-- Social/LIVE nie są fixed, więc nie powinny nachodzić na logo.
-- Prawa dekoracja może być lekko przycięta.

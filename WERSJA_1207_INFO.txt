@@ -1,7 +1,0 @@
-WERSJA 1207
-Mocna poprawka dla 1680x1050 / 20 cali.
-- 27 cali 2K bez zmian.
-- 1680x1050 dostało FULLSCREEN CROP MODE.
-- Scena jest większa niż viewport i dekoracyjne boki są przycinane.
-- Social/LIVE/opinie/czat są fixed względem viewportu.
-- Cel: koniec efektu małej makiety z pustym miejscem.

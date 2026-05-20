@@ -1,7 +1,0 @@
-WERSJA 1211
-Poprawka dla 1680x1050 po screenie z nachodzącym social/LIVE na logo.
-- 27 cali 2K bez zmian.
-- Dla szerokości 1600-1849px social dock i panel LIVE są ukryte.
-- Login zostaje czysty, bez nachodzenia elementów.
-- Bez agresywnego cropu z lewej.
-- Opinie/czat zostają w prawym dolnym rogu.

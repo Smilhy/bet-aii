@@ -1,7 +1,0 @@
-WERSJA 1206
-Poprawka tylko dla 1680x1050 / 20 cali.
-- 27 cali 2K z wersji 1205 zostaje bez zmian.
-- Dla 1600-1849px zwiększono scenę do scale(.935).
-- Przesunięto scenę lekko w lewo, żeby mocniej wypełniała ekran.
-- Dopasowano social dock i panel LIVE.
-- Ukryte elementy z 1205 pozostają ukryte.
