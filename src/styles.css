@@ -50079,3 +50079,83 @@ html body .auth609-screen .auth609-forgot-link{
   }
 }
 
+
+
+/* =========================================================
+   WERSJA 1225 — LOGIN 67 FIX / DASHBOARD ZOSTAJE
+   BAZA: 1224.
+   USTALENIE:
+   - Dashboard na 1680x1050 jest już OK — NIE RUSZAĆ.
+   - Poprawiamy tylko login na 1680x1050.
+   - Login zostaje w globalnym 67%, ale artboard jest mniej agresywny,
+     przesunięty tak, żeby social nie nachodził na panel.
+   - Dolne karty są podniesione, żeby ich nie zjadało na dole.
+   ========================================================= */
+
+@media (min-width: 1600px) and (max-width: 1849px){
+  /*
+    TYLKO LOGIN.
+    :not(:has(.app-shell)) = niezalogowany widok logowania.
+    Dashboard z .app-shell zostaje z ustawień 1224.
+  */
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
+    width:2048px!important;
+    min-width:2048px!important;
+    max-width:none!important;
+    height:1152px!important;
+    min-height:1152px!important;
+    aspect-ratio:auto!important;
+    transform:scale(1.08)!important;
+    transform-origin:top left!important;
+    margin-left:185px!important;
+    margin-top:0!important;
+    margin-right:0!important;
+    flex:0 0 auto!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference,
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay{
+    width:2048px!important;
+    height:1152px!important;
+    max-width:none!important;
+  }
+
+  /* Lewa kolumna zostaje po lewej i nie wchodzi na login */
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-dock{
+    display:flex!important;
+    visibility:visible!important;
+    position:absolute!important;
+    left:28px!important;
+    top:118px!important;
+    width:174px!important;
+    max-width:174px!important;
+    gap:8px!important;
+    z-index:90!important;
+  }
+
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth623-side-live.auth624-side-live,
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+    display:block!important;
+    visibility:visible!important;
+    position:absolute!important;
+    left:22px!important;
+    top:450px!important;
+    width:188px!important;
+    max-width:188px!important;
+    transform:none!important;
+    z-index:88!important;
+  }
+
+  /* W 1224 zjadało dół. Podnosimy benefit cards tylko na loginie. */
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth617-feature-strip{
+    display:grid!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    left:1024px!important;
+    bottom:38px!important;
+    width:1760px!important;
+    transform:translateX(-50%)!important;
+  }
+}
+
