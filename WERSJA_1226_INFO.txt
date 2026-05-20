@@ -1,0 +1,6 @@
+WERSJA 1226 — 1680x1050 LOGIN JAK 75% / DASHBOARD ZOSTAJE
+Baza: 1224.
+- 27 cali / 2K bez zmian.
+- Dashboard na 1680x1050 zostaje z 1224.
+- Login na 1680x1050 emuluje widok jak przy ręcznym zoomie 75%, ale użytkownik ma zoom przeglądarki 100%.
+- Reguły loginu działają tylko gdy #root nie ma .app-shell, więc nie ruszają dashboardu.

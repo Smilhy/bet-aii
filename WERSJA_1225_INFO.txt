@@ -1,7 +1,0 @@
-WERSJA 1225 — LOGIN 67 FIX / DASHBOARD ZOSTAJE
-Baza: 1224.
-- Dashboard na 1680x1050 zostaje z 1224, bo użytkownik potwierdził że jest OK.
-- Poprawiony tylko login dla 1600-1849px.
-- Artboard loginu: scale 1.08, margin-left 185.
-- Dolne karty benefitów podniesione z bottom -110 na bottom 38.
-- 27 cali / 2K bez zmian.
