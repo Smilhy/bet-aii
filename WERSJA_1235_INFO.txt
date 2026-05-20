@@ -1,9 +1,0 @@
-WERSJA 1235 — LAPTOP 15.6 / 1920x1080 FONT +1PX SAFE
-Baza: 1233.
-- Cofnięto ostatnią poprawkę 1234, która zbyt szeroko podbijała czcionki.
-- Auto 90% dla laptopa z 1233 zostaje.
-- Font +1px dodany tylko pod klasą html.betai-laptop-browser90-v1233.
-- Usunięto uniwersalne powiększanie #root * calc(1em + 1px).
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
-- 20 cali / 1680x1050 bez zmian.
