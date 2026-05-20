@@ -54425,3 +54425,50 @@ html.betai-laptop-browser90-v1233 body #root html body .auth609-screen .auth623-
 html.betai-laptop-browser90-v1233 body #root html body #root .auth609-screen .auth627-social-link b{font-size:16px!important;}
 html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-link b{font-size:16px!important;}
 
+
+
+/* =========================================================
+   WERSJA 1239 — LAPTOP 15.6 / 1920x1080 AUTO 90 DETECT FIX
+   BAZA: 1236.
+   Problem: u kolegi poprzedni detect mógł nie odpalać, bo viewport height
+   po paskach przeglądarki był niższy niż warunek.
+   Teraz wykrywanie jest po szerokości i/lub screen 1920x1080.
+   ========================================================= */
+
+html.betai-laptop90-force-v1239 body{
+  zoom:90%!important;
+  width:111.111111vw!important;
+  min-width:111.111111vw!important;
+  height:111.111111vh!important;
+  min-height:111.111111vh!important;
+  overflow:hidden!important;
+  background:#020914!important;
+}
+
+html.betai-laptop90-force-v1239 body #root{
+  width:111.111111vw!important;
+  min-width:111.111111vw!important;
+  max-width:none!important;
+  height:111.111111vh!important;
+  min-height:111.111111vh!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  background:#020914!important;
+}
+
+html.betai-laptop90-force-v1239 body #root .app-shell{
+  width:111.111111vw!important;
+  min-width:111.111111vw!important;
+  min-height:111.111111vh!important;
+  max-width:none!important;
+  transform:none!important;
+  zoom:1!important;
+}
+
+html.betai-laptop90-force-v1239 body #root:not(:has(.app-shell)) .auth609-screen{
+  width:111.111111vw!important;
+  min-width:111.111111vw!important;
+  height:111.111111vh!important;
+  min-height:111.111111vh!important;
+}
+

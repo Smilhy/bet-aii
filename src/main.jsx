@@ -35,6 +35,51 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
 /* =========================================================
+   WERSJA 1239 — LAPTOP DETECT FIX
+   Drugi bezpieczny watcher: jeżeli viewport/screen wygląda jak laptop FHD,
+   wymusza auto 90% także po logowaniu i po zmianie widoku.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_LAPTOP90_FORCE_1239 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const vw = window.innerWidth || html.clientWidth || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599
+    const isRealFhdScreen = ((sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) || (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100))
+
+    const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
+      && !(vw >= 2200)
+      && !(vw >= 1600 && vw <= 1849)
+
+    if (shouldApply) {
+      html.classList.add('betai-laptop-browser90-v1233')
+      html.classList.add('betai-laptop90-force-v1239')
+      if (body) {
+        body.style.setProperty('zoom', '90%', 'important')
+        body.style.setProperty('width', '111.111111vw', 'important')
+        body.style.setProperty('min-width', '111.111111vw', 'important')
+        body.style.setProperty('height', '111.111111vh', 'important')
+        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('overflow', 'hidden', 'important')
+      }
+    } else {
+      html.classList.remove('betai-laptop90-force-v1239')
+    }
+  }
+
+  BETAI_LAPTOP90_FORCE_1239()
+  window.addEventListener('resize', BETAI_LAPTOP90_FORCE_1239, { passive: true })
+  window.addEventListener('orientationchange', BETAI_LAPTOP90_FORCE_1239, { passive: true })
+  window.addEventListener('load', BETAI_LAPTOP90_FORCE_1239, { passive: true })
+  setInterval(BETAI_LAPTOP90_FORCE_1239, 1200)
+}
+
+
+/* =========================================================
    WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
    To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
    27/32 cale 2K i 1680x1050 są poza zakresem.
@@ -54,9 +99,9 @@ if (typeof window !== 'undefined') {
     // NIE dotykamy:
     // - 1680x1050: gotowe,
     // - 2K: gotowe.
-    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 900 && vh <= 1200
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930
-    const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599
+    const isRealFhdScreen = ((sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) || (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100))
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
       && !(vw >= 2200)

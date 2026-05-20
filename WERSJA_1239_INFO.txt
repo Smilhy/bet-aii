@@ -1,0 +1,9 @@
+WERSJA 1239 — LAPTOP 15.6 / 1920x1080 AUTO 90 DETECT FIX
+Baza: 1236.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
+- Naprawiono wykrywanie laptopa: usunięto zbyt ścisły warunek wysokości viewportu.
+- Auto 90% działa dla 1850-2199px, 1450-1599px lub realnego screen 1920x1080.
+- Dotyczy loginu i dashboardu.
+- Font +2px z 1236 zostaje tylko dla trybu laptopowego.
