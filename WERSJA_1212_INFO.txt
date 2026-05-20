@@ -1,8 +1,0 @@
-WERSJA 1212 — STRUCTURAL 1680 LOGIN NAPRAWA
-Baza: 1205, nie 1208-1211.
-- 27 cali / 2K zostaje bez zmian.
-- Dla 1600-1849px / 1680x1050 zrobiono osobny structural layout.
-- Artboard ma 100vw/100vh, a screen jest tłem/dekoracją object-fit: cover.
-- Panel logowania jest niezależny, czytelny i nie skaluje się razem z makietą.
-- Social/LIVE/dolny pasek benefitów są ukryte tylko na tym wariancie, bo psuły lewą stronę.
-- Opinie/czat zostają w prawym dolnym rogu.
