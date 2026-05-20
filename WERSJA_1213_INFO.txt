@@ -1,8 +1,0 @@
-WERSJA 1213 — 1680 REAL FULL BACKGROUND
-Baza: 1205.
-- 27 cali 2K bez zmian.
-- Dla 1600-1849px artboard jest pełnym viewportem 100vw/100vh.
-- Oryginalny img auth-frame-reference jest ukryty, bo robił małą planszę w rogu.
-- Ten sam obraz jest użyty jako background-size: cover, więc wypełnia cały ekran.
-- Panel logowania jest osobny, niezależny i czytelny.
-- Social/LIVE/dolne benefity ukryte tylko w tym wariancie.
