@@ -54451,3 +54451,48 @@ html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell
     scrollbar-gutter:stable!important;
   }
 }
+
+/* =========================================================
+   PATCH 1680x1050 / 20 cali — Dashboard: scroll CAŁEJ STRONY
+   Tylko dashboard z prawą kolumną. Innych rozdzielczości nie ruszać.
+   Poprawia sytuację, gdy wcześniejsze skalowanie 1680 blokowało scroll body/#root.
+========================================================= */
+@media (min-width:1600px) and (max-width:1849px) and (min-height:980px) and (max-height:1100px){
+  html:has(body #root .app-shell:not(.no-rightbar-page)){
+    height:auto!important;
+    min-height:100%!important;
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+    scrollbar-gutter:stable!important;
+  }
+
+  html body:has(#root .app-shell:not(.no-rightbar-page)){
+    height:auto!important;
+    min-height:100vh!important;
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+    scrollbar-gutter:stable!important;
+  }
+
+  html body:has(#root .app-shell:not(.no-rightbar-page)) #root:has(.app-shell:not(.no-rightbar-page)){
+    height:auto!important;
+    min-height:calc(135.685210vh + 460px)!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding-bottom:460px!important;
+  }
+
+  html body:has(#root .app-shell:not(.no-rightbar-page)) #root:has(.app-shell:not(.no-rightbar-page)) .app-shell:not(.no-rightbar-page){
+    height:auto!important;
+    min-height:135.685210vh!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+
+  html body:has(#root .app-shell:not(.no-rightbar-page)) #root:has(.app-shell:not(.no-rightbar-page)) .rightbar{
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding-bottom:90px!important;
+  }
+}
