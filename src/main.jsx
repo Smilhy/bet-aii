@@ -22780,12 +22780,30 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('profile_sub') === 'success') {
-      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera zostanie odświeżony.' })
-      if (sessionUser?.id) {
-        fetchTips(sessionUser.id)
-        fetchPaymentHistory(sessionUser.id)
+      const sessionId = params.get('session_id')
+      async function syncProfileSubReturn() {
+        try {
+          if (sessionId) {
+            const response = await fetch('/.netlify/functions/sync-connect-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session_id: sessionId, expected_user_id: sessionUser?.id || null })
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
+          }
+          showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera został odświeżony.' })
+          if (sessionUser?.id) {
+            await fetchTips(sessionUser.id)
+            await fetchPaymentHistory(sessionUser.id)
+          }
+        } catch (error) {
+          showToast({ type: 'error', title: 'Dostęp do profilu', message: formatAppErrorMessage(error.message) })
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
       }
-      window.history.replaceState({}, document.title, window.location.pathname)
+      syncProfileSubReturn()
     }
     if (params.get('profile_sub') === 'cancel') {
       showToast({ type: 'info', title: 'Dostęp do profilu', message: 'Zakup dostępu został anulowany.' })
@@ -22895,7 +22913,7 @@ function App() {
 
       const { data, error } = await supabase
         .from('user_stripe_accounts')
-        .select('stripe_account_id,charges_enabled,payouts_enabled,created_at,updated_at')
+        .select('stripe_account_id,charges_enabled,payouts_enabled,details_submitted,connect_status,created_at,updated_at')
         .eq('user_id', userId)
         .maybeSingle()
 
@@ -23683,27 +23701,38 @@ function App() {
     const stripeReturn = params.get('stripe') === '1'
 
     if (payment === 'success' && stripeReturn && tipId) {
-      // Nie ustawiamy odblokowania zanim znamy zalogowanego usera.
-      // Odblokowanie zapisuje się dopiero pod konkretnym user_id po powrocie ze Stripe.
-
       async function persistUnlockFromReturn() {
-        await saveUnlockToSupabase(tipId, 29)
-        await savePaymentToSupabase(tipId, 29)
+        const sessionId = params.get('session_id')
         const { data } = isSupabaseConfigured && supabase
           ? await supabase.auth.getSession()
           : { data: null }
-
         const userId = data?.session?.user?.id
+
+        if (sessionId) {
+          const response = await fetch('/.netlify/functions/sync-connect-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, expected_user_id: userId || null })
+          })
+          const syncData = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
+        } else {
+          await saveUnlockToSupabase(tipId, 29)
+          await savePaymentToSupabase(tipId, 29)
+        }
+
         if (userId) {
           clearGuestUnlockedTips()
           await fetchUnlockedTips(userId)
           await fetchPaymentHistory(userId)
         }
 
+        showToast({ type: 'success', title: 'Typ odblokowany', message: 'Płatność zakończona. Dostęp został zapisany.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
 
-      persistUnlockFromReturn().catch(() => {
+      persistUnlockFromReturn().catch((error) => {
+        showToast({ type: 'error', title: 'Płatność', message: formatAppErrorMessage(error.message) })
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     }
