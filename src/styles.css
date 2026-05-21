@@ -54813,3 +54813,84 @@ html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-ico
   html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon::after,
   html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon svg{animation:none!important;}
 }
+
+/* =========================================================
+   WERSJA 1252 — POPRAWKA REALNA
+   - właściwe klasy dla 4 dolnych kafli: auth617-feature-icon
+   - twarde ciemne wypełnienie selektora języka jak czat
+   BAZA: 1251
+   ========================================================= */
+
+/* 1) 4 dolne kafle na loginie — pulsujące ikony */
+html body #root .auth617-feature-card .auth617-feature-icon{
+  position:relative!important;
+  overflow:hidden!important;
+  transform:translateZ(0)!important;
+  animation:betaiAuth617IconAlive1252 4.8s ease-in-out infinite!important;
+}
+html body #root .auth617-feature-card:nth-child(2) .auth617-feature-icon{animation-delay:.55s!important;}
+html body #root .auth617-feature-card:nth-child(3) .auth617-feature-icon{animation-delay:1.1s!important;}
+html body #root .auth617-feature-card:nth-child(4) .auth617-feature-icon{animation-delay:1.65s!important;}
+html body #root .auth617-feature-card .auth617-feature-icon::after{
+  content:""!important;
+  position:absolute!important;
+  inset:-2px!important;
+  background:linear-gradient(115deg,transparent 0%,rgba(64,255,226,0) 32%,rgba(64,255,226,.22) 48%,rgba(255,255,255,.18) 52%,rgba(64,255,226,0) 68%,transparent 100%)!important;
+  transform:translateX(-128%) skewX(-12deg)!important;
+  animation:betaiAuth617IconScan1252 4.8s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+html body #root .auth617-feature-card:nth-child(2) .auth617-feature-icon::after{animation-delay:.55s!important;}
+html body #root .auth617-feature-card:nth-child(3) .auth617-feature-icon::after{animation-delay:1.1s!important;}
+html body #root .auth617-feature-card:nth-child(4) .auth617-feature-icon::after{animation-delay:1.65s!important;}
+html body #root .auth617-feature-card .auth617-feature-icon svg{
+  animation:betaiAuth617IconGlyph1252 2.6s ease-in-out infinite!important;
+}
+@keyframes betaiAuth617IconAlive1252{
+  0%,100%{transform:translate3d(0,0,0) scale(1);box-shadow:0 0 22px rgba(52,213,255,.15)!important;}
+  45%{transform:translate3d(2px,-2px,0) scale(1.045);box-shadow:0 0 28px rgba(54,240,199,.24),0 0 42px rgba(24,215,255,.14)!important;}
+  70%{transform:translate3d(-1px,1px,0) scale(1.015);}
+}
+@keyframes betaiAuth617IconScan1252{
+  0%,38%{transform:translateX(-135%) skewX(-12deg);opacity:0;}
+  48%{opacity:1;}
+  62%,100%{transform:translateX(135%) skewX(-12deg);opacity:0;}
+}
+@keyframes betaiAuth617IconGlyph1252{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(54,240,199,0));transform:scale(1);}
+  50%{filter:drop-shadow(0 0 10px rgba(54,240,199,.42));transform:scale(1.08);}
+}
+
+/* 2) selektor języka — ciemne wypełnienie jak czat, bez zielonego środka */
+html body #root .auth609-language .betai-language-switch.compact.betai-language-dropdown,
+html body #root .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown{
+  background:linear-gradient(180deg,rgba(7,22,34,.98),rgba(4,14,24,.98))!important;
+  border:1px solid rgba(53,233,228,.18)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 0 16px rgba(0,0,0,.22)!important;
+}
+html body #root .auth609-language .betai-language-switch.compact.betai-language-dropdown .betai-language-current,
+html body #root .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current,
+html body #root .betai-language-switch.compact.betai-language-dropdown .betai-language-current.is-active{
+  background:linear-gradient(180deg,rgba(7,22,34,.98),rgba(4,14,24,.98))!important;
+  background-image:linear-gradient(180deg,rgba(7,22,34,.98),rgba(4,14,24,.98))!important;
+  border:1px solid rgba(72,225,255,.14)!important;
+  color:#eefcff!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 0 14px rgba(0,0,0,.18)!important;
+}
+html body #root .auth609-language .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+html body #root .auth609-language .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current,
+html body #root .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+html body #root .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current,
+html body #root .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current,
+html body #root .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover{
+  background:linear-gradient(180deg,rgba(8,24,36,.99),rgba(5,16,26,.99))!important;
+  background-image:linear-gradient(180deg,rgba(8,24,36,.99),rgba(5,16,26,.99))!important;
+  border:1px solid rgba(72,225,255,.18)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 0 18px rgba(17,196,214,.08)!important;
+}
+
+@media (prefers-reduced-motion:reduce){
+  html body #root .auth617-feature-card .auth617-feature-icon,
+  html body #root .auth617-feature-card .auth617-feature-icon::after,
+  html body #root .auth617-feature-card .auth617-feature-icon svg{animation:none!important;}
+}
