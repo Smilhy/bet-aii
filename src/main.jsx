@@ -34,65 +34,6 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
-
-/* =========================================================
-   WERSJA 1250 — TABLET LENOVO 10.1 CALA / AUTO 75% (TYLKO TABLET)
-   Zmiana działa wyłącznie na tablecie Android / Lenovo 10.1.
-   Desktopy 20 cali / 1680x1050, 27/32 cale 2K i laptopy bez zmian.
-   Użytkownik widzi 100% w przeglądarce, ale układ zachowuje się jak 75%.
-   ========================================================= */
-if (typeof window !== 'undefined') {
-  const BETAI_TABLET_LENOVO10_AUTO75_1250 = () => {
-    const html = document.documentElement
-    const vw = window.innerWidth || html.clientWidth || 0
-    const vh = window.innerHeight || html.clientHeight || 0
-    const sw = window.screen?.width || 0
-    const sh = window.screen?.height || 0
-    const aw = window.screen?.availWidth || 0
-    const ah = window.screen?.availHeight || 0
-    const ua = (navigator.userAgent || '').toLowerCase()
-    const platform = (navigator.platform || '').toLowerCase()
-    const touch = navigator.maxTouchPoints || 0
-    const dpr = window.devicePixelRatio || 1
-    const coarse = typeof window.matchMedia === 'function' ? window.matchMedia('(pointer: coarse)').matches : false
-
-    const isAndroid = ua.includes('android')
-    const isMobilePhone = ua.includes('mobile')
-    const isLenovo = ua.includes('lenovo') || platform.includes('lenovo')
-    const isTabletUa = isAndroid && !isMobilePhone
-    const isTouch = touch >= 3
-    const shortestScreen = Math.min(sw || 99999, sh || 99999)
-    const longestScreen = Math.max(sw || 0, sh || 0)
-    const shortestAvail = Math.min(aw || 99999, ah || 99999)
-    const longestAvail = Math.max(aw || 0, ah || 0)
-    const shortestViewport = Math.min(vw || 99999, vh || 99999)
-    const longestViewport = Math.max(vw || 0, vh || 0)
-
-    const looksLikeTabletSize = (
-      (shortestScreen >= 700 && shortestScreen <= 1400 && longestScreen >= 1000 && longestScreen <= 2600) ||
-      (shortestAvail >= 700 && shortestAvail <= 1400 && longestAvail >= 1000 && longestAvail <= 2600) ||
-      (shortestViewport >= 600 && shortestViewport <= 1400 && longestViewport >= 800 && longestViewport <= 2000)
-    )
-
-    const shouldApply = !!(
-      isTouch &&
-      coarse &&
-      (isLenovo || isTabletUa) &&
-      looksLikeTabletSize &&
-      dpr >= 1 && dpr <= 3.5
-    )
-
-    html.classList.toggle('betai-tablet-lenovo10-auto75-v1250', shouldApply)
-  }
-
-  BETAI_TABLET_LENOVO10_AUTO75_1250()
-  window.addEventListener('resize', BETAI_TABLET_LENOVO10_AUTO75_1250, { passive: true })
-  window.addEventListener('orientationchange', BETAI_TABLET_LENOVO10_AUTO75_1250, { passive: true })
-  window.addEventListener('load', BETAI_TABLET_LENOVO10_AUTO75_1250, { passive: true })
-  setInterval(BETAI_TABLET_LENOVO10_AUTO75_1250, 1500)
-}
-
-
 /* =========================================================
    WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
    To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
