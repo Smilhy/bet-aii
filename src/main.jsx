@@ -12656,11 +12656,10 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose,
 
   return (
     <div className="betai-notify-overlay" aria-hidden={!open} onMouseDown={e => { if (e.target === e.currentTarget) onClose?.() }}>
-      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Powiadomienia BetAI">
+      <div className="betai-notify-panel" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Powiadomienia Bet+AI">
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-kicker">BETAI NEWS</div>
-            <div className="betai-notify-title">Powiadomienia BetAI</div>
+            <div className="betai-notify-title">Powiadomienia Bet+AI</div>
             <div className="betai-notify-sub">Nagrody, informacje od strony i komunikaty od admina.</div>
           </div>
           <div className="betai-notify-actions">
@@ -24236,7 +24235,7 @@ function App() {
           </label>
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
-            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia BetAI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
               <span className="wallet-split-segment wallet-split-balance">
