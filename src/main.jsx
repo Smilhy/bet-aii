@@ -35,42 +35,6 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
 /* =========================================================
-   WERSJA 1242 — LAPTOP 15.6 / 1920x1080 LOGIN + DASHBOARD JAK BROWSER 90
-   Użytkownik ma 100% w przeglądarce, strona ma zachowywać się jak 90%.
-   ========================================================= */
-if (typeof window !== 'undefined') {
-  const BETAI_LAPTOP90_BOTH_1242 = () => {
-    const html = document.documentElement
-    const vw = window.innerWidth || html.clientWidth || 0
-    const sw = window.screen?.width || 0
-    const sh = window.screen?.height || 0
-
-    const viewportFhd = vw >= 1850 && vw <= 2199
-    const viewportFhdScaled = vw >= 1450 && vw <= 1599
-    const screenFhd = (
-      (sw >= 1900 && sw <= 1930 && sh >= 1060 && sh <= 1100) ||
-      (sh >= 1900 && sh <= 1930 && sw >= 1060 && sw <= 1100)
-    )
-
-    const protected1680 = vw >= 1600 && vw <= 1849
-    const protected2k = vw >= 2200
-
-    if ((viewportFhd || viewportFhdScaled || screenFhd) && !protected1680 && !protected2k) {
-      html.classList.add('betai-laptop90-both-v1242')
-    } else {
-      html.classList.remove('betai-laptop90-both-v1242')
-    }
-  }
-
-  BETAI_LAPTOP90_BOTH_1242()
-  window.addEventListener('resize', BETAI_LAPTOP90_BOTH_1242, { passive: true })
-  window.addEventListener('orientationchange', BETAI_LAPTOP90_BOTH_1242, { passive: true })
-  window.addEventListener('load', BETAI_LAPTOP90_BOTH_1242, { passive: true })
-  setInterval(BETAI_LAPTOP90_BOTH_1242, 1000)
-}
-
-
-/* =========================================================
    WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
    To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
    27/32 cale 2K i 1680x1050 są poza zakresem.
@@ -90,8 +54,8 @@ if (typeof window !== 'undefined') {
     // NIE dotykamy:
     // - 1680x1050: gotowe,
     // - 2K: gotowe.
-    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 900 && vh <= 1200
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 820 && vh <= 1200
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 680 && vh <= 930
     const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
@@ -100,13 +64,13 @@ if (typeof window !== 'undefined') {
 
     if (shouldApply) {
       html.classList.add('betai-laptop-browser90-v1233')
-      html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
+      html.style.setProperty('--betai-laptop-zoom-1233', '0.81')
       if (body) {
-        body.style.setProperty('zoom', '90%', 'important')
-        body.style.setProperty('width', '111.111111vw', 'important')
-        body.style.setProperty('min-width', '111.111111vw', 'important')
-        body.style.setProperty('height', '111.111111vh', 'important')
-        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('zoom', '81%', 'important')
+        body.style.setProperty('width', '123.456790vw', 'important')
+        body.style.setProperty('min-width', '123.456790vw', 'important')
+        body.style.setProperty('height', '123.456790vh', 'important')
+        body.style.setProperty('min-height', '123.456790vh', 'important')
         body.style.setProperty('overflow', 'hidden', 'important')
       }
     } else {
