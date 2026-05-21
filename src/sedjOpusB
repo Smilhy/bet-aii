@@ -3672,9 +3672,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const premiumStatus = params.get('premium')
     const sessionId = params.get('session_id')
+    const premiumSuccessPath = window.location.pathname === '/premium-success' || window.location.pathname.endsWith('/premium-success')
+    const premiumCancelPath = window.location.pathname === '/premium-cancel' || window.location.pathname.endsWith('/premium-cancel')
 
     async function syncPremiumAfterStripe() {
-      if (premiumStatus === 'success' && sessionId) {
+      if ((premiumStatus === 'success' || premiumSuccessPath) && sessionId) {
         try {
           showToast({ type: 'info', title: 'Premium', message: 'Synchronizuję subskrypcję ze Stripe...' })
           const response = await fetch('/.netlify/functions/sync-premium-session', {
@@ -3701,13 +3703,13 @@ function App() {
         } catch (error) {
           showToast({ type: 'error', title: 'Premium', message: formatAppErrorMessage(error.message) })
         } finally {
-          window.history.replaceState({}, document.title, window.location.pathname)
+          window.history.replaceState({}, document.title, '/')
         }
-      } else if (premiumStatus === 'success') {
+      } else if (premiumStatus === 'success' || premiumSuccessPath) {
         showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
         if (sessionUser?.id) fetchUserPlan(sessionUser.id)
-        window.history.replaceState({}, document.title, window.location.pathname)
-      } else if (premiumStatus === 'cancel') {
+        window.history.replaceState({}, document.title, '/')
+      } else if (premiumStatus === 'cancel' || premiumCancelPath) {
         showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }

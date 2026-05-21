@@ -41,11 +41,18 @@ exports.handler = async (event) => {
       session.status === 'complete' ||
       ['active', 'trialing'].includes(subscription?.status);
 
-    if (session.mode !== 'subscription' && !subscription) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Not a subscription checkout session' }) };
+    const isOneTimePremiumPayment =
+      session.mode === 'payment' &&
+      (session.payment_status === 'paid' || session.status === 'complete') &&
+      String(session.currency || '').toLowerCase() === 'pln' &&
+      Number(session.amount_total || 0) === Number(process.env.PREMIUM_PRICE_GROSZE || 2900) &&
+      !['wallet_topup', 'tip_purchase', 'tipster_profile_subscription'].includes(String(session.metadata?.kind || ''));
+
+    if (session.mode !== 'subscription' && !subscription && !isOneTimePremiumPayment) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Not a premium checkout session' }) };
     }
 
-    if (!isPaidOrActive) {
+    if (!isPaidOrActive && !isOneTimePremiumPayment) {
       return {
         statusCode: 402,
         body: JSON.stringify({
@@ -74,7 +81,7 @@ exports.handler = async (event) => {
       customerId,
       subscriptionId: subscription?.id || (typeof session.subscription === 'string' ? session.subscription : null),
       status: subscription?.status || 'active',
-      currentPeriodEnd: subscription?.current_period_end || null,
+      currentPeriodEnd: subscription?.current_period_end || (isOneTimePremiumPayment ? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60 : null),
       cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
       forcePremium: true
     });

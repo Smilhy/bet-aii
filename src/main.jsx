@@ -217,7 +217,7 @@ if (typeof window !== 'undefined') {
 }
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1QidRg1Ekmc6b3JQcmugw3mKDq2Ndk0AxkQ97dCqYrWedyg4DCmufYXHm#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
+const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
@@ -22811,9 +22811,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const premiumStatus = params.get('premium')
     const sessionId = params.get('session_id')
+    const premiumSuccessPath = window.location.pathname === '/premium-success' || window.location.pathname.endsWith('/premium-success')
+    const premiumCancelPath = window.location.pathname === '/premium-cancel' || window.location.pathname.endsWith('/premium-cancel')
 
     async function syncPremiumAfterStripe() {
-      if (premiumStatus === 'success' && sessionId) {
+      if ((premiumStatus === 'success' || premiumSuccessPath) && sessionId) {
         try {
           showToast({ type: 'info', title: 'Premium', message: 'Synchronizuję subskrypcję ze Stripe...' })
           const response = await fetch('/.netlify/functions/sync-premium-session', {
@@ -22840,13 +22842,13 @@ function App() {
         } catch (error) {
           showToast({ type: 'error', title: 'Premium', message: formatAppErrorMessage(error.message) })
         } finally {
-          window.history.replaceState({}, document.title, window.location.pathname)
+          window.history.replaceState({}, document.title, '/')
         }
-      } else if (premiumStatus === 'success') {
+      } else if (premiumStatus === 'success' || premiumSuccessPath) {
         showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
         if (sessionUser?.id) fetchUserPlan(sessionUser.id)
-        window.history.replaceState({}, document.title, window.location.pathname)
-      } else if (premiumStatus === 'cancel') {
+        window.history.replaceState({}, document.title, '/')
+      } else if (premiumStatus === 'cancel' || premiumCancelPath) {
         showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
