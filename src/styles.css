@@ -54489,3 +54489,73 @@ html.betai-laptop-fhd-win125-browser81-v1242 body{
   min-height:123.456790vh!important;
   overflow:hidden!important;
 }
+
+/* =========================================================
+   WERSJA 1243 — LOGIN FHD WIN125: zielony licznik czatu + ocena po lewej
+   BAZA: 1242.
+   TYLKO login, tylko ekran laptop 15" / 1920x1080 / Windows 125% / efekt browser 81%.
+   Nie dotyka dashboardu ani innych rozdzielczości.
+   ========================================================= */
+html.betai-laptop-fhd-win125-browser81-v1242 body #root:not(:has(.app-shell)) .auth609-screen .support510-fab-badge{
+  background:linear-gradient(180deg,#36f0c7,#17d8a7)!important;
+  color:#06202a!important;
+  border:1px solid rgba(166,255,233,.62)!important;
+  box-shadow:0 0 0 2px rgba(6,24,35,.94),0 0 16px rgba(54,240,199,.34)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.12)!important;
+}
+html.betai-laptop-fhd-win125-browser81-v1242 body #root:not(:has(.app-shell)) .auth609-screen .support510-fab-pulse{
+  border-color:rgba(54,240,199,.34)!important;
+  box-shadow:0 0 18px rgba(54,240,199,.20)!important;
+}
+html.betai-laptop-fhd-win125-browser81-v1242 body #root:not(:has(.app-shell)) .auth609-screen .reviews512{
+  left:14px!important;
+  right:auto!important;
+  bottom:14px!important;
+  z-index:220!important;
+}
+html.betai-laptop-fhd-win125-browser81-v1242 body #root:not(:has(.app-shell)) .auth609-screen .reviews512-panel{
+  left:0!important;
+  right:auto!important;
+  bottom:78px!important;
+}
+
+/* =========================================================
+   WERSJA 1244 — GLOBALNIE: zielony licznik czatu + ocena po lewej
+   BAZA: 1243.
+   Bez podziału na rozdzielczości — działa na całej stronie.
+   Zmienia tylko floating chat badge oraz pozycję oceny strony.
+   ========================================================= */
+html body .support510-fab-badge,
+html body .auth609-screen .support510-fab-badge,
+html body #root .support510-fab-badge,
+html body #root .auth609-screen .support510-fab-badge{
+  background:linear-gradient(180deg,#36f0c7,#17d8a7)!important;
+  color:#06202a!important;
+  border:1px solid rgba(166,255,233,.62)!important;
+  box-shadow:0 0 0 2px rgba(6,24,35,.94),0 0 16px rgba(54,240,199,.34)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.12)!important;
+}
+html body .support510-fab-pulse,
+html body .auth609-screen .support510-fab-pulse,
+html body #root .support510-fab-pulse,
+html body #root .auth609-screen .support510-fab-pulse{
+  border-color:rgba(54,240,199,.34)!important;
+  box-shadow:0 0 18px rgba(54,240,199,.20)!important;
+}
+html body .reviews512,
+html body .auth609-screen .reviews512,
+html body #root .reviews512,
+html body #root .auth609-screen .reviews512{
+  left:14px!important;
+  right:auto!important;
+  bottom:14px!important;
+  z-index:220!important;
+}
+html body .reviews512-panel,
+html body .auth609-screen .reviews512-panel,
+html body #root .reviews512-panel,
+html body #root .auth609-screen .reviews512-panel{
+  left:0!important;
+  right:auto!important;
+  bottom:78px!important;
+}
