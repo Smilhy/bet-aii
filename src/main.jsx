@@ -54,8 +54,8 @@ if (typeof window !== 'undefined') {
     // NIE dotykamy:
     // - 1680x1050: gotowe,
     // - 2K: gotowe.
-    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 900 && vh <= 1200
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 820 && vh <= 1200
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 650 && vh <= 930
     const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
@@ -64,13 +64,13 @@ if (typeof window !== 'undefined') {
 
     if (shouldApply) {
       html.classList.add('betai-laptop-browser90-v1233')
-      html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
+      html.style.setProperty('--betai-laptop-zoom-1233', '0.81')
       if (body) {
-        body.style.setProperty('zoom', '90%', 'important')
-        body.style.setProperty('width', '111.111111vw', 'important')
-        body.style.setProperty('min-width', '111.111111vw', 'important')
-        body.style.setProperty('height', '111.111111vh', 'important')
-        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('zoom', '81%', 'important')
+        body.style.setProperty('width', '123.456790vw', 'important')
+        body.style.setProperty('min-width', '123.456790vw', 'important')
+        body.style.setProperty('height', '123.456790vh', 'important')
+        body.style.setProperty('min-height', '123.456790vh', 'important')
         body.style.setProperty('overflow', 'hidden', 'important')
       }
     } else {
