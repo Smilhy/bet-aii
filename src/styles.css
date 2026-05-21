@@ -54578,3 +54578,17 @@ html body #root .auth609-screen .reviews512-powered,
 html body #root .auth609-screen .support510-powered{
   display:none!important;
 }
+
+/* =========================================================
+   WERSJA 1246 — DASHBOARD: białe napisy w czacie
+   BAZA: 1245.
+   Tylko dashboard (.app-shell).
+   Napisy w wiadomościach użytkownika mają być białe i czytelne.
+   ========================================================= */
+html body #root .app-shell .support510-msg.mine,
+html body #root .app-shell .support510-msg.mine p{
+  color:#f4fbff!important;
+}
+html body #root .app-shell .support510-msg.mine span{
+  color:rgba(244,251,255,.82)!important;
+}
