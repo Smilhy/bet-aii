@@ -54,8 +54,8 @@ if (typeof window !== 'undefined') {
     // NIE dotykamy:
     // - 1680x1050: gotowe,
     // - 2K: gotowe.
-    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 820 && vh <= 1200
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 650 && vh <= 930
+    const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 900 && vh <= 1200
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930
     const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)
@@ -64,13 +64,13 @@ if (typeof window !== 'undefined') {
 
     if (shouldApply) {
       html.classList.add('betai-laptop-browser90-v1233')
-      html.style.setProperty('--betai-laptop-zoom-1233', '0.81')
+      html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
       if (body) {
-        body.style.setProperty('zoom', '81%', 'important')
-        body.style.setProperty('width', '123.456790vw', 'important')
-        body.style.setProperty('min-width', '123.456790vw', 'important')
-        body.style.setProperty('height', '123.456790vh', 'important')
-        body.style.setProperty('min-height', '123.456790vh', 'important')
+        body.style.setProperty('zoom', '90%', 'important')
+        body.style.setProperty('width', '111.111111vw', 'important')
+        body.style.setProperty('min-width', '111.111111vw', 'important')
+        body.style.setProperty('height', '111.111111vh', 'important')
+        body.style.setProperty('min-height', '111.111111vh', 'important')
         body.style.setProperty('overflow', 'hidden', 'important')
       }
     } else {
@@ -91,6 +91,57 @@ if (typeof window !== 'undefined') {
   window.addEventListener('resize', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
   window.addEventListener('orientationchange', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
   window.addEventListener('load', BETAI_LAPTOP_BROWSER90_1233, { passive: true })
+}
+
+
+/* =========================================================
+   PATCH 1240 — 1680x1050 / 20 cali: scroll strony dashboardu
+   Cel: tylko dashboard z prawą kolumną na fizycznym ekranie 1680x1050.
+   Nie dotyka innych rozdzielczości ani widoków bez rightbara.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_DASHBOARD_1680_SCROLL_1240 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+    const vw = window.innerWidth || html.clientWidth || 0
+    const isTarget1680 = ((sw === 1680 && sh === 1050) || (sw === 1050 && sh === 1680) || (vw >= 1600 && vw <= 1849 && sh === 1050))
+    const isDashboardWithRightbar = !!document.querySelector('#root .app-shell:not(.no-rightbar-page) .rightbar')
+    const shouldApply = isTarget1680 && isDashboardWithRightbar
+
+    html.classList.toggle('betai-dashboard-1680-scroll-v1240', shouldApply)
+
+    if (shouldApply && body) {
+      html.style.setProperty('overflow-y', 'scroll', 'important')
+      html.style.setProperty('overflow-x', 'hidden', 'important')
+      html.style.setProperty('height', 'auto', 'important')
+      html.style.setProperty('min-height', '100%', 'important')
+      body.style.setProperty('overflow-y', 'scroll', 'important')
+      body.style.setProperty('overflow-x', 'hidden', 'important')
+      body.style.setProperty('height', 'auto', 'important')
+      body.style.setProperty('min-height', '100vh', 'important')
+    } else if (body) {
+      html.style.removeProperty('overflow-y')
+      html.style.removeProperty('overflow-x')
+      html.style.removeProperty('height')
+      html.style.removeProperty('min-height')
+      body.style.removeProperty('overflow-y')
+      body.style.removeProperty('overflow-x')
+      body.style.removeProperty('height')
+      body.style.removeProperty('min-height')
+    }
+  }
+
+  BETAI_DASHBOARD_1680_SCROLL_1240()
+  window.addEventListener('resize', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
+  window.addEventListener('orientationchange', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
+  window.addEventListener('load', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
+  setTimeout(BETAI_DASHBOARD_1680_SCROLL_1240, 250)
+  setTimeout(BETAI_DASHBOARD_1680_SCROLL_1240, 900)
+  try {
+    new MutationObserver(BETAI_DASHBOARD_1680_SCROLL_1240).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+  } catch (_) {}
 }
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];

@@ -1,7 +1,0 @@
-WERSJA 1247 — 20 CALI / 1680x1050 — PRZYWROCONY SCROLL W DASHBOARD
-Baza: 1246.
-- Zmiana tylko dla 1600–1849px i tylko po zalogowaniu (.app-shell).
-- Przywrócony pionowy scroll w dashboardzie / prawej kolumnie / treści.
-- Laptop 15.6 / 1920x1080 zostaje osobno bez zmian.
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
