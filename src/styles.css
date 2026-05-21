@@ -54470,3 +54470,22 @@ html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .rightbar{
   overflow:visible!important;
   padding-bottom:140px!important;
 }
+
+/* =========================================================
+   PATCH 1242 — 1920x1080 / Windows 125% / laptop 15 cali
+   JS aktywuje tylko dla FHD raportowanego jako ok. 1536x864.
+   Efekt: jak zoom przeglądarki 81%, przeglądarka nadal pokazuje 100%.
+========================================================= */
+html.betai-laptop-fhd-win125-browser81-v1242,
+html.betai-laptop-fhd-win125-browser81-v1242 body{
+  overflow-x:hidden!important;
+}
+
+html.betai-laptop-fhd-win125-browser81-v1242 body{
+  zoom:81%!important;
+  width:123.456790vw!important;
+  min-width:123.456790vw!important;
+  height:123.456790vh!important;
+  min-height:123.456790vh!important;
+  overflow:hidden!important;
+}

@@ -145,6 +145,77 @@ if (typeof window !== 'undefined') {
   } catch (_) {}
 }
 
+
+/* =========================================================
+   PATCH 1242 — LAPTOP 15.6 / 1920x1080 / WINDOWS 125%
+   Cel: automatyczny efekt jak ręczny zoom przeglądarki 81%,
+   ale bez zmiany widocznego zoomu w przeglądarce (dalej pokazuje 100%).
+   Zakres tylko fizyczny laptop FHD widziany przez Windows 125% jako ok. 1536x864.
+   Nie dotyka 1680x1050 ani 2K/2560x1440.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const vw = window.innerWidth || html.clientWidth || 0
+    const vh = window.innerHeight || html.clientHeight || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+    const ratio = sw && sh ? Math.max(sw, sh) / Math.min(sw, sh) : 0
+
+    // Windows 125% na panelu 1920x1080 najczęściej raportuje screen ok. 1536x864.
+    // Dajemy mały margines na pasek przeglądarki / różnice systemowe.
+    const isWin125VirtualFhdScreen =
+      ((sw >= 1490 && sw <= 1585 && sh >= 830 && sh <= 900) ||
+       (sh >= 1490 && sh <= 1585 && sw >= 830 && sw <= 900)) &&
+      ratio > 1.68 && ratio < 1.86
+
+    const isWin125Viewport =
+      vw >= 1450 && vw <= 1599 &&
+      vh >= 730 && vh <= 930
+
+    const isNotOtherLockedResolution =
+      !((sw === 1680 && sh === 1050) || (sw === 1050 && sh === 1680)) &&
+      !(sw >= 2500 || sh >= 1400) &&
+      !(vw >= 1600 && vw <= 1849)
+
+    const shouldApply = isNotOtherLockedResolution && isWin125VirtualFhdScreen && isWin125Viewport
+
+    html.classList.toggle('betai-laptop-fhd-win125-browser81-v1242', shouldApply)
+
+    if (shouldApply && body) {
+      html.style.setProperty('--betai-laptop-zoom-1242', '0.81')
+      body.style.setProperty('zoom', '81%', 'important')
+      body.style.setProperty('width', '123.456790vw', 'important')
+      body.style.setProperty('min-width', '123.456790vw', 'important')
+      body.style.setProperty('height', '123.456790vh', 'important')
+      body.style.setProperty('min-height', '123.456790vh', 'important')
+      body.style.setProperty('overflow', 'hidden', 'important')
+      body.style.setProperty('overflow-x', 'hidden', 'important')
+    } else if (body) {
+      html.classList.remove('betai-laptop-fhd-win125-browser81-v1242')
+      html.style.removeProperty('--betai-laptop-zoom-1242')
+      if (!html.classList.contains('betai-laptop-browser90-v1233')) {
+        body.style.removeProperty('zoom')
+        body.style.removeProperty('width')
+        body.style.removeProperty('min-width')
+        body.style.removeProperty('height')
+        body.style.removeProperty('min-height')
+        body.style.removeProperty('overflow')
+        body.style.removeProperty('overflow-x')
+      }
+    }
+  }
+
+  BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242()
+  window.addEventListener('resize', BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, { passive: true })
+  window.addEventListener('orientationchange', BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, { passive: true })
+  window.addEventListener('load', BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, { passive: true })
+  setTimeout(BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, 120)
+  setTimeout(BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, 500)
+  setTimeout(BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, 1200)
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
