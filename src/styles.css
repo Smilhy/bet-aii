@@ -54425,3 +54425,29 @@ html.betai-laptop-browser90-v1233 body #root html body .auth609-screen .auth623-
 html.betai-laptop-browser90-v1233 body #root html body #root .auth609-screen .auth627-social-link b{font-size:15px!important;}
 html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-link b{font-size:15px!important;}
 
+
+/* =========================================================
+   PATCH 1680x1050 / 20 cali — Dashboard: prawy scroll
+   Scope: tylko dashboard z prawą kolumną na rozdzielczości 1680x1050.
+   Innych rozdzielczości i widoków nie ruszać.
+========================================================= */
+@media (min-width:1600px) and (max-width:1849px) and (min-height:980px) and (max-height:1100px){
+  body:has(.app-shell:not(.no-rightbar-page)){
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+  }
+  #root:has(.app-shell:not(.no-rightbar-page)){
+    min-height:100vh!important;
+  }
+  .app-shell:not(.no-rightbar-page){
+    min-height:calc(100vh + 1px)!important;
+    overflow:visible!important;
+    scrollbar-gutter:stable!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar{
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    max-height:100vh!important;
+    scrollbar-gutter:stable!important;
+  }
+}
