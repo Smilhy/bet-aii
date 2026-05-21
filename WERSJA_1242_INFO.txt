@@ -1,0 +1,8 @@
+WERSJA 1242 — LAPTOP 15.6 / 1920x1080 LOGIN + DASHBOARD JAK 90%
+Baza: 1235.
+- Użytkownik ma przeglądarkę na 100%.
+- Laptop ma zachowywać się jak ręczny zoom 90%.
+- Zastosowane dla loginu i dashboardu na #root.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.

@@ -54428,16 +54428,18 @@ html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell
 
 
 /* =========================================================
-   WERSJA 1241 — LAPTOP 15.6 / 1920x1080 BROWSER 90 BEZ PODWÓJNEGO SCALE
+   WERSJA 1242 — LAPTOP 15.6 / 1920x1080 LOGIN + DASHBOARD JAK 90%
    BAZA: 1235.
-   - 1240 źle powiększało, bo doszedł zoom na #root.
-   - Teraz #root ma zoom:1, a efekt 90% jest tylko na body.
-   - Login i dashboard są objęte, ale bez podwójnego skalowania.
-   - 27/32 cale 2K i 1680x1050 bez zmian.
+   - Dotyczy loginu i dashboardu.
+   - Użytkownik zostawia przeglądarkę na 100%.
+   - Strona na laptopie zachowuje się jak przy ręcznym zoomie 90%.
+   - 27 cali / 2K: NIE RUSZAĆ.
+   - 32 cale / 2K: NIE RUSZAĆ.
+   - 20 cali / 1680x1050: NIE RUSZAĆ.
    ========================================================= */
 
-html.betai-laptop90-no-double-v1241,
-html.betai-laptop90-no-double-v1241 body{
+html.betai-laptop90-both-v1242,
+html.betai-laptop90-both-v1242 body{
   width:100%!important;
   height:100%!important;
   min-width:0!important;
@@ -54447,18 +54449,11 @@ html.betai-laptop90-no-double-v1241 body{
   background:#020914!important;
 }
 
-html.betai-laptop90-no-double-v1241 body{
-  zoom:90%!important;
-  width:111.111111vw!important;
-  min-width:111.111111vw!important;
-  height:111.111111vh!important;
-  min-height:111.111111vh!important;
-}
-
-/* Najważniejsze: NIE skalować #root drugi raz */
-html.betai-laptop90-no-double-v1241 body #root{
-  zoom:1!important;
-  transform:none!important;
+/*
+  Browser zoom 90% = wirtualnie więcej miejsca + wizualnie 90%.
+  Robimy to na #root, bo ma objąć LOGIN i DASHBOARD.
+*/
+html.betai-laptop90-both-v1242 body #root{
   width:111.111111vw!important;
   min-width:111.111111vw!important;
   max-width:none!important;
@@ -54467,17 +54462,13 @@ html.betai-laptop90-no-double-v1241 body #root{
   max-height:none!important;
   overflow:hidden!important;
   background:#020914!important;
-}
-
-/* Neutralizacja ewentualnych starszych laptopowych root scale z wcześniejszych prób */
-html.betai-laptop90-no-double-v1241 body #root,
-html.betai-laptop90-no-double-v1241 body #root .app-shell,
-html.betai-laptop90-no-double-v1241 body #root .auth609-artboard{
+  transform:scale(.90)!important;
+  transform-origin:top left!important;
   zoom:1!important;
 }
 
 /* LOGIN */
-html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-screen{
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen{
   width:111.111111vw!important;
   min-width:111.111111vw!important;
   height:111.111111vh!important;
@@ -54489,7 +54480,7 @@ html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-sc
   background:#020914!important;
 }
 
-html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth609-artboard{
   width:2048px!important;
   min-width:2048px!important;
   max-width:none!important;
@@ -54504,15 +54495,51 @@ html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-sc
   flex:0 0 auto!important;
 }
 
-html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference,
-html.betai-laptop90-no-double-v1241 body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay{
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference,
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay{
   width:2048px!important;
   height:1152px!important;
   max-width:none!important;
 }
 
+/* Lewa kolumna loginu */
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-dock{
+  display:flex!important;
+  visibility:visible!important;
+  position:absolute!important;
+  left:28px!important;
+  top:118px!important;
+  width:174px!important;
+  max-width:174px!important;
+  gap:8px!important;
+  z-index:90!important;
+}
+
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth623-side-live.auth624-side-live,
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth1179-left-stats-outside.auth623-side-live.auth624-side-live{
+  display:block!important;
+  visibility:visible!important;
+  position:absolute!important;
+  left:22px!important;
+  top:450px!important;
+  width:188px!important;
+  max-width:188px!important;
+  transform:none!important;
+  z-index:88!important;
+}
+
+html.betai-laptop90-both-v1242 body #root:not(:has(.app-shell)) .auth609-screen .auth617-feature-strip{
+  display:grid!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  left:1024px!important;
+  bottom:-110px!important;
+  width:1760px!important;
+  transform:translateX(-50%)!important;
+}
+
 /* DASHBOARD */
-html.betai-laptop90-no-double-v1241 body #root .app-shell{
+html.betai-laptop90-both-v1242 body #root .app-shell{
   width:111.111111vw!important;
   min-width:111.111111vw!important;
   min-height:111.111111vh!important;
