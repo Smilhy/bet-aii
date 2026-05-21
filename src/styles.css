@@ -55088,3 +55088,205 @@ html body #root .betai-language-switch.compact.betai-language-dropdown .betai-la
   color:rgba(231,245,255,.84)!important;
   text-shadow:none!important;
 }
+
+/* =========================================================
+   WERSJA 1258 — PRAWA STRONA LOGINU: żywy holograficzny mockup premium
+   BAZA: 1257
+   - subtelny ruch mockupu
+   - glass/hologram overlay
+   - skan-linia i świetlny sweep
+   - delikatna aktywność kart
+   - mocniejsza piłka 3D / premium
+   Nie rusza lewego panelu formularza.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth609-artboard{
+  overflow:hidden!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-reference{
+  animation:betaiAuthMockupFloat1258 18s ease-in-out infinite alternate,
+            betaiAuthMockupTone1258 7.6s ease-in-out infinite!important;
+  transform-origin:74% 52%!important;
+  will-change:transform, filter!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx{
+  position:absolute!important;
+  left:664px!important;
+  top:24px!important;
+  width:1338px!important;
+  height:1098px!important;
+  pointer-events:none!important;
+  overflow:hidden!important;
+  border-radius:34px!important;
+  z-index:0!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx > span{
+  position:absolute!important;
+  display:block!important;
+  pointer-events:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-glass{
+  inset:16px 20px 20px 18px!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.038), rgba(255,255,255,.012) 28%, rgba(0,0,0,0) 68%),
+    radial-gradient(circle at 19% 10%, rgba(81,236,255,.09), transparent 34%),
+    radial-gradient(circle at 84% 78%, rgba(36,255,229,.05), transparent 26%)!important;
+  box-shadow:inset 0 0 0 1px rgba(120,246,255,.10), inset 0 0 40px rgba(36,255,229,.04)!important;
+  backdrop-filter:blur(1.8px) saturate(1.08)!important;
+  opacity:.96!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-scan{
+  inset:0!important;
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(120,245,255,.030) 0px,
+    rgba(120,245,255,.030) 1px,
+    rgba(0,0,0,0) 1px,
+    rgba(0,0,0,0) 10px
+  )!important;
+  mix-blend-mode:screen!important;
+  opacity:.22!important;
+  animation:betaiAuthScan1258 13s linear infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-sweep{
+  top:-8%!important;
+  left:-20%!important;
+  width:54%!important;
+  height:120%!important;
+  background:linear-gradient(102deg, rgba(255,255,255,0) 22%, rgba(105,255,244,.11) 46%, rgba(255,255,255,.18) 50%, rgba(65,232,255,.11) 54%, rgba(255,255,255,0) 78%)!important;
+  transform:translateX(-130%) skewX(-16deg)!important;
+  filter:blur(4px)!important;
+  opacity:.66!important;
+  animation:betaiAuthSweep1258 11.8s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-hero{
+  left:155px!important;
+  top:46px!important;
+  width:744px!important;
+  height:342px!important;
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(86,235,255,.10), transparent 42%),
+    linear-gradient(180deg, rgba(50,230,255,.08), rgba(50,230,255,0) 46%)!important;
+  box-shadow:0 0 60px rgba(31,215,255,.07), inset 0 0 0 1px rgba(92,246,255,.06)!important;
+  animation:betaiAuthHeroGlow1258 8s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-card{
+  height:10px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg, rgba(44,231,214,.0), rgba(54,240,199,.95), rgba(71,205,255,.95), rgba(44,231,214,.0))!important;
+  box-shadow:0 0 18px rgba(54,240,199,.32)!important;
+  opacity:.72!important;
+  animation:betaiAuthCardPulse1258 4.4s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-card-1{left:972px!important; top:152px!important; width:172px!important; animation-delay:.3s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-card-2{left:968px!important; top:238px!important; width:160px!important; animation-delay:1.05s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-card-3{left:972px!important; top:706px!important; width:190px!important; animation-delay:1.8s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-card-4{left:430px!important; top:912px!important; width:154px!important; animation-delay:2.35s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-pips{
+  width:14px!important;
+  height:14px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 30% 30%, #aaffff, #27ebd4 52%, rgba(39,235,212,.18) 72%, rgba(39,235,212,0) 100%)!important;
+  box-shadow:0 0 22px rgba(39,235,212,.34)!important;
+  animation:betaiAuthPipBlink1258 3.6s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-pips-1{left:291px!important; top:760px!important; animation-delay:.55s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-pips-2{left:759px!important; top:931px!important; animation-delay:1.7s!important;}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-ball-shadow{
+  left:813px!important;
+  top:790px!important;
+  width:300px!important;
+  height:122px!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 50% 44%, rgba(0,0,0,.46), rgba(0,0,0,.20) 46%, rgba(0,0,0,0) 72%)!important;
+  filter:blur(16px)!important;
+  opacity:.72!important;
+  animation:betaiAuthBallShadow1258 7s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-ball{
+  left:820px!important;
+  top:732px!important;
+  width:292px!important;
+  height:292px!important;
+  border-radius:50%!important;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.26), rgba(255,255,255,0) 28%),
+    radial-gradient(circle at 48% 42%, rgba(96,241,255,.10), rgba(96,241,255,0) 56%),
+    radial-gradient(circle at 50% 50%, rgba(29,214,255,.16), rgba(29,214,255,0) 66%)!important;
+  box-shadow:0 0 42px rgba(63,233,255,.28), 0 0 110px rgba(36,255,229,.12)!important;
+  mix-blend-mode:screen!important;
+  animation:betaiAuthBallFloat1258 7s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-right-fx-ball-ring{
+  left:760px!important;
+  top:858px!important;
+  width:424px!important;
+  height:126px!important;
+  border-radius:50%!important;
+  border:2px solid rgba(69,228,255,.24)!important;
+  box-shadow:0 0 32px rgba(69,228,255,.20), inset 0 0 24px rgba(54,240,199,.08)!important;
+  background:radial-gradient(circle at 50% 50%, rgba(54,240,199,.10), rgba(54,240,199,0) 62%)!important;
+  filter:blur(.2px)!important;
+  animation:betaiAuthRingPulse1258 5.2s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-left-panel{
+  z-index:2!important;
+}
+
+@keyframes betaiAuthMockupFloat1258{
+  0%{transform:translate3d(0,0,0) scale(1);}
+  50%{transform:translate3d(-7px,4px,0) scale(1.006);}
+  100%{transform:translate3d(6px,-5px,0) scale(1.01);}
+}
+@keyframes betaiAuthMockupTone1258{
+  0%,100%{filter:brightness(1) saturate(1.03) contrast(1.015);}
+  50%{filter:brightness(1.035) saturate(1.08) contrast(1.04);}
+}
+@keyframes betaiAuthScan1258{
+  0%{transform:translateY(-8px);opacity:.14;}
+  50%{transform:translateY(0);opacity:.24;}
+  100%{transform:translateY(8px);opacity:.14;}
+}
+@keyframes betaiAuthSweep1258{
+  0%,18%{transform:translateX(-138%) skewX(-16deg);opacity:0;}
+  28%{opacity:.72;}
+  42%,100%{transform:translateX(228%) skewX(-16deg);opacity:0;}
+}
+@keyframes betaiAuthHeroGlow1258{
+  0%,100%{opacity:.58; transform:translate3d(0,0,0) scale(1);}
+  50%{opacity:.88; transform:translate3d(5px,-3px,0) scale(1.02);}
+}
+@keyframes betaiAuthCardPulse1258{
+  0%,100%{opacity:.24; transform:scaleX(.94);}
+  50%{opacity:.92; transform:scaleX(1);}
+}
+@keyframes betaiAuthPipBlink1258{
+  0%,100%{opacity:.24; transform:scale(.86);}
+  40%{opacity:.92; transform:scale(1.08);}
+  60%{opacity:.52; transform:scale(.96);}
+}
+@keyframes betaiAuthBallFloat1258{
+  0%,100%{transform:translate3d(0,0,0) scale(1); opacity:.62;}
+  50%{transform:translate3d(-4px,-7px,0) scale(1.04); opacity:.94;}
+}
+@keyframes betaiAuthBallShadow1258{
+  0%,100%{transform:scale(.96); opacity:.54;}
+  50%{transform:scale(1.05); opacity:.8;}
+}
+@keyframes betaiAuthRingPulse1258{
+  0%,100%{transform:scale(.98); opacity:.48;}
+  50%{transform:scale(1.04); opacity:.92;}
+}
+
+@media (max-width:1100px){
+  html body #root:not(:has(.app-shell)) .auth609-right-fx{display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-reference{animation:none!important;}
+}
+@media (prefers-reduced-motion:reduce){
+  html body #root:not(:has(.app-shell)) .auth609-reference,
+  html body #root:not(:has(.app-shell)) .auth609-right-fx *,
+  html body #root:not(:has(.app-shell)) .auth609-right-fx{
+    animation:none!important;
+  }
+}

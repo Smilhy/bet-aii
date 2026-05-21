@@ -15939,6 +15939,21 @@ function AuthView({ onAuth }) {
         />
 
         <div className="auth609-overlay">
+          <div className="auth609-right-fx" aria-hidden="true">
+            <span className="auth609-right-fx-glass" />
+            <span className="auth609-right-fx-scan" />
+            <span className="auth609-right-fx-sweep" />
+            <span className="auth609-right-fx-hero" />
+            <span className="auth609-right-fx-card auth609-right-fx-card-1" />
+            <span className="auth609-right-fx-card auth609-right-fx-card-2" />
+            <span className="auth609-right-fx-card auth609-right-fx-card-3" />
+            <span className="auth609-right-fx-card auth609-right-fx-card-4" />
+            <span className="auth609-right-fx-pips auth609-right-fx-pips-1" />
+            <span className="auth609-right-fx-pips auth609-right-fx-pips-2" />
+            <span className="auth609-right-fx-ball" />
+            <span className="auth609-right-fx-ball-ring" />
+            <span className="auth609-right-fx-ball-shadow" />
+          </div>
           <section className="auth609-left-panel">
             <div className="auth609-panel-shell auth609-panel-shell-fixed">
               <div className="auth609-center-wrap">
