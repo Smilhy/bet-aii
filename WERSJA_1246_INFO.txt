@@ -1,0 +1,9 @@
+WERSJA 1246 — OSOBNO LAPTOP 15.6 / 1920x1080 / FEEL 81
+Baza: dobra paczka 1235.
+- To jest osobny zapis pod laptop 15.6 cala / 1920x1080 / Windows 125%.
+- Przeglądarka pokazuje 100%, strona ma czuć się jak 81%.
+- Dotyczy loginu i dashboardu.
+- Font +1px z 1235 zostaje.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.

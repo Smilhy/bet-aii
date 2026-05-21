@@ -55,7 +55,7 @@ if (typeof window !== 'undefined') {
     // - 1680x1050: gotowe,
     // - 2K: gotowe.
     const isLaptopFhdViewport = vw >= 1850 && vw <= 2199 && vh >= 820 && vh <= 1200
-    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 680 && vh <= 930
+    const isLaptop125Viewport = vw >= 1450 && vw <= 1599 && vh >= 650 && vh <= 930
     const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
 
     const shouldApply = (isLaptopFhdViewport || isLaptop125Viewport || isRealFhdScreen)

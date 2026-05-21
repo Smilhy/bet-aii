@@ -54428,13 +54428,14 @@ html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell
 
 
 /* =========================================================
-   WERSJA 1245 — LAPTOP 15.6 / 1920x1080 CZUJE 81%, POKAZUJE 100%
+   WERSJA 1246 — OSOBNO LAPTOP 15.6 / 1920x1080 / FEEL 81
    BAZA: dobra paczka 1235.
-   USTALENIE:
-   - 1235 miało auto 90%.
-   - Kolega przy tym jeszcze ręcznie dawał 90%, więc realnie było 90% * 90% = 81%.
-   - Teraz przy przeglądarce 100% laptop ma sam czuć się jak 81%.
-   - Dotyczy LOGINU i DASHBOARDU.
+   ZAPIS OSOBNO POD LAPTOP:
+   - Tylko laptop 15.6 / 1920x1080 / Windows 125%.
+   - Przeglądarka ma pokazywać 100%.
+   - Strona ma czuć się jak 81%.
+   - To odpowiada: auto 90% z 1235 + ręczne 90% u Pawła = 81%.
+   - Dotyczy loginu i dashboardu.
    - 27 cali / 2K: NIE RUSZAĆ.
    - 32 cale / 2K: NIE RUSZAĆ.
    - 20 cali / 1680x1050: NIE RUSZAĆ.
@@ -54454,7 +54455,7 @@ html.betai-laptop-browser90-v1233 body{
   min-height:123.456790vh!important;
 }
 
-/* root obejmuje login i dashboard */
+/* Login + dashboard, bo #root obejmuje całą aplikację */
 html.betai-laptop-browser90-v1233 body #root{
   width:123.456790vw!important;
   min-width:123.456790vw!important;
