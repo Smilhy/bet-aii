@@ -2628,7 +2628,7 @@ function LiveChatPanel({ user }) {
                 </div>
                 <div className="livechat226-text">{msg.message}</div>
                 <div className="livechat226-actions">
-                  {mine ? <span className="livechat226-tipmeta">Twoja wiadomość</span> : <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button>}
+                  {!mine ? <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button> : null}
                   <span className="livechat226-tipmeta">Tips: {Number(msg.tipped_amount || 0)}</span>
                 </div>
               </div>
