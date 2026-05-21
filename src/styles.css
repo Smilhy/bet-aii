@@ -55088,38 +55088,3 @@ html body #root .betai-language-switch.compact.betai-language-dropdown .betai-la
   color:rgba(231,245,255,.84)!important;
   text-shadow:none!important;
 }
-
-/* =========================================================
-   WERSJA 1258-GLASS-ONLY — PRAWA STRONA LOGINU: tylko efekt szkła
-   BAZA: cofnięta wersja po rewercie prawej strony.
-   - bez 3D,
-   - bez dodatkowych przeróbek,
-   - tylko delikatny glass overlay na prawą część.
-   ========================================================= */
-html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before{
-  content:""!important;
-  position:absolute!important;
-  left:650px!important;
-  top:20px!important;
-  width:1336px!important;
-  height:1098px!important;
-  border-radius:34px!important;
-  pointer-events:none!important;
-  z-index:1!important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018) 16%, rgba(255,255,255,.006) 42%, rgba(255,255,255,.018) 100%),
-    linear-gradient(108deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.040) 11%, rgba(255,255,255,0) 21%),
-    radial-gradient(circle at 18% 10%, rgba(94,240,255,.065), transparent 28%)!important;
-  border:1px solid rgba(100,238,255,.10)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 0 0 1px rgba(10,36,58,.14),
-    0 0 0 1px rgba(74,214,255,.03)!important;
-  backdrop-filter:blur(1.4px) saturate(1.03)!important;
-}
-html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel{
-  z-index:2!important;
-}
-@media (max-width:1100px){
-  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before{display:none!important;}
-}
