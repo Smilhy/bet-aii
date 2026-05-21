@@ -54559,3 +54559,22 @@ html body #root .auth609-screen .reviews512-panel{
   right:auto!important;
   bottom:78px!important;
 }
+
+/* =========================================================
+   WERSJA 1245 — GLOBALNIE: usuń napisy dolne + ten sam układ login/dashboard
+   BAZA: 1244.
+   - usuwa dolne napisy z okna opinii i czatu,
+   - zostawia zielony badge czatu,
+   - zostawia ocenę po lewej stronie,
+   - działa globalnie na loginie i dashboardzie.
+   ========================================================= */
+html body .reviews512-powered,
+html body .support510-powered,
+html body .auth609-screen .reviews512-powered,
+html body .auth609-screen .support510-powered,
+html body #root .reviews512-powered,
+html body #root .support510-powered,
+html body #root .auth609-screen .reviews512-powered,
+html body #root .auth609-screen .support510-powered{
+  display:none!important;
+}

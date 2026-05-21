@@ -15016,7 +15016,6 @@ function SiteReviewsWidget({ user }) {
             )}
           </div>
 
-          <div className="reviews512-powered">Oceny zapisywane live w <b>BetAI Reviews</b></div>
         </section>
       ) : null}
 
@@ -15239,7 +15238,6 @@ function SupportChatWidget({ user }) {
             }} />
             <button type="button" onClick={sendSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
           </footer>
-          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
         </section>
       ) : null}
 
@@ -15351,7 +15349,6 @@ function AuthSupportChatGuest() {
             }} />
             <button type="button" onClick={sendGuestSupportMessage} disabled={loading || !text.trim()} aria-label="Wyślij wiadomość">➤</button>
           </footer>
-          <div className="support510-powered">Napędzane przez <b>BetAI Live Support</b></div>
         </section>
       ) : null}
 
