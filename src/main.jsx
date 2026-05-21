@@ -95,22 +95,23 @@ if (typeof window !== 'undefined') {
 
 
 /* =========================================================
-   PATCH 1240 — 1680x1050 / 20 cali: scroll strony dashboardu
-   Cel: tylko dashboard z prawą kolumną na fizycznym ekranie 1680x1050.
-   Nie dotyka innych rozdzielczości ani widoków bez rightbara.
+   PATCH 1241 — 1680x1050 / 20 cali: scroll strony we wszystkich zakładkach aplikacji
+   Cel: prawy scroll całej strony na fizycznym ekranie 1680x1050.
+   Nie dotyka innych rozdzielczości ani ekranów logowania.
    ========================================================= */
 if (typeof window !== 'undefined') {
-  const BETAI_DASHBOARD_1680_SCROLL_1240 = () => {
+  const BETAI_ALLTABS_1680_SCROLL_1241 = () => {
     const html = document.documentElement
     const body = document.body
     const sw = window.screen?.width || 0
     const sh = window.screen?.height || 0
     const vw = window.innerWidth || html.clientWidth || 0
     const isTarget1680 = ((sw === 1680 && sh === 1050) || (sw === 1050 && sh === 1680) || (vw >= 1600 && vw <= 1849 && sh === 1050))
-    const isDashboardWithRightbar = !!document.querySelector('#root .app-shell:not(.no-rightbar-page) .rightbar')
-    const shouldApply = isTarget1680 && isDashboardWithRightbar
+    const isAppTab = !!document.querySelector('#root .app-shell')
+    const shouldApply = isTarget1680 && isAppTab
 
-    html.classList.toggle('betai-dashboard-1680-scroll-v1240', shouldApply)
+    html.classList.toggle('betai-dashboard-1680-scroll-v1240', false)
+    html.classList.toggle('betai-alltabs-1680-scroll-v1241', shouldApply)
 
     if (shouldApply && body) {
       html.style.setProperty('overflow-y', 'scroll', 'important')
@@ -133,14 +134,14 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  BETAI_DASHBOARD_1680_SCROLL_1240()
-  window.addEventListener('resize', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
-  window.addEventListener('orientationchange', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
-  window.addEventListener('load', BETAI_DASHBOARD_1680_SCROLL_1240, { passive: true })
-  setTimeout(BETAI_DASHBOARD_1680_SCROLL_1240, 250)
-  setTimeout(BETAI_DASHBOARD_1680_SCROLL_1240, 900)
+  BETAI_ALLTABS_1680_SCROLL_1241()
+  window.addEventListener('resize', BETAI_ALLTABS_1680_SCROLL_1241, { passive: true })
+  window.addEventListener('orientationchange', BETAI_ALLTABS_1680_SCROLL_1241, { passive: true })
+  window.addEventListener('load', BETAI_ALLTABS_1680_SCROLL_1241, { passive: true })
+  setTimeout(BETAI_ALLTABS_1680_SCROLL_1241, 250)
+  setTimeout(BETAI_ALLTABS_1680_SCROLL_1241, 900)
   try {
-    new MutationObserver(BETAI_DASHBOARD_1680_SCROLL_1240).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+    new MutationObserver(BETAI_ALLTABS_1680_SCROLL_1241).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
   } catch (_) {}
 }
 

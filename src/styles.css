@@ -54425,15 +54425,13 @@ html.betai-laptop-browser90-v1233 body #root html body .auth609-screen .auth623-
 html.betai-laptop-browser90-v1233 body #root html body #root .auth609-screen .auth627-social-link b{font-size:15px!important;}
 html.betai-laptop-browser90-v1233 body #root html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-link b{font-size:15px!important;}
 
-
-
 /* =========================================================
-   PATCH 1240 — 1680x1050 / 20 cali: PRAWY SCROLL CAŁEJ STRONY
-   Zakres: wyłącznie dashboard z prawą kolumną na ekranie 1680x1050.
-   JS dodaje klasę html.betai-dashboard-1680-scroll-v1240 tylko w tym przypadku.
+   PATCH 1241 — 1680x1050 / 20 cali: PRAWY SCROLL CAŁEJ STRONY
+   Zakres: wszystkie zakładki aplikacji na ekranie 1680x1050.
+   JS dodaje klasę html.betai-alltabs-1680-scroll-v1241 tylko w tym przypadku.
 ========================================================= */
-html.betai-dashboard-1680-scroll-v1240,
-html.betai-dashboard-1680-scroll-v1240 body{
+html.betai-alltabs-1680-scroll-v1241,
+html.betai-alltabs-1680-scroll-v1241 body{
   height:auto!important;
   min-height:100vh!important;
   overflow-y:scroll!important;
@@ -54441,21 +54439,29 @@ html.betai-dashboard-1680-scroll-v1240 body{
   scrollbar-gutter:stable!important;
 }
 
-html.betai-dashboard-1680-scroll-v1240 body #root:has(.app-shell:not(.no-rightbar-page)){
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell){
   height:auto!important;
   min-height:calc(135.685210vh + 720px)!important;
   max-height:none!important;
   overflow:visible!important;
 }
 
-html.betai-dashboard-1680-scroll-v1240 body #root:has(.app-shell:not(.no-rightbar-page)) .app-shell:not(.no-rightbar-page){
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .app-shell{
   height:auto!important;
   min-height:calc(135.685210vh + 720px)!important;
   max-height:none!important;
   overflow:visible!important;
 }
 
-html.betai-dashboard-1680-scroll-v1240 body #root:has(.app-shell:not(.no-rightbar-page)) .rightbar{
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .main,
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) main,
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .content,
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .page{
+  max-height:none!important;
+  overflow:visible!important;
+}
+
+html.betai-alltabs-1680-scroll-v1241 body #root:has(.app-shell) .rightbar{
   position:relative!important;
   top:auto!important;
   height:auto!important;
