@@ -55011,3 +55011,33 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-center-wrap{
     transform:none!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1256 — LOGIN: mniejsze powiększenie panelu w lewo
+   BAZA: 1255
+   Poprzednie rozszerzenie było za mocne. Zmniejszamy je,
+   ale dalej powiększamy tylko w lewo, z zachowaniem prawej krawędzi.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel{
+  left:7px!important;
+  width:660px!important;
+  max-width:660px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-panel-shell-fixed{
+  width:660px!important;
+  max-width:660px!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-center-wrap{
+  left:330px!important;
+  right:auto!important;
+  transform:translate(-50%,-50%)!important;
+}
+@media (max-width:640px){
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel{
+    left:auto!important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-center-wrap{
+    left:auto!important;
+    transform:none!important;
+  }
+}
