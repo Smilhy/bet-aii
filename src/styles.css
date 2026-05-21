@@ -54712,3 +54712,27 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon svg{
   html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon,
   html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon svg{animation:none!important;}
 }
+
+/* =========================================================
+   WERSJA 1249 — LOGIN: ramki przy ikonach social jak w statystykach
+   BAZA: 1248.
+   Dodaje taki sam typ obramowania i tła do ikonek social na loginie.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon{
+  width:32px!important;
+  height:32px!important;
+  flex:0 0 32px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:12px!important;
+  color:inherit!important;
+  background:radial-gradient(circle at 34% 26%, rgba(37,239,210,.20), rgba(6,24,42,.96) 62%)!important;
+  border:1px solid rgba(67,230,255,.26)!important;
+  box-shadow:0 0 18px rgba(37,239,210,.13)!important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon svg{
+  width:17px!important;
+  height:17px!important;
+  flex:0 0 17px!important;
+}
