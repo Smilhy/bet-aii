@@ -54512,3 +54512,45 @@ html.betai-laptop-browser90-v1233 body #root .app-shell{
   zoom:1!important;
 }
 
+
+
+/* =========================================================
+   WERSJA 1247 — 20 CALI / 1680x1050 — PRZYWRÓCONY SCROLL W DASHBOARD
+   BAZA: 1246.
+   Zmiana tylko dla 1600–1849px i tylko po zalogowaniu (.app-shell).
+   Przywracamy pionowy scroll w dashboardzie po prawej / w treści.
+   Laptop 15.6 1920x1080 zostaje osobno bez zmian.
+   27 cali / 2K bez zmian.
+   32 cale / 2K bez zmian.
+   ========================================================= */
+@media (min-width: 1600px) and (max-width: 1849px){
+  html:has(.app-shell),
+  body:has(.app-shell){
+    height:auto!important;
+    min-height:100vh!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+
+  html body #root:has(.app-shell){
+    height:auto!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+
+  html body #root:has(.app-shell) .app-shell{
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+
+  html body #root:has(.app-shell) .main,
+  html body #root:has(.app-shell) .rightbar,
+  html body #root:has(.app-shell) .feed,
+  html body #root:has(.app-shell) .feed-wrap,
+  html body #root:has(.app-shell) .tips-page,
+  html body #root:has(.app-shell) .dashboard-page{
+    overflow:visible!important;
+  }
+}
