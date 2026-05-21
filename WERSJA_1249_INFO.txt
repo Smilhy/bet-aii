@@ -1,0 +1,9 @@
+WERSJA 1249 — TABLET LENOVO 10.1 CALA / AUTO 75%
+Baza: 1248.
+- Osobny wariant pod tablet Lenovo 10.1 cala.
+- Przeglądarka pokazuje 100%, strona czuje się jak 75%.
+- Dotyczy loginu i dashboardu.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- 20 cali / 1680x1050 bez zmian.
+- Laptop 15.6 / 1920x1080 bez zmian.

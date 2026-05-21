@@ -35,6 +35,55 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
 /* =========================================================
+   WERSJA 1249 — TABLET LENOVO 10.1 CALA / AUTO 75%
+   Użytkownik ma widzieć 100% w przeglądarce,
+   ale tablet ma zachowywać się jak ręczny zoom 75%.
+   Dotyczy loginu i dashboardu.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_TABLET_LENOVO10_AUTO75_1249 = () => {
+    const html = document.documentElement
+    const vw = window.innerWidth || html.clientWidth || 0
+    const vh = window.innerHeight || html.clientHeight || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+    const ua = (navigator.userAgent || '').toLowerCase()
+    const platform = (navigator.platform || '').toLowerCase()
+    const touch = navigator.maxTouchPoints || 0
+
+    const isAndroid = ua.includes('android')
+    const isLenovo = ua.includes('lenovo') || platform.includes('lenovo')
+    const isTabletUa = isAndroid && !ua.includes('mobile')
+    const isTouch = touch >= 3
+
+    const screen1280x800 = (sw >= 780 && sw <= 820 && sh >= 1240 && sh <= 1320) || (sh >= 780 && sh <= 820 && sw >= 1240 && sw <= 1320)
+    const screen1920x1200 = (sw >= 1180 && sw <= 1225 && sh >= 1880 && sh <= 1940) || (sh >= 1180 && sh <= 1225 && sw >= 1880 && sw <= 1940)
+    const screen2000x1200 = (sw >= 1180 && sw <= 1225 && sh >= 1960 && sh <= 2025) || (sh >= 1180 && sh <= 1225 && sw >= 1960 && sw <= 2025)
+
+    const viewportTabletLandscape = vw >= 800 && vw <= 1400 && vh >= 500 && vh <= 1100
+    const viewportTabletPortrait = vh >= 800 && vh <= 1400 && vw >= 500 && vw <= 1100
+
+    const shouldApply = (
+      (isLenovo && isTouch) ||
+      (isTabletUa && isTouch && (screen1280x800 || screen1920x1200 || screen2000x1200 || viewportTabletLandscape || viewportTabletPortrait))
+    )
+
+    if (shouldApply) {
+      html.classList.add('betai-tablet-lenovo10-auto75-v1249')
+    } else {
+      html.classList.remove('betai-tablet-lenovo10-auto75-v1249')
+    }
+  }
+
+  BETAI_TABLET_LENOVO10_AUTO75_1249()
+  window.addEventListener('resize', BETAI_TABLET_LENOVO10_AUTO75_1249, { passive: true })
+  window.addEventListener('orientationchange', BETAI_TABLET_LENOVO10_AUTO75_1249, { passive: true })
+  window.addEventListener('load', BETAI_TABLET_LENOVO10_AUTO75_1249, { passive: true })
+  setInterval(BETAI_TABLET_LENOVO10_AUTO75_1249, 1200)
+}
+
+
+/* =========================================================
    WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
    To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
    27/32 cale 2K i 1680x1050 są poza zakresem.

@@ -54554,3 +54554,121 @@ html.betai-laptop-browser90-v1233 body #root .app-shell{
     overflow:visible!important;
   }
 }
+
+
+/* =========================================================
+   WERSJA 1248 — 20 CALI / 1680x1050 — FIX RAMKI LIVE CHATU
+   BAZA: 1247.
+   Cel: prawa ramka przy polu wiadomości / przycisku wyślij
+   nie może być zjadana na dole po prawej.
+   Zmiana tylko dla dashboardu 1600–1849px.
+   27 cali / 2K bez zmian.
+   32 cale / 2K bez zmian.
+   Laptop 15.6 / 1920x1080 bez zmian.
+   ========================================================= */
+@media (min-width: 1600px) and (max-width: 1849px){
+  html body #root:has(.app-shell) .app-shell{
+    grid-template-columns:250px minmax(0,1fr) 448px!important;
+    gap:16px!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar{
+    width:448px!important;
+    min-width:448px!important;
+    max-width:448px!important;
+    padding-right:12px!important;
+    box-sizing:border-box!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar .panel,
+  html body #root:has(.app-shell) .rightbar .live-chat-panel,
+  html body #root:has(.app-shell) .rightbar [class*="livechat226"],
+  html body #root:has(.app-shell) .rightbar [class*="betai-chat"]{
+    overflow:visible!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar .live-chat-panel,
+  html body #root:has(.app-shell) .rightbar .betai-chat-panel-final,
+  html body #root:has(.app-shell) .rightbar .livechat226-panel{
+    padding-bottom:16px!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar .livechat226-input-wrap.betai-input-actions-final,
+  html body #root:has(.app-shell) .rightbar .betai-input-wrap-final.betai-input-actions-final{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 36px 72px 44px!important;
+    gap:7px!important;
+    align-items:center!important;
+    width:100%!important;
+    padding-right:4px!important;
+    box-sizing:border-box!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar .livechat226-input,
+  html body #root:has(.app-shell) .rightbar input.livechat226-input{
+    min-width:0!important;
+    width:100%!important;
+  }
+
+  html body #root:has(.app-shell) .rightbar .livechat226-send,
+  html body #root:has(.app-shell) .rightbar .betai-send-final{
+    width:44px!important;
+    min-width:44px!important;
+    height:43px!important;
+  }
+}
+
+
+/* =========================================================
+   WERSJA 1249 — TABLET LENOVO 10.1 CALA / AUTO 75%
+   BAZA: 1248.
+   Zmiana osobno pod tablet Lenovo 10.1 cala.
+   Użytkownik ma widzieć 100% w przeglądarce,
+   ale strona ma czuć się jak 75%.
+   Dotyczy loginu i dashboardu.
+   27 cali / 2K bez zmian.
+   32 cale / 2K bez zmian.
+   20 cali / 1680x1050 bez zmian.
+   Laptop 15.6 / 1920x1080 bez zmian.
+   ========================================================= */
+html.betai-tablet-lenovo10-auto75-v1249,
+html.betai-tablet-lenovo10-auto75-v1249 body{
+  overflow:auto!important;
+  background:#020914!important;
+}
+
+html.betai-tablet-lenovo10-auto75-v1249 body{
+  zoom:75%!important;
+  width:133.333333vw!important;
+  min-width:133.333333vw!important;
+  height:133.333333vh!important;
+  min-height:133.333333vh!important;
+}
+
+html.betai-tablet-lenovo10-auto75-v1249 body #root{
+  width:133.333333vw!important;
+  min-width:133.333333vw!important;
+  min-height:133.333333vh!important;
+  max-width:none!important;
+  max-height:none!important;
+  background:#020914!important;
+}
+
+/* LOGIN */
+html.betai-tablet-lenovo10-auto75-v1249 body #root:not(:has(.app-shell)) .auth609-screen{
+  width:133.333333vw!important;
+  min-width:133.333333vw!important;
+  min-height:133.333333vh!important;
+  height:133.333333vh!important;
+  overflow:auto!important;
+}
+
+/* DASHBOARD */
+html.betai-tablet-lenovo10-auto75-v1249 body #root .app-shell{
+  width:133.333333vw!important;
+  min-width:133.333333vw!important;
+  min-height:133.333333vh!important;
+  max-width:none!important;
+  transform:none!important;
+  zoom:1!important;
+}

@@ -1,0 +1,8 @@
+WERSJA 1248 — 20 CALI / 1680x1050 — FIX RAMKI LIVE CHATU
+Baza: 1247.
+- Poprawiona prawa dolna ramka przy polu czatu / przycisku wyślij.
+- Delikatnie poszerzona prawa kolumna i dopracowany układ inputa czatu.
+- Zmiana tylko dla dashboardu 1600–1849px.
+- 27 cali / 2K bez zmian.
+- 32 cale / 2K bez zmian.
+- Laptop 15.6 / 1920x1080 bez zmian.
