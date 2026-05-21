@@ -1,0 +1,12 @@
+WERSJA 1238 — MODERACJA LIVE CHATU
+
+Zrobione:
+- przekleństwa na live chacie są automatycznie wykropkowane,
+- użytkownik dostaje ostrzeżenie w powiadomieniach BetAI,
+- po 3 ostrzeżeniach czat blokuje się na 24h,
+- po kolejnym naruszeniu po odblokowaniu blokada czatu wynosi 7 dni,
+- dodany plik SQL do Supabase: supabase/version_1238_live_chat_profanity_moderation.sql,
+- frontend pokazuje komunikat o blokadzie, gdy Supabase odrzuci wysłanie wiadomości.
+
+WAŻNE:
+Po wrzuceniu paczki na hosting uruchom SQL w Supabase SQL Editor.

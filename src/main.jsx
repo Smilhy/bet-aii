@@ -2089,6 +2089,43 @@ function AnimatedDashboardHero() {
   )
 }
 
+const BETAI_CHAT_PROFANITY_WORDS = [
+  'kurwa', 'kurwo', 'kurwy', 'kurwie', 'kurew', 'kurewski', 'kurewska', 'kurwiarz',
+  'chuj', 'chuja', 'chuje', 'chujem', 'chujowy', 'chujowa', 'huj', 'huja', 'huje',
+  'pierdol', 'pierdolę', 'pierdole', 'pierdolony', 'pierdolona', 'spierdalaj', 'wypierdalaj', 'zapierdala',
+  'jebac', 'jebać', 'jebie', 'jebany', 'jebana', 'zjeb', 'zjeba', 'pojeb', 'pojebany', 'pojebana',
+  'pizda', 'pizdo', 'pizdy', 'pizde', 'pizdę', 'pizdzie',
+  'suka', 'suko', 'suki', 'sukinsyn', 'skurwysyn', 'skurwiel', 'skurw',
+  'dupa', 'dupek', 'dupku', 'dupka',
+  'cwel', 'cwela', 'cwele', 'cwelu',
+  'idiota', 'idiotka', 'debil', 'debilu', 'debile', 'kretyn', 'kretynie'
+]
+
+function escapeBetaiRegex(value = '') {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const BETAI_CHAT_PROFANITY_RE = new RegExp('(^|[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ])(' + BETAI_CHAT_PROFANITY_WORDS.map(escapeBetaiRegex).join('|') + ')(?=$|[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ])', 'giu')
+
+function betaiContainsProfanity(value = '') {
+  BETAI_CHAT_PROFANITY_RE.lastIndex = 0
+  return BETAI_CHAT_PROFANITY_RE.test(String(value || ''))
+}
+
+function betaiCensorChatText(value = '') {
+  BETAI_CHAT_PROFANITY_RE.lastIndex = 0
+  return String(value || '').replace(BETAI_CHAT_PROFANITY_RE, (full, prefix, word) => `${prefix}${'•'.repeat(Math.max(3, String(word || '').length))}`)
+}
+
+function betaiParseChatBlockError(error) {
+  const raw = String(error?.message || error?.details || error || '')
+  const match = raw.match(/CHAT_BLOCKED_UNTIL:([^|\s]+)/i)
+  if (!match) return ''
+  const until = new Date(match[1])
+  if (Number.isNaN(until.getTime())) return 'Masz czasową blokadę czatu za przekleństwa.'
+  return `Masz blokadę czatu do ${until.toLocaleString('pl-PL')} za przekleństwa.`
+}
+
 function LiveChatPanel({ user }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
@@ -2391,6 +2428,7 @@ function LiveChatPanel({ user }) {
 
   const sendMessage = async () => {
     const clean = String(text || '').trim().slice(0, 240)
+    const hadProfanity = betaiContainsProfanity(clean)
     if (!clean || sending) return
     if (!email) {
       setStatus('Musisz być zalogowany, aby pisać na live chacie.')
@@ -2422,18 +2460,19 @@ function LiveChatPanel({ user }) {
           window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
           setStatus(`Wiadomość wysłana. Bonus dzienny: +${Number(bonusResult.tokens_awarded || 1)} żeton za pierwszą wiadomość dnia.`)
         } else {
-          setStatus('Wiadomość wysłana na live chat.')
+          setStatus(hadProfanity ? 'Wiadomość wysłana, ale przekleństwa zostały wykropkowane. Ostrzeżenie dodane do powiadomień.' : 'Wiadomość wysłana na live chat.')
         }
       } catch (bonusError) {
         console.warn('daily chat message bonus skipped', bonusError)
-        setStatus('Wiadomość wysłana na live chat.')
+        setStatus(hadProfanity ? 'Wiadomość wysłana, ale przekleństwa zostały wykropkowane. Ostrzeżenie dodane do powiadomień.' : 'Wiadomość wysłana na live chat.')
       }
 
       setText('')
       await loadMessages()
     } catch (error) {
       console.error('live chat send error', error)
-      setStatus('Nie udało się wysłać wiadomości online. Sprawdź Supabase i spróbuj ponownie.')
+      const blockMessage = betaiParseChatBlockError(error)
+      setStatus(blockMessage || 'Nie udało się wysłać wiadomości online. Sprawdź Supabase i spróbuj ponownie.')
     } finally {
       setSending(false)
     }
@@ -12701,7 +12740,6 @@ function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadCha
       <div className="betai-notify-panel betai-notify-panel-with-dm betai-notify-users-only" style={panelStyle || undefined} role="dialog" aria-modal="true" aria-label="Wiadomości użytkowników">
         <div className="betai-notify-header">
           <div>
-            <div className="betai-notify-kicker">USER MESSAGES</div>
             <div className="betai-notify-title">Wiadomości użytkowników</div>
             <div className="betai-notify-sub">Prywatny czat użytkowników. Ten panel otwiera się z koperty, nie z dzwonka.</div>
           </div>
