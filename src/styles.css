@@ -55090,11 +55090,11 @@ html body #root .betai-language-switch.compact.betai-language-dropdown .betai-la
 }
 
 /* =========================================================
-   WERSJA 1258-LITE — PRAWA STRONA LOGINU: tylko szkło + bardziej 3D
+   WERSJA 1258-GLASS-ONLY — PRAWA STRONA LOGINU: tylko efekt szkła
    BAZA: cofnięta wersja po rewercie prawej strony.
-   - bez zmiany układu,
-   - bez animacji mockupu,
-   - tylko subtelny glass / holographic overlay i więcej głębi.
+   - bez 3D,
+   - bez dodatkowych przeróbek,
+   - tylko delikatny glass overlay na prawą część.
    ========================================================= */
 html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before{
   content:""!important;
@@ -55107,44 +55107,19 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before{
   pointer-events:none!important;
   z-index:1!important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.048), rgba(255,255,255,.018) 18%, rgba(255,255,255,.005) 42%, rgba(255,255,255,.018) 100%),
-    radial-gradient(circle at 18% 10%, rgba(94,240,255,.10), transparent 30%),
-    radial-gradient(circle at 84% 78%, rgba(43,241,218,.07), transparent 25%)!important;
-  border:1px solid rgba(100,238,255,.12)!important;
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018) 16%, rgba(255,255,255,.006) 42%, rgba(255,255,255,.018) 100%),
+    linear-gradient(108deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.040) 11%, rgba(255,255,255,0) 21%),
+    radial-gradient(circle at 18% 10%, rgba(94,240,255,.065), transparent 28%)!important;
+  border:1px solid rgba(100,238,255,.10)!important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 0 0 1px rgba(10,36,58,.18),
-    inset 0 0 42px rgba(38,237,220,.035),
-    0 18px 44px rgba(0,0,0,.12),
-    0 0 0 1px rgba(74,214,255,.04)!important;
-  backdrop-filter:blur(1.8px) saturate(1.05)!important;
-}
-html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::after{
-  content:""!important;
-  position:absolute!important;
-  left:668px!important;
-  top:36px!important;
-  width:1300px!important;
-  height:1062px!important;
-  border-radius:30px!important;
-  pointer-events:none!important;
-  z-index:1!important;
-  background:
-    linear-gradient(107deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.045) 12%, rgba(255,255,255,0) 22%),
-    linear-gradient(180deg, rgba(70,225,255,.04), rgba(0,0,0,0) 24%, rgba(0,0,0,0) 76%, rgba(70,225,255,.03) 100%),
-    radial-gradient(ellipse at 75% 88%, rgba(79,238,255,.16), rgba(79,238,255,0) 20%),
-    radial-gradient(ellipse at 76% 92%, rgba(0,0,0,.24), rgba(0,0,0,0) 40%)!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.05),
-    inset 0 -18px 40px rgba(0,0,0,.08)!important;
-}
-html body #root:not(:has(.app-shell)) .auth609-screen .auth609-reference{
-  filter:brightness(1.02) saturate(1.05) contrast(1.03)!important;
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(10,36,58,.14),
+    0 0 0 1px rgba(74,214,255,.03)!important;
+  backdrop-filter:blur(1.4px) saturate(1.03)!important;
 }
 html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel{
   z-index:2!important;
 }
 @media (max-width:1100px){
-  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before,
-  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::after{display:none!important;}
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-overlay::before{display:none!important;}
 }
