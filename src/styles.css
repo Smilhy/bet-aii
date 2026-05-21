@@ -54736,3 +54736,80 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth627-social-icon svg{
   height:17px!important;
   flex:0 0 17px!important;
 }
+
+/* =========================================================
+   WERSJA 1250 — język u góry: ciemne wypełnienie jak czat
+   BAZA: 1249.
+   Zmienia środek / fill selektora języka z zielonego na ciemny.
+   Dotyczy loginu i dashboardu.
+   ========================================================= */
+html body .betai-language-switch.compact.betai-language-dropdown .betai-language-current,
+html body .betai-language-switch.compact.betai-language-dropdown button.is-active,
+html body .auth609-language .betai-language-switch.compact.betai-language-dropdown .betai-language-current,
+html body .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current{
+  background:linear-gradient(180deg,rgba(7,22,34,.98),rgba(4,14,24,.98))!important;
+  color:#eefcff!important;
+  box-shadow:inset 0 0 0 1px rgba(72,225,255,.14),0 0 14px rgba(0,0,0,.18)!important;
+}
+html body .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+html body .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current,
+html body .auth609-language .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+html body .auth609-language .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current,
+html body .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown .betai-language-current:hover,
+html body .app-shell .topbar .betai-language-switch.compact.betai-language-dropdown.is-open .betai-language-current{
+  background:linear-gradient(180deg,rgba(8,24,36,.99),rgba(5,16,26,.99))!important;
+  color:#f4fcff!important;
+  box-shadow:inset 0 0 0 1px rgba(72,225,255,.18),0 0 18px rgba(17,196,214,.08)!important;
+}
+html body .betai-language-switch.compact.betai-language-dropdown .betai-language-chevron{
+  color:rgba(226,248,255,.86)!important;
+}
+
+/* =========================================================
+   WERSJA 1251 — LOGIN: dolne ikonki benefitów pulsują jak sociale/statystyki
+   BAZA: 1250.
+   Tylko ikonki w 4 dolnych kafelkach na loginie.
+   ========================================================= */
+html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon{
+  position:relative!important;
+  overflow:hidden!important;
+  transform:translateZ(0)!important;
+  animation:betaiFeatureIconAlive1251 4.8s ease-in-out infinite!important;
+}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(2) .auth481-feature-icon{animation-delay:.55s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(3) .auth481-feature-icon{animation-delay:1.1s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(4) .auth481-feature-icon{animation-delay:1.65s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon::after{
+  content:""!important;
+  position:absolute!important;
+  inset:-2px!important;
+  background:linear-gradient(115deg,transparent 0%,rgba(64,255,226,0) 32%,rgba(64,255,226,.20) 48%,rgba(255,255,255,.18) 52%,rgba(64,255,226,0) 68%,transparent 100%)!important;
+  transform:translateX(-128%) skewX(-12deg)!important;
+  animation:betaiFeatureIconScan1251 4.8s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(2) .auth481-feature-icon::after{animation-delay:.55s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(3) .auth481-feature-icon::after{animation-delay:1.1s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card:nth-child(4) .auth481-feature-icon::after{animation-delay:1.65s!important;}
+html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon svg{
+  animation:betaiFeatureIconGlyph1251 2.6s ease-in-out infinite!important;
+}
+@keyframes betaiFeatureIconAlive1251{
+  0%,100%{transform:translate3d(0,0,0) scale(1);box-shadow:0 0 18px rgba(24,224,195,.16),0 0 34px rgba(24,215,255,.08)!important;}
+  45%{transform:translate3d(2px,-2px,0) scale(1.045);box-shadow:0 0 24px rgba(54,240,199,.24),0 0 42px rgba(24,215,255,.14)!important;}
+  70%{transform:translate3d(-1px,1px,0) scale(1.015);}
+}
+@keyframes betaiFeatureIconScan1251{
+  0%,38%{transform:translateX(-135%) skewX(-12deg);opacity:0;}
+  48%{opacity:1;}
+  62%,100%{transform:translateX(135%) skewX(-12deg);opacity:0;}
+}
+@keyframes betaiFeatureIconGlyph1251{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(54,240,199,0));transform:scale(1);}
+  50%{filter:drop-shadow(0 0 10px rgba(54,240,199,.42));transform:scale(1.08);}
+}
+@media (prefers-reduced-motion:reduce){
+  html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon,
+  html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon::after,
+  html body #root:not(:has(.app-shell)) .auth481-feature-card .auth481-feature-icon svg{animation:none!important;}
+}
