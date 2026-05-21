@@ -15179,10 +15179,10 @@ function SupportChatWidget({ user }) {
   return (
     <div className={`support510 ${open ? 'is-open' : ''}`}>
       {open ? (
-        <section className="support510-panel" aria-label="Wsparcie TypyAI.pl live">
+        <section className="support510-panel" aria-label="Wsparcie Bet+AI live">
           <header className="support510-head">
             <div>
-              <strong>{adminMode ? 'Centrum wsparcia' : 'Wsparcie TypyAI.pl'}</strong>
+              <strong>{adminMode ? 'Centrum wsparcia' : 'Wsparcie Bet+AI'}</strong>
               <span><i /> {adminMode ? 'Panel admina live' : 'Natychmiastowa odpowiedź live'}</span>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
@@ -15317,10 +15317,10 @@ function AuthSupportChatGuest() {
   return (
     <div className={`support510 support510-guest ${open ? 'is-open' : ''}`}>
       {open ? (
-        <section className="support510-panel support510-guest-panel" aria-label="Wsparcie BetAI live">
+        <section className="support510-panel support510-guest-panel" aria-label="Wsparcie Bet+AI live">
           <header className="support510-head">
             <div>
-              <strong>Wsparcie BetAI</strong>
+              <strong>Wsparcie Bet+AI</strong>
               <span><i /> Live pomoc — wiadomość trafia tylko do smilhytv</span>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="Zamknij czat">×</button>
