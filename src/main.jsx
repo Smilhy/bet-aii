@@ -1906,7 +1906,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
         <div className="betai-premium-logo-card" aria-label="Bet+AI logo">
           <img
             className="betai-premium-logo-image"
-            src="/betai-sidebar-logo-new.png"
+            src="/betai-sidebar-logo-v27.png"
             alt="Bet+AI"
           />
         </div>

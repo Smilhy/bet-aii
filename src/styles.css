@@ -57707,3 +57707,161 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .panel-head h2{
   text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 18px rgba(255,255,255,.06)!important;
 }
+
+
+/* WERSJA 27 — ultra premium lewa kolumna: separator NAWIGACJA + nowe logo */
+.app-shell .sidebar.betai-sidebar-premium-v8,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8{
+  padding:18px 16px 20px!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card{
+  min-height:82px!important;
+  padding:10px 12px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(36,239,255,.15), transparent 44%),
+    linear-gradient(180deg, rgba(6,31,42,.92), rgba(2,16,27,.97))!important;
+  border:1px solid rgba(47,231,238,.22)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -16px 30px rgba(0,0,0,.16),
+    0 12px 30px rgba(0,0,0,.22),
+    0 0 24px rgba(21,231,239,.055)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-image{
+  width:100%!important;
+  height:auto!important;
+  max-height:68px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 14px rgba(29,233,244,.16)) drop-shadow(0 7px 16px rgba(0,0,0,.32)) saturate(1.08) brightness(1.04)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-user-card{
+  margin-top:18px!important;
+  margin-bottom:0!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]{
+  position:relative!important;
+  margin-top:34px!important;
+  padding:34px 10px 14px!important;
+  border-radius:26px!important;
+  border:1px solid rgba(44,226,235,.16)!important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(31,226,174,.08), transparent 32%),
+    linear-gradient(180deg, rgba(5,27,38,.74), rgba(2,14,25,.86))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 -18px 30px rgba(0,0,0,.12),
+    0 16px 40px rgba(0,0,0,.20),
+    0 0 26px rgba(29,233,244,.035)!important;
+  gap:8px!important;
+  overflow:visible!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after{
+  content:""!important;
+  position:absolute!important;
+  left:8px!important;
+  right:8px!important;
+  top:-1px!important;
+  height:1px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg, transparent, rgba(34,229,239,.70), transparent)!important;
+  box-shadow:0 0 14px rgba(34,229,239,.42)!important;
+  pointer-events:none!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before{
+  content:"•••  NAWIGACJA  •••"!important;
+  position:absolute!important;
+  left:50%!important;
+  top:-18px!important;
+  transform:translateX(-50%)!important;
+  width:auto!important;
+  min-width:150px!important;
+  height:34px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin:0!important;
+  padding:0 18px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(41,235,255,.26)!important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,229,239,.18), transparent 68%),
+    linear-gradient(180deg, rgba(5,28,39,.95), rgba(2,15,26,.98))!important;
+  color:#63eef7!important;
+  text-shadow:0 0 12px rgba(34,229,239,.30)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 1px rgba(0,0,0,.20),
+    0 0 22px rgba(34,229,239,.18)!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  letter-spacing:2px!important;
+  line-height:1!important;
+  z-index:3!important;
+  white-space:nowrap!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button{
+  min-height:54px!important;
+  padding:9px 12px!important;
+  border-radius:18px!important;
+  border-color:rgba(49,228,216,.08)!important;
+  background:linear-gradient(90deg, rgba(7,31,43,.26), rgba(2,13,23,.18))!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button.active{
+  background:
+    linear-gradient(90deg, rgba(20,219,221,.22), rgba(7,35,49,.54))!important;
+  border-color:rgba(49,228,216,.26)!important;
+  box-shadow:
+    inset 3px 0 0 #20eadf,
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 24px rgba(32,234,223,.09)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button:not(:last-child){
+  border-bottom-color:rgba(76,119,132,.08)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] .betai-sidebar-nav-label{
+  color:rgba(221,238,245,.86)!important;
+  text-shadow:0 4px 14px rgba(0,0,0,.32)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button.active .betai-sidebar-nav-label,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button:hover .betai-sidebar-nav-label{
+  color:#f4fbff!important;
+}
+
+@media (max-width:1536px){
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card{
+    min-height:74px!important;
+    padding:8px 10px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logo-image{
+    max-height:58px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]{
+    margin-top:30px!important;
+    padding:31px 8px 12px!important;
+    border-radius:24px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before{
+    min-width:132px!important;
+    height:30px!important;
+    top:-16px!important;
+    padding:0 14px!important;
+    font-size:9px!important;
+    letter-spacing:1.6px!important;
+  }
+  .app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button{
+    min-height:50px!important;
+    padding:8px 10px!important;
+  }
+}
