@@ -1894,8 +1894,17 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
   return (
     <div className="sidebar-stack">
       <aside className="sidebar sidebar-main-box">
-        <div className="sidebar-logo-wrap" aria-label="Bet+AI logo">
-          <img src="/betai-sidebar-logo-new.png" alt="Bet+AI" className="sidebar-logo-image" />
+        <div className="sidebar-logo-wrap betai-premium-logo-lock" aria-label="Bet+AI logo premium">
+          <div className="betai-premium-logo-card" role="img" aria-label="Bet+AI AI Match Picks">
+            <div className="betai-premium-logo-icon">
+              <span className="betai-premium-ba">BA</span>
+              <span className="betai-premium-chart-line"></span>
+            </div>
+            <div className="betai-premium-logo-text">
+              <strong><span>Bet</span><em>+AI</em></strong>
+              <small>AI MATCH PICKS</small>
+            </div>
+          </div>
         </div>
         <div className="user-card">
           <div
