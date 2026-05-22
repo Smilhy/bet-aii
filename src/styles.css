@@ -56408,3 +56408,75 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   box-shadow: 0 0 0 1px rgba(45, 255, 220, 0.14) !important;
   outline: none !important;
 }
+
+/* =====================================================================
+   WERSJA 17 — LIVE CHAT COMPOSER CLEAN FRAME FIX
+   Cel: przywrócić ramkę przy emotce, ale usunąć zewnętrzną ramkę
+   całego paska wpisywania wiadomości w prawym czacie.
+   ===================================================================== */
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-composer-final{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  padding:0!important;
+  margin:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input-wrap,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-input-wrap-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input-wrap.betai-input-actions-final,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-input-wrap-final.betai-input-actions-final{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  padding:8px 6px 0 6px!important;
+  gap:8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input{
+  height:43px!important;
+  border-radius:14px!important;
+  background:rgba(4,13,22,.96)!important;
+  border:1px solid rgba(35,213,222,.16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025), 0 0 14px rgba(0,0,0,.10)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-inline-final{
+  width:38px!important;
+  height:43px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-inline-final .betai-emoji-toggle-final,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final{
+  width:38px!important;
+  height:43px!important;
+  min-width:38px!important;
+  padding:0!important;
+  border-radius:13px!important;
+  border:1px solid rgba(35,213,222,.18)!important;
+  background:rgba(8,29,43,.94)!important;
+  color:#fff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 0 14px rgba(0,255,204,.045)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:17px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final:hover,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final:focus-visible{
+  border-color:rgba(35,213,222,.38)!important;
+  background:rgba(12,38,54,.96)!important;
+  box-shadow:0 0 16px rgba(35,213,222,.08), inset 0 1px 0 rgba(255,255,255,.05)!important;
+  outline:none!important;
+}
