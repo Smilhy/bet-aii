@@ -56063,3 +56063,88 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     padding-left:24px!important;
   }
 }
+
+/* =====================================================================
+   WERSJA 13 — LEFT LOGIN PANEL DARK MATCH FIX
+   Cel: przyciemnić tylko lewy panel profilu/logowania, bez zmiany reszty strony.
+   ===================================================================== */
+.app-shell .sidebar.betai-sidebar-premium-v8,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8{
+  background:
+    radial-gradient(circle at 20% 0%, rgba(18,170,164,.055), transparent 30%),
+    linear-gradient(180deg, rgba(4,22,32,.96), rgba(2,12,22,.985))!important;
+  border-color:rgba(35,214,202,.14)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 0 0 1px rgba(34,224,211,.035),
+    0 16px 42px rgba(0,0,0,.32)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card{
+  background:
+    linear-gradient(180deg, rgba(5,24,36,.88), rgba(2,14,24,.96)),
+    radial-gradient(circle at 14% 18%, rgba(24,219,210,.055), transparent 45%)!important;
+  border-color:rgba(42,224,212,.16)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 -10px 22px rgba(0,0,0,.12),
+    0 8px 22px rgba(0,0,0,.18)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-image{
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.18)) saturate(.95) brightness(.96)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-user-card{
+  background:
+    linear-gradient(180deg, rgba(6,28,40,.78), rgba(2,15,25,.94)),
+    radial-gradient(circle at 20% 10%, rgba(31,220,211,.055), transparent 34%)!important;
+  border-color:rgba(42,224,212,.14)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    inset 0 -16px 24px rgba(0,0,0,.12),
+    0 14px 28px rgba(0,0,0,.17)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-avatar{
+  box-shadow:
+    0 0 0 4px rgba(24,215,206,.035),
+    0 0 14px rgba(39,236,223,.13),
+    inset 0 0 8px rgba(0,0,0,.16)!important;
+  border-color:rgba(55,236,225,.68)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row{
+  background:linear-gradient(180deg, rgba(2,15,26,.94), rgba(1,10,18,.98))!important;
+  border-color:rgba(45,224,213,.105)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 -8px 18px rgba(0,0,0,.15),
+    0 6px 14px rgba(0,0,0,.15)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row b{
+  color:#28eddc!important;
+  text-shadow:0 0 8px rgba(40,237,220,.10)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn{
+  background:
+    linear-gradient(180deg, rgba(2,16,27,.94), rgba(1,9,17,.985))!important;
+  border-color:rgba(48,236,223,.56)!important;
+  box-shadow:
+    0 0 10px rgba(38,233,222,.06),
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -10px 20px rgba(0,0,0,.18)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::before{
+  box-shadow:0 0 8px rgba(49,247,227,.11), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  background:linear-gradient(180deg, rgba(5,35,46,.78), rgba(2,18,28,.92))!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+  background:linear-gradient(135deg,#22d9cd 0%,#23bbdf 100%)!important;
+  box-shadow:
+    0 7px 18px rgba(38,235,220,.13),
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -8px 14px rgba(0,0,0,.08)!important;
+}
