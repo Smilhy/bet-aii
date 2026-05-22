@@ -55937,3 +55937,129 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   }
   .app-shell .betai-sidebar-premium-v8 .betai-premium-btn-label{font-size:12.5px!important;}
 }
+
+/* =====================================================================
+   WERSJA 12 — HARD FIX: SIDEBAR BUTTONS STATIC TEXT
+   Naprawia konflikt starych reguł span, który zakrywał tekst przycisków.
+   ===================================================================== */
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:0!important;
+  width:100%!important;
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 14px!important;
+  margin-top:12px!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  text-align:center!important;
+  line-height:1!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn > span,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn > span,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn .betai-premium-btn-icon,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn .betai-premium-btn-label,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn .betai-premium-btn-icon,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn .betai-premium-btn-label{
+  display:none!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::before,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::before{
+  content:''!important;
+  position:absolute!important;
+  left:17px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:31px!important;
+  height:31px!important;
+  border-radius:999px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:15px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  z-index:2!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::after,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
+  position:relative!important;
+  z-index:2!important;
+  display:block!important;
+  width:100%!important;
+  padding-left:26px!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  font-size:13.5px!important;
+  font-weight:950!important;
+  letter-spacing:-.25px!important;
+  line-height:1!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn{
+  color:#ffffff!important;
+  border:1.5px solid rgba(49,244,230,.82)!important;
+  background:
+    radial-gradient(circle at 18% 25%, rgba(49,244,230,.12), transparent 36%),
+    linear-gradient(180deg, rgba(2,20,32,.94), rgba(1,10,19,.98))!important;
+  box-shadow:0 0 18px rgba(39,233,222,.13), inset 0 1px 0 rgba(255,255,255,.11), inset 0 -10px 20px rgba(0,0,0,.22)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::before{
+  content:'↗'!important;
+  color:#31f7e3!important;
+  border:1px solid rgba(49,247,227,.46)!important;
+  background:linear-gradient(180deg, rgba(5,45,57,.88), rgba(2,20,30,.95))!important;
+  box-shadow:0 0 13px rgba(49,247,227,.18), inset 0 1px 0 rgba(255,255,255,.11)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::after{
+  content:'Ulepsz konto'!important;
+  color:#ffffff!important;
+  text-shadow:0 2px 10px rgba(0,0,0,.36)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+  color:#041722!important;
+  border:1px solid rgba(143,255,248,.52)!important;
+  background:linear-gradient(135deg,#28ead8 0%,#29c9ee 100%)!important;
+  box-shadow:0 10px 26px rgba(38,235,220,.22), 0 0 18px rgba(38,235,220,.18), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -8px 14px rgba(0,0,0,.08)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::before{
+  content:'⏻'!important;
+  color:#041722!important;
+  background:rgba(255,255,255,.20)!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
+  content:'Wyloguj'!important;
+  color:#041722!important;
+  text-shadow:none!important;
+  font-size:15px!important;
+}
+@media (max-width:1536px){
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn,
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+    height:50px!important;
+    min-height:50px!important;
+    border-radius:18px!important;
+    padding:0 12px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::before,
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::before{
+    left:15px!important;
+    width:28px!important;
+    height:28px!important;
+    font-size:14px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn::after{
+    font-size:12.5px!important;
+    padding-left:24px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn::after{
+    font-size:14px!important;
+    padding-left:24px!important;
+  }
+}
