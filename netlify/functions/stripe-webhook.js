@@ -55,7 +55,7 @@ async function syncPremiumFromSession(supabase, session) {
     customerId: session.customer || null,
     subscriptionId: subscription?.id || session.subscription || null,
     status: subscription?.status || 'active',
-    currentPeriodEnd: subscription?.current_period_end || (session.mode === 'payment' ? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60 : null),
+    currentPeriodEnd: subscription?.current_period_end || null,
     cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
     forcePremium: true
   });
@@ -302,23 +302,15 @@ exports.handler = async (event) => {
       if (kind === 'tip_purchase') await handleTipPurchase(supabase, session);
       if (kind === 'tipster_profile_subscription') await handleTipsterProfileSubscription(supabase, session);
 
-      const isOneTimePremiumPayment =
-        session.mode === 'payment' &&
-        (session.payment_status === 'paid' || session.status === 'complete') &&
-        String(session.currency || '').toLowerCase() === 'pln' &&
-        Number(session.amount_total || 0) === Number(process.env.PREMIUM_PRICE_GROSZE || 2900) &&
-        !['wallet_topup', 'tip_purchase', 'tipster_profile_subscription'].includes(String(kind || ''));
-
       const isPremiumCheckout =
         kind === 'premium_subscription' ||
         kind === 'premium_access' ||
-        isOneTimePremiumPayment ||
         (session.mode === 'subscription' && kind !== 'tipster_profile_subscription') ||
         (Boolean(session.subscription) && kind !== 'tipster_profile_subscription');
 
       if (isPremiumCheckout) {
         const result = await syncPremiumFromSession(supabase, session);
-        const amount = roundMoney(Number(session.metadata?.amount || 0) || (Number(session.amount_total || 0) / 100) || 29);
+        const amount = Number(session.metadata?.amount || 29);
         const invoice = session.invoice ? await getInvoice(session.invoice) : null;
         const { error: txError } = await supabase.from('wallet_transactions').insert({
           user_id: result.userId,

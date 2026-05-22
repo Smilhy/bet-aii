@@ -18,11 +18,11 @@ exports.handler = async function(event) {
   }
 
   try {
-    const stripeSecretKey = process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
-    const siteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL || 'https://bet-ai.app';
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'http://localhost:8888';
 
     if (!stripeSecretKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: 'Brak STRIPE_CONNECT_SECRET_KEY w Netlify Environment variables.' }) };
+      return { statusCode: 500, body: JSON.stringify({ error: 'Brak STRIPE_SECRET_KEY w Netlify Environment variables.' }) };
     }
 
     const stripe = new Stripe(stripeSecretKey);
@@ -74,9 +74,6 @@ exports.handler = async function(event) {
     if (!sellerStripe?.stripe_account_id) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Ten typer nie podłączył jeszcze Stripe Connect. Nie można kupić płatnego typu.' }) };
     }
-    if (!sellerStripe.payouts_enabled) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Ten typer ma Stripe Connect, ale konto nie jest jeszcze gotowe do wypłat. Dokończ konfigurację Stripe.' }) };
-    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -113,7 +110,7 @@ exports.handler = async function(event) {
         seller_stripe_account_id: sellerStripe.stripe_account_id,
         referral_code: referralCode
       },
-      success_url: `${siteUrl}/?payment=success&stripe=1&tip=${encodeURIComponent(tip.id)}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${siteUrl}/?payment=success&stripe=1&tip=${encodeURIComponent(tip.id)}`,
       cancel_url: `${siteUrl}/?payment=cancel`
     });
 

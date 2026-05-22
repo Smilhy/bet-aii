@@ -1,7 +1,7 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -16,9 +16,9 @@ exports.handler = async (event) => {
   }
 
   try {
-    if (!(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY)) throw new Error('Missing STRIPE_CONNECT_SECRET_KEY');
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('Missing STRIPE_SECRET_KEY');
 
-    const { user_id, email, country } = JSON.parse(event.body || '{}');
+    const { user_id, email } = JSON.parse(event.body || '{}');
 
     if (!user_id) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
@@ -39,11 +39,10 @@ exports.handler = async (event) => {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
-        country: String(country || process.env.STRIPE_CONNECT_COUNTRY || 'GB').toUpperCase(),
+        country: 'PL',
         email: email || undefined,
         capabilities: {
-          transfers: { requested: true },
-          card_payments: { requested: true }
+          transfers: { requested: true }
         },
         business_type: 'individual',
         metadata: { user_id }
@@ -58,8 +57,6 @@ exports.handler = async (event) => {
           stripe_account_id: accountId,
           charges_enabled: Boolean(account.charges_enabled),
           payouts_enabled: Boolean(account.payouts_enabled),
-          details_submitted: Boolean(account.details_submitted),
-          connect_status: account.payouts_enabled ? 'active' : (account.details_submitted ? 'pending' : 'onboarding'),
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
@@ -68,13 +65,14 @@ exports.handler = async (event) => {
 
     const siteUrl =
       process.env.SITE_URL ||
-      process.env.PUBLIC_SITE_URL ||
-      'https://bet-ai.app';
+      process.env.URL ||
+      process.env.DEPLOY_PRIME_URL ||
+      'https://unique-queijadas-333bcd.netlify.app';
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: `${siteUrl}/?stripe_connect=refresh`,
-      return_url: `${siteUrl}/?stripe_connect=success&account_id=${encodeURIComponent(accountId)}`,
+      return_url: `${siteUrl}/?stripe_connect=success`,
       type: 'account_onboarding'
     });
 

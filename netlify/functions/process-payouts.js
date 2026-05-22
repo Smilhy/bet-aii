@@ -2,7 +2,7 @@
 const Stripe = require('stripe');
 const { response, supabaseAdmin, safeInsert, safeUpdatePayout } = require('./_admin-payout-security');
 
-const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
 const MAX_BATCH = Number(process.env.PAYOUT_CRON_BATCH_SIZE || 10);
 
@@ -129,7 +129,7 @@ async function processSinglePayout(supabase, payout) {
 
 exports.handler = async (event) => {
   if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { error: 'Method not allowed' });
-  if (!(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY)) return response(500, { error: 'Missing STRIPE_CONNECT_SECRET_KEY' });
+  if (!process.env.STRIPE_SECRET_KEY) return response(500, { error: 'Missing STRIPE_SECRET_KEY' });
   if (!isAuthorized(event)) return response(401, { error: 'Unauthorized: set PAYOUT_CRON_SECRET/CRON_SECRET or use Netlify scheduled function' });
 
   const supabase = supabaseAdmin();
