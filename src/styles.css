@@ -57388,3 +57388,180 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     font-size:18px !important;
   }
 }
+
+/* WERSJA 1247 — Top typerzy: finalne zmniejszenie fontów i dopasowanie do realnego panelu strony */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19{
+  padding:16px!important;
+  border-radius:26px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .panel-head{
+  margin:0 0 12px!important;
+  padding:0 2px 12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .panel-head h2{
+  font-size:21px!important;
+  line-height:1.08!important;
+  letter-spacing:-.035em!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
+  grid-template-columns:118px minmax(0,1fr) 128px!important;
+  gap:12px!important;
+  min-height:118px!important;
+  padding:16px 18px!important;
+  margin:0 0 12px!important;
+  border-radius:24px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-left{
+  width:118px!important;
+  min-width:118px!important;
+  gap:10px!important;
+  overflow:visible!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-medal-v19{
+  width:48px!important;
+  height:48px!important;
+  min-width:48px!important;
+  font-size:27px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-avatar-v19{
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  box-shadow:0 0 0 4px rgba(4,16,28,.92), 0 0 18px rgba(28,226,255,.12)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-main{
+  min-width:0!important;
+  overflow:visible!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-topline{
+  margin-bottom:12px!important;
+  gap:8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-topline b{
+  font-size:17px!important;
+  line-height:1!important;
+  letter-spacing:-.035em!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-crown-v19{
+  font-size:15px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats{
+  grid-template-columns:repeat(3,minmax(58px,1fr))!important;
+  gap:0!important;
+  min-width:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div{
+  min-height:48px!important;
+  padding-left:12px!important;
+  overflow:visible!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div:first-child{
+  padding-left:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats small{
+  display:block!important;
+  margin-bottom:6px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  color:#9fb0bc!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats strong,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats .rank-types-v19,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .wins,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .sep,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .losses{
+  font-size:15px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:1px!important;
+  min-width:48px!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
+  width:128px!important;
+  min-width:128px!important;
+  max-width:128px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 em{
+  margin-bottom:6px!important;
+  font-size:11px!important;
+  line-height:1!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
+  font-size:18px!important;
+  line-height:1!important;
+  letter-spacing:-.03em!important;
+}
+
+@media (max-width:1680px){
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
+    grid-template-columns:106px minmax(0,1fr) 118px!important;
+    gap:10px!important;
+    padding:15px 16px!important;
+    min-height:108px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-left{
+    width:106px!important;
+    min-width:106px!important;
+    gap:9px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-medal-v19{
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    font-size:24px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-avatar-v19{
+    width:52px!important;
+    height:52px!important;
+    min-width:52px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-topline b{
+    font-size:15px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats small{
+    font-size:10px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats strong,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats .rank-types-v19,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .wins,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .sep,
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .losses{
+    font-size:13px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
+    width:118px!important;
+    min-width:118px!important;
+    max-width:118px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
+    font-size:16px!important;
+  }
+}
