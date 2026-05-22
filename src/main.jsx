@@ -217,7 +217,7 @@ if (typeof window !== 'undefined') {
 }
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
+const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
@@ -1911,7 +1911,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
           <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
           <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951" onClick={() => setView('unlockedTips')}><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></button>
-          <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
+          <button className="outline-btn" onClick={openPremiumCheckout}>Ulepsz konto</button>
           <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
         </div>
 
@@ -21283,7 +21283,15 @@ function App() {
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
   const [stripeConnectStatus, setStripeConnectStatus] = useState(null)
+  const sessionUserRef = useRef(null)
+  const stableInitialLoadRef = useRef({ userId: '', startedAt: 0 })
+  const tipsFetchGuardRef = useRef({ key: '', startedAt: 0 })
+  const stripeStatusCacheRef = useRef(null)
   const [adminFinanceReport, setAdminFinanceReport] = useState({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+  useEffect(() => {
+    sessionUserRef.current = sessionUser
+  }, [sessionUser?.id, sessionUser?.email])
+
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -21744,11 +21752,16 @@ function App() {
 
   async function fetchTips(userId = sessionUser?.id) {
     if (!isSupabaseConfigured || !supabase) {
-      setTips([])
+      if (!tips.length) setTips([])
       return
     }
 
-    setLoading(true)
+    const tipsKey = String(userId || 'guest')
+    if (tips.length && tipsFetchGuardRef.current.key === tipsKey && Date.now() - tipsFetchGuardRef.current.startedAt < 15000) {
+      return
+    }
+    tipsFetchGuardRef.current = { key: tipsKey, startedAt: Date.now() }
+    if (!tips.length) setLoading(true)
 
     const [{ data: tipsData, error: tipsError }, { data: unlockedData, error: unlockedError }] = await Promise.all([
       supabase
@@ -21766,7 +21779,8 @@ function App() {
     if (tipsError) {
       console.error('FETCH TIPS ERROR:', tipsError)
       showToast({ type: 'error', title: 'Nie pobrano typów', message: formatAppErrorMessage(tipsError.message || String(tipsError)) })
-      setTips([])
+      // Wersja 5: nie czyścimy istniejących typów przy chwilowym błędzie Supabase.
+      if (!tips.length) setTips([])
       return
     }
 
@@ -22780,12 +22794,30 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('profile_sub') === 'success') {
-      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera zostanie odświeżony.' })
-      if (sessionUser?.id) {
-        fetchTips(sessionUser.id)
-        fetchPaymentHistory(sessionUser.id)
+      const sessionId = params.get('session_id')
+      async function syncProfileSubReturn() {
+        try {
+          if (sessionId) {
+            const response = await fetch('/.netlify/functions/sync-connect-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session_id: sessionId, expected_user_id: sessionUser?.id || null })
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
+          }
+          showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera został odświeżony.' })
+          if (sessionUser?.id) {
+            await fetchTips(sessionUser.id)
+            await fetchPaymentHistory(sessionUser.id)
+          }
+        } catch (error) {
+          showToast({ type: 'error', title: 'Dostęp do profilu', message: formatAppErrorMessage(error.message) })
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
       }
-      window.history.replaceState({}, document.title, window.location.pathname)
+      syncProfileSubReturn()
     }
     if (params.get('profile_sub') === 'cancel') {
       showToast({ type: 'info', title: 'Dostęp do profilu', message: 'Zakup dostępu został anulowany.' })
@@ -22811,9 +22843,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const premiumStatus = params.get('premium')
     const sessionId = params.get('session_id')
+    const premiumSuccessPath = window.location.pathname === '/premium-success' || window.location.pathname.endsWith('/premium-success')
+    const premiumCancelPath = window.location.pathname === '/premium-cancel' || window.location.pathname.endsWith('/premium-cancel')
 
     async function syncPremiumAfterStripe() {
-      if (premiumStatus === 'success' && sessionId) {
+      if ((premiumStatus === 'success' || premiumSuccessPath) && sessionId) {
         try {
           showToast({ type: 'info', title: 'Premium', message: 'Synchronizuję subskrypcję ze Stripe...' })
           const response = await fetch('/.netlify/functions/sync-premium-session', {
@@ -22840,13 +22874,13 @@ function App() {
         } catch (error) {
           showToast({ type: 'error', title: 'Premium', message: formatAppErrorMessage(error.message) })
         } finally {
-          window.history.replaceState({}, document.title, window.location.pathname)
+          window.history.replaceState({}, document.title, '/')
         }
-      } else if (premiumStatus === 'success') {
+      } else if (premiumStatus === 'success' || premiumSuccessPath) {
         showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
         if (sessionUser?.id) fetchUserPlan(sessionUser.id)
-        window.history.replaceState({}, document.title, window.location.pathname)
-      } else if (premiumStatus === 'cancel') {
+        window.history.replaceState({}, document.title, '/')
+      } else if (premiumStatus === 'cancel' || premiumCancelPath) {
         showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
@@ -22871,8 +22905,8 @@ function App() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
     if (params.get('stripe_connect') === 'refresh') {
-      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
-      if (sessionUser?.id) connectStripeAccount()
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe przyciskiem w Portfelu.' })
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [sessionUser?.id])
 
@@ -22887,25 +22921,94 @@ function App() {
   async function fetchStripeConnectStatus(userId = sessionUser?.id) {
     try {
       if (!isSupabaseConfigured || !supabase || !userId) {
-        setStripeConnectStatus(null)
-        return
+        // Wersja 5: nie czyścimy statusu przy chwilowym braku usera, żeby UI nie migało.
+        return stripeStatusCacheRef.current || null
       }
 
-      const { data, error } = await supabase
-        .from('user_stripe_accounts')
-        .select('stripe_account_id,charges_enabled,payouts_enabled,created_at,updated_at')
-        .eq('user_id', userId)
-        .maybeSingle()
+      const currentEmail = normalizeEmail(sessionUserRef.current?.email || sessionUser?.email || accountProfile?.email || '')
+      const currentUsername = normalizeEmail(
+        accountProfile?.username || accountProfile?.public_slug ||
+        sessionUserRef.current?.user_metadata?.username || sessionUserRef.current?.user_metadata?.name ||
+        (currentEmail ? currentEmail.split('@')[0] : '')
+      )
 
-      if (error || !data) {
-        setStripeConnectStatus(null)
-        return
+      const statusFilters = [
+        `user_id.eq.${userId}`,
+        currentEmail ? `email.eq.${currentEmail}` : '',
+        currentUsername ? `username.eq.${currentUsername}` : ''
+      ].filter(Boolean).join(',')
+
+      let statusRow = null
+      if (statusFilters) {
+        const { data, error } = await supabase
+          .from('user_stripe_accounts')
+          .select('stripe_account_id,charges_enabled,payouts_enabled,details_submitted,connect_status,status,created_at,updated_at')
+          .or(statusFilters)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (!error && data) statusRow = data
       }
 
-      setStripeConnectStatus(data)
+      if (!statusRow) {
+        const profileFilters = [
+          `id.eq.${userId}`,
+          currentEmail ? `email.eq.${currentEmail}` : '',
+          currentUsername ? `username.eq.${currentUsername}` : '',
+          currentUsername ? `public_slug.eq.${currentUsername}` : ''
+        ].filter(Boolean).join(',')
+
+        if (profileFilters) {
+          const { data: profileRow, error: profileError } = await supabase
+            .from('profiles')
+            .select('stripe_account_id,stripe_connect_account_id,connect_status,stripe_connect_status,stripe_charges_enabled,stripe_payouts_enabled,stripe_details_submitted,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,updated_at')
+            .or(profileFilters)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (!profileError && profileRow) {
+            const connected = String(profileRow.connect_status || profileRow.stripe_connect_status || '').toLowerCase()
+            statusRow = {
+              stripe_account_id: profileRow.stripe_connect_account_id || profileRow.stripe_account_id || null,
+              connect_status: connected || 'not_connected',
+              status: connected || 'not_connected',
+              charges_enabled: Boolean(profileRow.stripe_charges_enabled || profileRow.stripe_connect_charges_enabled),
+              payouts_enabled: Boolean(profileRow.stripe_payouts_enabled || profileRow.stripe_connect_payouts_enabled),
+              details_submitted: Boolean(profileRow.stripe_details_submitted || profileRow.stripe_connect_details_submitted),
+              updated_at: profileRow.updated_at
+            }
+          }
+        }
+      }
+
+      if (!statusRow) {
+        // Wersja 5: zachowujemy poprzedni status zamiast pokazywać NIEPODŁĄCZONE podczas opóźnienia Supabase.
+        return stripeStatusCacheRef.current || null
+      }
+
+      const normalized = {
+        ...statusRow,
+        charges_enabled: Boolean(statusRow.charges_enabled),
+        payouts_enabled: Boolean(statusRow.payouts_enabled),
+        details_submitted: Boolean(statusRow.details_submitted)
+      }
+
+      const statusText = String(normalized.connect_status || normalized.status || '').toLowerCase()
+      if ((statusText === 'connected' || statusText === 'active') && normalized.stripe_account_id) {
+        normalized.charges_enabled = normalized.charges_enabled || true
+        normalized.payouts_enabled = normalized.payouts_enabled || true
+        normalized.details_submitted = normalized.details_submitted || true
+      }
+
+      stripeStatusCacheRef.current = normalized
+      setStripeConnectStatus(normalized)
+      return normalized
     } catch (error) {
       console.error('fetchStripeConnectStatus error', error)
-      setStripeConnectStatus(null)
+      // Wersja 5: nie zerujemy statusu po błędzie sieci/funkcji, bo to powodowało miganie Portfela.
+      if (stripeStatusCacheRef.current) setStripeConnectStatus(stripeStatusCacheRef.current)
+      return stripeStatusCacheRef.current || null
     }
   }
 
@@ -23187,37 +23290,12 @@ function App() {
     }
 
     try {
-      showToast({ type: 'info', title: 'Premium', message: 'Przekierowanie do płatności Stripe...' })
+      sessionStorage.setItem('betai_premium_checkout_user_id', sessionUser.id)
+      sessionStorage.setItem('betai_premium_checkout_email', sessionUser.email || '')
+    } catch {}
 
-      const response = await fetch('/.netlify/functions/create-premium-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: sessionUser.id, email: sessionUser.email })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || 'Nie udało się utworzyć płatności Premium.')
-      }
-
-      try {
-        sessionStorage.setItem('betai_premium_checkout_user_id', sessionUser.id)
-        sessionStorage.setItem('betai_premium_checkout_email', sessionUser.email || '')
-      } catch {}
-
-      if (data.alreadyActive) {
-        setUserPlan('premium')
-        await fetchUserPlan(sessionUser.id)
-        showToast({ type: 'success', title: 'Premium aktywne', message: 'To konto ma już aktywną subskrypcję Premium.' })
-        window.history.replaceState({}, document.title, window.location.pathname)
-        return
-      }
-
-      window.location.href = data.url
-    } catch (error) {
-      showToast({ type: 'error', title: 'Błąd Premium', message: formatAppErrorMessage(error.message) })
-    }
+    showToast({ type: 'info', title: 'Premium', message: 'Przekierowanie do płatności Stripe...' })
+    window.location.href = BETAI_STRIPE_SUBSCRIPTION_LINK
   }
 
   async function openCustomerPortal() {
@@ -23634,6 +23712,12 @@ function App() {
     let unsubscribe = null
 
     async function safeInitialLoad(userId) {
+      if (!userId) return
+      const now = Date.now()
+      if (stableInitialLoadRef.current.userId === String(userId) && now - stableInitialLoadRef.current.startedAt < 45000) {
+        return
+      }
+      stableInitialLoadRef.current = { userId: String(userId), startedAt: now }
       try { await fetchPaymentHistory(userId) } catch (e) { console.error(e) }
       try { await fetchPayoutRequests(userId) } catch (e) { console.error(e) }
       try { await fetchUserPlan(userId) } catch (e) { console.error(e) }
@@ -23665,12 +23749,22 @@ function App() {
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
           const nextUser = session?.user || null
+          const previousUser = sessionUserRef.current
+          const sameUser = previousUser?.id && nextUser?.id && String(previousUser.id) === String(nextUser.id)
+
+          if (sameUser) {
+            // Wersja 5: TOKEN_REFRESHED / route change nie może czyścić Portfela, czatu ani typów.
+            setSessionUser(prev => ({ ...(prev || {}), ...(nextUser || {}) }))
+            return
+          }
+
           setSessionUser(nextUser)
-          setWalletBalance(0)
-          setTipsterEarnings({ total: 0, sales: 0, history: [] })
-          setStripeConnectStatus(null)
 
           if (!nextUser?.id) {
+            setWalletBalance(0)
+            setTipsterEarnings({ total: 0, sales: 0, history: [] })
+            setStripeConnectStatus(null)
+            stripeStatusCacheRef.current = null
             setUnlockedTips(new Set())
             try {
               localStorage.removeItem('betai_unlocked_tips_v1')
@@ -23679,7 +23773,7 @@ function App() {
             return
           }
 
-          setUnlockedTips(new Set())
+          // Nie zerujemy danych przy logowaniu/przełączeniu. Nowe dane nadpiszą stare po fetchu.
           safeInitialLoad(nextUser.id)
           ensureUserWalletAndWelcome(nextUser)
         })
@@ -23706,27 +23800,38 @@ function App() {
     const stripeReturn = params.get('stripe') === '1'
 
     if (payment === 'success' && stripeReturn && tipId) {
-      // Nie ustawiamy odblokowania zanim znamy zalogowanego usera.
-      // Odblokowanie zapisuje się dopiero pod konkretnym user_id po powrocie ze Stripe.
-
       async function persistUnlockFromReturn() {
-        await saveUnlockToSupabase(tipId, 29)
-        await savePaymentToSupabase(tipId, 29)
+        const sessionId = params.get('session_id')
         const { data } = isSupabaseConfigured && supabase
           ? await supabase.auth.getSession()
           : { data: null }
-
         const userId = data?.session?.user?.id
+
+        if (sessionId) {
+          const response = await fetch('/.netlify/functions/sync-connect-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, expected_user_id: userId || null })
+          })
+          const syncData = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
+        } else {
+          await saveUnlockToSupabase(tipId, 29)
+          await savePaymentToSupabase(tipId, 29)
+        }
+
         if (userId) {
           clearGuestUnlockedTips()
           await fetchUnlockedTips(userId)
           await fetchPaymentHistory(userId)
         }
 
+        showToast({ type: 'success', title: 'Typ odblokowany', message: 'Płatność zakończona. Dostęp został zapisany.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
 
-      persistUnlockFromReturn().catch(() => {
+      persistUnlockFromReturn().catch((error) => {
+        showToast({ type: 'error', title: 'Płatność', message: formatAppErrorMessage(error.message) })
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     }
@@ -23885,16 +23990,8 @@ function App() {
     const params = new URLSearchParams(window.location.search)
 
     if (params.get('stripe_connect') === 'success') {
-      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Odświeżam status wypłat.' })
-
-      if (sessionUser?.id) {
-        fetch('/.netlify/functions/refresh-stripe-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: sessionUser.id })
-        }).finally(() => fetchStripeConnectStatus(sessionUser.id))
-      }
-
+      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Status odczytuję z Supabase.' })
+      if (sessionUser?.id) fetchStripeConnectStatus(sessionUser.id)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 

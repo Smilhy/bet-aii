@@ -1,0 +1,30 @@
+WERSJA 3 — STRIPE PREMIUM / BET-AI.APP
+
+Zrobione:
+1. Podpięto nowy link Stripe Premium 29 zł:
+   https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00
+
+2. Dodano obsługę powrotu ze Stripe na:
+   /premium-success?session_id={CHECKOUT_SESSION_ID}
+
+3. Poprawiono sync-premium-session:
+   - obsługuje także jednorazowy zakup Premium 29 PLN,
+   - nie wymaga już tylko subskrypcji Stripe,
+   - aktywuje Premium po opłaconej sesji checkout.
+
+4. Poprawiono stripe-webhook:
+   - wykrywa checkout.session.completed dla Premium 29 PLN,
+   - zapisuje użytkownika jako premium w Supabase,
+   - działa z webhookiem:
+     https://bet-ai.app/.netlify/functions/stripe-webhook
+
+5. Zbudowano aktualny dist.
+
+Wymagane zmienne Netlify:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+
+Ważne bezpieczeństwo:
+Jeżeli klucz Stripe był pokazany na screenie, utwórz nowy sk_live_ w Stripe, podmień w Netlify i stary klucz usuń/rotate.

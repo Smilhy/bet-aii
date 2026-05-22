@@ -2,7 +2,7 @@
 const Stripe = require('stripe');
 const { response, supabaseAdmin, requireAdmin, safeInsert, safeUpdatePayout } = require('./_admin-payout-security');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
 const MIN_PAYOUT_AMOUNT = Number(process.env.MIN_PAYOUT_AMOUNT || 50);
 
 async function markFailed(supabase, payout, message, adminUserId = null) {
@@ -31,7 +31,7 @@ async function markFailed(supabase, payout, message, adminUserId = null) {
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
-  if (!process.env.STRIPE_SECRET_KEY) return response(500, { error: 'Missing STRIPE_SECRET_KEY' });
+  if (!(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY)) return response(500, { error: 'Missing STRIPE_CONNECT_SECRET_KEY' });
 
   let supabase = null;
   let payout = null;
