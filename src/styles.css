@@ -55826,3 +55826,114 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   .app-shell .betai-sidebar-premium-v8 .betai-premium-btn-icon{width:30px!important;height:30px!important;min-width:30px!important;font-size:15px!important;}
   .app-shell .betai-sidebar-premium-v8 .betai-premium-btn-label{font-size:12px!important;}
 }
+
+/* =====================================================================
+   WERSJA 11 — SIDEBAR BUTTONS FINAL FIX
+   Cel: naprawa Ulepsz konto + Wyloguj po screenie użytkownika.
+   ===================================================================== */
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+  display:grid!important;
+  grid-template-columns:34px 1fr!important;
+  align-items:center!important;
+  justify-content:center!important;
+  column-gap:10px!important;
+  min-height:54px!important;
+  height:54px!important;
+  width:100%!important;
+  padding:0 16px!important;
+  margin-top:12px!important;
+  border-radius:20px!important;
+  box-sizing:border-box!important;
+  text-align:center!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-btn-icon{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  max-width:32px!important;
+  border-radius:999px!important;
+  line-height:1!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-btn-label{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  min-width:0!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  opacity:1!important;
+  visibility:visible!important;
+  text-align:center!important;
+  font-size:14px!important;
+  font-weight:950!important;
+  letter-spacing:-.15px!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn{
+  color:#ffffff!important;
+  border:1.5px solid rgba(45,240,225,.84)!important;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(45,240,225,.14), transparent 36%),
+    linear-gradient(180deg, rgba(3,22,34,.96), rgba(2,12,22,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -10px 20px rgba(0,0,0,.24),
+    0 0 20px rgba(36,236,222,.16)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn .betai-premium-btn-icon{
+  color:#31f7e3!important;
+  border:1px solid rgba(49,247,227,.44)!important;
+  background:linear-gradient(180deg, rgba(5,45,57,.88), rgba(2,20,30,.95))!important;
+  box-shadow:0 0 13px rgba(49,247,227,.18), inset 0 1px 0 rgba(255,255,255,.11)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn .betai-premium-btn-label{
+  color:#ffffff!important;
+  text-shadow:0 2px 10px rgba(0,0,0,.36)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+  color:#041722!important;
+  border:1px solid rgba(143,255,248,.52)!important;
+  background:linear-gradient(135deg,#28ead8 0%,#29c9ee 100%)!important;
+  box-shadow:
+    0 10px 26px rgba(38,235,220,.22),
+    0 0 18px rgba(38,235,220,.18),
+    inset 0 1px 0 rgba(255,255,255,.35),
+    inset 0 -8px 14px rgba(0,0,0,.08)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn .betai-premium-btn-icon{
+  display:flex!important;
+  color:#041722!important;
+  background:rgba(255,255,255,.18)!important;
+  border:1px solid rgba(255,255,255,.20)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn .betai-premium-btn-label{
+  display:flex!important;
+  color:#041722!important;
+  text-shadow:none!important;
+}
+@media (max-width:1536px){
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-upgrade-btn,
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logout-btn{
+    grid-template-columns:30px 1fr!important;
+    column-gap:8px!important;
+    height:50px!important;
+    min-height:50px!important;
+    padding:0 14px!important;
+    border-radius:18px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-btn-icon{
+    width:28px!important;height:28px!important;min-width:28px!important;max-width:28px!important;font-size:14px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-btn-label{font-size:12.5px!important;}
+}
