@@ -1,7 +1,7 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -37,6 +37,8 @@ exports.handler = async (event) => {
       stripe_account_id: account.id,
       charges_enabled: Boolean(account.charges_enabled),
       payouts_enabled: Boolean(account.payouts_enabled),
+      details_submitted: Boolean(account.details_submitted),
+      connect_status: account.payouts_enabled ? 'active' : (account.details_submitted ? 'pending' : 'onboarding'),
       updated_at: new Date().toISOString()
     };
 

@@ -217,7 +217,7 @@ if (typeof window !== 'undefined') {
 }
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
-const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://checkout.stripe.com/c/pay/cs_live_b1EqdPrQrAqvEZrUpaYzcJcis7ceXMxcSPFcZ6VkWT2IumMTdbogZB28sN#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicGRmZGhqaWBTZHdsZGtxJz8nZmprcXdqaScpJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWdnViV0RuMExCbjZhM1d0SE99Rmc3clNwaFxqMkdCbE9uYjUwbnVTZ0gxdkJxZnZWPUd3UnFLYUldb2B3f3xJaERtVkFJTEFdMzxmf0xdM1Q0dE1qMFI1NUExVEA0Q2E8JyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl';
+const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
@@ -1911,7 +1911,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
           <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
           <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951" onClick={() => setView('unlockedTips')}><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></button>
-          <button className="outline-btn" onClick={onTopUp || (() => {})}>Ulepsz konto</button>
+          <button className="outline-btn" onClick={openPremiumCheckout}>Ulepsz konto</button>
           <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
         </div>
 
@@ -2628,7 +2628,7 @@ function LiveChatPanel({ user }) {
                 </div>
                 <div className="livechat226-text">{msg.message}</div>
                 <div className="livechat226-actions">
-                  {mine ? <span className="livechat226-tipmeta">Twoja wiadomość</span> : <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button>}
+                  {!mine ? <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button> : null}
                   <span className="livechat226-tipmeta">Tips: {Number(msg.tipped_amount || 0)}</span>
                 </div>
               </div>
@@ -22780,12 +22780,30 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('profile_sub') === 'success') {
-      showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera zostanie odświeżony.' })
-      if (sessionUser?.id) {
-        fetchTips(sessionUser.id)
-        fetchPaymentHistory(sessionUser.id)
+      const sessionId = params.get('session_id')
+      async function syncProfileSubReturn() {
+        try {
+          if (sessionId) {
+            const response = await fetch('/.netlify/functions/sync-connect-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session_id: sessionId, expected_user_id: sessionUser?.id || null })
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
+          }
+          showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera został odświeżony.' })
+          if (sessionUser?.id) {
+            await fetchTips(sessionUser.id)
+            await fetchPaymentHistory(sessionUser.id)
+          }
+        } catch (error) {
+          showToast({ type: 'error', title: 'Dostęp do profilu', message: formatAppErrorMessage(error.message) })
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
       }
-      window.history.replaceState({}, document.title, window.location.pathname)
+      syncProfileSubReturn()
     }
     if (params.get('profile_sub') === 'cancel') {
       showToast({ type: 'info', title: 'Dostęp do profilu', message: 'Zakup dostępu został anulowany.' })
@@ -22811,9 +22829,11 @@ function App() {
     const params = new URLSearchParams(window.location.search)
     const premiumStatus = params.get('premium')
     const sessionId = params.get('session_id')
+    const premiumSuccessPath = window.location.pathname === '/premium-success' || window.location.pathname.endsWith('/premium-success')
+    const premiumCancelPath = window.location.pathname === '/premium-cancel' || window.location.pathname.endsWith('/premium-cancel')
 
     async function syncPremiumAfterStripe() {
-      if (premiumStatus === 'success' && sessionId) {
+      if ((premiumStatus === 'success' || premiumSuccessPath) && sessionId) {
         try {
           showToast({ type: 'info', title: 'Premium', message: 'Synchronizuję subskrypcję ze Stripe...' })
           const response = await fetch('/.netlify/functions/sync-premium-session', {
@@ -22840,13 +22860,13 @@ function App() {
         } catch (error) {
           showToast({ type: 'error', title: 'Premium', message: formatAppErrorMessage(error.message) })
         } finally {
-          window.history.replaceState({}, document.title, window.location.pathname)
+          window.history.replaceState({}, document.title, '/')
         }
-      } else if (premiumStatus === 'success') {
+      } else if (premiumStatus === 'success' || premiumSuccessPath) {
         showToast({ type: 'success', title: 'Premium', message: 'Płatność zakończona. Premium aktywuje się po potwierdzeniu Stripe.' })
         if (sessionUser?.id) fetchUserPlan(sessionUser.id)
-        window.history.replaceState({}, document.title, window.location.pathname)
-      } else if (premiumStatus === 'cancel') {
+        window.history.replaceState({}, document.title, '/')
+      } else if (premiumStatus === 'cancel' || premiumCancelPath) {
         showToast({ type: 'info', title: 'Premium', message: 'Płatność Premium została anulowana.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
@@ -22893,7 +22913,7 @@ function App() {
 
       const { data, error } = await supabase
         .from('user_stripe_accounts')
-        .select('stripe_account_id,charges_enabled,payouts_enabled,created_at,updated_at')
+        .select('stripe_account_id,charges_enabled,payouts_enabled,details_submitted,connect_status,created_at,updated_at')
         .eq('user_id', userId)
         .maybeSingle()
 
@@ -23187,37 +23207,12 @@ function App() {
     }
 
     try {
-      showToast({ type: 'info', title: 'Premium', message: 'Przekierowanie do płatności Stripe...' })
+      sessionStorage.setItem('betai_premium_checkout_user_id', sessionUser.id)
+      sessionStorage.setItem('betai_premium_checkout_email', sessionUser.email || '')
+    } catch {}
 
-      const response = await fetch('/.netlify/functions/create-premium-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: sessionUser.id, email: sessionUser.email })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || 'Nie udało się utworzyć płatności Premium.')
-      }
-
-      try {
-        sessionStorage.setItem('betai_premium_checkout_user_id', sessionUser.id)
-        sessionStorage.setItem('betai_premium_checkout_email', sessionUser.email || '')
-      } catch {}
-
-      if (data.alreadyActive) {
-        setUserPlan('premium')
-        await fetchUserPlan(sessionUser.id)
-        showToast({ type: 'success', title: 'Premium aktywne', message: 'To konto ma już aktywną subskrypcję Premium.' })
-        window.history.replaceState({}, document.title, window.location.pathname)
-        return
-      }
-
-      window.location.href = data.url
-    } catch (error) {
-      showToast({ type: 'error', title: 'Błąd Premium', message: formatAppErrorMessage(error.message) })
-    }
+    showToast({ type: 'info', title: 'Premium', message: 'Przekierowanie do płatności Stripe...' })
+    window.location.href = BETAI_STRIPE_SUBSCRIPTION_LINK
   }
 
   async function openCustomerPortal() {
@@ -23706,27 +23701,38 @@ function App() {
     const stripeReturn = params.get('stripe') === '1'
 
     if (payment === 'success' && stripeReturn && tipId) {
-      // Nie ustawiamy odblokowania zanim znamy zalogowanego usera.
-      // Odblokowanie zapisuje się dopiero pod konkretnym user_id po powrocie ze Stripe.
-
       async function persistUnlockFromReturn() {
-        await saveUnlockToSupabase(tipId, 29)
-        await savePaymentToSupabase(tipId, 29)
+        const sessionId = params.get('session_id')
         const { data } = isSupabaseConfigured && supabase
           ? await supabase.auth.getSession()
           : { data: null }
-
         const userId = data?.session?.user?.id
+
+        if (sessionId) {
+          const response = await fetch('/.netlify/functions/sync-connect-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, expected_user_id: userId || null })
+          })
+          const syncData = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
+        } else {
+          await saveUnlockToSupabase(tipId, 29)
+          await savePaymentToSupabase(tipId, 29)
+        }
+
         if (userId) {
           clearGuestUnlockedTips()
           await fetchUnlockedTips(userId)
           await fetchPaymentHistory(userId)
         }
 
+        showToast({ type: 'success', title: 'Typ odblokowany', message: 'Płatność zakończona. Dostęp został zapisany.' })
         window.history.replaceState({}, document.title, window.location.pathname)
       }
 
-      persistUnlockFromReturn().catch(() => {
+      persistUnlockFromReturn().catch((error) => {
+        showToast({ type: 'error', title: 'Płatność', message: formatAppErrorMessage(error.message) })
         window.history.replaceState({}, document.title, window.location.pathname)
       })
     }
