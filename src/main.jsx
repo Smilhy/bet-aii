@@ -3220,7 +3220,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
             <div className="rank-v19-main">
               <div className="rank-v19-topline">
                 <b>{rowName}</b>
-                {index === 0 ? <span className="rank-crown-v19" aria-hidden="true">👑</span> : null}
+                {index === 0 ? <span className="rank-crown-v19" aria-hidden="true">♛</span> : null}
               </div>
               <div className="rank-v19-stats">
                 <div>
