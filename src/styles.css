@@ -57777,3 +57777,96 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     top:-17px!important;
   }
 }
+
+/* WERSJA 32 — subtelna NAWIGACJA + brak osobnego scrolla w lewej kolumnie */
+.app-shell .sidebar-stack,
+.app-shell:not(.no-rightbar-page) .sidebar-stack{
+  position:sticky!important;
+  top:12px!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  overflow-y:visible!important;
+  overflow-x:visible!important;
+  scrollbar-width:none!important;
+  padding-top:12px!important;
+  padding-bottom:28px!important;
+}
+
+.app-shell .sidebar-stack::-webkit-scrollbar,
+.app-shell:not(.no-rightbar-page) .sidebar-stack::-webkit-scrollbar,
+.app-shell .sidebar-main-box::-webkit-scrollbar,
+.app-shell .sidebar::-webkit-scrollbar{
+  width:0!important;
+  height:0!important;
+  display:none!important;
+}
+
+.app-shell .sidebar-main-box,
+.app-shell .sidebar,
+.app-shell .sidebar.betai-sidebar-premium-v8,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8{
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  overflow-y:visible!important;
+  overflow-x:visible!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"],
+.app-shell .betai-sidebar-premium-v8 .menu{
+  margin-top:46px!important;
+  padding-top:28px!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before,
+.app-shell .betai-sidebar-premium-v8 .menu::before{
+  content:"NAWIGACJA"!important;
+  top:-19px!important;
+  padding:0 16px!important;
+  color:#5eeaf2!important;
+  font-size:10px!important;
+  font-weight:1000!important;
+  letter-spacing:3.1px!important;
+  text-shadow:0 0 7px rgba(33,234,245,.34), 0 2px 8px rgba(0,0,0,.58)!important;
+  background:linear-gradient(90deg, rgba(2,12,21,0), rgba(2,12,21,.94) 22%, rgba(2,12,21,.94) 78%, rgba(2,12,21,0))!important;
+  box-shadow:none!important;
+  border:0!important;
+  border-radius:0!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after,
+.app-shell .betai-sidebar-premium-v8 .menu::after{
+  top:-18px!important;
+  left:10px!important;
+  right:10px!important;
+  height:10px!important;
+  background:
+    radial-gradient(circle at 0 50%, rgba(38,239,249,.72) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 100% 50%, rgba(38,239,249,.72) 0 1.5px, transparent 2px),
+    linear-gradient(90deg, transparent 0 9%, rgba(38,239,249,.46) 9% 29%, transparent 29% 71%, rgba(38,239,249,.46) 71% 91%, transparent 91% 100%)!important;
+  filter:drop-shadow(0 0 4px rgba(38,239,249,.28))!important;
+  opacity:.82!important;
+}
+
+@media (max-width:1536px){
+  .app-shell .sidebar-stack,
+  .app-shell:not(.no-rightbar-page) .sidebar-stack{
+    top:10px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"],
+  .app-shell .betai-sidebar-premium-v8 .menu{
+    margin-top:42px!important;
+    padding-top:26px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before,
+  .app-shell .betai-sidebar-premium-v8 .menu::before{
+    top:-18px!important;
+    font-size:9px!important;
+    letter-spacing:2.7px!important;
+  }
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after,
+  .app-shell .betai-sidebar-premium-v8 .menu::after{
+    top:-17px!important;
+  }
+}
