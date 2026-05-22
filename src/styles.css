@@ -56274,3 +56274,104 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     animation:none!important;
   }
 }
+
+/* =====================================================================
+   WERSJA 15 — PREMIUM STAT ICONS FRAME + PULSE
+   Cel: dodać do ikon Saldo / Coin / Odblokowane takie same neonowe ramki
+   i pulsowanie jak przy ikonach menu w dashboardzie.
+   ===================================================================== */
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  border-radius:11px!important;
+  font-style:normal!important;
+  font-size:14px!important;
+  line-height:1!important;
+  color:#f7fbff!important;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(51, 238, 255, .16), transparent 55%),
+    linear-gradient(180deg, rgba(10, 28, 42, .98), rgba(2, 10, 20, .98))!important;
+  border:1px solid rgba(41, 235, 255, .34)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(20, 110, 126, .24),
+    0 10px 20px rgba(0,0,0,.26),
+    0 0 16px rgba(41, 235, 255, .10)!important;
+  overflow:visible!important;
+  isolation:isolate!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i::before,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  border-radius:inherit;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i::before{
+  inset:-4px;
+  border-radius:14px;
+  border:1px solid rgba(41, 235, 255, .18);
+  opacity:.78;
+  animation:betaiSidebarStatPulseV15 2.8s ease-in-out infinite;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i::after{
+  inset:4px;
+  border-radius:8px;
+  box-shadow:inset 0 0 12px rgba(41, 235, 255, .11);
+  opacity:.88;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row:nth-of-type(2) span i::before{ animation-delay:.18s; }
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row:nth-of-type(3) span i::before{ animation-delay:.36s; }
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row:nth-of-type(4) span i::before{ animation-delay:.54s; }
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row .betai-coin-mini img{
+  position:relative!important;
+  z-index:1!important;
+  width:18px!important;
+  height:18px!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.18));
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row:hover span i,
+.app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row:focus-within span i{
+  border-color:rgba(86, 245, 255, .56)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 0 0 1px rgba(46, 235, 255, .30),
+    0 12px 24px rgba(0,0,0,.30),
+    0 0 22px rgba(46, 235, 255, .16)!important;
+}
+
+@keyframes betaiSidebarStatPulseV15{
+  0%,100%{
+    transform:scale(1);
+    opacity:.62;
+    box-shadow:0 0 0 0 rgba(41,235,255,.12);
+  }
+  50%{
+    transform:scale(1.08);
+    opacity:1;
+    box-shadow:0 0 0 9px rgba(41,235,255,0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-stat-row span i::before{
+    animation:none!important;
+  }
+}
