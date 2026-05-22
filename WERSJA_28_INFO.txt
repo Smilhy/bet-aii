@@ -1,8 +1,0 @@
-WERSJA 28 — LEFT SIDEBAR 1:1 NAV + LOGO INTEGRATED
-
-Zmiany:
-- logo w lewym sidebarze zmienione na wersję transparentną/wcieloną w panel,
-- usunięty efekt „wklejonego obrazka” z logo,
-- separator NAWIGACJA przerobiony na neonowe linie jak w mockupie,
-- sekcja menu dostaje bardziej szklany, premium wygląd,
-- ikony, napisy, kolejność zakładek i logika bez zmian.

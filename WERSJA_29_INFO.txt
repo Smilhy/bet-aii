@@ -1,5 +1,0 @@
-WERSJA 29 — Left nav refined to match premium mockup closer.
-- Removed capsule/pill look from NAWIGACJA header.
-- Added clean neon separator line with centered text.
-- Tuned menu item spacing/dividers/active state closer to reference.
-- Removed pasted-shadow look from sidebar logo and integrated it visually.

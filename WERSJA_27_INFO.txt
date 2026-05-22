@@ -1,8 +1,0 @@
-WERSJA 27 — ULTRA PREMIUM LEFT NAV SEPARATOR + LOGO
-
-Zmiany:
-- podmienione górne logo sidebaru na jaśniejsze Bet+AI z dostarczonego screena,
-- dodany premium separator „NAWIGACJA” między panelem użytkownika a menu,
-- menu nawigacji dostało osobną szklaną sekcję z neonową linią i glow,
-- ikony, napisy i kolejność zakładek bez zmian,
-- logika strony bez zmian.
