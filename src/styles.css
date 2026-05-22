@@ -57865,3 +57865,201 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     padding:8px 10px!important;
   }
 }
+
+/* WERSJA 28 — lewy sidebar 1:1 premium: logo wcielone + separator NAWIGACJA jak mockup */
+.app-shell .sidebar.betai-sidebar-premium-v8,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8{
+  position:relative!important;
+  padding:18px 16px 22px!important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(17,191,208,.10), transparent 26%),
+    linear-gradient(180deg, rgba(3,18,29,.98), rgba(1,10,18,.99))!important;
+  border-right:1px solid rgba(24,220,236,.20)!important;
+  box-shadow:
+    inset -1px 0 0 rgba(38,238,250,.22),
+    inset 1px 0 0 rgba(38,238,250,.07),
+    0 0 44px rgba(0,0,0,.25)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card{
+  min-height:82px!important;
+  padding:12px 13px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(31,230,238,.13), transparent 42%),
+    linear-gradient(180deg, rgba(5,27,39,.72), rgba(2,14,24,.90))!important;
+  border:1px solid rgba(48,226,235,.20)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -18px 32px rgba(0,0,0,.13),
+    0 0 0 1px rgba(0,0,0,.18),
+    0 0 22px rgba(20,232,241,.045)!important;
+  overflow:hidden!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card::before{
+  content:""!important;
+  position:absolute!important;
+  inset:10px 12px!important;
+  border-radius:19px!important;
+  background:linear-gradient(90deg, rgba(19,194,209,.055), rgba(3,17,29,.0) 45%, rgba(19,194,209,.035))!important;
+  pointer-events:none!important;
+  z-index:0!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-logo-image{
+  position:relative!important;
+  z-index:1!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:62px!important;
+  object-fit:contain!important;
+  opacity:.98!important;
+  mix-blend-mode:screen!important;
+  filter:drop-shadow(0 0 9px rgba(24,235,245,.18)) saturate(1.06) brightness(1.03)!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .betai-premium-user-card{
+  margin-top:20px!important;
+  margin-bottom:0!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]{
+  position:relative!important;
+  margin-top:54px!important;
+  padding:24px 0 14px!important;
+  border-radius:24px!important;
+  border:1px solid rgba(42,223,235,.17)!important;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(21,224,217,.10), transparent 28%),
+    linear-gradient(180deg, rgba(4,26,37,.60), rgba(2,14,24,.78))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.042),
+    inset 0 -20px 34px rgba(0,0,0,.12),
+    0 18px 44px rgba(0,0,0,.22),
+    0 0 30px rgba(32,235,240,.045)!important;
+  gap:0!important;
+  overflow:visible!important;
+}
+
+/* pozioma neonowa belka pod panelem użytkownika */
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after{
+  content:""!important;
+  position:absolute!important;
+  left:4px!important;
+  right:4px!important;
+  top:-30px!important;
+  height:30px!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 0% 50%, rgba(30,239,248,1) 0 2px, transparent 3px),
+    radial-gradient(circle at 100% 50%, rgba(30,239,248,1) 0 2px, transparent 3px),
+    linear-gradient(90deg, transparent 0 7%, rgba(25,229,240,.90) 7% 32%, transparent 32% 68%, rgba(25,229,240,.90) 68% 93%, transparent 93% 100%)!important;
+  filter:drop-shadow(0 0 8px rgba(25,229,240,.72))!important;
+  opacity:.92!important;
+}
+
+.app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before{
+  content:"NAWIGACJA"!important;
+  position:absolute!important;
+  left:50%!important;
+  top:-28px!important;
+  transform:translateX(-50%)!important;
+  height:28px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 16px!important;
+  min-width:auto!important;
+  border:0!important;
+  border-radius:0!important;
+  background:linear-gradient(90deg, rgba(2,13,23,.0), rgba(2,13,23,.96) 18%, rgba(2,13,23,.96) 82%, rgba(2,13,23,.0))!important;
+  color:#58eff8!important;
+  text-shadow:0 0 13px rgba(35,235,244,.48), 0 2px 10px rgba(0,0,0,.55)!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:3px!important;
+  line-height:1!important;
+  z-index:4!important;
+  white-space:nowrap!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button{
+  position:relative!important;
+  min-height:64px!important;
+  padding:8px 16px 8px 20px!important;
+  margin:0 0 0!important;
+  border-radius:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:15px!important;
+  overflow:visible!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button::after{
+  content:""!important;
+  position:absolute!important;
+  left:74px!important;
+  right:22px!important;
+  bottom:0!important;
+  height:1px!important;
+  background:linear-gradient(90deg, rgba(49,223,233,.10), rgba(82,145,160,.12), transparent)!important;
+  pointer-events:none!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button:last-child::after{display:none!important;}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button.active{
+  border-radius:0 18px 18px 0!important;
+  background:linear-gradient(90deg, rgba(19,218,221,.30), rgba(7,35,49,.50) 58%, rgba(6,26,38,.16))!important;
+  border:1px solid rgba(40,230,238,.18)!important;
+  border-left:0!important;
+  box-shadow:
+    inset 5px 0 0 #20eadd,
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 24px rgba(32,234,223,.11)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button:hover:not(.active){
+  background:linear-gradient(90deg, rgba(19,218,221,.10), rgba(7,35,49,.22), transparent)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] .betai-sidebar-nav-icon{
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  border-radius:16px!important;
+  filter:drop-shadow(0 0 12px rgba(29,233,244,.16))!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button.active .betai-sidebar-nav-icon{
+  transform:translateX(-3px)!important;
+  filter:drop-shadow(0 0 17px rgba(29,233,244,.35))!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] .betai-sidebar-nav-label{
+  color:rgba(220,235,243,.84)!important;
+  font-size:15px!important;
+  font-weight:950!important;
+  text-shadow:0 4px 14px rgba(0,0,0,.38)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button.active .betai-sidebar-nav-label,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button:hover .betai-sidebar-nav-label{
+  color:#f3fbff!important;
+}
+
+@media (max-width:1536px){
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logo-card{min-height:74px!important;padding:9px 10px!important;border-radius:22px!important;}
+  .app-shell .betai-sidebar-premium-v8 .betai-premium-logo-image{max-height:56px!important;}
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]{margin-top:48px!important;padding-top:22px!important;border-radius:22px!important;}
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::before{font-size:10px!important;letter-spacing:2.4px!important;top:-26px!important;}
+  .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after{top:-28px!important;height:28px!important;}
+  .app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] button{min-height:58px!important;padding-left:18px!important;gap:13px!important;}
+  .app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] .betai-sidebar-nav-icon{width:40px!important;height:40px!important;min-width:40px!important;border-radius:15px!important;}
+  .app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"] .betai-sidebar-nav-label{font-size:14px!important;}
+}
