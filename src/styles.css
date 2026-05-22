@@ -56375,3 +56375,36 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     animation:none!important;
   }
 }
+
+
+/* WERSJA 16 — chat emoji button without square frame */
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-inline-final{
+  width: 34px !important;
+  height: 43px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final{
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size: 20px !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final:hover,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-emoji-toggle-final:focus-visible{
+  border: none !important;
+  background: rgba(45, 255, 220, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(45, 255, 220, 0.14) !important;
+  outline: none !important;
+}
