@@ -1866,8 +1866,16 @@ const LOCKED_ADMIN_SIDEBAR_ITEMS_V1129 = Object.freeze([
   Object.freeze({ id: 'adminPayouts', label: '🏦 Admin wypłaty', activeViews: Object.freeze(['adminPayouts']) })
 ])
 
+function splitSidebarLabel(label = '') {
+  const normalized = String(label || '').trim()
+  const match = normalized.match(/^(\S+)\s+(.*)$/)
+  if (!match) return { icon: '•', text: normalized }
+  return { icon: match[1], text: match[2] }
+}
+
 function LockedSidebarMenuButton({ item, view, setView }) {
   const activeViews = Array.isArray(item.activeViews) ? item.activeViews : [item.id]
+  const { icon, text } = splitSidebarLabel(item.label)
   const handleClick = () => {
     if (item.clearTipster) window.dispatchEvent(new CustomEvent('betai:clear-selected-tipster'))
     setView(item.id)
@@ -1875,7 +1883,8 @@ function LockedSidebarMenuButton({ item, view, setView }) {
 
   return (
     <button className={activeViews.includes(view) ? 'active' : ''} onClick={handleClick}>
-      {item.label}
+      <span className="betai-sidebar-nav-icon" aria-hidden="true"><span>{icon}</span></span>
+      <span className="betai-sidebar-nav-label">{text}</span>
     </button>
   )
 }

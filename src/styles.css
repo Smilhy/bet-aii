@@ -56148,3 +56148,129 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     inset 0 1px 0 rgba(255,255,255,.26),
     inset 0 -8px 14px rgba(0,0,0,.08)!important;
 }
+
+/* WERSJA 14 — dashboard sidebar menu: neon frames + pulse around icons */
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+  min-height:56px!important;
+  padding:11px 14px!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-label{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  display:block!important;
+  text-align:left!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  width:42px!important;
+  min-width:42px!important;
+  height:42px!important;
+  border-radius:14px!important;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(51, 238, 255, .16), transparent 55%),
+    linear-gradient(180deg, rgba(10, 28, 42, .98), rgba(2, 10, 20, .98))!important;
+  border:1px solid rgba(41, 235, 255, .36)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(20, 110, 126, .28),
+    0 12px 24px rgba(0, 0, 0, .34),
+    0 0 20px rgba(41, 235, 255, .10)!important;
+  overflow:visible!important;
+  isolation:isolate!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon::before,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon::before{
+  inset:-5px;
+  border-radius:18px;
+  border:1px solid rgba(41, 235, 255, .20);
+  opacity:.75;
+  animation: betaiSidebarIconPulseV14 2.8s ease-in-out infinite;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon::after{
+  inset:5px;
+  border-radius:10px;
+  box-shadow: inset 0 0 16px rgba(41, 235, 255, .12);
+  opacity:.85;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon > span{
+  position:relative!important;
+  z-index:1!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:18px!important;
+  line-height:1!important;
+  filter: drop-shadow(0 0 10px rgba(41,235,255,.18));
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:hover .betai-sidebar-nav-icon,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button.active .betai-sidebar-nav-icon{
+  border-color:rgba(86, 245, 255, .62)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 0 0 1px rgba(46, 235, 255, .34),
+    0 14px 28px rgba(0, 0, 0, .38),
+    0 0 28px rgba(46, 235, 255, .20)!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:hover .betai-sidebar-nav-icon::before,
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button.active .betai-sidebar-nav-icon::before{
+  border-color:rgba(86, 245, 255, .34)!important;
+  opacity:1!important;
+}
+
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(2) .betai-sidebar-nav-icon::before{ animation-delay:.18s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(3) .betai-sidebar-nav-icon::before{ animation-delay:.36s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(4) .betai-sidebar-nav-icon::before{ animation-delay:.54s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(5) .betai-sidebar-nav-icon::before{ animation-delay:.72s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(6) .betai-sidebar-nav-icon::before{ animation-delay:.90s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(7) .betai-sidebar-nav-icon::before{ animation-delay:1.08s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(8) .betai-sidebar-nav-icon::before{ animation-delay:1.26s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(9) .betai-sidebar-nav-icon::before{ animation-delay:1.44s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(10) .betai-sidebar-nav-icon::before{ animation-delay:1.62s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(11) .betai-sidebar-nav-icon::before{ animation-delay:1.8s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(12) .betai-sidebar-nav-icon::before{ animation-delay:1.98s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(13) .betai-sidebar-nav-icon::before{ animation-delay:2.16s; }
+.app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button:nth-child(14) .betai-sidebar-nav-icon::before{ animation-delay:2.34s; }
+
+@keyframes betaiSidebarIconPulseV14{
+  0%, 100%{
+    transform:scale(1);
+    opacity:.62;
+    box-shadow:0 0 0 0 rgba(41,235,255,.14);
+  }
+  50%{
+    transform:scale(1.08);
+    opacity:1;
+    box-shadow:0 0 0 10px rgba(41,235,255,0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .app-shell .sidebar-main-box.betai-sidebar-premium-v8 .menu button .betai-sidebar-nav-icon::before{
+    animation:none!important;
+  }
+}
