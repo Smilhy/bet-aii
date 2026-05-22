@@ -2611,8 +2611,7 @@ function LiveChatPanel({ user }) {
       <div className="betai-live-head-final">
         <div className="betai-live-title-wrap-final">
           <span className="livechat226-title-dot"></span>
-          <div className="livechat226-kicker">BETAI LIVE CHAT</div>
-          <span className="betai-online-final">{onlineCount} online</span>
+          <div className="livechat226-kicker">Bet+AI Live Chat</div>
         </div>
         <div className="betai-live-actions-final">
           <button aria-label="Ustawienia czatu" className="betai-gear-final" type="button">⚙</button>
@@ -3192,31 +3191,55 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
   return (
     <aside className="rightbar">
       <LiveChatPanel user={user} />
-      <section className="panel real-ranking-panel">
+      <section className="panel real-ranking-panel real-ranking-panel-v19">
         <div className="panel-head"><h2>🏆 Top typerzy</h2><a>Ranking real</a></div>
         {rightRankingRows.length ? rightRankingRows.slice(0, 4).map((row, index) => {
           const rowName = formatRankingName(row)
           const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
+          const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : 'default'
+          const totalTips = Number(row.totalTips || row.total_tips || 0)
+          const wins = Number(row.wins || 0)
+          const losses = Number(row.losses || 0)
+          const yieldValue = Number(row.roi || row.yield || 0)
+          const profitValue = Number(row.earnings || row.total_earnings || row.profit || 0)
+          const avatarUrl = getProfileAvatarUrl(row)
           return (
           <button
             type="button"
-            className={`rank rank-clickable-v974 ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`}
+            className={`rank rank-v19 rank-clickable-v974 ${index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : ''}`}
             key={row.tipster_id || row.id || row.email || row.username || index}
             onClick={() => onOpenTipster?.(rowRef, rowName)}
             title={`Otwórz profil typera ${rowName}`}
           >
-            <span className={`rank-position-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}`}>{index + 1}</span>
-            <div className={`mini-avatar ${getProfileAvatarUrl(row) ? 'has-avatar' : ''}`}>
-              {getProfileAvatarUrl(row) ? <img src={getProfileAvatarUrl(row)} alt="" loading="lazy" /> : rowName.slice(0, 2).toUpperCase()}
+            <div className="rank-v19-left">
+              <span className={`rank-medal-v19 ${rankClass}`}>{index + 1}</span>
+              <div className={`mini-avatar rank-avatar-v19 ${avatarUrl ? 'has-avatar' : ''}`}>
+                {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" /> : rowName.slice(0, 2).toUpperCase()}
+              </div>
             </div>
-            <div>
-              <b>{rowName}</b>
-              <small>Yield: {Number(row.roi || row.yield || 0).toFixed(2)}% • WR: {Number(row.winrate || 0).toFixed(1)}%</small>
-              <small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Wygrane: {Number(row.wins || 0)} • Przegrane: {Number(row.losses || 0)}</small>
+            <div className="rank-v19-main">
+              <div className="rank-v19-topline">
+                <b>{rowName}</b>
+                {index === 0 ? <span className="rank-crown-v19">♛</span> : null}
+              </div>
+              <div className="rank-v19-stats">
+                <div>
+                  <small>Yield</small>
+                  <strong>{yieldValue.toFixed(2)}%</strong>
+                </div>
+                <div>
+                  <small>Typy</small>
+                  <strong>{totalTips}</strong>
+                </div>
+                <div>
+                  <small>Bilans</small>
+                  <strong>{wins} <span>–</span> {losses}</strong>
+                </div>
+              </div>
             </div>
-            <strong className={`ranking-profit-box ${Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
-              <em>Profit</em>
-              <span>{Number(row.earnings || row.total_earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.total_earnings || row.profit || 0)}</span>
+            <strong className={`ranking-profit-box ranking-profit-box-v19 ${profitValue >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
+              <em>PROFIT</em>
+              <span>{profitValue >= 0 ? '+' : ''}{formatMoney(profitValue)} ✦</span>
             </strong>
           </button>
           )

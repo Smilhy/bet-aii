@@ -1,0 +1,4 @@
+WERSJA 19 — Top typerzy w nowym premium stylu ze screena.
+- Nowy układ w prawym panelu.
+- Usunięte WR z widoku.
+- Dodane pola Yield / Typy / Bilans / Profit.

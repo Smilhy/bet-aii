@@ -1,0 +1,7 @@
+WERSJA 18 — CHAT HEADER CLEAN
+
+Zmiana:
+- nagłówek czatu zmieniony na „Bet+AI Live Chat”,
+- usunięto duplikat „1 online” z górnego nagłówka,
+- kafelek „Aktywni teraz” zostaje bez zmian,
+- logika czatu bez zmian.
