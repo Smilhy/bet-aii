@@ -1895,14 +1895,11 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
     <div className="sidebar-stack">
       <aside className="sidebar sidebar-main-box betai-sidebar-premium-v8">
         <div className="betai-premium-logo-card" aria-label="Bet+AI logo">
-          <div className="betai-premium-logo-mark">
-            <span>BA</span>
-            <i></i>
-          </div>
-          <div className="betai-premium-logo-copy">
-            <strong>Bet<span>+AI</span></strong>
-            <small>AI MATCH PICKS</small>
-          </div>
+          <img
+            className="betai-premium-logo-image"
+            src="/betai-sidebar-logo-new.png"
+            alt="Bet+AI"
+          />
         </div>
 
         <div className="user-card betai-premium-user-card">
@@ -1923,8 +1920,14 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
           <div className="wallet-row wallet-row-tokens betai-premium-stat-row"><span><i className="betai-coin-mini"><img src="/betai-coin-icon.png" alt="" /></i>Coin</span><b>{Number(tokenBalance || 0)}</b></div>
           <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951 betai-premium-stat-row" onClick={() => setView('unlockedTips')}><span><i>🔓</i>Odblokowane</span><b>{unlockedCount || 0}</b></button>
 
-          <button className="outline-btn betai-premium-upgrade-btn" onClick={openPremiumCheckout}><span>↗</span> Ulepsz konto</button>
-          <button className="logout-btn betai-premium-logout-btn" onClick={onLogout}><span>⏻</span> Wyloguj</button>
+          <button className="outline-btn betai-premium-upgrade-btn" onClick={openPremiumCheckout}>
+            <span className="betai-premium-btn-icon">↗</span>
+            <span className="betai-premium-btn-label">Ulepsz konto</span>
+          </button>
+          <button className="logout-btn betai-premium-logout-btn" onClick={onLogout}>
+            <span className="betai-premium-btn-icon">⏻</span>
+            <span className="betai-premium-btn-label">Wyloguj</span>
+          </button>
         </div>
 
         <nav className="menu" data-sidebar-lock="v1129">
