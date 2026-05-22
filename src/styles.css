@@ -57567,46 +57567,143 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 }
 
 
-/* WERSJA 1248 — Top typerzy: usuń dublowany znaczek profitu + lekko zwęż prawą kolumnę */
-@media (min-width:1201px){
-  .app-shell{grid-template-columns:250px minmax(620px,1fr) 410px!important;}
-  .rightbar{width:410px!important;min-width:410px!important;}
+/* WERSJA 1248 — Top typerzy: usuń gwiazdki przy proficie, daj więcej oddechu pod chatem i wycentruj statystyki */
+.app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel + .real-ranking-panel.real-ranking-panel-v19{
+  margin-top:8px!important;
 }
 
-@media (min-width:1001px) and (max-width:1200px){
-  .app-shell{grid-template-columns:230px minmax(540px,1fr) 372px!important;}
-  .rightbar{width:372px!important;min-width:372px!important;}
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box span::after{
+  content:none!important;
+  display:none!important;
 }
 
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div{
+  padding:0 10px!important;
+  align-items:center!important;
+  text-align:center!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div:first-child{
+  padding-left:10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats small,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats strong,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats .rank-balance-v19{
+  text-align:center!important;
+  justify-content:center!important;
+}
+
+
+/* WERSJA 1249 / PACZKA 26 — ULTRA PREMIUM FINAL POLISH PRAWEJ KOLUMNY
+   Zakres: tylko wygląd. Nie zmienia logiki, SQL ani naliczania statystyk. */
+
+/* więcej oddechu między Live Chat i Top typerzy */
+.app-shell:not(.no-rightbar-page) .rightbar{
+  gap:20px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .live-chat-panel + .real-ranking-panel.real-ranking-panel-v19{
+  margin-top:10px!important;
+}
+
+/* Top typerzy — gładszy premium panel */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19{
+  background:
+    radial-gradient(circle at 8% 0%, rgba(28,226,255,.09), transparent 33%),
+    radial-gradient(circle at 96% 4%, rgba(31,226,174,.07), transparent 28%),
+    linear-gradient(180deg, rgba(5,17,28,.98), rgba(3,10,18,.99))!important;
+  border-color:rgba(65,215,242,.16)!important;
+  box-shadow:
+    0 22px 62px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 0 28px rgba(31,226,174,.045)!important;
+}
+
+/* karty rankingu — bardziej elegancki kontrast */
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
-  grid-template-columns:106px minmax(0,1fr) 116px!important;
+  background:
+    radial-gradient(circle at 0% 50%, rgba(28,226,255,.055), transparent 34%),
+    linear-gradient(90deg, rgba(7,19,32,.98), rgba(4,13,24,.99))!important;
+  border-color:rgba(58,193,225,.13)!important;
 }
 
-.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
-  width:116px!important;
-  min-width:116px!important;
-  max-width:116px!important;
+/* usuń KAŻDĄ gwiazdkę / sparkle przy proficie, także z dawnych pseudo-elementów */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box span::after,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span::after,
+.rightbar .real-ranking-panel .ranking-profit-box span::after{
+  content:none!important;
+  display:none!important;
 }
 
+/* profit czysty, bez dublowania ozdobników */
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
-  font-size:17px!important;
-  letter-spacing:-.035em!important;
+  color:#43f0b6!important;
+  text-shadow:
+    0 0 10px rgba(67,240,182,.22),
+    0 0 22px rgba(67,240,182,.10)!important;
+  padding-right:0!important;
 }
 
-@media (max-width:1680px){
-  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
-    grid-template-columns:100px minmax(0,1fr) 108px!important;
-  }
-  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-left{
-    width:100px!important;
-    min-width:100px!important;
-  }
-  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
-    width:108px!important;
-    min-width:108px!important;
-    max-width:108px!important;
-  }
-  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
-    font-size:15px!important;
-  }
+/* statystyki: Yield / Typy / Bilans idealnie w osi, nie uciekają w lewo */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats{
+  align-items:center!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding-left:10px!important;
+  padding-right:10px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats > div:first-child{
+  padding-left:10px!important;
+  border-left:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats small,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-stats strong{
+  width:100%!important;
+  text-align:center!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19{
+  width:100%!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  text-align:center!important;
+}
+
+/* minimalnie premium glow na avatarach i medalach bez rozpychania */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-avatar-v19{
+  box-shadow:
+    0 0 0 4px rgba(4,16,28,.92),
+    0 0 18px rgba(28,226,255,.14),
+    inset 0 0 14px rgba(255,255,255,.04)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-medal-v19{
+  filter:saturate(1.04)!important;
+}
+
+/* dymek chatu nie powinien zasłaniać profitu w ostatnim wierszu */
+.betai-floating-chat,
+.floating-chat,
+.chat-floating,
+.chatbot-floating,
+.support-floating,
+[class*="floating"][class*="chat"],
+[class*="chat"][class*="bubble"]{
+  bottom:22px!important;
+  right:16px!important;
+}
+
+/* drobny finalny polish dla nagłówka */
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .panel-head h2{
+  text-shadow:0 2px 0 rgba(0,0,0,.35), 0 0 18px rgba(255,255,255,.06)!important;
 }
