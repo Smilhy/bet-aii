@@ -1893,35 +1893,38 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
 
   return (
     <div className="sidebar-stack">
-      <aside className="sidebar sidebar-main-box">
-        <div className="sidebar-logo-wrap betai-premium-logo-lock" aria-label="Bet+AI logo premium">
-          <div className="betai-premium-logo-card" role="img" aria-label="Bet+AI AI Match Picks">
-            <div className="betai-premium-logo-icon">
-              <span className="betai-premium-ba">BA</span>
-              <span className="betai-premium-chart-line"></span>
-            </div>
-            <div className="betai-premium-logo-text">
-              <strong><span>Bet</span><em>+AI</em></strong>
-              <small>AI MATCH PICKS</small>
-            </div>
+      <aside className="sidebar sidebar-main-box betai-sidebar-premium-v8">
+        <div className="betai-premium-logo-card" aria-label="Bet+AI logo">
+          <div className="betai-premium-logo-mark">
+            <span>BA</span>
+            <i></i>
+          </div>
+          <div className="betai-premium-logo-copy">
+            <strong>Bet<span>+AI</span></strong>
+            <small>AI MATCH PICKS</small>
           </div>
         </div>
-        <div className="user-card">
-          <div
-            className={`avatar sidebar-user-avatar ${profile.avatarUrl ? 'has-avatar' : ''}`}
-            style={profile.avatarUrl ? { '--avatar-image': `url("${profile.avatarUrl}")` } : undefined}
-          >
-            {profile.avatarUrl ? '' : profile.initials}
+
+        <div className="user-card betai-premium-user-card">
+          <div className="betai-premium-user-head">
+            <div
+              className={`avatar sidebar-user-avatar betai-premium-avatar ${profile.avatarUrl ? 'has-avatar' : ''}`}
+              style={profile.avatarUrl ? { '--avatar-image': `url("${profile.avatarUrl}")` } : undefined}
+            >
+              {profile.avatarUrl ? '' : profile.initials}
+            </div>
+            <div className="betai-premium-user-meta">
+              <strong title={profile.username}>{profile.username}</strong>
+              <span className="pill betai-premium-role">{getDisplayRole(user, userPlan)}</span>
+            </div>
           </div>
-          <div>
-            <strong>{profile.username}</strong>
-            <span className="pill">{getDisplayRole(user, userPlan)}</span>
-          </div>
-          <div className="wallet-row"><span>💰 Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
-          <div className="wallet-row wallet-row-tokens"><span><span className="wallet-token-white-coin" aria-hidden="true"><img src="/betai-coin-icon.png" alt="" /></span> Coin</span><b>{Number(tokenBalance || 0)}</b></div>
-          <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951" onClick={() => setView('unlockedTips')}><span>🔓 Odblokowane</span><b>{unlockedCount || 0}</b></button>
-          <button className="outline-btn" onClick={openPremiumCheckout}>Ulepsz konto</button>
-          <button className="logout-btn" onClick={onLogout}>Wyloguj</button>
+
+          <div className="wallet-row betai-premium-stat-row"><span><i>💰</i>Saldo</span><b>{Number(wallet || 0).toFixed(2)} zł</b></div>
+          <div className="wallet-row wallet-row-tokens betai-premium-stat-row"><span><i className="betai-coin-mini"><img src="/betai-coin-icon.png" alt="" /></i>Coin</span><b>{Number(tokenBalance || 0)}</b></div>
+          <button type="button" className="wallet-row wallet-row-clickable unlocked-row-v951 betai-premium-stat-row" onClick={() => setView('unlockedTips')}><span><i>🔓</i>Odblokowane</span><b>{unlockedCount || 0}</b></button>
+
+          <button className="outline-btn betai-premium-upgrade-btn" onClick={openPremiumCheckout}><span>↗</span> Ulepsz konto</button>
+          <button className="logout-btn betai-premium-logout-btn" onClick={onLogout}><span>⏻</span> Wyloguj</button>
         </div>
 
         <nav className="menu" data-sidebar-lock="v1129">

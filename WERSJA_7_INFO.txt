@@ -1,5 +1,0 @@
-WERSJA 7 — PREMIUM SIDEBAR NA SZTYWNO
-- Zmieniony wygląd lewego panelu według referencji użytkownika.
-- Logo wykonane jako premium neonowy blok Bet+AI z ramką.
-- User card, statystyki, przyciski Ulepsz konto/Wyloguj i menu wystylizowane na premium.
-- Logika aplikacji, Supabase, Stripe, Premium, Connect, czat i funkcje bez zmian.
