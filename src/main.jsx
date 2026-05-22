@@ -3239,7 +3239,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
             </div>
             <strong className={`ranking-profit-box ranking-profit-box-v19 ${profitValue >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
               <em>PROFIT</em>
-              <span>{profitValue >= 0 ? '+' : ''}{formatMoney(profitValue)} ✦</span>
+              <span>{profitValue >= 0 ? '+' : ''}{formatMoney(profitValue)}</span>
             </strong>
           </button>
           )

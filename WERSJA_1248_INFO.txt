@@ -1,0 +1,4 @@
+WERSJA 1248 / PACZKA 24
+- usunięty dublujący się znaczek przy PROFIT we wszystkich wierszach Top typerzy
+- lekko zwężona prawa kolumna dashboardu
+- lekko zwężona sekcja profit w panelu Top typerzy

@@ -57565,3 +57565,48 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     font-size:16px!important;
   }
 }
+
+
+/* WERSJA 1248 — Top typerzy: usuń dublowany znaczek profitu + lekko zwęż prawą kolumnę */
+@media (min-width:1201px){
+  .app-shell{grid-template-columns:250px minmax(620px,1fr) 410px!important;}
+  .rightbar{width:410px!important;min-width:410px!important;}
+}
+
+@media (min-width:1001px) and (max-width:1200px){
+  .app-shell{grid-template-columns:230px minmax(540px,1fr) 372px!important;}
+  .rightbar{width:372px!important;min-width:372px!important;}
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
+  grid-template-columns:106px minmax(0,1fr) 116px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
+  width:116px!important;
+  min-width:116px!important;
+  max-width:116px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
+  font-size:17px!important;
+  letter-spacing:-.035em!important;
+}
+
+@media (max-width:1680px){
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank.rank-v19{
+    grid-template-columns:100px minmax(0,1fr) 108px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-v19-left{
+    width:100px!important;
+    min-width:100px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{
+    width:108px!important;
+    min-width:108px!important;
+    max-width:108px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19 span{
+    font-size:15px!important;
+  }
+}
