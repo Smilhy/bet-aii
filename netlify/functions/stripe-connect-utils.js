@@ -49,8 +49,19 @@ async function notifyUser(supabase, userId, title, body) {
       .maybeSingle();
     const email = profile?.email;
     if (!email) return;
+
+    // V6: prevent repeated Stripe Connect notification spam during webhook retries/reconnects.
+    const { data: existing } = await supabase
+      .from('betai_system_notifications')
+      .select('id')
+      .eq('recipient_email', String(email).toLowerCase())
+      .eq('title', title)
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .limit(1);
+    if (Array.isArray(existing) && existing.length) return;
+
     await safeInsert(supabase, 'betai_system_notifications', {
-      recipient_email: email,
+      recipient_email: String(email).toLowerCase(),
       title,
       body,
       message: body,
@@ -74,7 +85,7 @@ async function updateConnectedAccountFromStripeAccount(supabase, account) {
     charges_enabled: Boolean(account.charges_enabled),
     payouts_enabled: Boolean(account.payouts_enabled),
     details_submitted: Boolean(account.details_submitted),
-    connect_status: account.payouts_enabled ? 'active' : (account.details_submitted ? 'pending' : 'onboarding'),
+    connect_status: account.payouts_enabled ? 'connected' : (account.details_submitted ? 'pending' : 'onboarding'),
     updated_at: new Date().toISOString()
   };
 

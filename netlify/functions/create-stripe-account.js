@@ -1,7 +1,11 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+  const key = process.env.STRIPE_CONNECT_SECRET_KEY;
+  if (!key) throw new Error('Missing STRIPE_CONNECT_SECRET_KEY');
+  return new Stripe(key);
+}
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -10,34 +14,47 @@ function getSupabase() {
   return createClient(url, key);
 }
 
+function connectStatusFromAccount(account) {
+  if (account?.payouts_enabled) return 'connected';
+  if (account?.details_submitted) return 'pending';
+  return 'onboarding';
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   try {
-    if (!(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY)) throw new Error('Missing STRIPE_CONNECT_SECRET_KEY');
-
+    const stripe = getStripe();
     const { user_id, email, country } = JSON.parse(event.body || '{}');
 
-    if (!user_id) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
-    }
+    if (!user_id) return { statusCode: 400, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Missing user_id' }) };
 
     const supabase = getSupabase();
 
     const { data: existing, error: existingError } = await supabase
       .from('user_stripe_accounts')
-      .select('*')
+      .select('user_id,stripe_account_id,charges_enabled,payouts_enabled,details_submitted,connect_status')
       .eq('user_id', user_id)
       .maybeSingle();
 
     if (existingError) throw existingError;
 
-    let accountId = existing?.stripe_account_id;
+    let account = null;
+    let accountId = existing?.stripe_account_id || null;
+
+    if (accountId) {
+      try {
+        account = await stripe.accounts.retrieve(accountId);
+      } catch (error) {
+        console.warn('Existing Stripe Connect account could not be retrieved, creating a new one:', error.message);
+        accountId = null;
+      }
+    }
 
     if (!accountId) {
-      const account = await stripe.accounts.create({
+      account = await stripe.accounts.create({
         type: 'express',
         country: String(country || process.env.STRIPE_CONNECT_COUNTRY || 'GB').toUpperCase(),
         email: email || undefined,
@@ -46,30 +63,28 @@ exports.handler = async (event) => {
           card_payments: { requested: true }
         },
         business_type: 'individual',
-        metadata: { user_id }
+        metadata: { user_id, source: 'betai_connect_v6' }
       });
-
       accountId = account.id;
-
-      const { error: upsertError } = await supabase
-        .from('user_stripe_accounts')
-        .upsert({
-          user_id,
-          stripe_account_id: accountId,
-          charges_enabled: Boolean(account.charges_enabled),
-          payouts_enabled: Boolean(account.payouts_enabled),
-          details_submitted: Boolean(account.details_submitted),
-          connect_status: account.payouts_enabled ? 'active' : (account.details_submitted ? 'pending' : 'onboarding'),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
-
-      if (upsertError) throw upsertError;
     }
 
-    const siteUrl =
-      process.env.SITE_URL ||
-      process.env.PUBLIC_SITE_URL ||
-      'https://bet-ai.app';
+    const payload = {
+      user_id,
+      stripe_account_id: accountId,
+      charges_enabled: Boolean(account?.charges_enabled),
+      payouts_enabled: Boolean(account?.payouts_enabled),
+      details_submitted: Boolean(account?.details_submitted),
+      connect_status: connectStatusFromAccount(account),
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: upsertError } = await supabase
+      .from('user_stripe_accounts')
+      .upsert(payload, { onConflict: 'user_id' });
+
+    if (upsertError) throw upsertError;
+
+    const siteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.URL || 'https://bet-ai.app';
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
@@ -81,17 +96,10 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: accountLink.url,
-        account_id: accountId
-      })
+      body: JSON.stringify({ url: accountLink.url, account_id: accountId, status: payload.connect_status })
     };
   } catch (error) {
     console.error('create-stripe-account error:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: error.message || 'Stripe Connect backend error' })
-    };
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: error.message || 'Stripe Connect backend error' }) };
   }
 };

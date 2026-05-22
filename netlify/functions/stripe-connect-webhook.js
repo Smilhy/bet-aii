@@ -5,6 +5,7 @@ const {
   handleConnectCheckoutSession
 } = require('./stripe-connect-utils');
 
+if (!process.env.STRIPE_CONNECT_SECRET_KEY) console.warn('Missing STRIPE_CONNECT_SECRET_KEY for Stripe Connect webhook');
 const stripe = new Stripe(process.env.STRIPE_CONNECT_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
 
 function constructEvent(body, signature) {

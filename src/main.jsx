@@ -22883,18 +22883,7 @@ function App() {
   }, [sessionUser?.id])
 
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('stripe_connect') === 'success') {
-      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Status wypłat odświeży się automatycznie.' })
-      if (sessionUser?.id) fetchStripeConnectStatus(sessionUser.id)
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-    if (params.get('stripe_connect') === 'refresh') {
-      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
-      if (sessionUser?.id) connectStripeAccount()
-    }
-  }, [sessionUser?.id])
+  // V6: Stripe Connect return is handled once below. Do not auto-start onboarding on refresh.
 
   useEffect(() => {
     fetchTips(sessionUser?.id)
@@ -22917,7 +22906,12 @@ function App() {
         .eq('user_id', userId)
         .maybeSingle()
 
-      if (error || !data) {
+      if (error) {
+        console.warn('fetchStripeConnectStatus warning', error.message || error)
+        return
+      }
+
+      if (!data) {
         setStripeConnectStatus(null)
         return
       }
@@ -22925,7 +22919,7 @@ function App() {
       setStripeConnectStatus(data)
     } catch (error) {
       console.error('fetchStripeConnectStatus error', error)
-      setStripeConnectStatus(null)
+      // V6: do not wipe the UI status on a temporary Supabase/network error.
     }
   }
 
@@ -22936,7 +22930,11 @@ function App() {
         return
       }
 
-      showToast({ type: 'info', title: 'Stripe Connect', message: 'Tworzenie linku onboarding...' })
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Tworzenie bezpiecznego linku onboarding...' })
+      try {
+        sessionStorage.setItem('betai_connect_user_id', sessionUser.id)
+        sessionStorage.setItem('betai_connect_email', sessionUser.email || '')
+      } catch {}
 
       const response = await fetch('/.netlify/functions/create-stripe-account', {
         method: 'POST',
@@ -23873,42 +23871,23 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    const connectStatus = params.get('stripe_connect')
+    if (!connectStatus) return
 
-    if (params.get('stripe_connect') === 'success') {
-      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Możesz odbierać wypłaty.' })
+    if (connectStatus === 'success') {
+      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Status pobiorę z bazy bez resetowania strony.' })
       if (sessionUser?.id) fetchStripeConnectStatus(sessionUser.id)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 
-    if (params.get('stripe_connect') === 'refresh') {
-      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
+    if (connectStatus === 'refresh') {
+      showToast({ type: 'info', title: 'Stripe Connect', message: 'Konfiguracja Stripe nie została ukończona. Kliknij przycisk ponownie, gdy chcesz dokończyć.' })
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [sessionUser?.id])
 
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-
-    if (params.get('stripe_connect') === 'success') {
-      showToast({ type: 'success', title: 'Stripe Connect', message: 'Konto Stripe zostało połączone. Odświeżam status wypłat.' })
-
-      if (sessionUser?.id) {
-        fetch('/.netlify/functions/refresh-stripe-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: sessionUser.id })
-        }).finally(() => fetchStripeConnectStatus(sessionUser.id))
-      }
-
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-
-    if (params.get('stripe_connect') === 'refresh') {
-      showToast({ type: 'info', title: 'Stripe Connect', message: 'Dokończ konfigurację konta Stripe.' })
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-  }, [sessionUser?.id])
+  // V6: disabled automatic Stripe account refresh on every return to avoid UI/profile resets.
 
   useEffect(() => {
     const currentEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
