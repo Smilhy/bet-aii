@@ -9751,7 +9751,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       <div className={`profile-ticket-v6-analysis ${effectiveIsLocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
-        <p>{effectiveIsLocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : cardAnalysis}</p>
+        <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana' : cardAnalysis}</p>
         <button type="button">Czytaj więcej⌄</button>
       </div>
 
@@ -17306,7 +17306,7 @@ function ProfileLiveTipCard({
 
       <div className={`profile-ticket-v6-analysis ${tip.premium && !effectiveIsUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
-        <p>{tip.premium && !effectiveIsUnlocked ? 'Ten typ premium jest zablokowany. Odblokuj dostęp, aby zobaczyć analizę, kurs i pełny typ.' : tip.analysis}</p>
+        <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana' : tip.analysis}</p>
         <button type="button">Czytaj więcej⌄</button>
       </div>
 
