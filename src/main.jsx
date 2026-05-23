@@ -2331,67 +2331,9 @@ function LiveChatPanel({ user }) {
       if (error) throw error
       let nextMessages = (data || []).reverse()
 
-      // WERSJA 912: avatar w czacie zawsze z prawdziwego profilu/cache.
-      // Nie ufamy starym avatar_url z wiadomości, bo mogły zostać zapisane od innego użytkownika.
-      cacheBetaiCurrentUserAvatar(user)
-      try {
-        const chatProfileMap = new Map()
-        const addProfileAvatar = (profile = {}) => {
-          const avatar = getProfileAvatarUrl(profile)
-          if (!avatar) return
-          const emailKey = normalizeEmail(profile.email || profile.user_email || profile.author_email)
-          const nameKey = normalizeEmail(profile.username || profile.user_name || profile.author_name)
-          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          if (profile.id) chatProfileMap.set(String(profile.id).toLowerCase(), avatar)
-          if (emailKey) chatProfileMap.set(emailKey, avatar)
-          if (localKey) chatProfileMap.set(localKey, avatar)
-          if (nameKey) chatProfileMap.set(nameKey, avatar)
-        }
-
-        // Najpierw RPC publicznych profili — to jest źródło prawdy niezależnie od zalogowanego konta.
-        try {
-          const chatProfiles = await fetchBetaiPublicProfiles()
-          ;(chatProfiles || []).forEach(addProfileAvatar)
-        } catch (profileAvatarError) {
-          console.warn('chat profiles avatar hydration skipped', profileAvatarError)
-        }
-
-        // Fallback tylko wtedy, kiedy nie ma profilu w mapie.
-        try {
-          const { data: chatTipAuthors } = await supabase
-            .from('tips')
-            .select('author_id,user_id,author_name,username,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
-            .order('created_at', { ascending: false })
-            .limit(500)
-          ;(chatTipAuthors || []).forEach(row => {
-            const emailKey = normalizeEmail(row.author_email)
-            const nameKey = normalizeEmail(row.author_name || row.username)
-            const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-            const avatar = row.author_avatar_url || row.profile_avatar_url || row.avatar_url || ''
-            if (!avatar) return
-            if (emailKey && !chatProfileMap.has(emailKey)) chatProfileMap.set(emailKey, avatar)
-            if (localKey && !chatProfileMap.has(localKey)) chatProfileMap.set(localKey, avatar)
-            if (nameKey && !chatProfileMap.has(nameKey)) chatProfileMap.set(nameKey, avatar)
-          })
-        } catch (tipAvatarError) {
-          console.warn('chat tip avatar fallback skipped', tipAvatarError)
-        }
-
-        nextMessages = nextMessages.map(row => {
-          const emailKey = normalizeEmail(row.user_email)
-          const nameKey = normalizeEmail(row.user_name)
-          const localKey = emailKey ? normalizeEmail(emailKey.split('@')[0]) : ''
-          let mappedAvatar = chatProfileMap.get(emailKey) || chatProfileMap.get(localKey) || chatProfileMap.get(nameKey) || ''
-          const currentAvatar = getProfileAvatarUrl(user)
-          const currentEmail = normalizeEmail(user?.email)
-          const currentName = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name)
-          if (currentAvatar && ((currentEmail && emailKey === currentEmail) || (currentName && nameKey === currentName))) mappedAvatar = currentAvatar
-          // mappedAvatar ma pierwszeństwo nad row.avatar_url, bo row.avatar_url bywa błędny/stary.
-          return mappedAvatar ? { ...row, avatar_url: mappedAvatar } : row
-        })
-      } catch (avatarError) {
-        console.warn('chat avatar hydration skipped', avatarError)
-      }
+      // v1261: anti-lag. Live chat nie hydratuje avatarów przez RPC/profiles/tips przy każdym odświeżeniu.
+      // Poprzednio co 2.5s odpalało dodatkowe zapytania do profili i tips, co tworzyło tysiące requestów.
+      nextMessages = nextMessages.map(row => row)
 
       setMessages(nextMessages)
       setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
@@ -2412,7 +2354,7 @@ function LiveChatPanel({ user }) {
         if (nextStatus === 'SUBSCRIBED') setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(nextStatus)) setStatus('Realtime chwilowo niedostępny — włączone odświeżanie.')
       })
-    const timer = setInterval(loadMessages, 2500)
+    const timer = setInterval(loadMessages, 30000)
     return () => {
       clearInterval(timer)
       supabase.removeChannel(channel)
@@ -21383,10 +21325,15 @@ function App() {
   const lastReceivedTipPollKeyRef = useRef('')
   const receivedTipNotificationPollReadyRef = useRef(false)
   const lastReceivedTipNotificationKeyRef = useRef('')
-  // v1260: guardy anty-lag. Po restore Supabase część RPC/tabel zwraca 400/404/500;
-  // nie wolno mielić ich w pętli na dashboardzie.
-  const initialLoadStartedRef = useRef(false)
-  const referralRpcUnavailableRef = useRef(false)
+  // v1261: anti-lag guards. Chroni dashboard przed pętlą requestów Supabase po zmianie widoku/F5.
+  const fetchTipsInFlightRef = useRef(false)
+  const fetchTipsLastRunRef = useRef(0)
+  const fetchNotificationsInFlightRef = useRef(false)
+  const fetchNotificationsLastRunRef = useRef(0)
+  const fetchTokenInFlightRef = useRef(false)
+  const fetchTokenLastRunRef = useRef(0)
+  const fetchRankingInFlightRef = useRef(false)
+  const fetchRankingLastRunRef = useRef(0)
 
   function hideReceivedTipPopup() {
     setReceivedTipPopupVisible(false)
@@ -21431,9 +21378,15 @@ function App() {
     }
   }
 
-  async function fetchCurrentTokenBalance() {
+  async function fetchCurrentTokenBalance({ force = false } = {}) {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!email) return 0
+    const now = Date.now()
+    if (!force && fetchTokenInFlightRef.current) return Number(tokenBalance || 0) || 0
+    if (!force && now - Number(fetchTokenLastRunRef.current || 0) < 12000) return Number(tokenBalance || 0) || 0
+    fetchTokenInFlightRef.current = true
+    fetchTokenLastRunRef.current = now
+    window.setTimeout(() => { fetchTokenInFlightRef.current = false }, 1500)
 
     const getRewardLock = () => {
       try {
@@ -21610,7 +21563,13 @@ function App() {
     }
   }
 
-  async function fetchRealRanking() {
+  async function fetchRealRanking({ force = false } = {}) {
+    const now = Date.now()
+    if (!force && fetchRankingInFlightRef.current) return
+    if (!force && now - Number(fetchRankingLastRunRef.current || 0) < 45000) return
+    fetchRankingInFlightRef.current = true
+    fetchRankingLastRunRef.current = now
+    window.setTimeout(() => { fetchRankingInFlightRef.current = false }, 2500)
     if (!isSupabaseConfigured || !supabase) {
       setRealRanking(buildLiveLeaderboardRows([], tips))
       return
@@ -21705,21 +21664,12 @@ function App() {
       setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
       return
     }
-    if (referralRpcUnavailableRef.current) return
 
     setReferralLoading(true)
     try {
-      const { data: codeData, error: codeError } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
-      if (codeError && (String(codeError.code) === 'PGRST202' || String(codeError.message || '').includes('Could not find the function'))) {
-        referralRpcUnavailableRef.current = true
-        return
-      }
+      const { data: codeData } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
       const referralCode = typeof codeData === 'string' ? codeData : ''
       const { data: dashboardData, error } = await supabase.rpc('get_referral_dashboard', { p_user_id: userId })
-      if (error && (String(error.code) === 'PGRST202' || String(error.message || '').includes('Could not find the function'))) {
-        referralRpcUnavailableRef.current = true
-        return
-      }
       if (error) throw error
       const row = Array.isArray(dashboardData) ? dashboardData[0] : dashboardData
 
@@ -21807,7 +21757,13 @@ function App() {
     }
   }
 
-  async function fetchTips(userId = sessionUser?.id) {
+  async function fetchTips(userId = sessionUser?.id, { force = false } = {}) {
+    const now = Date.now()
+    if (!force && fetchTipsInFlightRef.current) return
+    if (!force && now - Number(fetchTipsLastRunRef.current || 0) < 10000) return
+    fetchTipsInFlightRef.current = true
+    fetchTipsLastRunRef.current = now
+    window.setTimeout(() => { fetchTipsInFlightRef.current = false }, 3000)
     if (!isSupabaseConfigured || !supabase) {
       setTips([])
       return
@@ -21873,17 +21829,17 @@ function App() {
       if (userId) {
         pushOwnQuery('author_id', userId)
         pushOwnQuery('user_id', userId)
-        pushOwnQuery('tipster_id', userId)
+        // v1261: skip missing/expensive legacy column tipster_id: pushOwnQuery('tipster_id', userId)
       }
       if (currentEmail) {
         pushOwnQuery('author_email', currentEmail)
-        pushOwnQuery('user_email', currentEmail)
-        pushOwnQuery('email', currentEmail)
+        // v1261: skip missing/expensive legacy column user_email: pushOwnQuery('user_email', currentEmail)
+        // v1261: skip missing/expensive legacy column email: pushOwnQuery('email', currentEmail)
       }
       if (currentUsername && !isGenericProfileName(currentUsername)) {
-        pushOwnQuery('author_name', currentUsername)
-        pushOwnQuery('username', currentUsername)
-        pushOwnQuery('public_slug', currentUsername)
+        // v1261: skip missing/expensive legacy column author_name: pushOwnQuery('author_name', currentUsername)
+        // v1261: skip missing/expensive legacy column username: pushOwnQuery('username', currentUsername)
+        // v1261: skip missing/expensive legacy column public_slug: pushOwnQuery('public_slug', currentUsername)
       }
 
       if (ownQueries.length) {
@@ -21999,7 +21955,7 @@ function App() {
     }
     setTips(sourceTips)
     setLastTipSaveStatus(readTipDebug())
-    fetchRealRanking()
+    // v1261: ranking refresh is throttled separately; do not chain it after every tips fetch.
   }
 
   useEffect(() => {
@@ -22098,7 +22054,7 @@ function App() {
       if (document.visibilityState === 'visible') {
         fetchTips(sessionUser?.id)
       }
-    }, 120000)
+    }, 60000)
 
     const onFocusRefresh = () => {
       fetchTips(sessionUser?.id)
@@ -22283,8 +22239,14 @@ function App() {
   }
 
 
-  async function fetchNotifications(userId = sessionUser?.id) {
+  async function fetchNotifications(userId = sessionUser?.id, { force = false } = {}) {
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+    const now = Date.now()
+    if (!force && fetchNotificationsInFlightRef.current) return
+    if (!force && now - Number(fetchNotificationsLastRunRef.current || 0) < 15000) return
+    fetchNotificationsInFlightRef.current = true
+    fetchNotificationsLastRunRef.current = now
+    window.setTimeout(() => { fetchNotificationsInFlightRef.current = false }, 2500)
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
       setTokenBalance(0)
@@ -22964,7 +22926,7 @@ function App() {
   // V6: Stripe Connect return is handled once below. Do not auto-start onboarding on refresh.
 
   useEffect(() => {
-    fetchTips(sessionUser?.id)
+    fetchTips(sessionUser?.id, { force: true })
   }, [sessionUser?.id])
 
 
@@ -23711,7 +23673,7 @@ function App() {
       try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
       try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
       try { await fetchRealRanking() } catch (e) { console.error(e) }
-      // v1260: referrals nie są potrzebne na starcie dashboardu. Brak RPC w Supabase robił 404 w pętli.
+      try { await fetchReferralData(userId) } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
       try { await ensureUserWalletAndWelcome({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
@@ -23731,10 +23693,10 @@ function App() {
 
         if (user?.id) {
           safeInitialLoad(user.id)
+          // v1261: ensure wallet is already included in safeInitialLoad; avoid duplicate request.
         }
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-          if (_event === 'INITIAL_SESSION') return
           const nextUser = session?.user || null
           setSessionUser(nextUser)
           setWalletBalance(0)
@@ -23752,6 +23714,7 @@ function App() {
 
           setUnlockedTips(new Set())
           safeInitialLoad(nextUser.id)
+          // v1261: ensure wallet is already included in safeInitialLoad; avoid duplicate request.
         })
 
         unsubscribe = listener?.subscription?.unsubscribe
@@ -24023,11 +23986,10 @@ function App() {
     }
 
     window.addEventListener('betai-token-balance-changed', refreshTokens)
-    const quickRefresh = setTimeout(refreshTokens, 900)
-    const quickNotificationPoll = setTimeout(pollTipNotifications, 1500)
-    // v1260: nie odpytywać Supabase co 2-3 sekundy. Realtime + ręczne akcje wystarczą.
-    const interval = null
-    const notificationInterval = null
+    const quickRefresh = setTimeout(refreshTokens, 350)
+    const quickNotificationPoll = setTimeout(pollTipNotifications, 900)
+    const interval = setInterval(refreshTokens, 60000)
+    const notificationInterval = setInterval(pollTipNotifications, 60000)
 
     let walletChannel = null
     if (isSupabaseConfigured && supabase) {
@@ -24055,8 +24017,8 @@ function App() {
       stopped = true
       clearTimeout(quickRefresh)
       clearTimeout(quickNotificationPoll)
-      if (interval) clearInterval(interval)
-      if (notificationInterval) clearInterval(notificationInterval)
+      clearInterval(interval)
+      clearInterval(notificationInterval)
       window.removeEventListener('betai-token-balance-changed', refreshTokens)
       if (walletChannel) {
         try { supabase.removeChannel(walletChannel) } catch (_) {}
@@ -24294,12 +24256,12 @@ function App() {
       }
     }
 
-    const initialPoll = setTimeout(pollTipTransfers, 1200)
-    const pollInterval = null
+    const initialPoll = setTimeout(pollTipTransfers, 700)
+    const pollInterval = setInterval(pollTipTransfers, 60000)
 
     return () => {
       clearTimeout(initialPoll)
-      if (pollInterval) clearInterval(pollInterval)
+      clearInterval(pollInterval)
       channels.forEach(channel => {
         try { supabase.removeChannel(channel) } catch (_) {}
       })
