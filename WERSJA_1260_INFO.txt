@@ -1,0 +1,14 @@
+WERSJA 1260 — FIX LAG / PETLA REQUESTOW
+
+Baza: surali_DASHBOARD_WERSJA_1256_RECZNE_WIDOCZNE_ROZLICZENIE_ADMIN(1).zip
+
+Zmiany:
+- Nie ruszano Supabase / SQL.
+- Nie ruszano logiki Dodaj typ.
+- Wyłączono agresywne odpytywanie Supabase co 2–3 sekundy dla powiadomień, token wallet i tip transfers.
+- Realtime dalej zostaje.
+- Referral RPC nie odpala się już na starcie dashboardu i nie spamuje 404, gdy funkcje nie istnieją.
+- Ograniczono auto-refresh typów z 15 s do 120 s.
+- Zabezpieczono przed podwójnym initial load auth.
+
+Cel: zatrzymać masę requestów w Network i odmulenie całej strony.

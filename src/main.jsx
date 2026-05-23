@@ -21383,6 +21383,10 @@ function App() {
   const lastReceivedTipPollKeyRef = useRef('')
   const receivedTipNotificationPollReadyRef = useRef(false)
   const lastReceivedTipNotificationKeyRef = useRef('')
+  // v1260: guardy anty-lag. Po restore Supabase część RPC/tabel zwraca 400/404/500;
+  // nie wolno mielić ich w pętli na dashboardzie.
+  const initialLoadStartedRef = useRef(false)
+  const referralRpcUnavailableRef = useRef(false)
 
   function hideReceivedTipPopup() {
     setReceivedTipPopupVisible(false)
@@ -21701,12 +21705,21 @@ function App() {
       setReferralData({ referral_code: '', referrals_count: 0, buyers_count: 0, reward_total: 0, referrals: [], rewards: [] })
       return
     }
+    if (referralRpcUnavailableRef.current) return
 
     setReferralLoading(true)
     try {
-      const { data: codeData } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
+      const { data: codeData, error: codeError } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
+      if (codeError && (String(codeError.code) === 'PGRST202' || String(codeError.message || '').includes('Could not find the function'))) {
+        referralRpcUnavailableRef.current = true
+        return
+      }
       const referralCode = typeof codeData === 'string' ? codeData : ''
       const { data: dashboardData, error } = await supabase.rpc('get_referral_dashboard', { p_user_id: userId })
+      if (error && (String(error.code) === 'PGRST202' || String(error.message || '').includes('Could not find the function'))) {
+        referralRpcUnavailableRef.current = true
+        return
+      }
       if (error) throw error
       const row = Array.isArray(dashboardData) ? dashboardData[0] : dashboardData
 
@@ -22085,7 +22098,7 @@ function App() {
       if (document.visibilityState === 'visible') {
         fetchTips(sessionUser?.id)
       }
-    }, 15000)
+    }, 120000)
 
     const onFocusRefresh = () => {
       fetchTips(sessionUser?.id)
@@ -23698,7 +23711,7 @@ function App() {
       try { await fetchWalletBalance(userId) } catch (e) { console.error(e) }
       try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
       try { await fetchRealRanking() } catch (e) { console.error(e) }
-      try { await fetchReferralData(userId) } catch (e) { console.error(e) }
+      // v1260: referrals nie są potrzebne na starcie dashboardu. Brak RPC w Supabase robił 404 w pętli.
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
       try { await ensureUserWalletAndWelcome({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
@@ -23718,10 +23731,10 @@ function App() {
 
         if (user?.id) {
           safeInitialLoad(user.id)
-          ensureUserWalletAndWelcome(user)
         }
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (_event === 'INITIAL_SESSION') return
           const nextUser = session?.user || null
           setSessionUser(nextUser)
           setWalletBalance(0)
@@ -23739,7 +23752,6 @@ function App() {
 
           setUnlockedTips(new Set())
           safeInitialLoad(nextUser.id)
-          ensureUserWalletAndWelcome(nextUser)
         })
 
         unsubscribe = listener?.subscription?.unsubscribe
@@ -24011,10 +24023,11 @@ function App() {
     }
 
     window.addEventListener('betai-token-balance-changed', refreshTokens)
-    const quickRefresh = setTimeout(refreshTokens, 350)
-    const quickNotificationPoll = setTimeout(pollTipNotifications, 900)
-    const interval = setInterval(refreshTokens, 3000)
-    const notificationInterval = setInterval(pollTipNotifications, 2200)
+    const quickRefresh = setTimeout(refreshTokens, 900)
+    const quickNotificationPoll = setTimeout(pollTipNotifications, 1500)
+    // v1260: nie odpytywać Supabase co 2-3 sekundy. Realtime + ręczne akcje wystarczą.
+    const interval = null
+    const notificationInterval = null
 
     let walletChannel = null
     if (isSupabaseConfigured && supabase) {
@@ -24042,8 +24055,8 @@ function App() {
       stopped = true
       clearTimeout(quickRefresh)
       clearTimeout(quickNotificationPoll)
-      clearInterval(interval)
-      clearInterval(notificationInterval)
+      if (interval) clearInterval(interval)
+      if (notificationInterval) clearInterval(notificationInterval)
       window.removeEventListener('betai-token-balance-changed', refreshTokens)
       if (walletChannel) {
         try { supabase.removeChannel(walletChannel) } catch (_) {}
@@ -24281,12 +24294,12 @@ function App() {
       }
     }
 
-    const initialPoll = setTimeout(pollTipTransfers, 700)
-    const pollInterval = setInterval(pollTipTransfers, 2200)
+    const initialPoll = setTimeout(pollTipTransfers, 1200)
+    const pollInterval = null
 
     return () => {
       clearTimeout(initialPoll)
-      clearInterval(pollInterval)
+      if (pollInterval) clearInterval(pollInterval)
       channels.forEach(channel => {
         try { supabase.removeChannel(channel) } catch (_) {}
       })
