@@ -58318,3 +58318,105 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     font-size:27px!important;
   }
 }
+
+/* WERSJA 38 — lewy blok autora w kartach dashboardu: większe statystyki + badge niżej */
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+  grid-template-columns:258px minmax(330px,1.28fr) minmax(150px,.46fr) minmax(138px,.34fr) minmax(98px,.26fr) minmax(210px,.58fr) 168px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+  display:grid!important;
+  grid-template-columns:78px minmax(0,1fr)!important;
+  grid-template-rows:auto 1fr auto!important;
+  align-content:stretch!important;
+  align-items:start!important;
+  min-height:100%!important;
+  padding:17px 17px 14px!important;
+  gap:0 14px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > .profile-ticket-v6-avatar{
+  grid-column:1!important;
+  grid-row:1 / span 2!important;
+  align-self:start!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > div{
+  grid-column:2!important;
+  grid-row:1 / span 2!important;
+  align-self:start!important;
+  min-width:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874{
+  margin-top:1px!important;
+  margin-bottom:8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 strong{
+  font-size:18px!important;
+  line-height:1.05!important;
+  max-width:132px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876{
+  margin-top:0!important;
+  padding:9px 11px!important;
+  gap:4px!important;
+  border-radius:15px!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018))!important;
+  border-color:rgba(109,166,184,.14)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 8px 18px rgba(0,0,0,.10)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 span{
+  font-size:12.5px!important;
+  line-height:1.22!important;
+  color:#d3e0ea!important;
+  font-weight:800!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 b{
+  font-size:12.5px!important;
+  font-weight:1000!important;
+  color:#ffffff!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-positive-text{
+  color:#23f4a8!important;
+  font-size:12.8px!important;
+  text-shadow:0 0 12px rgba(35,244,168,.22)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-negative-text{
+  color:#ff6a85!important;
+  font-size:12.8px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-access{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+  justify-self:center!important;
+  align-self:end!important;
+  margin-top:18px!important;
+  margin-bottom:1px!important;
+  min-width:138px!important;
+  height:42px!important;
+  padding:0 18px!important;
+  font-size:12.5px!important;
+  font-weight:1000!important;
+}
+
+@media (max-width:1536px){
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+    padding:15px 15px 13px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 span,
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 b{
+    font-size:12px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-access{
+    margin-top:16px!important;
+    height:40px!important;
+  }
+}

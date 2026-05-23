@@ -1,0 +1,4 @@
+WERSJA 38
+- lewy blok autora w kartach dashboardu: większe statystyki
+- badge DARMOWY/PREMIUM opuszczony niżej
+- UI only, logika bez zmian
