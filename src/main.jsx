@@ -9406,7 +9406,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <b>{Number(form.odds || 0).toFixed(2)}</b>
             </div>
             <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !effectiveSelectedMatch || !ticketMarketSelected} onClick={handlePublish}>
-              {saving ? 'Publikowanie…' : 'Dodaj typ'}
+              {saving ? 'Publikowanie…' : 'Opublikuj typ'}
             </button>
           </div>
         </aside>
@@ -11075,10 +11075,7 @@ function ArticlesView() {
     return 'Krótki podgląd artykułu jest dostępny na stronie BetAI. Pełną treść otworzysz u źródła.'
   }
 
-  const fightmodePpvUrl = 'https://ppv.fightmode.tv/watch'
-
   const tvRows = [
-    { time: 'LIVE', sport: '🥊', match: 'Fightmode PPV', league: 'TV Live', status: 'TWÓJ STREAM', source: 'Fightmode PPV', note: 'Oficjalna strona transmisji PPV — użytkownik przechodzi do zakupu/logowania.', url: fightmodePpvUrl },
     { time: '18:30', sport: '⚽', match: 'Manchester City – Arsenal', league: 'Premier League', status: 'LIVE CENTER', source: 'Oficjalny nadawca / aplikacja ligi', note: 'Wynik, status meczu i legalna ścieżka oglądania', url: 'https://www.premierleague.com/broadcast-schedules' },
     { time: '20:45', sport: '⚽', match: 'Inter – Juventus', league: 'Serie A', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca Serie A', note: 'Bez playerów i bez pirackich linków', url: 'https://www.legaseriea.it/en' },
     { time: '21:00', sport: '⚽', match: 'Real Madryt – Betis', league: 'LaLiga', status: 'ZAPOWIEDŹ', source: 'Oficjalny nadawca LaLiga', note: 'Sprawdź legalną transmisję w swoim kraju', url: 'https://www.laliga.com/en-GB/where-to-watch-laliga' },
@@ -11281,59 +11278,7 @@ function ArticlesView() {
             </>
           ) : null}
 
-          {activeArticleTab === 'tv' ? (
-            <div className="glass-tvlive-v8 fightmode-tv-wrap-v1254">
-              <div className="fightmode-tv-hero-v1254">
-                <div className="fightmode-tv-copy-v1254">
-                  <span>TV LIVE / PPV</span>
-                  <h2>Fightmode PPV</h2>
-                  <p>Oficjalny link do Twojej transmisji. Użytkownik po kliknięciu przechodzi na stronę Fightmode, gdzie może się zalogować albo wykupić dostęp PPV.</p>
-                  <div className="fightmode-tv-actions-v1254">
-                    <button type="button" onClick={() => window.open(fightmodePpvUrl, '_blank', 'noopener,noreferrer')}>Oglądaj stream</button>
-                    <button type="button" className="ghost-v1254" onClick={() => navigator?.clipboard?.writeText(fightmodePpvUrl)}>Kopiuj link</button>
-                  </div>
-                </div>
-                <div className="fightmode-tv-card-v1254">
-                  <small>STATUS</small>
-                  <strong>PPV READY</strong>
-                  <p>Bez iframe i bez kombinowania z playerem — bezpieczne przekierowanie do oficjalnej strony.</p>
-                </div>
-              </div>
-
-              <div className="fightmode-tv-grid-v1254">
-                <article className="fightmode-tv-main-card-v1254">
-                  <div className="fightmode-tv-main-top-v1254">
-                    <span>🥊</span>
-                    <b>TWÓJ STREAM</b>
-                  </div>
-                  <h3>Fightmode PPV — transmisja live</h3>
-                  <p>Link prowadzi do strony PPV. Dostęp do oglądania zostaje po stronie Fightmode: logowanie, zakup i uprawnienia użytkownika.</p>
-                  <button type="button" onClick={() => window.open(fightmodePpvUrl, '_blank', 'noopener,noreferrer')}>Przejdź do transmisji</button>
-                </article>
-
-                <div className="fightmode-tv-info-v1254">
-                  {legalLiveInfoRows.map((row, index) => (
-                    <div key={index}>
-                      <span>{row[0]}</span>
-                      <p>{row[1]}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="fightmode-tv-list-v1254">
-                {tvRows.map((row, index) => (
-                  <div className="fightmode-tv-row-v1254" key={`${row.match}-${index}`}>
-                    <div className="fightmode-tv-time-v1254">{row.time}</div>
-                    <div className="fightmode-tv-match-v1254"><span>{row.sport}</span><div><strong>{row.match}</strong><small>{row.league}</small></div></div>
-                    <em>{row.status}</em>
-                    <p>{row.note}</p>
-                    <button type="button" onClick={() => window.open(row.url, '_blank', 'noopener,noreferrer')}>Otwórz</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
+          {/* v1134: usunięto stary panel TV/articles z tej sekcji. */}
 
           {/* v1134: usunięto dodatkowy panel kart/newsów nad Wyniki live. */}
 

@@ -1,0 +1,6 @@
+WERSJA 1255 — DODAJ TYP KOLORY DASHBOARD
+
+Zakres zmian:
+- Zmieniono wyłącznie kolorystykę zakładki Dodaj typ.
+- Dopasowano tło, panele, ramki, aktywne elementy i przyciski do kolorów dashboardu.
+- Nie zmieniano logiki, wyszukiwania meczów, trybu ręcznego, formularzy ani innych zakładek.
