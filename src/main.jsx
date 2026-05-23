@@ -34,6 +34,20 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
+
+/* =========================================================
+   WERSJA 1266 — NETWORK FIX / ANTY-SPAM REQUESTÓW
+   Nie zmienia UI ani głównej logiki. Zmniejsza tylko agresywne
+   polling intervale, bo Realtime Supabase już odświeża dane.
+   ========================================================= */
+const BETAI_REFRESH_INTERVALS = {
+  tokenBalanceMs: 60000,
+  notificationPollMs: 60000,
+  tipTransferPollMs: 60000,
+  liveChatFallbackMs: 30000,
+  onlineCountMs: 30000
+}
+
 /* =========================================================
    WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
    To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
@@ -2455,7 +2469,7 @@ function LiveChatPanel({ user }) {
         if (nextStatus === 'SUBSCRIBED') setStatus('Live chat połączony — wiadomości odświeżają się automatycznie.')
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(nextStatus)) setStatus('Realtime chwilowo niedostępny — włączone odświeżanie.')
       })
-    const timer = setInterval(loadMessages, 2500)
+    const timer = setInterval(loadMessages, BETAI_REFRESH_INTERVALS.liveChatFallbackMs)
     return () => {
       clearInterval(timer)
       supabase.removeChannel(channel)
@@ -2469,7 +2483,7 @@ function LiveChatPanel({ user }) {
 
   useEffect(() => {
     loadOnlineCount()
-    const timer = setInterval(loadOnlineCount, 15000)
+    const timer = setInterval(loadOnlineCount, BETAI_REFRESH_INTERVALS.onlineCountMs)
     window.addEventListener('focus', loadOnlineCount)
     return () => {
       clearInterval(timer)
@@ -22095,8 +22109,32 @@ function App() {
     })
     let activeSubs = []
     if (userId) {
-      const { data: subRows } = await supabase.from('tipster_subscriptions').select('tipster_id,status,expires_at').eq('user_id', userId).eq('status', 'active')
-      activeSubs = Array.isArray(subRows) ? subRows.filter(row => !row.expires_at || new Date(row.expires_at).getTime() > Date.now()) : []
+      try {
+        const baseSelect = window.__betaiTipsterSubscriptionsNoExpiresAt ? 'tipster_id,status' : 'tipster_id,status,expires_at'
+        let { data: subRows, error: subError } = await supabase
+          .from('tipster_subscriptions')
+          .select(baseSelect)
+          .eq('user_id', userId)
+          .eq('status', 'active')
+
+        // Jeżeli baza nie ma kolumny expires_at, nie spamujemy więcej błędami 400.
+        if (subError && !window.__betaiTipsterSubscriptionsNoExpiresAt) {
+          window.__betaiTipsterSubscriptionsNoExpiresAt = true
+          const fallback = await supabase
+            .from('tipster_subscriptions')
+            .select('tipster_id,status')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+          subRows = fallback.data
+          subError = fallback.error
+        }
+
+        if (subError) throw subError
+        activeSubs = Array.isArray(subRows) ? subRows.filter(row => !row.expires_at || new Date(row.expires_at).getTime() > Date.now()) : []
+      } catch (error) {
+        console.warn('tipster_subscriptions fetch skipped', error)
+        activeSubs = []
+      }
       setTipsterSubscriptions(activeSubs)
     }
     setTips(sourceTips)
@@ -22385,7 +22423,8 @@ function App() {
   }
 
 
-  async function fetchNotifications(userId = sessionUser?.id) {
+  async function fetchNotifications(userId = sessionUser?.id, options = {}) {
+    const skipBalanceRefresh = Boolean(options?.skipBalanceRefresh)
     const email = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
     if (!isSupabaseConfigured || !supabase || (!userId && !email)) {
       setNotifications([])
@@ -22422,11 +22461,13 @@ function App() {
         console.warn('fetch betai_system_notifications skipped', error)
       }
 
-      try {
-        await fetchCurrentTokenBalance()
-      } catch (error) {
-        const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
-        setTokenBalance(Math.max(Number(tokenBalance || 0) || 0, localTokens))
+      if (!skipBalanceRefresh) {
+        try {
+          await fetchCurrentTokenBalance()
+        } catch (error) {
+          const localTokens = Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0
+          setTokenBalance(Math.max(Number(tokenBalance || 0) || 0, localTokens))
+        }
       }
     }
 
@@ -24094,7 +24135,7 @@ function App() {
     const refreshTokens = async () => {
       if (stopped) return
       await fetchCurrentTokenBalance()
-      await fetchNotifications(sessionUser?.id)
+      await fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
     }
 
     const pollTipNotifications = async () => {
@@ -24128,8 +24169,8 @@ function App() {
     window.addEventListener('betai-token-balance-changed', refreshTokens)
     const quickRefresh = setTimeout(refreshTokens, 350)
     const quickNotificationPoll = setTimeout(pollTipNotifications, 900)
-    const interval = setInterval(refreshTokens, 3000)
-    const notificationInterval = setInterval(pollTipNotifications, 2200)
+    const interval = setInterval(refreshTokens, BETAI_REFRESH_INTERVALS.tokenBalanceMs)
+    const notificationInterval = setInterval(pollTipNotifications, BETAI_REFRESH_INTERVALS.notificationPollMs)
 
     let walletChannel = null
     if (isSupabaseConfigured && supabase) {
@@ -24140,7 +24181,7 @@ function App() {
             const nextBalance = Number(payload?.new?.balance || 0) || 0
             setTokenBalance(nextBalance)
             try { localStorage.setItem('betai_tokens_' + currentEmail, String(nextBalance)) } catch (_) {}
-            fetchNotifications(sessionUser?.id)
+            fetchNotifications(sessionUser?.id, { skipBalanceRefresh: true })
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'betai_system_notifications', filter: `recipient_email=eq.${currentEmail}` }, payload => {
             const row = payload?.new || {}
@@ -24397,7 +24438,7 @@ function App() {
     }
 
     const initialPoll = setTimeout(pollTipTransfers, 700)
-    const pollInterval = setInterval(pollTipTransfers, 2200)
+    const pollInterval = setInterval(pollTipTransfers, BETAI_REFRESH_INTERVALS.tipTransferPollMs)
 
     return () => {
       clearTimeout(initialPoll)

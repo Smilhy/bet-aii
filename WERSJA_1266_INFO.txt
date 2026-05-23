@@ -1,0 +1,39 @@
+WERSJA 1266 — NETWORK FIX / ANTY-SPAM REQUESTÓW
+
+Cel:
+- Zmniejszenie spamu requestów widocznego w DevTools bez zmiany wyglądu strony i bez usuwania głównej logiki.
+
+Zmiany w src/main.jsx:
+1. Dodano stałe BETAI_REFRESH_INTERVALS:
+   - tokenBalanceMs: 60000 ms
+   - notificationPollMs: 60000 ms
+   - tipTransferPollMs: 60000 ms
+   - liveChatFallbackMs: 30000 ms
+   - onlineCountMs: 30000 ms
+
+2. Tokeny / powiadomienia:
+   - refresh tokenów zmieniony z 3000 ms na 60000 ms.
+   - polling powiadomień zmieniony z 2200 ms na 60000 ms.
+   - fetchNotifications dostało opcję skipBalanceRefresh, żeby nie pobierać salda drugi raz, gdy refreshTokens już to zrobił.
+
+3. Live chat:
+   - fallback polling loadMessages zmieniony z 2500 ms na 30000 ms.
+   - Realtime Supabase zostaje bez zmian.
+
+4. Tip transfers:
+   - polling popupów tip transferów zmieniony z 2200 ms na 60000 ms.
+   - Realtime Supabase zostaje bez zmian.
+
+5. Online count:
+   - polling online count zmieniony z 15000 ms na 30000 ms.
+
+6. tipster_subscriptions:
+   - dodano try/catch oraz fallback select bez expires_at, jeśli baza zwraca błąd 400 przez brak kolumny expires_at.
+   - po wykryciu problemu z expires_at frontend nie powinien spamować dalej tym samym błędem.
+
+Build:
+- npm run build zakończony sukcesem.
+- Vite zgłasza tylko stare ostrzeżenia o duplicate keys w tłumaczeniach i dużym bundle — nie są to nowe błędy tej poprawki.
+
+Wygląd:
+- Nie zmieniano CSS/layoutu/UI.
