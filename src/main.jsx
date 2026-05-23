@@ -8807,8 +8807,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
     const fixtureIdValue = publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null
     const isApiBackedTip = addTipMode !== 'manual' && fixtureIdValue && !String(fixtureIdValue).startsWith('manual-')
-    const initialSettlementStatus = 'pending'
-    const settlementSource = isApiBackedTip ? 'api-football' : 'manual_visible_admin_settlement'
+    const initialSettlementStatus = isApiBackedTip ? 'pending' : 'pending_admin_review'
+    const settlementSource = isApiBackedTip ? 'api-football' : 'manual_admin_review'
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -8942,8 +8942,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         type: 'success',
         title: 'Typ opublikowany',
         message: finalAccessType === 'premium'
-          ? `Twój tip premium został dodany do dashboardu i profilu. ${isApiBackedTip ? 'Rozliczenie automatyczne po FT.' : 'Typ ręczny jest od razu widoczny. Rozliczenie użytkownika będzie czekać na admina.'} Cena singla: ${priceValue.toFixed(2)} zł.`
-          : `Twój darmowy tip został dodany do dashboardu i profilu.${isApiBackedTip ? ' Zostanie rozliczony automatycznie po zakończeniu meczu.' : ' Typ ręczny jest od razu widoczny, a rozliczenie użytkownika będzie czekać na admina.'}${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
+          ? `Twój tip premium został dodany do dashboardu i profilu. ${isApiBackedTip ? 'Rozliczenie automatyczne po FT.' : 'Typ ręczny trafił do sprawdzenia przez admina.'} Cena singla: ${priceValue.toFixed(2)} zł.`
+          : `Twój darmowy tip został dodany do dashboardu i profilu.${isApiBackedTip ? ' Zostanie rozliczony automatycznie po zakończeniu meczu.' : ' Typ ręczny trafił do sprawdzenia przez admina.'}${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
       onTipSaved?.(normalizeTipRow({
         ...savedRow,
@@ -9649,7 +9649,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
   async function settleDashboardTip() {
     setMenuOpen(false)
-    const nextStatus = window.prompt('Zgłoś wynik do admina: won / lost / void', 'won')
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
     if (!nextStatus) return
     const clean = String(nextStatus).trim().toLowerCase()
     if (!['won', 'lost', 'void'].includes(clean)) {
@@ -9657,20 +9657,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       return
     }
     try {
-      await updateTipField(tip?.id, {
-        status: 'pending',
-        result: null,
-        manual_settlement_status: 'pending_admin',
-        manual_settlement_result: clean,
-        manual_settlement_requested_at: new Date().toISOString(),
-        manual_settlement_requested_by: currentUser?.id || null,
-        admin_approval_status: 'pending',
-        settlement_source: 'manual_user'
-      })
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono wynik: ${clean}. Typ zostaje widoczny jako oczekujący do czasu zatwierdzenia.` })
-      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+      await updateTipField(tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się wysłać wyniku do admina.') })
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
     }
   }
 
@@ -17217,7 +17207,7 @@ function ProfileLiveTipCard({
 
   async function settleTip() {
     setMenuOpen(false)
-    const nextStatus = window.prompt('Zgłoś wynik do admina: won / lost / void', 'won')
+    const nextStatus = window.prompt('Wpisz wynik: won / lost / void', 'won')
     if (!nextStatus) return
     const clean = String(nextStatus).trim().toLowerCase()
     if (!['won', 'lost', 'void'].includes(clean)) {
@@ -17225,20 +17215,10 @@ function ProfileLiveTipCard({
       return
     }
     try {
-      await updateTipField(sourceTip?.id || tip?.id, {
-        status: 'pending',
-        result: null,
-        manual_settlement_status: 'pending_admin',
-        manual_settlement_result: clean,
-        manual_settlement_requested_at: new Date().toISOString(),
-        manual_settlement_requested_by: currentUser?.id || null,
-        admin_approval_status: 'pending',
-        settlement_source: 'manual_user'
-      })
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono wynik: ${clean}. Typ zostaje oczekujący do zatwierdzenia.` })
-      window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
+      await updateTipField(sourceTip?.id || tip?.id, { status: clean })
+      onToast?.({ type: 'success', title: 'Typ rozliczony', message: `Zapisano wynik: ${clean}.` })
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się wysłać wyniku do admina.') })
+      onToast?.({ type: 'error', title: 'Błąd rozliczenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać wyniku.') })
     }
   }
 
@@ -17511,26 +17491,41 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const clean = String(result || '').toLowerCase()
     if (!tip?.id || !['won', 'lost', 'void'].includes(clean)) return
 
-    // Każde ręczne rozliczenie idzie do admina.
-    // Typ pozostaje widoczny jako pending, a statystyki dopisują się dopiero po zatwierdzeniu.
-    const patch = {
-      status: 'pending',
-      result: null,
-      manual_settlement_status: 'pending_admin',
-      manual_settlement_result: clean,
-      manual_settlement_requested_at: new Date().toISOString(),
-      manual_settlement_requested_by: viewerProfile?.id || null,
-      admin_approval_status: 'pending',
-      settlement_source: 'manual_user'
-    }
+    // Przegrana zadeklarowana przez właściciela typu nie wymaga admina.
+    // Admin zatwierdza tylko wygraną albo zwrot.
+    const isSelfLoss = clean === 'lost'
+    const patch = isSelfLoss
+      ? {
+          status: 'lost',
+          result: 'lost',
+          manual_settlement_status: 'self_lost',
+          manual_settlement_result: 'lost',
+          manual_settlement_requested_at: new Date().toISOString(),
+          manual_settlement_requested_by: viewerProfile?.id || null,
+          admin_approval_status: 'not_required',
+          settlement_source: 'manual_user_loss'
+        }
+      : {
+          status: 'pending',
+          manual_settlement_status: 'pending_admin',
+          manual_settlement_result: clean,
+          manual_settlement_requested_at: new Date().toISOString(),
+          manual_settlement_requested_by: viewerProfile?.id || null,
+          admin_approval_status: 'pending',
+          settlement_source: 'manual_user'
+        }
 
     setLocalSettlementPatches(prev => ({ ...prev, [String(tip.id)]: patch }))
     try {
       await updateTipField(tip.id, patch)
-      onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Typ zostaje widoczny jako oczekujący, a statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      if (isSelfLoss) {
+        onToast?.({ type: 'success', title: 'Typ rozliczony', message: 'Oznaczono przegraną. Ten wynik nie wymaga zatwierdzenia admina.' })
+      } else {
+        onToast?.({ type: 'success', title: 'Wysłano do admina', message: `Zgłoszono ${normalizeManualResultLabel(clean)}. Statystyki dopiszą się dopiero po zatwierdzeniu admina.` })
+      }
       window.dispatchEvent(new CustomEvent('betai:admin-coupon-approval-changed'))
     } catch (error) {
-      onToast?.({ type: 'error', title: 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać rozliczenia. Uruchom SQL wersji 945.') })
+      onToast?.({ type: 'error', title: isSelfLoss ? 'Błąd rozliczenia' : 'Błąd zgłoszenia', message: formatAppErrorMessage(error?.message || 'Nie udało się zapisać rozliczenia. Uruchom SQL wersji 945.') })
     }
   }
   const handleProfileSubscribeClick = () => {
@@ -19363,7 +19358,7 @@ function AdminCouponApprovalView({ user, onToast }) {
         <div>
           <span>Tylko administrator</span>
           <h1>Kupony do zatwierdzenia</h1>
-          <p>Każde ręczne rozliczenie użytkownika czeka tutaj na potwierdzenie admina. Statystyki dopisują się dopiero po zatwierdzeniu.</p>
+          <p>Wygrane i zwroty zgłoszone ręcznie czekają tutaj na potwierdzenie. Przegrane użytkownik może rozliczyć samodzielnie bez admina.</p>
         </div>
         <button type="button" onClick={loadRows}>{loading ? 'Ładowanie...' : 'Odśwież'}</button>
       </div>
