@@ -770,6 +770,49 @@ function readTipDebug() {
   try { return window.localStorage.getItem('betai_last_tip_save_status') || '' } catch (_) { return '' }
 }
 
+
+const BETAI_RECENT_SAVED_TIPS_KEY = 'betai_recent_saved_tips_v1263'
+
+function readRecentSavedTips(userId = '') {
+  try {
+    const raw = window.localStorage.getItem(BETAI_RECENT_SAVED_TIPS_KEY)
+    const rows = raw ? JSON.parse(raw) : []
+    if (!Array.isArray(rows)) return []
+    const cutoff = Date.now() - (48 * 60 * 60 * 1000)
+    const uid = String(userId || '').trim()
+    return rows
+      .filter(Boolean)
+      .map(normalizeTipRow)
+      .filter(tip => {
+        const created = Date.parse(tip.created_at || '')
+        if (Number.isFinite(created) && created < cutoff) return false
+        if (!uid) return true
+        return String(tip.user_id || tip.author_id || '') === uid || !tip.user_id && !tip.author_id
+      })
+  } catch (_) {
+    return []
+  }
+}
+
+function rememberRecentSavedTip(tip = {}, userId = '') {
+  try {
+    const normalized = normalizeTipRow({
+      status: 'pending',
+      settlement_status: 'pending',
+      manual_settlement_status: 'none',
+      admin_approval_status: 'none',
+      ...tip,
+      user_id: tip.user_id || tip.author_id || userId || null,
+      author_id: tip.author_id || tip.user_id || userId || null,
+      created_at: tip.created_at || new Date().toISOString(),
+    })
+    const current = readRecentSavedTips('')
+    const next = [normalized, ...current.filter(row => String(row.id || '') !== String(normalized.id || ''))]
+      .slice(0, 20)
+    window.localStorage.setItem(BETAI_RECENT_SAVED_TIPS_KEY, JSON.stringify(next))
+  } catch (_) {}
+}
+
 function getUnlockedTipsStorageKey(userId = 'guest') {
   return `betai_unlocked_tips_${userId || 'guest'}`
 }
@@ -8835,6 +8878,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       home_logo: publishMatch.homeLogo || null,
       away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
+      event_start_at: combinedIso,
+      event_time: combinedIso,
+      kickoff_time: combinedIso,
+      start_time: combinedIso,
       market: form.market,
       bet_type: form.betType,
       prediction: form.betType,
@@ -8880,6 +8927,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       home_logo: publishMatch.homeLogo || null,
       away_logo: publishMatch.awayLogo || null,
       match_time: combinedIso,
+      event_start_at: combinedIso,
+      event_time: combinedIso,
+      kickoff_time: combinedIso,
+      start_time: combinedIso,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -8899,6 +8950,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       email,
       league: currentLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
+      match_time: combinedIso,
+      event_start_at: combinedIso,
+      event_time: combinedIso,
+      kickoff_time: combinedIso,
+      start_time: combinedIso,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -8924,6 +8980,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       email,
       league: currentLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
+      match_time: combinedIso,
+      event_start_at: combinedIso,
+      event_time: combinedIso,
+      kickoff_time: combinedIso,
+      start_time: combinedIso,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -8963,7 +9024,23 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           ? `Twój tip premium został dodany do dashboardu i profilu. ${isApiBackedTip ? 'Rozliczenie automatyczne po FT.' : 'Typ ręczny jest od razu widoczny. Rozliczenie użytkownika będzie czekać na admina.'} Cena singla: ${priceValue.toFixed(2)} zł.`
           : `Twój darmowy tip został dodany do dashboardu i profilu.${isApiBackedTip ? ' Zostanie rozliczony automatycznie po zakończeniu meczu.' : ' Typ ręczny jest od razu widoczny, a rozliczenie użytkownika będzie czekać na admina.'}${isPremiumUser ? '' : ` Pozostało dziś ${Math.max(5 - (dailyCount + 1), 0)} z 5 darmowych typów.`}`
       })
-      onTipSaved?.(normalizeTipRow({
+      const visibleSavedTipForDashboard = normalizeTipRow({
+        status: initialSettlementStatus,
+        settlement_status: initialSettlementStatus,
+        manual_settlement_status: savedRow?.manual_settlement_status || initialManualSettlementStatus,
+        admin_approval_status: savedRow?.admin_approval_status || initialAdminApprovalStatus,
+        manual_settlement_result: savedRow?.manual_settlement_result || null,
+        ...savedRow,
+        author_name: username,
+        username,
+        author_email: email,
+        author_avatar_url: savedRow?.author_avatar_url || getProfileAvatarUrl(user) || null,
+        avatar_url: savedRow?.avatar_url || getProfileAvatarUrl(user) || null
+      })
+      rememberRecentSavedTip(visibleSavedTipForDashboard, user?.id)
+      onTipSaved?.(visibleSavedTipForDashboard)
+      /* old inline payload kept disabled by v1263 */
+      false && onTipSaved?.(normalizeTipRow({
         status: initialSettlementStatus,
         settlement_status: initialSettlementStatus,
         manual_settlement_status: savedRow?.manual_settlement_status || initialManualSettlementStatus,
@@ -21277,6 +21354,7 @@ function parseBetaiKickoffTime(value) {
 
 function getTipKickoffTimestamp(tip = {}) {
   const candidates = [
+    tip.event_start_at,
     tip.match_time,
     tip.event_time,
     tip.kickoff_time,
@@ -21858,6 +21936,19 @@ function App() {
     setUnlockedTips(unlockedSet)
 
     let sourceTips = (tipsData || []).map(normalizeTipRow)
+
+    // v1263: lokalny fallback dla świeżo dodanych typów ręcznych.
+    // Jeżeli Supabase/restore/cache chwilowo nie odda nowego rekordu do głównego feedu,
+    // dashboard nadal pokazuje własny typ, który już zapisał się w profilu.
+    const recentSavedTips = readRecentSavedTips(userId).filter(isTipVisibleInActiveFeed)
+    if (recentSavedTips.length) {
+      const byId = new Map()
+      ;[...recentSavedTips, ...sourceTips].forEach(tip => {
+        const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.match || ''}-${tip.bet_type || tip.prediction || ''}`)
+        if (key) byId.set(key, tip)
+      })
+      sourceTips = Array.from(byId.values())
+    }
 
     // v1100: Mój profil nie może zależeć od globalnego limitu ostatnich typów.
     // Wcześniej pobieraliśmy tylko najnowsze globalne rekordy, więc konto smilhytv
@@ -24410,10 +24501,18 @@ function App() {
             onTipSaved={(savedTip) => {
               setLastTipSaveStatus(readTipDebug())
               if (savedTip?.id) {
-                setTips(prev => [savedTip, ...prev.filter(tip => tip.id !== savedTip.id)])
+                const visibleSavedTip = normalizeTipRow({
+                  status: 'pending',
+                  settlement_status: 'pending',
+                  manual_settlement_status: 'none',
+                  admin_approval_status: 'none',
+                  ...savedTip
+                })
+                rememberRecentSavedTip(visibleSavedTip, sessionUser?.id)
+                setTips(prev => [visibleSavedTip, ...prev.filter(tip => String(tip.id) !== String(visibleSavedTip.id))])
               }
-              fetchTips(sessionUser?.id)
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
+              window.setTimeout(() => fetchTips(sessionUser?.id), 1200)
               setView('dashboard')
             }}
           />

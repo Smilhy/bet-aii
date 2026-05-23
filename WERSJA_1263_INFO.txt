@@ -1,0 +1,1 @@
+WERSJA 1263 - reczne typy widoczne na dashboardzie bez SQL. Fix: lokalny fallback swiezo dodanych typow, event_start_at w payloadach, dashboard nie nadpisuje nowego typu zanim Supabase odda go w feedzie.
