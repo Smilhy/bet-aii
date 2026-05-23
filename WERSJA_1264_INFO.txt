@@ -1,0 +1,4 @@
+WERSJA 1264 - fix recznego dodawania bez event_start_at.
+Nie wymaga SQL.
+Usunieto zapisywanie kolumny event_start_at z payloadow, bo aktualna tabela tips jej nie ma.
+Ręczne typy nadal zapisują match_time/event_time/kickoff_time/start_time i status pending, żeby dashboard mógł je pokazać.
