@@ -1,0 +1,1 @@
+WERSJA 1251 — przywrócony live chat po 1250. Fix ramki AI Typy dnia jest zawężony tylko do prawej kolumny z panelem AI, bez wpływu na chat.
