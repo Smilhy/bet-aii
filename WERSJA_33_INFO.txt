@@ -1,0 +1,5 @@
+WERSJA 33
+- subtelniejszy separator NAWIGACJA
+- tylko napis + cienkie linie
+- bez jasnej belki w tle
+- nic innego nie ruszane

@@ -57823,13 +57823,13 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 .app-shell .betai-sidebar-premium-v8 .menu::before{
   content:"NAWIGACJA"!important;
   top:-19px!important;
-  padding:0 16px!important;
-  color:#5eeaf2!important;
+  padding:0 12px!important;
+  color:#66eef6!important;
   font-size:10px!important;
   font-weight:1000!important;
-  letter-spacing:3.1px!important;
-  text-shadow:0 0 7px rgba(33,234,245,.34), 0 2px 8px rgba(0,0,0,.58)!important;
-  background:linear-gradient(90deg, rgba(2,12,21,0), rgba(2,12,21,.94) 22%, rgba(2,12,21,.94) 78%, rgba(2,12,21,0))!important;
+  letter-spacing:3.4px!important;
+  text-shadow:0 0 6px rgba(33,234,245,.22), 0 1px 6px rgba(0,0,0,.48)!important;
+  background:transparent!important;
   box-shadow:none!important;
   border:0!important;
   border-radius:0!important;
@@ -57837,16 +57837,22 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 
 .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after,
 .app-shell .betai-sidebar-premium-v8 .menu::after{
-  top:-18px!important;
-  left:10px!important;
-  right:10px!important;
-  height:10px!important;
+  top:-11px!important;
+  left:12px!important;
+  right:12px!important;
+  height:2px!important;
   background:
-    radial-gradient(circle at 0 50%, rgba(38,239,249,.72) 0 1.5px, transparent 2px),
-    radial-gradient(circle at 100% 50%, rgba(38,239,249,.72) 0 1.5px, transparent 2px),
-    linear-gradient(90deg, transparent 0 9%, rgba(38,239,249,.46) 9% 29%, transparent 29% 71%, rgba(38,239,249,.46) 71% 91%, transparent 91% 100%)!important;
-  filter:drop-shadow(0 0 4px rgba(38,239,249,.28))!important;
-  opacity:.82!important;
+    linear-gradient(90deg,
+      transparent 0 2%,
+      rgba(58,240,247,.72) 2% 24%,
+      rgba(58,240,247,.18) 24% 31%,
+      transparent 31% 42%,
+      transparent 58% 69%,
+      rgba(58,240,247,.18) 69% 76%,
+      rgba(58,240,247,.72) 76% 98%,
+      transparent 98% 100%)!important;
+  filter:drop-shadow(0 0 3px rgba(38,239,249,.22))!important;
+  opacity:.92!important;
 }
 
 @media (max-width:1536px){
@@ -57863,10 +57869,10 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   .app-shell .betai-sidebar-premium-v8 .menu::before{
     top:-18px!important;
     font-size:9px!important;
-    letter-spacing:2.7px!important;
+    letter-spacing:2.8px!important;
   }
   .app-shell .betai-sidebar-premium-v8 .menu[data-sidebar-lock="v1129"]::after,
   .app-shell .betai-sidebar-premium-v8 .menu::after{
-    top:-17px!important;
+    top:-10px!important;
   }
 }
