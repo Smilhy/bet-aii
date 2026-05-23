@@ -1,7 +1,0 @@
-WERSJA 1250 — poprawka prawej kolumny Dashboardu
-
-- Skrócona ramka panelu „AI Typy dnia” — kończy się poprawnie pod ostatnim elementem TOP 3.
-- Usunięty pusty, ciągnący się dół / drugi obrys w prawej kolumnie.
-- Ujednolicony flex/height prawej kolumny, aby panele nie rozciągały się sztucznie.
-- Zmiana wyłącznie CSS/UI: bez ruszania logiki AI, rankingu, chatu, auth, Supabase ani płatności.
-- Build produkcyjny sprawdzony lokalnie.
