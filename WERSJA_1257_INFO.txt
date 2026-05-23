@@ -1,0 +1,13 @@
+WERSJA 1257 — Dodaj typ: Top mecze dziś/jutro
+
+Zmiany tylko w zakładce Dodaj typ:
+- dodano tryb „★ Top mecze” obok „Wszystkie dziś” i „Wyszukiwanie”;
+- dodano przełącznik „Dzisiaj / Jutro” dla top meczów;
+- top mecze pobierają realne wydarzenia z najlepszych lig przez API-FOOTBALL;
+- lista korzysta z tych samych kursów, przycisku „Więcej” i flow dodawania typu co obecne wyszukiwanie;
+- nie ruszano Dashboardu, czatu, Top typerów, Typów AI ani logiki ręcznego dodawania.
+
+Top ligi w tej wersji:
+Premier League, Champions League, La Liga, Serie A, Bundesliga, Ligue 1, Europa League, Conference League, Ekstraklasa.
+
+Build: OK. Pozostały tylko stare warningi projektu o duplikatach tłumaczeń.
