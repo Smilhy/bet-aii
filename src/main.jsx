@@ -3140,23 +3140,43 @@ function DailyAiPicksRightPanelV1156() {
       <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
         <div className="empty-mini">Ładowanie TOP 3 przyszłych typów AI na dziś...</div>
-      ) : picks.length ? picks.map((pick, index) => (
-        <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163" key={`${pick.id}-${index}`}>
-          <div className="ai-day-pick-body-v1163">
-            <div className="ai-day-matchline-v1163">
+      ) : picks.length ? picks.map((pick, index) => {
+        const confidence = Math.max(0, Math.min(100, Number(pick.confidence || 0)))
+        const oddsValue = Number(pick.odds || 0)
+        return (
+        <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163 ai-pick-premium-v34" key={`${pick.id}-${index}`}>
+          <div className="ai-card-v34-top">
+            <span className="ai-card-v34-badge">AI PICK #{index + 1}</span>
+            <span className="ai-card-v34-league">{pick.league || 'Football'}</span>
+          </div>
+
+          <div className="ai-card-v34-match">
+            <div className="ai-card-v34-team ai-card-v34-home">
               <TipTeamLogo logo={pick.homeLogo || pick.home_logo} teamId={pick.homeTeamId || pick.home_team_id} name={pick.home} />
               <b className="ai-day-team-name-v1163 ai-day-home-name-v1164">{pick.home}</b>
-              <span className="ai-day-vs-dot-v1162 ai-day-vs-inline-v1163">vs</span>
-              <b className="ai-day-team-name-v1163 ai-day-away-name-v1164">{pick.away}</b>
-              <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
             </div>
-            <small>{pick.league}</small>
-            <small>Typ: {pick.pick} • Kurs: {Number(pick.odds || 0).toFixed(2)}</small>
-            <div className="tiny-progress"><i style={{width:`${Math.max(5, Math.min(100, Number(pick.confidence || 0)))}%`}}></i></div>
+            <span className="ai-day-vs-dot-v1162 ai-day-vs-inline-v1163 ai-card-v34-vs">VS</span>
+            <div className="ai-card-v34-team ai-card-v34-away">
+              <TipTeamLogo logo={pick.awayLogo || pick.away_logo} teamId={pick.awayTeamId || pick.away_team_id} name={pick.away} />
+              <b className="ai-day-team-name-v1163 ai-day-away-name-v1164">{pick.away}</b>
+            </div>
           </div>
-          <strong>{Number(pick.confidence || 0)}%</strong>
+
+          <div className="ai-card-v34-bottom">
+            <div className="ai-card-v34-pickbox">
+              <small>TYP AI</small>
+              <strong>{pick.pick}</strong>
+              <span>Kurs {oddsValue.toFixed(2)}</span>
+            </div>
+            <div className="ai-card-v34-confidence" style={{'--ai-confidence': `${confidence}%`}}>
+              <i>{confidence}%</i>
+              <em>Pewność</em>
+            </div>
+          </div>
+          <div className="tiny-progress ai-card-v34-progress"><i style={{width:`${Math.max(5, confidence)}%`}}></i></div>
         </div>
-      )) : (
+        )
+      }) : (
         <div className="empty-mini">Brak zapisanych typów AI na dziś. Bez meczów live/zakończonych. Spróbuje ponownie po odświeżeniu.</div>
       )}
       <div className="ai-day-cache-note-v1156">{notice || 'Odświeżenie po 00:00 • tylko mecze min. 5 min przed startem'}</div>
