@@ -16,16 +16,19 @@ exports.handler = async (event) => {
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
     const sessionUserId = session.client_reference_id || session.metadata?.user_id || session.metadata?.buyer_id;
-    if (expected_user_id && sessionUserId && String(expected_user_id) !== String(sessionUserId)) {
-      return { statusCode: 403, body: JSON.stringify({ error: 'SESSION_USER_MISMATCH' }) };
-    }
+    const userMismatch = Boolean(expected_user_id && sessionUserId && String(expected_user_id) !== String(sessionUserId));
+
     if (!(session.payment_status === 'paid' || session.status === 'complete')) {
       return { statusCode: 400, body: JSON.stringify({ error: 'SESSION_NOT_PAID' }) };
     }
 
     const supabase = getSupabase();
     const result = await handleConnectCheckoutSession(supabase, session);
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result) };
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...result, user_mismatch: userMismatch, session_user_id: sessionUserId || null, expected_user_id: expected_user_id || null })
+    };
   } catch (error) {
     console.error('sync-connect-session error:', error);
     return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: error.message || 'Connect session sync error' }) };

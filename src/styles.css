@@ -58661,3 +58661,93 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     min-width:142px!important;
   }
 }
+
+/* WERSJA 43 — tylko kolorystyka: Kup singiel + gwiazdki oceny + chat badge jak Kup Premium */
+:root{
+  --betai-premium-cyan-1:#36f0ff;
+  --betai-premium-cyan-2:#21e4df;
+  --betai-premium-cyan-3:#14bfe8;
+  --betai-premium-cyan-ink:#04121a;
+}
+
+/* Kup singiel ma mieć kolor jak Kup Premium */
+.app-shell .profile-ticket-v6-buy > button,
+.app-shell .dashboard-ticket-v6 .profile-ticket-v6-buy > button,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > button{
+  border:1px solid rgba(126,255,255,.74)!important;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,.34), transparent 30%),
+    linear-gradient(135deg, var(--betai-premium-cyan-2) 0%, var(--betai-premium-cyan-1) 42%, var(--betai-premium-cyan-3) 100%)!important;
+  color:var(--betai-premium-cyan-ink)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.20)!important;
+  box-shadow:
+    0 0 24px rgba(33,228,223,.30),
+    0 10px 24px rgba(0,186,220,.16),
+    inset 0 1px 0 rgba(255,255,255,.44),
+    inset 0 -10px 20px rgba(0,120,160,.14)!important;
+}
+
+.app-shell .profile-ticket-v6-buy > button:hover,
+.app-shell .dashboard-ticket-v6 .profile-ticket-v6-buy > button:hover,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > button:hover{
+  filter:brightness(1.08) saturate(1.05)!important;
+  box-shadow:
+    0 0 32px rgba(33,228,223,.42),
+    0 12px 28px rgba(0,186,220,.20),
+    inset 0 1px 0 rgba(255,255,255,.52)!important;
+}
+
+/* Floating ocena: gwiazdki ten sam premium cyan co Kup Premium */
+html body .reviews512-fab-stars,
+html body #root .reviews512-fab-stars,
+html body .auth609-screen .reviews512-fab-stars{
+  color:var(--betai-premium-cyan-1)!important;
+  -webkit-text-fill-color:var(--betai-premium-cyan-1)!important;
+  text-shadow:
+    0 0 10px rgba(54,240,255,.46),
+    0 0 18px rgba(33,228,223,.24)!important;
+}
+
+html body .reviews512-fab,
+html body #root .reviews512-fab,
+html body .auth609-screen .reviews512-fab{
+  border-color:rgba(54,240,255,.34)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.035) inset,
+    0 0 24px rgba(54,240,255,.16),
+    0 18px 44px rgba(0,0,0,.38)!important;
+}
+
+/* Chat: licznik 0 i zielona otoczka na kolor Kup Premium */
+html body .support510-fab-badge,
+html body #root .support510-fab-badge,
+html body .auth609-screen .support510-fab-badge,
+html body #root .auth609-screen .support510-fab-badge{
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255,255,255,.32), transparent 38%),
+    linear-gradient(135deg, var(--betai-premium-cyan-2) 0%, var(--betai-premium-cyan-1) 48%, var(--betai-premium-cyan-3) 100%)!important;
+  color:var(--betai-premium-cyan-ink)!important;
+  border:1px solid rgba(126,255,255,.74)!important;
+  box-shadow:
+    0 0 0 2px rgba(6,24,35,.94),
+    0 0 18px rgba(54,240,255,.34)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.16)!important;
+}
+
+html body .support510-fab-pulse,
+html body #root .support510-fab-pulse,
+html body .auth609-screen .support510-fab-pulse,
+html body #root .auth609-screen .support510-fab-pulse{
+  border-color:rgba(54,240,255,.38)!important;
+  box-shadow:0 0 20px rgba(54,240,255,.22)!important;
+}
+
+html body .support510-fab,
+html body #root .support510-fab,
+html body .auth609-screen .support510-fab{
+  border-color:rgba(54,240,255,.24)!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 0 24px rgba(54,240,255,.13),
+    0 18px 44px rgba(0,0,0,.38)!important;
+}

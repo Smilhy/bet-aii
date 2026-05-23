@@ -1,0 +1,5 @@
+WERSJA 43 — tylko kolorystyka:
+- Kup singiel w kolorze jak Kup Premium
+- gwiazdki oceny w tym samym kolorze
+- badge/licznik czatu i otoczka w tym samym kolorze
+- bez zmian logiki

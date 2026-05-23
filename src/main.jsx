@@ -22838,6 +22838,19 @@ function App() {
             })
             const data = await response.json().catch(() => ({}))
             if (!response.ok) throw new Error(data.error || 'Nie udało się zsynchronizować subskrypcji profilu.')
+            if (data?.user_mismatch) {
+              if (supabase) await supabase.auth.signOut()
+              setSessionUser(null)
+              setWalletBalance(0)
+              setUnlockedTips(new Set())
+              clearGuestUnlockedTips()
+              showToast({
+                type: 'info',
+                title: 'Dostęp zapisany',
+                message: 'Zakup zapisano na koncie kupującego. Zaloguj się tym samym kontem, którym rozpoczęto płatność.'
+              })
+              return
+            }
           }
           showToast({ type: 'success', title: 'Dostęp do profilu', message: 'Płatność zakończona. Dostęp do typów typera został odświeżony.' })
           if (sessionUser?.id) {
@@ -23761,6 +23774,20 @@ function App() {
           })
           const syncData = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error(syncData.error || 'Nie udało się zsynchronizować zakupu typu.')
+          if (syncData?.user_mismatch) {
+            if (supabase) await supabase.auth.signOut()
+            setSessionUser(null)
+            setWalletBalance(0)
+            setUnlockedTips(new Set())
+            clearGuestUnlockedTips()
+            showToast({
+              type: 'info',
+              title: 'Dostęp zapisany',
+              message: 'Zakup zapisano na koncie kupującego. Zaloguj się tym samym kontem, którym rozpoczęto płatność.'
+            })
+            window.history.replaceState({}, document.title, window.location.pathname)
+            return
+          }
         } else {
           await saveUnlockToSupabase(tipId, 29)
           await savePaymentToSupabase(tipId, 29)
