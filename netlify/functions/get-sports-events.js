@@ -316,13 +316,6 @@ exports.handler = async function(event) {
     'francja|ligue 1': 61,
     'holandia|eredivisie': 88,
     'portugalia|primeira liga': 94,
-    'polska|ekstraklasa': 106,
-    'europa|champions league': 2,
-    'europa|liga mistrzow': 2,
-    'europa|europa league': 3,
-    'europa|liga europy': 3,
-    'europa|conference league': 848,
-    'europa|liga konferencji': 848,
     'usa|mls': 253,
   }
 
@@ -1243,78 +1236,6 @@ exports.handler = async function(event) {
     if (!apiKey) return { configs: [], fixtures: [], message: 'Brak APISPORTS_KEY w Netlify.' }
     const configs = getApiSportsConfigs()
     if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
-
-    if (mode === 'top-matches') {
-      const cfg = configs[0]
-      const safeStart = requestedDay || new Date().toISOString().slice(0, 10)
-      const season = getApiFootballSeasonForDate(safeStart)
-      const topLeagues = [
-        { country: 'Anglia', league: 'Premier League', leagueId: 39, priority: 1 },
-        { country: 'Europa', league: 'Champions League', leagueId: 2, priority: 2 },
-        { country: 'Hiszpania', league: 'La Liga', leagueId: 140, priority: 3 },
-        { country: 'Włochy', league: 'Serie A', leagueId: 135, priority: 4 },
-        { country: 'Niemcy', league: 'Bundesliga', leagueId: 78, priority: 5 },
-        { country: 'Francja', league: 'Ligue 1', leagueId: 61, priority: 6 },
-        { country: 'Europa', league: 'Europa League', leagueId: 3, priority: 7 },
-        { country: 'Europa', league: 'Conference League', leagueId: 848, priority: 8 },
-        { country: 'Polska', league: 'Ekstraklasa', leagueId: 106, priority: 9 },
-      ]
-      const collected = []
-      const errors = []
-      for (const top of topLeagues) {
-        try {
-          const url = new URL(`${cfg.host}${cfg.path}`)
-          url.searchParams.set('league', String(top.leagueId))
-          url.searchParams.set('season', String(season))
-          url.searchParams.set('date', safeStart)
-          url.searchParams.set('timezone', APP_TIMEZONE)
-          const response = await fetch(url.toString(), {
-            headers: {
-              'x-apisports-key': apiKey,
-              'x-rapidapi-key': apiKey
-            }
-          })
-          const data = await response.json().catch(() => ({}))
-          if (!response.ok) {
-            errors.push(`top/${top.leagueId}: HTTP ${response.status}`)
-            continue
-          }
-          if (data?.errors && typeof data.errors === 'object' && Object.keys(data.errors).length) {
-            errors.push(`top/${top.leagueId}: ${JSON.stringify(data.errors).slice(0, 120)}`)
-          }
-          const rows = Array.isArray(data?.response) ? data.response : []
-          rows
-            .map((item, index) => ({ ...mapApiSportsItemToFixture(item, index, cfg), topPriority: top.priority }))
-            .filter(item => {
-              const short = String(item.status_short || '').toUpperCase()
-              if (['1H','HT','2H','ET','BT','P','LIVE','FT','AET','PEN'].includes(short)) return false
-              const kickMs = Date.parse(item.commence_time || '')
-              if (!Number.isFinite(kickMs)) return true
-              return kickMs > Date.now() + 2 * 60 * 1000
-            })
-            .forEach(item => collected.push(item))
-        } catch (error) {
-          errors.push(`top/${top.leagueId}: ${error.message}`)
-        }
-      }
-      const seen = new Set()
-      const baseFixtures = collected
-        .sort((a, b) => (Number(a.topPriority || 99) - Number(b.topPriority || 99)) || (Date.parse(a.commence_time || '') - Date.parse(b.commence_time || '')))
-        .filter(item => {
-          const key = `${item.sportKey}|${item.home}|${item.away}|${item.commence_time}`.toLowerCase()
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-        .slice(0, 80)
-      const oddsEnriched = await enrichSearchFixturesWithApiFootballOdds(apiKey, cfg, baseFixtures)
-      errors.push(...oddsEnriched.errors)
-      return {
-        configs: configs.map(item => item.key),
-        fixtures: oddsEnriched.fixtures,
-        message: oddsEnriched.fixtures.length ? '' : (errors.length ? `API-Sports nie zwróciło top meczów. ${errors.slice(0, 3).join(' | ')}` : 'API-FOOTBALL Pro nie zwróciło top meczów dla wybranego dnia.')
-      }
-    }
 
     if (mode === 'search' && query) {
       const searched = await searchApiFootballFixtures(apiKey, query)
