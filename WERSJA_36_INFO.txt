@@ -1,0 +1,6 @@
+WERSJA 36 — AI Typy dnia compact premium fix
+- bazuje na ostatniej dobrej V33
+- poprawiony tylko prawy panel AI Typy dnia
+- logika pobierania, cache, herby, typy, kursy, confidence bez zmian
+- nowy kompaktowy premium layout z żywymi danymi
+- build sprawdzony lokalnie
