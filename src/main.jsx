@@ -9741,7 +9741,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className="profile-ticket-v6-field stake">
         <small>STAWKA</small>
         <strong>{stakeLabel}</strong>
-        <i><b style={{ width: `${Math.max(12, Math.min(100, stakeValue * 10))}%` }} /></i>
+        <i><b style={{ width: `${Math.max(3, Math.min(100, (Number(stakeValue || 0) / 1000) * 100))}%` }} /></i>
       </div>
 
       <div className="profile-ticket-v6-field odds">
@@ -17296,7 +17296,7 @@ function ProfileLiveTipCard({
       <div className="profile-ticket-v6-field stake">
         <small>STAWKA</small>
         <strong>{tip.stake.toFixed(0)} zł</strong>
-        <i><b style={{ width: `${Math.max(12, Math.min(100, tip.stake * 10))}%` }} /></i>
+        <i><b style={{ width: `${Math.max(3, Math.min(100, (Number(tip.stake || 0) / 1000) * 100))}%` }} /></i>
       </div>
 
       <div className="profile-ticket-v6-field odds">
