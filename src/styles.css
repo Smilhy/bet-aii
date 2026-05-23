@@ -58800,3 +58800,65 @@ html body #root .app-shell:not(.no-rightbar-page) .main article.dashboard-ticket
 html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   color:#ecfbff!important;
 }
+
+/* =========================================================
+   WERSJA 1250 — Dashboard prawa kolumna: koniec ramki dokładnie pod AI Typy dnia
+   Problem ze screena: prawa ramka miała dodatkowy, pusty dół / drugi ciągnący się obrys.
+   Poprawka jest tylko wizualna — bez zmian w logice AI, rankingu, chatu, auth i Supabase.
+   ========================================================= */
+.app-shell:not(.no-rightbar-page) .rightbar{
+  align-items:stretch!important;
+  align-content:flex-start!important;
+  gap:20px!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding-bottom:22px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar > .panel,
+.app-shell:not(.no-rightbar-page) .rightbar > .real-ranking-panel,
+.app-shell:not(.no-rightbar-page) .rightbar > .live-chat-panel,
+.app-shell:not(.no-rightbar-page) .rightbar > .betai-right-chat-final,
+.app-shell:not(.no-rightbar-page) .rightbar > .livechat226-card{
+  flex:0 0 auto!important;
+  align-self:stretch!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156{
+  display:block!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin-top:0!important;
+  margin-bottom:0!important;
+  padding-bottom:16px!important;
+  overflow:hidden!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 .ai-pick-real-v1163:last-of-type{
+  margin-bottom:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-cache-note-v1156{
+  margin:10px 0 0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar > *:last-child,
+html[data-betai-exact-scale="on"] .app-shell:not(.no-rightbar-page) .rightbar > *:last-child{
+  margin-bottom:0!important;
+}
+
+/* Na laptopowym skalowaniu zostawiamy ten sam efekt: panel kończy się pod przyciskiem TOP 3. */
+html.betai-laptop-browser90-v1233 body #root .app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin-bottom:0!important;
+  padding-bottom:16px!important;
+}
