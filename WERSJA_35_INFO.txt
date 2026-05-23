@@ -1,0 +1,5 @@
+WERSJA 35 — AI Typy dnia premium compact widget
+- baza: V33
+- zmieniony tylko prawy panel AI Typy dnia
+- logika, pobieranie danych, herby, kursy i confidence bez zmian
+- nowy żywy wygląd premium kart jak mockup compact

@@ -57877,78 +57877,93 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   }
 }
 
-/* WERSJA 34 — prawy panel AI Typy dnia jako żywe premium karty, logika i herby bez zmian */
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156{
+/* WERSJA 35 — AI Typy dnia: premium compact live widget w prawej kolumnie */
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35{
   position:relative!important;
-  overflow:hidden!important;
-  padding:18px!important;
+  padding:18px 16px 18px!important;
   border-radius:28px!important;
-  border:1px solid rgba(62,224,255,.15)!important;
+  overflow:hidden!important;
   background:
-    radial-gradient(circle at 10% 0%, rgba(39,232,255,.13), transparent 34%),
-    radial-gradient(circle at 90% 6%, rgba(31,226,174,.08), transparent 30%),
-    linear-gradient(180deg, rgba(5,16,28,.97), rgba(3,10,18,.99))!important;
-  box-shadow:0 24px 64px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04), 0 0 30px rgba(39,232,255,.045)!important;
+    radial-gradient(circle at 9% 0%, rgba(31,226,174,.12), transparent 32%),
+    radial-gradient(circle at 100% 10%, rgba(34,211,238,.07), transparent 34%),
+    linear-gradient(180deg, rgba(6,25,36,.98), rgba(3,13,22,.99))!important;
+  border:1px solid rgba(55,224,235,.16)!important;
+  box-shadow:0 22px 54px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04), 0 0 28px rgba(32,234,223,.045)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156::before{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35:before{
   content:""!important;
   position:absolute!important;
-  inset:0!important;
-  background:linear-gradient(110deg, rgba(255,255,255,.045), transparent 32%, rgba(39,232,255,.045) 72%, transparent)!important;
+  left:0!important;
+  right:0!important;
+  top:0!important;
+  height:1px!important;
+  background:linear-gradient(90deg, transparent, rgba(40,238,248,.56), transparent)!important;
+  opacity:.70!important;
   pointer-events:none!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 > *{position:relative!important;z-index:1!important;}
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 .panel-head{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-premium-head-v35{
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
-  gap:12px!important;
+  gap:10px!important;
   margin:0 0 14px!important;
-  padding:0 2px 12px!important;
-  border-bottom:1px solid rgba(148,163,184,.10)!important;
+  padding:0 0 12px!important;
+  border-bottom:1px solid rgba(132,165,180,.10)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 .panel-head h2{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-premium-head-v35 h2{
   margin:0!important;
   color:#f4fbff!important;
   font-size:20px!important;
-  line-height:1.1!important;
+  line-height:1!important;
   font-weight:1000!important;
-  letter-spacing:-.035em!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 2px 0 rgba(0,0,0,.35)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 .ai-day-title-accent{
-  color:#41f0ff!important;
-  text-shadow:0 0 16px rgba(65,240,255,.28)!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-premium-head-v35 h2 span{
+  color:#35eaff!important;
+  text-shadow:0 0 12px rgba(53,234,255,.18)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-real-v1156 .panel-head a{
-  padding:7px 10px!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-premium-head-v35 a{
+  flex:0 0 auto!important;
+  height:28px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 12px!important;
   border-radius:999px!important;
-  border:1px solid rgba(65,240,255,.16)!important;
-  background:rgba(65,240,255,.055)!important;
-  color:#9eeff5!important;
-  font-size:10px!important;
-  font-weight:900!important;
-  letter-spacing:.02em!important;
+  color:#6eeaf0!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  letter-spacing:.04em!important;
+  background:rgba(25,226,215,.075)!important;
+  border:1px solid rgba(48,226,235,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-premium-v34{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35 .ai-pick-premium-v35{
   position:relative!important;
   display:block!important;
+  width:100%!important;
   margin:0 0 12px!important;
-  padding:14px!important;
+  padding:14px 14px 13px!important;
   border-radius:24px!important;
-  border:1px solid rgba(74,220,255,.13)!important;
+  border:1px solid rgba(71,222,234,.13)!important;
   background:
-    radial-gradient(circle at 8% 0%, rgba(65,240,255,.10), transparent 34%),
-    linear-gradient(180deg, rgba(7,20,33,.98), rgba(4,12,22,.99))!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 12px 28px rgba(0,0,0,.20)!important;
+    linear-gradient(180deg, rgba(8,23,36,.98), rgba(4,13,23,.99))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025), 0 10px 24px rgba(0,0,0,.18)!important;
   overflow:hidden!important;
-  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-premium-v34:hover{
-  transform:translateY(-2px)!important;
-  border-color:rgba(74,220,255,.23)!important;
-  box-shadow:0 16px 34px rgba(0,0,0,.25), 0 0 22px rgba(65,240,255,.06)!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35 .ai-pick-premium-v35:last-of-type{
+  margin-bottom:12px!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-premium-v34::after{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35 .ai-pick-premium-v35:before{
   content:""!important;
   position:absolute!important;
   left:0!important;
@@ -57956,192 +57971,242 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
   bottom:18px!important;
   width:3px!important;
   border-radius:999px!important;
-  background:linear-gradient(180deg,#41f0ff,#31e2ae)!important;
-  box-shadow:0 0 14px rgba(65,240,255,.38)!important;
+  background:linear-gradient(180deg, #27f5ee, #31d7ff)!important;
+  box-shadow:0 0 16px rgba(39,245,238,.36)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-top{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-top-v35{
   display:flex!important;
   align-items:center!important;
   justify-content:space-between!important;
-  gap:10px!important;
-  margin-bottom:12px!important;
+  gap:8px!important;
+  margin:0 0 12px!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-badge{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-top-v35 span{
+  flex:0 0 auto!important;
+  min-height:24px!important;
   display:inline-flex!important;
   align-items:center!important;
-  height:24px!important;
-  padding:0 9px!important;
+  justify-content:center!important;
+  padding:0 11px!important;
   border-radius:999px!important;
-  background:linear-gradient(135deg, rgba(65,240,255,.18), rgba(31,226,174,.10))!important;
-  border:1px solid rgba(65,240,255,.18)!important;
-  color:#baffff!important;
-  font-size:9px!important;
+  color:#bafffb!important;
+  font-size:10px!important;
   font-weight:1000!important;
-  letter-spacing:.08em!important;
-  white-space:nowrap!important;
+  letter-spacing:.04em!important;
+  background:linear-gradient(180deg, rgba(36,224,218,.22), rgba(16,110,121,.44))!important;
+  border:1px solid rgba(56,238,246,.20)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-league{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-top-v35 b{
   min-width:0!important;
+  display:block!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
   white-space:nowrap!important;
-  color:#8ea5b6!important;
+  color:#9fb7c8!important;
   font-size:10px!important;
-  font-weight:800!important;
+  font-weight:950!important;
   text-align:right!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-match{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-match-card-v35{
+  min-height:82px!important;
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr)!important;
+  grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;
   align-items:center!important;
   gap:8px!important;
-  min-height:62px!important;
-  padding:9px 10px!important;
+  padding:13px 12px!important;
+  margin:0 0 12px!important;
   border-radius:20px!important;
-  border:1px solid rgba(148,163,184,.10)!important;
-  background:linear-gradient(90deg, rgba(255,255,255,.040), rgba(255,255,255,.020))!important;
+  border:1px solid rgba(142,176,196,.10)!important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45,231,241,.045), transparent 52%),
+    linear-gradient(180deg, rgba(13,31,45,.88), rgba(6,18,30,.94))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-team{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-match-card-v35 em{
+  width:34px!important;
+  height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  color:#9edce4!important;
+  font-size:11px!important;
+  font-style:normal!important;
+  font-weight:1000!important;
+  background:rgba(39,209,224,.075)!important;
+  border:1px solid rgba(52,225,237,.18)!important;
+  box-shadow:0 0 12px rgba(48,226,235,.08)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35{
+  min-width:0!important;
   display:flex!important;
   flex-direction:column!important;
   align-items:center!important;
   justify-content:center!important;
-  min-width:0!important;
-  gap:6px!important;
+  gap:8px!important;
   text-align:center!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-team .profile-ticket-v6-team-logo,
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-team .tip-team-logo,
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-team [class*="team-logo"]{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 .profile-ticket-v6-team-logo{
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
   border-radius:50%!important;
-  background:rgba(255,255,255,.065)!important;
-  border:1px solid rgba(65,240,255,.16)!important;
-  box-shadow:0 0 0 3px rgba(4,14,24,.72), 0 0 14px rgba(65,240,255,.08)!important;
+  margin:0!important;
+  background:radial-gradient(circle at 30% 20%, rgba(43,237,246,.22), rgba(7,24,38,.96) 70%)!important;
+  border:1px solid rgba(45,230,241,.34)!important;
+  box-shadow:0 0 0 3px rgba(4,14,24,.76), 0 0 18px rgba(36,238,246,.10)!important;
+  overflow:hidden!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-team img{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 .profile-ticket-v6-team-logo img{
   width:100%!important;
   height:100%!important;
   object-fit:contain!important;
+  padding:3px!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-premium-v34 .ai-day-team-name-v1163{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 .profile-ticket-v6-team-logo b{
+  color:#78f4fb!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 strong{
   display:block!important;
-  max-width:100%!important;
+  width:100%!important;
+  min-height:29px!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  color:#f4fbff!important;
+  color:#f5fbff!important;
   font-size:12px!important;
-  line-height:1.1!important;
-  font-weight:950!important;
-  text-align:center!important;
+  font-weight:1000!important;
+  line-height:1.18!important;
+  text-shadow:0 2px 0 rgba(0,0,0,.28)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-vs{
-  width:30px!important;
-  height:30px!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-bottom-v35{
   display:grid!important;
-  place-items:center!important;
-  border-radius:50%!important;
-  border:1px solid rgba(65,240,255,.18)!important;
-  background:rgba(65,240,255,.070)!important;
-  color:#60eff7!important;
+  grid-template-columns:minmax(0,1fr) 82px!important;
+  align-items:center!important;
+  gap:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-type-v35{
+  min-height:74px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  padding:12px 14px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(126,156,177,.09)!important;
+  background:linear-gradient(180deg, rgba(2,12,22,.92), rgba(1,9,17,.96))!important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-type-v35 small{
+  margin:0 0 7px!important;
+  color:#8ea5b6!important;
   font-size:10px!important;
   font-weight:1000!important;
-  letter-spacing:.04em!important;
-  box-shadow:0 0 16px rgba(65,240,255,.08)!important;
+  letter-spacing:.16em!important;
+  line-height:1!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-bottom{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 72px!important;
-  gap:12px!important;
-  align-items:center!important;
-  margin-top:12px!important;
-}
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-pickbox{
-  min-width:0!important;
-  padding:11px 12px!important;
-  border-radius:18px!important;
-  background:rgba(0,0,0,.16)!important;
-  border:1px solid rgba(148,163,184,.09)!important;
-}
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-pickbox small{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-type-v35 strong{
   display:block!important;
-  margin-bottom:6px!important;
-  color:#7f96a8!important;
-  font-size:9px!important;
-  font-weight:1000!important;
-  letter-spacing:.12em!important;
-}
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-pickbox strong{
-  display:block!important;
-  max-width:100%!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
+  margin:0 0 7px!important;
   color:#f4fbff!important;
-  font-size:13px!important;
-  line-height:1.1!important;
+  font-size:14px!important;
+  line-height:1.15!important;
   font-weight:1000!important;
-  margin-bottom:5px!important;
+  letter-spacing:-.02em!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-pickbox span{
-  color:#41f0ff!important;
-  font-size:11px!important;
-  font-weight:900!important;
-  text-shadow:0 0 12px rgba(65,240,255,.18)!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-type-v35 span{
+  color:#35f2f1!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  line-height:1!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-confidence{
-  width:66px!important;
-  height:66px!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-confidence-ring-v35{
+  width:72px!important;
+  height:72px!important;
   border-radius:50%!important;
   display:flex!important;
   flex-direction:column!important;
   align-items:center!important;
   justify-content:center!important;
   background:
-    radial-gradient(circle at center, rgba(5,16,28,.98) 0 55%, transparent 56%),
-    conic-gradient(#41f0ff var(--ai-confidence), rgba(255,255,255,.09) 0)!important;
-  box-shadow:0 0 0 1px rgba(65,240,255,.10), 0 0 18px rgba(65,240,255,.10)!important;
+    radial-gradient(circle at 50% 50%, rgba(7,17,27,.97) 0 52%, transparent 53%),
+    conic-gradient(#35f2f1 var(--ai-confidence), rgba(43,64,78,.64) 0)!important;
+  box-shadow:0 0 18px rgba(53,242,241,.15), inset 0 0 0 1px rgba(255,255,255,.03)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-confidence i{
-  font-style:normal!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-confidence-ring-v35 b{
   color:#f4fbff!important;
-  font-size:16px!important;
+  font-size:18px!important;
   line-height:1!important;
   font-weight:1000!important;
+  letter-spacing:-.04em!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-confidence em{
-  margin-top:3px!important;
-  color:#8ea5b6!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-confidence-ring-v35 small{
+  margin:3px 0 0!important;
+  color:#9db5c5!important;
   font-size:8px!important;
   line-height:1!important;
-  font-style:normal!important;
   font-weight:900!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-progress{
-  margin-top:12px!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-progress-v35{
   height:5px!important;
+  margin:13px 14px 0!important;
   border-radius:999px!important;
-  background:rgba(255,255,255,.07)!important;
+  background:rgba(114,148,168,.13)!important;
   overflow:hidden!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-card-v34-progress i{
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-pick-progress-v35 i{
+  display:block!important;
   height:100%!important;
   border-radius:999px!important;
-  background:linear-gradient(90deg,#31e2ae,#41f0ff)!important;
-  box-shadow:0 0 14px rgba(65,240,255,.30)!important;
+  background:linear-gradient(90deg, #2cf4cf, #35eaff)!important;
+  box-shadow:0 0 12px rgba(47,238,231,.28)!important;
 }
-.app-shell:not(.no-rightbar-page) .rightbar .ai-day-cache-note-v1156{
-  margin-top:12px!important;
-  padding:10px 12px!important;
-  border-radius:16px!important;
-  background:rgba(255,255,255,.035)!important;
-  border:1px solid rgba(255,255,255,.06)!important;
-  color:#8197a8!important;
-  font-size:10px!important;
-  line-height:1.35!important;
-  font-weight:800!important;
+
+.app-shell:not(.no-rightbar-page) .rightbar .ai-day-cache-note-v35{
+  height:auto!important;
+  min-height:34px!important;
+  margin:8px 0 0!important;
+  padding:9px 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
   text-align:center!important;
+  border-radius:999px!important;
+  color:#9fb7c8!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.022))!important;
+  border:1px solid rgba(142,176,196,.09)!important;
+}
+
+@media (max-width: 1680px){
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-day-panel-premium-v35{padding:16px 14px 16px!important;border-radius:26px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-day-premium-head-v35 h2{font-size:18px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-match-card-v35{min-height:76px!important;padding:12px 10px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 .profile-ticket-v6-team-logo{width:40px!important;height:40px!important;min-width:40px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-team-v35 strong{font-size:11px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-bottom-v35{grid-template-columns:minmax(0,1fr) 72px!important;gap:10px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-confidence-ring-v35{width:66px!important;height:66px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-confidence-ring-v35 b{font-size:17px!important;}
+  .app-shell:not(.no-rightbar-page) .rightbar .ai-pick-type-v35 strong{font-size:13px!important;}
 }

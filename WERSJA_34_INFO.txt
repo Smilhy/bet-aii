@@ -1,7 +1,0 @@
-WERSJA 34 — PRAWY PANEL AI TYPY DNIA PREMIUM CARDS
-
-Zmiana dotyczy tylko prawego panelu Dashboardu: AI Typy dnia.
-- logika pobierania typów bez zmian,
-- herby drużyn bez zmian,
-- dane live/dynamiczne bez zmian,
-- zmieniony tylko wygląd na żywe karty premium AI jak mockup.
