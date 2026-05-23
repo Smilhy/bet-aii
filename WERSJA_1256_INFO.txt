@@ -1,0 +1,19 @@
+WERSJA 1256 - RĘCZNE TYPY WIDOCZNE OD RAZU + ROZLICZENIE DO ADMINA
+
+Zakres zmian:
+- ręcznie dodany typ zapisuje się ze statusem pending, więc od razu widać go na dashboardzie,
+- ręczne typy nie startują już jako pending_admin_review,
+- gdy użytkownik zgłasza wynik won/lost/void, typ NIE jest od razu rozliczany,
+- zgłoszony wynik zapisuje się jako manual_settlement_result i admin_approval_status=pending,
+- typ zostaje widoczny/oczekujący do czasu zatwierdzenia przez admina,
+- admin w panelu Kupony do zatwierdzenia potwierdza wynik i dopiero wtedy status zmienia się na won/lost/void.
+
+Nie ruszano:
+- kolorów Dodaj typ z wersji 1255,
+- wyszukiwania meczów,
+- pobierania kursów,
+- układu innych zakładek,
+- czatu,
+- Top typerów.
+
+Build: npm run build OK.
