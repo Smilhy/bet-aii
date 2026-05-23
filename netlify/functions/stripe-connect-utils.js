@@ -187,21 +187,48 @@ async function handleTipsterProfileSubscription(supabase, session) {
   const amount = roundMoney(session.metadata?.amount_pln || (session.amount_total || 0) / 100);
   const platformFee = roundMoney(session.metadata?.platform_fee || amount * 0.20);
   const tipsterAmount = roundMoney(session.metadata?.tipster_amount || amount - platformFee);
-  const existingUntil = new Date();
-  const expiresAt = new Date(existingUntil.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+  const planKey = session.metadata?.plan_key || session.metadata?.key || '';
+  const planLabel = session.metadata?.label || session.metadata?.plan || `${durationDays} dni`;
 
-  await safeUpsert(supabase, 'tipster_subscriptions', {
+  // V41: jeśli kupujący przedłuża aktywny dostęp, liczymy nowy termin od obecnego expires_at,
+  // a nie od teraz. Dzięki temu subskrypcja nie skraca się przy kolejnym zakupie.
+  const { data: existingSub } = await supabase
+    .from('tipster_subscriptions')
+    .select('expires_at,status')
+    .eq('user_id', userId)
+    .eq('tipster_id', tipsterId)
+    .maybeSingle();
+
+  const now = Date.now();
+  const existingExpiry = existingSub?.expires_at ? new Date(existingSub.expires_at).getTime() : 0;
+  const baseTime = Number.isFinite(existingExpiry) && existingExpiry > now ? existingExpiry : now;
+  const expiresAt = new Date(baseTime + durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+  // V41: ten rekord jest krytyczny — to on odblokowuje premium typy typera po zakupie.
+  const subPayload = {
     user_id: userId,
     buyer_id: userId,
     tipster_id: tipsterId,
+    plan: planLabel,
+    plan_key: planKey,
     duration_days: durationDays,
     price: amount,
     platform_fee: platformFee,
     tipster_amount: tipsterAmount,
     stripe_session_id: session.id,
     status: 'active',
-    expires_at: expiresAt
-  }, { onConflict: 'user_id,tipster_id' }, { user_id: userId, buyer_id: userId, tipster_id: tipsterId, expires_at: expiresAt });
+    expires_at: expiresAt,
+    updated_at: new Date().toISOString()
+  };
+
+  const subResult = await safeUpsert(
+    supabase,
+    'tipster_subscriptions',
+    subPayload,
+    { onConflict: 'user_id,tipster_id' },
+    { user_id: userId, buyer_id: userId, tipster_id: tipsterId, status: 'active', expires_at: expiresAt }
+  );
+  if (!subResult.ok) throw new Error(`Nie zapisano dostępu w tipster_subscriptions: ${subResult.error?.message || 'unknown error'}`);
 
   await safeInsert(supabase, 'payments', {
     user_id: userId,
@@ -235,6 +262,7 @@ async function handleTipsterProfileSubscription(supabase, session) {
     status: 'completed'
   });
 
+  await notifyUser(supabase, userId, 'Dostęp premium aktywny', 'Zakup dostępu do profilu typera został zapisany. Możesz oglądać jego typy premium.');
   await recordReferralReward(supabase, { userId, amount, source: 'profile_subscription', sourceId: tipsterId, sessionId: session.id });
   return { ok: true, kind: 'tipster_profile_subscription', userId, tipsterId, expiresAt };
 }

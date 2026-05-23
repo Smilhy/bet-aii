@@ -1,0 +1,4 @@
+WERSJA 41 — automatyczny zapis subskrypcji profilu po Stripe Connect.
+- Hardening webhook/sync-connect-session.
+- Dodany SQL RUN ONCE dla tipster_subscriptions.
+- Nie rusza UI.

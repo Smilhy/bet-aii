@@ -58495,3 +58495,169 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     margin-top:24px!important;
   }
 }
+
+
+/* WERSJA 40 — FINAL FIX: lewy blok typów, badge naprawdę na dół + statystyki bez nachodzenia */
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+  grid-template-columns:292px minmax(320px,1.20fr) minmax(146px,.43fr) minmax(130px,.31fr) minmax(92px,.23fr) minmax(158px,.38fr) 156px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+  position:relative!important;
+  display:block!important;
+  min-height:190px!important;
+  height:100%!important;
+  padding:18px 18px 74px!important;
+  overflow:visible!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > .profile-ticket-v6-avatar{
+  position:absolute!important;
+  left:18px!important;
+  top:18px!important;
+  width:74px!important;
+  height:74px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > div{
+  display:block!important;
+  margin-left:90px!important;
+  min-width:0!important;
+  width:calc(100% - 90px)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:100%!important;
+  margin:0 0 10px!important;
+  min-width:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 strong{
+  flex:1 1 auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  font-size:17px!important;
+  line-height:1.05!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 b{
+  flex:0 0 18px!important;
+  width:18px!important;
+  height:18px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:10px 12px 11px!important;
+  gap:3px!important;
+  border-radius:15px!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.018))!important;
+  border:1px solid rgba(112,174,194,.16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 8px 18px rgba(0,0,0,.10)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 span{
+  display:block!important;
+  font-size:11.4px!important;
+  line-height:1.18!important;
+  color:#d7e3eb!important;
+  font-weight:850!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 b,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-positive-text,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-negative-text{
+  font-size:12.4px!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-positive-text{
+  color:#22f4a8!important;
+  text-shadow:0 0 10px rgba(34,244,168,.20)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-negative-text{
+  color:#ff6a85!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left .profile-ticket-v6-access{
+  position:absolute!important;
+  left:50%!important;
+  bottom:18px!important;
+  top:auto!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  margin:0!important;
+  width:auto!important;
+  min-width:150px!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0 22px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  z-index:5!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis{
+  padding:14px 9px!important;
+  min-width:0!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis p{
+  max-width:138px!important;
+  font-size:11.4px!important;
+  line-height:1.20!important;
+  -webkit-line-clamp:3!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis button{
+  font-size:11px!important;
+}
+
+@media (max-width:1600px){
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+    grid-template-columns:280px minmax(300px,1.14fr) minmax(136px,.40fr) minmax(124px,.30fr) minmax(84px,.22fr) minmax(150px,.36fr) 150px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+    min-height:184px!important;
+    padding:17px 16px 72px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > .profile-ticket-v6-avatar{
+    left:16px!important;
+    top:17px!important;
+    width:70px!important;
+    height:70px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left > div{
+    margin-left:84px!important;
+    width:calc(100% - 84px)!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 strong{
+    font-size:16px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 span{
+    font-size:11px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 b,
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-positive-text,
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-negative-text{
+    font-size:11.9px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left .profile-ticket-v6-access{
+    bottom:16px!important;
+    min-width:142px!important;
+  }
+}

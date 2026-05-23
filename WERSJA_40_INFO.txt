@@ -1,0 +1,1 @@
+WERSJA 40 — finalny fix lewego bloku kart typów: badge DARMOWY/PREMIUM naprawdę na dole, statystyki bez nachodzenia, analiza węższa.
