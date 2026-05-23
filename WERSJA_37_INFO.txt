@@ -1,0 +1,4 @@
+WERSJA 37
+- Dashboard marketplace tickets premium polish
+- UI only: nie rusza logiki, danych, pobierania herbów, zakupu ani filtrów
+- Poprawione: avatar/nick/statystyki, herby, VS, data, typ, stawka, kurs, analiza, przyciski i border premium/free

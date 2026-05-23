@@ -57876,3 +57876,445 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
     top:-10px!important;
   }
 }
+
+/* WERSJA 37 — Dashboard marketplace tickets: ultra premium polish, UI only, bez zmiany logiki */
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+  --ticket-accent:#23f0df;
+  --ticket-accent-soft:rgba(35,240,223,.14);
+  --ticket-border:rgba(35,240,223,.22);
+  position:relative!important;
+  grid-template-columns:258px minmax(330px,1.28fr) minmax(150px,.46fr) minmax(138px,.34fr) minmax(98px,.26fr) minmax(210px,.58fr) 168px!important;
+  grid-template-rows:minmax(124px,auto) 38px!important;
+  margin:16px 0 28px!important;
+  min-height:172px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 5% 15%, rgba(32,240,223,.075), transparent 23%),
+    radial-gradient(circle at 96% 0%, rgba(34,166,255,.045), transparent 28%),
+    linear-gradient(180deg, rgba(4,18,32,.98), rgba(2,12,23,.99))!important;
+  border:1px solid var(--ticket-border)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    inset 0 -20px 36px rgba(0,0,0,.12),
+    0 18px 42px rgba(0,0,0,.22)!important;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0 auto 0 0!important;
+  width:2px!important;
+  background:linear-gradient(180deg, transparent, var(--ticket-accent), transparent)!important;
+  box-shadow:0 0 16px var(--ticket-accent-soft)!important;
+  opacity:.68!important;
+  pointer-events:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(52,242,232,.30)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -20px 36px rgba(0,0,0,.12),
+    0 22px 48px rgba(0,0,0,.25),
+    0 0 28px rgba(34,238,226,.05)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6.premium{
+  --ticket-accent:#f0c542;
+  --ticket-accent-soft:rgba(240,197,66,.15);
+  --ticket-border:rgba(240,197,66,.34);
+  border-color:rgba(240,197,66,.36)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 -20px 36px rgba(0,0,0,.12),
+    0 18px 42px rgba(0,0,0,.22),
+    0 0 0 1px rgba(240,197,66,.035)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6.free{
+  --ticket-accent:#20f08f;
+  --ticket-accent-soft:rgba(32,240,143,.12);
+  --ticket-border:rgba(32,240,143,.24);
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6 > div{
+  border-right:1px solid rgba(128,169,191,.115)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+  padding:18px 18px 16px!important;
+  grid-template-columns:78px minmax(0,1fr)!important;
+  gap:0 14px!important;
+  background:
+    radial-gradient(circle at 22% 18%, var(--ticket-accent-soft), transparent 32%),
+    linear-gradient(90deg, rgba(255,255,255,.025), transparent)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-avatar{
+  width:76px!important;
+  height:76px!important;
+  border:1.5px solid rgba(34,230,245,.90)!important;
+  background:var(--avatar-image) center/cover no-repeat, radial-gradient(circle at 30% 20%, rgba(61,240,245,.16), rgba(8,24,38,.92))!important;
+  box-shadow:0 0 0 4px rgba(2,14,24,.76), 0 0 24px rgba(28,226,255,.11)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:7px!important;
+  width:100%!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 strong{
+  max-width:142px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:17px!important;
+  letter-spacing:-.025em!important;
+  color:#f4fbff!important;
+  text-shadow:0 2px 10px rgba(0,0,0,.34)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-author-row-v874 b{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  font-size:11px!important;
+  background:linear-gradient(135deg,#30e6ff,#2279ff)!important;
+  box-shadow:0 0 12px rgba(48,178,255,.40)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876{
+  margin-top:8px!important;
+  padding:8px 10px!important;
+  display:grid!important;
+  gap:3px!important;
+  width:100%!important;
+  border-radius:14px!important;
+  border:1px solid rgba(111,151,171,.10)!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 span{
+  display:block!important;
+  font-size:11px!important;
+  line-height:1.18!important;
+  color:#c2d0dc!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 b{
+  display:inline!important;
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#f4fbff!important;
+  font-size:11px!important;
+  box-shadow:none!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-mini-stats-v876 .profit-positive-text{
+  color:#24f2a7!important;
+  text-shadow:0 0 10px rgba(36,242,167,.18)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-access{
+  margin-top:12px!important;
+  min-width:132px!important;
+  height:40px!important;
+  padding:0 16px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-access.premium{
+  color:#ffe98a!important;
+  border-color:rgba(255,212,68,.70)!important;
+  background:linear-gradient(180deg,rgba(255,205,44,.16),rgba(84,55,0,.24))!important;
+  box-shadow:0 0 18px rgba(255,194,34,.12), inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-access.free{
+  color:#dfffea!important;
+  border-color:rgba(61,255,151,.62)!important;
+  background:linear-gradient(180deg,rgba(39,230,127,.16),rgba(5,95,48,.16))!important;
+  box-shadow:0 0 16px rgba(40,230,127,.11), inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-main{
+  padding:17px 22px!important;
+  align-content:center!important;
+  gap:12px!important;
+  background:linear-gradient(90deg, rgba(8,24,38,.34), transparent)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-league{
+  display:inline-flex!important;
+  align-items:center!important;
+  width:max-content!important;
+  max-width:100%!important;
+  gap:9px!important;
+  padding:0!important;
+  color:#e3edf5!important;
+  font-size:15px!important;
+  font-weight:950!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-league span{
+  width:22px!important;
+  height:22px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  background:rgba(48,188,255,.10)!important;
+  box-shadow:0 0 12px rgba(48,188,255,.10)!important;
+  font-size:14px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match{
+  grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:center!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match > div{
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match > div:last-child{
+  justify-content:flex-end!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match > span{
+  width:38px!important;
+  height:38px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  color:#9fb7c8!important;
+  text-transform:uppercase!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  border:1px solid rgba(45,236,245,.18)!important;
+  background:radial-gradient(circle, rgba(43,231,240,.12), rgba(5,18,31,.90))!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-team-logo{
+  width:52px!important;
+  height:52px!important;
+  flex:0 0 52px!important;
+  border:1px solid rgba(89,222,255,.18)!important;
+  background:radial-gradient(circle at 30% 20%, rgba(255,255,255,.10), rgba(5,18,31,.72))!important;
+  box-shadow:0 0 18px rgba(29,233,244,.08)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-team-logo img{
+  width:88%!important;
+  height:88%!important;
+  object-fit:contain!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match strong{
+  min-width:0!important;
+  color:#f2f8ff!important;
+  font-size:16px!important;
+  line-height:1.1!important;
+  font-weight:1000!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-main > small{
+  justify-self:center!important;
+  width:max-content!important;
+  padding:6px 12px!important;
+  border-radius:999px!important;
+  color:#b7c8d5!important;
+  background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(120,160,178,.10)!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis{
+  padding:18px 18px!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.012), rgba(255,255,255,.004))!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field small,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis small{
+  margin-bottom:2px!important;
+  color:#a4b5c4!important;
+  font-size:11px!important;
+  font-weight:950!important;
+  letter-spacing:.12em!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field strong{
+  color:#f3faff!important;
+  font-size:18px!important;
+  line-height:1.18!important;
+  font-weight:1000!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field span{
+  color:#c7d4df!important;
+  font-size:14px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.stake strong{
+  font-size:17px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.stake i{
+  height:7px!important;
+  background:rgba(255,255,255,.07)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.stake i b{
+  background:linear-gradient(90deg,#2ff091,#17dff3)!important;
+  box-shadow:0 0 14px rgba(31,226,174,.24)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.odds{
+  text-align:center!important;
+  justify-items:center!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.odds strong{
+  color:#f5f8ff!important;
+  font-size:30px!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 0 16px rgba(255,255,255,.07)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis p{
+  min-height:46px!important;
+  color:#cbd8e2!important;
+  font-size:13px!important;
+  line-height:1.32!important;
+  -webkit-line-clamp:3!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-analysis button{
+  color:#28e8ff!important;
+  font-weight:950!important;
+  font-size:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy{
+  padding:48px 16px 15px!important;
+  border-right:0!important;
+  background:linear-gradient(90deg, rgba(255,255,255,.01), rgba(255,255,255,.025))!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-corner{
+  top:12px!important;
+  right:12px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-corner > span{
+  color:#c6d4df!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy span[class^="status-"]{
+  padding:7px 13px!important;
+  border-radius:999px!important;
+  color:#9dd9c3!important;
+  background:rgba(50,240,168,.10)!important;
+  border:1px solid rgba(50,240,168,.08)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy > button:not(:first-child),
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.locked .profile-ticket-v6-buy > button{
+  min-height:42px!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg, rgba(39,214,255,.92), rgba(0,118,214,.78))!important;
+  border:1px solid rgba(65,229,255,.82)!important;
+  box-shadow:0 0 20px rgba(0,191,255,.23), inset 0 1px 0 rgba(255,255,255,.20)!important;
+  color:white!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-buy strong{
+  color:#f5fbff!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-footer{
+  grid-column:2/-1!important;
+  min-height:38px!important;
+  padding:0 18px!important;
+  background:rgba(0,0,0,.12)!important;
+  border-top:1px solid rgba(120,160,178,.08)!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-footer div{
+  gap:16px!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-action-btn-v877{
+  color:#dce7ee!important;
+  opacity:.95!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-action-btn-v877:hover,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-action-btn-v877.active{
+  color:#24e7f2!important;
+}
+
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .ticket-follow-inline-btn{
+  min-height:26px!important;
+  padding:0 12px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(44,238,224,.42)!important;
+  color:#e8ffff!important;
+  background:rgba(23,220,211,.08)!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+}
+
+@media (max-width:1600px){
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6.profile-ticket-v6{
+    grid-template-columns:236px minmax(300px,1.18fr) minmax(140px,.44fr) minmax(128px,.34fr) minmax(86px,.24fr) minmax(190px,.54fr) 154px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-left{
+    grid-template-columns:68px minmax(0,1fr)!important;
+    padding:16px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-avatar{
+    width:66px!important;
+    height:66px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-team-logo{
+    width:46px!important;
+    height:46px!important;
+    flex-basis:46px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-match strong{
+    font-size:15px!important;
+  }
+  .app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.odds strong{
+    font-size:27px!important;
+  }
+}
