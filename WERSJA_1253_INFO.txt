@@ -1,0 +1,4 @@
+WERSJA 1253 — redesign tylko zakładki Dodaj typ.
+Zakres: wyłącznie widok Dodaj typ (klasy .add-tip-betfolio-page).
+Zmiany: dopasowanie kolorystyki do dashboardu, kompaktowy hero, czystsza lista sportów/lig, poprawiony ekran rynków, podgląd typu po prawej jako panel kreatora, CTA „Dodaj typ”.
+Nie ruszano dashboardu, czatu, Top typerów ani logiki publikacji typów.
