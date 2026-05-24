@@ -9407,17 +9407,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
               {addTipMode === 'auto' && (
                 <>
-                  <div className="betfolio-fixture-mode-tabs">
-                    <button
-                      type="button"
-                      className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
-                      onClick={fetchTopFootballMatchesTodayTomorrow}
-                      disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
-                      aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
-                    >
-                      <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
-                      {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
-                    </button>
+                  <div className="betfolio-fixture-mode-tabs betfolio-top-panel-v1291">
+                    <div className="betfolio-top-panel-row-v1291">
+                      <button
+                        type="button"
+                        className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
+                        onClick={fetchTopFootballMatchesTodayTomorrow}
+                        disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
+                        aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
+                      >
+                        <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                        {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
+                      </button>
+
+                      <div className="betfolio-top-panel-chips-v1291" aria-label="Parametry top meczów">
+                        <span className="betfolio-top-chip-v1291 active">Dziś + jutro</span>
+                        <span className="betfolio-top-chip-v1291">6 lig</span>
+                        <span className="betfolio-top-chip-v1291">{visibleMatchOptions.length} wydarzeń</span>
+                        <span className="betfolio-top-chip-v1291 subtle">godziny rosnąco</span>
+                      </div>
+                    </div>
+                    <div className="betfolio-top-panel-subtitle-v1291">Premium wybór najważniejszych meczów z top lig. Kliknij kafel lub kurs, aby od razu budować typ.</div>
                   </div>
                 </>
               )}
