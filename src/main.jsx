@@ -7749,6 +7749,31 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     }
   }
 
+  function mergeFootballCountsData(previous = {}, incoming = {}) {
+    const prev = normalizeFootballCountsData(previous || {})
+    const next = normalizeFootballCountsData(incoming || {})
+    const countries = { ...(prev.countries || {}) }
+    Object.entries(next.countries || {}).forEach(([key, value]) => {
+      countries[key] = Math.max(Number(countries[key] || 0), Number(value || 0))
+    })
+    const leagues = { ...(prev.leagues || {}) }
+    Object.entries(next.leagues || {}).forEach(([key, value]) => {
+      leagues[key] = Math.max(Number(leagues[key] || 0), Number(value || 0))
+    })
+    const countryLeagues = { ...(prev.countryLeagues || {}) }
+    Object.entries(next.countryLeagues || {}).forEach(([key, value]) => {
+      const merged = [...new Set([...(countryLeagues[key] || []), ...(Array.isArray(value) ? value : [])])]
+      countryLeagues[key] = merged.sort((a, b) => a.localeCompare(b, 'pl'))
+    })
+    return {
+      countries,
+      leagues,
+      countryLeagues,
+      total: Math.max(Number(prev.total || 0), Number(next.total || 0)),
+      source: next.source || prev.source || 'merged-cache'
+    }
+  }
+
   function buildFootballCountsFromFixtures(fixtures = [], source = 'loaded-fixtures') {
     const countries = {}
     const leagues = {}
@@ -8202,7 +8227,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   useEffect(() => {
     if (addTipMode !== 'auto') return
-    fetchFootballMatchCountsFromCache(false)
+    // WERSJA 1285: liczników krajów/lig nie czytamy ślepo z localStorage,
+    // bo wcześniejsze wersje mogły nadpisać cache wynikiem jednej ligi.
+    // Pobieramy świeży snapshot z backendowego cache liczników.
+    fetchFootballMatchCountsFromCache(true)
   }, [addTipMode, sportCountsDate])
 
   function handleTopSportButtonClick(item) {
@@ -8589,9 +8617,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       setLiveFixtures(fixtures)
       if (String(overrides.sport || form.sport || '').toLowerCase().includes('piłka') || String(overrides.sport || form.sport || '').toLowerCase().includes('pilka')) {
         const loadedCounts = buildFootballCountsFromFixtures(fixtures, data.source || 'live-api')
-        if (loadedCounts.total > 0) {
-          setFootballMatchCounts(loadedCounts)
-          try { localStorage.setItem(`betai_football_country_league_counts_v1088_${overrides.date || liveDate || getTodayLocalKey()}`, JSON.stringify(loadedCounts)) } catch (_) {}
+        // WERSJA 1285: kliknięcie pojedynczego kraju/ligi NIE może zerować liczników po lewej.
+        // Liczniki krajów/lig aktualizujemy tylko przy szerokim pobraniu wszystkich lig.
+        // Dla pojedynczej ligi zostawiamy dotychczasowy globalny snapshot.
+        if (loadedCounts.total > 0 && (overrides.allLeagues || overrides.mode === 'all-today')) {
+          setFootballMatchCounts(prev => {
+            const mergedCounts = mergeFootballCountsData(prev, loadedCounts)
+            try { localStorage.setItem(`betai_football_country_league_counts_v1088_${overrides.date || liveDate || getTodayLocalKey()}`, JSON.stringify(mergedCounts)) } catch (_) {}
+            return mergedCounts
+          })
         }
       }
       setLiveDataSource(data.source || (data.demo ? 'demo' : 'odds-api'))
