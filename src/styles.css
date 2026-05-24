@@ -59387,3 +59387,181 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   .add-tip-betfolio-page .sport-showcase-card-v1274{min-height:104px; padding:14px 13px; border-radius:18px}
   .add-tip-betfolio-page .sport-showcase-icon-v1274{width:36px;height:36px;margin-bottom:10px}
 }
+
+/* =====================================================
+   1275 UI: Premium sport strip zamiast dużych sztucznych kafli
+   Tylko wygląd, bez zmiany logiki Top Mecze/API/Supabase.
+   ===================================================== */
+.add-tip-betfolio-page .betfolio-sport-showcase-v1274,
+.add-tip-betfolio-page .sport-showcase-card-v1274{
+  display:none !important;
+}
+.add-tip-betfolio-page .betfolio-sport-premium-strip-v1275{
+  position:relative;
+  overflow:hidden;
+  margin:16px 0 18px;
+  padding:12px 14px;
+  border-radius:22px;
+  border:1px solid rgba(37,255,239,.18);
+  background:
+    linear-gradient(90deg, rgba(3,31,43,.74), rgba(3,16,32,.58)),
+    radial-gradient(circle at 18% 50%, rgba(29,255,231,.12), transparent 0 34%),
+    radial-gradient(circle at 88% 50%, rgba(82,128,255,.11), transparent 0 32%);
+  box-shadow:0 18px 48px rgba(0,0,0,.23), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.add-tip-betfolio-page .betfolio-sport-premium-strip-v1275::before{
+  content:"";
+  position:absolute;
+  left:16px;
+  right:16px;
+  top:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(31,255,231,.8), rgba(83,135,255,.52), transparent);
+  opacity:.75;
+}
+.add-tip-betfolio-page .betfolio-sport-premium-strip-v1275::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+  background-size:36px 36px;
+  mask-image:linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  opacity:.36;
+  pointer-events:none;
+}
+.add-tip-betfolio-page .sport-strip-head-v1275{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 2px 10px;
+}
+.add-tip-betfolio-page .sport-strip-head-v1275 span{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#eaffff;
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+}
+.add-tip-betfolio-page .sport-strip-head-v1275 span::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#1fffe7;
+  box-shadow:0 0 14px rgba(31,255,231,.75);
+}
+.add-tip-betfolio-page .sport-strip-head-v1275 em{
+  color:rgba(207,233,240,.64);
+  font-size:11px;
+  font-style:normal;
+  font-weight:800;
+}
+.add-tip-betfolio-page .sport-strip-track-v1275{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:10px;
+  align-items:center;
+  min-height:62px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid rgba(130,220,255,.12);
+  color:#eefcff;
+  text-align:left;
+  cursor:pointer;
+  background:linear-gradient(135deg, rgba(8,32,50,.72), rgba(8,19,36,.62));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 10px 24px rgba(0,0,0,.18);
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(110deg, transparent 35%, rgba(255,255,255,.08), transparent 65%);
+  transform:translateX(-130%);
+  transition:transform .48s ease;
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275:hover::before{transform:translateX(130%)}
+.add-tip-betfolio-page .sport-strip-pill-v1275:hover{
+  transform:translateY(-2px);
+  border-color:rgba(31,255,231,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 15px 34px rgba(0,0,0,.26), 0 0 20px rgba(31,255,231,.08);
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275.active{
+  background:linear-gradient(135deg, rgba(0,118,105,.34), rgba(25,87,179,.22));
+  border-color:rgba(31,255,231,.7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 16px 36px rgba(0,0,0,.27), 0 0 26px rgba(31,255,231,.17);
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275 i{
+  grid-row:1 / span 2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:14px;
+  background:rgba(3,14,26,.68);
+  border:1px solid rgba(255,255,255,.09);
+  font-size:20px;
+  font-style:normal;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 0 16px rgba(31,255,231,.08);
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275 strong{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:13px;
+  font-weight:1000;
+  letter-spacing:-.02em;
+  line-height:1.1;
+}
+.add-tip-betfolio-page .sport-strip-pill-v1275 small{
+  margin-top:4px;
+  color:rgba(205,232,240,.64);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+
+/* Lekki premium polish dla bocznego panelu SPORT, bez zmiany działania. */
+.add-tip-betfolio-page .sport-accordion-item{
+  position:relative;
+}
+.add-tip-betfolio-page .sport-accordion-head{
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.add-tip-betfolio-page .sport-accordion-head:hover{
+  transform:translateX(2px);
+  border-color:rgba(31,255,231,.30) !important;
+  box-shadow:0 0 18px rgba(31,255,231,.07), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+.add-tip-betfolio-page .sport-accordion-item.is-open .sport-accordion-head{
+  background:linear-gradient(90deg, rgba(31,255,231,.13), rgba(84,128,255,.12)) !important;
+  border-color:rgba(31,255,231,.38) !important;
+}
+
+@media (max-width: 1280px){
+  .add-tip-betfolio-page .sport-strip-track-v1275{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width: 760px){
+  .add-tip-betfolio-page .sport-strip-track-v1275{grid-template-columns:1fr 1fr}
+  .add-tip-betfolio-page .sport-strip-head-v1275{align-items:flex-start; flex-direction:column; gap:4px}
+}
