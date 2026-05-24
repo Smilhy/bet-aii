@@ -60018,3 +60018,25 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 @media (max-width:1400px){.ai-center-page-v747 .sport-cards-track-v1276.ai-sports-grid-v1279{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}}
 @media (max-width:1100px){.ai-center-page-v747 .sport-cards-track-v1276.ai-sports-grid-v1279{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}}
 @media (max-width:680px){.ai-center-page-v747 .sport-cards-track-v1276.ai-sports-grid-v1279{grid-template-columns:1fr !important;}}
+
+/* WERSJA 1286 — usuń wewnętrzny scroll z ramki dodawania typu */
+.add-tip-betfolio-page .betfolio-add-shell.ticket-visible .betfolio-right,
+.add-tip-betfolio-page .betfolio-right{
+  position:relative !important;
+  top:auto !important;
+  max-height:none !important;
+  height:auto !important;
+  overflow:visible !important;
+  align-self:start !important;
+}
+.add-tip-betfolio-page .betfolio-right::-webkit-scrollbar{
+  width:0 !important;
+  height:0 !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-body,
+.add-tip-betfolio-page .betfolio-details-body,
+.add-tip-betfolio-page .betfolio-ticket-card,
+.add-tip-betfolio-page .betfolio-sidebar-block{
+  max-height:none !important;
+  overflow:visible !important;
+}
