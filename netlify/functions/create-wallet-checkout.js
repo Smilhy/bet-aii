@@ -14,11 +14,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing user_id' }) };
     }
 
-    const topupAmount = Number(amount || 100);
-    const allowedAmounts = [50, 100, 200, 500];
+    const topupAmount = Math.round(Number(amount || 100) * 100) / 100;
 
-    if (!allowedAmounts.includes(topupAmount)) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Nieprawidłowa kwota doładowania.' }) };
+    if (!Number.isFinite(topupAmount) || topupAmount < 50) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Minimalna kwota doładowania to 50 zł.' }) };
     }
 
     const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://unique-queijadas-333bcd.netlify.app';

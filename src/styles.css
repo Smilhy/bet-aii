@@ -60706,3 +60706,13 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   background-size:128px 128px, 128px 128px, auto, auto, auto !important;
   mix-blend-mode:screen;
 }
+
+/* WERSJA 1301 — Portfel: min. 50 zł, bez sztucznego limitu wpłat */
+.deposits-min-note{
+  display:block!important;
+  margin:-4px 0 12px!important;
+  color:#ffd36a!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+}

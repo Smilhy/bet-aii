@@ -11771,7 +11771,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
 
   const walletAmount = Math.max(0, Number(wallet || 0) || 0)
   const userTokens = Math.max(0, Number(tokenBalance || 0) || 0)
-  const tokenPlnValue = userTokens / 1000
+  const tokenPlnValue = (userTokens / 1000) * 0.9
   const isPremiumWalletUser = isPremiumProfile(user) || isPremiumAccount(userPlan) || isPremiumAccount(user?.plan || user?.subscription_status || user?.status)
   const subscriptionLabel = isPremiumWalletUser ? 'Premium' : 'Free'
   const subscriptionPlanLabel = isPremiumWalletUser ? 'Plan miesięczny' : 'Plan darmowy'
@@ -12250,9 +12250,9 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               <small>Dostępne żetony</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
-              <div className="wallet-v2-stat-top"><span>Wartość żetonów (PLN)</span><i>◍</i></div>
+              <div className="wallet-v2-stat-top"><span>Wartość sprzedaży żetonów (PLN)</span><i>◍</i></div>
               <strong>{formatWalletPln(tokenPlnValue)}</strong>
-              <small>1000 żetonów = 1 zł</small>
+              <small>1000 żetonów = 0,90 zł przy wymianie</small>
             </div>
           </div>
 
@@ -19234,9 +19234,10 @@ function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
   const [customAmount, setCustomAmount] = useState('')
   const [topups, setTopups] = useState([])
   const [loading, setLoading] = useState(false)
-  const presetAmounts = [10, 25, 50, 100, 200, 500]
+  const presetAmounts = [50, 100, 200, 500, 1000]
   const selectedAmount = customAmount !== '' ? Number(customAmount || 0) : Number(amount || 0)
-  const safeAmount = Math.max(1, Math.round(Number(selectedAmount || 0) * 100) / 100)
+  const safeAmount = Math.max(50, Math.round(Number(selectedAmount || 0) * 100) / 100)
+  const amountBelowMinimum = Number(selectedAmount || 0) > 0 && Number(selectedAmount || 0) < 50
 
   useEffect(() => {
     let active = true
@@ -19315,13 +19316,14 @@ function DepositsView({ user, wallet = 0, onTopUp, onViewChange }) {
             <span>Własna kwota</span>
             <input
               type="number"
-              min="1"
+              min="50"
               step="0.01"
-              placeholder="np. 75"
+              placeholder="min. 50 zł"
               value={customAmount}
               onChange={event => setCustomAmount(event.target.value)}
             />
           </label>
+          {amountBelowMinimum && <small className="deposits-min-note">Minimalna wpłata to 50 zł.</small>}
           <button type="button" className="wallet-v2-primary-btn deposits-pay-btn" onClick={() => onTopUp?.(safeAmount)}>
             Wpłać {formatMoney(safeAmount)} przez Stripe
           </button>
