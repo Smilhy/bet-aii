@@ -9363,7 +9363,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
                 <div className="sport-cards-head-v1276">
                   <span>Popularne sporty</span>
-                  <em>wszystkie Twoje sporty w jednym miejscu</em>
                 </div>
                 <div className="sport-cards-track-v1276 all-sports">
                   {sportKeys.map((sportName) => {

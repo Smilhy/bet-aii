@@ -60420,3 +60420,121 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     justify-content: center !important;
   }
 }
+
+/* WERSJA 1295 — Top Mecze: centrowanie + mocniejszy premium wygląd + żółty CTA */
+.add-tip-betfolio-page .betfolio-top-panel-v1291{
+  width: fit-content !important;
+  max-width: min(100%, 1120px) !important;
+  margin: 8px auto 18px auto !important;
+  padding: 12px 14px !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(70, 210, 255, 0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(5, 22, 38, 0.94), rgba(3, 16, 30, 0.97)),
+    radial-gradient(circle at 18% 0%, rgba(57, 190, 255, 0.10), transparent 34%),
+    radial-gradient(circle at 85% 100%, rgba(255, 205, 72, 0.08), transparent 28%) !important;
+  box-shadow:
+    0 16px 40px rgba(2, 12, 24, 0.34),
+    inset 0 1px 0 rgba(115, 235, 255, 0.06) !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-row-v1291{
+  width: auto !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-v1291 .betfolio-top-matches-loading-btn{
+  min-height: 56px !important;
+  padding: 0 24px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 215, 90, 0.22) !important;
+  background: linear-gradient(135deg, #ffd84d 0%, #ffcd45 38%, #f5b33b 100%) !important;
+  color: #12202f !important;
+  font-weight: 900 !important;
+  letter-spacing: .01em !important;
+  box-shadow:
+    0 12px 28px rgba(255, 199, 64, 0.28),
+    0 0 0 1px rgba(255,255,255,0.08) inset,
+    inset 0 1px 0 rgba(255,255,255,0.50) !important;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-v1291 .betfolio-top-matches-loading-btn:hover{
+  transform: translateY(-1px) !important;
+  filter: brightness(1.02) !important;
+  box-shadow:
+    0 16px 34px rgba(255, 199, 64, 0.34),
+    0 0 0 1px rgba(255,255,255,0.12) inset,
+    inset 0 1px 0 rgba(255,255,255,0.58) !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-v1291 .betfolio-top-matches-loading-btn span{
+  color: inherit !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-v1291 .betfolio-top-matches-spinner{
+  border-color: rgba(18, 32, 47, 0.18) !important;
+  border-top-color: rgba(18, 32, 47, 0.86) !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-panel-chips-v1291{
+  flex: 0 1 auto !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-chip-v1291{
+  min-height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(74, 210, 255, 0.16) !important;
+  background: linear-gradient(180deg, rgba(8, 27, 44, 0.96), rgba(4, 16, 30, 0.98)) !important;
+  color: rgba(220, 241, 255, 0.90) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: .03em !important;
+  box-shadow: inset 0 1px 0 rgba(124, 232, 255, 0.05) !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-chip-v1291.active{
+  border-color: rgba(108, 229, 255, 0.22) !important;
+  background: linear-gradient(135deg, rgba(61, 216, 255, 0.22), rgba(110, 163, 255, 0.20)) !important;
+  color: #bfeeff !important;
+  box-shadow: 0 10px 24px rgba(46, 165, 255, 0.12), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-chip-v1291.subtle{
+  color: rgba(164, 191, 206, 0.88) !important;
+  border-style: dashed !important;
+  background: linear-gradient(180deg, rgba(7, 23, 40, 0.86), rgba(4, 14, 27, 0.92)) !important;
+}
+
+@media (max-width: 880px){
+  .add-tip-betfolio-page .betfolio-top-panel-v1291{
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    margin: 8px auto 14px auto !important;
+  }
+  .add-tip-betfolio-page .betfolio-top-panel-row-v1291{
+    gap: 10px !important;
+  }
+  .add-tip-betfolio-page .betfolio-top-panel-v1291 .betfolio-top-matches-loading-btn{
+    width: 100% !important;
+    min-height: 52px !important;
+    padding: 0 18px !important;
+  }
+  .add-tip-betfolio-page .betfolio-top-panel-chips-v1291{
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    justify-content: center !important;
+  }
+  .add-tip-betfolio-page .betfolio-top-chip-v1291{
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+}
