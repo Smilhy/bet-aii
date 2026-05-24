@@ -60377,3 +60377,46 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 .add-tip-betfolio-page .betfolio-events-list.top-matches-list-v1293{
   margin-top:14px!important;
 }
+
+/* WERSJA 1294 — usuń ramkę panelu top meczów, usuń opis, wyśrodkuj panel, ukryj dolny nagłówek listy */
+.betfolio-top-panel-v1291{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 auto 10px auto !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.betfolio-top-panel-row-v1291{
+  width: 100%;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+.betfolio-top-panel-chips-v1291{
+  flex: 0 1 auto !important;
+  justify-content: center !important;
+}
+
+.betfolio-top-panel-subtitle-v1291{
+  display: none !important;
+}
+
+.add-tip-betfolio-page .betfolio-events-head{
+  display: none !important;
+}
+
+@media (max-width: 880px){
+  .betfolio-top-panel-v1291{
+    margin: 0 auto 8px auto !important;
+  }
+  .betfolio-top-panel-row-v1291{
+    justify-content: center !important;
+  }
+  .betfolio-top-panel-chips-v1291{
+    flex: 1 1 100% !important;
+    justify-content: center !important;
+  }
+}
