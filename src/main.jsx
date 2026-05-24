@@ -6483,6 +6483,23 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     'Dart': '🎯',
   }
 
+  const sportCardThemeMap = {
+    'Piłka nożna': 'football',
+    'Tenis': 'tennis',
+    'Koszykówka': 'basketball',
+    'Hokej': 'hockey',
+    'MMA': 'mma',
+    'E-sport': 'esports',
+    'Siatkówka': 'volleyball',
+    'Boks': 'boxing',
+    'Piłka ręczna': 'handball',
+    'Krykiet': 'cricket',
+    'Rugby': 'rugby',
+    'Rugby League': 'rugbyleague',
+    'Baseball': 'baseball',
+    'Dart': 'dart',
+  }
+
   const sidebarComingSoonSports = [
     'Tenis',
     'Koszykówka',
@@ -9316,45 +9333,32 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
                 <div className="sport-cards-head-v1276">
                   <span>Popularne sporty</span>
-                  <em>kliknij kafelek lub wybierz ligę z panelu po lewej</em>
+                  <em>wszystkie Twoje sporty w jednym miejscu</em>
                 </div>
-                <div className="sport-cards-track-v1276">
-                  <button type="button" className="sport-card-v1276 active football" onClick={() => selectSidebarSport('Piłka nożna')}>
-                    <div className="sport-card-top-v1276"><i>⚽</i><span>Piłka nożna</span></div>
-                    <strong>Top mecze</strong>
-                    <small>Premier League • La Liga • Serie A</small>
-                    <b aria-hidden="true">⚽</b>
-                  </button>
-                  <button type="button" className="sport-card-v1276 tennis" onClick={() => onToast?.({ type: 'success', title: 'Tenis', message: 'Tenis zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <div className="sport-card-top-v1276"><i>🎾</i><span>Tenis</span></div>
-                    <strong>Wkrótce</strong>
-                    <small>top turnieje i rynki</small>
-                    <b aria-hidden="true">🎾</b>
-                  </button>
-                  <button type="button" className="sport-card-v1276 basketball" onClick={() => onToast?.({ type: 'success', title: 'Koszykówka', message: 'Koszykówka zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <div className="sport-card-top-v1276"><i>🏀</i><span>Koszykówka</span></div>
-                    <strong>Wkrótce</strong>
-                    <small>NBA i najpopularniejsze ligi</small>
-                    <b aria-hidden="true">🏀</b>
-                  </button>
-                  <button type="button" className="sport-card-v1276 hockey" onClick={() => onToast?.({ type: 'success', title: 'Hokej', message: 'Hokej zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <div className="sport-card-top-v1276"><i>🏒</i><span>Hokej</span></div>
-                    <strong>Wkrótce</strong>
-                    <small>NHL i top wydarzenia</small>
-                    <b aria-hidden="true">🏒</b>
-                  </button>
-                  <button type="button" className="sport-card-v1276 esports" onClick={() => onToast?.({ type: 'success', title: 'E-sport', message: 'E-sport zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <div className="sport-card-top-v1276"><i>🎮</i><span>E-sport</span></div>
-                    <strong>Wkrótce</strong>
-                    <small>CS2 • LoL • Valorant</small>
-                    <b aria-hidden="true">🎮</b>
-                  </button>
-                  <button type="button" className="sport-card-v1276 volleyball" onClick={() => onToast?.({ type: 'success', title: 'Siatkówka', message: 'Siatkówka zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <div className="sport-card-top-v1276"><i>🏐</i><span>Siatkówka</span></div>
-                    <strong>Wkrótce</strong>
-                    <small>top ligi i wydarzenia</small>
-                    <b aria-hidden="true">🏐</b>
-                  </button>
+                <div className="sport-cards-track-v1276 all-sports">
+                  {sportKeys.map((sportName) => {
+                    const sportData = sportsbook[sportName] || {}
+                    const leagues = Object.keys(sportData.leagues || {})
+                    const matchesCount = leagues.reduce((sum, leagueName) => sum + ((sportData.leagues?.[leagueName] || []).length), 0)
+                    const themeClass = sportCardThemeMap[sportName] || 'default'
+                    const isActiveCard = openSidebarSport === sportName || form.sport === sportName
+                    const subtitle = sportName === 'Piłka nożna'
+                      ? 'Top mecze • dziś + jutro'
+                      : leagues.slice(0, 2).join(' • ') || 'Wybierz sport'
+                    return (
+                      <button
+                        key={sportName}
+                        type="button"
+                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''}`}
+                        onClick={() => selectSidebarSport(sportName)}
+                      >
+                        <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || '✦'}</i><span>{sportName}</span></div>
+                        <strong>{matchesCount} {matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}</strong>
+                        <small>{subtitle}</small>
+                        <b aria-hidden="true">{sportIconMap[sportName] || '✦'}</b>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
