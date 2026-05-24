@@ -60664,3 +60664,45 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     animation:none!important;
   }
 }
+
+/* WERSJA 1299 — Portfel hero: delikatny premium grid/kreski jak w Dodaj typ */
+.wallet-v2-hero{
+  background:
+    linear-gradient(rgba(45, 221, 255, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 221, 255, .045) 1px, transparent 1px),
+    radial-gradient(circle at 72% 45%, rgba(16,157,255,.20), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(38,234,255,.10), transparent 18%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(7,25,53,.94)) !important;
+  background-size:
+    64px 64px,
+    64px 64px,
+    auto,
+    auto,
+    auto !important;
+  background-position:
+    center center,
+    center center,
+    center center,
+    center center,
+    center center !important;
+}
+
+.wallet-v2-hero::before{
+  background:
+    linear-gradient(115deg, rgba(42,235,255,.10), transparent 38%),
+    linear-gradient(290deg, rgba(93,125,255,.10), transparent 34%),
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,.065) 49%, transparent 100%),
+    radial-gradient(circle at 20% 18%, rgba(35, 228, 255, .08), transparent 24%) !important;
+  background-size:100% 100%, 100% 100%, 220% 100%, auto !important;
+}
+
+.wallet-v2-hero::after{
+  background:
+    linear-gradient(90deg, rgba(45, 221, 255, .035) 1px, transparent 1px),
+    linear-gradient(rgba(45, 221, 255, .032) 1px, transparent 1px),
+    radial-gradient(circle at 18% 42%, rgba(34,239,209,.10), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(94,157,255,.12), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(22,225,255,.08), transparent 0 18%) !important;
+  background-size:128px 128px, 128px 128px, auto, auto, auto !important;
+  mix-blend-mode:screen;
+}

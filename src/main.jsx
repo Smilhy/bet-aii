@@ -18413,12 +18413,22 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   // 🔒 ZABLOKOWANA LOGIKA STATYSTYK v981
   // Typy = wszystkie, Profit/Yield/Stawka ROI = tylko rozliczone.
   // Pending nigdy nie wchodzi do Yield/ROI.
-  const getProfileTipStake = (tip = {}) => Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
-  const getProfileTipOdds = (tip = {}) => Math.max(0, Number(tip.odds || tip.course || 0) || 0)
-  const getProfileTipSettlement = (tip = {}) => normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
-  const isProfileTipSettled = (tip = {}) => ['won', 'lost'].includes(getProfileTipSettlement(tip))
-  const getProfileTipSettledStake = (tip = {}) => isProfileTipSettled(tip) ? getProfileTipStake(tip) : 0
-  const getProfileTipProfit = (tip = {}) => {
+  function getProfileTipStake(tip = {}) {
+    return Math.max(0, Number(tip.stake || tip.bet_amount || tip.amount || 0) || 0)
+  }
+  function getProfileTipOdds(tip = {}) {
+    return Math.max(0, Number(tip.odds || tip.course || 0) || 0)
+  }
+  function getProfileTipSettlement(tip = {}) {
+    return normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.statusLabel ?? tip.result_status)
+  }
+  function isProfileTipSettled(tip = {}) {
+    return ['won', 'lost'].includes(getProfileTipSettlement(tip))
+  }
+  function getProfileTipSettledStake(tip = {}) {
+    return isProfileTipSettled(tip) ? getProfileTipStake(tip) : 0
+  }
+  function getProfileTipProfit(tip = {}) {
     const status = getProfileTipSettlement(tip)
     const stake = getProfileTipStake(tip)
     const odds = getProfileTipOdds(tip)
