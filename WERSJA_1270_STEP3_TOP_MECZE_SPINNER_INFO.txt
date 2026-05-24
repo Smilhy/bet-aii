@@ -1,0 +1,21 @@
+WERSJA 1270 STEP3 TOP MECZE SPINNER
+
+Zmiana tylko na ekranie Dodaj typ -> Top Mecze dziś + jutro.
+
+Dodano spinner/loader obok przycisku Top Mecze dziś + jutro:
+- startuje od razu po kliknięciu,
+- pokazuje tekst: Szukam top meczów...,
+- znika po pobraniu meczów albo po błędzie,
+- przycisk jest zablokowany podczas ładowania, żeby nie klikać kilka razy i nie odpalać wielu requestów.
+
+Nie zmieniano:
+- Supabase SQL,
+- cache sports_fixture_cache,
+- dashboardu,
+- Typów AI,
+- live chatu,
+- powiadomień,
+- cennika,
+- profilu.
+
+Build: npm run build OK.

@@ -58994,3 +58994,33 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   background:linear-gradient(180deg, rgba(6, 30, 43, .72), rgba(3, 17, 31, .86)) !important;
   border-color:rgba(25, 198, 206, .20) !important;
 }
+
+
+/* 1270 STEP3: loader przy Top Mecze dziś + jutro */
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn:disabled{
+  cursor:wait !important;
+  opacity:.92 !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-matches-spinner{
+  width:16px !important;
+  height:16px !important;
+  border-radius:999px !important;
+  border:2px solid rgba(5,17,27,.24) !important;
+  border-top-color:#06121b !important;
+  border-right-color:#06121b !important;
+  display:inline-block !important;
+  flex:0 0 auto !important;
+  animation: betfolioTopMatchesSpin .72s linear infinite !important;
+}
+
+@keyframes betfolioTopMatchesSpin{
+  to{ transform: rotate(360deg); }
+}

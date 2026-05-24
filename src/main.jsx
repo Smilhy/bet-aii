@@ -9307,7 +9307,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
                   </div>
                   <div className="betfolio-fixture-mode-tabs">
-                    <button type="button" className={footballViewMode === 'top-matches' ? 'active' : ''} onClick={fetchTopFootballMatchesTodayTomorrow}>Top Mecze dziś + jutro</button>
+                    <button
+                      type="button"
+                      className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
+                      onClick={fetchTopFootballMatchesTodayTomorrow}
+                      disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
+                      aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
+                    >
+                      <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                      {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
+                    </button>
                   </div>
                 </>
               )}
