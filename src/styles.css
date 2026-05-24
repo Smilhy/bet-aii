@@ -60554,3 +60554,113 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   color: rgba(218, 242, 249, .88) !important;
   font-weight: 800 !important;
 }
+
+/* WERSJA 1298 — hero Portfel otrzymuje animację premium jak w Dodaj typ, bez zmiany układu */
+.wallet-v2-hero{
+  isolation:isolate!important;
+}
+.wallet-v2-hero::before{
+  background:
+    linear-gradient(115deg, rgba(42,235,255,.10), transparent 38%),
+    linear-gradient(290deg, rgba(93,125,255,.10), transparent 34%),
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,.065) 49%, transparent 100%)!important;
+  background-size:100% 100%, 100% 100%, 220% 100%!important;
+  animation:walletHeroSheen 8.8s ease-in-out infinite!important;
+}
+.wallet-v2-hero::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:
+    radial-gradient(circle at 18% 42%, rgba(34,239,209,.10), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(94,157,255,.12), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(22,225,255,.08), transparent 0 18%)!important;
+  opacity:.9!important;
+  animation:walletHeroGlowShift 9.5s ease-in-out infinite!important;
+  z-index:0!important;
+}
+.wallet-v2-hero-copy,
+.wallet-v2-hero-visual{
+  position:relative!important;
+  z-index:2!important;
+}
+.wallet-v2-hero-features i{
+  animation:walletHeroFeaturePulse 4.2s ease-in-out infinite!important;
+}
+.wallet-v2-hero-orbit{
+  animation:walletHeroOrbitFloat 9.5s ease-in-out infinite!important;
+  will-change:transform, opacity!important;
+}
+.wallet-v2-hero-orbit::after{
+  animation:walletHeroOrbitDot 4.4s ease-in-out infinite!important;
+}
+.wallet-v2-hero-coin{
+  animation:walletHeroCoinFloat 6.6s ease-in-out infinite!important;
+  will-change:transform, box-shadow!important;
+}
+.wallet-v2-hero-card{
+  will-change:transform, box-shadow!important;
+}
+.wallet-v2-hero-card-main{
+  animation:walletHeroCardMain 7s ease-in-out infinite!important;
+}
+.wallet-v2-hero-card-deposit{
+  animation:walletHeroCardDeposit 6.4s ease-in-out infinite!important;
+}
+.wallet-v2-hero-card-withdraw{
+  animation:walletHeroCardWithdraw 7.4s ease-in-out infinite!important;
+}
+
+@keyframes walletHeroSheen{
+  0%,100%{background-position:0 0, 0 0, -120% 0;opacity:.86}
+  50%{background-position:0 0, 0 0, 140% 0;opacity:1}
+}
+@keyframes walletHeroGlowShift{
+  0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.78}
+  33%{transform:translate3d(6px,-10px,0) scale(1.03);opacity:.92}
+  66%{transform:translate3d(-8px,8px,0) scale(.985);opacity:.84}
+}
+@keyframes walletHeroOrbitFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(-14deg) scale(1);opacity:.82}
+  50%{transform:translate3d(18px,-8px,0) rotate(-9deg) scale(1.03);opacity:1}
+}
+@keyframes walletHeroOrbitDot{
+  0%,100%{transform:scale(1);box-shadow:0 0 22px rgba(45,231,255,.9)}
+  50%{transform:scale(1.45);box-shadow:0 0 30px rgba(45,231,255,1)}
+}
+@keyframes walletHeroCoinFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1);box-shadow:0 0 0 1px rgba(47,222,255,.28),0 0 55px rgba(24,211,255,.18),inset 0 0 28px rgba(40,220,255,.10)}
+  50%{transform:translate3d(-10px,-12px,0) rotate(4deg) scale(1.035);box-shadow:0 0 0 1px rgba(47,222,255,.34),0 0 72px rgba(24,211,255,.26),inset 0 0 38px rgba(40,220,255,.16)}
+}
+@keyframes walletHeroCardMain{
+  0%,100%{transform:rotate(-6deg) translate3d(0,0,0)}
+  50%{transform:rotate(-4deg) translate3d(0,-8px,0)}
+}
+@keyframes walletHeroCardDeposit{
+  0%,100%{transform:translate3d(0,0,0) rotate(0deg)}
+  50%{transform:translate3d(-10px,-6px,0) rotate(-2deg)}
+}
+@keyframes walletHeroCardWithdraw{
+  0%,100%{transform:translate3d(0,0,0) rotate(0deg)}
+  50%{transform:translate3d(8px,-10px,0) rotate(3deg)}
+}
+@keyframes walletHeroFeaturePulse{
+  0%,100%{box-shadow:0 0 24px rgba(36,229,255,.08);transform:translateY(0)}
+  50%{box-shadow:0 0 32px rgba(36,229,255,.18);transform:translateY(-2px)}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .wallet-v2-hero::before,
+  .wallet-v2-hero::after,
+  .wallet-v2-hero-features i,
+  .wallet-v2-hero-orbit,
+  .wallet-v2-hero-orbit::after,
+  .wallet-v2-hero-coin,
+  .wallet-v2-hero-card-main,
+  .wallet-v2-hero-card-deposit,
+  .wallet-v2-hero-card-withdraw{
+    animation:none!important;
+  }
+}
