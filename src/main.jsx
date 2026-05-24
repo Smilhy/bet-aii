@@ -13560,10 +13560,16 @@ const BETAI_SPORT_META_V1051 = {
   'Tenis': { icon: '🎾', label: 'Tenis' },
   'Koszykówka': { icon: '🏀', label: 'Koszykówka' },
   'Hokej': { icon: '🏒', label: 'Hokej' },
+  'MMA': { icon: '🥊', label: 'MMA' },
   'E-sport': { icon: '🎮', label: 'E-sport' },
   'Siatkówka': { icon: '🏐', label: 'Siatkówka' },
-  'MMA': { icon: '🥊', label: 'MMA' },
-  'Baseball': { icon: '⚾', label: 'Baseball' }
+  'Boks': { icon: '🥊', label: 'Boks' },
+  'Piłka ręczna': { icon: '🤾', label: 'Piłka ręczna' },
+  'Krykiet': { icon: '🏏', label: 'Krykiet' },
+  'Rugby': { icon: '🏉', label: 'Rugby' },
+  'Rugby League': { icon: '🏉', label: 'Rugby League' },
+  'Baseball': { icon: '⚾', label: 'Baseball' },
+  'Dart': { icon: '🎯', label: 'Dart' }
 }
 
 function getBetAiSportMetaV1051(sport = '') {
@@ -13785,17 +13791,23 @@ function buildBetAiFallbackMatchesV1053() {
 
 
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
-  const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
-  const LOCKED_SPORTS_V1055 = ['Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
+  const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'MMA', 'E-sport', 'Siatkówka', 'Boks', 'Piłka ręczna', 'Krykiet', 'Rugby', 'Rugby League', 'Baseball', 'Dart']
+  const LOCKED_SPORTS_V1055 = SPORTS.filter(sport => sport !== 'Piłka nożna')
   const aiSportCardThemeMapV1281 = {
     'Piłka nożna': 'football',
     'Tenis': 'tennis',
     'Koszykówka': 'basketball',
     'Hokej': 'hockey',
+    'MMA': 'mma',
     'E-sport': 'esports',
     'Siatkówka': 'volleyball',
-    'MMA': 'mma',
+    'Boks': 'boxing',
+    'Piłka ręczna': 'handball',
+    'Krykiet': 'cricket',
+    'Rugby': 'rugby',
+    'Rugby League': 'rugbyleague',
     'Baseball': 'baseball',
+    'Dart': 'dart',
   }
   const isLockedSportV1055 = sport => LOCKED_SPORTS_V1055.includes(sport)
   const [activeSport, setActiveSport] = useState('Piłka nożna')
