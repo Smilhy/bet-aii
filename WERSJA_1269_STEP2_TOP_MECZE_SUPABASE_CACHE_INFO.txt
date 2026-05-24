@@ -1,0 +1,30 @@
+WERSJA 1269 STEP2 TOP MECZE SUPABASE CACHE
+
+Zakres zmiany:
+- Tylko zakładka Dodaj typ -> Top Mecze dziś + jutro.
+- Usunięto wymuszanie forceRefresh=1 i cache-buster _top=Date.now().
+- Funkcja get-sports-events może teraz najpierw czytać sports_fixture_cache w Supabase.
+- Gdy cache jest pusty lub wygasł, backend pobierze mecze z API i zapisze je do Supabase.
+
+Nie ruszano:
+- dashboardu,
+- Typów AI,
+- live chat,
+- powiadomień,
+- profilu,
+- cennika,
+- rankingu.
+
+Wymagane w Netlify env dla zapisu cache:
+- SUPABASE_URL lub VITE_SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+
+SQL do odpalenia w Supabase:
+- SQL_1269_TOP_MECZE_SUPABASE_CACHE.sql
+
+Test:
+1. Odpal SQL.
+2. Wgraj paczkę.
+3. Wejdź Dodaj typ -> Top Mecze dziś + jutro.
+4. Pierwsze kliknięcie może pobrać API i zapisać do Supabase.
+5. Drugie kliknięcie / odświeżenie powinno korzystać z Supabase cache.

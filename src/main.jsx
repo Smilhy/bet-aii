@@ -8432,10 +8432,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           realOnly: '1',
           allLeagues: '0',
           mode: 'top-matches',
-          forceRefresh: '1',
+          // Nie używamy forceRefresh ani cache-bustera.
+          // get-sports-events najpierw czyta Supabase sports_fixture_cache,
+          // a dopiero gdy nie ma świeżych danych, pobiera API-Football/The Odds API
+          // i zapisuje wynik do Supabase.
         })
         try {
-          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_top=${Date.now()}`)
+          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}`)
           const data = await response.json().catch(() => ({}))
           if (!response.ok) throw new Error(data.error || `Nie udało się pobrać ${item.label}`)
           return Array.isArray(data.fixtures) ? data.fixtures : []
