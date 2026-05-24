@@ -2670,9 +2670,6 @@ function LiveChatPanel({ user }) {
           <span className="livechat226-title-dot"></span>
           <div className="livechat226-kicker">Bet+AI Live Chat</div>
         </div>
-        <div className="betai-live-actions-final">
-          <button aria-label="Ustawienia czatu" className="betai-gear-final" type="button">⚙</button>
-        </div>
       </div>
 
       <div className="betai-chat-stats-final">
@@ -3216,7 +3213,6 @@ function DailyAiPicksRightPanelV1156() {
       )) : (
         <div className="empty-mini">Brak zapisanych typów AI na dziś. Bez meczów live/zakończonych. Spróbuje ponownie po odświeżeniu.</div>
       )}
-      <div className="ai-day-cache-note-v1156">{notice || 'Odświeżenie po 00:00 • tylko mecze min. 5 min przed startem'}</div>
     </section>
   )
 }

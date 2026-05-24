@@ -60225,3 +60225,11 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   border: 3px solid rgba(9,31,46,.98) !important;
   box-shadow: 0 0 0 3px rgba(36,244,255,.22), 0 0 18px rgba(36,244,255,.45) !important;
 }
+
+
+/* WERSJA 1289 — cleanup: AI Typy dnia bez dolnego paska + live chat bez zębatki */
+.ai-day-panel-right .ai-day-cache-note-v1156{display:none!important;}
+.ai-day-panel-right.ai-day-panel-real-v1156{padding-bottom:18px!important;}
+.ai-day-panel-right.ai-day-panel-real-v1156 .ai-pick:last-of-type{margin-bottom:0!important;}
+.betai-right-chat-final .betai-live-head-final{justify-content:flex-start!important;}
+.betai-right-chat-final .betai-live-actions-final,.betai-right-chat-final .betai-gear-final{display:none!important;}
