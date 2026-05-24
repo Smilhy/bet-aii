@@ -60040,3 +60040,64 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   max-height:none !important;
   overflow:visible !important;
 }
+
+/* WERSJA 1287 — poprawka ścisku w nagłówku formularza dodawania typu */
+.add-tip-betfolio-page .betfolio-ticket-top{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:10px !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-tabs{
+  width:100% !important;
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-tabs button{
+  width:100% !important;
+  min-width:0 !important;
+  white-space:nowrap !important;
+  padding:12px 10px !important;
+  justify-content:center !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-summary{
+  width:100% !important;
+  text-align:left !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  padding:9px 12px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(28, 210, 224, .16) !important;
+  background:linear-gradient(180deg, rgba(5, 25, 38, .92), rgba(3, 14, 25, .96)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-summary small{
+  display:block !important;
+  color:#8ea8b6 !important;
+  font-size:11px !important;
+  line-height:1 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  white-space:nowrap !important;
+}
+.add-tip-betfolio-page .betfolio-ticket-summary strong{
+  display:block !important;
+  color:#24f2f0 !important;
+  font-size:18px !important;
+  line-height:1.08 !important;
+  text-align:right !important;
+  white-space:normal !important;
+  word-break:normal !important;
+}
+@media (max-width: 1280px){
+  .add-tip-betfolio-page .betfolio-ticket-summary{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+  .add-tip-betfolio-page .betfolio-ticket-summary strong{
+    text-align:left !important;
+  }
+}
