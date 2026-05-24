@@ -9341,21 +9341,29 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const leagues = Object.keys(sportData.leagues || {})
                     const matchesCount = leagues.reduce((sum, leagueName) => sum + ((sportData.leagues?.[leagueName] || []).length), 0)
                     const themeClass = sportCardThemeMap[sportName] || 'default'
-                    const isActiveCard = openSidebarSport === sportName || form.sport === sportName
-                    const subtitle = sportName === 'Piłka nożna'
+                    const isFootballCard = sportName === 'Piłka nożna'
+                    const isActiveCard = isFootballCard && (openSidebarSport === sportName || form.sport === sportName)
+                    const subtitle = isFootballCard
                       ? 'Top mecze • dziś + jutro'
-                      : leagues.slice(0, 2).join(' • ') || 'Wybierz sport'
+                      : 'Aktywacja w kolejnych wersjach'
                     return (
                       <button
                         key={sportName}
                         type="button"
-                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''}`}
-                        onClick={() => selectSidebarSport(sportName)}
+                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isFootballCard ? 'is-soon-v1281' : ''}`}
+                        onClick={() => {
+                          if (!isFootballCard) {
+                            onToast?.({ type: 'success', title: sportName, message: `${sportName} będzie dostępny wkrótce. Na ten moment aktywna jest tylko piłka nożna.` })
+                            return
+                          }
+                          selectSidebarSport(sportName)
+                        }}
                       >
                         <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || '✦'}</i><span>{sportName}</span></div>
-                        <strong>{matchesCount} {matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}</strong>
+                        <strong>{isFootballCard ? `${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}` : 'Wkrótce'}</strong>
                         <small>{subtitle}</small>
                         <b aria-hidden="true">{sportIconMap[sportName] || '✦'}</b>
+                        {!isFootballCard ? <mark className="sport-card-badge-v1281">WKRÓTCE</mark> : null}
                       </button>
                     )
                   })}
@@ -13779,6 +13787,16 @@ function buildBetAiFallbackMatchesV1053() {
 function AiPicksView({ tips = [], loading = false, liveGenerating = false, settleGenerating = false, onGenerateLive, onSettle, onRefresh }) {
   const SPORTS = ['Piłka nożna', 'Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
   const LOCKED_SPORTS_V1055 = ['Tenis', 'Koszykówka', 'Hokej', 'E-sport', 'Siatkówka', 'MMA', 'Baseball']
+  const aiSportCardThemeMapV1281 = {
+    'Piłka nożna': 'football',
+    'Tenis': 'tennis',
+    'Koszykówka': 'basketball',
+    'Hokej': 'hockey',
+    'E-sport': 'esports',
+    'Siatkówka': 'volleyball',
+    'MMA': 'mma',
+    'Baseball': 'baseball',
+  }
   const isLockedSportV1055 = sport => LOCKED_SPORTS_V1055.includes(sport)
   const [activeSport, setActiveSport] = useState('Piłka nożna')
   const [activePanel, setActivePanel] = useState('live')
@@ -14621,7 +14639,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               const meta = getBetAiSportMetaV1051(sport)
               const locked = isLockedSportV1055(sport)
               const count = allCards.filter(card => card.sport === sport).length
-              const themeClass = (sportCardThemeMap && sportCardThemeMap[sport]) || 'default'
+              const themeClass = aiSportCardThemeMapV1281[sport] || 'default'
               return (
                 <button
                   key={sport}

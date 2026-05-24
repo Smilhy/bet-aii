@@ -59753,3 +59753,25 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 @media (max-width: 680px){
   .ai-center-page-v747 .ai-sports-grid-v1279{grid-template-columns: 1fr;}
 }
+
+
+/* WERSJA 1281 — fix only football active + Typy AI error */
+.add-tip-betfolio-page .sport-card-v1276.is-soon-v1281{
+  opacity: .95;
+}
+.add-tip-betfolio-page .sport-card-v1276.is-soon-v1281::after{
+  background: linear-gradient(90deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+}
+.add-tip-betfolio-page .sport-card-badge-v1281{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(9,17,29,.56);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #d8ebff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
