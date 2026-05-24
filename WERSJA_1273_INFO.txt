@@ -1,0 +1,7 @@
+WERSJA 1273 - UI MOVE API NOTICE UNDER HERO
+
+Zmiana tylko wizualna na ekranie Dodaj typ:
+- pasek "Tryb ręczny API" przeniesiony bezpośrednio pod baner hero,
+- usunięty z poprzedniej pozycji pod przyciskami trybu,
+- logika Top Mecze / API / Supabase cache bez zmian,
+- SQL nie jest potrzebny.

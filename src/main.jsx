@@ -9308,6 +9308,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
               </div>
 
+              <div className="betfolio-api-saver-note">
+                <strong>Tryb ręczny API</strong>
+                <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
+              </div>
+
               <div className="betfolio-add-mode-switch">
                 <button type="button" className={addTipMode === 'auto' ? 'active' : ''} onClick={() => switchAddTipMode('auto')}>Dodaj typ automatycznie</button>
                 <button type="button" className={addTipMode === 'manual' ? 'active' : ''} onClick={() => switchAddTipMode('manual')}>Dodaj typ ręcznie</button>
@@ -9315,10 +9320,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
               {addTipMode === 'auto' && (
                 <>
-                  <div className="betfolio-api-saver-note">
-                    <strong>Tryb ręczny API</strong>
-                    <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
-                  </div>
                   <div className="betfolio-fixture-mode-tabs">
                     <button
                       type="button"
