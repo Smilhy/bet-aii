@@ -8392,6 +8392,93 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
 
+  const topFootballLeaguesForAddTip = [
+    { country: 'Anglia', league: 'Premier League', label: 'Premier League' },
+    { country: 'Hiszpania', league: 'La Liga', label: 'La Liga' },
+    { country: 'Włochy', league: 'Serie A', label: 'Serie A' },
+    { country: 'Niemcy', league: 'Bundesliga', label: 'Bundesliga' },
+    { country: 'Francja', league: 'Ligue 1', label: 'Ligue 1' },
+    { country: 'Świat', league: 'Liga Mistrzów', label: 'Liga Mistrzów' },
+  ]
+
+  async function fetchTopFootballMatchesTodayTomorrow() {
+    setFootballViewMode('top-matches')
+    setFixtureSearchPerformed(false)
+    setSidebarSearch('')
+    setLiveFixtures([])
+    setLiveDataSource('loading')
+    setLiveFixturesLoading(true)
+    setHasTriedLiveLoad(true)
+    setLiveFixturesStatus('Pobieram Top Mecze: dziś + jutro z 6 najważniejszych lig...')
+    updateForm({
+      sport: 'Piłka nożna',
+      country: 'Top ligi',
+      league: 'Top Mecze',
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
+    })
+
+    try {
+      const today = getTodayLocalKey()
+      const responses = await Promise.all(topFootballLeaguesForAddTip.map(async (item) => {
+        const params = new URLSearchParams({
+          sport: 'Piłka nożna',
+          country: item.country,
+          league: item.league,
+          date: today,
+          daysAhead: '1',
+          realOnly: '1',
+          allLeagues: '0',
+          mode: 'top-matches',
+          forceRefresh: '1',
+        })
+        try {
+          const response = await fetch(`/.netlify/functions/get-sports-events?${params.toString()}&_top=${Date.now()}`)
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) throw new Error(data.error || `Nie udało się pobrać ${item.label}`)
+          return Array.isArray(data.fixtures) ? data.fixtures : []
+        } catch (error) {
+          console.warn('top matches league fetch skipped', item.label, error)
+          return []
+        }
+      }))
+
+      const seen = new Set()
+      const fixtures = responses
+        .flat()
+        .filter(Boolean)
+        .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
+        .filter(match => {
+          const key = String(match.apiFixtureId || match.id || `${match.country}|${match.league}|${match.home}|${match.away}|${match.commence_time}`).toLowerCase()
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+
+      setLiveFixtures(fixtures)
+      setLiveDataSource('top-matches')
+      if (fixtures.length) {
+        applyMatchToForm(fixtures[0])
+        setLiveFixturesStatus(`Top Mecze: załadowano ${fixtures.length} wydarzeń dziś i jutro z 6 lig. Godziny rosnąco, czas dla Polski.`)
+        onToast?.({ type: 'success', title: 'Top Mecze pobrane', message: `Załadowano ${fixtures.length} wydarzeń z 6 najważniejszych lig.` })
+      } else {
+        setLiveFixturesStatus('Top Mecze: API nie zwróciło meczów dziś ani jutro dla 6 najważniejszych lig.')
+        onToast?.({ type: 'info', title: 'Brak Top Meczów', message: 'Nie znaleziono meczów dziś/jutro w top ligach.' })
+      }
+    } catch (error) {
+      console.warn('fetch top football matches error', error)
+      setLiveFixtures([])
+      setLiveDataSource('error')
+      setLiveFixturesStatus('Top Mecze: nie udało się pobrać danych. Sprawdź APISPORTS_KEY w Netlify.')
+      onToast?.({ type: 'error', title: 'Nie pobrano Top Meczów', message: error?.message || 'Sprawdź konfigurację API.' })
+    } finally {
+      setLiveFixturesLoading(false)
+    }
+  }
+
+
   function fetchAllTodayFootballFixtures() {
     setFootballViewMode('all-today')
     setFixtureSearchPerformed(false)
@@ -9214,11 +9301,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <>
                   <div className="betfolio-api-saver-note">
                     <strong>Tryb ręczny API</strong>
-                    <span>Nic nie pobieram automatycznie. Kliknij ligę, wyszukaj mecz albo pokaż wszystkie dzisiejsze.</span>
+                    <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
                   </div>
                   <div className="betfolio-fixture-mode-tabs">
-                    <button type="button" className={footballViewMode === 'all-today' ? 'active' : ''} onClick={fetchAllTodayFootballFixtures}>Wszystkie dziś</button>
-                    <button type="button" className={footballViewMode === 'search' ? 'active' : ''} onClick={handleFixtureSearchSubmit}>Wyszukiwanie</button>
+                    <button type="button" className={footballViewMode === 'top-matches' ? 'active' : ''} onClick={fetchTopFootballMatchesTodayTomorrow}>Top Mecze dziś + jutro</button>
                   </div>
                 </>
               )}
@@ -9230,7 +9316,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               {addTipMode === 'auto' ? (
                 <>
                   <div className="betfolio-events-head">
-                    <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
+                    <strong>{footballViewMode === 'top-matches' ? 'Top Mecze • dziś + jutro • 6 lig' : footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
                     <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
                   </div>
 
@@ -9273,8 +9359,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       )
                     }) : (
                       <div className="betfolio-empty-state no-fake-empty">
-                        <strong>{!hasTriedLiveLoad ? 'Wybierz ligę, pokaż wszystkie mecze albo wyszukaj drużynę' : footballViewMode === 'search' ? 'Brak wyników wyszukiwania' : footballViewMode === 'all-today' ? 'Dziś brak meczów' : 'Dziś brak meczów w tej lidze'}</strong>
-                        <span>{!hasTriedLiveLoad ? 'Nie pobieram nic automatycznie. Możesz kliknąć ligę po lewej, przycisk „Wszystkie dziś” albo użyć wyszukiwarki meczów.' : footballViewMode === 'search' ? 'Nie znalazłem prawdziwego meczu dla wpisanej frazy.' : footballViewMode === 'all-today' ? 'API nie zwróciło dziś meczów. Nie pokazuję demo ani fake spotkań.' : 'API nie zwróciło dziś meczów dla tej ligi. Nie pokazuję demo ani fake spotkań.'}</span>
+                        <strong>{!hasTriedLiveLoad ? 'Kliknij Top Mecze, wybierz ligę albo wyszukaj drużynę' : footballViewMode === 'top-matches' ? 'Brak Top Meczów dziś/jutro' : footballViewMode === 'search' ? 'Brak wyników wyszukiwania' : footballViewMode === 'all-today' ? 'Dziś brak meczów' : 'Dziś brak meczów w tej lidze'}</strong>
+                        <span>{!hasTriedLiveLoad ? 'Nie pobieram nic automatycznie. Możesz kliknąć Top Mecze, ligę po lewej albo użyć wyszukiwarki.' : footballViewMode === 'top-matches' ? 'API nie zwróciło dziś/jutro meczów dla top 6 lig. Nie pokazuję demo ani fake spotkań.' : footballViewMode === 'search' ? 'Nie znalazłem prawdziwego meczu dla wpisanej frazy.' : footballViewMode === 'all-today' ? 'API nie zwróciło dziś meczów. Nie pokazuję demo ani fake spotkań.' : 'API nie zwróciło dziś meczów dla tej ligi. Nie pokazuję demo ani fake spotkań.'}</span>
                       </div>
                     )}
                   </div>

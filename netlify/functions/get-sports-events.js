@@ -288,6 +288,9 @@ exports.handler = async function(event) {
       eredivisie: 'eredivisie',
       primeiraliga: 'primeira liga',
       mls: 'mls',
+      ligamistrzow: 'liga mistrzow',
+      championsleague: 'liga mistrzow',
+      uefachampionsleague: 'liga mistrzow',
     }
     return aliases[clean.replace(/\s+/g, '')] || clean
   }
@@ -317,6 +320,8 @@ exports.handler = async function(event) {
     'holandia|eredivisie': 88,
     'portugalia|primeira liga': 94,
     'usa|mls': 253,
+    'swiat|liga mistrzow': 2,
+    'world|liga mistrzow': 2,
   }
 
   const getApiFootballSeasonForDate = (dateKey = '') => {
@@ -570,6 +575,7 @@ exports.handler = async function(event) {
 
     if (s.includes('pilka') || s.includes('football') || s.includes('soccer')) {
       if (allLeagues) return footballKeys
+      if (l.includes('liga mistrzow') || l.includes('champions')) return ['soccer_uefa_champs_league']
       if (c.includes('anglia')) {
         if (l.includes('premier')) return ['soccer_epl']
         if (l.includes('championship')) return ['soccer_efl_champ']
