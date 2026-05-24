@@ -9271,25 +9271,38 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
                   <div className="betfolio-add-hero-features">
                     <div>
-                      <i>⌕</i>
+                      <i>⚡</i>
                       <strong>Szybkie wyszukiwanie</strong>
-                      <small>Znajdź każdy mecz błyskawicznie</small>
+                      <small>Top ligi, dziś i jutro</small>
                     </div>
                     <div>
-                      <i>↗</i>
-                      <strong>Setki rynków</strong>
-                      <small>Najpopularniejsze rynki bukmacherskie</small>
+                      <i>📈</i>
+                      <strong>Kursy i rynki</strong>
+                      <small>Najpopularniejsze opcje zakładów</small>
+                    </div>
+                    <div>
+                      <i>🤖</i>
+                      <strong>AI value</strong>
+                      <small>Sportowy skaner okazji</small>
                     </div>
                   </div>
                 </div>
 
-                <div className="betfolio-add-hero-visual" aria-hidden="true">
-                  <div className="betfolio-add-hero-orbit"></div>
-                  <div className="betfolio-add-hero-ball">⚽</div>
-                  <div className="betfolio-add-hero-ticket">
-                    <b>◎</b>
-                    <span></span>
-                    <span></span>
+                <div className="betfolio-add-hero-visual betfolio-sport-hero-v2" aria-hidden="true">
+                  <div className="sport-hero-grid"></div>
+                  <div className="sport-hero-data-line line-a"></div>
+                  <div className="sport-hero-data-line line-b"></div>
+                  <div className="sport-hero-data-line line-c"></div>
+                  <div className="sport-hero-orbit orbit-a"></div>
+                  <div className="sport-hero-orbit orbit-b"></div>
+                  <div className="sport-hero-ball main-ball">⚽</div>
+                  <div className="sport-hero-mini-ball mini-tennis">🎾</div>
+                  <div className="sport-hero-mini-ball mini-basket">🏀</div>
+                  <div className="sport-hero-mini-ball mini-hockey">🏒</div>
+                  <div className="sport-hero-scanner-card">
+                    <span>AI SCANNER</span>
+                    <strong>87%</strong>
+                    <small>live odds tracking</small>
                     <em></em>
                   </div>
                 </div>

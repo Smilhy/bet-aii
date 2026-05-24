@@ -59024,3 +59024,219 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 @keyframes betfolioTopMatchesSpin{
   to{ transform: rotate(360deg); }
 }
+
+/* WERSJA 1271 — UI only: wycentrowanie przycisków Dodaj typ automatycznie / ręcznie */
+.add-tip-betfolio-page .betfolio-add-mode-switch{
+  display:flex !important;
+  width:max-content !important;
+  max-width:100% !important;
+  margin:18px auto 22px auto !important;
+  justify-content:center !important;
+  align-items:center !important;
+}
+
+@media (max-width: 760px){
+  .add-tip-betfolio-page .betfolio-add-mode-switch{
+    width:100% !important;
+    flex-direction:column !important;
+  }
+  .add-tip-betfolio-page .betfolio-add-mode-switch button{
+    width:100% !important;
+    min-width:0 !important;
+  }
+}
+
+/* WERSJA 1272 — lekki animowany baner sportowy w Dodaj typ (tylko UI/CSS) */
+.add-tip-betfolio-page .betfolio-add-hero{
+  min-height:340px !important;
+  grid-template-columns:minmax(0,1fr) minmax(420px,520px) !important;
+  background:
+    radial-gradient(circle at 79% 46%, rgba(19,226,255,.18), transparent 24%),
+    radial-gradient(circle at 92% 16%, rgba(82,112,255,.16), transparent 22%),
+    radial-gradient(circle at 18% 18%, rgba(23,226,190,.10), transparent 24%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(6,25,52,.96) 48%, rgba(5,14,30,.98)) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero::before{
+  background:
+    linear-gradient(90deg, rgba(31,224,255,.06) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(31,224,255,.045) 1px, transparent 1px),
+    linear-gradient(115deg, rgba(48,237,255,.14), transparent 36%),
+    linear-gradient(288deg, rgba(102,122,255,.14), transparent 34%) !important;
+  background-size:42px 42px,42px 42px,auto,auto !important;
+  mask-image:linear-gradient(90deg, transparent 0%, #000 18%, #000 100%) !important;
+  animation:sportHeroGridShift 16s linear infinite !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero::after{
+  background:
+    linear-gradient(110deg, rgba(255,255,255,.07), transparent 19%, transparent 78%, rgba(255,255,255,.045) 100%),
+    radial-gradient(circle at 72% 62%, rgba(45,231,255,.10), transparent 20%) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-copy h2{
+  text-shadow:0 10px 36px rgba(0,0,0,.36), 0 0 28px rgba(37,225,255,.10) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features{
+  max-width:720px !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features div{
+  min-width:170px !important;
+  backdrop-filter:blur(10px) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features i{
+  background:linear-gradient(135deg, rgba(26,229,255,.16), rgba(93,128,255,.13)) !important;
+}
+.add-tip-betfolio-page .betfolio-sport-hero-v2{
+  min-height:250px !important;
+  overflow:hidden !important;
+  border-radius:30px !important;
+}
+.add-tip-betfolio-page .betfolio-sport-hero-v2 .sport-hero-grid{
+  position:absolute !important;
+  inset:10px 0 0 40px !important;
+  border-radius:32px !important;
+  background:
+    linear-gradient(90deg, rgba(41,232,255,.10) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(41,232,255,.07) 1px, transparent 1px),
+    radial-gradient(circle at 50% 55%, rgba(33,225,255,.18), transparent 34%) !important;
+  background-size:34px 34px,34px 34px,auto !important;
+  transform:perspective(520px) rotateX(62deg) rotateZ(-8deg) translateY(64px) !important;
+  opacity:.48 !important;
+  filter:drop-shadow(0 0 24px rgba(35,229,255,.14)) !important;
+  animation:sportHeroGridPulse 5.5s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-data-line{
+  position:absolute !important;
+  height:2px !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg, transparent, rgba(44,234,255,.82), rgba(118,132,255,.72), transparent) !important;
+  box-shadow:0 0 18px rgba(44,234,255,.38) !important;
+  opacity:.72 !important;
+  animation:sportHeroLineMove 4.6s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-data-line.line-a{width:320px; right:120px; top:42px; animation-delay:-.6s!important}
+.add-tip-betfolio-page .sport-hero-data-line.line-b{width:250px; right:38px; top:112px; animation-delay:-1.7s!important}
+.add-tip-betfolio-page .sport-hero-data-line.line-c{width:210px; right:180px; bottom:48px; animation-delay:-2.6s!important}
+.add-tip-betfolio-page .sport-hero-orbit{
+  position:absolute !important;
+  border-radius:50% !important;
+  border:1px solid rgba(53,226,255,.25) !important;
+  box-shadow:0 0 32px rgba(38,222,255,.10), inset 0 0 20px rgba(38,222,255,.04) !important;
+}
+.add-tip-betfolio-page .sport-hero-orbit.orbit-a{
+  width:420px !important;
+  height:165px !important;
+  right:28px !important;
+  top:54px !important;
+  transform:rotate(-16deg) !important;
+  animation:sportHeroOrbitA 7s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-orbit.orbit-b{
+  width:310px !important;
+  height:115px !important;
+  right:102px !important;
+  top:82px !important;
+  transform:rotate(18deg) !important;
+  opacity:.55 !important;
+  animation:sportHeroOrbitB 6.2s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-ball.main-ball{
+  position:absolute !important;
+  left:74px !important;
+  top:42px !important;
+  width:154px !important;
+  height:154px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  font-size:112px !important;
+  line-height:1 !important;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.38), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(31,219,255,.24), rgba(6,18,38,.98) 66%) !important;
+  box-shadow:0 0 0 1px rgba(51,227,255,.30), 0 0 70px rgba(37,221,255,.25), inset 0 0 30px rgba(48,220,255,.16) !important;
+  filter:saturate(.82) brightness(.86) !important;
+  animation:sportHeroMainBall 5.8s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-mini-ball{
+  position:absolute !important;
+  width:52px !important;
+  height:52px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  font-size:31px !important;
+  background:rgba(6,20,42,.76) !important;
+  border:1px solid rgba(58,228,255,.22) !important;
+  box-shadow:0 0 28px rgba(31,220,255,.13), inset 0 1px 0 rgba(255,255,255,.06) !important;
+  animation:sportHeroMiniFloat 5s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-mini-ball.mini-tennis{right:86px; top:20px; animation-delay:-.8s!important}
+.add-tip-betfolio-page .sport-hero-mini-ball.mini-basket{right:22px; bottom:52px; animation-delay:-1.8s!important}
+.add-tip-betfolio-page .sport-hero-mini-ball.mini-hockey{left:214px; bottom:26px; animation-delay:-2.7s!important}
+.add-tip-betfolio-page .sport-hero-scanner-card{
+  position:absolute !important;
+  right:92px !important;
+  top:74px !important;
+  width:188px !important;
+  min-height:162px !important;
+  padding:18px 18px 16px !important;
+  border-radius:24px !important;
+  background:linear-gradient(180deg, rgba(10,35,69,.82), rgba(6,20,43,.88)) !important;
+  border:1px solid rgba(58,231,255,.30) !important;
+  box-shadow:0 22px 55px rgba(0,0,0,.34), 0 0 36px rgba(27,221,255,.14), inset 0 1px 0 rgba(255,255,255,.06) !important;
+  transform:rotate(-3deg) !important;
+  animation:sportHeroCardFloat 6.6s ease-in-out infinite !important;
+}
+.add-tip-betfolio-page .sport-hero-scanner-card span{
+  display:block !important;
+  color:#81efff !important;
+  font-size:11px !important;
+  font-weight:1000 !important;
+  letter-spacing:.14em !important;
+  margin-bottom:8px !important;
+}
+.add-tip-betfolio-page .sport-hero-scanner-card strong{
+  display:block !important;
+  color:#f3fbff !important;
+  font-size:46px !important;
+  line-height:1 !important;
+  letter-spacing:-.045em !important;
+  text-shadow:0 0 26px rgba(45,231,255,.28) !important;
+}
+.add-tip-betfolio-page .sport-hero-scanner-card small{
+  display:block !important;
+  color:#b7c8dc !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  margin-top:8px !important;
+}
+.add-tip-betfolio-page .sport-hero-scanner-card em{
+  display:block !important;
+  height:8px !important;
+  width:100% !important;
+  border-radius:999px !important;
+  margin-top:16px !important;
+  background:linear-gradient(90deg, #27e6ff 0%, #27e6ff 72%, rgba(255,255,255,.13) 72%) !important;
+  box-shadow:0 0 18px rgba(39,230,255,.24) !important;
+}
+@keyframes sportHeroGridShift{to{background-position:42px 42px,42px 42px,0 0,0 0}}
+@keyframes sportHeroGridPulse{0%,100%{opacity:.38; transform:perspective(520px) rotateX(62deg) rotateZ(-8deg) translateY(68px)}50%{opacity:.58; transform:perspective(520px) rotateX(62deg) rotateZ(-8deg) translateY(58px)}}
+@keyframes sportHeroLineMove{0%,100%{transform:translateX(-18px); opacity:.28}50%{transform:translateX(18px); opacity:.84}}
+@keyframes sportHeroOrbitA{0%,100%{transform:rotate(-16deg) scale(1)}50%{transform:rotate(-11deg) scale(1.035)}}
+@keyframes sportHeroOrbitB{0%,100%{transform:rotate(18deg) scale(1)}50%{transform:rotate(23deg) scale(.965)}}
+@keyframes sportHeroMainBall{0%,100%{transform:translate3d(0,0,0) rotate(-3deg)}50%{transform:translate3d(8px,-13px,0) rotate(5deg)}}
+@keyframes sportHeroMiniFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes sportHeroCardFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-9px) rotate(1deg)}}
+@media(max-width:1450px){
+  .add-tip-betfolio-page .betfolio-add-hero{grid-template-columns:minmax(0,1fr) 410px !important}
+  .add-tip-betfolio-page .sport-hero-ball.main-ball{left:36px!important; width:132px!important; height:132px!important; font-size:96px!important}
+  .add-tip-betfolio-page .sport-hero-scanner-card{right:46px!important; width:168px!important}
+  .add-tip-betfolio-page .sport-hero-orbit.orbit-a{width:330px!important; right:22px!important}
+  .add-tip-betfolio-page .sport-hero-mini-ball.mini-hockey{left:170px!important}
+}
+@media(max-width:1100px){
+  .add-tip-betfolio-page .betfolio-add-hero{grid-template-columns:1fr !important}
+  .add-tip-betfolio-page .betfolio-sport-hero-v2{min-height:220px!important}
+}
+@media(max-width:720px){
+  .add-tip-betfolio-page .betfolio-sport-hero-v2{display:none!important}
+}
