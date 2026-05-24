@@ -60372,3 +60372,8 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 .ai-center-page-v747 .sport-card-badge-v1279{
   display:none !important;
 }
+
+/* WERSJA 1293 — Top Mecze: usuń zdublowany nagłówek pod panelem akcji */
+.add-tip-betfolio-page .betfolio-events-list.top-matches-list-v1293{
+  margin-top:14px!important;
+}

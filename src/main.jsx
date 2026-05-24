@@ -9438,12 +9438,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <>
               {addTipMode === 'auto' ? (
                 <>
-                  <div className="betfolio-events-head">
-                    <strong>{footballViewMode === 'top-matches' ? 'Top Mecze • dziś + jutro • 6 lig' : footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
-                    <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
-                  </div>
+                  {footballViewMode !== 'top-matches' && (
+                    <div className="betfolio-events-head">
+                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
+                      <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                    </div>
+                  )}
 
-                  <div className="betfolio-events-list">
+                  <div className={`betfolio-events-list ${footballViewMode === 'top-matches' ? 'top-matches-list-v1293' : ''}`}>
                     {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
                       const active = selectedMatch?.id === match.id
                       const primaryOdds = getPrimaryOdds(match)
