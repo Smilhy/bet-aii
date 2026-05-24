@@ -60538,3 +60538,19 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     font-size: 12px !important;
   }
 }
+
+
+/* WERSJA 1297 — belka Tryb ręczny API: wyszukiwarka gotowa */
+.add-tip-betfolio-page .betfolio-api-saver-note.search-ready-v1297{
+  border-color: rgba(35, 235, 219, .22) !important;
+  background: linear-gradient(90deg, rgba(10, 51, 53, .74), rgba(4, 20, 34, .88)) !important;
+  box-shadow: inset 0 1px 0 rgba(120,255,245,.06), 0 10px 26px rgba(0,0,0,.18) !important;
+}
+.add-tip-betfolio-page .betfolio-api-saver-note.search-ready-v1297 strong{
+  color: #28f2d2 !important;
+  text-shadow: 0 0 12px rgba(40,242,210,.28) !important;
+}
+.add-tip-betfolio-page .betfolio-api-saver-note.search-ready-v1297 span{
+  color: rgba(218, 242, 249, .88) !important;
+  font-weight: 800 !important;
+}

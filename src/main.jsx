@@ -9355,9 +9355,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
               </div>
 
-              <div className="betfolio-api-saver-note">
+              <div className="betfolio-api-saver-note search-ready-v1297">
                 <strong>Tryb ręczny API</strong>
-                <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
+                <span>Wyszukiwarka działa w 100%. Nic nie pobieram automatycznie — wpisz mecz/drużynę, kliknij Top Mecze albo wybierz ligę po lewej.</span>
               </div>
 
               <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
