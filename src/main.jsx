@@ -9337,24 +9337,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
                 <div className="sport-cards-track-v1276 all-sports">
                   {sportKeys.map((sportName) => {
-                    const sportData = sportsbook[sportName] || {}
-                    const leagues = Object.keys(sportData.leagues || {})
-                    const matchesCount = leagues.reduce((sum, leagueName) => sum + ((sportData.leagues?.[leagueName] || []).length), 0)
                     const themeClass = sportCardThemeMap[sportName] || 'default'
-                    const isActiveCard = openSidebarSport === sportName || form.sport === sportName
-                    const subtitle = sportName === 'Piłka nożna'
-                      ? 'Top mecze • dziś + jutro'
-                      : leagues.slice(0, 2).join(' • ') || 'Wybierz sport'
+                    const isFootballCard = sportName === 'Piłka nożna'
+                    const isActiveCard = isFootballCard && (openSidebarSport === sportName || form.sport === sportName)
                     return (
                       <button
                         key={sportName}
                         type="button"
-                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''}`}
-                        onClick={() => selectSidebarSport(sportName)}
+                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isFootballCard ? 'coming-soon' : ''}`}
+                        onClick={() => isFootballCard
+                          ? selectSidebarSport('Piłka nożna')
+                          : onToast?.({ type: 'success', title: `${sportName} wkrótce`, message: 'Na razie dostępna jest Piłka nożna. Ten sport będzie dodany później.' })
+                        }
+                        aria-disabled={!isFootballCard}
                       >
                         <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || '✦'}</i><span>{sportName}</span></div>
-                        <strong>{matchesCount} {matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}</strong>
-                        <small>{subtitle}</small>
+                        <strong>{isFootballCard ? 'Dostępne' : 'Wkrótce'}</strong>
+                        <small>{isFootballCard ? 'Top mecze • dziś + jutro' : 'Sport przygotowywany'}</small>
+                        {!isFootballCard && <em className="sport-card-soon-badge-v1278">WKRÓTCE</em>}
                         <b aria-hidden="true">{sportIconMap[sportName] || '✦'}</b>
                       </button>
                     )
