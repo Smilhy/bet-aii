@@ -60364,3 +60364,11 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     justify-content:center;
   }
 }
+
+/* WERSJA 1292 — usuń górne badge WKRÓTCE na kafelkach sportów */
+.add-tip-betfolio-page .sport-card-badge-v1281,
+.add-tip-betfolio-page .sport-card-badge-v1279,
+.ai-center-page-v747 .sport-card-badge-v1281,
+.ai-center-page-v747 .sport-card-badge-v1279{
+  display:none !important;
+}
