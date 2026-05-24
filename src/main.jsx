@@ -9313,26 +9313,47 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
               </div>
 
-              <div className="betfolio-sport-premium-strip-v1275" aria-label="Popularne sporty">
-                <div className="sport-strip-head-v1275">
+              <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
+                <div className="sport-cards-head-v1276">
                   <span>Popularne sporty</span>
-                  <em>wybierz sport z panelu lub użyj Top Mecze</em>
+                  <em>kliknij kafelek lub wybierz ligę z panelu po lewej</em>
                 </div>
-                <div className="sport-strip-track-v1275">
-                  <button type="button" className="sport-strip-pill-v1275 active" onClick={() => selectSidebarSport('Piłka nożna')}>
-                    <i>⚽</i><strong>Piłka nożna</strong><small>Top mecze</small>
+                <div className="sport-cards-track-v1276">
+                  <button type="button" className="sport-card-v1276 active football" onClick={() => selectSidebarSport('Piłka nożna')}>
+                    <div className="sport-card-top-v1276"><i>⚽</i><span>Piłka nożna</span></div>
+                    <strong>Top mecze</strong>
+                    <small>Premier League • La Liga • Serie A</small>
+                    <b aria-hidden="true">⚽</b>
                   </button>
-                  <button type="button" className="sport-strip-pill-v1275" onClick={() => onToast?.({ type: 'success', title: 'Tenis', message: 'Tenis zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <i>🎾</i><strong>Tenis</strong><small>wkrótce</small>
+                  <button type="button" className="sport-card-v1276 tennis" onClick={() => onToast?.({ type: 'success', title: 'Tenis', message: 'Tenis zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
+                    <div className="sport-card-top-v1276"><i>🎾</i><span>Tenis</span></div>
+                    <strong>Wkrótce</strong>
+                    <small>top turnieje i rynki</small>
+                    <b aria-hidden="true">🎾</b>
                   </button>
-                  <button type="button" className="sport-strip-pill-v1275" onClick={() => onToast?.({ type: 'success', title: 'Koszykówka', message: 'Koszykówka zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <i>🏀</i><strong>Koszykówka</strong><small>wkrótce</small>
+                  <button type="button" className="sport-card-v1276 basketball" onClick={() => onToast?.({ type: 'success', title: 'Koszykówka', message: 'Koszykówka zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
+                    <div className="sport-card-top-v1276"><i>🏀</i><span>Koszykówka</span></div>
+                    <strong>Wkrótce</strong>
+                    <small>NBA i najpopularniejsze ligi</small>
+                    <b aria-hidden="true">🏀</b>
                   </button>
-                  <button type="button" className="sport-strip-pill-v1275" onClick={() => onToast?.({ type: 'success', title: 'Hokej', message: 'Hokej zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <i>🏒</i><strong>Hokej</strong><small>wkrótce</small>
+                  <button type="button" className="sport-card-v1276 hockey" onClick={() => onToast?.({ type: 'success', title: 'Hokej', message: 'Hokej zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
+                    <div className="sport-card-top-v1276"><i>🏒</i><span>Hokej</span></div>
+                    <strong>Wkrótce</strong>
+                    <small>NHL i top wydarzenia</small>
+                    <b aria-hidden="true">🏒</b>
                   </button>
-                  <button type="button" className="sport-strip-pill-v1275" onClick={() => onToast?.({ type: 'success', title: 'E-sport', message: 'E-sport zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
-                    <i>🎮</i><strong>E-sport</strong><small>wkrótce</small>
+                  <button type="button" className="sport-card-v1276 esports" onClick={() => onToast?.({ type: 'success', title: 'E-sport', message: 'E-sport zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
+                    <div className="sport-card-top-v1276"><i>🎮</i><span>E-sport</span></div>
+                    <strong>Wkrótce</strong>
+                    <small>CS2 • LoL • Valorant</small>
+                    <b aria-hidden="true">🎮</b>
+                  </button>
+                  <button type="button" className="sport-card-v1276 volleyball" onClick={() => onToast?.({ type: 'success', title: 'Siatkówka', message: 'Siatkówka zostaje w panelu po lewej. Logiki nie ruszamy.' })}>
+                    <div className="sport-card-top-v1276"><i>🏐</i><span>Siatkówka</span></div>
+                    <strong>Wkrótce</strong>
+                    <small>top ligi i wydarzenia</small>
+                    <b aria-hidden="true">🏐</b>
                   </button>
                 </div>
               </div>
