@@ -9313,6 +9313,39 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <span>Nic nie pobieram automatycznie. Kliknij Top Mecze, ligę po lewej albo wyszukaj mecz.</span>
               </div>
 
+              <div className="betfolio-sport-showcase-v1274" aria-label="Sporty">
+                <button type="button" className="sport-showcase-card-v1274 football active" onClick={() => selectSidebarSport('Piłka nożna')}>
+                  <span className="sport-showcase-glow-v1274"></span>
+                  <span className="sport-showcase-icon-v1274">⚽</span>
+                  <strong>Piłka nożna</strong>
+                  <small>Top mecze i rynki</small>
+                </button>
+                <button type="button" className="sport-showcase-card-v1274 tennis" onClick={() => onToast?.({ type: 'success', title: 'Tenis', message: 'Kafelek jest gotowy wizualnie. Obsługę rynku podłączymy później.' })}>
+                  <span className="sport-showcase-glow-v1274"></span>
+                  <span className="sport-showcase-icon-v1274">🎾</span>
+                  <strong>Tenis</strong>
+                  <small>Wkrótce</small>
+                </button>
+                <button type="button" className="sport-showcase-card-v1274 basket" onClick={() => onToast?.({ type: 'success', title: 'Koszykówka', message: 'Kafelek jest gotowy wizualnie. Obsługę rynku podłączymy później.' })}>
+                  <span className="sport-showcase-glow-v1274"></span>
+                  <span className="sport-showcase-icon-v1274">🏀</span>
+                  <strong>Koszykówka</strong>
+                  <small>Wkrótce</small>
+                </button>
+                <button type="button" className="sport-showcase-card-v1274 hockey" onClick={() => onToast?.({ type: 'success', title: 'Hokej', message: 'Kafelek jest gotowy wizualnie. Obsługę rynku podłączymy później.' })}>
+                  <span className="sport-showcase-glow-v1274"></span>
+                  <span className="sport-showcase-icon-v1274">🏒</span>
+                  <strong>Hokej</strong>
+                  <small>Wkrótce</small>
+                </button>
+                <button type="button" className="sport-showcase-card-v1274 esport" onClick={() => onToast?.({ type: 'success', title: 'E-sport', message: 'Kafelek jest gotowy wizualnie. Obsługę rynku podłączymy później.' })}>
+                  <span className="sport-showcase-glow-v1274"></span>
+                  <span className="sport-showcase-icon-v1274">🎮</span>
+                  <strong>E-sport</strong>
+                  <small>Wkrótce</small>
+                </button>
+              </div>
+
               <div className="betfolio-add-mode-switch">
                 <button type="button" className={addTipMode === 'auto' ? 'active' : ''} onClick={() => switchAddTipMode('auto')}>Dodaj typ automatycznie</button>
                 <button type="button" className={addTipMode === 'manual' ? 'active' : ''} onClick={() => switchAddTipMode('manual')}>Dodaj typ ręcznie</button>

@@ -1,0 +1,10 @@
+WERSJA 1274 - UI SPORT CATEGORY ANIMATION
+
+Zakres zmiany:
+- tylko ekran Dodaj typ,
+- dodany animowany panel kafelków sportowych w klimacie premium sportsbook,
+- piłka nożna aktywna i klikalna jak dotychczas,
+- pozostałe sporty są wizualne / wkrótce i pokazują toast,
+- bez zmian w API-Football, Supabase, cache, Top Mecze i logice dodawania typu.
+
+SQL: niepotrzebny.
