@@ -9368,28 +9368,20 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               {addTipMode === 'auto' && (
-                <div className="betfolio-top-control-bar-v1280">
-                  <button
-                    type="button"
-                    className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn betfolio-top-control-cta-v1280' : 'betfolio-top-matches-loading-btn betfolio-top-control-cta-v1280'}
-                    onClick={fetchTopFootballMatchesTodayTomorrow}
-                    disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
-                    aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
-                  >
-                    <span className="betfolio-top-control-cta-icon-v1280">⚡</span>
-                    <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
-                    {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
-                  </button>
-                  <div className="betfolio-top-control-meta-v1280" aria-hidden="true">
-                    <span>6 lig</span>
-                    <span>Dziś + jutro</span>
-                    <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Aktualizacja…' : 'Premium feed'}</span>
+                <>
+                  <div className="betfolio-fixture-mode-tabs">
+                    <button
+                      type="button"
+                      className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
+                      onClick={fetchTopFootballMatchesTodayTomorrow}
+                      disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
+                      aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
+                    >
+                      <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                      {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
+                    </button>
                   </div>
-                  <div className="betfolio-top-control-count-v1280">
-                    <b>{visibleMatchOptions.length}</b>
-                    <small>wydarzeń</small>
-                  </div>
-                </div>
+                </>
               )}
             </>
           )}
@@ -9398,12 +9390,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <>
               {addTipMode === 'auto' ? (
                 <>
-                  {footballViewMode !== 'top-matches' && (
-                    <div className="betfolio-events-head">
-                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
-                      <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
-                    </div>
-                  )}
+                  <div className="betfolio-events-head">
+                    <strong>{footballViewMode === 'top-matches' ? 'Top Mecze • dziś + jutro • 6 lig' : footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
+                    <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                  </div>
 
                   <div className="betfolio-events-list">
                     {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
