@@ -9337,24 +9337,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
                 <div className="sport-cards-track-v1276 all-sports">
                   {sportKeys.map((sportName) => {
+                    const sportData = sportsbook[sportName] || {}
+                    const leagues = Object.keys(sportData.leagues || {})
+                    const matchesCount = leagues.reduce((sum, leagueName) => sum + ((sportData.leagues?.[leagueName] || []).length), 0)
                     const themeClass = sportCardThemeMap[sportName] || 'default'
-                    const isFootballCard = sportName === 'Piłka nożna'
-                    const isActiveCard = isFootballCard && (openSidebarSport === sportName || form.sport === sportName)
+                    const isActiveCard = openSidebarSport === sportName || form.sport === sportName
+                    const subtitle = sportName === 'Piłka nożna'
+                      ? 'Top mecze • dziś + jutro'
+                      : leagues.slice(0, 2).join(' • ') || 'Wybierz sport'
                     return (
                       <button
                         key={sportName}
                         type="button"
-                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isFootballCard ? 'coming-soon' : ''}`}
-                        onClick={() => isFootballCard
-                          ? selectSidebarSport('Piłka nożna')
-                          : onToast?.({ type: 'success', title: `${sportName} wkrótce`, message: 'Na razie dostępna jest Piłka nożna. Ten sport będzie dodany później.' })
-                        }
-                        aria-disabled={!isFootballCard}
+                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''}`}
+                        onClick={() => selectSidebarSport(sportName)}
                       >
                         <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || '✦'}</i><span>{sportName}</span></div>
-                        <strong>{isFootballCard ? 'Dostępne' : 'Wkrótce'}</strong>
-                        <small>{isFootballCard ? 'Top mecze • dziś + jutro' : 'Sport przygotowywany'}</small>
-                        {!isFootballCard && <em className="sport-card-soon-badge-v1278">WKRÓTCE</em>}
+                        <strong>{matchesCount} {matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}</strong>
+                        <small>{subtitle}</small>
                         <b aria-hidden="true">{sportIconMap[sportName] || '✦'}</b>
                       </button>
                     )
@@ -9368,20 +9368,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               </div>
 
               {addTipMode === 'auto' && (
-                <>
-                  <div className="betfolio-fixture-mode-tabs">
-                    <button
-                      type="button"
-                      className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
-                      onClick={fetchTopFootballMatchesTodayTomorrow}
-                      disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
-                      aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
-                    >
-                      <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
-                      {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
-                    </button>
+                <div className="betfolio-top-control-bar-v1280">
+                  <button
+                    type="button"
+                    className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn betfolio-top-control-cta-v1280' : 'betfolio-top-matches-loading-btn betfolio-top-control-cta-v1280'}
+                    onClick={fetchTopFootballMatchesTodayTomorrow}
+                    disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
+                    aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
+                  >
+                    <span className="betfolio-top-control-cta-icon-v1280">⚡</span>
+                    <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                    {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
+                  </button>
+                  <div className="betfolio-top-control-meta-v1280" aria-hidden="true">
+                    <span>6 lig</span>
+                    <span>Dziś + jutro</span>
+                    <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Aktualizacja…' : 'Premium feed'}</span>
                   </div>
-                </>
+                  <div className="betfolio-top-control-count-v1280">
+                    <b>{visibleMatchOptions.length}</b>
+                    <small>wydarzeń</small>
+                  </div>
+                </div>
               )}
             </>
           )}
@@ -9390,10 +9398,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             <>
               {addTipMode === 'auto' ? (
                 <>
-                  <div className="betfolio-events-head">
-                    <strong>{footballViewMode === 'top-matches' ? 'Top Mecze • dziś + jutro • 6 lig' : footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
-                    <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
-                  </div>
+                  {footballViewMode !== 'top-matches' && (
+                    <div className="betfolio-events-head">
+                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
+                      <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
+                    </div>
+                  )}
 
                   <div className="betfolio-events-list">
                     {visibleMatchOptions.length ? visibleMatchOptions.map((match) => {
@@ -14611,35 +14621,40 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       </div>
 
       <div className="ai-filter-bar-v747">
-        <div className="ai-sport-tabs-v747">
-          {SPORTS.map(sport => {
-            const meta = getBetAiSportMetaV1051(sport)
-            const locked = isLockedSportV1055(sport)
-            const count = allCards.filter(card => card.sport === sport).length
-            return (
-              <button
-                key={sport}
-                type="button"
-                disabled={locked}
-                className={`${sport === 'Piłka nożna' ? 'active ' : ''}${locked ? 'locked-sport-v1059 ' : ''}sport-tile-static-v1059`}
-                onClick={() => {
-                  if (locked) {
-                    setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną.`)
-                    return
-                  }
-                  setActiveSport('Piłka nożna')
-                  setSelectedId('')
-                }}
-              >
-                <span className="sport-static-icon-v1059">{meta.icon}</span>
-                <span className="sport-static-copy-v1059">
-                  <b>{meta.label}</b>
-                  <small>{locked ? 'Wkrótce' : count}</small>
-                </span>
-                {locked ? <i className="sport-static-lock-v1059">🔒</i> : null}
-              </button>
-            )
-          })}
+        <div className="betfolio-sport-cards-v1276 ai-sports-cards-v1279" aria-label="Sporty Typy AI premium">
+          <div className="sport-cards-head-v1276">
+            <span>Sporty Typy AI</span>
+            <em>Piłka nożna aktywna, pozostałe sporty wkrótce</em>
+          </div>
+          <div className="sport-cards-track-v1276 ai-sports-grid-v1279">
+            {SPORTS.map((sport) => {
+              const meta = getBetAiSportMetaV1051(sport)
+              const locked = isLockedSportV1055(sport)
+              const count = allCards.filter(card => card.sport === sport).length
+              const themeClass = (sportCardThemeMap && sportCardThemeMap[sport]) || 'default'
+              return (
+                <button
+                  key={sport}
+                  type="button"
+                  className={`sport-card-v1276 ${themeClass} ${!locked ? 'active' : ''} ${locked ? 'is-soon-v1279' : ''}`}
+                  onClick={() => {
+                    if (locked) {
+                      setStatusText(`${meta.label} będzie dostępny wkrótce. Na ten moment Typy AI liczą tylko piłkę nożną.`)
+                      return
+                    }
+                    setActiveSport('Piłka nożna')
+                    setSelectedId('')
+                  }}
+                >
+                  <div className="sport-card-top-v1276"><i>{meta.icon}</i><span>{meta.label}</span></div>
+                  <strong>{locked ? 'Wkrótce' : `${count} ${count === 1 ? 'mecz' : count < 5 ? 'mecze' : 'meczów'}`}</strong>
+                  <small>{locked ? 'Aktywacja w kolejnych wersjach' : 'Aktywne typy AI • dostępne teraz'}</small>
+                  <b aria-hidden="true">{meta.icon}</b>
+                  {locked ? <mark className="sport-card-badge-v1279">WKRÓTCE</mark> : null}
+                </button>
+              )
+            })}
+          </div>
         </div>
 <div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
