@@ -60737,3 +60737,111 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 .wallet-ultra-page .earnings-card-v2 .wallet-v2-primary-btn{
   margin-top:16px !important;
 }
+
+/* WERSJA 1304 — Portfel hero: grid i odstępy dopasowane do Dodaj typ */
+.wallet-v2-hero{
+  background:
+    linear-gradient(rgba(45, 221, 255, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 221, 255, .045) 1px, transparent 1px),
+    radial-gradient(circle at 72% 45%, rgba(16,157,255,.20), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(38,234,255,.10), transparent 18%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(7,25,53,.94)) !important;
+  background-size:
+    34px 34px,
+    34px 34px,
+    auto,
+    auto,
+    auto !important;
+  background-position:
+    40px 10px,
+    40px 10px,
+    center center,
+    center center,
+    center center !important;
+}
+
+.wallet-v2-hero::after{
+  background:
+    linear-gradient(90deg, rgba(45, 221, 255, .030) 1px, transparent 1px),
+    linear-gradient(rgba(45, 221, 255, .026) 1px, transparent 1px),
+    radial-gradient(circle at 18% 42%, rgba(34,239,209,.10), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(94,157,255,.12), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(22,225,255,.08), transparent 0 18%) !important;
+  background-size:34px 34px, 34px 34px, auto, auto, auto !important;
+  background-position:40px 10px, 40px 10px, center center, center center, center center !important;
+  mix-blend-mode:screen;
+}
+
+
+/* WERSJA 1305 — Portfel hero: kolorystyczne dopasowanie do Dashboardu
+   TYLKO KOLORY: bez zmiany układu, animacji, odstępów i logiki. */
+.wallet-v2-hero{
+  background:
+    linear-gradient(rgba(38, 220, 255, .040) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(38, 220, 255, .034) 1px, transparent 1px),
+    radial-gradient(circle at 74% 45%, rgba(20, 115, 190, .13), transparent 28%),
+    radial-gradient(circle at 86% 20%, rgba(27, 195, 225, .055), transparent 18%),
+    linear-gradient(135deg, rgba(3,12,24,.985), rgba(3,16,30,.975) 48%, rgba(8,26,49,.925)) !important;
+  background-size:
+    34px 34px,
+    34px 34px,
+    auto,
+    auto,
+    auto !important;
+  background-position:
+    40px 10px,
+    40px 10px,
+    center center,
+    center center,
+    center center !important;
+  border-color:rgba(33,214,238,.14) !important;
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 0 0 1px rgba(21,219,255,.025) !important;
+}
+
+.wallet-v2-hero::before{
+  background:
+    linear-gradient(115deg, rgba(33,224,245,.060), transparent 38%),
+    linear-gradient(290deg, rgba(68,110,210,.060), transparent 34%),
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,.035) 49%, transparent 100%),
+    radial-gradient(circle at 20% 18%, rgba(35,228,255,.045), transparent 24%) !important;
+  background-size:100% 100%, 100% 100%, 220% 100%, auto !important;
+}
+
+.wallet-v2-hero::after{
+  background:
+    linear-gradient(90deg, rgba(38,220,255,.022) 1px, transparent 1px),
+    linear-gradient(rgba(38,220,255,.020) 1px, transparent 1px),
+    radial-gradient(circle at 18% 42%, rgba(34,239,209,.055), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(67,120,220,.080), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(22,225,255,.045), transparent 0 18%) !important;
+  background-size:34px 34px, 34px 34px, auto, auto, auto !important;
+  background-position:40px 10px, 40px 10px, center center, center center, center center !important;
+  opacity:.78 !important;
+  mix-blend-mode:screen;
+}
+
+.wallet-v2-hero-copy h2{
+  text-shadow:0 10px 36px rgba(0,0,0,.42), 0 0 18px rgba(36,224,255,.08) !important;
+}
+
+.wallet-v2-hero-copy p{
+  color:rgba(220,235,245,.86) !important;
+}
+
+.wallet-v2-hero-features i{
+  background:linear-gradient(135deg, rgba(20,205,230,.105), rgba(66,105,190,.085)) !important;
+  border-color:rgba(40,226,255,.14) !important;
+  box-shadow:0 0 20px rgba(36,229,255,.055) !important;
+}
+
+.wallet-v2-hero-card{
+  background:linear-gradient(180deg, rgba(8,28,54,.66), rgba(5,18,35,.78)) !important;
+  border-color:rgba(44,226,255,.18) !important;
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.30),
+    0 0 20px rgba(25,213,255,.055),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}

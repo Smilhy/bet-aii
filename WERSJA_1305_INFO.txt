@@ -1,0 +1,8 @@
+WERSJA 1305 — PORTFEL HERO DASHBOARD COLORS
+
+Zmiany:
+- tylko kolorystyka hero Portfela dopasowana do Dashboardu
+- ciemniejsze tło
+- subtelniejszy niebieski glow
+- kratki/grid zostają jak w wersji 1304
+- bez zmiany układu, animacji, odstępów, logiki, API, Supabase i Stripe
