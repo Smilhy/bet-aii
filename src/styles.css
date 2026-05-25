@@ -60716,3 +60716,24 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   font-weight:800!important;
   letter-spacing:.01em!important;
 }
+
+
+/* WERSJA 1303 — PORTFEL: OBNIŻENIE CTA, ŻEBY NIE NACHODZIŁY */
+.wallet-v2-methods-card .wallet-v2-primary-btn{
+  margin-top:14px !important;
+}
+.wallet-v2-invoice-list + .wallet-v2-primary-btn{
+  margin-top:14px !important;
+}
+.wallet-v2-empty-documents + .wallet-v2-primary-btn,
+.subscription-card-v2 .wallet-v2-primary-btn,
+.earnings-card-v2 .wallet-v2-primary-btn{
+  margin-top:14px !important;
+}
+.wallet-ultra-page .wallet-v2-methods-card .wallet-v2-primary-btn,
+.wallet-ultra-page .wallet-v2-invoice-list + .wallet-v2-primary-btn,
+.wallet-ultra-page .wallet-v2-empty-documents + .wallet-v2-primary-btn,
+.wallet-ultra-page .subscription-card-v2 .wallet-v2-primary-btn,
+.wallet-ultra-page .earnings-card-v2 .wallet-v2-primary-btn{
+  margin-top:16px !important;
+}
