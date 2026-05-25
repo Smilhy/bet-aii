@@ -60771,3 +60771,94 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   background-position:40px 10px, 40px 10px, center center, center center, center center !important;
   mix-blend-mode:screen;
 }
+
+
+/* ===== WERSJA 1308 — Typy AI lekki baner jak Dodaj typ ===== */
+.ai-lite-hero{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
+  align-items:center;
+  gap:28px;
+  min-height:250px;
+  padding:28px 30px;
+  border-radius:28px;
+  border:1px solid rgba(41, 228, 255, .16);
+  background:
+    linear-gradient(90deg, rgba(12,56,72,.55) 0%, rgba(6,29,53,.72) 48%, rgba(25,44,92,.76) 100%),
+    radial-gradient(circle at 18% 18%, rgba(63,255,223,.12), transparent 34%),
+    radial-gradient(circle at 86% 20%, rgba(106,130,255,.18), transparent 32%),
+    #07141d;
+  box-shadow:0 16px 60px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.ai-lite-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(to right, rgba(77,180,224,.08) 0 1px, transparent 1px 48px),
+    repeating-linear-gradient(to bottom, rgba(77,180,224,.06) 0 1px, transparent 1px 48px);
+  pointer-events:none;
+  opacity:.55;
+}
+.ai-lite-copy,.ai-lite-visual{position:relative;z-index:1}
+.ai-lite-kicker{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;
+  border:1px solid rgba(64,224,255,.22);background:rgba(5,22,35,.68);color:#9fdfff;
+  font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;
+}
+.ai-lite-copy h1{margin:0;font-size:68px;line-height:.92;letter-spacing:-.05em;color:#f6fbff}
+.ai-lite-copy p{margin:16px 0 0;max-width:720px;font-size:22px;line-height:1.35;color:#b2c6d5!important;font-weight:700}
+.ai-lite-feature-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:28px}
+.ai-lite-feature{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;
+  border:1px solid rgba(65,213,255,.14);background:rgba(7,22,35,.72);backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.ai-lite-feature span{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:linear-gradient(135deg,rgba(32,255,208,.14),rgba(99,102,241,.2));border:1px solid rgba(80,233,255,.18)}
+.ai-lite-feature b{display:block;color:#f5fbff;font-size:15px;margin-bottom:4px}
+.ai-lite-feature small{display:block;color:#8fb0c2;font-size:12px;font-weight:800}
+.ai-lite-visual{min-height:210px;display:flex;align-items:center;justify-content:center}
+.ai-lite-orbit{
+  position:absolute;width:300px;height:150px;border-radius:50%;border:1px solid rgba(67,222,255,.18);
+  box-shadow:0 0 0 1px rgba(67,222,255,.06) inset;transform:rotate(-8deg);top:36px;left:50%;translate:-50% 0;
+}
+.ai-lite-ball{
+  position:absolute;left:24px;top:22px;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;
+  font-size:56px;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.24), rgba(81,128,255,.12) 55%, rgba(3,15,29,.96) 100%);
+  border:1px solid rgba(72,232,255,.2);box-shadow:0 18px 32px rgba(0,0,0,.28), 0 0 30px rgba(48,194,255,.12);
+}
+.ai-lite-scanner{
+  position:absolute;right:18px;top:44px;width:220px;padding:20px 18px 18px;border-radius:24px;
+  background:linear-gradient(180deg, rgba(11,31,63,.9), rgba(8,20,36,.9));border:1px solid rgba(82,216,255,.18);
+  box-shadow:0 20px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04);transform:rotate(-4deg);
+}
+.ai-lite-scanner span{display:block;color:#8beaff;font-size:13px;font-weight:950;letter-spacing:.14em}
+.ai-lite-scanner strong{display:block;margin-top:8px;color:#f9fcff;font-size:58px;line-height:1;letter-spacing:-.05em}
+.ai-lite-scanner small{display:block;margin-top:8px;color:#9db6c8;font-size:13px;font-weight:800}
+.ai-lite-scanner i{display:block;height:10px;border-radius:999px;margin-top:14px;background:linear-gradient(90deg,#2de7d5,#3cbcff);box-shadow:0 0 20px rgba(44,215,255,.25)}
+.ai-lite-badge{position:absolute;padding:8px 12px;border-radius:999px;border:1px solid rgba(82,216,255,.16);background:rgba(7,18,30,.78);color:#d6f5ff;font-size:11px;font-weight:950;letter-spacing:.14em}
+.ai-lite-badge-top{right:10px;top:18px}
+.ai-lite-badge-live{left:132px;bottom:24px}
+.ai-compact-toolbar{padding:16px 20px;border-radius:22px;background:linear-gradient(180deg,rgba(9,23,36,.88),rgba(5,14,22,.9));border:1px solid rgba(255,255,255,.07)}
+.ai-brand-title-compact h2{margin:0;font-size:24px;color:#f6fbff;letter-spacing:-.03em}
+.ai-brand-title-compact p{margin:6px 0 0;color:#90a9ba;font-weight:800}
+.ai-brand-title-compact .ai-logo-mark{width:40px;height:40px;font-size:22px}
+@media (max-width: 1180px){
+  .ai-lite-hero{grid-template-columns:1fr;min-height:auto;padding:24px}
+  .ai-lite-copy h1{font-size:52px}
+  .ai-lite-copy p{font-size:18px}
+  .ai-lite-feature-row{grid-template-columns:1fr}
+  .ai-lite-visual{min-height:240px}
+  .ai-lite-ball{left:10px;top:10px;width:96px;height:96px;font-size:44px}
+  .ai-lite-scanner{position:relative;right:auto;top:auto;transform:none;margin:46px 0 0 auto;width:min(100%,240px)}
+  .ai-lite-orbit{width:240px;height:130px;top:68px}
+  .ai-lite-badge-live{left:16px;bottom:18px}
+}
+@media (max-width: 720px){
+  .ai-lite-copy h1{font-size:42px}
+  .ai-lite-copy p{font-size:16px}
+  .ai-lite-kicker{font-size:11px;letter-spacing:.12em}
+  .ai-lite-hero{padding:20px}
+}

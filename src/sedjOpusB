@@ -1902,12 +1902,37 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-premium-dashboard">
-      <header className="ai-premium-header">
-        <div className="ai-brand-title">
+      <header className="ai-lite-hero">
+        <div className="ai-lite-copy">
+          <div className="ai-lite-kicker">SPORTY • VALUE • LIVE AI</div>
+          <h1>Typy AI</h1>
+          <p>Automatyczne typy oparte na danych, kursach, value i prawdopodobieństwie. Lżejszy, czytelniejszy baner w stylu zakładki Dodaj typ.</p>
+          <div className="ai-lite-feature-row">
+            <div className="ai-lite-feature"><span>⚡</span><div><b>Szybkie skanowanie</b><small>Top value, live i mecze startujące</small></div></div>
+            <div className="ai-lite-feature"><span>📈</span><div><b>Value EV</b><small>Filtrujemy tylko mocniejsze okazje</small></div></div>
+            <div className="ai-lite-feature"><span>🛡️</span><div><b>Rozliczenie AI</b><small>Wyniki i statystyki po zakończeniu spotkań</small></div></div>
+          </div>
+        </div>
+        <div className="ai-lite-visual">
+          <div className="ai-lite-orbit" />
+          <div className="ai-lite-ball">⚽</div>
+          <div className="ai-lite-scanner">
+            <span>AI SCANNER</span>
+            <strong>{avgConfidence}%</strong>
+            <small>średnia pewność modeli</small>
+            <i style={{ width: `${Math.max(24, Math.min(100, avgConfidence))}%` }} />
+          </div>
+          <div className="ai-lite-badge ai-lite-badge-top">TOP VALUE</div>
+          <div className="ai-lite-badge ai-lite-badge-live">LIVE</div>
+        </div>
+      </header>
+
+      <div className="ai-premium-header ai-compact-toolbar">
+        <div className="ai-brand-title ai-brand-title-compact">
           <span className="ai-logo-mark">▟</span>
           <div>
-            <h1>AI Picks Dashboard</h1>
-            <p>TOP VALUE, LIVE, Zaraz startują oraz Zakończone/Rozliczone — słabe typy są ukryte</p>
+            <h2>Panel sterowania AI</h2>
+            <p>Auto refresh co 10 min • lekkie odświeżanie bez ciężkiego banera</p>
           </div>
         </div>
         <div className="ai-header-actions">
@@ -1916,7 +1941,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <button className="ai-live-action" onClick={onGenerateLive} disabled={liveGenerating}>{liveGenerating ? 'Skanuję REAL AI PRO...' : 'Skanuj REAL AI PRO'}</button>
           <button className="ai-live-action settle" onClick={onSettle} disabled={settleGenerating}>{settleGenerating ? 'Rozliczam FT...' : 'Rozlicz zakończone'}</button>
         </div>
-      </header>
+      </div>
 
       <div className="ai-control-row ai-mode-row">
         <button className={mode === 'topvalue' ? 'active' : ''} onClick={() => setMode('topvalue')}>💎 TOP VALUE ({topValueTips.length})</button>
