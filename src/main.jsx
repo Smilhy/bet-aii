@@ -14705,7 +14705,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="betfolio-sport-cards-v1276 ai-sports-cards-v1279" aria-label="Sporty Typy AI premium">
           <div className="sport-cards-head-v1276">
             <span>Sporty Typy AI</span>
-            <em>Piłka nożna aktywna, pozostałe sporty wkrótce</em>
           </div>
           <div className="sport-cards-track-v1276 ai-sports-grid-v1279">
             {SPORTS.map((sport) => {
