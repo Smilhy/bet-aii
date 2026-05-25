@@ -14670,9 +14670,30 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   return (
     <section className="ai-center-page-v747">
-      <div className="ai-exact-hero-v1062 ai-exact-hero-v1065 ai-exact-hero-v1067 ai-exact-hero-v1068 ai-exact-hero-v1070" aria-label="Typy AI Premium Hero">
-        <img src="/typy-ai-hero-v1070.png" alt="Typy AI — premium AI sports analytics" />
-      </div>
+      <header className="ai-lite-hero" aria-label="Typy AI Premium Hero">
+        <div className="ai-lite-copy">
+          <div className="ai-lite-kicker">SPORTY • VALUE • LIVE AI</div>
+          <h1>Typy AI</h1>
+          <p>Wyszukuj najmocniejsze okazje AI w kilka sekund. Lżejszy baner premium w stylu Dodaj typ — bez ciężkiej grafiki.</p>
+          <div className="ai-lite-feature-row">
+            <div className="ai-lite-feature"><span>⚡</span><div><b>Szybkie skanowanie</b><small>Top mecze, live i najlepsze value</small></div></div>
+            <div className="ai-lite-feature"><span>📈</span><div><b>Value EV</b><small>Filtrowanie kursów, EV i prawdopodobieństwa</small></div></div>
+            <div className="ai-lite-feature"><span>🤖</span><div><b>AI engine</b><small>Gotowe typy modelu i analiza skuteczności</small></div></div>
+          </div>
+        </div>
+        <div className="ai-lite-visual">
+          <div className="ai-lite-orbit" />
+          <div className="ai-lite-ball">⚽</div>
+          <div className="ai-lite-scanner">
+            <span>AI SCANNER</span>
+            <strong>{stats.avgScore}%</strong>
+            <small>średnia ocena modeli</small>
+            <i style={{ width: `${Math.max(24, Math.min(100, stats.avgScore || 0))}%` }} />
+          </div>
+          <div className="ai-lite-badge ai-lite-badge-top">TOP VALUE</div>
+          <div className="ai-lite-badge ai-lite-badge-live">LIVE</div>
+        </div>
+      </header>
       <div className="ai-kpi-grid-v747 ai-kpi-grid-premium-v1066">
         <div className="ai-kpi-card-v1066 ai-kpi-card--types-v1066"><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
         <div className="ai-kpi-card-v1066 ai-kpi-card--score-v1066"><span>Śr. ocena AI</span><strong>{stats.avgScore}/100</strong><small>jakość selekcji</small></div>
