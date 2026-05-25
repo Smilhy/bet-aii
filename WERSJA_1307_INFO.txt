@@ -1,0 +1,17 @@
+WERSJA 1307 — PORTFEL LIGHT / PERFORMANCE SAFE
+
+Baza: 1303 stabilna.
+Cel: cofnięcie ciężkiego dopasowania całej zakładki Portfel z wersji 1306, które mogło spowolnić stronę.
+
+Zostaje:
+- CTA odsunięte, żeby nie nachodziły
+- wartość sprzedaży żetonów po kursie 1000 = 0,90 zł
+- min. wpłaty od 50 zł i no limit wpłat
+- naprawa Mój profil dn error
+- hero Portfel animacja + lekki grid dopasowany do Dodaj typ
+
+Nie ma:
+- ciężkich globalnych override CSS z wersji 1306 dla całej zakładki Portfel
+- pełnego recoloru całej zakładki
+
+Logika/API/Supabase/Stripe bez zmian.

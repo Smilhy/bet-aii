@@ -1,7 +1,0 @@
-WERSJA 1304 — PORTFEL HERO GRID DOPASOWANY DO DODAJ TYP
-
-Zmiany:
-- wyrównany rozmiar kratek (grid) w hero Portfela do hero Dodaj typ
-- ustawione takie same odstępy siatki jak w Dodaj typ
-- zachowany wygląd premium i animacje
-- baza: wersja 1303
