@@ -14674,7 +14674,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-lite-copy">
           <div className="ai-lite-kicker">SPORTY • VALUE • LIVE AI</div>
           <h1>Typy AI</h1>
-          <p>Wyszukuj najmocniejsze okazje AI w kilka sekund. Lżejszy baner premium w stylu Dodaj typ — bez ciężkiej grafiki.</p>
           <div className="ai-lite-feature-row">
             <div className="ai-lite-feature"><span>⚡</span><div><b>Szybkie skanowanie</b><small>Top mecze, live i najlepsze value</small></div></div>
             <div className="ai-lite-feature"><span>📈</span><div><b>Value EV</b><small>Filtrowanie kursów, EV i prawdopodobieństwa</small></div></div>
