@@ -60845,3 +60845,165 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     0 0 20px rgba(25,213,255,.055),
     inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
+
+/* WERSJA 1306 — PORTFEL: CAŁA ZAKŁADKA KOLORY JAK DASHBOARD (CSS ONLY) */
+.wallet-ultra-page{
+  --wallet-cyan:#22e6f7 !important;
+  --wallet-cyan-2:#24f0d4 !important;
+  --wallet-dashboard-bg:#020b13 !important;
+  --wallet-dashboard-panel:#061423 !important;
+  --wallet-dashboard-panel-2:#081b2d !important;
+  --wallet-dashboard-border:rgba(31, 218, 240, .13) !important;
+  --wallet-dashboard-border-strong:rgba(34, 230, 247, .22) !important;
+}
+
+.wallet-ultra-page::after{
+  background:
+    radial-gradient(circle at 7% 10%, rgba(34,230,247,.045), transparent 22%),
+    radial-gradient(circle at 82% 6%, rgba(34,230,247,.04), transparent 24%),
+    radial-gradient(circle at 72% 98%, rgba(36,240,212,.035), transparent 28%) !important;
+}
+
+.wallet-ultra-page .glass-v2-panel,
+.wallet-ultra-page .wallet-v2-card,
+.wallet-ultra-page .wallet-v2-sidecard,
+.wallet-ultra-page .wallet-stripe-connect-card,
+.wallet-ultra-page .wallet-v2-tabs{
+  background:
+    radial-gradient(circle at 100% 0%, rgba(34,230,247,.045), transparent 30%),
+    linear-gradient(180deg, rgba(6, 20, 34, .94), rgba(3, 12, 22, .98)) !important;
+  border-color:var(--wallet-dashboard-border) !important;
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.028),
+    0 0 22px rgba(34,230,247,.028) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero{
+  background:
+    linear-gradient(rgba(34,230,247,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,230,247,.036) 1px, transparent 1px),
+    radial-gradient(circle at 72% 45%, rgba(34, 128, 180, .12), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(34,230,247,.055), transparent 18%),
+    linear-gradient(135deg, rgba(4,18,31,.98), rgba(3,14,27,.99) 58%, rgba(8,24,43,.94)) !important;
+  background-size:34px 34px,34px 34px,auto,auto,auto !important;
+  border-color:rgba(31,218,240,.16) !important;
+  box-shadow:
+    0 34px 86px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 0 28px rgba(34,230,247,.035) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero::before{
+  background:
+    linear-gradient(115deg, rgba(34,230,247,.055), transparent 38%),
+    linear-gradient(290deg, rgba(62,111,170,.045), transparent 34%),
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,.040) 49%, transparent 100%),
+    radial-gradient(circle at 20% 18%, rgba(34,230,247,.045), transparent 24%) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero::after{
+  background:
+    linear-gradient(90deg, rgba(34,230,247,.026) 1px, transparent 1px),
+    linear-gradient(rgba(34,230,247,.024) 1px, transparent 1px),
+    radial-gradient(circle at 18% 42%, rgba(36,240,212,.055), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(34,128,180,.070), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(34,230,247,.040), transparent 0 18%) !important;
+  background-size:34px 34px,34px 34px,auto,auto,auto !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-copy h2,
+.wallet-ultra-page .wallet-v2-card-head h3,
+.wallet-ultra-page .wallet-stripe-connect-head h3{
+  color:#f4fbff !important;
+  text-shadow:0 10px 30px rgba(0,0,0,.30) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-copy h2 span{
+  color:#22e6f7 !important;
+  text-shadow:0 0 18px rgba(34,230,247,.18) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-copy p,
+.wallet-ultra-page .wallet-stripe-connect-card p,
+.wallet-ultra-page .wallet-v2-sub,
+.wallet-ultra-page .wallet-v2-stat small,
+.wallet-ultra-page .wallet-v2-action-grid button small,
+.wallet-ultra-page .wallet-v2-payment-grid small,
+.wallet-ultra-page .history-text small,
+.wallet-ultra-page .invoice-info small,
+.wallet-ultra-page .invoice-meta small{
+  color:rgba(178,205,220,.82) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-features i,
+.wallet-ultra-page .wallet-v2-action-grid button b,
+.wallet-ultra-page .history-icon,
+.wallet-ultra-page .invoice-icon,
+.wallet-ultra-page .wallet-v2-stat-top i{
+  background:rgba(34,230,247,.075) !important;
+  border-color:rgba(34,230,247,.14) !important;
+  color:#22e6f7 !important;
+  box-shadow:0 0 18px rgba(34,230,247,.075) !important;
+}
+
+.wallet-ultra-page .wallet-v2-stat:nth-child(1),
+.wallet-ultra-page .wallet-v2-stat:nth-child(2),
+.wallet-ultra-page .wallet-v2-stat:nth-child(3){
+  background:
+    radial-gradient(circle at 100% 0%, rgba(34,230,247,.055), transparent 28%),
+    linear-gradient(180deg, rgba(6,22,38,.94), rgba(3,13,24,.98)) !important;
+  border-color:rgba(31,218,240,.14) !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs button,
+.wallet-ultra-page .wallet-v2-action-grid button,
+.wallet-ultra-page .wallet-v2-payment-grid-live > button.wallet-pay-method,
+.wallet-ultra-page .wallet-v2-history-item,
+.wallet-ultra-page .invoice-item,
+.wallet-ultra-page .subscription-badge-v2,
+.wallet-ultra-page .earnings-live-stats span,
+.wallet-ultra-page .earnings-live-last span,
+.wallet-ultra-page .earnings-topline select{
+  background:
+    radial-gradient(circle at 100% 0%, rgba(34,230,247,.035), transparent 30%),
+    linear-gradient(180deg, rgba(5, 18, 32, .96), rgba(3, 12, 22, .99)) !important;
+  border-color:rgba(31,218,240,.105) !important;
+  color:#eaf7ff !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs button.active,
+.wallet-ultra-page .wallet-v2-primary-btn,
+.wallet-ultra-page .wallet-stripe-connect-card > button{
+  background:linear-gradient(135deg, #21e2d2, #27cdec 55%, #4d8cff) !important;
+  color:#04111d !important;
+  box-shadow:0 16px 34px rgba(33,226,210,.16), 0 0 18px rgba(39,205,236,.08) !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs .wallet-v2-admin-tab,
+.wallet-ultra-page .wallet-v2-tabs .wallet-v2-admin-tab.is-unlocked{
+  background:linear-gradient(180deg, rgba(72,13,20,.78), rgba(44,6,12,.92)) !important;
+  border-color:rgba(255,87,118,.16) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-card{
+  background:linear-gradient(180deg, rgba(6, 20, 36, .80), rgba(3, 12, 24, .90)) !important;
+  border-color:rgba(31,218,240,.16) !important;
+  box-shadow:0 18px 40px rgba(0,0,0,.30), 0 0 20px rgba(34,230,247,.04), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero-coin{
+  box-shadow:
+    0 0 0 1px rgba(34,230,247,.18),
+    0 0 44px rgba(34,230,247,.10),
+    inset 0 0 24px rgba(34,230,247,.07),
+    0 24px 48px rgba(0,0,0,.26) !important;
+}
+
+.wallet-ultra-page .wallet-v2-card-head button,
+.wallet-ultra-page .side-card-head button,
+.wallet-ultra-page .invoice-info small a,
+.wallet-ultra-page .invoice-info small em,
+.wallet-ultra-page .wallet-stripe-connect-card p b{
+  color:#22e6f7 !important;
+}
