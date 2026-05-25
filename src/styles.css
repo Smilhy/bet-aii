@@ -60737,3 +60737,37 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 .wallet-ultra-page .earnings-card-v2 .wallet-v2-primary-btn{
   margin-top:16px !important;
 }
+
+/* WERSJA 1304 — Portfel hero: grid i odstępy dopasowane do Dodaj typ */
+.wallet-v2-hero{
+  background:
+    linear-gradient(rgba(45, 221, 255, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 221, 255, .045) 1px, transparent 1px),
+    radial-gradient(circle at 72% 45%, rgba(16,157,255,.20), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(38,234,255,.10), transparent 18%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(7,25,53,.94)) !important;
+  background-size:
+    34px 34px,
+    34px 34px,
+    auto,
+    auto,
+    auto !important;
+  background-position:
+    40px 10px,
+    40px 10px,
+    center center,
+    center center,
+    center center !important;
+}
+
+.wallet-v2-hero::after{
+  background:
+    linear-gradient(90deg, rgba(45, 221, 255, .030) 1px, transparent 1px),
+    linear-gradient(rgba(45, 221, 255, .026) 1px, transparent 1px),
+    radial-gradient(circle at 18% 42%, rgba(34,239,209,.10), transparent 0 20%),
+    radial-gradient(circle at 82% 24%, rgba(94,157,255,.12), transparent 0 22%),
+    radial-gradient(circle at 72% 78%, rgba(22,225,255,.08), transparent 0 18%) !important;
+  background-size:34px 34px, 34px 34px, auto, auto, auto !important;
+  background-position:40px 10px, 40px 10px, center center, center center, center center !important;
+  mix-blend-mode:screen;
+}
