@@ -1,0 +1,9 @@
+WERSJA 1314 — DODAJ TYP: KOLORY JAK DASHBOARD (MOCNIEJSZY MATCH)
+
+Co poprawiłem:
+- mocniej dopasowałem CAŁĄ zakładkę „Dodaj typ” do kolorystyki Dashboardu,
+- przyciemniłem główne tła paneli i kolumn do dashboardowego dark black/navy,
+- hero dostał bardziej dashboardowy klimat (ciemniejszy, mniej niebieski, bardziej neutralny),
+- panele, inputy, market board, lista meczów, prawa i lewa kolumna są teraz bliżej dashboardu,
+- aktywne CTA i przyciski zachowują jasny cyan/blue gradient w stylu dashboardu,
+- nie ruszałem layoutu ani logiki — tylko kolor i klimat wizualny.

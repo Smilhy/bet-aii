@@ -61149,3 +61149,211 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
 .add-tip-betfolio-page .betfolio-right{
   scrollbar-color:rgba(46,225,214,.28) rgba(255,255,255,.03) !important;
 }
+
+/* WERSJA 1314 — mocniejsze dopasowanie kolorów DODAJ TYP do Dashboardu */
+.add-tip-betfolio-page{
+  --dash-black-1:#040b12;
+  --dash-black-2:#06111b;
+  --dash-black-3:#081521;
+  --dash-line:rgba(62, 214, 255, .10);
+  --dash-line-strong:rgba(62, 214, 255, .18);
+  --dash-glow:rgba(44, 218, 255, .10);
+  --dash-copy:#edf8ff;
+  --dash-copy-soft:#8ea9bb;
+  --dash-copy-soft2:#6e8ea3;
+  --dash-pill:#0a1622;
+  --dash-cyan:#24dfe2;
+  --dash-blue:#62b6ff;
+}
+
+/* główna atmosfera strony */
+.add-tip-betfolio-page .betfolio-left,
+.add-tip-betfolio-page .betfolio-center,
+.add-tip-betfolio-page .betfolio-right{
+  background:linear-gradient(180deg, rgba(4,11,18,.98), rgba(5,14,22,.98)) !important;
+  border-color:var(--dash-line) !important;
+  box-shadow:0 22px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.add-tip-betfolio-page .betfolio-search-wrap,
+.add-tip-betfolio-page .betfolio-sidebar-block,
+.add-tip-betfolio-page .betfolio-search-panel,
+.add-tip-betfolio-page .betfolio-sport-cards-v1276,
+.add-tip-betfolio-page .betfolio-top-panel-v1291,
+.add-tip-betfolio-page .betfolio-api-saver-note,
+.add-tip-betfolio-page .betfolio-market-board-view,
+.add-tip-betfolio-page .betfolio-details-wrap,
+.add-tip-betfolio-page .betfolio-ticket-wrap,
+.add-tip-betfolio-page .betfolio-empty-state,
+.add-tip-betfolio-page .betfolio-market-accordion,
+.add-tip-betfolio-page .betfolio-ticket-row,
+.add-tip-betfolio-page .betfolio-side-field,
+.add-tip-betfolio-page .betfolio-side-note,
+.add-tip-betfolio-page .betfolio-side-card,
+.add-tip-betfolio-page .betfolio-market-option,
+.add-tip-betfolio-page .betfolio-event-row{
+  background:linear-gradient(180deg, rgba(7,17,28,.97), rgba(5,12,20,.98)) !important;
+  border-color:var(--dash-line) !important;
+}
+
+/* hero bardziej jak dashboard — ciemniejszy, mniej niebieski */
+.add-tip-betfolio-page .betfolio-add-hero{
+  background:
+    radial-gradient(circle at 78% 28%, rgba(35,223,226,.10), transparent 20%),
+    radial-gradient(circle at 86% 46%, rgba(98,182,255,.07), transparent 18%),
+    linear-gradient(90deg, rgba(9,24,35,.96) 0%, rgba(8,20,33,.96) 30%, rgba(6,19,31,.96) 60%, rgba(16,36,60,.92) 100%) !important;
+  border-color:var(--dash-line-strong) !important;
+  box-shadow:0 24px 54px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.03), 0 0 0 1px rgba(41,230,231,.03) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero::after{
+  background:linear-gradient(180deg, transparent, rgba(0,0,0,.12)) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero::before{
+  opacity:.38 !important;
+}
+
+/* typografia */
+.add-tip-betfolio-page .betfolio-add-hero-copy h2,
+.add-tip-betfolio-page .betfolio-side-top,
+.add-tip-betfolio-page .betfolio-ticket-top,
+.add-tip-betfolio-page .betfolio-details-top,
+.add-tip-betfolio-page .betfolio-center-header,
+.add-tip-betfolio-page .betfolio-events-head,
+.add-tip-betfolio-page .sport-cards-head-v1276 span,
+.add-tip-betfolio-page .betfolio-search-input,
+.add-tip-betfolio-page .betfolio-total-box b,
+.add-tip-betfolio-page .betfolio-odd-box b,
+.add-tip-betfolio-page .betfolio-market-accordion-head strong,
+.add-tip-betfolio-page .betfolio-market-group-title strong,
+.add-tip-betfolio-page .betfolio-event-teamline strong,
+.add-tip-betfolio-page .betfolio-empty-state strong,
+.add-tip-betfolio-page .sport-card-top-v1276 span,
+.add-tip-betfolio-page .sport-card-v1276 strong,
+.add-tip-betfolio-page .betfolio-market-option strong,
+.add-tip-betfolio-page .betfolio-market-option b,
+.add-tip-betfolio-page .betfolio-more-btn,
+.add-tip-betfolio-page .betfolio-search-go-btn,
+.add-tip-betfolio-page .betfolio-publish-btn{
+  color:var(--dash-copy) !important;
+}
+
+.add-tip-betfolio-page .betfolio-mini-brand,
+.add-tip-betfolio-page .betfolio-add-hero-copy p,
+.add-tip-betfolio-page .betfolio-side-caption,
+.add-tip-betfolio-page .betfolio-center-header p,
+.add-tip-betfolio-page .betfolio-event-meta span,
+.add-tip-betfolio-page .betfolio-ticket-summary small,
+.add-tip-betfolio-page .betfolio-ticket-card small,
+.add-tip-betfolio-page .betfolio-total-box span,
+.add-tip-betfolio-page .betfolio-side-note,
+.add-tip-betfolio-page .betfolio-ticket-profit,
+.add-tip-betfolio-page .sport-card-v1276 small,
+.add-tip-betfolio-page .betfolio-market-option span,
+.add-tip-betfolio-page .betfolio-market-group-title span,
+.add-tip-betfolio-page .betfolio-market-accordion-head b,
+.add-tip-betfolio-page .betfolio-empty-state span,
+.add-tip-betfolio-page .betfolio-premium-lock,
+.add-tip-betfolio-page .betfolio-search-input::placeholder{
+  color:var(--dash-copy-soft) !important;
+}
+
+/* akcenty */
+.add-tip-betfolio-page .betfolio-add-hero-copy h2 span,
+.add-tip-betfolio-page .betfolio-api-saver-note strong,
+.add-tip-betfolio-page .betfolio-market-accordion-head i,
+.add-tip-betfolio-page .betfolio-side-top i,
+.add-tip-betfolio-page .betfolio-ticket-top i,
+.add-tip-betfolio-page .betfolio-side-total strong,
+.add-tip-betfolio-page .betfolio-fetch-spinner,
+.add-tip-betfolio-page .betfolio-search-go-btn i{
+  color:var(--dash-cyan) !important;
+}
+
+.add-tip-betfolio-page .betfolio-add-hero-features div,
+.add-tip-betfolio-page .betfolio-mini-feature,
+.add-tip-betfolio-page .betfolio-market-option,
+.add-tip-betfolio-page .betfolio-ticket-card,
+.add-tip-betfolio-page .betfolio-event-meta span,
+.add-tip-betfolio-page .betfolio-top-chip-v1291,
+.add-tip-betfolio-page .betfolio-market-tabs button,
+.add-tip-betfolio-page .betfolio-ticket-tabs button,
+.add-tip-betfolio-page .betfolio-more-btn,
+.add-tip-betfolio-page .betfolio-odd-box,
+.add-tip-betfolio-page .betfolio-add-mode-switch button{
+  background:linear-gradient(180deg, rgba(9,22,35,.98), rgba(8,18,29,.98)) !important;
+  border-color:rgba(62,214,255,.11) !important;
+}
+
+.add-tip-betfolio-page .betfolio-add-hero-features i,
+.add-tip-betfolio-page .betfolio-mini-feature i,
+.add-tip-betfolio-page .betfolio-search-go-btn,
+.add-tip-betfolio-page .betfolio-fetch-btn,
+.add-tip-betfolio-page .betfolio-publish-btn,
+.add-tip-betfolio-page .betfolio-add-mode-switch button.active,
+.add-tip-betfolio-page .betfolio-odd-box.active,
+.add-tip-betfolio-page .betfolio-market-option.active,
+.add-tip-betfolio-page .betfolio-market-tabs button.active,
+.add-tip-betfolio-page .betfolio-ticket-tabs button.active,
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn.active{
+  background:linear-gradient(135deg, #27dfd8 0%, #42c7ff 52%, #6f8cff 100%) !important;
+  color:#031019 !important;
+  border-color:transparent !important;
+}
+
+/* bar z top meczami i info नोटka — bardziej dashboardowa */
+.add-tip-betfolio-page .betfolio-api-saver-note{
+  background:linear-gradient(90deg, rgba(7,42,50,.55), rgba(6,17,28,.96)) !important;
+}
+.add-tip-betfolio-page .betfolio-top-panel-v1291{
+  background:linear-gradient(180deg, rgba(7,16,27,.96), rgba(5,12,20,.98)) !important;
+}
+.add-tip-betfolio-page .betfolio-top-chip-v1291.active{
+  background:linear-gradient(180deg, rgba(15,30,42,.98), rgba(10,18,29,.98)) !important;
+  border-color:rgba(255,211,94,.28) !important;
+  box-shadow:0 10px 24px rgba(255,208,86,.10), inset 0 0 0 1px rgba(255,211,94,.08) !important;
+  color:#fff3c8 !important;
+}
+
+/* eventy i rynki */
+.add-tip-betfolio-page .betfolio-event-row,
+.add-tip-betfolio-page .betfolio-market-accordion,
+.add-tip-betfolio-page .betfolio-total-box{
+  box-shadow:0 10px 26px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+.add-tip-betfolio-page .betfolio-event-row.active{
+  border-color:rgba(37,223,226,.26) !important;
+  box-shadow:0 16px 34px rgba(0,0,0,.22), 0 0 0 1px rgba(37,223,226,.06) !important;
+}
+
+/* kafle sportów pozostają kolorowe, ale rama i tekst jak dashboard */
+.add-tip-betfolio-page .betfolio-sport-cards-v1276{
+  box-shadow:0 14px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+.add-tip-betfolio-page .sport-card-v1276{
+  border:1px solid rgba(62,214,255,.10) !important;
+}
+.add-tip-betfolio-page .sport-card-v1276.active{
+  border-color:rgba(37,223,226,.42) !important;
+  box-shadow:0 14px 28px rgba(0,0,0,.22), 0 0 0 1px rgba(37,223,226,.08) !important;
+}
+
+/* inputy boczne */
+.add-tip-betfolio-page .betfolio-side-field input,
+.add-tip-betfolio-page .betfolio-side-field textarea,
+.add-tip-betfolio-page .betfolio-search-input{
+  background:#06111b !important;
+  border-color:rgba(62,214,255,.12) !important;
+  color:var(--dash-copy) !important;
+}
+
+/* delikatne hovery */
+.add-tip-betfolio-page .betfolio-market-tabs button:hover,
+.add-tip-betfolio-page .betfolio-ticket-tabs button:hover,
+.add-tip-betfolio-page .betfolio-odd-box:hover,
+.add-tip-betfolio-page .betfolio-market-option:hover,
+.add-tip-betfolio-page .betfolio-more-btn:hover,
+.add-tip-betfolio-page .betfolio-add-mode-switch button:hover,
+.add-tip-betfolio-page .betfolio-top-chip-v1291:hover{
+  border-color:rgba(62,214,255,.20) !important;
+  box-shadow:0 12px 24px rgba(0,0,0,.18), 0 0 14px rgba(37,223,226,.05) !important;
+}
