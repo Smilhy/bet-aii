@@ -12218,24 +12218,28 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
             <button type="button" onClick={() => onViewChange?.('payments')}>Płatności</button>
             <button type="button" onClick={() => onViewChange?.('subscriptions')}>Subskrypcja</button>
             <button type="button" onClick={() => onViewChange?.('earnings')}>Zarobki</button>
-            <button
-              type="button"
-              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
-              onClick={() => handleAdminWalletTab('adminFinance')}
-              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
-            >
-              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
-              <span>Admin finanse</span>
-            </button>
-            <button
-              type="button"
-              className={`wallet-v2-admin-tab ${adminUnlocked ? 'is-unlocked' : 'is-locked'}`}
-              onClick={() => handleAdminWalletTab('adminPayouts')}
-              title={adminUnlocked ? 'Przejdź do panelu admina' : 'Tylko administrator może wejść do tej sekcji'}
-            >
-              <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
-              <span>Admin wypłaty</span>
-            </button>
+            {adminUnlocked && (
+              <>
+                <button
+                  type="button"
+                  className="wallet-v2-admin-tab is-unlocked"
+                  onClick={() => handleAdminWalletTab('adminFinance')}
+                  title="Przejdź do panelu admina"
+                >
+                  <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+                  <span>Admin finanse</span>
+                </button>
+                <button
+                  type="button"
+                  className="wallet-v2-admin-tab is-unlocked"
+                  onClick={() => handleAdminWalletTab('adminPayouts')}
+                  title="Przejdź do panelu admina"
+                >
+                  <span className="wallet-v2-admin-lock" aria-hidden="true">🔒</span>
+                  <span>Admin wypłaty</span>
+                </button>
+              </>
+            )}
           </div>
 
           <div className="wallet-v2-topstats">
