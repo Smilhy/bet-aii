@@ -61541,3 +61541,268 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   color:#fff3c8 !important;
   box-shadow:0 10px 24px rgba(255,208,86,.10), inset 0 0 0 1px rgba(255,211,94,.08) !important;
 }
+
+/* ===== WERSJA 1316 — PORTFEL / WSZYSTKIE ZAKŁADKI / KOLORY JAK DASHBOARD ===== */
+.wallet-ultra-page,
+.wallet-subpage,
+.admin-finance-live-page,
+.admin-payout-live-page{
+  --wallet-dash-bg-main: linear-gradient(180deg, rgba(7,18,29,.965) 0%, rgba(4,10,18,.99) 100%);
+  --wallet-dash-bg-soft: linear-gradient(180deg, rgba(9,22,35,.965) 0%, rgba(5,12,21,.99) 100%);
+  --wallet-dash-bg-hero: linear-gradient(90deg, rgba(10,31,44,.96) 0%, rgba(5,18,31,.975) 36%, rgba(8,24,42,.985) 66%, rgba(31,51,92,.94) 100%);
+  --wallet-dash-border: rgba(68, 211, 255, .14);
+  --wallet-dash-border-strong: rgba(79, 230, 255, .24);
+  --wallet-dash-shadow: 0 18px 44px rgba(0,0,0,.32), 0 0 20px rgba(35,196,255,.06), inset 0 1px 0 rgba(255,255,255,.03);
+  --wallet-dash-text: #edf8ff;
+  --wallet-dash-muted: #9cb3c4;
+}
+
+.wallet-ultra-page .glass-v2-panel,
+.wallet-ultra-page .wallet-v2-sidecard,
+.wallet-subpage .glass-v2-panel,
+.admin-finance-live-page .glass-v2-panel,
+.admin-payout-live-page .glass-v2-panel{
+  background: var(--wallet-dash-bg-main) !important;
+  border: 1px solid var(--wallet-dash-border) !important;
+  box-shadow: var(--wallet-dash-shadow) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero,
+.wallet-subpage .deposits-hero,
+.wallet-subpage .payout-live-hero,
+.wallet-subpage .payments-live-hero,
+.wallet-subpage .subscription-live-hero,
+.wallet-subpage .earnings-live-hero,
+.admin-finance-live-page .admin-finance-live-hero,
+.admin-payout-live-page .admin-payout-live-hero{
+  background:
+    linear-gradient(90deg, rgba(11,30,44,.94) 0%, rgba(6,18,31,.97) 37%, rgba(9,26,46,.98) 68%, rgba(34,53,95,.94) 100%),
+    repeating-linear-gradient(90deg, rgba(76,196,255,.055) 0 1px, transparent 1px 38px) !important;
+  border-color: rgba(83, 222, 255, .18) !important;
+}
+
+.wallet-ultra-page .wallet-v2-hero::before,
+.wallet-ultra-page .wallet-v2-hero::after{
+  opacity: .52 !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs,
+.wallet-subpage .deposits-grid > .glass-v2-panel,
+.wallet-subpage .payout-live-grid > .glass-v2-panel,
+.wallet-subpage .payments-live-grid > .glass-v2-panel,
+.wallet-subpage .subscription-live-grid > .glass-v2-panel,
+.wallet-subpage .earnings-live-grid > .glass-v2-panel,
+.admin-finance-live-page .admin-finance-live-grid > .glass-v2-panel,
+.admin-payout-live-page .admin-payout-live-grid > .glass-v2-panel,
+.admin-payout-live-page .admin-payout-transactions-card{
+  background: var(--wallet-dash-bg-soft) !important;
+  border-color: rgba(68, 211, 255, .13) !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs button,
+.wallet-subpage .payments-live-filters button,
+.admin-finance-live-page .admin-finance-live-filters button,
+.admin-payout-live-page .admin-payout-live-toolbar button{
+  background: linear-gradient(180deg, rgba(12,28,42,.92), rgba(7,17,29,.98)) !important;
+  border: 1px solid rgba(90, 218, 255, .12) !important;
+  color: #d6eaf7 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.wallet-ultra-page .wallet-v2-tabs button.active,
+.wallet-subpage .payments-live-filters button.active,
+.admin-finance-live-page .admin-finance-live-filters button.active,
+.admin-payout-live-page .admin-payout-live-toolbar button.active{
+  background: linear-gradient(135deg, #27ddd2 0%, #53c2ff 58%, #6b7dff 100%) !important;
+  border-color: rgba(128, 220, 255, .42) !important;
+  color: #03131c !important;
+  box-shadow: 0 12px 28px rgba(46, 206, 255, .18), inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+
+.wallet-ultra-page .wallet-v2-admin-tab.is-locked,
+.wallet-ultra-page .wallet-v2-admin-tab.is-unlocked{
+  background: linear-gradient(180deg, rgba(84,18,20,.88), rgba(112,20,24,.88)) !important;
+  border-color: rgba(255, 121, 121, .14) !important;
+  color: #ffe5e5 !important;
+}
+
+.wallet-ultra-page .wallet-v2-stat,
+.wallet-ultra-page .wallet-v2-card,
+.wallet-ultra-page .wallet-v2-sidecard,
+.wallet-subpage .deposits-card,
+.wallet-subpage .payout-live-request-card,
+.wallet-subpage .payout-live-methods-card,
+.wallet-subpage .payout-live-history-card,
+.wallet-subpage .payments-live-table-card,
+.wallet-subpage .payments-live-info-card,
+.wallet-subpage .subscription-live-plan-card,
+.wallet-subpage .subscription-live-rules-card,
+.wallet-subpage .subscription-live-history-card,
+.wallet-subpage .earnings-live-chart-card,
+.wallet-subpage .earnings-live-stripe-card,
+.wallet-subpage .earnings-live-history-card,
+.admin-finance-live-page .glass-v2-panel,
+.admin-payout-live-page .glass-v2-panel{
+  background: linear-gradient(180deg, rgba(8,20,32,.97) 0%, rgba(4,10,18,.99) 100%) !important;
+}
+
+.wallet-ultra-page .wallet-v2-stat:nth-child(1){
+  background: linear-gradient(90deg, rgba(7,70,68,.42) 0%, rgba(7,28,38,.98) 100%) !important;
+}
+.wallet-ultra-page .wallet-v2-stat:nth-child(2){
+  background: linear-gradient(90deg, rgba(11,42,76,.34) 0%, rgba(7,22,38,.99) 100%) !important;
+}
+.wallet-ultra-page .wallet-v2-stat:nth-child(3){
+  background: linear-gradient(90deg, rgba(19,39,79,.30) 0%, rgba(8,20,34,.99) 100%) !important;
+}
+
+.wallet-ultra-page .wallet-v2-card-head h3,
+.wallet-ultra-page .wallet-v2-stat-top span,
+.wallet-subpage h1,
+.wallet-subpage h2,
+.wallet-subpage h3,
+.admin-finance-live-page h1,
+.admin-finance-live-page h2,
+.admin-payout-live-page h1,
+.admin-payout-live-page h2{
+  color: var(--wallet-dash-text) !important;
+}
+
+.wallet-ultra-page .wallet-v2-sub,
+.wallet-ultra-page .wallet-v2-stat small,
+.wallet-ultra-page .wallet-v2-history-item small,
+.wallet-ultra-page .wallet-v2-hero-features small,
+.wallet-subpage p,
+.wallet-subpage small,
+.admin-finance-live-page p,
+.admin-finance-live-page small,
+.admin-payout-live-page p,
+.admin-payout-live-page small{
+  color: var(--wallet-dash-muted) !important;
+}
+
+.wallet-ultra-page .wallet-v2-action-grid button,
+.wallet-ultra-page .wallet-pay-method,
+.wallet-subpage .deposits-amounts button,
+.wallet-subpage .deposits-methods button,
+.wallet-subpage .payout-live-methods button,
+.wallet-subpage .subscription-live-compare > div,
+.wallet-subpage .payments-live-row,
+.wallet-subpage .subscription-live-history > div,
+.wallet-subpage .earnings-live-history > div,
+.admin-finance-live-page .admin-finance-live-row,
+.admin-payout-live-page .admin-payout-live-row,
+.admin-payout-live-page .admin-payout-queue-item{
+  background: linear-gradient(180deg, rgba(11,26,40,.92), rgba(7,17,29,.98)) !important;
+  border-color: rgba(81, 213, 255, .10) !important;
+}
+
+.wallet-ultra-page .wallet-v2-action-grid button:hover,
+.wallet-ultra-page .wallet-pay-method:hover,
+.wallet-subpage .deposits-amounts button:hover,
+.wallet-subpage .payout-live-methods button:hover,
+.wallet-subpage .payments-live-row:hover,
+.wallet-subpage .subscription-live-history > div:hover,
+.wallet-subpage .earnings-live-history > div:hover,
+.admin-finance-live-page .admin-finance-live-row:hover,
+.admin-payout-live-page .admin-payout-live-row:hover,
+.admin-payout-live-page .admin-payout-queue-item:hover{
+  border-color: rgba(99, 226, 255, .22) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.22), 0 0 16px rgba(49, 205, 255, .07) !important;
+}
+
+.wallet-ultra-page .wallet-v2-primary-btn,
+.wallet-ultra-page .wallet-stripe-connect-card > button,
+.wallet-subpage .wallet-v2-primary-btn,
+.wallet-subpage .subscription-live-plan-card button,
+.wallet-subpage .payments-live-info-card button,
+.wallet-subpage .earnings-live-stripe-card button,
+.admin-finance-live-page .admin-finance-live-hero button,
+.admin-payout-live-page .admin-payout-actions-card button{
+  background: linear-gradient(135deg, #27ddd2 0%, #4ec4ff 58%, #6d7bff 100%) !important;
+  border: 1px solid rgba(137, 230, 255, .44) !important;
+  color: #04141c !important;
+  box-shadow: 0 16px 34px rgba(53, 204, 255, .16), inset 0 1px 0 rgba(255,255,255,.24) !important;
+}
+
+.wallet-ultra-page .wallet-stripe-connect-head .stripe-status-pill,
+.wallet-subpage .deposits-live-pill,
+.wallet-subpage .subscription-status-chip,
+.admin-finance-live-page .admin-finance-badge,
+.admin-payout-live-page .admin-payout-badge{
+  background: rgba(8, 24, 38, .82) !important;
+  border-color: rgba(91, 225, 255, .18) !important;
+  color: #f0dd8a !important;
+}
+
+.wallet-ultra-page .wallet-v2-history-item,
+.wallet-ultra-page .invoice-row-v2,
+.wallet-ultra-page .top-typer-row,
+.wallet-ultra-page .ai-day-item,
+.wallet-ultra-page .top-user-row,
+.wallet-subpage .payments-live-row,
+.wallet-subpage .subscription-live-history > div,
+.wallet-subpage .earnings-live-history > div,
+.admin-finance-live-page .admin-finance-live-row,
+.admin-payout-live-page .admin-payout-live-row{
+  border-bottom-color: rgba(86, 212, 255, .08) !important;
+}
+
+.wallet-ultra-page .wallet-v2-methods-card .wallet-v2-method-section,
+.wallet-subpage .deposits-history-list > div,
+.wallet-subpage .payout-live-history > div,
+.wallet-subpage .subscription-live-history > div,
+.wallet-subpage .earnings-live-history > div{
+  border-color: rgba(86, 212, 255, .08) !important;
+}
+
+.wallet-ultra-page .wallet-pay-method.is-active,
+.wallet-subpage .wallet-pay-method.is-active{
+  background: linear-gradient(180deg, rgba(11,39,54,.96), rgba(8,20,33,.99)) !important;
+  border-color: rgba(93, 225, 255, .24) !important;
+  box-shadow: inset 0 0 0 1px rgba(72, 216, 255, .06), 0 0 18px rgba(39, 203, 255, .08) !important;
+}
+
+.wallet-ultra-page .wallet-pay-method.is-locked,
+.wallet-subpage .wallet-pay-method.is-locked{
+  background: linear-gradient(180deg, rgba(9,20,31,.90), rgba(5,12,20,.98)) !important;
+}
+
+.wallet-ultra-page .wallet-v2-action-grid button b,
+.wallet-ultra-page .wallet-v2-history-item b.positive,
+.wallet-subpage .earnings-positive,
+.wallet-subpage .payments-live-amount.is-positive,
+.admin-finance-live-page .is-positive,
+.admin-payout-live-page .is-positive{
+  color: #27f0d5 !important;
+}
+
+.wallet-ultra-page .wallet-v2-history-item b.negative,
+.wallet-subpage .payments-live-amount.is-negative,
+.admin-finance-live-page .is-negative,
+.admin-payout-live-page .is-negative{
+  color: #ff7a8b !important;
+}
+
+.wallet-subpage .deposits-custom input,
+.wallet-subpage .payout-live-request-card input,
+.wallet-subpage .payout-live-request-card textarea,
+.admin-payout-live-page input,
+.admin-payout-live-page select,
+.admin-finance-live-page input,
+.admin-finance-live-page select{
+  background: rgba(5, 14, 24, .96) !important;
+  border-color: rgba(83, 214, 255, .14) !important;
+  color: #edf8ff !important;
+}
+
+.wallet-subpage .deposits-custom input:focus,
+.wallet-subpage .payout-live-request-card input:focus,
+.wallet-subpage .payout-live-request-card textarea:focus,
+.admin-payout-live-page input:focus,
+.admin-payout-live-page select:focus,
+.admin-finance-live-page input:focus,
+.admin-finance-live-page select:focus{
+  border-color: rgba(104, 231, 255, .28) !important;
+  box-shadow: 0 0 0 3px rgba(39, 206, 255, .10) !important;
+}
