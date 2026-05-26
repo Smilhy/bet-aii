@@ -60898,3 +60898,254 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   .ai-lite-kicker{font-size:11px;letter-spacing:.12em}
   .ai-lite-hero{padding:20px}
 }
+
+/* WERSJA 1313 — DODAJ TYP pełna kolorystyka jak Dashboard (bez zmiany layoutu) */
+.add-tip-betfolio-page{
+  --addtip-dash-surface-1: linear-gradient(180deg, rgba(6,20,34,.96), rgba(3,12,23,.98));
+  --addtip-dash-surface-2: linear-gradient(180deg, rgba(7,25,42,.96), rgba(5,17,31,.98));
+  --addtip-dash-surface-3: linear-gradient(135deg, rgba(4,21,37,.96), rgba(8,32,53,.94));
+  --addtip-dash-hero: linear-gradient(135deg, rgba(8,30,47,.98), rgba(5,25,45,.96) 46%, rgba(13,42,68,.93) 78%, rgba(26,53,101,.90));
+  --addtip-dash-border: rgba(44, 219, 255, .14);
+  --addtip-dash-border-strong: rgba(44, 219, 255, .22);
+  --addtip-dash-text: #effaff;
+  --addtip-dash-muted: #8fb3c5;
+  --addtip-dash-muted-2: #75a1b7;
+  --addtip-dash-accent: #29e6e7;
+  --addtip-dash-accent-2: #63a8ff;
+  --addtip-dash-accent-3: #20e1b2;
+  --addtip-dash-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+
+.add-tip-betfolio-page .betfolio-left,
+.add-tip-betfolio-page .betfolio-center,
+.add-tip-betfolio-page .betfolio-right{
+  background:var(--addtip-dash-surface-1) !important;
+  border:1px solid var(--addtip-dash-border) !important;
+  box-shadow:var(--addtip-dash-shadow), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.add-tip-betfolio-page .betfolio-search-wrap,
+.add-tip-betfolio-page .betfolio-side-field,
+.add-tip-betfolio-page .betfolio-ticket-row,
+.add-tip-betfolio-page .betfolio-ticket-card,
+.add-tip-betfolio-page .betfolio-side-note,
+.add-tip-betfolio-page .betfolio-sidebar-block,
+.add-tip-betfolio-page .betfolio-empty-state,
+.add-tip-betfolio-page .betfolio-details-wrap,
+.add-tip-betfolio-page .betfolio-market-accordion,
+.add-tip-betfolio-page .betfolio-market-option,
+.add-tip-betfolio-page .betfolio-event-row,
+.add-tip-betfolio-page .betfolio-top-panel-v1291,
+.add-tip-betfolio-page .betfolio-api-saver-note,
+.add-tip-betfolio-page .betfolio-sport-cards-v1276,
+.add-tip-betfolio-page .betfolio-market-board-view{
+  background:var(--addtip-dash-surface-2) !important;
+  border-color:var(--addtip-dash-border) !important;
+  box-shadow:0 12px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+
+.add-tip-betfolio-page .betfolio-search-input,
+.add-tip-betfolio-page .betfolio-event-teamline strong,
+.add-tip-betfolio-page .betfolio-events-head strong,
+.add-tip-betfolio-page .betfolio-details-top strong,
+.add-tip-betfolio-page .betfolio-ticket-summary strong,
+.add-tip-betfolio-page .betfolio-ticket-card strong,
+.add-tip-betfolio-page .betfolio-market-group-title strong,
+.add-tip-betfolio-page .betfolio-total-box b,
+.add-tip-betfolio-page .sport-card-top-v1276 span,
+.add-tip-betfolio-page .sport-card-v1276 strong,
+.add-tip-betfolio-page .betfolio-odd-box b,
+.add-tip-betfolio-page .betfolio-more-btn,
+.add-tip-betfolio-page .betfolio-market-option b,
+.add-tip-betfolio-page .betfolio-market-option strong,
+.add-tip-betfolio-page .betfolio-market-accordion-head strong{
+  color:var(--addtip-dash-text) !important;
+}
+
+.add-tip-betfolio-page .betfolio-side-caption,
+.add-tip-betfolio-page .betfolio-mini-brand,
+.add-tip-betfolio-page .betfolio-center-header p,
+.add-tip-betfolio-page .betfolio-event-meta span,
+.add-tip-betfolio-page .betfolio-center-badges span,
+.add-tip-betfolio-page .betfolio-ticket-summary small,
+.add-tip-betfolio-page .betfolio-ticket-card small,
+.add-tip-betfolio-page .betfolio-total-box span,
+.add-tip-betfolio-page .betfolio-side-note,
+.add-tip-betfolio-page .betfolio-premium-lock,
+.add-tip-betfolio-page .betfolio-ticket-profit,
+.add-tip-betfolio-page .sport-card-v1276 small,
+.add-tip-betfolio-page .betfolio-market-option span,
+.add-tip-betfolio-page .betfolio-market-group-title span,
+.add-tip-betfolio-page .betfolio-market-accordion-head b,
+.add-tip-betfolio-page .betfolio-empty-state,
+.add-tip-betfolio-page .betfolio-empty-state span{
+  color:var(--addtip-dash-muted) !important;
+}
+
+.add-tip-betfolio-page .betfolio-add-hero{
+  background:
+    radial-gradient(circle at 76% 30%, rgba(35, 219, 255, .15), transparent 23%),
+    radial-gradient(circle at 82% 58%, rgba(26, 222, 177, .08), transparent 20%),
+    var(--addtip-dash-hero) !important;
+  border:1px solid var(--addtip-dash-border-strong) !important;
+  box-shadow:0 26px 65px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04), 0 0 24px rgba(41,230,231,.05) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero::before{
+  opacity:.55 !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-copy h2,
+.add-tip-betfolio-page .betfolio-add-hero-copy p{
+  color:var(--addtip-dash-text) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-copy h2 span{
+  color:var(--addtip-dash-accent) !important;
+  text-shadow:0 0 18px rgba(41,230,231,.18) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-copy p{
+  color:#a9c5d3 !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features div{
+  background:rgba(7, 20, 35, .68) !important;
+  border:1px solid rgba(44,219,255,.12) !important;
+  box-shadow:0 12px 26px rgba(0,0,0,.16) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features i{
+  background:linear-gradient(135deg, rgba(41,230,231,.22), rgba(99,168,255,.18)) !important;
+  border-color:rgba(41,230,231,.20) !important;
+  color:var(--addtip-dash-accent) !important;
+}
+.add-tip-betfolio-page .betfolio-add-hero-features strong{color:#f3fcff !important;}
+.add-tip-betfolio-page .betfolio-add-hero-features small{color:#98bbca !important;}
+.add-tip-betfolio-page .betfolio-add-hero-visual,
+.add-tip-betfolio-page .betfolio-sport-hero-v2{filter:saturate(.92) brightness(.98) !important;}
+
+.add-tip-betfolio-page .betfolio-api-saver-note{
+  background:linear-gradient(90deg, rgba(3, 86, 95, .28), rgba(6, 25, 43, .92)) !important;
+  border:1px solid rgba(43,225,213,.16) !important;
+}
+.add-tip-betfolio-page .betfolio-api-saver-note strong{
+  color:var(--addtip-dash-accent) !important;
+}
+.add-tip-betfolio-page .betfolio-api-saver-note span{
+  color:#c9e5ec !important;
+}
+
+.add-tip-betfolio-page .betfolio-sport-cards-v1276,
+.add-tip-betfolio-page .betfolio-top-panel-v1291,
+.add-tip-betfolio-page .betfolio-add-mode-switch{
+  background:var(--addtip-dash-surface-2) !important;
+  border:1px solid var(--addtip-dash-border) !important;
+}
+.add-tip-betfolio-page .sport-cards-head-v1276 span{
+  color:#d4f4ff !important;
+}
+.add-tip-betfolio-page .sport-card-v1276{
+  border-color:rgba(44,219,255,.12) !important;
+  box-shadow:0 12px 24px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+.add-tip-betfolio-page .sport-card-v1276.active{
+  border-color:rgba(41,230,231,.48) !important;
+  box-shadow:0 16px 34px rgba(0,0,0,.20), 0 0 0 1px rgba(41,230,231,.14) !important;
+}
+
+.add-tip-betfolio-page .betfolio-add-mode-switch button,
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn,
+.add-tip-betfolio-page .betfolio-top-chip-v1291,
+.add-tip-betfolio-page .betfolio-market-accordion-head b,
+.add-tip-betfolio-page .betfolio-market-tabs button,
+.add-tip-betfolio-page .betfolio-ticket-tabs button,
+.add-tip-betfolio-page .betfolio-odd-box,
+.add-tip-betfolio-page .betfolio-more-btn,
+.add-tip-betfolio-page .betfolio-market-option,
+.add-tip-betfolio-page .betfolio-search-go-btn,
+.add-tip-betfolio-page .betfolio-fetch-btn,
+.add-tip-betfolio-page .betfolio-small-outline{
+  background:linear-gradient(180deg, rgba(12,28,46,.98), rgba(9,20,35,.98)) !important;
+  border:1px solid rgba(44,219,255,.12) !important;
+  color:#def8ff !important;
+}
+.add-tip-betfolio-page .betfolio-add-mode-switch button.active,
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn.active,
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn:hover,
+.add-tip-betfolio-page .betfolio-odd-box.active,
+.add-tip-betfolio-page .betfolio-market-option.active,
+.add-tip-betfolio-page .betfolio-market-tabs button.active,
+.add-tip-betfolio-page .betfolio-ticket-tabs button.active,
+.add-tip-betfolio-page .betfolio-search-go-btn,
+.add-tip-betfolio-page .betfolio-fetch-btn,
+.add-tip-betfolio-page .betfolio-add-hero .betfolio-add-hero-cta,
+.add-tip-betfolio-page .betfolio-publish-btn{
+  background:linear-gradient(135deg, #23e0d8 0%, #49c5ff 52%, #7386ff 100%) !important;
+  border-color:transparent !important;
+  color:#04131e !important;
+  box-shadow:0 14px 30px rgba(54,203,255,.18), inset 0 1px 0 rgba(255,255,255,.4) !important;
+}
+.add-tip-betfolio-page .betfolio-top-chip-v1291.active{
+  background:linear-gradient(135deg, rgba(27,231,199,.16), rgba(71,149,255,.18)) !important;
+  border-color:rgba(44,219,255,.22) !important;
+  color:#dffcff !important;
+}
+.add-tip-betfolio-page .betfolio-top-chip-v1291.subtle{
+  border-style:dashed !important;
+}
+.add-tip-betfolio-page .betfolio-add-mode-switch button:not(.active):hover,
+.add-tip-betfolio-page .betfolio-odd-box:hover,
+.add-tip-betfolio-page .betfolio-more-btn:hover,
+.add-tip-betfolio-page .betfolio-market-option:hover,
+.add-tip-betfolio-page .betfolio-market-tabs button:hover,
+.add-tip-betfolio-page .betfolio-ticket-tabs button:hover{
+  border-color:rgba(44,219,255,.24) !important;
+  box-shadow:0 12px 24px rgba(0,0,0,.16), 0 0 16px rgba(41,230,231,.06) !important;
+}
+
+.add-tip-betfolio-page .betfolio-event-row,
+.add-tip-betfolio-page .betfolio-market-accordion,
+.add-tip-betfolio-page .betfolio-market-option,
+.add-tip-betfolio-page .betfolio-total-box,
+.add-tip-betfolio-page .betfolio-ticket-row{
+  background:linear-gradient(180deg, rgba(8,25,42,.96), rgba(6,17,30,.98)) !important;
+}
+.add-tip-betfolio-page .betfolio-event-row.active{
+  border-color:rgba(41,230,231,.28) !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.22), 0 0 0 1px rgba(41,230,231,.08) !important;
+}
+.add-tip-betfolio-page .betfolio-event-meta span{
+  background:rgba(255,255,255,.035) !important;
+  border:1px solid rgba(255,255,255,.04) !important;
+}
+.add-tip-betfolio-page .betfolio-odd-box span{
+  color:var(--addtip-dash-muted) !important;
+}
+
+.add-tip-betfolio-page .betfolio-side-top,
+.add-tip-betfolio-page .betfolio-ticket-top,
+.add-tip-betfolio-page .betfolio-details-top,
+.add-tip-betfolio-page .betfolio-center-header,
+.add-tip-betfolio-page .betfolio-events-head{
+  color:var(--addtip-dash-text) !important;
+}
+
+.add-tip-betfolio-page .betfolio-empty-state strong,
+.add-tip-betfolio-page .betfolio-premium-lock,
+.add-tip-betfolio-page .betfolio-side-caption,
+.add-tip-betfolio-page .betfolio-market-group-title strong,
+.add-tip-betfolio-page .betfolio-details-top span{
+  color:#d7f2ff !important;
+}
+
+.add-tip-betfolio-page .betfolio-publish-btn,
+.add-tip-betfolio-page .betfolio-add-mode-switch button.active,
+.add-tip-betfolio-page .betfolio-top-matches-loading-btn.active,
+.add-tip-betfolio-page .betfolio-fetch-btn,
+.add-tip-betfolio-page .betfolio-search-go-btn{
+  font-weight:900 !important;
+}
+
+.add-tip-betfolio-page .betfolio-search-input::placeholder{
+  color:#7ea3b5 !important;
+}
+
+.add-tip-betfolio-page .betfolio-left,
+.add-tip-betfolio-page .betfolio-right{
+  scrollbar-color:rgba(46,225,214,.28) rgba(255,255,255,.03) !important;
+}

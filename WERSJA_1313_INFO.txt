@@ -1,0 +1,8 @@
+WERSJA 1313 — DODAJ TYP: KOLORYSTYKA DASHBOARDU
+
+Zmiany:
+- dopasowano całą zakładkę „Dodaj typ” kolorystycznie do Dashboardu,
+- ujednolicono tło głównych paneli, ramek i kart do klimatu dashboard,
+- hero, sidebar, karta środkowa, prawa kolumna, sport cards, event rows i market board dostały dashboardowy dark cyan/teal look,
+- przyciski aktywne i CTA zostały przeniesione na jaśniejszy dashboardowy gradient cyan/blue,
+- nie zmieniano logiki ani layoutu — tylko kolorystykę i klimat wizualny.
