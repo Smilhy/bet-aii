@@ -61357,3 +61357,187 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   border-color:rgba(62,214,255,.20) !important;
   box-shadow:0 12px 24px rgba(0,0,0,.18), 0 0 14px rgba(37,223,226,.05) !important;
 }
+
+/* WERSJA 1315 — DODAJ TYP final premium dashboard palette (granit zamiast niebieskich ramek) */
+.add-tip-betfolio-page{
+  --addtip-premium-1:#071019;
+  --addtip-premium-2:#0a1420;
+  --addtip-premium-3:#0d1a27;
+  --addtip-premium-4:#101f2d;
+  --addtip-premium-line:rgba(79, 230, 255, .10);
+  --addtip-premium-line-strong:rgba(79, 230, 255, .18);
+  --addtip-premium-copy:#eaf7ff;
+  --addtip-premium-copy-soft:#88a3b6;
+  --addtip-premium-glow:rgba(37, 228, 222, .07);
+}
+
+.add-tip-betfolio-page .betfolio-left,
+.add-tip-betfolio-page .betfolio-center,
+.add-tip-betfolio-page .betfolio-right{
+  background:
+    linear-gradient(180deg, rgba(6,13,21,.985), rgba(4,10,16,.992)) !important;
+  border-color:rgba(72, 222, 255, .10) !important;
+  box-shadow:
+    0 24px 48px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.018),
+    0 0 0 1px rgba(30,235,223,.025) !important;
+}
+
+.add-tip-betfolio-page .betfolio-search-wrap,
+.add-tip-betfolio-page .betfolio-search-panel,
+.add-tip-betfolio-page .betfolio-sidebar-block,
+.add-tip-betfolio-page .betfolio-market-board-view,
+.add-tip-betfolio-page .betfolio-details-wrap,
+.add-tip-betfolio-page .betfolio-ticket-wrap,
+.add-tip-betfolio-page .betfolio-api-saver-note,
+.add-tip-betfolio-page .betfolio-top-panel-v1291,
+.add-tip-betfolio-page .betfolio-sport-cards-v1276{
+  background:
+    linear-gradient(180deg, rgba(8,16,25,.985), rgba(5,11,18,.992)) !important;
+  border-color:rgba(72, 222, 255, .10) !important;
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.018) !important;
+}
+
+.add-tip-betfolio-page .betfolio-side-top,
+.add-tip-betfolio-page .betfolio-side-top h3,
+.add-tip-betfolio-page .betfolio-side-caption,
+.add-tip-betfolio-page .betfolio-search-input,
+.add-tip-betfolio-page .betfolio-search-input::placeholder{
+  color:var(--addtip-premium-copy) !important;
+}
+
+/* search + top note bardziej jak dashboard */
+.add-tip-betfolio-page .betfolio-search-input{
+  background:linear-gradient(180deg, rgba(8,17,26,.98), rgba(5,11,18,.99)) !important;
+  border-color:rgba(72, 222, 255, .10) !important;
+}
+.add-tip-betfolio-page .betfolio-search-input::placeholder{
+  color:#7996ab !important;
+}
+.add-tip-betfolio-page .betfolio-search-go-btn{
+  background:linear-gradient(135deg, #28ddd8 0%, #4dc7ff 58%, #6f89ff 100%) !important;
+  border-color:transparent !important;
+  color:#041119 !important;
+  box-shadow:0 14px 28px rgba(45, 221, 225, .22) !important;
+}
+.add-tip-betfolio-page .betfolio-api-saver-note{
+  background:linear-gradient(90deg, rgba(7,36,43,.68), rgba(6,13,21,.98)) !important;
+}
+
+/* lewy panel sportów – granit premium jak dashboard */
+.add-tip-betfolio-page .sport-accordion-head,
+.add-tip-betfolio-page .football-country-node > button,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button{
+  background:
+    linear-gradient(180deg, rgba(18,30,45,.92), rgba(11,20,32,.97)) !important;
+  border:1px solid rgba(88, 226, 255, .11) !important;
+  color:#dbe9f3 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 12px 24px rgba(0,0,0,.18) !important;
+}
+
+.add-tip-betfolio-page .sport-accordion-head::before,
+.add-tip-betfolio-page .football-country-node > button::before,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button::before,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button::before{
+  background:linear-gradient(90deg, rgba(255,255,255,.03), transparent 46%, rgba(46,236,227,.03)) !important;
+}
+
+.add-tip-betfolio-page .sport-accordion-head:hover,
+.add-tip-betfolio-page .football-country-node > button:hover,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button:hover,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button:hover{
+  border-color:rgba(72, 222, 255, .20) !important;
+  background:linear-gradient(180deg, rgba(20,34,50,.94), rgba(12,22,35,.98)) !important;
+  box-shadow:
+    0 14px 28px rgba(0,0,0,.22),
+    0 0 18px rgba(37,228,222,.05),
+    inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.add-tip-betfolio-page .sport-accordion-head.active,
+.add-tip-betfolio-page .football-country-node > button.is-active,
+.add-tip-betfolio-page .football-country-node > button.country-active,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.is-active,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.league-active,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button.is-active,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button.league-active{
+  background:
+    linear-gradient(180deg, rgba(15,47,61,.92), rgba(10,23,34,.98)) !important;
+  border-color:rgba(73, 226, 255, .28) !important;
+  color:#f2fdff !important;
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.22),
+    0 0 0 1px rgba(37,228,222,.06),
+    0 0 20px rgba(37,228,222,.06),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.add-tip-betfolio-page .sport-accordion-head.active *,
+.add-tip-betfolio-page .football-country-node > button.is-active *,
+.add-tip-betfolio-page .football-country-node > button.country-active *,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.is-active *,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.league-active *,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button.is-active *,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button.league-active *{
+  color:#f2fdff !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button b,
+.add-tip-betfolio-page .sport-accordion-head b{
+  color:#92bfd0 !important;
+  background:rgba(255,255,255,.035) !important;
+  border:1px solid rgba(255,255,255,.04) !important;
+}
+
+.add-tip-betfolio-page .football-country-node > button.country-active b,
+.add-tip-betfolio-page .football-country-node > button.is-active b,
+.add-tip-betfolio-page .sport-accordion-head.active b,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.is-active b,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button.league-active b{
+  color:#03131a !important;
+  background:linear-gradient(135deg, #28ddd8, #57cfff) !important;
+  border-color:transparent !important;
+  box-shadow:0 8px 18px rgba(37,228,222,.18) !important;
+}
+
+.add-tip-betfolio-page .football-country-label,
+.add-tip-betfolio-page .sport-accordion-head,
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two button,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list button{
+  color:#dceaf4 !important;
+}
+
+.add-tip-betfolio-page .football-country-node > .sport-accordion-children.level-two,
+.add-tip-betfolio-page .football-country-node > .football-leagues-list{
+  border-left:1px solid rgba(72, 222, 255, .14) !important;
+}
+
+/* przyciski i chipsy w centrum dalej w klimacie dashboard */
+.add-tip-betfolio-page .betfolio-add-mode-switch,
+.add-tip-betfolio-page .betfolio-fixture-mode-tabs,
+.add-tip-betfolio-page .betfolio-event-tabs,
+.add-tip-betfolio-page .betfolio-ticket-tabs{
+  background:rgba(5,12,20,.86) !important;
+  border-color:rgba(72, 222, 255, .10) !important;
+}
+.add-tip-betfolio-page .betfolio-add-mode-switch button:not(.active),
+.add-tip-betfolio-page .betfolio-top-chip-v1291,
+.add-tip-betfolio-page .betfolio-fixture-mode-tabs button,
+.add-tip-betfolio-page .betfolio-event-tabs button,
+.add-tip-betfolio-page .betfolio-ticket-tabs button{
+  background:linear-gradient(180deg, rgba(10,18,28,.98), rgba(7,13,21,.99)) !important;
+  border-color:rgba(72, 222, 255, .10) !important;
+  color:#dbe9f4 !important;
+}
+
+.add-tip-betfolio-page .betfolio-top-chip-v1291.active{
+  background:linear-gradient(180deg, rgba(22,29,38,.98), rgba(10,16,24,.99)) !important;
+  border-color:rgba(255,211,94,.28) !important;
+  color:#fff3c8 !important;
+  box-shadow:0 10px 24px rgba(255,208,86,.10), inset 0 0 0 1px rgba(255,211,94,.08) !important;
+}

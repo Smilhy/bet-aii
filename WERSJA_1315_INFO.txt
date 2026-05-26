@@ -1,0 +1,9 @@
+WERSJA 1315 — DODAJ TYP FINAL PREMIUM DASHBOARD PALETTE
+
+Zmiany:
+- poprawiona pełna kolorystyka zakładki Dodaj typ pod klimat Dashboardu,
+- usunięty zbyt niebieski wygląd lewej listy sportów / krajów / lig,
+- lewy panel dostał ciemny granitowy premium styl z delikatnym neon-cyan akcentem,
+- aktywne elementy są bardziej premium i mniej jaskrawo-niebieskie,
+- search panel, note bar i główne kontenery zostały dociemnione pod Dashboard,
+- zachowany layout i logika — zmieniona wyłącznie warstwa wizualna.
