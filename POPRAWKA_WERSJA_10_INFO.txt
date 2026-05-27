@@ -1,0 +1,12 @@
+POPRAWKA WERSJA 10
+
+Zakres zmian:
+- Mój profil -> Typy: jeszcze bardziej zwężona lewa sekcja karty.
+- Zmniejszony avatar, nick i box statystyk.
+- Przycisk DARMOWY / PREMIUM opuszczony niżej, żeby nie nachodził i był bliżej dołu jak we wzorze.
+- Dalsze dopasowanie proporcji do wyglądu kart z Dashboardu.
+
+Build:
+- paczka bez node_modules
+- paczka bez dist
+- gotowa pod Netlify
