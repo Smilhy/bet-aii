@@ -9909,8 +9909,20 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardAway = tip.team_away || tip.away_team || 'Goście'
   const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
   const cardAnalysis = tip.analysis || tip.ai_analysis || tip.description || 'Brak analizy użytkownika.'
-  const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
-  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
+  const cardMatchLabel = tip.display_match_label || (tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj')
+  const dashboardStatus = String(tip.status || 'pending').toLowerCase()
+  const dashboardApprovalStatus = String(tip.admin_approval_status || tip.manual_settlement_status || '').toLowerCase()
+  const cardStatusLabel = tip.display_status_label || (['won', 'win', 'wygrany', 'wygrana'].includes(dashboardStatus)
+    ? 'Wygrany'
+    : ['lost', 'loss', 'przegrany', 'przegrana'].includes(dashboardStatus)
+      ? 'Przegrany'
+      : ['void', 'push', 'zwrot'].includes(dashboardStatus)
+        ? 'Zwrot'
+        : dashboardApprovalStatus === 'pending' || dashboardApprovalStatus === 'pending_admin'
+          ? 'Czeka na admina'
+          : dashboardApprovalStatus === 'rejected'
+            ? 'Odrzucony'
+            : 'Oczekujący')
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
   const showFollowButton = !isOwnTip
@@ -18701,56 +18713,99 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     profitValue: profitAmount,
   }
 
-  const renderProfileTipCard = (tip) => (
-    <ProfileLiveTipCard
-      key={tip.id}
-      tip={tip}
-      sourceTip={tip.rawTip || {}}
-      avatarUrl={avatarUrl}
-      initials={initials}
-      displayName={displayName}
-      currentUser={viewerProfile}
-      unlockedTips={unlockedTips}
-      tipsterSubscriptions={profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
-        ...tipsterSubscriptions,
-        { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
-      ] : tipsterSubscriptions}
-      followingTipsters={followingTipsters}
-      onToggleFollow={onToggleFollow}
-      onUnlock={onUnlock}
-      onSubscribeToTipster={onSubscribeToTipster}
-      onToast={onToast}
-      onViewType={() => setProfileTab('tips')}
-      authorStats={profileTipStats}
-      canFollowAuthor={!profileIsOwnForViewer}
-    />
-  )
+  const mapProfileCardToDashboardTip = (tip, overrides = {}) => {
+    const raw = tip.rawTip || {}
+    const mappedStatus = tip.statusLabel === 'Wygrany'
+      ? 'won'
+      : tip.statusLabel === 'Przegrany'
+        ? 'lost'
+        : tip.statusLabel === 'Zwrot'
+          ? 'void'
+          : 'pending'
+
+    return {
+      id: tip.id,
+      access_type: tip.premium ? 'premium' : 'free',
+      author_id: overrides.author_id ?? raw.author_id ?? raw.user_id ?? viewedIdKey ?? viewerProfile?.id ?? null,
+      user_id: overrides.user_id ?? raw.user_id ?? raw.author_id ?? viewerProfile?.id ?? null,
+      author_name: overrides.author_name ?? raw.author_name ?? raw.username ?? displayName ?? 'Użytkownik',
+      author_email: overrides.author_email ?? raw.author_email ?? raw.email ?? raw.user_email ?? viewerProfile?.email ?? '',
+      author_avatar_url: overrides.author_avatar_url ?? raw.author_avatar_url ?? raw.avatar_url ?? raw.profile_avatar_url ?? avatarUrl ?? '',
+      profile_avatar_url: overrides.author_avatar_url ?? raw.author_avatar_url ?? raw.avatar_url ?? raw.profile_avatar_url ?? avatarUrl ?? '',
+      author_visible_stats: overrides.author_visible_stats ?? profileTipStats,
+      team_home: tip.home,
+      team_away: tip.away,
+      home_logo: tip.homeLogo,
+      away_logo: tip.awayLogo,
+      home_team_id: tip.homeTeamId,
+      away_team_id: tip.awayTeamId,
+      bet_type: tip.pick,
+      prediction: tip.pick,
+      pick: tip.pick,
+      odds: Number(tip.odds || 0) || 0,
+      stake: Number(tip.stake || 0) || 0,
+      analysis: tip.analysis,
+      ai_analysis: tip.analysis,
+      description: tip.analysis,
+      league: tip.league,
+      match_time: raw.match_time || raw.event_date || raw.kickoff_at || null,
+      display_match_label: tip.matchLabel,
+      created_at: raw.created_at || null,
+      status: mappedStatus,
+      admin_approval_status: tip.approvalStatus || raw.admin_approval_status || raw.manual_settlement_status || '',
+      manual_settlement_status: tip.approvalStatus || raw.manual_settlement_status || '',
+      manual_settlement_result: tip.manualResult || raw.manual_settlement_result || raw.admin_approved_result || '',
+      display_status_label: tip.statusLabel,
+      likes: Number(tip.likes || raw.likes || raw.hearts || 0) || 0,
+      dislikes: Number(raw.dislikes || 0) || 0,
+      comments_count: Number(tip.comments || raw.comments_count || raw.comments || 0) || 0,
+      price: Math.max(0, Number(tip.price || raw.price || 29) || 29),
+    }
+  }
+
+  const renderProfileTipCard = (tip) => {
+    const dashboardStyleTip = mapProfileCardToDashboardTip(tip)
+    const profileTipUnlocked = profileIsOwnForViewer || unlockedTips?.has?.(tip.id) || unlockedTips?.has?.(tip.rawTip?.id)
+    return (
+      <TipCard
+        key={tip.id}
+        tip={dashboardStyleTip}
+        unlocked={profileTipUnlocked}
+        onUnlock={onUnlock}
+        onSubscribeToTipster={onSubscribeToTipster}
+        profileSubscriptionActive={Boolean(profileSubscriptionActive && !profileIsOwnForViewer)}
+        currentUser={viewerProfile}
+        followingTipsters={followingTipsters}
+        onToggleFollow={onToggleFollow}
+        onOpenTipster={null}
+        onToast={onToast}
+      />
+    )
+  }
 
   const renderPurchasedSingleCard = (tip) => {
     const raw = tip.rawTip || tip
     const purchasedDisplayName = raw.author_name || raw.username || tip.author || 'Typer'
     const purchasedAvatar = raw.author_avatar_url || raw.avatar_url || ''
-    const purchasedInitials = String(purchasedDisplayName || 'TY').slice(0, 2).toUpperCase()
+    const dashboardStyleTip = mapProfileCardToDashboardTip(tip, {
+      author_name: purchasedDisplayName,
+      author_avatar_url: purchasedAvatar,
+      author_visible_stats: null,
+    })
     return (
       <div className="profile-purchased-single-wrap-v952" key={tip.id}>
         <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
-        <ProfileLiveTipCard
-          tip={tip}
-          sourceTip={raw}
-          avatarUrl={purchasedAvatar}
-          initials={purchasedInitials}
-          displayName={purchasedDisplayName}
-          currentUser={viewerProfile}
-          unlockedTips={unlockedTips}
-          tipsterSubscriptions={tipsterSubscriptions}
-          followingTipsters={followingTipsters}
-          onToggleFollow={onToggleFollow}
+        <TipCard
+          tip={dashboardStyleTip}
+          unlocked={true}
           onUnlock={onUnlock}
           onSubscribeToTipster={onSubscribeToTipster}
+          profileSubscriptionActive={false}
+          currentUser={viewerProfile}
+          followingTipsters={followingTipsters}
+          onToggleFollow={onToggleFollow}
+          onOpenTipster={null}
           onToast={onToast}
-          onViewType={() => setProfileTab('tips')}
-          authorStats={null}
-          canFollowAuthor={!isSameProfileIdentity(viewerProfile, raw)}
         />
       </div>
     )
