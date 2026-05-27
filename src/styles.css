@@ -62335,3 +62335,133 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     grid-template-columns:286px minmax(390px,1.18fr) minmax(145px,.42fr) minmax(122px,.30fr) minmax(95px,.20fr) minmax(155px,.32fr) 172px!important;
   }
 }
+
+/* WERSJA 8 — Mój profil / Typy: elastyczne kolumny, bez ucinania lewej sekcji */
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list,
+.profile-static-v3 .profile-v4-tips-page .profile-purchased-singles-list-v952{
+  overflow-x:hidden!important;
+  width:100%!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+  width:100%!important;
+  max-width:100%!important;
+  grid-template-columns:minmax(270px,.96fr) minmax(260px,1.34fr) minmax(128px,.47fr) minmax(96px,.33fr) minmax(72px,.21fr) minmax(118px,.38fr) minmax(112px,.31fr)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left{
+  grid-template-columns:78px minmax(0,1fr)!important;
+  padding:18px 18px 16px!important;
+  gap:8px 14px!important;
+  min-width:0!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-avatar{
+  width:74px!important;
+  height:74px!important;
+  min-width:74px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874 strong,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left strong.tipster-name-link{
+  font-size:18px!important;
+  max-width:calc(100% - 24px)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876{
+  padding:9px 11px!important;
+  font-size:12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access{
+  min-width:154px!important;
+  max-width:190px!important;
+  padding:10px 15px!important;
+  margin-top:10px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-main{
+  padding:20px 20px 16px!important;
+  min-width:0!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match{
+  grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;
+  gap:12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match > div strong{
+  max-width:150px!important;
+  font-size:18px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-team-logo{
+  width:48px!important;
+  height:48px!important;
+  flex-basis:48px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field{
+  padding:20px 14px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field strong{
+  font-size:19px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field.odds strong{
+  font-size:30px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis{
+  padding:20px 12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis p{
+  max-width:118px!important;
+  font-size:12.5px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy{
+  min-width:112px!important;
+  padding:42px 10px 12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy span[class^="status-"]{
+  min-width:92px!important;
+  padding:8px 10px!important;
+  font-size:12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy > button:not(:first-child){
+  min-width:104px!important;
+  padding:10px 12px!important;
+  font-size:13px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-footer{
+  padding:0 18px!important;
+}
+
+@media(max-width:1500px){
+  .profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+    grid-template-columns:minmax(252px,.95fr) minmax(230px,1.25fr) minmax(120px,.46fr) minmax(90px,.32fr) minmax(68px,.2fr) minmax(108px,.35fr) minmax(104px,.29fr)!important;
+  }
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left{
+    grid-template-columns:70px minmax(0,1fr)!important;
+    padding:16px!important;
+  }
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-avatar{
+    width:66px!important;
+    height:66px!important;
+    min-width:66px!important;
+  }
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874 strong,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left strong.tipster-name-link{
+    font-size:17px!important;
+  }
+}
