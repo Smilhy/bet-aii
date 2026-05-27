@@ -1,0 +1,12 @@
+POPRAWKA WERSJA 4
+
+Naprawa po nieudanym deployu Netlify:
+- paczka NIE zawiera node_modules ani dist, żeby Netlify wykonał czystą instalację zależności i build,
+- sprawdzone lokalnie: npm ci oraz npm run build przechodzą poprawnie,
+- zachowane poprawki z Wersji 2 i Wersji 3:
+  * Admin wypłaty: maksymalnie 4 widoczne zgłoszenia + Pokaż więcej/Zwiń,
+  * Admin finanse: poprawiona ramka/tabela w sekcji sprzedaży typów między użytkownikami.
+
+Na Netlify ustawienia:
+Build command: npm run build
+Publish directory: dist
