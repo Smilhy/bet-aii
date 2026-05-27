@@ -61806,3 +61806,50 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
   border-color: rgba(104, 231, 255, .28) !important;
   box-shadow: 0 0 0 3px rgba(39, 206, 255, .10) !important;
 }
+
+/* WERSJA 1320 — Admin finanse: widok sprzedaży typów między użytkownikami */
+.admin-marketplace-sales-card{
+  margin-top:14px!important;
+}
+.admin-marketplace-sales-table{
+  display:grid!important;
+  gap:8px!important;
+}
+.admin-marketplace-sales-row{
+  display:grid!important;
+  grid-template-columns:1.05fr 1.7fr 1.1fr 1.1fr .8fr .9fr .9fr!important;
+  gap:12px!important;
+  align-items:center!important;
+  padding:13px 14px!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg,rgba(8,22,36,.94),rgba(5,13,23,.98))!important;
+  border:1px solid rgba(70,214,255,.10)!important;
+  color:#eaf8ff!important;
+}
+.admin-marketplace-sales-row.header{
+  background:transparent!important;
+  border:0!important;
+  padding:6px 14px!important;
+  color:#8ea9bb!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  text-transform:uppercase!important;
+  letter-spacing:.08em!important;
+}
+.admin-marketplace-sales-row strong{display:block!important;color:#f1fbff!important;font-weight:1000!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.admin-marketplace-sales-row small{display:block!important;color:#8faabc!important;font-weight:800!important;font-size:11px!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.admin-marketplace-sales-row .amount{font-weight:1000!important;color:#f1fbff!important}
+.admin-marketplace-sales-row .amount.commission{color:#30e6d8!important}
+.admin-marketplace-sales-row .amount.seller{color:#8defff!important}
+.admin-marketplace-sales-empty{
+  padding:18px!important;
+  border-radius:14px!important;
+  border:1px dashed rgba(70,214,255,.16)!important;
+  background:rgba(7,18,30,.62)!important;
+  color:#9db6c8!important;
+}
+.admin-marketplace-sales-empty strong{display:block!important;color:#f1fbff!important;margin-bottom:5px!important}
+@media(max-width:1200px){
+  .admin-marketplace-sales-row{grid-template-columns:1fr 1.4fr 1fr!important}
+  .admin-marketplace-sales-row.header{display:none!important}
+}

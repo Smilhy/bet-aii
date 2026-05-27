@@ -1,0 +1,9 @@
+WERSJA 1320 — ADMIN FINANSE: PREMIUM + SPRZEDAŻ TYPÓW MIĘDZY UŻYTKOWNIKAMI
+
+Co zrobiono:
+- Premium platformy liczy się osobno jako przychód platformy.
+- Zakupy typów między użytkownikami liczą się jako marketplace.
+- W Admin finanse dodano osobną sekcję: Sprzedaż typów między użytkownikami.
+- Dla każdego zakupu typu pokazuje: data, typ/mecz, kupujący, typer/sprzedawca, brutto, prowizja platformy 20%, zarobek typera 80%.
+- Marketplace nie miesza się już z Premium 29 zł.
+- Bez zmian schematu Supabase; działa na podstawie istniejących tabel payments/tips/profiles, jeśli dane mają tip_id.

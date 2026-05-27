@@ -19783,12 +19783,13 @@ function AdminCouponApprovalView({ user, onToast }) {
 function AdminFinanceView({ report, onRefresh, onViewChange }) {
   const [adminFinanceFilter, setAdminFinanceFilter] = useState('all')
   const transactions = Array.isArray(report?.transactions) ? report.transactions : []
+  const marketplaceSales = Array.isArray(report?.marketplace_sales) ? report.marketplace_sales : []
   const getTxType = row => {
-    const raw = String(row?.type || row?.source || '').toLowerCase()
-    if (raw.includes('earning') || raw.includes('sale') || raw.includes('tip_purchase')) return 'marketplace'
+    const raw = String(row?.type || row?.source || row?.provider || '').toLowerCase()
+    if (row?.tip_id || raw.includes('earning') || raw.includes('sale') || raw.includes('tip_purchase') || raw.includes('marketplace') || raw.includes('single')) return 'marketplace'
     if (raw.includes('premium')) return 'premium'
     if (raw.includes('payout')) return 'payout'
-    if (raw.includes('topup')) return 'topup'
+    if (raw.includes('topup') || raw.includes('deposit')) return 'topup'
     return 'other'
   }
   const getTxLabel = row => {
@@ -19907,6 +19908,40 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
               <span>{totalPlatformRevenue > 0 ? `Łącznie ${formatMoney(totalPlatformRevenue)} realnego przychodu.` : 'Po pierwszych sprzedażach pojawią się tu dane.'}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="glass-v2-panel admin-marketplace-sales-card">
+        <div className="admin-finance-live-card-head">
+          <h2>Sprzedaż typów między użytkownikami</h2>
+          <span>{marketplaceSales.length} transakcji</span>
+        </div>
+        <div className="admin-marketplace-sales-table">
+          <div className="admin-marketplace-sales-row header">
+            <span>Data</span>
+            <span>Typ / mecz</span>
+            <span>Kupujący</span>
+            <span>Typer</span>
+            <span>Brutto</span>
+            <span>Platforma 20%</span>
+            <span>Typer 80%</span>
+          </div>
+          {marketplaceSales.length ? marketplaceSales.slice(0, 12).map((sale, idx) => (
+            <div className="admin-marketplace-sales-row" key={sale.id || idx}>
+              <span>{sale.created_at ? new Date(sale.created_at).toLocaleString('pl-PL') : '—'}</span>
+              <span><strong>{sale.tip_title || sale.match_label || 'Zakup typu'}</strong><small>{sale.selection || sale.market || sale.tip_id || '—'}</small></span>
+              <span>{sale.buyer_name || sale.buyer_id || '—'}</span>
+              <span>{sale.seller_name || sale.seller_id || '—'}</span>
+              <span className="amount">{formatMoney(sale.gross_amount || sale.amount)}</span>
+              <span className="amount commission">{formatMoney(sale.platform_commission)}</span>
+              <span className="amount seller">{formatMoney(sale.tipster_earning)}</span>
+            </div>
+          )) : (
+            <div className="admin-marketplace-sales-empty">
+              <strong>Brak sprzedaży typów między użytkownikami</strong>
+              <span>Gdy ktoś kupi płatny typ innego typera, zobaczysz tutaj kupującego, sprzedawcę, prowizję i zarobek typera.</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -21723,7 +21758,7 @@ function App() {
   const [adminPayoutRequests, setAdminPayoutRequests] = useState([])
   const [tipsterEarnings, setTipsterEarnings] = useState({ total: 0, sales: 0, history: [] })
   const [stripeConnectStatus, setStripeConnectStatus] = useState(null)
-  const [adminFinanceReport, setAdminFinanceReport] = useState({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [] })
+  const [adminFinanceReport, setAdminFinanceReport] = useState({ platform_commission: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, transactions: [], marketplace_sales: [] })
   function updateUnlockedTips(updater) {
     setUnlockedTips(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -23971,7 +24006,7 @@ function App() {
 
   async function fetchAdminFinanceReport() {
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
-      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
       return
     }
 
@@ -23979,14 +24014,14 @@ function App() {
       const { data, error } = await supabase.rpc('get_admin_finance_report')
 
       if (error || !data) {
-        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
+        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
         return
       }
 
       const row = Array.isArray(data) ? (data[0] || {}) : data
       if (row?.ok === false || row?.admin_denied) {
         showToast?.({ type: 'error', title: 'Brak dostępu', message: row?.error || 'Raport finansowy jest dostępny tylko dla administratora.' })
-        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
+        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
         return
       }
 
@@ -24010,7 +24045,7 @@ function App() {
         }
       }
 
-      const transactions = rawTransactions.map(tx => {
+      let transactions = rawTransactions.map(tx => {
         const profile = usersById[String(tx?.user_id || '')]
         const displayUser = tx?.display_user || tx?.user_username || tx?.username || profile?.username || profile?.display_name || profile?.full_name || profile?.email || tx?.user_email || tx?.user_id || '—'
 
@@ -24024,26 +24059,198 @@ function App() {
         }
       })
 
+      let premiumRevenue = Number(row.premium_revenue || 0)
+      let grossSales = Number(row.gross_sales || 0)
+      let totalSales = Number(row.total_sales || 0)
+      let platformCommission = Number(row.platform_commission || 0)
+      let tipsterEarnings = Number(row.tipster_earnings || 0)
+      let walletTopups = Number(row.wallet_topups || 0)
+
+      // WERSJA 1319: dodatkowy licznik po tabeli payments.
+      // Poprawia sytuację, gdy RPC nie klasyfikuje zakupu typu jako marketplace,
+      // bo w payments jest provider='wallet' oraz tip_id zamiast typu 'tip_purchase'.
+      try {
+        const { data: paymentRows, error: paymentsError } = await supabase
+          .from('payments')
+          .select('id,user_id,tip_id,amount,status,provider,created_at')
+          .order('created_at', { ascending: false })
+          .limit(120)
+
+        if (!paymentsError && Array.isArray(paymentRows)) {
+          const successStatuses = new Set(['paid', 'succeeded', 'completed', 'success', 'active'])
+          const validPayments = paymentRows.filter(payment => {
+            const status = String(payment?.status || 'completed').toLowerCase()
+            return successStatuses.has(status)
+          })
+
+          const isMarketplacePayment = payment => {
+            const provider = String(payment?.provider || '').toLowerCase()
+            return Boolean(payment?.tip_id)
+              || provider.includes('tip_purchase')
+              || provider.includes('tip_unlock')
+              || provider.includes('paid_tip')
+              || provider.includes('marketplace')
+              || provider.includes('single_purchase')
+          }
+
+          const isPlatformPremiumPayment = payment => {
+            const provider = String(payment?.provider || '').toLowerCase()
+            return !isMarketplacePayment(payment)
+              && (provider.includes('premium') || provider.includes('subscription'))
+          }
+
+          const isWalletTopupPayment = payment => {
+            const provider = String(payment?.provider || '').toLowerCase()
+            return provider.includes('topup') || provider.includes('deposit') || provider.includes('wallet_topup')
+          }
+
+          const marketplacePayments = validPayments.filter(isMarketplacePayment)
+          const premiumPayments = validPayments.filter(isPlatformPremiumPayment)
+          const topupPayments = validPayments.filter(isWalletTopupPayment)
+
+          const marketplaceTipIds = [...new Set(marketplacePayments.map(payment => payment?.tip_id).filter(Boolean))]
+          let tipsById = {}
+          if (marketplaceTipIds.length) {
+            try {
+              const tipSelects = [
+                'id,author_id,user_id,tipster_id,author_name,user_name,username,title,match_label,match,home_team,away_team,market,selection',
+                'id,author_id,user_id,author_name,user_name,username,match_label,market,selection',
+                'id,user_id,username,selection'
+              ]
+              for (const columns of tipSelects) {
+                const { data: tipRows, error: tipError } = await supabase
+                  .from('tips')
+                  .select(columns)
+                  .in('id', marketplaceTipIds)
+                if (!tipError && Array.isArray(tipRows)) {
+                  tipsById = Object.fromEntries(tipRows.map(tip => [String(tip.id), tip]))
+                  break
+                }
+              }
+            } catch (tipResolveError) {
+              console.warn('admin finance marketplace tip resolve error', tipResolveError)
+            }
+          }
+
+          const extraProfileIds = new Set()
+          marketplacePayments.forEach(payment => {
+            if (payment?.user_id) extraProfileIds.add(String(payment.user_id))
+            const tip = tipsById[String(payment?.tip_id || '')]
+            ;[tip?.author_id, tip?.user_id, tip?.tipster_id].filter(Boolean).forEach(id => extraProfileIds.add(String(id)))
+          })
+          const missingProfileIds = [...extraProfileIds].filter(id => !usersById[id])
+          if (missingProfileIds.length) {
+            try {
+              const { data: extraProfiles } = await supabase
+                .from('profiles')
+                .select('id, username, display_name, full_name, email')
+                .in('id', missingProfileIds)
+              ;(extraProfiles || []).forEach(profile => { usersById[String(profile.id)] = profile })
+            } catch (extraProfileError) {
+              console.warn('admin finance marketplace profiles resolve error', extraProfileError)
+            }
+          }
+
+          const profileName = id => {
+            const profile = usersById[String(id || '')]
+            return profile?.username || profile?.display_name || profile?.full_name || profile?.email || id || '—'
+          }
+          const marketplaceSales = marketplacePayments.map(payment => {
+            const tip = tipsById[String(payment?.tip_id || '')] || {}
+            const sellerId = tip.author_id || tip.tipster_id || tip.user_id || null
+            const gross = Number(payment?.amount || 0)
+            const homeAway = [tip.home_team, tip.away_team].filter(Boolean).join(' - ')
+            return {
+              id: payment.id,
+              created_at: payment.created_at,
+              tip_id: payment.tip_id || null,
+              buyer_id: payment.user_id || null,
+              buyer_name: profileName(payment.user_id),
+              seller_id: sellerId,
+              seller_name: tip.author_name || tip.user_name || tip.username || profileName(sellerId),
+              tip_title: tip.title || tip.match_label || tip.match || homeAway || 'Zakup typu',
+              match_label: tip.match_label || tip.match || homeAway || null,
+              market: tip.market || null,
+              selection: tip.selection || null,
+              amount: gross,
+              gross_amount: gross,
+              platform_commission: Number((gross * PLATFORM_COMMISSION_RATE).toFixed(2)),
+              tipster_earning: Number((gross * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)),
+              status: payment.status || 'paid'
+            }
+          }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+
+          const directGrossSales = marketplacePayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
+          const directPremiumRevenue = premiumPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
+          const directWalletTopups = topupPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
+
+          if (validPayments.length) {
+            grossSales = directGrossSales
+            totalSales = marketplacePayments.length
+            platformCommission = Number((directGrossSales * 0.20).toFixed(2))
+            tipsterEarnings = Number((directGrossSales * 0.80).toFixed(2))
+            premiumRevenue = directPremiumRevenue
+            walletTopups = directWalletTopups || walletTopups
+
+            const paymentTransactions = paymentRows.map(payment => {
+              const profile = usersById[String(payment?.user_id || '')]
+              const provider = String(payment?.provider || 'payment')
+              const isMarketplace = isMarketplacePayment(payment)
+              const isPremium = isPlatformPremiumPayment(payment)
+              return {
+                id: payment.id,
+                created_at: payment.created_at,
+                type: isMarketplace ? 'tip_purchase' : isPremium ? 'premium_purchase' : provider,
+                source: isMarketplace ? 'marketplace_payment' : 'payments',
+                provider,
+                tip_id: payment.tip_id || null,
+                user_id: payment.user_id || null,
+                raw_user_id: payment.user_id || null,
+                amount: Number(payment.amount || 0),
+                gross_amount: isMarketplace ? Number(payment.amount || 0) : null,
+                platform_commission: isMarketplace ? Number((Number(payment.amount || 0) * PLATFORM_COMMISSION_RATE).toFixed(2)) : null,
+                tipster_earning: isMarketplace ? Number((Number(payment.amount || 0) * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)) : null,
+                status: payment.status || 'completed',
+                display_user: profile?.username || profile?.display_name || profile?.full_name || profile?.email || payment.user_id || '—'
+              }
+            })
+
+            const seenTransactionIds = new Set()
+            transactions = [...paymentTransactions, ...transactions].filter(tx => {
+              const key = `${tx.source || 'tx'}:${tx.id || tx.created_at || Math.random()}`
+              if (seenTransactionIds.has(key)) return false
+              seenTransactionIds.add(key)
+              return true
+            }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 60)
+          }
+        }
+      } catch (paymentsFallbackError) {
+        console.warn('admin finance payments fallback error', paymentsFallbackError)
+      }
+
+      const totalPlatformRevenue = Number((Number(platformCommission || 0) + Number(premiumRevenue || 0)).toFixed(2))
+
       setAdminFinanceReport({
         ok: row.ok !== false,
         source: row.source || 'supabase-rpc',
         generated_at: row.generated_at || new Date().toISOString(),
-        platform_commission: Number(row.platform_commission || 0),
-        premium_revenue: Number(row.premium_revenue || 0),
-        total_platform_revenue: Number(row.total_platform_revenue || Number(row.platform_commission || 0) + Number(row.premium_revenue || 0)),
-        total_sales: Number(row.total_sales || 0),
-        gross_sales: Number(row.gross_sales || 0),
-        tipster_earnings: Number(row.tipster_earnings || 0),
+        platform_commission: platformCommission,
+        premium_revenue: premiumRevenue,
+        total_platform_revenue: totalPlatformRevenue,
+        total_sales: totalSales,
+        gross_sales: grossSales,
+        tipster_earnings: tipsterEarnings,
         total_payouts: Number(row.total_payouts || 0),
         pending_payouts: Number(row.pending_payouts || 0),
-        available_to_payout: Number(row.available_to_payout || 0),
-        wallet_topups: Number(row.wallet_topups || 0),
+        available_to_payout: Number(row.available_to_payout || Math.max(0, Number(tipsterEarnings || 0) - Number(row.total_payouts || 0) - Number(row.pending_payouts || 0))),
+        wallet_topups: walletTopups,
         active_premium_users: Number(row.active_premium_users || 0),
-        transactions
+        transactions,
+        marketplace_sales: typeof marketplaceSales !== 'undefined' ? marketplaceSales : []
       })
     } catch (error) {
       console.error('fetchAdminFinanceReport error', error)
-      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [] })
+      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
     }
   }
 
