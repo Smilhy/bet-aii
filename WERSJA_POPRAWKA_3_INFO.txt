@@ -1,0 +1,4 @@
+POPRAWKA WERSJA 3
+- Admin finanse: poprawiono sekcję "Sprzedaż typów między użytkownikami".
+- Dodano wewnętrzny padding karty, aby tytuł i licznik transakcji nie nachodziły na ramkę.
+- Zabezpieczono tabelę przed wychodzeniem poza kontener: minmax kolumn, ellipsis i overflow hidden.

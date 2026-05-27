@@ -20027,6 +20027,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   const [query, setQuery] = useState('')
   const [amountFilter, setAmountFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState([])
+  const [payoutRequestsExpanded, setPayoutRequestsExpanded] = useState(false)
 
   const normalizedRequests = requests.map(request => ({
     ...request,
@@ -20069,6 +20070,9 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     return matchesStatus && matchesQuery && matchesAmount
   })
 
+  const visiblePayoutRequests = payoutRequestsExpanded ? filteredRequests : filteredRequests.slice(0, 4)
+  const hiddenPayoutRequestsCount = Math.max(0, filteredRequests.length - 4)
+
   const selectedRequests = normalizedRequests.filter(request => selectedIds.includes(request.id))
   const selectedPending = selectedRequests.filter(request => request.normalizedStatus === 'pending')
   const selectedReady = selectedPending.filter(request => request.amountNumber >= 50)
@@ -20078,7 +20082,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   const toggleAllVisible = () => {
-    const visiblePendingIds = filteredRequests.filter(request => request.normalizedStatus === 'pending').map(request => request.id)
+    const visiblePendingIds = visiblePayoutRequests.filter(request => request.normalizedStatus === 'pending').map(request => request.id)
     const allSelected = visiblePendingIds.length > 0 && visiblePendingIds.every(id => selectedIds.includes(id))
     setSelectedIds(current => allSelected ? current.filter(id => !visiblePendingIds.includes(id)) : Array.from(new Set([...current, ...visiblePendingIds])))
   }
@@ -20239,7 +20243,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
         <div className="admin-payout-live-table">
           <div className="admin-payout-live-row header">
-            <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(row => row.normalizedStatus === 'pending') && filteredRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
+            <span><input type="checkbox" onChange={toggleAllVisible} checked={visiblePayoutRequests.some(row => row.normalizedStatus === 'pending') && visiblePayoutRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
             <span>Użytkownik</span>
             <span>Data</span>
             <span>Kwota</span>
@@ -20247,7 +20251,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
             <span>Stripe</span>
             <span>Akcje</span>
           </div>
-          {filteredRequests.length ? filteredRequests.map(request => (
+          {filteredRequests.length ? visiblePayoutRequests.map(request => (
             <div className="admin-payout-live-row" key={request.id}>
               <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
               <span className="admin-payout-user-cell-v1047">
@@ -20278,6 +20282,15 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
               <span>Zmień filtr albo poczekaj na nowe prawdziwe wypłaty użytkowników.</span>
             </div>
           )}
+          {filteredRequests.length > 4 ? (
+            <button
+              type="button"
+              className="admin-finance-show-more-btn admin-payout-show-more-btn-v2"
+              onClick={() => setPayoutRequestsExpanded(current => !current)}
+            >
+              {payoutRequestsExpanded ? 'Zwiń listę' : `Pokaż więcej (${hiddenPayoutRequestsCount})`}
+            </button>
+          ) : null}
         </div>
       </div>
     </section>

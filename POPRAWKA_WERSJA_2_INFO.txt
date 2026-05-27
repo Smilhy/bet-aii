@@ -1,0 +1,9 @@
+POPRAWKA WERSJA 2
+
+Zakładka: Admin wypłaty
+- Lista „Zgłoszenia wypłat” pokazuje maksymalnie 4 pozycje.
+- Pozostałe pozycje można rozwinąć przyciskiem „Pokaż więcej”, tak jak w Admin finanse.
+- Po rozwinięciu można zwinąć listę przyciskiem „Zwiń listę”.
+- Zaznaczanie checkboxem w nagłówku działa tylko dla aktualnie widocznych pozycji.
+
+Build produkcyjny wykonany po zmianach.
