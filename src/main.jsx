@@ -19782,6 +19782,8 @@ function AdminCouponApprovalView({ user, onToast }) {
 
 function AdminFinanceView({ report, onRefresh, onViewChange }) {
   const [adminFinanceFilter, setAdminFinanceFilter] = useState('all')
+  const [expandedTransactionTabs, setExpandedTransactionTabs] = useState({})
+  const [marketplaceSalesExpanded, setMarketplaceSalesExpanded] = useState(false)
   const transactions = Array.isArray(report?.transactions) ? report.transactions : []
   const marketplaceSales = Array.isArray(report?.marketplace_sales) ? report.marketplace_sales : []
   const getTxType = row => {
@@ -19815,7 +19817,18 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
     payout: transactions.filter(row => getTxType(row) === 'payout').length,
     topup: transactions.filter(row => getTxType(row) === 'topup').length
   }
-  const filteredTransactions = transactions.filter(row => adminFinanceFilter === 'all' || getTxType(row) === adminFinanceFilter)
+  const sortByNewest = (a, b) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime()
+  const sortedTransactions = [...transactions].sort(sortByNewest)
+  const sortedMarketplaceSales = [...marketplaceSales].sort(sortByNewest)
+  const filteredTransactions = sortedTransactions.filter(row => adminFinanceFilter === 'all' || getTxType(row) === adminFinanceFilter)
+  const currentTabExpanded = !!expandedTransactionTabs[adminFinanceFilter]
+  const visibleTransactions = currentTabExpanded ? filteredTransactions : filteredTransactions.slice(0, 4)
+  const hiddenTransactionsCount = Math.max(0, filteredTransactions.length - 4)
+  const visibleMarketplaceSales = marketplaceSalesExpanded ? sortedMarketplaceSales : sortedMarketplaceSales.slice(0, 4)
+  const hiddenMarketplaceSalesCount = Math.max(0, sortedMarketplaceSales.length - 4)
+  const changeFinanceFilter = filter => {
+    setAdminFinanceFilter(filter)
+  }
   const totalPlatformRevenue = Number(report?.total_platform_revenue || (Number(report?.platform_commission || 0) + Number(report?.premium_revenue || 0)))
   const platformCommission = Number(report?.platform_commission || 0)
   const premiumRevenue = Number(report?.premium_revenue || 0)
@@ -19926,7 +19939,7 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
             <span>Platforma 20%</span>
             <span>Typer 80%</span>
           </div>
-          {marketplaceSales.length ? marketplaceSales.slice(0, 12).map((sale, idx) => (
+          {sortedMarketplaceSales.length ? visibleMarketplaceSales.map((sale, idx) => (
             <div className="admin-marketplace-sales-row" key={sale.id || idx}>
               <span>{sale.created_at ? new Date(sale.created_at).toLocaleString('pl-PL') : '—'}</span>
               <span><strong>{sale.tip_title || sale.match_label || 'Zakup typu'}</strong><small>{sale.selection || sale.market || sale.tip_id || '—'}</small></span>
@@ -19942,6 +19955,15 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
               <span>Gdy ktoś kupi płatny typ innego typera, zobaczysz tutaj kupującego, sprzedawcę, prowizję i zarobek typera.</span>
             </div>
           )}
+          {sortedMarketplaceSales.length > 4 ? (
+            <button
+              type="button"
+              className="admin-finance-show-more-btn"
+              onClick={() => setMarketplaceSalesExpanded(prev => !prev)}
+            >
+              {marketplaceSalesExpanded ? 'Zwiń listę' : `Pokaż więcej (${hiddenMarketplaceSalesCount})`}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -19952,11 +19974,11 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
         </div>
 
         <div className="admin-finance-live-filters">
-          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => setAdminFinanceFilter('all')}>Wszystkie <b>{txCounts.all}</b></button>
-          <button type="button" className={adminFinanceFilter === 'marketplace' ? 'active' : ''} onClick={() => setAdminFinanceFilter('marketplace')}>Marketplace <b>{txCounts.marketplace}</b></button>
-          <button type="button" className={adminFinanceFilter === 'premium' ? 'active' : ''} onClick={() => setAdminFinanceFilter('premium')}>Premium <b>{txCounts.premium}</b></button>
-          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => setAdminFinanceFilter('payout')}>Wypłaty <b>{txCounts.payout}</b></button>
-          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => setAdminFinanceFilter('topup')}>Wpłaty <b>{txCounts.topup}</b></button>
+          <button type="button" className={adminFinanceFilter === 'all' ? 'active' : ''} onClick={() => changeFinanceFilter('all')}>Wszystkie <b>{txCounts.all}</b></button>
+          <button type="button" className={adminFinanceFilter === 'marketplace' ? 'active' : ''} onClick={() => changeFinanceFilter('marketplace')}>Marketplace <b>{txCounts.marketplace}</b></button>
+          <button type="button" className={adminFinanceFilter === 'premium' ? 'active' : ''} onClick={() => changeFinanceFilter('premium')}>Premium <b>{txCounts.premium}</b></button>
+          <button type="button" className={adminFinanceFilter === 'payout' ? 'active' : ''} onClick={() => changeFinanceFilter('payout')}>Wypłaty <b>{txCounts.payout}</b></button>
+          <button type="button" className={adminFinanceFilter === 'topup' ? 'active' : ''} onClick={() => changeFinanceFilter('topup')}>Wpłaty <b>{txCounts.topup}</b></button>
         </div>
 
         <div className="admin-finance-live-table">
@@ -19967,7 +19989,7 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
             <span>Kwota</span>
             <span>Status</span>
           </div>
-          {filteredTransactions.length ? filteredTransactions.map((row, idx) => (
+          {filteredTransactions.length ? visibleTransactions.map((row, idx) => (
             <div className="admin-finance-live-row" key={row.id || idx}>
               <span>{new Date(row.created_at).toLocaleString('pl-PL')}</span>
               <span><strong>{getTxLabel(row)}</strong><small>{row.type || row.source || '—'}</small></span>
@@ -19984,6 +20006,15 @@ function AdminFinanceView({ report, onRefresh, onViewChange }) {
               <span>Po pierwszych prawdziwych płatnościach i wypłatach zobaczysz je tutaj.</span>
             </div>
           )}
+          {filteredTransactions.length > 4 ? (
+            <button
+              type="button"
+              className="admin-finance-show-more-btn"
+              onClick={() => setExpandedTransactionTabs(prev => ({ ...prev, [adminFinanceFilter]: !prev[adminFinanceFilter] }))}
+            >
+              {currentTabExpanded ? 'Zwiń listę' : `Pokaż więcej (${hiddenTransactionsCount})`}
+            </button>
+          ) : null}
         </div>
       </div>
     </section>

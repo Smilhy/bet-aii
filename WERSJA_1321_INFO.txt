@@ -1,0 +1,6 @@
+WERSJA 1321 — Admin finanse sortowanie i limit operacji
+- Ostatnie operacje finansowe sortowane od najnowszej do najstarszej.
+- Każda zakładka/filtr pokazuje domyślnie maksymalnie 4 wpisy.
+- Dodany przycisk Pokaż więcej / Zwiń listę dla każdego filtra.
+- Sprzedaż typów między użytkownikami też ma sortowanie od najnowszych i limit 4 z rozwijaniem.
+- Bez zmian logiki płatności, Supabase i Stripe.
