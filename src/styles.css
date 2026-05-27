@@ -61931,3 +61931,261 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     letter-spacing:.045em!important;
   }
 }
+
+/* POPRAWKA WERSJA 6 — Mój profil / Typy: realny wygląd kart jak Dashboard, bez starego ścisku tabelkowego */
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list,
+.profile-static-v3 .profile-purchased-singles-list-v952{
+  display:grid!important;
+  gap:28px!important;
+  padding:16px 0 2px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+  display:grid!important;
+  grid-template-columns:300px minmax(430px,1.32fr) minmax(168px,.50fr) minmax(150px,.38fr) minmax(108px,.25fr) minmax(185px,.42fr) 190px!important;
+  grid-template-rows:minmax(170px,auto) 48px!important;
+  min-height:220px!important;
+  margin:0!important;
+  border-radius:22px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 11% 42%, rgba(0,236,255,.11), transparent 22%),
+    radial-gradient(circle at 94% 58%, rgba(7,255,168,.08), transparent 28%),
+    linear-gradient(180deg,rgba(6,24,48,.98),rgba(2,13,30,.99))!important;
+  border:1px solid rgba(22,177,212,.38)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055), 0 18px 44px rgba(0,0,0,.26)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6.premium,
+.profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6.premium{
+  border-color:rgba(255,202,43,.52)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055), 0 0 0 1px rgba(255,202,43,.08), 0 18px 44px rgba(0,0,0,.28)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6.free{
+  border-color:rgba(20,218,135,.42)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6 > div{
+  border-right:1px solid rgba(255,255,255,.075)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left{
+  grid-template-columns:86px minmax(0,1fr)!important;
+  grid-template-rows:auto 1fr auto!important;
+  gap:0 18px!important;
+  padding:22px 22px 18px!important;
+  align-content:stretch!important;
+  background:linear-gradient(90deg,rgba(0,229,255,.055),rgba(0,0,0,0))!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-avatar{
+  width:82px!important;
+  height:82px!important;
+  min-width:82px!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  box-shadow:0 0 22px rgba(0,217,255,.18)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left > div{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:start!important;
+  min-width:0!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874 strong,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left strong.tipster-name-link{
+  max-width:180px!important;
+  font-size:20px!important;
+  line-height:1.05!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876{
+  max-width:190px!important;
+  margin-top:8px!important;
+  padding:10px 12px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.045)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+  justify-self:center!important;
+  min-width:170px!important;
+  padding:12px 18px!important;
+  border-radius:999px!important;
+  font-size:14px!important;
+  margin:18px 0 0!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-main{
+  padding:24px 30px 18px!important;
+  gap:18px!important;
+  align-content:center!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-league{
+  font-size:17px!important;
+  gap:12px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match{
+  grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr)!important;
+  gap:18px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match > span{
+  width:42px!important;
+  height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:999px!important;
+  border:1px solid rgba(0,224,255,.28)!important;
+  background:rgba(0,213,255,.08)!important;
+  color:#dff9ff!important;
+  font-weight:900!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match > div{
+  min-width:0!important;
+  gap:14px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-match > div strong{
+  max-width:220px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:19px!important;
+  line-height:1.12!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-team-logo{
+  width:56px!important;
+  height:56px!important;
+  flex:0 0 56px!important;
+  background:rgba(255,255,255,.06)!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-main > small{
+  justify-self:center!important;
+  padding:7px 16px!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.055)!important;
+  color:#d7e4f1!important;
+  font-size:13px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field{
+  padding:24px 20px!important;
+  align-content:center!important;
+  gap:7px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field small,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis small{
+  font-size:12px!important;
+  letter-spacing:.14em!important;
+  color:#9db2c6!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field strong{
+  font-size:21px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field.odds strong{
+  font-size:34px!important;
+  color:#ffffff!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-field.stake i{
+  height:8px!important;
+  max-width:160px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis{
+  padding:24px 18px!important;
+  align-content:center!important;
+  gap:7px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis p{
+  max-width:170px!important;
+  font-size:13.5px!important;
+  line-height:1.24!important;
+  -webkit-line-clamp:3!important;
+  color:#f3f8ff!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis button{
+  font-size:13px!important;
+  font-weight:900!important;
+  color:#13e6ff!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy{
+  min-width:190px!important;
+  padding:52px 18px 18px!important;
+  align-content:center!important;
+  justify-items:center!important;
+  text-align:center!important;
+  border-right:0!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-corner{
+  top:14px!important;
+  right:14px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-corner > span{
+  max-width:106px!important;
+  white-space:nowrap!important;
+  font-size:13px!important;
+  color:#dbe7f4!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy span[class^="status-"]{
+  min-width:128px!important;
+  padding:9px 14px!important;
+  font-size:14px!important;
+  border-radius:999px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-footer{
+  grid-column:2 / -1!important;
+  min-height:48px!important;
+  padding:0 28px!important;
+  border-top:1px solid rgba(255,255,255,.08)!important;
+  background:rgba(2,13,28,.22)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-footer div{
+  gap:22px!important;
+}
+
+@media(max-width:1700px){
+  .profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+    grid-template-columns:270px minmax(350px,1.2fr) minmax(145px,.48fr) minmax(132px,.36fr) minmax(96px,.24fr) minmax(165px,.40fr) 174px!important;
+  }
+}
+
+@media(max-width:1320px){
+  .profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto!important;
+  }
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-footer{
+    grid-column:auto!important;
+  }
+}

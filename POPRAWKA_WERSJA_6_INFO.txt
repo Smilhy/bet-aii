@@ -1,0 +1,12 @@
+POPRAWKA WERSJA 6
+
+Naprawa po uwadze: w wersji 5 komponent został podmieniony, ale stare style profilu dalej ściskały kartę.
+
+Zakres zmian:
+- Mój profil -> Typy: realnie nadpisany CSS kart.
+- Karty są większe, bardziej dashboardowe i mniej tabelkowe.
+- Szerszy panel typera, większy avatar, większe logo drużyn, większy środek meczu.
+- Dotyczy Darmowe, Premium i Kupione single.
+- Build sprawdzony lokalnie: npm run build przechodzi.
+
+Paczka jest czysta: bez node_modules i bez dist.
