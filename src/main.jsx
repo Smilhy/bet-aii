@@ -49,8 +49,8 @@ const BETAI_REFRESH_INTERVALS = {
 }
 
 /* =========================================================
-   WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
-   To wymusza efekt jak ręczny zoom przeglądarki 90% dla laptopa 1920x1080.
+   WERSJA 1318 — 23/24 CALE 1920x1080 REAL BROWSER 80
+   To wymusza efekt jak ręczny zoom przeglądarki 80% dla 23/24 cali 1920x1080.
    27/32 cale 2K i 1680x1050 są poza zakresem.
    ========================================================= */
 if (typeof window !== 'undefined') {
@@ -78,13 +78,13 @@ if (typeof window !== 'undefined') {
 
     if (shouldApply) {
       html.classList.add('betai-laptop-browser90-v1233')
-      html.style.setProperty('--betai-laptop-zoom-1233', '0.9')
+      html.style.setProperty('--betai-laptop-zoom-1233', '0.8')
       if (body) {
-        body.style.setProperty('zoom', '90%', 'important')
-        body.style.setProperty('width', '111.111111vw', 'important')
-        body.style.setProperty('min-width', '111.111111vw', 'important')
-        body.style.setProperty('height', '111.111111vh', 'important')
-        body.style.setProperty('min-height', '111.111111vh', 'important')
+        body.style.setProperty('zoom', '80%', 'important')
+        body.style.setProperty('width', '125vw', 'important')
+        body.style.setProperty('min-width', '125vw', 'important')
+        body.style.setProperty('height', '125vh', 'important')
+        body.style.setProperty('min-height', '125vh', 'important')
         body.style.setProperty('overflow', 'hidden', 'important')
       }
     } else {
