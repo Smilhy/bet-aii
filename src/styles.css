@@ -62465,3 +62465,121 @@ html body #root article.profile-ticket-v6 .profile-ticket-v6-analysis.locked p{
     font-size:17px!important;
   }
 }
+
+/* WERSJA 9 — Mój profil / Typy: węższa lewa ramka + badge niżej jak na dashboardzie */
+.profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+  grid-template-columns:minmax(228px,.78fr) minmax(270px,1.46fr) minmax(126px,.46fr) minmax(94px,.31fr) minmax(74px,.21fr) minmax(114px,.34fr) minmax(108px,.29fr)!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left{
+  grid-template-columns:76px minmax(0,1fr)!important;
+  grid-template-rows:auto auto 1fr auto!important;
+  padding:18px 14px 14px!important;
+  gap:7px 12px!important;
+  align-items:start!important;
+  align-content:stretch!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-avatar{
+  width:72px!important;
+  height:72px!important;
+  min-width:72px!important;
+  margin-top:2px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left > div{
+  grid-column:2!important;
+  grid-row:1 / span 2!important;
+  min-width:0!important;
+  align-self:start!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874{
+  margin:0 0 7px!important;
+  gap:8px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874 strong,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left strong.tipster-name-link{
+  font-size:16px!important;
+  line-height:1.08!important;
+  max-width:138px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876{
+  width:150px!important;
+  max-width:150px!important;
+  padding:8px 11px!important;
+  border-radius:15px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 span,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b,
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 small{
+  font-size:12px!important;
+  line-height:1.26!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access{
+  grid-column:1 / -1!important;
+  grid-row:4!important;
+  align-self:end!important;
+  justify-self:center!important;
+  min-width:156px!important;
+  max-width:156px!important;
+  margin-top:auto!important;
+  margin-bottom:2px!important;
+  padding:10px 14px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-main{
+  padding:18px 18px 14px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-main > small{
+  margin-top:4px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-analysis p{
+  max-width:108px!important;
+}
+
+.profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-buy{
+  padding:40px 10px 12px!important;
+}
+
+@media(max-width:1500px){
+  .profile-static-v3 .profile-v4-tips-page .profile-all-tips-list > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-purchased-single-wrap-v952 > .profile-ticket-v6,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6.dashboard-ticket-v6{
+    grid-template-columns:minmax(220px,.78fr) minmax(235px,1.30fr) minmax(118px,.45fr) minmax(88px,.30fr) minmax(68px,.20fr) minmax(102px,.32fr) minmax(100px,.28fr)!important;
+  }
+
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left{
+    padding:16px 12px 13px!important;
+  }
+
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-avatar{
+    width:68px!important;
+    height:68px!important;
+    min-width:68px!important;
+  }
+
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-author-row-v874 strong,
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left strong.tipster-name-link{
+    max-width:128px!important;
+    font-size:15px!important;
+  }
+
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876{
+    width:142px!important;
+    max-width:142px!important;
+  }
+
+  .profile-static-v3 .profile-v4-tips-page .profile-ticket-v6-left .profile-ticket-v6-access{
+    min-width:148px!important;
+    max-width:148px!important;
+  }
+}
