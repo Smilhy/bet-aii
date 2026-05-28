@@ -18073,6 +18073,12 @@ function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, on
       amount_pln: finalAmount,
       currency: 'pln',
       message: String(message || '').trim().slice(0, 240),
+      label: 'Wsparcie tipami',
+      price: finalAmount,
+      durationDays: 0,
+      isDonation: true,
+      support: true,
+      donation: true,
       success_url: `${window.location.origin}${window.location.pathname}?support=success`,
       cancel_url: `${window.location.origin}${window.location.pathname}?support=cancelled`,
     }
@@ -18081,7 +18087,7 @@ function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, on
       '/.netlify/functions/create-tipster-support-checkout',
       '/.netlify/functions/create-tipster-donation-checkout',
       '/.netlify/functions/create-donation-checkout',
-      '/.netlify/functions/create-checkout-session'
+      '/.netlify/functions/create-tipster-subscription-checkout'
     ]
 
     try {
@@ -18111,7 +18117,7 @@ function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, on
         }
       }
 
-      throw lastError || new Error('Nie udało się utworzyć płatności Stripe.')
+      throw lastError || new Error('Nie znaleziono endpointu Stripe dla wsparcia tipami.')
     } catch (checkoutError) {
       const clean = formatAppErrorMessage(checkoutError?.message || checkoutError || 'Nie udało się utworzyć płatności Stripe.')
       setError(clean)
