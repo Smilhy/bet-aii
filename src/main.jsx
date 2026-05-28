@@ -18553,18 +18553,47 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
   if (!analysisRows.length) analysisRows.push(['Brak analiz — dodaj pierwszy typ, aby zbudować historię profilu.', 'Bet+AI'])
 
-  const rankingSnapshot = buildRankingFromTips(Array.isArray(tips) ? tips : [])
+  const rankingSnapshot = buildLiveLeaderboardRows([], Array.isArray(tips) ? tips : [])
+  const profileIdentityKeys = [
+    profile.id,
+    user?.id,
+    email,
+    username,
+    normalizeEmail(email).split('@')[0],
+    profile.public_slug,
+    user?.public_slug,
+  ].filter(Boolean).map(value => String(value).toLowerCase())
+
   const ownRankingRow = rankingSnapshot.find(row => {
-    const sameId = profile.id && String(row.id || '') === String(profile.id)
-    const sameEmail = email && normalizeEmail(row.email || '') === email
-    const sameName = username && normalizeEmail(row.username || '') === normalizeEmail(username)
-    return sameId || sameEmail || sameName
+    const rowKeys = [
+      row.id,
+      row.tipster_id,
+      row.author_id,
+      row.user_id,
+      row.email,
+      row.author_email,
+      row.user_email,
+      row.username,
+      row.author_name,
+      row.name,
+      normalizeEmail(row.email || row.author_email || row.user_email).split('@')[0],
+    ].filter(Boolean).map(value => String(value).toLowerCase())
+    return rowKeys.some(key => profileIdentityKeys.includes(key))
   })
   const rankingPosition = Number(user?.ranking_position || user?.rank || ownRankingRow?.liveRank || 0) || 0
+  const rankingTotal = Math.max(1, rankingSnapshot.length || 1)
 
   const sortedUserTips = [...userTips].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
   const latestTip = sortedUserTips[0] || null
-  const latestActivityRaw = latestTip?.created_at || user?.last_sign_in_at || user?.updated_at || profileCreatedAt || ''
+  const latestActivityCandidates = [
+    profileIsOwnForViewer ? new Date().toISOString() : '',
+    user?.last_sign_in_at,
+    user?.last_login_at,
+    user?.updated_at,
+    latestTip?.created_at,
+    profileCreatedAt,
+  ].filter(Boolean)
+  const latestActivityRaw = latestActivityCandidates.sort((a, b) => Date.parse(b || 0) - Date.parse(a || 0))[0] || ''
   const formatProfileDate = (value) => {
     if (!value) return 'Brak danych'
     const date = new Date(value)
@@ -18594,13 +18623,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     tip?.event_date ||
     tip?.created_at
   )
-  const lastActivityLabel = formatProfileDate(latestActivityRaw)
+  const lastActivityLabel = profileIsOwnForViewer ? 'Teraz online' : formatProfileDate(latestActivityRaw)
   const lastTipAt = latestTip?.created_at ? new Date(latestTip.created_at) : null
-  const isActive30d = Boolean(lastTipAt && !Number.isNaN(lastTipAt.getTime()) && Date.now() - lastTipAt.getTime() <= 30 * 24 * 60 * 60 * 1000)
-  const rankingPercent = Number(user?.ranking_percent || user?.rank_percent || 0) || 0
+  const latestActivityAt = latestActivityRaw ? new Date(latestActivityRaw) : null
+  const isActive30d = Boolean(
+    profileIsOwnForViewer ||
+    (lastTipAt && !Number.isNaN(lastTipAt.getTime()) && Date.now() - lastTipAt.getTime() <= 30 * 24 * 60 * 60 * 1000) ||
+    (latestActivityAt && !Number.isNaN(latestActivityAt.getTime()) && Date.now() - latestActivityAt.getTime() <= 30 * 24 * 60 * 60 * 1000)
+  )
+  const rankingPercent = Number(user?.ranking_percent || user?.rank_percent || (rankingPosition ? (rankingPosition / rankingTotal) * 100 : 0)) || 0
+  const isTopOnePercent = Boolean(rankingPosition && rankingPosition <= Math.max(1, Math.ceil(rankingTotal * 0.01)))
 
   const profileBadges = [
-    { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPercent > 0 ? `${rankingPercent}%` : (rankingPosition ? `#${rankingPosition}` : 'Brak rankingu'), achieved: rankingPercent > 0 && rankingPercent <= 1 },
+    { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPosition ? `#${rankingPosition}` : 'Brak rankingu', achieved: isTopOnePercent },
     { icon: '✦', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
     { icon: '🛡', tone: 'cyan', title: 'WIN RATE+', detail: settledTips ? `${winRate}% / 60%` : '0 rozliczeń', achieved: settledTips >= 10 && winRate >= 60 },
     { icon: '↗', tone: 'teal', title: 'ROI+', detail: `${roi}% / 10%`, achieved: settledTips >= 10 && roi >= 10 },
