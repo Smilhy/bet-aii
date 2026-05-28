@@ -1,0 +1,10 @@
+WERSJA 1330
+
+Zmiana:
+- cofnięta zmiana w dashboardzie — dashboard zostaje bez ruszania,
+- poprawka koloru Bilans zostaje tylko tam, gdzie miała być robiona na profilu,
+- dodatni wynik = zielony,
+- ujemny wynik = czerwony.
+
+Pliki zmienione:
+- src/main.jsx

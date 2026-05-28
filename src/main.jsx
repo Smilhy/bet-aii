@@ -10141,7 +10141,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b><span className={dashboardAuthorStats.profitValue >= 0 ? 'profit-positive-text' : 'profit-negative-text'}>{dashboardAuthorStats.profitLabel}</span></b></span>
+              <span>Bilans: <b className={dashboardAuthorStats.profitValue >= 0 ? 'profit-positive-text' : 'profit-negative-text'}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
