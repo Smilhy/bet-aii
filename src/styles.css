@@ -62728,3 +62728,28 @@ html.betai-fhd-monitor80-v1323 body #root{
   padding:6px 0 0!important;
   color:#c8deea!important;
 }
+
+
+/* WERSJA 1346 — przycisk Wiadomości w profilu: ikona koperty jak topbar */
+.profile-static-v3 .profile-message-btn-v1346{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+}
+
+.profile-static-v3 .profile-message-icon-v1346{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:18px!important;
+  height:18px!important;
+  font-size:16px!important;
+  line-height:1!important;
+  color:#eaf7ff!important;
+  filter:drop-shadow(0 0 8px rgba(40,210,255,.18))!important;
+}
+
+.profile-static-v3 .profile-message-btn-v1346:hover .profile-message-icon-v1346{
+  color:#22f4ff!important;
+}

@@ -3456,7 +3456,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
 }
 
 
-function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], followingTipsters, followStats = {}, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [] }) {
+function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], followingTipsters, followStats = {}, onToggleFollow, onUnlock, onSubscribeToTipster, unlockedTips = new Set(), tipsterSubscriptions = [], onOpenDirectMessage = null }) {
   const [profile, setProfile] = useState(null)
   const [tipsterTips, setTipsterTips] = useState([])
   const [stats, setStats] = useState(null)
@@ -3752,6 +3752,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
           onProfileUpdated={null}
           onUnlock={onUnlock}
           onSubscribeToTipster={onSubscribeToTipster}
+          onOpenDirectMessage={onOpenDirectMessage}
         />
       )}
     </section>
@@ -12743,7 +12744,7 @@ function NotificationsView({ notifications = [], onMarkAllRead, onRefresh }) {
   )
 }
 
-function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
+function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarget = null }) {
   const [users, setUsers] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [messages, setMessages] = useState([])
@@ -12757,6 +12758,24 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
 
   const myId = user?.id || ''
   const myEmail = normalizeEmail(user?.email || '')
+
+  const normalizeExternalTarget = (target = null) => {
+    if (!target) return null
+    const id = String(target.id || target.user_id || target.author_id || '').trim()
+    const email = normalizeEmail(target.email || target.author_email || target.user_email || '')
+    const username = target.username || target.author_name || target.name || ''
+    if (!id || id === String(myId)) return null
+    const name = displayName(email, username, id)
+    return {
+      id,
+      email,
+      username,
+      name,
+      initials: initials(name),
+      created_at: target.created_at || '',
+      lastAt: target.lastAt || new Date().toISOString()
+    }
+  }
 
   const displayName = (email = '', username = '', id = '') => {
     const clean = normalizeEmail(email)
@@ -13074,16 +13093,22 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
         return String(a.name || '').localeCompare(String(b.name || ''), 'pl', { sensitivity: 'base' })
       })
 
-      setUsers(rows)
+      const externalTarget = normalizeExternalTarget(initialTarget)
+      const finalRows = externalTarget && !rows.some(row => String(row.id) === String(externalTarget.id))
+        ? [externalTarget, ...rows]
+        : rows
+      setUsers(finalRows)
       setActiveUser(prev => {
-        if (prev && rows.some(row => String(row.id) === String(prev.id))) {
-          return rows.find(row => String(row.id) === String(prev.id)) || prev
+        if (externalTarget) return finalRows.find(row => String(row.id) === String(externalTarget.id)) || externalTarget
+
+        if (prev && finalRows.some(row => String(row.id) === String(prev.id))) {
+          return finalRows.find(row => String(row.id) === String(prev.id)) || prev
         }
-        const unreadFirst = rows.find(row => Number(unreadMap[row.id] || 0) > 0)
-        const recentFirst = rows.find(row => row.lastAt)
-        return unreadFirst || recentFirst || rows[0] || null
+        const unreadFirst = finalRows.find(row => Number(unreadMap[row.id] || 0) > 0)
+        const recentFirst = finalRows.find(row => row.lastAt)
+        return unreadFirst || recentFirst || finalRows[0] || null
       })
-      setStatus(rows.length ? 'Kliknij użytkownika po lewej i napisz prywatną wiadomość.' : 'Brak użytkowników do pokazania. Jeśli problem zostanie, uruchom SQL dla profiles/direct_messages.')
+      setStatus(finalRows.length ? 'Kliknij użytkownika po lewej i napisz prywatną wiadomość.' : 'Brak użytkowników do pokazania. Jeśli problem zostanie, uruchom SQL dla profiles/direct_messages.')
     } catch (error) {
       console.warn('user messages load users skipped', error)
       setStatus('Nie udało się wczytać listy użytkowników. Sprawdź tabelę profiles/RLS.')
@@ -13180,6 +13205,16 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange }) {
   useEffect(() => {
     if (visible && activeUser?.id) loadConversation(activeUser)
   }, [visible, activeUser?.id])
+
+  useEffect(() => {
+    if (!visible || !initialTarget) return
+    const externalTarget = normalizeExternalTarget(initialTarget)
+    if (!externalTarget) return
+    setUsers(prev => prev.some(row => String(row.id) === String(externalTarget.id)) ? prev : [externalTarget, ...prev])
+    setActiveUser(externalTarget)
+    setSearch('')
+  }, [visible, initialTarget?.id, initialTarget?.email, initialTarget?.username])
+
 
   useEffect(() => {
     if (!visible) return
@@ -13286,7 +13321,7 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose,
   )
 }
 
-function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, panelStyle = null }) {
+function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadChange, onClose, panelStyle = null, initialTarget = null }) {
   if (!open) return null
 
   return (
@@ -13302,7 +13337,7 @@ function UserMessagesPopup({ open, user = null, dmUnreadCount = 0, onDmUnreadCha
             <button className="betai-notify-btn" type="button" title="Zamknij" onClick={onClose}>✕</button>
           </div>
         </div>
-        <UserMessagesPanel user={user} visible={open} onUnreadChange={onDmUnreadChange} />
+        <UserMessagesPanel user={user} visible={open} onUnreadChange={onDmUnreadChange} initialTarget={initialTarget} />
       </div>
     </div>
   )
@@ -17979,7 +18014,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
@@ -19042,7 +19077,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   ) : (
                     <button type="button" className="primary">Mój profil</button>
                   )}
-                  <button type="button">▢ Wiadomości</button>
+                  <button type="button" className="profile-message-btn-v1346" onClick={() => onOpenDirectMessage?.({ id: viewedIdKey, email, username, name: displayName })}><span className="profile-message-icon-v1346">✉</span> Wiadomości</button>
                   {canMonetizeProfile ? <button type="button" onClick={handleProfileSubscribeClick}>🏆 Wsparcie tipami</button> : <button type="button" className="profile-action-disabled-v1037" title="Konto FREE nie może sprzedawać subskrypcji">FREE bez sprzedaży</button>}
                 </div>
               </div>
@@ -22058,6 +22093,7 @@ function App() {
   const [dmPanelOpen, setDmPanelOpen] = useState(false)
   const [dmPanelStyle, setDmPanelStyle] = useState(null)
   const [dmUnreadCount, setDmUnreadCount] = useState(0)
+  const [dmInitialTarget, setDmInitialTarget] = useState(null)
   const notifyButtonRef = useRef(null)
   const mailButtonRef = useRef(null)
   const [tokenBalance, setTokenBalance] = useState(0)
@@ -25046,7 +25082,22 @@ function App() {
       setDmPanelStyle(getSafeTopbarPanelStyle(rect, 860, 360))
     }
     setNotifyPanelOpen(false)
+    setDmInitialTarget(null)
     setDmPanelOpen(prev => !prev)
+  }
+
+  function openDirectMessageFromProfile(target = {}) {
+    const id = String(target.id || target.user_id || target.author_id || '').trim()
+    const emailTarget = normalizeEmail(target.email || target.author_email || target.user_email || '')
+    const usernameTarget = target.username || target.author_name || target.name || ''
+    if (!id) {
+      showToast?.({ type: 'error', title: 'Brak użytkownika', message: 'Nie mogę otworzyć rozmowy, bo profil nie ma ID użytkownika.' })
+      return
+    }
+    setDmInitialTarget({ id, email: emailTarget, username: usernameTarget, name: usernameTarget || emailTarget || 'Użytkownik' })
+    setNotifyPanelOpen(false)
+    setDmPanelOpen(true)
+    setDmPanelStyle({ top: '96px', right: '24px', left: 'auto', width: '860px' })
   }
 
   const allUserTips = tips.filter(isUserTip).map(normalizeTipRow)
@@ -25243,7 +25294,7 @@ function App() {
         onSuccess={handlePaymentSuccess}
       />
       <BetaiNotifyPanel open={notifyPanelOpen} notifications={notifications} tokenBalance={tokenBalance} panelStyle={notifyPanelStyle} onClose={() => setNotifyPanelOpen(false)} onMarkAllRead={markAllNotificationsRead} />
-      <UserMessagesPopup open={dmPanelOpen} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={dmPanelStyle} onClose={() => setDmPanelOpen(false)} />
+      <UserMessagesPopup open={dmPanelOpen} user={sessionUser} dmUnreadCount={dmUnreadCount} onDmUnreadChange={setDmUnreadCount} panelStyle={dmPanelStyle} initialTarget={dmInitialTarget} onClose={() => { setDmPanelOpen(false); setDmInitialTarget(null) }} />
       <Sidebar view={view} setView={setView} wallet={walletBalance} tokenBalance={tokenBalance} unlockedCount={unlockedTips.size} notificationsCount={notifications.filter(n => !n.is_read).length} onTopUp={() => startStripeTopup(100)} user={effectiveAccountProfile} userPlan={effectiveAccountPlan} onLogout={logout} />
 
       <main className="main">
@@ -25448,6 +25499,7 @@ function App() {
             followingTipsters={followingTipsters}
             followStats={followStats}
             onToggleFollow={toggleFollowTipster}
+            onOpenDirectMessage={openDirectMessageFromProfile}
             onAvatarUpdated={(nextAvatarUrl) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
               setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
@@ -25498,6 +25550,7 @@ function App() {
             onSubscribeToTipster={setSelectedProfileSub}
             unlockedTips={unlockedTips}
             tipsterSubscriptions={tipsterSubscriptions}
+            onOpenDirectMessage={openDirectMessageFromProfile}
           />
         )}
 
