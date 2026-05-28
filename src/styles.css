@@ -62331,3 +62331,20 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#ff5d74!important;
   text-shadow:0 0 14px rgba(255,93,116,.14)!important;
 }
+
+/* WERSJA 1329 — twarde kolorowanie wartości Bilans w mini-statach karty typu */
+.profile-ticket-v6 .ticket-mini-stats-v876 b .profit-positive-text,
+.dashboard-ticket-v6 .ticket-mini-stats-v876 b .profit-positive-text,
+.profile-static-v3 article.profile-ticket-v6 .ticket-mini-stats-v876 b .profit-positive-text,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .ticket-mini-stats-v876 b .profit-positive-text{
+  color:#22f4a8!important;
+  text-shadow:0 0 10px rgba(34,244,168,.20)!important;
+}
+
+.profile-ticket-v6 .ticket-mini-stats-v876 b .profit-negative-text,
+.dashboard-ticket-v6 .ticket-mini-stats-v876 b .profit-negative-text,
+.profile-static-v3 article.profile-ticket-v6 .ticket-mini-stats-v876 b .profit-negative-text,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .ticket-mini-stats-v876 b .profit-negative-text{
+  color:#ff5d74!important;
+  text-shadow:none!important;
+}

@@ -1,0 +1,11 @@
+WERSJA 1329
+
+Zmiana:
+- poprawione na twardo kolorowanie wartości "Bilans" w mini statystykach karty typu,
+- dodatnia wartość bilansu jest zielona,
+- ujemna wartość bilansu jest czerwona,
+- poprawka działa dla kart typu na profilu i dashboardzie.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
