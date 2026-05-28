@@ -17756,7 +17756,7 @@ function ProfileLiveTipCard({
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{authorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b><span className={(Number(authorStats?.profitValue || 0) >= 0) ? 'profit-positive-text' : 'profit-negative-text'}>{authorStats.profitLabel}</span></b></span>
+              <span>Bilans: <b style={{ color: (Number(authorStats?.profitValue || 0) >= 0) ? '#22f4a8' : '#ff5d74', textShadow: (Number(authorStats?.profitValue || 0) >= 0) ? '0 0 10px rgba(34,244,168,.20)' : 'none' }}>{authorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
@@ -18575,6 +18575,49 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return 'Piłka nożna'
   }
   const getProfileTipAccessLabel = (tip = {}) => isTipPremium(tip) ? 'Płatny' : 'Publiczny'
+  const getProfileTipLeagueLabel = (tip = {}) => {
+    const raw = String(
+      tip.league ||
+      tip.league_name ||
+      tip.competition ||
+      tip.competition_name ||
+      tip.tournament ||
+      tip.tournament_name ||
+      tip.category_name ||
+      ''
+    ).trim()
+    return raw || 'Nie ustawiono ligi'
+  }
+  const getProfileTipBetTypeLabel = (tip = {}) => {
+    const raw = String(
+      tip.bet_type ||
+      tip.betType ||
+      tip.market ||
+      tip.market_name ||
+      tip.marketName ||
+      tip.pick_type ||
+      tip.pickType ||
+      tip.selection_type ||
+      tip.selectionType ||
+      tip.type_label ||
+      tip.typeLabel ||
+      tip.type ||
+      tip.prediction_type ||
+      tip.predictionType ||
+      ''
+    ).trim()
+    if (raw) return raw
+    const pick = String(tip.pick || tip.prediction || tip.selection || tip.bet || tip.tip || '').trim()
+    if (!pick) return 'Inny typ'
+    const lower = pick.toLowerCase()
+    if (lower.includes('remis') || lower === 'x' || lower.includes(' draw')) return 'Remis'
+    if (lower.includes('over') || lower.includes('powyżej')) return 'Over / Powyżej'
+    if (lower.includes('under') || lower.includes('poniżej')) return 'Under / Poniżej'
+    if (lower.includes('btts') || lower.includes('obie strzel')) return 'BTTS'
+    if (lower.includes('handicap') || lower.includes('azjatycki')) return 'Handicap'
+    if (lower.includes('wygra') || lower.includes('win') || lower.includes('zwycię')) return 'Zwycięzca meczu'
+    return pick
+  }
   const getProfileTipHourBucket = (tip = {}) => {
     const value = tip.match_time || tip.event_time || tip.start_time || tip.created_at
     const date = new Date(value || Date.now())
@@ -18634,6 +18677,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const activeStatsTips = userTips.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
   const liveTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipAccessLabel, ['Publiczny', 'Płatny'])
+  const liveLeagueStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipLeagueLabel)
+  const liveBetTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipBetTypeLabel)
   const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
   const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])
   const liveHourStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipHourBucket, ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59'])
@@ -19170,6 +19215,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </svg>
               </section>
               <div className="profile-v4-stats-grid">
+                <ProfileStatsTable title="Statystyki według lig" columns={['Liga', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']} rows={liveLeagueStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])} />
+                <ProfileStatsTable title="Statystyki rodzajów typów" columns={['Rodzaj typu', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']} rows={liveBetTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])} />
                 <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
                 <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
                 <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
