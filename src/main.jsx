@@ -19339,14 +19339,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             </div>
           </div>
 
-          <div className="glass-profile-v3 side-card-v3">
-            <div className="side-card-head-v3"><h3>Ranking typerów</h3></div>
-            <div className="ranking-v3">
-              {rankingRows.length ? rankingRows.map((row, idx) => <div key={idx}><span className="rank-mini">{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]}</small></div><em>{row[3]}</em><b>{row[4]}</b></div>) : (
-                <div className="profile-sidebar-empty">Brak danych rankingowych.</div>
-              )}
-            </div>
-          </div>
         </aside>}
       </div>
     </section>
