@@ -62686,3 +62686,45 @@ html.betai-fhd-monitor80-v1323 body #root{
   border:1px solid rgba(0,189,224,.16)!important;
   color:#c8deea!important;
 }
+
+/* WERSJA 1341 — usunięcie zbędnych ramek w Mój profil */
+.profile-static-v3 .community-v3 > div,
+.profile-static-v3 .badges-grid-v3 > div,
+.profile-static-v3 .rating-score,
+.profile-static-v3 .rating-bars > div{
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+/* delikatne separatory zamiast ciężkich ramek */
+.profile-static-v3 .community-v3 > div{
+  border-bottom:1px solid rgba(0,189,224,.10)!important;
+  border-radius:0!important;
+}
+.profile-static-v3 .community-v3 > div:last-child{
+  border-bottom:none!important;
+}
+
+/* sekcja odznak i opinii — czystszy look bez kafelków w kafelkach */
+.profile-static-v3 .badges-grid-v3{
+  gap:12px!important;
+}
+.profile-static-v3 .badges-grid-v3 > div{
+  padding:0!important;
+}
+
+/* oceny/opinie — bez obwódek przy liczbie i paskach */
+.profile-static-v3 .rating-bars > div{
+  padding-left:0!important;
+  padding-right:0!important;
+}
+
+/* licznik pokazywanych typów bez wielkiej ramki */
+.profile-static-v3 .feed-visible-counter{
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+  padding:6px 0 0!important;
+  color:#c8deea!important;
+}
