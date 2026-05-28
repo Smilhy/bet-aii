@@ -62318,3 +62318,16 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#ff5d74!important;
   text-shadow:none!important;
 }
+
+/* WERSJA 1328 — Profil statystyki: wartość PROFIT/BILANS kolor semantyczny */
+.profile-stats-cards-grid .profile-stat-card.profile-stat-card-success strong,
+.profile-stats-cards-grid .profile-stat-card:nth-child(2).profile-stat-card-success strong{
+  color:#22f4a8!important;
+  text-shadow:0 0 14px rgba(34,244,168,.18)!important;
+}
+
+.profile-stats-cards-grid .profile-stat-card.profile-stat-card-danger strong,
+.profile-stats-cards-grid .profile-stat-card:nth-child(2).profile-stat-card-danger strong{
+  color:#ff5d74!important;
+  text-shadow:0 0 14px rgba(255,93,116,.14)!important;
+}

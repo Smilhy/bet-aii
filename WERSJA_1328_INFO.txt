@@ -1,0 +1,9 @@
+WERSJA 1328
+
+Zmiana:
+- dopracowany kolor wartości w kafelku PROFIT/BILANS w sekcji "Twoje statystyki" na profilu,
+- dodatni profit jest zielony,
+- ujemny profit jest czerwony.
+
+Pliki zmienione:
+- src/styles.css
