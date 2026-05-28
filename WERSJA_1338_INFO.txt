@@ -1,0 +1,16 @@
+WERSJA 1338
+
+Zmiana:
+- usunięty zapis "zł" z widoków statystyk i typów, żeby interfejs był bardziej uniwersalny dla zagranicznych użytkowników,
+- zostają same liczby/staty bez oznaczenia waluty.
+
+Objęte poprawką:
+- mini statystyki autora (Bilans),
+- karty typów (Stawka),
+- sekcja "Twoje statystyki" (Profit, Stawki, Napiwki),
+- wiersze wyników/statystyk profilu,
+- ranking w profilu,
+- historia aktywności profilu,
+- tabela wyników z typami.
+
+Płatności / portfel / ceny premium nie były ruszane.

@@ -912,7 +912,7 @@ function getAuthorStatsLabels(sourceStats) {
   return {
     yieldLabel: `${compactNumberLabel(stats.yield, 2)}%`,
     totalTipsLabel: String(Number(stats.totalTips || 0) || 0),
-    profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} zł`,
+    profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}`,
     profitValue: profit,
   }
 }
@@ -10080,7 +10080,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const activeVote = feedback?.votes?.[actorKey] || null
   const commentCount = baseCommentCount + (feedback?.comments?.length || 0)
   const stakeValue = Number(tip?.stake || 0)
-  const stakeLabel = stakeValue > 0 ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)} zł` : '—'
+  const stakeLabel = stakeValue > 0 ? `${Number.isInteger(stakeValue) ? stakeValue : stakeValue.toFixed(2)}` : '—'
   const cardAuthor = resolveRealProfileUsername({ username: isOwnTip ? (currentUsername || author) : author, author_name: isOwnTip ? (currentUsername || author) : author, email: tip.author_email || tip.email || tip.user_email })
   const cardHome = tip.team_home || tip.home_team || 'Gospodarze'
   const cardAway = tip.team_away || tip.away_team || 'Goście'
@@ -17858,7 +17858,7 @@ function ProfileLiveTipCard({
 
       <div className="profile-ticket-v6-field stake">
         <small>STAWKA</small>
-        <strong>{tip.stake.toFixed(0)} zł</strong>
+        <strong>{tip.stake.toFixed(0)}</strong>
         <i><b style={{ width: `${Math.max(3, Math.min(100, (Number(tip.stake || 0) / 1000) * 100))}%` }} /></i>
       </div>
 
@@ -18396,15 +18396,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const statsCards = [
     { label: 'Yield', value: `${roi}%`, sub: roi > 0 ? 'Zwrot na plus' : roi < 0 ? 'Zwrot na minus' : 'Zwrot z inwestycji', tone: roi < 0 ? 'danger' : roi > 0 ? 'success' : 'neutral', accent: true },
-    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`, sub: profitAmount > 0 ? 'Bilans na plus' : profitAmount < 0 ? 'Bilans na minus' : 'Bilans zerowy', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
+    { label: 'Profit', value: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)}`, sub: profitAmount > 0 ? 'Bilans na plus' : profitAmount < 0 ? 'Bilans na minus' : 'Bilans zerowy', tone: profitAmount < 0 ? 'danger' : profitAmount > 0 ? 'success' : 'neutral', accent: true },
     { label: 'Typy', value: String(totalTips), sub: 'Wszystkie dodane', tone: totalTips > 0 ? 'info' : 'neutral' },
     { label: 'Wygrane', value: String(wonTips), sub: 'Rozliczone na plus', tone: wonTips > 0 ? 'success' : 'neutral' },
     { label: 'Przegrane', value: String(lostTips), sub: 'Rozliczone na minus', tone: lostTips > 0 ? 'danger' : 'neutral' },
     { label: 'Pending', value: String(pendingTips), sub: 'Czekają na wynik', tone: pendingTips > 0 ? 'warning' : 'neutral' },
-    { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)} zł`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
+    { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)}`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
     { label: 'Śr. kurs', value: avgOdds, sub: 'Średnia kursów', tone: Number(avgOdds) > 2 ? 'info' : 'neutral' },
     { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
-    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)} ${importedTipsCurrency}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
   ]
   const profileFollowStats = (() => {
     const keys = [
@@ -18509,8 +18509,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const freeCards = freeTipCardsAll.slice(0, 3)
 
   const resultRows = [
-    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
-    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
+    ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)}`],
+    ['Wszystkie typy', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)}`],
   ]
   const analysisRows = userTips.slice(0, 3).map(tip => {
     const normalized = normalizeTipRow(tip)
@@ -18609,7 +18609,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   })
 
   const rankingRows = ownRankingRow
-    ? [[String(ownRankingRow.liveRank || rankingPosition || '—'), displayName, `${Number(ownRankingRow.roi || roi || 0).toFixed(0)}% ROI`, String(ownRankingRow.followers || followersCount), `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`]]
+    ? [[String(ownRankingRow.liveRank || rankingPosition || '—'), displayName, `${Number(ownRankingRow.roi || roi || 0).toFixed(0)}% ROI`, String(ownRankingRow.followers || followersCount), `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)}`]]
     : []
 
 
@@ -18898,7 +18898,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : `Rozliczono typ: ${card.statusLabel}`,
       detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
       tone: card.statusLabel === 'Wygrany' ? 'success' : card.statusLabel === 'Przegrany' ? 'danger' : 'info',
-      amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)} zł` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)} zł` : '',
+      amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)}` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)}` : '',
     }
   })
   const reviewRows = approvedProfileReviews
@@ -18906,7 +18906,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const profileTipStats = {
     yieldLabel: `${roi}%`,
     totalTipsLabel: String(totalTips),
-    profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)} zł`,
+    profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)}`,
     profitValue: profitAmount,
   }
 
@@ -19282,7 +19282,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         <span>{tip.home} — {tip.away}</span>
                         <span>{rowIsUnlocked ? tip.pick : 'Typ premium'}</span>
                         <span>{rowIsUnlocked ? tip.odds : '—'}</span>
-                        <span>{tip.stake.toFixed(2)} zł</span>
+                        <span>{tip.stake.toFixed(2)}</span>
                         <em className={tip.statusLabel === 'Wygrany' ? 'pos' : tip.statusLabel === 'Przegrany' ? 'neg' : tip.statusLabel === 'Zwrot' ? 'void' : tip.statusLabel === 'Czeka na admina' ? 'admin' : 'wait'}>{tip.statusLabel}</em>
                         <span className="manual-settle-actions-v945">
                           {canRequestSettlement ? (
