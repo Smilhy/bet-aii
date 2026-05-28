@@ -1,0 +1,11 @@
+WERSJA 1336
+
+Dashboard:
+- maksymalnie widoczne są 3 typy na start,
+- przycisk "Pokaż kolejne 3 typy" rozwija listę o następne 3,
+- po rozwinięciu można użyć "Zwiń do 3 typów",
+- licznik pokazuje ile typów jest aktualnie widocznych.
+
+Uwagi:
+- filtr / wyszukiwarka / powrót na dashboard resetuje widok z powrotem do 3 typów.
+- dashboard poza tym bez zmian.
