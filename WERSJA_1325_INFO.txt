@@ -1,0 +1,4 @@
+WERSJA 1325
+- Dopasowano kartę typu na profilu do wyglądu dashboardu: ta sama ramka, promień, neonowy akcent i proporcje kolumn.
+- Ujednolicono lewy blok autora: avatar, statystyki i przycisk DARMOWY/PREMIUM mają takie samo położenie jak na dashboardzie.
+- Poprawiono szerokości sekcji mecz/typ/stawka/kurs/analiza/status, żeby karta profilu nie była rozciągnięta inaczej niż karta z dashboardu.

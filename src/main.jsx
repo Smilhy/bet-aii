@@ -36,6 +36,108 @@ import './styles.css'
 
 
 /* =========================================================
+   WERSJA 1324 — MONITORY 19 CALI 1440x900 + 23/24 CALE FHD — TRUE 80%
+   Patch działa priorytetowo: dla realnego ekranu 1440x900 oraz 1920x1080
+   wymusza efekt jak ręczny zoom przeglądarki 80% i rozszerza wirtualny viewport.
+   Nie dotyka 1680x1050 ani 2K.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_FHD_23_24_MONITOR80_1323 = () => {
+    const html = document.documentElement
+    const body = document.body
+    if (!html || !body) return
+
+    const vw = window.innerWidth || html.clientWidth || 0
+    const vh = window.innerHeight || html.clientHeight || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+    const dpr = window.devicePixelRatio || 1
+
+    const isRealFhdScreen = (sw === 1920 && sh === 1080) || (sw === 1080 && sh === 1920)
+    const isFhdViewport100 = vw >= 1850 && vw <= 1995 && vh >= 930 && vh <= 1120
+    const isFhdViewport125 = vw >= 1450 && vw <= 1599 && vh >= 760 && vh <= 930 && dpr >= 1.15
+
+    // WERSJA 1324 — osobny przypadek: monitor 19 cali / 1440x900
+    // Na tym ekranie ręczny zoom przeglądarki 80% daje poprawny efekt,
+    // więc aktywujemy ten sam mechanizm skalowania co dla FHD.
+    const isReal1440x900Screen = (sw === 1440 && sh === 900) || (sw === 900 && sh === 1440)
+    const is1440x900Viewport100 = vw >= 1350 && vw <= 1495 && vh >= 700 && vh <= 930
+
+    const isNot2k = sw < 2200 && vw < 2200
+    const isNot1680 = !(sw === 1680 && sh === 1050) && !(vw >= 1600 && vw <= 1849 && vh >= 900 && vh <= 1100)
+
+    const shouldApply = isNot2k && isNot1680 && (isRealFhdScreen || isFhdViewport100 || isFhdViewport125 || isReal1440x900Screen || is1440x900Viewport100)
+
+    if (shouldApply) {
+      html.classList.add('betai-fhd-monitor80-v1323')
+      html.classList.add('betai-laptop-browser90-v1233')
+      html.style.setProperty('--betai-fhd-scale-1323', '0.8')
+      html.style.setProperty('--betai-fhd-inverse-1323', '1.25')
+      body.style.setProperty('zoom', '80%', 'important')
+      body.style.setProperty('width', '125vw', 'important')
+      body.style.setProperty('min-width', '125vw', 'important')
+      body.style.setProperty('max-width', 'none', 'important')
+      body.style.setProperty('height', 'auto', 'important')
+      body.style.setProperty('min-height', '125vh', 'important')
+      body.style.setProperty('max-height', 'none', 'important')
+      body.style.setProperty('overflow-x', 'hidden', 'important')
+      body.style.setProperty('overflow-y', 'auto', 'important')
+      body.dataset.betaiFhdMonitor80 = `on:${vw}x${vh}:screen:${sw}x${sh}:dpr:${dpr}`
+
+      const root = document.getElementById('root')
+      if (root) {
+        root.style.setProperty('width', '125vw', 'important')
+        root.style.setProperty('min-width', '125vw', 'important')
+        root.style.setProperty('max-width', 'none', 'important')
+        root.style.setProperty('height', 'auto', 'important')
+        root.style.setProperty('min-height', '125vh', 'important')
+        root.style.setProperty('max-height', 'none', 'important')
+        root.style.setProperty('overflow-x', 'hidden', 'important')
+        root.style.setProperty('overflow-y', 'auto', 'important')
+      }
+    } else {
+      html.classList.remove('betai-fhd-monitor80-v1323')
+      html.style.removeProperty('--betai-fhd-scale-1323')
+      html.style.removeProperty('--betai-fhd-inverse-1323')
+      if (body.dataset.betaiFhdMonitor80) {
+        delete body.dataset.betaiFhdMonitor80
+        body.style.removeProperty('zoom')
+        body.style.removeProperty('width')
+        body.style.removeProperty('min-width')
+        body.style.removeProperty('max-width')
+        body.style.removeProperty('height')
+        body.style.removeProperty('min-height')
+        body.style.removeProperty('max-height')
+        body.style.removeProperty('overflow-x')
+        body.style.removeProperty('overflow-y')
+        const root = document.getElementById('root')
+        if (root) {
+          root.style.removeProperty('width')
+          root.style.removeProperty('min-width')
+          root.style.removeProperty('max-width')
+          root.style.removeProperty('height')
+          root.style.removeProperty('min-height')
+          root.style.removeProperty('max-height')
+          root.style.removeProperty('overflow-x')
+          root.style.removeProperty('overflow-y')
+        }
+      }
+    }
+  }
+
+  BETAI_FHD_23_24_MONITOR80_1323()
+  window.addEventListener('resize', BETAI_FHD_23_24_MONITOR80_1323, { passive: true })
+  window.addEventListener('orientationchange', BETAI_FHD_23_24_MONITOR80_1323, { passive: true })
+  window.addEventListener('load', BETAI_FHD_23_24_MONITOR80_1323, { passive: true })
+  setTimeout(BETAI_FHD_23_24_MONITOR80_1323, 50)
+  setTimeout(BETAI_FHD_23_24_MONITOR80_1323, 200)
+  setTimeout(BETAI_FHD_23_24_MONITOR80_1323, 700)
+  setTimeout(BETAI_FHD_23_24_MONITOR80_1323, 1500)
+  setTimeout(BETAI_FHD_23_24_MONITOR80_1323, 3000)
+}
+
+
+/* =========================================================
    WERSJA 1266 — NETWORK FIX / ANTY-SPAM REQUESTÓW
    Nie zmienia UI ani głównej logiki. Zmniejsza tylko agresywne
    polling intervale, bo Realtime Supabase już odświeża dane.
@@ -9909,20 +10011,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardAway = tip.team_away || tip.away_team || 'Goście'
   const cardPick = tip.bet_type || tip.prediction || tip.pick || 'Typ'
   const cardAnalysis = tip.analysis || tip.ai_analysis || tip.description || 'Brak analizy użytkownika.'
-  const cardMatchLabel = tip.display_match_label || (tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj')
-  const dashboardStatus = String(tip.status || 'pending').toLowerCase()
-  const dashboardApprovalStatus = String(tip.admin_approval_status || tip.manual_settlement_status || '').toLowerCase()
-  const cardStatusLabel = tip.display_status_label || (['won', 'win', 'wygrany', 'wygrana'].includes(dashboardStatus)
-    ? 'Wygrany'
-    : ['lost', 'loss', 'przegrany', 'przegrana'].includes(dashboardStatus)
-      ? 'Przegrany'
-      : ['void', 'push', 'zwrot'].includes(dashboardStatus)
-        ? 'Zwrot'
-        : dashboardApprovalStatus === 'pending' || dashboardApprovalStatus === 'pending_admin'
-          ? 'Czeka na admina'
-          : dashboardApprovalStatus === 'rejected'
-            ? 'Odrzucony'
-            : 'Oczekujący')
+  const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
+  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
   const showFollowButton = !isOwnTip
@@ -18713,99 +18803,56 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     profitValue: profitAmount,
   }
 
-  const mapProfileCardToDashboardTip = (tip, overrides = {}) => {
-    const raw = tip.rawTip || {}
-    const mappedStatus = tip.statusLabel === 'Wygrany'
-      ? 'won'
-      : tip.statusLabel === 'Przegrany'
-        ? 'lost'
-        : tip.statusLabel === 'Zwrot'
-          ? 'void'
-          : 'pending'
-
-    return {
-      id: tip.id,
-      access_type: tip.premium ? 'premium' : 'free',
-      author_id: overrides.author_id ?? raw.author_id ?? raw.user_id ?? viewedIdKey ?? viewerProfile?.id ?? null,
-      user_id: overrides.user_id ?? raw.user_id ?? raw.author_id ?? viewerProfile?.id ?? null,
-      author_name: overrides.author_name ?? raw.author_name ?? raw.username ?? displayName ?? 'Użytkownik',
-      author_email: overrides.author_email ?? raw.author_email ?? raw.email ?? raw.user_email ?? viewerProfile?.email ?? '',
-      author_avatar_url: overrides.author_avatar_url ?? raw.author_avatar_url ?? raw.avatar_url ?? raw.profile_avatar_url ?? avatarUrl ?? '',
-      profile_avatar_url: overrides.author_avatar_url ?? raw.author_avatar_url ?? raw.avatar_url ?? raw.profile_avatar_url ?? avatarUrl ?? '',
-      author_visible_stats: overrides.author_visible_stats ?? profileTipStats,
-      team_home: tip.home,
-      team_away: tip.away,
-      home_logo: tip.homeLogo,
-      away_logo: tip.awayLogo,
-      home_team_id: tip.homeTeamId,
-      away_team_id: tip.awayTeamId,
-      bet_type: tip.pick,
-      prediction: tip.pick,
-      pick: tip.pick,
-      odds: Number(tip.odds || 0) || 0,
-      stake: Number(tip.stake || 0) || 0,
-      analysis: tip.analysis,
-      ai_analysis: tip.analysis,
-      description: tip.analysis,
-      league: tip.league,
-      match_time: raw.match_time || raw.event_date || raw.kickoff_at || null,
-      display_match_label: tip.matchLabel,
-      created_at: raw.created_at || null,
-      status: mappedStatus,
-      admin_approval_status: tip.approvalStatus || raw.admin_approval_status || raw.manual_settlement_status || '',
-      manual_settlement_status: tip.approvalStatus || raw.manual_settlement_status || '',
-      manual_settlement_result: tip.manualResult || raw.manual_settlement_result || raw.admin_approved_result || '',
-      display_status_label: tip.statusLabel,
-      likes: Number(tip.likes || raw.likes || raw.hearts || 0) || 0,
-      dislikes: Number(raw.dislikes || 0) || 0,
-      comments_count: Number(tip.comments || raw.comments_count || raw.comments || 0) || 0,
-      price: Math.max(0, Number(tip.price || raw.price || 29) || 29),
-    }
-  }
-
-  const renderProfileTipCard = (tip) => {
-    const dashboardStyleTip = mapProfileCardToDashboardTip(tip)
-    const profileTipUnlocked = profileIsOwnForViewer || unlockedTips?.has?.(tip.id) || unlockedTips?.has?.(tip.rawTip?.id)
-    return (
-      <TipCard
-        key={tip.id}
-        tip={dashboardStyleTip}
-        unlocked={profileTipUnlocked}
-        onUnlock={onUnlock}
-        onSubscribeToTipster={onSubscribeToTipster}
-        profileSubscriptionActive={Boolean(profileSubscriptionActive && !profileIsOwnForViewer)}
-        currentUser={viewerProfile}
-        followingTipsters={followingTipsters}
-        onToggleFollow={onToggleFollow}
-        onOpenTipster={null}
-        onToast={onToast}
-      />
-    )
-  }
+  const renderProfileTipCard = (tip) => (
+    <ProfileLiveTipCard
+      key={tip.id}
+      tip={tip}
+      sourceTip={tip.rawTip || {}}
+      avatarUrl={avatarUrl}
+      initials={initials}
+      displayName={displayName}
+      currentUser={viewerProfile}
+      unlockedTips={unlockedTips}
+      tipsterSubscriptions={profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
+        ...tipsterSubscriptions,
+        { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
+      ] : tipsterSubscriptions}
+      followingTipsters={followingTipsters}
+      onToggleFollow={onToggleFollow}
+      onUnlock={onUnlock}
+      onSubscribeToTipster={onSubscribeToTipster}
+      onToast={onToast}
+      onViewType={() => setProfileTab('tips')}
+      authorStats={profileTipStats}
+      canFollowAuthor={!profileIsOwnForViewer}
+    />
+  )
 
   const renderPurchasedSingleCard = (tip) => {
     const raw = tip.rawTip || tip
     const purchasedDisplayName = raw.author_name || raw.username || tip.author || 'Typer'
     const purchasedAvatar = raw.author_avatar_url || raw.avatar_url || ''
-    const dashboardStyleTip = mapProfileCardToDashboardTip(tip, {
-      author_name: purchasedDisplayName,
-      author_avatar_url: purchasedAvatar,
-      author_visible_stats: null,
-    })
+    const purchasedInitials = String(purchasedDisplayName || 'TY').slice(0, 2).toUpperCase()
     return (
       <div className="profile-purchased-single-wrap-v952" key={tip.id}>
         <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
-        <TipCard
-          tip={dashboardStyleTip}
-          unlocked={true}
-          onUnlock={onUnlock}
-          onSubscribeToTipster={onSubscribeToTipster}
-          profileSubscriptionActive={false}
+        <ProfileLiveTipCard
+          tip={tip}
+          sourceTip={raw}
+          avatarUrl={purchasedAvatar}
+          initials={purchasedInitials}
+          displayName={purchasedDisplayName}
           currentUser={viewerProfile}
+          unlockedTips={unlockedTips}
+          tipsterSubscriptions={tipsterSubscriptions}
           followingTipsters={followingTipsters}
           onToggleFollow={onToggleFollow}
-          onOpenTipster={null}
+          onUnlock={onUnlock}
+          onSubscribeToTipster={onSubscribeToTipster}
           onToast={onToast}
+          onViewType={() => setProfileTab('tips')}
+          authorStats={null}
+          canFollowAuthor={!isSameProfileIdentity(viewerProfile, raw)}
         />
       </div>
     )
@@ -20082,7 +20129,6 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   const [query, setQuery] = useState('')
   const [amountFilter, setAmountFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState([])
-  const [payoutRequestsExpanded, setPayoutRequestsExpanded] = useState(false)
 
   const normalizedRequests = requests.map(request => ({
     ...request,
@@ -20125,9 +20171,6 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
     return matchesStatus && matchesQuery && matchesAmount
   })
 
-  const visiblePayoutRequests = payoutRequestsExpanded ? filteredRequests : filteredRequests.slice(0, 4)
-  const hiddenPayoutRequestsCount = Math.max(0, filteredRequests.length - 4)
-
   const selectedRequests = normalizedRequests.filter(request => selectedIds.includes(request.id))
   const selectedPending = selectedRequests.filter(request => request.normalizedStatus === 'pending')
   const selectedReady = selectedPending.filter(request => request.amountNumber >= 50)
@@ -20137,7 +20180,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
   }
 
   const toggleAllVisible = () => {
-    const visiblePendingIds = visiblePayoutRequests.filter(request => request.normalizedStatus === 'pending').map(request => request.id)
+    const visiblePendingIds = filteredRequests.filter(request => request.normalizedStatus === 'pending').map(request => request.id)
     const allSelected = visiblePendingIds.length > 0 && visiblePendingIds.every(id => selectedIds.includes(id))
     setSelectedIds(current => allSelected ? current.filter(id => !visiblePendingIds.includes(id)) : Array.from(new Set([...current, ...visiblePendingIds])))
   }
@@ -20298,7 +20341,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
 
         <div className="admin-payout-live-table">
           <div className="admin-payout-live-row header">
-            <span><input type="checkbox" onChange={toggleAllVisible} checked={visiblePayoutRequests.some(row => row.normalizedStatus === 'pending') && visiblePayoutRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
+            <span><input type="checkbox" onChange={toggleAllVisible} checked={filteredRequests.some(row => row.normalizedStatus === 'pending') && filteredRequests.filter(row => row.normalizedStatus === 'pending').every(row => selectedIds.includes(row.id))} /></span>
             <span>Użytkownik</span>
             <span>Data</span>
             <span>Kwota</span>
@@ -20306,7 +20349,7 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
             <span>Stripe</span>
             <span>Akcje</span>
           </div>
-          {filteredRequests.length ? visiblePayoutRequests.map(request => (
+          {filteredRequests.length ? filteredRequests.map(request => (
             <div className="admin-payout-live-row" key={request.id}>
               <span><input type="checkbox" disabled={request.normalizedStatus !== 'pending'} checked={selectedIds.includes(request.id)} onChange={() => toggleSelected(request.id)} /></span>
               <span className="admin-payout-user-cell-v1047">
@@ -20337,15 +20380,6 @@ function AdminPayoutsView({ user, requests = [], onUpdateStatus, onRunCron }) {
               <span>Zmień filtr albo poczekaj na nowe prawdziwe wypłaty użytkowników.</span>
             </div>
           )}
-          {filteredRequests.length > 4 ? (
-            <button
-              type="button"
-              className="admin-finance-show-more-btn admin-payout-show-more-btn-v2"
-              onClick={() => setPayoutRequestsExpanded(current => !current)}
-            >
-              {payoutRequestsExpanded ? 'Zwiń listę' : `Pokaż więcej (${hiddenPayoutRequestsCount})`}
-            </button>
-          ) : null}
         </div>
       </div>
     </section>

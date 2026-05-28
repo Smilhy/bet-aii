@@ -1,0 +1,9 @@
+WERSJA 1324 — 1440x900 / 19 cali + FHD 23/24 cale TRUE 80 FIX
+
+Zmiany:
+- start z wersji 1323,
+- dodano osobne wykrywanie monitora 1440x900 / około 19 cali,
+- dla 1440x900 strona automatycznie dostaje efekt jak zoom przeglądarki 80%,
+- zostawiono wcześniejszy fix dla 1920x1080 / 23-24 cale,
+- nie ruszono 1680x1050 ani 2K,
+- bez zmian logiki, API, Supabase i Stripe.
