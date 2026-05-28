@@ -1,0 +1,18 @@
+WERSJA 1339
+
+Zmiana:
+- Mój profil otrzymał globalnie styl i kolory z głównego dashboardu.
+- Zmienione są kolory/panele/przyciski/zakładki/tabele/notki we wszystkich zakładkach profilu.
+- Logika, liczenie statystyk, filtrowanie, rozwijanie typów, zapisy i dane nie były zmieniane.
+
+Zakres:
+- Mój profil -> Typy
+- Mój profil -> Wyniki
+- Mój profil -> Statystyki
+- Mój profil -> Historia
+- Mój profil -> Opinie
+- Cennik subskrypcji
+- sidebar profilu
+
+Pliki zmienione:
+- src/styles.css
