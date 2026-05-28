@@ -18614,7 +18614,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     { label: 'Stawki', value: `${totalStakedAmount.toFixed(2)}`, sub: 'Łącznie zagrane', tone: totalStakedAmount > 0 ? 'info' : 'neutral' },
     { label: 'Śr. kurs', value: avgOdds, sub: 'Średnia kursów', tone: Number(avgOdds) > 2 ? 'info' : 'neutral' },
     { label: 'Max kurs', value: highestOdds, sub: 'Najwyższy kurs', tone: highestOddsNumber >= 3 ? 'success' : 'neutral' },
-    { label: 'Napiwki', value: `${tipsSupportAmount.toFixed(2)}`, sub: 'Wsparcie społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
+    { label: 'Wsparcie', value: `${tipsSupportAmount.toFixed(2)}`, sub: 'Napiwki od społeczności', tone: tipsSupportAmount > 0 ? 'success' : 'neutral' },
   ]
   const profileFollowStats = (() => {
     const keys = [

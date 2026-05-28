@@ -1,0 +1,13 @@
+WERSJA 1351
+
+Kosmetyka Mój profil bez zmiany logiki:
+- lekko przyciemniony hero/banner profilu,
+- poprawiony kontrast karty typu,
+- kafelek „Napiwki” zmieniony na „Wsparcie”,
+- delikatnie uporządkowana prawa kolumna,
+- przycisk Stripe ma spokojniejszy statusowy wygląd,
+- logika typów, Stripe, donate, statystyki i ranking bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
