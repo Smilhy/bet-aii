@@ -853,6 +853,53 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
   return importedStats
 }
 
+
+function normalizeBetTypeForStats(marketValue = '', pickValue = '', source = {}) {
+  const stored = String(
+    source?.bet_market_type ||
+    source?.market_type ||
+    source?.stats_bet_type ||
+    source?.type_label ||
+    source?.pick_type ||
+    source?.selection_type ||
+    source?.prediction_type ||
+    ''
+  ).trim()
+  if (stored) return stored
+
+  const market = String(marketValue || source?.market || source?.market_name || source?.marketName || '').trim()
+  const pick = String(pickValue || source?.pick || source?.prediction || source?.selection || source?.bet_type || source?.betType || source?.bet || source?.tip || '').trim()
+  const combined = `${market} ${pick}`.toLowerCase()
+  const cleanPick = pick || 'Inny typ'
+
+  const hasAny = (...words) => words.some(word => combined.includes(word))
+  const numberMatch = combined.match(/(\d+(?:[.,]\d+)?)/)
+  const line = numberMatch ? numberMatch[1].replace(',', '.') : ''
+
+  if (hasAny('dnb', 'draw no bet', 'bez remisu')) return 'DNB'
+  if (hasAny('podwójna szansa', 'double chance') || /\b1x\b|\bx2\b|\b12\b/.test(combined)) return 'Podwójna szansa'
+  if (hasAny('handicap', 'azjatycki')) return 'Handicap'
+  if (hasAny('btts', 'obie strzel')) return 'BTTS'
+  if (hasAny('rzut', 'rożn', 'corner')) {
+    if (hasAny('under', 'poniżej', 'mniej')) return line ? `Under ${line} rożnych` : 'Under rożne'
+    if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} rożnych` : 'Over rożne'
+    return 'Rzuty rożne'
+  }
+  if (hasAny('kartk', 'żółt', 'yellow card', 'cards')) {
+    if (hasAny('under', 'poniżej', 'mniej')) return line ? `Under ${line} kartek` : 'Under kartki'
+    if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} kartek` : 'Over kartki'
+    return 'Kartki'
+  }
+  if (hasAny('gol', 'bramk', 'goal', 'goals')) {
+    if (hasAny('under', 'poniżej', 'mniej')) return line ? `Under ${line} gola` : 'Under gole'
+    if (hasAny('over', 'powyżej', 'więcej')) return line ? `Over ${line} gola` : 'Over gole'
+    return 'Gole'
+  }
+  if (hasAny('wynik końcowy', '1x2', 'match winner', 'full time result') || /(^|\s)(1|x|2)(\s|$)/.test(combined) || hasAny('wygra', 'zwycięzca', 'remis')) return '1X2'
+
+  return cleanPick
+}
+
 function compactNumberLabel(value, decimals = 2) {
   const num = Number(value || 0)
   if (Number.isInteger(num)) return String(num)
@@ -9107,6 +9154,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const settlementSource = isApiBackedTip ? 'api-football' : 'manual_visible_admin_settlement'
     const initialManualSettlementStatus = 'none'
     const initialAdminApprovalStatus = isApiBackedTip ? 'not_required' : 'none'
+    const statsBetTypeLabel = normalizeBetTypeForStats(form.market, form.betType)
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -9134,6 +9182,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       event_time: combinedIso,
       kickoff_time: combinedIso,
       market: form.market,
+      market_name: form.market,
+      bet_market_type: statsBetTypeLabel,
+      stats_bet_type: statsBetTypeLabel,
+      type_label: statsBetTypeLabel,
+      pick_type: statsBetTypeLabel,
+      selection_type: statsBetTypeLabel,
       bet_type: form.betType,
       prediction: form.betType,
       odds: Number(form.odds || 0),
@@ -9180,6 +9234,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
+      market: form.market,
+      market_name: form.market,
+      bet_market_type: statsBetTypeLabel,
+      stats_bet_type: statsBetTypeLabel,
+      type_label: statsBetTypeLabel,
+      pick_type: statsBetTypeLabel,
+      selection_type: statsBetTypeLabel,
       bet_type: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -9202,6 +9263,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
+      market: form.market,
+      market_name: form.market,
+      bet_market_type: statsBetTypeLabel,
+      stats_bet_type: statsBetTypeLabel,
+      type_label: statsBetTypeLabel,
+      pick_type: statsBetTypeLabel,
+      selection_type: statsBetTypeLabel,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -9230,6 +9298,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
+      market: form.market,
+      market_name: form.market,
+      bet_market_type: statsBetTypeLabel,
+      stats_bet_type: statsBetTypeLabel,
+      type_label: statsBetTypeLabel,
+      pick_type: statsBetTypeLabel,
+      selection_type: statsBetTypeLabel,
       prediction: form.betType,
       odds: Number(form.odds || 0),
       stake: stakeValue,
@@ -18589,34 +18664,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return raw || 'Nie ustawiono ligi'
   }
   const getProfileTipBetTypeLabel = (tip = {}) => {
-    const raw = String(
-      tip.bet_type ||
-      tip.betType ||
-      tip.market ||
-      tip.market_name ||
-      tip.marketName ||
-      tip.pick_type ||
-      tip.pickType ||
-      tip.selection_type ||
-      tip.selectionType ||
-      tip.type_label ||
-      tip.typeLabel ||
-      tip.type ||
-      tip.prediction_type ||
-      tip.predictionType ||
-      ''
-    ).trim()
-    if (raw) return raw
-    const pick = String(tip.pick || tip.prediction || tip.selection || tip.bet || tip.tip || '').trim()
-    if (!pick) return 'Inny typ'
-    const lower = pick.toLowerCase()
-    if (lower.includes('remis') || lower === 'x' || lower.includes(' draw')) return 'Remis'
-    if (lower.includes('over') || lower.includes('powyżej')) return 'Over / Powyżej'
-    if (lower.includes('under') || lower.includes('poniżej')) return 'Under / Poniżej'
-    if (lower.includes('btts') || lower.includes('obie strzel')) return 'BTTS'
-    if (lower.includes('handicap') || lower.includes('azjatycki')) return 'Handicap'
-    if (lower.includes('wygra') || lower.includes('win') || lower.includes('zwycię')) return 'Zwycięzca meczu'
-    return pick
+    return normalizeBetTypeForStats(
+      tip.market || tip.market_name || tip.marketName || '',
+      tip.pick || tip.prediction || tip.selection || tip.bet_type || tip.betType || tip.bet || tip.tip || '',
+      tip
+    )
   }
   const getProfileTipHourBucket = (tip = {}) => {
     const value = tip.match_time || tip.event_time || tip.start_time || tip.created_at

@@ -1,0 +1,16 @@
+WERSJA 1333
+
+Zmiana:
+- dopracowane statystyki rodzajów typów w Mój profil -> Statystyki.
+- Rodzaj typu nie pokazuje już nazw drużyn typu „Getafe wygra”, tylko kategorie:
+  1X2, DNB, Podwójna szansa, Handicap, BTTS,
+  Over/Under gole, Over/Under rożne, Over/Under kartki.
+- Przykłady:
+  „Powyżej 9 cornerów” zapisze się jako „Over 9 rożnych”.
+  „Żółte kartki powyżej 4.5” zapisze się jako „Over 4.5 kartek”.
+  „Getafe wygra” zapisze się jako „1X2”.
+- Przy publikacji typu zapisuję dodatkowe pole statystyczne rodzaju typu, jeśli Supabase ma takie kolumny.
+- Dashboard bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
