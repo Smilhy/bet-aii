@@ -18097,6 +18097,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('free')
+  const [profileTipsVisibleCount, setProfileTipsVisibleCount] = useState(3)
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const [profileChartRange, setProfileChartRange] = useState('90d')
   const [profileChartMode, setProfileChartMode] = useState('cumulative')
@@ -18502,8 +18503,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const allProfileTipCards = userTips.map(buildProfileTipCard)
   const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący')
-  const premiumCards = activeProfileTipCards.filter(tip => tip.premium).slice(0, 3)
-  const freeCards = activeProfileTipCards.filter(tip => !tip.premium).slice(0, 3)
+  const premiumTipCardsAll = activeProfileTipCards.filter(tip => tip.premium)
+  const freeTipCardsAll = activeProfileTipCards.filter(tip => !tip.premium)
+  const premiumCards = premiumTipCardsAll.slice(0, 3)
+  const freeCards = freeTipCardsAll.slice(0, 3)
 
   const resultRows = [
     ['Bieżący miesiąc', String(totalTips), String(wonTips), String(lostTips), `${winRate}%`, `${roi}%`, `${profitAmount.toFixed(2)} zł`],
@@ -18859,11 +18862,18 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       )
     })
     .map(tip => buildProfileTipCard({ ...tip, rawTip: tip.rawTip || tip }))
-  const profileVisibleTipCards = activeProfileTipCards.filter(tip => {
-    if (profileTipsFilter === 'purchased') return false
-    if (profileTipsFilter === 'premium') return profileSubscriptionActive && tip.premium
-    return !tip.premium
-  })
+  const profileVisibleTipCardsBase = (() => {
+    if (profileTipsFilter === 'purchased') return purchasedSingleCards
+    if (profileTipsFilter === 'premium') return profileSubscriptionActive ? premiumTipCardsAll : []
+    return freeTipCardsAll
+  })()
+  const profileVisibleTipCards = profileVisibleTipCardsBase.slice(0, profileTipsVisibleCount)
+  const profileHasMoreTipCards = profileVisibleTipCardsBase.length > profileTipsVisibleCount
+  const profileHasExpandedTipCards = profileTipsVisibleCount > 3
+
+  useEffect(() => {
+    if (profileTab === 'tips') setProfileTipsVisibleCount(3)
+  }, [profileTipsFilter, profileTab])
   const resultTipRows = allProfileTipCards.filter(tip => {
     if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
     if (profileResultsFilter === 'lost') return tip.statusLabel === 'Przegrany'
@@ -19072,8 +19082,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-tips-page">
               <div className="profile-v3-card-head profile-v4-tips-head"><h3>◉ Typy</h3></div>
               <div className="profile-v4-filter-row profile-v4-filter-row-paid-access">
-                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeCards.length}</b></button>
-                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileAccessUnlocked ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileAccessUnlocked ? premiumCards.length : '🔒'}</b></button>
+                <button type="button" className={`filter-pill-v872 free ${profileTipsFilter === 'free' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('free')}><span className="filter-icon-v872">🎁</span><span>Darmowe</span><b>{freeTipCardsAll.length}</b></button>
+                <button type="button" className={`filter-pill-v872 premium ${profileTipsFilter === 'premium' ? 'active' : ''} ${!profileAccessUnlocked ? 'locked' : ''}`} onClick={handlePremiumProfileTabClick}><span className="filter-icon-v872">♕</span><span>Premium</span><b>{profileAccessUnlocked ? premiumTipCardsAll.length : '🔒'}</b></button>
                 {profileIsOwnForViewer ? (
                   <button type="button" className={`filter-pill-v872 purchased ${profileTipsFilter === 'purchased' ? 'active' : ''}`} onClick={() => setProfileTipsFilter('purchased')}><span className="filter-icon-v872">🔓</span><span>Kupione single</span><b>{purchasedSingleCards.length}</b></button>
                 ) : null}
@@ -19096,13 +19106,61 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
               ) : null}
               {profileTipsFilter === 'purchased' ? (
-                purchasedSingleCards.length ? (
-                  <div className="profile-all-tips-list profile-purchased-singles-list-v952">{purchasedSingleCards.map(renderPurchasedSingleCard)}</div>
+                profileVisibleTipCardsBase.length ? (
+                  <>
+                    <div className="profile-all-tips-list profile-purchased-singles-list-v952">{profileVisibleTipCards.map(renderPurchasedSingleCard)}</div>
+                    <div className="feed-visible-counter">Pokazano {Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z {profileVisibleTipCardsBase.length} typów</div>
+                    {profileVisibleTipCardsBase.length > 3 ? (
+                      <div className="feed-load-more-wrap">
+                        <button
+                          type="button"
+                          className="feed-load-more-btn"
+                          onClick={() => setProfileTipsVisibleCount(prev => prev + 3)}
+                          disabled={!profileHasMoreTipCards}
+                        >
+                          {profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                        </button>
+                        {profileHasExpandedTipCards ? (
+                          <button
+                            type="button"
+                            className="feed-load-less-btn"
+                            onClick={() => setProfileTipsVisibleCount(3)}
+                          >
+                            Zwiń do 3 typów
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </>
                 ) : (
                   <div className="profile-live-tip-empty">Nie masz jeszcze kupionych singli. Kup pojedynczy typ premium, a pojawi się tutaj.</div>
                 )
-              ) : profileVisibleTipCards.length ? (
-                <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
+              ) : profileVisibleTipCardsBase.length ? (
+                <>
+                  <div className="profile-all-tips-list">{profileVisibleTipCards.map(renderProfileTipCard)}</div>
+                  <div className="feed-visible-counter">Pokazano {Math.min(profileTipsVisibleCount, profileVisibleTipCardsBase.length)} z {profileVisibleTipCardsBase.length} typów</div>
+                  {profileVisibleTipCardsBase.length > 3 ? (
+                    <div className="feed-load-more-wrap">
+                      <button
+                        type="button"
+                        className="feed-load-more-btn"
+                        onClick={() => setProfileTipsVisibleCount(prev => prev + 3)}
+                        disabled={!profileHasMoreTipCards}
+                      >
+                        {profileHasMoreTipCards ? `Pokaż kolejne 3 typy (${Math.max(profileVisibleTipCardsBase.length - profileTipsVisibleCount, 0)} pozostało)` : 'Pokazano wszystkie typy'}
+                      </button>
+                      {profileHasExpandedTipCards ? (
+                        <button
+                          type="button"
+                          className="feed-load-less-btn"
+                          onClick={() => setProfileTipsVisibleCount(3)}
+                        >
+                          Zwiń do 3 typów
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
               ) : (
                 <div className="profile-live-tip-empty">{profileTipsFilter === 'premium' && !profileAccessUnlocked ? 'Zakładka Premium jest zablokowana. Kup subskrypcję profilu, aby zobaczyć typy premium.' : 'Brak aktywnych typów w tej kategorii. Rozstrzygnięte typy znajdziesz w zakładce Wyniki.'}</div>
               )}
