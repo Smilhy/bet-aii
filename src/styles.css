@@ -62848,3 +62848,141 @@ html.betai-fhd-monitor80-v1323 body #root{
   border-color:rgba(255,255,255,.18)!important;
   color:#ffffff!important;
 }
+
+/* WERSJA 1343 — zakładki Mój profil naprawdę jak w Portfelu */
+/* kontener zakładek bez ciężkiej belki */
+.profile-static-v3 .profile-v3-tabs,
+.profile-static-v3 .profile-v4-tabs{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+  padding:0!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+/* górne zakładki */
+.profile-static-v3 .profile-v3-tabs button,
+.profile-static-v3 .profile-v4-tabs button{
+  height:52px!important;
+  min-height:52px!important;
+  padding:0 24px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(22,111,155,.34)!important;
+  background:linear-gradient(180deg, rgba(8,24,42,.98), rgba(4,16,30,.96))!important;
+  color:#ecf7ff!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  letter-spacing:-.01em!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 8px 18px rgba(0,0,0,.18)!important;
+}
+
+.profile-static-v3 .profile-v3-tabs button:hover,
+.profile-static-v3 .profile-v4-tabs button:hover{
+  border-color:rgba(61,168,220,.45)!important;
+}
+
+.profile-static-v3 .profile-v3-tabs button.active,
+.profile-static-v3 .profile-v4-tabs button.active{
+  background:linear-gradient(135deg, #35dff1 0%, #6fa7ff 100%)!important;
+  border-color:rgba(121,223,255,.85)!important;
+  color:#071723!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 10px 24px rgba(51,196,255,.20)!important;
+}
+
+/* ikony w top tabs bardziej subtelne */
+.profile-static-v3 .profile-v3-tabs button svg,
+.profile-static-v3 .profile-v4-tabs button svg,
+.profile-static-v3 .profile-v3-tabs button i,
+.profile-static-v3 .profile-v4-tabs button i,
+.profile-static-v3 .profile-v3-tabs button .tab-icon,
+.profile-static-v3 .profile-v4-tabs button .tab-icon{
+  width:16px!important;
+  height:16px!important;
+  opacity:.78!important;
+}
+
+/* badge liczby w top tabs */
+.profile-static-v3 .profile-v3-tabs button b,
+.profile-static-v3 .profile-v4-tabs button b{
+  min-width:28px!important;
+  height:28px!important;
+  margin-left:8px!important;
+  padding:0 8px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(255,255,255,.14)!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  color:#f8fdff!important;
+  font-size:14px!important;
+  line-height:1!important;
+}
+
+.profile-static-v3 .profile-v3-tabs button.active b,
+.profile-static-v3 .profile-v4-tabs button.active b{
+  background:rgba(255,255,255,.26)!important;
+  border-color:rgba(255,255,255,.18)!important;
+  color:#ffffff!important;
+}
+
+/* druga linia zakładek: Darmowe/Premium/Kupione single */
+.profile-static-v3 .profile-v4-filter-row,
+.profile-static-v3 .profile-v4-filter-row-paid-access{
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  flex-wrap:wrap!important;
+  padding:8px 0 0!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+.profile-static-v3 .filter-pill-v872{
+  height:44px!important;
+  min-height:44px!important;
+  padding:0 20px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(22,111,155,.32)!important;
+  background:linear-gradient(180deg, rgba(8,24,42,.98), rgba(4,16,30,.96))!important;
+  color:#ecf7ff!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 8px 18px rgba(0,0,0,.16)!important;
+}
+
+.profile-static-v3 .filter-pill-v872.active{
+  background:linear-gradient(135deg, #35dff1 0%, #6fa7ff 100%)!important;
+  border-color:rgba(121,223,255,.82)!important;
+  color:#071723!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 22px rgba(51,196,255,.18)!important;
+}
+
+.profile-static-v3 .filter-pill-v872 b{
+  min-width:28px!important;
+  height:28px!important;
+  margin-left:8px!important;
+  padding:0 8px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(255,255,255,.14)!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  color:#f8fdff!important;
+  font-size:14px!important;
+}
+
+.profile-static-v3 .filter-pill-v872.active b{
+  background:rgba(255,255,255,.26)!important;
+  border-color:rgba(255,255,255,.18)!important;
+  color:#ffffff!important;
+}

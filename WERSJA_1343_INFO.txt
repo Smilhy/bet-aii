@@ -1,0 +1,12 @@
+WERSJA 1343
+
+Zmiana:
+- poprawione zakładki w Mój profil, żeby naprawdę wyglądały jak zakładki z Portfela.
+- usunięta ciężka belka pod nimi,
+- zakładki są teraz bardziej kompaktowe, prostsze i bliższe screenowi referencyjnemu,
+- dotyczy górnych zakładek oraz drugiego rzędu: Darmowe / Premium / Kupione single.
+
+Logika bez zmian.
+
+Pliki zmienione:
+- src/styles.css
