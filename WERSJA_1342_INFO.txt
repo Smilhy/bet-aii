@@ -1,0 +1,13 @@
+WERSJA 1342
+
+Zmiana:
+- zakładki w Mój profil dostały wygląd jak w Portfelu z przykładu.
+- dotyczy:
+  1) górnych zakładek: Typy / Wyniki / Statystyki / Historia / Opinie / Cennik subskrypcji
+  2) drugiego rzędu: Darmowe / Premium / Kupione single
+- zmieniony tylko wygląd: kształt, padding, tło, gradient aktywnej zakładki, obwódki i badge z liczbą.
+
+Logika bez zmian.
+
+Pliki zmienione:
+- src/styles.css
