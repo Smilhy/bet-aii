@@ -1,0 +1,14 @@
+WERSJA 1335
+
+Zmiana:
+- w Mój profil -> Statystyki przeniesione wyżej zostały:
+  1) Statystyki typów kuponów
+  2) Statystyki dla sportów
+- poniżej nich są teraz:
+  3) Statystyki według lig
+  4) Statystyki rodzajów typów
+
+Dashboard bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
