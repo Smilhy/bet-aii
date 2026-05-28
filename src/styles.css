@@ -62986,3 +62986,123 @@ html.betai-fhd-monitor80-v1323 body #root{
   border-color:rgba(255,255,255,.18)!important;
   color:#ffffff!important;
 }
+
+/* WERSJA 1344 — Mój profil: przyciski zakładek 1:1 jak Portfel, bez ikon i bez błyszczących kapsuł */
+.profile-static-v3 .profile-v3-tabs,
+.profile-static-v3 .profile-v4-tabs{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  flex-wrap:wrap!important;
+  padding:18px 18px!important;
+  background:linear-gradient(180deg, rgba(4,15,27,.98), rgba(3,13,24,.98))!important;
+  border:1px solid rgba(0,189,224,.12)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+
+/* usuwa ikonki z górnych zakładek, zostaje czysty napis jak Portfel/Wpłaty/Wypłaty */
+.profile-static-v3 .profile-v3-tabs button > span:first-child,
+.profile-static-v3 .profile-v4-tabs button > span:first-child{
+  display:none!important;
+}
+
+.profile-static-v3 .profile-v3-tabs button,
+.profile-static-v3 .profile-v4-tabs button{
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 26px!important;
+  border-radius:17px!important;
+  border:1px solid rgba(31,116,154,.30)!important;
+  background:#061827!important;
+  background-image:linear-gradient(180deg, rgba(9,29,47,.92), rgba(4,15,27,.96))!important;
+  color:#e7f3fb!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:-.01em!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .profile-v3-tabs button.active,
+.profile-static-v3 .profile-v4-tabs button.active{
+  background:#32dbe8!important;
+  background-image:linear-gradient(135deg, #35dce8 0%, #67a9ff 100%)!important;
+  border-color:transparent!important;
+  color:#061827!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+/* liczba przy aktywnej zakładce ma być spokojna, bez dużej kapsuły */
+.profile-static-v3 .profile-v3-tabs button b,
+.profile-static-v3 .profile-v4-tabs button b{
+  min-width:auto!important;
+  height:auto!important;
+  margin-left:8px!important;
+  padding:0!important;
+  background:transparent!important;
+  border:none!important;
+  color:inherit!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+}
+
+/* drugi rząd: Darmowe / Premium / Kupione single też jako przyciski z Portfela */
+.profile-static-v3 .profile-v4-filter-row,
+.profile-static-v3 .profile-v4-filter-row-paid-access{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+  flex-wrap:wrap!important;
+  padding:18px!important;
+  background:transparent!important;
+  border:none!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+
+.profile-static-v3 .filter-pill-v872 .filter-icon-v872{
+  display:none!important;
+}
+
+.profile-static-v3 .filter-pill-v872{
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 26px!important;
+  border-radius:17px!important;
+  border:1px solid rgba(31,116,154,.30)!important;
+  background:#061827!important;
+  background-image:linear-gradient(180deg, rgba(9,29,47,.92), rgba(4,15,27,.96))!important;
+  color:#e7f3fb!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:-.01em!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .filter-pill-v872.active{
+  background:#32dbe8!important;
+  background-image:linear-gradient(135deg, #35dce8 0%, #67a9ff 100%)!important;
+  border-color:transparent!important;
+  color:#061827!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .filter-pill-v872 b{
+  min-width:auto!important;
+  height:auto!important;
+  margin-left:8px!important;
+  padding:0!important;
+  background:transparent!important;
+  border:none!important;
+  color:inherit!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+}

@@ -1,0 +1,14 @@
+WERSJA 1344
+
+Zmiana:
+- przyciski zakładek w Mój profil zmienione na wygląd jak w Portfelu.
+- usunięte ikonki z zakładek.
+- usunięte świecące kapsuły z liczbami.
+- aktywna zakładka ma prosty turkusowo-niebieski gradient jak Portfel.
+- nieaktywne zakładki są proste, ciemne, z delikatną ramką.
+- drugi rząd Darmowe / Premium / Kupione single też dostał ten sam styl.
+
+Logika bez zmian.
+
+Pliki zmienione:
+- src/styles.css
