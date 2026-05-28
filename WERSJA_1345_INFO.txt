@@ -1,0 +1,12 @@
+WERSJA 1345
+
+Zmiana:
+- twardo wymuszony wygląd przycisków w Mój profil jak w zakładkach Portfela,
+- dotyczy górnych zakładek oraz przycisków Darmowe / Premium / Kupione single,
+- usunięte kapsuły liczników i ikonki, liczba jest teraz zwykłym tekstem przy nazwie,
+- aktywne i nieaktywne przyciski mają prosty styl jak Portfel.
+
+Logika bez zmian.
+
+Pliki zmienione:
+- src/styles.css

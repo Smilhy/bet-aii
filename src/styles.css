@@ -63106,3 +63106,132 @@ html.betai-fhd-monitor80-v1323 body #root{
   font-size:16px!important;
   box-shadow:none!important;
 }
+
+/* WERSJA 1345 — twarde wymuszenie wyglądu przycisków jak w Portfelu */
+/* górny rząd zakładek */
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs{
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  flex-wrap:wrap!important;
+  padding:18px!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  height:52px!important;
+  min-height:52px!important;
+  padding:0 24px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(22,111,155,.34)!important;
+  background:#071827!important;
+  background-image:linear-gradient(180deg, rgba(10,28,46,.96), rgba(5,17,31,.96))!important;
+  color:#eef8ff!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button.active{
+  background:#37dcec!important;
+  background-image:linear-gradient(135deg, #40dff0 0%, #6daeff 100%)!important;
+  border-color:rgba(110,215,255,.70)!important;
+  color:#081722!important;
+}
+
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button > span:first-child,
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button .tab-icon,
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button i,
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button svg{
+  display:none!important;
+}
+
+.profile-static-v3 .profile-v3-tabs.glass-profile-v3.profile-v4-tabs > button b{
+  display:inline!important;
+  margin:0 0 0 6px!important;
+  padding:0!important;
+  min-width:0!important;
+  width:auto!important;
+  height:auto!important;
+  border:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  opacity:.92!important;
+}
+
+/* drugi rząd przycisków */
+.profile-static-v3 .profile-v4-filter-row,
+.profile-static-v3 .profile-v4-filter-row-paid-access{
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  flex-wrap:wrap!important;
+  padding:18px!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+.profile-static-v3 .profile-v4-filter-row > button.filter-pill-v872,
+.profile-static-v3 .profile-v4-filter-row-paid-access > button.filter-pill-v872{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  height:48px!important;
+  min-height:48px!important;
+  padding:0 22px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(22,111,155,.34)!important;
+  background:#071827!important;
+  background-image:linear-gradient(180deg, rgba(10,28,46,.96), rgba(5,17,31,.96))!important;
+  color:#eef8ff!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  line-height:1!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .profile-v4-filter-row > button.filter-pill-v872.active,
+.profile-static-v3 .profile-v4-filter-row-paid-access > button.filter-pill-v872.active{
+  background:#37dcec!important;
+  background-image:linear-gradient(135deg, #40dff0 0%, #6daeff 100%)!important;
+  border-color:rgba(110,215,255,.70)!important;
+  color:#081722!important;
+}
+
+.profile-static-v3 .profile-v4-filter-row > button.filter-pill-v872 .filter-icon-v872,
+.profile-static-v3 .profile-v4-filter-row-paid-access > button.filter-pill-v872 .filter-icon-v872{
+  display:none!important;
+}
+
+.profile-static-v3 .profile-v4-filter-row > button.filter-pill-v872 b,
+.profile-static-v3 .profile-v4-filter-row-paid-access > button.filter-pill-v872 b{
+  display:inline!important;
+  margin:0 0 0 6px!important;
+  padding:0!important;
+  min-width:0!important;
+  width:auto!important;
+  height:auto!important;
+  border:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  opacity:.92!important;
+}
