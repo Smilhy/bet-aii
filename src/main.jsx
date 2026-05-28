@@ -18014,6 +18014,167 @@ function ProfileStatsTable({ title, columns, rows, wide = false }) {
   )
 }
 
+
+function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, onToast }) {
+  const [amount, setAmount] = useState(10)
+  const [customAmount, setCustomAmount] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!open) return null
+
+  const tipsterProfile = getUserProfileView(tipster)
+  const tipsterName = resolveRealProfileUsername(tipster) || tipsterProfile.username || tipster?.email || 'Typer'
+  const finalAmount = Math.max(1, Number(customAmount || amount || 0) || 0)
+  const amounts = [5, 10, 25, 50]
+
+  async function startSupportCheckout() {
+    if (loading) return
+    setError('')
+
+    if (!viewer?.id && !viewer?.email) {
+      const msg = 'Zaloguj się, aby wesprzeć typera.'
+      setError(msg)
+      onToast?.({ type: 'error', title: 'Brak konta', message: msg })
+      return
+    }
+
+    if (!tipster?.id) {
+      const msg = 'Ten profil nie ma ID użytkownika, więc nie można uruchomić wsparcia.'
+      setError(msg)
+      onToast?.({ type: 'error', title: 'Brak profilu', message: msg })
+      return
+    }
+
+    if (!finalAmount || finalAmount < 1) {
+      setError('Podaj kwotę wsparcia minimum 1.')
+      return
+    }
+
+    setLoading(true)
+
+    const payload = {
+      type: 'tipster_support',
+      tipster_id: tipster.id,
+      tipsterId: tipster.id,
+      receiver_id: tipster.id,
+      seller_user_id: tipster.id,
+      tipster_email: tipster.email || tipsterProfile.email || '',
+      tipsterEmail: tipster.email || tipsterProfile.email || '',
+      tipster_username: tipsterName,
+      tipsterUsername: tipsterName,
+      sender_id: viewer?.id || null,
+      user_id: viewer?.id || null,
+      userId: viewer?.id || null,
+      userEmail: viewer?.email || '',
+      email: viewer?.email || '',
+      amount: finalAmount,
+      amount_pln: finalAmount,
+      currency: 'pln',
+      message: String(message || '').trim().slice(0, 240),
+      success_url: `${window.location.origin}${window.location.pathname}?support=success`,
+      cancel_url: `${window.location.origin}${window.location.pathname}?support=cancelled`,
+    }
+
+    const endpoints = [
+      '/.netlify/functions/create-tipster-support-checkout',
+      '/.netlify/functions/create-tipster-donation-checkout',
+      '/.netlify/functions/create-donation-checkout',
+      '/.netlify/functions/create-checkout-session'
+    ]
+
+    try {
+      let lastError = null
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+
+          let data = {}
+          try { data = await response.json() } catch (_) {}
+
+          const url = data?.url || data?.checkout_url || data?.checkoutUrl || data?.session_url
+          if (response.ok && url) {
+            onToast?.({ type: 'success', title: 'Stripe', message: 'Przekierowanie do płatności...' })
+            window.location.href = url
+            return
+          }
+
+          lastError = new Error(data?.error || data?.message || `Endpoint ${endpoint} nie zwrócił linku płatności.`)
+        } catch (endpointError) {
+          lastError = endpointError
+        }
+      }
+
+      throw lastError || new Error('Nie udało się utworzyć płatności Stripe.')
+    } catch (checkoutError) {
+      const clean = formatAppErrorMessage(checkoutError?.message || checkoutError || 'Nie udało się utworzyć płatności Stripe.')
+      setError(clean)
+      onToast?.({ type: 'error', title: 'Błąd wsparcia', message: clean })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="tipster-support-backdrop-v1349" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }}>
+      <div className="tipster-support-modal-v1349" role="dialog" aria-modal="true" aria-label="Wesprzyj typera">
+        <button type="button" className="tipster-support-close-v1349" onClick={onClose}>✕</button>
+        <div className="tipster-support-icon-v1349">🏆</div>
+        <h2>Wesprzyj typera</h2>
+        <p>Wyślij jednorazowe wsparcie dla <b>{tipsterName}</b>. Płatność idzie przez Stripe.</p>
+
+        <div className="tipster-support-amounts-v1349">
+          {amounts.map(value => (
+            <button
+              type="button"
+              key={value}
+              className={!customAmount && Number(amount) === value ? 'active' : ''}
+              onClick={() => { setAmount(value); setCustomAmount('') }}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+
+        <label className="tipster-support-field-v1349">
+          <span>Własna kwota</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={customAmount}
+            onChange={(event) => setCustomAmount(event.target.value)}
+            placeholder="np. 15"
+          />
+        </label>
+
+        <label className="tipster-support-field-v1349">
+          <span>Wiadomość opcjonalna</span>
+          <textarea
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            maxLength={240}
+            placeholder="Np. Dzięki za dobre typy!"
+          />
+        </label>
+
+        {error ? <div className="tipster-support-error-v1349">{error}</div> : null}
+
+        <button type="button" className="tipster-support-pay-v1349" onClick={startSupportCheckout} disabled={loading}>
+          {loading ? 'Łączenie ze Stripe...' : `Wesprzyj ${finalAmount.toFixed(0)}`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
 function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
@@ -18118,6 +18279,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     onSubscribeToTipster?.(profileSubPurchasePayload)
   }
+  const handleTipsterSupportClick = () => {
+    if (!canMonetizeProfile) {
+      onToast?.({ type: 'warning', title: 'Wsparcie niedostępne', message: 'Ten użytkownik ma konto FREE, więc nie może przyjmować wsparcia.' })
+      return
+    }
+    setTipsterSupportOpen(true)
+  }
   const handleName = username.startsWith('@') ? username : `@${username}`
   const initials = (username || email || 'U').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2).toUpperCase() || 'U'
   const profileCreatedAt = user?.created_at || user?.createdAt || user?.profile_created_at || user?.author_created_at || user?.updated_at || ''
@@ -18133,6 +18301,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('free')
   const [profileTipsVisibleCount, setProfileTipsVisibleCount] = useState(3)
+  const [tipsterSupportOpen, setTipsterSupportOpen] = useState(false)
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const [profileChartRange, setProfileChartRange] = useState('90d')
   const [profileChartMode, setProfileChartMode] = useState('cumulative')
@@ -19037,6 +19206,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   return (
     <section className={`profile-page profile-ultra-pro-v988 profile-static-v3 ${(profileTab === 'overview' || profileTab === 'tips') ? '' : 'profile-v4-wide-mode'}`} aria-label="Mój profil">
+      <TipsterSupportModalV1349 open={tipsterSupportOpen} tipster={user} viewer={viewerProfile} onClose={() => setTipsterSupportOpen(false)} onToast={onToast} />
       <div className="profile-v3-layout">
         <div className="profile-v3-main">
           <div className="profile-v3-hero glass-profile-v3">
@@ -19113,7 +19283,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <button type="button" className="primary">Mój profil</button>
                   )}
                   <button type="button" className="profile-message-btn-v1346" onClick={() => onOpenDirectMessage?.({ id: viewedIdKey, email, username, name: displayName })}><span className="profile-message-icon-v1346">✉</span> Wiadomości</button>
-                  {canMonetizeProfile ? <button type="button" onClick={handleProfileSubscribeClick}>🏆 Wsparcie tipami</button> : <button type="button" className="profile-action-disabled-v1037" title="Konto FREE nie może sprzedawać subskrypcji">FREE bez sprzedaży</button>}
+                  {canMonetizeProfile ? <button type="button" onClick={handleTipsterSupportClick}>🏆 Wsparcie tipami</button> : <button type="button" className="profile-action-disabled-v1037" title="Konto FREE nie może przyjmować wsparcia">FREE bez wsparcia</button>}
                 </div>
               </div>
             </div>

@@ -1,0 +1,9 @@
+WERSJA 1348
+
+Zmiana:
+- napis ONLINE w sekcji Podsumowanie w Mój profil ma teraz zielony kolor,
+- kolor jest dopasowany do zielonej kropki statusu online,
+- tylko zmiana wizualna, bez zmian logiki.
+
+Pliki zmienione:
+- src/styles.css

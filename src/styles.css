@@ -62753,3 +62753,151 @@ html.betai-fhd-monitor80-v1323 body #root{
 .profile-static-v3 .profile-message-btn-v1346:hover .profile-message-icon-v1346{
   color:#22f4ff!important;
 }
+
+/* WERSJA 1348 — ONLINE w podsumowaniu na zielono jak kropka */
+.profile-static-v3 .side-card-head-v3 span{
+  color:#27ff75!important;
+  text-shadow:0 0 12px rgba(39,255,117,.32)!important;
+}
+
+
+/* WERSJA 1349 — modal Wsparcie tipami / donate */
+.tipster-support-backdrop-v1349{
+  position:fixed!important;
+  inset:0!important;
+  z-index:999999!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:24px!important;
+  background:rgba(0,7,13,.72)!important;
+  backdrop-filter:blur(10px)!important;
+}
+
+.tipster-support-modal-v1349{
+  position:relative!important;
+  width:min(520px, 96vw)!important;
+  border-radius:26px!important;
+  padding:28px!important;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(32,244,255,.16), transparent 42%),
+    linear-gradient(145deg, rgba(5,18,32,.98), rgba(2,37,47,.94))!important;
+  border:1px solid rgba(32,244,255,.22)!important;
+  box-shadow:0 32px 90px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04)!important;
+  color:#f5fbff!important;
+}
+
+.tipster-support-close-v1349{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  width:36px!important;
+  height:36px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  background:rgba(255,255,255,.045)!important;
+  color:#dff7ff!important;
+  font-weight:900!important;
+}
+
+.tipster-support-icon-v1349{
+  width:58px!important;
+  height:58px!important;
+  border-radius:20px!important;
+  display:grid!important;
+  place-items:center!important;
+  margin-bottom:16px!important;
+  font-size:28px!important;
+  background:linear-gradient(135deg, rgba(34,244,168,.22), rgba(32,155,255,.16))!important;
+  border:1px solid rgba(34,244,168,.24)!important;
+}
+
+.tipster-support-modal-v1349 h2{
+  margin:0 0 8px!important;
+  font-size:28px!important;
+  color:#ffffff!important;
+}
+
+.tipster-support-modal-v1349 p{
+  margin:0 0 18px!important;
+  color:#a9c5d7!important;
+  line-height:1.45!important;
+}
+
+.tipster-support-modal-v1349 p b{
+  color:#22f4a8!important;
+}
+
+.tipster-support-amounts-v1349{
+  display:grid!important;
+  grid-template-columns:repeat(4,1fr)!important;
+  gap:10px!important;
+  margin:18px 0!important;
+}
+
+.tipster-support-amounts-v1349 button,
+.tipster-support-pay-v1349{
+  border:1px solid rgba(32,244,255,.20)!important;
+  border-radius:16px!important;
+  min-height:48px!important;
+  background:rgba(5,20,35,.88)!important;
+  color:#eaf7ff!important;
+  font-weight:900!important;
+}
+
+.tipster-support-amounts-v1349 button.active,
+.tipster-support-pay-v1349{
+  background:linear-gradient(135deg,#20e4ef,#328dff)!important;
+  color:#041522!important;
+  border-color:rgba(32,244,255,.74)!important;
+  box-shadow:0 0 24px rgba(32,244,255,.18)!important;
+}
+
+.tipster-support-field-v1349{
+  display:grid!important;
+  gap:8px!important;
+  margin:12px 0!important;
+}
+
+.tipster-support-field-v1349 span{
+  color:#9fb8ca!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+
+.tipster-support-field-v1349 input,
+.tipster-support-field-v1349 textarea{
+  width:100%!important;
+  border-radius:16px!important;
+  border:1px solid rgba(32,244,255,.16)!important;
+  background:rgba(1,10,20,.72)!important;
+  color:#f7fdff!important;
+  padding:13px 14px!important;
+  outline:none!important;
+  font-weight:800!important;
+}
+
+.tipster-support-field-v1349 textarea{
+  min-height:88px!important;
+  resize:vertical!important;
+}
+
+.tipster-support-error-v1349{
+  margin:12px 0!important;
+  padding:12px 14px!important;
+  border-radius:14px!important;
+  background:rgba(255,93,116,.12)!important;
+  border:1px solid rgba(255,93,116,.24)!important;
+  color:#ff9aaa!important;
+  font-weight:800!important;
+}
+
+.tipster-support-pay-v1349{
+  width:100%!important;
+  margin-top:14px!important;
+  font-size:16px!important;
+}
+
+.tipster-support-pay-v1349:disabled{
+  opacity:.72!important;
+  cursor:not-allowed!important;
+}

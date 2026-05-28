@@ -1,0 +1,18 @@
+WERSJA 1349
+
+Zmiana:
+- aktywowany przycisk „Wsparcie tipami” jako donate/wsparcie dla typera,
+- po kliknięciu otwiera się modal „Wesprzyj typera”,
+- użytkownik wybiera kwotę: 5 / 10 / 25 / 50 albo własną kwotę,
+- można dodać krótką wiadomość,
+- modal próbuje uruchomić Stripe checkout na istniejących endpointach backendowych:
+  1) /.netlify/functions/create-tipster-support-checkout
+  2) /.netlify/functions/create-tipster-donation-checkout
+  3) /.netlify/functions/create-donation-checkout
+  4) /.netlify/functions/create-checkout-session
+- payload zawiera tipster_id, sender_id, amount, currency, message itd.
+- logika typów/statystyk bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
