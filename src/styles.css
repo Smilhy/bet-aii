@@ -63303,3 +63303,65 @@ html.betai-fhd-monitor80-v1323 body #root{
 .profile-results-svg-v961 circle{stroke:#081624!important; stroke-width:.6!important; fill:#4eeeff!important; filter:drop-shadow(0 0 3px rgba(98,248,255,.95)) drop-shadow(0 0 12px rgba(59,214,255,.52))!important;}
 .profile-results-svg-v961 circle.loss{fill:#ff5a96!important; filter:drop-shadow(0 0 3px rgba(255,120,170,.95)) drop-shadow(0 0 12px rgba(255,78,141,.45))!important;}
 .profile-results-svg-v961 circle.win{fill:#62f2ff!important;}
+
+
+/* WERSJA 1364 — HARD NEON wykres dla Wyniki i Statystyki */
+.profile-results-chart-v961{
+  background:
+    radial-gradient(circle at 82% 18%, rgba(67,255,247,.16), transparent 24%),
+    radial-gradient(circle at 18% 80%, rgba(255,58,149,.12), transparent 18%),
+    radial-gradient(circle at 52% 6%, rgba(123,73,255,.10), transparent 18%),
+    linear-gradient(180deg, rgba(2,12,28,.98), rgba(1,8,18,.99))!important;
+  border:1px solid rgba(74,220,255,.34)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(57,216,255,.11), 0 0 36px rgba(48,164,255,.10), 0 24px 58px rgba(0,0,0,.30)!important;
+}
+.profile-results-chart-v961::before{
+  box-shadow:inset 0 0 0 1px rgba(88,238,255,.12), inset 0 0 64px rgba(18,132,255,.12), 0 0 42px rgba(19,199,255,.06)!important;
+}
+.profile-chart-mode-v961{
+  border-color:rgba(82,231,255,.42)!important;
+  box-shadow:inset 0 0 0 1px rgba(114,228,255,.08), 0 0 26px rgba(25,177,255,.12)!important;
+}
+.profile-results-range-v961 button{
+  border-color:rgba(80,170,220,.44)!important;
+}
+.profile-results-range-v961 button.active{
+  border-color:#61edff!important;
+  background:linear-gradient(180deg, rgba(49,222,255,.62), rgba(34,102,255,.52))!important;
+  box-shadow:0 0 0 1px rgba(64,221,255,.26), 0 0 30px rgba(50,214,255,.48), 0 0 52px rgba(85,138,255,.24), inset 0 1px 0 rgba(255,255,255,.26)!important;
+}
+.profile-results-chart-stage-v961{
+  background:
+    linear-gradient(rgba(113,173,209,.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(113,173,209,.13) 1px, transparent 1px),
+    radial-gradient(circle at 86% 18%, rgba(74,244,255,.11), transparent 26%),
+    radial-gradient(circle at 16% 86%, rgba(255,72,145,.06), transparent 18%),
+    linear-gradient(180deg, rgba(3,15,31,.80), rgba(1,7,16,.92))!important;
+  background-size:100% 37px, 12.5% 100%, 100% 100%, 100% 100%, 100% 100%!important;
+  border:1px solid rgba(77,171,225,.26)!important;
+  box-shadow:inset 0 0 58px rgba(23,145,255,.10), 0 0 24px rgba(0,0,0,.10)!important;
+}
+.profile-results-yaxis-v961,.profile-results-xaxis-v961{
+  color:#aec8e2!important;
+  text-shadow:0 0 10px rgba(105,214,255,.12)!important;
+}
+.profile-results-area-v961{
+  opacity:1!important;
+  filter:drop-shadow(0 0 22px rgba(54,214,255,.20)) drop-shadow(0 0 44px rgba(73,115,255,.08))!important;
+}
+.profile-results-line-v961{
+  filter:drop-shadow(0 0 5px rgba(117,243,255,.98)) drop-shadow(0 0 14px rgba(95,205,255,.62)) drop-shadow(0 0 30px rgba(124,77,255,.24))!important;
+}
+.profile-results-svg-v961 circle{
+  stroke:#071322!important;
+  stroke-width:.68!important;
+  fill:#7af9ff!important;
+  filter:drop-shadow(0 0 5px rgba(116,251,255,.98)) drop-shadow(0 0 15px rgba(59,214,255,.70)) drop-shadow(0 0 24px rgba(82,130,255,.20))!important;
+}
+.profile-results-svg-v961 circle.loss{
+  fill:#ff68a8!important;
+  filter:drop-shadow(0 0 5px rgba(255,130,181,.98)) drop-shadow(0 0 15px rgba(255,78,141,.72)) drop-shadow(0 0 28px rgba(255,78,141,.18))!important;
+}
+.profile-results-svg-v961 circle.win{
+  fill:#8afcff!important;
+}

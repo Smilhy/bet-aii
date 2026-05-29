@@ -1,0 +1,10 @@
+WERSJA 1364
+
+Zmiana:
+- wersja HARD NEON dla wykresów Wyniki i Statystyki,
+- mocniejszy glow linii, bardziej świecące punkty, mocniejsze neonowe tło i bardziej wyraziste aktywne przyciski zakresu,
+- logika bez zmian, tylko styl wizualny.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

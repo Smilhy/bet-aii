@@ -19531,19 +19531,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileBalanceFillV961" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(64,221,255,.46)" />
-                          <stop offset="50%" stopColor="rgba(37,168,255,.22)" />
+                          <stop offset="0%" stopColor="rgba(64,241,255,.58)" />
+                          <stop offset="50%" stopColor="rgba(73,115,255,.28)" />
                           <stop offset="100%" stopColor="rgba(37,168,255,0)" />
                         </linearGradient>
                         <linearGradient id="profileBalanceStrokeV961" x1="0" x2="1" y1="0" y2="0">
                           <stop offset="0%" stopColor="#ff4b88" />
                           <stop offset="24%" stopColor="#ff4b88" />
                           <stop offset="38%" stopColor="#8a68ff" />
-                          <stop offset="58%" stopColor="#23d7ff" />
-                          <stop offset="100%" stopColor="#69f7ff" />
+                          <stop offset="58%" stopColor="#00e7ff" />
+                          <stop offset="100%" stopColor="#7fffff" />
                         </linearGradient>
                         <filter id="profileBalanceGlowV961">
-                          <feGaussianBlur stdDeviation="1.9" result="coloredBlur" />
+                          <feGaussianBlur stdDeviation="2.7" result="coloredBlur" />
                           <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -19551,7 +19551,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         </filter>
                       </defs>
                       <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFillV961)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.85" filter="url(#profileBalanceGlowV961)" />
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="2.05" filter="url(#profileBalanceGlowV961)" />
                       {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
                         const [x, y] = point.split(',').map(Number)
                         if (!Number.isFinite(x) || !Number.isFinite(y)) return null
@@ -19660,19 +19660,19 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileStatsBalanceFillV1361" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(64,221,255,.46)" />
-                          <stop offset="50%" stopColor="rgba(37,168,255,.22)" />
+                          <stop offset="0%" stopColor="rgba(64,241,255,.58)" />
+                          <stop offset="50%" stopColor="rgba(73,115,255,.28)" />
                           <stop offset="100%" stopColor="rgba(37,168,255,0)" />
                         </linearGradient>
                         <linearGradient id="profileStatsBalanceStrokeV1361" x1="0" x2="1" y1="0" y2="0">
                           <stop offset="0%" stopColor="#ff4b88" />
                           <stop offset="24%" stopColor="#ff4b88" />
                           <stop offset="38%" stopColor="#8a68ff" />
-                          <stop offset="58%" stopColor="#23d7ff" />
-                          <stop offset="100%" stopColor="#69f7ff" />
+                          <stop offset="58%" stopColor="#00e7ff" />
+                          <stop offset="100%" stopColor="#7fffff" />
                         </linearGradient>
                         <filter id="profileStatsBalanceGlowV1361">
-                          <feGaussianBlur stdDeviation="1.9" result="coloredBlur" />
+                          <feGaussianBlur stdDeviation="2.7" result="coloredBlur" />
                           <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -19680,7 +19680,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         </filter>
                       </defs>
                       <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileStatsBalanceFillV1361)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="1.85" filter="url(#profileStatsBalanceGlowV1361)" />
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="2.05" filter="url(#profileStatsBalanceGlowV1361)" />
                       {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
                         const [x, y] = point.split(',').map(Number)
                         if (!Number.isFinite(x) || !Number.isFinite(y)) return null
