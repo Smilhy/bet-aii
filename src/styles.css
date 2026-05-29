@@ -65211,3 +65211,31 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ranking-upgrade-v1398 .ball-v4{
   font-size:66px!important;
 }
+
+
+/* WERSJA 1402 — Ranking: usunięte małe ikonki przy proficie i galerii */
+.ranking-upgrade-v1398 .profit-v4::after,
+.ranking-live-v999 .profit-v4::after,
+.ranking-v4-table .profit-v4::after,
+.hall-laurels-v4 button em,
+.ranking-upgrade-v1398 .hall-laurels-v4 button em{
+  content:none!important;
+  display:none!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4 button{
+  grid-template-columns:42px 1fr!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401{
+  padding-right:0!important;
+}
+
+/* dodatkowe zabezpieczenie, gdy ikony były dodawane pseudo-elementem */
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401::after,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 strong::after,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b::after,
+.ranking-v4-table .profit-v4 span::after{
+  content:none!important;
+  display:none!important;
+}

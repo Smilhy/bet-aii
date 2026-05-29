@@ -2168,7 +2168,7 @@ function Sidebar({ view, setView, wallet, tokenBalance = 0, unlockedCount, notif
       </aside>
 
       <div className="premium-box sidebar-premium-detached">
-        <h3>✦ Bet+AI Premium</h3>
+        <h3> Bet+AI Premium</h3>
         <p>✓ AI Typy bez limitu</p>
         <p>✓ Szczegółowe analizy</p>
         <p>✓ Statystyki premium</p>
@@ -9595,10 +9595,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           selectSidebarSport(sportName)
                         }}
                       >
-                        <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || '✦'}</i><span>{sportName}</span></div>
+                        <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || ''}</i><span>{sportName}</span></div>
                         <strong>{isFootballCard ? `${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}` : 'Wkrótce'}</strong>
                         <small>{subtitle}</small>
-                        <b aria-hidden="true">{sportIconMap[sportName] || '✦'}</b>
+                        <b aria-hidden="true">{sportIconMap[sportName] || ''}</b>
                         {!isFootballCard ? <mark className="sport-card-badge-v1281">WKRÓTCE</mark> : null}
                       </button>
                     )
@@ -12086,7 +12086,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         else if ((type === 'spend' || type === 'purchase') && row.provider === 'token_exchange') { title = 'Kupno żetonów'; icon = '◎' }
         else if (type === 'token_exchange') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
         else if (type === 'spend' || type === 'purchase') { title = 'Zakup z portfela'; icon = '◎' }
-        else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '★' }
+        else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '' }
         return {
           id: `wallet_${row.id}`,
           createdAt: row.created_at,
@@ -12105,7 +12105,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         return {
           id: `payment_${row.id}`,
           createdAt: row.created_at,
-          icon: isPremium ? '★' : '🧾',
+          icon: isPremium ? '' : '🧾',
           title: isPremium ? 'Zakup Premium' : 'Zakup typu premium',
           time: formatHistoryDate(row.created_at),
           amount: formatHistoryPln(row.amount, '-'),
@@ -12579,7 +12579,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               </div>
               <p className="wallet-v2-sub">Aktywny plan</p>
               <div className="subscription-badge-v2">
-                <span className="premium-round">{isPremiumWalletUser ? '✦' : '◌'}</span>
+                <span className="premium-round">{isPremiumWalletUser ? '' : '◌'}</span>
                 <div>
                   <strong>{subscriptionLabel}</strong>
                   <small>{subscriptionPlanLabel}</small>
@@ -13841,7 +13841,7 @@ function AiEventCard({ tip }) {
 
 
 const BETAI_SPORT_META_V1051 = {
-  'Wszystkie': { icon: '✦', label: 'Wszystkie' },
+  'Wszystkie': { icon: '', label: 'Wszystkie' },
   'Piłka nożna': { icon: '⚽', label: 'Piłka nożna' },
   'Tenis': { icon: '🎾', label: 'Tenis' },
   'Koszykówka': { icon: '🏀', label: 'Koszykówka' },
@@ -13859,7 +13859,7 @@ const BETAI_SPORT_META_V1051 = {
 }
 
 function getBetAiSportMetaV1051(sport = '') {
-  return BETAI_SPORT_META_V1051[sport] || { icon: '✦', label: sport || 'Sport' }
+  return BETAI_SPORT_META_V1051[sport] || { icon: '', label: sport || 'Sport' }
 }
 
 function getBetAiKickoffStateV1051(rawDate, meta = {}) {
@@ -15270,7 +15270,7 @@ function LeaderboardView({
       },
       {
         key: 'weekly_roi_20',
-        icon: '⭐',
+        icon: '',
         title: 'Value Hunter',
         desc: 'Osiągnij ROI powyżej 20%',
         value: Math.min(100, Math.max(0, (roi / 20) * 100)),
@@ -15458,7 +15458,7 @@ function LeaderboardView({
                           <small>Yield {Number(row.roi || row.yield || 0).toFixed(2)}%</small>
                           <b>Profit {Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatRankingAmount(row.earnings || row.profit || 0)}</b>
                         </span>
-                        <em>🏆</em>
+                        
                       </button>
                     ))}
                   </div>
@@ -15664,7 +15664,7 @@ function SiteReviewsWidget({ user }) {
             onMouseLeave={() => interactive && setHoverRating(0)}
             aria-label={`${star} gwiazdek`}
           >
-            ★
+           
           </button>
         ))}
       </div>
@@ -15739,7 +15739,7 @@ function SiteReviewsWidget({ user }) {
       ) : null}
 
       <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz opinie">
-        <span className="reviews512-fab-stars">★★★★★</span>
+        <span className="reviews512-fab-stars"></span>
         <b>{averageRating ? averageRating.toFixed(1) : 'Oceń'}</b>
         {!open ? <i /> : null}
       </button>
@@ -18946,7 +18946,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const profileBadges = [
     { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPosition ? `#${rankingPosition}` : 'Brak rankingu', achieved: isTopOnePercent },
-    { icon: '✦', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
+    { icon: '', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
     { icon: '🛡', tone: 'cyan', title: 'WIN RATE+', detail: settledTips ? `${winRate}% / 60%` : '0 rozliczeń', achieved: settledTips >= 10 && winRate >= 60 },
     { icon: '↗', tone: 'teal', title: 'ROI+', detail: `${roi}% / 10%`, achieved: settledTips >= 10 && roi >= 10 },
     { icon: '⚡', tone: 'yellow', title: 'AKTYWNY', detail: isActive30d ? 'Typ w 30 dni' : 'Brak typu 30 dni', achieved: isActive30d },
@@ -18985,7 +18985,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const ratingBars = [5,4,3,2,1].map(score => {
     const count = approvedProfileReviews.filter(review => Number(review.rating) === score).length
     const width = profileRatingCount ? Math.round((count / profileRatingCount) * 100) : 0
-    return { label: `${score} ★`, count, width }
+    return { label: `${score}`, count, width }
   })
 
   const rankingRows = ownRankingRow
@@ -20064,7 +20064,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         onClick={() => setProfileReviewRating(score)}
                         title={`${score} gwiazdek`}
                       >
-                        ★
+                       
                       </button>
                     )
                   })}
@@ -20090,7 +20090,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   <article key={review.id || index}>
                     <div>
                       <strong>{review.reviewer_name || review.author_name || 'Użytkownik'}</strong>
-                      <small>{new Date(review.created_at || Date.now()).toLocaleDateString('pl-PL')} • {Number(review.rating || 0).toFixed(0)}/5 ★</small>
+                      <small>{new Date(review.created_at || Date.now()).toLocaleDateString('pl-PL')} • {Number(review.rating || 0).toFixed(0)}/5</small>
                     </div>
                     <span>{review.comment || review.body || ''}</span>
                   </article>
@@ -20168,7 +20168,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <div className="ratings-v3">
               <div className="rating-score">
                 <strong>{profileRatingCount ? profileRatingAverage.toFixed(1) : '0.0'}</strong>
-                <span>{profileRatingCount ? '★★★★★' : '☆☆☆☆☆'}</span>
+                <span>{profileRatingCount ? '' : '☆☆☆☆☆'}</span>
                 <small>{profileRatingCount ? `Na podstawie ${profileRatingCount} opinii` : 'Brak ocen profilu'}</small>
               </div>
               <div className="rating-bars">
@@ -21828,7 +21828,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     if (roi >= 60 && totalTips >= 3) achievements.push({ icon: '📈', title: 'ROI Master', desc: 'ROI minimum +60%', tone: 'cyan' })
     else if (roi >= 50 && totalTips >= 3) achievements.push({ icon: '📈', title: 'ROI +50%', desc: 'ROI minimum +50%', tone: 'cyan' })
 
-    if (rating >= 4.8 && votes >= 3) achievements.push({ icon: '⭐', title: 'Zaufany', desc: 'Ocena minimum 4.8 i 3 opinie', tone: 'gold' })
+    if (rating >= 4.8 && votes >= 3) achievements.push({ icon: '', title: 'Zaufany', desc: 'Ocena minimum 4.8 i 3 opinie', tone: 'gold' })
     if (premium) achievements.push({ icon: '💎', title: 'Premium typer', desc: 'Sprzedaje płatne typy', tone: 'violet' })
 
     return achievements.slice(0, 4)
@@ -22153,7 +22153,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                         <i>✓</i>
                       </div>
                       <p>{tipster.subtitle}</p>
-                      <div className="seller-rating-v7">⭐ {tipster.rating} <span>({tipster.votes})</span> <em>{tipster.premium ? 'PREMIUM' : 'DARMOWE'}</em></div>
+                      <div className="seller-rating-v7"> {tipster.rating} <span>({tipster.votes})</span> <em>{tipster.premium ? 'PREMIUM' : 'DARMOWE'}</em></div>
                     </div>
                   </div>
 
@@ -22411,7 +22411,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
               <div className="rewards-ultra-streak-rewards">
                 {streakRewards.map((item) => (
                   <div className={`rewards-ultra-streak-box ${item.tone}`} key={item.days}>
-                    <i>{item.tone === 'gold' ? '🏆' : item.tone === 'violet' ? '✦' : item.tone === 'blue' ? '⬢' : '✪'}</i>
+                    <i>{item.tone === 'gold' ? '🏆' : item.tone === 'violet' ? '' : item.tone === 'blue' ? '⬢' : '✪'}</i>
                     <div><strong>{item.days}</strong><small>{item.reward}</small></div>
                   </div>
                 ))}
@@ -22478,7 +22478,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
               <div className="rewards-ultra-premium-list">
                 {premiumBonuses.map((item) => (
                   <div className="rewards-ultra-premium-row" key={item.title}>
-                    <div className="rewards-ultra-premium-icon">✦</div>
+                    <div className="rewards-ultra-premium-icon"></div>
                     <div><strong>{item.title}</strong><small>{item.desc}</small></div>
                     <span>{item.state}</span>
                   </div>
