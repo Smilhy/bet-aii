@@ -1,0 +1,10 @@
+WERSJA 1357
+
+Poprawka dodawania typów:
+- naprawiony błąd Supabase: brak kolumny bet_market_type w tabeli tips,
+- publikowanie typu automatycznie usuwa z payloadu pole, którego nie ma w schemacie bazy i próbuje ponownie,
+- dzięki temu typ powinien się dodać nawet jeśli Supabase nie ma nowych kolumn statystyk,
+- logika statystyk i widoku bez zmian.
+
+Pliki zmienione:
+- src/main.jsx

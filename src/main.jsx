@@ -1227,6 +1227,21 @@ function isSchemaError(error) {
   return msg.includes('column') || msg.includes('schema cache') || msg.includes('could not find') || msg.includes('pgrst204') || msg.includes('42703')
 }
 
+function getMissingSchemaColumn(error) {
+  const msg = String(error?.message || error || '')
+  const patterns = [
+    /Could not find the ['"]([^'"]+)['"] column/i,
+    /column ['"]([^'"]+)['"] .*schema cache/i,
+    /column ['"]([^'"]+)['"] does not exist/i,
+    /column\s+([^\s]+)\s+does not exist/i
+  ]
+  for (const pattern of patterns) {
+    const match = msg.match(pattern)
+    if (match?.[1]) return String(match[1]).replace(/[^a-zA-Z0-9_]/g, '')
+  }
+  return ''
+}
+
 function normalizeTipRow(row = {}) {
   const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
   const premium = isTipPremium(row)
@@ -9325,13 +9340,27 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       let savedRow = null
       let lastError = null
       for (const candidate of [tipPayloadRich, tipPayloadBasic, tipPayloadMinimal, tipPayloadLegacy]) {
-        const { data, error } = await supabase.from('tips').insert(candidate).select('*').single()
-        if (!error && data) {
-          savedRow = data
-          break
+        let safeCandidate = { ...candidate }
+        const removedColumns = new Set()
+        for (let attempt = 0; attempt < 12; attempt += 1) {
+          const { data, error } = await supabase.from('tips').insert(safeCandidate).select('*').single()
+          if (!error && data) {
+            savedRow = data
+            break
+          }
+
+          lastError = error
+          if (!isSchemaError(error)) break
+
+          const missingColumn = getMissingSchemaColumn(error)
+          if (!missingColumn || removedColumns.has(missingColumn) || !(missingColumn in safeCandidate)) break
+
+          removedColumns.add(missingColumn)
+          const { [missingColumn]: _removed, ...nextCandidate } = safeCandidate
+          safeCandidate = nextCandidate
         }
-        lastError = error
-        if (!isSchemaError(error)) break
+        if (savedRow) break
+        if (lastError && !isSchemaError(lastError)) break
       }
       if (!savedRow && lastError) throw lastError
       if (!savedRow) savedRow = { id: `local_${Date.now()}`, ...tipPayloadBasic }
