@@ -63218,3 +63218,38 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#d8ebf7!important;
   font-weight:800!important;
 }
+
+
+/* WERSJA 1360 — wykres Statystyki w stylu wykresu Wyniki */
+.profile-stats-chart-v1360{
+  overflow:hidden!important;
+}
+
+.profile-stats-chart-v1360 .profile-results-chart-stage-v961{
+  margin-top:8px!important;
+}
+
+.profile-stats-chart-badge-v1360{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:36px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(77,216,255,.18)!important;
+  background:linear-gradient(180deg, rgba(8,22,38,.96), rgba(7,18,31,.92))!important;
+  color:#cdeaff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 26px rgba(0,0,0,.16)!important;
+}
+
+@media(max-width:900px){
+  .profile-stats-chart-v1360 .profile-results-chart-head-v961{
+    gap:10px!important;
+  }
+  .profile-stats-chart-badge-v1360{
+    width:100%!important;
+  }
+}

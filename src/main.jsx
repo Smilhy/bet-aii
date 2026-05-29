@@ -19623,18 +19623,58 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'stats' && (
             <section className="profile-v4-page profile-v4-stats-page">
-              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card">
-                <div className="profile-v3-card-head"><h3>Wykres salda</h3></div>
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-v4-balance-chart cyan">
-                  <defs>
-                    <linearGradient id="profileBalanceBlue" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(0,180,255,.34)" />
-                      <stop offset="100%" stopColor="rgba(0,180,255,0)" />
-                    </linearGradient>
-                  </defs>
-                  <polyline points={linePoints} fill="none" stroke="currentColor" strokeWidth="1.6" />
-                  <polygon points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceBlue)" />
-                </svg>
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-stats-chart-v1360">
+                <div className="profile-results-chart-head-v961">
+                  <div>
+                    <h3>Wykres salda</h3>
+                    <button type="button" className="profile-chart-info-v961" title="Wykres pokazuje narastający bilans z rozliczonych typów.">i</button>
+                  </div>
+                  <div className="profile-stats-chart-badge-v1360">Taki sam styl jak w Wynikach</div>
+                </div>
+
+                <div className="profile-results-chart-stage-v961">
+                  <div className="profile-results-yaxis-v961">
+                    {chartYLabels.map((label, index) => <span key={`stats-${label}-${index}`}>{label}</span>)}
+                  </div>
+
+                  <div className="profile-results-grid-v961">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
+                      <defs>
+                        <linearGradient id="profileStatsBalanceFillV1360" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stopColor="rgba(30,255,152,.34)" />
+                          <stop offset="55%" stopColor="rgba(30,255,152,.13)" />
+                          <stop offset="100%" stopColor="rgba(30,255,152,0)" />
+                        </linearGradient>
+                        <linearGradient id="profileStatsBalanceStrokeV1360" x1="0" x2="1" y1="0" y2="0">
+                          <stop offset="0%" stopColor="#e83f4f" />
+                          <stop offset="28%" stopColor="#e83f4f" />
+                          <stop offset="36%" stopColor="#20e78a" />
+                          <stop offset="100%" stopColor="#20e78a" />
+                        </linearGradient>
+                        <filter id="profileStatsBalanceGlowV1360">
+                          <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
+                          <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileStatsBalanceFillV1360)" />
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1360)" strokeWidth="1.7" filter="url(#profileStatsBalanceGlowV1360)" />
+                      {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
+                        const [x, y] = point.split(',').map(Number)
+                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+                        if (arr.length > 42 && index % Math.ceil(arr.length / 38) !== 0 && index !== arr.length - 1) return null
+                        const row = chartPointRows[index] || {}
+                        return <circle key={`stats-${point}-${index}`} className={Number(row.value || 0) < 0 ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
+                      })}
+                    </svg>
+                  </div>
+
+                  <div className="profile-results-xaxis-v961">
+                    {chartXLabels.map((row, index) => <span key={`stats-${row.key || row.label}-${index}`}>{formatChartDateLabel(row.date) || row.label}</span>)}
+                  </div>
+                </div>
               </section>
               <div className="profile-v4-stats-grid">
                 <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
