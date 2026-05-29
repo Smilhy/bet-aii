@@ -64042,3 +64042,335 @@ html.betai-fhd-monitor80-v1323 body #root{
     max-width:100%!important;
   }
 }
+
+
+/* WERSJA 1382 — Kupione single: hero banner jak Dodaj typ (kratka + animacje) */
+.unlocked-tips-hero-v951.unlocked-tips-hero-premium-v1382{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:238px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(420px, 48%)!important;
+  align-items:center!important;
+  gap:34px!important;
+  padding:40px 42px!important;
+  border-radius:28px!important;
+  border:1px solid rgba(47,213,255,.24)!important;
+  background:
+    linear-gradient(rgba(40,206,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40,206,255,.045) 1px, transparent 1px),
+    radial-gradient(circle at 74% 42%, rgba(32,180,255,.18), transparent 32%),
+    radial-gradient(circle at 92% 24%, rgba(67,94,255,.12), transparent 26%),
+    linear-gradient(135deg, rgba(4,18,34,.98), rgba(2,42,50,.88) 64%, rgba(5,25,45,.94))!important;
+  background-size:58px 58px, 58px 58px, auto, auto, auto!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045), 0 22px 55px rgba(0,0,0,.25)!important;
+}
+
+.unlocked-tips-hero-v951.unlocked-tips-hero-premium-v1382::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(30,226,255,.10) 48%, transparent 78%),
+    radial-gradient(circle at 78% 38%, rgba(38,234,255,.13), transparent 28%)!important;
+  opacity:.8!important;
+  animation:unlockedHeroSweepV1382 7s ease-in-out infinite!important;
+}
+
+.unlocked-tips-hero-v951.unlocked-tips-hero-premium-v1382::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 45% 58%, rgba(45,228,255,.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 63% 28%, rgba(88,121,255,.22) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 70%, rgba(39,245,190,.22) 0 2px, transparent 3px)!important;
+  background-size:220px 160px, 260px 190px, 300px 220px!important;
+  opacity:.45!important;
+  animation:unlockedHeroParticlesV1382 12s linear infinite!important;
+}
+
+.unlocked-hero-copy-v1382{
+  position:relative!important;
+  z-index:2!important;
+  max-width:720px!important;
+}
+
+.unlocked-hero-copy-v1382 span{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin-bottom:14px!important;
+  color:#39f7ff!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  letter-spacing:.22em!important;
+  text-transform:uppercase!important;
+  text-shadow:0 0 16px rgba(46,238,255,.28)!important;
+}
+
+.unlocked-hero-copy-v1382 span::before{
+  content:"✦"!important;
+  color:#49f8e7!important;
+  text-shadow:0 0 16px rgba(73,248,231,.4)!important;
+}
+
+.unlocked-hero-copy-v1382 h1{
+  margin:0 0 14px!important;
+  color:#f4fbff!important;
+  font-size:clamp(38px,4.1vw,68px)!important;
+  line-height:.96!important;
+  font-weight:1000!important;
+  letter-spacing:-.055em!important;
+  text-shadow:0 14px 36px rgba(0,0,0,.42)!important;
+}
+
+.unlocked-hero-copy-v1382 h1 em{
+  font-style:normal!important;
+  color:#25e6dc!important;
+  text-shadow:0 0 24px rgba(37,230,220,.28)!important;
+}
+
+.unlocked-hero-copy-v1382 p{
+  max-width:680px!important;
+  margin:0!important;
+  color:#a8bdce!important;
+  font-size:16px!important;
+  line-height:1.55!important;
+  font-weight:850!important;
+}
+
+.unlocked-hero-art-v1382{
+  position:relative!important;
+  z-index:2!important;
+  height:200px!important;
+  min-width:420px!important;
+  isolation:isolate!important;
+}
+
+.unlocked-orbit-v1382{
+  position:absolute!important;
+  border:1px solid rgba(54,210,255,.42)!important;
+  border-radius:50%!important;
+  transform:rotate(-16deg)!important;
+  filter:drop-shadow(0 0 16px rgba(37,202,255,.18))!important;
+}
+
+.unlocked-orbit-v1382.orbit-one{
+  width:390px!important;
+  height:108px!important;
+  right:24px!important;
+  top:48px!important;
+  border-left-color:transparent!important;
+  border-bottom-color:rgba(126,89,255,.45)!important;
+  animation:unlockedHeroFloatV1382 5.5s ease-in-out infinite!important;
+}
+
+.unlocked-orbit-v1382.orbit-two{
+  width:300px!important;
+  height:78px!important;
+  right:84px!important;
+  top:78px!important;
+  border-top-color:rgba(57,244,255,.58)!important;
+  border-right-color:transparent!important;
+  opacity:.76!important;
+  animation:unlockedHeroFloatV1382 6.6s ease-in-out infinite reverse!important;
+}
+
+.unlocked-ticket-visual-v1382{
+  position:absolute!important;
+  right:190px!important;
+  top:35px!important;
+  width:168px!important;
+  height:112px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:28px!important;
+  transform:rotate(-8deg)!important;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255,255,255,.22), transparent 32%),
+    linear-gradient(135deg, rgba(40,239,255,.95), rgba(30,139,255,.82))!important;
+  border:1px solid rgba(96,238,255,.62)!important;
+  box-shadow:
+    0 0 44px rgba(36,212,255,.36),
+    0 20px 42px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.28)!important;
+  animation:unlockedTicketFloatV1382 4.8s ease-in-out infinite!important;
+}
+
+.unlocked-ticket-visual-v1382::before,
+.unlocked-ticket-visual-v1382::after{
+  content:""!important;
+  position:absolute!important;
+  top:50%!important;
+  width:20px!important;
+  height:20px!important;
+  border-radius:50%!important;
+  background:#061426!important;
+  transform:translateY(-50%)!important;
+  box-shadow:inset 0 0 14px rgba(41,226,255,.16)!important;
+}
+
+.unlocked-ticket-visual-v1382::before{left:-10px!important}
+.unlocked-ticket-visual-v1382::after{right:-10px!important}
+
+.unlocked-ticket-visual-v1382 span{
+  font-size:50px!important;
+  filter:drop-shadow(0 0 18px rgba(255,255,255,.22))!important;
+}
+
+.unlocked-access-card-v1382{
+  position:absolute!important;
+  right:10px!important;
+  top:58px!important;
+  width:210px!important;
+  padding:19px 20px 18px!important;
+  border-radius:22px!important;
+  background:linear-gradient(145deg, rgba(5,22,41,.92), rgba(4,13,27,.9))!important;
+  border:1px solid rgba(68,217,255,.34)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05)!important;
+  transform:rotate(-4deg)!important;
+}
+
+.unlocked-access-card-v1382 small{
+  display:block!important;
+  margin-bottom:10px!important;
+  color:#8cf8ff!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  letter-spacing:.16em!important;
+  text-transform:uppercase!important;
+}
+
+.unlocked-access-card-v1382 strong{
+  display:block!important;
+  color:#f5fbff!important;
+  font-size:15px!important;
+  line-height:1.25!important;
+  font-weight:950!important;
+  margin-bottom:11px!important;
+}
+
+.unlocked-access-card-v1382 b{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:54px!important;
+  height:42px!important;
+  border-radius:14px!important;
+  color:#fff!important;
+  font-size:26px!important;
+  font-weight:1000!important;
+  background:rgba(38,228,255,.10)!important;
+  border:1px solid rgba(79,225,255,.22)!important;
+}
+
+.unlocked-access-card-v1382 em{
+  margin-left:9px!important;
+  color:#9eb8ca!important;
+  font-style:normal!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+
+.unlocked-access-card-v1382::after{
+  content:""!important;
+  display:block!important;
+  height:8px!important;
+  margin-top:13px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg,#31eaff 0 68%, rgba(65,99,145,.55) 68%)!important;
+  box-shadow:0 0 16px rgba(49,234,255,.22)!important;
+}
+
+.unlocked-sport-dot-v1382{
+  position:absolute!important;
+  z-index:3!important;
+  width:46px!important;
+  height:46px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:999px!important;
+  background:rgba(5,20,38,.82)!important;
+  border:1px solid rgba(73,220,255,.34)!important;
+  box-shadow:0 0 30px rgba(34,205,255,.20), inset 0 1px 0 rgba(255,255,255,.05)!important;
+  font-style:normal!important;
+}
+
+.unlocked-sport-dot-v1382.ball{right:328px!important;top:10px!important;animation:unlockedHeroFloatV1382 4.8s ease-in-out infinite!important}
+.unlocked-sport-dot-v1382.racket{right:112px!important;top:2px!important;animation:unlockedHeroFloatV1382 5.2s ease-in-out infinite reverse!important}
+.unlocked-sport-dot-v1382.coin{right:98px!important;bottom:25px!important;animation:unlockedHeroFloatV1382 6s ease-in-out infinite!important}
+
+.unlocked-spark-v1382{
+  position:absolute!important;
+  height:2px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg, transparent, rgba(43,231,255,.95), transparent)!important;
+  filter:drop-shadow(0 0 10px rgba(43,231,255,.55))!important;
+}
+
+.unlocked-spark-v1382.spark-one{
+  width:170px!important;
+  right:370px!important;
+  top:75px!important;
+  transform:rotate(-8deg)!important;
+  animation:unlockedHeroSparkV1382 3.8s ease-in-out infinite!important;
+}
+
+.unlocked-spark-v1382.spark-two{
+  width:120px!important;
+  right:285px!important;
+  bottom:42px!important;
+  transform:rotate(-18deg)!important;
+  animation:unlockedHeroSparkV1382 4.6s ease-in-out infinite reverse!important;
+}
+
+@keyframes unlockedHeroSweepV1382{
+  0%,100%{opacity:.50; transform:translateX(-2%)}
+  50%{opacity:.88; transform:translateX(2%)}
+}
+
+@keyframes unlockedHeroParticlesV1382{
+  from{background-position:0 0,0 0,0 0}
+  to{background-position:220px -160px,-260px 190px,300px -220px}
+}
+
+@keyframes unlockedHeroFloatV1382{
+  0%,100%{transform:translateY(0) rotate(-16deg)}
+  50%{transform:translateY(-7px) rotate(-13deg)}
+}
+
+@keyframes unlockedTicketFloatV1382{
+  0%,100%{transform:translateY(0) rotate(-8deg)}
+  50%{transform:translateY(-8px) rotate(-5deg)}
+}
+
+@keyframes unlockedHeroSparkV1382{
+  0%,100%{opacity:.22}
+  50%{opacity:.92}
+}
+
+@media (max-width: 1250px){
+  .unlocked-tips-hero-v951.unlocked-tips-hero-premium-v1382{
+    grid-template-columns:1fr!important;
+    min-height:auto!important;
+  }
+  .unlocked-hero-art-v1382{
+    min-width:0!important;
+    width:100%!important;
+  }
+}
+
+@media (max-width: 680px){
+  .unlocked-tips-hero-v951.unlocked-tips-hero-premium-v1382{
+    padding:28px 22px!important;
+  }
+  .unlocked-hero-copy-v1382 h1{
+    font-size:42px!important;
+  }
+  .unlocked-hero-art-v1382{
+    display:none!important;
+  }
+}

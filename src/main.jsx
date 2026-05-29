@@ -20495,15 +20495,32 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
 
   return (
     <section className="unlocked-tips-page-v951">
-      <div className="unlocked-tips-hero-v951 glass-v2-panel">
-        <div>
+      <div className="unlocked-tips-hero-v951 unlocked-tips-hero-premium-v1382 glass-v2-panel">
+        <div className="unlocked-hero-copy-v1382">
           <span>Moje zakupy</span>
-          <h1>Odblokowane typy</h1>
+          <h1>Odblokowane <em>typy</em></h1>
           <p>Tutaj widzisz wszystkie kupione single. Singiel odblokowuje tylko jeden konkretny kupon — nie odblokowuje całego profilu ani zakładki Wyniki typera.</p>
         </div>
-        <div className="unlocked-tips-hero-stat-v951">
-          <b>{unlockedRows.length}</b>
-          <small>kupionych singli</small>
+
+        <div className="unlocked-hero-art-v1382" aria-hidden="true">
+          <i className="unlocked-orbit-v1382 orbit-one" />
+          <i className="unlocked-orbit-v1382 orbit-two" />
+          <i className="unlocked-spark-v1382 spark-one" />
+          <i className="unlocked-spark-v1382 spark-two" />
+          <i className="unlocked-sport-dot-v1382 ball">⚽</i>
+          <i className="unlocked-sport-dot-v1382 racket">🏸</i>
+          <i className="unlocked-sport-dot-v1382 coin">🪙</i>
+
+          <div className="unlocked-ticket-visual-v1382">
+            <span>🔓</span>
+          </div>
+
+          <div className="unlocked-access-card-v1382">
+            <small>Single access</small>
+            <strong>Odblokowuje<br />jeden konkretny kupon</strong>
+            <b>{unlockedRows.length}</b>
+            <em>kupionych singli</em>
+          </div>
         </div>
       </div>
 
