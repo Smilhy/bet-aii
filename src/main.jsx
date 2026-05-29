@@ -19330,29 +19330,37 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       const rawDate = getHistoryEventTimestamp(normalized, card.statusLabel)
       const dateMeta = formatProfileDateTime(rawDate)
       const dateGroup = formatProfileDate(rawDate)
-      const amountValue = card.statusLabel === 'Wygrany'
+      const matchDateRaw = normalized.match_time || normalized.event_time || normalized.kickoff_time || normalized.event_date || normalized.match_date || ''
+      const matchDate = matchDateRaw ? new Date(matchDateRaw) : null
+      const matchIsFuture = matchDate && Number.isFinite(matchDate.getTime()) && matchDate.getTime() > Date.now()
+      const manualResult = String(normalized.manual_settlement_result || normalized.admin_approved_result || '').trim()
+      const hasRealSettlementTime = Boolean(normalized.settled_at || normalized.result_at || normalized.resolved_at)
+      const shouldForcePendingHistory = matchIsFuture && !hasRealSettlementTime && !manualResult
+
+      const effectiveStatusLabel = shouldForcePendingHistory ? 'Oczekujący' : card.statusLabel
+      const amountValue = effectiveStatusLabel === 'Wygrany'
         ? (card.stake * Math.max(0, Number(card.odds) - 1))
-        : card.statusLabel === 'Przegrany'
+        : effectiveStatusLabel === 'Przegrany'
           ? -Math.abs(card.stake)
-          : card.statusLabel === 'Zwrot'
+          : effectiveStatusLabel === 'Zwrot'
             ? 0
             : null
-      const tone = card.statusLabel === 'Wygrany'
+      const tone = effectiveStatusLabel === 'Wygrany'
         ? 'success'
-        : card.statusLabel === 'Przegrany'
+        : effectiveStatusLabel === 'Przegrany'
           ? 'danger'
-          : card.statusLabel === 'Zwrot'
+          : effectiveStatusLabel === 'Zwrot'
             ? 'warning'
             : 'info'
-      const icon = card.statusLabel === 'Wygrany'
+      const icon = effectiveStatusLabel === 'Wygrany'
         ? '✅'
-        : card.statusLabel === 'Przegrany'
+        : effectiveStatusLabel === 'Przegrany'
           ? '❌'
-          : card.statusLabel === 'Zwrot'
+          : effectiveStatusLabel === 'Zwrot'
             ? '↩'
-            : card.statusLabel === 'Oczekujący'
+            : effectiveStatusLabel === 'Oczekujący'
               ? '⏳'
-              : card.statusLabel === 'Czeka na admina'
+              : effectiveStatusLabel === 'Czeka na admina'
                 ? '🛡️'
                 : '•'
       const historyPickLabel = getHistoryPickLabel(normalized, card)
@@ -19361,8 +19369,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         dateGroup,
         dateLabel: dateMeta.date,
         timeLabel: dateMeta.time,
-        title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : 'Rozliczono typ',
-        statusLabel: card.statusLabel,
+        title: effectiveStatusLabel === 'Oczekujący' ? 'Opublikowano typ' : 'Rozliczono typ',
+        statusLabel: effectiveStatusLabel,
         detail: `${card.home} vs ${card.away} • ${historyPickLabel} • kurs ${card.odds}`,
         tone,
         icon,
