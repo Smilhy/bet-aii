@@ -1,0 +1,10 @@
+WERSJA 1367
+
+Poprawki po wersji 1366:
+- naprawiona logika etykiet osi X na wykresach Wyniki i Statystyki,
+- gdy zakres obejmuje wiele dni, oś X pokazuje daty zamiast samej godziny,
+- gdy zakres jest krótki, może pokazać datę + godzinę dla lepszej czytelności,
+- zmienione podpisy summary: Najwyższy bilans / Najniższy bilans.
+
+Plik zmieniony:
+- src/main.jsx

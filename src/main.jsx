@@ -19081,10 +19081,26 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     if (!(a instanceof Date) || !(b instanceof Date)) return false
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
   }
-  const formatChartAxisLabel = (row, rows = []) => {
+  const formatChartAxisLabel = (row, tickRows = [], allRows = []) => {
     if (!row?.date) return row?.label || ''
-    const duplicateDay = rows.filter(item => isSameCalendarDay(item?.date, row.date)).length > 1
-    return duplicateDay ? formatChartDateLabel(row.date, true) : formatChartDateLabel(row.date, false)
+    const sourceRows = allRows.length ? allRows : tickRows
+    const validDates = sourceRows
+      .map(item => item?.date)
+      .filter(date => date instanceof Date && Number.isFinite(date.getTime()))
+    const minTime = validDates.length ? Math.min(...validDates.map(date => date.getTime())) : row.date.getTime()
+    const maxTime = validDates.length ? Math.max(...validDates.map(date => date.getTime())) : row.date.getTime()
+    const spanDays = Math.max(0, (maxTime - minTime) / 86400000)
+    const duplicateDay = tickRows.filter(item => isSameCalendarDay(item?.date, row.date)).length > 1
+
+    if (spanDays <= 1) {
+      return formatChartDateLabel(row.date, true)
+    }
+    if (spanDays <= 3) {
+      return duplicateDay
+        ? `${formatChartDateLabel(row.date, false)} ${formatChartDateLabel(row.date, true)}`
+        : formatChartDateLabel(row.date, false)
+    }
+    return formatChartDateLabel(row.date, false)
   }
   const getChartResultColor = (delta = 0) => delta > 0 ? '#39f3bc' : delta < 0 ? '#ff5b92' : '#7be6ff'
 
@@ -19620,14 +19636,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   </div>
 
                   <div className="profile-results-xaxis-v961">
-                    {chartXLabels.map((row, index) => <span key={`${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels) || row.label}</span>)}
+                    {chartXLabels.map((row, index) => <span key={`${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels, chartPlotRows) || row.label}</span>)}
                   </div>
                 </div>
 
                 <div className="profile-chart-summary-v1366">
                   <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
-                  <article><small>Najwyższy punkt</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
-                  <article><small>Najniższy punkt</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>Najwyższy bilans</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>Najniższy bilans</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
                   <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
                   <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
@@ -19766,14 +19782,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   </div>
 
                   <div className="profile-results-xaxis-v961">
-                    {chartXLabels.map((row, index) => <span key={`stats-x-${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels) || row.label}</span>)}
+                    {chartXLabels.map((row, index) => <span key={`stats-x-${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels, chartPlotRows) || row.label}</span>)}
                   </div>
                 </div>
 
                 <div className="profile-chart-summary-v1366">
                   <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
-                  <article><small>Najwyższy punkt</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
-                  <article><small>Najniższy punkt</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>Najwyższy bilans</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>Najniższy bilans</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
                   <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
                   <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
