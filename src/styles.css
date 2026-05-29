@@ -64507,3 +64507,45 @@ html.betai-fhd-monitor80-v1323 body #root{
   font-weight:950!important;
   letter-spacing:.04em!important;
 }
+
+
+/* WERSJA 1395 — Mój profil: czysta społeczność, bez kodu polecającego */
+.profile-referral-code-v1393{
+  display:none!important;
+}
+
+.profile-community-referrals-v1393 > div:nth-child(3) b{
+  color:#f4fbff!important;
+  text-shadow:none!important;
+  font-weight:950!important;
+}
+
+/* ikonka Poleceni ma kolor fioletowy jak pozostałe ikony w boxie Społeczność */
+.profile-community-referrals-v1393 > div:nth-child(3) span{
+  color:#9fb8cc!important;
+}
+.profile-community-referrals-v1393 > div:nth-child(3) span::first-letter{
+  color:#a75cff!important;
+}
+
+/* dopięcie fioletowego akcentu dla emoji/link-icon w większości przeglądarek */
+.profile-community-referrals-v1393 > div:nth-child(3){
+  --profile-community-referral-purple:#a75cff;
+}
+.profile-community-referrals-v1393 > div:nth-child(3) span{
+  text-shadow:none!important;
+}
+
+/* nadpisanie wcześniejszego neonowego zielonego Poleceni */
+.profile-community-referrals-v1393 > div:nth-child(3) b,
+.community-v3.profile-community-referrals-v1393 > div:nth-child(3) b{
+  color:#ffffff!important;
+}
+
+.profile-referral-purple-icon-v1395{
+  color:#a75cff!important;
+  filter:drop-shadow(0 0 7px rgba(167,92,255,.32))!important;
+  font-style:normal!important;
+  display:inline-block!important;
+  margin-right:4px!important;
+}
