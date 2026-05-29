@@ -64374,3 +64374,7 @@ html.betai-fhd-monitor80-v1323 body #root{
     display:none!important;
   }
 }
+
+
+/* WERSJA 1383 — usunięta moneta z hero, bo zasłaniała tekst */
+.unlocked-sport-dot-v1382.coin{display:none!important;}

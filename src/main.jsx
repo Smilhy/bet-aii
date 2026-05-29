@@ -20509,7 +20509,6 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
           <i className="unlocked-spark-v1382 spark-two" />
           <i className="unlocked-sport-dot-v1382 ball">⚽</i>
           <i className="unlocked-sport-dot-v1382 racket">🏸</i>
-          <i className="unlocked-sport-dot-v1382 coin">🪙</i>
 
           <div className="unlocked-ticket-visual-v1382">
             <span>🔓</span>
