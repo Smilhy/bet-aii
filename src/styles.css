@@ -64449,3 +64449,61 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ranking-v4-sidebar .referrals-v4 .hall-btn-v4.alt{
   margin-top:12px!important;
 }
+
+
+/* WERSJA 1391 — Polecenia: usunięte kółko po 'coin' */
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 i,
+.referral-bonuses-v4 .ref-bonus-v4 i{
+  display:none!important;
+}
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4{
+  display:flex!important;
+  align-items:center!important;
+  gap:2px!important;
+}
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 b{
+  margin-left:0!important;
+}
+
+
+/* WERSJA 1393 — Mój profil: liczba poleconych w prawej kolumnie */
+.profile-community-referrals-v1393{
+  gap:10px!important;
+}
+.profile-community-referrals-v1393 > div{
+  min-height:30px!important;
+}
+.profile-community-referrals-v1393 > div:nth-child(3){
+  padding-top:10px!important;
+  margin-top:4px!important;
+  border-top:1px solid rgba(255,255,255,.06)!important;
+}
+.profile-community-referrals-v1393 > div:nth-child(3) span{
+  color:#9fb8cc!important;
+}
+.profile-community-referrals-v1393 > div:nth-child(3) b{
+  color:#20f2dc!important;
+  text-shadow:0 0 14px rgba(32,242,220,.18)!important;
+}
+.profile-referral-code-v1393{
+  margin-top:12px!important;
+  padding:10px 12px!important;
+  border-radius:14px!important;
+  background:rgba(5,18,31,.58)!important;
+  border:1px solid rgba(46,225,255,.10)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.profile-referral-code-v1393 span{
+  color:#8da7ba!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.profile-referral-code-v1393 b{
+  color:#21f2dc!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  letter-spacing:.04em!important;
+}

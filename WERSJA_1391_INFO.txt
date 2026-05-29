@@ -1,0 +1,13 @@
+WERSJA 1391
+
+Poprawka Poleceń:
+- usunięte kółko/status '○' po nagrodach coin,
+- wpisy wyglądają teraz jak:
+  10 poleceń +1 coin
+  50 poleceń +10 coin
+  150 poleceń +100 coin
+  300 poleceń +1000 coin
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

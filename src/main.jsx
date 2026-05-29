@@ -15287,10 +15287,10 @@ function LeaderboardView({
   const referralCode = String(referralData?.referral_code || user?.username || user?.email?.split('@')?.[0] || 'BETAI').toUpperCase()
   const referralProgress = Math.min(100, (referralCount / 10) * 100)
   const referralBonuses = [
-    ['10 poleceń', '+1 coin', referralCount >= 10],
-    ['50 poleceń', '+10 coin', referralCount >= 50],
-    ['150 poleceń', '+100 coin', referralCount >= 150],
-    ['300 poleceń', '+1000 coin', referralCount >= 300],
+    ['10 poleceń', '+10 coin', referralCount >= 10],
+    ['50 poleceń', '+100 coin', referralCount >= 50],
+    ['150 poleceń', '+1000 coin', referralCount >= 150],
+    ['300 poleceń', '+10000 coin', referralCount >= 300],
   ]
 
   const openRow = (row) => onOpenTipster?.(row.rowRef, row.rowName)
@@ -15456,7 +15456,7 @@ function LeaderboardView({
             </div>
             <div className="referral-bonuses-v4">
               {referralBonuses.map((item, idx) => (
-                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b><i>{item[2] ? '✓' : '○'}</i></div>
+                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b></div>
               ))}
             </div>
             <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
@@ -16351,7 +16351,8 @@ function AuthView({ onAuth }) {
           options: {
             data: {
               username: derivedUsername,
-              display_name: derivedUsername
+              display_name: derivedUsername,
+              referral_code: getStoredReferralCode()
             }
           }
         })
@@ -18263,7 +18264,7 @@ function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, on
 }
 
 
-function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null }) {
+function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null, referralData = null, referralLoading = false }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
   const username = resolveRealProfileUsername({ ...(user || {}), email: profile.email || user?.email, username: profile.username })
@@ -18892,6 +18893,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
   const rankingPercent = Number(user?.ranking_percent || user?.rank_percent || (rankingPosition ? (rankingPosition / rankingTotal) * 100 : 0)) || 0
   const isTopOnePercent = Boolean(rankingPosition && rankingPosition <= Math.max(1, Math.ceil(rankingTotal * 0.01)))
+
+  const profileReferralCount = profileIsOwnForViewer
+    ? Number(referralData?.referrals_count ?? referralData?.buyers_count ?? user?.referrals_count ?? user?.buyers_count ?? 0) || 0
+    : Number(user?.referrals_count ?? user?.buyers_count ?? 0) || 0
+  const profileReferralCode = String(referralData?.referral_code || user?.referral_code || username || email?.split('@')?.[0] || 'BETAI').toUpperCase()
 
   const profileBadges = [
     { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPosition ? `#${rankingPosition}` : 'Brak rankingu', achieved: isTopOnePercent },
@@ -20092,7 +20098,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           <div className="glass-profile-v3 side-card-v3">
             <div className="side-card-head-v3"><h3>Społeczność</h3></div>
-            <div className="community-v3"><div><span>👥 Obserwujący</span><b>{followersCount}</b></div><div><span>👤 Obserwowani</span><b>{followingCount}</b></div></div>
+            <div className="community-v3 profile-community-referrals-v1393">
+              <div><span>👥 Obserwujący</span><b>{followersCount}</b></div>
+              <div><span>👤 Obserwowani</span><b>{followingCount}</b></div>
+              <div><span>🔗 Poleceni</span><b>{referralLoading ? '...' : profileReferralCount}</b></div>
+            </div>
+            {profileIsOwnForViewer ? <div className="profile-referral-code-v1393"><span>Kod polecający</span><b>{profileReferralCode}</b></div> : null}
           </div>
 
           <div className="glass-profile-v3 side-card-v3 side-badges-v3">
@@ -23080,6 +23091,33 @@ function App() {
     }
   }
 
+  async function registerReferralFromStoredCode(user = sessionUser) {
+    const code = getStoredReferralCode()
+    const userId = user?.id
+    if (!code || !userId || !isSupabaseConfigured || !supabase) return false
+
+    try {
+      const { data, error } = await supabase.rpc('register_referral_signup', {
+        p_referred_id: userId,
+        p_referral_code: code,
+        p_referred_email: normalizeEmail(user?.email || '')
+      })
+      if (error) throw error
+
+      if (data) {
+        try { localStorage.removeItem('betai_referral_code') } catch (_) {}
+        await fetchReferralData(userId)
+        await fetchCurrentTokenBalance()
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.warn('register referral skipped', error)
+      return false
+    }
+  }
+
   async function runLiveAiEngine() {
     setAiLiveGenerating(true)
     try {
@@ -23468,6 +23506,14 @@ function App() {
 
         fetchRealRanking()
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referrals' }, () => {
+        fetchReferralData(sessionUser?.id)
+        fetchCurrentTokenBalance()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_rewards' }, () => {
+        fetchReferralData(sessionUser?.id)
+        fetchCurrentTokenBalance()
+      })
       .subscribe()
 
     const softPoll = window.setInterval(() => {
@@ -23479,6 +23525,7 @@ function App() {
     const onFocusRefresh = () => {
       fetchTips(sessionUser?.id)
       fetchRealRanking()
+      fetchReferralData(sessionUser?.id)
     }
     window.addEventListener('focus', onFocusRefresh)
 
@@ -25271,6 +25318,7 @@ function App() {
       try { await fetchTipsterEarnings(userId) } catch (e) { console.error(e) }
       try { await fetchRealRanking() } catch (e) { console.error(e) }
       try { await fetchReferralData(userId) } catch (e) { console.error(e) }
+      try { await registerReferralFromStoredCode({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
       try { await fetchStripeConnectStatus(userId) } catch (e) { console.error(e) }
       try { await fetchUnlockedTips(userId) } catch (e) { console.error(e) }
       try { await ensureUserWalletAndWelcome({ id: userId, email: sessionUser?.email }) } catch (e) { console.error(e) }
@@ -25312,6 +25360,7 @@ function App() {
           setUnlockedTips(new Set())
           safeInitialLoad(nextUser.id)
           ensureUserWalletAndWelcome(nextUser)
+          registerReferralFromStoredCode(nextUser)
         })
 
         unsubscribe = listener?.subscription?.unsubscribe
@@ -26131,6 +26180,8 @@ function App() {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), avatar_url: nextAvatarUrl }))
               setSessionUser(prev => prev ? ({ ...prev, avatar_url: nextAvatarUrl, user_metadata: { ...(prev.user_metadata || {}), avatar_url: nextAvatarUrl } }) : prev)
             }}
+            referralData={referralData}
+            referralLoading={referralLoading}
             onProfileUpdated={(patch) => {
               setAccountProfile(prev => ({ ...(prev || effectiveAccountProfile || {}), ...(patch || {}) }))
               setSessionUser(prev => prev ? ({ ...prev, ...(patch || {}), user_metadata: { ...(prev.user_metadata || {}), ...(patch || {}) } }) : prev)
