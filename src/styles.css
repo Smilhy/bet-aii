@@ -63857,3 +63857,20 @@ html.betai-fhd-monitor80-v1323 body #root{
     left:auto!important;
   }
 }
+
+
+/* WERSJA 1377 — miesięczny plan: kropka aktywności wyrównana do prawej jak w innych kartach */
+.tipster-plan-card-v1374.recommended .tipster-plan-toggle-v1374{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  left:auto!important;
+  transform:none!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-recommended-v1374{
+  position:absolute!important;
+  top:14px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+}
