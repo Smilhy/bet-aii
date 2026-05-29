@@ -17998,18 +17998,32 @@ function ProfileLiveTipCard({
 }
 
 
-function ProfileStatsTable({ title, columns, rows, wide = false }) {
+function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7 }) {
+  const [expanded, setExpanded] = useState(false)
+  const safeRows = Array.isArray(rows) ? rows : []
+  const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
+  const hasMoreRows = safeRows.length > visibleLimit
+  const visibleRows = expanded || !hasMoreRows ? safeRows : safeRows.slice(0, visibleLimit)
+
   return (
-    <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''}`}>
-      <div className="profile-v3-card-head"><h3>{title}</h3></div>
+    <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''} ${hasMoreRows ? 'has-expand-v1356' : ''}`}>
+      <div className="profile-v3-card-head">
+        <h3>{title}</h3>
+        {hasMoreRows ? <span>{expanded ? `Pokazano ${safeRows.length}` : `Top ${visibleLimit} z ${safeRows.length}`}</span> : null}
+      </div>
       <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
         <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
-        {rows.map((row, index) => (
+        {visibleRows.map((row, index) => (
           <div key={`${title}-${index}`}>
             {row.map((cell, cellIndex) => <span key={`${title}-${index}-${cellIndex}`}>{cell}</span>)}
           </div>
         ))}
       </div>
+      {hasMoreRows ? (
+        <button type="button" className="profile-stats-expand-v1356" onClick={() => setExpanded(prev => !prev)}>
+          {expanded ? 'Pokaż mniej' : `Pokaż kolejne ${Math.min(visibleLimit, safeRows.length - visibleLimit)}`}
+        </button>
+      ) : null}
     </section>
   )
 }

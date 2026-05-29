@@ -63145,3 +63145,38 @@ html.betai-fhd-monitor80-v1323 body #root{
     margin-bottom:72px!important;
   }
 }
+
+
+/* WERSJA 1356 — statystyki: max 7 wierszy i rozwijanie */
+.profile-static-v3 .profile-v4-stats-table.has-expand-v1356{
+  overflow:hidden!important;
+}
+
+.profile-static-v3 .profile-v4-stats-table .profile-v3-card-head span{
+  color:#9fb8ca!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+
+.profile-static-v3 .profile-stats-expand-v1356{
+  margin:12px auto 0!important;
+  min-height:38px!important;
+  padding:0 18px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(32,244,255,.22)!important;
+  background:linear-gradient(180deg, rgba(9,25,44,.92), rgba(4,14,28,.96))!important;
+  color:#eaf7ff!important;
+  font-weight:900!important;
+  font-size:13px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+.profile-static-v3 .profile-stats-expand-v1356:hover{
+  border-color:rgba(96,208,255,.58)!important;
+  color:#ffffff!important;
+  transform:translateY(-1px)!important;
+}

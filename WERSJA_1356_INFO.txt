@@ -1,0 +1,12 @@
+WERSJA 1356
+
+Zmiana:
+- wszystkie tabele w zakładce Statystyki pokazują domyślnie maksymalnie 7 wierszy,
+- jeśli tabela ma więcej niż 7 pozycji, pojawia się przycisk „Pokaż kolejne 7”,
+- po rozwinięciu można kliknąć „Pokaż mniej”,
+- dotyczy tabel: typów kuponów, sportów, lig, rodzajów typów, zakresów kursów, godzin i miesięcy,
+- logika statystyk bez zmian, zmieniona tylko prezentacja.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
