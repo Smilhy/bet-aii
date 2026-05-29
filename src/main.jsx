@@ -15383,7 +15383,6 @@ function LeaderboardView({
 
           <div className="glass-ranking-v4 ranking-v4-tabs">
             <button type="button" className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>Ranking</button>
-            <button type="button" className={activeTab === 'top' ? 'active' : ''} onClick={() => setActiveTab('top')}>Top typerzy</button>
             <button type="button" className={activeTab === 'referrals' ? 'active' : ''} onClick={() => setActiveTab('referrals')}>Polecenia</button>
             <button type="button" className={activeTab === 'month' ? 'active' : ''} onClick={() => setActiveTab('month')}>Liderzy miesiąca</button>
           </div>
@@ -15424,7 +15423,7 @@ function LeaderboardView({
                   <div className="ball-v4">⚽</div>
                 </div>
               </div>
-              <button type="button" className="hall-btn-v4" onClick={() => setActiveTab('top')}>Zobacz całą galerię</button>
+              <button type="button" className="hall-btn-v4" onClick={() => setActiveTab('ranking')}>Zobacz ranking</button>
             </div>
 
             <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
@@ -15444,51 +15443,6 @@ function LeaderboardView({
           </div>
         </div>
 
-        <aside className="ranking-v4-sidebar">
-          <div className="glass-ranking-v4 sidebar-card-v4">
-            <div className="sidebar-tabs-v4">
-              <button type="button" className={sidebarTab === 'top' ? 'active' : ''} onClick={() => setSidebarTab('top')}>Top typerzy</button>
-              <button type="button" className={sidebarTab === 'referrals' ? 'active' : ''} onClick={() => setSidebarTab('referrals')}>Polecenia</button>
-              <button type="button" className={sidebarTab === 'month' ? 'active' : ''} onClick={() => setSidebarTab('month')}>Liderzy miesiąca</button>
-            </div>
-            <button type="button" className="sidebar-head-link-v4" onClick={() => setActiveTab(sidebarTab === 'month' ? 'month' : sidebarTab === 'referrals' ? 'referrals' : 'top')}>Zobacz wszystkich</button>
-            {sidebarTab === 'referrals' ? (
-              <div className="referral-code-v4">
-                <span>Kod polecający</span>
-                <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
-              </div>
-            ) : (
-              <div className="top-tipsters-list-v4">
-                {(sidebarTab === 'month' ? monthlyRows : topTyperRows).map((row, idx) => (
-                  <button type="button" className="top-tipster-row-v4 top-tipster-clickable-v974" key={row.tipster_id || row.id || idx} onClick={() => openRow(row)} title={`Otwórz profil typera ${row.rowName}`}>
-                    <span className={`mini-rank-v4 r${idx+1}`}>{idx + 1}</span>
-                    {renderAvatar(row, 'mini-avatar-v4')}
-                    <div><strong>{row.rowName}</strong><small>Typy: {Number(row.totalTips || row.total_tips || 0)} • Win: {Number(row.winrate || 0).toFixed(1)}% • Yield: {Number(row.roi || row.yield || 0).toFixed(2)}%</small></div>
-                    <b>{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</b>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4">
-            <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
-            <div className="referral-code-v4">
-              <span>Kod polecający</span>
-              <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
-            </div>
-            <div className="referral-progress-v4">
-              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>{referralCount} / 10</b></div>
-              <div className="progress-bar-v4"><i style={{width:`${referralProgress}%`}}></i></div>
-            </div>
-            <div className="referral-bonuses-v4">
-              {referralBonuses.map((item, idx) => (
-                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b><i>{item[2] ? '✓' : '○'}</i></div>
-              ))}
-            </div>
-            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
-          </div>
-        </aside>
       </div>
     </section>
   )

@@ -64378,3 +64378,19 @@ html.betai-fhd-monitor80-v1323 body #root{
 
 /* WERSJA 1383 — usunięta moneta z hero, bo zasłaniała tekst */
 .unlocked-sport-dot-v1382.coin{display:none!important;}
+
+
+/* WERSJA 1385 — Ranking: usunięta cała prawa kolumna */
+.ranking-v4-layout{
+  grid-template-columns:1fr!important;
+}
+.ranking-v4-main{
+  width:100%!important;
+  max-width:100%!important;
+}
+.ranking-v4-sidebar{
+  display:none!important;
+}
+.ranking-static-v4 .ranking-v4-main{
+  grid-column:1 / -1!important;
+}

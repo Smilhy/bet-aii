@@ -1,0 +1,10 @@
+WERSJA 1384
+
+Poprawka rankingu:
+- usunięta zakładka 'Top typerzy' obok zakładki 'Ranking' w głównych tabach rankingu,
+- zostają: Ranking, Polecenia, Liderzy miesiąca,
+- prawy panel Top typerzy zostaje bez zmian,
+- link 'Zobacz wszystkich' z prawego panelu Top typerzy prowadzi teraz do głównego Rankingu.
+
+Plik zmieniony:
+- src/main.jsx
