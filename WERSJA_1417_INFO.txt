@@ -1,0 +1,18 @@
+WERSJA 1417 — SPOŁECZNOŚĆ: CLEAN IKONY + EDYCJA/USUWANIE POSTÓW
+
+Zrobione:
+- usunięty pasek "Jak wrzucić kupon?",
+- usunięty przycisk/link 🔗 w nagłówku czatu,
+- usunięty przycisk udostępniania ↗ z akcji posta,
+- usunięte kopiowanie linku z menu posta,
+- poprawiony wygląd ikon: emoji, załącznik i wyślij są równe, dopasowane i w jednej linii,
+- właściciel posta ma widoczne przyciski "Edytuj" i "Usuń" przy swoim poście,
+- menu posta nadal zostaje jako dodatkowe opcje,
+- frontend używa RPC:
+  update_community_post_v1417
+  delete_community_post_v1417
+  z fallbackiem do starego sposobu.
+
+WAŻNE — SQL:
+Trzeba wkleić w Supabase:
+supabase/WERSJA_1417_COMMUNITY_EDIT_DELETE_OWN_POSTS.sql

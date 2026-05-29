@@ -10919,13 +10919,21 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!ok) return
     try {
       setBusy(true)
-      await supabase.from('community_reactions').delete().eq('post_id', post.id)
-      await supabase.from('community_comments').delete().eq('post_id', post.id)
-      const deleteQuery = supabase.from('community_posts').delete().eq('id', post.id)
-      const { error } = isAdminUser(user)
-        ? await deleteQuery
-        : await deleteQuery.eq('author_id', user.id)
-      if (error) throw error
+
+      const rpcResult = await supabase.rpc('delete_community_post_v1417', {
+        p_post_id: post.id
+      })
+
+      if (rpcResult?.error) {
+        await supabase.from('community_reactions').delete().eq('post_id', post.id)
+        await supabase.from('community_comments').delete().eq('post_id', post.id)
+        const deleteQuery = supabase.from('community_posts').delete().eq('id', post.id)
+        const { error } = isAdminUser(user)
+          ? await deleteQuery
+          : await deleteQuery.eq('author_id', user.id)
+        if (error) throw error
+      }
+
       setOpenPostMenuId(null)
       onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został usunięty.' })
       await loadCommunity()
@@ -10949,12 +10957,21 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!post?.id || !isOwnPost(post) || !clean || !isSupabaseConfigured || !supabase) return
     try {
       setBusy(true)
-      const { error } = await supabase
-        .from('community_posts')
-        .update({ body: clean, updated_at: new Date().toISOString() })
-        .eq('id', post.id)
-        .eq('author_id', user.id)
-      if (error) throw error
+
+      const rpcResult = await supabase.rpc('update_community_post_v1417', {
+        p_post_id: post.id,
+        p_body: clean
+      })
+
+      if (rpcResult?.error) {
+        const { error } = await supabase
+          .from('community_posts')
+          .update({ body: clean, updated_at: new Date().toISOString() })
+          .eq('id', post.id)
+          .eq('author_id', user.id)
+        if (error) throw error
+      }
+
       setEditingPostId(null)
       setEditingPostText('')
       onToast?.({ type: 'success', title: 'Społeczność', message: 'Post został zaktualizowany.' })
@@ -11009,18 +11026,25 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
             <div><button type="button" className="community-name-btn-v1016 feed-name-v1016" onClick={() => openCommunityProfile(post)}>{author}</button><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small><em>#{post.channel_key || 'ogolny'}</em></div></div>
           </div>
-          <div className="post-menu-wrap-v1024">
-            <button type="button" className="post-menu-trigger-v1024" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
+          <div className="post-head-actions-v1417">
+            {isOwnPost(post) ? (
+              <div className="post-owner-actions-v1417">
+                <button type="button" onClick={() => startEditCommunityPost(post)}>Edytuj</button>
+                <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>Usuń</button>
+              </div>
+            ) : null}
+            <div className="post-menu-wrap-v1024">
+              <button type="button" className="post-menu-trigger-v1024" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
             {openPostMenuId === post.id ? (
               <div className="post-menu-v1024">
                 <button type="button" onClick={() => { openCommunityProfile(post); setOpenPostMenuId(null) }}>👤 Otwórz profil</button>
-                <button type="button" onClick={() => { try { navigator.clipboard?.writeText(`${window.location.origin}${window.location.pathname}#community-post-${post.id}`) } catch (_) {} ; onToast?.({ type: 'success', title: 'Społeczność', message: 'Link do posta skopiowany.' }); setOpenPostMenuId(null) }}>🔗 Kopiuj link</button>
-                {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ Edytuj post</button> : null}
-                {canModerateCommunityPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń post</button> : null}
+                {isOwnPost(post) ? <button type="button" onClick={() => startEditCommunityPost(post)}>✏️ Edytuj</button> : null}
+                {canModerateCommunityPost(post) ? <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>🗑️ Usuń</button> : null}
                 {!isOwnPost(post) ? <button type="button" onClick={() => reportCommunityPost(post)}>🚩 Zgłoś post</button> : null}
                 <button type="button" onClick={() => setOpenPostMenuId(null)}>Zamknij</button>
               </div>
             ) : null}
+            </div>
           </div>
         </div>
         {editingPostId === post.id ? (
@@ -11037,7 +11061,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         <div className="feed-actions-v5">
           <button type="button" onClick={() => toggleLike(post)}>👍 {Number(post.likes_count || 0)}</button>
           <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}>💬 {Number(post.comments_count || postComments.length || 0)}</button>
-          <button type="button">↗</button>
           <button type="button" onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: true }))}>Komentarze ({Number(post.comments_count || postComments.length || 0)})</button>
         </div>
         {expandedComments[post.id] ? (
@@ -11186,15 +11209,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               <div className="glass-community-v5 pro-chat-panel-v1012 pro-chat-panel-v1014 live-chat-real-v1017">
                 <div className="pro-chat-head-v1012">
                   <h3>#{activeChannelMeta.label} <span>• {filteredChatMessages.length} wiadomości</span></h3>
-                  <button type="button">🔗</button>
                 </div>
                 <div className="pro-pin-v1012"><b>{activePinnedMessage.title}</b><span>{activePinnedMessage.text}</span></div>
-                {activeCommunityChannel === 'kupony-spolecznosci' ? (
-                  <div className="coupon-chat-help-v1416">
-                    <strong>🎟️ Jak wrzucić kupon?</strong>
-                    <span>Napisz krótką wiadomość, kliknij <b>📎</b> i dodaj screen kuponu z bukmachera.</span>
-                  </div>
-                ) : null}
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url

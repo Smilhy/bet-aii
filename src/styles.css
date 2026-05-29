@@ -65891,3 +65891,140 @@ html.betai-fhd-monitor80-v1323 body #root{
     text-align:left!important;
   }
 }
+
+
+/* WERSJA 1417 — Społeczność: czystsze ikony, bez linków, edycja/usuwanie własnych postów */
+.community-10-v1017 .coupon-chat-help-v1416{
+  display:none!important;
+}
+
+/* Górny przycisk linku w czacie usunięty w JSX; to zabezpieczenie */
+.community-10-v1017 .pro-chat-head-v1012 > button{
+  display:none!important;
+}
+
+.community-10-v1017 .pro-chat-head-v1012{
+  grid-template-columns:1fr!important;
+}
+
+.community-10-v1017 .chat-input-active-v1023{
+  display:grid!important;
+  grid-template-columns:1fr auto 46px!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-height:52px!important;
+  padding:6px!important;
+  border-radius:17px!important;
+}
+
+.community-10-v1017 .chat-tools-v1023{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin:0!important;
+}
+
+.community-10-v1017 .chat-tools-v1023 button,
+.community-10-v1017 .chat-tools-v1023 label,
+.community-10-v1017 .chat-send-v1023{
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  border-radius:13px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  padding:0!important;
+  margin:0!important;
+  font-size:15px!important;
+  line-height:1!important;
+  border:1px solid rgba(34,242,230,.14)!important;
+  background:linear-gradient(135deg,rgba(8,30,42,.94),rgba(5,17,31,.98))!important;
+  color:#dffcff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+  cursor:pointer!important;
+}
+
+.community-10-v1017 .chat-tools-v1023 button:hover,
+.community-10-v1017 .chat-tools-v1023 label:hover{
+  border-color:rgba(34,242,230,.32)!important;
+  transform:translateY(-1px)!important;
+}
+
+.community-10-v1017 .chat-send-v1023{
+  background:linear-gradient(90deg,#21f2e6,#37a8ff)!important;
+  color:#04151c!important;
+  font-weight:1000!important;
+}
+
+.community-10-v1017 .chat-send-v1023:disabled{
+  opacity:.55!important;
+  filter:saturate(.55)!important;
+  cursor:not-allowed!important;
+}
+
+.community-10-v1017 .post-head-actions-v1417{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  position:relative!important;
+}
+
+.community-10-v1017 .post-owner-actions-v1417{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+
+.community-10-v1017 .post-owner-actions-v1417 button{
+  height:30px!important;
+  min-width:58px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(34,242,230,.18)!important;
+  background:rgba(34,242,230,.07)!important;
+  color:#dffcff!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  cursor:pointer!important;
+}
+
+.community-10-v1017 .post-owner-actions-v1417 button:hover{
+  border-color:rgba(34,242,230,.36)!important;
+  background:rgba(34,242,230,.13)!important;
+}
+
+.community-10-v1017 .post-owner-actions-v1417 button.danger{
+  border-color:rgba(255,79,118,.20)!important;
+  background:rgba(255,79,118,.08)!important;
+  color:#ffd7e0!important;
+}
+
+.community-10-v1017 .feed-actions-v5{
+  gap:10px!important;
+}
+
+.community-10-v1017 .feed-actions-v5 button{
+  min-width:58px!important;
+  height:34px!important;
+  border-radius:11px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+}
+
+/* Menu posta bez śmieci i równe */
+.community-10-v1017 .post-menu-trigger-v1024{
+  width:34px!important;
+  height:34px!important;
+  border-radius:12px!important;
+  display:grid!important;
+  place-items:center!important;
+}
+
+.community-10-v1017 .post-menu-v1024 button{
+  min-height:34px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
