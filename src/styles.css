@@ -65308,3 +65308,68 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#8b5cf6!important;
   text-shadow:0 0 12px rgba(139,92,246,.32)!important;
 }
+
+
+/* WERSJA 1406 — Ranking: RANGI naprawdę widoczne */
+.ranking-live-v999 .ranking-v4-row,
+.ranking-upgrade-v1398 .ranking-v4-row,
+.ranking-v4-row{
+  grid-template-columns:56px 1.65fr .78fr .72fr .64fr .8fr .92fr .8fr .76fr!important;
+}
+
+.ranking-live-v999 .badges-cell-v4,
+.ranking-upgrade-v1398 .badges-cell-v4,
+.ranking-v4-row .badges-cell-v4,
+.ranking-v4-table .badges-cell-v4{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:8px!important;
+  min-width:0!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+.ranking-live-v999 .badges-cell-v4 i,
+.ranking-upgrade-v1398 .badges-cell-v4 i,
+.ranking-v4-table .badges-cell-v4 i{
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(255,255,255,.05)!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  color:#ffca46!important;
+  font-style:normal!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+
+.ranking-live-v999 .badges-cell-v4 i:nth-child(1),
+.ranking-upgrade-v1398 .badges-cell-v4 i:nth-child(1){
+  color:#c46cff!important;
+}
+
+.ranking-live-v999 .badges-cell-v4 i:nth-child(2),
+.ranking-upgrade-v1398 .badges-cell-v4 i:nth-child(2){
+  color:#78e8ff!important;
+}
+
+.ranking-live-v999 .badges-cell-v4 i:nth-child(3),
+.ranking-upgrade-v1398 .badges-cell-v4 i:nth-child(3){
+  color:#f7b843!important;
+}
+
+/* żeby przycisk Obserwuj wrócił do ostatniej kolumny, a RANGI były przed nim */
+.ranking-live-v999 .ranking-v4-row > span:nth-child(8),
+.ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(8){
+  justify-self:start!important;
+}
+
+.ranking-live-v999 .ranking-v4-row > span:nth-child(9),
+.ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(9){
+  justify-self:end!important;
+}

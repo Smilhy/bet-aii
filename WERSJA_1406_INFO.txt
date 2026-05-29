@@ -1,0 +1,10 @@
+WERSJA 1406
+
+Poprawka:
+- RANGI są naprawdę przywrócone i widoczne,
+- naprawiony wcześniejszy CSS z wersji 1403, który ukrywał .badges-cell-v4,
+- tabela znowu ma 9 kolumn: # / Typer / Win Rate / Yield / Typy / Obserwujący / Profit / Rangi / Akcja,
+- ikonki rang wróciły przed przyciskiem Obserwuj.
+
+SQL do Supabase:
+- bez zmian, nic nie trzeba wklejać.
