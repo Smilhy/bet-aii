@@ -1,0 +1,10 @@
+WERSJA 1370
+
+Poprawka Historii:
+- naprawiony przypadek, gdzie historia mogła pokazać mecz Paris Saint Germain vs Arsenal, ale typ z innego meczu, np. Nice wygra,
+- historia wybiera teraz poprawniejszy label typu z pól selection/prediction/bet_type/pick,
+- jeśli wykryje, że typ typu „X wygra” nie pasuje do żadnej drużyny w meczu, nie pokazuje błędnej drużyny i używa neutralnego opisu „Typ meczowy”,
+- wygląd historii z wersji 1369 zostaje bez zmian.
+
+Plik zmieniony:
+- src/main.jsx

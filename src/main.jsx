@@ -19271,12 +19271,63 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const autoResultsCount = allProfileTipCards.filter(tip => String(tip.settlementSource || '').includes('auto')).length
   const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
   const linePoints = chartLinePoints || '0,96 100,96'
-  const getHistoryEventTimestamp = (tip) => tip?.settled_at || tip?.result_at || tip?.updated_at || tip?.match_time || tip?.event_time || tip?.created_at || ''
+  const getHistoryEventTimestamp = (tip, statusLabel = '') => {
+    const status = String(statusLabel || tip?.status || '').toLowerCase()
+
+    // Dla opublikowanego / oczekującego typu historia ma pokazać moment publikacji,
+    // a nie datę meczu. Inaczej typ wpadał pod dzień meczu albo poza pierwsze 7 wpisów.
+    if (status.includes('oczek') || status.includes('pending')) {
+      return tip?.created_at || tip?.published_at || tip?.inserted_at || tip?.updated_at || tip?.match_time || tip?.event_time || ''
+    }
+
+    // Dla rozliczonych typów pokazujemy czas rozliczenia, a gdy go nie ma — czas meczu.
+    return tip?.settled_at || tip?.result_at || tip?.resolved_at || tip?.updated_at || tip?.match_time || tip?.event_time || tip?.created_at || ''
+  }
+  const normalizeHistoryText = (value = '') => String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  const isHistoryWinnerPickMismatched = (pick, home, away) => {
+    const cleanPick = normalizeHistoryText(pick)
+    if (!cleanPick) return true
+    const looksLikeWinnerPick = /(wygra|win|winner|ganha|gana|vence)/i.test(cleanPick)
+    if (!looksLikeWinnerPick) return false
+    const cleanHome = normalizeHistoryText(home)
+    const cleanAway = normalizeHistoryText(away)
+    return !(
+      (cleanHome && cleanPick.includes(cleanHome)) ||
+      (cleanAway && cleanPick.includes(cleanAway))
+    )
+  }
+  const getHistoryPickLabel = (normalized = {}, card = {}) => {
+    const candidates = [
+      normalized.selection_label,
+      normalized.pick_label,
+      normalized.prediction_label,
+      normalized.tip_label,
+      normalized.bet_selection,
+      normalized.selection,
+      normalized.prediction,
+      normalized.bet,
+      normalized.tip,
+      normalized.bet_type,
+      normalized.pick,
+      card.pick,
+    ]
+      .map(value => String(value || '').trim())
+      .filter(Boolean)
+
+    const saneCandidate = candidates.find(value => !isHistoryWinnerPickMismatched(value, card.home, card.away))
+    if (saneCandidate) return saneCandidate
+
+    // Jeżeli w bazie został stary pick z innego meczu, nie pokazujemy błędnej drużyny.
+    return 'Typ meczowy'
+  }
   const historyEvents = sortedUserTips
     .map(tip => {
       const normalized = normalizeTipRow(tip)
       const card = buildProfileTipCard(normalized)
-      const rawDate = getHistoryEventTimestamp(normalized)
+      const rawDate = getHistoryEventTimestamp(normalized, card.statusLabel)
       const dateMeta = formatProfileDateTime(rawDate)
       const dateGroup = formatProfileDate(rawDate)
       const amountValue = card.statusLabel === 'Wygrany'
@@ -19304,6 +19355,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               : card.statusLabel === 'Czeka na admina'
                 ? '🛡️'
                 : '•'
+      const historyPickLabel = getHistoryPickLabel(normalized, card)
       return {
         id: card.id,
         dateGroup,
@@ -19311,7 +19363,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         timeLabel: dateMeta.time,
         title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : 'Rozliczono typ',
         statusLabel: card.statusLabel,
-        detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
+        detail: `${card.home} vs ${card.away} • ${historyPickLabel} • kurs ${card.odds}`,
         tone,
         icon,
         amountValue,

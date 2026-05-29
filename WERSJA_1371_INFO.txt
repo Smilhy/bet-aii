@@ -1,0 +1,10 @@
+WERSJA 1371
+
+Poprawka Historii:
+- oczekujące typy / 'Opublikowano typ' są teraz sortowane i grupowane po created_at, czyli po czasie publikacji,
+- wcześniej mogły wpadać pod datę meczu, np. 30.05.2026, albo znikać poza pierwsze 7 wpisów,
+- rozliczone typy dalej używają czasu rozliczenia / meczu,
+- wygląd Historii bez zmian.
+
+Plik zmieniony:
+- src/main.jsx
