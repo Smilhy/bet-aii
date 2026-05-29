@@ -1,0 +1,16 @@
+WERSJA 1400 — RANKING 10/10
+
+Zrobione:
+- usunięte duplikujące się zakładki Polecenia i Liderzy miesiąca,
+- zostaje tylko jedna zakładka Ranking,
+- hero rankingowe jest bardziej kompaktowe i bardziej premium,
+- dodany mocniejszy grid/neon efekt w hero,
+- tabela jest bliżej hero i bardziej zwarta,
+- dolne sekcje Galeria sławy / Wyzwania tygodniowe są lepiej dopasowane wizualnie,
+- w wyzwaniach zmienione żeton na coin,
+- prawa kolumna z kodem polecającym ma poprawione dopasowanie kodu do boxa,
+- brak zmian w SQL i logice Supabase.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

@@ -10797,7 +10797,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email: userEmail, balance: nextBalance, reason: 'community_reward' } }))
       window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
       await onRefreshTokens?.()
-      onToast?.({ type: 'success', title: 'Nagroda społeczności', message: `${reward.title}: +1 żeton.` })
+      onToast?.({ type: 'success', title: 'Nagroda społeczności', message: `${reward.title}: +1 coin.` })
       await loadCommunity()
     } catch (error) {
       console.error('claim community reward error', error)
@@ -11095,7 +11095,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <span>{reward.icon}</span>
                   <div><strong>{reward.title}</strong><small>{reward.desc}</small><div className="reward-progress-v5"><i style={{ width: `${Math.max(4, reward.progress)}%` }}></i></div></div>
                   <em>{reward.current}</em>
-                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Odbierz +1 żeton' : '+1 żeton'}</button>
+                  <button type="button" disabled={!reward.done || reward.claimed} onClick={() => claimCommunityReward(reward)}>{reward.claimed ? getRewardUnlockLabel(reward.key) : reward.done ? 'Odbierz +1 coin' : '+1 coin'}</button>
                 </div>
               ))}
             </div>
@@ -15279,7 +15279,7 @@ function LeaderboardView({
         done: roi >= 20
       }
     ]
-    return challenges.map(item => ({ ...item, claimed: isChallengeClaimed(item.key), reward: '+1 żeton', width: `${Math.max(3, Math.min(100, item.value))}%` }))
+    return challenges.map(item => ({ ...item, claimed: isChallengeClaimed(item.key), reward: '+1 coin', width: `${Math.max(3, Math.min(100, item.value))}%` }))
   }
 
   const challengeRows = buildChallengeRows()
@@ -15380,23 +15380,23 @@ function LeaderboardView({
             <div className="ranking-v1398-copy">
               <span className="ranking-v1398-eyebrow">LIVE LEADERBOARD • BET+AI COMMUNITY</span>
               <h1>Ranking <span>Bet+AI</span></h1>
-              <p>Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. To centrum Twojego rankingu — szybki podgląd liderów, formy i poleceń.</p>
+              <p>Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. Szybki podgląd liderów, formy i wyników.</p>
 
               <div className="ranking-v1398-features">
                 <div>
                   <i>🏆</i>
                   <strong>Top typerzy</strong>
-                  <small>Najlepsze profile według wyniku i profitu</small>
+                  <small>Najlepsze profile według profitu</small>
                 </div>
                 <div>
                   <i>📈</i>
                   <strong>Live profit</strong>
-                  <small>Ranking odświeżany pod aktywność użytkowników</small>
+                  <small>Wyniki i forma w jednym miejscu</small>
                 </div>
                 <div>
                   <i>👥</i>
                   <strong>Społeczność</strong>
-                  <small>Obserwuj liderów i rozwijaj własny profil</small>
+                  <small>Obserwuj liderów rankingu</small>
                 </div>
               </div>
             </div>
@@ -15444,26 +15444,11 @@ function LeaderboardView({
             </div>
           </div>
 
-          <div className="glass-ranking-v4 ranking-v4-tabs">
-            <button type="button" className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>Ranking</button>
-            <button type="button" className={activeTab === 'referrals' ? 'active' : ''} onClick={() => setActiveTab('referrals')}>Polecenia</button>
-            <button type="button" className={activeTab === 'month' ? 'active' : ''} onClick={() => setActiveTab('month')}>Liderzy miesiąca</button>
+          <div className="ranking-v4-tabs ranking-v1400-tabs-single" aria-label="Zakładka rankingu">
+            <button type="button" className="active">Ranking</button>
           </div>
 
-          {activeTab === 'referrals' ? (
-            <div className="glass-ranking-v4 referrals-main-v999">
-              <h3>Program poleceń</h3>
-              <p>Udostępnij link i zbieraj aktywnych użytkowników. Nagrody za polecenia są naliczane w coinach.</p>
-              <div className="referral-code-v4 big">
-                <span>Kod polecający</span>
-                <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
-              </div>
-              <div className="referral-progress-v4">
-                <div className="progress-head-v4"><span>Postęp do bonusu</span><b>{referralCount} / 10</b></div>
-                <div className="progress-bar-v4"><i style={{ width: `${referralProgress}%` }}></i></div>
-              </div>
-            </div>
-          ) : renderRankingTable(mainRows)}
+          {renderRankingTable(mainRows)}
 
           <div className="ranking-v4-bottom-grid">
             <div className="glass-ranking-v4 ranking-v4-card hall-card-v4">
@@ -15471,7 +15456,7 @@ function LeaderboardView({
               <div className="hall-stage-v4">
                 <div className="hall-copy-v4">
                   <strong>Legendy Bet+AI</strong>
-                  <p>Najlepsi typerzy i najwyższy profit.</p>
+                  <p>Najlepsi typerzy, najwyższy profit i historyczne wyniki.</p>
                   <div className="hall-laurels-v4">
                     {leaderboardRows.slice(0, 3).map((row) => (
                       <button type="button" key={row.tipster_id || row.liveRank} onClick={() => openRow(row)}>
@@ -15490,7 +15475,7 @@ function LeaderboardView({
             </div>
 
             <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
-              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nagroda za każde: <b>1 żeton</b></span></div>
+              <div className="ranking-v4-card-head"><h3>Wyzwania tygodniowe</h3><span>⏱ Nagroda za każde: <b>1 coin</b></span></div>
               <div className="challenge-list-v4">
                 {challengeRows.map((row) => (
                   <div className={`challenge-item-v4 ${row.done ? 'is-done' : ''} ${row.claimed ? 'is-claimed' : ''}`} key={row.key}>
@@ -24255,7 +24240,7 @@ function App() {
       await fetchRankingChallengeClaims(userId)
       // Opóźniony refresh nie może cofnąć salda, bo fetchCurrentTokenBalance respektuje reward lock.
       window.setTimeout(() => { try { fetchCurrentTokenBalance() } catch (_) {} }, 1200)
-      showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 żeton. Powiadomienie dodane.` })
+      showToast({ type: 'success', title: 'Wyzwanie ukończone', message: `${challenge.title}: +1 coin. Powiadomienie dodane.` })
       return true
     } catch (error) {
       console.warn('claimRankingChallengeReward blocked because DB claim failed', error)

@@ -64817,3 +64817,251 @@ html.betai-fhd-monitor80-v1323 body #root{
     font-size:19px!important;
   }
 }
+
+
+/* WERSJA 1400 — Ranking 10/10: jedna zakładka, compact hero, lepsze dolne karty */
+.ranking-upgrade-v1398.ranking-static-v4{
+  gap:18px!important;
+}
+
+/* Hero bardziej premium i trochę niższy */
+.ranking-upgrade-v1398 .ranking-v4-hero{
+  min-height:270px!important;
+  padding:24px 26px!important;
+  margin-bottom:16px!important;
+  grid-template-columns:minmax(0,1.02fr) minmax(470px,.98fr)!important;
+  background:
+    linear-gradient(rgba(35,224,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(35,224,255,.04) 1px, transparent 1px),
+    radial-gradient(circle at 16% 22%,rgba(32,242,210,.14),transparent 24%),
+    radial-gradient(circle at 88% 12%,rgba(126,107,255,.16),transparent 26%),
+    linear-gradient(135deg,rgba(4,15,26,.99),rgba(7,20,34,.98) 54%,rgba(4,24,32,.99))!important;
+  background-size:40px 40px,40px 40px,auto,auto,auto!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-hero::after{
+  content:''!important;
+  position:absolute!important;
+  inset:auto 24px 28px 24px!important;
+  height:2px!important;
+  border-radius:999px!important;
+  background:linear-gradient(90deg,transparent,rgba(35,242,222,.9),rgba(113,117,255,.55),transparent)!important;
+  filter:blur(.15px)!important;
+  box-shadow:0 0 22px rgba(35,242,222,.22)!important;
+  opacity:.75!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-eyebrow{
+  margin-bottom:13px!important;
+  font-size:11.5px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-hero h1{
+  font-size:clamp(40px,4.15vw,58px)!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-hero p{
+  max-width:670px!important;
+  margin-top:14px!important;
+  font-size:15.5px!important;
+  line-height:1.55!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-features{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin-top:18px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-features div{
+  min-height:92px!important;
+  padding:13px 14px!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.022))!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-features i{
+  width:34px!important;
+  height:34px!important;
+  border-radius:12px!important;
+  font-size:17px!important;
+  margin-bottom:10px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-features strong{
+  font-size:14px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-features small{
+  font-size:12px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-stats{
+  gap:10px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-stats div{
+  min-height:72px!important;
+  padding:13px 14px!important;
+  border-radius:16px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-stats strong{
+  font-size:22px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-visual{
+  min-height:156px!important;
+  border-radius:20px!important;
+  background:
+    linear-gradient(rgba(44,224,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(44,224,255,.035) 1px, transparent 1px),
+    linear-gradient(135deg,rgba(6,20,34,.96),rgba(4,15,28,.98))!important;
+  background-size:34px 34px,34px 34px,auto!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-card.main{
+  left:18px!important;
+  bottom:18px!important;
+  max-width:285px!important;
+  padding:14px 16px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-card.mini{
+  right:18px!important;
+  top:18px!important;
+  max-width:156px!important;
+  padding:13px 15px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-card strong{
+  font-size:22px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-cup{
+  right:145px!important;
+  bottom:22px!important;
+  font-size:76px!important;
+  opacity:.22!important;
+}
+
+/* Jedna zakładka — usunięte dublowanie Polecenia/Liderzy */
+.ranking-upgrade-v1398 .ranking-v1400-tabs-single{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:0 0 14px!important;
+  gap:0!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1400-tabs-single button{
+  min-width:132px!important;
+  height:46px!important;
+  border-radius:16px!important;
+  padding:0 26px!important;
+  font-size:15px!important;
+}
+
+/* Tabela bliżej hero i bardziej zwarta */
+.ranking-upgrade-v1398 .ranking-v4-table-card{
+  border-radius:22px!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-row{
+  min-height:46px!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-row.head{
+  min-height:34px!important;
+}
+
+/* Dolne sekcje bardziej spójne z neon style */
+.ranking-upgrade-v1398 .ranking-v4-bottom-grid{
+  margin-top:18px!important;
+  gap:16px!important;
+  grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr)!important;
+}
+
+.ranking-upgrade-v1398 .hall-card-v4{
+  background:
+    radial-gradient(circle at 76% 50%,rgba(255,190,66,.22),transparent 30%),
+    radial-gradient(circle at 18% 0%,rgba(33,242,210,.08),transparent 30%),
+    linear-gradient(135deg,rgba(33,21,5,.92),rgba(5,15,25,.98))!important;
+  border-color:rgba(255,190,66,.18)!important;
+}
+
+.ranking-upgrade-v1398 .hall-copy-v4 strong{
+  color:#ffd25f!important;
+  text-shadow:0 0 18px rgba(255,201,74,.18)!important;
+}
+
+.ranking-upgrade-v1398 .hall-copy-v4 p{
+  max-width:330px!important;
+  line-height:1.45!important;
+}
+
+.ranking-upgrade-v1398 .trophy-v4{
+  filter:drop-shadow(0 0 34px rgba(255,196,64,.22))!important;
+}
+
+.ranking-upgrade-v1398 .challenge-card-v4{
+  background:
+    radial-gradient(circle at 82% 48%,rgba(35,226,255,.16),transparent 32%),
+    radial-gradient(circle at 20% 0%,rgba(35,242,210,.08),transparent 28%),
+    linear-gradient(135deg,rgba(5,18,30,.96),rgba(4,15,27,.99))!important;
+  border-color:rgba(35,226,255,.15)!important;
+}
+
+.ranking-upgrade-v1398 .challenge-reward-v4,
+.ranking-upgrade-v1398 .challenge-item-v4.is-done .challenge-reward-v4{
+  font-weight:1000!important;
+}
+
+/* Prawa kolumna: czytelny kod, bez przepełniania */
+.ranking-v4-sidebar .referral-code-v4 div{
+  grid-template-columns:minmax(0,1fr) 40px!important;
+  gap:8px!important;
+  padding:12px 12px!important;
+}
+
+.ranking-v4-sidebar .referral-code-v4 div strong{
+  font-size:19px!important;
+  letter-spacing:.01em!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.ranking-v4-sidebar .referral-code-v4 button{
+  width:40px!important;
+  height:38px!important;
+}
+
+/* Coin zamiast żeton — tylko wizualne dopięcie tekstu w wyzwaniach */
+.ranking-upgrade-v1398 .challenge-card-v4 .ranking-v4-card-head span b{
+  color:#20f2d2!important;
+}
+
+@media (max-width:1400px){
+  .ranking-upgrade-v1398 .ranking-v4-hero{
+    grid-template-columns:1fr!important;
+  }
+  .ranking-upgrade-v1398 .ranking-v1398-visual{
+    min-height:190px!important;
+  }
+}
+
+@media (max-width:760px){
+  .ranking-upgrade-v1398 .ranking-v4-hero{
+    padding:20px 16px!important;
+  }
+  .ranking-upgrade-v1398 .ranking-v1398-features,
+  .ranking-upgrade-v1398 .ranking-v4-bottom-grid{
+    grid-template-columns:1fr!important;
+  }
+  .ranking-upgrade-v1398 .ranking-v1400-tabs-single button{
+    width:100%!important;
+  }
+}
