@@ -11045,8 +11045,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         </div>
       </div>
 
-      <div className="community-v5-tabs glass-community-v5 community-pro-tabs-v1012 community-tabs-v1016">
+      <div className="community-v5-tabs glass-community-v5 community-pro-tabs-v1012 community-tabs-v1016 community-tabs-v1413">
         <button type="button" className={activeTab === 'feed' ? 'active' : ''} onClick={() => setActiveTab('feed')}>💬 Czat live</button>
+        <button type="button" className={activeTab === 'posts' ? 'active' : ''} onClick={() => setActiveTab('posts')}>📝 Posty</button>
         <button type="button" className={activeTab === 'rewards' ? 'active' : ''} onClick={() => setActiveTab('rewards')}>🏆 Nagrody</button>
       </div>
 
@@ -11058,7 +11059,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               {channelDefs.map((row, index) => (
                 <React.Fragment key={row.key}>
                   {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{row.group}</div> : null}
-                  <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
+                  <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab(row.key === 'kupony-spolecznosci' ? 'posts' : 'feed') }}>
                     {row.flagClass ? <span className={`channel-flag-v1412 ${row.flagClass}`} aria-hidden="true"></span> : <span>{row.icon}</span>}<b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
                   </button>
                 </React.Fragment>
@@ -11096,7 +11097,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               <p className="community-panel-sub-v1014">Kanały są żywe — wybór kanału filtruje czat i posty po `channel_key`.</p>
               <div className="community-channel-grid-v1014">
                 {channelDefs.map((row) => (
-                  <button type="button" key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }} className={activeCommunityChannel === row.key ? 'active' : ''}>
+                  <button type="button" key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab(row.key === 'kupony-spolecznosci' ? 'posts' : 'feed') }} className={activeCommunityChannel === row.key ? 'active' : ''}>
                     <span>{row.icon}</span>
                     <strong>{row.label}</strong>
                     <small>{channelCounts[row.key] || 0} aktywności</small>
@@ -11107,7 +11108,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             </div>
           ) : activeTab === 'rewards' ? (
             <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014">
-              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 coin</b> • limit raz na 24h</span></div>
+              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Coin dostajesz dopiero po wykonaniu akcji.</span></div>
               {rewardRows.map(reward => (
                 <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={reward.key}>
                   <span>{reward.icon}</span>
@@ -11117,6 +11118,26 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 </div>
               ))}
             </div>
+          ) : activeTab === 'posts' ? (
+            <>
+              <div className="community-pro-feed-v1012">
+                <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
+                  <div className="composer-v5-head">
+                    <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
+                    <div><strong>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Dodaj kupon społeczności' : `Post w kanale #${activeChannelMeta.label}`}</strong><small>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć realny kupon: screen, kurs, stawkę, status i krótki opis.' : 'Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.'}</small></div>
+                  </div>
+                  <div className="composer-v5-row">
+                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wklej realny kupon, kurs, stawkę, status albo screen z bukmachera...' : `Napisz post w #${activeChannelMeta.label}...`} />
+                    <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
+                  </div>
+                </div>
+
+                {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">Ładuję społeczność...</div> : null}
+                {!loadingCommunity && !filteredPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>Brak postów w tym kanale.</strong><span>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć pierwszy realny kupon społeczności.' : `Opublikuj pierwszy realny wpis w #${activeChannelMeta.label}.`}</span></div> : null}
+
+                {filteredPosts.slice(0, 10).map(renderPostCard)}
+              </div>
+            </>
           ) : (
             <>
               <div className="glass-community-v5 pro-chat-panel-v1012 pro-chat-panel-v1014 live-chat-real-v1017">
@@ -11179,24 +11200,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className="chat-send-v1023" disabled={busy || (!chatText.trim() && !chatAttachment)} onClick={sendChatMessage}>➤</button>
                   </div>
                 </div>
-              </div>
-
-              <div className="community-pro-feed-v1012">
-                <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
-                  <div className="composer-v5-head">
-                    <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
-                    <div><strong>Post w kanale #{activeChannelMeta.label}</strong><small>Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.</small></div>
-                  </div>
-                  <div className="composer-v5-row">
-                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wklej realny kupon, kurs, stawkę, status albo screen z bukmachera...' : `Napisz post w #${activeChannelMeta.label}...`} />
-                    <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
-                  </div>
-                </div>
-
-                {loadingCommunity ? <div className="glass-community-v5 community-empty-v1008">Ładuję społeczność...</div> : null}
-                {!loadingCommunity && !filteredPosts.length ? <div className="glass-community-v5 community-empty-v1008"><strong>Brak postów w tym kanale.</strong><span>Opublikuj pierwszy realny wpis w #{activeChannelMeta.label}.</span></div> : null}
-
-                {filteredPosts.slice(0, 10).map(renderPostCard)}
               </div>
             </>
           )}

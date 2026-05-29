@@ -65732,3 +65732,117 @@ html.betai-fhd-monitor80-v1323 body #root{
     0 0 22px rgba(34,242,230,.20),
     inset 0 1px 0 rgba(255,255,255,.24)!important;
 }
+
+
+/* WERSJA 1413 — Społeczność: koniec chaosu, czat i posty rozdzielone */
+.community-10-v1017 .community-tabs-v1413{
+  display:flex!important;
+  gap:12px!important;
+}
+
+.community-10-v1017 .community-tabs-v1413 button{
+  min-width:138px!important;
+}
+
+.community-10-v1017 .community-pro-center-v1012{
+  display:block!important;
+}
+
+.community-10-v1017 .pro-chat-panel-v1012,
+.community-10-v1017 .community-pro-feed-v1012,
+.community-10-v1017 .community-tab-panel-v1014{
+  margin-top:0!important;
+}
+
+.community-10-v1017 .pro-chat-panel-v1012{
+  min-height:520px!important;
+}
+
+.community-10-v1017 .pro-chat-list-v1012{
+  min-height:340px!important;
+  max-height:430px!important;
+}
+
+.community-10-v1017 .community-pro-feed-v1012{
+  display:grid!important;
+  gap:16px!important;
+}
+
+.community-10-v1017 .composer-pro-v1014{
+  border-radius:22px!important;
+  padding:18px!important;
+  border:1px solid rgba(34,242,230,.16)!important;
+  background:
+    radial-gradient(circle at 5% 15%,rgba(34,242,230,.12),transparent 30%),
+    linear-gradient(135deg,rgba(7,28,38,.96),rgba(4,17,30,.98))!important;
+}
+
+.community-10-v1017 .composer-v5-head{
+  margin-bottom:14px!important;
+}
+
+.community-10-v1017 .composer-v5-head strong{
+  font-size:17px!important;
+  color:#f5feff!important;
+}
+
+.community-10-v1017 .composer-v5-head small{
+  color:#9fb8c9!important;
+  font-size:13px!important;
+}
+
+.community-10-v1017 .composer-v5-row{
+  display:grid!important;
+  grid-template-columns:1fr 138px!important;
+  gap:12px!important;
+}
+
+.community-10-v1017 .composer-v5-row input{
+  min-height:48px!important;
+  border-radius:15px!important;
+}
+
+.community-10-v1017 .composer-v5-row button{
+  min-height:48px!important;
+  border-radius:15px!important;
+}
+
+.community-10-v1017 .community-empty-v1008{
+  border-radius:22px!important;
+  padding:30px 18px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(34,242,230,.08),transparent 34%),
+    linear-gradient(135deg,rgba(6,22,34,.92),rgba(3,13,24,.96))!important;
+}
+
+.community-10-v1017 .feed-card-v5{
+  border-radius:22px!important;
+  padding:18px!important;
+}
+
+.community-10-v1017 .pro-pin-v1012{
+  padding:12px 14px!important;
+  border-radius:15px!important;
+}
+
+.community-10-v1017 .pro-pin-v1012 span{
+  line-height:1.35!important;
+}
+
+/* Kupony społeczności — karta bardziej czytelna */
+.community-10-v1017 .composer-v5-row input::placeholder,
+.community-10-v1017 .pro-chat-input-v1012 input::placeholder{
+  color:#8faabe!important;
+}
+
+@media (max-width: 920px){
+  .community-10-v1017 .community-tabs-v1413{
+    overflow:auto!important;
+  }
+  .community-10-v1017 .community-tabs-v1413 button{
+    min-width:118px!important;
+  }
+  .community-10-v1017 .composer-v5-row{
+    grid-template-columns:1fr!important;
+  }
+}
