@@ -10459,6 +10459,47 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const activeChannelMeta = channelDefs.find(ch => ch.key === activeCommunityChannel) || channelDefs[0]
 
+  const communityPinnedMessages = {
+    ogolny: {
+      title: '📌 Przypięta wiadomość',
+      text: 'Witamy w społeczności Bet+AI. Pamiętaj o regulaminie i baw się dobrze.'
+    },
+    english: {
+      title: '📌 Pinned message',
+      text: 'Welcome to the Bet+AI community. Please follow the rules and enjoy your stay.'
+    },
+    espanol: {
+      title: '📌 Mensaje fijado',
+      text: 'Bienvenido a la comunidad Bet+AI. Respeta las reglas y disfruta de la comunidad.'
+    },
+    deutsch: {
+      title: '📌 Angeheftete Nachricht',
+      text: 'Willkommen in der Bet+AI-Community. Bitte beachte die Regeln und viel Spaß.'
+    },
+    'pilka-nozna': {
+      title: '📌 Przypięta wiadomość',
+      text: 'Kanał piłkarski społeczności Bet+AI. Rozmawiaj o meczach, analizach i typach.'
+    },
+    'kupony-spolecznosci': {
+      title: '📌 Przypięta wiadomość',
+      text: 'Tutaj wrzucamy realne kupony społeczności. Dodaj screen, kurs, stawkę i status. Nie pokazuj danych wrażliwych.'
+    },
+    'zaklady-na-zywo': {
+      title: '📌 Przypięta wiadomość',
+      text: 'Kanał live betting. Wrzucaj szybkie aktualizacje i typy na żywo.'
+    },
+    'typy-premium': {
+      title: '📌 Przypięta wiadomość',
+      text: 'Tutaj rozmawiamy o typach premium i jakościowych analizach.'
+    },
+    wygrane: {
+      title: '📌 Przypięta wiadomość',
+      text: 'Pochwal się wygraną i pokaż najlepsze trafione kupony społeczności.'
+    }
+  }
+
+  const activePinnedMessage = communityPinnedMessages[activeCommunityChannel] || communityPinnedMessages.ogolny
+
   const openCommunityProfile = (item = {}) => {
     const ref = item.author_id || item.id || item.user_id || item.email || item.author_email || item.username || item.author_name
     const name = getCommunityDisplayName(item)
@@ -10788,7 +10829,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
-      const { data, error } = await supabase.rpc('claim_community_reward_v1409', {
+      const { data, error } = await supabase.rpc('claim_community_reward_v1415', {
         p_user_id: user.id,
         p_email: userEmail,
         p_reward_key: reward.key,
@@ -10796,8 +10837,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       })
       if (error) throw error
       if (data?.claimed === false) {
-        setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
-        onToast?.({ type: 'info', title: 'Społeczność', message: data?.message || 'Ta nagroda była już odebrana.' })
+        if (data?.already_claimed) {
+          setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
+        }
+        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Społeczność', message: data?.message || 'Najpierw wykonaj akcję w społeczności, potem odbierz nagrodę.' })
         await loadCommunity()
         return
       }
@@ -11145,7 +11188,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <h3>#{activeChannelMeta.label} <span>• {filteredChatMessages.length} wiadomości</span></h3>
                   <button type="button">🔗</button>
                 </div>
-                <div className="pro-pin-v1012"><b>📌 Przypięta wiadomość</b><span>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Tutaj wrzucamy realne kupony społeczności. Dodaj screen, kurs, stawkę i status. Nie pokazuj danych wrażliwych.' : 'Witamy w społeczności Bet+AI. Pamiętaj o regulaminie i baw się dobrze.'}</span></div>
+                <div className="pro-pin-v1012"><b>{activePinnedMessage.title}</b><span>{activePinnedMessage.text}</span></div>
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url

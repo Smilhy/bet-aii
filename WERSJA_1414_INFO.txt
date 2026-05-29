@@ -1,0 +1,12 @@
+WERSJA 1414 — SPOŁECZNOŚĆ MULTI-LANGUAGE PINNED MESSAGE
+
+Zrobione:
+- przypięta wiadomość w kanałach językowych jest teraz dopasowana do języka kanału,
+- Polski = wiadomość po polsku,
+- English / UK = wiadomość po angielsku,
+- Español = wiadomość po hiszpańsku,
+- Deutsch = wiadomość po niemiecku,
+- pozostałe kanały mają własne, sensowne opisy.
+
+SQL:
+- bez zmian, nic nie trzeba wklejać do Supabase.
