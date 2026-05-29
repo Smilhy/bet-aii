@@ -63748,3 +63748,53 @@ html.betai-fhd-monitor80-v1323 body #root{
   .tipster-pricing-grid-v1374{grid-template-columns:1fr!important}
   .tipster-pricing-savebar-v1374 button{width:100%!important;min-width:0!important}
 }
+
+
+/* WERSJA 1375 — poprawka overlap badge/toggle w miesięcznym pakiecie */
+.tipster-plan-toggle-v1374{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  padding:0!important;
+  justify-content:center!important;
+}
+.tipster-plan-toggle-v1374 em{
+  display:none!important;
+}
+.tipster-plan-toggle-v1374 b{
+  width:12px!important;
+  height:12px!important;
+}
+.tipster-plan-recommended-v1374{
+  top:14px!important;
+  right:54px!important;
+  max-width:150px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  z-index:2!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-top-v1374{
+  padding-right:178px!important;
+}
+@media (max-width: 1300px){
+  .tipster-plan-recommended-v1374{
+    right:54px!important;
+    max-width:135px!important;
+  }
+  .tipster-plan-card-v1374.recommended .tipster-plan-top-v1374{
+    padding-right:165px!important;
+  }
+}
+@media (max-width: 760px){
+  .tipster-plan-recommended-v1374{
+    position:static!important;
+    display:inline-flex!important;
+    width:max-content!important;
+    max-width:100%!important;
+    margin-bottom:-6px!important;
+  }
+  .tipster-plan-card-v1374.recommended .tipster-plan-top-v1374{
+    padding-right:0!important;
+  }
+}

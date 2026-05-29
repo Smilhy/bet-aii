@@ -1,0 +1,10 @@
+WERSJA 1375
+
+Poprawka:
+- naprawiony błąd w miesięcznym pakiecie cennika,
+- badge 'Najczęściej wybierane' nie nachodzi już na przełącznik Aktywny,
+- przełącznik został skrócony wizualnie do eleganckiej świecącej kropki,
+- wygląd i logika cennika bez zmian.
+
+Plik zmieniony:
+- src/styles.css
