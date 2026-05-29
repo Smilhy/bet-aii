@@ -1,0 +1,13 @@
+WERSJA 1379
+
+Poprawka:
+- bilans na karcie typu jest teraz kolorowany według wartości:
+  - plus = zielony,
+  - minus = czerwony,
+  - zero = neutralny/biały,
+- poprawione dla kart typów w profilu i dashboardzie,
+- logika bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

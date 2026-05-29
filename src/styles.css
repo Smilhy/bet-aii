@@ -63874,3 +63874,32 @@ html.betai-fhd-monitor80-v1323 body #root{
   right:auto!important;
   transform:translateX(-50%)!important;
 }
+
+
+/* WERSJA 1379 — bilans na karcie typu: plus zielony, minus czerwony, zero neutralne */
+.profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.dashboard-ticket-v6 .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-positive-text,
+.ticket-mini-stats-v876 b.profit-positive-text{
+  color:#24f3a6!important;
+  text-shadow:0 0 10px rgba(36,243,166,.22)!important;
+}
+
+.profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.dashboard-ticket-v6 .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-negative-text,
+.ticket-mini-stats-v876 b.profit-negative-text{
+  color:#ff5d74!important;
+  text-shadow:0 0 10px rgba(255,93,116,.16)!important;
+}
+
+.profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-neutral-text,
+.dashboard-ticket-v6 .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-neutral-text,
+.profile-v4-tips-page .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-neutral-text,
+.profile-all-tips-list .profile-ticket-v6-left .ticket-mini-stats-v876 b.profit-neutral-text,
+.ticket-mini-stats-v876 b.profit-neutral-text{
+  color:#f4fbff!important;
+  text-shadow:none!important;
+}

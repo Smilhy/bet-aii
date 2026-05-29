@@ -10246,7 +10246,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={dashboardAuthorStats.profitValue >= 0 ? 'profit-positive-text' : 'profit-negative-text'}>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
@@ -17936,7 +17936,9 @@ function ProfileLiveTipCard({
             <div className="ticket-mini-stats-v876">
               <span>Yield: <b>{authorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b style={{ color: (Number(authorStats?.profitValue || 0) >= 0) ? '#22f4a8' : '#ff5d74', textShadow: (Number(authorStats?.profitValue || 0) >= 0) ? '0 0 10px rgba(34,244,168,.20)' : 'none' }}>{authorStats.profitLabel}</b></span>
+              <span>Bilans: <b
+                className={Number(authorStats?.profitValue || 0) > 0 ? 'profit-positive-text' : Number(authorStats?.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}
+              >{authorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
