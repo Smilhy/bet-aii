@@ -65065,3 +65065,149 @@ html.betai-fhd-monitor80-v1323 body #root{
     width:100%!important;
   }
 }
+
+
+/* WERSJA 1401 — Ranking final clean: bez filtrów, bez zakładki, lepsza galeria */
+.ranking-upgrade-v1398 .ranking-v1398-filters,
+.ranking-upgrade-v1398 .ranking-v1400-tabs-single,
+.ranking-upgrade-v1398 .ranking-v4-tabs.ranking-v1400-tabs-single{
+  display:none!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v4-table-card{
+  margin-top:18px!important;
+}
+
+/* Po usunięciu filtrów statystyki w hero ustawiają się czysto od góry */
+.ranking-upgrade-v1398 .ranking-v1398-side{
+  align-content:center!important;
+}
+
+.ranking-upgrade-v1398 .ranking-v1398-stats{
+  margin-top:0!important;
+}
+
+/* Galeria sławy — większe odstępy, większa czcionka, czytelniejsze kolory */
+.ranking-upgrade-v1398 .hall-card-v4{
+  padding:20px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 77% 45%,rgba(255,194,66,.26),transparent 34%),
+    radial-gradient(circle at 8% 0%,rgba(36,242,210,.09),transparent 28%),
+    linear-gradient(135deg,rgba(34,22,4,.92),rgba(5,15,25,.99))!important;
+  border-color:rgba(255,191,58,.24)!important;
+}
+
+.ranking-upgrade-v1398 .hall-card-v4 .ranking-v4-card-head h3{
+  font-size:17px!important;
+  color:#fff6d8!important;
+}
+
+.ranking-upgrade-v1398 .hall-copy-v4 strong{
+  font-size:27px!important;
+  line-height:1.05!important;
+  color:#ffd45f!important;
+}
+
+.ranking-upgrade-v1398 .hall-copy-v4 p{
+  margin-top:8px!important;
+  margin-bottom:18px!important;
+  font-size:15px!important;
+  line-height:1.5!important;
+  color:#f1d58c!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4{
+  gap:12px!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4 button{
+  position:relative!important;
+  grid-template-columns:42px 1fr auto!important;
+  gap:12px!important;
+  min-height:62px!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  background:
+    linear-gradient(90deg,rgba(255,196,58,.075),rgba(6,18,29,.74) 42%,rgba(6,18,29,.92))!important;
+  border:1px solid rgba(255,198,71,.14)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 20px rgba(0,0,0,.16)!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4 button:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(255,207,79,.3)!important;
+  background:
+    linear-gradient(90deg,rgba(255,196,58,.12),rgba(6,22,32,.78) 45%,rgba(6,18,29,.94))!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4 .mini-avatar-v4{
+  width:42px!important;
+  height:42px!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401{
+  display:grid!important;
+  gap:3px!important;
+  min-width:0!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 strong{
+  color:#ffe081!important;
+  font-size:16px!important;
+  font-weight:1000!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 small{
+  color:#f5d58b!important;
+  font-size:12.5px!important;
+  font-weight:800!important;
+  line-height:1.2!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b{
+  color:#fff7da!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  line-height:1.2!important;
+  text-shadow:0 0 12px rgba(255,206,68,.18)!important;
+}
+
+.ranking-upgrade-v1398 .hall-laurels-v4 button em{
+  display:grid!important;
+  place-items:center!important;
+  width:28px!important;
+  height:28px!important;
+  border-radius:999px!important;
+  background:rgba(255,203,73,.08)!important;
+  border:1px solid rgba(255,203,73,.14)!important;
+  font-style:normal!important;
+  font-size:14px!important;
+  color:#ffd35e!important;
+}
+
+.ranking-upgrade-v1398 .hall-btn-v4{
+  margin-top:16px!important;
+  min-height:48px!important;
+  border-radius:14px!important;
+  font-size:16px!important;
+  color:#fff2bd!important;
+  background:linear-gradient(90deg,rgba(94,58,6,.92),rgba(55,34,4,.96))!important;
+  border:1px solid rgba(255,198,58,.22)!important;
+}
+
+.ranking-upgrade-v1398 .hall-btn-v4:hover{
+  filter:brightness(1.08)!important;
+}
+
+.ranking-upgrade-v1398 .trophy-v4{
+  font-size:155px!important;
+}
+
+.ranking-upgrade-v1398 .ball-v4{
+  font-size:66px!important;
+}

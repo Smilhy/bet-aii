@@ -9919,7 +9919,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 </div>
               </>
             ) : (
-              <div className="betfolio-ticket-profit is-free-mode">Typ darmowy — cena 0.00 zł, bez blokady premium.</div>
+              <div className="betfolio-ticket-profit is-free-mode">Typ darmowy — cena 0.00, bez blokady premium.</div>
             )}
           </div>
 
@@ -11637,11 +11637,11 @@ function ArticlesView() {
   ]
 
   const sideTipsters = [
-    ['1', 'smilhytv', 'ROI: +20.6% • WR: 0.0%', 'Typy: 72 • Wygrane: 0', '+0.00 zł'],
-    ['2', 'buchajson1988', 'ROI: +18.1% • WR: 0.0%', 'Typy: 50 • Wygrane: 0', '+0.00 zł'],
-    ['3', 'pirotek1987', 'ROI: +17.2% • WR: 0.0%', 'Typy: 61 • Wygrane: 0', '+0.00 zł'],
-    ['4', 'krystian_typer', 'ROI: +16.3% • WR: 0.0%', 'Typy: 49 • Wygrane: 0', '+0.00 zł'],
-    ['5', 'adrianbets', 'ROI: +15.0% • WR: 0.0%', 'Typy: 38 • Wygrane: 0', '+0.00 zł'],
+    ['1', 'smilhytv', 'ROI: +20.6% • WR: 0.0%', 'Typy: 72 • Wygrane: 0', '+0.00'],
+    ['2', 'buchajson1988', 'ROI: +18.1% • WR: 0.0%', 'Typy: 50 • Wygrane: 0', '+0.00'],
+    ['3', 'pirotek1987', 'ROI: +17.2% • WR: 0.0%', 'Typy: 61 • Wygrane: 0', '+0.00'],
+    ['4', 'krystian_typer', 'ROI: +16.3% • WR: 0.0%', 'Typy: 49 • Wygrane: 0', '+0.00'],
+    ['5', 'adrianbets', 'ROI: +15.0% • WR: 0.0%', 'Typy: 38 • Wygrane: 0', '+0.00'],
   ]
 
   const aiDayRows = [
@@ -12215,7 +12215,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
   const topTipsters = [
     ['smilhytv', 'Typy: 72 • WIN: 62.1%', '+1250.75 zł'],
     ['buchajsonek1988', 'Typy: 67 • WIN: 59.8%', '+980.50 zł'],
-    ['piotrek1987', 'Typy: 61 • WIN: 61.0%', '+750.00 zł'],
+    ['piotrek1987', 'Typy: 61 • WIN: 61.0%', '+750.00'],
     ['krystian_typer', 'Typy: 54 • WIN: 57.2%', '+620.30 zł'],
     ['adrianbets', 'Typy: 48 • WIN: 55.4%', '+410.25 zł']
   ]
@@ -15346,7 +15346,7 @@ function LeaderboardView({
             <span>{Number(row.roi || row.yield || 0).toFixed(2)}%</span>
             <span>{Number(row.totalTips || row.total_tips || 0)}</span>
             <span>{Number(row.followers || 0)}</span>
-            <span className="profit-v4">{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</span>
+            <span className="profit-v4">{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatRankingAmount(row.earnings || row.profit || 0)}</span>
             <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
             <span>
               <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
@@ -15355,16 +15355,17 @@ function LeaderboardView({
             </span>
           </button>
         ))}
-        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00 zł</span><span>-</span><span></span></div>}
+        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span></span></div>}
       </div>
       <button type="button" className="full-ranking-btn-v4" onClick={() => onRefreshRanking?.()}>Odśwież ranking</button>
     </div>
   )
 
+  const formatRankingAmount = (value) => Number(value || 0).toFixed(2)
   const heroLeaderRow = leaderboardRows[0] || null
   const heroLeaderName = heroLeaderRow?.rowName || 'Top typer'
   const heroLeaderProfitValue = Number(heroLeaderRow?.earnings ?? heroLeaderRow?.profit ?? 0)
-  const heroLeaderProfit = heroLeaderRow ? `${heroLeaderProfitValue >= 0 ? '+' : ''}${formatMoney(heroLeaderProfitValue)}` : '0.00 zł'
+  const heroLeaderProfit = heroLeaderRow ? `${heroLeaderProfitValue >= 0 ? '+' : ''}${formatRankingAmount(heroLeaderProfitValue)}` : '0.00'
   const heroLeaderWinrate = heroLeaderRow ? `${Number(heroLeaderRow?.winrate || 0).toFixed(1)}%` : '0.0%'
 
   const mainRows =
@@ -15402,11 +15403,6 @@ function LeaderboardView({
             </div>
 
             <div className="ranking-v1398-side">
-              <div className="ranking-v4-filters ranking-v1398-filters">
-                <button type="button" onClick={() => setSportFilter(sportFilter === 'all' ? 'piłka' : 'all')}>{sportFilter === 'all' ? 'Wszystkie sporty' : 'Piłka nożna'} ⌄</button>
-                <button type="button" onClick={() => setPeriodFilter(periodFilter === 'week' ? 'all' : 'week')}>{periodFilter === 'week' ? 'Tydzień' : 'Cały okres'} ⌄</button>
-              </div>
-
               <div className="ranking-v1398-stats">
                 <div>
                   <span>Typerów w tabeli</span>
@@ -15444,10 +15440,6 @@ function LeaderboardView({
             </div>
           </div>
 
-          <div className="ranking-v4-tabs ranking-v1400-tabs-single" aria-label="Zakładka rankingu">
-            <button type="button" className="active">Ranking</button>
-          </div>
-
           {renderRankingTable(mainRows)}
 
           <div className="ranking-v4-bottom-grid">
@@ -15461,7 +15453,12 @@ function LeaderboardView({
                     {leaderboardRows.slice(0, 3).map((row) => (
                       <button type="button" key={row.tipster_id || row.liveRank} onClick={() => openRow(row)}>
                         {renderAvatar(row, 'mini-avatar-v4')}
-                        <span>{row.rowName}<br/><small>Yield {Number(row.roi || row.yield || 0).toFixed(2)}% • Profit {Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatMoney(row.earnings || row.profit || 0)}</small></span>
+                        <span className="hall-laurel-copy-v1401">
+                          <strong>{row.rowName}</strong>
+                          <small>Yield {Number(row.roi || row.yield || 0).toFixed(2)}%</small>
+                          <b>Profit {Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatRankingAmount(row.earnings || row.profit || 0)}</b>
+                        </span>
+                        <em>🏆</em>
                       </button>
                     ))}
                   </div>
@@ -18734,7 +18731,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
   const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(profileStatsSource?.imported_yield || 0) || 0)
-  // CORE LOCK v986: pokazujemy wyłącznie realne wsparcie/napiwki, domyślnie 0.00 zł.
+  // CORE LOCK v986: pokazujemy wyłącznie realne wsparcie/napiwki, domyślnie 0.00.
   const tipsSupportAmount = Math.max(0, realTipsSupportAmount)
 
   const statsCards = [
