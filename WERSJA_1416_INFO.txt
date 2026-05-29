@@ -1,0 +1,13 @@
+WERSJA 1416 — KUPONY SPOŁECZNOŚCI: WIADOMOŚĆ + ZAŁĄCZNIK
+
+Zmienione:
+- kliknięcie kanału 🎟️ Kupony społeczności otwiera teraz Czat live, nie Posty,
+- kupony wrzuca się jako normalną wiadomość z załącznikiem/screenem przez ikonę 📎,
+- dodana pomoc nad czatem: jak wrzucić kupon,
+- placeholder mówi jasno: "Napisz wiadomość i dodaj screen kuponu przez ikonę 📎...",
+- przypięta wiadomość też mówi o screenie przez 📎,
+- zakładka Posty zostaje do zwykłych wpisów tekstowych.
+
+SQL:
+- bez zmian względem 1415.
+- jeśli SQL 1415 był już odpalony, nic nowego nie trzeba wklejać.

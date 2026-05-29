@@ -10482,7 +10482,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     },
     'kupony-spolecznosci': {
       title: '📌 Przypięta wiadomość',
-      text: 'Tutaj wrzucamy realne kupony społeczności. Dodaj screen, kurs, stawkę i status. Nie pokazuj danych wrażliwych.'
+      text: 'Tutaj wrzucamy realne kupony jako wiadomość z załącznikiem. Dodaj screen przez 📎, kurs, stawkę i status. Nie pokazuj danych wrażliwych.'
     },
     'zaklady-na-zywo': {
       title: '📌 Przypięta wiadomość',
@@ -11102,7 +11102,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               {channelDefs.map((row, index) => (
                 <React.Fragment key={row.key}>
                   {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{row.group}</div> : null}
-                  <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab(row.key === 'kupony-spolecznosci' ? 'posts' : 'feed') }}>
+                  <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
                     {row.flagClass ? <span className={`channel-flag-v1412 ${row.flagClass}`} aria-hidden="true"></span> : <span>{row.icon}</span>}<b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
                   </button>
                 </React.Fragment>
@@ -11140,7 +11140,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               <p className="community-panel-sub-v1014">Kanały są żywe — wybór kanału filtruje czat i posty po `channel_key`.</p>
               <div className="community-channel-grid-v1014">
                 {channelDefs.map((row) => (
-                  <button type="button" key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab(row.key === 'kupony-spolecznosci' ? 'posts' : 'feed') }} className={activeCommunityChannel === row.key ? 'active' : ''}>
+                  <button type="button" key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }} className={activeCommunityChannel === row.key ? 'active' : ''}>
                     <span>{row.icon}</span>
                     <strong>{row.label}</strong>
                     <small>{channelCounts[row.key] || 0} aktywności</small>
@@ -11167,10 +11167,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 <div className="glass-community-v5 composer-v5 pro-composer-v1012 composer-pro-v1014">
                   <div className="composer-v5-head">
                     <span className={`composer-avatar-v5 ${userAvatar ? 'has-avatar' : ''}`}>{userAvatar ? <img src={userAvatar} alt="" /> : userInitials}</span>
-                    <div><strong>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Dodaj kupon społeczności' : `Post w kanale #${activeChannelMeta.label}`}</strong><small>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć realny kupon: screen, kurs, stawkę, status i krótki opis.' : 'Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.'}</small></div>
+                    <div><strong>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Dodaj kupon społeczności' : `Post w kanale #${activeChannelMeta.label}`}</strong><small>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Do screenów kuponów użyj zakładki Czat live i ikony 📎. Tutaj możesz dodać sam opis tekstowy.' : 'Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.'}</small></div>
                   </div>
                   <div className="composer-v5-row">
-                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wklej realny kupon, kurs, stawkę, status albo screen z bukmachera...' : `Napisz post w #${activeChannelMeta.label}...`} />
+                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Opisz kupon tekstowo albo przejdź do Czat live, żeby dodać screen przez 📎...' : `Napisz post w #${activeChannelMeta.label}...`} />
                     <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
                   </div>
                 </div>
@@ -11189,6 +11189,12 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <button type="button">🔗</button>
                 </div>
                 <div className="pro-pin-v1012"><b>{activePinnedMessage.title}</b><span>{activePinnedMessage.text}</span></div>
+                {activeCommunityChannel === 'kupony-spolecznosci' ? (
+                  <div className="coupon-chat-help-v1416">
+                    <strong>🎟️ Jak wrzucić kupon?</strong>
+                    <span>Napisz krótką wiadomość, kliknij <b>📎</b> i dodaj screen kuponu z bukmachera.</span>
+                  </div>
+                ) : null}
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url
@@ -11232,7 +11238,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     </div>
                   ) : null}
                   <div className="pro-chat-input-v1012 chat-input-active-v1023">
-                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć kupon społeczności albo opisz typy z kuponu...' : `Napisz wiadomość w #${activeChannelMeta.label}...`} />
+                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Napisz wiadomość i dodaj screen kuponu przez ikonę 📎...' : `Napisz wiadomość w #${activeChannelMeta.label}...`} />
                     <div className="chat-tools-v1023">
                       <button type="button" title="Dodaj emoji" onClick={() => setEmojiPickerOpen(prev => !prev)}>😊</button>
                       <label title="Dodaj plik">

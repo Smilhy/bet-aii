@@ -65846,3 +65846,48 @@ html.betai-fhd-monitor80-v1323 body #root{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* WERSJA 1416 — Kupony społeczności: normalna wiadomość + załącznik/screen */
+.community-10-v1017 .coupon-chat-help-v1416{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  margin:10px 0 12px!important;
+  padding:12px 14px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(34,242,230,.18)!important;
+  background:
+    radial-gradient(circle at 0% 50%,rgba(34,242,230,.12),transparent 30%),
+    linear-gradient(90deg,rgba(7,27,39,.94),rgba(5,18,31,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+.community-10-v1017 .coupon-chat-help-v1416 strong{
+  color:#f5feff!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+}
+
+.community-10-v1017 .coupon-chat-help-v1416 span{
+  color:#9fb8c9!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  text-align:right!important;
+}
+
+.community-10-v1017 .coupon-chat-help-v1416 span b{
+  color:#25f2dc!important;
+}
+
+@media (max-width:760px){
+  .community-10-v1017 .coupon-chat-help-v1416{
+    flex-direction:column!important;
+    align-items:flex-start!important;
+  }
+  .community-10-v1017 .coupon-chat-help-v1416 span{
+    text-align:left!important;
+  }
+}
