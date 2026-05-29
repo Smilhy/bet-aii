@@ -63798,3 +63798,62 @@ html.betai-fhd-monitor80-v1323 body #root{
     padding-right:0!important;
   }
 }
+
+
+/* WERSJA 1376 — miesięczny plan: badge na środku + zielona kropka za napisem */
+.tipster-plan-card-v1374.recommended{
+  padding-top:44px!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-recommended-v1374{
+  position:absolute!important;
+  top:14px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  max-width:none!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  z-index:3!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-toggle-v1374{
+  position:absolute!important;
+  top:14px!important;
+  left:calc(50% + 102px)!important;
+  right:auto!important;
+  transform:none!important;
+  z-index:4!important;
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  border-color:rgba(62,245,190,.30)!important;
+  background:rgba(28,177,126,.10)!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-toggle-v1374 b{
+  width:11px!important;
+  height:11px!important;
+  background:#3cf3ba!important;
+  box-shadow:0 0 14px rgba(58,243,186,.46)!important;
+}
+.tipster-plan-card-v1374.recommended .tipster-plan-top-v1374{
+  padding-right:0!important;
+}
+@media (max-width:760px){
+  .tipster-plan-card-v1374.recommended{
+    padding-top:18px!important;
+  }
+  .tipster-plan-card-v1374.recommended .tipster-plan-recommended-v1374{
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    transform:none!important;
+    justify-self:center!important;
+    margin:0 auto -4px!important;
+  }
+  .tipster-plan-card-v1374.recommended .tipster-plan-toggle-v1374{
+    position:absolute!important;
+    top:14px!important;
+    right:14px!important;
+    left:auto!important;
+  }
+}

@@ -1,0 +1,10 @@
+WERSJA 1376
+
+Poprawka cennika:
+- w pakiecie 1 miesiąc napis 'Najczęściej wybierane' jest teraz wyśrodkowany,
+- zielona kropka aktywności jest za napisem, po prawej stronie,
+- usunięte nakładanie elementów,
+- logika bez zmian.
+
+Plik zmieniony:
+- src/styles.css
