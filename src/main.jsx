@@ -11350,7 +11350,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong><button type="button">za akcję</button></div>
+            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">

@@ -66414,3 +66414,13 @@ html.betai-fhd-monitor80-v1323 body #root{
 .community-10-v1017 .suggested-row-v1020:hover{
   border-color:rgba(34,242,230,.28)!important;
 }
+
+
+/* WERSJA 1422 — Społeczność: usunięty badge "za akcję" z Misji aktywności */
+.community-10-v1017 .pro-missions-head-v1012{
+  justify-content:flex-start!important;
+}
+
+.community-10-v1017 .pro-missions-head-v1012 button{
+  display:none!important;
+}
