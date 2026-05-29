@@ -65373,3 +65373,63 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(9){
   justify-self:end!important;
 }
+
+
+/* WERSJA 1407 — Ranking: load more zamiast Odśwież ranking */
+.full-ranking-btn-v4{
+  display:none!important;
+}
+
+.ranking-loadmore-v1407{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  margin-top:12px!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(34,242,210,.12)!important;
+  background:linear-gradient(90deg,rgba(7,25,34,.92),rgba(4,17,30,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+.ranking-loadmore-v1407 span{
+  color:#8faabe!important;
+  font-size:13px!important;
+  font-weight:850!important;
+}
+
+.ranking-loadmore-v1407 span b{
+  color:#f4feff!important;
+  font-weight:1000!important;
+}
+
+.ranking-loadmore-v1407 button{
+  height:38px!important;
+  min-width:154px!important;
+  border:0!important;
+  border-radius:12px!important;
+  padding:0 18px!important;
+  cursor:pointer!important;
+  color:#04151b!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  background:linear-gradient(90deg,#21e8e2,#4f86ff)!important;
+  box-shadow:0 14px 32px rgba(33,232,226,.13), inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+
+.ranking-loadmore-v1407 button:hover{
+  filter:brightness(1.06)!important;
+  transform:translateY(-1px)!important;
+}
+
+@media (max-width:720px){
+  .ranking-loadmore-v1407{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    text-align:center!important;
+  }
+  .ranking-loadmore-v1407 button{
+    width:100%!important;
+  }
+}

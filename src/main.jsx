@@ -15146,6 +15146,7 @@ function LeaderboardView({
   const [sidebarTab, setSidebarTab] = useState('top')
   const [periodFilter, setPeriodFilter] = useState('all')
   const [sportFilter, setSportFilter] = useState('all')
+  const [rankingVisibleCount, setRankingVisibleCount] = useState(10)
   const [claimedChallenges, setClaimedChallenges] = useState({})
 
   const allRows = buildLiveLeaderboardRows(ranking, tips).filter(row => !isBlockedTestProfile(row)).map(row => {
@@ -15194,6 +15195,14 @@ function LeaderboardView({
 
   const topTyperRows = leaderboardRows.slice(0, 5)
   const monthlyRows = leaderboardRows.slice(0, 5)
+
+  useEffect(() => {
+    setRankingVisibleCount(prev => {
+      if (!leaderboardRows.length) return 10
+      return Math.min(Math.max(10, Number(prev) || 10), leaderboardRows.length)
+    })
+  }, [leaderboardRows.length])
+
   const currentUserKey = String(user?.id || '').toLowerCase()
   const currentUserRow = leaderboardRows.find(row => row.rowKeys.includes(currentUserKey)) || leaderboardRows.find(row => normalizeEmail(row.email) === normalizeEmail(user?.email || ''))
 
@@ -15357,7 +15366,14 @@ function LeaderboardView({
         ))}
         {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span></span></div>}
       </div>
-      <button type="button" className="full-ranking-btn-v4" onClick={() => onRefreshRanking?.()}>Odśwież ranking</button>
+      <div className="ranking-loadmore-v1407">
+        <span>Pokazano <b>{Math.min(rows.length, leaderboardRows.length)}</b> z <b>{leaderboardRows.length}</b> typerów</span>
+        {rankingVisibleCount < leaderboardRows.length ? (
+          <button type="button" onClick={() => setRankingVisibleCount(prev => Math.min(prev + 5, leaderboardRows.length))}>Pokaż kolejne 5</button>
+        ) : leaderboardRows.length > 10 ? (
+          <button type="button" onClick={() => setRankingVisibleCount(10)}>Zwiń ranking</button>
+        ) : null}
+      </div>
     </div>
   )
 
@@ -15368,10 +15384,7 @@ function LeaderboardView({
   const heroLeaderProfit = heroLeaderRow ? `${heroLeaderProfitValue >= 0 ? '+' : ''}${formatRankingAmount(heroLeaderProfitValue)}` : '0.00'
   const heroLeaderWinrate = heroLeaderRow ? `${Number(heroLeaderRow?.winrate || 0).toFixed(1)}%` : '0.0%'
 
-  const mainRows =
-    activeTab === 'top' ? leaderboardRows.slice(0, 10) :
-    activeTab === 'month' ? monthlyRows :
-    leaderboardRows
+  const mainRows = leaderboardRows.slice(0, rankingVisibleCount)
 
   return (
     <section className="leaderboard-page ranking-static-v4 ranking-live-v999 ranking-upgrade-v1398">
@@ -15468,7 +15481,7 @@ function LeaderboardView({
                   <div className="ball-v4">⚽</div>
                 </div>
               </div>
-              <button type="button" className="hall-btn-v4" onClick={() => setActiveTab('top')}>Zobacz całą galerię</button>
+              <button type="button" className="hall-btn-v4" onClick={() => setRankingVisibleCount(leaderboardRows.length || 10)}>Zobacz całą galerię</button>
             </div>
 
             <div className="glass-ranking-v4 ranking-v4-card challenges-card-v4">
