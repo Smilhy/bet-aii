@@ -1,0 +1,10 @@
+WERSJA 1387
+
+Poprawka Rankingu:
+- poprawnie usunięty tylko pierwszy prawy box z zakładkami Top typerzy / Polecenia / Liderzy miesiąca,
+- prawa kolumna 'Twoje polecenia' została zachowana,
+- główna zakładka Top typerzy obok Ranking nadal jest usunięta,
+- układ prawej kolumny wraca do normalnego działania.
+
+Plik zmieniony:
+- src/main.jsx
