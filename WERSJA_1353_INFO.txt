@@ -1,0 +1,13 @@
+WERSJA 1353
+
+Zmiana:
+- FREE ma teraz ten sam kolor-system co Darmowe,
+- PREMIUM jest ujednolicone na złoty/żółty,
+- dotyczy badge planu w profilu, przycisków filtrów Typy oraz etykiet FREE/PREMIUM na kartach typów,
+- TYPER i AKTYWNY zostają bez zmiany funkcjonalnej.
+
+Logika bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

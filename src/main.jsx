@@ -19249,9 +19249,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
                 <small>{handleName}</small>
                 <div className="profile-v3-badges">
-                  <span>{roleLabel}</span>
-                  <span>TYPER</span>
-                  {totalTips > 0 && <span>AKTYWNY</span>}
+                  <span className={`plan-badge ${String(roleLabel || '').toLowerCase() === 'premium' ? 'premium' : 'free'}`}>{roleLabel}</span>
+                  <span className="role-badge typer">TYPER</span>
+                  {totalTips > 0 && <span className="role-badge active">AKTYWNY</span>}
                 </div>
                 {bioEditing ? (
                   <div className="profile-v3-bio-editor">
