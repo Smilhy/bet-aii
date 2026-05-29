@@ -63114,85 +63114,34 @@ html.betai-fhd-monitor80-v1323 body #root{
 }
 
 
-/* WERSJA 1353 — ujednolicenie kolorów FREE/DARMOWE i PREMIUM */
-.profile-static-v3 .profile-v3-badges .plan-badge.free,
-.public-profile-mirror-hero .profile-v3-badges .plan-badge.free{
-  color:#62f4ff!important;
-  background:linear-gradient(135deg, rgba(34,223,240,.16), rgba(59,126,255,.10))!important;
-  border-color:rgba(87,219,255,.32)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 8px 18px rgba(0,0,0,.18)!important;
+/* WERSJA 1355 — trochę więcej miejsca na dole dashboardu,
+   żeby badge oceny nie nachodził na box Premium w lewej kolumnie */
+.app-shell .main,
+.app-shell:not(.no-rightbar-page) .main{
+  padding-bottom:140px!important;
 }
 
-.profile-static-v3 .profile-v3-badges .plan-badge.premium,
-.public-profile-mirror-hero .profile-v3-badges .plan-badge.premium{
-  color:#ffd86b!important;
-  background:linear-gradient(135deg, rgba(255,210,74,.18), rgba(130,87,0,.12))!important;
-  border-color:rgba(255,213,92,.34)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 8px 18px rgba(0,0,0,.18)!important;
+.app-shell .sidebar-stack,
+.app-shell:not(.no-rightbar-page) .sidebar-stack{
+  padding-bottom:110px!important;
 }
 
-.profile-static-v3 .profile-v3-badges .role-badge.typer,
-.public-profile-mirror-hero .profile-v3-badges .role-badge.typer{
-  color:#1cebcf!important;
+.app-shell .sidebar-stack .sidebar-premium-detached,
+.app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar-premium-detached{
+  margin-bottom:110px!important;
 }
 
-.profile-static-v3 .profile-v3-badges .role-badge.active,
-.public-profile-mirror-hero .profile-v3-badges .role-badge.active{
-  color:#ffb35d!important;
-}
-
-/* Filtry typów: FREE = jak Darmowe, PREMIUM = złoto */
-.profile-static-v3 .filter-pill-v872.free,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.free{
-  border-color:rgba(87,219,255,.34)!important;
-}
-
-.profile-static-v3 .filter-pill-v872.free.active,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.free.active{
-  background:linear-gradient(135deg, #29dff0 0%, #56b8ff 100%)!important;
-  border-color:rgba(147,232,255,.85)!important;
-  color:#041420!important;
-}
-
-.profile-static-v3 .filter-pill-v872.premium,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.premium{
-  border-color:rgba(255,213,92,.34)!important;
-  color:#fff5cb!important;
-}
-
-.profile-static-v3 .filter-pill-v872.premium .filter-icon-v872,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.premium .filter-icon-v872{
-  color:#ffd86b!important;
-}
-
-.profile-static-v3 .filter-pill-v872.premium.active,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.premium.active{
-  background:linear-gradient(135deg, #f1c64a 0%, #c89414 100%)!important;
-  border-color:rgba(255,224,116,.88)!important;
-  color:#1f1400!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 12px 26px rgba(233,188,62,.20)!important;
-}
-
-.profile-static-v3 .filter-pill-v872.premium.active b,
-.profile-v4-tips-page .profile-v4-filter-row .filter-pill-v872.premium.active b{
-  background:rgba(255,255,255,.24)!important;
-  border-color:rgba(255,255,255,.16)!important;
-  color:#ffffff!important;
-}
-
-/* Etykiety na kartach typów też spójnie */
-.profile-static-v3 .profile-ticket-v6-access.free,
-.app-shell.no-rightbar-page .profile-ticket-v6-access.free,
-.dashboard-ticket-v6 .profile-ticket-v6-access.free{
-  background:linear-gradient(135deg, rgba(29,224,134,.18), rgba(24,188,255,.12))!important;
-  border-color:#19f28b!important;
-  color:#79ffc1!important;
-}
-
-.profile-static-v3 .profile-ticket-v6-access.premium,
-.app-shell.no-rightbar-page .profile-ticket-v6-access.premium,
-.dashboard-ticket-v6 .profile-ticket-v6-access.premium{
-  background:linear-gradient(135deg, rgba(255,210,74,.20), rgba(149,101,4,.14))!important;
-  border-color:#efc71f!important;
-  color:#ffe37a!important;
+@media(max-width:900px){
+  .app-shell .main,
+  .app-shell:not(.no-rightbar-page) .main{
+    padding-bottom:96px!important;
+  }
+  .app-shell .sidebar-stack,
+  .app-shell:not(.no-rightbar-page) .sidebar-stack{
+    padding-bottom:72px!important;
+  }
+  .app-shell .sidebar-stack .sidebar-premium-detached,
+  .app-shell:not(.no-rightbar-page) .sidebar-stack .sidebar-premium-detached{
+    margin-bottom:72px!important;
+  }
 }

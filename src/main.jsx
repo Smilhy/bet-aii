@@ -2817,7 +2817,7 @@ function LiveChatPanel({ user }) {
       <div className="betai-live-head-final">
         <div className="betai-live-title-wrap-final">
           <span className="livechat226-title-dot"></span>
-          <div className="livechat226-kicker">Bet+AI Live Chat</div>
+          <div className="livechat226-kicker">Live Chat</div>
         </div>
       </div>
 
@@ -19249,9 +19249,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
                 <small>{handleName}</small>
                 <div className="profile-v3-badges">
-                  <span className={`plan-badge ${String(roleLabel || '').toLowerCase() === 'premium' ? 'premium' : 'free'}`}>{roleLabel}</span>
-                  <span className="role-badge typer">TYPER</span>
-                  {totalTips > 0 && <span className="role-badge active">AKTYWNY</span>}
+                  <span>{roleLabel}</span>
+                  <span>TYPER</span>
+                  {totalTips > 0 && <span>AKTYWNY</span>}
                 </div>
                 {bioEditing ? (
                   <div className="profile-v3-bio-editor">
@@ -23367,7 +23367,15 @@ function App() {
           setTokenBalance(next)
           showToast({ type: 'success', title: 'Bonus powitalny', message: 'Dodaliśmy 100 żetonów do Twojego konta.' })
         } else {
-          showToast({ type: 'success', title: 'Witaj ponownie 👋', message: 'Miło Cię widzieć z powrotem w BetAI.' })
+          const welcomeToastKey = `betai_welcome_toast_seen_${email}_${user?.id || ''}`
+          let shouldShowWelcomeToast = true
+          try {
+            shouldShowWelcomeToast = sessionStorage.getItem(welcomeToastKey) !== '1'
+            if (shouldShowWelcomeToast) sessionStorage.setItem(welcomeToastKey, '1')
+          } catch (_) {}
+          if (shouldShowWelcomeToast) {
+            showToast({ type: 'success', title: 'Witaj ponownie 👋', message: 'Miło Cię widzieć z powrotem w BetAI.' })
+          }
         }
       }
       await fetchNotifications(user?.id)
@@ -25088,6 +25096,13 @@ function App() {
   }
 
   async function logout() {
+    try {
+      const logoutEmail = normalizeEmail(sessionUser?.email || accountProfile?.email || '')
+      if (logoutEmail) {
+        sessionStorage.removeItem(`betai_welcome_toast_seen_${logoutEmail}_${sessionUser?.id || ''}`)
+        sessionStorage.removeItem(`betai_welcome_toast_seen_${logoutEmail}_`)
+      }
+    } catch (_) {}
     if (supabase) await supabase.auth.signOut()
     setSessionUser(null)
     setWalletBalance(0)
