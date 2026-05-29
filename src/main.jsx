@@ -19377,9 +19377,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         amountValue,
         amountLabel: amountValue === null ? '' : `${amountValue > 0 ? '+' : amountValue < 0 ? '' : ''}${amountValue.toFixed(2)}`,
         sortTimestamp: Date.parse(rawDate || 0) || 0,
+        sortPriority: effectiveStatusLabel === 'Oczekujący' ? 0 : 1,
       }
     })
-    .sort((a, b) => b.sortTimestamp - a.sortTimestamp)
+    .sort((a, b) => {
+      if (a.sortPriority !== b.sortPriority) return a.sortPriority - b.sortPriority
+      return b.sortTimestamp - a.sortTimestamp
+    })
   const visibleHistoryEvents = historyEvents.slice(0, profileHistoryVisibleCount)
   const historyHasMore = historyEvents.length > profileHistoryVisibleCount
   const historyCanCollapse = profileHistoryVisibleCount > 7

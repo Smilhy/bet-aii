@@ -1,0 +1,9 @@
+WERSJA 1373
+
+Zmiana w Historii aktywności:
+- wpisy ze statusem "Oczekujący" / "Opublikowano typ" są sortowane na samej górze,
+- poniżej dopiero idą wpisy rozliczone,
+- w obrębie każdej grupy nadal obowiązuje sortowanie od najnowszych.
+
+Plik zmieniony:
+- src/main.jsx
