@@ -30582,6 +30582,34 @@ button.betfolio-fetch-btn{
 }
 .profile-v4-history-timeline article.success b{color:#52f29a}
 .profile-v4-history-timeline article.danger b{color:#ff7187}
+.profile-v4-history-group{display:grid;gap:10px}
+.profile-v4-history-group-label{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#9ed8ee}
+.profile-v4-history-group-label:before{content:'';width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#33f0ff,#1b8cff);box-shadow:0 0 12px rgba(44,226,255,.35)}
+.profile-v4-history-group-list{display:grid;gap:12px}
+.profile-v4-history-timeline .history-event-v1369{display:grid;grid-template-columns:52px 72px minmax(0,1fr) auto;align-items:center;gap:16px;min-height:84px;padding:14px 16px;border:1px solid rgba(69,214,255,.14);border-radius:18px;background:linear-gradient(145deg, rgba(7,24,43,.92), rgba(2,35,45,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.history-event-icon-v1369{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:17px;background:rgba(7,24,43,.7);border:1px solid rgba(79,210,255,.18);box-shadow:0 8px 18px rgba(0,0,0,.22)}
+.history-event-v1369.success .history-event-icon-v1369{background:radial-gradient(circle at 30% 30%, rgba(82,242,154,.3), rgba(7,24,43,.86));border-color:rgba(82,242,154,.3)}
+.history-event-v1369.danger .history-event-icon-v1369{background:radial-gradient(circle at 30% 30%, rgba(255,113,135,.28), rgba(7,24,43,.86));border-color:rgba(255,113,135,.28)}
+.history-event-v1369.warning .history-event-icon-v1369{background:radial-gradient(circle at 30% 30%, rgba(255,214,74,.28), rgba(7,24,43,.86));border-color:rgba(255,214,74,.28)}
+.history-event-v1369.info .history-event-icon-v1369{background:radial-gradient(circle at 30% 30%, rgba(76,214,255,.25), rgba(7,24,43,.86));border-color:rgba(76,214,255,.22)}
+.history-event-meta-v1369 small{display:block;color:#89a6ba;font-size:12px;font-weight:800;letter-spacing:.04em}
+.history-event-body-v1369{display:grid;gap:6px;min-width:0}
+.history-event-topline-v1369{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.history-event-topline-v1369 strong{margin:0;color:#f5fbff;font-size:15px;font-weight:900}
+.history-event-body-v1369>span{display:block;color:#9fb7c9;font-size:13px;line-height:1.45;white-space:normal;overflow:hidden;text-overflow:ellipsis}
+.history-status-badge-v1369{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;border:1px solid transparent}
+.history-status-badge-v1369.success{color:#56f4ad;background:rgba(82,242,154,.12);border-color:rgba(82,242,154,.26)}
+.history-status-badge-v1369.danger{color:#ff7f96;background:rgba(255,113,135,.12);border-color:rgba(255,113,135,.24)}
+.history-status-badge-v1369.warning{color:#ffd86a;background:rgba(255,214,74,.12);border-color:rgba(255,214,74,.24)}
+.history-status-badge-v1369.info{color:#81e8ff;background:rgba(76,214,255,.1);border-color:rgba(76,214,255,.22)}
+.history-event-amount-v1369{font-size:22px;font-weight:900;letter-spacing:.01em;color:#eef8ff;min-width:108px;text-align:right}
+.history-event-amount-v1369.success{color:#52f29a}
+.history-event-amount-v1369.danger{color:#ff7187}
+.history-event-amount-v1369.warning,.history-event-amount-v1369.neutral{color:#ffd86a}
+.history-event-amount-v1369.muted{color:#7890a2}
+.profile-history-expand-wrap-v1369{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+@media (max-width: 900px){.profile-v4-history-timeline .history-event-v1369{grid-template-columns:52px minmax(0,1fr) auto}.history-event-meta-v1369{display:none}}
+@media (max-width: 680px){.profile-v4-history-timeline .history-event-v1369{grid-template-columns:1fr;align-items:flex-start}.history-event-icon-v1369{width:36px;height:36px}.history-event-amount-v1369{min-width:0;text-align:left;font-size:18px}.history-event-topline-v1369{justify-content:flex-start}}
 .profile-v4-opinion-summary{
   display:grid;
   grid-template-columns:280px minmax(0,1fr);

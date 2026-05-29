@@ -18373,6 +18373,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileTab, setProfileTab] = useState('tips')
   const [profileTipsFilter, setProfileTipsFilter] = useState('free')
   const [profileTipsVisibleCount, setProfileTipsVisibleCount] = useState(3)
+  const [profileHistoryVisibleCount, setProfileHistoryVisibleCount] = useState(7)
   const [tipsterSupportOpen, setTipsterSupportOpen] = useState(false)
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const [profileChartRange, setProfileChartRange] = useState('90d')
@@ -19252,6 +19253,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   useEffect(() => {
     if (profileTab === 'tips') setProfileTipsVisibleCount(3)
+    if (profileTab === 'history') setProfileHistoryVisibleCount(7)
   }, [profileTipsFilter, profileTab])
   const resultTipRows = allProfileTipCards.filter(tip => {
     if (profileResultsFilter === 'won') return tip.statusLabel === 'Wygrany'
@@ -19269,17 +19271,67 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const autoResultsCount = allProfileTipCards.filter(tip => String(tip.settlementSource || '').includes('auto')).length
   const formatStatValue = (value, decimals = 2) => Number(value || 0).toFixed(decimals)
   const linePoints = chartLinePoints || '0,96 100,96'
-  const historyEvents = sortedUserTips.slice(0, 8).map(tip => {
-    const normalized = normalizeTipRow(tip)
-    const card = buildProfileTipCard(normalized)
-    return {
-      date: formatProfileDate(normalized.created_at),
-      title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : `Rozliczono typ: ${card.statusLabel}`,
-      detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
-      tone: card.statusLabel === 'Wygrany' ? 'success' : card.statusLabel === 'Przegrany' ? 'danger' : 'info',
-      amount: card.statusLabel === 'Wygrany' ? `+${(card.stake * Math.max(0, Number(card.odds) - 1)).toFixed(2)}` : card.statusLabel === 'Przegrany' ? `-${card.stake.toFixed(2)}` : '',
+  const getHistoryEventTimestamp = (tip) => tip?.settled_at || tip?.result_at || tip?.updated_at || tip?.match_time || tip?.event_time || tip?.created_at || ''
+  const historyEvents = sortedUserTips
+    .map(tip => {
+      const normalized = normalizeTipRow(tip)
+      const card = buildProfileTipCard(normalized)
+      const rawDate = getHistoryEventTimestamp(normalized)
+      const dateMeta = formatProfileDateTime(rawDate)
+      const dateGroup = formatProfileDate(rawDate)
+      const amountValue = card.statusLabel === 'Wygrany'
+        ? (card.stake * Math.max(0, Number(card.odds) - 1))
+        : card.statusLabel === 'Przegrany'
+          ? -Math.abs(card.stake)
+          : card.statusLabel === 'Zwrot'
+            ? 0
+            : null
+      const tone = card.statusLabel === 'Wygrany'
+        ? 'success'
+        : card.statusLabel === 'Przegrany'
+          ? 'danger'
+          : card.statusLabel === 'Zwrot'
+            ? 'warning'
+            : 'info'
+      const icon = card.statusLabel === 'Wygrany'
+        ? '✅'
+        : card.statusLabel === 'Przegrany'
+          ? '❌'
+          : card.statusLabel === 'Zwrot'
+            ? '↩'
+            : card.statusLabel === 'Oczekujący'
+              ? '⏳'
+              : card.statusLabel === 'Czeka na admina'
+                ? '🛡️'
+                : '•'
+      return {
+        id: card.id,
+        dateGroup,
+        dateLabel: dateMeta.date,
+        timeLabel: dateMeta.time,
+        title: card.statusLabel === 'Oczekujący' ? 'Opublikowano typ' : 'Rozliczono typ',
+        statusLabel: card.statusLabel,
+        detail: `${card.home} vs ${card.away} • ${card.pick} • kurs ${card.odds}`,
+        tone,
+        icon,
+        amountValue,
+        amountLabel: amountValue === null ? '' : `${amountValue > 0 ? '+' : amountValue < 0 ? '' : ''}${amountValue.toFixed(2)}`,
+        sortTimestamp: Date.parse(rawDate || 0) || 0,
+      }
+    })
+    .sort((a, b) => b.sortTimestamp - a.sortTimestamp)
+  const visibleHistoryEvents = historyEvents.slice(0, profileHistoryVisibleCount)
+  const historyHasMore = historyEvents.length > profileHistoryVisibleCount
+  const historyCanCollapse = profileHistoryVisibleCount > 7
+  const groupedHistoryEvents = visibleHistoryEvents.reduce((acc, event) => {
+    const lastGroup = acc[acc.length - 1]
+    if (lastGroup && lastGroup.label === event.dateGroup) {
+      lastGroup.items.push(event)
+      return acc
     }
-  })
+    acc.push({ label: event.dateGroup, items: [event] })
+    return acc
+  }, [])
   const reviewRows = approvedProfileReviews
 
   const profileTipStats = {
@@ -19809,19 +19861,44 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'history' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">
-              <div className="profile-v3-card-head"><h3>Historia aktywności</h3><span>{historyEvents.length} zdarzeń</span></div>
+              <div className="profile-v3-card-head"><h3>Historia aktywności</h3><span>{historyEvents.length ? `Pokazano ${Math.min(profileHistoryVisibleCount, historyEvents.length)} z ${historyEvents.length}` : '0 zdarzeń'}</span></div>
               <div className="profile-v4-history-timeline">
-                {historyEvents.length ? historyEvents.map((event, index) => (
-                  <article key={`${event.title}-${index}`} className={event.tone}>
-                    <small>{event.date}</small>
-                    <div>
-                      <strong>{event.title}</strong>
-                      <span>{event.detail}</span>
+                {groupedHistoryEvents.length ? groupedHistoryEvents.map(group => (
+                  <section key={group.label} className="profile-v4-history-group">
+                    <div className="profile-v4-history-group-label">{group.label}</div>
+                    <div className="profile-v4-history-group-list">
+                      {group.items.map((event, index) => (
+                        <article key={`${event.id}-${index}`} className={`history-event-v1369 ${event.tone}`}>
+                          <div className="history-event-icon-v1369" aria-hidden="true">{event.icon}</div>
+                          <div className="history-event-meta-v1369">
+                            <small>{event.timeLabel}</small>
+                          </div>
+                          <div className="history-event-body-v1369">
+                            <div className="history-event-topline-v1369">
+                              <strong>{event.title}</strong>
+                              <span className={`history-status-badge-v1369 ${event.tone}`}>{event.statusLabel}</span>
+                            </div>
+                            <span>{event.detail}</span>
+                          </div>
+                          {event.amountLabel ? <b className={`history-event-amount-v1369 ${event.tone} ${event.amountValue === 0 ? 'neutral' : ''}`}>{event.amountLabel}</b> : <b className="history-event-amount-v1369 muted">—</b>}
+                        </article>
+                      ))}
                     </div>
-                    {event.amount && <b>{event.amount}</b>}
-                  </article>
+                  </section>
                 )) : <p>Brak aktywności do pokazania.</p>}
               </div>
+              {historyEvents.length > 7 ? (
+                <div className="profile-history-expand-wrap-v1369">
+                  {historyHasMore ? (
+                    <button type="button" className="profile-stats-expand-v1356" onClick={() => setProfileHistoryVisibleCount(prev => Math.min(prev + 7, historyEvents.length))}>
+                      Pokaż kolejne {Math.min(7, Math.max(historyEvents.length - profileHistoryVisibleCount, 0))}
+                    </button>
+                  ) : null}
+                  {historyCanCollapse ? (
+                    <button type="button" className="feed-load-less-btn" onClick={() => setProfileHistoryVisibleCount(7)}>Pokaż mniej</button>
+                  ) : null}
+                </div>
+              ) : null}
             </section>
           )}
 
