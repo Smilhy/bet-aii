@@ -10446,10 +10446,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
 
   const channelDefs = [
-    { key: 'ogolny', label: 'Polski', icon: '🇵🇱', group: 'Języki' },
-    { key: 'english', label: 'English / UK', icon: '🇬🇧', group: 'Języki' },
-    { key: 'espanol', label: 'Español', icon: '🇪🇸', group: 'Języki' },
-    { key: 'deutsch', label: 'Deutsch', icon: '🇩🇪', group: 'Języki' },
+    { key: 'ogolny', label: 'Polski', icon: '🇵🇱', flagClass: 'pl', group: 'Języki' },
+    { key: 'english', label: 'English / UK', icon: '🇬🇧', flagClass: 'gb', group: 'Języki' },
+    { key: 'espanol', label: 'Español', icon: '🇪🇸', flagClass: 'es', group: 'Języki' },
+    { key: 'deutsch', label: 'Deutsch', icon: '🇩🇪', flagClass: 'de', group: 'Języki' },
     { key: 'pilka-nozna', label: 'Piłka nożna', icon: '⚽', group: 'Sporty' },
     { key: 'kupony-spolecznosci', label: 'Kupony społeczności', icon: '🎟️', group: 'Typy' },
     { key: 'zaklady-na-zywo', label: 'Live betting', icon: '🔴', group: 'Typy' },
@@ -11059,7 +11059,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 <React.Fragment key={row.key}>
                   {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{row.group}</div> : null}
                   <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
-                    <span>{row.icon}</span><b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
+                    {row.flagClass ? <span className={`channel-flag-v1412 ${row.flagClass}`} aria-hidden="true"></span> : <span>{row.icon}</span>}<b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
                   </button>
                 </React.Fragment>
               ))}

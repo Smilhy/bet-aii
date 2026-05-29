@@ -1,0 +1,14 @@
+WERSJA 1412 — SPOŁECZNOŚĆ: FLAGI ZAMIAST KODÓW PL/GB/ES/DE
+
+Zmienione:
+- w kanałach językowych zamiast literek PL / GB / ES / DE są teraz graficzne flagi:
+  🇵🇱 Polska
+  🇬🇧 UK / English
+  🇪🇸 Hiszpania / Español
+  🇩🇪 Niemcy / Deutsch
+- flagi są robione w CSS, więc nie powinny zamieniać się na tekstowe kody typu PL/GB,
+- kanał Kupony społeczności zostaje.
+
+SQL:
+- bez zmian względem 1409/1411.
+- jeśli SQL 1409 był już odpalony, nic więcej w Supabase nie trzeba robić.

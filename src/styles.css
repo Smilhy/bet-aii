@@ -65687,3 +65687,48 @@ html.betai-fhd-monitor80-v1323 body #root{
     display:none!important;
   }
 }
+
+
+/* WERSJA 1412 — Społeczność: prawdziwe flagi zamiast liter PL/GB/ES/DE */
+.community-10-v1017 .pro-channel-list-v1012 button .channel-flag-v1412{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  border-radius:999px!important;
+  display:inline-block!important;
+  overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:
+    0 0 0 3px rgba(34,242,230,.055),
+    0 7px 18px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.20)!important;
+  background-size:cover!important;
+  background-position:center!important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button .channel-flag-v1412.pl{
+  background:
+    linear-gradient(to bottom,#ffffff 0 50%,#dc143c 50% 100%)!important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button .channel-flag-v1412.gb{
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2060%2060%27%3E%0A%3CclipPath%20id%3D%27c%27%3E%3Ccircle%20cx%3D%2730%27%20cy%3D%2730%27%20r%3D%2730%27/%3E%3C/clipPath%3E%0A%3Cg%20clip-path%3D%27url%28%23c%29%27%3E%0A%3Cpath%20fill%3D%27%23012169%27%20d%3D%27M0%200h60v60H0z%27/%3E%0A%3Cpath%20stroke%3D%27%23fff%27%20stroke-width%3D%2711%27%20d%3D%27M-6%200l72%2060M66%200L-6%2060%27/%3E%0A%3Cpath%20stroke%3D%27%23C8102E%27%20stroke-width%3D%276%27%20d%3D%27M-6%200l72%2060M66%200L-6%2060%27/%3E%0A%3Cpath%20stroke%3D%27%23fff%27%20stroke-width%3D%2718%27%20d%3D%27M30%200v60M0%2030h60%27/%3E%0A%3Cpath%20stroke%3D%27%23C8102E%27%20stroke-width%3D%2711%27%20d%3D%27M30%200v60M0%2030h60%27/%3E%0A%3C/g%3E%0A%3C/svg%3E")!important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button .channel-flag-v1412.es{
+  background:
+    linear-gradient(to bottom,#aa151b 0 25%,#f1bf00 25% 75%,#aa151b 75% 100%)!important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button .channel-flag-v1412.de{
+  background:
+    linear-gradient(to bottom,#000000 0 33.333%,#dd0000 33.333% 66.666%,#ffce00 66.666% 100%)!important;
+}
+
+.community-10-v1017 .pro-channel-list-v1012 button.active .channel-flag-v1412,
+.community-10-v1017 .pro-channel-list-v1012 button:hover .channel-flag-v1412{
+  box-shadow:
+    0 0 0 3px rgba(34,242,230,.12),
+    0 0 22px rgba(34,242,230,.20),
+    inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
