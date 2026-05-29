@@ -1,0 +1,11 @@
+WERSJA 1361
+
+Zmiana:
+- w zakładce Statystyki wykres został zrobiony praktycznie 1:1 jak w zakładce Wyniki,
+- dodałem ten sam select trybu wykresu,
+- dodałem te same przyciski zakresu 7D / 30D / 90D / 1R / Wszystko,
+- zostawiłem ten sam układ osi, siatki, linii, glow i area fill.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

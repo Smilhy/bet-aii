@@ -63253,3 +63253,15 @@ html.betai-fhd-monitor80-v1323 body #root{
     width:100%!important;
   }
 }
+
+
+/* WERSJA 1361 — Statystyki: wykres 1:1 jak w Wynikach */
+.profile-stats-chart-v1361{
+  overflow:hidden!important;
+}
+
+.profile-v4-stats-page .profile-stats-chart-v1361 .profile-results-chart-head-v961,
+.profile-v4-stats-page .profile-stats-chart-v1361 .profile-results-range-v961,
+.profile-v4-stats-page .profile-stats-chart-v1361 .profile-results-chart-stage-v961{
+  width:100%!important;
+}
