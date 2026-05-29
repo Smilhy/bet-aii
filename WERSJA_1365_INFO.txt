@@ -1,0 +1,11 @@
+WERSJA 1365
+
+Zmiana:
+- zrobiłem wersję SOFT NEON PREMIUM wykresów w zakładkach Wyniki i Statystyki,
+- glow został osłabiony względem hard neon,
+- punkty są delikatniejsze, fill pod linią subtelniejszy, a neon bardziej elegancki i premium,
+- logika bez zmian, tylko styl wizualny.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
