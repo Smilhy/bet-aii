@@ -64378,3 +64378,60 @@ html.betai-fhd-monitor80-v1323 body #root{
 
 /* WERSJA 1383 — usunięta moneta z hero, bo zasłaniała tekst */
 .unlocked-sport-dot-v1382.coin{display:none!important;}
+
+
+/* WERSJA 1388 — Ranking: węższa prawa kolumna, szersza tabela */
+.ranking-v4-layout{
+  grid-template-columns:minmax(920px, 1fr) 315px!important;
+  gap:16px!important;
+  align-items:start!important;
+}
+
+.ranking-v4-sidebar{
+  max-width:315px!important;
+  width:315px!important;
+}
+
+.ranking-v4-sidebar .sidebar-card-v4,
+.ranking-v4-sidebar .referrals-v4{
+  border-radius:18px!important;
+}
+
+.ranking-v4-sidebar .referral-code-v4 div strong{
+  font-size:24px!important;
+  letter-spacing:.03em!important;
+}
+
+.ranking-v4-sidebar .referral-bonuses-v4{
+  font-size:12px!important;
+  line-height:1.25!important;
+}
+
+.ranking-v4-main{
+  min-width:0!important;
+  width:100%!important;
+}
+
+.ranking-v4-table{
+  width:100%!important;
+}
+
+@media (max-width: 1320px){
+  .ranking-v4-layout{
+    grid-template-columns:minmax(760px, 1fr) 300px!important;
+  }
+  .ranking-v4-sidebar{
+    max-width:300px!important;
+    width:300px!important;
+  }
+}
+
+@media (max-width: 1120px){
+  .ranking-v4-layout{
+    grid-template-columns:1fr!important;
+  }
+  .ranking-v4-sidebar{
+    max-width:100%!important;
+    width:100%!important;
+  }
+}

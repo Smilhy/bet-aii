@@ -1,0 +1,10 @@
+WERSJA 1388
+
+Poprawka Rankingu:
+- prawa kolumna 'Twoje polecenia' została zwężona,
+- główna tabela rankingu dostała więcej szerokości,
+- układ nadal przechodzi na jedną kolumnę na mniejszych ekranach,
+- logika bez zmian.
+
+Plik zmieniony:
+- src/styles.css
