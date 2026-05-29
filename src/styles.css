@@ -64597,3 +64597,80 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#f4feff!important;
   text-shadow:none!important;
 }
+
+
+/* WERSJA 1397 — Ranking: większa i czytelniejsza czcionka w boxie Twoje polecenia */
+.ranking-v4-sidebar .referrals-v4{
+  padding:18px 16px!important;
+}
+
+.ranking-v4-sidebar .referrals-v4 .ranking-v4-card-head h3{
+  font-size:18px!important;
+  line-height:1.15!important;
+  font-weight:950!important;
+}
+
+.ranking-v4-sidebar .referral-code-v4 span,
+.ranking-v4-sidebar .referral-progress-v4 span{
+  font-size:12.5px!important;
+  line-height:1.25!important;
+  font-weight:800!important;
+}
+
+.ranking-v4-sidebar .referral-code-v4 div strong{
+  font-size:26px!important;
+  line-height:1!important;
+  letter-spacing:.035em!important;
+}
+
+.ranking-v4-sidebar .progress-head-v4 b{
+  font-size:13px!important;
+  font-weight:950!important;
+  color:#f4feff!important;
+}
+
+.ranking-v4-sidebar .referral-bonuses-v4{
+  margin-top:12px!important;
+  margin-bottom:16px!important;
+  display:grid!important;
+  gap:5px!important;
+  font-size:13px!important;
+  line-height:1.25!important;
+}
+
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4{
+  display:flex!important;
+  align-items:center!important;
+  gap:3px!important;
+  min-height:17px!important;
+}
+
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 span{
+  font-size:13px!important;
+  line-height:1.25!important;
+  color:#9fb8cc!important;
+  font-weight:750!important;
+}
+
+.ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 b{
+  font-size:13px!important;
+  line-height:1.25!important;
+  color:#f4feff!important;
+  font-weight:950!important;
+}
+
+.ranking-v4-sidebar .referrals-v4 .hall-btn-v4.alt{
+  min-height:42px!important;
+  font-size:13.5px!important;
+  font-weight:950!important;
+}
+
+@media (max-width: 1320px){
+  .ranking-v4-sidebar .referral-code-v4 div strong{
+    font-size:24px!important;
+  }
+  .ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 span,
+  .ranking-v4-sidebar .referral-bonuses-v4 .ref-bonus-v4 b{
+    font-size:12.5px!important;
+  }
+}
