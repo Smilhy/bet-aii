@@ -63180,3 +63180,22 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#ffffff!important;
   transform:translateY(-1px)!important;
 }
+
+
+/* WERSJA 1358 — zielony/czerwony bilans w tabelach statystyk */
+.profile-static-v3 .profile-v4-data-table .stats-cell-balance-v1358.positive{
+  color:#2df6a0!important;
+  font-weight:900!important;
+  text-shadow:0 0 12px rgba(45,246,160,.12)!important;
+}
+
+.profile-static-v3 .profile-v4-data-table .stats-cell-balance-v1358.negative{
+  color:#ff6d88!important;
+  font-weight:900!important;
+  text-shadow:0 0 12px rgba(255,109,136,.12)!important;
+}
+
+.profile-static-v3 .profile-v4-data-table .stats-cell-balance-v1358.neutral{
+  color:#d8ebf7!important;
+  font-weight:800!important;
+}

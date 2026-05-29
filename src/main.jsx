@@ -18033,6 +18033,17 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
   const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
   const hasMoreRows = safeRows.length > visibleLimit
   const visibleRows = expanded || !hasMoreRows ? safeRows : safeRows.slice(0, visibleLimit)
+  const balanceColumnIndex = Array.isArray(columns)
+    ? columns.findIndex(column => String(column || '').trim().toLowerCase() === 'bilans')
+    : -1
+  const parseSignedCellValue = value => {
+    const normalized = String(value ?? '')
+      .replace(/\s+/g, '')
+      .replace(/,/g, '.')
+      .replace(/[^0-9.+-]/g, '')
+    const numeric = Number(normalized)
+    return Number.isFinite(numeric) ? numeric : null
+  }
 
   return (
     <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''} ${hasMoreRows ? 'has-expand-v1356' : ''}`}>
@@ -18044,7 +18055,14 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
         <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
         {visibleRows.map((row, index) => (
           <div key={`${title}-${index}`}>
-            {row.map((cell, cellIndex) => <span key={`${title}-${index}-${cellIndex}`}>{cell}</span>)}
+            {row.map((cell, cellIndex) => {
+              const isBalanceCell = cellIndex === balanceColumnIndex
+              const numericValue = isBalanceCell ? parseSignedCellValue(cell) : null
+              const toneClass = isBalanceCell && numericValue !== null
+                ? (numericValue > 0 ? 'positive' : numericValue < 0 ? 'negative' : 'neutral')
+                : ''
+              return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-balance-v1358 ${toneClass}` : ''}>{cell}</span>
+            })}
           </div>
         ))}
       </div>
