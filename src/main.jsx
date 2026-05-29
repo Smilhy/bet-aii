@@ -15361,23 +15361,86 @@ function LeaderboardView({
     </div>
   )
 
+  const heroLeaderRow = leaderboardRows[0] || null
+  const heroLeaderName = heroLeaderRow?.rowName || 'Top typer'
+  const heroLeaderProfitValue = Number(heroLeaderRow?.earnings ?? heroLeaderRow?.profit ?? 0)
+  const heroLeaderProfit = heroLeaderRow ? `${heroLeaderProfitValue >= 0 ? '+' : ''}${formatMoney(heroLeaderProfitValue)}` : '0.00 zł'
+  const heroLeaderWinrate = heroLeaderRow ? `${Number(heroLeaderRow?.winrate || 0).toFixed(1)}%` : '0.0%'
+
   const mainRows =
     activeTab === 'top' ? leaderboardRows.slice(0, 10) :
     activeTab === 'month' ? monthlyRows :
     leaderboardRows
 
   return (
-    <section className="leaderboard-page ranking-static-v4 ranking-live-v999">
+    <section className="leaderboard-page ranking-static-v4 ranking-live-v999 ranking-upgrade-v1398">
       <div className="ranking-v4-layout">
         <div className="ranking-v4-main">
-          <div className="ranking-v4-header">
-            <div>
-              <h1>Ranking</h1>
-              <p>Żywa tabela typerów — wszyscy zarejestrowani użytkownicy, miejsca według profitu.</p>
+          <div className="ranking-v4-hero ranking-v1398-hero">
+            <div className="ranking-v1398-copy">
+              <span className="ranking-v1398-eyebrow">LIVE LEADERBOARD • BET+AI COMMUNITY</span>
+              <h1>Ranking <span>Bet+AI</span></h1>
+              <p>Śledź najlepszych typerów, rosnący profit i aktywność społeczności w czasie rzeczywistym. To centrum Twojego rankingu — szybki podgląd liderów, formy i poleceń.</p>
+
+              <div className="ranking-v1398-features">
+                <div>
+                  <i>🏆</i>
+                  <strong>Top typerzy</strong>
+                  <small>Najlepsze profile według wyniku i profitu</small>
+                </div>
+                <div>
+                  <i>📈</i>
+                  <strong>Live profit</strong>
+                  <small>Ranking odświeżany pod aktywność użytkowników</small>
+                </div>
+                <div>
+                  <i>👥</i>
+                  <strong>Społeczność</strong>
+                  <small>Obserwuj liderów i rozwijaj własny profil</small>
+                </div>
+              </div>
             </div>
-            <div className="ranking-v4-filters">
-              <button type="button" onClick={() => setSportFilter(sportFilter === 'all' ? 'piłka' : 'all')}>{sportFilter === 'all' ? 'Wszystkie sporty' : 'Piłka nożna'} ⌄</button>
-              <button type="button" onClick={() => setPeriodFilter(periodFilter === 'week' ? 'all' : 'week')}>{periodFilter === 'week' ? 'Tydzień' : 'Cały okres'} ⌄</button>
+
+            <div className="ranking-v1398-side">
+              <div className="ranking-v4-filters ranking-v1398-filters">
+                <button type="button" onClick={() => setSportFilter(sportFilter === 'all' ? 'piłka' : 'all')}>{sportFilter === 'all' ? 'Wszystkie sporty' : 'Piłka nożna'} ⌄</button>
+                <button type="button" onClick={() => setPeriodFilter(periodFilter === 'week' ? 'all' : 'week')}>{periodFilter === 'week' ? 'Tydzień' : 'Cały okres'} ⌄</button>
+              </div>
+
+              <div className="ranking-v1398-stats">
+                <div>
+                  <span>Typerów w tabeli</span>
+                  <strong>{leaderboardRows.length}</strong>
+                </div>
+                <div>
+                  <span>Top profit</span>
+                  <strong>{heroLeaderProfit}</strong>
+                </div>
+                <div>
+                  <span>Twoje polecenia</span>
+                  <strong>{referralCount}</strong>
+                </div>
+              </div>
+
+              <div className="ranking-v1398-visual" aria-hidden="true">
+                <div className="ranking-v1398-grid"></div>
+                <div className="ranking-v1398-line line-a"></div>
+                <div className="ranking-v1398-line line-b"></div>
+                <div className="ranking-v1398-line line-c"></div>
+                <div className="ranking-v1398-orb orb-a"></div>
+                <div className="ranking-v1398-orb orb-b"></div>
+                <div className="ranking-v1398-cup">🏆</div>
+                <div className="ranking-v1398-card main">
+                  <span>LIVE #1</span>
+                  <strong>{heroLeaderName}</strong>
+                  <small>Profit {heroLeaderProfit} • Win rate {heroLeaderWinrate}</small>
+                </div>
+                <div className="ranking-v1398-card mini">
+                  <span>AKTYWNI</span>
+                  <strong>{leaderboardRows.length}</strong>
+                  <small>zarejestrowanych typerów w tabeli</small>
+                </div>
+              </div>
             </div>
           </div>
 

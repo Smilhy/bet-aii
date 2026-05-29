@@ -1,0 +1,13 @@
+WERSJA 1398
+
+Ranking — poprawki wyglądu:
+- zakładki Ranking / Polecenia / Liderzy miesiąca mają nowy wygląd jak na wzorze z 1. screena,
+- nazwy zakładek zostały te same,
+- dodany nowy hero banner na górze zakładki Ranking,
+- hero jest w stylistyce strony i inspirowany sekcją Dodaj typ,
+- dodane kafelki informacyjne, live top typer i statystyki w hero,
+- prawa kolumna Twoje polecenia z poprzedniej wersji zostaje bez zmian.
+
+Zmodyfikowane pliki:
+- src/main.jsx
+- src/styles.css
