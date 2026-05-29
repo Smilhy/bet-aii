@@ -1,0 +1,17 @@
+WERSJA 1419 — SPOŁECZNOŚĆ: KARTY + MENU TRZY KROPKI WSZĘDZIE
+
+Zrobione:
+- każda wiadomość czatu jest teraz osobną kartą/ramką,
+- każdy komentarz jest teraz osobną mini-kartą/ramką,
+- posty dopasowane do tego samego systemu kart,
+- akcje Edytuj/Usuń/Zgłoś ukryte pod menu ⋯ w prawym górnym rogu,
+- menu ⋯ jest spójne dla:
+  wiadomości czatu,
+  komentarzy,
+  postów,
+- usunięte widoczne inline przyciski Edytuj/Usuń przy komentarzach i wiadomościach,
+- styl bardziej premium, mniej chaosu, lepszy spacing.
+
+SQL:
+- bez zmian względem wersji 1418.
+- jeśli SQL 1418 był już odpalony, nic nowego nie trzeba wklejać.

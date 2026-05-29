@@ -10396,6 +10396,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [editingCommentText, setEditingCommentText] = useState('')
   const [editingChatId, setEditingChatId] = useState(null)
   const [editingChatText, setEditingChatText] = useState('')
+  const [openCommentMenuId, setOpenCommentMenuId] = useState(null)
+  const [openChatMenuId, setOpenChatMenuId] = useState(null)
   const [posts, setPosts] = useState([])
   const [chatMessages, setChatMessages] = useState([])
   const [commentsByPost, setCommentsByPost] = useState({})
@@ -10856,6 +10858,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     if (!comment?.id || !isOwnComment(comment)) return
     setEditingCommentId(comment.id)
     setEditingCommentText(String(comment.body || ''))
+    setOpenCommentMenuId(null)
   }
 
   async function saveEditCommunityComment(comment) {
@@ -10909,6 +10912,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         if (error) throw error
       }
 
+      setOpenCommentMenuId(null)
       onToast?.({ type: 'success', title: 'Społeczność', message: 'Komentarz został usunięty.' })
       await loadCommunity()
     } catch (error) {
@@ -10924,6 +10928,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     const parts = parseChatBodyParts(message.body)
     setEditingChatId(message.id)
     setEditingChatText(String(parts.text || ''))
+    setOpenChatMenuId(null)
   }
 
   async function saveEditCommunityChatMessage(message) {
@@ -10988,6 +10993,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       setEditingChatId(null)
       setEditingChatText('')
+      setOpenChatMenuId(null)
       onToast?.({ type: 'success', title: 'Czat live', message: 'Wiadomość została usunięta.' })
       await loadCommunity()
     } catch (error) {
@@ -11198,15 +11204,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             <span className={`feed-avatar-v5 ${avatar ? 'has-avatar' : 'cyan'}`}>{avatar ? <img src={avatar} alt="" /> : String(author || 'U').slice(0,2).toUpperCase()}</span>
             <div><button type="button" className="community-name-btn-v1016 feed-name-v1016" onClick={() => openCommunityProfile(post)}>{author}</button><div className="feed-meta-v5"><span className={`feed-badge-v5 ${getAccountPlanBadgeLabel(post).toLowerCase()}`}>{getAccountPlanBadgeLabel(post)}</span><small>{post.created_at ? new Date(post.created_at).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small><em>#{post.channel_key || 'ogolny'}</em></div></div>
           </div>
-          <div className="post-head-actions-v1417">
-            {isOwnPost(post) ? (
-              <div className="post-owner-actions-v1417">
-                <button type="button" onClick={() => startEditCommunityPost(post)}>Edytuj</button>
-                <button type="button" className="danger" onClick={() => deleteCommunityPost(post)}>Usuń</button>
-              </div>
-            ) : null}
+          <div className="post-head-actions-v1417 post-head-actions-v1419">
             <div className="post-menu-wrap-v1024">
-              <button type="button" className="post-menu-trigger-v1024" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
+              <button type="button" className="post-menu-trigger-v1024 card-menu-trigger-v1419" onClick={() => setOpenPostMenuId(prev => prev === post.id ? null : post.id)}>⋮</button>
             {openPostMenuId === post.id ? (
               <div className="post-menu-v1024">
                 <button type="button" onClick={() => { openCommunityProfile(post); setOpenPostMenuId(null) }}>👤 Otwórz profil</button>
@@ -11247,16 +11247,16 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <div className="feed-meta-v5 reply-meta-v1418">
                       <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(comment)}>{cName}</button>
                       <small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small>
-                      {isOwnComment(comment) ? (
-                        <span className="comment-actions-v1418">
-                          <button type="button" onClick={() => startEditCommunityComment(comment)}>Edytuj</button>
-                          <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button>
-                        </span>
-                      ) : canModerateCommunityComment(comment) ? (
-                        <span className="comment-actions-v1418">
-                          <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button>
-                        </span>
-                      ) : null}
+                      <span className="comment-menu-wrap-v1419">
+                        <button type="button" className="mini-menu-trigger-v1419" onClick={() => setOpenCommentMenuId(prev => prev === comment.id ? null : comment.id)}>⋯</button>
+                        {openCommentMenuId === comment.id ? (
+                          <span className="mini-menu-v1419">
+                            {isOwnComment(comment) ? <button type="button" onClick={() => startEditCommunityComment(comment)}>Edytuj</button> : null}
+                            {canModerateCommunityComment(comment) ? <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button> : null}
+                            {!isOwnComment(comment) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: 'Społeczność', message: 'Komentarz został zgłoszony.' }); setOpenCommentMenuId(null) }}>Zgłoś</button> : null}
+                          </span>
+                        ) : null}
+                      </span>
                     </div>
                     {editingCommentId === comment.id ? (
                       <div className="inline-edit-v1418">
@@ -11413,23 +11413,23 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     const author = row.author_name || row.username || communityNameFromEmail(row.author_email)
                     const initials = String(author || 'U').slice(0, 2).toUpperCase()
                     return (
-                      <div className="pro-chat-message-v1012" key={row.id}>
+                      <div className="pro-chat-message-v1012 chat-card-v1419" key={row.id}>
                         <span className={`pro-chat-avatar-v1012 ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initials}</span>
                         <div className="chat-message-body-v1418">
                           <div className="pro-chat-meta-v1012 chat-meta-v1418">
                             <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(row)}>{author}</button>
                             <em>{getAccountPlanBadgeLabel(row)}</em>
                             <small>{row.created_at ? new Date(row.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small>
-                            {isOwnChatMessage(row) ? (
-                              <span className="chat-message-actions-v1418">
-                                <button type="button" onClick={() => startEditCommunityChatMessage(row)}>Edytuj</button>
-                                <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button>
-                              </span>
-                            ) : canModerateCommunityChatMessage(row) ? (
-                              <span className="chat-message-actions-v1418">
-                                <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button>
-                              </span>
-                            ) : null}
+                            <span className="chat-menu-wrap-v1419">
+                              <button type="button" className="mini-menu-trigger-v1419" onClick={() => setOpenChatMenuId(prev => prev === row.id ? null : row.id)}>⋯</button>
+                              {openChatMenuId === row.id ? (
+                                <span className="mini-menu-v1419">
+                                  {isOwnChatMessage(row) ? <button type="button" onClick={() => startEditCommunityChatMessage(row)}>Edytuj</button> : null}
+                                  {canModerateCommunityChatMessage(row) ? <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button> : null}
+                                  {!isOwnChatMessage(row) && !isAdminUser(user) ? <button type="button" onClick={() => { onToast?.({ type: 'info', title: 'Czat live', message: 'Wiadomość została zgłoszona.' }); setOpenChatMenuId(null) }}>Zgłoś</button> : null}
+                                </span>
+                              ) : null}
+                            </span>
                           </div>
                           {(() => {
                             const parts = parseChatBodyParts(row.body)
