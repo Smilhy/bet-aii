@@ -16938,36 +16938,77 @@ function TipsterPricingSettings({ user, onToast }) {
   }
 
   return (
-    <div className="glass-profile-v3 tipster-pricing-settings">
-      <div className="profile-v3-card-head">
-        <h3>Cennik subskrypcji profilu</h3>
-        <span>{loading ? 'Ładowanie...' : 'Dla kupujących'}</span>
+    <div className="glass-profile-v3 tipster-pricing-settings tipster-pricing-premium-v1374">
+      <div className="tipster-pricing-hero-v1374">
+        <div>
+          <span className="tipster-pricing-kicker-v1374">💎 Monetizacja profilu</span>
+          <h3>Cennik subskrypcji profilu</h3>
+          <p>Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu, statystyk i typów premium.</p>
+        </div>
+        <div className="tipster-pricing-status-v1374">
+          <small>Status</small>
+          <strong>{loading ? 'Ładowanie...' : 'Dla kupujących'}</strong>
+        </div>
       </div>
-      <p>Ustaw ceny, za które inni użytkownicy mogą kupić dostęp do Twojego profilu i typów.</p>
-      <div className="tipster-pricing-grid">
-        {plans.map(plan => (
-          <label key={plan.key}>
-            <strong>{plan.label}</strong>
-            <span>{plan.durationDays} dni</span>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={plan.price}
-              onChange={event => updatePlan(plan.key, { price: Math.max(0, Number(event.target.value || 0)) })}
-            />
-            <em>zł</em>
-            <input
-              type="checkbox"
-              checked={plan.active}
-              onChange={event => updatePlan(plan.key, { active: event.target.checked })}
-            />
-          </label>
-        ))}
+
+      <div className="tipster-pricing-grid tipster-pricing-grid-v1374">
+        {plans.map((plan, index) => {
+          const recommended = plan.key === 'month' || plan.durationDays === 30
+          return (
+            <label key={plan.key} className={`tipster-plan-card-v1374 ${plan.active ? 'active' : 'inactive'} ${recommended ? 'recommended' : ''}`}>
+              {recommended ? <i className="tipster-plan-recommended-v1374">Najczęściej wybierane</i> : null}
+              <div className="tipster-plan-top-v1374">
+                <div>
+                  <strong>{plan.label}</strong>
+                  <span>{plan.durationDays} dni dostępu</span>
+                </div>
+                <button
+                  type="button"
+                  className={`tipster-plan-toggle-v1374 ${plan.active ? 'on' : 'off'}`}
+                  onClick={() => updatePlan(plan.key, { active: !plan.active })}
+                  aria-label={plan.active ? 'Wyłącz plan' : 'Włącz plan'}
+                >
+                  <b />
+                  <em>{plan.active ? 'Aktywny' : 'Wyłączony'}</em>
+                </button>
+              </div>
+
+              <div className="tipster-plan-price-v1374">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={plan.price}
+                  onChange={event => updatePlan(plan.key, { price: Math.max(0, Number(event.target.value || 0)) })}
+                />
+                <span>zł</span>
+              </div>
+
+              <div className="tipster-plan-foot-v1374">
+                <small>✓ Dostęp do typów premium</small>
+                <small>✓ Podgląd profilu typera</small>
+              </div>
+
+              <input
+                className="tipster-plan-hidden-check-v1374"
+                type="checkbox"
+                checked={plan.active}
+                onChange={event => updatePlan(plan.key, { active: event.target.checked })}
+              />
+            </label>
+          )
+        })}
       </div>
-      <button type="button" onClick={savePlans} disabled={saving}>
-        {saving ? 'Zapisuję...' : 'Zapisz cennik'}
-      </button>
+
+      <div className="tipster-pricing-savebar-v1374">
+        <div>
+          <strong>{plans.filter(plan => plan.active).length} aktywne pakiety</strong>
+          <span>Zmiany będą widoczne dla kupujących po zapisaniu cennika.</span>
+        </div>
+        <button type="button" onClick={savePlans} disabled={saving}>
+          {saving ? 'Zapisuję...' : 'Zapisz cennik'}
+        </button>
+      </div>
     </div>
   )
 }
