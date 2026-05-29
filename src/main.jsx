@@ -19723,8 +19723,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961">
                 <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wyniki — przebieg bilansu (PLN)</h3>
-                    <button type="button" className="profile-chart-info-v961" title="Wykres pokazuje narastający bilans z rozliczonych typów.">i</button>
+                    <h3>Wyniki — przebieg bilansu</h3>
                   </div>
                   <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
                     {profileChartModes.map(mode => <option key={mode.key} value={mode.key}>{mode.label}</option>)}
@@ -19869,8 +19868,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-stats-chart-v1361">
                 <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wykres salda (PLN)</h3>
-                    <button type="button" className="profile-chart-info-v961" title="Wykres pokazuje narastający bilans z rozliczonych typów.">i</button>
+                    <h3>Wykres salda</h3>
                   </div>
                   <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
                     {profileChartModes.map(mode => <option key={`stats-${mode.key}`} value={mode.key}>{mode.label}</option>)}
