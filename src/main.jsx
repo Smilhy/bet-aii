@@ -439,16 +439,16 @@ function getInitialBetaiLanguage() {
 
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', 'Saldo': 'Balance', 'Żetony': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
   },
   de: {
-    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Ulepsz konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Żetony': 'Coin', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
+    'Dashboard': 'Dashboard', 'Dodaj typ': 'Tipp hinzufügen', 'Portfel': 'Wallet', 'Mój profil': 'Mein Profil', 'Ranking': 'Ranking', 'Polecenia': 'Empfehlungen', 'Powiadomienia': 'Benachrichtigungen', 'Płatności': 'Zahlungen', 'Subskrypcja': 'Abo', 'Zarobki': 'Einnahmen', 'Wypłaty': 'Auszahlungen', 'Typy AI': 'KI-Tipps', 'Top typerzy': 'Top-Tipper', 'Admin finanse': 'Admin Finanzen', 'Admin wypłaty': 'Admin Auszahlungen', 'Wyloguj': 'Ausloggen', 'Ulepsz konto': 'Konto aufladen', 'Saldo': 'Guthaben', 'Coiny': 'Coin', 'Odblokowane': 'Freigeschaltet', 'Przejdź na Premium': 'Zu Premium wechseln', 'Zarządzaj Premium': 'Premium verwalten', 'Szukaj meczów, lig, użytkowników...': 'Spiele, Ligen, Nutzer suchen...', 'Szukaj meczów, lig i użytkowników': 'Spiele, Ligen und Nutzer suchen', 'WITAJ PONOWNIE': 'WILLKOMMEN ZURÜCK', 'MECZÓW DZIŚ': 'SPIELE HEUTE', 'ŚR. PEWNOŚĆ': 'Ø SICHERHEIT', 'Marketplace premium': 'Premium-Marktplatz', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar. Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen', 'typów premium': 'Premium-Tipps', 'Wszystkie': 'Alle', 'Premium': 'Premium', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'AI Analiza': 'KI-Analyse', 'Zobacz typ': 'Tipp ansehen', 'Obserwuj typera': 'Tipper folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Dzisiaj': 'Heute', 'Typ': 'Tipp', 'Kurs': 'Quote', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Top użytkownik (24h)': 'Top-Nutzer (24h)', 'Nagroda dnia': 'Tagespreis', 'Aktywni teraz': 'Jetzt aktiv', 'Brak lidera': 'Kein Leader', 'wiadomości dziś': 'Nachrichten heute', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Top typerzy': 'Top-Tipper', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Wyniki live': 'Live-Ergebnisse', 'Artykuły': 'Artikel', 'News': 'News', 'Analizy AI': 'KI-Analysen', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Tipps konnten nicht geladen werden', 'Brak konta': 'Kein Konto', 'Zaloguj się, aby odblokować': 'Einloggen zum Freischalten', 'Musisz być zalogowany, aby obserwować typera.': 'Du musst eingeloggt sein, um einem Tipper zu folgen.', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.'
   },
   es: {
-    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Ulepsz konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Żetony': 'Coin', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
+    'Dashboard': 'Panel', 'Dodaj typ': 'Añadir pick', 'Portfel': 'Cartera', 'Mój profil': 'Mi perfil', 'Ranking': 'Ranking', 'Polecenia': 'Referidos', 'Powiadomienia': 'Notificaciones', 'Płatności': 'Pagos', 'Subskrypcja': 'Suscripción', 'Zarobki': 'Ganancias', 'Wypłaty': 'Retiros', 'Typy AI': 'Picks IA', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finanzas', 'Admin wypłaty': 'Admin retiros', 'Wyloguj': 'Cerrar sesión', 'Ulepsz konto': 'Recargar cuenta', 'Saldo': 'Saldo', 'Coiny': 'Coin', 'Odblokowane': 'Desbloqueados', 'Przejdź na Premium': 'Ir a Premium', 'Zarządzaj Premium': 'Gestionar Premium', 'Szukaj meczów, lig, użytkowników...': 'Buscar partidos, ligas, usuarios...', 'Szukaj meczów, lig i użytkowników': 'Buscar partidos, ligas y usuarios', 'WITAJ PONOWNIE': 'BIENVENIDO DE NUEVO', 'MECZÓW DZIŚ': 'PARTIDOS HOY', 'ŚR. PEWNOŚĆ': 'CONFIANZA MEDIA', 'Marketplace premium': 'Marketplace premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publicar picks de pago solo está disponible para usuarios Premium. Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium', 'typów premium': 'picks premium', 'Wszystkie': 'Todos', 'Premium': 'Premium', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'AI Analiza': 'Análisis IA', 'Zobacz typ': 'Ver pick', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Dzisiaj': 'Hoy', 'Typ': 'Pick', 'Kurs': 'Cuota', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Top użytkownik (24h)': 'Usuario top (24h)', 'Nagroda dnia': 'Premio del día', 'Aktywni teraz': 'Activos ahora', 'Brak lidera': 'Sin líder', 'wiadomości dziś': 'mensajes hoy', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Wyniki live': 'Resultados live', 'Artykuły': 'Artículos', 'News': 'Noticias', 'Analizy AI': 'Análisis IA', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'No se pudieron cargar picks', 'Brak konta': 'Sin cuenta', 'Zaloguj się, aby odblokować': 'Inicia sesión para desbloquear', 'Musisz być zalogowany, aby obserwować typera.': 'Debes iniciar sesión para seguir a un tipster.', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.'
   },
   ru: {
-    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Ulepsz konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Żetony': 'Coin', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
+    'Dashboard': 'Панель', 'Dodaj typ': 'Добавить прогноз', 'Portfel': 'Кошелек', 'Mój profil': 'Мой профиль', 'Ranking': 'Рейтинг', 'Polecenia': 'Рефералы', 'Powiadomienia': 'Уведомления', 'Płatności': 'Платежи', 'Subskrypcja': 'Подписка', 'Zarobki': 'Доходы', 'Wypłaty': 'Выводы', 'Typy AI': 'AI прогнозы', 'Top typerzy': 'Топ типстеры', 'Admin finanse': 'Админ финансы', 'Admin wypłaty': 'Админ выводы', 'Wyloguj': 'Выйти', 'Ulepsz konto': 'Пополнить счет', 'Saldo': 'Баланс', 'Coiny': 'Coin', 'Odblokowane': 'Разблокировано', 'Przejdź na Premium': 'Перейти на Premium', 'Zarządzaj Premium': 'Управлять Premium', 'Szukaj meczów, lig, użytkowników...': 'Искать матчи, лиги, пользователей...', 'Szukaj meczów, lig i użytkowników': 'Искать матчи, лиги и пользователей', 'WITAJ PONOWNIE': 'С ВОЗВРАЩЕНИЕМ', 'MECZÓW DZIŚ': 'МАТЧЕЙ СЕГОДНЯ', 'ŚR. PEWNOŚĆ': 'СР. УВЕРЕННОСТЬ', 'Marketplace premium': 'Premium маркетплейс', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Платные прогнозы доступны только Premium пользователям. Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium', 'typów premium': 'premium прогнозов', 'Wszystkie': 'Все', 'Premium': 'Premium', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'AI Analiza': 'AI анализ', 'Zobacz typ': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Dzisiaj': 'Сегодня', 'Typ': 'Прогноз', 'Kurs': 'Коэф.', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Top użytkownik (24h)': 'Топ пользователь (24ч)', 'Nagroda dnia': 'Награда дня', 'Aktywni teraz': 'Активны сейчас', 'Brak lidera': 'Лидера нет', 'wiadomości dziś': 'сообщений сегодня', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Wyniki live': 'Live результаты', 'Artykuły': 'Статьи', 'News': 'Новости', 'Analizy AI': 'AI аналитика', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Не удалось загрузить прогнозы', 'Brak konta': 'Нет аккаунта', 'Zaloguj się, aby odblokować': 'Войдите, чтобы разблокировать', 'Musisz być zalogowany, aby obserwować typera.': 'Нужно войти, чтобы следить за типстером.', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.'
   }
 }
 
@@ -456,7 +456,7 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
   en: {
     'Zaloguj się': 'Log in', 'Zarejestruj się': 'Register', 'Załóż konto': 'Create account', 'Nazwa użytkownika': 'Username', 'Hasło': 'Password', 'Powtórz hasło': 'Repeat password', 'Regulamin': 'Terms', 'Politykę prywatności': 'Privacy policy', 'Nie pamiętasz hasła?': 'Forgot password?', 'Szyfrowane logowanie': 'Encrypted login',
     'Realne statystyki live': 'Real live statistics', 'Platforma żyje i odświeża dane na bieżąco': 'The platform is live and refreshes data in real time', 'Zarejestrowanych użytkowników': 'Registered users', 'Skuteczność AI': 'AI accuracy', 'Typów dzisiaj': 'Picks today', 'Auto-odświeżanie co 30 s': 'Auto-refresh every 30s', 'ostatnia aktualizacja': 'last update',
-    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP USER (24H)', 'NAGRODA DNIA': 'DAILY REWARD', 'AKTYWNI TERAZ': 'ACTIVE NOW', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'No leader', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP USER (24H)', 'NAGRODA DNIA': 'DAILY REWARD', 'AKTYWNI TERAZ': 'ACTIVE NOW', '1 coin / 24h': '1 token / 24h', 'Brak lidera': 'No leader', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.',
     'Marketplace premium': 'Premium marketplace', 'Typy premium': 'Premium picks', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publishing paid picks is available only for Premium users.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Upgrade to Premium to monetize your analyses.', 'Kup Premium': 'Buy Premium',
     'Wszystkie': 'All', 'Darmowe': 'Free', 'Moje': 'Mine', 'Dodaj typ': 'Add pick', 'Zobacz typ': 'View pick', 'Zobacz prognozę': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Today', 'Prognoz': 'Pick', 'Prognoza': 'Pick', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Ponad 2.5 gola': 'Over 2.5 goals', 'Kurs': 'Odds', 'Koef.': 'Odds', 'AI Analiza': 'AI analysis', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real is in excellent home form. Bayern has had defensive problems in recent matches.',
     'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Brak danych': 'No data', 'Brak typów': 'No picks', 'Ładowanie...': 'Loading...', 'Łączenie...': 'Connecting...', 'Kup dostęp': 'Buy access', 'Szczegóły': 'Details',
@@ -466,7 +466,7 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
   de: {
     'Zaloguj się': 'Einloggen', 'Zarejestruj się': 'Registrieren', 'Załóż konto': 'Konto erstellen', 'Nazwa użytkownika': 'Benutzername', 'Hasło': 'Passwort', 'Powtórz hasło': 'Passwort wiederholen', 'Regulamin': 'Bedingungen', 'Politykę prywatności': 'Datenschutz', 'Nie pamiętasz hasła?': 'Passwort vergessen?', 'Szyfrowane logowanie': 'Verschlüsselter Login',
     'Realne statystyki live': 'Echte Live-Statistiken', 'Platforma żyje i odświeża dane na bieżąco': 'Die Plattform ist live und aktualisiert Daten laufend', 'Zarejestrowanych użytkowników': 'Registrierte Nutzer', 'Skuteczność AI': 'KI-Trefferquote', 'Typów dzisiaj': 'Tipps heute', 'Auto-odświeżanie co 30 s': 'Auto-Aktualisierung alle 30 s', 'ostatnia aktualizacja': 'letzte Aktualisierung',
-    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP-NUTZER (24H)', 'NAGRODA DNIA': 'TAGESPREIS', 'AKTYWNI TERAZ': 'JETZT AKTIV', '1 żeton / 24h': '1 Token / 24h', 'Brak lidera': 'Kein Leader', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'TOP-NUTZER (24H)', 'NAGRODA DNIA': 'TAGESPREIS', 'AKTYWNI TERAZ': 'JETZT AKTIV', '1 coin / 24h': '1 Token / 24h', 'Brak lidera': 'Kein Leader', 'Dla najbardziej aktywnych': 'Für die Aktivsten', 'Napisz wiadomość...': 'Nachricht schreiben...', 'Twoja wiadomość': 'Deine Nachricht', 'Witaj ponownie': 'Willkommen zurück', 'Miło Cię widzieć z powrotem w BetAI.': 'Schön, dich wieder bei BetAI zu sehen.',
     'Marketplace premium': 'Premium-Marktplatz', 'Typy premium': 'Premium-Tipps', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Bezahlte Tipps sind nur für Premium-Nutzer verfügbar.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Wechsle zu Premium, um deine Analysen zu monetarisieren.', 'Kup Premium': 'Premium kaufen',
     'Wszystkie': 'Alle', 'Darmowe': 'Kostenlos', 'Moje': 'Meine', 'Dodaj typ': 'Tipp hinzufügen', 'Zobacz typ': 'Tipp ansehen', 'Zobacz prognozę': 'Prognose ansehen', 'Obserwuj typera': 'Tipster folgen', 'Obserwuj': 'Folgen', 'Oczekujący': 'Ausstehend', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Heute', 'Prognoz': 'Tipp', 'Prognoza': 'Tipp', 'Powyżej 2.5 gola': 'Über 2,5 Tore', 'Ponad 2.5 gola': 'Über 2,5 Tore', 'Kurs': 'Quote', 'Koef.': 'Quote', 'AI Analiza': 'KI-Analyse', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real ist zu Hause in sehr guter Form. Bayern hatte zuletzt Defensivprobleme.',
     'Top typerzy': 'Top-Tipster', 'Ranking real': 'Echtes Ranking', 'AI Typy dnia': 'KI-Tipps des Tages', 'Zobacz wszystkie': 'Alle ansehen', 'Brak danych': 'Keine Daten', 'Brak typów': 'Keine Tipps', 'Ładowanie...': 'Laden...', 'Łączenie...': 'Verbinden...', 'Kup dostęp': 'Zugang kaufen', 'Szczegóły': 'Details',
@@ -476,7 +476,7 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
   es: {
     'Zaloguj się': 'Iniciar sesión', 'Zarejestruj się': 'Registrarse', 'Załóż konto': 'Crear cuenta', 'Nazwa użytkownika': 'Usuario', 'Hasło': 'Contraseña', 'Powtórz hasło': 'Repetir contraseña', 'Regulamin': 'Términos', 'Politykę prywatności': 'Política de privacidad', 'Nie pamiętasz hasła?': '¿Olvidaste tu contraseña?', 'Szyfrowane logowanie': 'Inicio seguro',
     'Realne statystyki live': 'Estadísticas live reales', 'Platforma żyje i odświeża dane na bieżąco': 'La plataforma está viva y actualiza datos en directo', 'Zarejestrowanych użytkowników': 'Usuarios registrados', 'Skuteczność AI': 'Precisión IA', 'Typów dzisiaj': 'Picks hoy', 'Auto-odświeżanie co 30 s': 'Auto-actualización cada 30 s', 'ostatnia aktualizacja': 'última actualización',
-    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'USUARIO TOP (24H)', 'NAGRODA DNIA': 'PREMIO DEL DÍA', 'AKTYWNI TERAZ': 'ACTIVOS AHORA', '1 żeton / 24h': '1 token / 24h', 'Brak lidera': 'Sin líder', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'online', 'TOP UŻYTKOWNIK (24H)': 'USUARIO TOP (24H)', 'NAGRODA DNIA': 'PREMIO DEL DÍA', 'AKTYWNI TERAZ': 'ACTIVOS AHORA', '1 coin / 24h': '1 token / 24h', 'Brak lidera': 'Sin líder', 'Dla najbardziej aktywnych': 'Para los más activos', 'Napisz wiadomość...': 'Escribe un mensaje...', 'Twoja wiadomość': 'Tu mensaje', 'Witaj ponownie': 'Bienvenido de nuevo', 'Miło Cię widzieć z powrotem w BetAI.': 'Qué bueno verte de vuelta en BetAI.',
     'Marketplace premium': 'Marketplace premium', 'Typy premium': 'Picks premium', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Publicar picks de pago solo está disponible para usuarios Premium.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Pasa a Premium para monetizar tus análisis.', 'Kup Premium': 'Comprar Premium',
     'Wszystkie': 'Todos', 'Darmowe': 'Gratis', 'Moje': 'Míos', 'Dodaj typ': 'Añadir pick', 'Zobacz typ': 'Ver pick', 'Zobacz prognozę': 'Ver pronóstico', 'Obserwuj typera': 'Seguir tipster', 'Obserwuj': 'Seguir', 'Oczekujący': 'Pendiente', 'Liga Mistrzów': 'Champions League', 'Dzisiaj': 'Hoy', 'Prognoz': 'Pronóstico', 'Prognoza': 'Pronóstico', 'Powyżej 2.5 gola': 'Más de 2.5 goles', 'Ponad 2.5 gola': 'Más de 2.5 goles', 'Kurs': 'Cuota', 'Koef.': 'Cuota', 'AI Analiza': 'Análisis IA', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real está muy fuerte en casa. Bayern tuvo problemas defensivos en los últimos partidos.',
     'Top typerzy': 'Top tipsters', 'Ranking real': 'Ranking real', 'AI Typy dnia': 'Picks IA del día', 'Zobacz wszystkie': 'Ver todo', 'Brak danych': 'Sin datos', 'Brak typów': 'Sin picks', 'Ładowanie...': 'Cargando...', 'Łączenie...': 'Conectando...', 'Kup dostęp': 'Comprar acceso', 'Szczegóły': 'Detalles',
@@ -486,7 +486,7 @@ const BETAI_EXTRA_DASHBOARD_TRANSLATIONS = {
   ru: {
     'Zaloguj się': 'Войти', 'Zarejestruj się': 'Регистрация', 'Załóż konto': 'Создать аккаунт', 'Nazwa użytkownika': 'Имя пользователя', 'Hasło': 'Пароль', 'Powtórz hasło': 'Повторите пароль', 'Regulamin': 'Условия', 'Politykę prywatności': 'Политику конфиденциальности', 'Nie pamiętasz hasła?': 'Забыли пароль?', 'Szyfrowane logowanie': 'Защищенный вход',
     'Realne statystyki live': 'Реальная live-статистика', 'Platforma żyje i odświeża dane na bieżąco': 'Платформа живая и обновляет данные онлайн', 'Zarejestrowanych użytkowników': 'Зарегистрированных пользователей', 'Skuteczność AI': 'Точность AI', 'Typów dzisiaj': 'Прогнозов сегодня', 'Auto-odświeżanie co 30 s': 'Автообновление каждые 30 с', 'ostatnia aktualizacja': 'последнее обновление',
-    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'онлайн', 'TOP UŻYTKOWNIK (24H)': 'ТОП ПОЛЬЗОВАТЕЛЬ (24Ч)', 'NAGRODA DNIA': 'НАГРАДА ДНЯ', 'AKTYWNI TERAZ': 'АКТИВНЫ СЕЙЧАС', '1 żeton / 24h': '1 жетон / 24ч', 'Brak lidera': 'Лидера нет', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.',
+    'BetAI LIVE CHAT': 'BetAI LIVE CHAT', 'online': 'онлайн', 'TOP UŻYTKOWNIK (24H)': 'ТОП ПОЛЬЗОВАТЕЛЬ (24Ч)', 'NAGRODA DNIA': 'НАГРАДА ДНЯ', 'AKTYWNI TERAZ': 'АКТИВНЫ СЕЙЧАС', '1 coin / 24h': '1 жетон / 24ч', 'Brak lidera': 'Лидера нет', 'Dla najbardziej aktywnych': 'Для самых активных', 'Napisz wiadomość...': 'Напишите сообщение...', 'Twoja wiadomość': 'Ваше сообщение', 'Witaj ponownie': 'С возвращением', 'Miło Cię widzieć z powrotem w BetAI.': 'Рады видеть вас снова в BetAI.',
     'Marketplace premium': 'Premium маркетплейс', 'Typy premium': 'Premium прогнозы', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium.': 'Платные прогнозы доступны только Premium пользователям.', 'Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Перейдите на Premium, чтобы монетизировать аналитику.', 'Kup Premium': 'Купить Premium',
     'Wszystkie': 'Все', 'Darmowe': 'Бесплатные', 'Moje': 'Мои', 'Dodaj typ': 'Добавить прогноз', 'Zobacz typ': 'Смотреть прогноз', 'Zobacz prognozę': 'Смотреть прогноз', 'Obserwuj typera': 'Следить за типстером', 'Obserwuj': 'Следить', 'Oczekujący': 'Ожидает', 'Liga Mistrzów': 'Лига чемпионов', 'Dzisiaj': 'Сегодня', 'Prognoz': 'Прогноз', 'Prognoza': 'Прогноз', 'Powyżej 2.5 gola': 'Тотал больше 2.5', 'Ponad 2.5 gola': 'Тотал больше 2.5', 'Kurs': 'Коэф.', 'Koef.': 'Коэф.', 'AI Analiza': 'AI анализ', 'Real w świetnej formie u siebie. Bayern ma problemy w defensywie w ostatnich meczach.': 'Real в отличной форме дома. У Bayern были проблемы в защите в последних матчах.',
     'Top typerzy': 'Топ типстеры', 'Ranking real': 'Реальный рейтинг', 'AI Typy dnia': 'AI прогнозы дня', 'Zobacz wszystkie': 'Смотреть все', 'Brak danych': 'Нет данных', 'Brak typów': 'Нет прогнозов', 'Ładowanie...': 'Загрузка...', 'Łączenie...': 'Подключение...', 'Kup dostęp': 'Купить доступ', 'Szczegóły': 'Детали',
@@ -2284,7 +2284,7 @@ function AnimatedDashboardHero() {
   const heroSlides = [
     { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — żetony, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
     { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
     { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
     { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
@@ -2501,8 +2501,8 @@ function LiveChatPanel({ user }) {
       const wallet = await getTokenWallet(dailyLeader.email, dailyLeader.user_id)
       await setTokenWallet(dailyLeader.email, Number(wallet.balance || 0) + 1, wallet.user_id || dailyLeader.user_id || null)
       await addTokenTransaction(dailyLeader.email, 1, 'live_chat_daily_leader', 'live_chat_daily_rewards', { reward_date: rewardDate, message_count: dailyLeader.count })
-      await safeInsertSystemNotification(dailyLeader.email, 'Nagroda za aktywność na czacie', `Gratulacje! Jesteś liderem aktywności BetAI Live Chat za dziś. Dodaliśmy 1 żeton do Twojego konta.`, 1)
-      setStatus(`🏆 ${dailyLeader.name} dostał 1 żeton za top aktywność 24h.`)
+      await safeInsertSystemNotification(dailyLeader.email, 'Nagroda za aktywność na czacie', `Gratulacje! Jesteś liderem aktywności BetAI Live Chat za dziś. Dodaliśmy 1 coin do Twojego konta.`, 1)
+      setStatus(`🏆 ${dailyLeader.name} dostał 1 coin za top aktywność 24h.`)
     } catch (error) {
       console.warn('daily chat reward skipped', error)
     }
@@ -2703,7 +2703,7 @@ function LiveChatPanel({ user }) {
         })
         if (!bonusError && bonusResult?.awarded) {
           window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
-          setStatus(`Wiadomość wysłana. Bonus dzienny: +${Number(bonusResult.tokens_awarded || 1)} żeton za pierwszą wiadomość dnia.`)
+          setStatus(`Wiadomość wysłana. Bonus dzienny: +${Number(bonusResult.tokens_awarded || 1)} coin za pierwszą wiadomość dnia.`)
         } else {
           setStatus(hadProfanity ? 'Wiadomość wysłana, ale przekleństwa zostały wykropkowane. Ostrzeżenie dodane do powiadomień.' : 'Wiadomość wysłana na live chat.')
         }
@@ -2747,7 +2747,7 @@ function LiveChatPanel({ user }) {
     try {
       const senderWallet = await getTokenWallet(email, user?.id || null)
       if (Number(senderWallet.balance || 0) < 1) {
-        setStatus('Masz za mało żetonów, aby wysłać tip.')
+        setStatus('Masz za mało coinów, aby wysłać tip.')
         return
       }
 
@@ -2806,11 +2806,11 @@ function LiveChatPanel({ user }) {
       }
       await addTokenTransaction(email, -1, 'live_chat_tip_sent', 'live_chat_tips', { message_id: String(msg.id), to_email: targetEmail })
       await addTokenTransaction(targetEmail, 1, 'live_chat_tip_received', 'live_chat_tips', { message_id: String(msg.id), from_email: email })
-      await safeInsertSystemNotification(targetEmail, 'Dostałeś tip na czacie', `${userName} wysłał Ci 1 żeton za wiadomość na BetAI Live Chat.`, 1)
-      await safeInsertSystemNotification(email, 'Tip wysłany', `Wysłałeś 1 żeton do ${msg.user_name || nameFromEmail(targetEmail)}.`, 0)
+      await safeInsertSystemNotification(targetEmail, 'Dostałeś tip na czacie', `${userName} wysłał Ci 1 coin za wiadomość na BetAI Live Chat.`, 1)
+      await safeInsertSystemNotification(email, 'Tip wysłany', `Wysłałeś 1 coin do ${msg.user_name || nameFromEmail(targetEmail)}.`, 0)
 
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
-      setStatus(`Tip wysłany do ${msg.user_name || nameFromEmail(targetEmail)}. Twoje saldo: ${nextSenderBalance} żetonów.`)
+      setStatus(`Tip wysłany do ${msg.user_name || nameFromEmail(targetEmail)}. Twoje saldo: ${nextSenderBalance} coinów.`)
       await loadMessages()
     } catch (error) {
       console.error('live chat tip error', error)
@@ -10000,7 +10000,7 @@ function ReceivedTipPopup({ popup, open, onClose }) {
   if (!popup) return null
   const sender = popup.senderName || 'Użytkownik'
   const amount = Math.max(1, Number(popup.amount || 1) || 1)
-  const amountLabel = amount === 1 ? '1 żeton' : `${amount} żetony`
+  const amountLabel = amount === 1 ? '1 coin' : `${amount} coiny`
   return (
     <div className={`betai-received-tip-overlay ${open ? 'is-visible' : 'is-hiding'}`} role="status" aria-live="polite">
       <div className={`betai-received-tip-card ${open ? 'is-visible' : 'is-hiding'}`}>
@@ -10427,8 +10427,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const getRewardUnlockLabel = (rewardKey) => {
     const claim = rewardClaims?.[rewardKey]
     const ts = new Date(claim?.created_at || 0).getTime()
-    if (!Number.isFinite(ts) || !ts) return 'Za 24h'
-    return 'Za 24h'
+    if (!Number.isFinite(ts) || !ts) return 'Zrób misję'
+    return 'Odebrane'
   }
 
   const getCommunityDisplayName = (item = {}) => {
@@ -10446,14 +10446,15 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
 
   const channelDefs = [
-    { key: 'ogolny', label: 'ogólny', icon: '#' },
-    { key: 'typy-premium', label: 'typy-premium', icon: '#' },
-    { key: 'pilka-nozna', label: 'piłka-nożna', icon: '#' },
-    { key: 'koszykowka', label: 'koszykówka', icon: '#' },
-    { key: 'tenis', label: 'tenis', icon: '#' },
-    { key: 'esport', label: 'esport', icon: '#' },
-    { key: 'zaklady-na-zywo', label: 'zakłady-na-żywo', icon: '#' },
-    { key: 'wygrane', label: 'wygrane', icon: '#' }
+    { key: 'ogolny', label: 'Polski', icon: '🇵🇱', group: 'Języki' },
+    { key: 'english', label: 'English / UK', icon: '🇬🇧', group: 'Języki' },
+    { key: 'espanol', label: 'Español', icon: '🇪🇸', group: 'Języki' },
+    { key: 'deutsch', label: 'Deutsch', icon: '🇩🇪', group: 'Języki' },
+    { key: 'pilka-nozna', label: 'Piłka nożna', icon: '⚽', group: 'Sporty' },
+    { key: 'kupony-spolecznosci', label: 'Kupony społeczności', icon: '🎟️', group: 'Typy' },
+    { key: 'zaklady-na-zywo', label: 'Live betting', icon: '🔴', group: 'Typy' },
+    { key: 'typy-premium', label: 'Typy premium', icon: '👑', group: 'Typy' },
+    { key: 'wygrane', label: 'Wygrane', icon: '🏆', group: 'Typy' }
   ]
 
   const activeChannelMeta = channelDefs.find(ch => ch.key === activeCommunityChannel) || channelDefs[0]
@@ -10527,6 +10528,20 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     return { myPosts, myComments, myLikes, myChat, total: myPosts + myComments + myLikes + myChat }
   }, [posts, commentsByPost, chatMessages, userEmail, user?.id])
 
+  const dailyStats = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000
+    const isMine = (row = {}) => normalizeEmail(row.author_email) === userEmail || String(row.author_id || '') === String(user?.id || '')
+    const isFresh = (row = {}) => {
+      const ts = new Date(row.created_at || 0).getTime()
+      return Number.isFinite(ts) && ts >= cutoff
+    }
+    const myPosts = posts.filter(row => isMine(row) && isFresh(row)).length
+    const myComments = Object.values(commentsByPost || {}).flat().filter(row => isMine(row) && isFresh(row)).length
+    const myLikes = posts.reduce((sum, row) => sum + (isMine(row) && isFresh(row) ? Number(row.likes_count || 0) : 0), 0)
+    const myChat = chatMessages.filter(row => isMine(row) && isFresh(row)).length
+    return { myPosts, myComments, myLikes, myChat, total: myPosts + myComments + myLikes + myChat }
+  }, [posts, commentsByPost, chatMessages, userEmail, user?.id])
+
   const rewardRows = [
     { key: 'first_post', icon: '📝', title: 'Pierwszy post społeczności', desc: 'Opublikuj minimum jeden realny post.', done: communityStats.myPosts >= 1, progress: Math.min(100, communityStats.myPosts * 100), current: `${Math.min(communityStats.myPosts, 1)}/1`, reward: 1 },
     { key: 'first_comment', icon: '💬', title: 'Pierwszy komentarz', desc: 'Dodaj komentarz pod postem.', done: communityStats.myComments >= 1, progress: Math.min(100, communityStats.myComments * 100), current: `${communityStats.myComments}/1`, reward: 1 },
@@ -10535,9 +10550,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
 
   const dailyMissionRows = [
-    { key: 'daily_chat', icon: '💬', title: 'Napisz wiadomość', desc: 'Napisz minimum jedną wiadomość na czacie.', done: communityStats.myChat >= 1, progress: communityStats.myChat >= 1 ? 100 : 8, current: `${Math.min(communityStats.myChat, 1)}/1`, reward: 1 },
-    { key: 'daily_post', icon: '📝', title: 'Dodaj post', desc: 'Dodaj minimum jeden post społeczności.', done: communityStats.myPosts >= 1, progress: communityStats.myPosts >= 1 ? 100 : 8, current: `${Math.min(communityStats.myPosts, 1)}/1`, reward: 1 },
-    { key: 'daily_active', icon: '⚡', title: 'Bądź aktywny', desc: 'Zrób łącznie 3 aktywności w społeczności.', done: communityStats.total >= 3, progress: Math.min(100, (communityStats.total / 3) * 100), current: `${Math.min(communityStats.total, 3)}/3`, reward: 1 }
+    { key: 'daily_chat', icon: '💬', title: 'Napisz wiadomość', desc: 'Napisz minimum jedną wiadomość na czacie w ostatnich 24h.', done: dailyStats.myChat >= 1, progress: dailyStats.myChat >= 1 ? 100 : 8, current: `${Math.min(dailyStats.myChat, 1)}/1`, reward: 1 },
+    { key: 'daily_post', icon: '📝', title: 'Dodaj post', desc: 'Dodaj minimum jeden post społeczności w ostatnich 24h.', done: dailyStats.myPosts >= 1, progress: dailyStats.myPosts >= 1 ? 100 : 8, current: `${Math.min(dailyStats.myPosts, 1)}/1`, reward: 1 },
+    { key: 'daily_active', icon: '⚡', title: 'Bądź aktywny', desc: 'Zrób łącznie 3 aktywności w ostatnich 24h.', done: dailyStats.total >= 3, progress: Math.min(100, (dailyStats.total / 3) * 100), current: `${Math.min(dailyStats.total, 3)}/3`, reward: 1 }
   ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
 
   const channelCounts = useMemo(() => {
@@ -10773,7 +10788,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
-      const { data, error } = await supabase.rpc('claim_community_reward_v1008', {
+      const { data, error } = await supabase.rpc('claim_community_reward_v1409', {
         p_user_id: user.id,
         p_email: userEmail,
         p_reward_key: reward.key,
@@ -11008,10 +11023,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     <section className="community-static-v5 community-live-v1008 community-pro-v1012 community-10-v1017">
       <div className="community-v5-header glass-community-v5 community-pro-hero-v1012">
         <div>
-          <span className="community-kicker-v1008">BET+AI SOCIAL LIVE</span>
+          <span className="community-kicker-v1008">BET+AI SOCIAL LIVE • COMMUNITY HUB</span>
           <h1>Społeczność</h1>
-          <p>Rozmawiaj, dziel się typami i zdobywaj nagrody z aktywną społecznością Bet+AI.</p>
-          <div className="community-hero-badges-v1014"><span>💬 Czat</span><span>🏆 Ranking</span><span>🎁 1 żeton</span></div>
+          <p>Rozmawiaj w kanałach językowych, dziel się typami i odbieraj coin dopiero za realną aktywność.</p>
+          <div className="community-hero-badges-v1014"><span>💬 Czat</span><span>🏆 Ranking</span><span>🎁 1 coin</span></div>
         </div>
         <div className="community-v5-online-wrap">
           <div className="community-v5-online-copy">
@@ -11025,7 +11040,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               const name = item.username || communityNameFromEmail(item.email)
               return <button type="button" className={avatar ? 'has-avatar' : ''} key={item.id || index} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
             })}
-            {activeUsersCount > 7 ? <em>+{activeUsersCount - 7}</em> : <em>+1</em>}
+            {activeUsersCount > 7 ? <em>+{activeUsersCount - 7}</em> : <em>+1 coin</em>}
           </div>
         </div>
       </div>
@@ -11038,24 +11053,27 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       <div className="community-pro-grid-v1012">
         <aside className="community-pro-left-v1012">
           <div className="glass-community-v5 pro-left-card-v1012">
-            <div className="pro-left-head-v1012"><strong>Czat live</strong><span><i></i>{Math.max(activeUsersCount, 1)} online</span></div>
+            <div className="pro-left-head-v1012"><strong>Kanały społeczności</strong><span><i></i>{Math.max(activeUsersCount, 1)} online</span></div>
             <div className="pro-channel-list-v1012">
-              {channelDefs.map((row) => (
-                <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} key={row.key} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
-                  <span>{row.icon}</span><b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
-                </button>
+              {channelDefs.map((row, index) => (
+                <React.Fragment key={row.key}>
+                  {index === 0 || channelDefs[index - 1]?.group !== row.group ? <div className="channel-group-title-v1409">{row.group}</div> : null}
+                  <button type="button" className={activeCommunityChannel === row.key ? 'active' : ''} onClick={() => { setActiveCommunityChannel(row.key); setActiveTab('feed') }}>
+                    <span>{row.icon}</span><b>{row.label}</b><em>{channelCounts[row.key] || 0}</em>
+                  </button>
+                </React.Fragment>
               ))}
             </div>
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje dzienne</strong><button type="button">24h</button></div>
+            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong><button type="button">za akcję</button></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
                   <span>{mission.title}</span>
                   <b>{mission.current}</b>
-                  <em>+1</em>
+                  <em>+1 coin</em>
                 </div>
                 <div className="mission-bar-v1012"><i style={{ width: `${Math.max(8, mission.progress)}%` }}></i></div>
                 <button
@@ -11089,7 +11107,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
             </div>
           ) : activeTab === 'rewards' ? (
             <div className="glass-community-v5 community-rewards-live-v1008 community-tab-panel-v1014">
-              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 żeton</b> • limit raz na 24h</span></div>
+              <div className="bottom-card-head-v5"><h3>Nagrody społeczności</h3><span>Każda nagroda: <b>1 coin</b> • limit raz na 24h</span></div>
               {rewardRows.map(reward => (
                 <div className={`community-reward-row-v1008 ${reward.done ? 'is-done' : ''} ${reward.claimed ? 'is-claimed' : ''}`} key={reward.key}>
                   <span>{reward.icon}</span>
@@ -11106,7 +11124,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   <h3>#{activeChannelMeta.label} <span>• {filteredChatMessages.length} wiadomości</span></h3>
                   <button type="button">🔗</button>
                 </div>
-                <div className="pro-pin-v1012"><b>📌 Przypięta wiadomość</b><span>Witamy w społeczności Bet+AI. Pamiętaj o regulaminie i baw się dobrze.</span></div>
+                <div className="pro-pin-v1012"><b>📌 Przypięta wiadomość</b><span>{activeCommunityChannel === 'kupony-spolecznosci' ? 'Tutaj wrzucamy realne kupony społeczności. Dodaj screen, kurs, stawkę i status. Nie pokazuj danych wrażliwych.' : 'Witamy w społeczności Bet+AI. Pamiętaj o regulaminie i baw się dobrze.'}</span></div>
                 <div className="pro-chat-list-v1012">
                   {filteredChatMessages.length ? filteredChatMessages.map(row => {
                     const avatar = row.avatar_url || row.profile_avatar_url
@@ -11150,7 +11168,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     </div>
                   ) : null}
                   <div className="pro-chat-input-v1012 chat-input-active-v1023">
-                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={`Napisz wiadomość w #${activeChannelMeta.label}...`} />
+                    <input value={chatText} onChange={event => setChatText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (chatText.trim() || chatAttachment)) sendChatMessage() }} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wrzuć kupon społeczności albo opisz typy z kuponu...' : `Napisz wiadomość w #${activeChannelMeta.label}...`} />
                     <div className="chat-tools-v1023">
                       <button type="button" title="Dodaj emoji" onClick={() => setEmojiPickerOpen(prev => !prev)}>😊</button>
                       <label title="Dodaj plik">
@@ -11170,7 +11188,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <div><strong>Post w kanale #{activeChannelMeta.label}</strong><small>Post zapisuje się w Supabase z `channel_key` i pojawia tylko w wybranym kanale.</small></div>
                   </div>
                   <div className="composer-v5-row">
-                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={`Napisz post w #${activeChannelMeta.label}...`} />
+                    <input value={postText} onChange={event => setPostText(event.target.value)} placeholder={activeCommunityChannel === 'kupony-spolecznosci' ? 'Wklej realny kupon, kurs, stawkę, status albo screen z bukmachera...' : `Napisz post w #${activeChannelMeta.label}...`} />
                     <button type="button" disabled={busy || !postText.trim()} onClick={() => publishPost(postText)}>{busy ? 'Publikuję...' : 'Opublikuj'}</button>
                   </div>
                 </div>
@@ -11186,8 +11204,8 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top społeczność</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
-            <small className="sidecard-sub-v5">Ranking tygodniowy • posty punktowane 1/doba</small>
+            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
+            <small className="sidecard-sub-v5">Aktywność społeczności • punkty za realne akcje</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
@@ -11198,11 +11216,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
             </div>
-            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież ranking</button>
+            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież aktywność</button>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>Polecani użytkownicy</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
+            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
@@ -12036,7 +12054,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
   const formatHistoryPln = (value, sign = '') => `${sign}${Math.abs(Number(value || 0)).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const formatHistoryTokens = value => {
     const amount = Number(value || 0)
-    return `${amount > 0 ? '+' : ''}${amount.toLocaleString('pl-PL')} ${Math.abs(amount) === 1 ? 'żeton' : 'żetonów'}`
+    return `${amount > 0 ? '+' : ''}${amount.toLocaleString('pl-PL')} ${Math.abs(amount) === 1 ? 'coin' : 'coinów'}`
   }
 
   const loadAccountHistory = async () => {
@@ -12083,8 +12101,8 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         let icon = '▣'
         if (type === 'topup') { title = row.provider === 'stripe' ? 'Wpłata Stripe' : 'Wpłata środków'; icon = '▣' }
         else if (type === 'payout') { title = 'Wypłata środków'; icon = '⇡' }
-        else if ((type === 'spend' || type === 'purchase') && row.provider === 'token_exchange') { title = 'Kupno żetonów'; icon = '◎' }
-        else if (type === 'token_exchange') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
+        else if ((type === 'spend' || type === 'purchase') && row.provider === 'token_exchange') { title = 'Kupno coinów'; icon = '◎' }
+        else if (type === 'token_exchange') { title = 'Wymiana coinów na walutę'; icon = '⇄' }
         else if (type === 'spend' || type === 'purchase') { title = 'Zakup z portfela'; icon = '◎' }
         else if (type === 'premium_purchase') { title = 'Zakup Premium'; icon = '' }
         return {
@@ -12118,13 +12136,13 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         const reason = String(row.reason || '').toLowerCase()
         const delta = Number(row.delta_tokens || 0)
         const refData = row.ref_data || {}
-        let title = 'Operacja żetonów'
+        let title = 'Operacja coinów'
         let icon = 'AI'
         if (reason === 'live_chat_tip_sent') { title = 'Tip wysłany'; icon = '↗' }
         else if (reason === 'live_chat_tip_received') { title = 'Tip otrzymany'; icon = '♡' }
         else if (reason === 'welcome_bonus') { title = 'Bonus powitalny'; icon = '🎁' }
-        else if (reason === 'token_purchase') { title = 'Kupno żetonów'; icon = '◎' }
-        else if (reason === 'token_exchange_to_wallet') { title = 'Wymiana żetonów na walutę'; icon = '⇄' }
+        else if (reason === 'token_purchase') { title = 'Kupno coinów'; icon = '◎' }
+        else if (reason === 'token_exchange_to_wallet') { title = 'Wymiana coinów na walutę'; icon = '⇄' }
         else if (reason === 'live_chat_daily_leader') { title = 'Nagroda lidera czatu'; icon = '🏆' }
         else if (reason === 'live_chat_daily_message') { title = 'Bonus za aktywność'; icon = '💬' }
         else if (reason.startsWith('community_reward') || String(row.ref_type || '').toLowerCase() === 'community_reward') {
@@ -12183,14 +12201,14 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
     const provider = String(payment?.provider || '').toLowerCase()
     if (payment?.invoice_number) return `Faktura ${payment.invoice_number}`
     if (provider.includes('premium')) return 'Zakup Premium'
-    if (provider.includes('token')) return 'Zakup żetonów'
+    if (provider.includes('token')) return 'Zakup coinów'
     if (payment?.tip_id) return 'Zakup typu premium'
     return 'Płatność'
   }
   const getPaymentDocumentSubtitle = payment => {
     const provider = String(payment?.provider || '').toLowerCase()
     if (provider.includes('premium')) return 'Premium 30 dni'
-    if (provider.includes('token')) return 'Zakup żetonów'
+    if (provider.includes('token')) return 'Zakup coinów'
     if (payment?.tip_id) return 'Typ premium'
     return String(payment?.provider || 'Płatność Stripe')
   }
@@ -12371,7 +12389,7 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
                 <div>
                   <i>◎</i>
                   <strong>Pełna kontrola portfela</strong>
-                  <small>Saldo, żetony, płatności i subskrypcja zawsze pod ręką</small>
+                  <small>Saldo, coiny, płatności i subskrypcja zawsze pod ręką</small>
                 </div>
               </div>
             </div>
@@ -12456,14 +12474,14 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               <small>Dostępne środki</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
-              <div className="wallet-v2-stat-top"><span>Saldo żetonów</span><i>◌</i></div>
+              <div className="wallet-v2-stat-top"><span>Saldo coinów</span><i>◌</i></div>
               <strong>{formatTokenCount(userTokens)}</strong>
-              <small>Dostępne żetony</small>
+              <small>Dostępne coiny</small>
             </div>
             <div className="glass-v2-panel wallet-v2-stat">
-              <div className="wallet-v2-stat-top"><span>Wartość sprzedaży żetonów (PLN)</span><i>◍</i></div>
+              <div className="wallet-v2-stat-top"><span>Wartość sprzedaży coinów (PLN)</span><i>◍</i></div>
               <strong>{formatWalletPln(tokenPlnValue)}</strong>
-              <small>1000 żetonów = 0,90 zł przy wymianie</small>
+              <small>1000 coinów = 0,90 zł przy wymianie</small>
             </div>
           </div>
 
@@ -12473,8 +12491,8 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               <div className="wallet-v2-action-grid">
                 <button type="button" onClick={() => onViewChange?.('deposits')}><b>＋</b><span><strong>Wpłać środki</strong><small>Przejdź do wpłat</small></span></button>
                 <button type="button" onClick={() => onViewChange?.('payouts')}><b>⇡</b><span><strong>Wypłać środki</strong><small>Przejdź do wypłat</small></span></button>
-                <button type="button" onClick={() => openTokenExchange('buy')}><b>◎</b><span><strong>Kup żetony</strong><small>1000 żetonów = 1,10 zł</small></span></button>
-                <button type="button" onClick={() => openTokenExchange('sell')}><b>⇄</b><span><strong>Wymień żetony na walutę</strong><small>1000 żetonów = 0,90 zł</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('buy')}><b>◎</b><span><strong>Kup coiny</strong><small>1000 coinów = 1,10 zł</small></span></button>
+                <button type="button" onClick={() => openTokenExchange('sell')}><b>⇄</b><span><strong>Wymień coiny na walutę</strong><small>1000 coinów = 0,90 zł</small></span></button>
                 <button type="button" onClick={() => setAccountHistoryExpanded(true)} className="wallet-v2-action-history"><b>◫</b><span><strong>Historia transakcji</strong><small>Zobacz wszystkie operacje</small></span></button>
               </div>
             </div>
@@ -12696,14 +12714,14 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
         <div className="wallet-token-exchange-overlay" onMouseDown={event => { if (event.target === event.currentTarget) closeTokenExchange() }}>
           <div className="wallet-token-exchange-modal glass-v2-panel">
             <button type="button" className="wallet-token-exchange-close" onClick={closeTokenExchange}>×</button>
-            <h3>{tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony na walutę'}</h3>
+            <h3>{tokenExchangeMode === 'buy' ? 'Kup coiny' : 'Wymień coiny na walutę'}</h3>
             <p>
               {tokenExchangeMode === 'buy'
-                ? 'Kupujesz drożej: 1000 żetonów kosztuje 1,10 zł.'
-                : 'Sprzedajesz taniej: 1000 żetonów daje 0,90 zł.'}
+                ? 'Kupujesz drożej: 1000 coinów kosztuje 1,10 zł.'
+                : 'Sprzedajesz taniej: 1000 coinów daje 0,90 zł.'}
             </p>
             <label>
-              <span>Liczba pakietów po 1000 żetonów</span>
+              <span>Liczba pakietów po 1000 coinów</span>
               <input
                 type="number"
                 min="1"
@@ -12713,11 +12731,11 @@ function WalletPanel({ wallet, tokenBalance = 0, unlockedTips, tips, payments = 
               />
             </label>
             <div className="wallet-token-exchange-summary">
-              <div><small>Żetony</small><b>{formatTokenCount(tokenExchangeTokens)}</b></div>
+              <div><small>Coiny</small><b>{formatTokenCount(tokenExchangeTokens)}</b></div>
               <div><small>{tokenExchangeMode === 'buy' ? 'Koszt' : 'Otrzymasz'}</small><b>{formatWalletPln(tokenExchangeMode === 'buy' ? tokenBuyPrice : tokenSellPrice)}</b></div>
             </div>
             <button type="button" className="wallet-v2-primary-btn" disabled={tokenExchangeBusy} onClick={submitTokenExchange}>
-              {tokenExchangeBusy ? 'Przetwarzam...' : tokenExchangeMode === 'buy' ? 'Kup żetony' : 'Wymień żetony'}
+              {tokenExchangeBusy ? 'Przetwarzam...' : tokenExchangeMode === 'buy' ? 'Kup coiny' : 'Wymień coiny'}
             </button>
           </div>
         </div>
@@ -13325,7 +13343,7 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose,
           </div>
         </div>
         <div className="betai-notify-stats">
-          <div className="betai-notify-stat"><span>Twoje żetony</span><strong>{Number(tokenBalance || 0)}</strong></div>
+          <div className="betai-notify-stat"><span>Twoje coiny</span><strong>{Number(tokenBalance || 0)}</strong></div>
           <div className="betai-notify-stat"><span>Nowe powiadomienia</span><strong>{unread.length}</strong></div>
         </div>
         <div className="betai-notify-list">
@@ -13338,7 +13356,7 @@ function BetaiNotifyPanel({ open, notifications = [], tokenBalance = 0, onClose,
               <div className="betai-notify-body">{getNotificationBody(item)}</div>
               <div className="betai-notify-chips">
                 <span className="betai-chip system">{item.source === 'system' ? 'Komunikat BetAI' : 'Powiadomienie'}</span>
-                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} żetonów</span>}
+                {Number(item.reward_tokens || 0) > 0 && <span className="betai-chip reward">+{Number(item.reward_tokens || 0)} coinów</span>}
               </div>
             </div>
           )) : (
@@ -17332,7 +17350,7 @@ function PaymentsView({ payments = [], onViewChange, onTopUp }) {
   const getPaymentName = payment => {
     const kind = getPaymentKind(payment)
     if (kind === 'premium') return 'Zakup Premium'
-    if (kind === 'tokens') return 'Zakup żetonów'
+    if (kind === 'tokens') return 'Zakup coinów'
     if (kind === 'tips') return 'Zakup typu premium'
     return 'Płatność'
   }
@@ -17415,7 +17433,7 @@ function PaymentsView({ payments = [], onViewChange, onTopUp }) {
             <button type="button" className={paymentFilter === 'all' ? 'active' : ''} onClick={() => setPaymentFilter('all')}>Wszystkie <b>{filterCounts.all}</b></button>
             <button type="button" className={paymentFilter === 'premium' ? 'active' : ''} onClick={() => setPaymentFilter('premium')}>Premium <b>{filterCounts.premium}</b></button>
             <button type="button" className={paymentFilter === 'tips' ? 'active' : ''} onClick={() => setPaymentFilter('tips')}>Typy <b>{filterCounts.tips}</b></button>
-            <button type="button" className={paymentFilter === 'tokens' ? 'active' : ''} onClick={() => setPaymentFilter('tokens')}>Żetony <b>{filterCounts.tokens}</b></button>
+            <button type="button" className={paymentFilter === 'tokens' ? 'active' : ''} onClick={() => setPaymentFilter('tokens')}>Coiny <b>{filterCounts.tokens}</b></button>
             <button type="button" className={paymentFilter === 'other' ? 'active' : ''} onClick={() => setPaymentFilter('other')}>Inne <b>{filterCounts.other}</b></button>
           </div>
 
@@ -17457,7 +17475,7 @@ function PaymentsView({ payments = [], onViewChange, onTopUp }) {
             <ul>
               <li>Zakupy Premium.</li>
               <li>Zakupy płatnych typów.</li>
-              <li>Zakupy żetonów, gdy zostaną podpięte pod płatność.</li>
+              <li>Zakupy coinów, gdy zostaną podpięte pod płatność.</li>
               <li>Prawdziwe faktury Stripe, jeśli zostały wygenerowane.</li>
             </ul>
           </div>
@@ -22932,8 +22950,8 @@ function App() {
     const title = String(row.title || '').toLowerCase()
     const body = String(row.body || row.message || '').toLowerCase()
     const reward = Number(row.reward_tokens || row.delta_tokens || 0) || 0
-    const isRewardMessage = title.includes('wyzwanie') || body.includes('otrzymujesz 1 żeton') || body.includes('otrzymujesz 1 zeton') || body.includes('ranking_challenge')
-    return (reward > 0 || isRewardMessage) && (title.includes('tip') || title.includes('wyzwanie') || body.includes('wysłał ci') || body.includes('wyslal ci') || body.includes('żeton') || body.includes('zeton'))
+    const isRewardMessage = title.includes('wyzwanie') || body.includes('otrzymujesz 1 coin') || body.includes('otrzymujesz 1 zeton') || body.includes('ranking_challenge')
+    return (reward > 0 || isRewardMessage) && (title.includes('tip') || title.includes('wyzwanie') || body.includes('wysłał ci') || body.includes('wyslal ci') || body.includes('coin') || body.includes('zeton'))
   }
 
   function showReceivedTipFromNotification(row = {}, silent = false) {
@@ -23857,13 +23875,13 @@ function App() {
         await supabase.from('betai_system_notifications').insert({
           recipient_email: email,
           title: 'Witamy w BetAI 👋',
-          body: 'Miło Cię widzieć! Na start dodaliśmy 100 żetonów do Twojego konta. Możesz nimi tipować najlepsze wiadomości na czacie.',
+          body: 'Miło Cię widzieć! Na start dodaliśmy 100 coinów do Twojego konta. Możesz nimi tipować najlepsze wiadomości na czacie.',
           reward_tokens: 100,
           sent_by: 'betai',
           is_read: false
         })
         setTokenBalance(100)
-        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Miło Cię widzieć! Dodaliśmy 100 żetonów na start.' })
+        showToast({ type: 'success', title: 'Witaj w BetAI 👋', message: 'Miło Cię widzieć! Dodaliśmy 100 coinów na start.' })
       } else {
         const balance = Number(existing.balance || 0) || 0
         const localBalance = (() => { try { return Number(localStorage.getItem('betai_tokens_' + email) || '0') || 0 } catch (_) { return 0 } })()
@@ -23877,13 +23895,13 @@ function App() {
           await supabase.from('betai_system_notifications').insert({
             recipient_email: email,
             title: 'Witamy w BetAI 👋',
-            body: 'Miło Cię widzieć! Przyznaliśmy jednorazowy bonus powitalny: 100 żetonów.',
+            body: 'Miło Cię widzieć! Przyznaliśmy jednorazowy bonus powitalny: 100 coinów.',
             reward_tokens: 100,
             sent_by: 'betai',
             is_read: false
           })
           setTokenBalance(next)
-          showToast({ type: 'success', title: 'Bonus powitalny', message: 'Dodaliśmy 100 żetonów do Twojego konta.' })
+          showToast({ type: 'success', title: 'Bonus powitalny', message: 'Dodaliśmy 100 coinów do Twojego konta.' })
         } else {
           const welcomeToastKey = `betai_welcome_toast_seen_${email}_${user?.id || ''}`
           let shouldShowWelcomeToast = true
@@ -24246,8 +24264,8 @@ function App() {
       const localRewardNotification = {
         id: `ranking_reward_${rewardKey}`,
         title: 'Wyzwanie ukończone',
-        body: `${challenge.title}: otrzymujesz 1 żeton.`,
-        message: `${challenge.title}: otrzymujesz 1 żeton.`,
+        body: `${challenge.title}: otrzymujesz 1 coin.`,
+        message: `${challenge.title}: otrzymujesz 1 coin.`,
         reward_tokens: 1,
         created_at: new Date().toISOString(),
         is_read: false,
@@ -24821,37 +24839,37 @@ function App() {
 
   async function buyWalletTokens(packs = 1) {
     if (!sessionUser?.id) {
-      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić żetony.' })
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby kupić coiny.' })
       return
     }
     try {
       const { data, error } = await supabase.rpc('buy_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
       if (error) throw error
-      showToast({ type: 'success', title: 'Kupiono żetony', message: `Dodano ${Number(data?.tokens || packs * 1000).toLocaleString('pl-PL')} żetonów.` })
+      showToast({ type: 'success', title: 'Kupiono coiny', message: `Dodano ${Number(data?.tokens || packs * 1000).toLocaleString('pl-PL')} coinów.` })
       await fetchWalletBalance(sessionUser.id)
       await fetchCurrentTokenBalance()
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
       window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
     } catch (error) {
-      showToast({ type: 'error', title: 'Nie udało się kupić żetonów', message: formatAppErrorMessage(error.message) })
+      showToast({ type: 'error', title: 'Nie udało się kupić coinów', message: formatAppErrorMessage(error.message) })
     }
   }
 
   async function sellWalletTokens(packs = 1) {
     if (!sessionUser?.id) {
-      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby wymienić żetony.' })
+      showToast({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby wymienić coiny.' })
       return
     }
     try {
       const { data, error } = await supabase.rpc('sell_wallet_tokens', { p_packs: Math.max(1, Number(packs || 1)) })
       if (error) throw error
-      showToast({ type: 'success', title: 'Wymieniono żetony', message: `Dodano ${Number(data?.pln || packs * 0.9).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł do salda.` })
+      showToast({ type: 'success', title: 'Wymieniono coiny', message: `Dodano ${Number(data?.pln || packs * 0.9).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł do salda.` })
       await fetchWalletBalance(sessionUser.id)
       await fetchCurrentTokenBalance()
       window.dispatchEvent(new CustomEvent('betai-token-balance-changed'))
       window.dispatchEvent(new CustomEvent('betai-wallet-history-changed'))
     } catch (error) {
-      showToast({ type: 'error', title: 'Nie udało się wymienić żetonów', message: formatAppErrorMessage(error.message) })
+      showToast({ type: 'error', title: 'Nie udało się wymienić coinów', message: formatAppErrorMessage(error.message) })
     }
   }
 
@@ -26053,7 +26071,7 @@ function App() {
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
-            <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i żetony">
+            <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i coiny">
               <span className="wallet-split-segment wallet-split-balance">
                 <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
                 <small>Saldo</small>

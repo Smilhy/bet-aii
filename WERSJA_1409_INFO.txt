@@ -1,0 +1,21 @@
+WERSJA 1409 — SPOŁECZNOŚĆ 10/10 + NAGRODY ZA AKCJĘ
+
+Zrobione:
+- hero Społeczność dostał grid/kratkę, neonowe animacje i wygląd premium jak Dodaj typ,
+- kanały zmienione na językowe + sportowe:
+  🇵🇱 Polski, 🇬🇧 English / UK, 🇪🇸 Español, 🇩🇪 Deutsch,
+  ⚽ Piłka nożna, 🏀 Koszykówka, 🎾 Tenis, 🎮 Esport,
+  🔴 Live betting, 👑 Typy premium, 🏆 Wygrane,
+- lewy panel nazywa się Kanały społeczności,
+- misje dzienne zmienione na Misje aktywności,
+- usunięte mylące "Za 24h" jako darmowy odbiór,
+- nagrody są opisane jako coin, nie żeton,
+- frontend używa nowej funkcji SQL claim_community_reward_v1409,
+- nagroda aktywuje się dopiero po realnej akcji w ostatnich 24h:
+  wiadomość / post / komentarz / aktywność,
+- po odebraniu zostaje blokada 24h.
+
+WAŻNE:
+Trzeba wkleić SQL:
+supabase/WERSJA_1409_COMMUNITY_REWARDS_ACTION_REQUIRED.sql
+w Supabase SQL Editor i uruchomić.

@@ -1,0 +1,21 @@
+WERSJA 1410 — SPOŁECZNOŚĆ: USUNIĘTE NIEAKTYWNE KANAŁY
+
+Usunięte z listy kanałów:
+- 🏀 Koszykówka
+- 🎾 Tenis
+- 🎮 Esport
+
+Zostają aktywne kanały:
+- 🇵🇱 Polski
+- 🇬🇧 English / UK
+- 🇪🇸 Español
+- 🇩🇪 Deutsch
+- ⚽ Piłka nożna
+- 🔴 Live betting
+- 👑 Typy premium
+- 🏆 Wygrane
+
+SQL:
+- bez zmian względem wersji 1409,
+- jeśli jeszcze nie odpalałeś SQL z 1409, nadal trzeba go wkleić do Supabase:
+  supabase/WERSJA_1409_COMMUNITY_REWARDS_ACTION_REQUIRED.sql
