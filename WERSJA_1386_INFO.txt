@@ -1,0 +1,11 @@
+WERSJA 1386
+
+Poprawka Rankingu:
+- prawa kolumna została przywrócona, ale tylko z boxem 'Twoje polecenia',
+- usunięty pozostaje box Top typerzy / Polecenia / Liderzy miesiąca,
+- główne taby rankingu bez duplikatu Top typerzy,
+- logika bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

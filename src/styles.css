@@ -64394,3 +64394,25 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ranking-static-v4 .ranking-v4-main{
   grid-column:1 / -1!important;
 }
+
+
+/* WERSJA 1386 — Ranking: przywrócone tylko Twoje polecenia po prawej */
+.ranking-v4-layout{
+  grid-template-columns:minmax(780px,1.62fr) minmax(340px,.58fr)!important;
+  gap:18px!important;
+}
+.ranking-v4-sidebar.ranking-v4-sidebar-referrals-only-v1386{
+  display:grid!important;
+  gap:18px!important;
+}
+.ranking-v4-sidebar-referrals-only-v1386 .sidebar-card-v4.referrals-v4{
+  display:block!important;
+}
+@media (max-width: 1180px){
+  .ranking-v4-layout{
+    grid-template-columns:1fr!important;
+  }
+  .ranking-v4-sidebar.ranking-v4-sidebar-referrals-only-v1386{
+    display:grid!important;
+  }
+}
