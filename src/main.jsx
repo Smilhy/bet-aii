@@ -20101,7 +20101,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             <div className="community-v3 profile-community-referrals-v1393">
               <div><span>👥 Obserwujący</span><b>{followersCount}</b></div>
               <div><span>👤 Obserwowani</span><b>{followingCount}</b></div>
-              <div><span><i className="profile-referral-purple-icon-v1395">🔗</i> Poleceni</span><b>{referralLoading ? '...' : profileReferralCount}</b></div>
+              <div className="profile-referral-row-v1396"><span><i className="profile-referral-purple-icon-v1396" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M10.2 13.8a3.2 3.2 0 0 0 4.5.1l2.7-2.7a3.2 3.2 0 1 0-4.5-4.5l-.7.7" /><path d="M13.8 10.2a3.2 3.2 0 0 0-4.5-.1l-2.7 2.7a3.2 3.2 0 1 0 4.5 4.5l.7-.7" /></svg></i> Poleceni</span><b>{referralLoading ? '...' : profileReferralCount}</b></div>
             </div>
           </div>
 

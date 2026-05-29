@@ -64549,3 +64549,51 @@ html.betai-fhd-monitor80-v1323 body #root{
   display:inline-block!important;
   margin-right:4px!important;
 }
+
+
+/* WERSJA 1396 — Poleceni: ten sam fiolet co ikony Społeczność + biała liczba */
+.profile-community-referrals-v1393 .profile-referral-row-v1396 span{
+  color:#8faabe!important;
+}
+
+.profile-community-referrals-v1393 .profile-referral-row-v1396 b,
+.community-v3.profile-community-referrals-v1393 .profile-referral-row-v1396 b,
+.glass-profile-v3 .profile-community-referrals-v1393 .profile-referral-row-v1396 b{
+  color:#f4feff!important;
+  text-shadow:none!important;
+  font-weight:900!important;
+}
+
+.profile-referral-purple-icon-v1395{
+  display:none!important;
+}
+
+.profile-referral-purple-icon-v1396{
+  width:13px!important;
+  height:13px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin-right:5px!important;
+  vertical-align:-2px!important;
+  color:#8b5cf6!important;
+  filter:drop-shadow(0 0 6px rgba(139,92,246,.38))!important;
+  font-style:normal!important;
+}
+
+.profile-referral-purple-icon-v1396 svg{
+  width:13px!important;
+  height:13px!important;
+  display:block!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:2.2!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+
+/* usuwa zielony override z wersji 1393/1395 tylko dla liczby Poleceni */
+.profile-community-referrals-v1393 > .profile-referral-row-v1396:nth-child(3) b{
+  color:#f4feff!important;
+  text-shadow:none!important;
+}
