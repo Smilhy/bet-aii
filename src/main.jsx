@@ -19111,7 +19111,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     })
     .filter(row => Number.isFinite(row.date?.getTime?.()))
 
-  const allBalanceRows = [...importedChartRows, ...liveChartRows]
+  // WERSJA 1362: nie mieszamy importowanych miesięcy z realnymi typami,
+  // bo wtedy wykres podwójnie liczy profit i pokazuje za duże wartości.
+  // Jeśli są realne rozliczone typy, wykres bazuje na nich. Import jest tylko fallbackiem.
+  const allBalanceRows = (liveChartRows.length ? liveChartRows : importedChartRows)
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const selectedChartRange = profileChartRanges.find(item => item.key === profileChartRange) || profileChartRanges[2]
