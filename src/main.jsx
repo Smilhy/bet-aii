@@ -20473,7 +20473,7 @@ function PayoutsView({ user, payoutRequests = [], onRequestPayout, userPlan = 'f
 
 
 
-function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, followingTipsters = new Set(), onToggleFollow, onOpenTipster, onUnlock, onSubscribeToTipster, onToast }) {
+function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, followingTipsters = new Set(), onToggleFollow, onOpenTipster, onUnlock, onSubscribeToTipster, onToast, onViewChange }) {
   const [filter, setFilter] = useState('all')
   const unlockedIds = new Set([...unlockedTips].map(value => String(value)))
   const unlockedRows = (Array.isArray(tips) ? tips : [])
@@ -20542,9 +20542,13 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
           ))}
         </div>
       ) : (
-        <div className="unlocked-tips-empty-v951 glass-v2-panel">
-          <strong>Nie masz jeszcze kupionych singli</strong>
-          <span>Gdy kupisz pojedynczy typ premium, pojawi się tutaj i będzie zawsze łatwy do znalezienia.</span>
+        <div className="unlocked-tips-empty-v951 unlocked-tips-empty-premium-v1380 glass-v2-panel">
+          <div className="unlocked-empty-orb-v1380">🎫</div>
+          <div>
+            <strong>Nie masz jeszcze kupionych singli</strong>
+            <span>Kup pojedynczy typ premium, a pojawi się tutaj z wynikiem, statusem rozliczenia i szybkim dostępem do kuponu.</span>
+          </div>
+          <button type="button" onClick={() => onViewChange?.('dashboard')}>Zobacz typy premium</button>
         </div>
       )}
     </section>
@@ -26113,6 +26117,7 @@ function App() {
             onUnlock={unlockTip}
             onSubscribeToTipster={setSelectedProfileSub}
             onToast={showToast}
+            onViewChange={setView}
           />
         )}
 

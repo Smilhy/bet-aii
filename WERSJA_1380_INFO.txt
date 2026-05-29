@@ -1,0 +1,12 @@
+WERSJA 1380
+
+Zmiana w zakładce Kupione single / Odblokowane typy:
+- poprawiony empty state, gdy użytkownik nie ma kupionych singli,
+- dodana większa ikona i bardziej premium wygląd pustej sekcji,
+- dodany lepszy tekst informujący, co pojawi się po zakupie,
+- dodany przycisk CTA 'Zobacz typy premium', który przenosi do dashboardu,
+- logika kupionych singli bez zmian.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css
