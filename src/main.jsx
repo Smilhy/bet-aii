@@ -10392,6 +10392,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [openPostMenuId, setOpenPostMenuId] = useState(null)
   const [editingPostId, setEditingPostId] = useState(null)
   const [editingPostText, setEditingPostText] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editingCommentText, setEditingCommentText] = useState('')
+  const [editingChatId, setEditingChatId] = useState(null)
+  const [editingChatText, setEditingChatText] = useState('')
   const [posts, setPosts] = useState([])
   const [chatMessages, setChatMessages] = useState([])
   const [commentsByPost, setCommentsByPost] = useState({})
@@ -10547,6 +10551,28 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const canModerateCommunityPost = (post = {}) => {
     return Boolean(isOwnPost(post) || isAdminUser(user))
+  }
+
+  const isOwnComment = (comment = {}) => {
+    return Boolean(
+      (user?.id && comment.author_id && String(user.id) === String(comment.author_id)) ||
+      (userEmail && normalizeEmail(comment.author_email || '') === userEmail)
+    )
+  }
+
+  const canModerateCommunityComment = (comment = {}) => {
+    return Boolean(isOwnComment(comment) || isAdminUser(user))
+  }
+
+  const isOwnChatMessage = (message = {}) => {
+    return Boolean(
+      (user?.id && message.author_id && String(user.id) === String(message.author_id)) ||
+      (userEmail && normalizeEmail(message.author_email || '') === userEmail)
+    )
+  }
+
+  const canModerateCommunityChatMessage = (message = {}) => {
+    return Boolean(isOwnChatMessage(message) || isAdminUser(user))
   }
 
   const getCappedCommunityPoints = (item = {}) => {
@@ -10826,6 +10852,152 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     }
   }
 
+  function startEditCommunityComment(comment) {
+    if (!comment?.id || !isOwnComment(comment)) return
+    setEditingCommentId(comment.id)
+    setEditingCommentText(String(comment.body || ''))
+  }
+
+  async function saveEditCommunityComment(comment) {
+    const clean = String(editingCommentText || '').trim()
+    if (!comment?.id || !isOwnComment(comment) || !clean || !isSupabaseConfigured || !supabase) return
+    try {
+      setBusy(true)
+
+      const rpcResult = await supabase.rpc('update_community_comment_v1418', {
+        p_comment_id: comment.id,
+        p_body: clean
+      })
+
+      if (rpcResult?.error) {
+        const { error } = await supabase
+          .from('community_comments')
+          .update({ body: clean, updated_at: new Date().toISOString() })
+          .eq('id', comment.id)
+          .eq('author_id', user.id)
+        if (error) throw error
+      }
+
+      setEditingCommentId(null)
+      setEditingCommentText('')
+      onToast?.({ type: 'success', title: 'Społeczność', message: 'Komentarz został zaktualizowany.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('edit community comment error', error)
+      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się edytować komentarza.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteCommunityComment(comment) {
+    if (!comment?.id || !canModerateCommunityComment(comment) || !isSupabaseConfigured || !supabase) return
+    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć ten komentarz?')
+    if (!ok) return
+    try {
+      setBusy(true)
+
+      const rpcResult = await supabase.rpc('delete_community_comment_v1418', {
+        p_comment_id: comment.id
+      })
+
+      if (rpcResult?.error) {
+        const deleteQuery = supabase.from('community_comments').delete().eq('id', comment.id)
+        const { error } = isAdminUser(user)
+          ? await deleteQuery
+          : await deleteQuery.eq('author_id', user.id)
+        if (error) throw error
+      }
+
+      onToast?.({ type: 'success', title: 'Społeczność', message: 'Komentarz został usunięty.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('delete community comment error', error)
+      onToast?.({ type: 'error', title: 'Społeczność', message: 'Nie udało się usunąć komentarza.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function startEditCommunityChatMessage(message) {
+    if (!message?.id || !isOwnChatMessage(message)) return
+    const parts = parseChatBodyParts(message.body)
+    setEditingChatId(message.id)
+    setEditingChatText(String(parts.text || ''))
+  }
+
+  async function saveEditCommunityChatMessage(message) {
+    const clean = String(editingChatText || '').trim()
+    if (!message?.id || !isOwnChatMessage(message) || !isSupabaseConfigured || !supabase) return
+    const parts = parseChatBodyParts(message.body)
+    if (!clean && !parts.attachment) {
+      onToast?.({ type: 'info', title: 'Czat live', message: 'Wiadomość nie może być pusta.' })
+      return
+    }
+    try {
+      setBusy(true)
+      const attachmentText = parts.attachment
+        ? `\n\n[attachment:${JSON.stringify(parts.attachment)}]`
+        : ''
+      const nextBody = `${clean}${attachmentText}`.trim()
+
+      const rpcResult = await supabase.rpc('update_community_chat_message_v1418', {
+        p_message_id: message.id,
+        p_body: nextBody
+      })
+
+      if (rpcResult?.error) {
+        const { error } = await supabase
+          .from('community_chat_messages')
+          .update({ body: nextBody, updated_at: new Date().toISOString() })
+          .eq('id', message.id)
+          .eq('author_id', user.id)
+        if (error) throw error
+      }
+
+      setEditingChatId(null)
+      setEditingChatText('')
+      onToast?.({ type: 'success', title: 'Czat live', message: 'Wiadomość została zaktualizowana.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('edit chat message error', error)
+      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się edytować wiadomości.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function deleteCommunityChatMessage(message) {
+    if (!message?.id || !canModerateCommunityChatMessage(message) || !isSupabaseConfigured || !supabase) return
+    const ok = typeof window === 'undefined' ? true : window.confirm('Usunąć tę wiadomość?')
+    if (!ok) return
+    try {
+      setBusy(true)
+
+      const rpcResult = await supabase.rpc('delete_community_chat_message_v1418', {
+        p_message_id: message.id
+      })
+
+      if (rpcResult?.error) {
+        const deleteQuery = supabase.from('community_chat_messages').delete().eq('id', message.id)
+        const { error } = isAdminUser(user)
+          ? await deleteQuery
+          : await deleteQuery.eq('author_id', user.id)
+        if (error) throw error
+      }
+
+      setEditingChatId(null)
+      setEditingChatText('')
+      onToast?.({ type: 'success', title: 'Czat live', message: 'Wiadomość została usunięta.' })
+      await loadCommunity()
+    } catch (error) {
+      console.error('delete chat message error', error)
+      onToast?.({ type: 'error', title: 'Czat live', message: 'Nie udało się usunąć wiadomości.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
@@ -11069,9 +11241,33 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
               const cAvatar = comment.avatar_url || comment.profile_avatar_url
               const cName = comment.author_name || comment.username || communityNameFromEmail(comment.author_email)
               return (
-                <div className="reply-preview-v5" key={comment.id}>
+                <div className="reply-preview-v5 reply-preview-v1418" key={comment.id}>
                   <span className={`reply-avatar-v5 ${cAvatar ? 'has-avatar' : ''}`}>{cAvatar ? <img src={cAvatar} alt="" /> : String(cName || 'U').slice(0,2).toUpperCase()}</span>
-                  <div><div className="feed-meta-v5"><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(comment)}>{cName}</button><small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small></div><p>{comment.body}</p></div>
+                  <div className="reply-body-v1418">
+                    <div className="feed-meta-v5 reply-meta-v1418">
+                      <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(comment)}>{cName}</button>
+                      <small>{comment.created_at ? new Date(comment.created_at).toLocaleString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : ''}</small>
+                      {isOwnComment(comment) ? (
+                        <span className="comment-actions-v1418">
+                          <button type="button" onClick={() => startEditCommunityComment(comment)}>Edytuj</button>
+                          <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button>
+                        </span>
+                      ) : canModerateCommunityComment(comment) ? (
+                        <span className="comment-actions-v1418">
+                          <button type="button" className="danger" onClick={() => deleteCommunityComment(comment)}>Usuń</button>
+                        </span>
+                      ) : null}
+                    </div>
+                    {editingCommentId === comment.id ? (
+                      <div className="inline-edit-v1418">
+                        <textarea value={editingCommentText} onChange={event => setEditingCommentText(event.target.value)} />
+                        <div>
+                          <button type="button" disabled={busy || !editingCommentText.trim()} onClick={() => saveEditCommunityComment(comment)}>Zapisz</button>
+                          <button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }}>Anuluj</button>
+                        </div>
+                      </div>
+                    ) : <p>{comment.body}</p>}
+                  </div>
                 </div>
               )
             }) : <div className="community-no-comments-v1008">Brak komentarzy. Dodaj pierwszy.</div>}
@@ -11219,13 +11415,35 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     return (
                       <div className="pro-chat-message-v1012" key={row.id}>
                         <span className={`pro-chat-avatar-v1012 ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initials}</span>
-                        <div>
-                          <div className="pro-chat-meta-v1012"><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(row)}>{author}</button><em>{getAccountPlanBadgeLabel(row)}</em><small>{row.created_at ? new Date(row.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small></div>
+                        <div className="chat-message-body-v1418">
+                          <div className="pro-chat-meta-v1012 chat-meta-v1418">
+                            <button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(row)}>{author}</button>
+                            <em>{getAccountPlanBadgeLabel(row)}</em>
+                            <small>{row.created_at ? new Date(row.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : 'teraz'}</small>
+                            {isOwnChatMessage(row) ? (
+                              <span className="chat-message-actions-v1418">
+                                <button type="button" onClick={() => startEditCommunityChatMessage(row)}>Edytuj</button>
+                                <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button>
+                              </span>
+                            ) : canModerateCommunityChatMessage(row) ? (
+                              <span className="chat-message-actions-v1418">
+                                <button type="button" className="danger" onClick={() => deleteCommunityChatMessage(row)}>Usuń</button>
+                              </span>
+                            ) : null}
+                          </div>
                           {(() => {
                             const parts = parseChatBodyParts(row.body)
                             return (
                               <>
-                                {parts.text ? <p>{parts.text}</p> : null}
+                                {editingChatId === row.id ? (
+                                  <div className="inline-edit-v1418 chat-edit-v1418">
+                                    <textarea value={editingChatText} onChange={event => setEditingChatText(event.target.value)} />
+                                    <div>
+                                      <button type="button" disabled={busy || (!editingChatText.trim() && !parts.attachment)} onClick={() => saveEditCommunityChatMessage(row)}>Zapisz</button>
+                                      <button type="button" onClick={() => { setEditingChatId(null); setEditingChatText('') }}>Anuluj</button>
+                                    </div>
+                                  </div>
+                                ) : parts.text ? <p>{parts.text}</p> : null}
                                 {parts.attachment ? (
                                   <div className="chat-attachment-preview-v1025">
                                     {String(parts.attachment.type || '').startsWith('image/') ? <button type="button" className="chat-image-open-v1029" onClick={() => setChatImagePreview(parts.attachment)}><img src={parts.attachment.dataUrl} alt={parts.attachment.name || 'załącznik'} /></button> : <span>📎</span>}
