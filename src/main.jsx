@@ -15270,7 +15270,7 @@ function LeaderboardView({
       },
       {
         key: 'weekly_roi_20',
-        icon: '',
+        icon: '💎',
         title: 'Value Hunter',
         desc: 'Osiągnij ROI powyżej 20%',
         value: Math.min(100, Math.max(0, (roi / 20) * 100)),
@@ -15329,7 +15329,6 @@ function LeaderboardView({
           <span>TYPY</span>
           <span>OBSERWUJĄCY</span>
           <span>PROFIT</span>
-          <span>RANGI</span>
           <span></span>
         </div>
         {rows.map((row, idx) => (
@@ -15347,7 +15346,6 @@ function LeaderboardView({
             <span>{Number(row.totalTips || row.total_tips || 0)}</span>
             <span>{Number(row.followers || 0)}</span>
             <span className="profit-v4">{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatRankingAmount(row.earnings || row.profit || 0)}</span>
-            <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
             <span>
               <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
                 {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}

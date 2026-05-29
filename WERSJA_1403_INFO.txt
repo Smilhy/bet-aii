@@ -1,0 +1,10 @@
+WERSJA 1403
+
+Poprawki:
+- usunięta kolumna RANGI z tabeli rankingu,
+- usunięte ikonki w tej kolumnie,
+- usunięta żółta poświata / glow przy PROFIcie (i powiązane pseudo-ikony),
+- pozostawiony czysty złoty kolor tekstu bez świecenia,
+- lekko poprawione odstępy i czytelność w Galerii sławy.
+
+SQL do Supabase: bez zmian.

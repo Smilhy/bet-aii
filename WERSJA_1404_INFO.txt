@@ -1,0 +1,10 @@
+WERSJA 1404
+
+Poprawka:
+- dodana ikonka 💎 do wyzwania 'Value Hunter',
+- dopasowany kolor ikonki do neonowego stylu,
+- SQL bez zmian — nic nie trzeba uruchamiać w Supabase.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

@@ -65239,3 +65239,72 @@ html.betai-fhd-monitor80-v1323 body #root{
   content:none!important;
   display:none!important;
 }
+
+
+/* WERSJA 1403 — ranking: usunięta kolumna RANGI + usunięty złoty glow przy proficie */
+.ranking-v4-row{
+  grid-template-columns:56px 1.72fr .78fr .72fr .64fr .8fr .96fr .84fr!important;
+}
+
+.ranking-v4-row.head span:nth-child(8){
+  justify-self:end!important;
+}
+
+.badges-cell-v4,
+.ranking-v4-row .badges-cell-v4,
+.ranking-v4-row.head .badges-cell-v4{
+  display:none!important;
+}
+
+/* Profit bez świecenia i bez pseudo-ikonek */
+.ranking-live-v999 .ranking-v4-row .profit-v4,
+.ranking-live-v999 .top-tipster-row-v4 > b,
+.ranking-live-v999 .hall-laurels-v4 small,
+.ranking-live-v999 .hall-copy-v4 small,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b{
+  text-shadow:none!important;
+  animation:none!important;
+  filter:none!important;
+}
+
+.ranking-live-v999 .ranking-v4-row .profit-v4,
+.ranking-live-v999 .top-tipster-row-v4 > b,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b{
+  color:#ffd76a!important;
+}
+
+.ranking-live-v999 .ranking-v4-row .profit-v4::before,
+.ranking-live-v999 .top-tipster-row-v4 > b::before,
+.ranking-live-v999 .ranking-v4-row .profit-v4::after,
+.ranking-live-v999 .top-tipster-row-v4 > b::after,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b::before,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* delikatnie czyściej w galerii */
+.ranking-upgrade-v1398 .hall-laurels-v4 button{
+  padding:10px 12px!important;
+}
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 strong{
+  font-size:18px!important;
+}
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 small,
+.ranking-upgrade-v1398 .hall-laurel-copy-v1401 b{
+  font-size:14px!important;
+  line-height:1.3!important;
+}
+
+
+/* WERSJA 1404 — Wyzwania tygodniowe: ikonka dla Value Hunter */
+.ranking-upgrade-v1398 .challenge-icon-v4{
+  font-size:19px!important;
+  color:#20f2d2!important;
+  text-shadow:0 0 10px rgba(32,242,210,.22)!important;
+}
+
+.ranking-upgrade-v1398 .challenge-item-v4:nth-child(3) .challenge-icon-v4{
+  color:#8b5cf6!important;
+  text-shadow:0 0 12px rgba(139,92,246,.32)!important;
+}
