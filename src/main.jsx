@@ -18036,6 +18036,9 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
   const balanceColumnIndex = Array.isArray(columns)
     ? columns.findIndex(column => String(column || '').trim().toLowerCase() === 'bilans')
     : -1
+  const yieldColumnIndex = Array.isArray(columns)
+    ? columns.findIndex(column => String(column || '').trim().toLowerCase() === 'yield')
+    : -1
   const parseSignedCellValue = value => {
     const normalized = String(value ?? '')
       .replace(/\s+/g, '')
@@ -18057,11 +18060,13 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
           <div key={`${title}-${index}`}>
             {row.map((cell, cellIndex) => {
               const isBalanceCell = cellIndex === balanceColumnIndex
-              const numericValue = isBalanceCell ? parseSignedCellValue(cell) : null
-              const toneClass = isBalanceCell && numericValue !== null
+              const isYieldCell = cellIndex === yieldColumnIndex
+              const isSignedCell = isBalanceCell || isYieldCell
+              const numericValue = isSignedCell ? parseSignedCellValue(cell) : null
+              const toneClass = isSignedCell && numericValue !== null
                 ? (numericValue > 0 ? 'positive' : numericValue < 0 ? 'negative' : 'neutral')
                 : ''
-              return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-balance-v1358 ${toneClass}` : ''}>{cell}</span>
+              return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-signed-v1359 ${toneClass}` : ''}>{cell}</span>
             })}
           </div>
         ))}

@@ -63199,3 +63199,22 @@ html.betai-fhd-monitor80-v1323 body #root{
   color:#d8ebf7!important;
   font-weight:800!important;
 }
+
+
+/* WERSJA 1359 — zielony/czerwony Yield tak jak Bilans */
+.profile-static-v3 .profile-v4-data-table .stats-cell-signed-v1359.positive{
+  color:#2df6a0!important;
+  font-weight:900!important;
+  text-shadow:0 0 12px rgba(45,246,160,.12)!important;
+}
+
+.profile-static-v3 .profile-v4-data-table .stats-cell-signed-v1359.negative{
+  color:#ff6d88!important;
+  font-weight:900!important;
+  text-shadow:0 0 12px rgba(255,109,136,.12)!important;
+}
+
+.profile-static-v3 .profile-v4-data-table .stats-cell-signed-v1359.neutral{
+  color:#d8ebf7!important;
+  font-weight:800!important;
+}
