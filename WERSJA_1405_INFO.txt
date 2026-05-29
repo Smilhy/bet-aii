@@ -1,0 +1,8 @@
+WERSJA 1405
+
+Poprawka:
+- przywrócone RANGI w tabeli rankingu,
+- przywrócone ikonki rang/badge w każdym wierszu,
+- zachowane wcześniejsze poprawki z WERSJI 1404 (ikonka Value Hunter).
+
+SQL do Supabase: brak zmian.
