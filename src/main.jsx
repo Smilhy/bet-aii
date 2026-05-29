@@ -19090,15 +19090,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const minTime = validDates.length ? Math.min(...validDates.map(date => date.getTime())) : row.date.getTime()
     const maxTime = validDates.length ? Math.max(...validDates.map(date => date.getTime())) : row.date.getTime()
     const spanDays = Math.max(0, (maxTime - minTime) / 86400000)
-    const duplicateDay = tickRows.filter(item => isSameCalendarDay(item?.date, row.date)).length > 1
 
+    // Na dłuższych zakresach nie pokazujemy godziny, bo wygląda jak aktualny czas.
+    // Wykres ma czytać się jako historia wyników po datach meczów.
+    if (['30d', '90d', '1y', 'all'].includes(profileChartRange)) {
+      return formatChartDateLabel(row.date, false)
+    }
+
+    // Tylko bardzo krótki zakres 7D może pokazać godzinę, gdy wszystkie punkty są z jednego dnia.
     if (spanDays <= 1) {
       return formatChartDateLabel(row.date, true)
-    }
-    if (spanDays <= 3) {
-      return duplicateDay
-        ? `${formatChartDateLabel(row.date, false)} ${formatChartDateLabel(row.date, true)}`
-        : formatChartDateLabel(row.date, false)
     }
     return formatChartDateLabel(row.date, false)
   }
@@ -19121,7 +19122,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const liveChartRows = allProfileTipCards
     .filter(tip => ['Wygrany', 'Przegrany', 'Zwrot'].includes(tip.statusLabel))
     .map(tip => {
-      const date = new Date(tip.created_at || tip.match_time || Date.now())
+      const date = new Date(tip.match_time || tip.event_time || tip.start_time || tip.created_at || Date.now())
       const stake = Number(tip.stake || 0) || 0
       const odds = Number(tip.odds || 0) || 0
       const profit = tip.statusLabel === 'Wygrany'
