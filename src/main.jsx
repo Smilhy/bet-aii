@@ -15287,10 +15287,10 @@ function LeaderboardView({
   const referralCode = String(referralData?.referral_code || user?.username || user?.email?.split('@')?.[0] || 'BETAI').toUpperCase()
   const referralProgress = Math.min(100, (referralCount / 10) * 100)
   const referralBonuses = [
-    ['10 poleceń', '+1 żeton', referralCount >= 10],
-    ['50 poleceń', '+1 żeton', referralCount >= 50],
-    ['150 poleceń', '+1 żeton', referralCount >= 150],
-    ['300 poleceń', '+1 żeton', referralCount >= 300],
+    ['10 poleceń', '+1 coin', referralCount >= 10],
+    ['50 poleceń', '+10 coin', referralCount >= 50],
+    ['150 poleceń', '+100 coin', referralCount >= 150],
+    ['300 poleceń', '+1000 coin', referralCount >= 300],
   ]
 
   const openRow = (row) => onOpenTipster?.(row.rowRef, row.rowName)
@@ -15390,7 +15390,7 @@ function LeaderboardView({
           {activeTab === 'referrals' ? (
             <div className="glass-ranking-v4 referrals-main-v999">
               <h3>Program poleceń</h3>
-              <p>Udostępnij link i zbieraj aktywnych użytkowników. Nagrody w tej wersji są ustawione na 1 żeton.</p>
+              <p>Udostępnij link i zbieraj aktywnych użytkowników. Nagrody za polecenia są naliczane w coinach.</p>
               <div className="referral-code-v4 big">
                 <span>Kod polecający</span>
                 <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>

@@ -1,0 +1,14 @@
+WERSJA 1389
+
+Poprawka Poleceń:
+- zmieniono nazewnictwo nagród z 'żeton' na 'coin',
+- zmieniono wartości progów:
+  - 10 poleceń = +1 coin,
+  - 50 poleceń = +10 coin,
+  - 150 poleceń = +100 coin,
+  - 300 poleceń = +1000 coin,
+- postęp poleceń zostaje bez zmian,
+- logika progów bez zmian: status odblokowania zależy od referralCount >= próg.
+
+Plik zmieniony:
+- src/main.jsx
