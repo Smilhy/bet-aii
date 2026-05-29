@@ -1,0 +1,13 @@
+WERSJA 1366
+
+Zmiany wykresów Wyniki i Statystyki:
+- mniej punktów na linii: pokazują się tylko kluczowe punkty (start, koniec, zwroty i wybrane punkty pośrednie),
+- gradient linii reaguje na kierunek wyniku: wzrosty zielono/cyan, spadki czerwono/różowo,
+- tooltip po hover pokazuje mecz, datę, typ, kurs, profit/stratę i bilans po typie,
+- pod wykresem dodałem panel summary: zmiana salda, najwyższy punkt, najniższy punkt, średni poziom, liczba rozliczonych typów,
+- wykres ma spokojniejszy glow i subtelniejszy fill,
+- oś X lepiej pokazuje etykiety: gdy kilka punktów jest z tego samego dnia, pokazuje godzinę.
+
+Pliki zmienione:
+- src/main.jsx
+- src/styles.css

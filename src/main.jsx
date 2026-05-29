@@ -18377,6 +18377,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
   const [profileChartRange, setProfileChartRange] = useState('90d')
   const [profileChartMode, setProfileChartMode] = useState('cumulative')
+  const [profileChartHover, setProfileChartHover] = useState(null)
   const [localSettlementPatches, setLocalSettlementPatches] = useState({})
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
@@ -19069,11 +19070,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return new Date(year, Math.max(0, month - 1), 1)
   }
 
-  const formatChartDateLabel = (dateLike) => {
+  const formatChartDateLabel = (dateLike, withTime = false) => {
     const date = dateLike instanceof Date ? dateLike : new Date(dateLike)
     if (!Number.isFinite(date.getTime())) return ''
-    return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
+    return withTime
+      ? date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      : date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })
   }
+  const isSameCalendarDay = (a, b) => {
+    if (!(a instanceof Date) || !(b instanceof Date)) return false
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  }
+  const formatChartAxisLabel = (row, rows = []) => {
+    if (!row?.date) return row?.label || ''
+    const duplicateDay = rows.filter(item => isSameCalendarDay(item?.date, row.date)).length > 1
+    return duplicateDay ? formatChartDateLabel(row.date, true) : formatChartDateLabel(row.date, false)
+  }
+  const getChartResultColor = (delta = 0) => delta > 0 ? '#39f3bc' : delta < 0 ? '#ff5b92' : '#7be6ff'
 
   const importedChartRows = [...liveMonthStatsRows].reverse()
     .map(row => {
@@ -19106,6 +19119,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         date,
         profit,
         stake,
+        odds,
+        pick: tip.pick,
+        home: tip.home,
+        away: tip.away,
+        statusLabel: tip.statusLabel,
         source: 'live'
       }
     })
@@ -19137,7 +19155,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return {
       ...row,
       index,
-      value
+      value,
+      cumulativeValue,
     }
   })
 
@@ -19148,20 +19167,49 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const chartMin = chartMinRaw - chartPadding
   const chartMax = chartMaxRaw + chartPadding
   const chartSpan = Math.max(1, chartMax - chartMin)
-  const chartLinePoints = chartPointRows.map((row, index) => {
-    const x = chartPointRows.length <= 1 ? 0 : (index / (chartPointRows.length - 1)) * 100
+  const chartPlotRows = chartPointRows.map((row, index, arr) => {
+    const x = arr.length <= 1 ? 0 : (index / (arr.length - 1)) * 100
     const y = 100 - ((Number(row.value || 0) - chartMin) / chartSpan) * 100
-    return `${x},${Math.max(4, Math.min(96, y))}`
-  }).join(' ')
+    const prev = arr[index - 1]
+    const next = arr[index + 1]
+    const prevDelta = prev ? Number(row.value || 0) - Number(prev.value || 0) : Number(row.value || 0)
+    const nextDelta = next ? Number(next.value || 0) - Number(row.value || 0) : prevDelta
+    const everyNth = Math.max(5, Math.ceil(arr.length / 6))
+    const turningPoint = prev && next && Math.sign(prevDelta) !== Math.sign(nextDelta)
+    const showDot = arr.length <= 8 || index === 0 || index === arr.length - 1 || turningPoint || index % everyNth === 0
+    return {
+      ...row,
+      x,
+      y: Math.max(4, Math.min(96, y)),
+      delta: prevDelta,
+      showDot,
+    }
+  })
+  const chartLinePoints = chartPlotRows.map(row => `${row.x},${row.y}`).join(' ')
+  const chartGradientStops = chartPlotRows.length <= 1
+    ? [{ offset: 0, color: '#7be6ff' }, { offset: 100, color: '#7be6ff' }]
+    : chartPlotRows.flatMap((row, index, arr) => {
+        const color = getChartResultColor(index === 0 ? row.delta : Number(row.value || 0) - Number(arr[index - 1]?.value || 0))
+        const offset = arr.length <= 1 ? 0 : (index / (arr.length - 1)) * 100
+        return [{ offset, color }, { offset, color }]
+      }).slice(1)
   const chartYLabels = [
     chartMax,
     chartMin + chartSpan * 0.66,
     chartMin + chartSpan * 0.33,
     chartMin
   ].map(value => profileChartMode === 'roi' ? `${Math.round(value)}%` : `${Math.round(value).toLocaleString('pl-PL')}.00`)
-  const chartXLabels = chartPointRows.length > 7
-    ? chartPointRows.filter((_, index) => index === 0 || index === chartPointRows.length - 1 || index % Math.ceil(chartPointRows.length / 5) === 0).slice(0, 7)
-    : chartPointRows
+  const chartXLabels = chartPlotRows.length > 7
+    ? chartPlotRows.filter((_, index) => index === 0 || index === chartPlotRows.length - 1 || index % Math.ceil(chartPlotRows.length / 5) === 0).slice(0, 7)
+    : chartPlotRows
+  const chartSummary = {
+    settledCount: rangedBalanceRows.length,
+    totalProfit: rangedBalanceRows.reduce((sum, row) => sum + Number(row.profit || 0), 0),
+    highest: chartValues.length ? Math.max(...chartValues) : 0,
+    lowest: chartValues.length ? Math.min(...chartValues) : 0,
+    average: chartValues.length ? chartValues.reduce((sum, value) => sum + Number(value || 0), 0) / chartValues.length : 0,
+  }
+  const formatChartSummaryNumber = (value, suffix = '') => `${Number(value || 0) >= 0 ? '+' : ''}${Number(value || 0).toFixed(2)}${suffix}`
   const purchasedSingleCards = (Array.isArray(tips) ? tips : [])
     .map(normalizeTipRow)
     .filter(tip => unlockedTips?.has?.(String(tip.id)) || unlockedTips?.has?.(tip.id))
@@ -19522,7 +19570,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   ))}
                 </div>
 
-                <div className="profile-results-chart-stage-v961">
+                <div className="profile-results-chart-stage-v961" onMouseLeave={() => setProfileChartHover(null)}>
                   <div className="profile-results-yaxis-v961">
                     {chartYLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
                   </div>
@@ -19531,19 +19579,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileBalanceFillV961" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(76,226,255,.40)" />
-                          <stop offset="50%" stopColor="rgba(38,150,255,.16)" />
+                          <stop offset="0%" stopColor="rgba(82,234,255,.26)" />
+                          <stop offset="45%" stopColor="rgba(38,150,255,.10)" />
                           <stop offset="100%" stopColor="rgba(37,168,255,0)" />
                         </linearGradient>
                         <linearGradient id="profileBalanceStrokeV961" x1="0" x2="1" y1="0" y2="0">
-                          <stop offset="0%" stopColor="#ff4b88" />
-                          <stop offset="24%" stopColor="#ff4b88" />
-                          <stop offset="38%" stopColor="#8a68ff" />
-                          <stop offset="58%" stopColor="#25d7ff" />
-                          <stop offset="100%" stopColor="#70f1ff" />
+                          {chartGradientStops.map((stop, index) => <stop key={`result-stop-${index}`} offset={`${stop.offset}%`} stopColor={stop.color} />)}
                         </linearGradient>
                         <filter id="profileBalanceGlowV961">
-                          <feGaussianBlur stdDeviation="1.55" result="coloredBlur" />
+                          <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
                           <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -19551,20 +19595,41 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         </filter>
                       </defs>
                       <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFillV961)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.82" filter="url(#profileBalanceGlowV961)" />
-                      {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
-                        const [x, y] = point.split(',').map(Number)
-                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null
-                        if (arr.length > 42 && index % Math.ceil(arr.length / 38) !== 0 && index !== arr.length - 1) return null
-                        const row = chartPointRows[index] || {}
-                        return <circle key={`${point}-${index}`} className={Number(row.value || 0) < 0 ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
-                      })}
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.76" filter="url(#profileBalanceGlowV961)" />
+                      {chartPlotRows.filter(row => row.showDot).map((row, index, arr) => (
+                        <circle
+                          key={`${row.key || row.label}-${index}`}
+                          className={Number(row.delta || row.value || 0) < 0 ? 'loss' : 'win'}
+                          cx={row.x}
+                          cy={row.y}
+                          r={index === arr.length - 1 ? 1.14 : .72}
+                          onMouseEnter={() => setProfileChartHover({ row, chart: 'results' })}
+                        />
+                      ))}
                     </svg>
+                    {profileChartHover && profileChartHover.chart === 'results' && (
+                      <div className="profile-chart-tooltip-v1366" style={{ left: `${Math.min(86, Math.max(8, profileChartHover.row.x))}%`, top: `${Math.min(78, Math.max(8, profileChartHover.row.y))}%` }}>
+                        <strong>{profileChartHover.row.home && profileChartHover.row.away ? `${profileChartHover.row.home} — ${profileChartHover.row.away}` : profileChartHover.row.label}</strong>
+                        <span>{profileChartHover.row.date ? `${formatChartDateLabel(profileChartHover.row.date)} ${formatChartDateLabel(profileChartHover.row.date, true)}` : ''}</span>
+                        {profileChartHover.row.pick && <span>Typ: {profileChartHover.row.pick}</span>}
+                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>Kurs: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
+                        <span>Profit / strata: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
+                        <span>Bilans po typie: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="profile-results-xaxis-v961">
-                    {chartXLabels.map((row, index) => <span key={`${row.key || row.label}-${index}`}>{formatChartDateLabel(row.date) || row.label}</span>)}
+                    {chartXLabels.map((row, index) => <span key={`${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels) || row.label}</span>)}
                   </div>
+                </div>
+
+                <div className="profile-chart-summary-v1366">
+                  <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
+                  <article><small>Najwyższy punkt</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>Najniższy punkt</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
+                  <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
               </section>
               <section className="glass-profile-v3 profile-v3-card profile-v4-table-card">
@@ -19651,7 +19716,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   ))}
                 </div>
 
-                <div className="profile-results-chart-stage-v961">
+                <div className="profile-results-chart-stage-v961" onMouseLeave={() => setProfileChartHover(null)}>
                   <div className="profile-results-yaxis-v961">
                     {chartYLabels.map((label, index) => <span key={`stats-y-${label}-${index}`}>{label}</span>)}
                   </div>
@@ -19660,19 +19725,15 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileStatsBalanceFillV1361" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(76,226,255,.40)" />
-                          <stop offset="50%" stopColor="rgba(38,150,255,.16)" />
+                          <stop offset="0%" stopColor="rgba(82,234,255,.26)" />
+                          <stop offset="45%" stopColor="rgba(38,150,255,.10)" />
                           <stop offset="100%" stopColor="rgba(37,168,255,0)" />
                         </linearGradient>
                         <linearGradient id="profileStatsBalanceStrokeV1361" x1="0" x2="1" y1="0" y2="0">
-                          <stop offset="0%" stopColor="#ff4b88" />
-                          <stop offset="24%" stopColor="#ff4b88" />
-                          <stop offset="38%" stopColor="#8a68ff" />
-                          <stop offset="58%" stopColor="#25d7ff" />
-                          <stop offset="100%" stopColor="#70f1ff" />
+                          {chartGradientStops.map((stop, index) => <stop key={`stats-stop-${index}`} offset={`${stop.offset}%`} stopColor={stop.color} />)}
                         </linearGradient>
                         <filter id="profileStatsBalanceGlowV1361">
-                          <feGaussianBlur stdDeviation="1.55" result="coloredBlur" />
+                          <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
                           <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -19680,20 +19741,41 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         </filter>
                       </defs>
                       <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileStatsBalanceFillV1361)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="1.82" filter="url(#profileStatsBalanceGlowV1361)" />
-                      {(linePoints || '').split(' ').filter(Boolean).map((point, index, arr) => {
-                        const [x, y] = point.split(',').map(Number)
-                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null
-                        if (arr.length > 42 && index % Math.ceil(arr.length / 38) !== 0 && index !== arr.length - 1) return null
-                        const row = chartPointRows[index] || {}
-                        return <circle key={`stats-point-${point}-${index}`} className={Number(row.value || 0) < 0 ? 'loss' : 'win'} cx={x} cy={y} r={index === arr.length - 1 ? 1.35 : .92} />
-                      })}
+                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="1.76" filter="url(#profileStatsBalanceGlowV1361)" />
+                      {chartPlotRows.filter(row => row.showDot).map((row, index, arr) => (
+                        <circle
+                          key={`stats-point-${row.key || row.label}-${index}`}
+                          className={Number(row.delta || row.value || 0) < 0 ? 'loss' : 'win'}
+                          cx={row.x}
+                          cy={row.y}
+                          r={index === arr.length - 1 ? 1.14 : .72}
+                          onMouseEnter={() => setProfileChartHover({ row, chart: 'stats' })}
+                        />
+                      ))}
                     </svg>
+                    {profileChartHover && profileChartHover.chart === 'stats' && (
+                      <div className="profile-chart-tooltip-v1366" style={{ left: `${Math.min(86, Math.max(8, profileChartHover.row.x))}%`, top: `${Math.min(78, Math.max(8, profileChartHover.row.y))}%` }}>
+                        <strong>{profileChartHover.row.home && profileChartHover.row.away ? `${profileChartHover.row.home} — ${profileChartHover.row.away}` : profileChartHover.row.label}</strong>
+                        <span>{profileChartHover.row.date ? `${formatChartDateLabel(profileChartHover.row.date)} ${formatChartDateLabel(profileChartHover.row.date, true)}` : ''}</span>
+                        {profileChartHover.row.pick && <span>Typ: {profileChartHover.row.pick}</span>}
+                        {Number.isFinite(profileChartHover.row.odds) && profileChartHover.row.odds > 0 && <span>Kurs: {Number(profileChartHover.row.odds).toFixed(2)}</span>}
+                        <span>Profit / strata: {formatChartSummaryNumber(profileChartHover.row.profit)}</span>
+                        <span>Bilans po typie: {formatChartSummaryNumber(profileChartHover.row.cumulativeValue)}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="profile-results-xaxis-v961">
-                    {chartXLabels.map((row, index) => <span key={`stats-x-${row.key || row.label}-${index}`}>{formatChartDateLabel(row.date) || row.label}</span>)}
+                    {chartXLabels.map((row, index) => <span key={`stats-x-${row.key || row.label}-${index}`}>{formatChartAxisLabel(row, chartXLabels) || row.label}</span>)}
                   </div>
+                </div>
+
+                <div className="profile-chart-summary-v1366">
+                  <article><small>Zmiana salda</small><strong className={chartSummary.totalProfit < 0 ? 'neg' : 'pos'}>{formatChartSummaryNumber(chartSummary.totalProfit)}</strong></article>
+                  <article><small>Najwyższy punkt</small><strong>{formatChartSummaryNumber(chartSummary.highest)}</strong></article>
+                  <article><small>Najniższy punkt</small><strong className={chartSummary.lowest < 0 ? 'neg' : ''}>{formatChartSummaryNumber(chartSummary.lowest)}</strong></article>
+                  <article><small>Średni poziom</small><strong>{formatChartSummaryNumber(chartSummary.average)}</strong></article>
+                  <article><small>Rozliczone typy</small><strong>{chartSummary.settledCount}</strong></article>
                 </div>
               </section>
               <div className="profile-v4-stats-grid">
