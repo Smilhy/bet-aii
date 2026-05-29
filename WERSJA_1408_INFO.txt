@@ -1,0 +1,11 @@
+WERSJA 1408 — FIX REJESTRACJI Z LINKU POLECAJĄCEGO
+
+Zrobione w plikach strony:
+- komunikat błędu rejestracji wskazuje poprawny plik SQL: SUPABASE_RUN_ONCE_FIX_REGISTER_REFERRAL_503.sql,
+- przy rejestracji frontend przekazuje referral_code i ref w metadata,
+- jeżeli Supabase zwróci od razu sesję po rejestracji, frontend dodatkowo próbuje zapisać polecenie przez RPC register_referral_signup,
+- dodany plik SQL w folderze supabase/.
+
+WAŻNE:
+- Ten fix wymaga uruchomienia SQL w Supabase.
+- Wklej zawartość pliku supabase/SUPABASE_RUN_ONCE_FIX_REGISTER_REFERRAL_503.sql w Supabase SQL Editor i kliknij Run.
