@@ -1,0 +1,5 @@
+WERSJA 1449 — sortowanie Mecze Result od najnowszej daty
+Zmiany:
+- Mecze Result sortuje wpisy od najnowszej daty do najstarszej
+- zachowany wygląd 1448
+- build OK

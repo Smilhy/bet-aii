@@ -67199,3 +67199,153 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ai-center-grid-v747.stats-fullwidth{
   display:block!important;
 }
+
+/* WERSJA 1448 — Mecze Result 10/10 polish */
+.ai-center-page-v747 .ai-results-card-v1448{
+  padding:18px 18px 10px !important;
+  border-radius:28px !important;
+  border:1px solid rgba(88,214,255,.12) !important;
+  background:linear-gradient(180deg, rgba(6,22,36,.84), rgba(3,14,25,.92)) !important;
+  box-shadow:0 22px 56px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+.ai-center-page-v747 .ai-table-title-results-v1448{
+  align-items:flex-start !important;
+  gap:14px !important;
+  margin-bottom:16px !important;
+}
+.ai-center-page-v747 .ai-title-stack-v1448{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:5px !important;
+}
+.ai-center-page-v747 .ai-table-title-results-v1448 h3{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  margin:0 !important;
+  color:#f7fcff !important;
+  font-size:34px !important;
+  line-height:1 !important;
+  letter-spacing:-.055em !important;
+  font-weight:950 !important;
+}
+.ai-center-page-v747 .ai-table-title-results-v1448 h3 small{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:38px !important;
+  height:26px !important;
+  padding:0 10px !important;
+  border-radius:999px !important;
+  background:linear-gradient(180deg, rgba(59,240,230,.18), rgba(80,164,255,.16)) !important;
+  border:1px solid rgba(85,225,255,.20) !important;
+  color:#79f4eb !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  letter-spacing:0 !important;
+}
+.ai-center-page-v747 .ai-table-title-results-v1448 p{
+  margin:0 !important;
+  color:#9ec2d4 !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+.ai-center-page-v747 .ai-table-title-results-v1448 > span{
+  align-self:flex-start !important;
+  padding:7px 11px !important;
+  border-radius:999px !important;
+  background:rgba(7,31,47,.72) !important;
+  border:1px solid rgba(98,214,255,.10) !important;
+  color:#b7d6e7 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:.06em !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.head{
+  padding:13px 12px !important;
+  margin-bottom:6px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(88,214,255,.08) !important;
+  background:rgba(8,24,38,.58) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.head span{
+  color:#a8c8d8 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:.08em !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448{
+  margin-bottom:6px !important;
+  padding:13px 12px !important;
+  border:1px solid transparent !important;
+  border-bottom:1px solid transparent !important;
+  border-radius:16px !important;
+  background:rgba(4,15,28,.26) !important;
+  transition:background .16s ease, border-color .16s ease, transform .16s ease !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448:nth-child(odd){
+  background:rgba(7,22,36,.38) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448:hover{
+  background:rgba(10,31,46,.72) !important;
+  border-color:rgba(67,237,228,.13) !important;
+  transform:translateY(-1px) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 > span{
+  color:#d9edf7 !important;
+  font-size:14px !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 .cell-date,
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 > span:nth-child(2),
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 > span:nth-child(3){
+  color:#9bbdcd !important;
+  font-size:13px !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 .cell-team{
+  color:#f6fbff !important;
+  font-weight:850 !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 .cell-score{
+  color:#ffffff !important;
+  font-size:20px !important;
+  font-weight:950 !important;
+  letter-spacing:-.04em !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 .cell-prediction{
+  color:#dff7ff !important;
+  font-weight:800 !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747 .result{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:76px !important;
+  padding:6px 10px !important;
+  border-radius:999px !important;
+  border:1px solid transparent !important;
+  text-align:center !important;
+  font-size:11px !important;
+  letter-spacing:.05em !important;
+  line-height:1 !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747 .result.won{
+  color:#96ffd9 !important;
+  background:rgba(17,143,95,.16) !important;
+  border-color:rgba(59,243,174,.16) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747 .result.lost{
+  color:#ffc0cd !important;
+  background:rgba(169,36,72,.15) !important;
+  border-color:rgba(255,96,134,.15) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747 .result.pending{
+  color:#ffe5a3 !important;
+  background:rgba(173,132,18,.14) !important;
+  border-color:rgba(255,214,92,.14) !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747 .result.void{
+  color:#dbe9f1 !important;
+  background:rgba(105,129,147,.14) !important;
+  border-color:rgba(173,195,209,.12) !important;
+}

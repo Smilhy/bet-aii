@@ -14786,7 +14786,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
     return Array.from(map.values())
       .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
-      .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
+      // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
+      .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards])
 
   const aiTabCounters = useMemo(() => {
@@ -15583,14 +15584,20 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           )}
 
           {activePanel === 'results' && (
-            <div className="ai-table-card-v747">
-              <div className="ai-table-title-v747"><h3>Mecze Result</h3><span>Dziennik każdego typu AI</span></div>
+            <div className="ai-table-card-v747 ai-results-card-v1448">
+              <div className="ai-table-title-v747 ai-table-title-results-v1448">
+                <div className="ai-title-stack-v1448">
+                  <h3>Mecze Result <small>{resultCards.length}</small></h3>
+                  <p>Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ</p>
+                </div>
+                <span>Archiwum wyników AI</span>
+              </div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
-                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id) }}>
-                  <span>{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span>{card.home}</span><span>{card.scoreHome} - {card.scoreAway}</span><span>{card.away}</span><span>{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{card.status}</span>
+                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747 row-v1448" onClick={() => { setSelectedId(card.id) }}>
+                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{card.scoreHome} - {card.scoreAway}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
                 </div>
-              )) : <div className="ai-result-table-v747"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">pending</span></div>}
+              )) : <div className="ai-result-table-v747 row-v1448"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
             </div>
           )}
 
