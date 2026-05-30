@@ -10508,6 +10508,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   const [suggestedUsers, setSuggestedUsers] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
   const [rewardClaims, setRewardClaims] = useState({})
+  const [verifiedDailyMissions, setVerifiedDailyMissions] = useState(null)
   const [busy, setBusy] = useState(false)
   const [loadingCommunity, setLoadingCommunity] = useState(false)
 
@@ -10538,6 +10539,31 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     const ts = new Date(claim?.created_at || 0).getTime()
     if (!Number.isFinite(ts) || !ts) return 'Zrób misję'
     return 'Odebrane'
+  }
+
+  const getVerifiedDailyMission = (key, fallback = {}) => {
+    const verified = verifiedDailyMissions?.[key]
+    if (!verifiedDailyMissions || !verified) {
+      return {
+        ...fallback,
+        done: false,
+        progress: 0,
+        current: key === 'daily_active' ? '0/3' : '0/1',
+        claimed: false,
+        verified: false
+      }
+    }
+
+    const target = Number(verified.target || (key === 'daily_active' ? 3 : 1))
+    const count = Math.max(0, Number(verified.count || 0))
+    return {
+      ...fallback,
+      done: Boolean(verified.done),
+      progress: target > 0 ? Math.min(100, (count / target) * 100) : 0,
+      current: `${Math.min(count, target)}/${target}`,
+      claimed: Boolean(verified.claimed),
+      verified: true
+    }
   }
 
   const getCommunityDisplayName = (item = {}) => {
@@ -10729,10 +10755,28 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
 
   const dailyMissionRows = [
-    { key: 'daily_chat', icon: '💬', title: 'Napisz wiadomość', desc: 'Napisz minimum jedną wiadomość na czacie w ostatnich 24h.', done: dailyStats.myChat >= 1, progress: dailyStats.myChat >= 1 ? 100 : 8, current: `${Math.min(dailyStats.myChat, 1)}/1`, reward: 1 },
-    { key: 'daily_post', icon: '📝', title: 'Dodaj post', desc: 'Dodaj minimum jeden post społeczności w ostatnich 24h.', done: dailyStats.myPosts >= 1, progress: dailyStats.myPosts >= 1 ? 100 : 8, current: `${Math.min(dailyStats.myPosts, 1)}/1`, reward: 1 },
-    { key: 'daily_active', icon: '⚡', title: 'Bądź aktywny', desc: 'Zrób łącznie 3 aktywności w ostatnich 24h.', done: dailyStats.total >= 3, progress: Math.min(100, (dailyStats.total / 3) * 100), current: `${Math.min(dailyStats.total, 3)}/3`, reward: 1 }
-  ].map(row => ({ ...row, claimed: Boolean(rewardClaims?.[row.key]) }))
+    getVerifiedDailyMission('daily_chat', {
+      key: 'daily_chat',
+      icon: '💬',
+      title: 'Napisz wiadomość',
+      desc: 'Napisz minimum jedną wiadomość na czacie w ostatnich 24h.',
+      reward: 1
+    }),
+    getVerifiedDailyMission('daily_post', {
+      key: 'daily_post',
+      icon: '📝',
+      title: 'Dodaj post',
+      desc: 'Dodaj minimum jeden post społeczności w ostatnich 24h.',
+      reward: 1
+    }),
+    getVerifiedDailyMission('daily_active', {
+      key: 'daily_active',
+      icon: '⚡',
+      title: 'Bądź aktywny',
+      desc: 'Zrób łącznie 3 aktywności w ostatnich 24h.',
+      reward: 1
+    })
+  ]
 
   const channelCounts = useMemo(() => {
     const counts = {}
@@ -10779,6 +10823,24 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     }
 
     try {
+      if (user?.id && userEmail) {
+        try {
+          const { data: verifiedData, error: verifiedError } = await supabase.rpc('get_community_daily_missions_v1435', {
+            p_user_id: user.id,
+            p_email: userEmail
+          })
+          if (!verifiedError && verifiedData) {
+            setVerifiedDailyMissions(verifiedData)
+          } else {
+            setVerifiedDailyMissions(null)
+          }
+        } catch (_) {
+          setVerifiedDailyMissions(null)
+        }
+      } else {
+        setVerifiedDailyMissions(null)
+      }
+
       const postsData = await safeQuery(
         supabase.from('community_posts').select('*').order('created_at', { ascending: false }).limit(35),
         []
@@ -11505,7 +11567,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
             <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
             {dailyMissionRows.map(mission => (
-              <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
+              <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : 'is-locked'} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
                   <span>{mission.title}</span>
                   <b>{mission.current}</b>
@@ -11515,7 +11577,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                 <button
                   type="button"
                   className="daily-mission-claim-v1022"
-                  disabled={!mission.done || mission.claimed}
+                  disabled={!mission.verified || !mission.done || mission.claimed}
                   onClick={() => claimCommunityReward(mission)}
                 >
                   {mission.claimed ? getRewardUnlockLabel(mission.key) : mission.done ? 'Odbierz +1' : 'Wykonaj misję'}

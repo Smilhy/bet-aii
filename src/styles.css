@@ -66424,3 +66424,29 @@ html.betai-fhd-monitor80-v1323 body #root{
 .community-10-v1017 .pro-missions-head-v1012 button{
   display:none!important;
 }
+
+
+/* WERSJA 1435 — misje aktywne dopiero po realnej weryfikacji w bazie */
+.daily-mission-item-v1022.is-locked {
+  opacity: .58;
+  filter: grayscale(.35);
+}
+
+.daily-mission-item-v1022.is-locked .mission-bar-v1012 i {
+  width: 0 !important;
+  opacity: .35;
+}
+
+.daily-mission-item-v1022.is-locked .daily-mission-claim-v1022,
+.daily-mission-claim-v1022:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  filter: grayscale(.45);
+  box-shadow: none !important;
+}
+
+.daily-mission-item-v1022.is-done:not(.is-claimed) {
+  opacity: 1;
+  filter: none;
+}
+
