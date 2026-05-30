@@ -15586,11 +15586,20 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747">
               <div className="ai-table-title-v747"><h3>Mecze Result</h3><span>Dziennik każdego typu AI</span></div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
-              {resultCards.length ? resultCards.map(card => (
-                <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747" onClick={() => { setSelectedId(card.id) }}>
-                  <span>{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span>{card.home}</span><span>{card.scoreHome} - {card.scoreAway}</span><span>{card.away}</span><span>{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{card.status}</span>
+              {resultCards.length ? resultCards.map(card => {
+                const statusKey = String(card.status || 'pending').toLowerCase()
+                return (
+                <div key={`${card.id}-${card.market}-${card.prediction}`} className={`ai-result-table-v747 row status-${statusKey}`} onClick={() => { setSelectedId(card.id) }}>
+                  <span className="cell-date">{card.date}</span>
+                  <span>{card.sport}</span>
+                  <span>{card.league}</span>
+                  <span className="cell-team home">{card.home}</span>
+                  <span className="cell-score">{card.scoreHome} - {card.scoreAway}</span>
+                  <span className="cell-team away">{card.away}</span>
+                  <span className="cell-prediction">{card.prediction}</span>
+                  <span className={`result ${statusKey}`}>{statusKey.toUpperCase()}</span>
                 </div>
-              )) : <div className="ai-result-table-v747"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">pending</span></div>}
+              )}) : <div className="ai-result-table-v747 row empty-row"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
             </div>
           )}
 
