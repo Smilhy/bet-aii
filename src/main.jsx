@@ -14810,14 +14810,36 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [selectedCard, selectedId])
 
   const stats = useMemo(() => {
-    const settled = allCards.filter(c => ['won','lost','void'].includes(String(c.status).toLowerCase()))
-    const won = allCards.filter(c => String(c.status).toLowerCase() === 'won').length
-    const lost = allCards.filter(c => String(c.status).toLowerCase() === 'lost').length
-    const pending = allCards.filter(c => !['won','lost','void'].includes(String(c.status).toLowerCase())).length
+    const normalizeStatus = c => String(c?.result || c?.status || 'pending').toLowerCase()
+    const readStake = c => Number(c?.stake || c?.bet_amount || c?.amount || 100) || 100
+    const readOdds = c => Number(c?.odds || c?.course || 1.8) || 1.8
+    const calcProfit = c => {
+      const status = normalizeStatus(c)
+      const stake = readStake(c)
+      const odds = readOdds(c)
+      const explicitProfit = c?.profit ?? c?.profit_amount ?? c?.result_profit ?? c?.payout_profit
+      if (explicitProfit !== undefined && explicitProfit !== null && String(explicitProfit) !== '') return Number(explicitProfit) || 0
+      if (['won','win'].includes(status)) return (odds - 1) * stake
+      if (['lost','loss','lose'].includes(status)) return -stake
+      return 0
+    }
+    const settled = allCards.filter(c => ['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c)))
+    const won = allCards.filter(c => ['won','win'].includes(normalizeStatus(c))).length
+    const lost = allCards.filter(c => ['lost','loss','lose'].includes(normalizeStatus(c))).length
+    const pending = allCards.filter(c => !['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c))).length
+    const totalStake = allCards.reduce((sum, c) => sum + readStake(c), 0)
+    const settledStake = settled.reduce((sum, c) => sum + readStake(c), 0)
+    const profit = settled.reduce((sum, c) => sum + calcProfit(c), 0)
+    const yieldValue = settledStake ? Math.round((profit / settledStake) * 100) : 0
+    const avgOddsRaw = allCards.length ? allCards.reduce((sum, c) => sum + readOdds(c), 0) / allCards.length : 0
+    const maxOddsRaw = allCards.length ? Math.max(...allCards.map(readOdds)) : 0
     const avgScore = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.aiScore || 0), 0) / allCards.length) : 0
     const avgEv = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.ev || 0), 0) / allCards.length) : 0
     const hitRate = (won + lost) ? Math.round((won / (won + lost)) * 100) : 0
-    return { total: allCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate }
+    return {
+      total: allCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate,
+      yieldValue, profit, totalStake, avgOdds: avgOddsRaw, maxOdds: maxOddsRaw
+    }
   }, [allCards])
 
   const leagueRows = useMemo(() => {
@@ -15459,13 +15481,17 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <div className="ai-lite-badge ai-lite-badge-live">LIVE</div>
         </div>
       </header>
-      <div className="ai-kpi-grid-v747 ai-kpi-grid-premium-v1066">
-        <div className="ai-kpi-card-v1066 ai-kpi-card--types-v1066"><span>Typy modelu</span><strong>{stats.total}</strong><small>live + dziennik</small></div>
-        <div className="ai-kpi-card-v1066 ai-kpi-card--score-v1066"><span>Śr. ocena AI</span><strong>{stats.avgScore}/100</strong><small>jakość selekcji</small></div>
-        <div className="ai-kpi-card-v1066 ai-kpi-card--ev-v1066"><span>Śr. EV</span><strong>{stats.avgEv >= 0 ? '+' : ''}{stats.avgEv}%</strong><small>wartość modelowa</small></div>
-        <div className="ai-kpi-card-v1066 ai-kpi-card--winrate-v1066"><span>Win rate</span><strong>{stats.hitRate}%</strong><small>{stats.won}W / {stats.lost}L</small></div>
-        <div className="ai-kpi-card-v1066 ai-kpi-card--pending-v1066"><span>Pending</span><strong>{stats.pending}</strong><small>czeka na wynik</small></div>
-      </div>
+      <section className="ai-stat-strip-v1443" aria-label="Statystyki Typy AI">
+        <article className="ai-stat-card-v1443 is-yield"><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>Zwrot z rozliczonych AI</small></div><i>◔</i></article>
+        <article className="ai-stat-card-v1443 is-profit"><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>Bilans Typy AI</small></div><i>₿</i></article>
+        <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>Wszystkie zapisane</small></div><i>↗</i></article>
+        <article className="ai-stat-card-v1443 is-won"><div><span>Wygrane</span><strong>{stats.won}</strong><small>Rozliczone na plus</small></div><i>🏆</i></article>
+        <article className="ai-stat-card-v1443 is-lost"><div><span>Przegrane</span><strong>{stats.lost}</strong><small>Rozliczone na minus</small></div><i>☹</i></article>
+        <article className="ai-stat-card-v1443 is-pending"><div><span>Pending</span><strong>{stats.pending}</strong><small>Czekają na wynik</small></div><i>◷</i></article>
+        <article className="ai-stat-card-v1443 is-stake"><div><span>Stawki AI</span><strong>{stats.totalStake.toFixed(2)}</strong><small>Łącznie zapisane</small></div><i>◎</i></article>
+        <article className="ai-stat-card-v1443 is-odds"><div><span>Śr. kurs</span><strong>{stats.avgOdds.toFixed(2)}</strong><small>Średnia kursów</small></div><i>⌁</i></article>
+        <article className="ai-stat-card-v1443 is-max"><div><span>Max kurs</span><strong>{stats.maxOdds.toFixed(2)}</strong><small>Najwyższy kurs AI</small></div><i>↗</i></article>
+      </section>
 
       <div className="ai-filter-bar-v747">
         <div className="betfolio-sport-cards-v1276 ai-sports-cards-v1279" aria-label="Sporty Typy AI premium">
