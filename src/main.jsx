@@ -10667,12 +10667,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         ? supabase.from('community_reward_claims').select('reward_key,period_key,created_at,email,user_id').or(`user_id.eq.${user.id},email.eq.${userEmail}`)
         : Promise.resolve({ data: [], error: null })
 
-      const [postsResult, chatResult, rankingResult, profilesResult, recommendedResult, claimsResult] = await Promise.all([
-        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(120),
-        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(220),
+      const [postsResult, chatResult, rankingResult, profilesResult, claimsResult] = await Promise.all([
+        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(80),
+        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(120),
         supabase.from('community_weekly_ranking_v1017').select('*').limit(20),
         supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,is_premium,imported_total_tips,imported_won_tips,imported_lost_tips,imported_yield,imported_profit,followers_count,created_at').order('created_at', { ascending: false }).limit(40),
-        supabase.rpc('get_recommended_tipsters_v1421', { p_limit: 8 }),
         claimQuery
       ])
 
@@ -10680,7 +10679,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       if (chatResult.error) console.warn('community chat skipped', chatResult.error)
       if (rankingResult.error) console.warn('community ranking skipped', rankingResult.error)
       if (profilesResult.error) console.warn('community profiles skipped', profilesResult.error)
-      if (recommendedResult.error) console.warn('recommended tipsters skipped', recommendedResult.error)
 
       const loadedPostsRaw = Array.isArray(postsResult.data) ? postsResult.data : []
       const loadedPosts = Array.from(new Map(loadedPostsRaw.map(row => [String(row.id), row])).values())
@@ -10697,19 +10695,27 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setCommunityRanking(rankRows)
 
       const profiles = Array.isArray(profilesResult.data) ? profilesResult.data : []
-      const recommendedRows = Array.isArray(recommendedResult.data) ? recommendedResult.data : []
       const cleanProfiles = profiles.filter(row => !isOwnCommunityUser(row))
-      const cleanRecommended = recommendedRows
+      const rankingSuggestions = rankRows
         .filter(row => !isOwnCommunityUser(row))
         .map(row => ({
           ...row,
-          recommendation_label: row.recommendation_label || (
-            row.is_premium || String(row.plan || '').toLowerCase() === 'premium'
-              ? 'Premium • aktywny typer'
-              : `${Number(row.total_tips || row.imported_total_tips || 0)} typów • aktywny`
-          )
+          id: row.user_id || row.id,
+          recommendation_label: `${getCommunityPostLabel(row.posts_count)} • aktywny`
         }))
-      setSuggestedUsers((cleanRecommended.length ? cleanRecommended : cleanProfiles).slice(0, 8))
+      const profileSuggestions = cleanProfiles
+        .filter(row => (
+          isPremiumProfile(row) ||
+          Number(row.imported_total_tips || 0) > 0 ||
+          Number(row.followers_count || 0) > 0
+        ))
+        .map(row => ({
+          ...row,
+          recommendation_label: isPremiumProfile(row)
+            ? 'Premium'
+            : `${Number(row.imported_total_tips || 0)} typów`
+        }))
+      setSuggestedUsers((rankingSuggestions.length ? rankingSuggestions : profileSuggestions).slice(0, 8))
       setOnlineUsers(profiles.slice(0, 8))
 
       const claims = {}
