@@ -14587,12 +14587,18 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const mk = (market, selection, oddsBase, probBase, note, riskBias = 0) => {
       const h = hashNumber(`${seed}-${market}-${selection}`, -8, 12)
       const odds = Number((oddsBase + (h / 100)).toFixed(2))
-      const probability = Math.max(48, Math.min(92, Math.round(probBase + hashNumber(`${seed}-${market}-p`, -7, 7))))
-      const fairOdds = probability > 0 ? 100 / probability : odds
-      const ev = Math.round(((odds / fairOdds) - 1) * 100)
-      const score = Math.max(55, Math.min(93, Math.round(probability * 0.72 + Math.max(-8, Math.min(20, ev)) * 0.85 + 18 - riskBias)))
-      const risk = odds > 2.45 || probability < 62 ? 'Podwyższone' : score >= 82 && ev >= 5 ? 'Niskie' : 'Średnie'
-      return { market, selection, odds, probability, ev, score, risk, note }
+      const rawProbability = Math.max(48, Math.min(88, Math.round(probBase + hashNumber(`${seed}-${market}-p`, -7, 7))))
+      const fairOdds = rawProbability > 0 ? 100 / rawProbability : odds
+      const rawEv = Math.round(((odds / fairOdds) - 1) * 100) - Math.max(0, riskBias)
+      const normalized = normalizeBetAiValueV1438({
+        odds,
+        probability: rawProbability,
+        ev: rawEv,
+        seed: `${seed}-${market}-${selection}`,
+        market,
+        selection
+      })
+      return { market, selection, odds, probability: normalized.probability, ev: normalized.ev, score: normalized.aiScore, risk: normalized.risk, note }
     }
 
     return [
@@ -14676,35 +14682,55 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
 
-  const mapAiTipRowToCard = (t, index = 0) => ({
-    id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
-    externalFixtureId: String(t.external_fixture_id || t.ai_external_key || ''),
-    sport: 'Piłka nożna',
-    league: t.league || t.league_name || t.country || 'Liga',
-    country: t.country || 'Baza',
-    home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
-    away: t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away',
-    matchName: t.match_name || t.match || `${t.team_home || 'Home'} vs ${t.team_away || 'Away'}`,
-    date: formatDate(t.event_time || t.kickoff_time || t.match_time || t.created_at),
-    rawDate: t.event_time || t.kickoff_time || t.match_time || t.created_at,
-    market: t.market || t.bet_type || 'Typ AI',
-    prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
-    odds: Number(t.odds || t.course || 1.8).toFixed(2),
-    aiScore: Math.round(Number(t.ai_score || t.ai_confidence || t.confidence || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).aiScore)),
-    probability: Math.round(Number(t.probability || t.ai_score || t.ai_confidence || 60)),
-    ev: Math.round(Number(t.value_score ?? buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).ev)),
-    risk: t.risk_level || buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time)).risk,
-    status: t.status || t.result || 'pending',
-    scoreHome: Number(t.live_score_home || 0),
-    scoreAway: Number(t.live_score_away || 0),
-    kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
-    source: 'Supabase Journal',
-    formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
-    formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
-    confidenceText: 'ZAPISANY TYP',
-    curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: t.risk_level || 'Średnie' }),
-    analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
-  })
+  const mapAiTipRowToCard = (t, index = 0) => {
+    const baseQuality = buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time))
+    const odds = Number(t.odds || t.course || 1.8)
+    const rawScore = Number(t.ai_score || t.ai_confidence || t.confidence || baseQuality.aiScore || 60)
+    const rawProbability = Number(t.probability || t.ai_probability || t.ai_confidence || rawScore || 60)
+    const rawEv = Number(t.value_score ?? t.ev ?? baseQuality.ev ?? 0)
+    const normalized = normalizeBetAiValueV1438({
+      odds,
+      probability: rawProbability,
+      ev: rawEv,
+      aiScore: rawScore,
+      seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${t.team_home}-${t.team_away}-${t.market}-${t.selection || t.pick || t.prediction}`,
+      market: t.market || t.bet_type,
+      selection: t.selection || t.pick || t.prediction,
+      home: t.team_home,
+      away: t.team_away,
+      league: t.league || t.league_name || t.country
+    })
+
+    return {
+      id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
+      externalFixtureId: String(t.external_fixture_id || t.ai_external_key || ''),
+      sport: 'Piłka nożna',
+      league: t.league || t.league_name || t.country || 'Liga',
+      country: t.country || 'Baza',
+      home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
+      away: t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away',
+      matchName: t.match_name || t.match || `${t.team_home || 'Home'} vs ${t.team_away || 'Away'}`,
+      date: formatDate(t.event_time || t.kickoff_time || t.match_time || t.created_at),
+      rawDate: t.event_time || t.kickoff_time || t.match_time || t.created_at,
+      market: t.market || t.bet_type || 'Typ AI',
+      prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
+      odds: odds.toFixed(2),
+      aiScore: normalized.aiScore,
+      probability: normalized.probability,
+      ev: normalized.ev,
+      risk: normalized.risk,
+      status: t.status || t.result || 'pending',
+      scoreHome: Number(t.live_score_home || 0),
+      scoreAway: Number(t.live_score_away || 0),
+      kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
+      source: 'Supabase Journal',
+      formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
+      formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
+      confidenceText: normalized.confidenceText,
+      curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: normalized.risk }),
+      analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
+    }
+  }
 
   const dbCards = useMemo(() => {
     return (tips || [])
@@ -15063,6 +15089,60 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const parsed = JSON.parse(raw)
       return parsed?.date === getBetAiSelectedLocalDateV1081(mode) ? parsed : null
     } catch (_) { return null }
+  }
+
+  function clampBetAiV1438(value, min, max) {
+    return Math.max(min, Math.min(max, Number(value) || 0))
+  }
+
+  function normalizeBetAiValueV1438(input = {}) {
+    const odds = clampBetAiV1438(input.odds || 1.8, 1.01, 20)
+    const rawProb = clampBetAiV1438(input.probability || input.aiScore || 60, 35, 90)
+    const rawEv = clampBetAiV1438(input.ev ?? 0, -20, 30)
+    const seed = String(input.seed || `${input.home || ''}-${input.away || ''}-${input.league || ''}-${input.market || ''}-${input.prediction || ''}`)
+    const variance = hashNumber(`ai-normalize-v1438-${seed}`, -4, 4)
+
+    let oddsPenalty = 0
+    if (odds < 1.35) oddsPenalty = 11
+    else if (odds < 1.50) oddsPenalty = 8
+    else if (odds < 1.65) oddsPenalty = 5
+    else if (odds > 3.25) oddsPenalty = 7
+    else if (odds > 2.50) oddsPenalty = 4
+
+    let ev = Math.round(rawEv * 0.55 + variance)
+    ev = clampBetAiV1438(ev, -10, 16)
+
+    if (odds < 1.50) ev = clampBetAiV1438(ev, -8, 9)
+    else if (odds < 1.70) ev = clampBetAiV1438(ev, -8, 12)
+
+    const probability = Math.round(clampBetAiV1438(rawProb * 0.92 + 4 + variance, 45, 86))
+
+    let score = Math.round(
+      48 +
+      (probability - 50) * 0.52 +
+      ev * 0.85 -
+      oddsPenalty +
+      hashNumber(`ai-score-spread-v1438-${seed}`, -5, 5)
+    )
+
+    const canBeElite = probability >= 82 && ev >= 10 && odds >= 1.55 && odds <= 2.30
+    score = clampBetAiV1438(score, 58, canBeElite ? 91 : 86)
+
+    const risk = odds > 2.45 || probability < 63 || ev < 0
+      ? 'Podwyższone'
+      : score >= 82 && ev >= 7
+        ? 'Niskie'
+        : 'Średnie'
+
+    const confidenceText = score >= 88 ? 'TOP VALUE' : score >= 80 ? 'MOCNY TYP' : score >= 72 ? 'DOBRY TYP' : 'OBSERWUJ'
+
+    return {
+      aiScore: score,
+      probability,
+      ev,
+      risk,
+      confidenceText
+    }
   }
 
   function rankBetAiCardsForDailyJournalV1086(cards = []) {
@@ -15511,7 +15591,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 <span className="label">WYBRANY TYP</span>
                 <h2>{selectedCard.home} vs {selectedCard.away}</h2>
                 <p>{selectedCard.sport} • {selectedCard.league} • {selectedCard.date} • {getBetAiKickoffLabelV1051(selectedCard.kickoffState)}</p>
-                <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}/100</strong><span>OCENA AI</span></div>
+                <div className="ai-score-circle-v747"><strong>{selectedCard.aiScore}/100</strong><span>{selectedCard.confidenceText || 'OCENA AI'}</span></div>
                 <div className="selected-pick-v747"><small>Najlepszy rynek</small><b>{selectedCard.prediction}</b><em>{selectedCard.market} • kurs {selectedCard.odds}</em></div>
               </div>
 
