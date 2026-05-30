@@ -10577,13 +10577,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     return Boolean(isOwnChatMessage(message) || isAdminUser(user))
   }
 
-  const getCommunityPostLabel = (count = 0) => {
-    const n = Number(count || 0)
-    if (n === 1) return '1 post'
-    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return `${n} posty`
-    return `${n} postów`
-  }
-
   const getCappedCommunityPoints = (item = {}) => {
     const postsPoint = Number.isFinite(Number(item.rewarded_post_days))
       ? Number(item.rewarded_post_days || 0)
@@ -10668,10 +10661,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         : Promise.resolve({ data: [], error: null })
 
       const [postsResult, chatResult, rankingResult, profilesResult, claimsResult] = await Promise.all([
-        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(80),
-        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(120),
+        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(120),
+        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(220),
         supabase.from('community_weekly_ranking_v1017').select('*').limit(20),
-        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,is_premium,imported_total_tips,imported_won_tips,imported_lost_tips,imported_yield,imported_profit,followers_count,created_at').order('created_at', { ascending: false }).limit(40),
+        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,created_at').order('created_at', { ascending: false }).limit(40),
         claimQuery
       ])
 
@@ -10696,26 +10689,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
       const profiles = Array.isArray(profilesResult.data) ? profilesResult.data : []
       const cleanProfiles = profiles.filter(row => !isOwnCommunityUser(row))
-      const rankingSuggestions = rankRows
-        .filter(row => !isOwnCommunityUser(row))
-        .map(row => ({
-          ...row,
-          id: row.user_id || row.id,
-          recommendation_label: `${getCommunityPostLabel(row.posts_count)} • aktywny`
-        }))
-      const profileSuggestions = cleanProfiles
-        .filter(row => (
-          isPremiumProfile(row) ||
-          Number(row.imported_total_tips || 0) > 0 ||
-          Number(row.followers_count || 0) > 0
-        ))
-        .map(row => ({
-          ...row,
-          recommendation_label: isPremiumProfile(row)
-            ? 'Premium'
-            : `${Number(row.imported_total_tips || 0)} typów`
-        }))
-      setSuggestedUsers((rankingSuggestions.length ? rankingSuggestions : profileSuggestions).slice(0, 8))
+      setSuggestedUsers(cleanProfiles.slice(0, 8))
       setOnlineUsers(profiles.slice(0, 8))
 
       const claims = {}
@@ -11356,7 +11330,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
+            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong><button type="button">za akcję</button></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
@@ -11516,22 +11490,23 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3></div>
+            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <small className="sidecard-sub-v5">Aktywność społeczności • punkty za realne akcje</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{getCommunityPostLabel(item.posts_count)}</span></small></div>
-                  <b>{getCappedCommunityPoints(item)} coin</b>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{Number(item.posts_count || 0)} postów</span><span>limit 1/doba</span></small></div>
+                  <b>{getCappedCommunityPoints(item)} Coin</b>
                 </div>
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
             </div>
+            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież aktywność</button>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3></div>
+            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
@@ -11542,7 +11517,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small><b>{planLabel}</b>{item.recommendation_label ? <span>{item.recommendation_label}</span> : null}</small>
+                      <small><b>{planLabel}</b><span>Profil użytkownika</span></small>
                     </div>
                     <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>
