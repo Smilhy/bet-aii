@@ -66876,3 +66876,19 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .pick-bottom-v747{grid-template-columns:1fr 1fr!important;}
   .ai-center-page-v747 .pick-match-v747{font-size:18px!important;}
 }
+
+/* WERSJA 1442 — przywrócenie kafli sportów w Typy AI (premium 10/10) */
+.ai-center-page-v747 .ai-filter-bar-v747{
+  display:block !important;
+  margin-bottom:14px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.ai-center-page-v747 .ai-filter-bar-v747 .betfolio-sport-cards-v1276.ai-sports-cards-v1279{
+  margin:0 !important;
+}
+.ai-center-page-v747 .ai-range-panel-v1054{
+  display:none !important;
+}
