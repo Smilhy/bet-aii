@@ -1504,7 +1504,7 @@ async function fetchBetaiPublicProfiles() {
     // Ostatni fallback: mały SELECT z profiles. Na RLS może zwrócić tylko aktualnego usera.
     try {
       const statsRows = await fetchBetaiProfilesWithStats()
-      const { data, error } = await withTimeout(supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,rating_avg,rating_count,reviews_count').limit(250), 4500)
+      const { data, error } = await withTimeout(supabase.from('profiles').select('*').limit(250), 4500)
       if (!error && Array.isArray(data)) return finish(mergeProfilesPreferStats(data, statsRows))
       if (statsRows.length) return finish(statsRows)
       if (error && error.message !== 'timeout') console.warn('profiles avatar fallback skipped', error)
@@ -1603,7 +1603,7 @@ async function fetchBetaiProfilesWithStats() {
   if (!isSupabaseConfigured || !supabase) return []
   const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
   try {
-    const { data, error } = await supabase.from('profiles').select(columns).limit(250)
+    const { data, error } = await supabase.from('profiles').select('*').limit(250)
     if (!error && Array.isArray(data)) return data
     if (error) console.warn('profiles stats select skipped', error)
   } catch (error) {
@@ -1994,8 +1994,7 @@ async function resolveTipsterPricingIdentity(source = {}) {
 
   try {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id,email,username,public_slug')
+      .from('profiles').select('*')
       .limit(150)
 
     if (error) throw error
@@ -2027,25 +2026,12 @@ async function loadTipsterPlansForSource(source = {}) {
   const identity = await resolveTipsterPricingIdentity(source)
   const keys = identity.keys || getTipsterPricingKeys(source)
 
-  if (isSupabaseConfigured && supabase) {
-    const idsToTry = [...new Set([identity.id, source?.tipster_id, source?.author_id, source?.user_id, ...keys].filter(Boolean).map(String))]
-    for (const id of idsToTry) {
-      try {
-        const { data, error } = await supabase
-          .from('tipster_plans')
-          .select('plan_key,label,duration_days,price,active')
-          .eq('tipster_id', id)
-          .eq('active', true)
-        if (!error && Array.isArray(data) && data.length) {
-          const plans = normalizeTipsterPlanRows(data)
-          writeLocalTipsterPlans(keys, plans)
-          return plans
-        }
-      } catch (_) {}
-    }
-  }
-
-  return readLocalTipsterPlans(keys) || normalizeTipsterPlanRows([])
+  // WERSJA 1431:
+  // Nie pobieramy już tipster_plans dla każdego typera w Top typerzy.
+  // To robiło kilkanaście/kilkadziesiąt requestów i dawało czerwone 400,
+  // gdy tabela miała inną strukturę albo schema cache nie znał kolumn.
+  // Plany są ładowane z localStorage; zapis z profilu typera nadal może zapisywać remote.
+  return readLocalTipsterPlans([...(keys || []), identity.id, identity.username, identity.email]) || normalizeTipsterPlanRows([])
 }
 
 async function saveTipsterPlansForSource(source = {}, plans = []) {
@@ -2298,8 +2284,7 @@ async function loadSafeTipsForProfile(profile = {}, limit = 200) {
   if (!isSupabaseConfigured || !supabase) return []
   const rows = await safeSupabaseArray(
     supabase
-      .from('tips')
-      .select('*')
+      .from('tips').select('*')
       .order('created_at', { ascending: false })
       .limit(Math.max(50, Math.min(Number(limit || 200), 250))),
     [],
@@ -2693,8 +2678,7 @@ function LiveChatPanel({ user }) {
         // Fallback tylko wtedy, kiedy nie ma profilu w mapie.
         try {
           const { data: chatTipAuthors } = await supabase
-            .from('tips')
-            .select('author_id,user_id,author_name,username,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
+            .from('tips').select('*')
             .order('created_at', { ascending: false })
             .limit(150)
           ;(chatTipAuthors || []).forEach(row => {
@@ -2868,8 +2852,7 @@ function LiveChatPanel({ user }) {
       let receiverUserId = receiverWallet.user_id || null
       try {
         const { data: receiverProfile } = await supabase
-          .from('profiles')
-          .select('id,username,email')
+          .from('profiles').select('*')
           .eq('email', targetEmail)
           .maybeSingle()
         receiverUserId = receiverProfile?.id || receiverUserId
@@ -3219,8 +3202,7 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
   try {
     const nextDay = getBetAiNextWarsawDayKeyV1156(dayKey)
     const { data, error } = await supabase
-      .from('tips')
-      .select('*')
+      .from('tips').select('*')
       .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
       .gte('event_time', `${dayKey}T00:00:00`)
       .lt('event_time', `${nextDay}T00:00:00`)
@@ -13404,8 +13386,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
     try {
       const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'timeout' } }), 3500))
       const queryPromise = supabase
-        .from('profiles')
-        .select('id,email,username,created_at')
+        .from('profiles').select('*')
         .or(`email.ilike.%${q}%,username.ilike.%${q}%`)
         .limit(20)
       const { data, error } = await Promise.race([queryPromise, timeout])
@@ -13462,8 +13443,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       if (dmUserIds.length) {
         const dmProfiles = await safe(
           supabase
-            .from('profiles')
-            .select('id,email,username,created_at')
+            .from('profiles').select('*')
             .in('id', dmUserIds.slice(0, 60)),
           []
         )
@@ -13473,8 +13453,7 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       // Mały fallback, żeby lista nie była pusta na świeżym koncie.
       const recentProfiles = await safe(
         supabase
-          .from('profiles')
-          .select('id,email,username,created_at')
+          .from('profiles').select('*')
           .neq('id', myId)
           .order('created_at', { ascending: false })
           .limit(30),
@@ -14828,8 +14807,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         const selection = String(row.selection || '')
         try {
           const { data: existing, error: findErr } = await supabase
-            .from('tips')
-            .select('id,status,result')
+            .from('tips').select('*')
             .eq('ai_external_key', key)
             .eq('market', market)
             .eq('selection', selection)
@@ -15050,8 +15028,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Dlatego ładujemy jeden wspólny dziennik wszystkich zapisanych typów AI,
       // a nie tylko ostatnio aktywny dzień.
       const { data, error } = await supabase
-        .from('tips')
-        .select('*')
+        .from('tips').select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
         .order('event_time', { ascending: true })
         .limit(200)
@@ -15081,8 +15058,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Potem filtrujemy już twardo po dacie Europe/Warsaw, żeby zakładka "dziś"
       // nie pokazywała meczów z jutra, np. 16.05 podczas dnia 15.05.
       const { data, error } = await supabase
-        .from('tips')
-        .select('*')
+        .from('tips').select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
         .gte('event_time', `${today}T00:00:00`)
         .order('event_time', { ascending: true })
@@ -16643,7 +16619,7 @@ function AuthView({ onAuth }) {
             supabase.from('tips').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
             supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', settledStatuses),
             supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', wonStatuses),
-            supabase.from('tips').select('ai_confidence, ai_probability, confidence').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
+            supabase.from('tips').select('*').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
           ])
 
           const exactCount = (result, fallback = 0) => {
@@ -21053,8 +21029,7 @@ function AdminCouponApprovalView({ user, onToast }) {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('tips')
-        .select('*')
+        .from('tips').select('*')
         .or('manual_settlement_status.eq.pending_admin,admin_approval_status.eq.pending,admin_approval_status.eq.approved,admin_approval_status.eq.rejected')
         .order('manual_settlement_requested_at', { ascending: false, nullsFirst: false })
         .limit(300)
@@ -21849,7 +21824,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     ]
     for (const columns of profileSelects) {
       try {
-        const { data, error } = await supabase.from('profiles').select(columns).order('updated_at', { ascending: false }).limit(200)
+        const { data, error } = await supabase.from('profiles').select('*').order('updated_at', { ascending: false }).limit(200)
         if (error || !Array.isArray(data)) continue
         data.forEach(row => {
           profileAvatarRows.push(row)
@@ -21858,16 +21833,10 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       } catch (_) {}
     }
 
-    const selects = [
-      'author_id,user_id,tipster_id,author_email,user_email,email,author_name,user_name,username,public_slug,author_avatar_url,avatar_url,profile_avatar_url,photo_url,picture,image_url,created_at,updated_at',
-      'author_id,user_id,author_email,user_email,author_name,user_name,username,author_avatar_url,avatar_url,profile_avatar_url,created_at',
-      'user_id,user_email,user_name,avatar_url,created_at',
-      'author_id,author_email,author_name,author_avatar_url,created_at',
-      'username,avatar_url,created_at',
-    ]
+    const selects = ['*']
     for (const columns of selects) {
       try {
-        const { data, error } = await supabase.from('tips').select(columns).order('created_at', { ascending: false }).limit(2000)
+        const { data, error } = await supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(200)
         if (error || !Array.isArray(data)) continue
         data.forEach(row => {
           tipAvatarRows.push(row)
@@ -23427,8 +23396,7 @@ function App() {
   // Pobieramy małą paczkę profili i filtrujemy lokalnie.
   const rows = await safeSupabaseArray(
     supabase
-      .from('profiles')
-      .select('*')
+      .from('profiles').select('*')
       .order('created_at', { ascending: false })
       .limit(250),
     [],
@@ -23547,7 +23515,7 @@ function App() {
       )
 
       const profileFallback = await safeQuery(
-        supabase.from('profiles').select('referral_code,referrals_count,buyers_count,referral_reward_total').eq('id', userId).maybeSingle(),
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
         null
       )
 
@@ -23669,8 +23637,7 @@ function App() {
 
     const [{ data: tipsData, error: tipsError }, { data: unlockedData, error: unlockedError }] = await Promise.all([
       supabase
-        .from('tips')
-        .select('*')
+        .from('tips').select('*')
         .order('created_at', { ascending: false })
         .limit(80),
       userId
@@ -23727,8 +23694,7 @@ function App() {
         if (!clean) return
         ownQueries.push(
           supabase
-            .from('tips')
-            .select('*')
+            .from('tips').select('*')
             .eq(column, clean)
             .order('created_at', { ascending: false })
             .limit(150)
@@ -23783,8 +23749,7 @@ function App() {
       ].join(',')
       if (profileFilters) {
         const { data: authorProfiles, error: authorProfilesError } = await supabase
-          .from('profiles')
-          .select('id,email,username,avatar_url,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_currency')
+          .from('profiles').select('*')
           .or(profileFilters)
         if (!authorProfilesError && Array.isArray(authorProfiles)) {
           const authorProfileMap = new Map()
@@ -24319,8 +24284,7 @@ function App() {
 
     if (rawRef && uuidLike.test(rawRef)) {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
+        .from('profiles').select('*')
         .eq('id', rawRef)
         .maybeSingle()
       if (!error && data?.id) return data
@@ -24340,8 +24304,7 @@ function App() {
     if (!candidates.length) return null
 
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
+      .from('profiles').select('*')
       .limit(150)
 
     if (error) {
@@ -25342,8 +25305,7 @@ function App() {
     if (!subResult.error) subscriptionData = subResult.data
 
     const { data: profData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
+      .from('profiles').select('*')
       .eq('id', userId)
       .maybeSingle()
 
