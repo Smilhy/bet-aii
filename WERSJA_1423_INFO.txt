@@ -1,0 +1,19 @@
+WERSJA 1423 — HOTFIX: SPOŁECZNOŚĆ ZNOWU SZYBKA
+
+Problem:
+- SQL 1421 get_recommended_tipsters_v1421 liczył score w bazie i mógł bardzo spowolnić ładowanie Społeczności.
+
+Zrobione:
+- frontend NIE woła już get_recommended_tipsters_v1421,
+- "Polecani typerzy" liczeni są lekko po stronie frontu na bazie już pobranych rankingów/profili,
+- ograniczyłem startowe pobieranie:
+  czat z 220 do 120 wiadomości,
+  posty ze 120 do 80 postów,
+- dodany awaryjny SQL:
+  supabase/WERSJA_1423_DISABLE_SLOW_RECOMMENDED_RPC.sql
+  który neutralizuje wolną funkcję w Supabase, jeśli stara wersja strony jest jeszcze aktywna.
+
+WAŻNE:
+1. Najpierw wgraj paczkę 1423.
+2. Dla bezpieczeństwa odpal SQL:
+   supabase/WERSJA_1423_DISABLE_SLOW_RECOMMENDED_RPC.sql

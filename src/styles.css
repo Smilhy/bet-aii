@@ -66350,3 +66350,77 @@ html.betai-fhd-monitor80-v1323 body #root{
     grid-template-columns:30px 1fr!important;
   }
 }
+
+
+/* WERSJA 1420 — Społeczność: prawa kolumna clean, bez zbędnych napisów */
+.community-10-v1017 .sidecard-head-v5{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+}
+
+.community-10-v1017 .sidecard-head-v5 button,
+.community-10-v1017 .side-btn-v5{
+  display:none!important;
+}
+
+.community-10-v1017 .side-leader-row-v5 small span + span,
+.community-10-v1017 .suggested-info-v1020 small span{
+  display:none!important;
+}
+
+.community-10-v1017 .side-leader-row-v5 small{
+  display:inline-flex!important;
+  width:auto!important;
+  gap:0!important;
+}
+
+.community-10-v1017 .side-leader-row-v5 b{
+  text-transform:lowercase!important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:0!important;
+}
+
+.community-10-v1017 .sidecard-v5{
+  padding-bottom:18px!important;
+}
+
+
+/* WERSJA 1421 — Polecani typerzy: nie losowi, tylko score/aktywność */
+.community-10-v1017 .suggested-info-v1020 small span{
+  display:inline!important;
+  color:#9fb8c9!important;
+  font-weight:850!important;
+  font-size:11px!important;
+  margin-left:7px!important;
+}
+
+.community-10-v1017 .suggested-info-v1020 small{
+  display:flex!important;
+  align-items:center!important;
+  gap:0!important;
+  flex-wrap:wrap!important;
+}
+
+.community-10-v1017 .suggested-row-v1020{
+  border-color:rgba(34,242,230,.13)!important;
+}
+
+.community-10-v1017 .suggested-row-v1020:hover{
+  border-color:rgba(34,242,230,.28)!important;
+}
+
+
+/* WERSJA 1422 — Społeczność: usunięty badge "za akcję" z Misji aktywności */
+.community-10-v1017 .pro-missions-head-v1012{
+  justify-content:flex-start!important;
+}
+
+.community-10-v1017 .pro-missions-head-v1012 button{
+  display:none!important;
+}

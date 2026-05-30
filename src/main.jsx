@@ -1446,45 +1446,80 @@ function findProfileFromMap(profileMap, source = {}) {
     null
 }
 
+
+let BETAI_PUBLIC_PROFILES_CACHE_1426 = { at: 0, rows: [], promise: null }
+
 async function fetchBetaiPublicProfiles() {
   if (!isSupabaseConfigured || !supabase) return []
 
-  // Najpierw RPC SECURITY DEFINER — omija RLS i daje publiczny avatar każdego użytkownika.
-  try {
-    const { data, error } = await supabase.rpc('betai_public_profiles_for_ui')
-    if (!error && Array.isArray(data)) {
-      const statsRows = await fetchBetaiProfilesWithStats()
-      return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
+  const now = Date.now()
+  if (BETAI_PUBLIC_PROFILES_CACHE_1426.rows?.length && now - BETAI_PUBLIC_PROFILES_CACHE_1426.at < 60 * 1000) {
+    return BETAI_PUBLIC_PROFILES_CACHE_1426.rows
+  }
+  if (BETAI_PUBLIC_PROFILES_CACHE_1426.promise) return BETAI_PUBLIC_PROFILES_CACHE_1426.promise
+
+  const withTimeout = async (promise, ms = 4500) => {
+    try {
+      const timeout = new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), ms))
+      return await Promise.race([promise, timeout])
+    } catch (error) {
+      return { data: null, error }
     }
-    if (error) console.warn('betai_public_profiles_for_ui rpc skipped', error)
-  } catch (error) {
-    console.warn('betai_public_profiles_for_ui rpc exception skipped', error)
   }
 
-  // Fallback: widok publiczny.
-  try {
-    const { data, error } = await supabase.from('betai_public_profiles_for_ui_view').select('*').limit(1000)
-    if (!error && Array.isArray(data)) {
-      const statsRows = await fetchBetaiProfilesWithStats()
-      return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
+  const finish = (rows = []) => {
+    const clean = mergeBetaiProfilesWithCache(Array.isArray(rows) ? rows : [])
+    BETAI_PUBLIC_PROFILES_CACHE_1426 = { at: Date.now(), rows: clean, promise: null }
+    return clean
+  }
+
+  BETAI_PUBLIC_PROFILES_CACHE_1426.promise = (async () => {
+    // Najpierw szybki lokalny cache avatarów, żeby UI nie czekał na pełen katalog.
+    const cached = mergeBetaiProfilesWithCache([])
+
+    // RPC SECURITY DEFINER — limitu nie da się tu ustawić, więc ma timeout i cache.
+    try {
+      const { data, error } = await withTimeout(supabase.rpc('betai_public_profiles_for_ui'), 4500)
+      if (!error && Array.isArray(data)) {
+        const statsRows = await fetchBetaiProfilesWithStats()
+        return finish(mergeProfilesPreferStats(data.slice(0, 250), statsRows))
+      }
+      if (error && error.message !== 'timeout') console.warn('betai_public_profiles_for_ui rpc skipped', error)
+    } catch (error) {
+      console.warn('betai_public_profiles_for_ui rpc exception skipped', error)
     }
-    if (error) console.warn('betai_public_profiles_for_ui view skipped', error)
-  } catch (error) {
-    console.warn('betai_public_profiles_for_ui view exception skipped', error)
-  }
 
-  // Ostatni fallback: bezpośrednio profiles. Na RLS może zwrócić tylko aktualnego usera.
+    // Fallback: widok publiczny z limitem.
+    try {
+      const { data, error } = await withTimeout(supabase.from('betai_public_profiles_for_ui_view').select('*').limit(250), 4500)
+      if (!error && Array.isArray(data)) {
+        const statsRows = await fetchBetaiProfilesWithStats()
+        return finish(mergeProfilesPreferStats(data, statsRows))
+      }
+      if (error && error.message !== 'timeout') console.warn('betai_public_profiles_for_ui view skipped', error)
+    } catch (error) {
+      console.warn('betai_public_profiles_for_ui view exception skipped', error)
+    }
+
+    // Ostatni fallback: mały SELECT z profiles. Na RLS może zwrócić tylko aktualnego usera.
+    try {
+      const statsRows = await fetchBetaiProfilesWithStats()
+      const { data, error } = await withTimeout(supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,rating_avg,rating_count,reviews_count').limit(250), 4500)
+      if (!error && Array.isArray(data)) return finish(mergeProfilesPreferStats(data, statsRows))
+      if (statsRows.length) return finish(statsRows)
+      if (error && error.message !== 'timeout') console.warn('profiles avatar fallback skipped', error)
+    } catch (error) {
+      console.warn('profiles avatar fallback exception skipped', error)
+    }
+
+    return finish(cached)
+  })()
+
   try {
-    const statsRows = await fetchBetaiProfilesWithStats()
-    const { data, error } = await supabase.from('profiles').select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,rating_avg,rating_count,reviews_count').limit(1000)
-    if (!error && Array.isArray(data)) return mergeBetaiProfilesWithCache(mergeProfilesPreferStats(data, statsRows))
-    if (statsRows.length) return mergeBetaiProfilesWithCache(statsRows)
-    if (error) console.warn('profiles avatar fallback skipped', error)
-  } catch (error) {
-    console.warn('profiles avatar fallback exception skipped', error)
+    return await BETAI_PUBLIC_PROFILES_CACHE_1426.promise
+  } finally {
+    BETAI_PUBLIC_PROFILES_CACHE_1426.promise = null
   }
-
-  return mergeBetaiProfilesWithCache([])
 }
 
 function buildBetaiProfileMap(profiles = []) {
@@ -1568,7 +1603,7 @@ async function fetchBetaiProfilesWithStats() {
   if (!isSupabaseConfigured || !supabase) return []
   const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
   try {
-    const { data, error } = await supabase.from('profiles').select(columns).limit(1000)
+    const { data, error } = await supabase.from('profiles').select(columns).limit(250)
     if (!error && Array.isArray(data)) return data
     if (error) console.warn('profiles stats select skipped', error)
   } catch (error) {
@@ -10577,6 +10612,13 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     return Boolean(isOwnChatMessage(message) || isAdminUser(user))
   }
 
+  const getCommunityPostLabel = (count = 0) => {
+    const n = Number(count || 0)
+    if (n === 1) return '1 post'
+    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return `${n} posty`
+    return `${n} postów`
+  }
+
   const getCappedCommunityPoints = (item = {}) => {
     const postsPoint = Number.isFinite(Number(item.rewarded_post_days))
       ? Number(item.rewarded_post_days || 0)
@@ -10654,53 +10696,125 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setSuggestedUsers([])
       return
     }
+
     setLoadingCommunity(true)
+
+    const safeQuery = async (query, fallback = []) => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 6500))
+        const result = await Promise.race([query, timeout])
+        if (result?.error) return fallback
+        return Array.isArray(result?.data) ? result.data : fallback
+      } catch (_) {
+        return fallback
+      }
+    }
+
     try {
-      const claimQuery = user?.id
-        ? supabase.from('community_reward_claims').select('reward_key,period_key,created_at,email,user_id').or(`user_id.eq.${user.id},email.eq.${userEmail}`)
-        : Promise.resolve({ data: [], error: null })
+      const postsData = await safeQuery(
+        supabase.from('community_posts').select('*').order('created_at', { ascending: false }).limit(35),
+        []
+      )
 
-      const [postsResult, chatResult, rankingResult, profilesResult, claimsResult] = await Promise.all([
-        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(120),
-        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(220),
-        supabase.from('community_weekly_ranking_v1017').select('*').limit(20),
-        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,created_at').order('created_at', { ascending: false }).limit(40),
-        claimQuery
-      ])
+      const chatData = await safeQuery(
+        supabase.from('community_chat_messages').select('*').order('created_at', { ascending: true }).limit(60),
+        []
+      )
 
-      if (postsResult.error) console.warn('community posts skipped', postsResult.error)
-      if (chatResult.error) console.warn('community chat skipped', chatResult.error)
-      if (rankingResult.error) console.warn('community ranking skipped', rankingResult.error)
-      if (profilesResult.error) console.warn('community profiles skipped', profilesResult.error)
+      const profilesData = await safeQuery(
+        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,is_premium,imported_total_tips,imported_won_tips,imported_lost_tips,imported_yield,imported_profit,followers_count,created_at').order('created_at', { ascending: false }).limit(30),
+        []
+      )
 
-      const loadedPostsRaw = Array.isArray(postsResult.data) ? postsResult.data : []
-      const loadedPosts = Array.from(new Map(loadedPostsRaw.map(row => [String(row.id), row])).values())
+      const claimsData = user?.id
+        ? await safeQuery(
+            supabase.from('community_reward_claims').select('reward_key,period_key,created_at,email,user_id').or(`user_id.eq.${user.id},email.eq.${userEmail}`).limit(40),
+            []
+          )
+        : []
+
+      const loadedPosts = Array.from(new Map(postsData.map(row => [String(row.id), row])).values())
+      const loadedChat = Array.from(new Map(chatData.map(row => [String(row.id), row])).values())
+
       setPosts(loadedPosts)
+      setChatMessages(loadedChat)
 
-      const loadedChatRaw = Array.isArray(chatResult.data) ? chatResult.data : []
-      setChatMessages(Array.from(new Map(loadedChatRaw.map(row => [String(row.id), row])).values()))
+      const pointsByUser = new Map()
+      loadedPosts.forEach(row => {
+        const key = String(row.author_id || normalizeEmail(row.author_email || '') || row.author_name || '')
+        if (!key) return
+        const prev = pointsByUser.get(key) || {
+          user_id: row.author_id,
+          id: row.author_id,
+          email: normalizeEmail(row.author_email || ''),
+          username: row.author_name || communityNameFromEmail(row.author_email || ''),
+          avatar_url: row.avatar_url || '',
+          posts_count: 0,
+          community_points: 0
+        }
+        prev.posts_count += 1
+        prev.community_points = Math.min(10, prev.posts_count)
+        pointsByUser.set(key, prev)
+      })
 
-      const rankRowsRaw = Array.isArray(rankingResult.data) ? rankingResult.data : []
-      const rankRows = Array.from(new Map(rankRowsRaw.map(row => [String(row.user_id || row.email || row.username), {
-        ...row,
-        community_points: getCappedCommunityPoints(row)
-      }])).values()).sort((a, b) => Number(b.community_points || 0) - Number(a.community_points || 0))
+      loadedChat.forEach(row => {
+        const key = String(row.author_id || normalizeEmail(row.author_email || '') || row.author_name || '')
+        if (!key) return
+        const prev = pointsByUser.get(key) || {
+          user_id: row.author_id,
+          id: row.author_id,
+          email: normalizeEmail(row.author_email || ''),
+          username: row.author_name || communityNameFromEmail(row.author_email || ''),
+          avatar_url: row.avatar_url || '',
+          posts_count: 0,
+          community_points: 0
+        }
+        prev.community_points = Math.min(10, Number(prev.community_points || 0) + 1)
+        pointsByUser.set(key, prev)
+      })
+
+      const rankRows = Array.from(pointsByUser.values())
+        .filter(row => !isOwnCommunityUser(row))
+        .sort((a, b) => Number(b.community_points || 0) - Number(a.community_points || 0))
+        .slice(0, 10)
+
       setCommunityRanking(rankRows)
 
-      const profiles = Array.isArray(profilesResult.data) ? profilesResult.data : []
+      const profiles = Array.isArray(profilesData) ? profilesData : []
       const cleanProfiles = profiles.filter(row => !isOwnCommunityUser(row))
-      setSuggestedUsers(cleanProfiles.slice(0, 8))
+      const rankingSuggestions = rankRows
+        .filter(row => !isOwnCommunityUser(row))
+        .map(row => ({
+          ...row,
+          id: row.user_id || row.id,
+          recommendation_label: `${getCommunityPostLabel(row.posts_count)} • aktywny`
+        }))
+      const profileSuggestions = cleanProfiles
+        .filter(row => (
+          isPremiumProfile(row) ||
+          Number(row.imported_total_tips || 0) > 0 ||
+          Number(row.followers_count || 0) > 0
+        ))
+        .map(row => ({
+          ...row,
+          recommendation_label: isPremiumProfile(row)
+            ? 'Premium'
+            : `${Number(row.imported_total_tips || 0)} typów`
+        }))
+
+      setSuggestedUsers((rankingSuggestions.length ? rankingSuggestions : profileSuggestions).slice(0, 8))
       setOnlineUsers(profiles.slice(0, 8))
 
       const claims = {}
-      ;(claimsResult.data || []).forEach(row => {
+      ;(claimsData || []).forEach(row => {
         if (row.reward_key && isRewardClaimFresh24h(row.created_at)) claims[row.reward_key] = row
       })
       setRewardClaims(claims)
 
-      await loadCommentsForPosts(loadedPosts.slice(0, 18))
+      // Komentarze ładujemy tylko dla kilku najnowszych postów, żeby nie blokować całej strony.
+      await loadCommentsForPosts(loadedPosts.slice(0, 6))
     } catch (error) {
-      console.error('loadCommunity error', error)
+      console.error('loadCommunity emergency error', error)
       setPosts([])
       setChatMessages([])
       setCommunityRanking([])
@@ -10718,7 +10832,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     try {
       const ids = rows.map(row => row.id).filter(Boolean)
       if (!ids.length) return
-      const { data, error } = await supabase.from('community_comments_live_v1017').select('*').in('post_id', ids).order('created_at', { ascending: true })
+      const { data, error } = await supabase.from('community_comments').select('*').in('post_id', ids).order('created_at', { ascending: true }).limit(80)
       if (error) throw error
       const grouped = {}
       Array.from(new Map((data || []).map(row => [String(row.id), row])).values()).forEach(row => {
@@ -10733,18 +10847,9 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   useEffect(() => { loadCommunity() }, [user?.id, user?.email])
 
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) return undefined
-    const channel = supabase
-      .channel('community-live-v1017')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, () => loadCommunity())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments' }, () => loadCommunity())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reactions' }, () => loadCommunity())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_chat_messages' }, () => loadCommunity())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reward_claims' }, () => loadCommunity())
-      .subscribe()
-    return () => { try { supabase.removeChannel(channel) } catch (_) {} }
-  }, [user?.id, user?.email])
+  // WERSJA 1424: Realtime dla społeczności wyłączony awaryjnie.
+  // Wcześniej każde zdarzenie odpalało pełne loadCommunity(), co potrafiło zablokować całą stronę.
+  useEffect(() => undefined, [user?.id, user?.email])
 
   async function publishPost(bodyOverride = '') {
     const clean = String(bodyOverride || postText || '').trim()
@@ -11330,7 +11435,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong><button type="button">za akcję</button></div>
+            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
@@ -11490,23 +11595,22 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
+            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3></div>
             <small className="sidecard-sub-v5">Aktywność społeczności • punkty za realne akcje</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{Number(item.posts_count || 0)} postów</span><span>limit 1/doba</span></small></div>
-                  <b>{getCappedCommunityPoints(item)} Coin</b>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{getCommunityPostLabel(item.posts_count)}</span></small></div>
+                  <b>{getCappedCommunityPoints(item)} coin</b>
                 </div>
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
             </div>
-            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież aktywność</button>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
+            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3></div>
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
@@ -11517,7 +11621,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small><b>{planLabel}</b><span>Profil użytkownika</span></small>
+                      <small><b>{planLabel}</b>{item.recommendation_label ? <span>{item.recommendation_label}</span> : null}</small>
                     </div>
                     <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>
@@ -13212,21 +13316,13 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
     const q = normalizeSearch(query)
     if (!q || q.length < 2 || !isSupabaseConfigured || !supabase || !myId) return
     try {
-      const { data, error } = await supabase.rpc('search_betai_user_directory', { p_query: q })
-      if (!error && Array.isArray(data)) {
-        mergeUsersIntoDirectory(data)
-        return
-      }
-    } catch (rpcError) {
-      console.warn('user directory search rpc skipped', rpcError)
-    }
-
-    try {
-      const { data, error } = await supabase
+      const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'timeout' } }), 3500))
+      const queryPromise = supabase
         .from('profiles')
         .select('id,email,username,created_at')
         .or(`email.ilike.%${q}%,username.ilike.%${q}%`)
-        .limit(25)
+        .limit(20)
+      const { data, error } = await Promise.race([queryPromise, timeout])
       if (!error && Array.isArray(data)) mergeUsersIntoDirectory(data)
     } catch (profileSearchError) {
       console.warn('profiles search fallback skipped', profileSearchError)
@@ -13235,155 +13331,70 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
 
   const loadUsers = async () => {
     if (!isSupabaseConfigured || !supabase || !myId) return
+
+    const safe = async (promise, fallback = []) => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 4500))
+        const result = await Promise.race([promise, timeout])
+        if (result?.error) return fallback
+        return Array.isArray(result?.data) ? result.data : fallback
+      } catch (_) {
+        return fallback
+      }
+    }
+
     try {
-      const profileRows = []
-      const existingProfileIds = new Set()
-      const existingProfileEmails = new Set()
-
-      const addProfileRow = (row = {}) => {
-        const id = String(row?.id || '')
-        const email = normalizeEmail(row?.email || '')
-        if (!id && !email) return
-        const key = id || `email:${email}`
-        if (id && existingProfileIds.has(id)) return
-        if (!id && email && existingProfileEmails.has(email)) return
-        if (id) existingProfileIds.add(id)
-        if (email) existingProfileEmails.add(email)
-        profileRows.push(row)
-      }
-
-      // WERSJA 684: główne źródło listy użytkowników.
-      // Funkcja SQL działa jako security definer i widzi wszystkich zarejestrowanych użytkowników.
-      try {
-        const { data: directoryRows, error: directoryError } = await supabase.rpc('get_betai_user_directory')
-        if (!directoryError && Array.isArray(directoryRows)) {
-          directoryRows.forEach(addProfileRow)
-        }
-      } catch (directoryError) {
-        console.warn('user directory rpc skipped', directoryError)
-      }
-
-      // Fallback: standardowa tabela profiles, jeżeli RLS pozwala ją czytać.
-      try {
-        let from = 0
-        const pageSize = 200
-        for (let guard = 0; guard < 8; guard += 1) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id,email,username,created_at')
-            .order('created_at', { ascending: false })
-            .range(from, from + pageSize - 1)
-          if (error) throw error
-          const batch = Array.isArray(data) ? data : []
-          batch.forEach(addProfileRow)
-          if (batch.length < pageSize) break
-          from += pageSize
-        }
-      } catch (profilesError) {
-        console.warn('profiles directory fallback skipped', profilesError)
-      }
-
-      // Fallback z live chatu: użytkownik może być aktywny na czacie, ale nie pojawiać się w profiles przez RLS.
-      // Po emailu próbujemy dociągnąć jego profil/id.
-      try {
-        const { data: chatUsers, error: chatUsersError } = await supabase
-          .from('live_chat_messages')
-          .select('user_email,user_name,user_id,created_at')
-          .order('created_at', { ascending: false })
-          .limit(1000)
-        if (!chatUsersError && Array.isArray(chatUsers)) {
-          const chatEmails = Array.from(new Set(chatUsers.map(row => normalizeEmail(row.user_email || '')).filter(Boolean)))
-          const chatByEmail = new Map()
-          chatUsers.forEach(row => {
-            const email = normalizeEmail(row.user_email || '')
-            if (!email || email === myEmail) return
-            if (!chatByEmail.has(email)) chatByEmail.set(email, row)
-          })
-
-          if (chatEmails.length) {
-            try {
-              const { data: chatProfiles, error: chatProfilesError } = await supabase
-                .from('profiles')
-                .select('id,email,username,created_at')
-                .in('email', chatEmails)
-              if (!chatProfilesError && Array.isArray(chatProfiles)) {
-                chatProfiles.forEach(addProfileRow)
-              }
-            } catch (chatProfilesError) {
-              console.warn('live chat profile lookup skipped', chatProfilesError)
-            }
-          }
-
-          chatByEmail.forEach((row, email) => {
-            if (existingProfileEmails.has(email) || email === myEmail) return
-            const id = String(row?.user_id || '')
-            if (!id) return
-            addProfileRow({
-              id,
-              email,
-              username: row?.user_name || '',
-              created_at: row?.created_at || ''
-            })
-          })
-        }
-      } catch (chatUsersError) {
-        console.warn('live chat users fallback skipped', chatUsersError)
-      }
-
-      let dmRows = []
-      try {
-        const { data: dmData, error: dmError } = await supabase
+      // WERSJA 1425: lekki katalog DM.
+      // Nie ładujemy wszystkich profili, live chatu i pełnego katalogu co kilka sekund.
+      const dmRows = await safe(
+        supabase
           .from('direct_messages')
           .select('sender_id,receiver_id,created_at')
           .or(`sender_id.eq.${myId},receiver_id.eq.${myId}`)
           .order('created_at', { ascending: false })
-          .limit(500)
-        if (dmError) throw dmError
-        dmRows = Array.isArray(dmData) ? dmData : []
-      } catch (dmError) {
-        console.warn('user messages directory meta skipped', dmError)
-      }
-
-      const dmUserIds = Array.from(new Set((dmRows || []).flatMap(row => [String(row?.sender_id || ''), String(row?.receiver_id || '')]).filter(id => id && id !== String(myId))))
-      if (dmUserIds.length) {
-        // WERSJA 846: zawsze rozwiąż użytkowników rozmów po UUID przez SECURITY DEFINER.
-        // Dzięki temu nicki nie zamieniają się na "Użytkownik ABC123", gdy zwykły SELECT z profiles zablokuje RLS.
-        try {
-          const { data: resolvedDmProfiles, error: resolvedDmProfilesError } = await supabase.rpc('resolve_betai_user_directory', {
-            p_user_ids: dmUserIds
-          })
-          if (!resolvedDmProfilesError && Array.isArray(resolvedDmProfiles)) {
-            resolvedDmProfiles.forEach(addProfileRow)
-          }
-        } catch (resolveError) {
-          console.warn('user messages dm resolver rpc skipped', resolveError)
-        }
-
-        try {
-          const { data: dmProfiles, error: dmProfilesError } = await supabase
-            .from('profiles')
-            .select('id,email,username,created_at')
-            .in('id', dmUserIds)
-          if (!dmProfilesError && Array.isArray(dmProfiles)) {
-            dmProfiles.forEach(addProfileRow)
-          }
-        } catch (profileLookupError) {
-          console.warn('user messages dm profile lookup skipped', profileLookupError)
-        }
-      }
+          .limit(80),
+        []
+      )
 
       const meta = {}
-      dmRows.forEach(row => {
+      const dmUserIds = []
+      ;(dmRows || []).forEach(row => {
         const senderId = String(row?.sender_id || '')
         const receiverId = String(row?.receiver_id || '')
         const otherId = senderId === String(myId) ? receiverId : senderId
         if (!otherId || otherId === String(myId)) return
+        if (!dmUserIds.includes(otherId)) dmUserIds.push(otherId)
         const createdAt = row?.created_at || ''
         if (!meta[otherId] || String(createdAt) > String(meta[otherId].lastAt || '')) {
           meta[otherId] = { lastAt: createdAt }
         }
       })
       setDirectoryMeta(meta)
+
+      let profileRows = []
+
+      if (dmUserIds.length) {
+        const dmProfiles = await safe(
+          supabase
+            .from('profiles')
+            .select('id,email,username,created_at')
+            .in('id', dmUserIds.slice(0, 60)),
+          []
+        )
+        profileRows = profileRows.concat(dmProfiles)
+      }
+
+      // Mały fallback, żeby lista nie była pusta na świeżym koncie.
+      const recentProfiles = await safe(
+        supabase
+          .from('profiles')
+          .select('id,email,username,created_at')
+          .neq('id', myId)
+          .order('created_at', { ascending: false })
+          .limit(30),
+        []
+      )
+      profileRows = profileRows.concat(recentProfiles)
 
       const byId = new Map()
       ;(Array.isArray(profileRows) ? profileRows : []).forEach(row => {
@@ -13404,7 +13415,6 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
 
       Object.keys(meta).forEach(id => {
         if (id === String(myId) || byId.has(id)) return
-        // Brak danych profilu oznacza konto nierozwiązane, ale nie generujemy już fałszywego "nicku" z UUID.
         const name = 'Użytkownik'
         byId.set(id, {
           id,
@@ -13430,10 +13440,10 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       const finalRows = externalTarget && !rows.some(row => String(row.id) === String(externalTarget.id))
         ? [externalTarget, ...rows]
         : rows
+
       setUsers(finalRows)
       setActiveUser(prev => {
         if (externalTarget) return finalRows.find(row => String(row.id) === String(externalTarget.id)) || externalTarget
-
         if (prev && finalRows.some(row => String(row.id) === String(prev.id))) {
           return finalRows.find(row => String(row.id) === String(prev.id)) || prev
         }
@@ -13441,21 +13451,25 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
         const recentFirst = finalRows.find(row => row.lastAt)
         return unreadFirst || recentFirst || finalRows[0] || null
       })
-      setStatus(finalRows.length ? 'Kliknij użytkownika po lewej i napisz prywatną wiadomość.' : 'Brak użytkowników do pokazania. Jeśli problem zostanie, uruchom SQL dla profiles/direct_messages.')
+
+      setStatus(finalRows.length ? 'Kliknij użytkownika po lewej i napisz prywatną wiadomość.' : 'Brak użytkowników do pokazania.')
     } catch (error) {
       console.warn('user messages load users skipped', error)
-      setStatus('Nie udało się wczytać listy użytkowników. Sprawdź tabelę profiles/RLS.')
+      setStatus('Nie udało się wczytać listy użytkowników.')
     }
   }
 
   const loadUnread = async () => {
     if (!isSupabaseConfigured || !supabase || !myId) return
     try {
-      const { data, error } = await supabase
+      const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'timeout' } }), 3000))
+      const query = supabase
         .from('direct_messages')
         .select('sender_id,is_read')
         .eq('receiver_id', myId)
         .eq('is_read', false)
+        .limit(100)
+      const { data, error } = await Promise.race([query, timeout])
       if (error) throw error
       const next = {}
       ;(Array.isArray(data) ? data : []).forEach(row => {
@@ -13475,18 +13489,21 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       return
     }
     try {
-      const { data, error } = await supabase
+      const timeout = new Promise(resolve => setTimeout(() => resolve({ data: [], error: { message: 'timeout' } }), 4000))
+      const query = supabase
         .from('direct_messages')
         .select('id,sender_id,receiver_id,message_text,created_at,is_read')
         .or(`and(sender_id.eq.${myId},receiver_id.eq.${target.id}),and(sender_id.eq.${target.id},receiver_id.eq.${myId})`)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
+        .limit(80)
+      const { data, error } = await Promise.race([query, timeout])
       if (error) throw error
-      setMessages(Array.isArray(data) ? data : [])
+      setMessages((Array.isArray(data) ? data : []).slice().reverse())
       await supabase.from('direct_messages').update({ is_read: true }).eq('sender_id', target.id).eq('receiver_id', myId).eq('is_read', false)
       await loadUnread()
     } catch (error) {
       console.warn('user messages conversation skipped', error)
-      setStatus('Nie udało się wczytać rozmowy. Uruchom SQL dla direct_messages.')
+      setStatus('Nie udało się wczytać rozmowy.')
     }
   }
 
@@ -13513,7 +13530,6 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
       setText('')
       setStatus('Wiadomość wysłana.')
       await loadConversation(activeUser)
-      await loadUsers()
     } catch (error) {
       console.warn('user messages send failed', error)
       setStatus('Wysyłka nie powiodła się. Sprawdź SQL/RLS direct_messages.')
@@ -13526,12 +13542,15 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
     if (!visible || !myId) return undefined
     loadUnread()
     loadUsers()
+
+    // WERSJA 1425: nie odpalamy pełnego katalogu użytkowników co 4 sekundy.
+    // To była jedna z głównych przyczyn mulenia strony.
     const timer = setInterval(() => {
       loadUnread()
-      loadUsers()
       const target = activeUserRef.current
       if (target?.id) loadConversation(target)
-    }, 4000)
+    }, 15000)
+
     return () => clearInterval(timer)
   }, [visible, myId])
 
@@ -13548,17 +13567,11 @@ function UserMessagesPanel({ user, visible = false, onUnreadChange, initialTarge
     setSearch('')
   }, [visible, initialTarget?.id, initialTarget?.email, initialTarget?.username])
 
-
-  useEffect(() => {
-    if (!visible) return
-    loadUsers()
-  }, [visible, JSON.stringify(unreadMap)])
-
   useEffect(() => {
     if (!visible) return undefined
     const q = normalizeSearch(search)
     if (q.length < 2) return undefined
-    const timer = setTimeout(() => searchUsersInDatabase(q), 250)
+    const timer = setTimeout(() => searchUsersInDatabase(q), 350)
     return () => clearTimeout(timer)
   }, [visible, search, myId])
 

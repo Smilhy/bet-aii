@@ -1,0 +1,25 @@
+WERSJA 1424 — AWARYJNE ODBLOKOWANIE STRONY
+
+Problem:
+- Społeczność potrafiła zablokować całą stronę po kilku wejściach/odświeżeniach.
+- Powód: ciężkie widoki + realtime odpalał pełne loadCommunity() po każdej zmianie.
+
+Zrobione:
+- wyłączony realtime dla Społeczności,
+- usunięte ciężkie widoki z głównego ładowania:
+  community_posts_live_v1017,
+  community_chat_messages_live_v1017,
+  community_weekly_ranking_v1017,
+- ładowanie idzie teraz z podstawowych tabel z małymi limitami:
+  community_posts 35,
+  community_chat_messages 60,
+  comments tylko dla 6 najnowszych postów,
+- dodany timeout 6.5 sekundy na zapytanie, żeby nie zawieszać UI,
+- ranking i polecani liczone lekko po stronie frontu z pobranych danych,
+- SQL dodaje indeksy i neutralizuje wolne RPC z 1421.
+
+WAŻNE:
+1. Odpal SQL:
+   supabase/WERSJA_1424_COMMUNITY_EMERGENCY_INDEXES_UNBLOCK.sql
+2. Wgraj paczkę 1424.
+3. Zrób Ctrl+F5.
