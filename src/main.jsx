@@ -11180,7 +11180,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
-      const { data, error } = await supabase.rpc('claim_community_reward_v1415', {
+      const { data, error } = await supabase.rpc('claim_community_reward_v1434', {
         p_user_id: user.id,
         p_email: userEmail,
         p_reward_key: reward.key,
@@ -11191,7 +11191,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         if (data?.already_claimed) {
           setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
         }
-        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Społeczność', message: data?.message || 'Najpierw wykonaj akcję w społeczności, potem odbierz nagrodę.' })
+        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Misje aktywności', message: data?.message || 'Najpierw wykonaj misję, potem odbierz nagrodę. Coin można odebrać raz na 24h.' })
         await loadCommunity()
         return
       }
@@ -11518,7 +11518,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                   disabled={!mission.done || mission.claimed}
                   onClick={() => claimCommunityReward(mission)}
                 >
-                  {mission.claimed ? getRewardUnlockLabel(mission.key) : mission.done ? 'Odbierz +1' : 'Zrób misję'}
+                  {mission.claimed ? getRewardUnlockLabel(mission.key) : mission.done ? 'Odbierz +1' : 'Wykonaj misję'}
                 </button>
               </div>
             ))}

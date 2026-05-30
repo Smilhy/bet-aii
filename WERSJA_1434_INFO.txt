@@ -1,0 +1,18 @@
+WERSJA 1434 — MISJE AKTYWNOŚCI: AKCJA WYMAGANA
+
+Problem:
+- misje aktywności mogły wyglądać jak gotowe do odbioru bez twardej weryfikacji w bazie,
+- teraz Supabase sprawdza realną akcję przed przyznaniem coina.
+
+Zrobione:
+- claimCommunityReward używa nowej funkcji claim_community_reward_v1434,
+- SQL sprawdza:
+  daily_chat: wiadomość w ostatnich 24h,
+  daily_post: post w ostatnich 24h,
+  daily_active: minimum 3 aktywności w ostatnich 24h,
+- każdy reward_key można odebrać maksymalnie raz na 24h,
+- jeśli nie ma akcji, SQL zwraca action_required i nie dodaje coinów.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1434_COMMUNITY_MISSIONS_ACTION_REQUIRED.sql
