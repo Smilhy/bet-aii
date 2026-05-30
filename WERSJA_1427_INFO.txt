@@ -1,0 +1,12 @@
+WERSJA 1427 — FIX get_referral_dashboard 400
+
+Zrobione:
+- naprawiony frontend: błąd get_referral_dashboard 400 nie blokuje już danych poleceń,
+- dodany fallback z profiles/referrals/referral_rewards,
+- limity referrals/rewards zmniejszone z 20 do 10,
+- dodany timeout na referral requesty,
+- SQL tworzy kompatybilną funkcję get_referral_dashboard(p_user_id uuid).
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1427_FIX_REFERRAL_DASHBOARD_400.sql

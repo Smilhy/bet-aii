@@ -23453,24 +23453,46 @@ function App() {
       return
     }
 
+    const safeQuery = async (promise, fallback = null) => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 4500))
+        const result = await Promise.race([promise, timeout])
+        if (result?.error) return fallback
+        return result?.data ?? fallback
+      } catch (_) {
+        return fallback
+      }
+    }
+
     setReferralLoading(true)
     try {
-      const { data: codeData } = await supabase.rpc('ensure_referral_code', { p_user_id: userId })
+      const codeData = await safeQuery(supabase.rpc('ensure_referral_code', { p_user_id: userId }), '')
       const referralCode = typeof codeData === 'string' ? codeData : ''
-      const { data: dashboardData, error } = await supabase.rpc('get_referral_dashboard', { p_user_id: userId })
-      if (error) throw error
+
+      const dashboardData = await safeQuery(supabase.rpc('get_referral_dashboard', { p_user_id: userId }), null)
       const row = Array.isArray(dashboardData) ? dashboardData[0] : dashboardData
 
-      const { data: referralsRows } = await supabase.from('referrals').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(20)
-      const { data: rewardsRows } = await supabase.from('referral_rewards').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(20)
+      const referralsRows = await safeQuery(
+        supabase.from('referrals').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(10),
+        []
+      )
+      const rewardsRows = await safeQuery(
+        supabase.from('referral_rewards').select('*').eq('referrer_id', userId).order('created_at', { ascending: false }).limit(10),
+        []
+      )
+
+      const profileFallback = await safeQuery(
+        supabase.from('profiles').select('referral_code,referrals_count,buyers_count,referral_reward_total').eq('id', userId).maybeSingle(),
+        null
+      )
 
       setReferralData({
-        referral_code: row?.referral_code || referralCode,
-        referrals_count: Number(row?.referrals_count || 0),
-        buyers_count: Number(row?.buyers_count || 0),
-        reward_total: Number(row?.reward_total || 0),
-        referrals: referralsRows || [],
-        rewards: rewardsRows || []
+        referral_code: row?.referral_code || profileFallback?.referral_code || referralCode,
+        referrals_count: Number(row?.referrals_count ?? profileFallback?.referrals_count ?? 0),
+        buyers_count: Number(row?.buyers_count ?? profileFallback?.buyers_count ?? 0),
+        reward_total: Number(row?.reward_total ?? profileFallback?.referral_reward_total ?? 0),
+        referrals: Array.isArray(referralsRows) ? referralsRows : [],
+        rewards: Array.isArray(rewardsRows) ? rewardsRows : []
       })
     } catch (error) {
       console.error('fetchReferralData error', error)
