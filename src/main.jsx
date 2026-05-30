@@ -14551,7 +14551,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [minOdds, setMinOdds] = useState(1.25)
   const [maxOdds, setMaxOdds] = useState(3.50)
   const [minProb, setMinProb] = useState(55)
-  const [minEv, setMinEv] = useState(-8)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
   const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
@@ -14761,7 +14760,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
       .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
-      .filter(c => Number(c.ev || 0) >= Number(minEv))
       .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction} ${c.market}`.toLowerCase().includes(q))
       .sort((a, b) => {
         const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
@@ -15509,8 +15507,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
           <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="45" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <label><span>EV min</span><b>{minEv >= 0 ? '+' : ''}{minEv}%</b><input type="range" min="-10" max="25" step="1" value={minEv} onChange={e => setMinEv(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMinEv(-8); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel === 'stats' ? 'stats-fullwidth' : ''}`}>

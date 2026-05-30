@@ -66450,3 +66450,15 @@ html.betai-fhd-monitor80-v1323 body #root{
   filter: none;
 }
 
+
+
+/* WERSJA 1439 — Typy AI bez filtra EV min */
+.ai-range-panel-v1054 {
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+}
+
+@media (max-width: 1100px) {
+  .ai-range-panel-v1054 {
+    grid-template-columns: 1fr;
+  }
+}
