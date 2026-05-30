@@ -10577,13 +10577,6 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     return Boolean(isOwnChatMessage(message) || isAdminUser(user))
   }
 
-  const getCommunityPostLabel = (count = 0) => {
-    const n = Number(count || 0)
-    if (n === 1) return '1 post'
-    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return `${n} posty`
-    return `${n} postów`
-  }
-
   const getCappedCommunityPoints = (item = {}) => {
     const postsPoint = Number.isFinite(Number(item.rewarded_post_days))
       ? Number(item.rewarded_post_days || 0)
@@ -10661,125 +10654,53 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       setSuggestedUsers([])
       return
     }
-
     setLoadingCommunity(true)
-
-    const safeQuery = async (query, fallback = []) => {
-      try {
-        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 6500))
-        const result = await Promise.race([query, timeout])
-        if (result?.error) return fallback
-        return Array.isArray(result?.data) ? result.data : fallback
-      } catch (_) {
-        return fallback
-      }
-    }
-
     try {
-      const postsData = await safeQuery(
-        supabase.from('community_posts').select('*').order('created_at', { ascending: false }).limit(35),
-        []
-      )
+      const claimQuery = user?.id
+        ? supabase.from('community_reward_claims').select('reward_key,period_key,created_at,email,user_id').or(`user_id.eq.${user.id},email.eq.${userEmail}`)
+        : Promise.resolve({ data: [], error: null })
 
-      const chatData = await safeQuery(
-        supabase.from('community_chat_messages').select('*').order('created_at', { ascending: true }).limit(60),
-        []
-      )
+      const [postsResult, chatResult, rankingResult, profilesResult, claimsResult] = await Promise.all([
+        supabase.from('community_posts_live_v1017').select('*').order('created_at', { ascending: false }).limit(120),
+        supabase.from('community_chat_messages_live_v1017').select('*').order('created_at', { ascending: true }).limit(220),
+        supabase.from('community_weekly_ranking_v1017').select('*').limit(20),
+        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,created_at').order('created_at', { ascending: false }).limit(40),
+        claimQuery
+      ])
 
-      const profilesData = await safeQuery(
-        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,is_premium,imported_total_tips,imported_won_tips,imported_lost_tips,imported_yield,imported_profit,followers_count,created_at').order('created_at', { ascending: false }).limit(30),
-        []
-      )
+      if (postsResult.error) console.warn('community posts skipped', postsResult.error)
+      if (chatResult.error) console.warn('community chat skipped', chatResult.error)
+      if (rankingResult.error) console.warn('community ranking skipped', rankingResult.error)
+      if (profilesResult.error) console.warn('community profiles skipped', profilesResult.error)
 
-      const claimsData = user?.id
-        ? await safeQuery(
-            supabase.from('community_reward_claims').select('reward_key,period_key,created_at,email,user_id').or(`user_id.eq.${user.id},email.eq.${userEmail}`).limit(40),
-            []
-          )
-        : []
-
-      const loadedPosts = Array.from(new Map(postsData.map(row => [String(row.id), row])).values())
-      const loadedChat = Array.from(new Map(chatData.map(row => [String(row.id), row])).values())
-
+      const loadedPostsRaw = Array.isArray(postsResult.data) ? postsResult.data : []
+      const loadedPosts = Array.from(new Map(loadedPostsRaw.map(row => [String(row.id), row])).values())
       setPosts(loadedPosts)
-      setChatMessages(loadedChat)
 
-      const pointsByUser = new Map()
-      loadedPosts.forEach(row => {
-        const key = String(row.author_id || normalizeEmail(row.author_email || '') || row.author_name || '')
-        if (!key) return
-        const prev = pointsByUser.get(key) || {
-          user_id: row.author_id,
-          id: row.author_id,
-          email: normalizeEmail(row.author_email || ''),
-          username: row.author_name || communityNameFromEmail(row.author_email || ''),
-          avatar_url: row.avatar_url || '',
-          posts_count: 0,
-          community_points: 0
-        }
-        prev.posts_count += 1
-        prev.community_points = Math.min(10, prev.posts_count)
-        pointsByUser.set(key, prev)
-      })
+      const loadedChatRaw = Array.isArray(chatResult.data) ? chatResult.data : []
+      setChatMessages(Array.from(new Map(loadedChatRaw.map(row => [String(row.id), row])).values()))
 
-      loadedChat.forEach(row => {
-        const key = String(row.author_id || normalizeEmail(row.author_email || '') || row.author_name || '')
-        if (!key) return
-        const prev = pointsByUser.get(key) || {
-          user_id: row.author_id,
-          id: row.author_id,
-          email: normalizeEmail(row.author_email || ''),
-          username: row.author_name || communityNameFromEmail(row.author_email || ''),
-          avatar_url: row.avatar_url || '',
-          posts_count: 0,
-          community_points: 0
-        }
-        prev.community_points = Math.min(10, Number(prev.community_points || 0) + 1)
-        pointsByUser.set(key, prev)
-      })
-
-      const rankRows = Array.from(pointsByUser.values())
-        .filter(row => !isOwnCommunityUser(row))
-        .sort((a, b) => Number(b.community_points || 0) - Number(a.community_points || 0))
-        .slice(0, 10)
-
+      const rankRowsRaw = Array.isArray(rankingResult.data) ? rankingResult.data : []
+      const rankRows = Array.from(new Map(rankRowsRaw.map(row => [String(row.user_id || row.email || row.username), {
+        ...row,
+        community_points: getCappedCommunityPoints(row)
+      }])).values()).sort((a, b) => Number(b.community_points || 0) - Number(a.community_points || 0))
       setCommunityRanking(rankRows)
 
-      const profiles = Array.isArray(profilesData) ? profilesData : []
+      const profiles = Array.isArray(profilesResult.data) ? profilesResult.data : []
       const cleanProfiles = profiles.filter(row => !isOwnCommunityUser(row))
-      const rankingSuggestions = rankRows
-        .filter(row => !isOwnCommunityUser(row))
-        .map(row => ({
-          ...row,
-          id: row.user_id || row.id,
-          recommendation_label: `${getCommunityPostLabel(row.posts_count)} • aktywny`
-        }))
-      const profileSuggestions = cleanProfiles
-        .filter(row => (
-          isPremiumProfile(row) ||
-          Number(row.imported_total_tips || 0) > 0 ||
-          Number(row.followers_count || 0) > 0
-        ))
-        .map(row => ({
-          ...row,
-          recommendation_label: isPremiumProfile(row)
-            ? 'Premium'
-            : `${Number(row.imported_total_tips || 0)} typów`
-        }))
-
-      setSuggestedUsers((rankingSuggestions.length ? rankingSuggestions : profileSuggestions).slice(0, 8))
+      setSuggestedUsers(cleanProfiles.slice(0, 8))
       setOnlineUsers(profiles.slice(0, 8))
 
       const claims = {}
-      ;(claimsData || []).forEach(row => {
+      ;(claimsResult.data || []).forEach(row => {
         if (row.reward_key && isRewardClaimFresh24h(row.created_at)) claims[row.reward_key] = row
       })
       setRewardClaims(claims)
 
-      // Komentarze ładujemy tylko dla kilku najnowszych postów, żeby nie blokować całej strony.
-      await loadCommentsForPosts(loadedPosts.slice(0, 6))
+      await loadCommentsForPosts(loadedPosts.slice(0, 18))
     } catch (error) {
-      console.error('loadCommunity emergency error', error)
+      console.error('loadCommunity error', error)
       setPosts([])
       setChatMessages([])
       setCommunityRanking([])
@@ -10797,7 +10718,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     try {
       const ids = rows.map(row => row.id).filter(Boolean)
       if (!ids.length) return
-      const { data, error } = await supabase.from('community_comments').select('*').in('post_id', ids).order('created_at', { ascending: true }).limit(80)
+      const { data, error } = await supabase.from('community_comments_live_v1017').select('*').in('post_id', ids).order('created_at', { ascending: true })
       if (error) throw error
       const grouped = {}
       Array.from(new Map((data || []).map(row => [String(row.id), row])).values()).forEach(row => {
@@ -10812,9 +10733,18 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   useEffect(() => { loadCommunity() }, [user?.id, user?.email])
 
-  // WERSJA 1424: Realtime dla społeczności wyłączony awaryjnie.
-  // Wcześniej każde zdarzenie odpalało pełne loadCommunity(), co potrafiło zablokować całą stronę.
-  useEffect(() => undefined, [user?.id, user?.email])
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined
+    const channel = supabase
+      .channel('community-live-v1017')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, () => loadCommunity())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments' }, () => loadCommunity())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reactions' }, () => loadCommunity())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_chat_messages' }, () => loadCommunity())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reward_claims' }, () => loadCommunity())
+      .subscribe()
+    return () => { try { supabase.removeChannel(channel) } catch (_) {} }
+  }, [user?.id, user?.email])
 
   async function publishPost(bodyOverride = '') {
     const clean = String(bodyOverride || postText || '').trim()
@@ -11400,7 +11330,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
           </div>
 
           <div className="glass-community-v5 pro-missions-v1012 daily-missions-v1022">
-            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong></div>
+            <div className="pro-missions-head-v1012"><strong>Misje aktywności</strong><button type="button">za akcję</button></div>
             {dailyMissionRows.map(mission => (
               <div className={`daily-mission-item-v1022 ${mission.done ? 'is-done' : ''} ${mission.claimed ? 'is-claimed' : ''}`} key={mission.key}>
                 <div className="mission-row-v1012">
@@ -11560,22 +11490,23 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
         <aside className="community-v5-sidebar community-pro-right-v1012">
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3></div>
+            <div className="sidecard-head-v5"><h3>🏆 Top aktywni dziś</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <small className="sidecard-sub-v5">Aktywność społeczności • punkty za realne akcje</small>
             <div className="side-list-v5">
               {communityRanking.slice(0, 5).map((item, index) => (
                 <div className="side-leader-row-v5" key={item.user_id || item.email || index}>
                   <span className={`leader-no-v5 n${index + 1}`}>{index + 1}</span>
-                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{getCommunityPostLabel(item.posts_count)}</span></small></div>
-                  <b>{getCappedCommunityPoints(item)} coin</b>
+                  <div><button type="button" className="community-name-btn-v1016" onClick={() => openCommunityProfile(item)}>{item.username || communityNameFromEmail(item.email)}</button><small><span>{Number(item.posts_count || 0)} postów</span><span>limit 1/doba</span></small></div>
+                  <b>{getCappedCommunityPoints(item)} Coin</b>
                 </div>
               ))}
               {!communityRanking.length ? <div className="empty-mini">Brak rankingu — dodaj pierwszy post.</div> : null}
             </div>
+            <button type="button" className="side-btn-v5" onClick={loadCommunity}>Odśwież aktywność</button>
           </div>
 
           <div className="glass-community-v5 sidecard-v5">
-            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3></div>
+            <div className="sidecard-head-v5"><h3>⭐ Polecani typerzy</h3><button type="button" onClick={loadCommunity}>Odśwież</button></div>
             <div className="suggested-list-v5">
               {suggestedUsers.slice(0, 5).map((item, index) => {
                 const avatar = getProfileAvatarUrl(item)
@@ -11586,7 +11517,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
                     <button type="button" className={`suggested-avatar-v5 ${avatar ? 'has-avatar' : ''}`} onClick={() => openCommunityProfile(item)}>{avatar ? <img src={avatar} alt="" /> : String(name || 'U').slice(0,2).toUpperCase()}</button>
                     <div className="suggested-info-v1020">
                       <button type="button" className="community-name-btn-v1016 suggested-name-v1020" onClick={() => openCommunityProfile(item)}>{name}</button>
-                      <small><b>{planLabel}</b>{item.recommendation_label ? <span>{item.recommendation_label}</span> : null}</small>
+                      <small><b>{planLabel}</b><span>Profil użytkownika</span></small>
                     </div>
                     <button type="button" className={`suggested-follow-v1020 ${isCommunityFollowing(item) ? 'is-following' : ''}`} onClick={() => toggleCommunityFollow(item)}>{isCommunityFollowing(item) ? 'Obserwujesz' : 'Obserwuj'}</button>
                   </div>
