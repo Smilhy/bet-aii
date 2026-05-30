@@ -14620,8 +14620,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const inRange = candidates.filter(x =>
       Number(x.odds) >= Number(minOdds) &&
       Number(x.odds) <= Number(maxOdds) &&
-      Number(x.probability) >= Number(minProb) &&
-      Number(x.ev) >= Number(minEv)
+      Number(x.probability) >= Number(minProb)
     )
     const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= Number(minOdds) && Number(x.odds) <= Number(maxOdds))
     const finalPool = pool.length ? pool : candidates
@@ -14772,7 +14771,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           || (evB - evA)
           || Number(b.aiScore || 0) - Number(a.aiScore || 0)
       })
-  }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb, minEv])
+  }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
