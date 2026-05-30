@@ -25399,252 +25399,72 @@ function App() {
 
 
   async function fetchAdminFinanceReport() {
+    const emptyReport = { platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] }
+
     if (!isSupabaseConfigured || !supabase || !sessionUser?.id || !isAdminUser(sessionUser)) {
-      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
+      setAdminFinanceReport(emptyReport)
       return
     }
 
+    const safeRpc = async () => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 5500))
+        return await Promise.race([supabase.rpc('get_admin_finance_report'), timeout])
+      } catch (error) {
+        return { data: null, error }
+      }
+    }
+
     try {
-      const { data, error } = await supabase.rpc('get_admin_finance_report')
+      // WERSJA 1428:
+      // Admin finanse nie robi już dodatkowych fallbacków po payments -> tips -> profiles.
+      // Poprzednio to generowało wiele czerwonych 400, bo próbowało selektować kolumny,
+      // których część tabel nie miała, np. display_name/full_name/tipster_id/author_name.
+      const { data, error } = await safeRpc()
 
       if (error || !data) {
-        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
+        console.warn('admin finance rpc skipped', error)
+        setAdminFinanceReport(emptyReport)
         return
       }
 
       const row = Array.isArray(data) ? (data[0] || {}) : data
       if (row?.ok === false || row?.admin_denied) {
         showToast?.({ type: 'error', title: 'Brak dostępu', message: row?.error || 'Raport finansowy jest dostępny tylko dla administratora.' })
-        setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
+        setAdminFinanceReport(emptyReport)
         return
       }
 
-      const rawTransactions = Array.isArray(row.transactions) ? row.transactions : []
-      const userIds = [...new Set(rawTransactions.map(tx => tx?.user_id).filter(Boolean))]
-      let usersById = {}
+      const transactions = Array.isArray(row.transactions) ? row.transactions.slice(0, 60) : []
+      const marketplaceSales = Array.isArray(row.marketplace_sales) ? row.marketplace_sales.slice(0, 40) : []
 
-      if (userIds.length) {
-        try {
-          const { data: users } = await supabase
-            .from('profiles')
-            .select('id, username, display_name, full_name, email')
-            .in('id', userIds)
-
-          usersById = Object.fromEntries((users || []).map(profile => [
-            String(profile.id),
-            profile
-          ]))
-        } catch (profileError) {
-          console.warn('admin finance usernames resolve error', profileError)
-        }
-      }
-
-      let transactions = rawTransactions.map(tx => {
-        const profile = usersById[String(tx?.user_id || '')]
-        const displayUser = tx?.display_user || tx?.user_username || tx?.username || profile?.username || profile?.display_name || profile?.full_name || profile?.email || tx?.user_email || tx?.user_id || '—'
-
-        return {
-          ...tx,
-          username: profile?.username || tx?.username || null,
-          display_name: profile?.display_name || profile?.full_name || null,
-          user_email: profile?.email || tx?.user_email || null,
-          display_user: displayUser,
-          raw_user_id: tx?.user_id || null
-        }
-      })
-
-      let premiumRevenue = Number(row.premium_revenue || 0)
-      let grossSales = Number(row.gross_sales || 0)
-      let totalSales = Number(row.total_sales || 0)
-      let platformCommission = Number(row.platform_commission || 0)
-      let tipsterEarnings = Number(row.tipster_earnings || 0)
-      let walletTopups = Number(row.wallet_topups || 0)
-
-      // WERSJA 1319: dodatkowy licznik po tabeli payments.
-      // Poprawia sytuację, gdy RPC nie klasyfikuje zakupu typu jako marketplace,
-      // bo w payments jest provider='wallet' oraz tip_id zamiast typu 'tip_purchase'.
-      try {
-        const { data: paymentRows, error: paymentsError } = await supabase
-          .from('payments')
-          .select('id,user_id,tip_id,amount,status,provider,created_at')
-          .order('created_at', { ascending: false })
-          .limit(120)
-
-        if (!paymentsError && Array.isArray(paymentRows)) {
-          const successStatuses = new Set(['paid', 'succeeded', 'completed', 'success', 'active'])
-          const validPayments = paymentRows.filter(payment => {
-            const status = String(payment?.status || 'completed').toLowerCase()
-            return successStatuses.has(status)
-          })
-
-          const isMarketplacePayment = payment => {
-            const provider = String(payment?.provider || '').toLowerCase()
-            return Boolean(payment?.tip_id)
-              || provider.includes('tip_purchase')
-              || provider.includes('tip_unlock')
-              || provider.includes('paid_tip')
-              || provider.includes('marketplace')
-              || provider.includes('single_purchase')
-          }
-
-          const isPlatformPremiumPayment = payment => {
-            const provider = String(payment?.provider || '').toLowerCase()
-            return !isMarketplacePayment(payment)
-              && (provider.includes('premium') || provider.includes('subscription'))
-          }
-
-          const isWalletTopupPayment = payment => {
-            const provider = String(payment?.provider || '').toLowerCase()
-            return provider.includes('topup') || provider.includes('deposit') || provider.includes('wallet_topup')
-          }
-
-          const marketplacePayments = validPayments.filter(isMarketplacePayment)
-          const premiumPayments = validPayments.filter(isPlatformPremiumPayment)
-          const topupPayments = validPayments.filter(isWalletTopupPayment)
-
-          const marketplaceTipIds = [...new Set(marketplacePayments.map(payment => payment?.tip_id).filter(Boolean))]
-          let tipsById = {}
-          if (marketplaceTipIds.length) {
-            try {
-              const tipSelects = [
-                'id,author_id,user_id,tipster_id,author_name,user_name,username,title,match_label,match,home_team,away_team,market,selection',
-                'id,author_id,user_id,author_name,user_name,username,match_label,market,selection',
-                'id,user_id,username,selection'
-              ]
-              for (const columns of tipSelects) {
-                const { data: tipRows, error: tipError } = await supabase
-                  .from('tips')
-                  .select(columns)
-                  .in('id', marketplaceTipIds)
-                if (!tipError && Array.isArray(tipRows)) {
-                  tipsById = Object.fromEntries(tipRows.map(tip => [String(tip.id), tip]))
-                  break
-                }
-              }
-            } catch (tipResolveError) {
-              console.warn('admin finance marketplace tip resolve error', tipResolveError)
-            }
-          }
-
-          const extraProfileIds = new Set()
-          marketplacePayments.forEach(payment => {
-            if (payment?.user_id) extraProfileIds.add(String(payment.user_id))
-            const tip = tipsById[String(payment?.tip_id || '')]
-            ;[tip?.author_id, tip?.user_id, tip?.tipster_id].filter(Boolean).forEach(id => extraProfileIds.add(String(id)))
-          })
-          const missingProfileIds = [...extraProfileIds].filter(id => !usersById[id])
-          if (missingProfileIds.length) {
-            try {
-              const { data: extraProfiles } = await supabase
-                .from('profiles')
-                .select('id, username, display_name, full_name, email')
-                .in('id', missingProfileIds)
-              ;(extraProfiles || []).forEach(profile => { usersById[String(profile.id)] = profile })
-            } catch (extraProfileError) {
-              console.warn('admin finance marketplace profiles resolve error', extraProfileError)
-            }
-          }
-
-          const profileName = id => {
-            const profile = usersById[String(id || '')]
-            return profile?.username || profile?.display_name || profile?.full_name || profile?.email || id || '—'
-          }
-          const marketplaceSales = marketplacePayments.map(payment => {
-            const tip = tipsById[String(payment?.tip_id || '')] || {}
-            const sellerId = tip.author_id || tip.tipster_id || tip.user_id || null
-            const gross = Number(payment?.amount || 0)
-            const homeAway = [tip.home_team, tip.away_team].filter(Boolean).join(' - ')
-            return {
-              id: payment.id,
-              created_at: payment.created_at,
-              tip_id: payment.tip_id || null,
-              buyer_id: payment.user_id || null,
-              buyer_name: profileName(payment.user_id),
-              seller_id: sellerId,
-              seller_name: tip.author_name || tip.user_name || tip.username || profileName(sellerId),
-              tip_title: tip.title || tip.match_label || tip.match || homeAway || 'Zakup typu',
-              match_label: tip.match_label || tip.match || homeAway || null,
-              market: tip.market || null,
-              selection: tip.selection || null,
-              amount: gross,
-              gross_amount: gross,
-              platform_commission: Number((gross * PLATFORM_COMMISSION_RATE).toFixed(2)),
-              tipster_earning: Number((gross * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)),
-              status: payment.status || 'paid'
-            }
-          }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-
-          const directGrossSales = marketplacePayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
-          const directPremiumRevenue = premiumPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
-          const directWalletTopups = topupPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0)
-
-          if (validPayments.length) {
-            grossSales = directGrossSales
-            totalSales = marketplacePayments.length
-            platformCommission = Number((directGrossSales * 0.20).toFixed(2))
-            tipsterEarnings = Number((directGrossSales * 0.80).toFixed(2))
-            premiumRevenue = directPremiumRevenue
-            walletTopups = directWalletTopups || walletTopups
-
-            const paymentTransactions = paymentRows.map(payment => {
-              const profile = usersById[String(payment?.user_id || '')]
-              const provider = String(payment?.provider || 'payment')
-              const isMarketplace = isMarketplacePayment(payment)
-              const isPremium = isPlatformPremiumPayment(payment)
-              return {
-                id: payment.id,
-                created_at: payment.created_at,
-                type: isMarketplace ? 'tip_purchase' : isPremium ? 'premium_purchase' : provider,
-                source: isMarketplace ? 'marketplace_payment' : 'payments',
-                provider,
-                tip_id: payment.tip_id || null,
-                user_id: payment.user_id || null,
-                raw_user_id: payment.user_id || null,
-                amount: Number(payment.amount || 0),
-                gross_amount: isMarketplace ? Number(payment.amount || 0) : null,
-                platform_commission: isMarketplace ? Number((Number(payment.amount || 0) * PLATFORM_COMMISSION_RATE).toFixed(2)) : null,
-                tipster_earning: isMarketplace ? Number((Number(payment.amount || 0) * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)) : null,
-                status: payment.status || 'completed',
-                display_user: profile?.username || profile?.display_name || profile?.full_name || profile?.email || payment.user_id || '—'
-              }
-            })
-
-            const seenTransactionIds = new Set()
-            transactions = [...paymentTransactions, ...transactions].filter(tx => {
-              const key = `${tx.source || 'tx'}:${tx.id || tx.created_at || Math.random()}`
-              if (seenTransactionIds.has(key)) return false
-              seenTransactionIds.add(key)
-              return true
-            }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 60)
-          }
-        }
-      } catch (paymentsFallbackError) {
-        console.warn('admin finance payments fallback error', paymentsFallbackError)
-      }
-
-      const totalPlatformRevenue = Number((Number(platformCommission || 0) + Number(premiumRevenue || 0)).toFixed(2))
+      const platformCommission = Number(row.platform_commission || 0)
+      const premiumRevenue = Number(row.premium_revenue || 0)
+      const tipsterEarnings = Number(row.tipster_earnings || 0)
+      const totalPayouts = Number(row.total_payouts || 0)
+      const pendingPayouts = Number(row.pending_payouts || 0)
 
       setAdminFinanceReport({
         ok: row.ok !== false,
-        source: row.source || 'supabase-rpc',
+        source: row.source || 'supabase-rpc-light',
         generated_at: row.generated_at || new Date().toISOString(),
         platform_commission: platformCommission,
         premium_revenue: premiumRevenue,
-        total_platform_revenue: totalPlatformRevenue,
-        total_sales: totalSales,
-        gross_sales: grossSales,
+        total_platform_revenue: Number(row.total_platform_revenue ?? (platformCommission + premiumRevenue)).toFixed ? Number(Number(row.total_platform_revenue ?? (platformCommission + premiumRevenue)).toFixed(2)) : platformCommission + premiumRevenue,
+        total_sales: Number(row.total_sales || 0),
+        gross_sales: Number(row.gross_sales || 0),
         tipster_earnings: tipsterEarnings,
-        total_payouts: Number(row.total_payouts || 0),
-        pending_payouts: Number(row.pending_payouts || 0),
-        available_to_payout: Number(row.available_to_payout || Math.max(0, Number(tipsterEarnings || 0) - Number(row.total_payouts || 0) - Number(row.pending_payouts || 0))),
-        wallet_topups: walletTopups,
+        total_payouts: totalPayouts,
+        pending_payouts: pendingPayouts,
+        available_to_payout: Number(row.available_to_payout ?? Math.max(0, tipsterEarnings - totalPayouts - pendingPayouts)),
+        wallet_topups: Number(row.wallet_topups || 0),
         active_premium_users: Number(row.active_premium_users || 0),
         transactions,
-        marketplace_sales: typeof marketplaceSales !== 'undefined' ? marketplaceSales : []
+        marketplace_sales: marketplaceSales
       })
     } catch (error) {
       console.error('fetchAdminFinanceReport error', error)
-      setAdminFinanceReport({ platform_commission: 0, premium_revenue: 0, total_platform_revenue: 0, total_sales: 0, gross_sales: 0, tipster_earnings: 0, total_payouts: 0, pending_payouts: 0, available_to_payout: 0, wallet_topups: 0, active_premium_users: 0, transactions: [], marketplace_sales: [] })
+      setAdminFinanceReport(emptyReport)
     }
   }
 
@@ -25673,10 +25493,14 @@ function App() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('get_tipster_earnings', { p_user_id: userId })
+      const timeout = new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 4500))
+      const { data, error } = await Promise.race([
+        supabase.rpc('get_tipster_earnings', { p_user_id: userId }),
+        timeout
+      ])
       if (!error && data) {
         const row = Array.isArray(data) ? data[0] : data
-        const history = Array.isArray(row?.history) ? row.history : []
+        const history = Array.isArray(row?.history) ? row.history.slice(0, 30) : []
         setTipsterEarnings({
           total: Number(row?.total || row?.total_earnings || 0),
           sales: Number(row?.sales || row?.sales_count || 0),
@@ -25689,32 +25513,9 @@ function App() {
       console.warn('fetchTipsterEarnings rpc skipped:', error)
     }
 
-    try {
-      const { data: ownTips } = await supabase
-        .from('tips')
-        .select('id')
-        .or(`author_id.eq.${userId},user_id.eq.${userId}`)
-
-      const ids = (ownTips || []).map(row => row.id).filter(Boolean)
-      if (!ids.length) {
-        setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
-        return
-      }
-
-      const { data: paymentsRows, error: paymentsError } = await supabase
-        .from('payments')
-        .select('*')
-        .in('tip_id', ids)
-        .order('created_at', { ascending: false })
-
-      if (paymentsError) throw paymentsError
-      const history = (paymentsRows || []).map(row => ({ ...row, amount: Number(row.amount || 0) * (1 - PLATFORM_COMMISSION_RATE) }))
-      const total = history.reduce((sum, row) => sum + Number(row.amount || 0), 0)
-      setTipsterEarnings({ total, sales: history.length, history, available_to_payout: total })
-    } catch (error) {
-      console.error('fetchTipsterEarnings error', error)
-      setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
-    }
+    // WERSJA 1428: nie robimy już fallbacku po tips/payments,
+    // bo generował wiele 400 i spowalniał admin/finanse.
+    setTipsterEarnings({ total: 0, sales: 0, history: [], available_to_payout: 0 })
   }
 
   useEffect(() => {

@@ -1,0 +1,19 @@
+WERSJA 1428 — ADMIN FINANSE LIGHT RPC
+
+Problem:
+- wejście w Admin finanse generowało serię zapytań:
+  payments -> tips -> profiles,
+- część selectów była na kolumny, których tabela może nie mieć,
+  np. display_name/full_name/tipster_id/author_name,
+- dlatego w Network było dużo czerwonych 400.
+
+Zrobione:
+- fetchAdminFinanceReport używa tylko jednego RPC,
+- usunięty frontendowy fallback po payments/tips/profiles,
+- fetchTipsterEarnings nie robi już ciężkiego fallbacku po tips/payments,
+- SQL tworzy lekką funkcję get_admin_finance_report(),
+- dodane indeksy pod payments/payouts/subskrypcje.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1428_ADMIN_FINANCE_LIGHT_RPC.sql
