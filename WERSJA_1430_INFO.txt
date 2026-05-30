@@ -1,0 +1,17 @@
+WERSJA 1430 — TOP TYPERZY STOP 400
+
+Problem:
+- w Top typerzy pojawiały się czerwone 400 na profiles i tips,
+- frontend pytał o kolumny/filtrowania, które w bazie mogły nie istnieć albo PostgREST nie miał ich w cache,
+- szczególnie: public_slug, author_id, user_id, tipster_id, author_email, user_email, username.
+
+Zrobione:
+- resolvePublicTipsterBySlug ładuje teraz małą paczkę profili i filtruje lokalnie,
+- tips dla profilu używa bezpiecznego select('*') i lokalnego filtrowania,
+- zmniejszone limity 1000 -> 200/100,
+- SQL dodaje brakujące kolumny i indeksy,
+- dodany raport: DIAGNOSTYKA_WERSJA_1430_TOP_TYPERZY.md.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1430_TOP_TYPERZY_SAFE_COLUMNS_INDEXES.sql

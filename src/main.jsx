@@ -1996,7 +1996,7 @@ async function resolveTipsterPricingIdentity(source = {}) {
     const { data, error } = await supabase
       .from('profiles')
       .select('id,email,username,public_slug')
-      .limit(500)
+      .limit(150)
 
     if (error) throw error
 
@@ -2230,6 +2230,84 @@ function formatRankingName(row) {
   })
   return String(resolved || 'Typer').includes('@') ? String(resolved).split('@')[0] : String(resolved || 'Typer')
 }
+
+
+function isSupabaseColumnError(error = {}) {
+  const msg = String(error?.message || error?.details || error?.hint || error || '').toLowerCase()
+  return msg.includes('column') || msg.includes('does not exist') || msg.includes('schema cache') || msg.includes('pgrst204') || msg.includes('42703')
+}
+
+async function safeSupabaseArray(queryPromise, fallback = [], timeoutMs = 4500) {
+  try {
+    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), timeoutMs))
+    const result = await Promise.race([queryPromise, timeout])
+    if (result?.error) return fallback
+    return Array.isArray(result?.data) ? result.data : fallback
+  } catch (_) {
+    return fallback
+  }
+}
+
+async function safeSupabaseMaybeSingle(queryPromise, fallback = null, timeoutMs = 4500) {
+  try {
+    const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), timeoutMs))
+    const result = await Promise.race([queryPromise, timeout])
+    if (result?.error) return fallback
+    return result?.data ?? fallback
+  } catch (_) {
+    return fallback
+  }
+}
+
+
+
+function doesTipBelongToProfile(row = {}, profile = {}) {
+  const ids = new Set([
+    profile?.id,
+    profile?.user_id,
+    profile?.tipster_id,
+    profile?.author_id
+  ].filter(Boolean).map(String))
+
+  const names = new Set([
+    profile?.username,
+    profile?.name,
+    profile?.author_name,
+    profile?.display_name
+  ].filter(Boolean).map(v => String(v).trim().toLowerCase()))
+
+  const emails = new Set([
+    profile?.email,
+    profile?.author_email,
+    profile?.user_email
+  ].filter(Boolean).map(v => String(v).trim().toLowerCase()))
+
+  const rowIds = [row.author_id, row.user_id, row.tipster_id, row.profile_id].filter(Boolean).map(String)
+  if (rowIds.some(id => ids.has(id))) return true
+
+  const rowNames = [row.username, row.author_name, row.user_name, row.tipster_name].filter(Boolean).map(v => String(v).trim().toLowerCase())
+  if (rowNames.some(name => names.has(name))) return true
+
+  const rowEmails = [row.email, row.author_email, row.user_email].filter(Boolean).map(v => String(v).trim().toLowerCase())
+  if (rowEmails.some(email => emails.has(email))) return true
+
+  return false
+}
+
+async function loadSafeTipsForProfile(profile = {}, limit = 200) {
+  if (!isSupabaseConfigured || !supabase) return []
+  const rows = await safeSupabaseArray(
+    supabase
+      .from('tips')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Math.max(50, Math.min(Number(limit || 200), 250))),
+    [],
+    5000
+  )
+  return rows.filter(row => doesTipBelongToProfile(row, profile))
+}
+
 
 function formatMoney(value) {
   return `${Number(value || 0).toFixed(2)} zł`
@@ -2618,7 +2696,7 @@ function LiveChatPanel({ user }) {
             .from('tips')
             .select('author_id,user_id,author_name,username,author_email,author_avatar_url,avatar_url,profile_avatar_url,created_at')
             .order('created_at', { ascending: false })
-            .limit(500)
+            .limit(150)
           ;(chatTipAuthors || []).forEach(row => {
             const emailKey = normalizeEmail(row.author_email)
             const nameKey = normalizeEmail(row.author_name || row.username)
@@ -3523,109 +3601,121 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
 
   useEffect(() => {
     let cancelled = false
+
+    const safeRows = async (query, fallback = []) => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 5000))
+        const result = await Promise.race([query, timeout])
+        if (result?.error) return fallback
+        return Array.isArray(result?.data) ? result.data : (result?.data ? [result.data] : fallback)
+      } catch (_) {
+        return fallback
+      }
+    }
+
     async function loadTipsterProfile() {
       if (!tipsterId || blockedTestProfileOpen || !isSupabaseConfigured || !supabase) return
       setLoading(true)
       try {
-        if (lookupTipsterKey) {
-          const [{ data: profilesData, error: profilesError }, { data: allTipsData, error: tipsLookupError }] = await Promise.all([
-            supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at').limit(500),
-            supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500)
-          ])
-          if (profilesError) console.error('profile lookup error', profilesError)
-          if (tipsLookupError) console.error('tips lookup error', tipsLookupError)
+        const matchKeyRaw = lookupTipsterKey || tipsterId
+        const normalizedMatchKey = normalizeEmail(matchKeyRaw)
+        const publicMatchKey = normalizePublicSlug(matchKeyRaw)
 
-          const matchesKey = (value) => {
-            const clean = normalizeEmail(value)
-            if (!clean || !normalizedLookupTipsterKey) return false
-            return clean === normalizedLookupTipsterKey ||
-              clean.split('@')[0] === normalizedLookupTipsterKey ||
-              normalizedLookupTipsterKey.split('@')[0] === clean
-          }
+        const matchesKey = (value) => {
+          const clean = normalizeEmail(value)
+          const slug = normalizePublicSlug(value)
+          if (!clean && !slug) return false
+          return Boolean(
+            (normalizedMatchKey && (
+              clean === normalizedMatchKey ||
+              clean.split('@')[0] === normalizedMatchKey ||
+              normalizedMatchKey.split('@')[0] === clean
+            )) ||
+            (publicMatchKey && slug === publicMatchKey) ||
+            String(value || '') === String(tipsterId || '')
+          )
+        }
 
-          const foundProfile = (profilesData || []).filter(profile => !isBlockedTestProfile(profile)).find(profile =>
+        // WERSJA 1429:
+        // Top typerzy nie odpala już serii zapytań po kolumnach/filtrach, które w różnych schematach
+        // dawały 400, np. public_slug, author_id, user_id, tipster_id.
+        // Pobieramy bezpieczne małe paczki przez select('*') i filtrujemy lokalnie.
+        const [profileRows, recentTipsRows] = await Promise.all([
+          safeRows(supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(250), []),
+          safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(300), [])
+        ])
+
+        if (cancelled) return
+
+        const foundProfile = (profileRows || [])
+          .filter(profile => !isBlockedTestProfile(profile))
+          .find(profile =>
             matchesKey(profile.id) ||
             matchesKey(profile.email) ||
             matchesKey(profile.username) ||
             matchesKey(profile.public_slug)
           ) || null
 
-          const normalizedTipsterTips = (allTipsData || [])
-            .filter(rawTip => !isBlockedTestProfile(rawTip))
-            .filter(rawTip => {
-              const tip = normalizeTipRow(rawTip)
-              return matchesKey(tip.author_id) ||
-                matchesKey(tip.user_id) ||
-                matchesKey(tip.author_email) ||
-                matchesKey(tip.email) ||
-                matchesKey(tip.user_email) ||
-                matchesKey(tip.author_name) ||
-                matchesKey(tip.username)
+        const targetValues = new Set([
+          tipsterId,
+          lookupTipsterKey,
+          foundProfile?.id,
+          foundProfile?.email,
+          foundProfile?.username,
+          foundProfile?.public_slug,
+          String(foundProfile?.email || '').split('@')[0]
+        ].filter(Boolean).map(value => String(value)))
+
+        const normalizedTipsterTips = (recentTipsRows || [])
+          .filter(rawTip => !isBlockedTestProfile(rawTip))
+          .map(normalizeTipRow)
+          .filter(tip => {
+            const values = [
+              tip.author_id,
+              tip.user_id,
+              tip.tipster_id,
+              tip.author_email,
+              tip.email,
+              tip.user_email,
+              tip.author_name,
+              tip.username,
+              tip.public_slug
+            ].filter(Boolean).map(String)
+
+            return values.some(value => {
+              if (targetValues.has(value)) return true
+              return matchesKey(value)
             })
-            .map(normalizeTipRow)
+          })
 
-          const fallbackProfile = foundProfile || (normalizedTipsterTips[0] ? {
-            id: normalizedTipsterTips[0].author_id || normalizedTipsterTips[0].user_id || null,
-            email: normalizedTipsterTips[0].author_email || normalizedTipsterTips[0].email || null,
-            username: normalizedTipsterTips[0].author_name || normalizedTipsterTips[0].username || lookupTipsterKey,
-            public_slug: normalizePublicSlug(normalizedTipsterTips[0].author_name || lookupTipsterKey),
-            avatar_url: normalizedTipsterTips[0].author_avatar_url || null
-          } : null)
+        const fallbackProfile = foundProfile || (normalizedTipsterTips[0] ? {
+          id: normalizedTipsterTips[0].author_id || normalizedTipsterTips[0].user_id || normalizedTipsterTips[0].tipster_id || null,
+          email: normalizedTipsterTips[0].author_email || normalizedTipsterTips[0].email || normalizedTipsterTips[0].user_email || null,
+          username: normalizedTipsterTips[0].author_name || normalizedTipsterTips[0].username || lookupTipsterKey || 'Użytkownik',
+          public_slug: normalizePublicSlug(normalizedTipsterTips[0].author_name || normalizedTipsterTips[0].username || lookupTipsterKey),
+          avatar_url: normalizedTipsterTips[0].author_avatar_url || normalizedTipsterTips[0].avatar_url || null
+        } : null)
 
-          const lookupStatsKey = String(fallbackProfile?.id || normalizedTipsterTips[0]?.author_id || normalizedTipsterTips[0]?.user_id || lookupTipsterKey).toLowerCase()
-          const importedFromProfile = getImportedProfileStats(fallbackProfile)
-          const importedFromTip = (normalizedTipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
-          const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(lookupStatsKey) || buildAuthorStatsFromTips(normalizedTipsterTips).values?.()?.next?.()?.value
-          const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, importedFromProfile || importedFromTip)
-
-          if (cancelled) return
-          setProfile(fallbackProfile)
-          setTipsterTips(normalizedTipsterTips.map(tip => ({
-            ...tip,
-            author_name: isGenericProfileName(tip.author_name) ? (fallbackProfile?.username || lookupTipsterKey || 'Użytkownik') : (tip.author_name || fallbackProfile?.username || lookupTipsterKey || 'Użytkownik'),
-            author_email: tip.author_email || fallbackProfile?.email || null,
-            author_avatar_url: tip.author_avatar_url || fallbackProfile?.avatar_url || null,
-            author_visible_stats: tipsterVisibleStats,
-          })))
-          setStats(null)
-          setByLeague([])
-          setByType([])
-          setRecentForm([])
-          return
-        }
-
-        const [profileRes, tipsRes, rankingRes, leagueRes, typeRes, formRes] = await Promise.all([
-          supabase.from('profiles').select('id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at').eq('id', tipsterId).maybeSingle(),
-          supabase.from('tips').select('*').eq('author_id', tipsterId).order('created_at', { ascending: false }).limit(80),
-          supabase.from('tipster_ranking').select('*').eq('tipster_id', tipsterId).maybeSingle(),
-          supabase.from('stats_by_league').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
-          supabase.from('stats_by_type').select('*').eq('tipster_id', tipsterId).order('bets', { ascending: false }).limit(8),
-          supabase.from('stats_recent_form').select('*').eq('tipster_id', tipsterId).limit(20)
-        ])
-        if (cancelled) return
-        if (profileRes.error) console.error('profileRes error', profileRes.error)
-        if (tipsRes.error) console.error('tipsRes error', tipsRes.error)
-        if (rankingRes.error) console.error('rankingRes error', rankingRes.error)
-        if (leagueRes.error) console.error('leagueRes error', leagueRes.error)
-        if (typeRes.error) console.error('typeRes error', typeRes.error)
-        if (formRes.error) console.error('formRes error', formRes.error)
-        setProfile(profileRes.data || null)
-        const normalizedTipsterTips = (tipsRes.data || []).map(normalizeTipRow)
-        const importedFromProfile = getImportedProfileStats(profileRes.data)
+        const statsKey = String(fallbackProfile?.id || normalizedTipsterTips[0]?.author_id || normalizedTipsterTips[0]?.user_id || normalizedTipsterTips[0]?.tipster_id || lookupTipsterKey || tipsterId).toLowerCase()
+        const importedFromProfile = getImportedProfileStats(fallbackProfile)
         const importedFromTip = (normalizedTipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
-        const tipsterDynamicStats = buildAuthorStatsFromTips(normalizedTipsterTips).get(String(tipsterId).toLowerCase())
+        const localStatsMap = buildAuthorStatsFromTips(normalizedTipsterTips)
+        const tipsterDynamicStats = localStatsMap.get(statsKey) || localStatsMap.values?.()?.next?.()?.value
         const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, importedFromProfile || importedFromTip)
+
+        setProfile(fallbackProfile)
         setTipsterTips(normalizedTipsterTips.map(tip => ({
           ...tip,
-          author_name: isGenericProfileName(tip.author_name) ? (profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')) : (tip.author_name || profileRes.data?.username || (profileRes.data?.email ? String(profileRes.data.email).split('@')[0] : 'Użytkownik')),
-          author_email: tip.author_email || profileRes.data?.email || null,
-          author_avatar_url: tip.author_avatar_url || profileRes.data?.avatar_url || null,
+          author_name: isGenericProfileName(tip.author_name) ? (fallbackProfile?.username || lookupTipsterKey || 'Użytkownik') : (tip.author_name || fallbackProfile?.username || lookupTipsterKey || 'Użytkownik'),
+          author_email: tip.author_email || fallbackProfile?.email || null,
+          author_avatar_url: tip.author_avatar_url || fallbackProfile?.avatar_url || null,
           author_visible_stats: tipsterVisibleStats,
         })))
-        setStats(rankingRes.data || null)
-        setByLeague(leagueRes.data || [])
-        setByType(typeRes.data || [])
-        setRecentForm(formRes.data || [])
+
+        setStats(tipsterVisibleStats || null)
+        setByLeague([])
+        setByType([])
+        setRecentForm([])
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -8469,9 +8559,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
     try {
       let result = await supabase
-        .from('tips')
-        .select('id', { count: 'exact', head: true })
-        .or(`author_id.eq.${user.id},user_id.eq.${user.id}`)
+        .from('tips').select('*')
         .gte('created_at', startOfDay.toISOString())
 
       if (result.error && isSchemaError(result.error)) {
@@ -8890,9 +8978,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
     try {
       const { data, error } = await supabase
-        .from('tips')
-        .select('id,match,team_home,team_away,league,match_time,created_at,author_id,user_id')
-        .or(`author_id.eq.${user.id},user_id.eq.${user.id}`)
+        .from('tips').select('*')
         .gte('created_at', startOfDay.toISOString())
         .limit(100)
 
@@ -10722,7 +10808,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       )
 
       const profilesData = await safeQuery(
-        supabase.from('profiles').select('id,email,username,avatar_url,plan,subscription_status,is_premium,imported_total_tips,imported_won_tips,imported_lost_tips,imported_yield,imported_profit,followers_count,created_at').order('created_at', { ascending: false }).limit(30),
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(30),
         []
       )
 
@@ -14968,7 +15054,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
         .order('event_time', { ascending: true })
-        .limit(1000)
+        .limit(200)
 
       if (error) throw error
 
@@ -15000,7 +15086,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
         .gte('event_time', `${today}T00:00:00`)
         .order('event_time', { ascending: true })
-        .limit(500)
+        .limit(150)
 
       if (error) throw error
 
@@ -21763,7 +21849,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     ]
     for (const columns of profileSelects) {
       try {
-        const { data, error } = await supabase.from('profiles').select(columns).order('updated_at', { ascending: false }).limit(1000)
+        const { data, error } = await supabase.from('profiles').select(columns).order('updated_at', { ascending: false }).limit(200)
         if (error || !Array.isArray(data)) continue
         data.forEach(row => {
           profileAvatarRows.push(row)
@@ -23332,30 +23418,37 @@ function App() {
   }, [])
 
   async function resolvePublicTipsterBySlug(slug) {
-    const cleanSlug = normalizePublicSlug(slug)
-    if (!cleanSlug || !isSupabaseConfigured || !supabase) return
+  const cleanSlug = String(slug || '').trim().toLowerCase()
+  if (!cleanSlug || !isSupabaseConfigured || !supabase) return null
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id,email,username,public_slug')
-        .or(`public_slug.eq.${cleanSlug},username.eq.${cleanSlug}`)
-        .limit(1)
-        .maybeSingle()
+  // WERSJA 1430:
+  // Nie robimy już profiles?public_slug.eq / username.eq / email.eq w URL,
+  // bo gdy kolumna lub filtr nie pasuje do schematu, Supabase daje czerwone 400.
+  // Pobieramy małą paczkę profili i filtrujemy lokalnie.
+  const rows = await safeSupabaseArray(
+    supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(250),
+    [],
+    4500
+  )
 
-      if (error) {
-        console.error('resolvePublicTipsterBySlug error', error)
-        return
-      }
+  return rows.find(row => {
+    const candidates = [
+      row.public_slug,
+      row.slug,
+      row.username,
+      row.email,
+      String(row.email || '').split('@')[0],
+      row.id
+    ].filter(Boolean).map(value => String(value).trim().toLowerCase())
 
-      if (data?.id) {
-        setSelectedTipsterId(data.id)
-        setView('dashboard')
-      }
-    } catch (error) {
-      console.error('resolvePublicTipsterBySlug exception', error)
-    }
-  }
+    return candidates.includes(cleanSlug)
+  }) || null
+}
+
 
   async function fetchRealRanking() {
     if (!isSupabaseConfigured || !supabase) {
@@ -23363,54 +23456,26 @@ function App() {
       return
     }
 
+    const safeRows = async (query, fallback = []) => {
+      try {
+        const timeout = new Promise(resolve => setTimeout(() => resolve({ data: fallback, error: { message: 'timeout' } }), 5000))
+        const result = await Promise.race([query, timeout])
+        if (result?.error) return fallback
+        return Array.isArray(result?.data) ? result.data : fallback
+      } catch (_) {
+        return fallback
+      }
+    }
+
     try {
-      let rankingRows = []
-      let tipRows = []
-      let profileRows = []
+      // WERSJA 1429: ranking/top typerzy bez ciężkich limitów 1000 i bez łańcucha wielu widoków.
+      const [rankingRows, tipRows, profileRows] = await Promise.all([
+        safeRows(supabase.from('betai_live_ranking_v999').select('*').order('profit', { ascending: false }).limit(100), []),
+        safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(200), []),
+        fetchBetaiPublicProfiles().catch(() => [])
+      ])
 
-      try {
-        const { data, error } = await supabase.from('betai_live_ranking_v999').select('*').order('profit', { ascending: false }).limit(1000)
-        if (!error && Array.isArray(data)) rankingRows = data
-        else if (error) console.warn('betai_live_ranking_v999 skipped', error)
-      } catch (error) {
-        console.warn('betai_live_ranking_v999 exception skipped', error)
-      }
-
-      if (!rankingRows.length) {
-        try {
-          const { data, error } = await supabase.from('tipster_ranking_live').select('*').order('profit', { ascending: false }).limit(1000)
-          if (!error && Array.isArray(data)) rankingRows = data
-          else if (error) console.warn('tipster_ranking_live skipped', error)
-        } catch (error) {
-          console.warn('tipster_ranking_live exception skipped', error)
-        }
-      }
-
-      if (!rankingRows.length) {
-        try {
-          const { data, error } = await supabase.from('tipster_ranking').select('*').limit(1000)
-          if (!error && Array.isArray(data)) rankingRows = data
-          else if (error) console.warn('tipster_ranking skipped', error)
-        } catch (error) {
-          console.warn('tipster_ranking exception skipped', error)
-        }
-      }
-
-      try {
-        const { data, error } = await supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(1000)
-        if (!error && Array.isArray(data)) tipRows = data
-        else if (error) console.warn('ranking tips skipped', error)
-      } catch (error) {
-        console.warn('ranking tips exception skipped', error)
-      }
-
-      try {
-        profileRows = await fetchBetaiPublicProfiles()
-      } catch (error) {
-        console.warn('ranking public profiles exception skipped', error)
-      }
-
-      const profileRankingRows = profileRows.filter(profile => !isBlockedTestProfile(profile)).map(profile => {
+      const profileRankingRows = (profileRows || []).filter(profile => !isBlockedTestProfile(profile)).map(profile => {
         const imported = getImportedProfileStats(profile)
         const profit = Number(imported?.profit ?? profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
         const totalTips = Number(imported?.totalTips ?? profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
@@ -23666,7 +23731,7 @@ function App() {
             .select('*')
             .eq(column, clean)
             .order('created_at', { ascending: false })
-            .limit(500)
+            .limit(150)
         )
       }
 
@@ -24277,7 +24342,7 @@ function App() {
     const { data, error } = await supabase
       .from('profiles')
       .select('id,email,username,public_slug,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,plan,subscription_status,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at')
-      .limit(500)
+      .limit(150)
 
     if (error) {
       console.error('resolveTipsterProfile error', error)
@@ -24994,8 +25059,7 @@ function App() {
     if (userIds.length) {
       try {
         const { data: users } = await supabase
-          .from('profiles')
-          .select('id, username, display_name, full_name, email')
+          .from('profiles').select('*')
           .in('id', userIds)
 
         usersById = Object.fromEntries((users || []).map(profile => [

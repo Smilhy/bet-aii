@@ -1,0 +1,20 @@
+WERSJA 1429 — TOP TYPERZY SAFE PROFILE LOAD
+
+Problem:
+- zakładka Top typerzy generowała czerwone 400 na profiles/tips,
+- powód: frontend selektował albo filtrował po kolumnach, które w Twojej bazie mogą nie istnieć albo mają różne nazwy,
+  np. public_slug, author_id, user_id, tipster_id,
+- dodatkowo ranking ładował limity 1000 i kilka fallbacków.
+
+Zrobione:
+- Top typerzy / profil typera ładuje dane przez select('*') z małymi limitami i filtruje lokalnie,
+- usunięte zapytania do stats_by_league/stats_by_type/stats_recent_form z profilu typera,
+- fetchRealRanking zmniejszony:
+  ranking limit 100,
+  tips limit 200,
+- resolvePublicTipsterBySlug nie filtruje już po public_slug/username w URL, tylko lokalnie,
+- dodany SQL z bezpiecznymi kolumnami i indeksami, żeby starsze requesty też przestały dawać 400.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1429_TOP_TYPERZY_SAFE_PROFILE_LOAD.sql
