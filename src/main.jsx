@@ -11245,7 +11245,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
-      const { data, error } = await supabase.rpc('claim_community_reward_v1436', {
+      const { data, error } = await supabase.rpc('claim_community_reward_v1437', {
         p_user_id: user.id,
         p_email: userEmail,
         p_reward_key: reward.key,
