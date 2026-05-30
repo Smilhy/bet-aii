@@ -10543,25 +10543,28 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
 
   const getVerifiedDailyMission = (key, fallback = {}) => {
     const verified = verifiedDailyMissions?.[key]
+    const target = Number(verified?.target || (key === 'daily_active' ? 3 : 1))
+
     if (!verifiedDailyMissions || !verified) {
       return {
         ...fallback,
         done: false,
         progress: 0,
-        current: key === 'daily_active' ? '0/3' : '0/1',
+        current: `0/${target}`,
         claimed: false,
         verified: false
       }
     }
 
-    const target = Number(verified.target || (key === 'daily_active' ? 3 : 1))
-    const count = Math.max(0, Number(verified.count || 0))
+    const claimed = Boolean(verified.claimed)
+    const count = claimed ? 0 : Math.max(0, Number(verified.count || 0))
+
     return {
       ...fallback,
-      done: Boolean(verified.done),
-      progress: target > 0 ? Math.min(100, (count / target) * 100) : 0,
+      done: !claimed && Boolean(verified.done),
+      progress: claimed ? 0 : (target > 0 ? Math.min(100, (count / target) * 100) : 0),
       current: `${Math.min(count, target)}/${target}`,
-      claimed: Boolean(verified.claimed),
+      claimed,
       verified: true
     }
   }
@@ -10825,7 +10828,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
     try {
       if (user?.id && userEmail) {
         try {
-          const { data: verifiedData, error: verifiedError } = await supabase.rpc('get_community_daily_missions_v1435', {
+          const { data: verifiedData, error: verifiedError } = await supabase.rpc('get_community_daily_missions_v1436', {
             p_user_id: user.id,
             p_email: userEmail
           })
@@ -11242,7 +11245,7 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
   async function claimCommunityReward(reward) {
     if (!reward?.done || reward.claimed || !user?.id || !userEmail || !isSupabaseConfigured || !supabase) return
     try {
-      const { data, error } = await supabase.rpc('claim_community_reward_v1434', {
+      const { data, error } = await supabase.rpc('claim_community_reward_v1436', {
         p_user_id: user.id,
         p_email: userEmail,
         p_reward_key: reward.key,
