@@ -66985,3 +66985,55 @@ html.betai-fhd-monitor80-v1323 body #root{
 @media (max-width: 720px){
   .ai-center-page-v747 .ai-stat-strip-v1443{grid-template-columns:1fr !important;}
 }
+
+/* WERSJA 1444 — Typy AI mniejsze kafle sportów */
+.ai-center-page-v747 .betfolio-sport-cards-v1276.ai-sports-cards-v1279{
+  padding:12px !important;
+  border-radius:20px !important;
+}
+.ai-center-page-v747 .sport-cards-head-v1276{
+  margin-bottom:10px !important;
+}
+.ai-center-page-v747 .sport-cards-track-v1276.ai-sports-grid-v1279{
+  gap:8px !important;
+}
+.ai-center-page-v747 .sport-card-v1276{
+  min-height:92px !important;
+  padding:11px 12px 10px !important;
+  border-radius:16px !important;
+}
+.ai-center-page-v747 .sport-card-top-v1276{
+  gap:8px !important;
+  margin-bottom:18px !important;
+}
+.ai-center-page-v747 .sport-card-top-v1276 i{
+  width:28px !important;
+  height:28px !important;
+  flex:0 0 28px !important;
+  font-size:15px !important;
+}
+.ai-center-page-v747 .sport-card-top-v1276 span{
+  font-size:13px !important;
+}
+.ai-center-page-v747 .sport-card-v1276 strong{
+  font-size:11px !important;
+  margin:0 0 3px !important;
+}
+.ai-center-page-v747 .sport-card-v1276 small{
+  max-width:78% !important;
+  font-size:10px !important;
+  line-height:1.22 !important;
+}
+.ai-center-page-v747 .sport-card-v1276 b{
+  right:8px !important;
+  bottom:0 !important;
+  font-size:46px !important;
+  opacity:.12 !important;
+}
+.ai-center-page-v747 .sport-card-badge-v1279,
+.ai-center-page-v747 .sport-card-badge-v1281{
+  top:10px !important;
+  right:10px !important;
+  padding:3px 7px !important;
+  font-size:9px !important;
+}
