@@ -15702,7 +15702,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return cached
       }
 
-      setSavedAiCards([])
+      // V1485: nie zerujemy globalnej listy zapisanych typów przy pustej zakładce,
+      // np. Jutro = 0. Inaczej znikały Statystyki i Mecze Result dla typów z Dziś.
       return []
     } catch (err) {
       console.warn('AI saved tips load skipped:', err?.message || err)
