@@ -13951,6 +13951,13 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
   const [timeFilter, setTimeFilter] = useState('all')
   const [savedLeagues, setSavedLeagues] = useState([])
+  const [tableVisibleCounts, setTableVisibleCounts] = useState({
+    coupons: 20,
+    sports: 20,
+    leagues: 20,
+    types: 20,
+    odds: 20,
+  })
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
@@ -14009,8 +14016,12 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     }
 
     if (market.includes('handicap')) {
-      if (hasHome) return `Handicap — ${home}`
-      if (hasAway) return `Handicap — ${away}`
+      const lineMatch = predictionRaw.match(/[+-]\s*\d+(?:[.,]\d+)?/)
+      const line = lineMatch ? lineMatch[0].replace(/\s+/g, '').replace(',', '.') : ''
+      const side = hasHome ? 'Home' : hasAway ? 'Away' : ''
+      if (line && side) return `Handicap ${line} ${side}`
+      if (line) return `Handicap ${line}`
+      if (side) return `Handicap ${side}`
       return `Handicap — ${predictionRaw || 'Inne'}`
     }
 
@@ -14221,11 +14232,15 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     return { key:bucket.key, bets:bucketTips.length, stake, profit, yieldValue: stake ? (profit/stake)*100 : 0, avgOdds: bucketTips.length ? oddsSum/bucketTips.length : 0 }
   }).filter(r => r.bets)
 
-  const StatTable = ({ title, columns, rows, variant = '' }) => (
+  const StatTable = ({ title, columns, rows, variant = '', tableKey = 'default' }) => {
+    const visibleCount = tableVisibleCounts[tableKey] || 20
+    const visibleRows = rows.slice(0, visibleCount)
+    const hasMore = rows.length > visibleCount
+    return (
     <div className={`ai-profile-stat-table-v1459 ${variant}`}>
       <h4>{title}</h4>
       <div className="ai-profile-table-head-v1459">{columns.map(c => <b key={c}>{c}</b>)}</div>
-      {rows.length ? rows.map(row => (
+      {visibleRows.length ? visibleRows.map(row => (
         <div className="ai-profile-table-row-v1459" key={row.key}>
           <span>{row.key}</span>
           <span>{row.bets}</span>
@@ -14236,8 +14251,17 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           {variant !== 'sport' ? <span>{row.avgOdds.toFixed(2)}</span> : null}
         </div>
       )) : <div className="ai-profile-table-empty-v1459">Brak danych dla wybranego filtra.</div>}
+      {hasMore ? (
+        <button
+          type="button"
+          className="ai-profile-load-more-v1463"
+          onClick={() => setTableVisibleCounts(prev => ({ ...prev, [tableKey]: (prev[tableKey] || 20) + 10 }))}
+        >
+          Pokaż kolejne 10 <small>{visibleCount}/{rows.length}</small>
+        </button>
+      ) : null}
     </div>
-  )
+  )}
 
   return (
     <section className="ai-profile-stats-v1459">
@@ -14259,15 +14283,15 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       </div>
 
       <div className="ai-profile-grid-v1459 two">
-        <StatTable title="Statystyki typów kuponów" columns={['Statystyki','Ilość kuponów','Stawka','Bilans','Yield','Śr. kurs']} rows={couponRows} />
-        <StatTable title="Statystyki dla sportów" columns={['Sport','Liczba kuponów','Stawka rozliczona','Bilans','Yield']} rows={sportRows} variant="sport" />
+        <StatTable title="Statystyki typów kuponów" columns={['Statystyki','Ilość kuponów','Stawka','Bilans','Yield','Śr. kurs']} rows={couponRows} tableKey="coupons" />
+        <StatTable title="Statystyki dla sportów" columns={['Sport','Liczba kuponów','Stawka rozliczona','Bilans','Yield']} rows={sportRows} variant="sport" tableKey="sports" />
       </div>
       <div className="ai-profile-grid-v1459 two">
-        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} />
-        <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} />
+        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} tableKey="leagues" />
+        <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} tableKey="types" />
       </div>
       <div className="ai-profile-grid-v1459 single">
-        <StatTable title="Statystyki zakresów kursów" columns={['Kurs','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={oddsProfileRows} />
+        <StatTable title="Statystyki zakresów kursów" columns={['Kurs','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={oddsProfileRows} tableKey="odds" />
       </div>
     </section>
   )
