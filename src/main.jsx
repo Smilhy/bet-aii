@@ -14138,7 +14138,6 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <div className="ai-analytics-panel-v749 table"><h4>Wyniki wg lig</h4><div className="table-head"><b>DIVISION</b><b>BETS</b><b>HIT RATE</b><b>PROFIT</b><b>ROI</b></div>{divisionRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span><span className={r.roi<0?'neg':'pos'}>{r.roi>=0?'+':''}{r.roi.toFixed(1)}%</span></div>)}</div>
         <div className="ai-analytics-panel-v749 table bet"><h4>Wyniki wg rynków</h4><div className="table-head"><b>BET TYPE</b><b>BETS</b><b>AVG ODDS</b><b>HIT RATE</b><b>PROFIT</b></div>{betTypeRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.avgOdds.toFixed(2)}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span></div>)}</div>
       </div>
-      <div className="ai-analytics-panel-v749 drawdown"><h4>Analiza drawdown</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg><footer><b>{maxDrawdown.toFixed(2)}u<small>MAX DRAWDOWN</small></b><b>{currentDrawdown.toFixed(2)}u<small>CURRENT DRAWDOWN</small></b><b>{recoveryFactor.toFixed(2)}<small>RECOVERY FACTOR</small></b></footer></div>
     </section>
   )
 }
