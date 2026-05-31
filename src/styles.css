@@ -67872,3 +67872,14 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .ai-profile-chart-head-v1459{grid-template-columns:1fr!important;}
   .ai-center-page-v747 .ai-profile-stat-table-v1459{overflow:auto!important;}
 }
+
+/* WERSJA 1460 — usunięty pasek podsumowania pod wykresem Statystyki AI */
+.ai-center-page-v747 .ai-profile-summary-v1459{display:none!important;}
+
+/* WERSJA 1461 — usunięta tabela godzin dodawania kuponów */
+.ai-center-page-v747 .ai-profile-grid-v1459.single{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:16px!important;
+  align-items:start!important;
+}

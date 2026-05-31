@@ -14207,13 +14207,6 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg>
           <div className="ai-profile-xlabels-v1459">{dateLabels.map((label,i)=><span key={`${label}-${i}`}>{label}</span>)}</div>
         </div>
-        <div className="ai-profile-summary-v1459">
-          <article><span>Zmiana salda</span><b className={totalProfit < 0 ? 'neg' : 'pos'}>{fmtMoney(totalProfit)}</b></article>
-          <article><span>Najwyższy bilans</span><b>{fmtMoney(balanceMax)}</b></article>
-          <article><span>Najniższy bilans</span><b>{fmtMoney(balanceMin)}</b></article>
-          <article><span>Średni poziom</span><b>{fmtMoney(chartSeries.reduce((s,v)=>s+v,0) / Math.max(1, chartSeries.length))}</b></article>
-          <article><span>Rozliczone typy</span><b>{settled.length}</b></article>
-        </div>
       </div>
 
       <div className="ai-profile-grid-v1459 two">
@@ -14224,9 +14217,8 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} />
         <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} />
       </div>
-      <div className="ai-profile-grid-v1459 two">
+      <div className="ai-profile-grid-v1459 single">
         <StatTable title="Statystyki zakresów kursów" columns={['Kurs','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={oddsProfileRows} />
-        <StatTable title="Statystyki godzin dodawania kuponów" columns={['Godziny','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={hourBuckets} />
       </div>
     </section>
   )
