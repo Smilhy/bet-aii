@@ -67788,3 +67788,8 @@ html.betai-fhd-monitor80-v1323 body #root{
 .ai-center-page-v747 .ai-stat-card-v1443.is-max strong{
   color:#ffffff !important;
 }
+
+/* WERSJA 1457 — usunięcie kart KPI z zakładki Statystyki AI */
+.ai-center-page-v747 .ai-analytics-screen-v749 .ai-analytics-kpis-v749{
+  display:none !important;
+}

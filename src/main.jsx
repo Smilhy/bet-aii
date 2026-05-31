@@ -14111,11 +14111,6 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
 
   return (
     <section className="ai-analytics-screen-v749">
-      <div className="ai-analytics-hero-v1450">
-        <span>AI PERFORMANCE • PREMIUM ANALIZA</span>
-        <h3>Statystyki AI</h3>
-        <p>Spójna analityka skuteczności typów, lig i rynków w stylistyce Bet+AI.</p>
-      </div>
       <div className="ai-analytics-filterbar-v749">
         <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>LIGA</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
