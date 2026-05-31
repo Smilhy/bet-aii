@@ -13923,8 +13923,69 @@ const ADD_TIP_SPORT_OPTIONS = [
   'Piłka nożna',
 ]
 
+const AI_STATS_FOOTBALL_BET_TYPES_PRESET = [
+  '1X2 — Gospodarz',
+  '1X2 — Remis',
+  '1X2 — Gość',
+  'Podwójna szansa — 1X',
+  'Podwójna szansa — X2',
+  'Podwójna szansa — 12',
+  'Draw No Bet — Home',
+  'Draw No Bet — Away',
+  'BTTS — Tak',
+  'BTTS — Nie',
+  'Suma goli — Powyżej 0.5',
+  'Suma goli — Poniżej 0.5',
+  'Suma goli — Powyżej 1.5',
+  'Suma goli — Poniżej 1.5',
+  'Suma goli — Powyżej 2.5',
+  'Suma goli — Poniżej 2.5',
+  'Suma goli — Powyżej 3.5',
+  'Suma goli — Poniżej 3.5',
+  'Suma goli — Powyżej 4.5',
+  'Suma goli — Poniżej 4.5',
+  'Handicap +0.5 Home',
+  'Handicap +0.5 Away',
+  'Handicap -0.5 Home',
+  'Handicap -0.5 Away',
+  'Handicap +1.5 Home',
+  'Handicap +1.5 Away',
+  'Handicap -1.5 Home',
+  'Handicap -1.5 Away',
+  'Handicap +2.5 Home',
+  'Handicap +2.5 Away',
+  'Handicap -2.5 Home',
+  'Handicap -2.5 Away',
+  'Team Total Home — Powyżej 0.5',
+  'Team Total Home — Poniżej 0.5',
+  'Team Total Home — Powyżej 1.5',
+  'Team Total Home — Poniżej 1.5',
+  'Team Total Away — Powyżej 0.5',
+  'Team Total Away — Poniżej 0.5',
+  'Team Total Away — Powyżej 1.5',
+  'Team Total Away — Poniżej 1.5',
+  'Połowa 1 — 1X2 Home',
+  'Połowa 1 — 1X2 Remis',
+  'Połowa 1 — 1X2 Away',
+  'Połowa 1 — Powyżej 0.5',
+  'Połowa 1 — Poniżej 0.5',
+  'Połowa 1 — Powyżej 1.5',
+  'Połowa 1 — Poniżej 1.5',
+  'Rzuty rożne — Powyżej 8.5',
+  'Rzuty rożne — Poniżej 8.5',
+  'Rzuty rożne — Powyżej 9.5',
+  'Rzuty rożne — Poniżej 9.5',
+  'Kartki — Powyżej 3.5',
+  'Kartki — Poniżej 3.5',
+  'Kartki — Powyżej 4.5',
+  'Kartki — Poniżej 4.5',
+  'Dokładny wynik',
+  'Correct Score',
+  'Wynik do przerwy/końca',
+]
+
 const AI_STATS_BET_TYPES_BY_SPORT = {
-  'Piłka nożna': ['1X2', 'Zwycięzca meczu', 'Podwójna szansa', 'Obie drużyny strzelą', 'Powyżej/Poniżej 2.5', 'Draw No Bet'],
+  'Piłka nożna': AI_STATS_FOOTBALL_BET_TYPES_PRESET,
   'Tenis': ['Zwycięzca meczu', 'Handicap gemów', 'Suma gemów', 'Dokładny wynik setów'],
   'Koszykówka': ['Zwycięzca meczu', 'Handicap', 'Suma punktów', 'Zwycięzca połowy'],
   'Hokej': ['Zwycięzca meczu', '1X2', 'Suma goli', 'Handicap'],
@@ -13993,9 +14054,13 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     const hasHome = home && prediction.includes(home.toLowerCase())
     const hasAway = away && prediction.includes(away.toLowerCase())
 
-    if (market.includes('btts') || market.includes('obie strzel') || prediction.includes('obie strzel')) {
-      if (prediction.includes('nie') || prediction.includes('no')) return 'BTTS — Nie'
-      return 'BTTS — Tak'
+    if (market.includes('btts') || market.includes('both teams') || market.includes('obie strzel') || prediction.includes('btts') || prediction.includes('both teams') || prediction.includes('obie strzel')) {
+      const combined = `${marketRaw} ${predictionRaw}`.toLowerCase()
+      const isNo = /(^|[^a-ząćęłńóśźż])(nie|no|nay|false|bez)([^a-ząćęłńóśźż]|$)/i.test(combined) || combined.includes('nie strzel') || combined.includes('not to score') || combined.includes('both teams to score no') || combined.includes('btts no') || combined.includes('btts - no') || combined.includes('btts: no')
+      const isYes = /(^|[^a-ząćęłńóśźż])(tak|yes|true)([^a-ząćęłńóśźż]|$)/i.test(combined) || combined.includes('obie strzelą') || combined.includes('both teams to score yes') || combined.includes('btts yes') || combined.includes('btts - yes') || combined.includes('btts: yes')
+      if (isNo) return 'BTTS — Nie'
+      if (isYes) return 'BTTS — Tak'
+      return 'BTTS — Inne'
     }
 
     if (market.includes('1x2') || market.includes('zwyci') || market.includes('winner') || market.includes('moneyline')) {
@@ -14015,19 +14080,65 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       return `Podwójna szansa — ${predictionRaw || 'Inne'}`
     }
 
+    if (market.includes('draw no bet') || market.includes('dnb') || market.includes('remis nie ma zakładu')) {
+      if (hasHome || /\bhome\b|gospodarz/i.test(predictionRaw)) return 'Draw No Bet — Home'
+      if (hasAway || /\baway\b|gość|gosc/i.test(predictionRaw)) return 'Draw No Bet — Away'
+      return `Draw No Bet — ${predictionRaw || 'Inne'}`
+    }
+
     if (market.includes('handicap')) {
-      const lineMatch = predictionRaw.match(/[+-]\s*\d+(?:[.,]\d+)?/)
+      const lineMatch = `${marketRaw} ${predictionRaw}`.match(/[+-]\s*\d+(?:[.,]\d+)?/)
       const line = lineMatch ? lineMatch[0].replace(/\s+/g, '').replace(',', '.') : ''
-      const side = hasHome ? 'Home' : hasAway ? 'Away' : ''
+      const combined = `${marketRaw} ${predictionRaw}`.toLowerCase()
+      const side = hasHome || /\bhome\b|gospodarz/i.test(combined) ? 'Home' : hasAway || /\baway\b|gość|gosc/i.test(combined) ? 'Away' : ''
       if (line && side) return `Handicap ${line} ${side}`
       if (line) return `Handicap ${line}`
       if (side) return `Handicap ${side}`
       return `Handicap — ${predictionRaw || 'Inne'}`
     }
 
+    if (market.includes('team total') || market.includes('gole drużyny') || market.includes('suma drużyny')) {
+      const line = `${marketRaw} ${predictionRaw}`.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.') || ''
+      const combined = `${marketRaw} ${predictionRaw}`.toLowerCase()
+      const side = hasHome || /\bhome\b|gospodarz/i.test(combined) ? 'Home' : hasAway || /\baway\b|gość|gosc/i.test(combined) ? 'Away' : 'Team'
+      const direction = combined.includes('under') || combined.includes('poniżej') ? 'Poniżej' : combined.includes('over') || combined.includes('powyżej') ? 'Powyżej' : 'Linia'
+      return `Team Total ${side} — ${direction} ${line}`.trim()
+    }
+
+    if (market.includes('roż') || market.includes('corner')) {
+      const line = `${marketRaw} ${predictionRaw}`.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.') || ''
+      if (prediction.includes('powyżej') || prediction.includes('over')) return `Rzuty rożne — Powyżej ${line}`.trim()
+      if (prediction.includes('poniżej') || prediction.includes('under')) return `Rzuty rożne — Poniżej ${line}`.trim()
+      return `Rzuty rożne — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('kart') || market.includes('card')) {
+      const line = `${marketRaw} ${predictionRaw}`.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.') || ''
+      if (prediction.includes('powyżej') || prediction.includes('over')) return `Kartki — Powyżej ${line}`.trim()
+      if (prediction.includes('poniżej') || prediction.includes('under')) return `Kartki — Poniżej ${line}`.trim()
+      return `Kartki — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('połowa') || market.includes('half')) {
+      const firstHalf = market.includes('1') || prediction.includes('1 poł') || prediction.includes('1st') || prediction.includes('first')
+      const prefix = firstHalf ? 'Połowa 1' : 'Połowa'
+      const line = `${marketRaw} ${predictionRaw}`.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.') || ''
+      if (prediction.includes('powyżej') || prediction.includes('over')) return `${prefix} — Powyżej ${line}`.trim()
+      if (prediction.includes('poniżej') || prediction.includes('under')) return `${prefix} — Poniżej ${line}`.trim()
+      if (hasDraw) return `${prefix} — 1X2 Remis`
+      if (hasHome) return `${prefix} — 1X2 Home`
+      if (hasAway) return `${prefix} — 1X2 Away`
+      return `${prefix} — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('dokładny wynik') || market.includes('correct score') || market.includes('exact score')) {
+      return `Dokładny wynik — ${predictionRaw || 'Inne'}`
+    }
+
     if (market.includes('suma') || market.includes('goli') || market.includes('over') || market.includes('under') || prediction.includes('powyżej') || prediction.includes('poniżej')) {
-      if (prediction.includes('powyżej') || prediction.includes('over')) return `Suma goli — Powyżej ${predictionRaw.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0] || ''}`.trim()
-      if (prediction.includes('poniżej') || prediction.includes('under')) return `Suma goli — Poniżej ${predictionRaw.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0] || ''}`.trim()
+      const line = `${marketRaw} ${predictionRaw}`.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.') || ''
+      if (prediction.includes('powyżej') || prediction.includes('over')) return `Suma goli — Powyżej ${line}`.trim()
+      if (prediction.includes('poniżej') || prediction.includes('under')) return `Suma goli — Poniżej ${line}`.trim()
       return `Suma goli — ${predictionRaw || 'Inne'}`
     }
 
