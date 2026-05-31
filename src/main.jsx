@@ -14014,6 +14014,8 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [chartMode, setChartMode] = useState('cumulative')
   const [chartRange, setChartRange] = useState('90d')
   const [hoverIndex, setHoverIndex] = useState(null)
+  const [chartModeOpen, setChartModeOpen] = useState(false)
+  const chartModeRef = useRef(null)
   const [savedLeagues, setSavedLeagues] = useState([])
   const [tableVisibleCounts, setTableVisibleCounts] = useState({
     coupons: 20,
@@ -14022,6 +14024,22 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     types: 20,
     odds: 20,
   })
+
+  useEffect(() => {
+    function handleChartModeOutside(event) {
+      if (!chartModeRef.current) return
+      if (!chartModeRef.current.contains(event.target)) setChartModeOpen(false)
+    }
+    function handleChartModeEscape(event) {
+      if (event.key === 'Escape') setChartModeOpen(false)
+    }
+    document.addEventListener('mousedown', handleChartModeOutside)
+    document.addEventListener('keydown', handleChartModeEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleChartModeOutside)
+      document.removeEventListener('keydown', handleChartModeEscape)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
@@ -14419,10 +14437,41 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       <div className="ai-profile-balance-card-v1459">
         <div className="ai-profile-chart-head-v1459">
           <b>Wykres salda AI</b>
-          <select aria-label="Typ wykresu" value={chartMode} onChange={e => setChartMode(e.target.value)}>
-            <option value="cumulative">Bilans kumulacyjny</option>
-            <option value="profit">Profit na typ</option>
-          </select>
+          <div className={`ai-profile-chart-select-v1472 ${chartModeOpen ? 'open' : ''}`} ref={chartModeRef}>
+            <button
+              type="button"
+              className="ai-profile-chart-select-trigger-v1472"
+              aria-haspopup="listbox"
+              aria-expanded={chartModeOpen ? 'true' : 'false'}
+              onClick={() => setChartModeOpen(prev => !prev)}
+            >
+              <span>{chartMode === 'cumulative' ? 'Bilans kumulacyjny' : 'Profit na typ'}</span>
+              <i aria-hidden="true">▾</i>
+            </button>
+            {chartModeOpen ? (
+              <div className="ai-profile-chart-select-menu-v1472" role="listbox" aria-label="Typ wykresu">
+                {[
+                  ['cumulative', 'Bilans kumulacyjny'],
+                  ['profit', 'Profit na typ'],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="option"
+                    aria-selected={chartMode === value ? 'true' : 'false'}
+                    className={chartMode === value ? 'active' : ''}
+                    onClick={() => {
+                      setChartMode(value)
+                      setChartModeOpen(false)
+                    }}
+                  >
+                    <span>{label}</span>
+                    {chartMode === value ? <small>Aktywny</small> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="ai-profile-mini-tabs-v1459">
           {[
