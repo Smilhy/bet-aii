@@ -17305,19 +17305,21 @@ function AuthView({ onAuth }) {
 
       const startOfToday = new Date()
       startOfToday.setHours(0, 0, 0, 0)
+      const endOfToday = new Date(startOfToday)
+      endOfToday.setDate(endOfToday.getDate() + 1)
       const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+
+      const aiTipsTodayQuery = supabase
+        .from('tips')
+        .select('id', { count: 'exact', head: true })
+        .gte('match_time', startOfToday.toISOString())
+        .lt('match_time', endOfToday.toISOString())
+        .or('ai_source.ilike.%real_ai%,ai_source.ilike.%ai%,source.ilike.%ai%,source.eq.Supabase Journal')
 
       const [registeredUsers, activeNow, tipsToday] = await Promise.all([
         safeCount(supabase.from('profiles').select('id', { count: 'exact', head: true }), 0, 3500),
         safeCount(supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('updated_at', activeSince), 1, 2500),
-        safeCount(
-          supabase
-            .from('tips')
-            .select('id', { count: 'exact', head: true })
-            .gte('created_at', startOfToday.toISOString()),
-          0,
-          3000
-        ),
+        safeCount(aiTipsTodayQuery, 0, 3000),
       ])
 
       if (!cancelled) {
