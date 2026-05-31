@@ -1,0 +1,9 @@
+WERSJA 1450 — Statystyki AI redesign premium
+Zmiany:
+- pełny redesign zakładki Statystyki AI pod styl Bet+AI
+- nowy hero, spójniejsze kolory i premium glassmorphism
+- poprawione filtry, przełączniki czasu i karty KPI
+- odświeżone wykresy, donut, recent form i sekcje tabel
+- bardziej spójna typografia i polskie etykiety
+- zachowana logika statystyk, tylko poprawa wyglądu i czytelności
+- build OK (pozostały wcześniejsze warningi projektu)

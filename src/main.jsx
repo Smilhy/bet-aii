@@ -14094,37 +14094,46 @@ function AiStatsAnalyticsView({ tips = [] }) {
   const divisionRows = buildRows(t => t.league || t.league_name || t.country || 'Inne').slice(0,10)
   const betTypeRows = buildRows(t => t.market || t.bet_type || 'Typ AI').slice(0,8)
 
+  const totalDistribution = Math.max(1, wins.length + losses.length + pushes.length)
+  const wonPct = `${((wins.length / totalDistribution) * 100).toFixed(2)}%`
+  const lostPct = `${((losses.length / totalDistribution) * 100).toFixed(2)}%`
+  const pushPct = `${Math.max(0, 100 - (((wins.length / totalDistribution) * 100) + ((losses.length / totalDistribution) * 100))).toFixed(2)}%`
+
   return (
     <section className="ai-analytics-screen-v749">
-      <h3>Statistics &amp; Analytics</h3>
+      <div className="ai-analytics-hero-v1450">
+        <span>AI PERFORMANCE • PREMIUM ANALIZA</span>
+        <h3>Statystyki AI</h3>
+        <p>Spójna analityka skuteczności typów, lig i rynków w stylistyce Bet+AI.</p>
+      </div>
       <div className="ai-analytics-filterbar-v749">
         <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <label><span>DIVISION</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <label><span>BET TYPE</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <div className="ai-analytics-time-v749">{[['all','All Time'],['year','This Year'],['month','This Month'],['week','This Week']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
+        <label><span>LIGA</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>RYNEK</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <div className="ai-analytics-time-v749">{[['all','Całość'],['year','Rok'],['month','Miesiąc'],['week','Tydzień']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
       </div>
       <div className="ai-analytics-kpis-v749">
-        <article className={totalProfit < 0 ? 'danger' : 'success'}><span>TOTAL PROFIT</span><b>{totalProfit.toFixed(2)}u</b><small>Based on {settled.length} bets</small></article>
-        <article className={roi < 0 ? 'danger' : 'success'}><span>ROI</span><b>{roi.toFixed(1)}%</b><small>Return on investment</small></article>
-        <article><span>HIT RATE</span><b>{hitRate.toFixed(1)}%</b><small>{wins.length}W / {losses.length}L / {pushes.length}P</small></article>
-        <article><span>TOTAL BETS</span><b>{filtered.length}</b><small>Analyzed predictions</small></article>
-        <article><span>AVG ODDS</span><b>{avgOdds.toFixed(2)}</b><small>Won avg: {wins.length ? (wins.reduce((s,t)=>s+Number(t.odds||t.course||1.8),0)/wins.length).toFixed(2) : '0.00'}</small></article>
-        <article><span>CURRENT STREAK</span><b>{currentStreak}{currentStreakResult==='won'?'W':currentStreakResult==='lost'?'L':'-'}</b><small>Max {bestWin}W / {worstLoss}L</small></article>
+        <article className={totalProfit < 0 ? 'danger' : 'success'}><span>PROFIT AI</span><b>{totalProfit.toFixed(2)}u</b><small>Na podstawie {settled.length} rozliczonych typów</small></article>
+        <article className={roi < 0 ? 'danger' : 'success'}><span>ROI</span><b>{roi.toFixed(1)}%</b><small>Zwrot z inwestycji</small></article>
+        <article><span>SKUTECZNOŚĆ</span><b>{hitRate.toFixed(1)}%</b><small>{wins.length}W / {losses.length}L / {pushes.length}P</small></article>
+        <article><span>TYPY AI</span><b>{filtered.length}</b><small>Analizowane predykcje</small></article>
+        <article><span>ŚR. KURS</span><b>{avgOdds.toFixed(2)}</b><small>Śr. kurs wygranych: {wins.length ? (wins.reduce((s,t)=>s+Number(t.odds||t.course||1.8),0)/wins.length).toFixed(2) : '0.00'}</small></article>
+        <article><span>AKTUALNA SERIA</span><b>{currentStreak}{currentStreakResult==='won'?'W':currentStreakResult==='lost'?'L':'-'}</b><small>Max {bestWin}W / {worstLoss}L</small></article>
       </div>
-      <div className="ai-analytics-panel-v749 profit"><h4>Profit Evolution</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg></div>
+      <div className="ai-analytics-panel-v749 profit"><h4>Krzywa zysku</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg></div>
       <div className="ai-analytics-grid-v749 mid">
-        <div className="ai-analytics-panel-v749 donut-panel"><h4>Win/Loss Distribution</h4><div className="ai-donut-v749" style={{'--won': `${wins.length}`, '--lost': `${losses.length}`, '--push': `${pushes.length}`}}/><div className="legend"><span>● Won</span><span>● Lost</span><span>● Push</span></div></div>
-        <div className="ai-analytics-panel-v749 odds"><h4>Performance by Odds Range</h4><div className="odds-bars">{oddsBuckets.map(b=><div key={b.label}><i style={{height:`${(b.won/maxBucket)*100}%`}}/><em style={{height:`${(b.lost/maxBucket)*100}%`}}/><small>{b.label}</small></div>)}</div></div>
+        <div className="ai-analytics-panel-v749 donut-panel"><h4>Rozkład wyników</h4><div className="ai-donut-v749" style={{'--won': wonPct, '--lost': lostPct, '--push': pushPct}}><span>{hitRate.toFixed(0)}%</span><small>skuteczność</small></div><div className="legend"><span>● Wygrane</span><span>● Przegrane</span><span>● Push</span></div></div>
+        <div className="ai-analytics-panel-v749 odds"><h4>Wyniki wg kursów</h4><div className="odds-bars">{oddsBuckets.map(b=><div key={b.label}><i style={{height:`${(b.won/maxBucket)*100}%`}}/><em style={{height:`${(b.lost/maxBucket)*100}%`}}/><small>{b.label}</small></div>)}</div></div>
       </div>
       <div className="ai-analytics-grid-v749 compact">
-        <div className="ai-analytics-panel-v749 streak"><h4>Streak Analysis</h4><p>Current <b>{currentStreak}{currentStreakResult==='won'?' Wins':currentStreakResult==='lost'?' Losses':''}</b></p><p>Best Win <b>{bestWin}</b></p><p>Worst Loss <b>{worstLoss}</b></p></div>
-        <div className="ai-analytics-panel-v749 recent"><h4>Recent Form (Last 20)</h4><div>{recent.map((r,i)=><span key={i} className={r}>{r==='won'?'W':r==='lost'?'L':r==='push'?'P':'•'}</span>)}</div></div>
+        <div className="ai-analytics-panel-v749 streak"><h4>Analiza serii</h4><p>Aktualnie <b>{currentStreak}{currentStreakResult==='won'?' wygrane':currentStreakResult==='lost'?' porażki':''}</b></p><p>Najlepsza seria <b>{bestWin}</b></p><p>Najgorsza seria <b>{worstLoss}</b></p></div>
+        <div className="ai-analytics-panel-v749 recent"><h4>Ostatnie 20 typów</h4><div>{recent.map((r,i)=><span key={i} className={r}>{r==='won'?'W':r==='lost'?'L':r==='push'?'P':'•'}</span>)}</div></div>
       </div>
       <div className="ai-analytics-grid-v749 tables">
-        <div className="ai-analytics-panel-v749 table"><h4>Performance by Division</h4><div className="table-head"><b>DIVISION</b><b>BETS</b><b>HIT RATE</b><b>PROFIT</b><b>ROI</b></div>{divisionRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span><span className={r.roi<0?'neg':'pos'}>{r.roi>=0?'+':''}{r.roi.toFixed(1)}%</span></div>)}</div>
-        <div className="ai-analytics-panel-v749 table bet"><h4>Performance by Bet Type</h4><div className="table-head"><b>BET TYPE</b><b>BETS</b><b>AVG ODDS</b><b>HIT RATE</b><b>PROFIT</b></div>{betTypeRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.avgOdds.toFixed(2)}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span></div>)}</div>
+        <div className="ai-analytics-panel-v749 table"><h4>Wyniki wg lig</h4><div className="table-head"><b>DIVISION</b><b>BETS</b><b>HIT RATE</b><b>PROFIT</b><b>ROI</b></div>{divisionRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span><span className={r.roi<0?'neg':'pos'}>{r.roi>=0?'+':''}{r.roi.toFixed(1)}%</span></div>)}</div>
+        <div className="ai-analytics-panel-v749 table bet"><h4>Wyniki wg rynków</h4><div className="table-head"><b>BET TYPE</b><b>BETS</b><b>AVG ODDS</b><b>HIT RATE</b><b>PROFIT</b></div>{betTypeRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.avgOdds.toFixed(2)}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span></div>)}</div>
       </div>
-      <div className="ai-analytics-panel-v749 drawdown"><h4>Drawdown Analysis</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg><footer><b>{maxDrawdown.toFixed(2)}u<small>MAX DRAWDOWN</small></b><b>{currentDrawdown.toFixed(2)}u<small>CURRENT DRAWDOWN</small></b><b>{recoveryFactor.toFixed(2)}<small>RECOVERY FACTOR</small></b></footer></div>
+      <div className="ai-analytics-panel-v749 drawdown"><h4>Analiza drawdown</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg><footer><b>{maxDrawdown.toFixed(2)}u<small>MAX DRAWDOWN</small></b><b>{currentDrawdown.toFixed(2)}u<small>CURRENT DRAWDOWN</small></b><b>{recoveryFactor.toFixed(2)}<small>RECOVERY FACTOR</small></b></footer></div>
     </section>
   )
 }
