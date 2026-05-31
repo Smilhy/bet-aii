@@ -1,0 +1,11 @@
+WERSJA 1475 SAFE — naprawa pętli 503 z logowania
+Baza: upload użytkownika 1471
+Zmiany:
+- ekran logowania wykonuje tylko jedno lekkie RPC get_auth_live_stats, bez fallbacku do profiles/tips/presence
+- usunięty interwał/focus refresh statystyk live na ekranie logowania
+- site_reviews na ekranie logowania ładuje się tylko raz, bez interwału i realtime
+- logowanie i rejestracja mają timeout 12s
+- globalny bezpieczny fetch Supabase: po 503/504/429 na tips/profiles/presence/site_reviews/get_auth_live_stats endpoint ma 60s cooldown z pustą odpowiedzią, żeby nie spamować requestami
+- auth/v1 nie jest mockowane ani blokowane
+- nie ruszano algorytmu typów AI, EV, kursów, rozliczania WON/LOST
+- build OK
