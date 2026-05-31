@@ -150,14 +150,25 @@ exports.handler = async function () {
       .select('*')
       .eq('ai_source', 'real_ai_engine')
       .eq('source', 'live_ai_engine')
-      .in('status', ['pending','live'])
       .order('event_time', { ascending: true })
-      .limit(150)
+      .limit(500)
     if (error) throw error
 
-    let settled = 0, checked = 0, skipped = 0
+    const isSettled = tip => ['won','lost','void','win','loss','push'].includes(norm(tip.status || tip.result || tip.result_status))
+    const isPending = tip => ['pending','live',''].includes(norm(tip.status || tip.result || tip.result_status))
+    const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
+    const hasVerifiedScore = tip => hasScore(tip) && Boolean(tip.live_status || tip.settlement_source === 'auto_ai_result_api')
+    const hasSuspiciousZero = tip => {
+      const h = scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home)
+      const a = scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away)
+      return isSettled(tip) && h === 0 && a === 0 && !hasVerifiedScore(tip)
+    }
+
+    const candidates = (tips || []).filter(tip => isPending(tip) || !hasVerifiedScore(tip) || hasSuspiciousZero(tip))
+
+    let settled = 0, checked = 0, skipped = 0, backfilled = 0
     const errors = []
-    for (const tip of tips || []) {
+    for (const tip of candidates) {
       checked++
       try {
         const { cfg, item } = await fetchApiSportsResult(tip)
@@ -166,29 +177,43 @@ exports.handler = async function () {
         if (!isFinishedStatus(statusRaw)) { skipped++; continue }
         const score = extractScore(item, cfg)
         if (score.home == null || score.away == null) { skipped++; continue }
-        const status = resolvePick(tip, score.home, score.away)
-        const result = status === 'won' ? 'win' : status === 'lost' ? 'loss' : 'void'
+
+        const computedStatus = resolvePick(tip, score.home, score.away)
+        const shouldResolveStatus = isPending(tip) || !isSettled(tip)
+        const finalStatus = shouldResolveStatus ? computedStatus : norm(tip.status || tip.result_status || computedStatus)
+        const finalResult = finalStatus === 'won' ? 'win' : finalStatus === 'lost' ? 'loss' : 'void'
         const update = {
-          status,
-          result,
-          profit: profitFromStatus(status, tip.odds, n(tip.stake, 100) || 100),
           live_score_home: scoreN(score.home),
           live_score_away: scoreN(score.away),
           live_status: statusRaw || 'FT',
-          result_status: status,
+          result_status: finalStatus,
           settlement_source: 'auto_ai_result_api',
-          settled_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
+
+        if (shouldResolveStatus) {
+          update.status = computedStatus
+          update.result = computedStatus === 'won' ? 'win' : computedStatus === 'lost' ? 'loss' : 'void'
+          update.profit = profitFromStatus(computedStatus, tip.odds, n(tip.stake, 100) || 100)
+          update.settled_at = new Date().toISOString()
+        } else {
+          // Stary rekord był już WON/LOST, więc przede wszystkim uzupełniamy prawdziwy wynik z API.
+          // Nie zmieniamy ręcznie zapisanego statusu, chyba że brakowało result/result_status.
+          if (!tip.result) update.result = finalResult
+          if (!tip.status) update.status = finalStatus
+          if (!tip.settled_at) update.settled_at = new Date().toISOString()
+        }
+
         const { error: upErr } = await supabase.from('tips').update(update).eq('id', tip.id)
         if (upErr) throw upErr
-        settled++
+        if (shouldResolveStatus) settled++
+        else backfilled++
       } catch (e) {
         errors.push({ id: tip.id, match: tip.match_name, sport: tip.sport, error: e.message || String(e) })
       }
     }
-    await supabase.from('ai_pick_runs').insert({ source: 'settle-live-ai-picks-v743', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; skipped=${skipped}; errors=${errors.length}` }).catch(() => {})
-    return json(200, { checked, settled, skipped, errors: errors.slice(0, 20) })
+    await supabase.from('ai_pick_runs').insert({ source: 'settle-live-ai-picks-v1453', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; errors=${errors.length}` }).catch(() => {})
+    return json(200, { checked, settled, backfilled, skipped, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })

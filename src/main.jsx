@@ -14599,9 +14599,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const home = readScoreValueV1451(card.scoreHome, card.finalScoreHome, card.live_score_home, card.score_home, card.home_score, card.final_score_home)
     const away = readScoreValueV1451(card.scoreAway, card.finalScoreAway, card.live_score_away, card.score_away, card.away_score, card.final_score_away)
     if (home === null || away === null) return '- : -'
-    // Stare rekordy mają zapisane 0-0 jako fallback. W Mecze Result nie pokazujemy 0-0,
-    // dopóki nie mamy pewnego realnego wyniku innego niż zera.
-    if (home === 0 && away === 0 && isSettledCardV1451(card)) return '- : -'
+    // 0-0 pokazujemy tylko wtedy, gdy wynik jest potwierdzony przez API po rozliczeniu.
+    // Stare fallbackowe zera bez potwierdzenia zostają jako - : -.
+    if (home === 0 && away === 0 && isSettledCardV1451(card) && !card.scoreVerified) return '- : -'
     return `${home} - ${away}`
   }
 
@@ -14751,7 +14751,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       status: t.status || t.result || 'pending',
       scoreHome: readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home),
       scoreAway: readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away),
-      scoreVerified: readScoreValueV1451(t.final_score_home, t.goals_home, t.score_home, t.home_score) !== null && readScoreValueV1451(t.final_score_away, t.goals_away, t.score_away, t.away_score) !== null,
+      scoreVerified: Boolean(t.live_status || t.settlement_source === 'auto_ai_result_api') && readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home) !== null && readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away) !== null,
       kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
       source: 'Supabase Journal',
       formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
