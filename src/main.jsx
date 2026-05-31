@@ -14584,6 +14584,26 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }
 
+  // WERSJA 1451: wynik meczu nie może wpadać domyślnie jako 0-0.
+  // Bierzemy wynik tylko z realnych pól API/Supabase. Brak wyniku pokazujemy jako - : -.
+  const readScoreValueV1451 = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null || value === '') continue
+      const n = Number(value)
+      if (Number.isFinite(n)) return n
+    }
+    return null
+  }
+  const isSettledCardV1451 = card => ['won','win','lost','loss','lose','void','push'].includes(String(card?.status || card?.result || '').toLowerCase())
+  const formatScoreV1451 = (card = {}) => {
+    const home = readScoreValueV1451(card.scoreHome, card.finalScoreHome, card.live_score_home, card.score_home, card.home_score, card.final_score_home)
+    const away = readScoreValueV1451(card.scoreAway, card.finalScoreAway, card.live_score_away, card.score_away, card.away_score, card.final_score_away)
+    if (home === null || away === null) return '- : -'
+    // Stare wersje zapisywały 0-0 jako fallback nawet przy WON/LOST. Nie pokazujemy tego jako realnego wyniku.
+    if (home === 0 && away === 0 && isSettledCardV1451(card) && !card.scoreVerified) return '- : -'
+    return `${home} - ${away}`
+  }
+
   const hashNumber = (text = '', min = 0, max = 100) => {
     let h = 0
     String(text).split('').forEach(ch => { h = ((h << 5) - h) + ch.charCodeAt(0); h |= 0 })
@@ -14672,8 +14692,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       ev: best.ev,
       risk: best.risk,
       status: 'pending',
-      scoreHome: Number(m.live_score_home || m.score_home || 0),
-      scoreAway: Number(m.live_score_away || m.score_away || 0),
+      scoreHome: readScoreValueV1451(m.live_score_home, m.score_home, m.final_score_home, m.home_score, m.goals?.home, m.score?.fulltime?.home),
+      scoreAway: readScoreValueV1451(m.live_score_away, m.score_away, m.final_score_away, m.away_score, m.goals?.away, m.score?.fulltime?.away),
+      scoreVerified: readScoreValueV1451(m.live_score_home, m.score_home, m.final_score_home, m.home_score, m.goals?.home, m.score?.fulltime?.home) !== null && readScoreValueV1451(m.live_score_away, m.score_away, m.final_score_away, m.away_score, m.goals?.away, m.score?.fulltime?.away) !== null,
       statusShort: m.status_short || m.statusShort || '',
       statusLong: m.status_long || m.statusLong || '',
       kickoffState,
@@ -14727,8 +14748,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       ev: normalized.ev,
       risk: normalized.risk,
       status: t.status || t.result || 'pending',
-      scoreHome: Number(t.live_score_home || 0),
-      scoreAway: Number(t.live_score_away || 0),
+      scoreHome: readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home),
+      scoreAway: readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away),
+      scoreVerified: readScoreValueV1451(t.final_score_home, t.goals_home, t.score_home, t.home_score) !== null && readScoreValueV1451(t.final_score_away, t.goals_away, t.score_away, t.away_score) !== null,
       kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
       source: 'Supabase Journal',
       formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
@@ -14906,8 +14928,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       analysis: card.analysis,
       ai_analysis: card.analysis,
       curiosity: card.curiosity,
-      live_score_home: Number(card.scoreHome || 0),
-      live_score_away: Number(card.scoreAway || 0),
+      live_score_home: card.scoreHome ?? null,
+      live_score_away: card.scoreAway ?? null,
       status: String(card.status || 'pending').toLowerCase(),
       result: String(card.result || card.status || 'pending').toLowerCase(),
       access_type: 'free',
@@ -15604,7 +15626,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
                 <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747 row-v1448" onClick={() => { setSelectedId(card.id) }}>
-                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{card.scoreHome} - {card.scoreAway}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
+                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{formatScoreV1451(card)}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
                 </div>
               )) : <div className="ai-result-table-v747 row-v1448"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
             </div>

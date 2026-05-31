@@ -8,6 +8,7 @@ function json(statusCode, body) {
   return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
 }
 function n(v, fallback = 0) { const x = Number(v); return Number.isFinite(x) ? x : fallback }
+function scoreN(v) { if (v === undefined || v === null || v === '') return null; const x = Number(v); return Number.isFinite(x) ? x : null }
 function norm(s) { return String(s || '').toLowerCase().trim() }
 function cleanName(s) { return norm(s).replace(/\s+/g, ' ') }
 function includesName(text, name) { const a = cleanName(text); const b = cleanName(name); return b && (a.includes(b) || b.includes(a)) }
@@ -87,7 +88,7 @@ function isFinishedStatus(status) {
   return ['FT','AET','PEN','AOT','AP','FINISHED','FINISH','FINAL','ENDED','AFTER OVER TIME','AFTER PENALTIES'].some(x => s.includes(x))
 }
 function extractScore(item, cfg) {
-  if (cfg.type === 'football') return { home: n(item?.goals?.home), away: n(item?.goals?.away) }
+  if (cfg.type === 'football') return { home: scoreN(item?.goals?.home ?? item?.score?.fulltime?.home ?? item?.score?.extratime?.home ?? item?.score?.penalty?.home), away: scoreN(item?.goals?.away ?? item?.score?.fulltime?.away ?? item?.score?.extratime?.away ?? item?.score?.penalty?.away) }
   if (cfg.type === 'fight') {
     const f1Win = item?.fighters?.first?.winner ?? item?.fighters?.home?.winner
     const f2Win = item?.fighters?.second?.winner ?? item?.fighters?.away?.winner
@@ -96,8 +97,8 @@ function extractScore(item, cfg) {
     return { home: null, away: null }
   }
   return {
-    home: n(item?.scores?.home?.total ?? item?.score?.home ?? item?.teams?.home?.score ?? item?.game?.scores?.home?.total),
-    away: n(item?.scores?.away?.total ?? item?.score?.away ?? item?.teams?.away?.score ?? item?.teams?.visitors?.score ?? item?.game?.scores?.away?.total)
+    home: scoreN(item?.scores?.home?.total ?? item?.score?.home ?? item?.teams?.home?.score ?? item?.game?.scores?.home?.total),
+    away: scoreN(item?.scores?.away?.total ?? item?.score?.away ?? item?.teams?.away?.score ?? item?.teams?.visitors?.score ?? item?.game?.scores?.away?.total)
   }
 }
 function resolvePick(tip, homeScore, awayScore) {
@@ -171,8 +172,8 @@ exports.handler = async function () {
           status,
           result,
           profit: profitFromStatus(status, tip.odds, n(tip.stake, 100) || 100),
-          live_score_home: n(score.home),
-          live_score_away: n(score.away),
+          live_score_home: scoreN(score.home),
+          live_score_away: scoreN(score.away),
           live_status: statusRaw || 'FT',
           result_status: status,
           settlement_source: 'auto_ai_result_api',

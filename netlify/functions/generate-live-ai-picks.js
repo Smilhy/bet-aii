@@ -132,8 +132,10 @@ function normalizeApiSportsEvent(item, cfg) {
 
   const league = item?.league?.name || item?.league?.league?.name || item?.competition?.name || item?.category?.name || item?.country?.name || cfg.sport
   const country = item?.league?.country || item?.country?.name || item?.country || null
-  const scoreHome = Number(item?.goals?.home ?? item?.scores?.home?.total ?? item?.score?.home ?? item?.teams?.home?.score ?? 0)
-  const scoreAway = Number(item?.goals?.away ?? item?.scores?.away?.total ?? item?.score?.away ?? item?.teams?.away?.score ?? item?.teams?.visitors?.score ?? 0)
+  const rawScoreHome = item?.goals?.home ?? item?.scores?.home?.total ?? item?.score?.home ?? item?.teams?.home?.score
+  const rawScoreAway = item?.goals?.away ?? item?.scores?.away?.total ?? item?.score?.away ?? item?.teams?.away?.score ?? item?.teams?.visitors?.score
+  const scoreHome = rawScoreHome === undefined || rawScoreHome === null || rawScoreHome === '' ? null : Number(rawScoreHome)
+  const scoreAway = rawScoreAway === undefined || rawScoreAway === null || rawScoreAway === '' ? null : Number(rawScoreAway)
 
   return {
     id: `${cfg.key}-${id}`,
@@ -275,8 +277,8 @@ async function buildRow(ev) {
     kickoff_time: ev.event_time,
     match_time: ev.event_time,
     live_minute: 0,
-    live_score_home: ev.live_score_home || 0,
-    live_score_away: ev.live_score_away || 0,
+    live_score_home: ev.live_score_home ?? null,
+    live_score_away: ev.live_score_away ?? null,
     live_status: ev.rawStatus || ev.status,
     status: ev.status,
     result: 'pending',
