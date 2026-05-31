@@ -13974,6 +13974,55 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     if (['push','void'].includes(raw) || raw.includes('void') || raw.includes('push')) return 'push'
     return 'pending'
   }
+  const getDetailedBetType = tip => {
+    const marketRaw = String(tip?.market || tip?.bet_type || '').trim()
+    const predictionRaw = String(tip?.prediction || tip?.selection || tip?.pick || '').trim()
+    const market = marketRaw.toLowerCase()
+    const prediction = predictionRaw.toLowerCase()
+    const home = String(tip?.home || tip?.team_home || '').trim()
+    const away = String(tip?.away || tip?.team_away || '').trim()
+
+    const hasDraw = prediction.includes('remis') || /(^|\s)(x|draw)(\s|$)/i.test(predictionRaw)
+    const hasHome = home && prediction.includes(home.toLowerCase())
+    const hasAway = away && prediction.includes(away.toLowerCase())
+
+    if (market.includes('btts') || market.includes('obie strzel') || prediction.includes('obie strzel')) {
+      if (prediction.includes('nie') || prediction.includes('no')) return 'BTTS — Nie'
+      return 'BTTS — Tak'
+    }
+
+    if (market.includes('1x2') || market.includes('zwyci') || market.includes('winner') || market.includes('moneyline')) {
+      if (hasDraw) return '1X2 — Remis'
+      if (hasHome) return '1X2 — Gospodarz'
+      if (hasAway) return '1X2 — Gość'
+      if (/\b1\b/.test(predictionRaw)) return '1X2 — Gospodarz'
+      if (/\b2\b/.test(predictionRaw)) return '1X2 — Gość'
+      if (/\bx\b/i.test(predictionRaw)) return '1X2 — Remis'
+      return `1X2 — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('podwój') || market.includes('double chance')) {
+      if (prediction.includes('1x') || (hasHome && hasDraw)) return 'Podwójna szansa — 1X'
+      if (prediction.includes('x2') || (hasAway && hasDraw)) return 'Podwójna szansa — X2'
+      if (prediction.includes('12') || (hasHome && hasAway)) return 'Podwójna szansa — 12'
+      return `Podwójna szansa — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('handicap')) {
+      if (hasHome) return `Handicap — ${home}`
+      if (hasAway) return `Handicap — ${away}`
+      return `Handicap — ${predictionRaw || 'Inne'}`
+    }
+
+    if (market.includes('suma') || market.includes('goli') || market.includes('over') || market.includes('under') || prediction.includes('powyżej') || prediction.includes('poniżej')) {
+      if (prediction.includes('powyżej') || prediction.includes('over')) return `Suma goli — Powyżej ${predictionRaw.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0] || ''}`.trim()
+      if (prediction.includes('poniżej') || prediction.includes('under')) return `Suma goli — Poniżej ${predictionRaw.match(/[0-9]+(?:[.,][0-9]+)?/)?.[0] || ''}`.trim()
+      return `Suma goli — ${predictionRaw || 'Inne'}`
+    }
+
+    return predictionRaw ? `${marketRaw || 'Typ AI'} — ${predictionRaw}` : (marketRaw || 'Typ AI')
+  }
+
   const sportOptions = ['All Sports', ...Array.from(new Set([...ADD_TIP_SPORT_OPTIONS, ...(tips || []).map(t => t.sport || t.sport_key).filter(Boolean)]))]
   const divisionOptions = ['All Divisions', ...Array.from(new Set([
     ...savedLeagues
@@ -13987,7 +14036,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     ...getAiStatsDefaultBetTypes(sportFilter),
     ...(tips || [])
       .filter(t => sportFilter === 'All Sports' || (t.sport || t.sport_key) === sportFilter)
-      .map(t => t.market || t.bet_type || 'Typ AI')
+      .map(t => getDetailedBetType(t))
       .filter(Boolean),
   ])).sort()]
   const now = new Date()
@@ -14002,7 +14051,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const filtered = (tips || []).filter(t => {
     const sport = t.sport || t.sport_key || 'Inne'
     const division = t.league || t.league_name || t.country || 'Inne'
-    const betType = t.market || t.bet_type || 'Typ AI'
+    const betType = getDetailedBetType(t)
     const q = String(searchQuery || '').trim().toLowerCase()
     const searchText = [
       sport, division, betType,
@@ -14144,8 +14193,8 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     return 'Publiczny'
   })
   const sportRows = buildProfileRows(t => t.sport || t.sport_key || 'Piłka nożna')
-  const leagueProfileRows = buildProfileRows(t => t.league || t.league_name || t.country || 'Inne').slice(0,12)
-  const typeProfileRows = buildProfileRows(t => t.market || t.bet_type || 'Typ AI').slice(0,12)
+  const leagueProfileRows = buildProfileRows(t => t.league || t.league_name || t.country || 'Inne')
+  const typeProfileRows = buildProfileRows(t => getDetailedBetType(t))
   const oddsProfileRows = oddsBuckets.map(bucket => {
     const bucketTips = filtered.filter(t => { const o = Number(t.odds || t.course || 0); return o >= bucket.min && o < bucket.max })
     const stake = bucketTips.reduce((s,t)=>s+(Number(t.stake||100)||100),0)
