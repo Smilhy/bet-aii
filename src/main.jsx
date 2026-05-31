@@ -14104,39 +14104,129 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const divisionRows = buildRows(t => t.league || t.league_name || t.country || 'Inne').slice(0,10)
   const betTypeRows = buildRows(t => t.market || t.bet_type || 'Typ AI').slice(0,8)
 
-  const totalDistribution = Math.max(1, wins.length + losses.length + pushes.length)
-  const wonPct = `${((wins.length / totalDistribution) * 100).toFixed(2)}%`
-  const lostPct = `${((losses.length / totalDistribution) * 100).toFixed(2)}%`
-  const pushPct = `${Math.max(0, 100 - (((wins.length / totalDistribution) * 100) + ((losses.length / totalDistribution) * 100))).toFixed(2)}%`
+  const fmtMoney = value => `${Number(value || 0) >= 0 ? '+' : ''}${Number(value || 0).toFixed(2)}`
+  const fmtPercent = value => `${Number(value || 0).toFixed(2)}%`
+  const settledCount = Math.max(1, settled.length)
+  const avgStake = settled.length ? totalStake / settled.length : 0
+  const balanceMin = Math.min(0, ...chartSeries)
+  const balanceMax = Math.max(1, ...chartSeries)
+  const chartTop = Math.ceil(balanceMax)
+  const chartMid = Math.round((balanceMax + balanceMin) / 2)
+  const chartBottom = Math.floor(balanceMin)
+  const dateLabels = byDate.length ? Array.from(new Set(byDate.map(t => {
+    const d = new Date(t.settled_at || t.event_time || t.kickoff_time || t.match_time || t.created_at)
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit' })
+  }).filter(Boolean))).slice(-5) : []
+
+  const buildProfileRows = keyFn => Object.values(filtered.reduce((acc, t) => {
+    const key = keyFn(t) || 'Inne'
+    if (!acc[key]) acc[key] = { key, bets:0, stake:0, profit:0, odds:0, settled:0 }
+    const stake = Number(t.stake || 100) || 100
+    const odds = Number(t.odds || t.course || 0) || 0
+    const result = normalizeResult(t.result || t.status)
+    acc[key].bets += 1
+    acc[key].stake += stake
+    acc[key].odds += odds
+    if (['won','lost','push'].includes(result)) {
+      acc[key].settled += 1
+      acc[key].profit += tipProfit(t)
+    }
+    return acc
+  }, {})).map(row => ({
+    ...row,
+    yieldValue: row.stake ? (row.profit / row.stake) * 100 : 0,
+    avgOdds: row.bets ? row.odds / row.bets : 0,
+  })).sort((a,b) => b.bets - a.bets || b.profit - a.profit)
+
+  const couponRows = buildProfileRows(t => {
+    const access = String(t.access_type || t.visibility || t.type || '').toLowerCase()
+    if (access.includes('paid') || access.includes('premium') || access.includes('płat')) return 'Płatny'
+    return 'Publiczny'
+  })
+  const sportRows = buildProfileRows(t => t.sport || t.sport_key || 'Piłka nożna')
+  const leagueProfileRows = buildProfileRows(t => t.league || t.league_name || t.country || 'Inne').slice(0,12)
+  const typeProfileRows = buildProfileRows(t => t.market || t.bet_type || 'Typ AI').slice(0,12)
+  const oddsProfileRows = oddsBuckets.map(bucket => {
+    const bucketTips = filtered.filter(t => { const o = Number(t.odds || t.course || 0); return o >= bucket.min && o < bucket.max })
+    const stake = bucketTips.reduce((s,t)=>s+(Number(t.stake||100)||100),0)
+    const profit = bucketTips.reduce((s,t)=>s+(['won','lost','push'].includes(normalizeResult(t.result||t.status)) ? tipProfit(t) : 0),0)
+    const oddsSum = bucketTips.reduce((s,t)=>s+(Number(t.odds||t.course||0)||0),0)
+    return { key:bucket.label, bets:bucketTips.length, stake, profit, yieldValue: stake ? (profit/stake)*100 : 0, avgOdds: bucketTips.length ? oddsSum/bucketTips.length : 0 }
+  })
+  const hourBuckets = [
+    { key:'00:00 - 07:59', min:0, max:8 },
+    { key:'08:00 - 11:59', min:8, max:12 },
+    { key:'12:00 - 16:59', min:12, max:17 },
+    { key:'17:00 - 19:59', min:17, max:20 },
+    { key:'20:00 - 23:59', min:20, max:24 },
+  ].map(bucket => {
+    const bucketTips = filtered.filter(t => {
+      const d = new Date(t.event_time || t.kickoff_time || t.match_time || t.created_at || 0)
+      if (Number.isNaN(d.getTime())) return false
+      const h = d.getHours()
+      return h >= bucket.min && h < bucket.max
+    })
+    const stake = bucketTips.reduce((s,t)=>s+(Number(t.stake||100)||100),0)
+    const profit = bucketTips.reduce((s,t)=>s+(['won','lost','push'].includes(normalizeResult(t.result||t.status)) ? tipProfit(t) : 0),0)
+    const oddsSum = bucketTips.reduce((s,t)=>s+(Number(t.odds||t.course||0)||0),0)
+    return { key:bucket.key, bets:bucketTips.length, stake, profit, yieldValue: stake ? (profit/stake)*100 : 0, avgOdds: bucketTips.length ? oddsSum/bucketTips.length : 0 }
+  }).filter(r => r.bets)
+
+  const StatTable = ({ title, columns, rows, variant = '' }) => (
+    <div className={`ai-profile-stat-table-v1459 ${variant}`}>
+      <h4>{title}</h4>
+      <div className="ai-profile-table-head-v1459">{columns.map(c => <b key={c}>{c}</b>)}</div>
+      {rows.length ? rows.map(row => (
+        <div className="ai-profile-table-row-v1459" key={row.key}>
+          <span>{row.key}</span>
+          <span>{row.bets}</span>
+          {variant === 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
+          {variant !== 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
+          <span className={row.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(row.profit)}</span>
+          <span className={row.yieldValue < 0 ? 'neg' : 'pos'}>{fmtPercent(row.yieldValue)}</span>
+          {variant !== 'sport' ? <span>{row.avgOdds.toFixed(2)}</span> : null}
+        </div>
+      )) : <div className="ai-profile-table-empty-v1459">Brak danych dla wybranego filtra.</div>}
+    </div>
+  )
 
   return (
-    <section className="ai-analytics-screen-v749">
-      <div className="ai-analytics-filterbar-v749">
-        <label><span>SPORT</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <label><span>LIGA</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <label><span>RYNEK</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <div className="ai-analytics-time-v749">{[['all','Całość'],['year','Rok'],['month','Miesiąc'],['week','Tydzień']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
+    <section className="ai-profile-stats-v1459">
+      <div className="ai-profile-filter-row-v1459">
+        <label><span>Sport</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>Liga</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <label><span>Rodzaj typu</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
+        <div className="ai-profile-periods-v1459">{[['all','Wszystko'],['year','1R'],['month','30D'],['week','7D']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
       </div>
-      <div className="ai-analytics-kpis-v749">
-        <article className={totalProfit < 0 ? 'danger' : 'success'}><span>PROFIT AI</span><b>{totalProfit.toFixed(2)}u</b><small>Na podstawie {settled.length} rozliczonych typów</small></article>
-        <article className={roi < 0 ? 'danger' : 'success'}><span>ROI</span><b>{roi.toFixed(1)}%</b><small>Zwrot z inwestycji</small></article>
-        <article><span>SKUTECZNOŚĆ</span><b>{hitRate.toFixed(1)}%</b><small>{wins.length}W / {losses.length}L / {pushes.length}P</small></article>
-        <article><span>TYPY AI</span><b>{filtered.length}</b><small>Analizowane predykcje</small></article>
-        <article><span>ŚR. KURS</span><b>{avgOdds.toFixed(2)}</b><small>Śr. kurs wygranych: {wins.length ? (wins.reduce((s,t)=>s+Number(t.odds||t.course||1.8),0)/wins.length).toFixed(2) : '0.00'}</small></article>
-        <article><span>AKTUALNA SERIA</span><b>{currentStreak}{currentStreakResult==='won'?'W':currentStreakResult==='lost'?'L':'-'}</b><small>Max {bestWin}W / {worstLoss}L</small></article>
+
+      <div className="ai-profile-balance-card-v1459">
+        <div className="ai-profile-chart-head-v1459"><b>Wykres salda AI</b><select aria-label="Typ wykresu" defaultValue="balance"><option value="balance">Bilans kumulacyjny</option><option value="profit">Profit AI</option></select></div>
+        <div className="ai-profile-mini-tabs-v1459"><button>7D</button><button>30D</button><button className="active">90D</button><button>1R</button><button>Wszystko</button></div>
+        <div className="ai-profile-chart-wrap-v1459">
+          <div className="ai-profile-ylabels-v1459"><span>{chartTop.toFixed(2)}</span><span>{chartMid.toFixed(2)}</span><span>{chartBottom.toFixed(2)}</span></div>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg>
+          <div className="ai-profile-xlabels-v1459">{dateLabels.map((label,i)=><span key={`${label}-${i}`}>{label}</span>)}</div>
+        </div>
+        <div className="ai-profile-summary-v1459">
+          <article><span>Zmiana salda</span><b className={totalProfit < 0 ? 'neg' : 'pos'}>{fmtMoney(totalProfit)}</b></article>
+          <article><span>Najwyższy bilans</span><b>{fmtMoney(balanceMax)}</b></article>
+          <article><span>Najniższy bilans</span><b>{fmtMoney(balanceMin)}</b></article>
+          <article><span>Średni poziom</span><b>{fmtMoney(chartSeries.reduce((s,v)=>s+v,0) / Math.max(1, chartSeries.length))}</b></article>
+          <article><span>Rozliczone typy</span><b>{settled.length}</b></article>
+        </div>
       </div>
-      <div className="ai-analytics-panel-v749 profit"><h4>Krzywa zysku</h4><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg></div>
-      <div className="ai-analytics-grid-v749 mid">
-        <div className="ai-analytics-panel-v749 donut-panel"><h4>Rozkład wyników</h4><div className="ai-donut-v749" style={{'--won': wonPct, '--lost': lostPct, '--push': pushPct}}><span>{hitRate.toFixed(0)}%</span><small>skuteczność</small></div><div className="legend"><span>● Wygrane</span><span>● Przegrane</span><span>● Push</span></div></div>
-        <div className="ai-analytics-panel-v749 odds"><h4>Wyniki wg kursów</h4><div className="odds-bars">{oddsBuckets.map(b=><div key={b.label}><i style={{height:`${(b.won/maxBucket)*100}%`}}/><em style={{height:`${(b.lost/maxBucket)*100}%`}}/><small>{b.label}</small></div>)}</div></div>
+
+      <div className="ai-profile-grid-v1459 two">
+        <StatTable title="Statystyki typów kuponów" columns={['Statystyki','Ilość kuponów','Stawka','Bilans','Yield','Śr. kurs']} rows={couponRows} />
+        <StatTable title="Statystyki dla sportów" columns={['Sport','Liczba kuponów','Stawka rozliczona','Bilans','Yield']} rows={sportRows} variant="sport" />
       </div>
-      <div className="ai-analytics-grid-v749 compact">
-        <div className="ai-analytics-panel-v749 streak"><h4>Analiza serii</h4><p>Aktualnie <b>{currentStreak}{currentStreakResult==='won'?' wygrane':currentStreakResult==='lost'?' porażki':''}</b></p><p>Najlepsza seria <b>{bestWin}</b></p><p>Najgorsza seria <b>{worstLoss}</b></p></div>
-        <div className="ai-analytics-panel-v749 recent"><h4>Ostatnie 20 typów</h4><div>{recent.map((r,i)=><span key={i} className={r}>{r==='won'?'W':r==='lost'?'L':r==='push'?'P':'•'}</span>)}</div></div>
+      <div className="ai-profile-grid-v1459 two">
+        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} />
+        <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} />
       </div>
-      <div className="ai-analytics-grid-v749 tables">
-        <div className="ai-analytics-panel-v749 table"><h4>Wyniki wg lig</h4><div className="table-head"><b>DIVISION</b><b>BETS</b><b>HIT RATE</b><b>PROFIT</b><b>ROI</b></div>{divisionRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span><span className={r.roi<0?'neg':'pos'}>{r.roi>=0?'+':''}{r.roi.toFixed(1)}%</span></div>)}</div>
-        <div className="ai-analytics-panel-v749 table bet"><h4>Wyniki wg rynków</h4><div className="table-head"><b>BET TYPE</b><b>BETS</b><b>AVG ODDS</b><b>HIT RATE</b><b>PROFIT</b></div>{betTypeRows.map(r=><div key={r.key}><span>{r.key}</span><span>{r.bets}</span><span>{r.avgOdds.toFixed(2)}</span><span>{r.hitRate.toFixed(1)}%</span><span className={r.profit<0?'neg':'pos'}>{r.profit>=0?'+':''}{r.profit.toFixed(2)}u</span></div>)}</div>
+      <div className="ai-profile-grid-v1459 two">
+        <StatTable title="Statystyki zakresów kursów" columns={['Kurs','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={oddsProfileRows} />
+        <StatTable title="Statystyki godzin dodawania kuponów" columns={['Godziny','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={hourBuckets} />
       </div>
     </section>
   )
