@@ -14933,9 +14933,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [aiDayMode, setAiDayMode] = useState('today')
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
-  const [minOdds, setMinOdds] = useState(1.25)
-  const [maxOdds, setMaxOdds] = useState(3.50)
-  const [minProb, setMinProb] = useState(55)
+  const [minOdds, setMinOdds] = useState(1.50)
+  const [maxOdds, setMaxOdds] = useState(3.00)
+  const [minProb, setMinProb] = useState(70)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
   const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
@@ -14945,8 +14945,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
   const [lastRefresh, setLastRefresh] = useState('')
 
-  const DAILY_AI_PICK_LIMIT_V1086 = 20
-  const DAILY_AI_MIN_SCORE_V1086 = 60
+  const DAILY_AI_PICK_LIMIT_V1086 = 5
+  const DAILY_AI_MIN_SCORE_V1086 = 70
+  const DAILY_AI_MIN_ODDS_V1478 = 1.50
+  const DAILY_AI_MIN_PROBABILITY_V1478 = 70
+  const DAILY_AI_MIN_EV_V1478 = 0
   const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1086'
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
@@ -15007,30 +15010,67 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
 
     return [
-      mk('1X2 / zwycięzca', `${home} wygra`, 1.62, 61, 'Model widzi przewagę gospodarzy w rynku zwycięzcy.', 2),
-      mk('1X2 / zwycięzca', `${away} wygra`, 1.82, 56, 'Model porównuje kurs z szansą drużyny gości.', 3),
-      mk('Podwójna szansa', `${home} lub remis`, 1.38, 74, 'Bezpieczniejszy wariant przy stabilnym faworycie.', -2),
-      mk('Podwójna szansa', `${away} lub remis`, 1.46, 68, 'Niższe ryzyko niż czysty zwycięzca gości.', -1),
-      mk('Suma goli', 'Powyżej 1.5 gola', 1.34, 78, 'Rynek goli ma wysokie prawdopodobieństwo, ale zwykle niższe value.', -2),
-      mk('Suma goli', 'Powyżej 2.5 gola', 1.74, 59, 'Model szuka value w tempie meczu i profilu bramkowym.', 2),
-      mk('Suma goli', 'Poniżej 3.5 gola', 1.42, 72, 'Bezpieczniejszy rynek przy umiarkowanym tempie spotkania.', -1),
-      mk('BTTS', 'Obie strzelą — Tak', 1.78, 57, 'Model ocenia potencjał ofensywny obu stron.', 2),
-      mk('BTTS', 'Obie strzelą — Nie', 1.85, 54, 'Opcja dla meczu z przewagą jednej strony albo słabszym atakiem gości.', 3),
-      mk('Handicap', `${home} +0.5`, 1.36, 76, 'Wariant defensywny, gdy model widzi małe ryzyko porażki gospodarzy.', -2),
-      mk('Handicap', `${away} +0.5`, 1.52, 66, 'Wariant defensywny dla gości przy kursie z akceptowalnym value.', 0),
+      mk('1X2 / zwycięzca', `${home} wygra`, 1.62, 72, 'Model widzi przewagę gospodarzy w rynku zwycięzcy.', 1),
+      mk('1X2 / zwycięzca', 'Remis', 3.05, 42, 'Remis trafia do listy tylko przy wyjątkowo dobrym value.', 4),
+      mk('1X2 / zwycięzca', `${away} wygra`, 1.82, 70, 'Model porównuje kurs z szansą drużyny gości.', 2),
+      mk('Podwójna szansa', `${home} lub remis`, 1.52, 78, 'Bezpieczniejszy wariant przy stabilnym faworycie.', -2),
+      mk('Podwójna szansa', `${away} lub remis`, 1.58, 75, 'Niższe ryzyko niż czysty zwycięzca gości.', -1),
+      mk('Podwójna szansa', `${home} lub ${away}`, 1.50, 71, 'Rynek 12 dla spotkań z małym prawdopodobieństwem remisu.', 0),
+      mk('Draw No Bet', `${home} DNB`, 1.56, 74, 'Zabezpieczenie remisu przy przewadze gospodarzy.', -1),
+      mk('Draw No Bet', `${away} DNB`, 1.68, 71, 'Zabezpieczenie remisu przy value po stronie gości.', 0),
+      mk('Suma goli', 'Powyżej 1.5 gola', 1.50, 80, 'Rynek goli z wysoką bazową skutecznością.', -2),
+      mk('Suma goli', 'Powyżej 2.5 gola', 1.74, 72, 'Model szuka value w tempie meczu i profilu bramkowym.', 1),
+      mk('Suma goli', 'Powyżej 3.5 gola', 2.28, 60, 'Agresywny over tylko przy mocnym value.', 3),
+      mk('Suma goli', 'Poniżej 2.5 gola', 1.86, 70, 'Under dla meczów o niższym tempie i mniejszej liczbie sytuacji.', 1),
+      mk('Suma goli', 'Poniżej 3.5 gola', 1.55, 78, 'Bezpieczniejszy under przy umiarkowanym tempie spotkania.', -2),
+      mk('BTTS', 'Obie strzelą — Tak', 1.78, 71, 'Model ocenia potencjał ofensywny obu stron.', 1),
+      mk('BTTS', 'Obie strzelą — Nie', 1.85, 70, 'Opcja dla meczu z przewagą jednej strony albo słabszym atakiem gości.', 1),
+      mk('Handicap', `${home} +0.5`, 1.52, 78, 'Wariant defensywny, gdy model widzi małe ryzyko porażki gospodarzy.', -2),
+      mk('Handicap', `${away} +0.5`, 1.58, 74, 'Wariant defensywny dla gości przy kursie z akceptowalnym value.', -1),
+      mk('Handicap', `${home} -0.5`, 1.72, 71, 'Czysta przewaga gospodarza z linią -0.5.', 1),
+      mk('Handicap', `${away} -0.5`, 1.92, 69, 'Czysta przewaga gościa z linią -0.5.', 2),
+      mk('Handicap', `${home} +1.5`, 1.50, 82, 'Bezpieczna linia dodatnia dla gospodarzy.', -2),
+      mk('Handicap', `${away} +1.5`, 1.50, 80, 'Bezpieczna linia dodatnia dla gości.', -2),
+      mk('Team Total', `${home} powyżej 0.5 gola`, 1.50, 79, 'Gole gospodarzy przy dobrej przewadze ofensywnej.', -1),
+      mk('Team Total', `${away} powyżej 0.5 gola`, 1.56, 75, 'Gole gości przy dobrej przewadze ofensywnej.', 0),
+      mk('Team Total', `${home} poniżej 1.5 gola`, 1.72, 70, 'Limit bramkowy gospodarzy przy mocniejszej defensywie rywala.', 1),
+      mk('Team Total', `${away} poniżej 1.5 gola`, 1.68, 71, 'Limit bramkowy gości przy mocniejszej defensywie rywala.', 1),
+      mk('Połowa 1', '1. połowa — Powyżej 0.5 gola', 1.50, 73, 'Szybkie tempo od początku meczu.', 0),
+      mk('Połowa 1', '1. połowa — Remis', 2.05, 58, 'Rynek niszowy, przechodzi tylko przy value.', 3),
+      mk('Rzuty rożne', 'Rzuty rożne — Powyżej 7.5', 1.72, 70, 'Profil drużyn sugeruje wysoką liczbę stałych fragmentów.', 1),
+      mk('Rzuty rożne', 'Rzuty rożne — Poniżej 10.5', 1.62, 72, 'Kontrola tempa i mniej chaotyczny mecz.', 0),
+      mk('Kartki', 'Kartki — Powyżej 3.5', 1.82, 70, 'Spotkanie o profilu kontaktowym i większym ryzyku kartek.', 1),
+      mk('Kartki', 'Kartki — Poniżej 5.5', 1.58, 74, 'Niższy próg kartek przy spokojniejszym profilu meczu.', -1),
     ]
+  }
+
+  const isBetAiQualityMarketV1478 = (pick = {}) => {
+    return Number(pick.odds || 0) >= DAILY_AI_MIN_ODDS_V1478 &&
+      Number(pick.probability || 0) >= DAILY_AI_MIN_PROBABILITY_V1478 &&
+      Number(pick.ev || 0) >= DAILY_AI_MIN_EV_V1478 &&
+      Number(pick.score || pick.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086
+  }
+
+  const isBetAiQualityCardV1478 = (card = {}) => {
+    return isBetAiPrematchAvailableV1091(card) &&
+      Number(card.odds || 0) >= DAILY_AI_MIN_ODDS_V1478 &&
+      Number(card.probability || 0) >= DAILY_AI_MIN_PROBABILITY_V1478 &&
+      Number(card.ev || 0) >= DAILY_AI_MIN_EV_V1478 &&
+      Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086
   }
 
   const chooseBestFootballMarket = (m, seed, home, away) => {
     const candidates = buildFootballMarketCandidates(m, seed, home, away)
-    const inRange = candidates.filter(x =>
-      Number(x.odds) >= Number(minOdds) &&
+    const userRange = candidates.filter(x =>
+      Number(x.odds) >= Math.max(Number(minOdds), DAILY_AI_MIN_ODDS_V1478) &&
       Number(x.odds) <= Number(maxOdds) &&
-      Number(x.probability) >= Number(minProb)
+      Number(x.probability) >= Math.max(Number(minProb), DAILY_AI_MIN_PROBABILITY_V1478)
     )
-    const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= Number(minOdds) && Number(x.odds) <= Number(maxOdds))
-    const finalPool = pool.length ? pool : candidates
-    return finalPool.sort((a, b) =>
+    const quality = userRange.filter(isBetAiQualityMarketV1478)
+    const pool = quality.length ? quality : candidates.filter(isBetAiQualityMarketV1478)
+    const finalPool = pool.length ? pool : userRange
+    const safePool = finalPool.length ? finalPool : candidates
+    return safePool.sort((a, b) =>
       (Number(b.ev) - Number(a.ev)) ||
       (Number(b.score) - Number(a.score)) ||
       (Number(b.probability) - Number(a.probability))
@@ -15288,7 +15328,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [allCards, search])
 
   async function saveCardsToJournal(cards = []) {
-    const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
+    const cardsToSave = (cards || []).filter(card => isBetAiQualityCardV1478(card))
     if (!isSupabaseConfigured || !supabase || !cardsToSave.length) return
 
     const nowIso = new Date().toISOString()
@@ -15598,8 +15638,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const seenMatch = new Set()
     return (cards || [])
       .filter(Boolean)
-      .filter(card => isBetAiPrematchAvailableV1091(card))
-      .filter(card => Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086)
+      .filter(card => isBetAiQualityCardV1478(card))
       .sort((a, b) => {
         const scoreA = Number(a.aiScore || 0) * 2 + Number(a.ev || 0) * 1.5 + Number(a.probability || 0)
         const scoreB = Number(b.aiScore || 0) * 2 + Number(b.ev || 0) * 1.5 + Number(b.probability || 0)
@@ -15663,6 +15702,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const mapped = (data || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
         .filter(card => getBetAiCardLocalDateV1078(card) === today)
+        .filter(card => isBetAiQualityCardV1478(card) || isBetAiSettledStatusV1091(card))
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiCards(mapped)
@@ -15706,7 +15746,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
+      setStatusText(`Pierwszy skan dnia: szukam value picków ${dayLabel}. Zapiszę tylko typy z kursem ${DAILY_AI_MIN_ODDS_V1478}+ i skutecznością ${DAILY_AI_MIN_PROBABILITY_V1478}%+...`)
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -15831,12 +15871,21 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
 
       const topCards = rankBetAiCardsForDailyJournalV1086(clean.filter(card => card.source !== 'Bet+AI fallback'))
-      const cardsToPersist = topCards.length ? topCards : clean.filter(card => card.source !== 'Bet+AI fallback').slice(0, DAILY_AI_PICK_LIMIT_V1086)
+      const cardsToPersist = topCards
+
+      if (!cardsToPersist.length) {
+        setLiveCards([])
+        setSelectedId('')
+        setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+        markBetAiDailyScanDoneV1086(mode, 0)
+        setStatusText(`Skan sprawdził ${clean.length} meczów na ${dayLabel}, ale nie znalazł typu spełniającego warunki premium: kurs ${DAILY_AI_MIN_ODDS_V1478}+, skuteczność ${DAILY_AI_MIN_PROBABILITY_V1478}%+ i EV dodatnie. Nie zapisuję słabych typów.`)
+        return
+      }
 
       setLiveCards(cardsToPersist)
-      setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
+      setSelectedId(cardsToPersist[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
+      setStatusText(`Skan sprawdził ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję tylko ${cardsToPersist.length} typów premium: kurs ${DAILY_AI_MIN_ODDS_V1478}+, skuteczność ${DAILY_AI_MIN_PROBABILITY_V1478}%+, EV dodatnie.`)
 
       await saveCardsToJournal(cardsToPersist)
       await loadSavedAiJournalFromDbV1094()
@@ -15845,7 +15894,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (savedAfter.length) {
         setLiveCards([])
         setSelectedId(savedAfter[0]?.id || '')
-        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI premium na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
       }
     } catch (err) {
       const saved = await loadSavedAiTipsFromDb(mode)
