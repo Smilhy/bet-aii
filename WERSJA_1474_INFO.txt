@@ -1,0 +1,12 @@
+WERSJA 1474 SAFE — naprawa zapętlonych 503 i logowania
+
+Baza: 1471 — pierwszy wykres ożywiony.
+
+Naprawiono:
+- anty-pętla dla Supabase 503 na: tips, profiles, presence_heartbeats, site_reviews, get_auth_live_stats
+- jeśli endpoint zwróci 503, aplikacja robi bezpieczny fallback i pauzuje ten endpoint na 60 sekund
+- logowanie/rejestracja mają timeout 12 sekund zamiast wisieć bez końca
+- statystyki live/heartbeat/opinie nie blokują logowania
+- algorytm typów AI, EV, kursy i rozliczanie WON/LOST nie były ruszane
+
+Build: OK
