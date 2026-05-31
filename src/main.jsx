@@ -15866,7 +15866,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
             <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
             {[
-              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats], ['leagues','Ligi', aiTabCounters.leagues]
+              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
