@@ -14599,8 +14599,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const home = readScoreValueV1451(card.scoreHome, card.finalScoreHome, card.live_score_home, card.score_home, card.home_score, card.final_score_home)
     const away = readScoreValueV1451(card.scoreAway, card.finalScoreAway, card.live_score_away, card.score_away, card.away_score, card.final_score_away)
     if (home === null || away === null) return '- : -'
-    // Stare wersje zapisywały 0-0 jako fallback nawet przy WON/LOST. Nie pokazujemy tego jako realnego wyniku.
-    if (home === 0 && away === 0 && isSettledCardV1451(card) && !card.scoreVerified) return '- : -'
+    // Stare rekordy mają zapisane 0-0 jako fallback. W Mecze Result nie pokazujemy 0-0,
+    // dopóki nie mamy pewnego realnego wyniku innego niż zera.
+    if (home === 0 && away === 0 && isSettledCardV1451(card)) return '- : -'
     return `${home} - ${away}`
   }
 

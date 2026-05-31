@@ -1,0 +1,7 @@
+WERSJA 1452 — twardy fix 0-0 w Mecze Result
+Zmiany:
+- Mecze Result nie pokazuje już 0-0 dla rozliczonych typów, gdy jest to fallback ze starych rekordów
+- przy 0-0 i statusie WON/LOST/VOID/PUSH tabela pokaże - : -
+- prawdziwe wyniki różne od 0-0 nadal będą widoczne
+- zachowany wygląd i logika z wersji 1450/1451
+- build OK (pozostały wcześniejsze warningi projektu)
