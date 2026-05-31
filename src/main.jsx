@@ -3375,62 +3375,12 @@ function DailyAiPicksRightPanelV1156() {
           return
         }
 
-        setNotice(`Mam ${collected.length}/3 — pobieram przyszłe mecze na dziś...`)
-        const tomorrow = getBetAiNextWarsawDayKeyV1156(today)
-        const urls = [
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&mode=today&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&day=${today}&mode=today&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&from=${today}&to=${tomorrow}&daysAhead=1&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent('Piłka nożna')}&date=${today}&daysAhead=1&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=football&date=${today}&mode=today&realOnly=1&allLeagues=1`
-        ]
-        let fixtures = []
-        for (const url of urls) {
-          const controller = new AbortController()
-          const timer = setTimeout(() => controller.abort(), 9000)
-          try {
-            const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
-            clearTimeout(timer)
-            if (!res.ok) continue
-            const json = await res.json()
-            fixtures = extractBetAiRightFixturesV1156(json)
-              .filter(isBetAiRightPrematchV1156)
-              .filter(m => getBetAiWarsawDayKeyV1156(new Date(m.date || m.commence_time || Date.now())) === today)
-            if (fixtures.length) break
-          } catch (_) {
-            clearTimeout(timer)
-          }
-        }
-
-        const seen = new Set()
-        const topFromApi = fixtures
-          .filter(m => {
-            const key = String(m.id || `${m.home}-${m.away}-${m.date}`)
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-          })
-          .map((m, index) => buildBetAiRightPickV1156(m, index, today))
-
-        collected = filterBetAiRightDailyAiPicksV1158([...collected, ...topFromApi], today)
-
-        if (collected.length >= 3) {
-          saveBetAiRightDailyAiCacheV1156(today, collected)
-          if (!alive) return
-          setPicks(collected.slice(0, 3))
-          setNotice(`TOP 3 zapisane na ${today}`)
-          return
-        }
-
-        if (collected.length) {
-          // Zapisujemy to, co znaleźliśmy, ale nie mielimy generatora w pętli.
-          // Jeżeli API nie dało pełnych 3 przyszłych meczów, nie blokujemy Dashboardu.
-          saveBetAiRightDailyAiCacheV1156(today, collected)
-          if (!alive) return
-          setPicks(collected.slice(0, 3))
-          setNotice(`Zapisano ${collected.length}/3 najmocniejsze przyszłe typy na ${today}`)
-          return
-        }
+        // WERSJA 1480 SAFE: prawy panel nie odpala już automatycznie get-sports-events.
+        // Ten widget pokazuje wyłącznie typy zapisane w Supabase/localStorage, żeby dashboard nie dusił API po każdym wejściu.
+        if (!alive) return
+        setPicks(collected.slice(0, 3))
+        setNotice(collected.length ? `Wczytano ${collected.length}/3 zapisane typy AI na dziś.` : 'Brak zapisanych typów AI na dziś. Skan uruchom ręcznie w zakładce Typy AI.')
+        return
 
         if (!alive) return
         setPicks([])
@@ -14934,12 +14884,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
   const [minOdds, setMinOdds] = useState(1.50)
-  const [maxOdds, setMaxOdds] = useState(3.00)
+  const [maxOdds, setMaxOdds] = useState(3.50)
   const [minProb, setMinProb] = useState(70)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
   const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
   const aiBootDoneRef = useRef(false)
+  const aiFetchInFlightRef = useRef(false)
   const [loadingAi, setLoadingAi] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [statusText, setStatusText] = useState('Gotowe. Aktywna jest piłka nożna. Pozostałe sporty są zablokowane i będą dostępne wkrótce.')
@@ -14947,9 +14898,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const DAILY_AI_PICK_LIMIT_V1086 = 5
   const DAILY_AI_MIN_SCORE_V1086 = 70
-  const DAILY_AI_MIN_ODDS_V1478 = 1.50
-  const DAILY_AI_MIN_PROBABILITY_V1478 = 70
-  const DAILY_AI_MIN_EV_V1478 = 0
+  const DAILY_AI_MIN_ODDS_V1480 = 1.50
+  const DAILY_AI_MIN_PROB_V1480 = 70
+  const DAILY_AI_SCAN_COOLDOWN_MS_V1480 = 5 * 60 * 1000
   const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1086'
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
@@ -15010,70 +14961,45 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
 
     return [
-      mk('1X2 / zwycięzca', `${home} wygra`, 1.62, 72, 'Model widzi przewagę gospodarzy w rynku zwycięzcy.', 1),
-      mk('1X2 / zwycięzca', 'Remis', 3.05, 42, 'Remis trafia do listy tylko przy wyjątkowo dobrym value.', 4),
-      mk('1X2 / zwycięzca', `${away} wygra`, 1.82, 70, 'Model porównuje kurs z szansą drużyny gości.', 2),
-      mk('Podwójna szansa', `${home} lub remis`, 1.52, 78, 'Bezpieczniejszy wariant przy stabilnym faworycie.', -2),
-      mk('Podwójna szansa', `${away} lub remis`, 1.58, 75, 'Niższe ryzyko niż czysty zwycięzca gości.', -1),
-      mk('Podwójna szansa', `${home} lub ${away}`, 1.50, 71, 'Rynek 12 dla spotkań z małym prawdopodobieństwem remisu.', 0),
-      mk('Draw No Bet', `${home} DNB`, 1.56, 74, 'Zabezpieczenie remisu przy przewadze gospodarzy.', -1),
-      mk('Draw No Bet', `${away} DNB`, 1.68, 71, 'Zabezpieczenie remisu przy value po stronie gości.', 0),
-      mk('Suma goli', 'Powyżej 1.5 gola', 1.50, 80, 'Rynek goli z wysoką bazową skutecznością.', -2),
-      mk('Suma goli', 'Powyżej 2.5 gola', 1.74, 72, 'Model szuka value w tempie meczu i profilu bramkowym.', 1),
-      mk('Suma goli', 'Powyżej 3.5 gola', 2.28, 60, 'Agresywny over tylko przy mocnym value.', 3),
-      mk('Suma goli', 'Poniżej 2.5 gola', 1.86, 70, 'Under dla meczów o niższym tempie i mniejszej liczbie sytuacji.', 1),
-      mk('Suma goli', 'Poniżej 3.5 gola', 1.55, 78, 'Bezpieczniejszy under przy umiarkowanym tempie spotkania.', -2),
-      mk('BTTS', 'Obie strzelą — Tak', 1.78, 71, 'Model ocenia potencjał ofensywny obu stron.', 1),
-      mk('BTTS', 'Obie strzelą — Nie', 1.85, 70, 'Opcja dla meczu z przewagą jednej strony albo słabszym atakiem gości.', 1),
-      mk('Handicap', `${home} +0.5`, 1.52, 78, 'Wariant defensywny, gdy model widzi małe ryzyko porażki gospodarzy.', -2),
-      mk('Handicap', `${away} +0.5`, 1.58, 74, 'Wariant defensywny dla gości przy kursie z akceptowalnym value.', -1),
-      mk('Handicap', `${home} -0.5`, 1.72, 71, 'Czysta przewaga gospodarza z linią -0.5.', 1),
-      mk('Handicap', `${away} -0.5`, 1.92, 69, 'Czysta przewaga gościa z linią -0.5.', 2),
-      mk('Handicap', `${home} +1.5`, 1.50, 82, 'Bezpieczna linia dodatnia dla gospodarzy.', -2),
-      mk('Handicap', `${away} +1.5`, 1.50, 80, 'Bezpieczna linia dodatnia dla gości.', -2),
-      mk('Team Total', `${home} powyżej 0.5 gola`, 1.50, 79, 'Gole gospodarzy przy dobrej przewadze ofensywnej.', -1),
-      mk('Team Total', `${away} powyżej 0.5 gola`, 1.56, 75, 'Gole gości przy dobrej przewadze ofensywnej.', 0),
-      mk('Team Total', `${home} poniżej 1.5 gola`, 1.72, 70, 'Limit bramkowy gospodarzy przy mocniejszej defensywie rywala.', 1),
-      mk('Team Total', `${away} poniżej 1.5 gola`, 1.68, 71, 'Limit bramkowy gości przy mocniejszej defensywie rywala.', 1),
-      mk('Połowa 1', '1. połowa — Powyżej 0.5 gola', 1.50, 73, 'Szybkie tempo od początku meczu.', 0),
-      mk('Połowa 1', '1. połowa — Remis', 2.05, 58, 'Rynek niszowy, przechodzi tylko przy value.', 3),
-      mk('Rzuty rożne', 'Rzuty rożne — Powyżej 7.5', 1.72, 70, 'Profil drużyn sugeruje wysoką liczbę stałych fragmentów.', 1),
-      mk('Rzuty rożne', 'Rzuty rożne — Poniżej 10.5', 1.62, 72, 'Kontrola tempa i mniej chaotyczny mecz.', 0),
-      mk('Kartki', 'Kartki — Powyżej 3.5', 1.82, 70, 'Spotkanie o profilu kontaktowym i większym ryzyku kartek.', 1),
-      mk('Kartki', 'Kartki — Poniżej 5.5', 1.58, 74, 'Niższy próg kartek przy spokojniejszym profilu meczu.', -1),
+      mk('1X2 / zwycięzca', `${home} wygra`, 1.62, 61, 'Model widzi przewagę gospodarzy w rynku zwycięzcy.', 2),
+      mk('1X2 / zwycięzca', `${away} wygra`, 1.82, 56, 'Model porównuje kurs z szansą drużyny gości.', 3),
+      mk('Podwójna szansa', `${home} lub remis`, 1.38, 74, 'Bezpieczniejszy wariant przy stabilnym faworycie.', -2),
+      mk('Podwójna szansa', `${away} lub remis`, 1.46, 68, 'Niższe ryzyko niż czysty zwycięzca gości.', -1),
+      mk('Suma goli', 'Powyżej 1.5 gola', 1.34, 78, 'Rynek goli ma wysokie prawdopodobieństwo, ale zwykle niższe value.', -2),
+      mk('Suma goli', 'Powyżej 2.5 gola', 1.74, 59, 'Model szuka value w tempie meczu i profilu bramkowym.', 2),
+      mk('Suma goli', 'Poniżej 3.5 gola', 1.42, 72, 'Bezpieczniejszy rynek przy umiarkowanym tempie spotkania.', -1),
+      mk('BTTS', 'Obie strzelą — Tak', 1.78, 57, 'Model ocenia potencjał ofensywny obu stron.', 2),
+      mk('BTTS', 'Obie strzelą — Nie', 1.85, 54, 'Opcja dla meczu z przewagą jednej strony albo słabszym atakiem gości.', 3),
+      mk('Handicap', `${home} +0.5`, 1.36, 76, 'Wariant defensywny, gdy model widzi małe ryzyko porażki gospodarzy.', -2),
+      mk('Handicap', `${away} +0.5`, 1.52, 66, 'Wariant defensywny dla gości przy kursie z akceptowalnym value.', 0),
     ]
   }
 
-  const isBetAiQualityMarketV1478 = (pick = {}) => {
-    return Number(pick.odds || 0) >= DAILY_AI_MIN_ODDS_V1478 &&
-      Number(pick.probability || 0) >= DAILY_AI_MIN_PROBABILITY_V1478 &&
-      Number(pick.ev || 0) >= DAILY_AI_MIN_EV_V1478 &&
-      Number(pick.score || pick.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086
+  const normalizeAiProbabilityV1480 = value => {
+    const n = Number(value || 0)
+    if (!Number.isFinite(n)) return 0
+    return n > 0 && n <= 1 ? Math.round(n * 100) : n
   }
 
-  const isBetAiQualityCardV1478 = (card = {}) => {
-    return isBetAiPrematchAvailableV1091(card) &&
-      Number(card.odds || 0) >= DAILY_AI_MIN_ODDS_V1478 &&
-      Number(card.probability || 0) >= DAILY_AI_MIN_PROBABILITY_V1478 &&
-      Number(card.ev || 0) >= DAILY_AI_MIN_EV_V1478 &&
-      Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086
+  const isQualityAiCardV1480 = card => {
+    const odds = Number(card?.odds || 0)
+    const probability = normalizeAiProbabilityV1480(card?.probability || card?.aiScore || 0)
+    return odds >= DAILY_AI_MIN_ODDS_V1480 && probability >= DAILY_AI_MIN_PROB_V1480
   }
 
   const chooseBestFootballMarket = (m, seed, home, away) => {
     const candidates = buildFootballMarketCandidates(m, seed, home, away)
-    const userRange = candidates.filter(x =>
-      Number(x.odds) >= Math.max(Number(minOdds), DAILY_AI_MIN_ODDS_V1478) &&
+    const inRange = candidates.filter(x =>
+      Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480 &&
       Number(x.odds) <= Number(maxOdds) &&
-      Number(x.probability) >= Math.max(Number(minProb), DAILY_AI_MIN_PROBABILITY_V1478)
+      normalizeAiProbabilityV1480(x.probability) >= DAILY_AI_MIN_PROB_V1480
     )
-    const quality = userRange.filter(isBetAiQualityMarketV1478)
-    const pool = quality.length ? quality : candidates.filter(isBetAiQualityMarketV1478)
-    const finalPool = pool.length ? pool : userRange
-    const safePool = finalPool.length ? finalPool : candidates
-    return safePool.sort((a, b) =>
+    const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480 && Number(x.odds) <= Number(maxOdds))
+    const finalPool = pool.length ? pool : candidates
+    return finalPool.sort((a, b) =>
+      (normalizeAiProbabilityV1480(b.probability) - normalizeAiProbabilityV1480(a.probability)) ||
       (Number(b.ev) - Number(a.ev)) ||
-      (Number(b.score) - Number(a.score)) ||
-      (Number(b.probability) - Number(a.probability))
+      (Number(b.score) - Number(a.score))
     )[0]
   }
 
@@ -15328,7 +15254,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [allCards, search])
 
   async function saveCardsToJournal(cards = []) {
-    const cardsToSave = (cards || []).filter(card => isBetAiQualityCardV1478(card))
+    const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
     if (!isSupabaseConfigured || !supabase || !cardsToSave.length) return
 
     const nowIso = new Date().toISOString()
@@ -15452,13 +15378,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
     }
 
-    try {
-      const upsertResult = await supabase.from('tips').upsert(payload, { onConflict: 'ai_external_key,market,selection' })
-      if (upsertResult.error) throw upsertResult.error
-    } catch (err) {
-      console.warn('AI journal bulk upsert fallback:', err?.message || err)
-      await saveTipsOneByOne()
-    }
+    // WERSJA 1480 SAFE: nie używamy upsert/on_conflict, bo brak constraintu potrafił dawać 400
+    // i zapętlać zapis. Zapis idzie bezpiecznie: najpierw SELECT, potem UPDATE albo INSERT.
+    await saveTipsOneByOne()
 
     await saveLeagueCatalog()
     setStatusText(`Zapisano ${payload.length} typów AI w bazie. Mecze Result, Ligi i Statystyki będą korzystać z tych danych na stałe.`)
@@ -15638,7 +15560,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const seenMatch = new Set()
     return (cards || [])
       .filter(Boolean)
-      .filter(card => isBetAiQualityCardV1478(card))
+      .filter(card => isBetAiPrematchAvailableV1091(card))
+      .filter(card => Number(card.aiScore || 0) >= DAILY_AI_MIN_SCORE_V1086)
       .sort((a, b) => {
         const scoreA = Number(a.aiScore || 0) * 2 + Number(a.ev || 0) * 1.5 + Number(a.probability || 0)
         const scoreB = Number(b.aiScore || 0) * 2 + Number(b.ev || 0) * 1.5 + Number(b.probability || 0)
@@ -15702,7 +15625,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const mapped = (data || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
         .filter(card => getBetAiCardLocalDateV1078(card) === today)
-        .filter(card => isBetAiQualityCardV1478(card) || isBetAiSettledStatusV1091(card))
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiCards(mapped)
@@ -15732,9 +15654,25 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   async function fetchLiveAiPicks(mode = aiDayMode, options = {}) {
-    setLoadingAi(true)
     const dayLabel = getBetAiDayLabelV1081(mode)
     const force = Boolean(options?.force)
+    const cooldownKey = `betai_ai_scan_cooldown_v1480_${mode}_${getBetAiSelectedLocalDateV1081(mode)}`
+    const lastScanTs = Number(localStorage.getItem(cooldownKey) || 0)
+
+    if (aiFetchInFlightRef.current || loadingAi) {
+      setStatusText('Skan AI już trwa. Czekaj na zakończenie — nie uruchamiam drugiego pobierania.')
+      return
+    }
+
+    if (!force && lastScanTs && Date.now() - lastScanTs < DAILY_AI_SCAN_COOLDOWN_MS_V1480) {
+      const seconds = Math.ceil((DAILY_AI_SCAN_COOLDOWN_MS_V1480 - (Date.now() - lastScanTs)) / 1000)
+      setStatusText(`Ochrona Supabase: kolejny skan AI będzie dostępny za ${seconds}s. Wczytuję zapisane typy z bazy.`)
+      await loadSavedAiTipsFromDb(mode)
+      return
+    }
+
+    aiFetchInFlightRef.current = true
+    setLoadingAi(true)
     setStatusText(`Sprawdzam zapisane typy AI na ${dayLabel}...`)
     try {
       const savedBefore = await loadSavedAiTipsFromDb(mode)
@@ -15746,7 +15684,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      setStatusText(`Pierwszy skan dnia: szukam value picków ${dayLabel}. Zapiszę tylko typy z kursem ${DAILY_AI_MIN_ODDS_V1478}+ i skutecznością ${DAILY_AI_MIN_PROBABILITY_V1478}%+...`)
+      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -15755,11 +15693,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       for (const sport of sportsToFetch) {
         const todayUrls = [
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&day=${today}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}&to=${tomorrow}&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&from=${today}T00:00:00&to=${tomorrow}T00:00:00&realOnly=1&allLeagues=1`,
-          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&daysAhead=0&mode=today&realOnly=1&allLeagues=1`
+          `/.netlify/functions/get-sports-events?sport=${encodeURIComponent(sport)}&date=${today}&realOnly=1&allLeagues=1`
         ]
 
         const seenFixtures = new Set()
@@ -15771,10 +15705,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           let duplicatePagesInRow = 0
           let page = 0
 
-          while (page <= 25) {
+          while (page <= 1) {
             const url = page === 0 ? baseUrl : `${baseUrl}&page=${page}`
             const beforeCount = sportFixtures.length
-            const result = await fetchJsonWithTimeoutV1079(url, page === 0 ? 8500 : 4500)
+            const result = await fetchJsonWithTimeoutV1079(url, page === 0 ? 6500 : 3500)
 
             if (!result.ok) {
               debug.push(`p${page}:${result.status}`)
@@ -15870,22 +15804,23 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      const topCards = rankBetAiCardsForDailyJournalV1086(clean.filter(card => card.source !== 'Bet+AI fallback'))
-      const cardsToPersist = topCards
+      const qualityClean = clean
+        .filter(card => card.source !== 'Bet+AI fallback')
+        .filter(isQualityAiCardV1480)
+      const topCards = rankBetAiCardsForDailyJournalV1086(qualityClean)
+      const cardsToPersist = topCards.slice(0, DAILY_AI_PICK_LIMIT_V1086)
 
       if (!cardsToPersist.length) {
         setLiveCards([])
         setSelectedId('')
-        setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-        markBetAiDailyScanDoneV1086(mode, 0)
-        setStatusText(`Skan sprawdził ${clean.length} meczów na ${dayLabel}, ale nie znalazł typu spełniającego warunki premium: kurs ${DAILY_AI_MIN_ODDS_V1478}+, skuteczność ${DAILY_AI_MIN_PROBABILITY_V1478}%+ i EV dodatnie. Nie zapisuję słabych typów.`)
+        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 70%+. Nie zapisuję słabych typów.`)
         return
       }
 
       setLiveCards(cardsToPersist)
-      setSelectedId(cardsToPersist[0]?.id || '')
+      setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Skan sprawdził ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję tylko ${cardsToPersist.length} typów premium: kurs ${DAILY_AI_MIN_ODDS_V1478}+, skuteczność ${DAILY_AI_MIN_PROBABILITY_V1478}%+, EV dodatnie.`)
+      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
       await saveCardsToJournal(cardsToPersist)
       await loadSavedAiJournalFromDbV1094()
@@ -15894,7 +15829,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (savedAfter.length) {
         setLiveCards([])
         setSelectedId(savedAfter[0]?.id || '')
-        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI premium na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
       }
     } catch (err) {
       const saved = await loadSavedAiTipsFromDb(mode)
@@ -15908,6 +15843,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Błąd API Typów AI: ${err?.message || err}. Brak zapisanych typów dla wybranego dnia.`)
       }
     } finally {
+      localStorage.setItem(cooldownKey, String(Date.now()))
+      aiFetchInFlightRef.current = false
       setLoadingAi(false)
     }
   }
@@ -15917,14 +15854,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     setLoadingAi(true)
     loadSavedAiJournalFromDbV1094()
     loadSavedAiTipsFromDb(aiDayMode).then(saved => {
-      if (!alive) return null
+      if (!alive) return
       if (saved.length) {
         setLiveCards([])
         setSelectedId(saved[0]?.id || '')
-        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Tabela jest stała — nie szukam ponownie po odświeżeniu.`)
-        return null
+        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
+      } else {
+        setLiveCards([])
+        setSelectedId('')
+        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
       }
-      return fetchLiveAiPicks(aiDayMode)
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
   }, [aiDayMode])
@@ -16008,10 +15947,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
         </div>
 <div className="ai-range-panel-v1054">
-          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.10" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
+          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
-          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="45" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.25); setMaxOdds(3.50); setMinProb(55); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="70" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(3.50); setMinProb(70); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>
@@ -16057,7 +15996,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Jutrzejsze mecze pojawią się po pobraniu z API.' : 'Dzisiejsze mecze pojawią się automatycznie po pobraniu z API.'}</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Odśwież jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.'}</p></div>}
             </div>
           )}
 
@@ -17227,111 +17166,19 @@ function AuthView({ onAuth }) {
     return String(parsed)
   }
 
+  // WERSJA 1477: ekran logowania nie może odpalać ciężkich zapytań do Supabase.
+  // Wcześniej live stats robiły serię requestów do profiles/tips/presence i przy 503
+  // blokowały odczucie działania strony jeszcze przed logowaniem.
   useEffect(() => {
-    let cancelled = false
-
-    async function loadAuthLiveStats() {
-      if (!isSupabaseConfigured || !supabase) {
-        if (!cancelled) {
-          setLiveStats(prev => ({ ...prev, loading: false }))
-        }
-        return
-      }
-
-      try {
-        let nextStats = null
-        const rpcResponse = await supabase.rpc('get_auth_live_stats')
-
-        if (!rpcResponse.error && rpcResponse.data) {
-          const row = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data
-          if (row) {
-            nextStats = {
-              registeredUsers: normalizeLiveCount(row.registered_users ?? row.registeredUsers),
-              aiAccuracy: normalizeLiveCount(row.ai_accuracy ?? row.aiAccuracy, 76),
-              activeNow: normalizeLiveCount(row.active_now ?? row.activeNow, 1),
-              tipsToday: normalizeLiveCount(row.tips_today ?? row.tipsToday),
-              updatedAt: new Date().toISOString(),
-              loading: false
-            }
-          }
-        }
-
-        if (!nextStats) {
-          const now = new Date()
-          const startOfDay = new Date(now)
-          startOfDay.setHours(0, 0, 0, 0)
-          const activeCutoff = new Date(now.getTime() - 10 * 60 * 1000).toISOString()
-          const aiRangeCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          const settledStatuses = ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana']
-          const wonStatuses = ['won', 'win', 'wygrany', 'wygrana']
-
-          const [profilesResult, activeResult, tipsTodayResult, aiSettledResult, aiWonResult, aiAvgResult] = await Promise.allSettled([
-            supabase.from('profiles').select('id', { count: 'exact', head: true }),
-            supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('last_seen', activeCutoff),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', settledStatuses),
-            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', wonStatuses),
-            supabase.from('tips').select('*').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
-          ])
-
-          const exactCount = (result, fallback = 0) => {
-            if (result.status !== 'fulfilled') return fallback
-            return normalizeLiveCount(result.value?.count, fallback)
-          }
-
-          const profilesCount = exactCount(profilesResult)
-          const activeCount = exactCount(activeResult, 1)
-          const tipsTodayCount = exactCount(tipsTodayResult)
-          const aiSettledCount = exactCount(aiSettledResult)
-          const aiWonCount = exactCount(aiWonResult)
-          const avgConfidence = aiAvgResult.status === 'fulfilled'
-            ? (() => {
-                const rows = Array.isArray(aiAvgResult.value?.data) ? aiAvgResult.value.data : []
-                const values = rows
-                  .map(row => Number(row?.ai_confidence ?? row?.ai_probability ?? row?.confidence ?? 0))
-                  .filter(value => Number.isFinite(value) && value > 0)
-                if (!values.length) return 76
-                return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
-              })()
-            : 76
-
-          nextStats = {
-            registeredUsers: profilesCount,
-            aiAccuracy: aiSettledCount > 0 ? Math.round((aiWonCount / aiSettledCount) * 100) : avgConfidence,
-            activeNow: activeCount,
-            tipsToday: tipsTodayCount,
-            updatedAt: new Date().toISOString(),
-            loading: false
-          }
-        }
-
-        if (!cancelled && nextStats) {
-          setLiveStats(prev => ({
-            ...prev,
-            ...nextStats,
-            registeredUsers: nextStats.registeredUsers || prev.registeredUsers || 0,
-            activeNow: nextStats.activeNow || prev.activeNow || 1,
-            aiAccuracy: nextStats.aiAccuracy || prev.aiAccuracy || 76,
-            tipsToday: nextStats.tipsToday || prev.tipsToday || 0
-          }))
-        }
-      } catch (error) {
-        console.warn('Auth live stats unavailable', error)
-        if (!cancelled) {
-          setLiveStats(prev => ({ ...prev, loading: false }))
-        }
-      }
-    }
-
-    loadAuthLiveStats()
-    const timer = window.setInterval(loadAuthLiveStats, 30000)
-    window.addEventListener('focus', loadAuthLiveStats)
-
-    return () => {
-      cancelled = true
-      window.clearInterval(timer)
-      window.removeEventListener('focus', loadAuthLiveStats)
-    }
+    setLiveStats(prev => ({
+      ...prev,
+      registeredUsers: prev.registeredUsers || 0,
+      aiAccuracy: prev.aiAccuracy || 76,
+      activeNow: prev.activeNow || 1,
+      tipsToday: prev.tipsToday || 0,
+      loading: false,
+      updatedAt: new Date().toISOString()
+    }))
   }, [])
 
   useEffect(() => {
@@ -17391,6 +17238,20 @@ function AuthView({ onAuth }) {
     }
   }
 
+  async function authWithTimeout(promise, timeoutMs = 12000) {
+    let timer
+    try {
+      return await Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          timer = window.setTimeout(() => reject(new Error('Autoryzacja trwa za długo. Spróbuj ponownie za chwilę — Supabase może jeszcze wracać po zmianie dysku.')), timeoutMs)
+        })
+      ])
+    } finally {
+      if (timer) window.clearTimeout(timer)
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     setAuthMessage('')
@@ -17434,7 +17295,7 @@ function AuthView({ onAuth }) {
         if (password.length < 8) throw new Error(t.shortPassword)
         if (password !== repeatPassword) throw new Error(t.passwordMismatch)
 
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await authWithTimeout(supabase.auth.signUp({
           email,
           password,
           options: {
@@ -17445,7 +17306,7 @@ function AuthView({ onAuth }) {
               ref: getStoredReferralCode()
             }
           }
-        })
+        }))
 
         if (error) throw error
 
@@ -17469,10 +17330,10 @@ function AuthView({ onAuth }) {
           showMessage('success', t.accountCreatedConfirm)
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await authWithTimeout(supabase.auth.signInWithPassword({
           email,
           password
-        })
+        }))
 
         if (error) throw error
         if (data?.user) {

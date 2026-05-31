@@ -1,0 +1,21 @@
+WERSJA 1480 — SAFE QUALITY AI + STOP DUSZENIA APLIKACJI
+
+Baza: wersja 1471 — pierwszy wykres ożywiony.
+
+Zmiany:
+- Typy AI nie skanują automatycznie po wejściu/odświeżeniu.
+- Skan AI tylko ręcznie po kliknięciu Odśwież dziś/jutro.
+- Jeden skan naraz, blokada przed klikaniem kilka razy.
+- Cooldown 5 minut po skanie, żeby nie spamować Supabase/API.
+- get-sports-events ograniczony do jednego endpointu i max 2 stron.
+- Timeout krótszy: 6.5s dla pierwszego requestu, 3.5s dla drugiej strony.
+- Quality Mode: zapisuje tylko typy z kursem 1.50+ i probability/confidence 70%+.
+- Max 5 typów na dzień.
+- Nie zapisuje słabych typów na siłę.
+- Usunięto bulk upsert z on_conflict=ai_external_key,market,selection, który powodował błędy 400.
+- Zapis do tips idzie bezpiecznie: SELECT -> UPDATE albo INSERT.
+- Prawy panel AI Typy dnia na dashboardzie nie odpala już automatycznego get-sports-events.
+- Logika rozliczania WON/LOST niezmieniona.
+
+Opcjonalny SQL:
+SUPABASE_OPTIONAL_1480_AI_SAFE_INDEXES.sql
