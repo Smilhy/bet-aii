@@ -16554,28 +16554,41 @@ function SiteReviewsWidget({ user }) {
   async function loadReviews() {
     if (!isSupabaseConfigured || !supabase) return
     try {
-      const timeout = new Promise(resolve => window.setTimeout(() => resolve({ data: [], error: { message: 'timeout' } }), 3000))
-      const result = await Promise.race([
-        supabase
-          .from('site_reviews')
-          .select('id,user_id,guest_session_id,user_email,user_name,rating,comment,is_approved,created_at')
-          .eq('is_approved', true)
-          .order('created_at', { ascending: false })
-          .limit(12),
-        timeout
-      ])
-      if (result?.error) return
-      setReviews(Array.isArray(result?.data) ? result.data : [])
+      const { data, error } = await supabase
+        .from('site_reviews')
+        .select('id,user_id,guest_session_id,user_email,user_name,rating,comment,is_approved,created_at')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(80)
+      if (error) throw error
+      setReviews(Array.isArray(data) ? data : [])
       setStatus('')
     } catch (error) {
-      console.warn('reviews load skipped', error)
+      console.warn('reviews load error', error)
+      setStatus('Opinie wymagają uruchomienia pliku SUPABASE_SITE_REVIEWS_512.sql.')
     }
   }
 
   useEffect(() => {
-    // WERSJA 1475 SAFE: opinie na ekranie logowania ładują się tylko raz.
-    // Bez interwału i realtime, żeby nie generować pętli 503.
     loadReviews()
+    const timer = setInterval(loadReviews, 30000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    let channel
+    try {
+      channel = supabase
+        .channel('site_reviews_live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_reviews' }, () => loadReviews())
+        .subscribe()
+    } catch (error) {
+      console.warn('reviews realtime skipped', error)
+    }
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [])
 
   async function submitReview() {
@@ -17165,57 +17178,111 @@ function AuthView({ onAuth }) {
     return String(parsed)
   }
 
-  function withAuthTimeout(promise, ms = 12000) {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => window.setTimeout(() => reject(new Error('Timeout autoryzacji. Supabase nie odpowiedział na czas — spróbuj ponownie.')), ms))
-    ])
-  }
-
   useEffect(() => {
     let cancelled = false
 
     async function loadAuthLiveStats() {
       if (!isSupabaseConfigured || !supabase) {
-        if (!cancelled) setLiveStats(prev => ({ ...prev, loading: false }))
+        if (!cancelled) {
+          setLiveStats(prev => ({ ...prev, loading: false }))
+        }
         return
       }
 
       try {
-        // WERSJA 1475 SAFE: ekran logowania nie może bombardować Supabase.
-        // Robimy tylko JEDNO lekkie RPC. Bez fallbacku do profiles/tips/presence,
-        // bo przy awarii Supabase dawało to pętlę 503 i blokowało logowanie.
-        const timeout = new Promise(resolve => window.setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 3500))
-        const rpcResponse = await Promise.race([supabase.rpc('get_auth_live_stats'), timeout])
-        const row = Array.isArray(rpcResponse?.data) ? rpcResponse.data[0] : rpcResponse?.data
-        const nextStats = row ? {
-          registeredUsers: normalizeLiveCount(row.registered_users ?? row.registeredUsers),
-          aiAccuracy: normalizeLiveCount(row.ai_accuracy ?? row.aiAccuracy, 76),
-          activeNow: normalizeLiveCount(row.active_now ?? row.activeNow, 1),
-          tipsToday: normalizeLiveCount(row.tips_today ?? row.tipsToday),
-          updatedAt: new Date().toISOString(),
-          loading: false
-        } : null
+        let nextStats = null
+        const rpcResponse = await supabase.rpc('get_auth_live_stats')
 
-        if (!cancelled) {
-          setLiveStats(prev => nextStats ? ({
+        if (!rpcResponse.error && rpcResponse.data) {
+          const row = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data
+          if (row) {
+            nextStats = {
+              registeredUsers: normalizeLiveCount(row.registered_users ?? row.registeredUsers),
+              aiAccuracy: normalizeLiveCount(row.ai_accuracy ?? row.aiAccuracy, 76),
+              activeNow: normalizeLiveCount(row.active_now ?? row.activeNow, 1),
+              tipsToday: normalizeLiveCount(row.tips_today ?? row.tipsToday),
+              updatedAt: new Date().toISOString(),
+              loading: false
+            }
+          }
+        }
+
+        if (!nextStats) {
+          const now = new Date()
+          const startOfDay = new Date(now)
+          startOfDay.setHours(0, 0, 0, 0)
+          const activeCutoff = new Date(now.getTime() - 10 * 60 * 1000).toISOString()
+          const aiRangeCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          const settledStatuses = ['won', 'win', 'wygrany', 'wygrana', 'lost', 'loss', 'przegrany', 'przegrana']
+          const wonStatuses = ['won', 'win', 'wygrany', 'wygrana']
+
+          const [profilesResult, activeResult, tipsTodayResult, aiSettledResult, aiWonResult, aiAvgResult] = await Promise.allSettled([
+            supabase.from('profiles').select('id', { count: 'exact', head: true }),
+            supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('last_seen', activeCutoff),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', settledStatuses),
+            supabase.from('tips').select('id', { count: 'exact', head: true }).eq('ai_source', 'real_ai_engine').gte('created_at', aiRangeCutoff).in('status', wonStatuses),
+            supabase.from('tips').select('*').eq('ai_source', 'real_ai_engine').order('created_at', { ascending: false }).limit(50)
+          ])
+
+          const exactCount = (result, fallback = 0) => {
+            if (result.status !== 'fulfilled') return fallback
+            return normalizeLiveCount(result.value?.count, fallback)
+          }
+
+          const profilesCount = exactCount(profilesResult)
+          const activeCount = exactCount(activeResult, 1)
+          const tipsTodayCount = exactCount(tipsTodayResult)
+          const aiSettledCount = exactCount(aiSettledResult)
+          const aiWonCount = exactCount(aiWonResult)
+          const avgConfidence = aiAvgResult.status === 'fulfilled'
+            ? (() => {
+                const rows = Array.isArray(aiAvgResult.value?.data) ? aiAvgResult.value.data : []
+                const values = rows
+                  .map(row => Number(row?.ai_confidence ?? row?.ai_probability ?? row?.confidence ?? 0))
+                  .filter(value => Number.isFinite(value) && value > 0)
+                if (!values.length) return 76
+                return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+              })()
+            : 76
+
+          nextStats = {
+            registeredUsers: profilesCount,
+            aiAccuracy: aiSettledCount > 0 ? Math.round((aiWonCount / aiSettledCount) * 100) : avgConfidence,
+            activeNow: activeCount,
+            tipsToday: tipsTodayCount,
+            updatedAt: new Date().toISOString(),
+            loading: false
+          }
+        }
+
+        if (!cancelled && nextStats) {
+          setLiveStats(prev => ({
             ...prev,
             ...nextStats,
             registeredUsers: nextStats.registeredUsers || prev.registeredUsers || 0,
             activeNow: nextStats.activeNow || prev.activeNow || 1,
             aiAccuracy: nextStats.aiAccuracy || prev.aiAccuracy || 76,
-            tipsToday: nextStats.tipsToday || prev.tipsToday || 0,
-            loading: false
-          }) : ({ ...prev, loading: false }))
+            tipsToday: nextStats.tipsToday || prev.tipsToday || 0
+          }))
         }
       } catch (error) {
         console.warn('Auth live stats unavailable', error)
-        if (!cancelled) setLiveStats(prev => ({ ...prev, loading: false }))
+        if (!cancelled) {
+          setLiveStats(prev => ({ ...prev, loading: false }))
+        }
       }
     }
 
     loadAuthLiveStats()
-    return () => { cancelled = true }
+    const timer = window.setInterval(loadAuthLiveStats, 30000)
+    window.addEventListener('focus', loadAuthLiveStats)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+      window.removeEventListener('focus', loadAuthLiveStats)
+    }
   }, [])
 
   useEffect(() => {
@@ -17318,7 +17385,7 @@ function AuthView({ onAuth }) {
         if (password.length < 8) throw new Error(t.shortPassword)
         if (password !== repeatPassword) throw new Error(t.passwordMismatch)
 
-        const { data, error } = await withAuthTimeout(supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -17329,7 +17396,7 @@ function AuthView({ onAuth }) {
               ref: getStoredReferralCode()
             }
           }
-        }))
+        })
 
         if (error) throw error
 
@@ -17353,10 +17420,10 @@ function AuthView({ onAuth }) {
           showMessage('success', t.accountCreatedConfirm)
         }
       } else {
-        const { data, error } = await withAuthTimeout(supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
-        }))
+        })
 
         if (error) throw error
         if (data?.user) {
