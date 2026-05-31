@@ -67759,3 +67759,32 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .ai-analytics-hero-v1450 h3{font-size:28px !important;}
   .ai-center-page-v747 .ai-analytics-kpis-v749{grid-template-columns:1fr !important;}
 }
+
+/* WERSJA 1454 — poprawa kolorów stat cards */
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-negative,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-negative{
+  border-color:rgba(255,74,123,.55)!important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-negative::before,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-negative::before{
+  background:radial-gradient(circle, rgba(255,74,123,.32), transparent 68%) !important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-negative strong,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-negative strong{
+  color:#ff5c87 !important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-positive,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-positive{
+  border-color:rgba(38,239,163,.55)!important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-positive::before,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-positive::before{
+  background:radial-gradient(circle, rgba(38,239,163,.35), transparent 68%) !important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-yield.is-positive strong,
+.ai-center-page-v747 .ai-stat-card-v1443.is-profit.is-positive strong{
+  color:#27f8b0 !important;
+}
+.ai-center-page-v747 .ai-stat-card-v1443.is-max strong{
+  color:#ffffff !important;
+}

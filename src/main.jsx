@@ -13945,7 +13945,7 @@ const getAiStatsDefaultBetTypes = sport => {
   return Array.from(new Set(Object.values(AI_STATS_BET_TYPES_BY_SPORT).flat()))
 }
 
-function AiStatsAnalyticsView({ tips = [] }) {
+function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [sportFilter, setSportFilter] = useState('All Sports')
   const [divisionFilter, setDivisionFilter] = useState('All Divisions')
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
@@ -14003,10 +14003,20 @@ function AiStatsAnalyticsView({ tips = [] }) {
     const sport = t.sport || t.sport_key || 'Inne'
     const division = t.league || t.league_name || t.country || 'Inne'
     const betType = t.market || t.bet_type || 'Typ AI'
+    const q = String(searchQuery || '').trim().toLowerCase()
+    const searchText = [
+      sport, division, betType,
+      t.home || t.team_home, t.away || t.team_away,
+      t.matchName || t.match_name || t.match,
+      t.prediction || t.selection || t.pick,
+      t.market || t.bet_type,
+      t.status || t.result,
+    ].filter(Boolean).join(' ').toLowerCase()
     return (sportFilter === 'All Sports' || sport === sportFilter)
       && (divisionFilter === 'All Divisions' || division === divisionFilter)
       && (betTypeFilter === 'All Types' || betType === betTypeFilter)
       && inTimeRange(t)
+      && (!q || searchText.includes(q))
   })
   const settled = filtered.filter(t => ['won','lost','push'].includes(normalizeResult(t.result || t.status)))
   const wins = settled.filter(t => normalizeResult(t.result || t.status) === 'won')
@@ -14782,6 +14792,24 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
   }, [liveCards, savedAiCards, savedAiJournalCards, dbCards])
 
+  const matchesAiSearchV1455 = (card = {}, query = search) => {
+    const q = String(query || '').trim().toLowerCase()
+    if (!q) return true
+    return [
+      card.sport,
+      card.league,
+      card.country,
+      card.home,
+      card.away,
+      card.matchName,
+      card.prediction,
+      card.market,
+      card.status,
+      card.result,
+      card.date,
+    ].filter(Boolean).join(' ').toLowerCase().includes(q)
+  }
+
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase()
     return allCards
@@ -14791,7 +14819,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
       .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
       .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
-      .filter(c => !q || `${c.sport} ${c.league} ${c.home} ${c.away} ${c.prediction} ${c.market}`.toLowerCase().includes(q))
+      .filter(c => matchesAiSearchV1455(c, q))
       .sort((a, b) => {
         const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
         const evA = Number(a.ev || 0)
@@ -14816,11 +14844,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const key = `${card.externalFixtureId || card.id}|||${card.market}|||${card.prediction}`
       if (!map.has(key)) map.set(key, card)
     })
+    const q = search.trim().toLowerCase()
     return Array.from(map.values())
       .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+      .filter(card => matchesAiSearchV1455(card, q))
       // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
-  }, [savedAiJournalCards, savedAiCards, dbCards, liveCards])
+  }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
 
   const aiTabCounters = useMemo(() => {
     const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
@@ -14877,7 +14907,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const leagueRows = useMemo(() => {
     const rows = new Map()
-    allCards.forEach(card => {
+    const q = search.trim().toLowerCase()
+    allCards.filter(card => matchesAiSearchV1455(card, q)).forEach(card => {
       const key = `${card.sport}|||${card.league}`
       const row = rows.get(key) || { sport: card.sport, league: card.league, total: 0, won: 0, lost: 0, pending: 0, avg: 0 }
       row.total += 1
@@ -14888,7 +14919,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       rows.set(key, row)
     })
     return Array.from(rows.values()).map(r => ({ ...r, avg: r.total ? Math.round(r.avg / r.total) : 0 })).sort((a,b) => b.total - a.total).slice(0, 12)
-  }, [allCards])
+  }, [allCards, search])
 
   async function saveCardsToJournal(cards = []) {
     const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
@@ -15515,8 +15546,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         </div>
       </header>
       <section className="ai-stat-strip-v1443" aria-label="Statystyki Typy AI">
-        <article className="ai-stat-card-v1443 is-yield"><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>Zwrot z rozliczonych AI</small></div><i>◔</i></article>
-        <article className="ai-stat-card-v1443 is-profit"><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>Bilans Typy AI</small></div><i>₿</i></article>
+        <article className={`ai-stat-card-v1443 is-yield ${stats.yieldValue >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Yield</span><strong>{stats.yieldValue}%</strong><small>Zwrot z rozliczonych AI</small></div><i>◔</i></article>
+        <article className={`ai-stat-card-v1443 is-profit ${stats.profit >= 0 ? 'is-positive' : 'is-negative'}`}><div><span>Profit</span><strong>{stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}</strong><small>Bilans Typy AI</small></div><i>₿</i></article>
         <article className="ai-stat-card-v1443 is-total"><div><span>Typy AI</span><strong>{stats.total}</strong><small>Wszystkie zapisane</small></div><i>↗</i></article>
         <article className="ai-stat-card-v1443 is-won"><div><span>Wygrane</span><strong>{stats.won}</strong><small>Rozliczone na plus</small></div><i>🏆</i></article>
         <article className="ai-stat-card-v1443 is-lost"><div><span>Przegrane</span><strong>{stats.lost}</strong><small>Rozliczone na minus</small></div><i>☹</i></article>
@@ -15633,7 +15664,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </div>
           )}
 
-          {activePanel === 'stats' && <AiStatsAnalyticsView tips={allCards} />}
+          {activePanel === 'stats' && <AiStatsAnalyticsView tips={allCards} searchQuery={search} />}
 
           {activePanel === 'leagues' && (
             <div className="ai-table-card-v747">
