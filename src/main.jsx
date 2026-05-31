@@ -14011,6 +14011,9 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [divisionFilter, setDivisionFilter] = useState('All Divisions')
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
   const [timeFilter, setTimeFilter] = useState('all')
+  const [chartMode, setChartMode] = useState('cumulative')
+  const [chartRange, setChartRange] = useState('90d')
+  const [hoverIndex, setHoverIndex] = useState(null)
   const [savedLeagues, setSavedLeagues] = useState([])
   const [tableVisibleCounts, setTableVisibleCounts] = useState({
     coupons: 20,
@@ -14207,21 +14210,51 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const roi = totalStake ? (totalProfit / totalStake) * 100 : 0
   const avgOdds = settled.length ? settled.reduce((sum, tip) => sum + Number(tip.odds || tip.course || 1.8), 0) / settled.length : 0
 
-  const byDate = [...settled].sort((a,b) => new Date(a.settled_at || a.event_time || a.created_at) - new Date(b.settled_at || b.event_time || b.created_at))
+  const inChartRange = tip => {
+    if (chartRange === 'all') return true
+    const date = new Date(tip.settled_at || tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at || 0)
+    if (Number.isNaN(date.getTime())) return false
+    if (chartRange === '7d') return date >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    if (chartRange === '30d') return date >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    if (chartRange === '90d') return date >= new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+    if (chartRange === 'year') return date >= new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+    return true
+  }
+  const chartSettled = [...settled]
+    .filter(inChartRange)
+    .sort((a,b) => new Date(a.settled_at || a.event_time || a.created_at) - new Date(b.settled_at || b.event_time || b.created_at))
   let cumulative = 0
-  const profitSeries = byDate.map(t => {
-    cumulative += tipProfit(t)
+  const chartSeriesRaw = chartSettled.map(t => {
+    const value = tipProfit(t)
+    if (chartMode === 'profit') return value
+    cumulative += value
     return cumulative
   })
-  const chartSeries = profitSeries.length ? profitSeries : [0,0,0,0,0,0,0]
+  const chartSeries = chartSeriesRaw.length ? chartSeriesRaw : [0,0,0,0,0,0,0]
   const minY = Math.min(0, ...chartSeries)
   const maxY = Math.max(1, ...chartSeries)
   const rangeY = Math.max(1, maxY - minY)
-  const path = chartSeries.map((v, i) => {
+  const chartPoints = chartSeries.map((v, i) => {
     const x = chartSeries.length === 1 ? 0 : (i / (chartSeries.length - 1)) * 100
     const y = 100 - ((v - minY) / rangeY) * 100
-    return `${i ? 'L' : 'M'} ${x} ${y}`
-  }).join(' ')
+    const src = chartSettled[i]
+    const date = src ? new Date(src.settled_at || src.event_time || src.kickoff_time || src.match_time || src.created_at || 0) : null
+    return {
+      x,
+      y,
+      value: v,
+      profit: src ? tipProfit(src) : 0,
+      result: src ? normalizeResult(src.result || src.status) : 'pending',
+      label: date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'Brak daty',
+      sublabel: date && !Number.isNaN(date.getTime()) ? date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '',
+      pick: src ? (src.prediction || src.selection || src.pick || src.market || src.bet_type || 'Typ AI') : 'Brak danych',
+    }
+  })
+  const path = chartPoints.map((pt, i) => `${i ? 'L' : 'M'} ${pt.x} ${pt.y}`).join(' ')
+  const areaPath = chartPoints.length
+    ? `${path} L ${chartPoints[chartPoints.length - 1].x} 100 L ${chartPoints[0].x} 100 Z`
+    : ''
+  const activePoint = chartPoints[Math.min(hoverIndex ?? chartPoints.length - 1, Math.max(chartPoints.length - 1, 0))] || null
   let peak = 0, maxDrawdown = 0
   chartSeries.forEach(value => {
     peak = Math.max(peak, value)
@@ -14284,10 +14317,10 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const chartTop = Math.ceil(balanceMax)
   const chartMid = Math.round((balanceMax + balanceMin) / 2)
   const chartBottom = Math.floor(balanceMin)
-  const dateLabels = byDate.length ? Array.from(new Set(byDate.map(t => {
+  const dateLabels = chartSettled.length ? Array.from(new Set(chartSettled.map(t => {
     const d = new Date(t.settled_at || t.event_time || t.kickoff_time || t.match_time || t.created_at)
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit' })
-  }).filter(Boolean))).slice(-5) : []
+  }).filter(Boolean))).slice(-6) : []
 
   const buildProfileRows = keyFn => Object.values(filtered.reduce((acc, t) => {
     const key = keyFn(t) || 'Inne'
@@ -14384,11 +14417,84 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       </div>
 
       <div className="ai-profile-balance-card-v1459">
-        <div className="ai-profile-chart-head-v1459"><b>Wykres salda AI</b><select aria-label="Typ wykresu" defaultValue="balance"><option value="balance">Bilans kumulacyjny</option><option value="profit">Profit AI</option></select></div>
-        <div className="ai-profile-mini-tabs-v1459"><button>7D</button><button>30D</button><button className="active">90D</button><button>1R</button><button>Wszystko</button></div>
+        <div className="ai-profile-chart-head-v1459">
+          <b>Wykres salda AI</b>
+          <select aria-label="Typ wykresu" value={chartMode} onChange={e => setChartMode(e.target.value)}>
+            <option value="cumulative">Bilans kumulacyjny</option>
+            <option value="profit">Profit na typ</option>
+          </select>
+        </div>
+        <div className="ai-profile-mini-tabs-v1459">
+          {[
+            ['7d', '7D'],
+            ['30d', '30D'],
+            ['90d', '90D'],
+            ['year', '1R'],
+            ['all', 'Wszystko'],
+          ].map(([key, label]) => (
+            <button key={key} className={chartRange === key ? 'active' : ''} onClick={() => setChartRange(key)}>{label}</button>
+          ))}
+          <small className="ai-profile-chart-hint-v1469">Najedź lub kliknij wykres</small>
+        </div>
         <div className="ai-profile-chart-wrap-v1459">
+          <div className="ai-profile-chart-glow-v1469" />
           <div className="ai-profile-ylabels-v1459"><span>{chartTop.toFixed(2)}</span><span>{chartMid.toFixed(2)}</span><span>{chartBottom.toFixed(2)}</span></div>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={path}/></svg>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" onMouseLeave={() => setHoverIndex(null)} onMouseMove={event => {
+              if (!chartPoints.length) return
+              const rect = event.currentTarget.getBoundingClientRect()
+              const pct = Math.max(0, Math.min(100, ((event.clientX - rect.left) / Math.max(1, rect.width)) * 100))
+              let nearest = 0
+              let distance = Infinity
+              chartPoints.forEach((pt, idx) => {
+                const diff = Math.abs(Number(pt.x || 0) - pct)
+                if (diff < distance) { distance = diff; nearest = idx }
+              })
+              setHoverIndex(nearest)
+            }} onClick={event => {
+              if (!chartPoints.length) return
+              const rect = event.currentTarget.getBoundingClientRect()
+              const pct = Math.max(0, Math.min(100, ((event.clientX - rect.left) / Math.max(1, rect.width)) * 100))
+              let nearest = 0
+              let distance = Infinity
+              chartPoints.forEach((pt, idx) => {
+                const diff = Math.abs(Number(pt.x || 0) - pct)
+                if (diff < distance) { distance = diff; nearest = idx }
+              })
+              setHoverIndex(nearest)
+            }}>
+            <defs>
+              <linearGradient id="aiChartLineGlow" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#3cf9ff" />
+                <stop offset="50%" stopColor="#35f1d0" />
+                <stop offset="100%" stopColor="#79a9ff" />
+              </linearGradient>
+              <linearGradient id="aiChartAreaGlow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(61,249,255,.30)" />
+                <stop offset="75%" stopColor="rgba(61,249,255,.05)" />
+                <stop offset="100%" stopColor="rgba(61,249,255,0)" />
+              </linearGradient>
+            </defs>
+            {areaPath ? <path className="area" d={areaPath} /> : null}
+            {path ? <path className="line-shadow" d={path} /> : null}
+            {path ? <path className="line-main" d={path} /> : null}
+            {chartPoints.map((pt, i) => (
+              <g key={`pt-${i}`}>
+                <line className="hover-col" x1={pt.x} y1="0" x2={pt.x} y2="100" onMouseEnter={() => setHoverIndex(i)} />
+                <circle className={`dot ${i === (hoverIndex ?? chartPoints.length - 1) ? 'active' : ''}`} cx={pt.x} cy={pt.y} r={i === (hoverIndex ?? chartPoints.length - 1) ? 1.8 : 1.2} onMouseEnter={() => setHoverIndex(i)} />
+              </g>
+            ))}
+          </svg>
+          {activePoint ? (
+            <div className="ai-profile-chart-tooltip-v1469" style={{ left: `calc(${activePoint.x}% + 34px)` }}>
+              <strong>{chartMode === 'cumulative' ? fmtMoney(activePoint.value) : fmtMoney(activePoint.profit)}</strong>
+              <span>{activePoint.label}{activePoint.sublabel ? ` • ${activePoint.sublabel}` : ''}</span>
+              <small>{activePoint.pick}</small>
+            </div>
+          ) : null}
+          <div className="ai-profile-chart-legend-v1469">
+            <span><i className="line" />{chartMode === 'cumulative' ? 'Bilans skumulowany' : 'Profit pojedynczego typu'}</span>
+            <span><i className="dot" />{chartSettled.length} rozliczonych typów</span>
+          </div>
           <div className="ai-profile-xlabels-v1459">{dateLabels.map((label,i)=><span key={`${label}-${i}`}>{label}</span>)}</div>
         </div>
       </div>
