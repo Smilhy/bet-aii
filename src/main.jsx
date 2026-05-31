@@ -14902,8 +14902,35 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const DAILY_AI_MIN_PROB_V1480 = 70
   const DAILY_AI_SCAN_COOLDOWN_MS_V1480 = 5 * 60 * 1000
   const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1086'
+  const DAILY_AI_VISIBLE_CACHE_PREFIX_V1484 = 'betai_quality_visible_cards_v1484'
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
+
+  function getBetAiVisibleCacheKeyV1484(mode = aiDayMode) {
+    return `${DAILY_AI_VISIBLE_CACHE_PREFIX_V1484}:${mode}:${getBetAiSelectedLocalDateV1081(mode)}`
+  }
+
+  function saveBetAiVisibleCacheV1484(mode = aiDayMode, cards = []) {
+    try {
+      const safe = (cards || []).filter(Boolean).slice(0, DAILY_AI_PICK_LIMIT_V1086)
+      window.localStorage.setItem(getBetAiVisibleCacheKeyV1484(mode), JSON.stringify({
+        date: getBetAiSelectedLocalDateV1081(mode),
+        mode,
+        at: new Date().toISOString(),
+        cards: safe
+      }))
+    } catch (_) {}
+  }
+
+  function loadBetAiVisibleCacheV1484(mode = aiDayMode) {
+    try {
+      const raw = window.localStorage.getItem(getBetAiVisibleCacheKeyV1484(mode))
+      if (!raw) return []
+      const parsed = JSON.parse(raw)
+      if (parsed?.date !== getBetAiSelectedLocalDateV1081(mode)) return []
+      return Array.isArray(parsed?.cards) ? parsed.cards.filter(Boolean) : []
+    } catch (_) { return [] }
+  }
 
   const formatDate = (raw) => {
     if (!raw) return 'Dzisiaj'
@@ -15658,11 +15685,33 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .filter(card => getBetAiCardLocalDateV1078(card) === today)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
-      setSavedAiCards(mapped)
-      if (mapped.length && !selectedId) setSelectedId(mapped[0].id)
-      return mapped
+      if (mapped.length) {
+        saveBetAiVisibleCacheV1484(mode, mapped)
+        setSavedAiCards(mapped)
+        if (!selectedId) setSelectedId(mapped[0].id)
+        return mapped
+      }
+
+      // V1484: jeśli Supabase jeszcze nie zwrócił nowo zapisanych typów albo użytkownik
+      // przełączył Dziś/Jutro, nie gubimy listy. Odtwarzamy ostatnie widoczne typy
+      // dla konkretnego dnia z lekkiego cache w przeglądarce.
+      const cached = loadBetAiVisibleCacheV1484(mode)
+      if (cached.length) {
+        setSavedAiCards(cached)
+        if (!selectedId) setSelectedId(cached[0].id)
+        return cached
+      }
+
+      setSavedAiCards([])
+      return []
     } catch (err) {
       console.warn('AI saved tips load skipped:', err?.message || err)
+      const cached = loadBetAiVisibleCacheV1484(mode)
+      if (cached.length) {
+        setSavedAiCards(cached)
+        if (!selectedId) setSelectedId(cached[0].id)
+        return cached
+      }
       return []
     }
   }
@@ -15857,6 +15906,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
       setLiveCards(cardsToPersist)
       setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
+      saveBetAiVisibleCacheV1484(mode, cardsToPersist)
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
       setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
@@ -15867,13 +15917,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         markBetAiDailyScanDoneV1086(mode, savedCount)
         const savedAfter = await loadSavedAiTipsFromDb(mode)
         if (savedAfter.length) {
+          saveBetAiVisibleCacheV1484(mode, savedAfter)
           setLiveCards([])
           setSelectedId(savedAfter[0]?.id || '')
-          setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+          setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz przełączanie Dziś/Jutro nie skasuje listy.`)
         } else {
           setLiveCards(cardsToPersist)
           setSelectedId(cardsToPersist[0]?.id || '')
-          setStatusText(`Zapis Supabase zgłosił sukces, ale reload jeszcze nie zwrócił danych. Zostawiam ${cardsToPersist.length} typów na ekranie.`)
+          saveBetAiVisibleCacheV1484(mode, cardsToPersist)
+          setStatusText(`Zapis Supabase zgłosił sukces, ale reload jeszcze nie zwrócił danych. Zostawiam ${cardsToPersist.length} typów na ekranie i w cache dnia.`)
         }
       } else {
         setLiveCards(cardsToPersist)
@@ -15910,7 +15962,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setSelectedId(saved[0]?.id || '')
         setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
       } else {
-        setLiveCards([])
+        // V1484: przełączenie Dziś/Jutro nie może zerować typów znalezionych chwilę wcześniej.
+        // Zostawiamy liveCards w pamięci; filtr dnia i tak pokaże tylko właściwą zakładkę.
         setSelectedId('')
         setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
       }
