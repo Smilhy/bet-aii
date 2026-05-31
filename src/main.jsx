@@ -15305,6 +15305,37 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
     const payload = cardsToSave.map(buildPayload)
 
+    const parseMissingColumnNameV1482 = message => {
+      const text = String(message || '')
+      return text.match(/Could not find the '([^']+)' column/i)?.[1]
+        || text.match(/column "([^"]+)" of relation "tips" does not exist/i)?.[1]
+        || text.match(/column ([a-zA-Z0-9_]+) does not exist/i)?.[1]
+        || ''
+    }
+
+    const sanitizeTipsPayloadV1482 = input => Object.fromEntries(
+      Object.entries(input || {}).filter(([, value]) => value !== undefined)
+    )
+
+    const writeTipsRowWithColumnFallbackV1482 = async (mode, row, existingId = null, settled = false) => {
+      let safeRow = sanitizeTipsPayloadV1482(
+        settled ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k))) : row
+      )
+      const removed = new Set()
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const result = mode === 'update'
+          ? await supabase.from('tips').update(safeRow).eq('id', existingId)
+          : await supabase.from('tips').insert(safeRow)
+        if (!result.error) return true
+        const missing = parseMissingColumnNameV1482(result.error?.message || result.error?.details || '')
+        if (!missing || removed.has(missing) || !(missing in safeRow)) throw result.error
+        removed.add(missing)
+        const { [missing]: _removed, ...nextRow } = safeRow
+        safeRow = nextRow
+      }
+      return false
+    }
+
     const saveTipsOneByOne = async () => {
       let saved = 0
       for (const row of payload) {
@@ -15313,7 +15344,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         const selection = String(row.selection || '')
         try {
           const { data: existing, error: findErr } = await supabase
-            .from('tips').select('*')
+            .from('tips').select('id,status,result')
             .eq('ai_external_key', key)
             .eq('market', market)
             .eq('selection', selection)
@@ -15321,18 +15352,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           if (findErr) throw findErr
           const existingId = existing?.[0]?.id
           if (existingId) {
-            // Nie cofamy już rozliczonych meczów na pending. Aktualizujemy tylko stałe dane i wynik live.
             const alreadySettled = ['won','lost','void','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
-            const updatePayload = alreadySettled
-              ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k)))
-              : row
-            const { error: upErr } = await supabase.from('tips').update(updatePayload).eq('id', existingId)
-            if (upErr) throw upErr
+            const ok = await writeTipsRowWithColumnFallbackV1482('update', row, existingId, alreadySettled)
+            if (ok) saved += 1
           } else {
-            const { error: insErr } = await supabase.from('tips').insert(row)
-            if (insErr) throw insErr
+            const ok = await writeTipsRowWithColumnFallbackV1482('insert', row)
+            if (ok) saved += 1
           }
-          saved += 1
         } catch (err) {
           console.warn('AI journal row save skipped:', row.match_name, err?.message || err)
         }
@@ -15380,11 +15406,16 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
     // WERSJA 1480 SAFE: nie używamy upsert/on_conflict, bo brak constraintu potrafił dawać 400
     // i zapętlać zapis. Zapis idzie bezpiecznie: najpierw SELECT, potem UPDATE albo INSERT.
-    await saveTipsOneByOne()
+    const savedCount = await saveTipsOneByOne()
 
-    await saveLeagueCatalog()
-    setStatusText(`Zapisano ${payload.length} typów AI w bazie. Mecze Result, Ligi i Statystyki będą korzystać z tych danych na stałe.`)
-    if (typeof onRefresh === 'function') await onRefresh()
+    if (savedCount > 0) {
+      await saveLeagueCatalog()
+      setStatusText(`Zapisano ${savedCount}/${payload.length} typów AI w bazie. Mecze Result, Ligi i Statystyki będą korzystać z tych danych na stałe.`)
+      if (typeof onRefresh === 'function') await onRefresh()
+    } else {
+      setStatusText(`Znalazłem ${payload.length} typów premium, ale Supabase nie przyjął zapisu. Zostawiam je na ekranie i nie włączam cooldownu.`)
+    }
+    return savedCount
   }
 
 
@@ -15666,13 +15697,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
     if (!force && lastScanTs && Date.now() - lastScanTs < DAILY_AI_SCAN_COOLDOWN_MS_V1480) {
       const seconds = Math.ceil((DAILY_AI_SCAN_COOLDOWN_MS_V1480 - (Date.now() - lastScanTs)) / 1000)
-      setStatusText(`Ochrona Supabase: kolejny skan AI będzie dostępny za ${seconds}s. Wczytuję zapisane typy z bazy.`)
-      await loadSavedAiTipsFromDb(mode)
-      return
+      setStatusText(`Ochrona Supabase: sprawdzam zapisane typy. Jeśli ich nie ma, pozwolę ponowić skan.`)
+      const savedDuringCooldown = await loadSavedAiTipsFromDb(mode)
+      if (savedDuringCooldown.length) {
+        setStatusText(`Wczytano ${savedDuringCooldown.length} zapisanych typów AI. Kolejny skan będzie dostępny za ${seconds}s.`)
+        return
+      }
+      // Jeżeli poprzedni skan znalazł typy, ale zapis do bazy się nie udał, nie blokujemy użytkownika cooldownem.
+      localStorage.removeItem(cooldownKey)
     }
 
     aiFetchInFlightRef.current = true
     setLoadingAi(true)
+    let shouldSetScanCooldownV1482 = false
     setStatusText(`Sprawdzam zapisane typy AI na ${dayLabel}...`)
     try {
       const savedBefore = await loadSavedAiTipsFromDb(mode)
@@ -15811,6 +15848,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const cardsToPersist = topCards.slice(0, DAILY_AI_PICK_LIMIT_V1086)
 
       if (!cardsToPersist.length) {
+        shouldSetScanCooldownV1482 = true
         setLiveCards([])
         setSelectedId('')
         setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 70%+. Nie zapisuję słabych typów.`)
@@ -15822,14 +15860,26 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
       setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
-      await saveCardsToJournal(cardsToPersist)
-      await loadSavedAiJournalFromDbV1094()
-      markBetAiDailyScanDoneV1086(mode, cardsToPersist.length)
-      const savedAfter = await loadSavedAiTipsFromDb(mode)
-      if (savedAfter.length) {
-        setLiveCards([])
-        setSelectedId(savedAfter[0]?.id || '')
-        setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+      const savedCount = await saveCardsToJournal(cardsToPersist)
+      if (savedCount > 0) {
+        shouldSetScanCooldownV1482 = true
+        await loadSavedAiJournalFromDbV1094()
+        markBetAiDailyScanDoneV1086(mode, savedCount)
+        const savedAfter = await loadSavedAiTipsFromDb(mode)
+        if (savedAfter.length) {
+          setLiveCards([])
+          setSelectedId(savedAfter[0]?.id || '')
+          setStatusText(`Zapisano i wczytano ${savedAfter.length} stałych typów AI na ${dayLabel}. Od teraz odświeżenie strony nie uruchomi nowego skanu dla tego dnia.`)
+        } else {
+          setLiveCards(cardsToPersist)
+          setSelectedId(cardsToPersist[0]?.id || '')
+          setStatusText(`Zapis Supabase zgłosił sukces, ale reload jeszcze nie zwrócił danych. Zostawiam ${cardsToPersist.length} typów na ekranie.`)
+        }
+      } else {
+        setLiveCards(cardsToPersist)
+        setSelectedId(cardsToPersist[0]?.id || '')
+        localStorage.removeItem(cooldownKey)
+        setStatusText(`Znalazłem ${cardsToPersist.length} typów premium, ale zapis do Supabase się nie udał. Nie czyszczę listy — sprawdź Network/Response dla requestu tips.`)
       }
     } catch (err) {
       const saved = await loadSavedAiTipsFromDb(mode)
@@ -15843,7 +15893,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Błąd API Typów AI: ${err?.message || err}. Brak zapisanych typów dla wybranego dnia.`)
       }
     } finally {
-      localStorage.setItem(cooldownKey, String(Date.now()))
+      if (shouldSetScanCooldownV1482) localStorage.setItem(cooldownKey, String(Date.now()))
       aiFetchInFlightRef.current = false
       setLoadingAi(false)
     }
@@ -17166,19 +17216,71 @@ function AuthView({ onAuth }) {
     return String(parsed)
   }
 
-  // WERSJA 1477: ekran logowania nie może odpalać ciężkich zapytań do Supabase.
-  // Wcześniej live stats robiły serię requestów do profiles/tips/presence i przy 503
-  // blokowały odczucie działania strony jeszcze przed logowaniem.
+  // WERSJA 1481: przywrócone lekkie liczniki na ekranie logowania.
+  // Bez ciężkich statystyk, bez realtime, bez pętli i bez skanowania AI.
+  // Każdy licznik ma krótki timeout, więc awaria Supabase nie blokuje logowania.
   useEffect(() => {
-    setLiveStats(prev => ({
-      ...prev,
-      registeredUsers: prev.registeredUsers || 0,
-      aiAccuracy: prev.aiAccuracy || 76,
-      activeNow: prev.activeNow || 1,
-      tipsToday: prev.tipsToday || 0,
-      loading: false,
-      updatedAt: new Date().toISOString()
-    }))
+    let cancelled = false
+
+    const safeCount = async (queryPromise, fallback = 0, timeoutMs = 3500) => {
+      try {
+        const timeout = new Promise(resolve => {
+          window.setTimeout(() => resolve({ count: fallback, error: { message: 'timeout' } }), timeoutMs)
+        })
+        const result = await Promise.race([queryPromise, timeout])
+        if (result?.error) return fallback
+        return Number.isFinite(Number(result?.count)) ? Number(result.count) : fallback
+      } catch (_) {
+        return fallback
+      }
+    }
+
+    async function loadLightAuthStats() {
+      if (!isSupabaseConfigured || !supabase) {
+        if (!cancelled) {
+          setLiveStats(prev => ({
+            ...prev,
+            aiAccuracy: prev.aiAccuracy || 76,
+            activeNow: prev.activeNow || 1,
+            loading: false,
+            updatedAt: new Date().toISOString()
+          }))
+        }
+        return
+      }
+
+      const startOfToday = new Date()
+      startOfToday.setHours(0, 0, 0, 0)
+      const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+
+      const [registeredUsers, activeNow, tipsToday] = await Promise.all([
+        safeCount(supabase.from('profiles').select('id', { count: 'exact', head: true }), 0, 3500),
+        safeCount(supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('updated_at', activeSince), 1, 2500),
+        safeCount(
+          supabase
+            .from('tips')
+            .select('id', { count: 'exact', head: true })
+            .gte('created_at', startOfToday.toISOString()),
+          0,
+          3000
+        ),
+      ])
+
+      if (!cancelled) {
+        setLiveStats(prev => ({
+          ...prev,
+          registeredUsers,
+          aiAccuracy: prev.aiAccuracy || 76,
+          activeNow,
+          tipsToday,
+          loading: false,
+          updatedAt: new Date().toISOString()
+        }))
+      }
+    }
+
+    loadLightAuthStats()
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
