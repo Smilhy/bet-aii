@@ -68314,3 +68314,103 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .ai-profile-chart-head-v1459{grid-template-columns:1fr!important;}
   .ai-center-page-v747 .ai-profile-chart-wrap-v1459{height:300px!important;}
 }
+
+/* WERSJA 1471 — przywrócony pierwszy styl wykresu + delikatna interakcja */
+.ai-center-page-v747 .ai-profile-balance-card-v1459{
+  border-radius:24px!important;
+  border:1px solid rgba(55,221,226,.16)!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(28,222,209,.10),transparent 24%),
+    linear-gradient(180deg,rgba(4,22,36,.94),rgba(2,14,25,.98))!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459{
+  height:260px!important;
+  margin:0 16px 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(81,215,230,.12)!important;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(26,216,204,.09), transparent 30%),
+    linear-gradient(180deg, rgba(5,22,35,.70), rgba(4,17,30,.36)),
+    linear-gradient(rgba(105,201,235,.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105,201,235,.065) 1px, transparent 1px)!important;
+  background-size:100% 100%,100% 100%,100% 25%,12.5% 100%!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.015),0 0 24px rgba(20,220,225,.04)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-glow-v1469{display:none!important;}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg{cursor:crosshair!important;}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .area{
+  opacity:.18!important;
+  fill:url(#aiChartAreaGlow)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .line-shadow{
+  stroke:url(#aiChartLineGlow)!important;
+  stroke-width:2.6!important;
+  opacity:.16!important;
+  filter:blur(1px)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .line-main{
+  stroke:url(#aiChartLineGlow)!important;
+  stroke-width:1.75!important;
+  filter:drop-shadow(0 0 6px rgba(53,241,208,.24))!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459:hover svg .line-main{
+  stroke-width:1.95!important;
+  filter:drop-shadow(0 0 9px rgba(53,241,208,.32))!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .hover-col{
+  stroke:rgba(117,234,255,.22)!important;
+  stroke-width:5!important;
+  opacity:0!important;
+  pointer-events:stroke!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .hover-col:hover{
+  opacity:.22!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .dot{
+  opacity:0!important;
+  fill:#07131f!important;
+  stroke:#6af7ff!important;
+  stroke-width:1!important;
+  filter:drop-shadow(0 0 6px rgba(80,242,255,.30))!important;
+  transition:opacity .15s ease, r .15s ease!important;
+  cursor:pointer!important;
+}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459:hover svg .dot{opacity:.10!important;}
+.ai-center-page-v747 .ai-profile-chart-wrap-v1459 svg .dot.active{
+  opacity:1!important;
+  fill:#9dfdff!important;
+  stroke:#ffffff!important;
+  stroke-width:1.15!important;
+  filter:drop-shadow(0 0 11px rgba(80,242,255,.44))!important;
+}
+.ai-center-page-v747 .ai-profile-chart-tooltip-v1469{
+  top:16px!important;
+  min-width:172px!important;
+  max-width:240px!important;
+  padding:10px 12px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(89,241,233,.22)!important;
+  background:linear-gradient(180deg,rgba(3,17,29,.96),rgba(5,20,33,.94))!important;
+  box-shadow:0 16px 36px rgba(0,0,0,.24),0 0 20px rgba(53,241,208,.09)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-legend-v1469{
+  left:28px!important;
+  bottom:26px!important;
+  background:rgba(3,14,25,.32)!important;
+  border:1px solid rgba(91,226,235,.08)!important;
+  border-radius:999px!important;
+  padding:6px 10px!important;
+  backdrop-filter:blur(6px)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-hint-v1469{
+  display:inline-flex!important;
+  margin-left:auto!important;
+  color:#79efe6!important;
+  font-size:10px!important;
+  letter-spacing:.14em!important;
+  text-transform:uppercase!important;
+  opacity:.65!important;
+}

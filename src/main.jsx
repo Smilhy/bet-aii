@@ -14254,7 +14254,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const areaPath = chartPoints.length
     ? `${path} L ${chartPoints[chartPoints.length - 1].x} 100 L ${chartPoints[0].x} 100 Z`
     : ''
-  const activePoint = chartPoints[Math.min(hoverIndex ?? chartPoints.length - 1, Math.max(chartPoints.length - 1, 0))] || null
+  const activePoint = hoverIndex !== null ? (chartPoints[Math.min(hoverIndex, Math.max(chartPoints.length - 1, 0))] || null) : null
   let peak = 0, maxDrawdown = 0
   chartSeries.forEach(value => {
     peak = Math.max(peak, value)
@@ -14480,7 +14480,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
             {chartPoints.map((pt, i) => (
               <g key={`pt-${i}`}>
                 <line className="hover-col" x1={pt.x} y1="0" x2={pt.x} y2="100" onMouseEnter={() => setHoverIndex(i)} />
-                <circle className={`dot ${i === (hoverIndex ?? chartPoints.length - 1) ? 'active' : ''}`} cx={pt.x} cy={pt.y} r={i === (hoverIndex ?? chartPoints.length - 1) ? 1.8 : 1.2} onMouseEnter={() => setHoverIndex(i)} />
+                <circle className={`dot ${i === hoverIndex ? 'active' : ''}`} cx={pt.x} cy={pt.y} r={i === (hoverIndex ?? chartPoints.length - 1) ? 1.8 : 1.2} onMouseEnter={() => setHoverIndex(i)} />
               </g>
             ))}
           </svg>
