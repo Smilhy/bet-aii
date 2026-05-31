@@ -2,9 +2,9 @@
   "name": "betai-wersja-762-football-market-board-real-odds",
   "version": "762.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",
