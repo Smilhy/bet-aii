@@ -69814,3 +69814,179 @@ html.betai-fhd-monitor80-v1323 body #root{
 .tvlive-page-v8 .flashscore-status-tabs-v1523 button:last-child.active{
   color:#03151d!important;
 }
+
+
+/* WERSJA 1531 — Nagrody/Bonusy -> Misje i nagrody, bez dropów */
+.rewards-missions-v1531{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+}
+.rewards-missions-hero-v1531{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:220px!important;
+  padding:26px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(420px,680px)!important;
+  align-items:center!important;
+  gap:22px!important;
+  background:
+    radial-gradient(circle at 82% 28%, rgba(38,238,241,.16), transparent 28%),
+    radial-gradient(circle at 12% 22%, rgba(38,238,241,.08), transparent 28%),
+    linear-gradient(135deg, rgba(4,18,31,.98), rgba(5,29,45,.96) 54%, rgba(4,14,24,.99))!important;
+}
+.rewards-missions-hero-v1531::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, rgba(31,224,255,.055) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(31,224,255,.04) 1px, transparent 1px)!important;
+  background-size:42px 42px!important;
+  opacity:.58!important;
+  animation:sportHeroGridShift 16s linear infinite!important;
+}
+.rewards-missions-hero-v1531 > *{position:relative!important;z-index:1!important;}
+.rewards-missions-hero-v1531 .rewards-ultra-hero-copy span{
+  display:block!important;
+  color:#28f1ea!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.16em!important;
+  margin-bottom:14px!important;
+}
+.rewards-missions-hero-v1531 h1{
+  margin:0!important;
+  color:#f4fbff!important;
+  font-size:44px!important;
+  line-height:1.02!important;
+  letter-spacing:-.04em!important;
+  font-weight:1000!important;
+  text-shadow:0 10px 32px rgba(0,0,0,.28)!important;
+}
+.rewards-missions-hero-v1531 p{
+  max-width:780px!important;
+  margin:14px 0 0!important;
+  color:#a8bdc8!important;
+  font-size:15px!important;
+  line-height:1.55!important;
+  font-weight:800!important;
+}
+.rewards-missions-hero-stats-v1531{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.rewards-missions-layout-v1531{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 330px!important;
+  gap:18px!important;
+}
+.rewards-missions-main-v1531{
+  display:grid!important;
+  grid-template-columns:1.1fr .9fr!important;
+  gap:18px!important;
+}
+.rewards-missions-main-v1531 .rewards-missions-rewards-soon-v1531,
+.rewards-missions-main-v1531 .rewards-ultra-achievements{
+  grid-column:1 / -1!important;
+}
+.rewards-missions-card-v1531{
+  min-height:0!important;
+}
+.rewards-mission-row-v1531{
+  grid-template-columns:44px minmax(0,1fr) 54px 72px!important;
+  align-items:center!important;
+}
+.rewards-mission-row-v1531 .rewards-ultra-mission-copy small{
+  display:block!important;
+  margin:3px 0 8px!important;
+  color:#8da9b7!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.rewards-streak-main-v1531{
+  align-items:center!important;
+}
+.rewards-missions-rewards-soon-v1531{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:20px!important;
+  padding:22px!important;
+  background:
+    radial-gradient(circle at 88% 30%, rgba(36,238,234,.14), transparent 30%),
+    linear-gradient(180deg, rgba(5,25,36,.94), rgba(3,16,25,.98))!important;
+}
+.rewards-missions-rewards-soon-v1531 span,
+.rewards-missions-info-v1531 span{
+  display:block!important;
+  color:#22efea!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.14em!important;
+  margin-bottom:8px!important;
+}
+.rewards-missions-rewards-soon-v1531 h3{
+  margin:0 0 8px!important;
+  color:#f2fbff!important;
+  font-size:22px!important;
+  font-weight:1000!important;
+}
+.rewards-missions-rewards-soon-v1531 p,
+.rewards-missions-info-v1531 p{
+  margin:0!important;
+  color:#9fb6c2!important;
+  font-size:14px!important;
+  line-height:1.55!important;
+  font-weight:800!important;
+}
+.rewards-soon-badges-v1531{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  min-width:280px!important;
+}
+.rewards-soon-badges-v1531 em{
+  font-style:normal!important;
+  padding:10px 12px!important;
+  border-radius:999px!important;
+  color:#dffcff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  background:rgba(34,238,234,.08)!important;
+  border:1px solid rgba(34,238,234,.16)!important;
+}
+.rewards-missions-side-v1531{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+}
+.rewards-missions-info-v1531{
+  padding:20px!important;
+}
+.rewards-missions-info-v1531 b{color:#25f1e9!important;}
+.rewards-missions-v1531 .rewards-ultra-ranking-row b{
+  color:#22efea!important;
+}
+@media(max-width:1400px){
+  .rewards-missions-layout-v1531{grid-template-columns:1fr!important;}
+  .rewards-missions-side-v1531{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+}
+@media(max-width:1000px){
+  .rewards-missions-hero-v1531{grid-template-columns:1fr!important;}
+  .rewards-missions-hero-stats-v1531{grid-template-columns:1fr!important;}
+  .rewards-missions-main-v1531{grid-template-columns:1fr!important;}
+  .rewards-missions-side-v1531{grid-template-columns:1fr!important;}
+  .rewards-missions-rewards-soon-v1531{flex-direction:column!important;align-items:flex-start!important;}
+  .rewards-soon-badges-v1531{justify-content:flex-start!important;min-width:0!important;}
+}
+@media(max-width:700px){
+  .rewards-missions-hero-v1531 h1{font-size:34px!important;}
+  .rewards-mission-row-v1531{grid-template-columns:40px minmax(0,1fr)!important;}
+  .rewards-mission-row-v1531 b,
+  .rewards-mission-row-v1531 span{justify-self:start!important;}
+}
