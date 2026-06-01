@@ -12453,12 +12453,13 @@ function ArticlesView() {
                   <span>BETAI LIVESCORE</span>
                   <h3>Wyniki live</h3>
                 </div>
-                <div className="flashscore-hero-stats-v1523">
-                  <button type="button" className={scoreStatusFilter === 'live' ? 'active' : ''} onClick={() => setScoreStatusFilter('live')}><em>LIVE</em><strong>{liveScorePhaseCounts.live || 0}</strong></button>
-                  <button type="button" className={scoreStatusFilter === 'pre' ? 'active' : ''} onClick={() => setScoreStatusFilter('pre')}><em>PRE</em><strong>{liveScorePhaseCounts.pre || 0}</strong></button>
-                  <button type="button" className={scoreStatusFilter === 'ht' ? 'active' : ''} onClick={() => setScoreStatusFilter('ht')}><em>HT</em><strong>{liveScorePhaseCounts.ht || 0}</strong></button>
+                <div className="flashscore-hero-right-v1524">
+                  <div className="flashscore-hero-stats-v1523">
+                    <button type="button" className={scoreStatusFilter === 'live' ? 'active' : ''} onClick={() => setScoreStatusFilter('live')}><em>LIVE</em><strong>{liveScorePhaseCounts.live || 0}</strong></button>
+                    <button type="button" className={scoreStatusFilter === 'pre' ? 'active' : ''} onClick={() => setScoreStatusFilter('pre')}><em>PRE</em><strong>{liveScorePhaseCounts.pre || 0}</strong></button>
+                  </div>
+                  <button type="button" onClick={refreshRealLiveScores} disabled={realLiveLoading}>{realLiveLoading ? '⟳ Pobieram...' : '⟳ Odśwież'}</button>
                 </div>
-                <button type="button" onClick={refreshRealLiveScores} disabled={realLiveLoading}>{realLiveLoading ? '⟳ Pobieram...' : '⟳ Odśwież'}</button>
               </div>
 
               <div className="flashscore-toolbar-v1132">
@@ -12480,15 +12481,9 @@ function ArticlesView() {
               </div>
 
               <div className="scores-tabs-v8 flashscore-status-tabs-v1523" aria-label="Filtr statusu meczu">
-                {liveScoreStatusFilters.map(status => (
+                {liveScoreStatusFilters.filter(status => status.id !== 'ht').map(status => (
                   <button type="button" key={status.id} className={scoreStatusFilter === status.id ? 'active' : ''} onClick={() => setScoreStatusFilter(status.id)}>{status.label}</button>
                 ))}
-              </div>
-
-              <div className="flashscore-live-status-v1142">
-                <span>{realLiveUpdatedAt ? `Ostatnia aktualizacja: ${new Date(realLiveUpdatedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}` : 'Realne wyniki live'}</span>
-                {realLiveLoading ? <b>Pobieram realne mecze...</b> : null}
-                {realLiveError ? <em>{realLiveError}</em> : null}
               </div>
 
               <div className="flashscore-list-v1132">
@@ -12499,11 +12494,11 @@ function ArticlesView() {
                     </div>
                     {matches.map(match => (
                       <article className="flashscore-match-v1132" key={match.id}>
-                        <div className={`flashscore-time-v1132 score-phase-${getLiveScorePhase(match)}`}><b>{getLiveScoreStatusLabel(match)}</b><small>{match.minute}</small></div>
                         <div className="flashscore-teams-v1132">
                           <div><i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo}</i><strong>{match.home?.name}</strong><span>{match.home?.score}</span></div>
                           <div><i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo}</i><strong>{match.away?.name}</strong><span>{match.away?.score}</span></div>
                         </div>
+                        <div className={`flashscore-time-v1132 score-phase-${getLiveScorePhase(match)}`}><b>{getLiveScoreStatusLabel(match)}</b><small>{match.minute}</small></div>
                       </article>
                     ))}
                   </section>
