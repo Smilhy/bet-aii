@@ -69315,3 +69315,127 @@ html.betai-fhd-monitor80-v1323 body #root{
   .tv-live-locked-panel-v1521 h2{font-size:30px!important;}
   .tv-live-locked-panel-v1521 p{font-size:15px!important;}
 }
+
+/* WERSJA 1522 — Wyniki live: hero jak Dodaj typ + czysta lista bez stadion/sędzia/źródło */
+.tvlive-page-v8 .flashscore-board-v1132{
+  background:linear-gradient(180deg,rgba(4,20,31,.96),rgba(3,13,22,.99))!important;
+  border-color:rgba(34,238,234,.14)!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132{
+  position:relative!important;
+  isolation:isolate!important;
+  min-height:260px!important;
+  padding:28px!important;
+  margin-bottom:18px!important;
+  overflow:hidden!important;
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 78% 46%, rgba(19,226,255,.18), transparent 24%),
+    radial-gradient(circle at 92% 16%, rgba(82,112,255,.15), transparent 22%),
+    radial-gradient(circle at 18% 18%, rgba(23,226,190,.10), transparent 24%),
+    linear-gradient(135deg, rgba(5,18,39,.98), rgba(6,25,52,.96) 48%, rgba(5,14,30,.98))!important;
+  border:1px solid rgba(49,228,255,.16)!important;
+  box-shadow:0 22px 56px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  border-radius:inherit!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, rgba(31,224,255,.06) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(31,224,255,.045) 1px, transparent 1px),
+    linear-gradient(115deg, rgba(48,237,255,.14), transparent 36%),
+    linear-gradient(288deg, rgba(102,122,255,.14), transparent 34%)!important;
+  background-size:42px 42px,42px 42px,auto,auto!important;
+  mask-image:linear-gradient(90deg, transparent 0%, #000 14%, #000 100%)!important;
+  opacity:.9!important;
+  animation:sportHeroGridShift 16s linear infinite!important;
+  z-index:0!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132::after{
+  content:'⚽'!important;
+  position:absolute!important;
+  right:48px!important;
+  top:34px!important;
+  width:178px!important;
+  height:178px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  font-size:112px!important;
+  line-height:1!important;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.38), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(31,219,255,.24), rgba(6,18,38,.98) 66%)!important;
+  box-shadow:0 0 0 1px rgba(51,227,255,.30),0 0 70px rgba(37,221,255,.25),inset 0 0 30px rgba(48,220,255,.16)!important;
+  filter:saturate(.86) brightness(.90)!important;
+  opacity:.78!important;
+  z-index:0!important;
+  animation:sportHeroMainBall 5.8s ease-in-out infinite!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132 > div,
+.tvlive-page-v8 .flashscore-header-v1132 > button{position:relative!important;z-index:1!important;}
+.tvlive-page-v8 .flashscore-header-v1132 span{
+  color:#60f2ff!important;
+  font-size:13px!important;
+  letter-spacing:.16em!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132 h3{
+  font-size:58px!important;
+  line-height:.98!important;
+  letter-spacing:-.045em!important;
+  margin:10px 0 14px!important;
+  text-shadow:0 10px 36px rgba(0,0,0,.36), 0 0 28px rgba(37,225,255,.10)!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132 p{
+  max-width:620px!important;
+  font-size:16px!important;
+  line-height:1.55!important;
+  color:#b1c5d0!important;
+}
+.tvlive-page-v8 .flashscore-header-v1132 button{
+  align-self:flex-end!important;
+  margin-bottom:6px!important;
+}
+.tvlive-page-v8 .flashscore-toolbar-v1132{
+  padding:14px!important;
+  border-radius:20px!important;
+  background:rgba(4,16,25,.72)!important;
+  border:1px solid rgba(34,238,234,.11)!important;
+}
+.tvlive-page-v8 .flashscore-match-v1132{
+  grid-template-columns:38px 80px minmax(0,1fr)!important;
+  gap:18px!important;
+  align-items:center!important;
+  padding:18px 16px!important;
+  background:linear-gradient(90deg,rgba(5,22,34,.46),rgba(2,12,20,.18))!important;
+}
+.tvlive-page-v8 .flashscore-match-v1132:hover{
+  background:linear-gradient(90deg,rgba(13,58,64,.34),rgba(4,20,30,.24))!important;
+}
+.tvlive-page-v8 .flashscore-teams-v1132{
+  max-width:760px!important;
+}
+.tvlive-page-v8 .flashscore-teams-v1132 div{
+  grid-template-columns:42px minmax(0,1fr) 56px!important;
+}
+.tvlive-page-v8 .flashscore-teams-v1132 span{
+  font-size:28px!important;
+  color:#f5feff!important;
+}
+.tvlive-page-v8 .flashscore-events-v1132,
+.tvlive-page-v8 .flashscore-stats-v1132,
+.tvlive-page-v8 .flashscore-odds-v1132{display:none!important;}
+@media(max-width:1100px){
+  .tvlive-page-v8 .flashscore-header-v1132{min-height:220px!important;}
+  .tvlive-page-v8 .flashscore-header-v1132 h3{font-size:44px!important;}
+  .tvlive-page-v8 .flashscore-header-v1132::after{width:128px!important;height:128px!important;font-size:82px!important;right:22px!important;top:50px!important;}
+}
+@media(max-width:760px){
+  .tvlive-page-v8 .flashscore-header-v1132::after{display:none!important;}
+  .tvlive-page-v8 .flashscore-header-v1132 h3{font-size:36px!important;}
+  .tvlive-page-v8 .flashscore-match-v1132{grid-template-columns:32px 62px minmax(0,1fr)!important;gap:10px!important;}
+  .tvlive-page-v8 .flashscore-teams-v1132 span{font-size:22px!important;min-width:36px!important;}
+}

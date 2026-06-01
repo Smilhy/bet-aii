@@ -12465,18 +12465,6 @@ function ArticlesView() {
                           <div><i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo}</i><strong>{match.home?.name}</strong><span>{match.home?.score}</span></div>
                           <div><i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo}</i><strong>{match.away?.name}</strong><span>{match.away?.score}</span></div>
                         </div>
-                        <div className="flashscore-events-v1132">
-                          <small>{(match.home?.scorers || []).join(' • ') || '—'}</small>
-                          <small>{(match.away?.scorers || []).join(' • ') || '—'}</small>
-                        </div>
-                        <div className="flashscore-stats-v1132">
-                          <span>Źródło <b>{match.source === 'api-football' ? 'API-Football' : 'Live API'}</b></span>
-                          <span>Stadion <b>{match.stats?.shots || '—'}</b></span>
-                          <span>Sędzia <b>{match.stats?.corners || '—'}</b></span>
-                        </div>
-                        <div className="flashscore-odds-v1132">
-                          <i>{match.odds?.[0] || '-'}</i><i>{match.odds?.[1] || '-'}</i><i>{match.odds?.[2] || '-'}</i><em>{match.trend}</em>
-                        </div>
                       </article>
                     ))}
                   </section>
