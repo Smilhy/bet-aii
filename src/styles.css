@@ -69712,3 +69712,70 @@ html.betai-fhd-monitor80-v1323 body #root{
 @media(max-width:900px){
   .tvlive-page-v8 .flashscore-hero-stats-v1523{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;}
 }
+
+/* WERSJA 1529 — Wyniki live: poprawione kafelki filtrów statusu i odstępy */
+.tvlive-page-v8 .flashscore-toolbar-v1132{
+  align-items:center!important;
+  gap:16px!important;
+}
+.tvlive-page-v8 .flashscore-days-v1132{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+.tvlive-page-v8 .flashscore-days-v1132 button,
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button,
+.tvlive-page-v8 .flashscore-sports-v1132 button{
+  height:40px!important;
+  min-height:40px!important;
+  padding:0 18px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(92,218,239,.16)!important;
+  background:linear-gradient(180deg,rgba(8,28,42,.78),rgba(4,18,29,.72))!important;
+  color:#b9cbd4!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  letter-spacing:0!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.tvlive-page-v8 .flashscore-days-v1132 button.active,
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button.active,
+.tvlive-page-v8 .flashscore-sports-v1132 button.active{
+  color:#03151d!important;
+  background:linear-gradient(135deg,#28f2e8,#26bfff)!important;
+  border-color:rgba(42,242,232,.75)!important;
+  box-shadow:0 10px 28px rgba(38,220,235,.18), inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin:4px 0 16px!important;
+  padding:0!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button{
+  min-width:88px!important;
+  justify-content:center!important;
+  text-transform:uppercase!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:first-child{
+  min-width:106px!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:hover,
+.tvlive-page-v8 .flashscore-days-v1132 button:hover,
+.tvlive-page-v8 .flashscore-sports-v1132 button:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(42,242,232,.36)!important;
+  color:#f3feff!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button.active:hover,
+.tvlive-page-v8 .flashscore-days-v1132 button.active:hover,
+.tvlive-page-v8 .flashscore-sports-v1132 button.active:hover{
+  color:#03151d!important;
+}
+@media(max-width:720px){
+  .tvlive-page-v8 .flashscore-status-tabs-v1523{gap:8px!important;}
+  .tvlive-page-v8 .flashscore-status-tabs-v1523 button{min-width:72px!important;padding:0 12px!important;}
+  .tvlive-page-v8 .flashscore-status-tabs-v1523 button:first-child{min-width:92px!important;}
+}
