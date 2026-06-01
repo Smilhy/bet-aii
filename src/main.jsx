@@ -13962,7 +13962,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [betTypeFilter, setBetTypeFilter] = useState('All Types')
   const [timeFilter, setTimeFilter] = useState('all')
   const [chartMode, setChartMode] = useState('cumulative')
-  const [chartRange, setChartRange] = useState('90d')
+  const [chartRange, setChartRange] = useState('all')
   const [hoverIndex, setHoverIndex] = useState(null)
   const [savedLeagues, setSavedLeagues] = useState([])
   const [tableVisibleCounts, setTableVisibleCounts] = useState({
@@ -14412,7 +14412,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <label><span>Sport</span><select value={sportFilter} onChange={e=>{setSportFilter(e.target.value);setDivisionFilter('All Divisions');setBetTypeFilter('All Types')}}>{sportOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>Liga</span><select value={divisionFilter} onChange={e=>setDivisionFilter(e.target.value)}>{divisionOptions.map(o=><option key={o}>{o}</option>)}</select></label>
         <label><span>Rodzaj typu</span><select value={betTypeFilter} onChange={e=>setBetTypeFilter(e.target.value)}>{betTypeOptions.map(o=><option key={o}>{o}</option>)}</select></label>
-        <div className="ai-profile-periods-v1459">{[['all','Wszystko'],['year','1R'],['month','30D'],['week','7D']].map(([k,l])=><button key={k} className={timeFilter===k?'active':''} onClick={()=>setTimeFilter(k)}>{l}</button>)}</div>
+        <div className="ai-profile-periods-v1459"><button className="active" type="button" onClick={()=>setTimeFilter('all')}>Wszystko</button></div>
       </div>
 
       <div className="ai-profile-balance-card-v1459">
@@ -14424,15 +14424,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           </select>
         </div>
         <div className="ai-profile-mini-tabs-v1459">
-          {[
-            ['7d', '7D'],
-            ['30d', '30D'],
-            ['90d', '90D'],
-            ['year', '1R'],
-            ['all', 'Wszystko'],
-          ].map(([key, label]) => (
-            <button key={key} className={chartRange === key ? 'active' : ''} onClick={() => setChartRange(key)}>{label}</button>
-          ))}
+          <button type="button" className="active" onClick={() => setChartRange('all')}>Wszystko</button>
           <small className="ai-profile-chart-hint-v1469">Najedź lub kliknij wykres</small>
         </div>
         <div className="ai-profile-chart-wrap-v1459">
