@@ -12132,41 +12132,65 @@ function ArticlesView() {
 
   const cleanArticleText = (value = '') => {
     let text = String(value || '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&amp;/gi, '&')
       .replace(/\s+/g, ' ')
-      .replace(/[.]{2,}$/g, '.')
-      .replace(/…$/g, '.')
+      .replace(/…/g, '...')
       .trim()
 
-    // Sport.pl feed czasem ucina zajawkę w połowie zdania, np. „..., a w”.
-    text = text.replace(/\s+(a|i|oraz|w|we|na|do|z|ze|po|przed|dla)$/i, '')
+    // Feed czasem ucina zajawkę w połowie zdania: „..., a”, „..., a w”, „..., do”.
+    text = text
+      .replace(/,\s*(a|i|oraz|w|we|na|do|z|ze|po|przed|dla)\.?$/i, '')
+      .replace(/\s+(a|i|oraz|w|we|na|do|z|ze|po|przed|dla)\.?$/i, '')
+      .replace(/[,;:]\s*$/g, '')
+      .replace(/\.{2,}$/g, '.')
+      .trim()
+
+    const lastComma = text.lastIndexOf(',')
+    if (lastComma > 80 && text.length - lastComma < 34 && !/[.!?]$/.test(text)) {
+      text = text.slice(0, lastComma).trim()
+    }
+
     if (text && !/[.!?]$/.test(text)) text += '.'
+    text = text.replace(/,\s*\.$/, '.').replace(/\s+\.$/, '.')
     return text
   }
 
   const getArticlePreviewText = (article = {}) => {
-    const text = cleanArticleText(article.excerpt || article.body || '')
+    const text = cleanArticleText(article.excerpt || article.summary || article.body || '')
     if (text) return text
-    return 'BetAI przygotował krótki widok wiadomości na podstawie danych dostępnych w feedzie sportowym.'
+    return 'Krótka zapowiedź wiadomości sportowej przygotowana na podstawie danych dostępnych w feedzie.'
   }
+
+  const normalizeArticleCompare = (value = '') => cleanArticleText(value).toLowerCase().replace(/[^a-ząćęłńóśźż0-9]+/gi, ' ').trim()
 
   const buildBetaiArticleBody = (article = {}) => {
     const title = cleanArticleText(article.title || 'Artykuł sportowy')
     const category = String(article.tag || article.category || 'Sport').trim()
     const lead = getArticlePreviewText(article)
+    const rawBody = cleanArticleText(article.body || article.content || '')
+    const normalizedLead = normalizeArticleCompare(lead)
+    const normalizedBody = normalizeArticleCompare(rawBody)
     const lowerCategory = category.toLowerCase()
-    const sportContext = lowerCategory.includes('tenis')
-      ? 'W tenisie takie informacje są ważne przede wszystkim dla oceny formy zawodniczki, rytmu turniejowego i nastawienia przed kolejnymi meczami.'
-      : lowerCategory.includes('kosz')
-        ? 'W koszykówce ten news ma znaczenie dla układu sił, dyspozycji zespołów i możliwych scenariuszy kolejnych spotkań.'
-        : lowerCategory.includes('pił') || lowerCategory.includes('noż')
-          ? 'W piłce nożnej taka wiadomość pomaga lepiej ocenić formę drużyn, decyzje kadrowe i atmosferę przed następnymi meczami.'
-          : 'To informacja, którą warto śledzić w kontekście formy, kalendarza i nastrojów wokół najbliższych wydarzeń sportowych.'
 
-    return [
-      `Najważniejsze: ${lead}`,
-      `Kontekst BetAI: ${sportContext}`,
-      `Co to oznacza dla użytkownika: temat „${title.replace(/[.!?]$/,'')}” może być przydatny przy szybkim sprawdzeniu sytuacji przed typowaniem, obserwacją zawodnika albo oceną aktualnej dyspozycji drużyny.`
-    ].filter(Boolean)
+    const paragraphs = []
+    if (rawBody && normalizedBody && normalizedBody !== normalizedLead && !normalizedBody.includes(normalizedLead.slice(0, 80))) {
+      paragraphs.push(rawBody)
+    }
+
+    const sportContext = lowerCategory.includes('tenis')
+      ? 'Dla kibica i typera najważniejsze są tutaj forma zawodniczki, rytm turniejowy oraz to, jak ta informacja może wpłynąć na kolejne spotkania.'
+      : lowerCategory.includes('kosz')
+        ? 'W koszykówce warto patrzeć na dyspozycję zespołów, układ sił i terminarz, bo takie wiadomości często pomagają szybciej ocenić kontekst następnych meczów.'
+        : lowerCategory.includes('pił') || lowerCategory.includes('noż')
+          ? 'W piłce nożnej znaczenie mają przede wszystkim forma drużyn, decyzje kadrowe i atmosfera przed kolejnymi spotkaniami.'
+          : 'Warto potraktować tę wiadomość jako szybki skrót sytuacji: forma, kalendarz i najbliższy kontekst sportowy są tu najważniejsze.'
+
+    paragraphs.push(sportContext)
+    return paragraphs.filter(Boolean).slice(0, 3)
   }
 
   const buildBetaiArticleHighlights = () => []
