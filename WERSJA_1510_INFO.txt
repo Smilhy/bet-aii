@@ -1,0 +1,16 @@
+WERSJA 1510 — POPRAWKA TOP TYPERZY
+
+Zakres zmian:
+- poprawiono faktyczną zakładkę Top typerzy, a nie Ranking,
+- stary baner hero w Top typerzy zastąpiony nowym banerem z animowaną kratką jak w Dodaj typ,
+- stare/śmieszne kafle sportów w Top typerzy zastąpione kaflami w stylu Dodaj typ,
+- kafle sportów filtrują listę typerów po sporcie,
+- zmiany ograniczone do UI zakładki Top typerzy.
+
+Nie ruszano:
+- Supabase,
+- Netlify,
+- logiki płatności,
+- innych zakładek.
+
+Build lokalny: OK.

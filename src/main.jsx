@@ -23301,15 +23301,38 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       })
   }, [profiles, topAvatarOverrides, publicTopAvatarRows])
 
+  const sportThemeMapV1510 = {
+    'Piłka nożna': 'football',
+    'Koszykówka': 'basketball',
+    'Tenis': 'tennis',
+    'Hokej': 'hockey',
+    'MMA': 'mma',
+    'E-sport': 'esports',
+    'Siatkówka': 'volleyball',
+    'Boks': 'boxing',
+    'Piłka ręczna': 'handball',
+    'Krykiet': 'cricket',
+    'Rugby': 'rugby',
+    'Rugby League': 'rugbyleague',
+    'Baseball': 'baseball',
+    'Dart': 'dart',
+  }
+
   const sportCategoryDefs = [
-    { label: 'Piłka nożna', icon: '⚽', enabled: true, soon: false },
-    { label: 'Tenis', icon: '🎾', enabled: false, soon: true },
-    { label: 'Koszykówka', icon: '🏀', enabled: false, soon: true },
-    { label: 'Hokej', icon: '🏒', enabled: false, soon: true },
-    { label: 'E-sport', icon: '🎮', enabled: false, soon: true },
-    { label: 'Siatkówka', icon: '🏐', enabled: false, soon: true },
-    { label: 'MMA', icon: '🥊', enabled: false, soon: true },
-    { label: 'Baseball', icon: '⚾', enabled: false, soon: true },
+    { label: 'Piłka nożna', icon: '⚽' },
+    { label: 'Koszykówka', icon: '🏀' },
+    { label: 'Tenis', icon: '🎾' },
+    { label: 'Hokej', icon: '🏒' },
+    { label: 'MMA', icon: '🥊' },
+    { label: 'E-sport', icon: '🎮' },
+    { label: 'Siatkówka', icon: '🏐' },
+    { label: 'Boks', icon: '🥊' },
+    { label: 'Piłka ręczna', icon: '🤾' },
+    { label: 'Krykiet', icon: '🏏' },
+    { label: 'Rugby', icon: '🏉' },
+    { label: 'Rugby League', icon: '🏉' },
+    { label: 'Baseball', icon: '⚾' },
+    { label: 'Dart', icon: '🎯' },
   ]
 
   const sortOptions = [
@@ -23320,10 +23343,16 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
   const countTopSport = (sportName) => realTipsters.filter(item => item.sport === sportName).length
 
-  const categories = sportCategoryDefs.map((item) => ({
-    ...item,
-    count: String(countTopSport(item.label)),
-  }))
+  const categories = sportCategoryDefs.map((item) => {
+    const count = countTopSport(item.label)
+    return {
+      ...item,
+      count,
+      theme: sportThemeMapV1510[item.label] || 'default',
+      enabled: true,
+      soon: count === 0,
+    }
+  })
 
   const sportFilteredTipsters = realTipsters.filter(item => item.sport === selectedTopSport)
   const filteredTipsters = sportFilteredTipsters.filter(item => {
@@ -23408,52 +23437,60 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
   }
 
   return (
-    <section className="market-static-v7">
+    <section className="market-static-v7 top-tipsters-v1510">
       <div className="market-v7-layout">
         <div className="market-v7-main">
-          <div className="glass-market-v7 market-v7-hero">
+          <div className="glass-market-v7 market-v7-hero top-tipsters-hero-v1510">
             <div className="market-hero-copy-v7">
-              <span>MARKETPLACE TYPÓW I ANALIZ</span>
-              <h1>Kupuj sprawdzone typy
-                <br />i analizy od <em>najlepszych</em></h1>
-              <p>Realne konta użytkowników Bet+AI, bez testowych/fake typerów.</p>
+              <span>TOP TYPERZY • LIVE MARKETPLACE</span>
+              <h1>Najlepsi typerzy
+                <br />w sportowej <em>kratce</em></h1>
+              <p>Nowy baner jak w Dodaj typ: czytelna animowana siatka, ranking i realne konta użytkowników Bet+AI.</p>
             </div>
-            <div className="market-hero-art-v7" aria-hidden="true">
-              <div className="art-card-v7 chart"></div>
-              <div className="art-card-v7 cart"></div>
-              <div className="hero-ball-v7"></div>
-              <div className="hero-line-v7 one"></div>
-              <div className="hero-line-v7 two"></div>
+            <div className="betfolio-add-hero-visual betfolio-sport-hero-v2 top-tipsters-hero-art-v1510" aria-hidden="true">
+              <div className="sport-hero-grid"></div>
+              <div className="sport-hero-data-line line-a"></div>
+              <div className="sport-hero-data-line line-b"></div>
+              <div className="sport-hero-data-line line-c"></div>
+              <div className="sport-hero-orbit orbit-a"></div>
+              <div className="sport-hero-orbit orbit-b"></div>
+              <div className="sport-hero-ball main-ball">🏆</div>
+              <div className="sport-hero-mini-ball mini-tennis">📈</div>
+              <div className="sport-hero-mini-ball mini-basket">👥</div>
+              <div className="sport-hero-mini-ball mini-hockey">⚡</div>
+              <div className="sport-hero-scanner-card">
+                <span>TOP TYPERZY</span>
+                <strong>{filteredTipsters.length || realTipsters.length}</strong>
+                <small>aktywnych profili w rankingu</small>
+                <em></em>
+              </div>
             </div>
           </div>
 
-          <div className="market-v7-cats">
-            {categories.map((item) => {
-              const isActive = selectedTopSport === item.label
-              const isDisabled = !item.enabled
-              return (
-                <button
-                  type="button"
-                  className={`glass-market-v7 cat-box-v7 ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
-                  key={item.label}
-                  onClick={() => {
-                    if (!isDisabled) setSelectedTopSport(item.label)
-                  }}
-                  aria-pressed={isActive}
-                  aria-disabled={isDisabled}
-                >
-                  <div className={`cat-icon-v7 ${item.icon === 'grid' ? 'grid' : ''}`} aria-hidden="true">
-                    {item.icon !== 'grid' ? <span className="cat-icon-emoji-v7">{item.icon}</span> : null}
-                  </div>
-                  {isDisabled ? <span className="cat-lock-v7">🔒</span> : null}
-                  <div className="cat-copy-v7">
-                    <strong>{item.label}</strong>
-                    <span>{item.count}</span>
-                    {item.soon ? <em>Wkrótce</em> : null}
-                  </div>
-                </button>
-              )
-            })}
+          <div className="betfolio-sport-cards-v1276 top-tipsters-sport-cards-v1510" aria-label="Popularne sporty Top typerzy">
+            <div className="sport-cards-head-v1276">
+              <span>Popularne sporty</span>
+            </div>
+            <div className="sport-cards-track-v1276 all-sports top-tipsters-sports-grid-v1510">
+              {categories.map((item) => {
+                const isActive = selectedTopSport === item.label
+                const count = Number(item.count || 0)
+                return (
+                  <button
+                    type="button"
+                    className={`sport-card-v1276 ${item.theme} ${isActive ? 'active' : ''} ${item.soon ? 'is-soon-v1510' : ''}`}
+                    key={item.label}
+                    onClick={() => setSelectedTopSport(item.label)}
+                    aria-pressed={isActive}
+                  >
+                    <div className="sport-card-top-v1276"><i>{item.icon}</i><span>{item.label}</span></div>
+                    <strong>{count ? `${count} ${count === 1 ? 'typer' : count < 5 ? 'typerów' : 'typerów'}` : 'WKRÓTCE'}</strong>
+                    <small>{count ? 'Filtruj ranking po sporcie' : 'Aktywacja w kolejnych wersjach'}</small>
+                    <b aria-hidden="true">{item.icon}</b>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="market-v7-filters">
