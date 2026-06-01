@@ -14418,10 +14418,22 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       <div className="ai-profile-balance-card-v1459">
         <div className="ai-profile-chart-head-v1459">
           <b>Wykres salda AI</b>
-          <select aria-label="Typ wykresu" value={chartMode} onChange={e => setChartMode(e.target.value)}>
-            <option value="cumulative">Bilans kumulacyjny</option>
-            <option value="profit">Profit na typ</option>
-          </select>
+          <div className="ai-profile-chart-mode-v1507" role="group" aria-label="Typ wykresu">
+            <button
+              type="button"
+              className={chartMode === 'cumulative' ? 'active' : ''}
+              onClick={() => setChartMode('cumulative')}
+            >
+              Bilans kumulacyjny
+            </button>
+            <button
+              type="button"
+              className={chartMode === 'profit' ? 'active' : ''}
+              onClick={() => setChartMode('profit')}
+            >
+              Profit na typ
+            </button>
+          </div>
         </div>
         <div className="ai-profile-mini-tabs-v1459">
           <button type="button" className="active" onClick={() => setChartRange('all')}>Wszystko</button>

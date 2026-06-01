@@ -68517,3 +68517,53 @@ html.betai-fhd-monitor80-v1323 body #root{
     max-width:calc(100% - 34px)!important;
   }
 }
+
+
+/* WERSJA 1507 — zakładka Typy AI: czytelny przełącznik wykresu zamiast natywnego dropdownu */
+.ai-center-page-v747 .ai-profile-chart-mode-v1507{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-self:start!important;
+  width:min(430px,100%)!important;
+  min-height:42px!important;
+  padding:4px!important;
+  gap:4px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(83,227,225,.24)!important;
+  background:linear-gradient(180deg,rgba(5,19,31,.96),rgba(4,16,28,.92))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.035),0 0 18px rgba(58,221,228,.08)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-mode-v1507 button{
+  flex:1 1 0!important;
+  min-width:0!important;
+  height:34px!important;
+  padding:0 14px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:transparent!important;
+  color:#bfe4ef!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  cursor:pointer!important;
+  transition:background .16s ease,color .16s ease,box-shadow .16s ease!important;
+}
+.ai-center-page-v747 .ai-profile-chart-mode-v1507 button:hover{
+  color:#f5feff!important;
+  background:rgba(57,238,225,.10)!important;
+}
+.ai-center-page-v747 .ai-profile-chart-mode-v1507 button.active{
+  color:#06131d!important;
+  background:linear-gradient(135deg,#33eee1,#74acff)!important;
+  box-shadow:0 10px 24px rgba(51,238,225,.16), inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+.ai-center-page-v747 .ai-profile-filter-row-v1459 select option,
+.ai-center-page-v747 .ai-profile-chart-head-v1459 select option{
+  background:#061522!important;
+  color:#f3fbff!important;
+}
+@media (max-width:760px){
+  .ai-center-page-v747 .ai-profile-chart-mode-v1507{width:100%!important;}
+  .ai-center-page-v747 .ai-profile-chart-mode-v1507 button{font-size:12px!important;padding:0 8px!important;}
+}
