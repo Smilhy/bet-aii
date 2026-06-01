@@ -68877,3 +68877,76 @@ html.betai-fhd-monitor80-v1323 body #root{
 .top-tipsters-v1510 .sport-card-v1276 small{font-size:11px!important;line-height:1.3!important;color:rgba(227,244,255,.74)!important;}
 .top-tipsters-v1510 .sport-card-v1276 > b{font-size:60px!important;right:18px!important;bottom:-5px!important;opacity:.12!important;}
 .top-tipsters-v1510 .side-title-v7 i{display:none!important;}
+
+/* WERSJA 1515 — Top typerzy redesign karty + ROI -> Yield */
+.seller-card-v1515{
+  grid-template-columns: minmax(0,1.28fr) minmax(280px,.8fr) minmax(290px,.78fr)!important;
+  gap:22px!important;
+  padding:20px!important;
+  border-radius:26px!important;
+  background:linear-gradient(180deg,rgba(4,20,30,.94),rgba(2,16,24,.92))!important;
+}
+.seller-main-v1515{display:flex!important;flex-direction:column!important;gap:18px!important;}
+.seller-profile-v1515{padding-bottom:16px!important;margin-bottom:2px!important;align-items:center!important;}
+.seller-copy-v1515{min-width:0!important;}
+.seller-copy-v1515 p{font-size:13px!important;line-height:1.35!important;color:#9db3c2!important;max-width:520px!important;}
+.seller-stats-row-v1515{gap:12px!important;padding-top:0!important;border-top:0!important;}
+.seller-stat-box-v1515{
+  min-height:92px!important;
+  padding:14px 14px 12px!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(8,25,36,.72),rgba(5,19,28,.48))!important;
+  border:1px solid rgba(24,234,216,.08)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.seller-stat-box-v1515 small{font-size:12px!important;letter-spacing:.02em!important;color:#88a2b2!important;margin-bottom:10px!important;}
+.seller-stat-box-v1515 b{font-size:21px!important;line-height:1.05!important;}
+.seller-chart-v1515{
+  justify-content:flex-start!important;
+  gap:16px!important;
+  padding:10px 8px!important;
+}
+.seller-chart-v1515 .recent-form-v1114{justify-content:flex-start!important;flex-wrap:wrap!important;gap:8px!important;}
+.success-head-v1515{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:10px!important;}
+.success-head-v1515 small{margin-bottom:0!important;font-size:14px!important;font-weight:800!important;color:#9ab3c2!important;text-transform:uppercase!important;letter-spacing:.04em!important;}
+.success-head-v1515 b{font-size:22px!important;font-weight:1000!important;color:#21eed7!important;}
+.achievement-head-v1515{font-size:15px!important;font-weight:900!important;color:#dcecf6!important;margin-top:2px!important;}
+.achievement-list-v1515{gap:10px!important;}
+.achievement-list-v1515 .achievement-badge-v1115{
+  width:34px!important;height:34px!important;border-radius:12px!important;
+  background:rgba(255,255,255,.04)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+.seller-cta-v1515{
+  justify-content:flex-start!important;
+  gap:14px!important;
+  padding:14px!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,rgba(6,25,36,.78),rgba(3,18,27,.66))!important;
+  border:1px solid rgba(24,234,216,.10)!important;
+}
+.price-v1515{display:flex!important;align-items:flex-end!important;gap:8px!important;flex-wrap:wrap!important;}
+.price-v1515 strong{font-size:26px!important;line-height:1!important;}
+.price-v1515 span{margin-left:0!important;font-size:14px!important;}
+.top-plan-mini-list-v1515{
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  background:rgba(4,17,26,.72)!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  display:grid!important;
+  gap:6px!important;
+}
+.top-plan-mini-list-v1515 span{display:flex!important;justify-content:space-between!important;gap:10px!important;}
+.top-plan-mini-list-v1515 b{color:#eefaff!important;}
+.seller-cta-v1515 .buy-btn-v7{height:54px!important;border-radius:16px!important;font-size:17px!important;cursor:pointer!important;}
+.cta-bottom-v1515{margin-top:auto!important;align-items:center!important;}
+.cta-bottom-v1515 .follow-btn-v7{cursor:pointer!important;}
+@media(max-width:1500px){
+  .seller-card-v1515{grid-template-columns:1fr!important;}
+  .seller-chart-v1515,.seller-cta-v1515{padding-left:0!important;padding-right:0!important;}
+}
+@media(max-width:760px){
+  .seller-stats-row-v1515{grid-template-columns:1fr 1fr!important;}
+  .seller-stat-box-v1515{min-height:84px!important;}
+  .price-v1515 strong{font-size:22px!important;}
+}

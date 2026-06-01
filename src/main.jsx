@@ -23572,11 +23572,11 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
             {loadingProfiles && <div className="glass-market-v7 seller-card-v7"><strong>Ładuję realne konta...</strong></div>}
             {!loadingProfiles && !filteredTipsters.length && <div className="glass-market-v7 seller-card-v7"><strong>Brak realnych kont dla wybranego sportu.</strong><p>Po rejestracji użytkownika albo zmianie specjalizacji profil dopisze się automatycznie z Supabase.</p></div>}
             {!loadingProfiles && filteredTipsters.map((tipster, idx) => (
-              <article className="glass-market-v7 seller-card-v7" key={tipster.id || idx}>
-                <div className="seller-main-v7">
-                  <div className="seller-profile-v7">
+              <article className="glass-market-v7 seller-card-v7 seller-card-v1515" key={tipster.id || idx}>
+                <div className="seller-main-v7 seller-main-v1515">
+                  <div className="seller-profile-v7 seller-profile-v1515">
                     <button type="button" className={`seller-avatar-v7 seller-avatar-button-v1111 a${(idx % 3) + 1} ${tipster.avatarUrl ? 'has-real-avatar-v1128' : ''}`} onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika">{tipster.avatarUrl ? <img src={tipster.avatarUrl} alt={tipster.name} loading="lazy" referrerPolicy="no-referrer" /> : tipster.avatar}</button>
-                    <div className="seller-copy-v7">
+                    <div className="seller-copy-v7 seller-copy-v1515">
                       <div className="seller-title-row-v7">
                         <span className={`rank-pill-v7 r${Math.min(tipster.rank, 3)}`}>{tipster.rank}</span>
                         <button type="button" className="seller-name-link-v1111" onClick={() => openTopTipsterProfile(tipster)} title="Otwórz profil użytkownika">{tipster.name}</button>
@@ -23587,40 +23587,41 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                     </div>
                   </div>
 
-                  <div className="seller-stats-row-v7">
-                    <div><small>Skuteczność</small><b>{tipster.success}</b></div>
-                    <div><small>ROI</small><b>{tipster.roi}</b></div>
-                    <div><small>Zysk</small><b>{tipster.profit}</b></div>
-                    <div><small>Typy</small><b>{tipster.picks}</b></div>
+                  <div className="seller-stats-row-v7 seller-stats-row-v1515">
+                    <div className="seller-stat-box-v1515"><small>Skuteczność</small><b>{tipster.success}</b></div>
+                    <div className="seller-stat-box-v1515"><small>Yield</small><b>{tipster.roi}</b></div>
+                    <div className="seller-stat-box-v1515"><small>Zysk</small><b>{tipster.profit}</b></div>
+                    <div className="seller-stat-box-v1515"><small>Typy</small><b>{tipster.picks}</b></div>
                   </div>
                 </div>
 
-                <div className="seller-chart-v7">
-                  <div className="success-head-v1117">
-                    <small>Skuteczność <b>{tipster.chart}</b></small>
+                <div className="seller-chart-v7 seller-chart-v1515">
+                  <div className="success-head-v1117 success-head-v1515">
+                    <small>Forma</small>
+                    <b>{tipster.chart}</b>
                   </div>
                   <div className="recent-form-v1114" aria-label={`Ostatnie 6 typów: ${(tipster.recentForm || []).map(item => item.label).join(' ')}`}>
                     {(tipster.recentForm || []).map((item, formIdx) => (
                       <span key={formIdx} className={`form-pill-v1114 ${item.status}`} title={item.title}>{item.label}</span>
                     ))}
                   </div>
-                  <div className="achievement-head-v1117">Osiągnięcia</div>
-                  <div className="spec-list-v7 achievement-list-v1115">
+                  <div className="achievement-head-v1117 achievement-head-v1515">Osiągnięcia</div>
+                  <div className="spec-list-v7 achievement-list-v1115 achievement-list-v1515">
                     {tipster.achievements?.length ? tipster.achievements.map((badge, i) => (
                       <i key={`${badge.title}-${i}`} className={`achievement-badge-v1115 ${badge.tone || ''}`} title={`${badge.title} — ${badge.desc}`}>{badge.icon}</i>
                     )) : <em className="no-achievement-v1115">Brak osiągnięć</em>}
                   </div>
                 </div>
 
-                <div className="seller-cta-v7">
-                  <div className="price-v7"><strong>{tipster.price}</strong><span>{tipster.priceSubLabel || '/ dostęp'}</span></div>
+                <div className="seller-cta-v7 seller-cta-v1515">
+                  <div className="price-v7 price-v1515"><strong>{tipster.price}</strong><span>{tipster.priceSubLabel || '/ dostęp'}</span></div>
                   {tipster.premium && tipster.top_subscription_plans?.length ? (
-                    <div className="top-plan-mini-list-v1113" title="Cennik ustawiony przez użytkownika">
+                    <div className="top-plan-mini-list-v1113 top-plan-mini-list-v1515" title="Cennik ustawiony przez użytkownika">
                       {tipster.top_subscription_plans.slice(0, 4).map(plan => <span key={plan.key}>{plan.label}: <b>{formatTopPlanPrice(plan.price)}</b></span>)}
                     </div>
                   ) : null}
                   <button type="button" className={`buy-btn-v7 ${tipster.premium ? '' : 'free-access-v1113'}`} onClick={() => openTopTipsterSubscription(tipster)}>{tipster.premium ? 'Kup subskrypcję' : 'Darmowe'}</button>
-                  <div className="cta-bottom-v7">
+                  <div className="cta-bottom-v7 cta-bottom-v1515">
                     {(() => {
                       const isFollowing = isTopTipsterFollowing(tipster)
                       return (
