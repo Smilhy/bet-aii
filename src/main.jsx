@@ -23660,7 +23660,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                 </div>
               ))}
             </div>
-            <button type="button" className="outline-wide-v7">Zobacz statystyki rynku</button>
           </div>
 
           <div className="glass-market-v7 side-market-card-v7">
@@ -23675,7 +23674,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
             </div>
           </div>
 
-          <button type="button" className="sell-analysis-v7">Sprzedaj swoją analizę</button>
         </aside>
       </div>
     </section>
