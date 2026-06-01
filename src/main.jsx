@@ -17359,6 +17359,33 @@ function AuthView({ onAuth }) {
       const tomorrowKey = getWarsawDateKey(1)
       const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
+      // Najpierw bierzemy lekkie liczniki z backendu Service Role.
+      // Dzięki temu ekran logowania widzi ai_bets nawet gdy RLS blokuje anon select.
+      try {
+        const controller = new AbortController()
+        const timer = window.setTimeout(() => controller.abort(), 3500)
+        const response = await fetch(`/.netlify/functions/get-auth-live-stats?date=${encodeURIComponent(todayKey)}`, {
+          method: 'GET',
+          signal: controller.signal
+        })
+        window.clearTimeout(timer)
+        if (response.ok) {
+          const stats = await response.json()
+          if (!cancelled) {
+            setLiveStats(prev => ({
+              ...prev,
+              registeredUsers: Number.isFinite(Number(stats.registeredUsers)) ? Number(stats.registeredUsers) : 0,
+              aiAccuracy: Number.isFinite(Number(stats.aiAccuracy)) ? Number(stats.aiAccuracy) : (prev.aiAccuracy || 76),
+              activeNow: Number.isFinite(Number(stats.activeNow)) ? Number(stats.activeNow) : 1,
+              tipsToday: Number.isFinite(Number(stats.tipsToday)) ? Number(stats.tipsToday) : 0,
+              loading: false,
+              updatedAt: stats.updatedAt || new Date().toISOString()
+            }))
+          }
+          return
+        }
+      } catch (_) {}
+
       const aiTipsTodayQuery = supabase
         .from('ai_bets')
         .select('id', { count: 'exact', head: true })
