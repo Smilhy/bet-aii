@@ -15302,6 +15302,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       match_name: card.matchName,
       team_home: card.home,
       team_away: card.away,
+      match_time: card.rawDate,
       event_time: card.rawDate,
       market: card.market,
       bet_type: card.market,
@@ -15309,6 +15310,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       pick: card.prediction,
       prediction: card.prediction,
       odds: Number(card.odds || 1.8),
+      confidence: Number(card.probability || card.aiScore || 0),
       stake: 100,
       profit: Number(card.profit || 0),
       ai_score: Number(card.aiScore || 0),
@@ -15668,7 +15670,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const { data, error } = await supabase
         .from('tips').select('*')
         .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
-        .order('event_time', { ascending: true })
+        .order('match_time', { ascending: true })
         .limit(200)
 
       if (error) throw error
@@ -15695,11 +15697,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Pobieramy szersze okno, bo event_time bywa zapisany w UTC.
       // Potem filtrujemy już twardo po dacie Europe/Warsaw, żeby zakładka "dziś"
       // nie pokazywała meczów z jutra, np. 16.05 podczas dnia 15.05.
+      const nextDayKey = getBetAiNextLocalDateV1081(mode)
       const { data, error } = await supabase
         .from('tips').select('*')
-        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
-        .gte('event_time', `${today}T00:00:00`)
-        .order('event_time', { ascending: true })
+        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%,source.eq.Supabase Journal')
+        .gte('match_time', `${today}T00:00:00`)
+        .lt('match_time', `${nextDayKey}T00:00:00`)
+        .order('match_time', { ascending: true })
         .limit(150)
 
       if (error) throw error
