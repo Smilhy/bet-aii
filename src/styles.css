@@ -68830,3 +68830,50 @@ html.betai-fhd-monitor80-v1323 body #root{
 @media(max-width:720px){
   .top-tipsters-v1510 .market-hero-copy-v7 h1{font-size:32px!important;}
 }
+
+
+/* WERSJA 1512 — Top typerzy: przywrócone kolorowe kafle sportów + usunięte ikonki z prawego panelu. */
+.top-tipsters-v1510 .sport-card-v1276,
+.top-tipsters-v1510 .sport-card-v1276.football,
+.top-tipsters-v1510 .sport-card-v1276.basketball,
+.top-tipsters-v1510 .sport-card-v1276.tennis,
+.top-tipsters-v1510 .sport-card-v1276.hockey,
+.top-tipsters-v1510 .sport-card-v1276.mma,
+.top-tipsters-v1510 .sport-card-v1276.boxing,
+.top-tipsters-v1510 .sport-card-v1276.esports,
+.top-tipsters-v1510 .sport-card-v1276.dart,
+.top-tipsters-v1510 .sport-card-v1276.volleyball,
+.top-tipsters-v1510 .sport-card-v1276.baseball,
+.top-tipsters-v1510 .sport-card-v1276.handball,
+.top-tipsters-v1510 .sport-card-v1276.cricket,
+.top-tipsters-v1510 .sport-card-v1276.rugby,
+.top-tipsters-v1510 .sport-card-v1276.rugbyleague{
+  min-height:138px!important;
+  padding:18px 16px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.top-tipsters-v1510 .sport-card-v1276::before{content:''!important;position:absolute!important;right:-35px!important;bottom:-45px!important;width:130px!important;height:130px!important;border-radius:50%!important;background:radial-gradient(circle,rgba(60,255,191,.24),transparent 70%)!important;}
+.top-tipsters-v1510 .sport-card-v1276.football{background:linear-gradient(135deg,rgba(0,87,78,.80),rgba(5,35,47,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.basketball{background:linear-gradient(135deg,rgba(105,47,19,.82),rgba(47,20,6,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.tennis{background:linear-gradient(135deg,rgba(14,53,93,.82),rgba(6,26,58,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.hockey{background:linear-gradient(135deg,rgba(44,66,87,.82),rgba(16,28,43,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.mma,
+.top-tipsters-v1510 .sport-card-v1276.boxing{background:linear-gradient(135deg,rgba(111,19,56,.82),rgba(55,9,29,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.esports,
+.top-tipsters-v1510 .sport-card-v1276.dart{background:linear-gradient(135deg,rgba(76,25,107,.82),rgba(36,9,58,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.volleyball,
+.top-tipsters-v1510 .sport-card-v1276.baseball{background:linear-gradient(135deg,rgba(25,72,103,.82),rgba(8,36,59,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.handball{background:linear-gradient(135deg,rgba(70,55,16,.82),rgba(35,27,5,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.cricket{background:linear-gradient(135deg,rgba(16,82,39,.82),rgba(7,45,23,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.rugby,
+.top-tipsters-v1510 .sport-card-v1276.rugbyleague{background:linear-gradient(135deg,rgba(98,55,12,.82),rgba(54,28,5,.98))!important;}
+.top-tipsters-v1510 .sport-card-v1276.active{border-color:rgba(38,239,241,.85)!important;box-shadow:0 0 0 1px rgba(38,239,241,.22),0 0 36px rgba(38,239,241,.14)!important;}
+.top-tipsters-v1510 .sport-card-top-v1276{gap:10px!important;margin-bottom:26px!important;}
+.top-tipsters-v1510 .sport-card-top-v1276 i{width:34px!important;height:34px!important;font-size:17px!important;}
+.top-tipsters-v1510 .sport-card-top-v1276 span{font-size:15px!important;}
+.top-tipsters-v1510 .sport-card-v1276 strong{font-size:12px!important;margin-bottom:4px!important;}
+.top-tipsters-v1510 .sport-card-v1276 small{font-size:11px!important;line-height:1.3!important;color:rgba(227,244,255,.74)!important;}
+.top-tipsters-v1510 .sport-card-v1276 > b{font-size:60px!important;right:18px!important;bottom:-5px!important;opacity:.12!important;}
+.top-tipsters-v1510 .side-title-v7 i{display:none!important;}

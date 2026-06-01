@@ -23613,7 +23613,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
         <aside className="market-v7-sidebar">
           <div className="glass-market-v7 side-market-card-v7">
-            <div className="side-title-v7">PODSUMOWANIE RYNKU <i>ⓘ</i></div>
+            <div className="side-title-v7">PODSUMOWANIE RYNKU</div>
             <div className="market-summary-grid-v7">
               {marketStats.map((item, idx) => (
                 <div key={idx}>
@@ -23622,7 +23622,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                 </div>
               ))}
             </div>
-            <button type="button" className="outline-wide-v7">📈 Zobacz statystyki rynku</button>
+            <button type="button" className="outline-wide-v7">Zobacz statystyki rynku</button>
           </div>
 
           <div className="glass-market-v7 side-market-card-v7">
@@ -23637,7 +23637,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
             </div>
           </div>
 
-          <button type="button" className="sell-analysis-v7">☁ Sprzedaj swoją analizę</button>
+          <button type="button" className="sell-analysis-v7">Sprzedaj swoją analizę</button>
         </aside>
       </div>
     </section>
