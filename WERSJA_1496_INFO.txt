@@ -1,0 +1,12 @@
+WERSJA 1496 — poprawka na bazie 1492
+
+Zmiany:
+- dodano /.netlify/functions/get-ai-bets do lekkiego odczytu ai_bets przez Service Role,
+- auto-load Typów AI pobiera wszystkie rekordy z public.ai_bets dla danego match_date,
+- UI nie przelicza już zapisanych typów z ai_bets,
+- główny wynik na karcie = probability z bazy,
+- pole Prawdop. = probability z bazy,
+- EV i kurs wyświetlane 1:1 z ai_bets,
+- naprawa przypadku, gdzie 70% zmieniało się w 62/100 i drugi typ znikał przez filtr.
+
+Baza: upload użytkownika 1492.

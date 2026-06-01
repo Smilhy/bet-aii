@@ -15081,58 +15081,49 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
   const mapAiTipRowToCard = (t, index = 0) => {
-    const homeTeamV1490 = t.home_team || t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home'
-    const awayTeamV1490 = t.away_team || t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away'
-    const rowTimeV1490 = t.match_date
+    const homeTeamV1496 = t.home_team || t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home'
+    const awayTeamV1496 = t.away_team || t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away'
+    const rowTimeV1496 = t.match_date
       ? `${String(t.match_date).slice(0, 10)}T${String(t.match_time || '12:00').slice(0, 5) || '12:00'}:00`
       : (t.event_time || t.kickoff_time || t.match_time || t.created_at)
-    const baseQuality = buildBetAiQualityV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(rowTimeV1490))
     const odds = Number(t.odds || t.course || 1.8)
-    const rawScore = Number(t.ai_score || t.ai_confidence || t.confidence || baseQuality.aiScore || 60)
-    const rawProbability = Number(t.probability || t.ai_probability || t.ai_confidence || rawScore || 60)
-    const rawEv = Number(t.value_score ?? t.ev ?? baseQuality.ev ?? 0)
-    const normalized = normalizeBetAiValueV1438({
-      odds,
-      probability: rawProbability,
-      ev: rawEv,
-      aiScore: rawScore,
-      seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${homeTeamV1490}-${awayTeamV1490}-${t.market}-${t.selection || t.pick || t.prediction}`,
-      market: t.market || t.bet_type,
-      selection: t.selection || t.pick || t.prediction,
-      home: homeTeamV1490,
-      away: awayTeamV1490,
-      league: t.league || t.league_name || t.country
-    })
+    const probability = Math.round(normalizeAiProbabilityV1480(t.probability ?? t.ai_probability ?? t.ai_confidence ?? t.confidence ?? t.ai_score ?? 0))
+    const ev = Number(t.value_score ?? t.ev ?? 0)
+    const aiScoreSnapshot = probability
+    const riskSnapshot = String(t.risk || '').trim() || (probability >= 78 && ev >= 8 ? 'Niskie' : probability >= 70 ? 'Średnie' : 'Podwyższone')
+    const confidenceTextSnapshot = probability >= 80 ? 'MOCNY TYP' : probability >= 70 ? 'OBSERWUJ' : 'NISKA PEWNOŚĆ'
 
     return {
-      id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
+      id: String(t.id || t.ai_external_key || t.external_fixture_id || index),
       externalFixtureId: String(t.external_fixture_id || t.ai_external_key || ''),
       sport: 'Piłka nożna',
       league: t.league || t.league_name || t.country || 'Liga',
       country: t.country || 'Baza',
-      home: homeTeamV1490,
-      away: awayTeamV1490,
-      matchName: t.match_name || t.match || `${homeTeamV1490} vs ${awayTeamV1490}`,
-      date: formatDate(rowTimeV1490),
-      rawDate: rowTimeV1490,
+      home: homeTeamV1496,
+      away: awayTeamV1496,
+      matchName: t.match_name || t.match || `${homeTeamV1496} vs ${awayTeamV1496}`,
+      date: formatDate(rowTimeV1496),
+      rawDate: rowTimeV1496,
       market: t.market || t.bet_type || 'Typ AI',
       prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
       odds: odds.toFixed(2),
-      aiScore: normalized.aiScore,
-      probability: normalized.probability,
-      ev: normalized.ev,
-      risk: normalized.risk,
+      // V1496: zapisany typ AI jest snapshotem z public.ai_bets.
+      // Nie przeliczamy ponownie wyniku, bo wtedy 70% potrafiło zmienić się w 62/100.
+      aiScore: aiScoreSnapshot,
+      probability,
+      ev,
+      risk: riskSnapshot,
       status: t.status || t.result || 'pending',
       scoreHome: readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home),
       scoreAway: readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away),
       scoreVerified: Boolean(t.live_status || t.settlement_source === 'auto_ai_result_api') && readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home) !== null && readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away) !== null,
-      kickoffState: getBetAiKickoffStateV1051(rowTimeV1490, t),
+      kickoffState: getBetAiKickoffStateV1051(rowTimeV1496, t),
       source: t.source || 'AI',
-      formHome: getBetAiFormPairV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}`).home,
-      formAway: getBetAiFormPairV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}`).away,
-      confidenceText: normalized.confidenceText,
-      curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: normalized.risk }),
-      analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
+      formHome: getBetAiFormPairV1052(`${homeTeamV1496}-${awayTeamV1496}-${t.league}`).home,
+      formAway: getBetAiFormPairV1052(`${homeTeamV1496}-${awayTeamV1496}-${t.league}`).away,
+      confidenceText: confidenceTextSnapshot,
+      curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: 'Piłka nożna', league: t.league || t.league_name || t.country || 'Liga', risk: riskSnapshot }),
+      analysis: t.ai_analysis || t.analysis || `Typ zapisany w ai_bets. Prawdopodobieństwo modelu: ${probability}%, kurs: ${odds.toFixed(2)}, EV: ${ev >= 0 ? '+' : ''}${ev}%.`,
     }
   }
 
@@ -15660,47 +15651,43 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return { journal: journal || [], today: todaySaved || [], tomorrow: tomorrowSaved || [] }
   }
 
-
-  async function fetchAiBetsViaServiceRoleV1494(params = {}) {
-    const query = new URLSearchParams()
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value) !== '') query.set(key, String(value))
-    })
-    const url = `/.netlify/functions/get-ai-bets${query.toString() ? `?${query.toString()}` : ''}`
-    try {
-      const result = await fetchJsonWithTimeoutV1079(url, 7000)
-      if (!result.ok) throw new Error(`get-ai-bets ${result.status}`)
-      return Array.isArray(result.json?.bets) ? result.json.bets : []
-    } catch (error) {
-      console.warn('get-ai-bets service load skipped:', error?.message || error)
-      return null
-    }
+  async function fetchAiBetsViaServiceV1496({ mode = aiDayMode, journal = false, limit = 200 } = {}) {
+    const date = getBetAiSelectedLocalDateV1081(mode)
+    const params = new URLSearchParams()
+    params.set('date', date)
+    params.set('mode', mode)
+    params.set('limit', String(limit))
+    if (journal) params.set('journal', '1')
+    const response = await fetch(`/.netlify/functions/get-ai-bets?${params.toString()}`, { cache: 'no-store' })
+    const json = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(json?.error || `get-ai-bets HTTP ${response.status}`)
+    return Array.isArray(json?.bets) ? json.bets : []
   }
 
   async function loadSavedAiJournalFromDbV1094() {
     try {
-      // V1494: czytamy ai_bets przez Netlify Function / Service Role, bo RLS/anon potrafił zwracać pustą listę.
-      const serviceRows = await fetchAiBetsViaServiceRoleV1494({ scope: 'journal', limit: 200 })
-      let data = serviceRows
-
-      if (!Array.isArray(data)) {
-        if (!isSupabaseConfigured || !supabase) return []
-        const { data: directData, error } = await supabase
+      // V1496: Mecze Result/Statystyki czytamy z public.ai_bets przez Service Role.
+      // To omija RLS i nie miesza typów AI z public.tips/user_manual.
+      let rows = []
+      try {
+        rows = await fetchAiBetsViaServiceV1496({ journal: true, limit: 200 })
+      } catch (serviceError) {
+        if (!isSupabaseConfigured || !supabase) throw serviceError
+        const { data, error } = await supabase
           .from('ai_bets').select('*')
           .order('match_date', { ascending: true })
           .order('match_time', { ascending: true })
           .limit(200)
         if (error) throw error
-        data = directData || []
+        rows = data || []
       }
 
-      const mapped = (data || [])
+      const mapped = (rows || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
         .filter(Boolean)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiJournalCards(mapped)
-      if (mapped.length) mergeSavedAiCardsV1487(mapped)
       return mapped
     } catch (err) {
       console.warn('AI full journal load skipped:', err?.message || err)
@@ -15713,25 +15700,25 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const today = getBetAiSelectedLocalDateV1081(mode)
 
     try {
-      // V1494: auto-load zapisanych Typów AI czyta public.ai_bets przez backend Service Role.
-      // Dzięki temu po wejściu w Typy AI od razu widać zapisane typy, bez klikania Odśwież.
-      const serviceRows = await fetchAiBetsViaServiceRoleV1494({ scope: 'day', mode, date: today, limit: 150 })
-      let data = serviceRows
-
-      if (!Array.isArray(data)) {
-        if (!isSupabaseConfigured || !supabase) return []
-        const { data: directData, error } = await supabase
+      // V1496: auto-load bierze wszystkie rekordy z public.ai_bets dla dnia.
+      // Nie używamy score przeliczanego lokalnie i nie odrzucamy drugiego typu przez ai_score.
+      let rows = []
+      try {
+        rows = await fetchAiBetsViaServiceV1496({ mode, journal: false, limit: 150 })
+      } catch (serviceError) {
+        if (!isSupabaseConfigured || !supabase) throw serviceError
+        const { data, error } = await supabase
           .from('ai_bets').select('*')
           .eq('match_date', today)
           .order('match_time', { ascending: true })
           .limit(150)
         if (error) throw error
-        data = directData || []
+        rows = data || []
       }
 
-      const mapped = (data || [])
+      const mapped = (rows || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
-        .filter(card => getBetAiCardLocalDateV1078(card) === today || String(card?.match_date || '').slice(0,10) === today)
+        .filter(card => getBetAiCardLocalDateV1078(card) === today)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       if (mapped.length) {
@@ -15760,7 +15747,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       return []
     }
   }
-
 
 
 
