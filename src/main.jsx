@@ -12130,34 +12130,46 @@ function ArticlesView() {
 
   const closeArticlePreview = () => setPreviewArticle(null)
 
+  const cleanArticleText = (value = '') => {
+    let text = String(value || '')
+      .replace(/\s+/g, ' ')
+      .replace(/[.]{2,}$/g, '.')
+      .replace(/…$/g, '.')
+      .trim()
+
+    // Sport.pl feed czasem ucina zajawkę w połowie zdania, np. „..., a w”.
+    text = text.replace(/\s+(a|i|oraz|w|we|na|do|z|ze|po|przed|dla)$/i, '')
+    if (text && !/[.!?]$/.test(text)) text += '.'
+    return text
+  }
+
   const getArticlePreviewText = (article = {}) => {
-    const text = String(article.excerpt || article.body || '').trim()
+    const text = cleanArticleText(article.excerpt || article.body || '')
     if (text) return text
-    return 'BetAI przygotował wewnętrzny widok wiadomości na podstawie danych dostępnych w feedzie sportowym.'
+    return 'BetAI przygotował krótki widok wiadomości na podstawie danych dostępnych w feedzie sportowym.'
   }
 
   const buildBetaiArticleBody = (article = {}) => {
-    const title = String(article.title || 'Artykuł sportowy').trim()
-    const lead = getArticlePreviewText(article)
+    const title = cleanArticleText(article.title || 'Artykuł sportowy')
     const category = String(article.tag || article.category || 'Sport').trim()
-    const source = article.source || 'Sport.pl'
+    const lead = getArticlePreviewText(article)
+    const lowerCategory = category.toLowerCase()
+    const sportContext = lowerCategory.includes('tenis')
+      ? 'W tenisie takie informacje są ważne przede wszystkim dla oceny formy zawodniczki, rytmu turniejowego i nastawienia przed kolejnymi meczami.'
+      : lowerCategory.includes('kosz')
+        ? 'W koszykówce ten news ma znaczenie dla układu sił, dyspozycji zespołów i możliwych scenariuszy kolejnych spotkań.'
+        : lowerCategory.includes('pił') || lowerCategory.includes('noż')
+          ? 'W piłce nożnej taka wiadomość pomaga lepiej ocenić formę drużyn, decyzje kadrowe i atmosferę przed następnymi meczami.'
+          : 'To informacja, którą warto śledzić w kontekście formy, kalendarza i nastrojów wokół najbliższych wydarzeń sportowych.'
+
     return [
-      lead,
-      `Temat wiadomości dotyczy kategorii ${category}. W BetAI pokazujemy artykuł w formie czytelnego omówienia: najpierw najważniejszy kontekst, później skrót wydarzenia i znaczenie dla kibiców oraz typerów.`,
-      `Najważniejszy sygnał z tej informacji: ${title}. To news, który warto śledzić, bo może wpływać na formę zawodnika, drużyny, nastroje wokół meczu albo zainteresowanie konkretnymi rozgrywkami.`,
-      'W praktyce oznacza to, że użytkownik nie musi od razu opuszczać dashboardu. Najpierw dostaje pełny widok informacyjny w BetAI, a dopiero na końcu może przejść do źródła, jeśli chce zweryfikować oryginalną publikację.',
-      `Źródło wiadomości: ${source}. BetAI zachowuje link źródłowy na dole artykułu.`
+      `Najważniejsze: ${lead}`,
+      `Kontekst BetAI: ${sportContext}`,
+      `Co to oznacza dla użytkownika: temat „${title.replace(/[.!?]$/,'')}” może być przydatny przy szybkim sprawdzeniu sytuacji przed typowaniem, obserwacją zawodnika albo oceną aktualnej dyspozycji drużyny.`
     ].filter(Boolean)
   }
 
-  const buildBetaiArticleHighlights = (article = {}) => {
-    const category = String(article.tag || article.category || 'Sport').trim()
-    return [
-      `Kategoria: ${category}`,
-      'Artykuł otwiera się bez przekierowania poza BetAI.',
-      'Na dole zostaje link do źródła dla weryfikacji.',
-    ]
-  }
+  const buildBetaiArticleHighlights = () => []
 
   const tvRows = [
     { time: '18:30', sport: '⚽', match: 'Manchester City – Arsenal', league: 'Premier League', status: 'LIVE CENTER', source: 'Oficjalny nadawca / aplikacja ligi', note: 'Wynik, status meczu i legalna ścieżka oglądania', url: 'https://www.premierleague.com/broadcast-schedules' },
@@ -12501,9 +12513,6 @@ function ArticlesView() {
               <p className="article-reader-lead-v1517">{getArticlePreviewText(previewArticle)}</p>
               <div className="article-reader-body-v1517">
                 {buildBetaiArticleBody(previewArticle).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-              </div>
-              <div className="article-preview-note-v1137 article-reader-note-v1517">
-                Artykuł otwierasz u nas w BetAI. Link źródłowy zostaje tylko do weryfikacji informacji.
               </div>
               <div className="article-preview-actions-v1137 article-reader-actions-v1517">
                 <button type="button" onClick={closeArticlePreview}>Wróć do artykułów</button>
