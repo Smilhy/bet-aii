@@ -69218,3 +69218,100 @@ html.betai-fhd-monitor80-v1323 body #root{
   .article-reader-hero-v1517{height:300px!important;}
   .article-reader-highlights-v1517{grid-template-columns:1fr!important;}
 }
+
+/* WERSJA 1521 — Artykuły/TV Live: TV Live zamknięte, płatny dodatek wkrótce */
+.tvlive-tabs-v8 .tv-locked-v1521{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+.tvlive-tabs-v8 .tv-lock-v1521{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  border-radius:999px!important;
+  font-size:11px!important;
+  background:rgba(16,234,216,.12)!important;
+  border:1px solid rgba(16,234,216,.24)!important;
+  box-shadow:0 0 16px rgba(16,234,216,.12)!important;
+}
+.tv-live-locked-panel-v1521{
+  min-height:430px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:48px 28px!important;
+  border-radius:28px!important;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(28,234,216,.15), transparent 28%),
+    radial-gradient(circle at 80% 75%, rgba(69,132,255,.10), transparent 26%),
+    linear-gradient(180deg, rgba(4,23,35,.96), rgba(2,13,22,.99))!important;
+  border:1px solid rgba(29,235,218,.16)!important;
+  box-shadow:0 22px 60px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.tv-live-locked-orb-v1521{
+  width:78px!important;
+  height:78px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:24px!important;
+  margin-bottom:20px!important;
+  font-size:32px!important;
+  background:linear-gradient(135deg, rgba(20,234,216,.20), rgba(45,120,255,.12))!important;
+  border:1px solid rgba(27,235,218,.26)!important;
+  box-shadow:0 0 34px rgba(20,234,216,.16)!important;
+}
+.tv-live-locked-panel-v1521 > span{
+  color:#27f1e3!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.18em!important;
+  text-transform:uppercase!important;
+  margin-bottom:12px!important;
+}
+.tv-live-locked-panel-v1521 h2{
+  margin:0!important;
+  max-width:760px!important;
+  color:#f3fbff!important;
+  font-size:42px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+  letter-spacing:-.035em!important;
+}
+.tv-live-locked-panel-v1521 p{
+  max-width:760px!important;
+  margin:18px auto 0!important;
+  color:#9fb7c6!important;
+  font-size:17px!important;
+  line-height:1.55!important;
+  font-weight:750!important;
+}
+.tv-live-locked-badges-v1521{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:center!important;
+  gap:10px!important;
+  margin-top:24px!important;
+}
+.tv-live-locked-badges-v1521 em{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:34px!important;
+  padding:0 14px!important;
+  border-radius:999px!important;
+  background:rgba(6,28,42,.72)!important;
+  border:1px solid rgba(29,235,218,.16)!important;
+  color:#dffcff!important;
+  font-size:12px!important;
+  font-style:normal!important;
+  font-weight:950!important;
+}
+@media(max-width:760px){
+  .tv-live-locked-panel-v1521{min-height:340px!important;padding:34px 18px!important;}
+  .tv-live-locked-panel-v1521 h2{font-size:30px!important;}
+  .tv-live-locked-panel-v1521 p{font-size:15px!important;}
+}

@@ -12324,7 +12324,7 @@ function ArticlesView() {
         <div className="tvlive-main-v8">
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
             <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Na żywo</button>
-            <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active' : ''} onClick={() => setActiveArticleTab('tv')}>TV Live</button>
+            <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active tv-locked-v1521' : 'tv-locked-v1521'} onClick={() => setActiveArticleTab('tv')}>TV Live <span className="tv-lock-v1521">🔒</span></button>
             <button type="button" aria-pressed={activeArticleTab === 'scores'} className={activeArticleTab === 'scores' ? 'active' : ''} onClick={() => setActiveArticleTab('scores')}>Wyniki live</button>
           </div>
 
@@ -12398,7 +12398,20 @@ function ArticlesView() {
             </>
           ) : null}
 
-          {/* v1134: usunięto stary panel TV/articles z tej sekcji. */}
+          {/* v1521: TV Live zamknięte — płatny dodatek w kolejnej wersji. */}
+          {activeArticleTab === 'tv' ? (
+            <div className="glass-tvlive-v8 tv-live-locked-panel-v1521">
+              <div className="tv-live-locked-orb-v1521">🔒</div>
+              <span>TV LIVE • DODATEK PREMIUM</span>
+              <h2>TV Live będzie dostępne wkrótce</h2>
+              <p>Ta sekcja będzie zamknięta i dostępna jako dodatkowo płatny moduł. Po aktywacji użytkownik otrzyma dostęp do transmisji, ramówki i wydarzeń live bez wychodzenia z BetAI.</p>
+              <div className="tv-live-locked-badges-v1521">
+                <em>Wkrótce</em>
+                <em>Dostęp za opłatą</em>
+                <em>BetAI Premium TV</em>
+              </div>
+            </div>
+          ) : null}
 
           {/* v1134: usunięto dodatkowy panel kart/newsów nad Wyniki live. */}
 
