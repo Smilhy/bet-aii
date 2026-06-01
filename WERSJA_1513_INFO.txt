@@ -1,0 +1,7 @@
+WERSJA 1513 — FIX trwałego cennika subskrypcji typera
+
+- Naprawiono odczyt cennika z Supabase z tabeli tipster_plans.
+- Top typerzy i okno kupna subskrypcji pobierają zapisane ceny z Supabase, a nie tylko z localStorage.
+- LocalStorage został tylko jako fallback, gdy Supabase chwilowo nie odpowie.
+- Dodano SQL: supabase/WERSJA_1513_TIPSTER_PLANS_SUPABASE_PERSIST.sql
+- Nie zmieniano wyglądu ani logiki innych zakładek.

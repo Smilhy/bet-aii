@@ -2025,13 +2025,50 @@ async function resolveTipsterPricingIdentity(source = {}) {
 async function loadTipsterPlansForSource(source = {}) {
   const identity = await resolveTipsterPricingIdentity(source)
   const keys = identity.keys || getTipsterPricingKeys(source)
+  const cacheKeys = [...new Set([...(keys || []), identity.id, identity.username, identity.email].filter(Boolean))]
+  const localPlans = readLocalTipsterPlans(cacheKeys)
 
-  // WERSJA 1431:
-  // Nie pobieramy już tipster_plans dla każdego typera w Top typerzy.
-  // To robiło kilkanaście/kilkadziesiąt requestów i dawało czerwone 400,
-  // gdy tabela miała inną strukturę albo schema cache nie znał kolumn.
-  // Plany są ładowane z localStorage; zapis z profilu typera nadal może zapisywać remote.
-  return readLocalTipsterPlans([...(keys || []), identity.id, identity.username, identity.email]) || normalizeTipsterPlanRows([])
+  if (!isSupabaseConfigured || !supabase) {
+    return localPlans || normalizeTipsterPlanRows([])
+  }
+
+  const idCandidates = [...new Set([
+    identity.id,
+    source?.id,
+    source?.user_id,
+    source?.author_id,
+    source?.tipster_id,
+    source?.profile_id,
+  ].filter(Boolean).map(value => String(value)))]
+
+  if (!idCandidates.length) {
+    return localPlans || normalizeTipsterPlanRows([])
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('tipster_plans')
+      .select('*')
+      .in('tipster_id', idCandidates)
+      .order('duration_days', { ascending: true })
+      .limit(20)
+
+    if (error) throw error
+
+    const remoteRows = Array.isArray(data)
+      ? data.filter(row => idCandidates.includes(String(row.tipster_id || '')))
+      : []
+
+    if (remoteRows.length) {
+      const remotePlans = normalizeTipsterPlanRows(remoteRows)
+      writeLocalTipsterPlans(cacheKeys, remotePlans)
+      return remotePlans
+    }
+  } catch (error) {
+    console.warn('tipster plans remote load skipped', error)
+  }
+
+  return localPlans || normalizeTipsterPlanRows([])
 }
 
 async function saveTipsterPlansForSource(source = {}, plans = []) {
