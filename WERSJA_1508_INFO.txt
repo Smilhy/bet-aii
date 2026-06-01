@@ -1,0 +1,9 @@
+WERSJA 1508 — TYPY AI: KRAJ LIGI W MECZE RESULT I STATYSTYKACH
+
+Zmiany:
+- Dodano kolumnę „Kraj” w zakładce Typy AI -> Mecze Result, obok ligi/division.
+- Dodano kolumnę „Kraj” w zakładce Typy AI -> Statystyki -> Statystyki według lig.
+- Kraj jest pobierany z danych typu, katalogu ai_leagues_catalog albo bezpiecznego mapowania lig/zespołów.
+- Nie zmieniano logiki Supabase, Netlify ani innych zakładek.
+
+Build: OK

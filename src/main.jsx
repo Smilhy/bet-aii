@@ -13934,6 +13934,95 @@ const AI_STATS_FOOTBALL_BET_TYPES_PRESET = [
   'Wynik do przerwy/końca',
 ]
 
+
+
+// WERSJA 1508 — etykieta kraju ligi w Typy AI (Mecze Result + Statystyki)
+const AI_COUNTRY_GENERIC_VALUES_V1508 = new Set(['', '-', '—', 'baza', 'api-sports', 'api sports', 'fallback ai', 'liga', 'division', 'football', 'piłka nożna', 'pilka nozna', 'wszystkie', 'all', 'all countries'])
+const normalizeAiCountryTextV1508 = value => String(value || '')
+  .trim()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim()
+
+const AI_LEAGUE_COUNTRY_HINTS_V1508 = {
+  'premier league': 'Anglia',
+  'championship': 'Anglia',
+  'league one': 'Anglia',
+  'league two': 'Anglia',
+  'fa cup': 'Anglia',
+  'la liga': 'Hiszpania',
+  'la liga 2': 'Hiszpania',
+  'segunda division': 'Hiszpania',
+  'serie a': 'Włochy',
+  'serie b': 'Włochy',
+  'serie c': 'Włochy',
+  'coppa italia': 'Włochy',
+  'bundesliga': 'Niemcy',
+  '2 bundesliga': 'Niemcy',
+  '3 liga': 'Niemcy',
+  'ligue 1': 'Francja',
+  'ligue 2': 'Francja',
+  'ekstraklasa': 'Polska',
+  '1 liga': 'Polska',
+  '2 liga': 'Polska',
+  'eredivisie': 'Holandia',
+  'eerste divisie': 'Holandia',
+  'primeira liga': 'Portugalia',
+  'liga portugal 2': 'Portugalia',
+  'super lig': 'Turcja',
+  'superliga': 'Dania',
+  'eliteserien': 'Norwegia',
+  'obos ligaen': 'Norwegia',
+  '1 division norway': 'Norwegia',
+  '2 division norway': 'Norwegia',
+  '3 division girone 5': 'Norwegia',
+  '3 division group 5': 'Norwegia',
+  '3 division': 'Norwegia',
+  'allsvenskan': 'Szwecja',
+  'superettan': 'Szwecja',
+  'veikkausliiga': 'Finlandia',
+  'premiership': 'Szkocja',
+  'league cup': 'Egipt',
+  'egypt league cup': 'Egipt',
+  'premier league egypt': 'Egipt',
+  'liga profesional': 'Argentyna',
+  'copa de la liga': 'Argentyna',
+  'brasileirao serie a': 'Brazylia',
+  'serie a brazil': 'Brazylia',
+  'mls': 'USA',
+  'liga mx': 'Meksyk',
+}
+
+const AI_TEAM_COUNTRY_HINTS_V1508 = [
+  { country: 'Egipt', words: ['al masry', 'masr', 'zamalek', 'al ahly', 'pyramids'] },
+  { country: 'Norwegia', words: ['tromso', 'tromsø', 'stromsgodset', 'strømsgodset', 'molde', 'bodo glimt', 'bodø glimt'] },
+]
+
+function getAiCountryLabelV1508(item = {}, leagueCatalog = []) {
+  const rawCountry = item.country || item.country_name || item.league_country || item.fixture_json?.country || ''
+  const normalizedCountry = normalizeAiCountryTextV1508(rawCountry)
+  if (rawCountry && !AI_COUNTRY_GENERIC_VALUES_V1508.has(normalizedCountry)) return String(rawCountry).trim()
+
+  const league = String(item.league || item.league_name || item.division || item.competition || '').trim()
+  const normalizedLeague = normalizeAiCountryTextV1508(league)
+  if (Array.isArray(leagueCatalog) && leagueCatalog.length) {
+    const found = leagueCatalog.find(row => normalizeAiCountryTextV1508(row?.league) === normalizedLeague && row?.country)
+    const foundCountry = found?.country || ''
+    if (foundCountry && !AI_COUNTRY_GENERIC_VALUES_V1508.has(normalizeAiCountryTextV1508(foundCountry))) return String(foundCountry).trim()
+  }
+
+  if (AI_LEAGUE_COUNTRY_HINTS_V1508[normalizedLeague]) return AI_LEAGUE_COUNTRY_HINTS_V1508[normalizedLeague]
+  const containsHit = Object.entries(AI_LEAGUE_COUNTRY_HINTS_V1508).find(([key]) => normalizedLeague && (normalizedLeague.includes(key) || key.includes(normalizedLeague)))
+  if (containsHit) return containsHit[1]
+
+  const teams = normalizeAiCountryTextV1508(`${item.home || item.home_team || item.team_home || ''} ${item.away || item.away_team || item.team_away || ''}`)
+  const teamHit = AI_TEAM_COUNTRY_HINTS_V1508.find(group => group.words.some(word => teams.includes(normalizeAiCountryTextV1508(word))))
+  if (teamHit) return teamHit.country
+
+  return '—'
+}
+
 const AI_STATS_BET_TYPES_BY_SPORT = {
   'Piłka nożna': AI_STATS_FOOTBALL_BET_TYPES_PRESET,
   'Tenis': ['Zwycięzca meczu', 'Handicap gemów', 'Suma gemów', 'Dokładny wynik setów'],
@@ -14299,9 +14388,12 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     return 'Publiczny'
   })
   const sportRows = buildProfileRows(t => t.sport || t.sport_key || 'Piłka nożna')
-  const leagueProfileRows = buildProfileRows(t => t.league || t.league_name || t.country || 'Inne')
-  const typeProfileRows = buildProfileRows(t => getDetailedBetType(t))
   const getLeagueKey = tip => tip.league || tip.league_name || tip.country || 'Inne'
+  const leagueProfileRows = buildProfileRows(t => getLeagueKey(t)).map(row => {
+    const sourceTip = filtered.find(t => getLeagueKey(t) === row.key) || { league: row.key }
+    return { ...row, country: getAiCountryLabelV1508({ ...sourceTip, league: row.key }, savedLeagues) }
+  })
+  const typeProfileRows = buildProfileRows(t => getDetailedBetType(t))
   const selectedLeagueTips = selectedLeagueDetail
     ? filtered.filter(t => getLeagueKey(t) === selectedLeagueDetail)
     : []
@@ -14386,6 +14478,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
           onKeyDown={onRowClick ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onRowClick(row) } } : undefined}
         >
           <span>{row.key}</span>
+          {variant === 'league-country' ? <span className="ai-country-pill-v1508">{row.country || '—'}</span> : null}
           <span>{row.bets}</span>
           {variant === 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
           {variant !== 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
@@ -14515,7 +14608,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <StatTable title="Statystyki dla sportów" columns={['Sport','Liczba kuponów','Stawka rozliczona','Bilans','Yield']} rows={sportRows} variant="sport" tableKey="sports" />
       </div>
       <div className="ai-profile-grid-v1459 two">
-        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} tableKey="leagues" onRowClick={row => setSelectedLeagueDetail(row.key)} />
+        <StatTable title="Statystyki według lig" columns={['Liga','Kraj','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} variant="league-country" tableKey="leagues" onRowClick={row => setSelectedLeagueDetail(row.key)} />
         <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} tableKey="types" />
       </div>
       <div className="ai-profile-grid-v1459 single">
@@ -16274,12 +16367,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                 </div>
                 <span>Archiwum wyników AI</span>
               </div>
-              <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
+              <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Kraj</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
                 <div key={`${card.id}-${card.market}-${card.prediction}`} className="ai-result-table-v747 row-v1448" onClick={() => { setSelectedId(card.id) }}>
-                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{formatScoreV1451(card)}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
+                  <span className="cell-date">{card.date}</span><span>{card.sport}</span><span className="ai-country-pill-v1508">{getAiCountryLabelV1508(card)}</span><span>{card.league}</span><span className="cell-team">{card.home}</span><span className="cell-score">{formatScoreV1451(card)}</span><span className="cell-team">{card.away}</span><span className="cell-prediction">{card.prediction}</span><span className={`result ${String(card.status).toLowerCase()}`}>{String(card.status).toUpperCase()}</span>
                 </div>
-              )) : <div className="ai-result-table-v747 row-v1448"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
+              )) : <div className="ai-result-table-v747 row-v1448"><span>Brak zapisanych typów</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span className="result pending">PENDING</span></div>}
             </div>
           )}
 

@@ -68567,3 +68567,47 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .ai-profile-chart-mode-v1507{width:100%!important;}
   .ai-center-page-v747 .ai-profile-chart-mode-v1507 button{font-size:12px!important;padding:0 8px!important;}
 }
+
+/* WERSJA 1508 — kraj ligi w Typy AI: Mecze Result + Statystyki */
+.ai-center-page-v747 .ai-result-table-v747{
+  grid-template-columns: .82fr .7fr .82fr 1.05fr 1.05fr .56fr 1.05fr 1.18fr .72fr !important;
+}
+.ai-center-page-v747 .ai-country-pill-v1508{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  padding:5px 9px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(61,249,255,.16) !important;
+  background:linear-gradient(135deg, rgba(37,235,224,.12), rgba(87,158,255,.08)) !important;
+  color:#bff9ff !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  font-weight:950 !important;
+  letter-spacing:.02em !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+.ai-center-page-v747 .ai-results-card-v1448 .ai-result-table-v747.row-v1448 .ai-country-pill-v1508{
+  color:#bff9ff !important;
+  font-size:12px !important;
+}
+.ai-center-page-v747 .ai-profile-stat-table-v1459.league-country .ai-profile-table-head-v1459,
+.ai-center-page-v747 .ai-profile-stat-table-v1459.league-country .ai-profile-table-row-v1459{
+  grid-template-columns:1.45fr .8fr .65fr .9fr .8fr .75fr .7fr!important;
+  min-width:720px!important;
+}
+.ai-center-page-v747 .ai-profile-stat-table-v1459.league-country .ai-profile-table-row-v1459 .ai-country-pill-v1508{
+  font-size:11px!important;
+  padding:5px 8px!important;
+}
+@media (max-width: 1100px){
+  .ai-center-page-v747 .ai-result-table-v747{
+    grid-template-columns: .9fr .74fr .86fr 1.08fr 1.05fr .62fr 1.05fr 1.18fr .78fr !important;
+    min-width:1120px!important;
+  }
+}
