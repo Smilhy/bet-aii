@@ -12499,9 +12499,6 @@ function ArticlesView() {
               </div>
               <h1>{previewArticle.title || 'Artykuł sportowy'}</h1>
               <p className="article-reader-lead-v1517">{getArticlePreviewText(previewArticle)}</p>
-              <div className="article-reader-highlights-v1517">
-                {buildBetaiArticleHighlights(previewArticle).map((item, index) => <div key={index}><b>{index + 1}</b><span>{item}</span></div>)}
-              </div>
               <div className="article-reader-body-v1517">
                 {buildBetaiArticleBody(previewArticle).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               </div>
