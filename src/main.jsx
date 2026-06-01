@@ -15081,7 +15081,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
   const mapAiTipRowToCard = (t, index = 0) => {
-    const baseQuality = buildBetAiQualityV1052(`${t.team_home}-${t.team_away}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(t.event_time))
+    const homeTeamV1490 = t.home_team || t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home'
+    const awayTeamV1490 = t.away_team || t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away'
+    const rowTimeV1490 = t.match_date
+      ? `${String(t.match_date).slice(0, 10)}T${String(t.match_time || '12:00').slice(0, 5) || '12:00'}:00`
+      : (t.event_time || t.kickoff_time || t.match_time || t.created_at)
+    const baseQuality = buildBetAiQualityV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}-${t.market}`, t.odds, t.league, t.market, getBetAiKickoffStateV1051(rowTimeV1490))
     const odds = Number(t.odds || t.course || 1.8)
     const rawScore = Number(t.ai_score || t.ai_confidence || t.confidence || baseQuality.aiScore || 60)
     const rawProbability = Number(t.probability || t.ai_probability || t.ai_confidence || rawScore || 60)
@@ -15091,11 +15096,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       probability: rawProbability,
       ev: rawEv,
       aiScore: rawScore,
-      seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${t.team_home}-${t.team_away}-${t.market}-${t.selection || t.pick || t.prediction}`,
+      seed: `${t.ai_external_key || t.external_fixture_id || t.id || index}-${homeTeamV1490}-${awayTeamV1490}-${t.market}-${t.selection || t.pick || t.prediction}`,
       market: t.market || t.bet_type,
       selection: t.selection || t.pick || t.prediction,
-      home: t.team_home,
-      away: t.team_away,
+      home: homeTeamV1490,
+      away: awayTeamV1490,
       league: t.league || t.league_name || t.country
     })
 
@@ -15105,11 +15110,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       sport: 'Piłka nożna',
       league: t.league || t.league_name || t.country || 'Liga',
       country: t.country || 'Baza',
-      home: t.team_home || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[0] || 'Home',
-      away: t.team_away || String(t.match_name || t.match || 'Home vs Away').split(' vs ')[1] || 'Away',
-      matchName: t.match_name || t.match || `${t.team_home || 'Home'} vs ${t.team_away || 'Away'}`,
-      date: formatDate(t.event_time || t.kickoff_time || t.match_time || t.created_at),
-      rawDate: t.event_time || t.kickoff_time || t.match_time || t.created_at,
+      home: homeTeamV1490,
+      away: awayTeamV1490,
+      matchName: t.match_name || t.match || `${homeTeamV1490} vs ${awayTeamV1490}`,
+      date: formatDate(rowTimeV1490),
+      rawDate: rowTimeV1490,
       market: t.market || t.bet_type || 'Typ AI',
       prediction: t.selection || t.pick || t.prediction || 'Predykcja AI',
       odds: odds.toFixed(2),
@@ -15121,10 +15126,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       scoreHome: readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home),
       scoreAway: readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away),
       scoreVerified: Boolean(t.live_status || t.settlement_source === 'auto_ai_result_api') && readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home) !== null && readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away) !== null,
-      kickoffState: getBetAiKickoffStateV1051(t.event_time || t.kickoff_time || t.match_time || t.created_at, t),
-      source: 'Supabase Journal',
-      formHome: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).home,
-      formAway: getBetAiFormPairV1052(`${t.team_home}-${t.team_away}-${t.league}`).away,
+      kickoffState: getBetAiKickoffStateV1051(rowTimeV1490, t),
+      source: t.source || 'AI',
+      formHome: getBetAiFormPairV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}`).home,
+      formAway: getBetAiFormPairV1052(`${homeTeamV1490}-${awayTeamV1490}-${t.league}`).away,
       confidenceText: normalized.confidenceText,
       curiosity: t.curiosity || getBetAiCuriosityV1052({ sport: detectBetAiSportV1052(t, t.sport || t.sport_key), league: t.league || t.league_name || t.country || 'Liga', risk: normalized.risk }),
       analysis: t.ai_analysis || t.analysis || 'Typ zapisany w dzienniku modelu AI. Po zakończeniu meczu zostanie rozliczony i zasili statystyki ligi oraz sportu.',
@@ -15132,12 +15137,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   const dbCards = useMemo(() => {
-    return (tips || [])
-      .filter(t => {
-        const src = `${t.ai_source || ''} ${t.source || ''}`.toLowerCase()
-        return src.includes('ai') || src.includes('real_ai') || src.includes('live_ai')
-      })
-      .map((t, index) => mapAiTipRowToCard(t, index))
+    // V1490: Typy AI są w public.ai_bets. public.tips zostaje tylko dla typerów/użytkowników.
+    // Nie mieszamy już user_manual z AI.
+    return []
   }, [tips])
 
   const allCards = useMemo(() => {
@@ -15285,142 +15287,101 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function saveCardsToJournal(cards = []) {
     const cardsToSave = (cards || []).filter(card => isBetAiPrematchAvailableV1091(card))
-    if (!isSupabaseConfigured || !supabase || !cardsToSave.length) return
+    if (!isSupabaseConfigured || !supabase || !cardsToSave.length) return 0
 
-    const nowIso = new Date().toISOString()
+    const readWarsawTimeHHMMV1490 = (raw) => {
+      try {
+        const d = new Date(raw)
+        if (!Number.isNaN(d.getTime())) {
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hour12: false
+          }).formatToParts(d).reduce((acc, part) => {
+            if (part.type !== 'literal') acc[part.type] = part.value
+            return acc
+          }, {})
+          return `${parts.hour || '12'}:${parts.minute || '00'}`
+        }
+      } catch (_) {}
+      const m = String(raw || '').match(/(\d{1,2}):(\d{2})/)
+      return m ? `${String(m[1]).padStart(2, '0')}:${m[2]}` : '12:00'
+    }
+
     const buildPayload = (card) => ({
-      ai_external_key: String(card.id),
-      external_fixture_id: String(card.externalFixtureId || card.apiFixtureId || card.fixture_id || card.id || ''),
-      ai_source: 'real_ai',
-      source: 'AI',
-      ai_model_version: 'Bet+AI Free Center v1',
-      author_name: 'Bet+AI Model',
-      username: 'Bet+AI Model',
-      sport: card.sport,
-      sport_key: card.sport,
-      country: card.country,
-      league: card.league,
-      league_name: card.league,
-      match: card.matchName,
-      match_name: card.matchName,
-      team_home: card.home,
-      team_away: card.away,
-      match_time: card.rawDate,
-      event_time: card.rawDate,
-      market: card.market,
-      bet_type: card.market,
-      selection: card.prediction,
-      pick: card.prediction,
-      prediction: card.prediction,
+      external_fixture_id: String(card.externalFixtureId || card.apiFixtureId || card.fixture_id || card.id || '').trim() || String(card.id || ''),
+      match_date: getBetAiCardLocalDateV1078(card) || getBetAiSelectedLocalDateV1081(aiDayMode),
+      match_time: readWarsawTimeHHMMV1490(card.rawDate || card.match_time || card.event_time || card.date),
+      home_team: String(card.home || 'Home'),
+      away_team: String(card.away || 'Away'),
+      country: String(card.country || 'API-Sports'),
+      league: String(card.league || 'Liga'),
+      market: String(card.market || 'Typ AI'),
+      prediction: String(card.prediction || card.selection || 'Predykcja AI'),
       odds: Number(card.odds || 1.8),
-      confidence: Number(card.probability || card.aiScore || 0),
-      stake: 100,
-      profit: Number(card.profit || 0),
-      ai_score: Number(card.aiScore || 0),
-      ai_confidence: Number(card.aiScore || 0),
-      probability: Number(card.probability || card.aiScore || 0),
-      value_score: Number(card.ev || 0),
-      risk_level: card.risk,
-      analysis: card.analysis,
-      ai_analysis: card.analysis,
-      curiosity: card.curiosity,
-      live_score_home: card.scoreHome ?? null,
-      live_score_away: card.scoreAway ?? null,
+      probability: normalizeAiProbabilityV1480(card.probability || card.aiScore || 0),
+      ev: Number(card.ev || 0),
+      ai_score: Number(card.aiScore || card.probability || 0),
       status: String(card.status || 'pending').toLowerCase(),
-      result: String(card.result || card.status || 'pending').toLowerCase(),
-      access_type: 'free',
-      access: 'free',
-      is_premium: false,
-      price: 0,
-      updated_at: nowIso,
+      result: String(card.result || 'pending').toLowerCase(),
+      profit: Number(card.profit || 0),
+      source: 'AI',
     })
 
     const payload = cardsToSave.map(buildPayload)
 
-    const parseMissingColumnNameV1482 = message => {
-      const text = String(message || '')
-      return text.match(/Could not find the '([^']+)' column/i)?.[1]
-        || text.match(/column "([^"]+)" of relation "tips" does not exist/i)?.[1]
-        || text.match(/column ([a-zA-Z0-9_]+) does not exist/i)?.[1]
-        || ''
-    }
-
-    const sanitizeTipsPayloadV1482 = input => Object.fromEntries(
-      Object.entries(input || {}).filter(([, value]) => value !== undefined)
-    )
-
-    const writeTipsRowWithColumnFallbackV1482 = async (mode, row, existingId = null, settled = false) => {
-      let safeRow = sanitizeTipsPayloadV1482(
-        settled ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k))) : row
-      )
-      const removed = new Set()
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        const result = mode === 'update'
-          ? await supabase.from('tips').update(safeRow).eq('id', existingId)
-          : await supabase.from('tips').insert(safeRow)
-        if (!result.error) return true
-        const missing = parseMissingColumnNameV1482(result.error?.message || result.error?.details || '')
-        if (!missing || removed.has(missing) || !(missing in safeRow)) throw result.error
-        removed.add(missing)
-        const { [missing]: _removed, ...nextRow } = safeRow
-        safeRow = nextRow
-      }
-      return false
-    }
-
-    const saveTipsOneByOne = async () => {
+    const saveAiBetOneByOneV1490 = async () => {
       let saved = 0
       for (const row of payload) {
-        const key = String(row.ai_external_key || '')
-        const market = String(row.market || '')
-        const selection = String(row.selection || '')
         try {
           let existing = []
-          let findErr = null
-
-          // V1489: ai_external_key nie zawsze istnieje w starej bazie. Nie wolno blokować zapisu AI,
-          // bo wtedy typy wiszą tylko lokalnie i znikają po wejściu od nowa.
-          // Najpierw próbujemy po ai_external_key, a jeśli baza zwróci błąd kolumny,
-          // przechodzimy na pewny klucz: match + prediction + match_time.
-          if (key) {
-            const byAiKey = await supabase
-              .from('tips').select('id,status,result')
-              .eq('ai_external_key', key)
-              .eq('market', market)
-              .eq('selection', selection)
+          if (row.external_fixture_id) {
+            const byKey = await supabase
+              .from('ai_bets')
+              .select('id,status,result')
+              .eq('external_fixture_id', row.external_fixture_id)
+              .eq('market', row.market)
+              .eq('prediction', row.prediction)
               .limit(1)
-            existing = byAiKey.data || []
-            findErr = byAiKey.error || null
+            if (byKey.error) throw byKey.error
+            existing = byKey.data || []
           }
 
-          if (findErr || !existing?.length) {
-            const byNaturalKey = await supabase
-              .from('tips').select('id,status,result')
-              .eq('match', row.match)
+          if (!existing.length) {
+            const byNatural = await supabase
+              .from('ai_bets')
+              .select('id,status,result')
+              .eq('match_date', row.match_date)
+              .eq('home_team', row.home_team)
+              .eq('away_team', row.away_team)
+              .eq('market', row.market)
               .eq('prediction', row.prediction)
-              .eq('match_time', row.match_time)
               .limit(1)
-            if (byNaturalKey.error) throw byNaturalKey.error
-            existing = byNaturalKey.data || []
+            if (byNatural.error) throw byNatural.error
+            existing = byNatural.data || []
           }
 
           const existingId = existing?.[0]?.id
           if (existingId) {
-            const alreadySettled = ['won','lost','void','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
-            const ok = await writeTipsRowWithColumnFallbackV1482('update', row, existingId, alreadySettled)
-            if (ok) saved += 1
+            const alreadySettled = ['won','lost','void','win','loss','push'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
+            const updateRow = alreadySettled
+              ? Object.fromEntries(Object.entries(row).filter(([k]) => !['status','result','profit'].includes(k)))
+              : row
+            const { error } = await supabase.from('ai_bets').update(updateRow).eq('id', existingId)
+            if (error) throw error
+            saved += 1
           } else {
-            const ok = await writeTipsRowWithColumnFallbackV1482('insert', row)
-            if (ok) saved += 1
+            const { error } = await supabase.from('ai_bets').insert(row)
+            if (error) throw error
+            saved += 1
           }
         } catch (err) {
-          console.warn('AI journal row save skipped:', row.match_name, err?.message || err)
+          console.warn('AI bet save skipped:', row.home_team, row.away_team, err?.message || err)
         }
       }
       return saved
     }
 
     const saveLeagueCatalog = async () => {
+      const nowIso = new Date().toISOString()
       const grouped = Array.from(new Map(cardsToSave.map(card => [`${card.sport}|||${card.league}`, {
         sport: card.sport,
         league: card.league,
@@ -15429,11 +15390,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         tips_count: cardsToSave.filter(c => c.sport === card.sport && c.league === card.league).length
       }])).values())
       if (!grouped.length) return
-
-      // Najpierw szybki upsert, a gdy baza nie ma constraintu sport+league, fallback update/insert.
       const up = await supabase.from('ai_leagues_catalog').upsert(grouped, { onConflict: 'sport,league' })
       if (!up.error) return
-
       for (const row of grouped) {
         try {
           const { data: existing } = await supabase
@@ -15458,16 +15416,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
     }
 
-    // WERSJA 1480 SAFE: nie używamy upsert/on_conflict, bo brak constraintu potrafił dawać 400
-    // i zapętlać zapis. Zapis idzie bezpiecznie: najpierw SELECT, potem UPDATE albo INSERT.
-    const savedCount = await saveTipsOneByOne()
-
+    const savedCount = await saveAiBetOneByOneV1490()
     if (savedCount > 0) {
       await saveLeagueCatalog()
-      setStatusText(`Zapisano ${savedCount}/${payload.length} typów AI w bazie. Mecze Result, Ligi i Statystyki będą korzystać z tych danych na stałe.`)
+      setStatusText(`Zapisano ${savedCount}/${payload.length} typów AI w tabeli ai_bets. Typy AI, Mecze Result, Statystyki i licznik logowania czytają teraz z ai_bets.`)
       if (typeof onRefresh === 'function') await onRefresh()
     } else {
-      setStatusText(`Znalazłem ${payload.length} typów premium, ale Supabase nie przyjął zapisu. Zostawiam je na ekranie i nie włączam cooldownu.`)
+      setStatusText(`Znalazłem ${payload.length} typów premium, ale Supabase nie przyjął zapisu do ai_bets. Zostawiam je na ekranie i nie włączam cooldownu.`)
     }
     return savedCount
   }
@@ -15693,8 +15648,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Dlatego ładujemy jeden wspólny dziennik wszystkich zapisanych typów AI,
       // a nie tylko ostatnio aktywny dzień.
       const { data, error } = await supabase
-        .from('tips').select('*')
-        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.ilike.%live_ai%')
+        .from('ai_bets').select('*')
+        .order('match_date', { ascending: true })
         .order('match_time', { ascending: true })
         .limit(200)
 
@@ -15722,12 +15677,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // Pobieramy szersze okno, bo event_time bywa zapisany w UTC.
       // Potem filtrujemy już twardo po dacie Europe/Warsaw, żeby zakładka "dziś"
       // nie pokazywała meczów z jutra, np. 16.05 podczas dnia 15.05.
-      const nextDayKey = getBetAiNextLocalDateV1081(mode)
       const { data, error } = await supabase
-        .from('tips').select('*')
-        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.ilike.%live_ai%,source.eq.Supabase Journal')
-        .gte('match_time', `${today}T00:00:00`)
-        .lt('match_time', `${nextDayKey}T00:00:00`)
+        .from('ai_bets').select('*')
+        .eq('match_date', today)
         .order('match_time', { ascending: true })
         .limit(150)
 
@@ -17389,11 +17341,9 @@ function AuthView({ onAuth }) {
       const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
       const aiTipsTodayQuery = supabase
-        .from('tips')
+        .from('ai_bets')
         .select('id', { count: 'exact', head: true })
-        .gte('match_time', `${todayKey}T00:00:00`)
-        .lt('match_time', `${tomorrowKey}T00:00:00`)
-        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.eq.Supabase Journal')
+        .eq('match_date', todayKey)
 
       const [registeredUsers, activeNow, tipsToday] = await Promise.all([
         safeCount(supabase.from('profiles').select('id', { count: 'exact', head: true }), 0, 3500),
