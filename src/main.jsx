@@ -3203,7 +3203,7 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
     const nextDay = getBetAiNextWarsawDayKeyV1156(dayKey)
     const { data, error } = await supabase
       .from('tips').select('*')
-      .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
+      .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.ilike.%live_ai%')
       .gte('event_time', `${dayKey}T00:00:00`)
       .lt('event_time', `${nextDay}T00:00:00`)
       .order('ai_confidence', { ascending: false, nullsFirst: false })
@@ -15133,7 +15133,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const dbCards = useMemo(() => {
     return (tips || [])
-      .filter(t => String(t.ai_source || t.source || '').includes('ai') || String(t.source || '').includes('live_ai'))
+      .filter(t => {
+        const src = `${t.ai_source || ''} ${t.source || ''}`.toLowerCase()
+        return src.includes('ai') || src.includes('real_ai') || src.includes('live_ai')
+      })
       .map((t, index) => mapAiTipRowToCard(t, index))
   }, [tips])
 
@@ -15288,8 +15291,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const buildPayload = (card) => ({
       ai_external_key: String(card.id),
       external_fixture_id: String(card.externalFixtureId || card.apiFixtureId || card.fixture_id || card.id || ''),
-      ai_source: 'real_ai_engine',
-      source: 'live_ai_engine',
+      ai_source: 'real_ai',
+      source: 'AI',
       ai_model_version: 'Bet+AI Free Center v1',
       author_name: 'Bet+AI Model',
       username: 'Bet+AI Model',
@@ -15372,13 +15375,35 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         const market = String(row.market || '')
         const selection = String(row.selection || '')
         try {
-          const { data: existing, error: findErr } = await supabase
-            .from('tips').select('id,status,result')
-            .eq('ai_external_key', key)
-            .eq('market', market)
-            .eq('selection', selection)
-            .limit(1)
-          if (findErr) throw findErr
+          let existing = []
+          let findErr = null
+
+          // V1489: ai_external_key nie zawsze istnieje w starej bazie. Nie wolno blokować zapisu AI,
+          // bo wtedy typy wiszą tylko lokalnie i znikają po wejściu od nowa.
+          // Najpierw próbujemy po ai_external_key, a jeśli baza zwróci błąd kolumny,
+          // przechodzimy na pewny klucz: match + prediction + match_time.
+          if (key) {
+            const byAiKey = await supabase
+              .from('tips').select('id,status,result')
+              .eq('ai_external_key', key)
+              .eq('market', market)
+              .eq('selection', selection)
+              .limit(1)
+            existing = byAiKey.data || []
+            findErr = byAiKey.error || null
+          }
+
+          if (findErr || !existing?.length) {
+            const byNaturalKey = await supabase
+              .from('tips').select('id,status,result')
+              .eq('match', row.match)
+              .eq('prediction', row.prediction)
+              .eq('match_time', row.match_time)
+              .limit(1)
+            if (byNaturalKey.error) throw byNaturalKey.error
+            existing = byNaturalKey.data || []
+          }
+
           const existingId = existing?.[0]?.id
           if (existingId) {
             const alreadySettled = ['won','lost','void','win','loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
@@ -15669,7 +15694,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       // a nie tylko ostatnio aktywny dzień.
       const { data, error } = await supabase
         .from('tips').select('*')
-        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%')
+        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.ilike.%live_ai%')
         .order('match_time', { ascending: true })
         .limit(200)
 
@@ -15700,7 +15725,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const nextDayKey = getBetAiNextLocalDateV1081(mode)
       const { data, error } = await supabase
         .from('tips').select('*')
-        .or('ai_source.ilike.%ai%,source.ilike.%ai%,source.ilike.%live_ai%,source.eq.Supabase Journal')
+        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.ilike.%live_ai%,source.eq.Supabase Journal')
         .gte('match_time', `${today}T00:00:00`)
         .lt('match_time', `${nextDayKey}T00:00:00`)
         .order('match_time', { ascending: true })
@@ -17348,18 +17373,27 @@ function AuthView({ onAuth }) {
         return
       }
 
-      const startOfToday = new Date()
-      startOfToday.setHours(0, 0, 0, 0)
-      const endOfToday = new Date(startOfToday)
-      endOfToday.setDate(endOfToday.getDate() + 1)
+      const getWarsawDateKey = (offsetDays = 0) => {
+        const base = new Date()
+        base.setUTCDate(base.getUTCDate() + offsetDays)
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(base).reduce((acc, part) => {
+          if (part.type !== 'literal') acc[part.type] = part.value
+          return acc
+        }, {})
+        return `${parts.year}-${parts.month}-${parts.day}`
+      }
+      const todayKey = getWarsawDateKey(0)
+      const tomorrowKey = getWarsawDateKey(1)
       const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
       const aiTipsTodayQuery = supabase
         .from('tips')
         .select('id', { count: 'exact', head: true })
-        .gte('match_time', startOfToday.toISOString())
-        .lt('match_time', endOfToday.toISOString())
-        .or('ai_source.ilike.%real_ai%,ai_source.ilike.%ai%,source.ilike.%ai%,source.eq.Supabase Journal')
+        .gte('match_time', `${todayKey}T00:00:00`)
+        .lt('match_time', `${tomorrowKey}T00:00:00`)
+        .or('ai_source.eq.real_ai,ai_source.ilike.%ai%,source.eq.AI,source.ilike.%ai%,source.eq.Supabase Journal')
 
       const [registeredUsers, activeNow, tipsToday] = await Promise.all([
         safeCount(supabase.from('profiles').select('id', { count: 'exact', head: true }), 0, 3500),
