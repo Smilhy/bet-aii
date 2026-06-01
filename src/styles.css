@@ -69439,3 +69439,139 @@ html.betai-fhd-monitor80-v1323 body #root{
   .tvlive-page-v8 .flashscore-match-v1132{grid-template-columns:32px 62px minmax(0,1fr)!important;gap:10px!important;}
   .tvlive-page-v8 .flashscore-teams-v1132 span{font-size:22px!important;min-width:36px!important;}
 }
+
+/* WERSJA 1523 — Wyniki live: układ jak mock, bez opisu/prawych detali, filtry LIVE/PRE/HT */
+.tvlive-page-v8 .flashscore-header-v1132 p{display:none!important;}
+.tvlive-page-v8 .flashscore-header-v1132{
+  align-items:center!important;
+  gap:22px!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523{
+  position:relative!important;
+  z-index:1!important;
+  margin-left:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(110px,1fr))!important;
+  gap:12px!important;
+  min-width:390px!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 button{
+  height:72px!important;
+  padding:12px 15px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(49,228,255,.12)!important;
+  background:linear-gradient(180deg,rgba(9,31,48,.78),rgba(4,18,30,.70))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+  color:#eaffff!important;
+  text-align:left!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:5px!important;
+  cursor:pointer!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 button.active,
+.tvlive-page-v8 .flashscore-hero-stats-v1523 button:hover{
+  border-color:rgba(35,241,213,.48)!important;
+  box-shadow:0 0 22px rgba(35,241,213,.10), inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 em{
+  color:#23f1d5!important;
+  font-size:12px!important;
+  font-style:normal!important;
+  font-weight:1000!important;
+  letter-spacing:.12em!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 strong{
+  color:#f4feff!important;
+  font-size:26px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523{
+  margin:0 0 14px!important;
+  display:flex!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button{
+  min-width:74px!important;
+  height:36px!important;
+  justify-content:center!important;
+  font-size:12px!important;
+  letter-spacing:.08em!important;
+}
+.tvlive-page-v8 .flashscore-league-head-v1132{
+  grid-template-columns:1fr!important;
+  padding:14px 18px!important;
+}
+.tvlive-page-v8 .flashscore-league-head-v1132 span{display:none!important;}
+.tvlive-page-v8 .flashscore-star-v1132{display:none!important;}
+.tvlive-page-v8 .flashscore-match-v1132{
+  grid-template-columns:88px minmax(0,1fr)!important;
+  gap:18px!important;
+  padding:16px 18px!important;
+  align-items:center!important;
+}
+.tvlive-page-v8 .flashscore-time-v1132{
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:5px!important;
+  min-height:54px!important;
+}
+.tvlive-page-v8 .flashscore-time-v1132 b{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  color:#22f0d4!important;
+  font-size:13px!important;
+  letter-spacing:.08em!important;
+}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-live b::before{
+  content:''!important;
+  width:8px!important;
+  height:8px!important;
+  border-radius:50%!important;
+  background:#ff3b3b!important;
+  box-shadow:0 0 12px rgba(255,59,59,.8)!important;
+  animation:liveDotPulse1523 1.2s ease-in-out infinite!important;
+}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-pre b{color:#9ec2d0!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-ht b{color:#ffd36b!important;}
+.tvlive-page-v8 .flashscore-time-v1132 small{font-size:12px!important;color:#a7bac3!important;font-weight:900!important;}
+.tvlive-page-v8 .flashscore-teams-v1132{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 92px!important;
+  row-gap:8px!important;
+  column-gap:18px!important;
+}
+.tvlive-page-v8 .flashscore-teams-v1132 div{
+  display:grid!important;
+  grid-template-columns:42px minmax(0,1fr) 52px!important;
+  gap:10px!important;
+  align-items:center!important;
+  grid-column:1 / -1!important;
+}
+.tvlive-page-v8 .flashscore-teams-v1132 strong{font-size:16px!important;}
+.tvlive-page-v8 .flashscore-teams-v1132 span{
+  font-size:28px!important;
+  min-width:52px!important;
+  color:#f7feff!important;
+}
+.tvlive-page-v8 .flashscore-events-v1132,
+.tvlive-page-v8 .flashscore-stats-v1132,
+.tvlive-page-v8 .flashscore-odds-v1132,
+.tvlive-page-v8 .flashscore-match-v1132 > .flashscore-events-v1132,
+.tvlive-page-v8 .flashscore-match-v1132 > .flashscore-stats-v1132,
+.tvlive-page-v8 .flashscore-match-v1132 > .flashscore-odds-v1132{display:none!important;}
+@keyframes liveDotPulse1523{0%,100%{transform:scale(.9);opacity:.8}50%{transform:scale(1.25);opacity:1}}
+@media(max-width:1200px){
+  .tvlive-page-v8 .flashscore-header-v1132{flex-direction:column!important;align-items:flex-start!important;}
+  .tvlive-page-v8 .flashscore-hero-stats-v1523{margin-left:0!important;min-width:0!important;width:100%!important;}
+}
+@media(max-width:760px){
+  .tvlive-page-v8 .flashscore-hero-stats-v1523{grid-template-columns:1fr!important;}
+  .tvlive-page-v8 .flashscore-match-v1132{grid-template-columns:70px minmax(0,1fr)!important;gap:10px!important;}
+  .tvlive-page-v8 .flashscore-teams-v1132 div{grid-template-columns:34px minmax(0,1fr) 42px!important;}
+}

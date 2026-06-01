@@ -11824,6 +11824,7 @@ function ArticlesView() {
   const [scoreSportFilter, setScoreSportFilter] = useState('all')
   const [scoreQuery, setScoreQuery] = useState('')
   const [scoreDay, setScoreDay] = useState('today')
+  const [scoreStatusFilter, setScoreStatusFilter] = useState('all')
   const [realLiveScores, setRealLiveScores] = useState([])
   const [realLiveLoading, setRealLiveLoading] = useState(false)
   const [realLiveError, setRealLiveError] = useState('')
@@ -12252,6 +12253,29 @@ function ArticlesView() {
     { id: 'tomorrow', label: 'Jutro' },
   ]
 
+  const liveScoreStatusFilters = [
+    { id: 'all', label: 'Wszystkie' },
+    { id: 'live', label: 'LIVE' },
+    { id: 'pre', label: 'PRE' },
+    { id: 'ht', label: 'HT' },
+  ]
+
+  const getLiveScorePhase = (match = {}) => {
+    const status = String(match.status || match.status_short || match.statusLong || '').trim().toUpperCase()
+    const minute = String(match.minute || '').trim().toLowerCase()
+    if (status === 'HT' || minute.includes('przerwa') || minute.includes('half')) return 'ht'
+    if (['NS', 'TBD', 'PST', 'PRE'].includes(status) || minute.includes('zapowied') || /^\d{1,2}:\d{2}$/.test(status)) return 'pre'
+    if (['LIVE', '1H', '2H', 'ET', 'BT', 'P', 'INT'].includes(status) || minute.includes('q') || minute.includes('set') || minute.includes('′')) return 'live'
+    return 'live'
+  }
+
+  const getLiveScoreStatusLabel = (match = {}) => {
+    const phase = getLiveScorePhase(match)
+    if (phase === 'pre') return 'PRE'
+    if (phase === 'ht') return 'HT'
+    return 'LIVE'
+  }
+
   const liveScores = [
     {
       id: 'pl-tot-liv', sport: 'football', day: 'today', country: 'Anglia', league: 'Premier League', status: 'LIVE', minute: '86′',
@@ -12307,9 +12331,16 @@ function ArticlesView() {
   const liveScoreSource = realLiveScores
   const filteredLiveScores = liveScoreSource.filter(match => {
     const sportOk = scoreSportFilter === 'all' || match.sport === scoreSportFilter
+    const statusOk = scoreStatusFilter === 'all' || getLiveScorePhase(match) === scoreStatusFilter
     const queryOk = !normalizedScoreQuery || `${match.country} ${match.league} ${match.home?.name || ''} ${match.away?.name || ''}`.toLowerCase().includes(normalizedScoreQuery)
-    return sportOk && queryOk
+    return sportOk && statusOk && queryOk
   })
+
+  const liveScorePhaseCounts = liveScoreSource.reduce((acc, match) => {
+    const phase = getLiveScorePhase(match)
+    acc[phase] = (acc[phase] || 0) + 1
+    return acc
+  }, { live: 0, pre: 0, ht: 0 })
 
   const groupedLiveScores = filteredLiveScores.reduce((acc, match) => {
     const key = `${match.country} • ${match.league}`
@@ -12421,7 +12452,11 @@ function ArticlesView() {
                 <div>
                   <span>BETAI LIVESCORE</span>
                   <h3>Wyniki live</h3>
-                  <p>Realne mecze z API-SPORTS/API-Football. Odświeżanie automatyczne co 60 sekund.</p>
+                </div>
+                <div className="flashscore-hero-stats-v1523">
+                  <button type="button" className={scoreStatusFilter === 'live' ? 'active' : ''} onClick={() => setScoreStatusFilter('live')}><em>LIVE</em><strong>{liveScorePhaseCounts.live || 0}</strong></button>
+                  <button type="button" className={scoreStatusFilter === 'pre' ? 'active' : ''} onClick={() => setScoreStatusFilter('pre')}><em>PRE</em><strong>{liveScorePhaseCounts.pre || 0}</strong></button>
+                  <button type="button" className={scoreStatusFilter === 'ht' ? 'active' : ''} onClick={() => setScoreStatusFilter('ht')}><em>HT</em><strong>{liveScorePhaseCounts.ht || 0}</strong></button>
                 </div>
                 <button type="button" onClick={refreshRealLiveScores} disabled={realLiveLoading}>{realLiveLoading ? '⟳ Pobieram...' : '⟳ Odśwież'}</button>
               </div>
@@ -12444,6 +12479,12 @@ function ArticlesView() {
                 ))}
               </div>
 
+              <div className="scores-tabs-v8 flashscore-status-tabs-v1523" aria-label="Filtr statusu meczu">
+                {liveScoreStatusFilters.map(status => (
+                  <button type="button" key={status.id} className={scoreStatusFilter === status.id ? 'active' : ''} onClick={() => setScoreStatusFilter(status.id)}>{status.label}</button>
+                ))}
+              </div>
+
               <div className="flashscore-live-status-v1142">
                 <span>{realLiveUpdatedAt ? `Ostatnia aktualizacja: ${new Date(realLiveUpdatedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}` : 'Realne wyniki live'}</span>
                 {realLiveLoading ? <b>Pobieram realne mecze...</b> : null}
@@ -12455,12 +12496,10 @@ function ArticlesView() {
                   <section className="flashscore-league-v1132" key={leagueName}>
                     <div className="flashscore-league-head-v1132">
                       <strong>{leagueName}</strong>
-                      <span>{matches.length} mecz{matches.length === 1 ? '' : 'e'}</span>
                     </div>
                     {matches.map(match => (
                       <article className="flashscore-match-v1132" key={match.id}>
-                        <button type="button" className="flashscore-star-v1132" aria-label="Dodaj do ulubionych">☆</button>
-                        <div className="flashscore-time-v1132"><b>{match.status}</b><small>{match.minute}</small></div>
+                        <div className={`flashscore-time-v1132 score-phase-${getLiveScorePhase(match)}`}><b>{getLiveScoreStatusLabel(match)}</b><small>{match.minute}</small></div>
                         <div className="flashscore-teams-v1132">
                           <div><i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo}</i><strong>{match.home?.name}</strong><span>{match.home?.score}</span></div>
                           <div><i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo}</i><strong>{match.away?.name}</strong><span>{match.away?.score}</span></div>
