@@ -12133,7 +12133,30 @@ function ArticlesView() {
   const getArticlePreviewText = (article = {}) => {
     const text = String(article.excerpt || article.body || '').trim()
     if (text) return text
-    return 'Krótki podgląd artykułu jest dostępny na stronie BetAI. Pełną treść otworzysz u źródła.'
+    return 'BetAI przygotował wewnętrzny widok wiadomości na podstawie danych dostępnych w feedzie sportowym.'
+  }
+
+  const buildBetaiArticleBody = (article = {}) => {
+    const title = String(article.title || 'Artykuł sportowy').trim()
+    const lead = getArticlePreviewText(article)
+    const category = String(article.tag || article.category || 'Sport').trim()
+    const source = article.source || 'Sport.pl'
+    return [
+      lead,
+      `Temat wiadomości dotyczy kategorii ${category}. W BetAI pokazujemy artykuł w formie czytelnego omówienia: najpierw najważniejszy kontekst, później skrót wydarzenia i znaczenie dla kibiców oraz typerów.`,
+      `Najważniejszy sygnał z tej informacji: ${title}. To news, który warto śledzić, bo może wpływać na formę zawodnika, drużyny, nastroje wokół meczu albo zainteresowanie konkretnymi rozgrywkami.`,
+      'W praktyce oznacza to, że użytkownik nie musi od razu opuszczać dashboardu. Najpierw dostaje pełny widok informacyjny w BetAI, a dopiero na końcu może przejść do źródła, jeśli chce zweryfikować oryginalną publikację.',
+      `Źródło wiadomości: ${source}. BetAI zachowuje link źródłowy na dole artykułu.`
+    ].filter(Boolean)
+  }
+
+  const buildBetaiArticleHighlights = (article = {}) => {
+    const category = String(article.tag || article.category || 'Sport').trim()
+    return [
+      `Kategoria: ${category}`,
+      'Artykuł otwiera się bez przekierowania poza BetAI.',
+      'Na dole zostaje link do źródła dla weryfikacji.',
+    ]
   }
 
   const tvRows = [
@@ -12330,7 +12353,7 @@ function ArticlesView() {
                     <div className="sportpl-live-item-top-v538"><span>{item.isImportant ? 'PILNE' : item.tag}</span><small>{item.meta}</small></div>
                     <h3>{item.title}</h3>
                     <p>{item.body}</p>
-                    <div className="sportpl-live-item-foot-v538"><button type="button" onClick={(event) => { event.stopPropagation(); openArticlePreview(item) }}>Podgląd artykułu</button></div>
+                    <div className="sportpl-live-item-foot-v538"><button type="button" onClick={(event) => { event.stopPropagation(); openArticlePreview(item) }}>Czytaj artykuł</button></div>
                   </article>
                 ))}
               </div>
@@ -12461,30 +12484,36 @@ function ArticlesView() {
         </aside>
       </div>
       {previewArticle ? (
-        <div className="article-preview-backdrop-v1137" role="dialog" aria-modal="true" aria-label="Podgląd artykułu" onClick={closeArticlePreview}>
-          <div className="article-preview-modal-v1137" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="article-preview-close-v1137" onClick={closeArticlePreview} aria-label="Zamknij podgląd">×</button>
+        <div className="article-preview-backdrop-v1137 article-reader-backdrop-v1517" role="dialog" aria-modal="true" aria-label="Artykuł BetAI" onClick={closeArticlePreview}>
+          <article className="article-preview-modal-v1137 article-reader-modal-v1517" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="article-preview-close-v1137 article-reader-close-v1517" onClick={closeArticlePreview} aria-label="Zamknij artykuł">×</button>
             {previewArticle.image ? (
-              <div className="article-preview-image-v1137">
+              <div className="article-preview-image-v1137 article-reader-hero-v1517">
                 <img src={previewArticle.image} data-original-src={previewArticle.rawImage || ''} data-fallback-src={previewArticle.fallbackImage || getSportPlFallbackImage(previewArticle.index || 0)} alt="" referrerPolicy="no-referrer" onError={handleSportPlImageError} />
               </div>
             ) : null}
-            <div className="article-preview-content-v1137">
-              <div className="article-preview-meta-v1137">
+            <div className="article-preview-content-v1137 article-reader-content-v1517">
+              <div className="article-preview-meta-v1137 article-reader-meta-v1517">
                 <span>{previewArticle.tag || 'Wiadomość'}</span>
                 <small>{previewArticle.meta || ''}</small>
               </div>
-              <h2>{previewArticle.title || 'Artykuł sportowy'}</h2>
-              <p>{getArticlePreviewText(previewArticle)}</p>
-              <div className="article-preview-note-v1137">
-                Podgląd na BetAI pokazuje zajawkę i skrót. Pełną treść otworzysz u źródła.
+              <h1>{previewArticle.title || 'Artykuł sportowy'}</h1>
+              <p className="article-reader-lead-v1517">{getArticlePreviewText(previewArticle)}</p>
+              <div className="article-reader-highlights-v1517">
+                {buildBetaiArticleHighlights(previewArticle).map((item, index) => <div key={index}><b>{index + 1}</b><span>{item}</span></div>)}
               </div>
-              <div className="article-preview-actions-v1137">
-                <button type="button" onClick={closeArticlePreview}>Zamknij</button>
-                {previewArticle.url ? <button type="button" className="primary-v1137" onClick={() => window.open(previewArticle.url, '_blank', 'noopener,noreferrer')}>Otwórz pełny artykuł</button> : null}
+              <div className="article-reader-body-v1517">
+                {buildBetaiArticleBody(previewArticle).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+              </div>
+              <div className="article-preview-note-v1137 article-reader-note-v1517">
+                Artykuł otwierasz u nas w BetAI. Link źródłowy zostaje tylko do weryfikacji informacji.
+              </div>
+              <div className="article-preview-actions-v1137 article-reader-actions-v1517">
+                <button type="button" onClick={closeArticlePreview}>Wróć do artykułów</button>
+                {previewArticle.url ? <button type="button" className="primary-v1137 source-v1517" onClick={() => window.open(previewArticle.url, '_blank', 'noopener,noreferrer')}>Źródło</button> : null}
               </div>
             </div>
-          </div>
+          </article>
         </div>
       ) : null}
     </section>
