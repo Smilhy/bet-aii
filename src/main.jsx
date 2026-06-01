@@ -15660,19 +15660,39 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return { journal: journal || [], today: todaySaved || [], tomorrow: tomorrowSaved || [] }
   }
 
-  async function loadSavedAiJournalFromDbV1094() {
-    if (!isSupabaseConfigured || !supabase) return []
-    try {
-      // V1094: Mecze Result ma być niezależne od klikniętej zakładki dziś/jutro.
-      // Dlatego ładujemy jeden wspólny dziennik wszystkich zapisanych typów AI,
-      // a nie tylko ostatnio aktywny dzień.
-      const { data, error } = await supabase
-        .from('ai_bets').select('*')
-        .order('match_date', { ascending: true })
-        .order('match_time', { ascending: true })
-        .limit(200)
 
-      if (error) throw error
+  async function fetchAiBetsViaServiceRoleV1494(params = {}) {
+    const query = new URLSearchParams()
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && String(value) !== '') query.set(key, String(value))
+    })
+    const url = `/.netlify/functions/get-ai-bets${query.toString() ? `?${query.toString()}` : ''}`
+    try {
+      const result = await fetchJsonWithTimeoutV1079(url, 7000)
+      if (!result.ok) throw new Error(`get-ai-bets ${result.status}`)
+      return Array.isArray(result.json?.bets) ? result.json.bets : []
+    } catch (error) {
+      console.warn('get-ai-bets service load skipped:', error?.message || error)
+      return null
+    }
+  }
+
+  async function loadSavedAiJournalFromDbV1094() {
+    try {
+      // V1494: czytamy ai_bets przez Netlify Function / Service Role, bo RLS/anon potrafił zwracać pustą listę.
+      const serviceRows = await fetchAiBetsViaServiceRoleV1494({ scope: 'journal', limit: 200 })
+      let data = serviceRows
+
+      if (!Array.isArray(data)) {
+        if (!isSupabaseConfigured || !supabase) return []
+        const { data: directData, error } = await supabase
+          .from('ai_bets').select('*')
+          .order('match_date', { ascending: true })
+          .order('match_time', { ascending: true })
+          .limit(200)
+        if (error) throw error
+        data = directData || []
+      }
 
       const mapped = (data || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
@@ -15680,6 +15700,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       setSavedAiJournalCards(mapped)
+      if (mapped.length) mergeSavedAiCardsV1487(mapped)
       return mapped
     } catch (err) {
       console.warn('AI full journal load skipped:', err?.message || err)
@@ -15689,24 +15710,28 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
 
   async function loadSavedAiTipsFromDb(mode = aiDayMode) {
-    if (!isSupabaseConfigured || !supabase) return []
     const today = getBetAiSelectedLocalDateV1081(mode)
 
     try {
-      // Pobieramy szersze okno, bo event_time bywa zapisany w UTC.
-      // Potem filtrujemy już twardo po dacie Europe/Warsaw, żeby zakładka "dziś"
-      // nie pokazywała meczów z jutra, np. 16.05 podczas dnia 15.05.
-      const { data, error } = await supabase
-        .from('ai_bets').select('*')
-        .eq('match_date', today)
-        .order('match_time', { ascending: true })
-        .limit(150)
+      // V1494: auto-load zapisanych Typów AI czyta public.ai_bets przez backend Service Role.
+      // Dzięki temu po wejściu w Typy AI od razu widać zapisane typy, bez klikania Odśwież.
+      const serviceRows = await fetchAiBetsViaServiceRoleV1494({ scope: 'day', mode, date: today, limit: 150 })
+      let data = serviceRows
 
-      if (error) throw error
+      if (!Array.isArray(data)) {
+        if (!isSupabaseConfigured || !supabase) return []
+        const { data: directData, error } = await supabase
+          .from('ai_bets').select('*')
+          .eq('match_date', today)
+          .order('match_time', { ascending: true })
+          .limit(150)
+        if (error) throw error
+        data = directData || []
+      }
 
       const mapped = (data || [])
         .map((row, index) => mapAiTipRowToCard(row, index))
-        .filter(card => getBetAiCardLocalDateV1078(card) === today)
+        .filter(card => getBetAiCardLocalDateV1078(card) === today || String(card?.match_date || '').slice(0,10) === today)
         .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
 
       if (mapped.length) {
@@ -15716,9 +15741,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return mapped
       }
 
-      // V1484: jeśli Supabase jeszcze nie zwrócił nowo zapisanych typów albo użytkownik
-      // przełączył Dziś/Jutro, nie gubimy listy. Odtwarzamy ostatnie widoczne typy
-      // dla konkretnego dnia z lekkiego cache w przeglądarce.
       const cached = loadBetAiVisibleCacheV1484(mode)
       if (cached.length) {
         mergeSavedAiCardsV1487(cached)
@@ -15726,8 +15748,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return cached
       }
 
-      // V1485: nie zerujemy globalnej listy zapisanych typów przy pustej zakładce,
-      // np. Jutro = 0. Inaczej znikały Statystyki i Mecze Result dla typów z Dziś.
       return []
     } catch (err) {
       console.warn('AI saved tips load skipped:', err?.message || err)
@@ -15740,6 +15760,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       return []
     }
   }
+
 
 
 
