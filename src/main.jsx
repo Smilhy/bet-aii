@@ -13972,6 +13972,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     types: 20,
     odds: 20,
   })
+  const [selectedLeagueDetail, setSelectedLeagueDetail] = useState(null)
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
@@ -14300,6 +14301,47 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const sportRows = buildProfileRows(t => t.sport || t.sport_key || 'Piłka nożna')
   const leagueProfileRows = buildProfileRows(t => t.league || t.league_name || t.country || 'Inne')
   const typeProfileRows = buildProfileRows(t => getDetailedBetType(t))
+  const getLeagueKey = tip => tip.league || tip.league_name || tip.country || 'Inne'
+  const selectedLeagueTips = selectedLeagueDetail
+    ? filtered.filter(t => getLeagueKey(t) === selectedLeagueDetail)
+    : []
+  const selectedLeagueTypeRows = selectedLeagueTips.length
+    ? Object.values(selectedLeagueTips.reduce((acc, t) => {
+        const key = getDetailedBetType(t) || t.market || t.bet_type || 'Typ AI'
+        if (!acc[key]) acc[key] = { key, bets: 0, stake: 0, profit: 0, odds: 0, won: 0, lost: 0, pending: 0 }
+        const stake = Number(t.stake || 100) || 100
+        const odds = Number(t.odds || t.course || 0) || 0
+        const result = normalizeResult(t.result || t.status)
+        acc[key].bets += 1
+        acc[key].stake += stake
+        acc[key].odds += odds
+        if (result === 'won') acc[key].won += 1
+        else if (result === 'lost') acc[key].lost += 1
+        else acc[key].pending += 1
+        if (['won', 'lost', 'push'].includes(result)) acc[key].profit += tipProfit(t)
+        return acc
+      }, {})).map(row => ({
+        ...row,
+        yieldValue: row.stake ? (row.profit / row.stake) * 100 : 0,
+        avgOdds: row.bets ? row.odds / row.bets : 0,
+      })).sort((a, b) => b.bets - a.bets || b.profit - a.profit)
+    : []
+  const selectedLeagueSummary = selectedLeagueTips.reduce((acc, t) => {
+    const stake = Number(t.stake || 100) || 100
+    const odds = Number(t.odds || t.course || 0) || 0
+    const result = normalizeResult(t.result || t.status)
+    acc.bets += 1
+    acc.stake += stake
+    acc.odds += odds
+    if (['won', 'lost', 'push'].includes(result)) {
+      acc.settled += 1
+      acc.profit += tipProfit(t)
+    }
+    if (result === 'won') acc.won += 1
+    else if (result === 'lost') acc.lost += 1
+    else acc.pending += 1
+    return acc
+  }, { bets: 0, stake: 0, profit: 0, odds: 0, settled: 0, won: 0, lost: 0, pending: 0 })
   const oddsProfileRows = oddsBuckets.map(bucket => {
     const bucketTips = filtered.filter(t => { const o = Number(t.odds || t.course || 0); return o >= bucket.min && o < bucket.max })
     const stake = bucketTips.reduce((s,t)=>s+(Number(t.stake||100)||100),0)
@@ -14326,7 +14368,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     return { key:bucket.key, bets:bucketTips.length, stake, profit, yieldValue: stake ? (profit/stake)*100 : 0, avgOdds: bucketTips.length ? oddsSum/bucketTips.length : 0 }
   }).filter(r => r.bets)
 
-  const StatTable = ({ title, columns, rows, variant = '', tableKey = 'default' }) => {
+  const StatTable = ({ title, columns, rows, variant = '', tableKey = 'default', onRowClick = null }) => {
     const visibleCount = tableVisibleCounts[tableKey] || 20
     const visibleRows = rows.slice(0, visibleCount)
     const hasMore = rows.length > visibleCount
@@ -14335,7 +14377,14 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
       <h4>{title}</h4>
       <div className="ai-profile-table-head-v1459">{columns.map(c => <b key={c}>{c}</b>)}</div>
       {visibleRows.length ? visibleRows.map(row => (
-        <div className="ai-profile-table-row-v1459" key={row.key}>
+        <div
+          className={`ai-profile-table-row-v1459 ${onRowClick ? 'clickable-v1497' : ''}`}
+          key={row.key}
+          role={onRowClick ? 'button' : undefined}
+          tabIndex={onRowClick ? 0 : undefined}
+          onClick={onRowClick ? () => onRowClick(row) : undefined}
+          onKeyDown={onRowClick ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onRowClick(row) } } : undefined}
+        >
           <span>{row.key}</span>
           <span>{row.bets}</span>
           {variant === 'sport' ? <span>{row.stake.toFixed(2)}</span> : null}
@@ -14454,12 +14503,45 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <StatTable title="Statystyki dla sportów" columns={['Sport','Liczba kuponów','Stawka rozliczona','Bilans','Yield']} rows={sportRows} variant="sport" tableKey="sports" />
       </div>
       <div className="ai-profile-grid-v1459 two">
-        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} tableKey="leagues" />
+        <StatTable title="Statystyki według lig" columns={['Liga','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={leagueProfileRows} tableKey="leagues" onRowClick={row => setSelectedLeagueDetail(row.key)} />
         <StatTable title="Statystyki rodzajów typów" columns={['Rodzaj typu','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={typeProfileRows} tableKey="types" />
       </div>
       <div className="ai-profile-grid-v1459 single">
         <StatTable title="Statystyki zakresów kursów" columns={['Kurs','Ilość kuponów','Stawka rozliczona','Bilans','Yield','Śr. kurs']} rows={oddsProfileRows} tableKey="odds" />
       </div>
+      {selectedLeagueDetail ? (
+        <div className="ai-league-modal-backdrop-v1497" onClick={() => setSelectedLeagueDetail(null)}>
+          <div className="ai-league-modal-v1497" onClick={event => event.stopPropagation()}>
+            <button type="button" className="ai-league-modal-close-v1497" onClick={() => setSelectedLeagueDetail(null)}>×</button>
+            <div className="ai-league-modal-head-v1497">
+              <span>ANALIZA LIGI AI</span>
+              <h3>{selectedLeagueDetail}</h3>
+              <p>Podgląd, jakie rodzaje typów AI pojawiały się w tej lidze i czy były na plusie.</p>
+            </div>
+            <div className="ai-league-modal-summary-v1497">
+              <div><small>Typów</small><b>{selectedLeagueSummary.bets}</b></div>
+              <div><small>Stawka</small><b>{selectedLeagueSummary.stake.toFixed(2)}</b></div>
+              <div><small>Bilans</small><b className={selectedLeagueSummary.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(selectedLeagueSummary.profit)}</b></div>
+              <div><small>Yield</small><b className={selectedLeagueSummary.stake && selectedLeagueSummary.profit < 0 ? 'neg' : 'pos'}>{fmtPercent(selectedLeagueSummary.stake ? (selectedLeagueSummary.profit / selectedLeagueSummary.stake) * 100 : 0)}</b></div>
+              <div><small>W/L/P</small><b>{selectedLeagueSummary.won}/{selectedLeagueSummary.lost}/{selectedLeagueSummary.pending}</b></div>
+            </div>
+            <div className="ai-league-modal-table-v1497">
+              <div className="head"><b>Rodzaj typu</b><b>Ilość</b><b>Stawka</b><b>Bilans</b><b>Yield</b><b>Śr. kurs</b><b>W/L/P</b></div>
+              {selectedLeagueTypeRows.length ? selectedLeagueTypeRows.map(row => (
+                <div className="row" key={row.key}>
+                  <span>{row.key}</span>
+                  <span>{row.bets}</span>
+                  <span>{row.stake.toFixed(2)}</span>
+                  <span className={row.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(row.profit)}</span>
+                  <span className={row.yieldValue < 0 ? 'neg' : 'pos'}>{fmtPercent(row.yieldValue)}</span>
+                  <span>{row.avgOdds.toFixed(2)}</span>
+                  <span>{row.won}/{row.lost}/{row.pending}</span>
+                </div>
+              )) : <div className="empty">Brak typów dla tej ligi w aktualnym filtrze.</div>}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

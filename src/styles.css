@@ -68414,3 +68414,29 @@ html.betai-fhd-monitor80-v1323 body #root{
   text-transform:uppercase!important;
   opacity:.65!important;
 }
+
+/* V1497 — podgląd ligi AI: typy, profit, yield */
+.ai-center-page-v747 .ai-profile-table-row-v1459.clickable-v1497{cursor:pointer!important;transition:background .18s ease, box-shadow .18s ease, transform .18s ease!important;}
+.ai-center-page-v747 .ai-profile-table-row-v1459.clickable-v1497:hover{background:rgba(45,238,225,.12)!important;box-shadow:0 0 0 1px rgba(45,238,225,.20),0 0 18px rgba(45,238,225,.10)!important;transform:translateY(-1px)!important;}
+.ai-league-modal-backdrop-v1497{position:fixed!important;inset:0!important;z-index:999999!important;background:rgba(0,8,15,.72)!important;backdrop-filter:blur(10px)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;}
+.ai-league-modal-v1497{position:relative!important;width:min(980px,calc(100vw - 42px))!important;max-height:86vh!important;overflow:auto!important;border:1px solid rgba(55,245,235,.34)!important;border-radius:28px!important;background:linear-gradient(145deg,rgba(4,24,38,.98),rgba(5,52,62,.96))!important;box-shadow:0 0 0 1px rgba(51,239,228,.10),0 24px 80px rgba(0,0,0,.58),0 0 48px rgba(31,235,228,.18)!important;padding:24px!important;color:#eafaff!important;}
+.ai-league-modal-v1497:before{content:"";position:absolute;inset:0;border-radius:28px;pointer-events:none;background:radial-gradient(circle at 20% 0%,rgba(67,244,255,.18),transparent 34%),radial-gradient(circle at 85% 20%,rgba(45,238,225,.12),transparent 30%);}
+.ai-league-modal-close-v1497{position:absolute!important;right:18px!important;top:16px!important;z-index:2!important;width:38px!important;height:38px!important;border-radius:14px!important;border:1px solid rgba(105,230,255,.28)!important;background:rgba(3,18,30,.72)!important;color:#dffbff!important;font-size:24px!important;font-weight:900!important;cursor:pointer!important;}
+.ai-league-modal-head-v1497{position:relative!important;z-index:1!important;padding-right:42px!important;margin-bottom:16px!important;}
+.ai-league-modal-head-v1497 span{display:inline-flex!important;letter-spacing:.16em!important;text-transform:uppercase!important;color:#45f4e8!important;font-size:11px!important;font-weight:950!important;margin-bottom:8px!important;}
+.ai-league-modal-head-v1497 h3{margin:0!important;font-size:28px!important;line-height:1.05!important;color:#fff!important;text-shadow:0 0 20px rgba(61,249,255,.20)!important;}
+.ai-league-modal-head-v1497 p{margin:8px 0 0!important;color:#a8c7d6!important;font-size:13px!important;}
+.ai-league-modal-summary-v1497{position:relative!important;z-index:1!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important;margin:18px 0!important;}
+.ai-league-modal-summary-v1497 div{border:1px solid rgba(88,219,236,.18)!important;border-radius:18px!important;background:rgba(3,18,30,.56)!important;padding:13px 14px!important;box-shadow:inset 0 0 22px rgba(45,238,225,.04)!important;}
+.ai-league-modal-summary-v1497 small{display:block!important;color:#93b4c4!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.08em!important;font-weight:900!important;margin-bottom:5px!important;}
+.ai-league-modal-summary-v1497 b{font-size:20px!important;color:#fff!important;font-weight:950!important;}
+.ai-league-modal-table-v1497{position:relative!important;z-index:1!important;border:1px solid rgba(88,219,236,.14)!important;border-radius:18px!important;background:rgba(3,15,25,.42)!important;overflow:hidden!important;}
+.ai-league-modal-table-v1497 .head,.ai-league-modal-table-v1497 .row{display:grid!important;grid-template-columns:2fr .55fr .8fr .8fr .75fr .7fr .7fr!important;gap:10px!important;align-items:center!important;padding:12px 14px!important;min-width:760px!important;}
+.ai-league-modal-table-v1497 .head{background:rgba(7,45,58,.88)!important;color:#d9f9ff!important;font-size:12px!important;font-weight:950!important;}
+.ai-league-modal-table-v1497 .row{border-top:1px solid rgba(105,216,255,.07)!important;color:#cde9f2!important;font-size:13px!important;}
+.ai-league-modal-table-v1497 .row:nth-child(odd){background:rgba(8,34,48,.24)!important;}
+.ai-league-modal-table-v1497 .row span:first-child{color:#fff!important;font-weight:900!important;}
+.ai-league-modal-table-v1497 .pos,.ai-league-modal-summary-v1497 .pos{color:#22ffd0!important;text-shadow:0 0 14px rgba(34,255,208,.22)!important;}
+.ai-league-modal-table-v1497 .neg,.ai-league-modal-summary-v1497 .neg{color:#ff5f8e!important;text-shadow:0 0 14px rgba(255,95,142,.22)!important;}
+.ai-league-modal-table-v1497 .empty{padding:18px!important;color:#aac6d5!important;}
+@media(max-width:760px){.ai-league-modal-summary-v1497{grid-template-columns:repeat(2,minmax(0,1fr))!important}.ai-league-modal-v1497{padding:18px!important}}
