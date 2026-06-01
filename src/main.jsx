@@ -23445,7 +23445,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
               <span>TOP TYPERZY • LIVE MARKETPLACE</span>
               <h1>Najlepsi typerzy
                 <br />w sportowej <em>kratce</em></h1>
-              <p>Nowy baner jak w Dodaj typ: czytelna animowana siatka, ranking i realne konta użytkowników Bet+AI.</p>
             </div>
             <div className="betfolio-add-hero-visual betfolio-sport-hero-v2 top-tipsters-hero-art-v1510" aria-hidden="true">
               <div className="sport-hero-grid"></div>
@@ -23525,7 +23524,6 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
                 </div>
               ) : null}
             </div>
-            <div className="glass-market-v7 filter-v7 accent"><b>↻ Auto z Supabase</b></div>
           </div>
 
           <div className="market-v7-section-head">

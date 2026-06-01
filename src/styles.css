@@ -68692,3 +68692,141 @@ html.betai-fhd-monitor80-v1323 body #root{
 @media(max-width:1500px){.top-tipsters-v1510 .top-tipsters-sports-grid-v1510{grid-template-columns:repeat(4,minmax(140px,1fr))!important}.top-tipsters-v1510 .top-tipsters-hero-art-v1510{flex-basis:430px!important}.top-tipsters-v1510 .sport-hero-ball.main-ball{left:38px!important;width:132px!important;height:132px!important;font-size:96px!important}.top-tipsters-v1510 .sport-hero-scanner-card{right:46px!important;width:168px!important}.top-tipsters-v1510 .sport-hero-orbit.orbit-a{width:330px!important;right:22px!important}.top-tipsters-v1510 .sport-hero-mini-ball.mini-hockey{left:170px!important}}
 @media(max-width:1100px){.top-tipsters-v1510 .top-tipsters-hero-v1510{flex-direction:column!important}.top-tipsters-v1510 .top-tipsters-hero-art-v1510{flex:0 0 auto!important;width:100%!important;min-height:220px!important}.top-tipsters-v1510 .top-tipsters-sports-grid-v1510{grid-template-columns:repeat(2,minmax(140px,1fr))!important}}
 @media(max-width:720px){.top-tipsters-v1510 .top-tipsters-hero-art-v1510{display:none!important}.top-tipsters-v1510 .top-tipsters-sports-grid-v1510{grid-template-columns:1fr!important}}
+
+/* WERSJA 1511 — Top typerzy: czystszy wygląd dashboardu, bez tekstu pod hero i bez belki Auto z Supabase. */
+.top-tipsters-v1510 .top-tipsters-hero-v1510{
+  min-height:248px!important;
+  padding:22px 24px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 82% 35%, rgba(35,238,241,.14), transparent 26%),
+    linear-gradient(135deg, rgba(4,18,31,.98), rgba(5,29,45,.96) 54%, rgba(4,14,24,.99))!important;
+  border:1px solid rgba(33,226,229,.16)!important;
+  box-shadow:0 18px 54px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.top-tipsters-v1510 .market-hero-copy-v7{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  max-width:560px!important;
+}
+.top-tipsters-v1510 .market-hero-copy-v7 span{
+  color:#51f4f2!important;
+  font-size:11px!important;
+  line-height:1.15!important;
+  margin-bottom:12px!important;
+  letter-spacing:.16em!important;
+  opacity:.92!important;
+}
+.top-tipsters-v1510 .market-hero-copy-v7 h1{
+  font-size:42px!important;
+  line-height:1.02!important;
+  letter-spacing:-.035em!important;
+  color:#f4fbff!important;
+  text-shadow:0 10px 28px rgba(0,0,0,.22)!important;
+}
+.top-tipsters-v1510 .market-hero-copy-v7 h1 em{
+  color:#22eeea!important;
+  text-shadow:0 0 24px rgba(34,238,234,.26)!important;
+}
+.top-tipsters-v1510 .market-hero-copy-v7 p{display:none!important;}
+.top-tipsters-v1510 .top-tipsters-hero-art-v1510{
+  flex:0 0 440px!important;
+  min-height:204px!important;
+  border-radius:24px!important;
+  background:linear-gradient(135deg, rgba(8,30,45,.42), rgba(3,14,24,.24))!important;
+  border:1px solid rgba(34,238,234,.14)!important;
+}
+.top-tipsters-v1510 .sport-hero-ball.main-ball{
+  left:54px!important;
+  top:30px!important;
+  width:126px!important;
+  height:126px!important;
+  font-size:86px!important;
+  filter:saturate(.82) brightness(.88)!important;
+}
+.top-tipsters-v1510 .sport-hero-scanner-card{
+  top:48px!important;
+  right:70px!important;
+  width:168px!important;
+  min-height:132px!important;
+  padding:15px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,rgba(8,34,49,.82),rgba(4,18,31,.92))!important;
+  border-color:rgba(34,238,234,.24)!important;
+}
+.top-tipsters-v1510 .sport-hero-scanner-card strong{font-size:38px!important;}
+.top-tipsters-v1510 .sport-hero-scanner-card small{font-size:11px!important;line-height:1.25!important;}
+.top-tipsters-v1510 .sport-hero-mini-ball{width:42px!important;height:42px!important;font-size:24px!important;}
+.top-tipsters-v1510 .sport-hero-mini-ball.mini-tennis{right:70px!important;top:14px!important;}
+.top-tipsters-v1510 .sport-hero-mini-ball.mini-basket{right:18px!important;bottom:38px!important;}
+.top-tipsters-v1510 .sport-hero-mini-ball.mini-hockey{left:178px!important;bottom:20px!important;}
+.top-tipsters-v1510 .top-tipsters-sport-cards-v1510{
+  padding:14px!important;
+  border-radius:24px!important;
+  background:linear-gradient(180deg,rgba(4,20,30,.96),rgba(3,13,22,.99))!important;
+  border-color:rgba(34,238,234,.13)!important;
+  box-shadow:0 16px 42px rgba(0,0,0,.22)!important;
+}
+.top-tipsters-v1510 .sport-cards-head-v1276 span{
+  font-size:12px!important;
+  color:#d9fbff!important;
+  letter-spacing:.14em!important;
+}
+.top-tipsters-v1510 .top-tipsters-sports-grid-v1510{gap:10px!important;}
+.top-tipsters-v1510 .sport-card-v1276,
+.top-tipsters-v1510 .sport-card-v1276.football,
+.top-tipsters-v1510 .sport-card-v1276.basketball,
+.top-tipsters-v1510 .sport-card-v1276.tennis,
+.top-tipsters-v1510 .sport-card-v1276.hockey,
+.top-tipsters-v1510 .sport-card-v1276.mma,
+.top-tipsters-v1510 .sport-card-v1276.boxing,
+.top-tipsters-v1510 .sport-card-v1276.esports,
+.top-tipsters-v1510 .sport-card-v1276.dart,
+.top-tipsters-v1510 .sport-card-v1276.volleyball,
+.top-tipsters-v1510 .sport-card-v1276.baseball,
+.top-tipsters-v1510 .sport-card-v1276.handball,
+.top-tipsters-v1510 .sport-card-v1276.cricket,
+.top-tipsters-v1510 .sport-card-v1276.rugby,
+.top-tipsters-v1510 .sport-card-v1276.rugbyleague{
+  min-height:112px!important;
+  padding:14px 13px!important;
+  border-radius:15px!important;
+  background:
+    radial-gradient(circle at 88% 88%, rgba(34,238,234,.13), transparent 36%),
+    linear-gradient(135deg, rgba(7,34,45,.94), rgba(4,18,30,.99))!important;
+  border:1px solid rgba(34,238,234,.11)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.top-tipsters-v1510 .sport-card-v1276:hover{
+  border-color:rgba(34,238,234,.32)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.26),0 0 18px rgba(34,238,234,.08)!important;
+}
+.top-tipsters-v1510 .sport-card-v1276.active{
+  background:
+    radial-gradient(circle at 85% 85%, rgba(34,238,234,.24), transparent 38%),
+    linear-gradient(135deg, rgba(8,64,67,.92), rgba(5,28,43,.99))!important;
+  border-color:rgba(34,238,234,.78)!important;
+  box-shadow:0 0 0 1px rgba(34,238,234,.18),0 0 28px rgba(34,238,234,.12)!important;
+}
+.top-tipsters-v1510 .sport-card-top-v1276{gap:9px!important;margin-bottom:18px!important;}
+.top-tipsters-v1510 .sport-card-top-v1276 i{width:30px!important;height:30px!important;font-size:15px!important;background:rgba(2,13,23,.58)!important;}
+.top-tipsters-v1510 .sport-card-top-v1276 span{font-size:13px!important;font-weight:900!important;}
+.top-tipsters-v1510 .sport-card-v1276 strong{font-size:11px!important;letter-spacing:.07em!important;margin-bottom:3px!important;}
+.top-tipsters-v1510 .sport-card-v1276 small{font-size:10px!important;line-height:1.25!important;color:#94b4c2!important;}
+.top-tipsters-v1510 .sport-card-v1276 > b{font-size:48px!important;right:13px!important;bottom:-6px!important;opacity:.09!important;}
+.top-tipsters-v1510 .market-v7-filters{
+  grid-template-columns:minmax(210px,260px)!important;
+  align-items:center!important;
+}
+.top-tipsters-v1510 .market-v7-section-head h2{
+  font-size:28px!important;
+  letter-spacing:.08em!important;
+}
+@media(max-width:1500px){
+  .top-tipsters-v1510 .market-hero-copy-v7 h1{font-size:38px!important;}
+  .top-tipsters-v1510 .top-tipsters-hero-art-v1510{flex-basis:380px!important;}
+}
+@media(max-width:720px){
+  .top-tipsters-v1510 .market-hero-copy-v7 h1{font-size:32px!important;}
+}
