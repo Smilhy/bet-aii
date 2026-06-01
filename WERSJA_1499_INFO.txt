@@ -1,0 +1,9 @@
+Wersja 1499 — auto rozliczanie AI Bets bez duszenia
+
+Baza: 1498
+Zmiany:
+- Po wejściu w zakładkę Typy AI aplikacja uruchamia automatyczne rozliczanie ai_bets raz z opóźnieniem.
+- Cooldown 15 minut zapisany w localStorage, żeby nie spamować API/Supabase.
+- Przyciski ręczne zostają jako backup.
+- Brak auto-skanu nowych typów — tylko auto-rozliczanie pendingów.
+- Rozliczanie dalej używa funkcji settle-live-ai-picks i aktualizuje ai_bets.

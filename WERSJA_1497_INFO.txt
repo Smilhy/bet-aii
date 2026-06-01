@@ -1,1 +1,0 @@
-Wersja 1497: Podgląd ligi AI po kliknięciu w wiersz ligi w Statystykach. Modal pokazuje rodzaje typów w danej lidze, ilość, stawkę, profit/yield zielony-czerwony, średni kurs oraz W/L/P. Baza: 1496 działająca.
