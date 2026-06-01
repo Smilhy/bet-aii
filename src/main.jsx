@@ -15416,13 +15416,32 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
     }
 
-    const savedCount = await saveAiBetOneByOneV1490()
+    let savedCount = 0
+    let saveErrorText = ''
+
+    // V1491: trwały zapis Typów AI robimy przez Netlify Function z SERVICE_ROLE_KEY.
+    // Frontendowy anon key/RLS może nie mieć prawa INSERT do public.ai_bets, przez co typy były tylko lokalnie.
+    try {
+      const response = await fetch('/.netlify/functions/save-ai-bets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bets: payload })
+      })
+      const json = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(json?.error || json?.errors?.[0]?.error || `save-ai-bets HTTP ${response.status}`)
+      savedCount = Number(json?.saved || 0)
+    } catch (functionError) {
+      saveErrorText = functionError?.message || String(functionError)
+      console.warn('save-ai-bets function failed, fallback to client save:', saveErrorText)
+      savedCount = await saveAiBetOneByOneV1490()
+    }
+
     if (savedCount > 0) {
       await saveLeagueCatalog()
-      setStatusText(`Zapisano ${savedCount}/${payload.length} typów AI w tabeli ai_bets. Typy AI, Mecze Result, Statystyki i licznik logowania czytają teraz z ai_bets.`)
+      setStatusText(`Zapisano ${savedCount}/${payload.length} typów AI w tabeli ai_bets. Po odświeżeniu będą ładowane z bazy, nie tylko z pamięci strony.`)
       if (typeof onRefresh === 'function') await onRefresh()
     } else {
-      setStatusText(`Znalazłem ${payload.length} typów premium, ale Supabase nie przyjął zapisu do ai_bets. Zostawiam je na ekranie i nie włączam cooldownu.`)
+      setStatusText(`Znalazłem ${payload.length} typów premium, ale zapis do ai_bets nie przeszedł${saveErrorText ? `: ${saveErrorText}` : ''}. Zostawiam je lokalnie na ekranie.`)
     }
     return savedCount
   }
