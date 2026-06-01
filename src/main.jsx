@@ -15210,7 +15210,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
     const q = search.trim().toLowerCase()
     return Array.from(map.values())
-      .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+      // V1500: Mecze Result to dziennik WSZYSTKICH typów AI z ai_bets:
+      // pending przed startem, rozpoczęte pending, won/lost/void. Nie filtrujemy tu po pre-match.
       .filter(card => matchesAiSearchV1455(card, q))
       // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
@@ -15526,11 +15527,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   function isBetAiPrematchAvailableV1091(card) {
-    if (!card || isBetAiSettledStatusV1091(card)) return true
-    if ((card.kickoffState || 'prematch') !== 'prematch') return false
+    // V1500 UX FIX: ta funkcja oznacza dokładnie „typ jeszcze do zagrania”.
+    // Rozliczone WON/LOST/VOID oraz rozpoczęte mecze NIE mogą być liczone w zakładce
+    // „Typy AI na dziś”, bo wtedy licznik pokazuje 2, a lista jest pusta.
+    if (!card || isBetAiSettledStatusV1091(card)) return false
+    const state = getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
+    if (state !== 'prematch') return false
     const raw = card.rawDate || card.event_time || card.kickoff_time || card.match_time || ''
     const t = raw ? new Date(raw).getTime() : 0
-    if (!t || Number.isNaN(t)) return true
+    if (!t || Number.isNaN(t)) return false
     return t > Date.now() + 2 * 60 * 1000
   }
 

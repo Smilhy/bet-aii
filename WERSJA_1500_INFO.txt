@@ -1,0 +1,1 @@
+Wersja 1500: poprawka UX liczników Typy AI. Zakładka Typy AI na dziś liczy tylko typy do zagrania (pre-match), Mecze Result pokazuje cały dziennik ai_bets, a Statystyki zostają globalne.
