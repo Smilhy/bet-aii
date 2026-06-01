@@ -23960,7 +23960,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
         <div className="rewards-ultra-hero-copy">
           <span>MISJE I NAGRODY</span>
           <h1>Aktywność, punkty i osiągnięcia</h1>
-          <p>Wykonuj proste misje, buduj streak i zbieraj punkty nagród. Konto Free może zdobyć maksymalnie 1 pkt dziennie, a Premium maksymalnie 2 pkt dziennie.</p>
+          <p>Wykonuj proste misje, buduj streak i zbieraj punkty nagród.</p>
         </div>
         <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1531">
           <div className="rewards-ultra-topmini tone-blue">
@@ -23972,11 +23972,6 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
             <span>Dzienny limit</span>
             <strong>{dailyRewardPoints} pkt</strong>
             <small>{isPremium ? 'Premium' : 'Free'}</small>
-          </div>
-          <div className="rewards-ultra-topmini tone-gold">
-            <span>Status nagród</span>
-            <strong>Wkrótce</strong>
-            <small>Wymiana punktów</small>
           </div>
         </div>
       </section>
@@ -24019,19 +24014,6 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
                   </div>
                 ))}
               </div>
-            </div>
-          </section>
-
-          <section className="rewards-ultra-card rewards-missions-rewards-soon-v1531">
-            <div>
-              <span>NAGRODY</span>
-              <h3>Wymiana punktów będzie dostępna wkrótce</h3>
-              <p>Nie pokazujemy już dropów i skrzynek. Nagrody będą prostym systemem: zdobywasz punkty za aktywność, a później wymieniasz je na bonusy dostępne w BetAI.</p>
-            </div>
-            <div className="rewards-soon-badges-v1531">
-              <em>Free: max 1 pkt / dzień</em>
-              <em>Premium: max 2 pkt / dzień</em>
-              <em>Bez dropów</em>
             </div>
           </section>
 
