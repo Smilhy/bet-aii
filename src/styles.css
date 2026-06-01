@@ -69679,3 +69679,36 @@ html.betai-fhd-monitor80-v1323 body #root{
   }
   .tvlive-page-v8 .flashscore-time-v1132{min-width:66px!important;padding-right:0!important;}
 }
+
+/* WERSJA 1526 — Wyniki live: usunięcie przycisku Odśwież z hero */
+.tvlive-page-v8 .flashscore-hero-right-v1524 > button{display:none!important;}
+.tvlive-page-v8 .flashscore-hero-right-v1524{
+  align-items:center!important;
+}
+
+/* WERSJA 1527 — Wyniki live: pełna obsługa statusów LIVE / PRE / HT / FT */
+.tvlive-page-v8 .flashscore-hero-stats-v1523{
+  grid-template-columns:repeat(4, minmax(84px, 104px))!important;
+  min-width:0!important;
+  gap:10px!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 button{
+  height:62px!important;
+  min-height:62px!important;
+  padding:10px 12px!important;
+}
+.tvlive-page-v8 .flashscore-hero-stats-v1523 strong{font-size:22px!important;}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:last-child{display:inline-flex!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-live b{color:#22f0d4!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-pre b{color:#9ec2d0!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-ht b{color:#ffd36b!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-ft b{color:#69f0a8!important;}
+.tvlive-page-v8 .flashscore-time-v1132.score-phase-ft b::before{display:none!important;content:none!important;}
+.tvlive-page-v8 .flashscore-hero-right-v1524{margin-right:120px!important;}
+@media(max-width:1350px){
+  .tvlive-page-v8 .flashscore-hero-stats-v1523{grid-template-columns:repeat(4,minmax(76px,1fr))!important;}
+  .tvlive-page-v8 .flashscore-hero-right-v1524{margin-right:68px!important;}
+}
+@media(max-width:900px){
+  .tvlive-page-v8 .flashscore-hero-stats-v1523{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;}
+}

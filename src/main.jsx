@@ -332,6 +332,96 @@ if (typeof window !== 'undefined') {
   setTimeout(BETAI_LAPTOP_FHD_WIN125_BROWSER81_1242, 1200)
 }
 
+
+/* =========================================================
+   WERSJA 1528 — GLOBALNY AUTO-ZOOM 80% DLA WSZYSTKICH SPRZĘTÓW
+   Wyjątek: fizyczny ekran 2K / 27 cali 2560x1440 Pawła — tam zostaje 100%.
+   Cel: użytkownik nie musi klikać lupy przeglądarki na 80%.
+   Nie zmienia logiki aplikacji ani danych.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_GLOBAL_AUTO_ZOOM80_1528 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const root = document.getElementById('root')
+    if (!html || !body) return
+
+    const vw = window.innerWidth || html.clientWidth || 0
+    const vh = window.innerHeight || html.clientHeight || 0
+    const sw = window.screen?.width || 0
+    const sh = window.screen?.height || 0
+    const maxScreen = Math.max(sw, sh)
+    const minScreen = Math.min(sw, sh)
+    const maxView = Math.max(vw, vh)
+    const minView = Math.min(vw, vh)
+
+    const isPawel2k27 =
+      (maxScreen >= 2450 && maxScreen <= 2700 && minScreen >= 1320 && minScreen <= 1505) ||
+      (maxView >= 2350 && maxView <= 2700 && minView >= 1180 && minView <= 1505)
+
+    const shouldApply = !isPawel2k27
+
+    html.classList.toggle('betai-global-zoom80-v1528', shouldApply)
+
+    if (shouldApply) {
+      html.style.setProperty('--betai-global-zoom-1528', '0.8')
+      html.style.setProperty('--betai-global-inverse-1528', '1.25')
+      body.dataset.betaiGlobalZoom80V1528 = `on:${vw}x${vh}:screen:${sw}x${sh}`
+      body.style.setProperty('zoom', '80%', 'important')
+      body.style.setProperty('width', '125vw', 'important')
+      body.style.setProperty('min-width', '125vw', 'important')
+      body.style.setProperty('max-width', 'none', 'important')
+      body.style.setProperty('height', 'auto', 'important')
+      body.style.setProperty('min-height', '125vh', 'important')
+      body.style.setProperty('max-height', 'none', 'important')
+      body.style.setProperty('overflow-x', 'hidden', 'important')
+      body.style.setProperty('overflow-y', 'auto', 'important')
+      if (root) {
+        root.style.setProperty('width', '125vw', 'important')
+        root.style.setProperty('min-width', '125vw', 'important')
+        root.style.setProperty('max-width', 'none', 'important')
+        root.style.setProperty('height', 'auto', 'important')
+        root.style.setProperty('min-height', '125vh', 'important')
+        root.style.setProperty('max-height', 'none', 'important')
+        root.style.setProperty('overflow-x', 'hidden', 'important')
+      }
+    } else if (body.dataset.betaiGlobalZoom80V1528) {
+      delete body.dataset.betaiGlobalZoom80V1528
+      html.classList.remove('betai-global-zoom80-v1528')
+      html.style.removeProperty('--betai-global-zoom-1528')
+      html.style.removeProperty('--betai-global-inverse-1528')
+      body.style.removeProperty('zoom')
+      body.style.removeProperty('width')
+      body.style.removeProperty('min-width')
+      body.style.removeProperty('max-width')
+      body.style.removeProperty('height')
+      body.style.removeProperty('min-height')
+      body.style.removeProperty('max-height')
+      body.style.removeProperty('overflow-x')
+      body.style.removeProperty('overflow-y')
+      if (root) {
+        root.style.removeProperty('width')
+        root.style.removeProperty('min-width')
+        root.style.removeProperty('max-width')
+        root.style.removeProperty('height')
+        root.style.removeProperty('min-height')
+        root.style.removeProperty('max-height')
+        root.style.removeProperty('overflow-x')
+      }
+    }
+  }
+
+  BETAI_GLOBAL_AUTO_ZOOM80_1528()
+  window.addEventListener('resize', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
+  window.addEventListener('orientationchange', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
+  window.addEventListener('load', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 60)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 250)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 800)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 1600)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 3200)
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
@@ -12258,21 +12348,30 @@ function ArticlesView() {
     { id: 'live', label: 'LIVE' },
     { id: 'pre', label: 'PRE' },
     { id: 'ht', label: 'HT' },
+    { id: 'ft', label: 'FT' },
   ]
 
   const getLiveScorePhase = (match = {}) => {
-    const status = String(match.status || match.status_short || match.statusLong || '').trim().toUpperCase()
+    const rawStatus = String(match.status || match.status_short || match.statusShort || match.statusLong || match.status_long || '').trim()
+    const status = rawStatus.toUpperCase()
+    const longStatus = String(match.status_long || match.statusLong || match.status_text || '').trim().toLowerCase()
     const minute = String(match.minute || '').trim().toLowerCase()
-    if (status === 'HT' || minute.includes('przerwa') || minute.includes('half')) return 'ht'
-    if (['NS', 'TBD', 'PST', 'PRE'].includes(status) || minute.includes('zapowied') || /^\d{1,2}:\d{2}$/.test(status)) return 'pre'
-    if (['LIVE', '1H', '2H', 'ET', 'BT', 'P', 'INT'].includes(status) || minute.includes('q') || minute.includes('set') || minute.includes('′')) return 'live'
-    return 'live'
+    const homeScore = match.home?.score
+    const awayScore = match.away?.score
+    const hasScore = homeScore !== undefined && awayScore !== undefined && homeScore !== null && awayScore !== null && homeScore !== '-' && awayScore !== '-'
+
+    if (['FT', 'AET', 'PEN', 'AWD', 'WO', 'W/O', 'CANC', 'ABD', 'SUSP', 'INT'].includes(status) || longStatus.includes('finished') || longStatus.includes('ended') || longStatus.includes('walkover') || minute === '90′' || minute === "90'" || minute === '90') return 'ft'
+    if (status === 'HT' || longStatus.includes('halftime') || longStatus.includes('half time') || minute.includes('przerwa') || minute.includes('half')) return 'ht'
+    if (['NS', 'TBD', 'PST', 'POSTP', 'PRE'].includes(status) || longStatus.includes('not started') || longStatus.includes('scheduled') || longStatus.includes('postponed') || minute.includes('zapowied') || /^\d{1,2}:\d{2}$/.test(rawStatus) || /^\d{1,2}:\d{2}$/.test(minute)) return 'pre'
+    if (['LIVE', '1H', '2H', 'ET', 'BT', 'P', 'Q1', 'Q2', 'Q3', 'Q4', 'OT'].includes(status) || longStatus.includes('live') || longStatus.includes('progress') || minute.includes('q') || minute.includes('set') || minute.includes('′') || minute.includes("'")) return 'live'
+    return hasScore ? 'ft' : 'pre'
   }
 
   const getLiveScoreStatusLabel = (match = {}) => {
     const phase = getLiveScorePhase(match)
     if (phase === 'pre') return 'PRE'
     if (phase === 'ht') return 'HT'
+    if (phase === 'ft') return 'FT'
     return 'LIVE'
   }
 
@@ -12340,7 +12439,7 @@ function ArticlesView() {
     const phase = getLiveScorePhase(match)
     acc[phase] = (acc[phase] || 0) + 1
     return acc
-  }, { live: 0, pre: 0, ht: 0 })
+  }, { live: 0, pre: 0, ht: 0, ft: 0 })
 
   const groupedLiveScores = filteredLiveScores.reduce((acc, match) => {
     const key = `${match.country} • ${match.league}`
@@ -12457,8 +12556,9 @@ function ArticlesView() {
                   <div className="flashscore-hero-stats-v1523">
                     <button type="button" className={scoreStatusFilter === 'live' ? 'active' : ''} onClick={() => setScoreStatusFilter('live')}><em>LIVE</em><strong>{liveScorePhaseCounts.live || 0}</strong></button>
                     <button type="button" className={scoreStatusFilter === 'pre' ? 'active' : ''} onClick={() => setScoreStatusFilter('pre')}><em>PRE</em><strong>{liveScorePhaseCounts.pre || 0}</strong></button>
+                    <button type="button" className={scoreStatusFilter === 'ht' ? 'active' : ''} onClick={() => setScoreStatusFilter('ht')}><em>HT</em><strong>{liveScorePhaseCounts.ht || 0}</strong></button>
+                    <button type="button" className={scoreStatusFilter === 'ft' ? 'active' : ''} onClick={() => setScoreStatusFilter('ft')}><em>FT</em><strong>{liveScorePhaseCounts.ft || 0}</strong></button>
                   </div>
-                  <button type="button" onClick={refreshRealLiveScores} disabled={realLiveLoading}>{realLiveLoading ? '⟳ Pobieram...' : '⟳ Odśwież'}</button>
                 </div>
               </div>
 
@@ -12481,7 +12581,7 @@ function ArticlesView() {
               </div>
 
               <div className="scores-tabs-v8 flashscore-status-tabs-v1523" aria-label="Filtr statusu meczu">
-                {liveScoreStatusFilters.filter(status => status.id !== 'ht').map(status => (
+                {liveScoreStatusFilters.map(status => (
                   <button type="button" key={status.id} className={scoreStatusFilter === status.id ? 'active' : ''} onClick={() => setScoreStatusFilter(status.id)}>{status.label}</button>
                 ))}
               </div>
