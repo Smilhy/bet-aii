@@ -69779,3 +69779,38 @@ html.betai-fhd-monitor80-v1323 body #root{
   .tvlive-page-v8 .flashscore-status-tabs-v1523 button{min-width:72px!important;padding:0 12px!important;}
   .tvlive-page-v8 .flashscore-status-tabs-v1523 button:first-child{min-width:92px!important;}
 }
+
+
+/* WERSJA 1530 — Wyniki live: wyrównany kafelek FT do reszty statusów */
+.tvlive-page-v8 .flashscore-status-tabs-v1523{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button,
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:last-child{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  height:40px!important;
+  min-height:40px!important;
+  line-height:1!important;
+  padding:0 18px!important;
+  margin:0!important;
+  vertical-align:middle!important;
+  transform:none!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button.active{
+  transform:none!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:hover{
+  transform:none!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:last-child{
+  min-width:88px!important;
+  color:#b9cbd4!important;
+}
+.tvlive-page-v8 .flashscore-status-tabs-v1523 button:last-child.active{
+  color:#03151d!important;
+}
