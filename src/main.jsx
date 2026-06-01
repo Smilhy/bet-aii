@@ -14475,13 +14475,21 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
               </g>
             ))}
           </svg>
-          {activePoint ? (
-            <div className="ai-profile-chart-tooltip-v1469" style={{ left: `calc(${activePoint.x}% + 34px)` }}>
-              <strong>{chartMode === 'cumulative' ? fmtMoney(activePoint.value) : fmtMoney(activePoint.profit)}</strong>
-              <span>{activePoint.label}{activePoint.sublabel ? ` • ${activePoint.sublabel}` : ''}</span>
-              <small>{activePoint.pick}</small>
-            </div>
-          ) : null}
+          {activePoint ? (() => {
+            const tooltipX = Number(activePoint.x || 0)
+            const tooltipStyle = tooltipX <= 12
+              ? { left: '86px', transform: 'none' }
+              : tooltipX >= 88
+                ? { left: 'auto', right: '18px', transform: 'none' }
+                : { left: `calc(${tooltipX}% + 18px)`, transform: 'translateX(-50%)' }
+            return (
+              <div className="ai-profile-chart-tooltip-v1469" style={tooltipStyle}>
+                <strong>{chartMode === 'cumulative' ? fmtMoney(activePoint.value) : fmtMoney(activePoint.profit)}</strong>
+                <span>{activePoint.label}{activePoint.sublabel ? ` • ${activePoint.sublabel}` : ''}</span>
+                <small>{activePoint.pick}</small>
+              </div>
+            )
+          })() : null}
           <div className="ai-profile-chart-legend-v1469">
             <span><i className="line" />{chartMode === 'cumulative' ? 'Bilans skumulowany' : 'Profit pojedynczego typu'}</span>
             <span><i className="dot" />{chartSettled.length} rozliczonych typów</span>

@@ -68497,3 +68497,23 @@ html.betai-fhd-monitor80-v1323 body #root{
   .ai-center-page-v747 .ai-profile-ylabels-v1459{bottom:94px!important;}
   .ai-center-page-v747 .ai-profile-chart-legend-v1469{bottom:16px!important;gap:10px!important;}
 }
+
+/* WERSJA 1506 — tylko estetyka tooltipa wykresu: nie wychodzi poza ramkę i nie nachodzi na oś Y */
+.ai-center-page-v747 .ai-profile-chart-tooltip-v1469{
+  top:22px!important;
+  max-width:220px!important;
+  z-index:8!important;
+  pointer-events:none!important;
+}
+.ai-center-page-v747 .ai-profile-chart-tooltip-v1469 small{
+  white-space:normal!important;
+  line-height:1.25!important;
+}
+@media (max-width:760px){
+  .ai-center-page-v747 .ai-profile-chart-tooltip-v1469{
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+    max-width:calc(100% - 34px)!important;
+  }
+}

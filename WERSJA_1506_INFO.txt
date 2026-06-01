@@ -1,0 +1,8 @@
+WERSJA 1506 — poprawiony tooltip wykresu AI
+
+Baza: 1505.
+Zmiana tylko estetyczna:
+- tooltip wykresu nie wychodzi poza lewą/prawą krawędź,
+- nie nachodzi na etykiety osi Y,
+- legenda i wykres zostają bez zmian,
+- nie ruszano ai_bets, auto-load, rozliczania, statystyk ani podglądu ligi.
