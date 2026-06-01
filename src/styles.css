@@ -69990,3 +69990,270 @@ html.betai-fhd-monitor80-v1323 body #root{
   .rewards-mission-row-v1531 b,
   .rewards-mission-row-v1531 span{justify-self:start!important;}
 }
+
+/* WERSJA 1533 — Misje i nagrody: premium ultra redesign */
+.rewards-missions-v1533{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+}
+.rewards-missions-hero-v1533{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:210px!important;
+  padding:28px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.25fr) minmax(360px,560px)!important;
+  align-items:center!important;
+  gap:26px!important;
+  background:
+    radial-gradient(circle at 86% 28%, rgba(38,238,241,.14), transparent 24%),
+    radial-gradient(circle at 10% 18%, rgba(38,238,241,.08), transparent 28%),
+    linear-gradient(135deg, rgba(4,18,31,.98), rgba(5,29,45,.96) 58%, rgba(4,14,24,.99))!important;
+}
+.rewards-missions-hero-v1533::before{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg, rgba(31,224,255,.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(31,224,255,.04) 1px, transparent 1px)!important;
+  background-size:40px 40px!important;
+  opacity:.56!important;
+  animation:sportHeroGridShift 16s linear infinite!important;
+}
+.rewards-missions-hero-v1533 > *{position:relative!important;z-index:1!important;}
+.rewards-hero-copy-v1533 span{
+  display:block!important;
+  color:#28f1ea!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  letter-spacing:.16em!important;
+  margin-bottom:14px!important;
+}
+.rewards-hero-copy-v1533 h1{
+  margin:0!important;
+  color:#f4fbff!important;
+  font-size:46px!important;
+  line-height:1.02!important;
+  letter-spacing:-.045em!important;
+  font-weight:1000!important;
+  text-shadow:0 12px 34px rgba(0,0,0,.28)!important;
+}
+.rewards-hero-copy-v1533 p{
+  max-width:760px!important;
+  margin:14px 0 0!important;
+  color:#a7bdc9!important;
+  font-size:15px!important;
+  line-height:1.62!important;
+  font-weight:800!important;
+}
+.rewards-hero-badges-v1533{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:10px!important;
+  margin-top:18px!important;
+}
+.rewards-hero-badges-v1533 em{
+  font-style:normal!important;
+  padding:10px 14px!important;
+  border-radius:999px!important;
+  background:rgba(16,34,47,.68)!important;
+  border:1px solid rgba(42,240,235,.14)!important;
+  color:#e9ffff!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.rewards-missions-hero-stats-v1533{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.rewards-hero-stat-card-v1533{
+  min-height:112px!important;
+  padding:18px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg, rgba(6,22,35,.94), rgba(4,16,26,.98))!important;
+  border:1px solid rgba(37,241,233,.1)!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.rewards-hero-stat-card-v1533 strong{font-size:22px!important;}
+.rewards-missions-layout-v1533{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 340px!important;
+  gap:18px!important;
+  align-items:start!important;
+}
+.rewards-missions-main-v1533{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,.95fr)!important;
+  gap:18px!important;
+  align-items:start!important;
+}
+.rewards-achievements-v1533{grid-column:1 / -1!important;}
+.rewards-missions-card-v1533,
+.rewards-side-card-v1533{
+  border-radius:22px!important;
+  min-height:0!important;
+}
+.rewards-missions-section-top-v1533{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:flex-start!important;
+  gap:18px!important;
+  margin-bottom:18px!important;
+}
+.rewards-mission-summary-v1533{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(110px,1fr))!important;
+  gap:10px!important;
+  min-width:240px!important;
+}
+.rewards-mission-summary-v1533 div{
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  background:rgba(10,25,37,.78)!important;
+  border:1px solid rgba(37,241,233,.08)!important;
+}
+.rewards-mission-summary-v1533 span{
+  display:block!important;
+  color:#7f98a7!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+  margin-bottom:6px!important;
+}
+.rewards-mission-summary-v1533 strong{color:#f2fbff!important;font-size:18px!important;font-weight:1000!important;}
+.rewards-mission-list-v1533{gap:12px!important;}
+.rewards-mission-row-v1533{
+  display:grid!important;
+  grid-template-columns:54px minmax(0,1fr) 104px!important;
+  align-items:center!important;
+  gap:14px!important;
+  padding:14px!important;
+  border-radius:18px!important;
+  border:1px solid rgba(37,241,233,.08)!important;
+  background:linear-gradient(180deg, rgba(7,23,34,.92), rgba(4,14,24,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.rewards-mission-row-v1533 .rewards-ultra-mission-icon{
+  width:54px!important;height:54px!important;border-radius:16px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  font-size:24px!important;
+  background:linear-gradient(180deg, rgba(12,39,56,.95), rgba(6,20,31,.98))!important;
+  border:1px solid rgba(37,241,233,.12)!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.22)!important;
+}
+.rewards-mission-row-v1533.tone-cyan .rewards-ultra-mission-icon{box-shadow:0 0 0 1px rgba(37,241,233,.1),0 12px 24px rgba(0,0,0,.22), inset 0 0 24px rgba(37,241,233,.08)!important;}
+.rewards-mission-row-v1533.tone-orange .rewards-ultra-mission-icon{box-shadow:0 0 0 1px rgba(255,170,77,.14),0 12px 24px rgba(0,0,0,.22), inset 0 0 24px rgba(255,170,77,.08)!important;}
+.rewards-mission-row-v1533 .rewards-ultra-mission-copy strong{display:block!important;color:#f5fbff!important;font-size:18px!important;font-weight:1000!important;line-height:1.1!important;}
+.rewards-mission-row-v1533 .rewards-ultra-mission-copy small{display:block!important;margin:6px 0 10px!important;color:#8ea9b7!important;font-size:12px!important;line-height:1.48!important;font-weight:800!important;}
+.rewards-mission-row-v1533 .rewards-ultra-progress{height:8px!important;border-radius:999px!important;background:rgba(255,255,255,.055)!important;overflow:hidden!important;}
+.rewards-mission-row-v1533 .rewards-ultra-progress i{display:block!important;height:100%!important;border-radius:999px!important;background:linear-gradient(90deg, #1fdfff, #20f1d2)!important;box-shadow:0 0 18px rgba(31,223,255,.3)!important;}
+.rewards-mission-meta-v1533{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:6px!important;
+}
+.rewards-mission-meta-v1533 b{color:#f1fbff!important;font-size:18px!important;font-weight:1000!important;}
+.rewards-mission-meta-v1533 span{color:#25f1e9!important;font-size:15px!important;font-weight:1000!important;}
+.rewards-mission-meta-v1533 em{
+  font-style:normal!important;
+  padding:7px 10px!important;
+  border-radius:999px!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.rewards-mission-meta-v1533 em.done{background:rgba(33,233,147,.14)!important;color:#59ffb1!important;border:1px solid rgba(33,233,147,.18)!important;}
+.rewards-mission-meta-v1533 em.pending{background:rgba(255,201,83,.12)!important;color:#ffd678!important;border:1px solid rgba(255,201,83,.16)!important;}
+.rewards-streak-card-v1533{display:flex!important;flex-direction:column!important;gap:16px!important;}
+.rewards-streak-main-v1533{display:flex!important;flex-direction:column!important;gap:18px!important;align-items:flex-start!important;}
+.rewards-streak-value-v1533{display:flex!important;align-items:flex-end!important;gap:12px!important;}
+.rewards-streak-value-v1533 strong{font-size:64px!important;line-height:.92!important;color:#f4fbff!important;font-weight:1000!important;}
+.rewards-streak-value-v1533 span{padding-bottom:10px!important;color:#95aebb!important;font-size:15px!important;font-weight:900!important;}
+.rewards-streak-days-v1533{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:12px!important;width:100%!important;}
+.rewards-streak-days-v1533 .rewards-ultra-day{
+  min-height:88px!important;
+  border-radius:18px!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:8px!important;
+  background:linear-gradient(180deg, rgba(8,24,37,.88), rgba(5,15,25,.96))!important;
+  border:1px solid rgba(37,241,233,.08)!important;
+}
+.rewards-streak-days-v1533 .rewards-ultra-day i{width:34px!important;height:34px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;font-style:normal!important;font-weight:1000!important;}
+.rewards-streak-days-v1533 .rewards-ultra-day.done i{background:rgba(36,238,234,.16)!important;color:#25f1e9!important;}
+.rewards-streak-days-v1533 .rewards-ultra-day.soon i{background:rgba(255,190,90,.12)!important;color:#ffc967!important;}
+.rewards-streak-days-v1533 .rewards-ultra-day.today i{background:rgba(255,123,75,.14)!important;color:#ffb25f!important;}
+.rewards-streak-days-v1533 .rewards-ultra-day span{color:#dfefff!important;font-size:12px!important;font-weight:900!important;}
+.rewards-streak-milestones-v1533{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;}
+.rewards-streak-milestone-v1533{padding:14px!important;border-radius:16px!important;background:rgba(8,22,34,.74)!important;border:1px solid rgba(37,241,233,.08)!important;}
+.rewards-streak-milestone-v1533 strong{display:block!important;color:#f4fbff!important;font-size:16px!important;font-weight:1000!important;margin-bottom:4px!important;}
+.rewards-streak-milestone-v1533 span{color:#8ca6b5!important;font-size:12px!important;font-weight:900!important;}
+.rewards-streak-milestone-v1533.active{box-shadow:inset 0 0 0 1px rgba(37,241,233,.06)!important;background:linear-gradient(180deg, rgba(6,28,39,.94), rgba(4,18,28,.98))!important;}
+.rewards-achievement-grid-v1533{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;}
+.rewards-achievement-card-v1533{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:14px!important;
+  padding:18px!important;border-radius:18px!important;background:linear-gradient(180deg, rgba(8,22,35,.9), rgba(4,14,24,.98))!important;
+  border:1px solid rgba(37,241,233,.08)!important;min-height:174px!important;
+}
+.rewards-achievement-card-v1533 .rewards-ultra-achievement-icon{width:52px!important;height:52px!important;border-radius:16px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;}
+.rewards-achievement-card-v1533 .rewards-ultra-achievement-copy strong{display:block!important;color:#f4fbff!important;font-size:18px!important;font-weight:1000!important;margin-bottom:5px!important;}
+.rewards-achievement-card-v1533 .rewards-ultra-achievement-copy small{display:block!important;color:#8fa8b6!important;font-size:12px!important;line-height:1.48!important;font-weight:800!important;}
+.rewards-achievement-card-v1533 > span{margin-top:auto!important;padding:8px 11px!important;border-radius:999px!important;background:rgba(37,241,233,.08)!important;color:#dffcff!important;font-size:11px!important;font-weight:1000!important;letter-spacing:.08em!important;text-transform:uppercase!important;border:1px solid rgba(37,241,233,.12)!important;}
+.rewards-missions-side-v1533{display:flex!important;flex-direction:column!important;gap:18px!important;align-items:stretch!important;}
+.rewards-side-card-v1533{padding:20px!important;}
+.rewards-progress-v1533 .rewards-ultra-ring{margin:12px auto 16px!important;}
+.rewards-progress-list-v1533{display:grid!important;gap:8px!important;}
+.rewards-progress-list-v1533 div{display:flex!important;justify-content:space-between!important;gap:12px!important;padding:12px 14px!important;border-radius:14px!important;background:rgba(8,22,34,.74)!important;border:1px solid rgba(37,241,233,.08)!important;}
+.rewards-progress-list-v1533 span{color:#8fa6b4!important;font-size:12px!important;font-weight:900!important;}
+.rewards-progress-list-v1533 b{color:#f2fbff!important;font-size:14px!important;font-weight:1000!important;}
+.rewards-ranking-list-v1533{display:flex!important;flex-direction:column!important;gap:10px!important;}
+.rewards-ranking-row-v1533{display:grid!important;grid-template-columns:32px 38px minmax(0,1fr) auto!important;gap:10px!important;align-items:center!important;padding:10px 12px!important;border-radius:14px!important;background:rgba(8,22,34,.72)!important;border:1px solid rgba(37,241,233,.06)!important;}
+.rewards-ranking-row-v1533 > span:first-child{width:28px!important;height:28px!important;border-radius:10px!important;background:linear-gradient(180deg,#ffc764,#ff9e39)!important;color:#13212c!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:12px!important;font-weight:1000!important;}
+.rewards-ranking-row-v1533 i{width:36px!important;height:36px!important;border-radius:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:rgba(37,241,233,.08)!important;color:#dffcff!important;font-style:normal!important;font-size:12px!important;font-weight:1000!important;border:1px solid rgba(37,241,233,.1)!important;}
+.rewards-ranking-row-v1533 div strong{display:block!important;color:#f2fbff!important;font-size:14px!important;font-weight:1000!important;line-height:1.1!important;}
+.rewards-ranking-row-v1533 div small{display:inline-flex!important;margin-top:3px!important;padding:4px 7px!important;border-radius:999px!important;background:rgba(255,255,255,.05)!important;color:#89a6b5!important;font-size:10px!important;font-weight:1000!important;letter-spacing:.08em!important;text-transform:uppercase!important;}
+.rewards-ranking-row-v1533 b{color:#22efea!important;font-size:15px!important;font-weight:1000!important;}
+.rewards-missions-info-v1533 span{display:block!important;color:#25f1e9!important;font-size:12px!important;font-weight:1000!important;letter-spacing:.15em!important;margin-bottom:12px!important;}
+.rewards-rules-list-v1533{display:flex!important;flex-direction:column!important;gap:10px!important;padding:0!important;margin:0!important;list-style:none!important;}
+.rewards-rules-list-v1533 li{display:flex!important;justify-content:space-between!important;gap:12px!important;padding:12px 14px!important;border-radius:14px!important;background:rgba(8,22,34,.72)!important;border:1px solid rgba(37,241,233,.07)!important;}
+.rewards-rules-list-v1533 li b{color:#f4fbff!important;font-size:13px!important;font-weight:1000!important;}
+.rewards-rules-list-v1533 li span{margin:0!important;color:#8fa8b5!important;font-size:12px!important;font-weight:900!important;letter-spacing:0!important;}
+.rewards-rewards-preview-v1533 .rewards-ultra-head small{display:block!important;margin-top:4px!important;color:#8fa8b5!important;font-size:12px!important;font-weight:800!important;}
+.rewards-preview-list-v1533{display:flex!important;flex-direction:column!important;gap:10px!important;}
+.rewards-preview-row-v1533{display:flex!important;justify-content:space-between!important;gap:12px!important;padding:12px 14px!important;border-radius:14px!important;background:rgba(8,22,34,.72)!important;border:1px solid rgba(37,241,233,.07)!important;}
+.rewards-preview-row-v1533 strong{display:block!important;color:#f4fbff!important;font-size:14px!important;font-weight:1000!important;}
+.rewards-preview-row-v1533 small{display:block!important;margin-top:4px!important;color:#8fa8b5!important;font-size:12px!important;font-weight:800!important;}
+.rewards-preview-row-v1533 em{font-style:normal!important;align-self:center!important;padding:8px 10px!important;border-radius:999px!important;background:rgba(37,241,233,.08)!important;border:1px solid rgba(37,241,233,.12)!important;color:#dffcff!important;font-size:11px!important;font-weight:1000!important;}
+
+@media(max-width:1460px){
+  .rewards-missions-layout-v1533{grid-template-columns:1fr!important;}
+  .rewards-missions-side-v1533{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:start!important;}
+}
+@media(max-width:1180px){
+  .rewards-missions-hero-v1533{grid-template-columns:1fr!important;}
+  .rewards-missions-hero-stats-v1533{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .rewards-missions-main-v1533{grid-template-columns:1fr!important;}
+  .rewards-achievement-grid-v1533{grid-template-columns:1fr!important;}
+  .rewards-streak-days-v1533{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+}
+@media(max-width:900px){
+  .rewards-missions-side-v1533{grid-template-columns:1fr!important;}
+  .rewards-missions-section-top-v1533{flex-direction:column!important;align-items:flex-start!important;}
+  .rewards-mission-summary-v1533{width:100%!important;min-width:0!important;}
+  .rewards-mission-row-v1533{grid-template-columns:48px minmax(0,1fr)!important;}
+  .rewards-mission-meta-v1533{align-items:flex-start!important;grid-column:2!important;}
+  .rewards-streak-milestones-v1533{grid-template-columns:1fr!important;}
+}
+@media(max-width:700px){
+  .rewards-hero-copy-v1533 h1{font-size:34px!important;}
+  .rewards-missions-hero-stats-v1533{grid-template-columns:1fr!important;}
+  .rewards-streak-days-v1533{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .rewards-ranking-row-v1533{grid-template-columns:28px 34px minmax(0,1fr)!important;}
+  .rewards-ranking-row-v1533 b{grid-column:2 / -1!important;justify-self:start!important;}
+}

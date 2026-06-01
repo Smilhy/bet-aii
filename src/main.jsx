@@ -23931,16 +23931,35 @@ function DashboardAutoTranslator({ lang }) {
 
 
 
+
 function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
   const isPremium = isPremiumAccount(userPlan) || isPremiumProfile(user)
   const dailyRewardPoints = isPremium ? 2 : 1
+  const weeklyGoal = isPremium ? 10 : 7
+  const weeklyPoints = isPremium ? 6 : 5
+  const weeklyProgress = Math.max(8, Math.min(100, Math.round((weeklyPoints / weeklyGoal) * 100)))
   const missions = [
-    { icon: '🎯', title: 'Dodaj typ dnia', desc: 'Opublikuj minimum jeden typ.', progress: 1, total: 1, reward: `+${dailyRewardPoints} pkt` },
-    { icon: '✅', title: 'Rozlicz kupon', desc: 'Uzupełnij wynik swojego typu.', progress: 0, total: 1, reward: '+1 pkt' },
-    { icon: '📊', title: 'Sprawdź statystyki', desc: 'Wejdź w profil albo ranking typera.', progress: 1, total: 1, reward: '+1 pkt' },
-    { icon: '🔥', title: 'Aktywność 7 dni', desc: 'Buduj serię codziennego logowania.', progress: 5, total: 7, reward: '+1 pkt' }
+    { icon: '🎯', title: 'Dodaj typ dnia', desc: 'Opublikuj minimum jeden typ i aktywuj profil.', progress: 1, total: 1, reward: `+${dailyRewardPoints} pkt`, tone: 'cyan' },
+    { icon: '✅', title: 'Rozlicz kupon', desc: 'Uzupełnij wynik swojego typu po zakończeniu meczu.', progress: 0, total: 1, reward: '+1 pkt', tone: 'green' },
+    { icon: '📊', title: 'Sprawdź statystyki', desc: 'Wejdź w profil albo ranking typera i utrzymaj aktywność.', progress: 1, total: 1, reward: '+1 pkt', tone: 'blue' },
+    { icon: '🔥', title: 'Aktywność 7 dni', desc: 'Buduj serię codziennego logowania i regularnych wejść.', progress: 5, total: 7, reward: '+1 pkt', tone: 'orange' }
   ]
-  const streakDays = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Dziś']
+  const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
+  const potentialPointsToday = missions.reduce((sum, mission) => sum + Number(String(mission.reward).replace(/[^\d]/g, '') || 0), 0)
+  const streakDays = [
+    { label: 'Pn', state: 'done' },
+    { label: 'Wt', state: 'done' },
+    { label: 'Śr', state: 'done' },
+    { label: 'Cz', state: 'done' },
+    { label: 'Pt', state: 'done' },
+    { label: 'So', state: 'soon' },
+    { label: 'Dziś', state: 'today' }
+  ]
+  const streakRewards = [
+    { value: '3 dni', reward: '+1 pkt', active: true },
+    { value: '7 dni', reward: '+2 pkt', active: true },
+    { value: '14 dni', reward: 'Odznaka', active: false }
+  ]
   const achievements = [
     { icon: '🟢', title: 'Pierwszy typ', desc: 'Dodany pierwszy typ w BetAI.', status: 'Odblokowano', tone: 'cyan' },
     { icon: '🔥', title: 'Seria aktywności', desc: 'Minimum 5 dni aktywności z rzędu.', status: 'Aktywne', tone: 'orange' },
@@ -23949,82 +23968,120 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
   const ranking = [
     { name: 'smilhytv', score: '42 pkt', badge: 'ADMIN', initials: 'SM' },
     { name: 'buchajson1988', score: '31 pkt', initials: 'BU' },
-    { name: 'pkucharski', score: '24 pkt', initials: 'P' },
+    { name: 'pkucharski', score: '24 pkt', initials: 'PK' },
     { name: 'smokeybet', score: '19 pkt', initials: 'MS' },
     { name: 'AI_Master', score: '15 pkt', initials: 'AI' }
   ]
+  const rewardsPreview = [
+    { title: 'Freebet 10 zł', cost: '120 pkt', state: 'Wkrótce' },
+    { title: 'Premium 7 dni', cost: '280 pkt', state: 'Wkrótce' },
+    { title: 'Bonus VIP', cost: '500 pkt', state: 'Wkrótce' }
+  ]
 
   return (
-    <div className="rewards-ultra-page rewards-missions-v1531">
-      <section className="rewards-ultra-card rewards-ultra-hero rewards-missions-hero-v1531">
-        <div className="rewards-ultra-hero-copy">
+    <div className="rewards-ultra-page rewards-missions-v1533">
+      <section className="rewards-ultra-card rewards-ultra-hero rewards-missions-hero-v1533">
+        <div className="rewards-ultra-hero-copy rewards-hero-copy-v1533">
           <span>MISJE I NAGRODY</span>
           <h1>Aktywność, punkty i osiągnięcia</h1>
-          <p>Wykonuj proste misje, buduj streak i zbieraj punkty nagród.</p>
+          <p>Codzienna aktywność w BetAI zamienia się w postęp profilu. Wykonuj misje, buduj streak i przygotuj konto pod przyszły system nagród.</p>
+          <div className="rewards-hero-badges-v1533">
+            <em>Misje dzienne</em>
+            <em>Streak aktywności</em>
+            <em>Osiągnięcia profilu</em>
+          </div>
         </div>
-        <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1531">
-          <div className="rewards-ultra-topmini tone-blue">
+        <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1533">
+          <div className="rewards-ultra-topmini tone-blue rewards-hero-stat-card-v1533">
             <span>Tokeny AI</span>
             <strong>{Number(tokenBalance || 0).toLocaleString('pl-PL')}</strong>
             <small>Saldo konta</small>
           </div>
-          <div className="rewards-ultra-topmini tone-green">
+          <div className="rewards-ultra-topmini tone-green rewards-hero-stat-card-v1533">
             <span>Dzienny limit</span>
             <strong>{dailyRewardPoints} pkt</strong>
             <small>{isPremium ? 'Premium' : 'Free'}</small>
           </div>
+          <div className="rewards-ultra-topmini tone-gold rewards-hero-stat-card-v1533">
+            <span>Postęp tygodnia</span>
+            <strong>{weeklyPoints}/{weeklyGoal}</strong>
+            <small>{weeklyProgress}% celu</small>
+          </div>
         </div>
       </section>
 
-      <div className="rewards-missions-layout-v1531">
-        <main className="rewards-missions-main-v1531">
-          <section className="rewards-ultra-card rewards-ultra-missions rewards-missions-card-v1531">
-            <div className="rewards-ultra-head stacked">
-              <h3>MISJE DZIENNE</h3>
-              <small>Proste zadania za aktywność. Nagrody są limitowane dziennie: Free 1 pkt, Premium 2 pkt.</small>
+      <div className="rewards-missions-layout-v1533">
+        <main className="rewards-missions-main-v1533">
+          <section className="rewards-ultra-card rewards-ultra-missions rewards-missions-card-v1533 rewards-missions-primary-v1533">
+            <div className="rewards-missions-section-top-v1533">
+              <div className="rewards-ultra-head stacked">
+                <h3>MISJE DZIENNE</h3>
+                <small>Każda aktywność dokłada punkty do tygodniowego progresu i ożywia profil typera.</small>
+              </div>
+              <div className="rewards-mission-summary-v1533">
+                <div><span>Wykonane</span><strong>{completedMissions}/{missions.length}</strong></div>
+                <div><span>Potencjał dziś</span><strong>{potentialPointsToday} pkt</strong></div>
+              </div>
             </div>
-            <div className="rewards-ultra-mission-list">
-              {missions.map((mission, index) => (
-                <div className="rewards-ultra-mission rewards-mission-row-v1531" key={index}>
-                  <div className="rewards-ultra-mission-icon">{mission.icon}</div>
-                  <div className="rewards-ultra-mission-copy">
-                    <strong>{mission.title}</strong>
-                    <small>{mission.desc}</small>
-                    <div className="rewards-ultra-progress"><i style={{ width: `${Math.max(8, Math.min(100, (mission.progress / mission.total) * 100))}%` }} /></div>
+            <div className="rewards-ultra-mission-list rewards-mission-list-v1533">
+              {missions.map((mission, index) => {
+                const progressPercent = Math.max(8, Math.min(100, Math.round((mission.progress / mission.total) * 100)))
+                const done = mission.progress >= mission.total
+                return (
+                  <div className={`rewards-ultra-mission rewards-mission-row-v1533 tone-${mission.tone}`} key={index}>
+                    <div className="rewards-ultra-mission-icon">{mission.icon}</div>
+                    <div className="rewards-ultra-mission-copy">
+                      <div className="rewards-mission-title-v1533">
+                        <strong>{mission.title}</strong>
+                        <small>{mission.desc}</small>
+                      </div>
+                      <div className="rewards-ultra-progress"><i style={{ width: `${progressPercent}%` }} /></div>
+                    </div>
+                    <div className="rewards-mission-meta-v1533">
+                      <b>{mission.progress}/{mission.total}</b>
+                      <span>{mission.reward}</span>
+                      <em className={done ? 'done' : 'pending'}>{done ? 'Gotowe' : 'W toku'}</em>
+                    </div>
                   </div>
-                  <b>{mission.progress}/{mission.total}</b>
-                  <span>{mission.reward}</span>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="rewards-ultra-card rewards-ultra-streak rewards-missions-card-v1533 rewards-streak-card-v1533">
+            <div className="rewards-ultra-head stacked">
+              <h3>STREAK AKTYWNOŚCI</h3>
+              <small>Im dłuższa seria wejść i aktywności, tym szybciej budujesz widoczność konta.</small>
+            </div>
+            <div className="rewards-ultra-streak-main rewards-streak-main-v1533">
+              <div className="rewards-ultra-streak-value rewards-streak-value-v1533"><strong>7</strong><span>dni z rzędu</span></div>
+              <div className="rewards-ultra-streak-days rewards-streak-days-v1533">
+                {streakDays.map((day) => (
+                  <div className={`rewards-ultra-day ${day.state}`} key={day.label}>
+                    <i>{day.state === 'done' ? '✓' : day.state === 'soon' ? '○' : '🔥'}</i>
+                    <span>{day.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rewards-streak-milestones-v1533">
+              {streakRewards.map(item => (
+                <div className={`rewards-streak-milestone-v1533 ${item.active ? 'active' : ''}`} key={item.value}>
+                  <strong>{item.value}</strong>
+                  <span>{item.reward}</span>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="rewards-ultra-card rewards-ultra-streak rewards-missions-card-v1531">
-            <div className="rewards-ultra-head stacked">
-              <h3>STREAK AKTYWNOŚCI</h3>
-              <small>Codzienna aktywność zwiększa widoczność profilu i odblokowuje osiągnięcia.</small>
-            </div>
-            <div className="rewards-ultra-streak-main rewards-streak-main-v1531">
-              <div className="rewards-ultra-streak-value"><strong>7</strong><span>dni z rzędu</span></div>
-              <div className="rewards-ultra-streak-days">
-                {streakDays.map((day, idx) => (
-                  <div className={`rewards-ultra-day ${idx < 5 ? 'done' : idx === 5 ? 'soon' : 'today'}`} key={day}>
-                    <i>{idx < 5 ? '✓' : idx === 5 ? '○' : '🔥'}</i>
-                    <span>{day}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="rewards-ultra-card rewards-ultra-achievements rewards-missions-card-v1531">
+          <section className="rewards-ultra-card rewards-ultra-achievements rewards-missions-card-v1533 rewards-achievements-v1533">
             <div className="rewards-ultra-head stacked">
               <h3>OSIĄGNIĘCIA</h3>
-              <small>Odznaki za aktywność, typowanie i rozwój profilu.</small>
+              <small>Odznaki za aktywność, regularność i rozwój profilu typera.</small>
             </div>
-            <div className="rewards-ultra-achievement-list">
+            <div className="rewards-achievement-grid-v1533">
               {achievements.map((item) => (
-                <div className="rewards-ultra-achievement" key={item.title}>
+                <div className={`rewards-ultra-achievement rewards-achievement-card-v1533 tone-${item.tone}`} key={item.title}>
                   <div className={`rewards-ultra-achievement-icon ${item.tone}`}>{item.icon}</div>
                   <div className="rewards-ultra-achievement-copy"><strong>{item.title}</strong><small>{item.desc}</small></div>
                   <span>{item.status}</span>
@@ -24034,42 +24091,61 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
           </section>
         </main>
 
-        <aside className="rewards-missions-side-v1531">
-          <section className="rewards-ultra-card rewards-ultra-progress-card">
+        <aside className="rewards-missions-side-v1533">
+          <section className="rewards-ultra-card rewards-ultra-progress-card rewards-side-card-v1533 rewards-progress-v1533">
             <div className="rewards-ultra-head stacked">
               <h3>PROGRES TYGODNIA</h3>
               <small>Aktywność użytkownika</small>
             </div>
-            <div className="rewards-ultra-ring" style={{ '--ring': '72%' }}>
-              <div><strong>72%</strong><span>Aktywny</span></div>
+            <div className="rewards-ultra-ring" style={{ '--ring': `${weeklyProgress}%` }}>
+              <div><strong>{weeklyProgress}%</strong><span>{weeklyPoints} / {weeklyGoal} pkt</span></div>
             </div>
-            <p>Cel tygodniowy: 7 pkt</p>
-            <b>Zdobyte: 5 / 7 pkt</b>
+            <div className="rewards-progress-list-v1533">
+              <div><span>Cel tygodniowy</span><b>{weeklyGoal} pkt</b></div>
+              <div><span>Zdobyte dziś</span><b>{Math.min(dailyRewardPoints, 1)} / {dailyRewardPoints} pkt</b></div>
+            </div>
           </section>
 
-          <section className="rewards-ultra-card rewards-ultra-ranking">
-            <div className="rewards-ultra-head"><h3>TOP AKTYWNOŚCI</h3></div>
-            <div className="rewards-ultra-ranking-list">
+          <section className="rewards-ultra-card rewards-ultra-ranking rewards-side-card-v1533">
+            <div className="rewards-ultra-head stacked"><h3>TOP AKTYWNOŚCI</h3><small>Najbardziej regularni użytkownicy</small></div>
+            <div className="rewards-ultra-ranking-list rewards-ranking-list-v1533">
               {ranking.map((item, idx) => (
-                <div className="rewards-ultra-ranking-row" key={item.name}>
+                <div className="rewards-ultra-ranking-row rewards-ranking-row-v1533" key={item.name}>
                   <span>{idx + 1}</span>
                   <i>{item.initials}</i>
-                  <div><strong>{item.name}</strong>{item.badge ? <small>{item.badge}</small> : null}</div>
+                  <div><strong>{item.name}</strong>{item.badge ? <small>{item.badge}</small> : <small>Aktywny</small>}</div>
                   <b>{item.score}</b>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="rewards-ultra-card rewards-missions-info-v1531">
-            <span>JAK DZIAŁA SYSTEM?</span>
-            <p>Free zdobywa maksymalnie <b>1 pkt dziennie</b>. Premium zdobywa maksymalnie <b>2 pkt dziennie</b>. Punkty mają promować aktywność, a nie losowe dropy.</p>
+          <section className="rewards-ultra-card rewards-missions-info-v1533 rewards-side-card-v1533">
+            <span>SYSTEM PUNKTÓW</span>
+            <ul className="rewards-rules-list-v1533">
+              <li><b>Free</b><span>maks. 1 pkt dziennie</span></li>
+              <li><b>Premium</b><span>maks. 2 pkt dziennie</span></li>
+              <li><b>Nagrody</b><span>wymiana już wkrótce</span></li>
+            </ul>
+          </section>
+
+          <section className="rewards-ultra-card rewards-rewards-preview-v1533 rewards-side-card-v1533">
+            <div className="rewards-ultra-head stacked"><h3>PODGLĄD NAGRÓD</h3><small>Preview sekcji, którą podłączymy do logiki</small></div>
+            <div className="rewards-preview-list-v1533">
+              {rewardsPreview.map(item => (
+                <div className="rewards-preview-row-v1533" key={item.title}>
+                  <div><strong>{item.title}</strong><small>{item.cost}</small></div>
+                  <em>{item.state}</em>
+                </div>
+              ))}
+            </div>
           </section>
         </aside>
       </div>
     </div>
   )
 }
+
 
 
 function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false, ariaLabel = 'Language switcher' }) {
