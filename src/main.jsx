@@ -15283,7 +15283,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
     const q = search.trim().toLowerCase()
     return Array.from(map.values())
-      .filter(card => isBetAiSettledStatusV1091(card) || isBetAiPrematchAvailableV1091(card))
+      // V1498: Mecze Result to dziennik ai_bets, więc pokazuje też typy, które już wystartowały i nadal są pending.
+      // Wcześniej rozpoczęty mecz wypadał z Typy AI na dziś i nie trafiał do Mecze Result.
       .filter(card => matchesAiSearchV1455(card, q))
       // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
@@ -16108,6 +16109,23 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }, [activePanel])
 
+  async function handleSettleAiBetsV1498() {
+    try {
+      if (typeof onSettle === 'function') await onSettle()
+      const journal = await loadSavedAiJournalFromDbV1094()
+      const saved = await loadSavedAiTipsFromDb(aiDayMode)
+      if (saved?.length) {
+        setLiveCards([])
+        setSelectedId(saved[0]?.id || '')
+      } else if (journal?.length && !selectedId) {
+        setSelectedId(journal[0]?.id || '')
+      }
+      setStatusText('Odświeżono ai_bets po rozliczeniu. Mecze Result pokazuje też rozpoczęte typy pending.')
+    } catch (err) {
+      setStatusText(`Nie udało się odświeżyć ai_bets po rozliczeniu: ${err?.message || err}`)
+    }
+  }
+
   return (
     <section className="ai-center-page-v747">
       <header className="ai-lite-hero" aria-label="Typy AI Premium Hero">
@@ -16209,7 +16227,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks(aiDayMode)} disabled={loadingAi}>
       ⟳ {loadingAi ? 'Pobieram...' : (aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś')}
     </button>
-    <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
+    <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={handleSettleAiBetsV1498} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
     </button>
   </div>
