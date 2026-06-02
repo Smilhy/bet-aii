@@ -334,15 +334,15 @@ if (typeof window !== 'undefined') {
 
 
 /* =========================================================
-   WERSJA 1536 — GLOBALNY AUTO-ZOOM 80% NA TWARDO
-   Działa na monitorach 17–32 cali, laptopach, tabletach,
-   telefonach i wszystkich rozdzielczościach.
+   WERSJA 1537 — AUTO-ZOOM 80% TYLKO DESKTOP/LAPTOP
+   Poprawka po teście tabletu: tablet/telefon NIE dostaje twardego 80%,
+   bo ma wrócić do normalnego responsywnego układu.
+   Desktop/laptop nadal dostaje efekt jak ręczny zoom przeglądarki 80%.
    Wyjątek: 2K / 27 cali / 2560×1440 zostaje bez zmian.
-   Cel: użytkownik nie musi klikać lupy przeglądarki na 80%.
    Nie zmienia logiki aplikacji ani danych.
    ========================================================= */
 if (typeof window !== 'undefined') {
-  const BETAI_GLOBAL_AUTO_ZOOM80_1528 = () => {
+  const BETAI_GLOBAL_AUTO_ZOOM80_1537 = () => {
     const html = document.documentElement
     const body = document.body
     const root = document.getElementById('root')
@@ -357,20 +357,24 @@ if (typeof window !== 'undefined') {
     const viewportLong = Math.max(vw, vh)
     const viewportShort = Math.min(vw, vh)
 
-    // WERSJA 1536: na twardo 80% dla wszystkich sprzętów i rozdzielczości,
-    // ale NIE dla Twojego 2K 2560×1440, bo tam wygląd jest już poprawny.
+    // WERSJA 1537:
+    // - desktop/laptop: twardy efekt 80%, jak ręczna lupa przeglądarki,
+    // - tablet/telefon: bez twardego zoomu, zostaje responsywny układ,
+    // - Twój ekran 2K 2560×1440: bez zmian.
     const isOwner2KScreen =
       (screenLong === 2560 && screenShort === 1440) ||
       (viewportLong === 2560 && viewportShort === 1440)
 
-    const shouldApply = !isOwner2KScreen
+    const hasTouch = Number(navigator.maxTouchPoints || 0) > 0 || window.matchMedia?.('(pointer: coarse)')?.matches === true
+    const isTabletOrPhone = hasTouch && screenLong <= 1400
+    const shouldApply = !isOwner2KScreen && !isTabletOrPhone
 
     html.classList.toggle('betai-global-zoom80-v1528', shouldApply)
 
     if (shouldApply) {
       html.style.setProperty('--betai-global-zoom-1528', '0.8')
       html.style.setProperty('--betai-global-inverse-1528', '1.25')
-      body.dataset.betaiGlobalZoom80V1528 = `on:${vw}x${vh}:screen:${sw}x${sh}`
+      body.dataset.betaiGlobalZoom80V1528 = `desktop-laptop-on:${vw}x${vh}:screen:${sw}x${sh}:touch:${hasTouch ? 'yes' : 'no'}`
       body.style.setProperty('zoom', '80%', 'important')
       body.style.setProperty('width', '125vw', 'important')
       body.style.setProperty('min-width', '125vw', 'important')
@@ -415,15 +419,15 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  BETAI_GLOBAL_AUTO_ZOOM80_1528()
-  window.addEventListener('resize', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
-  window.addEventListener('orientationchange', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
-  window.addEventListener('load', BETAI_GLOBAL_AUTO_ZOOM80_1528, { passive: true })
-  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 60)
-  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 250)
-  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 800)
-  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 1600)
-  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1528, 3200)
+  BETAI_GLOBAL_AUTO_ZOOM80_1537()
+  window.addEventListener('resize', BETAI_GLOBAL_AUTO_ZOOM80_1537, { passive: true })
+  window.addEventListener('orientationchange', BETAI_GLOBAL_AUTO_ZOOM80_1537, { passive: true })
+  window.addEventListener('load', BETAI_GLOBAL_AUTO_ZOOM80_1537, { passive: true })
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 60)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 250)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 800)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 1600)
+  setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 3200)
 }
 
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
