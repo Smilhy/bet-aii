@@ -23941,7 +23941,7 @@ function DashboardAutoTranslator({ lang }) {
 
 
 
-function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onToast }) {
+function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onToast, onOpenTipster }) {
   const isPremium = isPremiumAccount(userPlan) || isPremiumProfile(user)
   const dailyRewardCoins = isPremium ? 2 : 1
   const defaultRewardCoins = isPremium ? 14 : 7
@@ -23985,16 +23985,35 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
       const { data, error } = await supabase.rpc('get_user_activity_leaderboard_v1542', { p_limit: 5, p_days: 30 })
       if (error) throw error
       const rawRows = Array.isArray(data) ? data : (Array.isArray(data?.leaders) ? data.leaders : [])
+      const publicProfiles = await fetchBetaiPublicProfiles().catch(() => [])
+      const profileMap = buildBetaiProfileMap(publicProfiles)
       const mapped = rawRows.map((row, index) => {
         const points = Number(row.points ?? row.total_points ?? row.score ?? 0) || 0
-        const name = String(row.display_name || row.user_name || row.username || row.name || row.email || `Użytkownik ${index + 1}`).replace(/@.*$/, '')
-        const initials = String(row.initials || name.slice(0, 2) || 'AI').toUpperCase()
+        const fallbackName = String(row.display_name || row.user_name || row.username || row.name || row.email || `Użytkownik ${index + 1}`).replace(/@.*$/, '')
+        const profile = findProfileFromMap(profileMap, {
+          id: row.user_id || row.id,
+          user_id: row.user_id || row.id,
+          email: row.email,
+          user_email: row.email,
+          username: row.display_name || row.user_name || row.username || row.name,
+          user_name: row.display_name || row.user_name || row.username || row.name,
+          public_slug: row.public_slug || row.slug
+        }) || null
+        if (profile) {
+          try { cacheBetaiPublicProfileAvatar(profile) } catch (_) {}
+        }
+        const profileName = String(resolveRealProfileUsername(profile || {}) || fallbackName || '').replace(/@.*$/, '')
+        const initials = String(row.initials || profileName.slice(0, 2) || 'AI').toUpperCase()
         return {
-          name,
+          name: profileName,
           score: `${points.toLocaleString('pl-PL')} pkt`,
           badge: row.badge || (index === 0 ? 'LIDER' : 'AKTYWNY'),
           initials,
-          points
+          points,
+          avatarUrl: getProfileAvatarUrl(profile || row) || '',
+          profileRef: profile?.id || row.user_id || row.id || row.email || profileName,
+          profileName,
+          email: row.email || profile?.email || '',
         }
       }).filter(row => row.points > 0)
       setActivityRanking(mapped)
@@ -24239,14 +24258,28 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
           <section className="rewards-ultra-card rewards-ultra-ranking rewards-side-card-v1533">
             <div className="rewards-ultra-head stacked"><h3>TOP AKTYWNOŚCI</h3><small>{activityRankingLoading ? 'Liczenie aktywności...' : 'Czat, posty, komentarze, misje i odbiory'}</small></div>
             <div className="rewards-ultra-ranking-list rewards-ranking-list-v1533">
-              {ranking.map((item, idx) => (
-                <div className="rewards-ultra-ranking-row rewards-ranking-row-v1533" key={item.name}>
-                  <span>{idx + 1}</span>
-                  <i>{item.initials}</i>
-                  <div><strong>{item.name}</strong>{item.badge ? <small>{item.badge}</small> : <small>Aktywny</small>}</div>
-                  <b>{item.score}</b>
-                </div>
-              ))}
+              {ranking.map((item, idx) => {
+                const canOpenProfile = Boolean(item.profileRef || item.email || item.profileName || item.name)
+                const openProfile = () => {
+                  if (!canOpenProfile) return
+                  onOpenTipster?.(item.profileRef || item.email || item.profileName || item.name, item.profileName || item.name)
+                }
+                return (
+                  <div className="rewards-ultra-ranking-row rewards-ranking-row-v1533" key={`${item.name}-${idx}`}>
+                    <span>{idx + 1}</span>
+                    <button type="button" className={`rewards-ranking-avatar-v1544 ${item.avatarUrl ? 'has-avatar' : ''}`} onClick={openProfile} disabled={!canOpenProfile} aria-label={`Otwórz profil ${item.name}`}>
+                      {item.avatarUrl ? <img src={item.avatarUrl} alt="" loading="lazy" /> : item.initials}
+                    </button>
+                    <div>
+                      <strong>
+                        <button type="button" className="rewards-ranking-user-btn-v1544" onClick={openProfile} disabled={!canOpenProfile}>{item.name}</button>
+                      </strong>
+                      {item.badge ? <small>{item.badge}</small> : <small>Aktywny</small>}
+                    </div>
+                    <b>{item.score}</b>
+                  </div>
+                )
+              })}
             </div>
           </section>
 
@@ -27703,7 +27736,7 @@ function App() {
         )}
 
         {view === 'rewardsBonuses' && (
-          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} onToast={showToast} />
+          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} onToast={showToast} onOpenTipster={openTipsterProfile} />
         )}
 
         {view === 'aiPicks' && (
