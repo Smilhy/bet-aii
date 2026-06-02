@@ -24101,12 +24101,6 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     { name: 'AI_Master', score: '0 pkt', badge: 'START', initials: 'AI' }
   ]
   const ranking = activityRanking.length ? activityRanking : fallbackRanking
-  const rewardsPreview = [
-    { title: 'Nagroda Free', cost: '7 coin', state: '7/7 dni' },
-    { title: 'Nagroda Premium', cost: '14 coin', state: '7/7 dni' },
-    { title: 'Odbiór tygodnia', cost: 'Poniedziałek', state: 'Po północy' }
-  ]
-
   return (
     <div className="rewards-ultra-page rewards-missions-v1533 rewards-weekly-v1540">
       <section className="rewards-ultra-card rewards-ultra-hero rewards-missions-hero-v1533">
@@ -24263,18 +24257,6 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
               <li><b>Premium</b><span>14 coin za 7/7 dni</span></li>
               <li><b>Odbiór</b><span>po niedzieli 00:00</span></li>
             </ul>
-          </section>
-
-          <section className="rewards-ultra-card rewards-rewards-preview-v1533 rewards-side-card-v1533">
-            <div className="rewards-ultra-head stacked"><h3>PODGLĄD NAGRÓD</h3><small>Pełny tydzień obecności odblokowuje odbiór coinów</small></div>
-            <div className="rewards-preview-list-v1533">
-              {rewardsPreview.map(item => (
-                <div className="rewards-preview-row-v1533" key={item.title}>
-                  <div><strong>{item.title}</strong><small>{item.cost}</small></div>
-                  <em>{item.state}</em>
-                </div>
-              ))}
-            </div>
           </section>
         </aside>
       </div>
