@@ -334,8 +334,10 @@ if (typeof window !== 'undefined') {
 
 
 /* =========================================================
-   WERSJA 1528 — GLOBALNY AUTO-ZOOM 80% DLA WSZYSTKICH SPRZĘTÓW
-   Wyjątek: fizyczny ekran 2K / 27 cali 2560x1440 Pawła — tam zostaje 100%.
+   WERSJA 1536 — GLOBALNY AUTO-ZOOM 80% NA TWARDO
+   Działa na monitorach 17–32 cali, laptopach, tabletach,
+   telefonach i wszystkich rozdzielczościach.
+   Wyjątek: 2K / 27 cali / 2560×1440 zostaje bez zmian.
    Cel: użytkownik nie musi klikać lupy przeglądarki na 80%.
    Nie zmienia logiki aplikacji ani danych.
    ========================================================= */
@@ -350,21 +352,18 @@ if (typeof window !== 'undefined') {
     const vh = window.innerHeight || html.clientHeight || 0
     const sw = window.screen?.width || 0
     const sh = window.screen?.height || 0
-    const maxScreen = Math.max(sw, sh)
-    const minScreen = Math.min(sw, sh)
-    const maxView = Math.max(vw, vh)
-    const minView = Math.min(vw, vh)
+    const screenLong = Math.max(sw, sh)
+    const screenShort = Math.min(sw, sh)
+    const viewportLong = Math.max(vw, vh)
+    const viewportShort = Math.min(vw, vh)
 
-    const isPawel2k27 =
-      (maxScreen >= 2450 && maxScreen <= 2700 && minScreen >= 1320 && minScreen <= 1505) ||
-      (maxView >= 2350 && maxView <= 2700 && minView >= 1180 && minView <= 1505)
+    // WERSJA 1536: na twardo 80% dla wszystkich sprzętów i rozdzielczości,
+    // ale NIE dla Twojego 2K 2560×1440, bo tam wygląd jest już poprawny.
+    const isOwner2KScreen =
+      (screenLong === 2560 && screenShort === 1440) ||
+      (viewportLong === 2560 && viewportShort === 1440)
 
-    // WERSJA 1534: jeżeli ktoś ręcznie ustawił zoom przeglądarki na 80%,
-    // window.innerWidth będzie większe niż screen.width. Wtedy nie dokładamy
-    // drugiego zoomu, żeby nie zrobić podwójnego zmniejszenia.
-    const isManualBrowserZoomOut = sw > 0 && vw > sw * 1.08
-
-    const shouldApply = !isPawel2k27 && !isManualBrowserZoomOut
+    const shouldApply = !isOwner2KScreen
 
     html.classList.toggle('betai-global-zoom80-v1528', shouldApply)
 
@@ -27852,7 +27851,7 @@ function BetaiExactScaleProvider({ children }) {
       // WERSJA 1534: jeżeli działa prawdziwy auto-zoom 80% dla 1920x1080,
       // NIE dokładamy starego transform: scale(width/2560), bo to psuło efekt
       // i nie wyglądało jak ręczny zoom przeglądarki 80%.
-      if (isTrueAutoZoom80Mode() && !isPawel2k27() && !isManualBrowserZoomOut()) {
+      if (isTrueAutoZoom80Mode()) {
         clearExactScale()
         return
       }
