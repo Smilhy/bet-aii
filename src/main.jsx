@@ -23972,6 +23972,45 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     previous_week_start: null
   }))
   const [claimBusy, setClaimBusy] = useState(false)
+  const [activityRanking, setActivityRanking] = useState([])
+  const [activityRankingLoading, setActivityRankingLoading] = useState(false)
+
+  const refreshActivityRanking = useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      setActivityRanking([])
+      return
+    }
+    setActivityRankingLoading(true)
+    try {
+      const { data, error } = await supabase.rpc('get_user_activity_leaderboard_v1542', { p_limit: 5, p_days: 30 })
+      if (error) throw error
+      const rawRows = Array.isArray(data) ? data : (Array.isArray(data?.leaders) ? data.leaders : [])
+      const mapped = rawRows.map((row, index) => {
+        const points = Number(row.points ?? row.total_points ?? row.score ?? 0) || 0
+        const name = String(row.display_name || row.user_name || row.username || row.name || row.email || `Użytkownik ${index + 1}`).replace(/@.*$/, '')
+        const initials = String(row.initials || name.slice(0, 2) || 'AI').toUpperCase()
+        return {
+          name,
+          score: `${points.toLocaleString('pl-PL')} pkt`,
+          badge: row.badge || (index === 0 ? 'LIDER' : 'AKTYWNY'),
+          initials,
+          points
+        }
+      }).filter(row => row.points > 0)
+      setActivityRanking(mapped)
+    } catch (error) {
+      console.warn('activity leaderboard skipped', error)
+      setActivityRanking([])
+    } finally {
+      setActivityRankingLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshActivityRanking()
+    const timer = window.setInterval(refreshActivityRanking, 60000)
+    return () => window.clearInterval(timer)
+  }, [refreshActivityRanking])
 
   const refreshAttendance = useCallback(async () => {
     const userId = user?.id
@@ -24054,13 +24093,14 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     { icon: '🔥', title: 'Seria aktywności', desc: 'Minimum 5 dni aktywności w tygodniu.', status: weeklyDays >= 5 ? 'Aktywne' : 'W toku', tone: 'orange' },
     { icon: '🏆', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
   ]
-  const ranking = [
-    { name: 'smilhytv', score: '42 coin', badge: 'ADMIN', initials: 'SM' },
-    { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} coin`, initials: 'BU' },
-    { name: 'pkucharski', score: '24 coin', initials: 'PK' },
-    { name: 'smokeybet', score: '19 coin', initials: 'MS' },
-    { name: 'AI_Master', score: '15 coin', initials: 'AI' }
+  const fallbackRanking = [
+    { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} pkt`, badge: 'AKTYWNY', initials: 'BU' },
+    { name: 'smilhytv', score: '0 pkt', badge: 'START', initials: 'SM' },
+    { name: 'pkucharski', score: '0 pkt', badge: 'START', initials: 'PK' },
+    { name: 'smokeybet', score: '0 pkt', badge: 'START', initials: 'MS' },
+    { name: 'AI_Master', score: '0 pkt', badge: 'START', initials: 'AI' }
   ]
+  const ranking = activityRanking.length ? activityRanking : fallbackRanking
   const rewardsPreview = [
     { title: 'Nagroda Free', cost: '7 coin', state: '7/7 dni' },
     { title: 'Nagroda Premium', cost: '14 coin', state: '7/7 dni' },
@@ -24203,7 +24243,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
           </section>
 
           <section className="rewards-ultra-card rewards-ultra-ranking rewards-side-card-v1533">
-            <div className="rewards-ultra-head stacked"><h3>TOP AKTYWNOŚCI</h3><small>Najbardziej regularni użytkownicy</small></div>
+            <div className="rewards-ultra-head stacked"><h3>TOP AKTYWNOŚCI</h3><small>{activityRankingLoading ? 'Liczenie aktywności...' : 'Czat, posty, komentarze, misje i odbiory'}</small></div>
             <div className="rewards-ultra-ranking-list rewards-ranking-list-v1533">
               {ranking.map((item, idx) => (
                 <div className="rewards-ultra-ranking-row rewards-ranking-row-v1533" key={item.name}>
