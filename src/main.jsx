@@ -23974,6 +23974,19 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   const [claimBusy, setClaimBusy] = useState(false)
   const [activityRanking, setActivityRanking] = useState([])
   const [activityRankingLoading, setActivityRankingLoading] = useState(false)
+  const [tipStreak, setTipStreak] = useState(() => ({
+    loading: true,
+    current_week_days: [],
+    current_week_count: 0,
+    previous_week_count: 0,
+    can_claim_previous: false,
+    previous_week_claimed: false,
+    reward_coins: 7,
+    message: 'Sprawdzam serię typów...',
+    current_week_start: null,
+    previous_week_start: null
+  }))
+  const [tipClaimBusy, setTipClaimBusy] = useState(false)
 
   const refreshActivityRanking = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
@@ -24088,17 +24101,76 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     }
   }
 
+
+  const refreshTipStreak = useCallback(async () => {
+    const userId = user?.id
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      setTipStreak(prev => ({ ...prev, loading: false, message: 'Podłącz Supabase, aby zapisać serię typów.' }))
+      return
+    }
+    setTipStreak(prev => ({ ...prev, loading: true, message: 'Sprawdzam serię typów...' }))
+    try {
+      const { data, error } = await supabase.rpc('get_weekly_tip_streak_status_v1545')
+      if (error) throw error
+      const payload = data || {}
+      setTipStreak({
+        loading: false,
+        current_week_days: Array.isArray(payload.current_week_days) ? payload.current_week_days.map(Number) : [],
+        current_week_count: Number(payload.current_week_count || 0),
+        previous_week_count: Number(payload.previous_week_count || 0),
+        can_claim_previous: Boolean(payload.can_claim_previous),
+        previous_week_claimed: Boolean(payload.previous_week_claimed),
+        reward_coins: Number(payload.reward_coins || 7),
+        message: payload.can_claim_previous ? `Seria typów gotowa: ${Number(payload.reward_coins || 7)} coin.` : 'Dodaj minimum 1 typ dziennie przez 7 dni.',
+        current_week_start: payload.current_week_start || null,
+        previous_week_start: payload.previous_week_start || null
+      })
+    } catch (error) {
+      console.warn('weekly tip streak skipped', error)
+      setTipStreak(prev => ({ ...prev, loading: false, message: 'Uruchom SQL Supabase dla serii typów.' }))
+    }
+  }, [user?.id])
+
+  useEffect(() => { refreshTipStreak() }, [refreshTipStreak])
+
+  const claimWeeklyTipReward = async () => {
+    if (tipClaimBusy || !user?.id || !isSupabaseConfigured || !supabase) return
+    setTipClaimBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('claim_weekly_tip_streak_reward_v1545')
+      if (error) throw error
+      const payload = data || {}
+      const rewardCoins = Number(payload.reward_coins || tipStreak.reward_coins || 7)
+      const nextBalance = Number(payload.new_balance ?? (Number(tokenBalance || 0) + rewardCoins)) || 0
+      const email = String(user?.email || '').toLowerCase()
+      try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'weekly_tip_streak_reward' } }))
+      setTipStreak(prev => ({ ...prev, can_claim_previous: false, previous_week_claimed: true, message: `Odebrano nagrodę za serię typów: +${rewardCoins} coin.` }))
+      onToast?.({ type: 'success', title: 'Seria typów odebrana', message: `Dodano ${rewardCoins} coin za 7 dni dodawania typów.` })
+      refreshActivityRanking()
+    } catch (error) {
+      console.warn('weekly tip reward claim failed', error)
+      setTipStreak(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody za serię typów.' }))
+      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+    } finally {
+      setTipClaimBusy(false)
+      refreshTipStreak()
+    }
+  }
+
   const attendedDays = Array.isArray(attendance.current_week_days) ? attendance.current_week_days.map(Number) : []
   const streakDays = buildLocalDays(attendedDays)
+  const tipStreakDays = Array.isArray(tipStreak.current_week_days) ? tipStreak.current_week_days.map(Number) : []
+  const tipStreakCount = Math.max(0, Math.min(7, Number(tipStreak.current_week_count || tipStreakDays.length || 0)))
   const weeklyGoal = 7
   const weeklyDays = Math.max(0, Math.min(7, Number(attendance.current_week_count || attendedDays.length || 0)))
   const weeklyProgress = Math.max(8, Math.min(100, Math.round((weeklyDays / weeklyGoal) * 100)))
   const rewardCoins = Number(attendance.reward_coins || defaultRewardCoins)
   const missions = [
     { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
-    { icon: '🔥', title: 'Pełny tydzień', desc: 'Zalicz dni od poniedziałku do niedzieli.', progress: weeklyDays, total: 7, reward: `+${rewardCoins} coin`, tone: 'orange' },
-    { icon: '🎁', title: 'Nagroda tygodnia', desc: attendance.can_claim_previous ? 'Nagroda jest gotowa do odebrania.' : 'Odbiór pojawi się po komplecie 7/7 dni.', progress: attendance.can_claim_previous ? 1 : 0, total: 1, reward: attendance.can_claim_previous ? 'Gotowe' : 'Czekaj', tone: 'green' },
-    { icon: '📊', title: 'Aktywność profilu', desc: 'Regularna obecność zwiększa widoczność konta.', progress: weeklyDays > 0 ? 1 : 0, total: 1, reward: 'Profil', tone: 'blue' }
+    { icon: '🎯', title: 'Dodaj typ 7 dni z rzędu', desc: 'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.', progress: tipStreakCount, total: 7, reward: '+7 coin', tone: 'orange' },
+    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? 'Gotowe' : 'Czekaj', tone: 'green' },
+    { icon: '📊', title: 'Aktywność profilu', desc: 'Regularna obecność i typy zwiększają widoczność konta.', progress: weeklyDays > 0 || tipStreakCount > 0 ? 1 : 0, total: 1, reward: 'Profil', tone: 'blue' }
   ]
   const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
   const potentialCoinsToday = dailyRewardCoins
@@ -24216,10 +24288,17 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
             </div>
             <div className="weekly-claim-box-v1540">
               <div>
-                <strong>{attendance.can_claim_previous ? `Nagroda gotowa: ${rewardCoins} coin` : attendance.previous_week_claimed ? 'Nagroda za poprzedni tydzień odebrana' : `Nagroda tygodnia: ${rewardCoins} coin`}</strong>
+                <strong>{attendance.can_claim_previous ? `Nagroda gotowa: ${rewardCoins} coin` : attendance.previous_week_claimed ? 'Nagroda za obecność odebrana' : `Obecność tygodnia: ${rewardCoins} coin`}</strong>
                 <small>{attendance.message || 'Zalicz 7/7 dni i odbierz nagrodę po zakończeniu tygodnia.'}</small>
               </div>
               <button type="button" disabled={!attendance.can_claim_previous || claimBusy} onClick={claimWeeklyReward}>{claimBusy ? 'Odbieram...' : attendance.can_claim_previous ? `Odbierz ${rewardCoins} coin` : 'Zablokowane'}</button>
+            </div>
+            <div className="weekly-claim-box-v1540 weekly-tip-claim-box-v1545">
+              <div>
+                <strong>{tipStreak.can_claim_previous ? `Seria typów gotowa: ${Number(tipStreak.reward_coins || 7)} coin` : tipStreak.previous_week_claimed ? 'Nagroda za serię typów odebrana' : `Seria typów: ${tipStreakCount}/7 dni`}</strong>
+                <small>{tipStreak.message || 'Dodaj minimum 1 typ dziennie przez 7 dni i odbierz 7 coin.'}</small>
+              </div>
+              <button type="button" disabled={!tipStreak.can_claim_previous || tipClaimBusy} onClick={claimWeeklyTipReward}>{tipClaimBusy ? 'Odbieram...' : tipStreak.can_claim_previous ? `Odbierz ${Number(tipStreak.reward_coins || 7)} coin` : 'Zablokowane'}</button>
             </div>
           </section>
 
@@ -24288,6 +24367,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
             <ul className="rewards-rules-list-v1533">
               <li><b>Free</b><span>7 coin za 7/7 dni</span></li>
               <li><b>Premium</b><span>14 coin za 7/7 dni</span></li>
+              <li><b>Typy 7/7</b><span>7 coin za komplet</span></li>
               <li><b>Odbiór</b><span>po niedzieli 00:00</span></li>
             </ul>
           </section>
