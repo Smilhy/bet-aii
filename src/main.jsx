@@ -27851,6 +27851,20 @@ function BetaiExactScaleProvider({ children }) {
     }
     const apply = () => {
       const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
+      const height = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 320)
+      const sw = window.screen?.width || 0
+      const sh = window.screen?.height || 0
+      const screenLong = Math.max(sw, sh)
+      const viewportLong = Math.max(width, height)
+      const hasTouch = Number(navigator.maxTouchPoints || 0) > 0 || window.matchMedia?.('(pointer: coarse)')?.matches === true
+      const isTabletOrPhone = hasTouch && Math.max(screenLong, viewportLong) <= 1400
+
+      // WERSJA 1539: tablet/telefon NIE może dostać starego exact-scale.
+      // To właśnie ściskało układ i powodowało nakładanie prawej kolumny na tablecie.
+      if (isTabletOrPhone || width <= 1180) {
+        clearExactScale()
+        return
+      }
 
       // WERSJA 1534: jeżeli działa prawdziwy auto-zoom 80% dla 1920x1080,
       // NIE dokładamy starego transform: scale(width/2560), bo to psuło efekt
