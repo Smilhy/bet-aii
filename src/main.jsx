@@ -359,7 +359,12 @@ if (typeof window !== 'undefined') {
       (maxScreen >= 2450 && maxScreen <= 2700 && minScreen >= 1320 && minScreen <= 1505) ||
       (maxView >= 2350 && maxView <= 2700 && minView >= 1180 && minView <= 1505)
 
-    const shouldApply = !isPawel2k27
+    // WERSJA 1534: jeżeli ktoś ręcznie ustawił zoom przeglądarki na 80%,
+    // window.innerWidth będzie większe niż screen.width. Wtedy nie dokładamy
+    // drugiego zoomu, żeby nie zrobić podwójnego zmniejszenia.
+    const isManualBrowserZoomOut = sw > 0 && vw > sw * 1.08
+
+    const shouldApply = !isPawel2k27 && !isManualBrowserZoomOut
 
     html.classList.toggle('betai-global-zoom80-v1528', shouldApply)
 
@@ -27807,25 +27812,70 @@ function BetaiExactScaleProvider({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
     const root = document.documentElement
+    const body = document.body
+    const clearExactScale = () => {
+      root.style.removeProperty('--betai-exact-scale')
+      root.removeAttribute('data-betai-exact-scale')
+    }
+    const isManualBrowserZoomOut = () => {
+      const vw = window.innerWidth || document.documentElement.clientWidth || 0
+      const sw = window.screen?.width || 0
+      return sw > 0 && vw > sw * 1.08
+    }
+    const isPawel2k27 = () => {
+      const vw = window.innerWidth || document.documentElement.clientWidth || 0
+      const vh = window.innerHeight || document.documentElement.clientHeight || 0
+      const sw = window.screen?.width || 0
+      const sh = window.screen?.height || 0
+      const maxScreen = Math.max(sw, sh)
+      const minScreen = Math.min(sw, sh)
+      const maxView = Math.max(vw, vh)
+      const minView = Math.min(vw, vh)
+      return (
+        (maxScreen >= 2450 && maxScreen <= 2700 && minScreen >= 1320 && minScreen <= 1505) ||
+        (maxView >= 2350 && maxView <= 2700 && minView >= 1180 && minView <= 1505)
+      )
+    }
+    const isTrueAutoZoom80Mode = () => {
+      const html = document.documentElement
+      return Boolean(
+        html.classList.contains('betai-global-zoom80-v1528') ||
+        html.classList.contains('betai-fhd-monitor80-v1323') ||
+        html.classList.contains('betai-laptop-browser90-v1233') ||
+        body?.dataset?.betaiGlobalZoom80V1528 ||
+        body?.dataset?.betaiFhdMonitor80
+      )
+    }
     const apply = () => {
       const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
-      const scale = Math.min(1, Math.max(0.30, width / 2560))
-      if (width >= 2500) {
-        root.style.removeProperty('--betai-exact-scale')
-        root.removeAttribute('data-betai-exact-scale')
+
+      // WERSJA 1534: jeżeli działa prawdziwy auto-zoom 80% dla 1920x1080,
+      // NIE dokładamy starego transform: scale(width/2560), bo to psuło efekt
+      // i nie wyglądało jak ręczny zoom przeglądarki 80%.
+      if (isTrueAutoZoom80Mode() && !isPawel2k27() && !isManualBrowserZoomOut()) {
+        clearExactScale()
         return
       }
+
+      if (width >= 2500) {
+        clearExactScale()
+        return
+      }
+      const scale = Math.min(1, Math.max(0.30, width / 2560))
       root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
       root.setAttribute('data-betai-exact-scale', 'on')
     }
     apply()
     window.addEventListener('resize', apply)
     window.addEventListener('orientationchange', apply)
+    window.addEventListener('load', apply)
+    const timers = [60, 250, 800, 1600].map(ms => window.setTimeout(apply, ms))
     return () => {
       window.removeEventListener('resize', apply)
       window.removeEventListener('orientationchange', apply)
-      root.style.removeProperty('--betai-exact-scale')
-      root.removeAttribute('data-betai-exact-scale')
+      window.removeEventListener('load', apply)
+      timers.forEach(timer => window.clearTimeout(timer))
+      clearExactScale()
     }
   }, [])
   return children
