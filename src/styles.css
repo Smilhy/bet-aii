@@ -70257,3 +70257,68 @@ html.betai-fhd-monitor80-v1323 body #root{
   .rewards-ranking-row-v1533{grid-template-columns:28px 34px minmax(0,1fr)!important;}
   .rewards-ranking-row-v1533 b{grid-column:2 / -1!important;justify-self:start!important;}
 }
+
+/* WERSJA 1540 — Misje i nagrody: realna obecność tygodniowa + coin */
+.rewards-weekly-v1540 .weekly-claim-box-v1540{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  margin-top:16px!important;
+  padding:16px!important;
+  border-radius:18px!important;
+  background:linear-gradient(135deg, rgba(18,238,225,.10), rgba(7,21,33,.96))!important;
+  border:1px solid rgba(34,238,234,.16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 16px 28px rgba(0,0,0,.18)!important;
+}
+.rewards-weekly-v1540 .weekly-claim-box-v1540 strong{
+  display:block!important;
+  color:#f4fbff!important;
+  font-size:18px!important;
+  line-height:1.1!important;
+  font-weight:1000!important;
+  margin-bottom:6px!important;
+}
+.rewards-weekly-v1540 .weekly-claim-box-v1540 small{
+  display:block!important;
+  color:#9fb7c4!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+  font-weight:800!important;
+}
+.rewards-weekly-v1540 .weekly-claim-box-v1540 button{
+  min-width:150px!important;
+  border:0!important;
+  border-radius:14px!important;
+  padding:13px 16px!important;
+  color:#03242d!important;
+  font-weight:1000!important;
+  font-size:13px!important;
+  cursor:pointer!important;
+  background:linear-gradient(135deg,#25f1e9,#35a4ff)!important;
+  box-shadow:0 12px 28px rgba(31,223,255,.2)!important;
+}
+.rewards-weekly-v1540 .weekly-claim-box-v1540 button:disabled{
+  cursor:not-allowed!important;
+  color:#819aa7!important;
+  background:rgba(10,25,37,.78)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:none!important;
+}
+.rewards-weekly-v1540 .rewards-streak-days-v1533 .rewards-ultra-day.missed i{
+  background:rgba(255,86,128,.12)!important;
+  color:#ff6a92!important;
+  border:1px solid rgba(255,86,128,.16)!important;
+}
+.rewards-weekly-v1540 .rewards-streak-days-v1533 .rewards-ultra-day.missed span{color:#ff9ab5!important;}
+.rewards-weekly-v1540 .rewards-ultra-day.done,
+.rewards-weekly-v1540 .rewards-ultra-day.today{
+  box-shadow:inset 0 0 0 1px rgba(35,241,233,.08), 0 12px 24px rgba(0,0,0,.14)!important;
+}
+.rewards-weekly-v1540 .rewards-preview-row-v1533 em{
+  white-space:nowrap!important;
+}
+@media(max-width:780px){
+  .rewards-weekly-v1540 .weekly-claim-box-v1540{flex-direction:column!important;align-items:stretch!important;}
+  .rewards-weekly-v1540 .weekly-claim-box-v1540 button{width:100%!important;}
+}

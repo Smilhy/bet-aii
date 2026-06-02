@@ -23940,80 +23940,161 @@ function DashboardAutoTranslator({ lang }) {
 
 
 
-function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
+
+function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onToast }) {
   const isPremium = isPremiumAccount(userPlan) || isPremiumProfile(user)
-  const dailyRewardPoints = isPremium ? 2 : 1
-  const weeklyGoal = isPremium ? 10 : 7
-  const weeklyPoints = isPremium ? 6 : 5
-  const weeklyProgress = Math.max(8, Math.min(100, Math.round((weeklyPoints / weeklyGoal) * 100)))
+  const dailyRewardCoins = isPremium ? 2 : 1
+  const defaultRewardCoins = isPremium ? 14 : 7
+  const todayIsoDow = (() => {
+    const day = new Date().getDay()
+    return day === 0 ? 7 : day
+  })()
+  const buildLocalDays = (activeDays = []) => [
+    { label: 'Pn', index: 1, state: activeDays.includes(1) ? 'done' : todayIsoDow === 1 ? 'today' : todayIsoDow < 1 ? 'soon' : 'soon' },
+    { label: 'Wt', index: 2, state: activeDays.includes(2) ? 'done' : todayIsoDow === 2 ? 'today' : todayIsoDow < 2 ? 'soon' : 'missed' },
+    { label: 'Śr', index: 3, state: activeDays.includes(3) ? 'done' : todayIsoDow === 3 ? 'today' : todayIsoDow < 3 ? 'soon' : 'missed' },
+    { label: 'Cz', index: 4, state: activeDays.includes(4) ? 'done' : todayIsoDow === 4 ? 'today' : todayIsoDow < 4 ? 'soon' : 'missed' },
+    { label: 'Pt', index: 5, state: activeDays.includes(5) ? 'done' : todayIsoDow === 5 ? 'today' : todayIsoDow < 5 ? 'soon' : 'missed' },
+    { label: 'So', index: 6, state: activeDays.includes(6) ? 'done' : todayIsoDow === 6 ? 'today' : todayIsoDow < 6 ? 'soon' : 'missed' },
+    { label: 'Dziś', index: 7, state: activeDays.includes(7) ? 'done' : todayIsoDow === 7 ? 'today' : todayIsoDow < 7 ? 'soon' : 'missed' }
+  ]
+  const [attendance, setAttendance] = useState(() => ({
+    loading: true,
+    source: 'local',
+    current_week_days: [],
+    current_week_count: 0,
+    previous_week_count: 0,
+    can_claim_previous: false,
+    previous_week_claimed: false,
+    reward_coins: defaultRewardCoins,
+    message: 'Sprawdzam obecność...',
+    current_week_start: null,
+    previous_week_start: null
+  }))
+  const [claimBusy, setClaimBusy] = useState(false)
+
+  const refreshAttendance = useCallback(async () => {
+    const userId = user?.id
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      const fallbackDays = buildLocalDays([todayIsoDow])
+      setAttendance(prev => ({ ...prev, loading: false, source: 'local', current_week_days: [todayIsoDow], current_week_count: 1, reward_coins: defaultRewardCoins, message: 'Zaloguj się i podłącz Supabase, aby zapisać obecność.' }))
+      return fallbackDays
+    }
+    setAttendance(prev => ({ ...prev, loading: true, message: 'Zapisuję dzisiejszą obecność...' }))
+    try {
+      const { data, error } = await supabase.rpc('mark_weekly_attendance_v1540')
+      if (error) throw error
+      const payload = data || {}
+      setAttendance({
+        loading: false,
+        source: 'supabase',
+        current_week_days: Array.isArray(payload.current_week_days) ? payload.current_week_days.map(Number) : [],
+        current_week_count: Number(payload.current_week_count || 0),
+        previous_week_count: Number(payload.previous_week_count || 0),
+        can_claim_previous: Boolean(payload.can_claim_previous),
+        previous_week_claimed: Boolean(payload.previous_week_claimed),
+        reward_coins: Number(payload.reward_coins || defaultRewardCoins),
+        message: payload.can_claim_previous ? `Masz nagrodę do odebrania: ${Number(payload.reward_coins || defaultRewardCoins)} coin.` : 'Obecność na dziś zapisana.',
+        current_week_start: payload.current_week_start || null,
+        previous_week_start: payload.previous_week_start || null
+      })
+    } catch (error) {
+      console.warn('weekly attendance skipped', error)
+      setAttendance(prev => ({ ...prev, loading: false, source: 'error', current_week_days: prev.current_week_days?.length ? prev.current_week_days : [todayIsoDow], current_week_count: Math.max(1, Number(prev.current_week_count || 0)), reward_coins: defaultRewardCoins, message: 'Uruchom SQL Supabase dla obecności tygodniowej.' }))
+    }
+  }, [user?.id, defaultRewardCoins, todayIsoDow])
+
+  useEffect(() => { refreshAttendance() }, [refreshAttendance])
+
+  const claimWeeklyReward = async () => {
+    if (claimBusy || !user?.id || !isSupabaseConfigured || !supabase) return
+    setClaimBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('claim_weekly_attendance_reward_v1540')
+      if (error) throw error
+      const payload = data || {}
+      const rewardCoins = Number(payload.reward_coins || attendance.reward_coins || defaultRewardCoins)
+      const nextBalance = Number(payload.new_balance ?? (Number(tokenBalance || 0) + rewardCoins)) || 0
+      const email = String(user?.email || '').toLowerCase()
+      try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'weekly_attendance_reward' } }))
+      setAttendance(prev => ({ ...prev, can_claim_previous: false, previous_week_claimed: true, message: `Odebrano nagrodę tygodniową: +${rewardCoins} coin.` }))
+      onToast?.({ type: 'success', title: 'Nagroda odebrana', message: `Dodano ${rewardCoins} coin za pełny tydzień obecności.` })
+    } catch (error) {
+      console.warn('weekly reward claim failed', error)
+      setAttendance(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody. Sprawdź SQL Supabase.' }))
+      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+    } finally {
+      setClaimBusy(false)
+      refreshAttendance()
+    }
+  }
+
+  const attendedDays = Array.isArray(attendance.current_week_days) ? attendance.current_week_days.map(Number) : []
+  const streakDays = buildLocalDays(attendedDays)
+  const weeklyGoal = 7
+  const weeklyDays = Math.max(0, Math.min(7, Number(attendance.current_week_count || attendedDays.length || 0)))
+  const weeklyProgress = Math.max(8, Math.min(100, Math.round((weeklyDays / weeklyGoal) * 100)))
+  const rewardCoins = Number(attendance.reward_coins || defaultRewardCoins)
   const missions = [
-    { icon: '🎯', title: 'Dodaj typ dnia', desc: 'Opublikuj minimum jeden typ i aktywuj profil.', progress: 1, total: 1, reward: `+${dailyRewardPoints} pkt`, tone: 'cyan' },
-    { icon: '✅', title: 'Rozlicz kupon', desc: 'Uzupełnij wynik swojego typu po zakończeniu meczu.', progress: 0, total: 1, reward: '+1 pkt', tone: 'green' },
-    { icon: '📊', title: 'Sprawdź statystyki', desc: 'Wejdź w profil albo ranking typera i utrzymaj aktywność.', progress: 1, total: 1, reward: '+1 pkt', tone: 'blue' },
-    { icon: '🔥', title: 'Aktywność 7 dni', desc: 'Buduj serię codziennego logowania i regularnych wejść.', progress: 5, total: 7, reward: '+1 pkt', tone: 'orange' }
+    { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
+    { icon: '🔥', title: 'Pełny tydzień', desc: 'Zalicz dni od poniedziałku do niedzieli.', progress: weeklyDays, total: 7, reward: `+${rewardCoins} coin`, tone: 'orange' },
+    { icon: '🎁', title: 'Nagroda tygodnia', desc: attendance.can_claim_previous ? 'Nagroda jest gotowa do odebrania.' : 'Odbiór pojawi się po komplecie 7/7 dni.', progress: attendance.can_claim_previous ? 1 : 0, total: 1, reward: attendance.can_claim_previous ? 'Gotowe' : 'Czekaj', tone: 'green' },
+    { icon: '📊', title: 'Aktywność profilu', desc: 'Regularna obecność zwiększa widoczność konta.', progress: weeklyDays > 0 ? 1 : 0, total: 1, reward: 'Profil', tone: 'blue' }
   ]
   const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
-  const potentialPointsToday = missions.reduce((sum, mission) => sum + Number(String(mission.reward).replace(/[^\d]/g, '') || 0), 0)
-  const streakDays = [
-    { label: 'Pn', state: 'done' },
-    { label: 'Wt', state: 'done' },
-    { label: 'Śr', state: 'done' },
-    { label: 'Cz', state: 'done' },
-    { label: 'Pt', state: 'done' },
-    { label: 'So', state: 'soon' },
-    { label: 'Dziś', state: 'today' }
-  ]
+  const potentialCoinsToday = dailyRewardCoins
   const streakRewards = [
-    { value: '3 dni', reward: '+1 pkt', active: true },
-    { value: '7 dni', reward: '+2 pkt', active: true },
-    { value: '14 dni', reward: 'Odznaka', active: false }
+    { value: '3 dni', reward: 'Seria', active: weeklyDays >= 3 },
+    { value: '7 dni', reward: `+${rewardCoins} coin`, active: weeklyDays >= 7 },
+    { value: 'Odbiór', reward: attendance.can_claim_previous ? 'Dostępny' : attendance.previous_week_claimed ? 'Odebrano' : 'Po tygodniu', active: attendance.can_claim_previous || attendance.previous_week_claimed }
   ]
   const achievements = [
-    { icon: '🟢', title: 'Pierwszy typ', desc: 'Dodany pierwszy typ w BetAI.', status: 'Odblokowano', tone: 'cyan' },
-    { icon: '🔥', title: 'Seria aktywności', desc: 'Minimum 5 dni aktywności z rzędu.', status: 'Aktywne', tone: 'orange' },
-    { icon: '🏆', title: 'Skuteczny typer', desc: 'Buduj wynik w rankingu i na profilu.', status: 'W toku', tone: 'gold' }
+    { icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan' },
+    { icon: '🔥', title: 'Seria aktywności', desc: 'Minimum 5 dni aktywności w tygodniu.', status: weeklyDays >= 5 ? 'Aktywne' : 'W toku', tone: 'orange' },
+    { icon: '🏆', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
   ]
   const ranking = [
-    { name: 'smilhytv', score: '42 pkt', badge: 'ADMIN', initials: 'SM' },
-    { name: 'buchajson1988', score: '31 pkt', initials: 'BU' },
-    { name: 'pkucharski', score: '24 pkt', initials: 'PK' },
-    { name: 'smokeybet', score: '19 pkt', initials: 'MS' },
-    { name: 'AI_Master', score: '15 pkt', initials: 'AI' }
+    { name: 'smilhytv', score: '42 coin', badge: 'ADMIN', initials: 'SM' },
+    { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} coin`, initials: 'BU' },
+    { name: 'pkucharski', score: '24 coin', initials: 'PK' },
+    { name: 'smokeybet', score: '19 coin', initials: 'MS' },
+    { name: 'AI_Master', score: '15 coin', initials: 'AI' }
   ]
   const rewardsPreview = [
-    { title: 'Freebet 10 zł', cost: '120 pkt', state: 'Wkrótce' },
-    { title: 'Premium 7 dni', cost: '280 pkt', state: 'Wkrótce' },
-    { title: 'Bonus VIP', cost: '500 pkt', state: 'Wkrótce' }
+    { title: 'Nagroda Free', cost: '7 coin', state: '7/7 dni' },
+    { title: 'Nagroda Premium', cost: '14 coin', state: '7/7 dni' },
+    { title: 'Odbiór tygodnia', cost: 'Poniedziałek', state: 'Po północy' }
   ]
 
   return (
-    <div className="rewards-ultra-page rewards-missions-v1533">
+    <div className="rewards-ultra-page rewards-missions-v1533 rewards-weekly-v1540">
       <section className="rewards-ultra-card rewards-ultra-hero rewards-missions-hero-v1533">
         <div className="rewards-ultra-hero-copy rewards-hero-copy-v1533">
           <span>MISJE I NAGRODY</span>
-          <h1>Aktywność, punkty i osiągnięcia</h1>
-          <p>Codzienna aktywność w BetAI zamienia się w postęp profilu. Wykonuj misje, buduj streak i przygotuj konto pod przyszły system nagród.</p>
+          <h1>Aktywność, coiny i osiągnięcia</h1>
+          <p>Wejdź codziennie do BetAI, zalicz tydzień od poniedziałku do niedzieli i odbierz nagrodę za wzorową obecność.</p>
           <div className="rewards-hero-badges-v1533">
-            <em>Misje dzienne</em>
-            <em>Streak aktywności</em>
-            <em>Osiągnięcia profilu</em>
+            <em>Free: 7 coin / tydzień</em>
+            <em>Premium: 14 coin / tydzień</em>
+            <em>Odbiór po niedzieli</em>
           </div>
         </div>
         <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1533">
           <div className="rewards-ultra-topmini tone-blue rewards-hero-stat-card-v1533">
-            <span>Tokeny AI</span>
+            <span>Twoje coiny</span>
             <strong>{Number(tokenBalance || 0).toLocaleString('pl-PL')}</strong>
             <small>Saldo konta</small>
           </div>
           <div className="rewards-ultra-topmini tone-green rewards-hero-stat-card-v1533">
-            <span>Dzienny limit</span>
-            <strong>{dailyRewardPoints} pkt</strong>
+            <span>Dzienny zapis</span>
+            <strong>{dailyRewardCoins} coin</strong>
             <small>{isPremium ? 'Premium' : 'Free'}</small>
           </div>
           <div className="rewards-ultra-topmini tone-gold rewards-hero-stat-card-v1533">
-            <span>Postęp tygodnia</span>
-            <strong>{weeklyPoints}/{weeklyGoal}</strong>
-            <small>{weeklyProgress}% celu</small>
+            <span>Tydzień</span>
+            <strong>{weeklyDays}/7</strong>
+            <small>{weeklyProgress}% obecności</small>
           </div>
         </div>
       </section>
@@ -24024,11 +24105,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
             <div className="rewards-missions-section-top-v1533">
               <div className="rewards-ultra-head stacked">
                 <h3>MISJE DZIENNE</h3>
-                <small>Każda aktywność dokłada punkty do tygodniowego progresu i ożywia profil typera.</small>
+                <small>Obecność zapisuje się automatycznie raz dziennie po wejściu na stronę.</small>
               </div>
               <div className="rewards-mission-summary-v1533">
                 <div><span>Wykonane</span><strong>{completedMissions}/{missions.length}</strong></div>
-                <div><span>Potencjał dziś</span><strong>{potentialPointsToday} pkt</strong></div>
+                <div><span>Dzisiaj</span><strong>{potentialCoinsToday} coin</strong></div>
               </div>
             </div>
             <div className="rewards-ultra-mission-list rewards-mission-list-v1533">
@@ -24059,14 +24140,14 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
           <section className="rewards-ultra-card rewards-ultra-streak rewards-missions-card-v1533 rewards-streak-card-v1533">
             <div className="rewards-ultra-head stacked">
               <h3>STREAK AKTYWNOŚCI</h3>
-              <small>Im dłuższa seria wejść i aktywności, tym szybciej budujesz widoczność konta.</small>
+              <small>Jeśli zaliczysz cały tydzień, po niedzieli odblokujesz nagrodę tygodniową.</small>
             </div>
             <div className="rewards-ultra-streak-main rewards-streak-main-v1533">
-              <div className="rewards-ultra-streak-value rewards-streak-value-v1533"><strong>7</strong><span>dni z rzędu</span></div>
+              <div className="rewards-ultra-streak-value rewards-streak-value-v1533"><strong>{weeklyDays}</strong><span>dni w tym tygodniu</span></div>
               <div className="rewards-ultra-streak-days rewards-streak-days-v1533">
                 {streakDays.map((day) => (
                   <div className={`rewards-ultra-day ${day.state}`} key={day.label}>
-                    <i>{day.state === 'done' ? '✓' : day.state === 'soon' ? '○' : '🔥'}</i>
+                    <i>{day.state === 'done' ? '✓' : day.state === 'missed' ? '×' : day.state === 'soon' ? '○' : '🔥'}</i>
                     <span>{day.label}</span>
                   </div>
                 ))}
@@ -24079,6 +24160,13 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
                   <span>{item.reward}</span>
                 </div>
               ))}
+            </div>
+            <div className="weekly-claim-box-v1540">
+              <div>
+                <strong>{attendance.can_claim_previous ? `Nagroda gotowa: ${rewardCoins} coin` : attendance.previous_week_claimed ? 'Nagroda za poprzedni tydzień odebrana' : `Nagroda tygodnia: ${rewardCoins} coin`}</strong>
+                <small>{attendance.message || 'Zalicz 7/7 dni i odbierz nagrodę po zakończeniu tygodnia.'}</small>
+              </div>
+              <button type="button" disabled={!attendance.can_claim_previous || claimBusy} onClick={claimWeeklyReward}>{claimBusy ? 'Odbieram...' : attendance.can_claim_previous ? `Odbierz ${rewardCoins} coin` : 'Zablokowane'}</button>
             </div>
           </section>
 
@@ -24103,14 +24191,14 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
           <section className="rewards-ultra-card rewards-ultra-progress-card rewards-side-card-v1533 rewards-progress-v1533">
             <div className="rewards-ultra-head stacked">
               <h3>PROGRES TYGODNIA</h3>
-              <small>Aktywność użytkownika</small>
+              <small>Obecność użytkownika</small>
             </div>
             <div className="rewards-ultra-ring" style={{ '--ring': `${weeklyProgress}%` }}>
-              <div><strong>{weeklyProgress}%</strong><span>{weeklyPoints} / {weeklyGoal} pkt</span></div>
+              <div><strong>{weeklyProgress}%</strong><span>{weeklyDays} / 7 dni</span></div>
             </div>
             <div className="rewards-progress-list-v1533">
-              <div><span>Cel tygodniowy</span><b>{weeklyGoal} pkt</b></div>
-              <div><span>Zdobyte dziś</span><b>{Math.min(dailyRewardPoints, 1)} / {dailyRewardPoints} pkt</b></div>
+              <div><span>Cel tygodniowy</span><b>7 dni</b></div>
+              <div><span>Nagroda</span><b>{rewardCoins} coin</b></div>
             </div>
           </section>
 
@@ -24129,16 +24217,16 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free' }) {
           </section>
 
           <section className="rewards-ultra-card rewards-missions-info-v1533 rewards-side-card-v1533">
-            <span>SYSTEM PUNKTÓW</span>
+            <span>SYSTEM COINÓW</span>
             <ul className="rewards-rules-list-v1533">
-              <li><b>Free</b><span>maks. 1 pkt dziennie</span></li>
-              <li><b>Premium</b><span>maks. 2 pkt dziennie</span></li>
-              <li><b>Nagrody</b><span>wymiana już wkrótce</span></li>
+              <li><b>Free</b><span>7 coin za 7/7 dni</span></li>
+              <li><b>Premium</b><span>14 coin za 7/7 dni</span></li>
+              <li><b>Odbiór</b><span>po niedzieli 00:00</span></li>
             </ul>
           </section>
 
           <section className="rewards-ultra-card rewards-rewards-preview-v1533 rewards-side-card-v1533">
-            <div className="rewards-ultra-head stacked"><h3>PODGLĄD NAGRÓD</h3><small>Preview sekcji, którą podłączymy do logiki</small></div>
+            <div className="rewards-ultra-head stacked"><h3>PODGLĄD NAGRÓD</h3><small>Pełny tydzień obecności odblokowuje odbiór coinów</small></div>
             <div className="rewards-preview-list-v1533">
               {rewardsPreview.map(item => (
                 <div className="rewards-preview-row-v1533" key={item.title}>
@@ -27593,7 +27681,7 @@ function App() {
         )}
 
         {view === 'rewardsBonuses' && (
-          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} />
+          <RewardsBonusesView user={sessionUser} tokenBalance={tokenBalance} userPlan={effectiveAccountPlan} onToast={showToast} />
         )}
 
         {view === 'aiPicks' && (
