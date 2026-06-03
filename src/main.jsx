@@ -24638,8 +24638,8 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   ]
   const achievements = [
     { key: 'first_attendance', icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan', unlocked: weeklyDays > 0 },
-    { key: 'win_streak_5', icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Gotowe' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange', unlocked: Number(winStreak.current_streak || 0) >= 5 },
-    { key: 'perfect_attendance_7', icon: '⭐', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold', unlocked: weeklyDays >= 7 }
+    { key: 'win_streak_5', icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Odbierz' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange', unlocked: Number(winStreak.current_streak || 0) >= 5 },
+    { key: 'perfect_attendance_7', icon: '⭐', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Odbierz' : `${weeklyDays}/7`, tone: 'gold', unlocked: weeklyDays >= 7 }
   ]
 
   useEffect(() => {
@@ -24737,7 +24737,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
                       {mission.claimable ? (
                         <button type="button" className="rewards-mission-claim-btn-v1548" disabled={mission.busy} onClick={mission.onClaim}>{mission.busy ? 'Odbieram...' : 'Odbierz'}</button>
                       ) : (
-                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Gotowe' : 'W toku'}</em>
+                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Odbierz' : 'W toku'}</em>
                       )}
                     </div>
                   </div>
