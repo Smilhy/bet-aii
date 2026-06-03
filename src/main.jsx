@@ -21713,9 +21713,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </div>
             </div>
             <div className="profile-rank-progress-v1557"><i style={{ width: `${Math.max(0, Math.min(100, Number(profileRank.progress_percent || 0)))}%` }} /></div>
-            <div className="profile-rank-note-v1558">
-              <span>Ranga jest liczona automatycznie z historii konta. Szczegóły liczbowe zostają w statystykach profilu, a tutaj widzisz tylko poziom i postęp.</span>
-            </div>
           </section>
 
           <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
