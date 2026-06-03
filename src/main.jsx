@@ -24373,6 +24373,17 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     previous_week_start: null
   }))
   const [tipClaimBusy, setTipClaimBusy] = useState(false)
+  const [winStreak, setWinStreak] = useState(() => ({
+    loading: true,
+    current_streak: 0,
+    target: 5,
+    can_claim: false,
+    claimed_units: 0,
+    available_units: 0,
+    reward_coins: 1,
+    message: 'Sprawdzam win streak...'
+  }))
+  const [winClaimBusy, setWinClaimBusy] = useState(false)
 
   const refreshActivityRanking = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
@@ -24544,6 +24555,65 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     }
   }
 
+
+
+  const refreshWinStreak = useCallback(async () => {
+    const userId = user?.id
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      setWinStreak(prev => ({ ...prev, loading: false, message: 'Podłącz Supabase, aby liczyć win streak.' }))
+      return
+    }
+    setWinStreak(prev => ({ ...prev, loading: true, message: 'Sprawdzam win streak...' }))
+    try {
+      const { data, error } = await supabase.rpc('get_win_streak_status_v1551')
+      if (error) throw error
+      const payload = data || {}
+      const current = Number(payload.current_streak || 0)
+      const available = Number(payload.available_units || 0)
+      const claimed = Number(payload.claimed_units || 0)
+      setWinStreak({
+        loading: false,
+        current_streak: current,
+        target: Number(payload.target || 5),
+        can_claim: Boolean(payload.can_claim),
+        claimed_units: claimed,
+        available_units: available,
+        reward_coins: Number(payload.reward_coins || 1),
+        message: payload.can_claim ? 'Masz gotowy odbiór za trafione 5/5.' : current >= 5 ? 'Nagroda za aktualny poziom została odebrana.' : 'Traf 5 typów z rzędu, aby odebrać 1 coin.'
+      })
+    } catch (error) {
+      console.warn('win streak skipped', error)
+      setWinStreak(prev => ({ ...prev, loading: false, message: 'Uruchom SQL Supabase dla win streak.' }))
+    }
+  }, [user?.id])
+
+  useEffect(() => { refreshWinStreak() }, [refreshWinStreak])
+
+  const claimWinStreakReward = async () => {
+    if (winClaimBusy || !user?.id || !isSupabaseConfigured || !supabase) return
+    setWinClaimBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('claim_win_streak_reward_v1551')
+      if (error) throw error
+      const payload = data || {}
+      const rewardCoins = Number(payload.reward_coins || winStreak.reward_coins || 1)
+      const nextBalance = Number(payload.new_balance ?? (Number(tokenBalance || 0) + rewardCoins)) || 0
+      const email = String(user?.email || '').toLowerCase()
+      try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'win_streak_5_reward' } }))
+      setWinStreak(prev => ({ ...prev, can_claim: false, claimed_units: Number(prev.claimed_units || 0) + 1, message: `Odebrano nagrodę za win streak: +${rewardCoins} coin.` }))
+      onToast?.({ type: 'success', title: 'Win streak odebrany', message: `Dodano ${rewardCoins} coin za trafione 5/5.` })
+      refreshActivityRanking()
+    } catch (error) {
+      console.warn('win streak claim failed', error)
+      setWinStreak(prev => ({ ...prev, message: 'Nie udało się odebrać nagrody za win streak.' }))
+      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+    } finally {
+      setWinClaimBusy(false)
+      refreshWinStreak()
+    }
+  }
+
   const attendedDays = Array.isArray(attendance.current_week_days) ? attendance.current_week_days.map(Number) : []
   const streakDays = buildLocalDays(attendedDays)
   const tipStreakDays = Array.isArray(tipStreak.current_week_days) ? tipStreak.current_week_days.map(Number) : []
@@ -24552,11 +24622,12 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   const weeklyDays = Math.max(0, Math.min(7, Number(attendance.current_week_count || attendedDays.length || 0)))
   const weeklyProgress = Math.max(8, Math.min(100, Math.round((weeklyDays / weeklyGoal) * 100)))
   const rewardCoins = Number(attendance.reward_coins || defaultRewardCoins)
+  const winStreakProgress = Math.max(0, Math.min(5, Number(winStreak.current_streak || 0)))
   const missions = [
     { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
+    { icon: '🔥', title: 'Win streak 5/5', desc: 'Traf 5 typów z rzędu i odbierz 1 coin.', progress: winStreakProgress, total: 5, reward: winStreak.can_claim ? '+1 coin' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'gold', claimable: winStreak.can_claim, claimed: !winStreak.can_claim && Number(winStreak.claimed_units || 0) > 0 && Number(winStreak.current_streak || 0) >= 5, busy: winClaimBusy, onClaim: claimWinStreakReward },
     { icon: '🎯', title: 'Dodaj typ 7 dni z rzędu', desc: 'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.', progress: tipStreakCount, total: 7, reward: '+7 coin', tone: 'orange' },
-    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : 'Czekaj', tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward },
-    { icon: '📊', title: 'Aktywność profilu', desc: 'Regularna obecność i typy zwiększają widoczność konta.', progress: weeklyDays > 0 || tipStreakCount > 0 ? 1 : 0, total: 1, reward: 'Profil', tone: 'blue' }
+    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : 'Czekaj', tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward }
   ]
   const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
   const potentialCoinsToday = dailyRewardCoins
@@ -24567,7 +24638,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   ]
   const achievements = [
     { icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan' },
-    { icon: '🔥', title: 'Seria aktywności', desc: 'Minimum 5 dni aktywności w tygodniu.', status: weeklyDays >= 5 ? 'Aktywne' : 'W toku', tone: 'orange' },
+    { icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Gotowe' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange' },
     { icon: '🏆', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
   ]
   const fallbackRanking = [
@@ -24584,11 +24655,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
         <div className="rewards-ultra-hero-copy rewards-hero-copy-v1533">
           <span>MISJE I NAGRODY</span>
           <h1>Aktywność, coiny i osiągnięcia</h1>
-          <p>Wejdź codziennie do BetAI, dodawaj typy przez 7 dni i odbieraj nagrody za pełne serie tygodniowe.</p>
+          <p>Wejdź codziennie do BetAI, buduj win streak 5/5 i dodawaj typy przez 7 dni po nagrody.</p>
           <div className="rewards-hero-badges-v1533">
             <em>Free: 7 coin / tydzień</em>
             <em>Premium: 14 coin / tydzień</em>
-            <em>Seria typów: 7 coin</em>
+            <em>Win streak 5/5: 1 coin</em><em>Seria typów: 7 coin</em>
           </div>
         </div>
         <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1533">
