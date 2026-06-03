@@ -18621,18 +18621,18 @@ function AuthView({ onAuth }) {
       accentClass: 'is-active'
     },
     {
-      key: 'views',
-      label: t.pageViews || 'Wyświetlenia witryny',
-      value: formatCompactNumber(liveStats.pageViews),
-      icon: <IconEye />,
-      accentClass: 'is-views'
-    },
-    {
       key: 'tips',
       label: t.tipsToday,
       value: formatCompactNumber(liveStats.tipsToday),
       icon: <IconShield />,
       accentClass: 'is-tips'
+    },
+    {
+      key: 'views',
+      label: t.pageViews || 'Wyświetlenia witryny',
+      value: formatCompactNumber(liveStats.pageViews),
+      icon: <IconEye />,
+      accentClass: 'is-views'
     }
   ]), [liveStats, authLang])
 
