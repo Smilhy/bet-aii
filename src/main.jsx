@@ -36,6 +36,189 @@ import './styles.css'
 
 
 /* =========================================================
+   WERSJA 1549 — TWARDY LOCAL DEVICE SCALE FIX
+   Naprawa: ?scale=67 ma zapisać się na sprzęcie i działać po F5.
+   Czyta query/hash/cookie/localStorage i nakłada skalę ponownie po renderze.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  ;(() => {
+    const KEY = 'betai_device_scale_percent_v1547'
+    const COOKIE = 'betai_device_scale_percent_v1549'
+    const STYLE_ID = 'betai-device-scale-style-v1549'
+
+    const normalize = (value) => {
+      const raw = String(value || '').trim().replace('%', '').replace(',', '.')
+      if (!raw) return ''
+      const low = raw.toLowerCase()
+      if (low === 'auto' || low === 'reset' || low === 'off' || low === 'clear') return 'auto'
+      const num = Number(raw)
+      if (!Number.isFinite(num)) return ''
+      return String(Math.max(50, Math.min(110, Math.round(num))))
+    }
+
+    const getCookie = () => {
+      try {
+        const found = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith(COOKIE + '='))
+        return found ? decodeURIComponent(found.split('=').slice(1).join('=')) : ''
+      } catch (_) { return '' }
+    }
+
+    const setCookie = (value) => {
+      try {
+        document.cookie = `${COOKIE}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax`
+      } catch (_) {}
+    }
+
+    const clearCookie = () => {
+      try { document.cookie = `${COOKIE}=; path=/; max-age=0; SameSite=Lax` } catch (_) {}
+    }
+
+    const readParam = () => {
+      try {
+        const href = String(window.location.href || '')
+        const url = new URL(href)
+        const fromSearch = url.searchParams.get('betaiScale') || url.searchParams.get('scale') || url.searchParams.get('viewScale') || ''
+        if (fromSearch) return fromSearch
+        const hash = String(url.hash || '').replace(/^#/, '')
+        const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?').pop() : hash)
+        return hashParams.get('betaiScale') || hashParams.get('scale') || hashParams.get('viewScale') || ''
+      } catch (_) { return '' }
+    }
+
+    const saveFromUrl = () => {
+      const param = normalize(readParam())
+      if (!param) return
+      try {
+        if (param === 'auto') {
+          localStorage.removeItem(KEY)
+          sessionStorage.removeItem(KEY)
+          clearCookie()
+        } else {
+          localStorage.setItem(KEY, param)
+          sessionStorage.setItem(KEY, param)
+          setCookie(param)
+        }
+      } catch (_) {}
+    }
+
+    const getSaved = () => {
+      try {
+        return normalize(localStorage.getItem(KEY) || sessionStorage.getItem(KEY) || getCookie() || '')
+      } catch (_) {
+        return normalize(getCookie() || '')
+      }
+    }
+
+    const removeStyle = () => {
+      try { document.getElementById(STYLE_ID)?.remove() } catch (_) {}
+    }
+
+    const clearScale = () => {
+      const html = document.documentElement
+      const body = document.body
+      const root = document.getElementById('root')
+      window.__BETAI_FORCE_DEVICE_SCALE_1549 = false
+      html?.classList?.remove('betai-device-scale-v1549')
+      removeStyle()
+      ;[html, body, root].filter(Boolean).forEach(el => {
+        el.style.removeProperty('zoom')
+        el.style.removeProperty('width')
+        el.style.removeProperty('min-width')
+        el.style.removeProperty('max-width')
+        el.style.removeProperty('height')
+        el.style.removeProperty('min-height')
+        el.style.removeProperty('max-height')
+        el.style.removeProperty('overflow-x')
+        el.style.removeProperty('overflow-y')
+        el.style.removeProperty('overflow')
+      })
+    }
+
+    const ensureStyle = (pct) => {
+      const inv = 100 / pct
+      const invVw = `${(inv * 100).toFixed(6)}vw`
+      const invVh = `${(inv * 100).toFixed(6)}vh`
+      const css = `
+html.betai-device-scale-v1549 body{zoom:${pct}%!important;width:${invVw}!important;min-width:${invVw}!important;max-width:none!important;height:auto!important;min-height:${invVh}!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;}
+html.betai-device-scale-v1549 #root{width:${invVw}!important;min-width:${invVw}!important;max-width:none!important;height:auto!important;min-height:${invVh}!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;}
+html.betai-device-scale-v1549 .app-shell,html.betai-device-scale-v1549 .betai-app,html.betai-device-scale-v1549 .dashboard-shell{max-width:none!important;}
+      `.trim()
+      let style = document.getElementById(STYLE_ID)
+      if (!style) {
+        style = document.createElement('style')
+        style.id = STYLE_ID
+        document.head?.appendChild(style)
+      }
+      if (style.textContent !== css) style.textContent = css
+    }
+
+    const apply = () => {
+      const saved = getSaved()
+      if (!saved || saved === 'auto') return clearScale()
+      const pct = Number(saved)
+      if (!Number.isFinite(pct)) return
+      const html = document.documentElement
+      const body = document.body
+      const root = document.getElementById('root')
+      if (!html || !body) return
+      const inv = 100 / pct
+      const invVw = `${(inv * 100).toFixed(6)}vw`
+      const invVh = `${(inv * 100).toFixed(6)}vh`
+      window.__BETAI_FORCE_DEVICE_SCALE_1549 = true
+      html.classList.add('betai-device-scale-v1549')
+      html.style.setProperty('--betai-device-scale-1549', String(pct / 100))
+      html.style.setProperty('--betai-device-inverse-1549', String(inv))
+      body.dataset.betaiDeviceScale1549 = `${pct}%`
+      ensureStyle(pct)
+      ;[body, root].filter(Boolean).forEach(el => {
+        el.style.setProperty('zoom', `${pct}%`, 'important')
+        el.style.setProperty('width', invVw, 'important')
+        el.style.setProperty('min-width', invVw, 'important')
+        el.style.setProperty('max-width', 'none', 'important')
+        el.style.setProperty('height', 'auto', 'important')
+        el.style.setProperty('min-height', invVh, 'important')
+        el.style.setProperty('max-height', 'none', 'important')
+        el.style.setProperty('overflow-x', 'hidden', 'important')
+        el.style.setProperty('overflow-y', 'auto', 'important')
+      })
+    }
+
+    saveFromUrl()
+    window.BETAI_SET_VIEW_SCALE = (value) => {
+      const next = normalize(value)
+      if (!next) return false
+      try {
+        if (next === 'auto') {
+          localStorage.removeItem(KEY)
+          sessionStorage.removeItem(KEY)
+          clearCookie()
+        } else {
+          localStorage.setItem(KEY, next)
+          sessionStorage.setItem(KEY, next)
+          setCookie(next)
+        }
+      } catch (_) {}
+      apply()
+      return true
+    }
+    window.BETAI_GET_VIEW_SCALE = () => getSaved() || 'auto'
+    apply()
+    ;[20,80,180,350,700,1200,2000,3500,5500,8000].forEach(ms => setTimeout(apply, ms))
+    window.addEventListener('load', apply, { passive: true })
+    window.addEventListener('resize', apply, { passive: true })
+    window.addEventListener('orientationchange', apply, { passive: true })
+    try { new MutationObserver(apply).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style','class'] }) } catch (_) {}
+    let count = 0
+    const timer = setInterval(() => {
+      apply()
+      count += 1
+      if (count > 80) clearInterval(timer)
+    }, 500)
+  })()
+}
+
+
+/* =========================================================
    WERSJA 1324 — MONITORY 19 CALI 1440x900 + 23/24 CALE FHD — TRUE 80%
    Patch działa priorytetowo: dla realnego ekranu 1440x900 oraz 1920x1080
    wymusza efekt jak ręczny zoom przeglądarki 80% i rozszerza wirtualny viewport.
@@ -24323,7 +24506,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   const missions = [
     { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
     { icon: '🎯', title: 'Dodaj typ 7 dni z rzędu', desc: 'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.', progress: tipStreakCount, total: 7, reward: '+7 coin', tone: 'orange' },
-    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? 'Gotowe' : 'Czekaj', tone: 'green' },
+    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : 'Czekaj', tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward },
     { icon: '📊', title: 'Aktywność profilu', desc: 'Regularna obecność i typy zwiększają widoczność konta.', progress: weeklyDays > 0 || tipStreakCount > 0 ? 1 : 0, total: 1, reward: 'Profil', tone: 'blue' }
   ]
   const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
@@ -24352,11 +24535,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
         <div className="rewards-ultra-hero-copy rewards-hero-copy-v1533">
           <span>MISJE I NAGRODY</span>
           <h1>Aktywność, coiny i osiągnięcia</h1>
-          <p>Wejdź codziennie do BetAI, zalicz tydzień od poniedziałku do niedzieli i odbierz nagrodę za wzorową obecność.</p>
+          <p>Wejdź codziennie do BetAI, dodawaj typy przez 7 dni i odbieraj nagrody za pełne serie tygodniowe.</p>
           <div className="rewards-hero-badges-v1533">
             <em>Free: 7 coin / tydzień</em>
             <em>Premium: 14 coin / tydzień</em>
-            <em>Odbiór po niedzieli</em>
+            <em>Seria typów: 7 coin</em>
           </div>
         </div>
         <div className="rewards-ultra-hero-stats rewards-missions-hero-stats-v1533">
@@ -24408,7 +24591,11 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
                     <div className="rewards-mission-meta-v1533">
                       <b>{mission.progress}/{mission.total}</b>
                       <span>{mission.reward}</span>
-                      <em className={done ? 'done' : 'pending'}>{done ? 'Gotowe' : 'W toku'}</em>
+                      {mission.claimable ? (
+                        <button type="button" className="rewards-mission-claim-btn-v1548" disabled={mission.busy} onClick={mission.onClaim}>{mission.busy ? 'Odbieram...' : 'Odbierz'}</button>
+                      ) : (
+                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Gotowe' : 'W toku'}</em>
+                      )}
                     </div>
                   </div>
                 )
