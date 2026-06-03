@@ -17862,7 +17862,7 @@ function SupportChatWidget({ user }) {
   if (!user?.id) return null
 
   return (
-    <div className={`support510 ${open ? 'is-open' : ''}`}>
+    <div className={`support510 ${adminMode ? 'is-admin' : ''} ${open ? 'is-open' : ''}`}>
       {open ? (
         <section className="support510-panel" aria-label="Wsparcie Bet+AI live">
           <header className="support510-head">
