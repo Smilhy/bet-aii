@@ -24627,7 +24627,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
     { icon: '🔥', title: 'Win streak 5/5', desc: 'Traf 5 typów z rzędu i odbierz 1 coin.', progress: winStreakProgress, total: 5, reward: winStreak.can_claim ? '+1 coin' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'gold', claimable: winStreak.can_claim, claimed: !winStreak.can_claim && Number(winStreak.claimed_units || 0) > 0 && Number(winStreak.current_streak || 0) >= 5, busy: winClaimBusy, onClaim: claimWinStreakReward },
     { icon: '🎯', title: 'Dodaj typ 7 dni z rzędu', desc: 'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.', progress: tipStreakCount, total: 7, reward: '+7 coin', tone: 'orange' },
-    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 1 : 0, total: 1, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : 'Czekaj', tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward }
+    { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet 7/7 z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 7 : tipStreakCount, total: 7, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : `${tipStreakCount}/7`, tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward }
   ]
   const completedMissions = missions.filter(mission => mission.progress >= mission.total).length
   const potentialCoinsToday = dailyRewardCoins
@@ -24639,7 +24639,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   const achievements = [
     { icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan' },
     { icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Gotowe' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange' },
-    { icon: '🏆', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
+    { icon: '⭐', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
   ]
   const fallbackRanking = [
     { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} pkt`, badge: 'AKTYWNY', initials: 'BU' },
