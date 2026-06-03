@@ -60,8 +60,9 @@ if (typeof window !== 'undefined') {
     // WERSJA 1324 — osobny przypadek: monitor 19 cali / 1440x900
     // Na tym ekranie ręczny zoom przeglądarki 80% daje poprawny efekt,
     // więc aktywujemy ten sam mechanizm skalowania co dla FHD.
-    const isReal1440x900Screen = (sw === 1440 && sh === 900) || (sw === 900 && sh === 1440)
-    const is1440x900Viewport100 = vw >= 1350 && vw <= 1495 && vh >= 700 && vh <= 930
+    // WERSJA 1546: 1440x900 NIE dostaje już 80%, bo na tym ekranie układ robił się za mały.
+    const isReal1440x900Screen = false
+    const is1440x900Viewport100 = false
 
     const isNot2k = sw < 2200 && vw < 2200
     const isNot1680 = !(sw === 1680 && sh === 1050) && !(vw >= 1600 && vw <= 1849 && vh >= 900 && vh <= 1100)
@@ -367,7 +368,16 @@ if (typeof window !== 'undefined') {
 
     const hasTouch = Number(navigator.maxTouchPoints || 0) > 0 || window.matchMedia?.('(pointer: coarse)')?.matches === true
     const isTabletOrPhone = hasTouch && screenLong <= 1400
-    const shouldApply = !isOwner2KScreen && !isTabletOrPhone
+    // WERSJA 1546: twarde 80% tylko dla sprawdzonego FHD 1920x1080.
+    // 1440x900 i 1680x1050 NIE dostają zoomu, bo zostawiały ogromne puste pole / za mały układ.
+    const isFhd1920Screen = (screenLong === 1920 && screenShort === 1080)
+    const isFhd1920Viewport = viewportLong >= 1850 && viewportLong <= 1995 && viewportShort >= 930 && viewportShort <= 1120
+    const isFhdWin125Viewport = viewportLong >= 1450 && viewportLong <= 1599 && viewportShort >= 760 && viewportShort <= 930 && screenLong >= 1850 && screenLong <= 1995
+    const isBlockedSmallDesktop =
+      (screenLong === 1680 && screenShort === 1050) ||
+      (screenLong === 1440 && screenShort === 900) ||
+      (viewportLong >= 1350 && viewportLong <= 1849 && viewportShort >= 700 && viewportShort <= 1100)
+    const shouldApply = !isOwner2KScreen && !isTabletOrPhone && !isBlockedSmallDesktop && (isFhd1920Screen || isFhd1920Viewport || isFhdWin125Viewport)
 
     html.classList.toggle('betai-global-zoom80-v1528', shouldApply)
 
@@ -28073,23 +28083,10 @@ function BetaiExactScaleProvider({ children }) {
       )
     }
     const apply = () => {
-      const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320)
-
-      // WERSJA 1534: jeżeli działa prawdziwy auto-zoom 80% dla 1920x1080,
-      // NIE dokładamy starego transform: scale(width/2560), bo to psuło efekt
-      // i nie wyglądało jak ręczny zoom przeglądarki 80%.
-      if (isTrueAutoZoom80Mode()) {
-        clearExactScale()
-        return
-      }
-
-      if (width >= 2500) {
-        clearExactScale()
-        return
-      }
-      const scale = Math.min(1, Math.max(0.30, width / 2560))
-      root.style.setProperty('--betai-exact-scale', scale.toFixed(5))
-      root.setAttribute('data-betai-exact-scale', 'on')
+      // WERSJA 1546: wyłączamy stary exact-scale globalnie.
+      // To on zmniejszał 1440/1680 i robił ogromne puste pole po prawej.
+      // Skalowanie zostaje tylko w dedykowanym auto-zoomie 80% dla 1920x1080.
+      clearExactScale()
     }
     apply()
     window.addEventListener('resize', apply)
