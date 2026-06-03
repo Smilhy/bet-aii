@@ -24637,10 +24637,33 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     { value: 'Odbiór', reward: attendance.can_claim_previous ? 'Dostępny' : attendance.previous_week_claimed ? 'Odebrano' : 'Po tygodniu', active: attendance.can_claim_previous || attendance.previous_week_claimed }
   ]
   const achievements = [
-    { icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan' },
-    { icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Gotowe' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange' },
-    { icon: '⭐', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold' }
+    { key: 'first_attendance', icon: '🟢', title: 'Pierwsza obecność', desc: 'Pierwszy zapisany dzień w BetAI.', status: weeklyDays > 0 ? 'Odblokowano' : 'W toku', tone: 'cyan', unlocked: weeklyDays > 0 },
+    { key: 'win_streak_5', icon: '🔥', title: 'Win streak', desc: 'Traf 5 typów z rzędu.', status: Number(winStreak.current_streak || 0) >= 5 ? 'Gotowe' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'orange', unlocked: Number(winStreak.current_streak || 0) >= 5 },
+    { key: 'perfect_attendance_7', icon: '⭐', title: 'Wzorowa obecność', desc: 'Pełne 7/7 dni w tygodniu.', status: weeklyDays >= 7 ? 'Gotowe' : `${weeklyDays}/7`, tone: 'gold', unlocked: weeklyDays >= 7 }
   ]
+
+  useEffect(() => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) return
+    const unlockedBadges = achievements.filter(item => item.unlocked).map(item => ({
+      key: item.key,
+      title: item.title,
+      description: item.desc,
+      icon: item.icon,
+      tone: item.tone
+    }))
+    if (!unlockedBadges.length) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { error } = await supabase.rpc('sync_user_achievements_v1554', { p_badges: unlockedBadges })
+        if (error && !cancelled) console.warn('achievements sync skipped', error)
+      } catch (error) {
+        if (!cancelled) console.warn('achievements sync exception skipped', error)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [user?.id, weeklyDays, winStreak.current_streak])
+
   const fallbackRanking = [
     { name: 'buchajson1988', score: `${Math.max(weeklyDays * dailyRewardCoins, 1)} pkt`, badge: 'AKTYWNY', initials: 'BU' },
     { name: 'smilhytv', score: '0 pkt', badge: 'START', initials: 'SM' },
