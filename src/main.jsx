@@ -36,9 +36,9 @@ import './styles.css'
 
 
 /* =========================================================
-   WERSJA 1549 — TWARDY LOCAL DEVICE SCALE FIX
-   Naprawa: ?scale=67 ma zapisać się na sprzęcie i działać po F5.
-   Czyta query/hash/cookie/localStorage i nakłada skalę ponownie po renderze.
+   WERSJA 1550 — AUTO SCALE FULLHD LAPTOP/DESKTOP FIX
+   Automatycznie: laptop FullHD skalowany Windows -> 67%, monitor FullHD DPR1 -> 80%.
+   Ręczny ?scale nadal działa jako override lokalny.
    ========================================================= */
 if (typeof window !== 'undefined') {
   ;(() => {
@@ -109,6 +109,53 @@ if (typeof window !== 'undefined') {
       }
     }
 
+    const isTouchLike = () => {
+      try {
+        return Boolean((navigator.maxTouchPoints || 0) > 1 || window.matchMedia?.('(pointer: coarse)')?.matches)
+      } catch (_) { return false }
+    }
+
+    const getAutoScale = () => {
+      try {
+        if (isTouchLike()) return ''
+
+        const sw = Number(window.screen?.width || 0)
+        const sh = Number(window.screen?.height || 0)
+        const iw = Number(window.innerWidth || 0)
+        const ih = Number(window.innerHeight || 0)
+        const dpr = Number(window.devicePixelRatio || 1)
+
+        const maxScreen = Math.max(sw, sh)
+        const minScreen = Math.min(sw, sh)
+        const maxView = Math.max(iw, ih)
+        const minView = Math.min(iw, ih)
+
+        // WERSJA 1550:
+        // laptop Full HD 15.6 przy skalowaniu Windows 125% zwykle raportuje viewport ok. 1536x864 i DPR ok. 1.25.
+        // Dajemy mu automatycznie odczucie 67%, bez żadnego ?scale=67 w linku.
+        const looksLikeFullHdLaptopScaled =
+          (dpr >= 1.15 && dpr <= 1.75 && maxScreen <= 1920 && minScreen <= 1080 && maxView <= 1700 && minView <= 1000) ||
+          (maxView >= 1450 && maxView <= 1580 && minView >= 800 && minView <= 900 && dpr >= 1.1)
+
+        if (looksLikeFullHdLaptopScaled) return '67'
+
+        // monitor Full HD 1920x1080 przy DPR 1 — zostawiamy sprawdzony efekt 80%.
+        const looksLikeFullHdDesktop =
+          dpr < 1.15 &&
+          (
+            (maxScreen === 1920 && minScreen === 1080) ||
+            (maxView >= 1880 && maxView <= 1935 && minView >= 1000 && minView <= 1100)
+          )
+
+        if (looksLikeFullHdDesktop) return '80'
+
+        // 2K 2560x1440, 1680x1050, 1440x900 i reszta bez agresywnego skalowania.
+        return ''
+      } catch (_) {
+        return ''
+      }
+    }
+
     const removeStyle = () => {
       try { document.getElementById(STYLE_ID)?.remove() } catch (_) {}
     }
@@ -154,8 +201,10 @@ html.betai-device-scale-v1549 .app-shell,html.betai-device-scale-v1549 .betai-ap
 
     const apply = () => {
       const saved = getSaved()
-      if (!saved || saved === 'auto') return clearScale()
-      const pct = Number(saved)
+      const autoScale = getAutoScale()
+      const finalScale = saved && saved !== 'auto' ? saved : autoScale
+      if (!finalScale || finalScale === 'auto') return clearScale()
+      const pct = Number(finalScale)
       if (!Number.isFinite(pct)) return
       const html = document.documentElement
       const body = document.body
