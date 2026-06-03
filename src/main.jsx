@@ -20299,6 +20299,69 @@ function TipsterSupportModalV1349({ open, tipster = {}, viewer = {}, onClose, on
 }
 
 
+
+
+const BETAI_PROFILE_RANK_TIERS_V1557 = [
+  { key: 'bronze', label: 'Bronze', icon: '🥉', tone: 'bronze', minDays: 1, minTips: 0, minProfit: -999999, minWinRate: 0 },
+  { key: 'silver', label: 'Silver', icon: '🥈', tone: 'silver', minDays: 7, minTips: 5, minProfit: -999999, minWinRate: 0 },
+  { key: 'gold', label: 'Gold', icon: '🥇', tone: 'gold', minDays: 14, minTips: 15, minProfit: 1, minWinRate: 0 },
+  { key: 'pro', label: 'Pro', icon: '⚡', tone: 'pro', minDays: 30, minTips: 30, minProfit: 100, minWinRate: 50 },
+  { key: 'master', label: 'Master', icon: '💎', tone: 'master', minDays: 60, minTips: 75, minProfit: 500, minWinRate: 55 },
+  { key: 'premium_master', label: 'Premium Master', icon: '👑', tone: 'premium', minDays: 90, minTips: 150, minProfit: 1000, minWinRate: 60 },
+]
+
+function buildBetaiProfileRankV1557(metrics = {}) {
+  const activeDays = Math.max(0, Number(metrics.active_days ?? metrics.activeDays ?? 0) || 0)
+  const totalTips = Math.max(0, Number(metrics.total_tips ?? metrics.totalTips ?? 0) || 0)
+  const profit = Number(metrics.profit ?? metrics.profitAmount ?? 0) || 0
+  const winRate = Math.max(0, Number(metrics.win_rate ?? metrics.winRate ?? 0) || 0)
+
+  let currentIndex = 0
+  BETAI_PROFILE_RANK_TIERS_V1557.forEach((tier, index) => {
+    if (activeDays >= tier.minDays && totalTips >= tier.minTips && profit >= tier.minProfit && winRate >= tier.minWinRate) currentIndex = index
+  })
+  const current = BETAI_PROFILE_RANK_TIERS_V1557[currentIndex] || BETAI_PROFILE_RANK_TIERS_V1557[0]
+  const next = BETAI_PROFILE_RANK_TIERS_V1557[currentIndex + 1] || null
+  const target = next || current
+  const progressItems = [
+    { key: 'days', label: 'Dni aktywności', value: activeDays, target: target.minDays, suffix: 'dni' },
+    { key: 'tips', label: 'Dodane typy', value: totalTips, target: target.minTips, suffix: 'typów' },
+    { key: 'profit', label: 'Profit', value: profit, target: target.minProfit <= -9999 ? 0 : target.minProfit, suffix: 'zł', money: true },
+    { key: 'winrate', label: 'Skuteczność', value: winRate, target: target.minWinRate, suffix: '%', percent: true },
+  ].map(item => {
+    const safeTarget = Number(item.target || 0)
+    const ratio = safeTarget <= 0 ? 100 : Math.max(0, Math.min(100, Math.round((Number(item.value || 0) / safeTarget) * 100)))
+    const done = safeTarget <= 0 || Number(item.value || 0) >= safeTarget
+    return { ...item, ratio, done }
+  })
+  const overallProgress = next ? Math.round(progressItems.reduce((sum, item) => sum + item.ratio, 0) / progressItems.length) : 100
+  return {
+    ok: true,
+    rank_key: current.key,
+    rank_label: current.label,
+    rank_icon: current.icon,
+    rank_tone: current.tone,
+    next_rank_key: next?.key || null,
+    next_rank_label: next?.label || 'MAX',
+    next_rank_icon: next?.icon || '✓',
+    progress_percent: overallProgress,
+    active_days: activeDays,
+    total_tips: totalTips,
+    profit,
+    win_rate: winRate,
+    requirements: progressItems,
+    is_max_rank: !next,
+  }
+}
+
+function formatProfileRankMetricV1557(item = {}) {
+  const value = Number(item.value || 0)
+  const target = Number(item.target || 0)
+  if (item.money) return `${value >= 0 ? '+' : ''}${value.toFixed(0)} / ${target >= 0 ? '+' : ''}${target.toFixed(0)} zł`
+  if (item.percent) return `${Math.round(value)}% / ${Math.round(target)}%`
+  return `${Math.round(value)} / ${Math.round(target)} ${item.suffix || ''}`.trim()
+}
+
 function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscriptions = [], followingTipsters = new Set(), followStats = {}, onToggleFollow = null, viewerUser = null, isPublicProfile = false, userPlan = 'free', stripeConnectStatus = null, onConnectStripe = null, onToast = null, onAvatarUpdated = null, onProfileUpdated = null, onUnlock = null, onSubscribeToTipster = null, onOpenDirectMessage = null, referralData = null, referralLoading = false }) {
   const profile = getUserProfileView(user)
   const email = normalizeEmail(profile.email || user?.email || '')
@@ -20451,6 +20514,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileReviewComment, setProfileReviewComment] = useState('')
   const [profileReviewSaving, setProfileReviewSaving] = useState(false)
   const [profileReviewStatus, setProfileReviewStatus] = useState('')
+  const [profileRankRemote, setProfileRankRemote] = useState(null)
+  const [profileRankLoading, setProfileRankLoading] = useState(false)
 
   const targetProfileIdForReviews = viewedIdKey || profile.id || user?.id || ''
   const viewerIdForReview = viewerProfile?.id || ''
@@ -20485,6 +20550,29 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   useEffect(() => {
     loadProfileReviews()
   }, [targetProfileIdForReviews])
+
+  useEffect(() => {
+    let alive = true
+    const loadRank = async () => {
+      if (!profileIsOwnForViewer || !isSupabaseConfigured || !supabase || !viewerProfile?.id) {
+        setProfileRankRemote(null)
+        return
+      }
+      setProfileRankLoading(true)
+      try {
+        const { data, error } = await supabase.rpc('get_my_profile_rank_v1557')
+        if (error) throw error
+        if (alive) setProfileRankRemote(data || null)
+      } catch (error) {
+        console.warn('profile rank v1557 skipped', error)
+        if (alive) setProfileRankRemote(null)
+      } finally {
+        if (alive) setProfileRankLoading(false)
+      }
+    }
+    loadRank()
+    return () => { alive = false }
+  }, [profileIsOwnForViewer, viewerProfile?.id])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !targetProfileIdForReviews) return undefined
@@ -20758,6 +20846,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
   const profileBio = user?.bio || user?.description || user?.about || fallbackBio
+  const localProfileRank = buildBetaiProfileRankV1557({ active_days: Number(user?.active_days || user?.attendance_days || user?.activity_days || 0) || 0, total_tips: totalTips, profit: profitAmount, win_rate: winRate })
+  const profileRank = profileRankRemote?.ok ? {
+    ...localProfileRank,
+    ...profileRankRemote,
+    requirements: Array.isArray(profileRankRemote.requirements) ? profileRankRemote.requirements : localProfileRank.requirements,
+    progress_percent: Number(profileRankRemote.progress_percent ?? localProfileRank.progress_percent) || 0,
+  } : localProfileRank
+  const profileRankRequirements = Array.isArray(profileRank.requirements) ? profileRank.requirements : []
   const preferredSport = user?.preferred_sport || user?.sport || 'Nie ustawiono'
 
   const toTipRow = (tip, fallbackPremium = false) => {
@@ -21601,6 +21697,32 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </div>
             </div>
           </div>
+
+          <section className={`glass-profile-v3 profile-rank-card-v1557 rank-${profileRank.rank_tone || 'bronze'}`}>
+            <div className="profile-rank-main-v1557">
+              <div className="profile-rank-orb-v1557"><span>{profileRank.rank_icon || '🥉'}</span></div>
+              <div className="profile-rank-copy-v1557">
+                <small>ROZWÓJ PROFILU TYPERA</small>
+                <h3>{profileRank.rank_label || 'Bronze'}</h3>
+                <p>{profileRank.is_max_rank ? 'Masz najwyższą rangę profilu.' : `Do następnej rangi: ${profileRank.next_rank_label || 'Silver'}`}</p>
+              </div>
+              <div className="profile-rank-score-v1557">
+                <span>Postęp</span>
+                <strong>{Math.max(0, Math.min(100, Math.round(Number(profileRank.progress_percent || 0))))}%</strong>
+                <em>{profileRankLoading ? 'Aktualizuję...' : 'Dni + typy + profit'}</em>
+              </div>
+            </div>
+            <div className="profile-rank-progress-v1557"><i style={{ width: `${Math.max(0, Math.min(100, Number(profileRank.progress_percent || 0)))}%` }} /></div>
+            <div className="profile-rank-reqs-v1557">
+              {profileRankRequirements.map((item) => (
+                <div className={item.done ? 'done' : ''} key={item.key || item.label}>
+                  <span>{item.label}</span>
+                  <b>{formatProfileRankMetricV1557(item)}</b>
+                  <i><em style={{ width: `${Math.max(0, Math.min(100, Number(item.ratio || 0)))}%` }} /></i>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <section className="glass-profile-v3 profile-v3-card profile-stats-cards-section">
             <div className="profile-v3-card-head">
