@@ -440,6 +440,150 @@ if (typeof window !== 'undefined') {
   setTimeout(BETAI_GLOBAL_AUTO_ZOOM80_1537, 3200)
 }
 
+/* =========================================================
+   WERSJA 1547 — LOKALNA SKALA URZĄDZENIA
+   Użycie: otwórz raz link z parametrem ?scale=67 albo ?betaiScale=67.
+   Skala zapisuje się w tej przeglądarce/na tym sprzęcie i nadpisuje auto-zoom.
+   Czyszczenie: ?scale=auto albo ?betaiScale=auto.
+   ========================================================= */
+if (typeof window !== 'undefined') {
+  const BETAI_DEVICE_SCALE_KEY_1547 = 'betai_device_scale_percent_v1547'
+
+  const readBetaiScaleParam1547 = () => {
+    try {
+      const params = new URLSearchParams(window.location.search || '')
+      return params.get('betaiScale') || params.get('scale') || params.get('viewScale') || ''
+    } catch (_) {
+      return ''
+    }
+  }
+
+  const normalizeBetaiScale1547 = (value) => {
+    const raw = String(value || '').trim().replace('%', '').replace(',', '.')
+    if (!raw || raw.toLowerCase() === 'auto' || raw.toLowerCase() === 'reset' || raw.toLowerCase() === 'off') return 'auto'
+    const num = Number(raw)
+    if (!Number.isFinite(num)) return ''
+    return String(Math.max(50, Math.min(110, Math.round(num))))
+  }
+
+  const persistScaleFromUrl1547 = () => {
+    const fromUrl = readBetaiScaleParam1547()
+    if (!fromUrl) return
+    const next = normalizeBetaiScale1547(fromUrl)
+    if (!next) return
+    try {
+      if (next === 'auto') window.localStorage.removeItem(BETAI_DEVICE_SCALE_KEY_1547)
+      else window.localStorage.setItem(BETAI_DEVICE_SCALE_KEY_1547, next)
+      window.dispatchEvent(new CustomEvent('betai-device-scale-changed-v1547', { detail: { scale: next } }))
+    } catch (_) {}
+  }
+
+  const getSavedBetaiScale1547 = () => {
+    try {
+      return normalizeBetaiScale1547(window.localStorage.getItem(BETAI_DEVICE_SCALE_KEY_1547) || '')
+    } catch (_) {
+      return ''
+    }
+  }
+
+  const clearScaleStyles1547 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const root = document.getElementById('root')
+    if (!html || !body) return
+    delete body.dataset.betaiDeviceScale1547
+    html.classList.remove('betai-device-scale-v1547')
+    html.style.removeProperty('--betai-device-scale-1547')
+    html.style.removeProperty('--betai-device-inverse-1547')
+    body.style.removeProperty('zoom')
+    body.style.removeProperty('width')
+    body.style.removeProperty('min-width')
+    body.style.removeProperty('max-width')
+    body.style.removeProperty('height')
+    body.style.removeProperty('min-height')
+    body.style.removeProperty('max-height')
+    body.style.removeProperty('overflow-x')
+    body.style.removeProperty('overflow-y')
+    body.style.removeProperty('overflow')
+    if (root) {
+      root.style.removeProperty('width')
+      root.style.removeProperty('min-width')
+      root.style.removeProperty('max-width')
+      root.style.removeProperty('height')
+      root.style.removeProperty('min-height')
+      root.style.removeProperty('max-height')
+      root.style.removeProperty('overflow-x')
+      root.style.removeProperty('overflow-y')
+    }
+  }
+
+  const applyBetaiDeviceScale1547 = () => {
+    const html = document.documentElement
+    const body = document.body
+    const root = document.getElementById('root')
+    if (!html || !body) return
+    const saved = getSavedBetaiScale1547()
+    if (!saved || saved === 'auto') return
+
+    const pct = Number(saved)
+    if (!Number.isFinite(pct)) return
+    const inverse = 100 / pct
+    const inverseVw = `${(inverse * 100).toFixed(6)}vw`
+    const inverseVh = `${(inverse * 100).toFixed(6)}vh`
+
+    html.classList.add('betai-device-scale-v1547')
+    html.style.setProperty('--betai-device-scale-1547', String(pct / 100))
+    html.style.setProperty('--betai-device-inverse-1547', String(inverse))
+    body.dataset.betaiDeviceScale1547 = `${pct}%`
+    body.style.setProperty('zoom', `${pct}%`, 'important')
+    body.style.setProperty('width', inverseVw, 'important')
+    body.style.setProperty('min-width', inverseVw, 'important')
+    body.style.setProperty('max-width', 'none', 'important')
+    body.style.setProperty('height', 'auto', 'important')
+    body.style.setProperty('min-height', inverseVh, 'important')
+    body.style.setProperty('max-height', 'none', 'important')
+    body.style.setProperty('overflow-x', 'hidden', 'important')
+    body.style.setProperty('overflow-y', 'auto', 'important')
+    if (root) {
+      root.style.setProperty('width', inverseVw, 'important')
+      root.style.setProperty('min-width', inverseVw, 'important')
+      root.style.setProperty('max-width', 'none', 'important')
+      root.style.setProperty('height', 'auto', 'important')
+      root.style.setProperty('min-height', inverseVh, 'important')
+      root.style.setProperty('max-height', 'none', 'important')
+      root.style.setProperty('overflow-x', 'hidden', 'important')
+      root.style.setProperty('overflow-y', 'auto', 'important')
+    }
+  }
+
+  persistScaleFromUrl1547()
+  applyBetaiDeviceScale1547()
+  window.BETAI_SET_VIEW_SCALE = (value) => {
+    const next = normalizeBetaiScale1547(value)
+    if (!next) return false
+    try {
+      if (next === 'auto') window.localStorage.removeItem(BETAI_DEVICE_SCALE_KEY_1547)
+      else window.localStorage.setItem(BETAI_DEVICE_SCALE_KEY_1547, next)
+    } catch (_) {}
+    if (next === 'auto') clearScaleStyles1547()
+    else applyBetaiDeviceScale1547()
+    window.dispatchEvent(new CustomEvent('betai-device-scale-changed-v1547', { detail: { scale: next } }))
+    return true
+  }
+  window.BETAI_GET_VIEW_SCALE = () => getSavedBetaiScale1547() || 'auto'
+
+  window.addEventListener('resize', applyBetaiDeviceScale1547, { passive: true })
+  window.addEventListener('orientationchange', applyBetaiDeviceScale1547, { passive: true })
+  window.addEventListener('load', applyBetaiDeviceScale1547, { passive: true })
+  window.addEventListener('betai-device-scale-changed-v1547', applyBetaiDeviceScale1547, { passive: true })
+  setTimeout(applyBetaiDeviceScale1547, 80)
+  setTimeout(applyBetaiDeviceScale1547, 300)
+  setTimeout(applyBetaiDeviceScale1547, 900)
+  setTimeout(applyBetaiDeviceScale1547, 1800)
+  setTimeout(applyBetaiDeviceScale1547, 3600)
+  setTimeout(applyBetaiDeviceScale1547, 5200)
+}
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
