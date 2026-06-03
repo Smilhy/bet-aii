@@ -24358,6 +24358,15 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
     previous_week_start: null
   }))
   const [claimBusy, setClaimBusy] = useState(false)
+  const [dailyReward, setDailyReward] = useState(() => ({
+    loading: true,
+    attended: false,
+    claimed: false,
+    can_claim: false,
+    reward_coins: dailyRewardCoins,
+    message: 'Sprawdzam dzienny odbiór...'
+  }))
+  const [dailyClaimBusy, setDailyClaimBusy] = useState(false)
   const [activityRanking, setActivityRanking] = useState([])
   const [activityRankingLoading, setActivityRankingLoading] = useState(false)
   const [tipStreak, setTipStreak] = useState(() => ({
@@ -24473,6 +24482,58 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   }, [user?.id, defaultRewardCoins, todayIsoDow])
 
   useEffect(() => { refreshAttendance() }, [refreshAttendance])
+
+  const refreshDailyReward = useCallback(async () => {
+    const userId = user?.id
+    if (!userId || !isSupabaseConfigured || !supabase) {
+      setDailyReward(prev => ({ ...prev, loading: false, attended: attendedDays?.includes?.(todayIsoDow) || false, reward_coins: dailyRewardCoins, message: 'Zaloguj się, aby odebrać dzienny coin.' }))
+      return
+    }
+    setDailyReward(prev => ({ ...prev, loading: true }))
+    try {
+      const { data, error } = await supabase.rpc('get_daily_attendance_reward_status_v1556')
+      if (error) throw error
+      const payload = data || {}
+      setDailyReward({
+        loading: false,
+        attended: Boolean(payload.attended_today),
+        claimed: Boolean(payload.claimed_today),
+        can_claim: Boolean(payload.can_claim_today),
+        reward_coins: Number(payload.reward_coins || dailyRewardCoins),
+        message: payload.claimed_today ? 'Dzisiejszy coin został już odebrany.' : payload.can_claim_today ? 'Możesz odebrać dzienny coin.' : 'Wejdź dziś do BetAI, aby odblokować odbiór.'
+      })
+    } catch (error) {
+      console.warn('daily attendance reward skipped', error)
+      setDailyReward(prev => ({ ...prev, loading: false, attended: attendedDays?.includes?.(todayIsoDow) || false, can_claim: false, reward_coins: dailyRewardCoins, message: 'Uruchom SQL Supabase dla dziennego odbioru.' }))
+    }
+  }, [user?.id, dailyRewardCoins, todayIsoDow])
+
+  useEffect(() => { refreshDailyReward() }, [refreshDailyReward, attendance.current_week_count])
+
+  const claimDailyAttendanceReward = async () => {
+    if (dailyClaimBusy || !user?.id || !isSupabaseConfigured || !supabase) return
+    setDailyClaimBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('claim_daily_attendance_reward_v1556')
+      if (error) throw error
+      const payload = data || {}
+      const rewardCoins = Number(payload.reward_coins || dailyReward.reward_coins || dailyRewardCoins)
+      const nextBalance = Number(payload.new_balance ?? (Number(tokenBalance || 0) + rewardCoins)) || 0
+      const email = String(user?.email || '').toLowerCase()
+      try { if (email) localStorage.setItem('betai_tokens_' + email, String(nextBalance)) } catch (_) {}
+      window.dispatchEvent(new CustomEvent('betai-token-balance-changed', { detail: { email, balance: nextBalance, reason: 'daily_attendance_reward' } }))
+      setDailyReward(prev => ({ ...prev, claimed: true, can_claim: false, reward_coins: rewardCoins, message: `Odebrano dzienną obecność: +${rewardCoins} coin.` }))
+      onToast?.({ type: 'success', title: 'Dzienna obecność odebrana', message: `Dodano ${rewardCoins} coin za dzisiejszą obecność.` })
+      refreshActivityRanking()
+    } catch (error) {
+      console.warn('daily attendance reward claim failed', error)
+      setDailyReward(prev => ({ ...prev, message: 'Nie udało się odebrać dziennego coina. Sprawdź SQL Supabase.' }))
+      onToast?.({ type: 'error', title: 'Nie odebrano nagrody', message: error?.message || 'Sprawdź Supabase SQL.' })
+    } finally {
+      setDailyClaimBusy(false)
+      refreshDailyReward()
+    }
+  }
 
   const claimWeeklyReward = async () => {
     if (claimBusy || !user?.id || !isSupabaseConfigured || !supabase) return
@@ -24624,7 +24685,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
   const rewardCoins = Number(attendance.reward_coins || defaultRewardCoins)
   const winStreakProgress = Math.max(0, Math.min(5, Number(winStreak.current_streak || 0)))
   const missions = [
-    { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: `+${dailyRewardCoins} coin`, tone: 'cyan' },
+    { icon: '📅', title: 'Dzisiejsza obecność', desc: 'Wejdź minimum raz dziennie do BetAI.', progress: dailyReward.attended || attendedDays.includes(todayIsoDow) ? 1 : 0, total: 1, reward: dailyReward.claimed ? 'Odebrano' : `+${Number(dailyReward.reward_coins || dailyRewardCoins)} coin`, tone: 'cyan', claimable: Boolean(dailyReward.can_claim), claimed: Boolean(dailyReward.claimed), busy: dailyClaimBusy, onClaim: claimDailyAttendanceReward },
     { icon: '🔥', title: 'Win streak 5/5', desc: 'Traf 5 typów z rzędu i odbierz 1 coin.', progress: winStreakProgress, total: 5, reward: winStreak.can_claim ? '+1 coin' : `${Number(winStreak.current_streak || 0)}/5`, tone: 'gold', claimable: winStreak.can_claim, claimed: !winStreak.can_claim && Number(winStreak.claimed_units || 0) > 0 && Number(winStreak.current_streak || 0) >= 5, busy: winClaimBusy, onClaim: claimWinStreakReward },
     { icon: '🎯', title: 'Dodaj typ 7 dni z rzędu', desc: 'Minimum 1 typ dziennie od poniedziałku do niedzieli. Nagroda tylko za komplet.', progress: tipStreakCount, total: 7, reward: '+7 coin', tone: 'orange' },
     { icon: '🎁', title: 'Nagroda za serię typów', desc: tipStreak.can_claim_previous ? 'Komplet 7/7 z poprzedniego tygodnia jest gotowy do odbioru.' : tipStreak.previous_week_claimed ? 'Nagroda za poprzedni tydzień została już odebrana.' : 'Odbiór pojawi się po komplecie 7/7 dni typowania.', progress: tipStreak.can_claim_previous || tipStreak.previous_week_claimed ? 7 : tipStreakCount, total: 7, reward: tipStreak.can_claim_previous ? '+7 coin' : tipStreak.previous_week_claimed ? 'Odebrano' : `${tipStreakCount}/7`, tone: 'green', claimable: tipStreak.can_claim_previous, claimed: tipStreak.previous_week_claimed, busy: tipClaimBusy, onClaim: claimWeeklyTipReward }
@@ -24737,7 +24798,7 @@ function RewardsBonusesView({ user, tokenBalance = 2450, userPlan = 'free', onTo
                       {mission.claimable ? (
                         <button type="button" className="rewards-mission-claim-btn-v1548" disabled={mission.busy} onClick={mission.onClaim}>{mission.busy ? 'Odbieram...' : 'Odbierz'}</button>
                       ) : (
-                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Odbierz' : 'W toku'}</em>
+                        <em className={done ? 'done' : 'pending'}>{mission.claimed ? 'Odebrane' : done ? 'Zapisane' : 'W toku'}</em>
                       )}
                     </div>
                   </div>
