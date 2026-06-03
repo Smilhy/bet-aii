@@ -70397,3 +70397,18 @@ html.betai-fhd-monitor80-v1323 body #root{
 .profile-rank-card-v1557.rank-premium .profile-rank-progress-v1557 i{background:linear-gradient(90deg,#fbbf24,#ec4899,#22efe8)!important;}
 @media (max-width: 1050px){.profile-rank-main-v1557{grid-template-columns:auto minmax(0,1fr)!important}.profile-rank-score-v1557{grid-column:1/-1!important}.profile-rank-reqs-v1557{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media (max-width: 620px){.profile-rank-card-v1557{padding:14px!important}.profile-rank-orb-v1557{width:58px!important;height:58px!important;border-radius:18px!important}.profile-rank-orb-v1557 span{font-size:27px!important}.profile-rank-copy-v1557 h3{font-size:24px!important}.profile-rank-reqs-v1557{grid-template-columns:1fr!important}}
+
+/* v1558 — profil: ukryte dublujące warunki rangi, zostaje lekki opis */
+.profile-rank-note-v1558{
+  margin-top:12px!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(37,241,233,.10)!important;
+  background:rgba(5,18,28,.46)!important;
+  color:#9fb6c4!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.45!important;
+}
+.profile-rank-note-v1558 span{display:block!important;max-width:980px!important;}
+.profile-rank-card-v1557 .profile-rank-reqs-v1557{display:none!important;}

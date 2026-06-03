@@ -21704,23 +21704,17 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="profile-rank-copy-v1557">
                 <small>ROZWÓJ PROFILU TYPERA</small>
                 <h3>{profileRank.rank_label || 'Bronze'}</h3>
-                <p>{profileRank.is_max_rank ? 'Masz najwyższą rangę profilu.' : `Do następnej rangi: ${profileRank.next_rank_label || 'Silver'}`}</p>
+                <p>{profileRank.is_max_rank ? 'Masz najwyższą rangę profilu.' : `Ranga rośnie dzięki aktywności, typom, profitowi i skuteczności.`}</p>
               </div>
               <div className="profile-rank-score-v1557">
                 <span>Postęp</span>
                 <strong>{Math.max(0, Math.min(100, Math.round(Number(profileRank.progress_percent || 0))))}%</strong>
-                <em>{profileRankLoading ? 'Aktualizuję...' : 'Dni + typy + profit'}</em>
+                <em>{profileRankLoading ? 'Aktualizuję...' : (profileRank.is_max_rank ? 'Maksymalna ranga' : `Następna: ${profileRank.next_rank_label || 'Silver'}`)}</em>
               </div>
             </div>
             <div className="profile-rank-progress-v1557"><i style={{ width: `${Math.max(0, Math.min(100, Number(profileRank.progress_percent || 0)))}%` }} /></div>
-            <div className="profile-rank-reqs-v1557">
-              {profileRankRequirements.map((item) => (
-                <div className={item.done ? 'done' : ''} key={item.key || item.label}>
-                  <span>{item.label}</span>
-                  <b>{formatProfileRankMetricV1557(item)}</b>
-                  <i><em style={{ width: `${Math.max(0, Math.min(100, Number(item.ratio || 0)))}%` }} /></i>
-                </div>
-              ))}
+            <div className="profile-rank-note-v1558">
+              <span>Ranga jest liczona automatycznie z historii konta. Szczegóły liczbowe zostają w statystykach profilu, a tutaj widzisz tylko poziom i postęp.</span>
             </div>
           </section>
 
