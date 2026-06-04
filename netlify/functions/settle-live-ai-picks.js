@@ -5,13 +5,26 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const APISPORTS_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 
 function json(statusCode, body) {
-  return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+    },
+    body: JSON.stringify(body)
+  }
 }
 function n(v, fallback = 0) { const x = Number(v); return Number.isFinite(x) ? x : fallback }
 function scoreN(v) { if (v === undefined || v === null || v === '') return null; const x = Number(v); return Number.isFinite(x) ? x : null }
 function norm(s) { return String(s || '').toLowerCase().trim() }
-function cleanName(s) { return norm(s).replace(/\s+/g, ' ') }
-function includesName(text, name) { const a = cleanName(text); const b = cleanName(name); return b && (a.includes(b) || b.includes(a)) }
+function cleanName(s) { return norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() }
+function includesName(text, name) {
+  const a = cleanName(text)
+  const b = cleanName(name)
+  return Boolean(b && (a.includes(b) || b.includes(a)))
+}
 function profitFromStatus(status, odds, stake = 100) {
   if (status === 'won') return Math.round((n(odds, 1) - 1) * stake)
   if (status === 'lost') return -stake
@@ -32,14 +45,21 @@ const SPORT_RESULT_APIS = [
   { match: ['mma','ufc'], host: 'https://v1.mma.api-sports.io', path: '/fights', type: 'fight' }
 ]
 function cfgForTip(tip) {
-  const text = norm(`${tip.sport || ''} ${tip.league || ''} ${tip.league_name || ''}`)
+  const text = norm(`${tip.sport || ''} ${tip.league || ''} ${tip.league_name || ''} ${tip.country || ''}`)
   return SPORT_RESULT_APIS.find(c => c.match.some(x => text.includes(x))) || SPORT_RESULT_APIS[0]
 }
 function tipDateKey(tip) {
+  if (tip.match_date) return String(tip.match_date).slice(0, 10)
   const raw = tip.event_time || tip.kickoff_time || tip.match_time || tip.created_at || ''
   const d = new Date(raw)
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
   return String(raw || '').slice(0, 10)
+}
+function tipHome(tip) {
+  return tip.home_team || tip.team_home || tip.home || String(tip.match_name || tip.match || '').split(' vs ')[0] || ''
+}
+function tipAway(tip) {
+  return tip.away_team || tip.team_away || tip.away || String(tip.match_name || tip.match || '').split(' vs ')[1] || ''
 }
 function itemTeams(item = {}) {
   const home = item?.teams?.home?.name || item?.teams?.home || item?.home?.name || item?.team?.home?.name || item?.fighters?.first?.name || item?.fighters?.home?.name || ''
@@ -48,13 +68,11 @@ function itemTeams(item = {}) {
 }
 function sameMatchByNames(tip, item) {
   const teams = itemTeams(item)
-  const home = tip.team_home || String(tip.match_name || '').split(' vs ')[0]
-  const away = tip.team_away || String(tip.match_name || '').split(' vs ')[1]
-  return includesName(teams.home, home) && includesName(teams.away, away)
+  return includesName(teams.home, tipHome(tip)) && includesName(teams.away, tipAway(tip))
 }
 async function fetchApiSportsResult(tip) {
   const cfg = cfgForTip(tip)
-  const directId = tip.external_fixture_id || tip.ai_external_key
+  const directId = tip.external_fixture_id || tip.ai_external_key || tip.fixture_id
   const headers = { 'x-apisports-key': APISPORTS_KEY }
 
   async function request(url) {
@@ -73,13 +91,12 @@ async function fetchApiSportsResult(tip) {
     if (rows[0]) return { cfg, item: rows[0] }
   }
 
-  // Fallback dla starszych zapisów bez external_fixture_id: szukamy po dacie i nazwach drużyn.
   const date = tipDateKey(tip)
   if (!date) return { cfg, item: null }
   const rows = await request(`${cfg.host}${cfg.path}?date=${encodeURIComponent(date)}`)
   return { cfg, item: rows.find(row => sameMatchByNames(tip, row)) || null }
 }
-function getStatus(item, cfg) {
+function getStatus(item) {
   const raw = item?.fixture?.status?.short || item?.fixture?.status?.long || item?.game?.status?.short || item?.game?.status?.long || item?.status?.short || item?.status?.long || item?.status || item?.fight?.status || ''
   return String(raw || '').toUpperCase()
 }
@@ -105,10 +122,10 @@ function resolvePick(tip, homeScore, awayScore) {
   const total = n(homeScore) + n(awayScore)
   const pick = norm(`${tip.pick || tip.selection || tip.prediction || ''}`)
   const market = norm(`${tip.market || tip.bet_type || ''}`)
-  const homeName = tip.team_home || String(tip.match_name || '').split(' vs ')[0]
-  const awayName = tip.team_away || String(tip.match_name || '').split(' vs ')[1]
-  const isHome = includesName(pick, homeName) || pick.includes('home') || pick.includes('gospod')
-  const isAway = includesName(pick, awayName) || pick.includes('away') || pick.includes('gość') || pick.includes('gosc')
+  const homeName = tipHome(tip)
+  const awayName = tipAway(tip)
+  const isHome = includesName(pick, homeName) || pick.includes('home') || pick.includes('gospod') || pick.includes('1') && market.includes('1x2')
+  const isAway = includesName(pick, awayName) || pick.includes('away') || pick.includes('gość') || pick.includes('gosc') || pick.includes('2') && market.includes('1x2')
   const over = pick.match(/(?:over|powyżej|powyzej)\s*(\d+(?:[.,]\d+)?)/i)
   const under = pick.match(/(?:under|poniżej|ponizej)\s*(\d+(?:[.,]\d+)?)/i)
   if (over) return total > Number(over[1].replace(',', '.')) ? 'won' : 'lost'
@@ -125,7 +142,7 @@ function resolvePick(tip, homeScore, awayScore) {
       if (isAway) return adjustedAway > n(homeScore) ? 'won' : adjustedAway === n(homeScore) ? 'void' : 'lost'
     }
   }
-  if (pick.includes('nie przegra') || market.includes('double') || market.includes('podwójna') || market.includes('podwojna')) {
+  if (pick.includes('nie przegra') || market.includes('double') || market.includes('podwójna') || market.includes('podwojna') || pick.includes('lub remis')) {
     if (homeScore === awayScore) return 'won'
     if (isHome) return homeScore > awayScore ? 'won' : 'lost'
     if (isAway) return awayScore > homeScore ? 'won' : 'lost'
@@ -140,33 +157,42 @@ function resolvePick(tip, homeScore, awayScore) {
   if (isAway) return awayScore > homeScore ? 'won' : 'lost'
   return 'void'
 }
+async function updateAiBet(supabase, id, fullUpdate, minimalUpdate) {
+  const first = await supabase.from('ai_bets').update(fullUpdate).eq('id', id)
+  if (!first.error) return { ok: true, fallback: false }
+  const msg = String(first.error.message || '')
+  if (!/column|schema|does not exist|Could not find/i.test(msg)) throw first.error
+  const second = await supabase.from('ai_bets').update(minimalUpdate).eq('id', id)
+  if (second.error) throw second.error
+  return { ok: true, fallback: true, firstError: msg }
+}
 
-exports.handler = async function () {
+exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') return json(204, {})
   try {
     if (!SUPABASE_URL || !SERVICE_KEY || !APISPORTS_KEY) return json(500, { error: 'Missing env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY albo APISPORTS_KEY.' })
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
-    const { data: tips, error } = await supabase
-      .from('tips')
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+
+    const { data: rows, error } = await supabase
+      .from('ai_bets')
       .select('*')
-      .eq('ai_source', 'real_ai_engine')
-      .eq('source', 'live_ai_engine')
-      .order('event_time', { ascending: true })
-      .limit(500)
+      .order('match_date', { ascending: true })
+      .order('match_time', { ascending: true })
+      .limit(700)
     if (error) throw error
 
     const isSettled = tip => ['won','lost','void','win','loss','push'].includes(norm(tip.status || tip.result || tip.result_status))
     const isPending = tip => ['pending','live',''].includes(norm(tip.status || tip.result || tip.result_status))
     const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
     const hasVerifiedScore = tip => hasScore(tip) && Boolean(tip.live_status || tip.settlement_source === 'auto_ai_result_api')
-    const hasSuspiciousZero = tip => {
-      const h = scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home)
-      const a = scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away)
-      return isSettled(tip) && h === 0 && a === 0 && !hasVerifiedScore(tip)
-    }
+    const now = Date.now()
+    const candidates = (rows || []).filter(tip => {
+      if (!(isPending(tip) || !hasVerifiedScore(tip))) return false
+      const d = new Date(`${tip.match_date || tipDateKey(tip)}T${String(tip.match_time || '23:59').slice(0,5)}:00`)
+      return Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
+    })
 
-    const candidates = (tips || []).filter(tip => isPending(tip) || !hasVerifiedScore(tip) || hasSuspiciousZero(tip))
-
-    let settled = 0, checked = 0, skipped = 0, backfilled = 0
+    let settled = 0, checked = 0, skipped = 0, backfilled = 0, fallbackUpdates = 0
     const errors = []
     for (const tip of candidates) {
       checked++
@@ -182,38 +208,31 @@ exports.handler = async function () {
         const shouldResolveStatus = isPending(tip) || !isSettled(tip)
         const finalStatus = shouldResolveStatus ? computedStatus : norm(tip.status || tip.result_status || computedStatus)
         const finalResult = finalStatus === 'won' ? 'win' : finalStatus === 'lost' ? 'loss' : 'void'
-        const update = {
+        const profit = profitFromStatus(computedStatus, tip.odds, n(tip.stake, 100) || 100)
+        const fullUpdate = {
           live_score_home: scoreN(score.home),
           live_score_away: scoreN(score.away),
           live_status: statusRaw || 'FT',
           result_status: finalStatus,
           settlement_source: 'auto_ai_result_api',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          status: finalStatus,
+          result: finalResult,
+          profit,
+          settled_at: new Date().toISOString()
         }
+        const minimalUpdate = { status: finalStatus, result: finalResult, profit }
 
-        if (shouldResolveStatus) {
-          update.status = computedStatus
-          update.result = computedStatus === 'won' ? 'win' : computedStatus === 'lost' ? 'loss' : 'void'
-          update.profit = profitFromStatus(computedStatus, tip.odds, n(tip.stake, 100) || 100)
-          update.settled_at = new Date().toISOString()
-        } else {
-          // Stary rekord był już WON/LOST, więc przede wszystkim uzupełniamy prawdziwy wynik z API.
-          // Nie zmieniamy ręcznie zapisanego statusu, chyba że brakowało result/result_status.
-          if (!tip.result) update.result = finalResult
-          if (!tip.status) update.status = finalStatus
-          if (!tip.settled_at) update.settled_at = new Date().toISOString()
-        }
-
-        const { error: upErr } = await supabase.from('tips').update(update).eq('id', tip.id)
-        if (upErr) throw upErr
+        const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
+        if (up.fallback) fallbackUpdates++
         if (shouldResolveStatus) settled++
         else backfilled++
       } catch (e) {
-        errors.push({ id: tip.id, match: tip.match_name, sport: tip.sport, error: e.message || String(e) })
+        errors.push({ id: tip.id, match: `${tipHome(tip)} vs ${tipAway(tip)}`, date: tip.match_date, error: e.message || String(e) })
       }
     }
-    await supabase.from('ai_pick_runs').insert({ source: 'settle-live-ai-picks-v1453', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; errors=${errors.length}` }).catch(() => {})
-    return json(200, { checked, settled, backfilled, skipped, errors: errors.slice(0, 20) })
+    await supabase.from('ai_pick_runs').insert({ source: 'settle-ai-bets-v1566', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}` }).catch(() => {})
+    return json(200, { table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })

@@ -41,6 +41,18 @@ import './styles.css'
    potrafił blokować start aplikacji. Brak auto-skali, brak czyszczenia w pętli.
    ========================================================= */
 
+
+const BETAI_REFRESH_INTERVALS = Object.freeze({
+  liveChatFallbackMs: 15000,
+  onlineCountMs: 30000,
+  tokenBalanceMs: 60000,
+  notificationPollMs: 45000,
+  tipTransferPollMs: 45000,
+  dashboardMs: 60000,
+  scoresMs: 60000,
+  profileMs: 120000,
+});
+
 const BETAI_ADMIN_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_STRIPE_SUBSCRIPTION_LINK = 'https://buy.stripe.com/3cI9ASgu7gQo8JndJ04AU00';
 const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
@@ -16082,6 +16094,23 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }, [activePanel])
 
+  useEffect(() => {
+    const reloadAfterAiSettlementV1566 = () => {
+      setLoadingAi(true)
+      Promise.all([loadSavedAiJournalFromDbV1094(), loadSavedAiTipsFromDb(aiDayMode)])
+        .then(([, saved]) => {
+          if (saved?.length) {
+            setLiveCards([])
+            setSelectedId(saved[0]?.id || '')
+          }
+          setStatusText('Rozliczenie AI zakończone — odświeżono Mecze Result z ai_bets.')
+        })
+        .finally(() => setLoadingAi(false))
+    }
+    window.addEventListener('betai-ai-bets-settled', reloadAfterAiSettlementV1566)
+    return () => window.removeEventListener('betai-ai-bets-settled', reloadAfterAiSettlementV1566)
+  }, [aiDayMode])
+
   return (
     <section className="ai-center-page-v747">
       <header className="ai-lite-hero" aria-label="Typy AI Premium Hero">
@@ -24993,6 +25022,7 @@ function App() {
       if (!isAuto || Number(data.settled || 0) > 0) {
         showToast({ type: data.settled ? "success" : "info", title: isAuto ? "Auto rozliczenie AI" : "AI Settlement", message: `Sprawdzono ${data.checked || 0}, rozliczono ${data.settled || 0}, pominięto ${data.skipped || 0}.${extra}` })
       }
+      try { window.dispatchEvent(new CustomEvent('betai-ai-bets-settled', { detail: data })) } catch (_) {}
       await fetchTips(sessionUser?.id)
     } catch (error) {
       console.error("runAiSettlement error", error)
