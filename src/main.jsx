@@ -10487,7 +10487,11 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
       desc: 'Zrób łącznie 3 aktywności w ostatnich 24h.',
       reward: 1
     })
-  ]
+  ].map(row => ({
+    ...row,
+    title: row.title || (row.key === 'daily_chat' ? 'Napisz wiadomość' : row.key === 'daily_post' ? 'Dodaj post' : 'Bądź aktywny'),
+    desc: row.desc || (row.key === 'daily_chat' ? 'Napisz minimum jedną wiadomość na czacie w ostatnich 24h.' : row.key === 'daily_post' ? 'Dodaj minimum jeden post społeczności w ostatnich 24h.' : 'Zrób łącznie 3 aktywności w ostatnich 24h.')
+  }))
 
   const channelCounts = useMemo(() => {
     const counts = {}
@@ -10964,7 +10968,10 @@ function ReferralsView({ user, data, loading, onRefresh, onToast, onRefreshToken
         if (data?.already_claimed) {
           setRewardClaims(prev => ({ ...prev, [reward.key]: { created_at: new Date().toISOString() } }))
         }
-        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Misje aktywności', message: data?.message || 'Najpierw wykonaj misję, potem odbierz nagrodę. Coin można odebrać raz na 24h.' })
+        const friendlyMissionMessage = data?.already_claimed
+          ? `${reward.title || 'Misja'} została już odebrana w ostatnich 24h.`
+          : `Najpierw wykonaj misję: ${reward.title || 'misja aktywności'}. Coin można odebrać raz na 24h.`
+        onToast?.({ type: data?.already_claimed ? 'info' : 'warning', title: 'Misje aktywności', message: friendlyMissionMessage })
         await loadCommunity()
         return
       }
@@ -16885,7 +16892,7 @@ function SiteReviewsWidget({ user }) {
             aria-label={`${star} gwiazdek`}
           >
            
-          </button>
+          ★</button>
         ))}
       </div>
     )
@@ -17360,41 +17367,6 @@ function AuthView({ onAuth }) {
     loading: true
   })
   const [presentationOpen, setPresentationOpen] = useState(false)
-
-  // WERSJA 1568: preload prezentacji po wejściu na ekran logowania,
-  // żeby po kliknięciu Play było mniej buforowania.
-  useEffect(() => {
-    try {
-      const href = '/media/betai-prezentacja-platformy.mp4'
-      const preloadLink = document.createElement('link')
-      preloadLink.rel = 'preload'
-      preloadLink.as = 'video'
-      preloadLink.href = href
-      preloadLink.type = 'video/mp4'
-      document.head.appendChild(preloadLink)
-
-      const warmupVideo = document.createElement('video')
-      warmupVideo.src = href
-      warmupVideo.preload = 'auto'
-      warmupVideo.muted = true
-      warmupVideo.playsInline = true
-      warmupVideo.style.position = 'fixed'
-      warmupVideo.style.width = '1px'
-      warmupVideo.style.height = '1px'
-      warmupVideo.style.opacity = '0'
-      warmupVideo.style.pointerEvents = 'none'
-      warmupVideo.style.left = '-9999px'
-      document.body.appendChild(warmupVideo)
-      try { warmupVideo.load() } catch (_) {}
-
-      return () => {
-        try { document.head.removeChild(preloadLink) } catch (_) {}
-        try { document.body.removeChild(warmupVideo) } catch (_) {}
-      }
-    } catch (_) {
-      return undefined
-    }
-  }, [])
   const supportedAuthLanguages = ['pl', 'en', 'de', 'es', 'ru']
   const [authLang, setAuthLang] = useState(() => {
     try {
@@ -18172,7 +18144,7 @@ function AuthView({ onAuth }) {
               src="/media/betai-prezentacja-platformy.mp4"
               controls
               playsInline
-              preload="auto"
+              preload="metadata"
               poster="/auth-logo-fused-619.png"
             />
           </div>
@@ -21560,7 +21532,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                         title={`${score} gwiazdek`}
                       >
                        
-                      </button>
+                      ★</button>
                     )
                   })}
                   <strong>{profileReviewRating}/5</strong>

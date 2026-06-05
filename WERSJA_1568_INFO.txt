@@ -1,5 +1,0 @@
-WERSJA 1568 - VIDEO PRELOAD LOGIN MODAL
-- Film w modalu zostaje taki sam jakościowo.
-- Dodano preload/warmup video na ekranie logowania.
-- Po kliknięciu Play film powinien mniej buforować, bo przeglądarka zaczyna pobierać go wcześniej.
-- Modal i przycisk zostają bez zmian.
