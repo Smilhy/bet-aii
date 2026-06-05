@@ -17360,6 +17360,41 @@ function AuthView({ onAuth }) {
     loading: true
   })
   const [presentationOpen, setPresentationOpen] = useState(false)
+
+  // WERSJA 1568: preload prezentacji po wejściu na ekran logowania,
+  // żeby po kliknięciu Play było mniej buforowania.
+  useEffect(() => {
+    try {
+      const href = '/media/betai-prezentacja-platformy.mp4'
+      const preloadLink = document.createElement('link')
+      preloadLink.rel = 'preload'
+      preloadLink.as = 'video'
+      preloadLink.href = href
+      preloadLink.type = 'video/mp4'
+      document.head.appendChild(preloadLink)
+
+      const warmupVideo = document.createElement('video')
+      warmupVideo.src = href
+      warmupVideo.preload = 'auto'
+      warmupVideo.muted = true
+      warmupVideo.playsInline = true
+      warmupVideo.style.position = 'fixed'
+      warmupVideo.style.width = '1px'
+      warmupVideo.style.height = '1px'
+      warmupVideo.style.opacity = '0'
+      warmupVideo.style.pointerEvents = 'none'
+      warmupVideo.style.left = '-9999px'
+      document.body.appendChild(warmupVideo)
+      try { warmupVideo.load() } catch (_) {}
+
+      return () => {
+        try { document.head.removeChild(preloadLink) } catch (_) {}
+        try { document.body.removeChild(warmupVideo) } catch (_) {}
+      }
+    } catch (_) {
+      return undefined
+    }
+  }, [])
   const supportedAuthLanguages = ['pl', 'en', 'de', 'es', 'ru']
   const [authLang, setAuthLang] = useState(() => {
     try {
@@ -18137,7 +18172,7 @@ function AuthView({ onAuth }) {
               src="/media/betai-prezentacja-platformy.mp4"
               controls
               playsInline
-              preload="metadata"
+              preload="auto"
               poster="/auth-logo-fused-619.png"
             />
           </div>
