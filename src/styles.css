@@ -70755,3 +70755,8 @@ html.betai-fhd-monitor80-v1323 body #root{
     letter-spacing:-1.5px!important;
   }
 }
+
+/* WERSJA 1572 — YouTube embed w modalu prezentacji */
+.auth1567-video-player{
+  border:0!important;
+}

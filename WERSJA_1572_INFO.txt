@@ -1,4 +1,4 @@
-WERSJA 1572 — prezentacja video jako HLS segmentowany
-- Film w modalu prezentacji ładuje się jako /media/betai-prezentacja-hls/index.m3u8.
-- Dodano segmenty .ts po około 2 sekundy, żeby uniknąć przycinania typu kilka sekund odtwarza / kilka sekund buforuje.
-- Zostawiono fallback MP4 540p pod /media/betai-prezentacja-platformy.mp4.
+WERSJA 1572 — podmiana prezentacji lokalnej na YouTube embed
+- Modal prezentacji używa teraz YouTube: https://www.youtube.com/watch?v=7RBp4np9z_w
+- Usunięto lokalny ciężki plik MP4 z paczki strony.
+- Cel: płynne odtwarzanie bez ścinek z hostingu strony.
