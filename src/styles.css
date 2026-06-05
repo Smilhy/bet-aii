@@ -70725,3 +70725,33 @@ html.betai-fhd-monitor80-v1323 body #root{
 .auth1567-video-player{
   max-height:calc(96vh - 76px)!important;
 }
+
+
+/* =========================================================
+   WERSJA 1570 — gwiazdki także na dolnym przycisku opinii
+   ========================================================= */
+.reviews512-fab{
+  gap:9px!important;
+}
+.reviews512-fab-stars{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  letter-spacing:-1px!important;
+  font-size:14px!important;
+  color:#36f0c7!important;
+  text-shadow:0 0 10px rgba(54,240,199,.38)!important;
+  white-space:nowrap!important;
+}
+.reviews512-fab b{
+  display:inline-flex!important;
+  align-items:center!important;
+  line-height:1!important;
+}
+@media (max-width:720px){
+  .reviews512-fab-stars{
+    font-size:12px!important;
+    letter-spacing:-1.5px!important;
+  }
+}

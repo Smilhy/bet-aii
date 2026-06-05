@@ -1,0 +1,3 @@
+WERSJA 1570
+- Dodano widoczne gwiazdki w dolnym przycisku opinii obok oceny 4.3.
+- Zostają poprawki 1569: gwiazdki w oknie opinii, gwiazdki w profilu, poprawka misji i większy modal video.

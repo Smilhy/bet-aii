@@ -16966,7 +16966,7 @@ function SiteReviewsWidget({ user }) {
       ) : null}
 
       <button type="button" className="reviews512-fab" onClick={() => setOpen(prev => !prev)} aria-label="Otwórz opinie">
-        <span className="reviews512-fab-stars"></span>
+        <span className="reviews512-fab-stars">★★★★★</span>
         <b>{averageRating ? averageRating.toFixed(1) : 'Oceń'}</b>
         {!open ? <i /> : null}
       </button>
