@@ -1,0 +1,3 @@
+- Usunięto embed YouTube z modala, bo YouTube blokował odtwarzanie w ramce ograniczeniem wiekowym.
+- Przycisk "Obejrzyj prezentację" otwiera teraz bezpośrednio: https://www.youtube.com/watch?v=I0l3Pa9t6hY
+- Cel: brak komunikatu o ograniczeniu w iframe i brak lokalnego MP4.

@@ -18061,7 +18061,7 @@ function AuthView({ onAuth }) {
                 <button
                   type="button"
                   className="auth1567-presentation-button"
-                  onClick={() => setPresentationOpen(true)}
+                  onClick={() => window.open('https://www.youtube.com/watch?v=I0l3Pa9t6hY', '_blank', 'noopener,noreferrer')}
                   aria-label="Obejrzyj prezentację platformy Bet plus AI"
                 >
                   <span className="auth1567-play-orb">▶</span>
@@ -18114,41 +18114,7 @@ function AuthView({ onAuth }) {
         </div>
       </div>
 
-      {presentationOpen ? (
-        <div
-          className="auth1567-video-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Prezentacja platformy Bet plus AI"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setPresentationOpen(false)
-          }}
-        >
-          <div className="auth1567-video-modal">
-            <div className="auth1567-video-head">
-              <div>
-                <span>PREZENTACJA PLATFORMY</span>
-                <strong>Bet+AI w praktyce</strong>
-              </div>
-              <button
-                type="button"
-                className="auth1567-video-close"
-                onClick={() => setPresentationOpen(false)}
-                aria-label="Zamknij prezentację"
-              >
-                ×
-              </button>
-            </div>
-            <iframe
-              className="auth1567-video-player"
-              src="https://www.youtube.com/embed/I0l3Pa9t6hY?autoplay=1&rel=0&modestbranding=1&playsinline=1"
-              title="Bet+AI prezentacja platformy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      ) : null}
+      {/* WERSJA 1574: YouTube otwierany bezpośrednio w nowej karcie, bez embeda/modala. */}
 
       <SiteReviewsWidget />
       <AuthSupportChatGuest />
