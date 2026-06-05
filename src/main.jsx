@@ -35,6 +35,87 @@ import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
 
+function BetAiHlsPresentationVideo() {
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return undefined
+
+    const hlsSrc = '/media/betai-prezentacja-hls/index.m3u8'
+    const fallbackSrc = '/media/betai-prezentacja-platformy.mp4'
+    let hlsInstance = null
+    let cancelled = false
+
+    const useFallback = () => {
+      if (!cancelled && video && !video.src) video.src = fallbackSrc
+    }
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hlsSrc
+      return () => {
+        cancelled = true
+        video.removeAttribute('src')
+        video.load()
+      }
+    }
+
+    const setupHls = () => {
+      if (cancelled || !window.Hls || !window.Hls.isSupported()) {
+        useFallback()
+        return
+      }
+      hlsInstance = new window.Hls({
+        maxBufferLength: 45,
+        maxMaxBufferLength: 90,
+        startFragPrefetch: true,
+        lowLatencyMode: false,
+      })
+      hlsInstance.loadSource(hlsSrc)
+      hlsInstance.attachMedia(video)
+      hlsInstance.on(window.Hls.Events.ERROR, (_event, data) => {
+        if (data?.fatal) {
+          try { hlsInstance?.destroy() } catch (_err) {}
+          hlsInstance = null
+          useFallback()
+        }
+      })
+    }
+
+    if (window.Hls) {
+      setupHls()
+    } else {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js'
+      script.async = true
+      script.onload = setupHls
+      script.onerror = useFallback
+      document.head.appendChild(script)
+    }
+
+    return () => {
+      cancelled = true
+      if (hlsInstance) hlsInstance.destroy()
+      if (video) {
+        video.removeAttribute('src')
+        video.load()
+      }
+    }
+  }, [])
+
+  return (
+    <video
+      ref={videoRef}
+      className="auth1567-video-player"
+      controls
+      playsInline
+      preload="auto"
+      poster="/auth-logo-fused-619.png"
+    />
+  )
+}
+
+
 /* =========================================================
    WERSJA 1564 — 1920x1080 RESTORE
    Usunięto awaryjny cleaner skali z v1563, bo na części laptopów FullHD
@@ -18139,14 +18220,7 @@ function AuthView({ onAuth }) {
                 ×
               </button>
             </div>
-            <video
-              className="auth1567-video-player"
-              src="/media/betai-prezentacja-platformy.mp4"
-              controls
-              playsInline
-              preload="metadata"
-              poster="/auth-logo-fused-619.png"
-            />
+            <BetAiHlsPresentationVideo />
           </div>
         </div>
       ) : null}
