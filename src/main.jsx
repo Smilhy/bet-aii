@@ -18141,7 +18141,7 @@ function AuthView({ onAuth }) {
             </div>
             <iframe
               className="auth1567-video-player"
-              src="https://www.youtube.com/embed/7RBp4np9z_w?autoplay=1&rel=0&modestbranding=1&playsinline=1"
+              src="https://www.youtube.com/embed/I0l3Pa9t6hY?autoplay=1&rel=0&modestbranding=1&playsinline=1"
               title="Bet+AI prezentacja platformy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
