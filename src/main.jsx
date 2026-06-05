@@ -17359,6 +17359,7 @@ function AuthView({ onAuth }) {
     updatedAt: null,
     loading: true
   })
+  const [presentationOpen, setPresentationOpen] = useState(false)
   const supportedAuthLanguages = ['pl', 'en', 'de', 'es', 'ru']
   const [authLang, setAuthLang] = useState(() => {
     try {
@@ -18050,6 +18051,19 @@ function AuthView({ onAuth }) {
                   <span>{t.secureNote}</span>
                 </div>
 
+                <button
+                  type="button"
+                  className="auth1567-presentation-button"
+                  onClick={() => setPresentationOpen(true)}
+                  aria-label="Obejrzyj prezentację platformy Bet plus AI"
+                >
+                  <span className="auth1567-play-orb">▶</span>
+                  <span>
+                    <b>Obejrzyj prezentację</b>
+                    <small>Zobacz, jak działa Bet+AI</small>
+                  </span>
+                </button>
+
                 {authMessage ? (
                   <div className={`auth481-message ${authMessageType} auth609-message`} role="status" aria-live="polite">
                     {authMessage}
@@ -18092,6 +18106,44 @@ function AuthView({ onAuth }) {
           </div>
         </div>
       </div>
+
+      {presentationOpen ? (
+        <div
+          className="auth1567-video-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Prezentacja platformy Bet plus AI"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPresentationOpen(false)
+          }}
+        >
+          <div className="auth1567-video-modal">
+            <div className="auth1567-video-head">
+              <div>
+                <span>PREZENTACJA PLATFORMY</span>
+                <strong>Bet+AI w praktyce</strong>
+              </div>
+              <button
+                type="button"
+                className="auth1567-video-close"
+                onClick={() => setPresentationOpen(false)}
+                aria-label="Zamknij prezentację"
+              >
+                ×
+              </button>
+            </div>
+            <video
+              className="auth1567-video-player"
+              src="/media/betai-prezentacja-platformy.mp4"
+              controls
+              playsInline
+              preload="metadata"
+              poster="/auth-logo-fused-619.png"
+            />
+          </div>
+        </div>
+      ) : null}
+
       <SiteReviewsWidget />
       <AuthSupportChatGuest />
     </div>
