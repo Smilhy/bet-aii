@@ -1,3 +1,5 @@
-- Usunięto embed YouTube z modala, bo YouTube blokował odtwarzanie w ramce ograniczeniem wiekowym.
-- Przycisk "Obejrzyj prezentację" otwiera teraz bezpośrednio: https://www.youtube.com/watch?v=I0l3Pa9t6hY
-- Cel: brak komunikatu o ograniczeniu w iframe i brak lokalnego MP4.
+WERSJA 1574 — Bunny Stream embed
+- Podmieniono YouTube embed na Bunny Stream.
+- Player działa w tym samym modalu prezentacji na stronie.
+- Źródło: https://player.mediadelivery.net/embed/677418/e5933e0a-544b-493d-97fd-504d2363c260
+- Usunięto problem ograniczenia wiekowego YouTube i odtwarzania poza stroną.

@@ -18061,7 +18061,7 @@ function AuthView({ onAuth }) {
                 <button
                   type="button"
                   className="auth1567-presentation-button"
-                  onClick={() => window.open('https://www.youtube.com/watch?v=I0l3Pa9t6hY', '_blank', 'noopener,noreferrer')}
+                  onClick={() => setPresentationOpen(true)}
                   aria-label="Obejrzyj prezentację platformy Bet plus AI"
                 >
                   <span className="auth1567-play-orb">▶</span>
@@ -18114,7 +18114,42 @@ function AuthView({ onAuth }) {
         </div>
       </div>
 
-      {/* WERSJA 1574: YouTube otwierany bezpośrednio w nowej karcie, bez embeda/modala. */}
+      {presentationOpen ? (
+        <div
+          className="auth1567-video-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Prezentacja platformy Bet plus AI"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPresentationOpen(false)
+          }}
+        >
+          <div className="auth1567-video-modal">
+            <div className="auth1567-video-head">
+              <div>
+                <span>PREZENTACJA PLATFORMY</span>
+                <strong>Bet+AI w praktyce</strong>
+              </div>
+              <button
+                type="button"
+                className="auth1567-video-close"
+                onClick={() => setPresentationOpen(false)}
+                aria-label="Zamknij prezentację"
+              >
+                ×
+              </button>
+            </div>
+            <iframe
+              className="auth1567-video-player"
+              src="https://player.mediadelivery.net/embed/677418/e5933e0a-544b-493d-97fd-504d2363c260?autoplay=true&loop=false&muted=false&preload=true&responsive=true"
+              title="Bet+AI prezentacja platformy"
+              loading="lazy"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      ) : null}
 
       <SiteReviewsWidget />
       <AuthSupportChatGuest />
