@@ -15016,7 +15016,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [search, setSearch] = useState('')
   const [minOdds, setMinOdds] = useState(1.50)
   const [maxOdds, setMaxOdds] = useState(3.50)
-  const [minProb, setMinProb] = useState(70)
+  const [minProb, setMinProb] = useState(65)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
   const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
@@ -15028,12 +15028,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [lastRefresh, setLastRefresh] = useState('')
 
   const DAILY_AI_PICK_LIMIT_V1086 = 5
-  const DAILY_AI_MIN_SCORE_V1086 = 70
+  const DAILY_AI_MIN_SCORE_V1086 = 65
   const DAILY_AI_MIN_ODDS_V1480 = 1.50
-  const DAILY_AI_MIN_PROB_V1480 = 70
+  const DAILY_AI_MIN_PROB_V1480 = 65
   const DAILY_AI_SCAN_COOLDOWN_MS_V1480 = 5 * 60 * 1000
-  const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1086'
-  const DAILY_AI_VISIBLE_CACHE_PREFIX_V1484 = 'betai_quality_visible_cards_v1484'
+  const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1608_min65'
+  const DAILY_AI_VISIBLE_CACHE_PREFIX_V1484 = 'betai_quality_visible_cards_v1608_min65'
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
 
@@ -15918,7 +15918,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   async function fetchLiveAiPicks(mode = aiDayMode, options = {}) {
     const dayLabel = getBetAiDayLabelV1081(mode)
     const force = Boolean(options?.force)
-    const cooldownKey = `betai_ai_scan_cooldown_v1480_${mode}_${getBetAiSelectedLocalDateV1081(mode)}`
+    const cooldownKey = `betai_ai_scan_cooldown_v1608_min65_${mode}_${getBetAiSelectedLocalDateV1081(mode)}`
     const lastScanTs = Number(localStorage.getItem(cooldownKey) || 0)
 
     if (aiFetchInFlightRef.current || loadingAi) {
@@ -16082,7 +16082,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         shouldSetScanCooldownV1482 = true
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 70%+. Nie zapisuję słabych typów.`)
+        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 65%+. Nie zapisuję słabych typów.`)
         return
       }
 
@@ -16268,8 +16268,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 <div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
           <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
-          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="70" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(3.50); setMinProb(70); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="65" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(3.50); setMinProb(65); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>
