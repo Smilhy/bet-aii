@@ -71338,3 +71338,70 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-sidebar{
 }
 .auth-reset-cancel:disabled { opacity: .65; cursor: not-allowed; }
 .auth-reset-message { margin-top: 16px; }
+
+/* =====================================================
+   WERSJA 1610 — FHD 1920x1080 / 24" AUTO 80%
+   Tylko dla klasy aktywowanej runtime w main.jsx.
+   Nie dotyka 2K, 1680x1050 ani tabletu.
+   ===================================================== */
+html.betai-fhd-monitor80-v1323,
+html.betai-fhd-monitor80-v1323 body{
+  width:100vw!important;
+  min-width:100vw!important;
+  max-width:100vw!important;
+  min-height:100vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  background:#020914!important;
+}
+html.betai-fhd-monitor80-v1323 body #root{
+  width:125vw!important;
+  min-width:125vw!important;
+  max-width:none!important;
+  min-height:125vh!important;
+  transform:scale(.8)!important;
+  transform-origin:0 0!important;
+  overflow:visible!important;
+  background:#020914!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .auth609-screen,
+html.betai-fhd-monitor80-v1323 body #root .app-shell{
+  width:125vw!important;
+  max-width:none!important;
+  margin:0!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .auth609-artboard{
+  width:2400px!important;
+  max-width:none!important;
+  min-width:2400px!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .app-shell{
+  min-height:125vh!important;
+  grid-template-columns:260px minmax(0,1fr) 420px!important;
+  gap:18px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .app-shell.no-rightbar-page{
+  grid-template-columns:260px minmax(0,1fr)!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .main,
+html.betai-fhd-monitor80-v1323 body #root .content,
+html.betai-fhd-monitor80-v1323 body #root .main-content,
+html.betai-fhd-monitor80-v1323 body #root .dashboard-main,
+html.betai-fhd-monitor80-v1323 body #root .page-content{
+  max-width:none!important;
+  min-width:0!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .rightbar,
+html.betai-fhd-monitor80-v1323 body #root .right-panel,
+html.betai-fhd-monitor80-v1323 body #root .dashboard-right{
+  width:420px!important;
+  min-width:420px!important;
+}
+html.betai-fhd-monitor80-v1323 body #root .sidebar,
+html.betai-fhd-monitor80-v1323 body #root .side-nav,
+html.betai-fhd-monitor80-v1323 body #root .leftbar{
+  width:260px!important;
+  min-width:260px!important;
+}

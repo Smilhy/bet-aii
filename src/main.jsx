@@ -28664,6 +28664,9 @@ function BetaiExactScaleProvider({ children }) {
     const clearExactScale = () => {
       root.style.removeProperty('--betai-exact-scale')
       root.removeAttribute('data-betai-exact-scale')
+      root.classList.remove('betai-fhd-monitor80-v1323')
+      body?.classList?.remove('betai-fhd-monitor80-v1323')
+      if (body?.dataset) delete body.dataset.betaiFhdMonitor80
     }
     const isManualBrowserZoomOut = () => {
       const vw = window.innerWidth || document.documentElement.clientWidth || 0
@@ -28694,11 +28697,33 @@ function BetaiExactScaleProvider({ children }) {
         body?.dataset?.betaiFhdMonitor80
       )
     }
+    const isFhd24Auto80 = () => {
+      const vw = window.innerWidth || document.documentElement.clientWidth || 0
+      const vh = window.innerHeight || document.documentElement.clientHeight || 0
+      const sw = window.screen?.width || 0
+      const sh = window.screen?.height || 0
+      const maxScreen = Math.max(sw, sh)
+      const minScreen = Math.min(sw, sh)
+      const maxView = Math.max(vw, vh)
+      // 24 cale / FHD 1920x1080 przy zoomie 100%.
+      // Nie łapiemy ręcznego zoomu 80%, bo wtedy innerWidth robi się ~2400.
+      return (
+        maxScreen >= 1880 && maxScreen <= 1945 &&
+        minScreen >= 1030 && minScreen <= 1115 &&
+        maxView <= 2050 &&
+        !isManualBrowserZoomOut() &&
+        !isPawel2k27()
+      )
+    }
     const apply = () => {
-      // WERSJA 1546: wyłączamy stary exact-scale globalnie.
-      // To on zmniejszał 1440/1680 i robił ogromne puste pole po prawej.
-      // Skalowanie zostaje tylko w dedykowanym auto-zoomie 80% dla 1920x1080.
+      // WERSJA 1610: tylko FHD 1920x1080/24 cale dostaje automatyczny widok jak zoom 80%.
+      // 2K, TV 2K, 1680x1050 i tablet zostają bez zmian.
       clearExactScale()
+      if (isFhd24Auto80()) {
+        root.classList.add('betai-fhd-monitor80-v1323')
+        body?.classList?.add('betai-fhd-monitor80-v1323')
+        if (body?.dataset) body.dataset.betaiFhdMonitor80 = '1'
+      }
     }
     apply()
     window.addEventListener('resize', apply)
