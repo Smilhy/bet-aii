@@ -8658,33 +8658,49 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     return `${currentLeague}|${match?.home || ''}|${match?.away || ''}|${form.date || ''}|${form.time || ''}`.toLowerCase().replace(/\s+/g, ' ').trim()
   }
 
-  async function hasDuplicateMatchToday() {
-    if (!isSupabaseConfigured || !supabase || !user?.id || !selectedMatch) return false
+  async function hasDuplicateMatchToday(matchToCheck = effectiveSelectedMatch) {
+    if (!isSupabaseConfigured || !supabase || !user?.id || !matchToCheck) return false
 
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
-    const matchText = `${selectedMatch.home} vs ${selectedMatch.away}`
-    const currentKey = getSelectedMatchKey()
+    const matchText = `${matchToCheck.home} vs ${matchToCheck.away}`.toLowerCase().trim()
+    const currentKey = getSelectedMatchKey(matchToCheck)
+    const fixtureIdValue = matchToCheck.apiFixtureId || matchToCheck.fixtureId || matchToCheck.id || null
 
     try {
-      const { data, error } = await supabase
+      let result = await supabase
         .from('tips').select('*')
         .gte('created_at', startOfDay.toISOString())
+        .or(`user_id.eq.${user.id},author_id.eq.${user.id}`)
         .limit(100)
 
+      if (result.error && isSchemaError(result.error)) {
+        result = await supabase
+          .from('tips').select('*')
+          .gte('created_at', startOfDay.toISOString())
+          .eq('user_id', user.id)
+          .limit(100)
+      }
+
+      const { data, error } = result
       if (error) {
         if (!isSchemaError(error)) throw error
         return false
       }
 
       return (data || []).some(row => {
+        const rowOwnerId = row.user_id || row.author_id || null
+        if (rowOwnerId && String(rowOwnerId) !== String(user.id)) return false
+
+        const rowFixtureIds = [row.fixture_id, row.api_fixture_id, row.external_fixture_id].filter(Boolean).map(value => String(value))
+        const sameFixture = fixtureIdValue && !String(fixtureIdValue).startsWith('manual-') && rowFixtureIds.includes(String(fixtureIdValue))
         const rowMatch = String(row.match || '').toLowerCase().trim()
-        const sameTextMatch = rowMatch && rowMatch === matchText.toLowerCase()
+        const sameTextMatch = rowMatch && rowMatch === matchText
         const rowDate = row.match_time ? new Date(row.match_time) : null
         const rowDateLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleDateString('pl-PL') : ''
         const rowTimeLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : ''
         const rowKey = `${row.league || ''}|${row.team_home || ''}|${row.team_away || ''}|${rowDateLabel}|${rowTimeLabel}`.toLowerCase().replace(/\s+/g, ' ').trim()
-        return sameTextMatch || (rowKey && rowKey === currentKey)
+        return sameFixture || sameTextMatch || (rowKey && rowKey === currentKey)
       })
     } catch (error) {
       console.warn('duplicate match check skipped', error)
@@ -8953,7 +8969,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
 
-    const duplicateMatch = await hasDuplicateMatchToday()
+    const duplicateMatch = await hasDuplicateMatchToday(publishMatch)
     if (duplicateMatch) {
       onToast?.({
         type: 'limit',
