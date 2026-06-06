@@ -491,6 +491,31 @@ function buildAuthorStatsFromTips(tips = []) {
   return statsMap
 }
 
+const BETAI_SMILHYTV_PROFILE_ID = '1a3f01d7-5675-4abf-b851-6ecec78262f5'
+const BETAI_SMILHYTV_IMPORTED_BASELINE_STATS = {
+  yield: 37,
+  totalTips: 765,
+  wonTips: 447,
+  lostTips: 318,
+  pendingTips: 0,
+  totalStaked: 222740,
+  profit: 82609.29,
+  avgOdds: 1.85,
+  highestOdds: 48,
+}
+
+function isSmilhytvImportedIdentity(profile) {
+  if (!profile) return false
+  const id = String(profile.id || profile.user_id || profile.author_id || profile.tipster_id || '').trim().toLowerCase()
+  const email = normalizeEmail(profile.email || profile.author_email || profile.user_email || '')
+  const username = normalizeEmail(profile.username || profile.author_name || profile.name || profile.public_slug || '')
+  const local = email.split('@')[0]
+  return id === BETAI_SMILHYTV_PROFILE_ID ||
+    email === 'smilhytv@gmail.com' ||
+    username === 'smilhytv' ||
+    local === 'smilhytv'
+}
+
 function getImportedProfileStats(profile) {
   if (!profile) return null
 
@@ -505,6 +530,13 @@ function getImportedProfileStats(profile) {
   const avgOdds = Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0
   const highestOdds = Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0
   const yieldValue = Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0
+
+  // v1603: smilhytv ma ręcznie wgraną historię jako zablokowany stan startowy.
+  // Jeśli po rozliczeniu/realtime profil lub tip przyjdzie bez imported_* albo tylko z realnymi typami,
+  // NIE wolno resetować widoku do 2/6/8 typów. Dla tego profilu minimalną bazą jest import 765.
+  if (isSmilhytvImportedIdentity(profile) && totalTips < BETAI_SMILHYTV_IMPORTED_BASELINE_STATS.totalTips) {
+    return { ...BETAI_SMILHYTV_IMPORTED_BASELINE_STATS }
+  }
 
   // Po resecie imported_* istnieje w profilu, ale wszystko ma wartość 0.
   // To NIE może być traktowane jako źródło prawdy, bo blokuje świeże statystyki liczone z realnych typów.
