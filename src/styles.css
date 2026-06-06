@@ -70817,3 +70817,47 @@ html.betai-tablet-wide50 .tip-form{
 html.betai-tablet-wide50 table{
   max-width:none!important;
 }
+
+/* =====================================================
+   WERSJA 1593 — TABLET 10" DASHBOARD ONLY TUNE
+   1592 zostaje: logowanie i inne zakładki bez zmian.
+   Tylko dashboard na tablecie z klasą betai-tablet-wide50:
+   mniej agresywne rozciągnięcie feedu + węższa prawa kolumna/czat.
+   Desktop 2K / TV 2K / laptop 1680x1050 bez zmian.
+   ===================================================== */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:240px minmax(0, 1fr) 300px!important;
+  gap:18px!important;
+  padding-left:20px!important;
+  padding-right:20px!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:1040px!important;
+  min-width:0!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar{
+  width:300px!important;
+  min-width:300px!important;
+  max-width:300px!important;
+  padding-right:0!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar > *,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .livechat226-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .betai-right-chat-final{
+  width:100%!important;
+  max-width:300px!important;
+  min-width:0!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main{
+  min-width:0!important;
+  max-width:none!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters{
+  max-width:100%!important;
+}
