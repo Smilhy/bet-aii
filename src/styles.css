@@ -70861,3 +70861,81 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
 html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters{
   max-width:100%!important;
 }
+
+/* =====================================================
+   WERSJA 1594 — TABLET 10" DASHBOARD FIX + FULL WIDTH TABS
+   Baza: 1593. Logowanie 1592/1593 zostaje bez zmian.
+   Tablet 10":
+   - dashboard bez prawej kolumny/czatu, żeby nie zjadał feedu,
+   - pozostałe zakładki rozciągnięte do pełnej szerokości roboczej,
+   - desktop 2K / TV 2K / laptop 1680x1050 bez zmian.
+   ===================================================== */
+
+/* Dashboard na tablecie: układ 2-kolumnowy zamiast 3-kolumnowego.
+   Prawa kolumna była przyczyną zjadania/rozpychania widoku. */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:240px minmax(0, 1fr)!important;
+  gap:22px!important;
+  padding-left:22px!important;
+  padding-right:22px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar{
+  display:none!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:0!important;
+  overflow:hidden!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
+  width:100%!important;
+  max-width:none!important;
+}
+
+/* Zakładki bez prawej kolumny: pełna szerokość na tablecie.
+   Nie dotyka logowania, bo tam nie ma .app-shell. */
+html.betai-tablet-wide50 .app-shell.no-rightbar-page{
+  grid-template-columns:240px minmax(0, 1fr)!important;
+  gap:22px!important;
+  padding-left:22px!important;
+  padding-right:22px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+}
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .main,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .page-wrap,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .page-content,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .content,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .profile-page,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .ranking-page,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .wallet-page,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .add-page{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .panel,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .tip-form,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .tip-card,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .profile-card,
+html.betai-tablet-wide50 .app-shell.no-rightbar-page .ranking-card{
+  width:100%!important;
+  max-width:none!important;
+}
