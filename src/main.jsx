@@ -2826,7 +2826,7 @@ function LiveChatPanel({ user }) {
 // V1158 — prawa ramka Dashboard: TOP 3 AI typy dnia, tylko mecze przyszłe.
 // Nie pokazuje meczów live/zakończonych ani takich, które startują za mniej niż 5 minut.
 // Cache jest tylko dla tej ramki Dashboardu i nie dotyka logiki innych zakładek.
-const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_locked_v1164_'
+const BETAI_RIGHT_DAILY_AI_CACHE_PREFIX_V1156 = 'betai_right_daily_ai_picks_locked_v1609_min65_odds150_'
 const BETAI_RIGHT_DAILY_AI_MIN_START_MS_V1158 = 5 * 60 * 1000
 
 function getBetAiWarsawDayKeyV1156(value = new Date()) {
@@ -2888,11 +2888,23 @@ function normalizeBetAiRightDailyAiPickV1158(pick = {}, dayKey = getBetAiWarsawD
   }
 }
 
+const BETAI_RIGHT_DAILY_AI_MIN_CONFIDENCE_V1609 = 65
+const BETAI_RIGHT_DAILY_AI_MIN_ODDS_V1609 = 1.50
+
+function passesBetAiRightDailyAiRulesV1609(pick = {}) {
+  const odds = Number(pick.odds ?? pick.course ?? pick.kurs ?? 0)
+  const confidence = Number(pick.confidence ?? pick.ai_confidence ?? pick.ai_score ?? pick.probability ?? pick.model_probability ?? 0)
+  return Number.isFinite(odds) && Number.isFinite(confidence)
+    && odds >= BETAI_RIGHT_DAILY_AI_MIN_ODDS_V1609
+    && confidence >= BETAI_RIGHT_DAILY_AI_MIN_CONFIDENCE_V1609
+}
+
 function filterBetAiRightDailyAiPicksV1158(picks = [], dayKey = getBetAiWarsawDayKeyV1156()) {
   const seen = new Set()
   return (picks || [])
     .map(p => normalizeBetAiRightDailyAiPickV1158(p, dayKey))
     .filter(Boolean)
+    .filter(passesBetAiRightDailyAiRulesV1609)
     .filter(pick => {
       const key = String(pick.id || `${pick.home}-${pick.away}-${pick.date}`)
       if (seen.has(key)) return false
@@ -2927,7 +2939,7 @@ function readBetAiRightDailyAiCacheV1156(dayKey, lockMode = false) {
           }
           // LOCK MODE: jeżeli TOP 3 już zapisane na dzisiejszą datę,
           // nie filtrujemy i nie nadpisujemy ich przy każdym refreshu.
-          if (lockMode && normalized.length >= 3) return normalized
+          if (lockMode && filterBetAiRightDailyAiPicksV1158(normalized, dayKey).length >= 3) return filterBetAiRightDailyAiPicksV1158(normalized, dayKey)
           return filterBetAiRightDailyAiPicksV1158(normalized, dayKey)
         }
       }
@@ -3177,7 +3189,7 @@ function DailyAiPicksRightPanelV1156() {
       }
 
       setLoading(true)
-      setNotice(cached.length ? `Mam ${cached.length}/3 — dobieram kolejne przyszłe mecze...` : 'Sprawdzam zapisane typy AI na dziś...')
+      setNotice(cached.length ? `Mam ${cached.length}/3 — dobieram kolejne przyszłe mecze...` : 'Sprawdzam zapisane typy AI na dziś: min. 65% i kurs 1.50+...')
       try {
         const savedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
         let collected = filterBetAiRightDailyAiPicksV1158([...cached, ...savedFromDb], today)
@@ -3193,7 +3205,7 @@ function DailyAiPicksRightPanelV1156() {
         // Ten widget pokazuje wyłącznie typy zapisane w Supabase/localStorage, żeby dashboard nie dusił API po każdym wejściu.
         if (!alive) return
         setPicks(collected.slice(0, 3))
-        setNotice(collected.length ? `Wczytano ${collected.length}/3 zapisane typy AI na dziś.` : 'Brak zapisanych typów AI na dziś. Skan uruchom ręcznie w zakładce Typy AI.')
+        setNotice(collected.length ? `Wczytano ${collected.length}/3 zapisane typy AI na dziś.` : 'Brak zapisanych typów AI spełniających warunek 65% i kurs 1.50+. Skan uruchom ręcznie w zakładce Typy AI.')
         return
 
         if (!alive) return
