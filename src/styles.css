@@ -71290,3 +71290,51 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-sidebar{
   min-width:0!important;
   box-sizing:border-box!important;
 }
+
+/* WERSJA 1607 — formularz ustawiania nowego hasła po linku Supabase recovery */
+.auth-reset-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.auth-reset-card {
+  width: min(520px, calc(100vw - 32px));
+  border: 1px solid rgba(34, 240, 255, .28);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(5, 18, 30, .96), rgba(0, 68, 74, .82));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .55), 0 0 42px rgba(29, 231, 255, .15);
+  padding: 34px;
+  color: #ecfeff;
+}
+.auth-reset-brand {
+  margin-bottom: 12px;
+  font-size: 34px;
+  font-weight: 900;
+}
+.auth-reset-brand span { color: #24e6ff; }
+.auth-reset-card h1 {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.05;
+}
+.auth-reset-copy {
+  margin: 0 0 22px;
+  color: rgba(222, 250, 255, .78);
+  line-height: 1.55;
+}
+.auth-reset-form { gap: 16px; }
+.auth-reset-submit { margin-top: 6px; }
+.auth-reset-cancel {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(136, 220, 255, .22);
+  background: rgba(4, 14, 24, .58);
+  color: #d9fbff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.auth-reset-cancel:disabled { opacity: .65; cursor: not-allowed; }
+.auth-reset-message { margin-top: 16px; }

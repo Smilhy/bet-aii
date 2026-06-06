@@ -17403,6 +17403,143 @@ function AuthField({ label, type = 'text', value, onChange, placeholder, icon, a
   )
 }
 
+
+function isPasswordRecoveryUrl() {
+  if (typeof window === 'undefined') return false
+  try {
+    const search = new URLSearchParams(window.location.search || '')
+    const hashRaw = String(window.location.hash || '').replace(/^#/, '')
+    const hash = new URLSearchParams(hashRaw)
+    const type = String(search.get('type') || hash.get('type') || '').toLowerCase()
+    const mode = String(search.get('mode') || hash.get('mode') || '').toLowerCase()
+    const accessToken = search.get('access_token') || hash.get('access_token') || search.get('code') || hash.get('code')
+    return type === 'recovery' || mode === 'recovery' || (Boolean(accessToken) && (type === 'recovery' || hashRaw.toLowerCase().includes('recovery')))
+  } catch (_) {
+    return false
+  }
+}
+
+function clearPasswordRecoveryUrl() {
+  if (typeof window === 'undefined') return
+  try {
+    window.history.replaceState({}, document.title, window.location.pathname || '/')
+  } catch (_) {}
+}
+
+function PasswordResetView({ user, onComplete, onCancel }) {
+  const [password, setPassword] = useState('')
+  const [repeatPassword, setRepeatPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('info')
+  const email = user?.email || ''
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setMessage('')
+
+    if (!isSupabaseConfigured || !supabase) {
+      setMessageType('error')
+      setMessage('Supabase nie jest skonfigurowane.')
+      return
+    }
+
+    if (!password || password.length < 8) {
+      setMessageType('error')
+      setMessage('Nowe hasło musi mieć minimum 8 znaków.')
+      return
+    }
+
+    if (password !== repeatPassword) {
+      setMessageType('error')
+      setMessage('Hasła nie są identyczne.')
+      return
+    }
+
+    setSubmitting(true)
+    setMessageType('info')
+    setMessage('Zapisywanie nowego hasła...')
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password })
+      if (error) throw error
+      clearPasswordRecoveryUrl()
+      try { localStorage.removeItem('betai_password_recovery_active') } catch (_) {}
+      setMessageType('success')
+      setMessage('Hasło zostało zmienione. Przekierowuję do panelu...')
+      window.setTimeout(() => onComplete?.(data?.user || user), 700)
+    } catch (error) {
+      setMessageType('error')
+      setMessage(error?.message || 'Nie udało się zmienić hasła.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleCancel() {
+    try { await supabase?.auth?.signOut?.() } catch (_) {}
+    try { localStorage.removeItem('betai_password_recovery_active') } catch (_) {}
+    clearPasswordRecoveryUrl()
+    onCancel?.()
+  }
+
+  return (
+    <div className="auth609-screen auth-reset-screen" aria-label="Reset hasła Bet+AI">
+      <div className="auth-reset-card">
+        <div className="auth-brand auth-reset-brand">Bet<span>+AI</span></div>
+        <h1>Ustaw nowe hasło</h1>
+        <p className="auth-reset-copy">Link resetu został potwierdzony. Ustaw nowe hasło dla konta{email ? ` ${email}` : ''}.</p>
+
+        <form className="auth481-form auth-reset-form" onSubmit={handleSubmit}>
+          <label className="auth481-field">
+            <span className="auth481-label">Nowe hasło</span>
+            <div className="auth481-input-shell">
+              <span className="auth481-field-icon">🔒</span>
+              <input
+                className="auth481-input"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Minimum 8 znaków"
+                autoComplete="new-password"
+              />
+            </div>
+          </label>
+
+          <label className="auth481-field">
+            <span className="auth481-label">Powtórz nowe hasło</span>
+            <div className="auth481-input-shell">
+              <span className="auth481-field-icon">🔒</span>
+              <input
+                className="auth481-input"
+                type="password"
+                value={repeatPassword}
+                onChange={(event) => setRepeatPassword(event.target.value)}
+                placeholder="Powtórz nowe hasło"
+                autoComplete="new-password"
+              />
+            </div>
+          </label>
+
+          <button type="submit" className="auth481-submit auth609-submit auth-reset-submit" disabled={submitting}>
+            {submitting ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
+          </button>
+
+          <button type="button" className="auth-reset-cancel" onClick={handleCancel} disabled={submitting}>
+            Anuluj i wróć do logowania
+          </button>
+        </form>
+
+        {message ? (
+          <div className={`auth481-message ${messageType} auth609-message auth-reset-message`} role="status" aria-live="polite">
+            {message}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function AuthView({ onAuth }) {
   const [mode, setMode] = useState('login')
   const [submitting, setSubmitting] = useState(false)
@@ -17675,7 +17812,7 @@ function AuthView({ onAuth }) {
     showMessage('info', t.resetSending)
 
     try {
-      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/?type=recovery` : undefined
       const { error } = await supabase.auth.resetPasswordForEmail(
         email,
         redirectTo ? { redirectTo } : undefined
@@ -24995,6 +25132,8 @@ function App() {
   const [dashboardVisibleTips, setDashboardVisibleTips] = useState(3)
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
+  const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => isPasswordRecoveryUrl())
+  const [passwordRecoveryUser, setPasswordRecoveryUser] = useState(null)
   const userProfile = getUserProfileView(sessionUser)
   const [authLoading, setAuthLoading] = useState(true)
   const [selectedPayment, setSelectedPayment] = useState(null)
@@ -27487,24 +27626,44 @@ function App() {
 
         const { data } = await supabase.auth.getSession()
         const user = data?.session?.user || null
+        const recoveryFromUrl = isPasswordRecoveryUrl()
+        if (recoveryFromUrl && user?.id) {
+          setPasswordRecoveryMode(true)
+          setPasswordRecoveryUser(user)
+          try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
+        }
         setSessionUser(user)
         setWalletBalance(0)
 
-        if (user?.id) {
+        if (user?.id && !recoveryFromUrl) {
           safeInitialLoad(user.id)
           ensureUserWalletAndWelcome(user)
         }
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
           const nextUser = session?.user || null
+          const eventName = String(_event || '')
+          const recoveryEvent = eventName === 'PASSWORD_RECOVERY' || isPasswordRecoveryUrl()
+
+          if (recoveryEvent && nextUser?.id) {
+            setPasswordRecoveryMode(true)
+            setPasswordRecoveryUser(nextUser)
+            setSessionUser(nextUser)
+            try { localStorage.setItem('betai_password_recovery_active', '1') } catch (_) {}
+            return
+          }
+
           setSessionUser(nextUser)
           setWalletBalance(0)
           setTipsterEarnings({ total: 0, sales: 0, history: [] })
           setStripeConnectStatus(null)
 
           if (!nextUser?.id) {
+            setPasswordRecoveryMode(false)
+            setPasswordRecoveryUser(null)
             setUnlockedTips(new Set())
             try {
+              localStorage.removeItem('betai_password_recovery_active')
               localStorage.removeItem('betai_unlocked_tips_v1')
               localStorage.removeItem(getUnlockedTipsStorageKey('guest'))
             } catch {}
@@ -28103,6 +28262,24 @@ function App() {
 
   if (authLoading) {
     return <div className="auth-screen"><div className="auth-card"><div className="auth-brand">Bet<span>+AI</span></div><p>Ładowanie sesji...</p></div></div>
+  }
+
+  if (passwordRecoveryMode) {
+    return (
+      <PasswordResetView
+        user={passwordRecoveryUser || sessionUser}
+        onComplete={(user) => {
+          setPasswordRecoveryMode(false)
+          setPasswordRecoveryUser(null)
+          setSessionUser(user || sessionUser)
+        }}
+        onCancel={() => {
+          setPasswordRecoveryMode(false)
+          setPasswordRecoveryUser(null)
+          setSessionUser(null)
+        }}
+      />
+    )
   }
 
   if (!sessionUser) {
