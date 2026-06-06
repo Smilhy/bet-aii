@@ -478,7 +478,7 @@ function buildAuthorStatsFromTips(tips = []) {
     current.totalTips += 1
     if (status === 'won') current.wonTips += 1
     else if (status === 'lost') current.lostTips += 1
-    else current.pendingTips += 1
+    else if (status !== 'void') current.pendingTips += 1
     if (status === 'won' || status === 'lost') current.totalStaked += stake
     current.profit += readTipProfitValue(tip)
     if (odds > 0) {
@@ -793,7 +793,7 @@ function buildRankingFromTips(tips = []) {
 
     if (settlementStatus === 'won') current.wins += 1
     else if (settlementStatus === 'lost') current.losses += 1
-    else current.pending += 1
+    else if (settlementStatus !== 'void') current.pending += 1
 
     if (settlementStatus === 'won' || settlementStatus === 'lost') {
       current.total_staked += stake
@@ -22509,14 +22509,25 @@ function AdminCouponApprovalView({ user, onToast }) {
     if (!isAdminUser(user)) return
     const clean = String(result || '').toLowerCase()
     try {
+      const stake = readTipStakeValue(row)
+      const odds = Number(row?.odds ?? row?.course ?? 0) || 0
+      const settledProfit = clean === 'won'
+        ? stake * Math.max(odds - 1, 0)
+        : clean === 'lost'
+          ? -stake
+          : 0
       const patch = {
         status: clean,
         result: clean,
+        result_status: clean,
+        settlement_status: clean,
+        profit: settledProfit,
         manual_settlement_status: 'approved',
         admin_approval_status: 'approved',
         admin_approved_result: clean,
         admin_approved_at: new Date().toISOString(),
         admin_approved_by: user?.id || null,
+        updated_at: new Date().toISOString(),
         settlement_source: 'manual_admin_approved'
       }
       await updateTipField(row.id, patch)
