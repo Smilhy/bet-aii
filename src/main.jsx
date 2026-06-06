@@ -551,27 +551,40 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
 
   if (!importedStats || Number(importedStats.totalTips || 0) <= 0) return dynamicFinal
 
-  const importedTotalStaked = Number(importedStats.totalStaked || 0)
-  const importedProfit = Number(importedStats.profit || 0)
-  const importedLooksStaleAfterReset =
-    Number(importedStats.totalTips || 0) > 0 &&
-    importedTotalStaked <= 0 &&
-    importedProfit === 0 &&
-    Number(importedStats.avgOdds || 0) <= 0 &&
-    (dynamicFinal.totalStaked > 0 || dynamicFinal.avgOdds > 0 || dynamicFinal.profit !== 0)
+  // v1601: import historyczny jest stanem STARTOWYM profilu.
+  // Nowe/realne typy z platformy mają się DOPISYWAĆ do importu, nigdy go nie zastępować.
+  const importedTotalTips = Number(importedStats.totalTips || 0) || 0
+  const importedWonTips = Number(importedStats.wonTips || 0) || 0
+  const importedLostTips = Number(importedStats.lostTips || 0) || 0
+  const importedPendingTips = Number(importedStats.pendingTips || 0) || 0
+  const importedTotalStaked = Number(importedStats.totalStaked || 0) || 0
+  const importedProfit = Number(importedStats.profit || 0) || 0
+  const importedAvgOdds = Number(importedStats.avgOdds || 0) || 0
+  const importedHighestOdds = Number(importedStats.highestOdds || 0) || 0
 
-  if (importedLooksStaleAfterReset) {
-    return {
-      ...importedStats,
-      ...dynamicFinal,
-      totalTips: Math.max(Number(importedStats.totalTips || 0), Number(dynamicFinal.totalTips || 0)),
-      wonTips: Math.max(Number(importedStats.wonTips || 0), Number(dynamicFinal.wonTips || 0)),
-      lostTips: Math.max(Number(importedStats.lostTips || 0), Number(dynamicFinal.lostTips || 0)),
-      pendingTips: Math.max(Number(importedStats.pendingTips || 0), Number(dynamicFinal.pendingTips || 0)),
-    }
+  const totalTips = importedTotalTips + dynamicFinal.totalTips
+  const wonTips = importedWonTips + dynamicFinal.wonTips
+  const lostTips = importedLostTips + dynamicFinal.lostTips
+  const pendingTips = importedPendingTips + dynamicFinal.pendingTips
+  const totalStaked = importedTotalStaked + dynamicFinal.totalStaked
+  const profit = importedProfit + dynamicFinal.profit
+  const avgOdds = totalTips > 0
+    ? (((importedAvgOdds * importedTotalTips) + (dynamicFinal.avgOdds * dynamicFinal.totalTips)) / totalTips)
+    : 0
+  const highestOdds = Math.max(importedHighestOdds, dynamicFinal.highestOdds)
+  const yieldValue = totalStaked > 0 ? (profit / totalStaked) * 100 : Number(importedStats.yield || 0) || dynamicFinal.yield
+
+  return {
+    yield: yieldValue,
+    totalTips,
+    wonTips,
+    lostTips,
+    pendingTips,
+    totalStaked,
+    profit,
+    avgOdds,
+    highestOdds,
   }
-
-  return importedStats
 }
 
 
@@ -20158,9 +20171,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const profileStatsSource = user || {}
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
   const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
-  const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
-    ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
-    : userTips
+  // v1601: importowane statystyki są stanem STARTOWYM, a typy istniejące w tej platformie
+  // mają być doliczane do tego stanu. Nie filtrujemy po created_at, bo aktywny typ mógł być
+  // dodany przed ręcznym importem i rozliczyć się dopiero później.
+  const liveTipsForStats = userTips
 
   const importedTotalTips = Number(profileStatsSource?.imported_total_tips || 0) || 0
   const importedWonTips = Number(profileStatsSource?.imported_won_tips || 0) || 0
