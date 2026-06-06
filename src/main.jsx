@@ -2056,6 +2056,10 @@ function formatMoney(value) {
   return `${Number(value || 0).toFixed(2)} zł`
 }
 
+function formatRankingAmount(value) {
+  return Number(value || 0).toFixed(2)
+}
+
 
 const ULTRA_PAGE_BANNERS = {
   dashboard: '/ultra-dashboard-banner.png',
@@ -16607,7 +16611,6 @@ function LeaderboardView({
     </div>
   )
 
-  const formatRankingAmount = (value) => Number(value || 0).toFixed(2)
   const heroLeaderRow = leaderboardRows[0] || null
   const heroLeaderName = heroLeaderRow?.rowName || 'Top typer'
   const heroLeaderProfitValue = Number(heroLeaderRow?.earnings ?? heroLeaderRow?.profit ?? 0)
