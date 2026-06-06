@@ -3259,7 +3259,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
             </div>
             <strong className={`ranking-profit-box ranking-profit-box-v19 ${profitValue >= 0 ? 'ranking-profit-positive' : 'ranking-profit-negative'}`}>
               <em>PROFIT</em>
-              <span>{profitValue >= 0 ? '+' : ''}{formatMoney(profitValue)}</span>
+              <span>{profitValue >= 0 ? '+' : ''}{formatRankingAmount(profitValue)}</span>
             </strong>
           </button>
           )
@@ -20596,7 +20596,82 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
   const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])
   const liveHourStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipHourBucket, ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59'])
-  const liveMonthStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipMonth).map(row => ({ ...row, label: row.label }))
+
+  const normalizeImportedMonthRowV1578 = (row = {}) => {
+    const rawLabel = row.label || row.date || row.month || row.period || ''
+    const label = String(rawLabel || '').trim()
+    if (!label) return null
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
+    const importedYield = row.yield ?? row.roi
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: 0,
+      stakeSum: stake,
+      yield: importedYield === undefined || importedYield === null || importedYield === ''
+        ? (stake > 0 ? (profit / stake) * 100 : 0)
+        : Number(importedYield) || 0,
+      avgOdds: 0,
+      avgStake: coupons ? stake / coupons : 0,
+      imported: true
+    }
+  }
+  const parseImportedMonthStatsRowsV1578 = (source = {}) => {
+    let raw = source?.imported_monthly_stats || source?.imported_month_stats || source?.monthly_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedMonthRowV1578).filter(Boolean)
+  }
+  const getMonthSortTimeV1578 = (label = '') => {
+    const [month, year] = String(label || '').split('/').map(Number)
+    if (!month || !year) return 0
+    return new Date(year, month - 1, 1).getTime()
+  }
+  const mergeMonthStatsRowsV1578 = (importedRows = [], liveRows = []) => {
+    const map = new Map()
+    importedRows.forEach(row => map.set(String(row.label), { ...row }))
+    liveRows.forEach(row => {
+      const key = String(row.label)
+      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const next = {
+        ...current,
+        coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
+        settledCoupons: Number(current.settledCoupons || 0) + Number(row.settledCoupons || 0),
+        stake: Number(current.stake || 0) + Number(row.stake || 0),
+        allStake: Number(current.allStake || 0) + Number(row.allStake || 0),
+        profit: Number(current.profit || 0) + Number(row.profit || 0),
+        oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
+        stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
+      }
+      next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
+      next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
+      next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
+      map.set(key, next)
+    })
+    return Array.from(map.values()).sort((a, b) => getMonthSortTimeV1578(b.label) - getMonthSortTimeV1578(a.label))
+  }
+  const importedMonthStatsRowsV1578 = parseImportedMonthStatsRowsV1578(user)
+  const importedStatsCutoffV1578 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffV1578 = Number.isFinite(importedStatsCutoffV1578.getTime()) && importedStatsCutoffV1578.getTime() > 0
+  const monthLiveTipsV1578 = importedMonthStatsRowsV1578.length && hasValidImportedCutoffV1578
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffV1578.getTime()
+      })
+    : activeStatsTips
+  const liveMonthStatsRows = mergeMonthStatsRowsV1578(
+    importedMonthStatsRowsV1578,
+    buildLiveStatRows(monthLiveTipsV1578, getProfileTipMonth).map(row => ({ ...row, label: row.label }))
+  )
 
   const profileChartRanges = [
     { key: '7d', label: '7D', days: 7 },

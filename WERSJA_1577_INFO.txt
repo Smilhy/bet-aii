@@ -1,0 +1,1 @@
+WERSJA 1577 — usunięto sufiks zł z profitu w panelu Top typerzy po prawej stronie. Ranking pokazuje czysty profit bez waluty, zgodnie z wcześniejszą logiką UI.
