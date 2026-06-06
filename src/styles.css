@@ -70939,3 +70939,59 @@ html.betai-tablet-wide50 .app-shell.no-rightbar-page .ranking-card{
   width:100%!important;
   max-width:none!important;
 }
+
+/* =====================================================
+   WERSJA 1595 — TABLET 10" DASHBOARD RIGHTBAR FIT
+   Baza: 1594. Logowanie i zakładki bez prawej kolumny zostają bez zmian.
+   Tylko dashboard na tablecie: przywraca prawą kolumnę/czat, ale zwęża ją
+   i daje więcej miejsca feedowi, żeby wszystko mieściło się w widoku 50%.
+   Desktop/TV/laptop bez zmian.
+   ===================================================== */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:220px minmax(0, 1fr) 260px!important;
+  gap:16px!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+  overflow:visible!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar{
+  display:block!important;
+  width:260px!important;
+  min-width:260px!important;
+  max-width:260px!important;
+  overflow:visible!important;
+  padding-right:0!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar > *,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .livechat226-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .betai-right-chat-final,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .top-tipsters-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-sidebar{
+  width:100%!important;
+  max-width:260px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  overflow:visible!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
