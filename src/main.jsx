@@ -20598,7 +20598,86 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const liveBetTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipBetTypeLabel)
   const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
   const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])
-  const liveHourStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipHourBucket, ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59'])
+
+  const normalizeImportedHourRowV1580 = (row = {}) => {
+    const rawLabel = row.label || row.hour || row.hours || row.range || row.period || ''
+    const label = String(rawLabel || '').trim()
+    if (!label) return null
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
+    const importedYield = row.yield ?? row.roi
+    const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
+    const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: avgOdds * coupons,
+      stakeSum: avgStake ? avgStake * coupons : stake,
+      yield: importedYield === undefined || importedYield === null || importedYield === ''
+        ? (stake > 0 ? (profit / stake) * 100 : 0)
+        : Number(importedYield) || 0,
+      avgOdds,
+      avgStake: avgStake || (coupons ? stake / coupons : 0),
+      imported: true
+    }
+  }
+  const parseImportedHourStatsRowsV1580 = (source = {}) => {
+    let raw = source?.imported_hourly_stats || source?.imported_hour_stats || source?.hourly_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedHourRowV1580).filter(Boolean)
+  }
+  const mergeOrderedStatsRowsV1580 = (importedRows = [], liveRows = [], order = []) => {
+    const map = new Map()
+    importedRows.forEach(row => map.set(String(row.label), { ...row }))
+    liveRows.forEach(row => {
+      const key = String(row.label)
+      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const next = {
+        ...current,
+        coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
+        settledCoupons: Number(current.settledCoupons || 0) + Number(row.settledCoupons || 0),
+        stake: Number(current.stake || 0) + Number(row.stake || 0),
+        allStake: Number(current.allStake || 0) + Number(row.allStake || 0),
+        profit: Number(current.profit || 0) + Number(row.profit || 0),
+        oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
+        stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
+      }
+      next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
+      next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
+      next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
+      map.set(key, next)
+    })
+    const rows = Array.from(map.values())
+    if (order.length) {
+      const pos = new Map(order.map((label, index) => [label, index]))
+      return rows.sort((a, b) => (pos.get(a.label) ?? 999) - (pos.get(b.label) ?? 999))
+    }
+    return rows
+  }
+  const profileHourBucketsV1580 = ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59']
+  const importedHourStatsRowsV1580 = parseImportedHourStatsRowsV1580(user)
+  const importedStatsCutoffHourV1580 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffHourV1580 = Number.isFinite(importedStatsCutoffHourV1580.getTime()) && importedStatsCutoffHourV1580.getTime() > 0
+  const hourLiveTipsV1580 = importedHourStatsRowsV1580.length && hasValidImportedCutoffHourV1580
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffHourV1580.getTime()
+      })
+    : activeStatsTips
+  const liveHourStatsRows = mergeOrderedStatsRowsV1580(
+    importedHourStatsRowsV1580,
+    buildLiveStatRows(hourLiveTipsV1580, getProfileTipHourBucket, profileHourBucketsV1580),
+    profileHourBucketsV1580
+  )
 
   const normalizeImportedMonthRowV1578 = (row = {}) => {
     const rawLabel = row.label || row.date || row.month || row.period || ''
