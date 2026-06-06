@@ -71055,3 +71055,64 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
   min-width:0!important;
   box-sizing:border-box!important;
 }
+
+/* =====================================================
+   WERSJA 1597 — TABLET 10" DASHBOARD FULL WIDTH BALANCE
+   Baza: 1596. NIE rusza logowania ani innych zakładek.
+   Tylko dashboard na tablecie: usuwa centrowanie i puste boki,
+   rozciąga układ na pełną szerokość roboczą, ale zostawia miejsce
+   dla lewej i prawej kolumny.
+   ===================================================== */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:300px minmax(0, 1fr) 390px!important;
+  gap:18px!important;
+  justify-content:stretch!important;
+  align-items:start!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar{
+  display:block!important;
+  width:390px!important;
+  min-width:390px!important;
+  max-width:390px!important;
+  overflow:visible!important;
+  padding-right:0!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar > *,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .livechat226-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .betai-right-chat-final,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .top-tipsters-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-sidebar{
+  width:100%!important;
+  max-width:390px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
