@@ -71185,3 +71185,44 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
   min-width:0!important;
   box-sizing:border-box!important;
 }
+
+
+/* =====================================================
+   WERSJA 1599 — TABLET 10" DASHBOARD CENTER WIDTH TUNE
+   Baza: 1598. NIE rusza logowania ani innych zakładek.
+   Tylko dashboard na tablecie: środkowa ramka lekko szersza,
+   lewa i prawa kolumna zostają jak w 1598.
+   ===================================================== */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:320px minmax(920px, 1120px) 460px!important;
+  gap:20px!important;
+  justify-content:space-between!important;
+  align-items:start!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:1120px!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
+  width:100%!important;
+  max-width:1120px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
