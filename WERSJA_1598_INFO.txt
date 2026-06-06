@@ -1,0 +1,7 @@
+BetAI STRONA WERSJA 1598
+Zmiana tylko CSS dla dashboardu na tablecie 10 cali:
+- środkowa ramka/feed trochę zmniejszona,
+- prawa kolumna/czat rozszerzona,
+- dodany odstęp między czatem i Top typerzy,
+- logowanie i inne zakładki bez zmian,
+- desktop/TV/laptop bez zmian.

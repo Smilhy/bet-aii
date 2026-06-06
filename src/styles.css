@@ -71116,3 +71116,72 @@ html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
   min-width:0!important;
   box-sizing:border-box!important;
 }
+
+/* =====================================================
+   WERSJA 1598 — TABLET 10" DASHBOARD BALANCE FINAL
+   Baza: 1597. NIE rusza logowania ani innych zakładek.
+   Tylko dashboard na tablecie: środkowa ramka trochę mniejsza,
+   prawa kolumna szersza i odstęp między czatem a Top typerzy.
+   ===================================================== */
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page){
+  grid-template-columns:320px minmax(820px, 1030px) 460px!important;
+  gap:20px!important;
+  justify-content:space-between!important;
+  align-items:start!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .main,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-section,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .dashboard-feed{
+  width:100%!important;
+  max-width:1030px!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px!important;
+  width:460px!important;
+  min-width:460px!important;
+  max-width:460px!important;
+  overflow:visible!important;
+  padding-right:0!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .rightbar > *,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .livechat226-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .betai-right-chat-final,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .top-tipsters-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .right-sidebar{
+  width:100%!important;
+  max-width:460px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .livechat226-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .betai-right-chat-final{
+  margin-bottom:18px!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .top-tipsters-card{
+  margin-top:0!important;
+}
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .tip-card,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .monetization-panel,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .feed-filters,
+html.betai-tablet-wide50 .app-shell:not(.no-rightbar-page) .panel{
+  width:100%!important;
+  max-width:1030px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
