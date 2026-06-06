@@ -1,0 +1,4 @@
+WERSJA 1575
+- Naprawiono Netlify Function netlify/functions/settle-live-ai-picks.js.
+- Usunięto błędne .catch() po supabase.from(...).insert(...), które powodowało HTTP 500.
+- Nie zmieniano logiki typów AI ani struktury bazy.
