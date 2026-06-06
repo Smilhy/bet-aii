@@ -71117,3 +71117,75 @@ thead,tbody,tr{width:100%;}
     display:none!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1586 — RESPONSIVE ONLY / FIX NO-RIGHTBAR DESKTOP WIDTH
+   Cel: desktop 2K i szerokie laptopy nie mogą zwężać zakładek.
+   Nie rusza logiki, tylko przywraca pełną szerokość dla stron bez rightbara.
+   ========================================================= */
+@media (min-width:1181px){
+  html body #root .app-shell.no-rightbar-page{
+    width:100vw!important;
+    max-width:none!important;
+    margin:0!important;
+    grid-template-columns:clamp(235px,13vw,270px) minmax(0,1fr)!important;
+    gap:clamp(14px,1.1vw,24px)!important;
+    padding:clamp(14px,1.05vw,22px)!important;
+  }
+
+  html body #root .app-shell.no-rightbar-page .main{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+
+  html body #root .app-shell.no-rightbar-page .main > section,
+  html body #root .app-shell.no-rightbar-page .main > div:not(.topbar),
+  html body #root .app-shell.no-rightbar-page .add-page,
+  html body #root .app-shell.no-rightbar-page .add-tip-betfolio-page,
+  html body #root .app-shell.no-rightbar-page .wallet-panel,
+  html body #root .app-shell.no-rightbar-page .wallet-ultra-page,
+  html body #root .app-shell.no-rightbar-page .profile-page,
+  html body #root .app-shell.no-rightbar-page .profile-ultra-page,
+  html body #root .app-shell.no-rightbar-page .leaderboard-page,
+  html body #root .app-shell.no-rightbar-page .articles-page,
+  html body #root .app-shell.no-rightbar-page .referrals-view,
+  html body #root .app-shell.no-rightbar-page .notifications-page,
+  html body #root .app-shell.no-rightbar-page .payments-page,
+  html body #root .app-shell.no-rightbar-page .subscription-page,
+  html body #root .app-shell.no-rightbar-page .subscription-ultra-page,
+  html body #root .app-shell.no-rightbar-page .earnings-page,
+  html body #root .app-shell.no-rightbar-page .payout-page,
+  html body #root .app-shell.no-rightbar-page .admin-finance-page,
+  html body #root .app-shell.no-rightbar-page .admin-payout-page,
+  html body #root .app-shell.no-rightbar-page .admin-payout-page-pro,
+  html body #root .app-shell.no-rightbar-page .ai-premium-dashboard{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  html body #root .app-shell.no-rightbar-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .add-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .add-tip-betfolio-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .wallet-ultra-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .profile-ultra-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .leaderboard-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .articles-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .payments-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .subscription-ultra-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .earnings-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .payout-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .admin-finance-page .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .admin-payout-page-pro .ultra-page-banner,
+  html body #root .app-shell.no-rightbar-page .ai-premium-dashboard .ultra-page-banner{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+}
+
+/* Przy 1180px i niżej zostaje tryb compact/mobile z 1585. */
