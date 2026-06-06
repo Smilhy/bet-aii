@@ -1,5 +1,4 @@
-WERSJA 1574 — Bunny Stream embed
-- Podmieniono YouTube embed na Bunny Stream.
-- Player działa w tym samym modalu prezentacji na stronie.
-- Źródło: https://player.mediadelivery.net/embed/677418/e5933e0a-544b-493d-97fd-504d2363c260
-- Usunięto problem ograniczenia wiekowego YouTube i odtwarzania poza stroną.
+WERSJA 1574 — FIX REJESTRACJI DUPLIKAT EMAIL
+- zablokowano mylący komunikat „konto utworzone” dla emaila, który już istnieje w Supabase Auth,
+- jeśli Supabase zwróci user.identities = [] albo błąd already registered, frontend pokazuje: „Konto z tym adresem email już istnieje...”,
+- nie zmienia logiki bazy i nie wymaga SQL.

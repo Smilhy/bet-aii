@@ -17685,7 +17685,20 @@ function AuthView({ onAuth }) {
           }
         }))
 
-        if (error) throw error
+        if (error) {
+          const msg = String(error?.message || '').toLowerCase()
+          if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
+            throw new Error('Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.')
+          }
+          throw error
+        }
+
+        const createdUser = data?.user || data?.session?.user || null
+        const identities = Array.isArray(createdUser?.identities) ? createdUser.identities : null
+        if (createdUser && identities && identities.length === 0) {
+          showMessage('error', 'Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.')
+          return
+        }
 
         if (data?.session?.user) {
           onAuth?.(data.session.user)
