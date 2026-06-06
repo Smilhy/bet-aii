@@ -15275,19 +15275,25 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
 
   const aiTabCounters = useMemo(() => {
-    const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
-    // V1501: licznik zakładki „Typy AI na dziś/jutro” ma oznaczać tylko typy,
-    // które faktycznie są jeszcze do zagrania. Rozliczone albo rozpoczęte typy zostają
-    // w „Mecze Result” i „Statystyki”, ale nie podbijają licznika aktywnych typów.
-    const isPlayablePrematch = card => {
-      if (!card || isBetAiSettledStatusV1091(card)) return false
-      const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
-      return state === 'prematch'
+    // V1577: licznik zakładek „Typy AI na dziś/jutro” używa dokładnie tych
+    // samych filtrów co lista widocznych typów. Dzięki temu nie ma sytuacji:
+    // badge pokazuje 1, a lista przy progu 70% jest pusta.
+    const matchesCurrentSport = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
+    const matchesActiveTipFilters = (card, dayMode) => {
+      if (!card) return false
+      if (!matchesCurrentSport(card)) return false
+      if (!isBetAiSelectedDayCardV1081(card, dayMode)) return false
+      if (!isBetAiPrematchAvailableV1091(card)) return false
+      if (matchMode !== 'all' && (card.kickoffState || 'prematch') !== matchMode) return false
+      if (Number(card.odds || 0) < Number(minOdds) || Number(card.odds || 0) > Number(maxOdds)) return false
+      if (Number(card.probability || card.aiScore || 0) < Number(minProb)) return false
+      if (!matchesAiSearchV1455(card, search)) return false
+      return true
     }
-    const today = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'today') && isPlayablePrematch(card)).length
-    const tomorrow = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'tomorrow') && isPlayablePrematch(card)).length
+    const today = allCards.filter(card => matchesActiveTipFilters(card, 'today')).length
+    const tomorrow = allCards.filter(card => matchesActiveTipFilters(card, 'tomorrow')).length
     const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
-    const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
+    const leagues = new Set(allCards.filter(matchesCurrentSport).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
     return {
       today,
       tomorrow,
@@ -15296,7 +15302,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       leagues,
       pending,
     }
-  }, [allCards, resultCards, activeSport])
+  }, [allCards, resultCards, activeSport, matchMode, minOdds, maxOdds, minProb, search])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)

@@ -1,0 +1,1 @@
+WERSJA 1577 — AI badge/list filter consistency fix. Licznik Typy AI na dziś/jutro używa tych samych filtrów co lista (próg, kursy, sport, dzień, status, search).
