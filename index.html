@@ -3,6 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // WERSJA 1591 — tylko tablety ok. 10" dostają automatyczny widok jak zoom 50%.
+    // Desktop 2K, TV 2K, laptop 1680x1050 i telefony zostają bez zmian.
+    (function () {
+      try {
+        var isTouchTablet = (navigator.maxTouchPoints || 0) > 1 || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+        var shortSide = Math.min(window.screen.width || 0, window.screen.height || 0);
+        var longSide = Math.max(window.screen.width || 0, window.screen.height || 0);
+        var isTablet10 = isTouchTablet && shortSide >= 600 && shortSide <= 1100 && longSide >= 900 && longSide <= 1500;
+        if (isTablet10) {
+          var viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.setAttribute('content', 'width=2000, initial-scale=0.5, maximum-scale=5.0, user-scalable=yes');
+          }
+          document.documentElement.classList.add('betai-tablet-auto50');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">

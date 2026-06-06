@@ -1,0 +1,1 @@
+WERSJA 1591 — TABLET 10 AUTO 50 META VIEWPORT. Tylko tablet/touch 10 cali, bez zmian w logice. Bazuje na 1584.
