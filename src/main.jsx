@@ -15878,6 +15878,38 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
 
       setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
+
+      // WERSJA 1576 — przycisk Odśwież dziś uruchamia też backendowy generator,
+      // który zapisuje typy bezpośrednio do public.ai_bets i loguje próbę w ai_pick_runs.
+      // Wcześniej UI potrafił tylko pobrać get-ai-bets/get-sports-events, więc w bazie nie pojawiał się nowy run.
+      try {
+        const generatorParams = new URLSearchParams()
+        generatorParams.set('sport', 'football')
+        generatorParams.set('days', mode === 'tomorrow' ? '2' : '1')
+        generatorParams.set('limit', String(Math.max(Number(DAILY_AI_PICK_LIMIT_V1086 || 3), 6)))
+        const generatorResponse = await fetch(`/.netlify/functions/generate-live-ai-picks?${generatorParams.toString()}`, { cache: 'no-store' })
+        const generatorJson = await generatorResponse.json().catch(() => ({}))
+        if (generatorResponse.ok) {
+          const savedAfterGenerator = await loadSavedAiTipsFromDb(mode)
+          if (savedAfterGenerator.length) {
+            setLiveCards([])
+            setSelectedId(savedAfterGenerator[0]?.id || '')
+            setStatusText(`Backend AI zapisał ${Number(generatorJson?.ai_bets_inserted || generatorJson?.inserted || savedAfterGenerator.length)} typów. Wczytano ${savedAfterGenerator.length} typów AI na ${dayLabel}.`)
+            await loadSavedAiJournalFromDbV1094()
+            markBetAiDailyScanDoneV1086(mode, savedAfterGenerator.length)
+            shouldSetScanCooldownV1482 = true
+            return
+          }
+          if (Number(generatorJson?.ai_bets_inserted || 0) === 0) {
+            setStatusText(`Backend AI wykonał skan, ale nie zapisał typów dla kryteriów dnia. Sprawdzam jeszcze lokalny skan awaryjny...`)
+          }
+        } else {
+          console.warn('generate-live-ai-picks failed:', generatorJson?.error || generatorResponse.status)
+        }
+      } catch (generatorError) {
+        console.warn('generate-live-ai-picks skipped:', generatorError?.message || generatorError)
+      }
+
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []

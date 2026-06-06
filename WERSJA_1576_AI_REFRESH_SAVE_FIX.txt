@@ -1,0 +1,18 @@
+WERSJA 1576 — AI REFRESH SAVE FIX
+
+Naprawa zakładki Typy AI:
+- przycisk "Odśwież dziś / Odśwież jutro" uruchamia teraz backendowy generator generate-live-ai-picks,
+- generator zapisuje TOP typy również do public.ai_bets,
+- generator tworzy wpis w public.ai_pick_runs także wtedy, gdy znajdzie 0 typów,
+- zostawiono istniejące pobieranie i lokalny skan awaryjny,
+- nie zmieniono SQL ani logiki bazy.
+
+Test po deployu:
+1. F12 -> Network.
+2. Kliknij Typy AI -> Odśwież dziś.
+3. Powinien pojawić się request generate-live-ai-picks ze statusem 200.
+4. W Supabase:
+   select * from public.ai_pick_runs order by created_at desc limit 10;
+   powinien pojawić się nowy run z dzisiejszą datą.
+5. Jeśli ai_bets_inserted > 0, typy pokażą się w Typy AI / Mecze Result.
+6. Jeśli ai_bets_inserted = 0, skan działa, ale kryteria/API nie dały typów.
