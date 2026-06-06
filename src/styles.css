@@ -70761,431 +70761,80 @@ html.betai-fhd-monitor80-v1323 body #root{
   border:0!important;
 }
 
-/* =========================================================
-   WERSJA 1585 — RESPONSIVE ONLY / KEEP DESIGN
-   Cel: bez zmian logiki, tylko automatyczne dopasowanie layoutu
-   do szerokości okna: 2K, 1920, 1680x1050, laptopy, tablet, telefon.
-   ========================================================= */
-
-html,
-body,
-#root{
-  width:100%!important;
-  max-width:100%!important;
-  min-width:320px!important;
-  overflow-x:hidden!important;
-}
-*,*::before,*::after{box-sizing:border-box!important;}
-img,video,canvas,svg,iframe{max-width:100%;}
-
-/* Nie pozwalamy pojedynczym kartom/gridom rozpychać całej strony. */
-.app-shell,
-.app-shell *,
-.main,
-.sidebar,
-.rightbar,
-.panel,
-.tip-card,
-.profile-card,
-.wallet-card,
-.leaderboard-card,
-.marketplace-card,
-.earnings-card,
-.payout-card,
-.admin-finance-card,
-.admin-cron-card,
-.subscription-hero,
-.public-profile-shell,
-.profile-static-v3,
-.profile-v4-stats-page,
-.add-tip-betfolio-page,
-.ai-center-page-v747,
-.stats-pro-page,
-.ai-pro-page{
-  min-width:0!important;
-}
-
-/* Desktop bazowy — obecny wygląd zostaje, tylko bardziej elastyczny. */
-.app-shell{
-  width:100%!important;
-  max-width:2050px!important;
-  margin:0 auto!important;
-  grid-template-columns:clamp(235px,13vw,270px) minmax(0,1fr) clamp(285px,17vw,330px)!important;
-  gap:clamp(14px,1.1vw,24px)!important;
-  padding:clamp(14px,1.05vw,22px)!important;
-}
-.app-shell.no-rightbar-page{
-  grid-template-columns:clamp(235px,13vw,270px) minmax(0,1fr)!important;
-  max-width:1720px!important;
-}
-.main,
-.feed-section,
-.add-page,
-.wallet-view,
-.profile-view,
-.leaderboard-view,
-.subscription-view,
-.earnings-view,
-.payouts-view,
-.admin-finance-view,
-.admin-payouts-view,
-.profile-page,
-.payout-page,
-.admin-payout-page,
-.notifications-page,
-.ai-center-page-v747,
-.stats-pro-page,
-.ai-pro-page,
-.profile-v4-stats-page{
-  width:100%!important;
-  max-width:none!important;
-}
-.sidebar,
-.rightbar{
-  max-width:100%!important;
-}
-
-/* Karty i siatki mają się zawijać zamiast nachodzić na siebie. */
-.profile-stats-grid,
-.profile-money-card,
-.leaderboard-stats,
-.earnings-grid,
-.payout-grid,
-.admin-finance-grid,
-.admin-payout-stats,
-.stats-pro-grid.four,
-.stats-pro-grid.two,
-.ai-top-grid,
-.pro-metric-grid,
-.pricing-grid,
-.marketplace-grid,
-.user-grid,
-.wallet-stats,
-.monetization-stats,
-.unlocked-tips-stats-v951{
-  grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr))!important;
-}
-.two-cols,
-.access-grid,
-.profile-split,
-.pro-stats-layout,
-.pro-stats-layout.small,
-.pro-tables-grid,
-.stats-pro-grid.two{
-  grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))!important;
-}
-
-/* Tabele/wiersze statystyk nie mogą rozpychać strony. */
-table,
-.admin-table,
-.table,
-.stats-table,
-.pro-table-card,
-.profile-v4-stats-table,
-.ranking-v4-table-card,
-.wallet-subpage .payments-live-table-card,
-.ai-center-page-v747 .ai-table-card-v747{
-  max-width:100%!important;
-  overflow-x:auto!important;
-  -webkit-overflow-scrolling:touch!important;
-}
-table{display:block!important;width:100%!important;}
-thead,tbody,tr{width:100%;}
-.pro-table-head,
-.pro-table-row,
-.stats-table > div,
-.leaderboard-row,
-.payments-row,
-.earnings-row,
-.payout-row,
-.admin-payout-row{
-  min-width:0!important;
-}
-
-/* 1680x1050 / 1536 / mniejsze desktopy: zachowaj design, tylko ciaśniej. */
-@media (max-width:1780px){
-  .app-shell{
-    max-width:1680px!important;
-    grid-template-columns:235px minmax(0,1fr) 292px!important;
-    gap:16px!important;
-    padding:16px!important;
-  }
-  .app-shell.no-rightbar-page{
-    grid-template-columns:235px minmax(0,1fr)!important;
-    max-width:1460px!important;
-  }
-  .sidebar{top:16px!important;height:calc(100vh - 32px)!important;border-radius:22px!important;padding:14px!important;}
-  .rightbar{top:16px!important;height:calc(100vh - 32px)!important;gap:12px!important;}
-  .topbar{border-radius:20px!important;}
-  .panel{padding:14px!important;border-radius:20px!important;}
-  .betai-animated-hero{min-height:280px!important;padding:22px 210px 22px 24px!important;border-radius:22px!important;}
-  .betai-hero-panel h1{font-size:clamp(42px,3.3vw,58px)!important;}
-  .betai-hero-stats{width:176px!important;gap:8px!important;}
-  .betai-hero-stats strong{font-size:21px!important;}
-  .tip-card{padding:13px 14px!important;}
-}
-
-/* 1440/1366/laptop: prawa kolumna schodzi, żeby feed nie był zjadany. */
-@media (max-width:1450px){
-  .app-shell,
-  .app-shell.no-rightbar-page{
-    max-width:1280px!important;
-    grid-template-columns:220px minmax(0,1fr)!important;
-    gap:14px!important;
-    padding:14px!important;
-  }
-  .rightbar{display:none!important;}
-  .sidebar{top:14px!important;height:calc(100vh - 28px)!important;}
-  .betai-animated-hero{padding:22px 24px!important;min-height:auto!important;}
-  .betai-hero-copy{min-height:0!important;}
-  .betai-hero-stats{position:relative!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:none!important;margin-top:18px!important;}
-  .betai-hero-orb-pill,.betai-hero-orb-ring,.betai-hero-orb-glow,.betai-hero-player{opacity:.28!important;}
-  .rank{grid-template-columns:26px 38px minmax(0,1fr) auto!important;}
-}
-
-/* 1200/1024/małe laptopy/tablet poziomo: sidebar jako górny panel, nie nachodzi na treść. */
-@media (max-width:1180px){
-  .app-shell,
-  .app-shell.no-rightbar-page{
-    display:block!important;
-    max-width:100%!important;
+/* =====================================================
+   VERSION 1590 — TABLET 10" AUTO 50% VIEW ONLY
+   Cel: tylko zakres tablet/mały ekran. Desktop 2K, TV 2K i 1680x1050
+   zostają bez zmian. To imituje ręczny zoom 50% na urządzeniach ok. 10".
+   ===================================================== */
+@media (min-width:700px) and (max-width:1100px){
+  html,
+  body{
     width:100%!important;
-    padding:12px!important;
-  }
-  .sidebar{
-    position:relative!important;
-    top:auto!important;
-    height:auto!important;
-    max-height:none!important;
-    margin:0 0 12px!important;
-    border-radius:22px!important;
-  }
-  .sidebar-stack{display:block!important;width:100%!important;}
-  .sidebar .menu{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(145px,1fr))!important;gap:8px!important;}
-  .sidebar .menu button,
-  .sidebar .menu a{min-height:42px!important;justify-content:flex-start!important;}
-  .sidebar-premium-detached,.premium-box.sidebar-premium-detached{display:none!important;}
-  .main{width:100%!important;}
-  .topbar{flex-wrap:wrap!important;align-items:center!important;}
-  .search{order:3!important;flex:1 1 100%!important;width:100%!important;}
-  .top-actions{margin-left:auto!important;}
-  .feed-filters{overflow-x:auto!important;white-space:nowrap!important;}
-}
-
-/* Tablet i telefon: jedna kolumna, ten sam styl kart, bez zjadania ramek. */
-@media (max-width:820px){
-  .app-shell,
-  .app-shell.no-rightbar-page{padding:10px!important;}
-  .sidebar{padding:12px!important;border-radius:20px!important;}
-  .brand{font-size:clamp(28px,8vw,38px)!important;}
-  .sidebar .avatar{width:44px!important;height:44px!important;margin-bottom:8px!important;}
-  .sidebar .menu{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .sidebar .menu button,
-  .sidebar .menu a{font-size:13px!important;min-height:40px!important;padding:9px 10px!important;border-radius:13px!important;}
-  .topbar{padding:8px!important;gap:8px!important;border-radius:18px!important;}
-  .top-actions{width:100%!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;gap:8px!important;}
-  .top-actions button,.wallet-top-btn,.notice-button,.add-btn{width:100%!important;min-height:40px!important;padding:0 10px!important;font-size:13px!important;}
-  .page-title h1,.leaderboard-hero h1,.profile-hero h1,.payout-hero h1,.earnings-hero h1,.subscription-hero h1{font-size:clamp(27px,8vw,38px)!important;line-height:1.05!important;}
-  .betai-animated-hero{padding:18px!important;border-radius:20px!important;}
-  .betai-hero-panel h1{font-size:clamp(34px,10vw,48px)!important;line-height:1!important;}
-  .betai-hero-panel p{font-size:14px!important;line-height:1.55!important;}
-  .betai-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .betai-hero-stats div{padding:10px!important;}
-  .tip-grid,.match-inputs,.leaderboard-row,.payments-row,.earnings-row,.payout-row,.admin-payout-row{grid-template-columns:1fr!important;}
-  .leaderboard-row.header,.payments-row.header,.earnings-row.header,.payout-row.header,.admin-payout-row.header{display:none!important;}
-  .tip-card,.panel,.profile-card,.wallet-card,.leaderboard-card,.marketplace-card,.earnings-card,.payout-card{padding:13px!important;border-radius:18px!important;}
-  .bet-row{grid-template-columns:1fr!important;}
-  .bet-row div+div{border-left:0!important;border-top:1px solid rgba(255,255,255,.08)!important;}
-  .profile-hero,.tipster-pro-card,.subscription-hero,.payout-hero,.earnings-hero,.leaderboard-hero{flex-direction:column!important;align-items:stretch!important;}
-  .profile-stats-grid,.profile-money-card,.leaderboard-stats,.earnings-grid,.payout-grid,.admin-finance-grid,.admin-payout-stats,.stats-pro-grid.four,.stats-pro-grid.two,.pro-metric-grid{grid-template-columns:1fr 1fr!important;}
-  .pro-table-head,.pro-table-row,.stats-table > div{grid-template-columns:150px 70px 90px 90px 80px!important;min-width:520px!important;}
-  .pro-table-card,.stats-table,.profile-v4-stats-table{overflow-x:auto!important;}
-}
-
-@media (max-width:560px){
-  .app-shell,.app-shell.no-rightbar-page{padding:8px!important;}
-  .sidebar .menu{grid-template-columns:1fr 1fr!important;}
-  .sidebar .menu button,.sidebar .menu a{font-size:12px!important;}
-  .top-actions{grid-template-columns:1fr!important;}
-  .profile-stats-grid,.profile-money-card,.leaderboard-stats,.earnings-grid,.payout-grid,.admin-finance-grid,.admin-payout-stats,.stats-pro-grid.four,.stats-pro-grid.two,.pro-metric-grid{grid-template-columns:1fr!important;}
-  .two-cols,.access-grid,.profile-split,.pro-stats-layout,.pro-stats-layout.small,.pro-tables-grid{grid-template-columns:1fr!important;}
-  .betai-hero-stats{grid-template-columns:1fr!important;}
-  .feed-filters{display:flex!important;gap:8px!important;}
-  .feed-filters button{flex:0 0 auto!important;}
-  input,textarea,select{font-size:16px!important;}
-  .support510-fab,.reviews512-fab{max-width:calc(100vw - 18px)!important;}
-}
-
-/* Logowanie / landing: ten sam styl, ale układ dopasowany do okna, nie do jednego monitora. */
-#root:not(:has(.app-shell)) .auth-screen,
-#root:not(:has(.app-shell)) .auth609-screen,
-#root:not(:has(.app-shell)) .auth481-screen{
-  width:100%!important;
-  max-width:100%!important;
-  min-width:320px!important;
-  overflow-x:hidden!important;
-}
-#root:not(:has(.app-shell)) .auth-card,
-#root:not(:has(.app-shell)) .auth609-left-panel,
-#root:not(:has(.app-shell)) .auth609-panel-shell-fixed,
-#root:not(:has(.app-shell)) .auth481-form-card,
-#root:not(:has(.app-shell)) .auth481-right-column{
-  max-width:100%!important;
-  min-width:0!important;
-}
-@media (max-width:1450px){
-  #root:not(:has(.app-shell)) .auth609-artboard,
-  #root:not(:has(.app-shell)) .auth609-reference,
-  #root:not(:has(.app-shell)) .auth609-overlay{
-    max-width:100vw!important;
-  }
-  #root:not(:has(.app-shell)) .auth609-left-panel{transform:none!important;}
-}
-@media (max-width:1180px){
-  #root:not(:has(.app-shell)) .auth609-screen,
-  #root:not(:has(.app-shell)) .auth481-screen{
-    min-height:100dvh!important;
-    height:auto!important;
-    padding:14px!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:hidden!important;
     overflow-y:auto!important;
   }
-  #root:not(:has(.app-shell)) .auth609-artboard,
-  #root:not(:has(.app-shell)) .auth609-reference,
-  #root:not(:has(.app-shell)) .auth609-overlay{
-    position:relative!important;
-    width:100%!important;
-    height:auto!important;
-    min-height:0!important;
-    transform:none!important;
-    inset:auto!important;
+
+  #root{
+    width:200vw!important;
+    min-height:200vh!important;
+    transform:scale(.5)!important;
+    transform-origin:top left!important;
   }
-  #root:not(:has(.app-shell)) .auth609-center-wrap,
-  #root:not(:has(.app-shell)) .auth481-shell,
-  #root:not(:has(.app-shell)) .auth481-layout{
-    width:100%!important;
-    max-width:980px!important;
-    margin:0 auto!important;
+
+  .app-shell{
     display:grid!important;
-    grid-template-columns:1fr!important;
-    gap:14px!important;
-    transform:none!important;
-  }
-  #root:not(:has(.app-shell)) .auth609-left-panel,
-  #root:not(:has(.app-shell)) .auth609-panel-shell-fixed{
-    position:relative!important;
-    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
-    width:min(100%,560px)!important;
-    margin:0 auto!important;
-    transform:none!important;
-  }
-  #root:not(:has(.app-shell)) .auth623-side-live,
-  #root:not(:has(.app-shell)) .auth1179-left-stats-outside,
-  #root:not(:has(.app-shell)) .auth627-social-block,
-  #root:not(:has(.app-shell)) .auth481-right-column{
-    position:relative!important;
-    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
-    width:100%!important;
-    max-width:760px!important;
-    margin:0 auto!important;
-    transform:none!important;
-  }
-}
-@media (max-width:720px){
-  #root:not(:has(.app-shell)) .auth609-screen,
-  #root:not(:has(.app-shell)) .auth481-screen{padding:10px!important;}
-  #root:not(:has(.app-shell)) .auth609-left-panel,
-  #root:not(:has(.app-shell)) .auth609-panel-shell-fixed,
-  #root:not(:has(.app-shell)) .auth-card{
-    width:100%!important;
-    border-radius:22px!important;
-  }
-  #root:not(:has(.app-shell)) .auth609-welcome,
-  #root:not(:has(.app-shell)) .auth481-title,
-  #root:not(:has(.app-shell)) .auth-card h1{
-    font-size:clamp(30px,10vw,46px)!important;
-    line-height:1.02!important;
-  }
-  #root:not(:has(.app-shell)) .auth609-subtitle-main,
-  #root:not(:has(.app-shell)) .auth481-subtitle,
-  #root:not(:has(.app-shell)) .auth-card p{
-    font-size:14px!important;
-    line-height:1.5!important;
-  }
-  #root:not(:has(.app-shell)) .auth623-side-live,
-  #root:not(:has(.app-shell)) .auth1179-left-stats-outside,
-  #root:not(:has(.app-shell)) .auth481-right-column{
-    display:none!important;
-  }
-}
-
-/* =========================================================
-   WERSJA 1586 — RESPONSIVE ONLY / FIX NO-RIGHTBAR DESKTOP WIDTH
-   Cel: desktop 2K i szerokie laptopy nie mogą zwężać zakładek.
-   Nie rusza logiki, tylko przywraca pełną szerokość dla stron bez rightbara.
-   ========================================================= */
-@media (min-width:1181px){
-  html body #root .app-shell.no-rightbar-page{
-    width:100vw!important;
+    width:min(200vw,2050px)!important;
     max-width:none!important;
-    margin:0!important;
-    grid-template-columns:clamp(235px,13vw,270px) minmax(0,1fr)!important;
-    gap:clamp(14px,1.1vw,24px)!important;
-    padding:clamp(14px,1.05vw,22px)!important;
+    grid-template-columns:270px minmax(0,1.65fr) 330px!important;
+    gap:24px!important;
+    padding:20px 22px!important;
+    margin:0 auto!important;
+    align-items:start!important;
   }
 
-  html body #root .app-shell.no-rightbar-page .main{
-    width:100%!important;
-    max-width:none!important;
+  .sidebar{
+    display:block!important;
+    position:sticky!important;
+    top:20px!important;
+    height:calc(200vh - 40px)!important;
+    overflow:auto!important;
+  }
+
+  .rightbar{
+    display:flex!important;
+    position:sticky!important;
+    top:20px!important;
+    height:calc(200vh - 40px)!important;
+    overflow:auto!important;
+  }
+
+  .main{
+    display:flex!important;
+    flex-direction:column!important;
     min-width:0!important;
-    margin:0!important;
+    width:100%!important;
   }
 
-  html body #root .app-shell.no-rightbar-page .main > section,
-  html body #root .app-shell.no-rightbar-page .main > div:not(.topbar),
-  html body #root .app-shell.no-rightbar-page .add-page,
-  html body #root .app-shell.no-rightbar-page .add-tip-betfolio-page,
-  html body #root .app-shell.no-rightbar-page .wallet-panel,
-  html body #root .app-shell.no-rightbar-page .wallet-ultra-page,
-  html body #root .app-shell.no-rightbar-page .profile-page,
-  html body #root .app-shell.no-rightbar-page .profile-ultra-page,
-  html body #root .app-shell.no-rightbar-page .leaderboard-page,
-  html body #root .app-shell.no-rightbar-page .articles-page,
-  html body #root .app-shell.no-rightbar-page .referrals-view,
-  html body #root .app-shell.no-rightbar-page .notifications-page,
-  html body #root .app-shell.no-rightbar-page .payments-page,
-  html body #root .app-shell.no-rightbar-page .subscription-page,
-  html body #root .app-shell.no-rightbar-page .subscription-ultra-page,
-  html body #root .app-shell.no-rightbar-page .earnings-page,
-  html body #root .app-shell.no-rightbar-page .payout-page,
-  html body #root .app-shell.no-rightbar-page .admin-finance-page,
-  html body #root .app-shell.no-rightbar-page .admin-payout-page,
-  html body #root .app-shell.no-rightbar-page .admin-payout-page-pro,
-  html body #root .app-shell.no-rightbar-page .ai-premium-dashboard{
-    width:100%!important;
-    max-width:none!important;
-    margin-left:0!important;
-    margin-right:0!important;
+  .topbar{
+    flex-wrap:nowrap!important;
   }
 
-  html body #root .app-shell.no-rightbar-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .add-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .add-tip-betfolio-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .wallet-ultra-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .profile-ultra-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .leaderboard-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .articles-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .payments-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .subscription-ultra-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .earnings-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .payout-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .admin-finance-page .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .admin-payout-page-pro .ultra-page-banner,
-  html body #root .app-shell.no-rightbar-page .ai-premium-dashboard .ultra-page-banner{
+  .feed-section,
+  .add-page,
+  .wallet-view,
+  .profile-view,
+  .leaderboard-view,
+  .subscription-view,
+  .earnings-view,
+  .payouts-view,
+  .admin-finance-view,
+  .admin-payouts-view,
+  .profile-page,
+  .payout-page,
+  .admin-payout-page{
     width:100%!important;
     max-width:none!important;
-    margin-left:0!important;
-    margin-right:0!important;
   }
 }
-
-/* Przy 1180px i niżej zostaje tryb compact/mobile z 1585. */
