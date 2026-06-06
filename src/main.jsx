@@ -1306,6 +1306,11 @@ function mergeProfilesPreferStats(...groups) {
       imported_profit: preferred.imported_profit ?? other.imported_profit,
       imported_avg_odds: preferred.imported_avg_odds ?? other.imported_avg_odds,
       imported_highest_odds: preferred.imported_highest_odds ?? other.imported_highest_odds,
+      imported_monthly_stats: preferred.imported_monthly_stats ?? other.imported_monthly_stats,
+      imported_hourly_stats: preferred.imported_hourly_stats ?? other.imported_hourly_stats,
+      imported_odds_range_stats: preferred.imported_odds_range_stats ?? other.imported_odds_range_stats,
+      imported_sport_stats: preferred.imported_sport_stats ?? other.imported_sport_stats,
+      imported_coupon_type_stats: preferred.imported_coupon_type_stats ?? other.imported_coupon_type_stats,
       imported_tips_amount: preferred.imported_tips_amount ?? other.imported_tips_amount,
       imported_tips_currency: preferred.imported_tips_currency ?? other.imported_tips_currency,
       stats_imported_at: preferred.stats_imported_at ?? other.stats_imported_at,
@@ -1322,7 +1327,7 @@ function mergeProfilesPreferStats(...groups) {
 
 async function fetchBetaiProfilesWithStats() {
   if (!isSupabaseConfigured || !supabase) return []
-  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_tips_amount,imported_tips_currency,stats_imported_at'
+  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_monthly_stats,imported_hourly_stats,imported_odds_range_stats,imported_sport_stats,imported_coupon_type_stats,imported_tips_amount,imported_tips_currency,stats_imported_at'
   try {
     const { data, error } = await supabase.from('profiles').select('*').limit(250)
     if (!error && Array.isArray(data)) return data
@@ -20593,12 +20598,110 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return rows.sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
   }
   const activeStatsTips = userTips.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
-  const liveTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipAccessLabel, ['Publiczny', 'Płatny'])
+  const normalizeCouponTypeLabelV1583 = (label = '') => {
+    const raw = String(label || '').trim()
+    const low = raw.toLowerCase()
+    if (['publiczny', 'publiczne', 'darmowy', 'darmowe', 'free'].includes(low)) return 'Publiczny'
+    if (['płatny', 'platny', 'płatne', 'platne', 'premium', 'paid'].includes(low)) return 'Płatny'
+    return raw || 'Publiczny'
+  }
+  const normalizeImportedCouponTypeRowV1583 = (row = {}) => {
+    const label = normalizeCouponTypeLabelV1583(row.label || row.type || row.access || row.name || row.statystyki || row.stats || '')
+    if (!label) return null
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? row.won ?? row.win ?? 0) || 0
+    const importedYield = row.yield ?? row.roi
+    const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
+    const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: avgOdds * coupons,
+      stakeSum: avgStake ? avgStake * coupons : stake,
+      yield: importedYield === undefined || importedYield === null || importedYield === ''
+        ? (stake > 0 ? (profit / stake) * 100 : 0)
+        : Number(importedYield) || 0,
+      avgOdds,
+      avgStake: avgStake || (coupons ? stake / coupons : 0),
+      imported: true
+    }
+  }
+  const parseImportedCouponTypeStatsRowsV1583 = (source = {}) => {
+    let raw = source?.imported_coupon_type_stats || source?.imported_coupon_stats || source?.coupon_type_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedCouponTypeRowV1583).filter(Boolean)
+  }
+  const importedCouponTypeStatsRowsV1583 = parseImportedCouponTypeStatsRowsV1583(user)
+  const importedStatsCutoffCouponTypeV1583 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffCouponTypeV1583 = Number.isFinite(importedStatsCutoffCouponTypeV1583.getTime()) && importedStatsCutoffCouponTypeV1583.getTime() > 0
+  const typeLiveTipsV1583 = importedCouponTypeStatsRowsV1583.length && hasValidImportedCutoffCouponTypeV1583
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffCouponTypeV1583.getTime()
+      })
+    : activeStatsTips
+  const liveTypeStatsRows = mergeOrderedStatsRowsV1580(
+    importedCouponTypeStatsRowsV1583,
+    buildLiveStatRows(typeLiveTipsV1583, getProfileTipAccessLabel, ['Publiczny', 'Płatny']),
+    ['Publiczny', 'Płatny']
+  )
   const liveLeagueStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipLeagueLabel)
   const liveBetTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipBetTypeLabel)
-  const liveSportStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipSport)
-  const liveOddsStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipOddsBucket, ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+'])
-
+  const normalizeImportedOddsRangeRowV1581 = (row = {}) => {
+    const rawLabel = row.label || row.oddsRange || row.odds_range || row.kurs || row.range || ''
+    const label = String(rawLabel || '').trim()
+    if (!label) return null
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
+    const importedYield = row.yield ?? row.roi
+    const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
+    const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: avgOdds * coupons,
+      stakeSum: avgStake ? avgStake * coupons : stake,
+      yield: importedYield === undefined || importedYield === null || importedYield === ''
+        ? (stake > 0 ? (profit / stake) * 100 : 0)
+        : Number(importedYield) || 0,
+      avgOdds,
+      avgStake: avgStake || (coupons ? stake / coupons : 0),
+      imported: true
+    }
+  }
+  const parseImportedOddsRangeStatsRowsV1581 = (source = {}) => {
+    let raw = source?.imported_odds_range_stats || source?.imported_odds_stats || source?.odds_range_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedOddsRangeRowV1581).filter(Boolean)
+  }
+  const profileOddsBucketsV1581 = ['1.01 - 1.50', '1.51 - 2.00', '2.01 - 3.00', '3.01 - 5.00', '5.01 - 8.00', '8.01 - 9.99', '10.00+']
+  const importedOddsStatsRowsV1581 = parseImportedOddsRangeStatsRowsV1581(user)
+  const importedStatsCutoffOddsV1581 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffOddsV1581 = Number.isFinite(importedStatsCutoffOddsV1581.getTime()) && importedStatsCutoffOddsV1581.getTime() > 0
+  const oddsLiveTipsV1581 = importedOddsStatsRowsV1581.length && hasValidImportedCutoffOddsV1581
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffOddsV1581.getTime()
+      })
+    : activeStatsTips
   const normalizeImportedHourRowV1580 = (row = {}) => {
     const rawLabel = row.label || row.hour || row.hours || row.range || row.period || ''
     const label = String(rawLabel || '').trim()
@@ -20663,6 +20766,61 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     return rows
   }
+  const normalizeImportedSportRowV1582 = (row = {}) => {
+    const rawLabel = row.label || row.sport || row.discipline || row.name || ''
+    const label = String(rawLabel || '').trim()
+    if (!label) return null
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.settledStake ?? row.settled_stake ?? row.invested ?? row.amount ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? row.won ?? row.win ?? 0) || 0
+    const importedYield = row.yield ?? row.roi
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: 0,
+      stakeSum: stake,
+      yield: importedYield === undefined || importedYield === null || importedYield === ''
+        ? (stake > 0 ? (profit / stake) * 100 : 0)
+        : Number(importedYield) || 0,
+      avgOdds: 0,
+      avgStake: coupons ? stake / coupons : 0,
+      imported: true
+    }
+  }
+  const parseImportedSportStatsRowsV1582 = (source = {}) => {
+    let raw = source?.imported_sport_stats || source?.imported_sports_stats || source?.sport_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedSportRowV1582).filter(Boolean)
+  }
+  const importedSportStatsRowsV1582 = parseImportedSportStatsRowsV1582(user)
+  const importedStatsCutoffSportV1582 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffSportV1582 = Number.isFinite(importedStatsCutoffSportV1582.getTime()) && importedStatsCutoffSportV1582.getTime() > 0
+  const sportLiveTipsV1582 = importedSportStatsRowsV1582.length && hasValidImportedCutoffSportV1582
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffSportV1582.getTime()
+      })
+    : activeStatsTips
+  const liveSportStatsRows = mergeOrderedStatsRowsV1580(
+    importedSportStatsRowsV1582,
+    buildLiveStatRows(sportLiveTipsV1582, getProfileTipSport),
+    []
+  )
+
+  const liveOddsStatsRows = mergeOrderedStatsRowsV1580(
+    importedOddsStatsRowsV1581,
+    buildLiveStatRows(oddsLiveTipsV1581, getProfileTipOddsBucket, profileOddsBucketsV1581),
+    profileOddsBucketsV1581
+  )
+
   const profileHourBucketsV1580 = ['00:00 - 07:59', '08:00 - 11:59', '12:00 - 16:59', '17:00 - 19:59', '20:00 - 23:59']
   const importedHourStatsRowsV1580 = parseImportedHourStatsRowsV1580(user)
   const importedStatsCutoffHourV1580 = new Date(user?.stats_imported_at || 0)
