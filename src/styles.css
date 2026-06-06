@@ -70763,28 +70763,57 @@ html.betai-fhd-monitor80-v1323 body #root{
 
 
 /* =====================================================
-   WERSJA 1591 — TABLET 10" AUTO 50% VIEW, BEZ RUSZANIA DESKTOPU
-   Działa tylko na urządzeniach dotykowych/tabletach. Nie zmienia 27" 2K,
-   TV 2K, laptopa 1680x1050 ani telefonu.
+   WERSJA 1592 — TABLET 10" AUTO 50% + FULL WIDTH
+   Zostawia ręczny efekt 50%, ale strona dostaje 2x większą szerokość
+   roboczą i rozciąga się do boków tabletu. Desktop/laptop bez dotyku bez zmian.
    ===================================================== */
-html.betai-tablet-auto50,
-html.betai-tablet-auto50 body{
-  width:2000px!important;
-  min-width:2000px!important;
+html.betai-tablet-wide50,
+html.betai-tablet-wide50 body{
+  width:var(--betai-tablet-layout-width, 2000px)!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
   max-width:none!important;
-  overflow-x:auto!important;
+  overflow-x:hidden!important;
   overflow-y:auto!important;
 }
-html.betai-tablet-auto50 #root{
-  width:2000px!important;
-  min-width:2000px!important;
+html.betai-tablet-wide50 #root{
+  width:100%!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
   max-width:none!important;
   overflow:visible!important;
 }
-html.betai-tablet-auto50 .app-shell,
-html.betai-tablet-auto50 .auth1567-shell,
-html.betai-tablet-auto50 .auth-shell,
-html.betai-tablet-auto50 .app,
-html.betai-tablet-auto50 .layout{
+html.betai-tablet-wide50 .app-shell{
+  width:100%!important;
+  min-width:var(--betai-tablet-layout-width, 2000px)!important;
+  max-width:none!important;
+  grid-template-columns:250px minmax(0, 1fr) 360px!important;
+  gap:24px!important;
+}
+html.betai-tablet-wide50 .main{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+html.betai-tablet-wide50 .feed-section,
+html.betai-tablet-wide50 .dashboard-feed,
+html.betai-tablet-wide50 .page-wrap,
+html.betai-tablet-wide50 .page-content,
+html.betai-tablet-wide50 .content,
+html.betai-tablet-wide50 .profile-page,
+html.betai-tablet-wide50 .ranking-page,
+html.betai-tablet-wide50 .wallet-page{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+html.betai-tablet-wide50 .add-page{
+  width:100%!important;
+  max-width:1100px!important;
+}
+html.betai-tablet-wide50 .tip-card,
+html.betai-tablet-wide50 .panel,
+html.betai-tablet-wide50 .tip-form{
+  max-width:100%!important;
+}
+html.betai-tablet-wide50 table{
   max-width:none!important;
 }
