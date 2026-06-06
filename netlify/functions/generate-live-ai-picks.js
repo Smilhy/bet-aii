@@ -295,96 +295,6 @@ async function buildRow(ev) {
   return { ...base, analysis, ai_analysis: analysis }
 }
 
-
-function aiBetDate(value) {
-  const d = new Date(value || Date.now())
-  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
-  return new Date().toISOString().slice(0, 10)
-}
-
-function aiBetTime(value) {
-  const d = new Date(value || Date.now())
-  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(11, 16)
-  const m = String(value || '').match(/(\d{1,2}):(\d{2})/)
-  return m ? `${String(m[1]).padStart(2, '0')}:${m[2]}` : '12:00'
-}
-
-function toAiBetRow(row = {}) {
-  const eventTime = row.event_time || row.match_time || row.kickoff_time || row.created_at || nowIso()
-  const home = safeName(row.team_home || row.home_team || row.home, 'Home')
-  const away = safeName(row.team_away || row.away_team || row.away, 'Away')
-  const market = safeName(row.market || row.bet_type, 'Typ AI')
-  const prediction = safeName(row.selection || row.pick || row.prediction, 'Predykcja AI')
-  return {
-    external_fixture_id: String(row.external_fixture_id || row.ai_external_key || `${home}-${away}-${eventTime}-${market}-${prediction}`),
-    match_date: aiBetDate(eventTime),
-    match_time: aiBetTime(eventTime),
-    home_team: home,
-    away_team: away,
-    country: safeName(row.country, 'API-Sports'),
-    league: safeName(row.league || row.league_name, 'Liga'),
-    market,
-    prediction,
-    odds: round(row.odds || 1.5, 2),
-    probability: round(row.probability || row.model_probability || row.ai_confidence || row.ai_score || 70, 2),
-    ev: round(row.value_score || row.ev || 0, 2),
-    ai_score: round(row.ai_score || row.ai_confidence || row.probability || 70, 2),
-    status: 'pending',
-    result: 'pending',
-    profit: 0,
-    source: 'live_ai_engine',
-    updated_at: nowIso()
-  }
-}
-
-async function saveRowsToAiBets(supabase, rows = []) {
-  let saved = 0
-  const errors = []
-  for (const raw of rows) {
-    const row = toAiBetRow(raw)
-    try {
-      const { data: existing, error: findError } = await supabase
-        .from('ai_bets')
-        .select('id,status,result')
-        .eq('external_fixture_id', row.external_fixture_id)
-        .eq('market', row.market)
-        .eq('prediction', row.prediction)
-        .limit(1)
-      if (findError) throw findError
-      const existingId = existing?.[0]?.id
-      if (existingId) {
-        const alreadySettled = ['won', 'lost', 'void', 'push', 'win', 'loss'].includes(String(existing?.[0]?.status || existing?.[0]?.result || '').toLowerCase())
-        const updateRow = alreadySettled
-          ? Object.fromEntries(Object.entries(row).filter(([key]) => !['status', 'result', 'profit'].includes(key)))
-          : row
-        const { error } = await supabase.from('ai_bets').update(updateRow).eq('id', existingId)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('ai_bets').insert({ ...row, created_at: nowIso() })
-        if (error) throw error
-      }
-      saved += 1
-    } catch (error) {
-      errors.push(`${row.home_team} vs ${row.away_team}: ${error?.message || error}`)
-    }
-  }
-  return { saved, errors }
-}
-
-async function logAiPickRun(supabase, payload = {}) {
-  try {
-    await supabase.from('ai_pick_runs').insert({
-      source: payload.source || 'generate-live-ai-picks-ai-bets-v1576',
-      picks_created: Number(payload.picks_created || 0),
-      status: payload.status || 'success',
-      error_message: payload.error_message ? String(payload.error_message).slice(0, 1000) : null,
-      finished_at: nowIso()
-    })
-  } catch (error) {
-    console.warn('ai_pick_runs log skipped:', error?.message || error)
-  }
-}
-
 exports.handler = async function (event) {
   try {
     if (!SUPABASE_URL || !SERVICE_KEY) return json(500, { error: 'Missing Supabase env: SUPABASE_URL/VITE_SUPABASE_URL albo SUPABASE_SERVICE_ROLE_KEY.' })
@@ -422,16 +332,8 @@ exports.handler = async function (event) {
     }
     const strongestRows = rows.sort((a, b) => Number(b.ai_score || 0) - Number(a.ai_score || 0)).slice(0, maxPicks)
     if (!strongestRows.length) {
-      await logAiPickRun(supabase, {
-        source: 'generate-live-ai-picks-ai-bets-v1576',
-        picks_created: 0,
-        status: 'success',
-        error_message: `Brak kandydatów. Mecze sprawdzone: ${events.length}. Błędy: ${errors.slice(0, 5).join(' | ')}`
-      })
-      return json(200, { inserted: 0, ai_bets_inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
+      return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
     }
-
-    const aiSave = await saveRowsToAiBets(supabase, strongestRows)
 
     let saved = 0
     try {
@@ -460,13 +362,8 @@ exports.handler = async function (event) {
         }
       }
     }
-    await logAiPickRun(supabase, {
-      source: 'generate-live-ai-picks-ai-bets-v1576',
-      picks_created: aiSave.saved,
-      status: aiSave.saved > 0 ? 'success' : 'error',
-      error_message: aiSave.errors.length ? aiSave.errors.slice(0, 6).join(' | ') : null
-    })
-    return json(200, { inserted: saved, ai_bets_inserted: aiSave.saved, ai_bets_errors: aiSave.errors.slice(0, 10), matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: 'generate-live-ai-picks-ai-bets-v1576', message: 'Skan dzienny zapisuje TOP typy także do public.ai_bets, aby zakładka Typy AI widziała je po odświeżeniu.', warnings: errors.slice(0, 12) })
+    await supabase.from('ai_pick_runs').insert({ source: '1086-daily-stable-scan', picks_created: saved, status: 'success', finished_at: nowIso() }).catch?.(() => {})
+    return json(200, { inserted: saved, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, model: '1086-daily-stable-scan', message: 'Skan dzienny zapisuje TOP typy bez usuwania wcześniejszych rekordów.', warnings: errors.slice(0, 12) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'MultiSport AI Engine error' })

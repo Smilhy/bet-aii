@@ -231,21 +231,7 @@ exports.handler = async function (event) {
         errors.push({ id: tip.id, match: `${tipHome(tip)} vs ${tipAway(tip)}`, date: tip.match_date, error: e.message || String(e) })
       }
     }
-    // WERSJA 1575: poprawka błędu Netlify/Supabase JS.
-    // Supabase query builder nie obsługuje .catch() bezpośrednio po insert().
-    // Wcześniej funkcja zwracała 500: "supabase.from(...).insert(...).catch is not a function".
-    try {
-      const { error: runLogError } = await supabase.from('ai_pick_runs').insert({
-        source: 'settle-ai-bets-v1575',
-        picks_created: settled,
-        status: errors.length ? 'partial' : 'success',
-        finished_at: new Date().toISOString(),
-        message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}`
-      })
-      if (runLogError) console.warn('ai_pick_runs log skipped:', runLogError.message || runLogError)
-    } catch (runLogCatchError) {
-      console.warn('ai_pick_runs log failed:', runLogCatchError.message || runLogCatchError)
-    }
+    await supabase.from('ai_pick_runs').insert({ source: 'settle-ai-bets-v1566', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}` }).catch(() => {})
     return json(200, { table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)

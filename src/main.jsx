@@ -15275,25 +15275,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
 
   const aiTabCounters = useMemo(() => {
-    // V1577: licznik zakładek „Typy AI na dziś/jutro” używa dokładnie tych
-    // samych filtrów co lista widocznych typów. Dzięki temu nie ma sytuacji:
-    // badge pokazuje 1, a lista przy progu 70% jest pusta.
-    const matchesCurrentSport = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
-    const matchesActiveTipFilters = (card, dayMode) => {
-      if (!card) return false
-      if (!matchesCurrentSport(card)) return false
-      if (!isBetAiSelectedDayCardV1081(card, dayMode)) return false
-      if (!isBetAiPrematchAvailableV1091(card)) return false
-      if (matchMode !== 'all' && (card.kickoffState || 'prematch') !== matchMode) return false
-      if (Number(card.odds || 0) < Number(minOdds) || Number(card.odds || 0) > Number(maxOdds)) return false
-      if (Number(card.probability || card.aiScore || 0) < Number(minProb)) return false
-      if (!matchesAiSearchV1455(card, search)) return false
-      return true
+    const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
+    // V1501: licznik zakładki „Typy AI na dziś/jutro” ma oznaczać tylko typy,
+    // które faktycznie są jeszcze do zagrania. Rozliczone albo rozpoczęte typy zostają
+    // w „Mecze Result” i „Statystyki”, ale nie podbijają licznika aktywnych typów.
+    const isPlayablePrematch = card => {
+      if (!card || isBetAiSettledStatusV1091(card)) return false
+      const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
+      return state === 'prematch'
     }
-    const today = allCards.filter(card => matchesActiveTipFilters(card, 'today')).length
-    const tomorrow = allCards.filter(card => matchesActiveTipFilters(card, 'tomorrow')).length
+    const today = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'today') && isPlayablePrematch(card)).length
+    const tomorrow = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'tomorrow') && isPlayablePrematch(card)).length
     const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
-    const leagues = new Set(allCards.filter(matchesCurrentSport).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
+    const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
     return {
       today,
       tomorrow,
@@ -15302,7 +15296,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       leagues,
       pending,
     }
-  }, [allCards, resultCards, activeSport, matchMode, minOdds, maxOdds, minProb, search])
+  }, [allCards, resultCards, activeSport])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -15884,38 +15878,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       }
 
       setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
-
-      // WERSJA 1576 — przycisk Odśwież dziś uruchamia też backendowy generator,
-      // który zapisuje typy bezpośrednio do public.ai_bets i loguje próbę w ai_pick_runs.
-      // Wcześniej UI potrafił tylko pobrać get-ai-bets/get-sports-events, więc w bazie nie pojawiał się nowy run.
-      try {
-        const generatorParams = new URLSearchParams()
-        generatorParams.set('sport', 'football')
-        generatorParams.set('days', mode === 'tomorrow' ? '2' : '1')
-        generatorParams.set('limit', String(Math.max(Number(DAILY_AI_PICK_LIMIT_V1086 || 3), 6)))
-        const generatorResponse = await fetch(`/.netlify/functions/generate-live-ai-picks?${generatorParams.toString()}`, { cache: 'no-store' })
-        const generatorJson = await generatorResponse.json().catch(() => ({}))
-        if (generatorResponse.ok) {
-          const savedAfterGenerator = await loadSavedAiTipsFromDb(mode)
-          if (savedAfterGenerator.length) {
-            setLiveCards([])
-            setSelectedId(savedAfterGenerator[0]?.id || '')
-            setStatusText(`Backend AI zapisał ${Number(generatorJson?.ai_bets_inserted || generatorJson?.inserted || savedAfterGenerator.length)} typów. Wczytano ${savedAfterGenerator.length} typów AI na ${dayLabel}.`)
-            await loadSavedAiJournalFromDbV1094()
-            markBetAiDailyScanDoneV1086(mode, savedAfterGenerator.length)
-            shouldSetScanCooldownV1482 = true
-            return
-          }
-          if (Number(generatorJson?.ai_bets_inserted || 0) === 0) {
-            setStatusText(`Backend AI wykonał skan, ale nie zapisał typów dla kryteriów dnia. Sprawdzam jeszcze lokalny skan awaryjny...`)
-          }
-        } else {
-          console.warn('generate-live-ai-picks failed:', generatorJson?.error || generatorResponse.status)
-        }
-      } catch (generatorError) {
-        console.warn('generate-live-ai-picks skipped:', generatorError?.message || generatorError)
-      }
-
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
@@ -25193,11 +25155,16 @@ function App() {
 
     setLoading(true)
 
-    const [{ data: tipsData, error: tipsError }, { data: unlockedData, error: unlockedError }] = await Promise.all([
+    const publicTipsPromise = fetch('/.netlify/functions/get-public-tips?limit=300')
+      .then(response => response.ok ? response.json() : { tips: [] })
+      .catch(() => ({ tips: [] }))
+
+    const [{ data: tipsData, error: tipsError }, publicTipsPayload, { data: unlockedData, error: unlockedError }] = await Promise.all([
       supabase
         .from('tips').select('*')
         .order('created_at', { ascending: false })
-        .limit(80),
+        .limit(120),
+      publicTipsPromise,
       userId
         ? supabase.from('unlocked_tips').select('tip_id').eq('user_id', userId)
         : Promise.resolve({ data: [], error: null })
@@ -25215,7 +25182,18 @@ function App() {
     const unlockedSet = new Set((unlockedData || []).map(row => row.tip_id))
     setUnlockedTips(unlockedSet)
 
-    let sourceTips = (tipsData || []).map(normalizeTipRow)
+    const publicTipsData = Array.isArray(publicTipsPayload?.tips) ? publicTipsPayload.tips : []
+    let sourceTips = [...publicTipsData, ...(tipsData || [])].map(normalizeTipRow)
+    if (sourceTips.length) {
+      const byId = new Map()
+      sourceTips.forEach(tip => {
+        const key = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.match || tip.team_home || ''}-${tip.bet_type || tip.prediction || tip.pick || ''}`)
+        if (!key) return
+        if (!byId.has(key)) byId.set(key, tip)
+      })
+      sourceTips = Array.from(byId.values())
+        .sort((a, b) => new Date(b.created_at || b.match_time || 0) - new Date(a.created_at || a.match_time || 0))
+    }
 
     // v1263: lokalny fallback dla świeżo dodanych typów ręcznych.
     // Jeżeli Supabase/restore/cache chwilowo nie odda nowego rekordu do głównego feedu,
@@ -25448,7 +25426,7 @@ function App() {
         const incomingTip = hydrateIncomingTip(payload?.new || {})
         if (!incomingTip) return
 
-        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 50))
+        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 300))
         showLiveTipPopup(incomingTip)
         scheduleFullRefresh()
       })

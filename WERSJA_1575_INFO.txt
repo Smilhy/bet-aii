@@ -1,4 +1,6 @@
-WERSJA 1575
-- Naprawiono Netlify Function netlify/functions/settle-live-ai-picks.js.
-- Usunięto błędne .catch() po supabase.from(...).insert(...), które powodowało HTTP 500.
-- Nie zmieniano logiki typów AI ani struktury bazy.
+WERSJA 1575 - NAPRAWA WIDOCZNOSCI TYPOW NA INNYCH KONTACH
+- Dodano netlify/functions/get-public-tips.js pobierający typy z tabeli tips przez SUPABASE_SERVICE_ROLE_KEY.
+- Dashboard łączy teraz typy z endpointu publicznego i z bezpośredniego Supabase select.
+- Naprawia przypadek: autor widzi własne typy, ale inne konto widzi pusty dashboard przez RLS/cache.
+- Zwiększono limit realtime z 50 do 300 wpisów.
+- Wymagane w Netlify ENV: SUPABASE_SERVICE_ROLE_KEY oraz SUPABASE_URL lub VITE_SUPABASE_URL.
