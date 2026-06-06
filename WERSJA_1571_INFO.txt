@@ -1,5 +1,6 @@
-WERSJA 1571 — podmiana prezentacji video na wersję 720p płynną
-- Zmieniono public/media/betai-prezentacja-platformy.mp4 na pełną prezentację 720p.
-- Film ma stałe 30 FPS, rozdzielczość 1280x720, H.264/AAC i faststart pod odtwarzanie w przeglądarce.
-- Cel: zmniejszenie ścinek/buforowania na ekranie logowania przy kliknięciu "Obejrzyj prezentację".
-- Oryginalny głos i cała prezentacja zakładka po zakładce zostają zachowane.
+WERSJA 1571 — NAPRAWA ODBIORU NAGRÓD SPOŁECZNOŚCI
+
+- Dodano SQL: SUPABASE_RUN_ONCE_WERSJA_1571_COMMUNITY_REWARD_CLAIM_FIX.sql
+- Naprawia przyciski „Odbierz +1 coin” w Społeczność -> Nagrody.
+- Poprzednia funkcja SQL obsługiwała daily_chat/daily_post/daily_active, ale nie obsługiwała first_post, first_comment, first_chat, social_value.
+- Bunny Stream zostaje bez zmian.
