@@ -478,7 +478,7 @@ function buildAuthorStatsFromTips(tips = []) {
     current.totalTips += 1
     if (status === 'won') current.wonTips += 1
     else if (status === 'lost') current.lostTips += 1
-    else if (status !== 'void') current.pendingTips += 1
+    else current.pendingTips += 1
     if (status === 'won' || status === 'lost') current.totalStaked += stake
     current.profit += readTipProfitValue(tip)
     if (odds > 0) {
@@ -491,55 +491,41 @@ function buildAuthorStatsFromTips(tips = []) {
   return statsMap
 }
 
-const BETAI_SMILHYTV_PROFILE_ID = '1a3f01d7-5675-4abf-b851-6ecec78262f5'
-const BETAI_SMILHYTV_IMPORTED_BASELINE_STATS = {
-  yield: 37,
-  totalTips: 765,
-  wonTips: 447,
-  lostTips: 318,
-  pendingTips: 0,
-  totalStaked: 222740,
-  profit: 82609.29,
-  avgOdds: 1.85,
-  highestOdds: 48,
-}
-
-function isSmilhytvImportedIdentity(profile) {
-  if (!profile) return false
-  const id = String(profile.id || profile.user_id || profile.author_id || profile.tipster_id || '').trim().toLowerCase()
-  const email = normalizeEmail(profile.email || profile.author_email || profile.user_email || '')
-  const username = normalizeEmail(profile.username || profile.author_name || profile.name || profile.public_slug || '')
-  const local = email.split('@')[0]
-  return id === BETAI_SMILHYTV_PROFILE_ID ||
-    email === 'smilhytv@gmail.com' ||
-    username === 'smilhytv' ||
-    local === 'smilhytv'
+function hasExplicitImportedStatsFields(profile = {}) {
+  if (!profile || typeof profile !== 'object') return false
+  return [
+    'imported_total_tips',
+    'imported_won_tips',
+    'imported_lost_tips',
+    'imported_pending_tips',
+    'imported_profit',
+    'imported_yield',
+    'imported_total_staked',
+    'imported_avg_odds',
+    'imported_highest_odds',
+    'stats_imported_at',
+  ].some(key => Object.prototype.hasOwnProperty.call(profile, key))
 }
 
 function getImportedProfileStats(profile) {
   if (!profile) return null
 
+  const explicitImported = hasExplicitImportedStatsFields(profile)
   const importedTotalTips = Number(profile.imported_total_tips ?? 0) || 0
-  const fallbackTotalTips = Number(profile.total_tips ?? profile.tips_count ?? 0) || 0
-  const totalTips = importedTotalTips || fallbackTotalTips
-  const wonTips = Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0
-  const lostTips = Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0
-  const pendingTips = Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0
-  const totalStaked = Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0
-  const profit = Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
-  const avgOdds = Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0
-  const highestOdds = Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0
-  const yieldValue = Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0
+  const totalTips = explicitImported
+    ? importedTotalTips
+    : (importedTotalTips || (Number(profile.total_tips ?? profile.tips_count ?? 0) || 0))
+  const wonTips = explicitImported ? (Number(profile.imported_won_tips ?? 0) || 0) : (Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0)
+  const lostTips = explicitImported ? (Number(profile.imported_lost_tips ?? 0) || 0) : (Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0)
+  const pendingTips = explicitImported ? (Number(profile.imported_pending_tips ?? 0) || 0) : (Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0)
+  const totalStaked = explicitImported ? (Number(profile.imported_total_staked ?? 0) || 0) : (Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0)
+  const profit = explicitImported ? (Number(profile.imported_profit ?? 0) || 0) : (Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0)
+  const avgOdds = explicitImported ? (Number(profile.imported_avg_odds ?? 0) || 0) : (Number(profile.imported_avg_odds ?? profile.avg_odds ?? 0) || 0)
+  const highestOdds = explicitImported ? (Number(profile.imported_highest_odds ?? 0) || 0) : (Number(profile.imported_highest_odds ?? profile.highest_odds ?? 0) || 0)
+  const yieldValue = explicitImported ? (Number(profile.imported_yield ?? 0) || 0) : (Number(profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0)
 
-  // v1603: smilhytv ma ręcznie wgraną historię jako zablokowany stan startowy.
-  // Jeśli po rozliczeniu/realtime profil lub tip przyjdzie bez imported_* albo tylko z realnymi typami,
-  // NIE wolno resetować widoku do 2/6/8 typów. Dla tego profilu minimalną bazą jest import 765.
-  if (isSmilhytvImportedIdentity(profile) && totalTips < BETAI_SMILHYTV_IMPORTED_BASELINE_STATS.totalTips) {
-    return { ...BETAI_SMILHYTV_IMPORTED_BASELINE_STATS }
-  }
-
-  // Po resecie imported_* istnieje w profilu, ale wszystko ma wartość 0.
-  // To NIE może być traktowane jako źródło prawdy, bo blokuje świeże statystyki liczone z realnych typów.
+  // Po resecie imported_* = 0 oznacza brak importu. Nie wolno wtedy brać
+  // starych author_imported_stats z cache/typów jako fallbacku, bo odtwarza stare 766.
   const hasRealImportedStats =
     totalTips > 0 ||
     wonTips > 0 ||
@@ -583,40 +569,27 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
 
   if (!importedStats || Number(importedStats.totalTips || 0) <= 0) return dynamicFinal
 
-  // v1601: import historyczny jest stanem STARTOWYM profilu.
-  // Nowe/realne typy z platformy mają się DOPISYWAĆ do importu, nigdy go nie zastępować.
-  const importedTotalTips = Number(importedStats.totalTips || 0) || 0
-  const importedWonTips = Number(importedStats.wonTips || 0) || 0
-  const importedLostTips = Number(importedStats.lostTips || 0) || 0
-  const importedPendingTips = Number(importedStats.pendingTips || 0) || 0
-  const importedTotalStaked = Number(importedStats.totalStaked || 0) || 0
-  const importedProfit = Number(importedStats.profit || 0) || 0
-  const importedAvgOdds = Number(importedStats.avgOdds || 0) || 0
-  const importedHighestOdds = Number(importedStats.highestOdds || 0) || 0
+  const importedTotalStaked = Number(importedStats.totalStaked || 0)
+  const importedProfit = Number(importedStats.profit || 0)
+  const importedLooksStaleAfterReset =
+    Number(importedStats.totalTips || 0) > 0 &&
+    importedTotalStaked <= 0 &&
+    importedProfit === 0 &&
+    Number(importedStats.avgOdds || 0) <= 0 &&
+    (dynamicFinal.totalStaked > 0 || dynamicFinal.avgOdds > 0 || dynamicFinal.profit !== 0)
 
-  const totalTips = importedTotalTips + dynamicFinal.totalTips
-  const wonTips = importedWonTips + dynamicFinal.wonTips
-  const lostTips = importedLostTips + dynamicFinal.lostTips
-  const pendingTips = importedPendingTips + dynamicFinal.pendingTips
-  const totalStaked = importedTotalStaked + dynamicFinal.totalStaked
-  const profit = importedProfit + dynamicFinal.profit
-  const avgOdds = totalTips > 0
-    ? (((importedAvgOdds * importedTotalTips) + (dynamicFinal.avgOdds * dynamicFinal.totalTips)) / totalTips)
-    : 0
-  const highestOdds = Math.max(importedHighestOdds, dynamicFinal.highestOdds)
-  const yieldValue = totalStaked > 0 ? (profit / totalStaked) * 100 : Number(importedStats.yield || 0) || dynamicFinal.yield
-
-  return {
-    yield: yieldValue,
-    totalTips,
-    wonTips,
-    lostTips,
-    pendingTips,
-    totalStaked,
-    profit,
-    avgOdds,
-    highestOdds,
+  if (importedLooksStaleAfterReset) {
+    return {
+      ...importedStats,
+      ...dynamicFinal,
+      totalTips: Math.max(Number(importedStats.totalTips || 0), Number(dynamicFinal.totalTips || 0)),
+      wonTips: Math.max(Number(importedStats.wonTips || 0), Number(dynamicFinal.wonTips || 0)),
+      lostTips: Math.max(Number(importedStats.lostTips || 0), Number(dynamicFinal.lostTips || 0)),
+      pendingTips: Math.max(Number(importedStats.pendingTips || 0), Number(dynamicFinal.pendingTips || 0)),
+    }
   }
+
+  return importedStats
 }
 
 
@@ -701,6 +674,35 @@ function readTipDebug() {
 
 
 const BETAI_RECENT_SAVED_TIPS_KEY = 'betai_recent_saved_tips_v1263'
+
+// WERSJA 1606: po resecie statystyk/typów nie wolno trzymać starych kuponów ani
+// author_imported_stats z localStorage, bo profil może pokazywać 766 typów mimo że
+// Supabase ma już imported_* = 0 i tips_left = 0. Czyścimy tylko techniczny cache typów,
+// nie ruszamy tokenów, logowania, języka, Stripe ani innych ustawień użytkownika.
+function runBetAiStatsResetCachePurgeV1606() {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return
+    const marker = 'betai_stats_reset_cache_purge_v1606'
+    if (window.localStorage.getItem(marker) === '1') return
+    const keysToRemove = []
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i) || ''
+      const lower = key.toLowerCase()
+      if (
+        key === BETAI_RECENT_SAVED_TIPS_KEY ||
+        lower.includes('recent_saved_tips') ||
+        lower.includes('author_imported_stats') ||
+        lower.includes('visible_stats') ||
+        lower.includes('tip_stats_cache') ||
+        lower.includes('public_tips_cache') ||
+        lower.includes('profile_stats_cache')
+      ) keysToRemove.push(key)
+    }
+    keysToRemove.forEach(key => window.localStorage.removeItem(key))
+    window.localStorage.setItem(marker, '1')
+  } catch (_) {}
+}
+runBetAiStatsResetCachePurgeV1606()
 
 function readRecentSavedTips(userId = '') {
   try {
@@ -793,7 +795,7 @@ function buildRankingFromTips(tips = []) {
 
     if (settlementStatus === 'won') current.wins += 1
     else if (settlementStatus === 'lost') current.losses += 1
-    else if (settlementStatus !== 'void') current.pending += 1
+    else current.pending += 1
 
     if (settlementStatus === 'won' || settlementStatus === 'lost') {
       current.total_staked += stake
@@ -3551,11 +3553,14 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     })
     return [...map.values()]
   })()
-  const firstVisibleStats = combinedProfileTips.find(t => t?.author_visible_stats)?.author_visible_stats || null
+  const profileHasExplicitImportedStats = hasExplicitImportedStatsFields(profile)
+  const firstVisibleStats = profileHasExplicitImportedStats ? null : (combinedProfileTips.find(t => t?.author_visible_stats)?.author_visible_stats || null)
   const importedProfileStats = getImportedProfileStats(profile)
-  const importedTipStats = (combinedProfileTips || []).map(getImportedProfileStats).find(Boolean) || null
+  const importedTipStats = profileHasExplicitImportedStats ? null : ((combinedProfileTips || []).map(getImportedProfileStats).find(Boolean) || null)
   const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(combinedProfileTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
-  const mergedVisibleStats = importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {}
+  const mergedVisibleStats = profileHasExplicitImportedStats
+    ? (importedProfileStats || dynamicProfileStats || {})
+    : (importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {})
   const publicOverride = getPublicProfileOverride({
     ...(profile || {}),
     username,
@@ -3584,18 +3589,18 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     preferred_sport: publicOverride.preferred_sport || profile?.preferred_sport || firstProfileTip?.preferred_sport || 'Nie ustawiono',
     plan: publicOverride.plan || profile?.plan || profile?.subscription_status || (normalizeEmail(username) === 'smilhytv' ? 'admin' : 'premium'),
     subscription_status: publicOverride.subscription_status || profile?.subscription_status || profile?.plan || 'premium',
-    imported_yield: Number(profile?.imported_yield ?? mergedVisibleStats.yield ?? 0) || 0,
-    imported_total_tips: Number(profile?.imported_total_tips ?? mergedVisibleStats.totalTips ?? tipsterTips.length ?? 0) || 0,
-    imported_won_tips: Number(profile?.imported_won_tips ?? mergedVisibleStats.wonTips ?? 0) || 0,
-    imported_lost_tips: Number(profile?.imported_lost_tips ?? mergedVisibleStats.lostTips ?? 0) || 0,
-    imported_pending_tips: Number(profile?.imported_pending_tips ?? mergedVisibleStats.pendingTips ?? Math.max(0, (Number(mergedVisibleStats.totalTips || tipsterTips.length || 0) - Number(mergedVisibleStats.wonTips || 0) - Number(mergedVisibleStats.lostTips || 0))) ) || 0,
-    imported_total_staked: Number(profile?.imported_total_staked ?? mergedVisibleStats.totalStaked ?? 0) || 0,
-    imported_profit: Number(profile?.imported_profit ?? mergedVisibleStats.profit ?? 0) || 0,
-    imported_avg_odds: Number(profile?.imported_avg_odds ?? mergedVisibleStats.avgOdds ?? 0) || 0,
-    imported_highest_odds: Number(profile?.imported_highest_odds ?? mergedVisibleStats.highestOdds ?? 0) || 0,
+    imported_yield: profileHasExplicitImportedStats ? (Number(profile?.imported_yield ?? 0) || 0) : (Number(profile?.imported_yield ?? mergedVisibleStats.yield ?? 0) || 0),
+    imported_total_tips: profileHasExplicitImportedStats ? (Number(profile?.imported_total_tips ?? 0) || 0) : (Number(profile?.imported_total_tips ?? mergedVisibleStats.totalTips ?? tipsterTips.length ?? 0) || 0),
+    imported_won_tips: profileHasExplicitImportedStats ? (Number(profile?.imported_won_tips ?? 0) || 0) : (Number(profile?.imported_won_tips ?? mergedVisibleStats.wonTips ?? 0) || 0),
+    imported_lost_tips: profileHasExplicitImportedStats ? (Number(profile?.imported_lost_tips ?? 0) || 0) : (Number(profile?.imported_lost_tips ?? mergedVisibleStats.lostTips ?? 0) || 0),
+    imported_pending_tips: profileHasExplicitImportedStats ? (Number(profile?.imported_pending_tips ?? 0) || 0) : (Number(profile?.imported_pending_tips ?? mergedVisibleStats.pendingTips ?? Math.max(0, (Number(mergedVisibleStats.totalTips || tipsterTips.length || 0) - Number(mergedVisibleStats.wonTips || 0) - Number(mergedVisibleStats.lostTips || 0))) ) || 0),
+    imported_total_staked: profileHasExplicitImportedStats ? (Number(profile?.imported_total_staked ?? 0) || 0) : (Number(profile?.imported_total_staked ?? mergedVisibleStats.totalStaked ?? 0) || 0),
+    imported_profit: profileHasExplicitImportedStats ? (Number(profile?.imported_profit ?? 0) || 0) : (Number(profile?.imported_profit ?? mergedVisibleStats.profit ?? 0) || 0),
+    imported_avg_odds: profileHasExplicitImportedStats ? (Number(profile?.imported_avg_odds ?? 0) || 0) : (Number(profile?.imported_avg_odds ?? mergedVisibleStats.avgOdds ?? 0) || 0),
+    imported_highest_odds: profileHasExplicitImportedStats ? (Number(profile?.imported_highest_odds ?? 0) || 0) : (Number(profile?.imported_highest_odds ?? mergedVisibleStats.highestOdds ?? 0) || 0),
     imported_tips_amount: Number(profile?.imported_tips_amount || 0) || 0,
     imported_tips_currency: profile?.imported_tips_currency || 'zł',
-    stats_imported_at: profile?.stats_imported_at || new Date(Date.now() + 3650 * 86400000).toISOString(),
+    stats_imported_at: profile?.stats_imported_at || null,
   }
   try { cacheBetaiPublicProfileAvatar(targetProfileUser) } catch (_) {}
 
@@ -20201,26 +20206,20 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       (usernameCanMatch && authorName === usernameKey)
   }).map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
   const profileStatsSource = user || {}
-  const importedStatsFromUser = getImportedProfileStats(profileStatsSource)
-  const importedStatsFromTips = (userTips || [])
-    .map(tip => tip.author_imported_stats || getImportedProfileStats(tip))
-    .find(Boolean) || null
-  const importedStatsBaselineV1602 = importedStatsFromUser || importedStatsFromTips || null
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
-  const hasImportedStats = Boolean(importedStatsBaselineV1602)
-  // v1602: importowane statystyki są stanem STARTOWYM profilu.
-  // Jeśli realtime/fetch chwilowo zwróci usera bez imported_*, bierzemy bazę z profilu autora
-  // zapisanej przy typach. Dzięki temu rozliczenie nie resetuje widoku do samych realnych typów.
-  const liveTipsForStats = userTips
+  const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
+  const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
+    ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
+    : userTips
 
-  const importedTotalTips = Number(importedStatsBaselineV1602?.totalTips ?? profileStatsSource?.imported_total_tips ?? 0) || 0
-  const importedWonTips = Number(importedStatsBaselineV1602?.wonTips ?? profileStatsSource?.imported_won_tips ?? 0) || 0
-  const importedLostTips = Number(importedStatsBaselineV1602?.lostTips ?? profileStatsSource?.imported_lost_tips ?? 0) || 0
-  const importedPendingTips = Number(importedStatsBaselineV1602?.pendingTips ?? profileStatsSource?.imported_pending_tips ?? 0) || 0
-  const importedTotalStaked = Number(importedStatsBaselineV1602?.totalStaked ?? profileStatsSource?.imported_total_staked ?? 0) || 0
-  const importedProfit = Number(importedStatsBaselineV1602?.profit ?? profileStatsSource?.imported_profit ?? 0) || 0
-  const importedAvgOdds = Number(importedStatsBaselineV1602?.avgOdds ?? profileStatsSource?.imported_avg_odds ?? 0) || 0
-  const importedHighestOdds = Number(importedStatsBaselineV1602?.highestOdds ?? profileStatsSource?.imported_highest_odds ?? 0) || 0
+  const importedTotalTips = Number(profileStatsSource?.imported_total_tips || 0) || 0
+  const importedWonTips = Number(profileStatsSource?.imported_won_tips || 0) || 0
+  const importedLostTips = Number(profileStatsSource?.imported_lost_tips || 0) || 0
+  const importedPendingTips = Number(profileStatsSource?.imported_pending_tips || 0) || 0
+  const importedTotalStaked = Number(profileStatsSource?.imported_total_staked || 0) || 0
+  const importedProfit = Number(profileStatsSource?.imported_profit || 0) || 0
+  const importedAvgOdds = Number(profileStatsSource?.imported_avg_odds || 0) || 0
+  const importedHighestOdds = Number(profileStatsSource?.imported_highest_odds || 0) || 0
   // CORE LOCK v986: Napiwki NIE są profitami ani liczbą typów.
   // imported_tips_amount było wcześniej używane jako licznik/statystyka typów, więc nie wolno go pokazywać jako napiwek.
   const realTipsSupportAmount = Number(
@@ -22509,25 +22508,14 @@ function AdminCouponApprovalView({ user, onToast }) {
     if (!isAdminUser(user)) return
     const clean = String(result || '').toLowerCase()
     try {
-      const stake = readTipStakeValue(row)
-      const odds = Number(row?.odds ?? row?.course ?? 0) || 0
-      const settledProfit = clean === 'won'
-        ? stake * Math.max(odds - 1, 0)
-        : clean === 'lost'
-          ? -stake
-          : 0
       const patch = {
         status: clean,
         result: clean,
-        result_status: clean,
-        settlement_status: clean,
-        profit: settledProfit,
         manual_settlement_status: 'approved',
         admin_approval_status: 'approved',
         admin_approved_result: clean,
         admin_approved_at: new Date().toISOString(),
         admin_approved_by: user?.id || null,
-        updated_at: new Date().toISOString(),
         settlement_source: 'manual_admin_approved'
       }
       await updateTipField(row.id, patch)
@@ -25548,7 +25536,7 @@ function App() {
 
     setLoading(true)
 
-    const publicTipsPromise = fetch('/.netlify/functions/get-public-tips?limit=300')
+    const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=300&t=${Date.now()}`, { cache: 'no-store' })
       .then(response => response.ok ? response.json() : { tips: [] })
       .catch(() => ({ tips: [] }))
 
@@ -25692,33 +25680,19 @@ function App() {
               authorProfileMap.get(String(getTipAuthorId(tip) || '')) ||
               authorProfileMap.get(normalizeEmail(tip.author_email || tip.email || tip.user_email)) ||
               authorProfileMap.get(normalizeEmail(tip.author_name || tip.username))
-            if (!profile) {
-              return {
-                ...tip,
-                author_name: resolveRealProfileUsername(tip)
-              }
-            }
-            const importedStats = getImportedProfileStats(profile)
-            return {
-              ...tip,
-              author_name: profile.username || (profile.email ? String(profile.email).split('@')[0] : resolveRealProfileUsername(tip)),
-              username: profile.username || tip.username,
-              author_email: tip.author_email || profile.email || null,
-              author_avatar_url: tip.author_avatar_url || getProfileAvatarUrl(profile) || null,
-              imported_yield: profile.imported_yield ?? tip.imported_yield,
-              imported_total_tips: profile.imported_total_tips ?? tip.imported_total_tips,
-              imported_won_tips: profile.imported_won_tips ?? tip.imported_won_tips,
-              imported_lost_tips: profile.imported_lost_tips ?? tip.imported_lost_tips,
-              imported_pending_tips: profile.imported_pending_tips ?? tip.imported_pending_tips,
-              imported_total_staked: profile.imported_total_staked ?? tip.imported_total_staked,
-              imported_profit: profile.imported_profit ?? tip.imported_profit,
-              imported_avg_odds: profile.imported_avg_odds ?? tip.imported_avg_odds,
-              imported_highest_odds: profile.imported_highest_odds ?? tip.imported_highest_odds,
-              imported_tips_currency: profile.imported_tips_currency ?? tip.imported_tips_currency,
-              stats_imported_at: profile.stats_imported_at ?? tip.stats_imported_at,
-              author_imported_stats: importedStats || tip.author_imported_stats || null,
-              author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), importedStats),
-            }
+            return profile
+              ? {
+                  ...tip,
+                  author_name: profile.username || (profile.email ? String(profile.email).split('@')[0] : resolveRealProfileUsername(tip)),
+                  username: profile.username || tip.username,
+                  author_email: tip.author_email || profile.email || null,
+                  author_avatar_url: tip.author_avatar_url || getProfileAvatarUrl(profile) || null,
+                  author_visible_stats: finalizeAuthorStats(authorDynamicStatsMap.get(getTipAuthorStatsKey(tip)), getImportedProfileStats(profile)),
+                }
+              : {
+                  ...tip,
+                  author_name: resolveRealProfileUsername(tip)
+                }
           })
         }
       }
@@ -27215,26 +27189,7 @@ function App() {
     const currentEmail = normalizeEmail(sessionUser?.email)
     if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
       setUserPlan('premium')
-      let premiumProfileData = null
-      if (isSupabaseConfigured && supabase && userId) {
-        try {
-          const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-          premiumProfileData = data || null
-        } catch (_) {}
-      }
-      setAccountProfile(prev => buildEffectiveAccountProfile({
-        ...(prev || {}),
-        ...(premiumProfileData || {}),
-        id: premiumProfileData?.id || userId || prev?.id || null,
-        email: premiumProfileData?.email || currentEmail,
-        username: premiumProfileData?.username || currentEmail.split('@')[0],
-        role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : (premiumProfileData?.role || prev?.role),
-        is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail) || Boolean(premiumProfileData?.is_admin),
-        is_premium: true,
-        plan: 'premium',
-        subscription_status: 'active',
-        current_period_end: premiumProfileData?.current_period_end || '2099-12-31T23:59:59Z'
-      }, sessionUser))
+      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : prev?.role, is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active', current_period_end: '2099-12-31T23:59:59Z' }))
       return
     }
 
