@@ -1,0 +1,24 @@
+WERSJA 1585 — RESPONSIVE ONLY / KEEP DESIGN
+
+Zakres:
+- tylko CSS/layout/responsywność,
+- bez zmian logiki aplikacji,
+- bez zmian Supabase,
+- bez zmian Stripe,
+- bez zmian statystyk i danych.
+
+Cel:
+- zachować obecny wygląd na dużym ekranie 2K,
+- dopasować stronę automatycznie do 1680x1050, 1366x768, tabletów i telefonów,
+- usunąć potrzebę ręcznego zoomu przeglądarki,
+- zapobiec nachodzeniu ramek i poziomemu scrollowi całej strony.
+
+Testować przy zoomie przeglądarki 100%:
+- ekran logowania,
+- dashboard,
+- profil typera,
+- statystyki,
+- ranking,
+- dodawanie typu,
+- portfel/subskrypcje,
+- społeczność.
