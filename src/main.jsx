@@ -28735,6 +28735,23 @@ function BetaiExactScaleProvider({ children }) {
           body.style.minWidth = '125vw'
         }
       }
+      // WERSJA 1613: FHD/24" ma działać jak ręczny zoom 75%, ale użytkownik zostawia przeglądarkę 100%.
+      const vw1613 = window.innerWidth || document.documentElement.clientWidth || 0
+      const vh1613 = window.innerHeight || document.documentElement.clientHeight || 0
+      const maxView1613 = Math.max(vw1613, vh1613)
+      const minView1613 = Math.min(vw1613, vh1613)
+      const isFhdNativeViewport1613 = maxView1613 >= 1800 && maxView1613 <= 1945 && minView1613 >= 900 && minView1613 <= 1115
+      const isFhdScaledViewport1613 = maxView1613 >= 1500 && maxView1613 <= 1605 && minView1613 >= 760 && minView1613 <= 930
+      if (window.__BETAI_FHD_AUTO75_V1613__ || (!isPawel2k27() && !isManualBrowserZoomOut() && !isFhd24Auto80() && (isFhdNativeViewport1613 || isFhdScaledViewport1613))) {
+        root.classList.add('betai-fhd-auto75-v1613')
+        body?.classList?.add('betai-fhd-auto75-v1613')
+        if (body?.style) {
+          body.style.zoom = '0.75'
+          body.style.width = '133.333vw'
+          body.style.minWidth = '133.333vw'
+          body.style.maxWidth = 'none'
+        }
+      }
     }
     apply()
     window.addEventListener('resize', apply)
