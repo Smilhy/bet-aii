@@ -20598,6 +20598,34 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return rows.sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
   }
   const activeStatsTips = userTips.map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
+  const mergeOrderedStatsRowsV1580 = (importedRows = [], liveRows = [], order = []) => {
+    const map = new Map()
+    importedRows.forEach(row => map.set(String(row.label), { ...row }))
+    liveRows.forEach(row => {
+      const key = String(row.label)
+      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const next = {
+        ...current,
+        coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
+        settledCoupons: Number(current.settledCoupons || 0) + Number(row.settledCoupons || 0),
+        stake: Number(current.stake || 0) + Number(row.stake || 0),
+        allStake: Number(current.allStake || 0) + Number(row.allStake || 0),
+        profit: Number(current.profit || 0) + Number(row.profit || 0),
+        oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
+        stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
+      }
+      next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
+      next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
+      next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
+      map.set(key, next)
+    })
+    const rows = Array.from(map.values())
+    if (order.length) {
+      const pos = new Map(order.map((label, index) => [label, index]))
+      return rows.sort((a, b) => (pos.get(a.label) ?? 999) - (pos.get(b.label) ?? 999))
+    }
+    return rows
+  }
   const normalizeCouponTypeLabelV1583 = (label = '') => {
     const raw = String(label || '').trim()
     const low = raw.toLowerCase()
@@ -20737,34 +20765,6 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
     if (!Array.isArray(raw)) return []
     return raw.map(normalizeImportedHourRowV1580).filter(Boolean)
-  }
-  const mergeOrderedStatsRowsV1580 = (importedRows = [], liveRows = [], order = []) => {
-    const map = new Map()
-    importedRows.forEach(row => map.set(String(row.label), { ...row }))
-    liveRows.forEach(row => {
-      const key = String(row.label)
-      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
-      const next = {
-        ...current,
-        coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
-        settledCoupons: Number(current.settledCoupons || 0) + Number(row.settledCoupons || 0),
-        stake: Number(current.stake || 0) + Number(row.stake || 0),
-        allStake: Number(current.allStake || 0) + Number(row.allStake || 0),
-        profit: Number(current.profit || 0) + Number(row.profit || 0),
-        oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
-        stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
-      }
-      next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
-      next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
-      next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
-      map.set(key, next)
-    })
-    const rows = Array.from(map.values())
-    if (order.length) {
-      const pos = new Map(order.map((label, index) => [label, index]))
-      return rows.sort((a, b) => (pos.get(a.label) ?? 999) - (pos.get(b.label) ?? 999))
-    }
-    return rows
   }
   const normalizeImportedSportRowV1582 = (row = {}) => {
     const rawLabel = row.label || row.sport || row.discipline || row.name || ''
