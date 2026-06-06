@@ -28724,6 +28724,17 @@ function BetaiExactScaleProvider({ children }) {
         body?.classList?.add('betai-fhd-monitor80-v1323')
         if (body?.dataset) body.dataset.betaiFhdMonitor80 = '1'
       }
+      // WERSJA 1612: jeśli index.html wykrył FHD/24", wymuś realny CSS zoom 80%.
+      // Nie czyścimy tej klasy w clearExactScale, bo musi działać od startu strony.
+      if (window.__BETAI_FHD_AUTO80_V1612__) {
+        root.classList.add('betai-fhd-auto80-v1612')
+        body?.classList?.add('betai-fhd-auto80-v1612')
+        if (body?.style) {
+          body.style.zoom = '0.8'
+          body.style.width = '125vw'
+          body.style.minWidth = '125vw'
+        }
+      }
     }
     apply()
     window.addEventListener('resize', apply)

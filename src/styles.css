@@ -71474,3 +71474,81 @@ html.betai-fhd-monitor80-v1323 body #root .leftbar{
     min-width:260px!important;
   }
 }
+
+
+/* =====================================================
+   WERSJA 1612 — FHD 1920x1080 / 24" AUTO 80% HARD FIX
+   Wymusza realny CSS zoom 80%, a nie tylko transform.
+   Aktywowane klasą z index.html/main runtime. Nie dotyka 2K/tabletu/1680.
+   ===================================================== */
+html.betai-fhd-auto80-v1612,
+html.betai-fhd-auto80-v1612 body{
+  width:125vw!important;
+  min-width:125vw!important;
+  max-width:none!important;
+  min-height:125vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  background:#020914!important;
+}
+html.betai-fhd-auto80-v1612 body{
+  zoom:.8!important;
+  transform:none!important;
+  transform-origin:0 0!important;
+}
+html.betai-fhd-auto80-v1612 body #root{
+  width:125vw!important;
+  min-width:125vw!important;
+  max-width:none!important;
+  min-height:125vh!important;
+  overflow:visible!important;
+  transform:none!important;
+  transform-origin:0 0!important;
+  background:#020914!important;
+}
+html.betai-fhd-auto80-v1612 body #root .auth609-screen,
+html.betai-fhd-auto80-v1612 body #root .app-shell{
+  width:125vw!important;
+  max-width:none!important;
+  margin:0!important;
+}
+html.betai-fhd-auto80-v1612 body #root .auth609-screen{
+  min-height:125vh!important;
+  justify-content:flex-start!important;
+  align-items:flex-start!important;
+}
+html.betai-fhd-auto80-v1612 body #root .auth609-artboard{
+  width:2400px!important;
+  min-width:2400px!important;
+  max-width:none!important;
+}
+html.betai-fhd-auto80-v1612 body #root .app-shell{
+  min-height:125vh!important;
+  grid-template-columns:260px minmax(0,1fr) 420px!important;
+  gap:18px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+}
+html.betai-fhd-auto80-v1612 body #root .app-shell.no-rightbar-page{
+  grid-template-columns:260px minmax(0,1fr)!important;
+}
+html.betai-fhd-auto80-v1612 body #root .main,
+html.betai-fhd-auto80-v1612 body #root .content,
+html.betai-fhd-auto80-v1612 body #root .main-content,
+html.betai-fhd-auto80-v1612 body #root .dashboard-main,
+html.betai-fhd-auto80-v1612 body #root .page-content{
+  max-width:none!important;
+  min-width:0!important;
+}
+html.betai-fhd-auto80-v1612 body #root .rightbar,
+html.betai-fhd-auto80-v1612 body #root .right-panel,
+html.betai-fhd-auto80-v1612 body #root .dashboard-right{
+  width:420px!important;
+  min-width:420px!important;
+}
+html.betai-fhd-auto80-v1612 body #root .sidebar,
+html.betai-fhd-auto80-v1612 body #root .side-nav,
+html.betai-fhd-auto80-v1612 body #root .leftbar{
+  width:260px!important;
+  min-width:260px!important;
+}

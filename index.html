@@ -3,6 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script>
+    // WERSJA 1612 — FHD 1920x1080 / 24" AUTO 80% przez prawdziwy CSS zoom.
+    // Łapie też Windows scaling 125% (screen 1536 CSS px * DPR 1.25 = 1920 fizycznie).
+    // Nie dotyka 2K, 1680x1050, tabletu ani telefonu. Nie aktywuje się, gdy użytkownik sam ustawi zoom 80%.
+    (function () {
+      try {
+        var dpr = window.devicePixelRatio || 1;
+        var swCss = window.screen && window.screen.width ? window.screen.width : 0;
+        var shCss = window.screen && window.screen.height ? window.screen.height : 0;
+        var swPhys = Math.round(swCss * dpr);
+        var shPhys = Math.round(shCss * dpr);
+        var maxPhys = Math.max(swPhys, shPhys);
+        var minPhys = Math.min(swPhys, shPhys);
+        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
+        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
+        var maxView = Math.max(vw, vh);
+        var minView = Math.min(vw, vh);
+        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+        var isTouch = touchPoints > 1;
+        var manualZoomOut = swCss > 0 && vw > swCss * 1.08;
+        var isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115;
+        var isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115;
+        var isViewFhdLike = maxView >= 1450 && maxView <= 1945 && minView >= 760 && minView <= 1085;
+        var is2k = maxPhys >= 2450 || maxView >= 2200;
+        var is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085;
+        if (!isTouch && !manualZoomOut && !is2k && !is1680x1050 && (isFhdPhysical || isFhdCss || isViewFhdLike)) {
+          document.documentElement.classList.add('betai-fhd-auto80-v1612');
+          document.documentElement.style.setProperty('--betai-fhd-auto80-scale', '0.8');
+          document.documentElement.style.setProperty('--betai-fhd-auto80-width', '125vw');
+          window.__BETAI_FHD_AUTO80_V1612__ = true;
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <script>
     // WERSJA 1592 — tablet 10": zostawia efekt 50%, ale rozciąga stronę do pełnej szerokości tabletu.
     // Nie dotyka desktopu 2K, TV 2K, laptopów bez dotyku ani telefonów.
