@@ -72125,3 +72125,26 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .auth609-beta-banner{
   overflow:visible !important;
 }
+
+/* v1636: Ranking - czerwony minus, zielony plus dla YIELD i PROFIT */
+.ranking-v4-table .yield-v4.metric-positive-v1636,
+.ranking-v4-table .profit-v4.metric-positive-v1636,
+.ranking-live-v999 .ranking-v4-row .yield-v4.metric-positive-v1636,
+.ranking-live-v999 .ranking-v4-row .profit-v4.metric-positive-v1636{
+  color:#1be6a4!important;
+  font-weight:900!important;
+}
+.ranking-v4-table .yield-v4.metric-negative-v1636,
+.ranking-v4-table .profit-v4.metric-negative-v1636,
+.ranking-live-v999 .ranking-v4-row .yield-v4.metric-negative-v1636,
+.ranking-live-v999 .ranking-v4-row .profit-v4.metric-negative-v1636{
+  color:#ff4d6d!important;
+  font-weight:900!important;
+}
+.ranking-v4-table .yield-v4.metric-neutral-v1636,
+.ranking-v4-table .profit-v4.metric-neutral-v1636,
+.ranking-live-v999 .ranking-v4-row .yield-v4.metric-neutral-v1636,
+.ranking-live-v999 .ranking-v4-row .profit-v4.metric-neutral-v1636{
+  color:#9cafbd!important;
+  font-weight:900!important;
+}

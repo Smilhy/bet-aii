@@ -16642,29 +16642,35 @@ function LeaderboardView({
           <span>RANGI</span>
           <span></span>
         </div>
-        {rows.map((row, idx) => (
-          <button type="button" className="ranking-v4-row ranking-v999-clickable" key={row.tipster_id || row.id || idx} onClick={() => openRow(row)}>
-            <span className={`place-badge-v4 p${row.liveRank}`}>{row.liveRank}</span>
-            <span className="tipster-cell-v4">
-              {renderAvatar(row)}
-              <div>
-                <b>{row.rowName}</b>
-                <small className={`status-tag-v4 ${getAccountPlanBadgeClass(row)}`}>{getAccountPlanBadgeLabel(row)}</small>
-              </div>
-            </span>
-            <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
-            <span>{Number(row.roi || row.yield || 0).toFixed(2)}%</span>
-            <span>{Number(row.totalTips || row.total_tips || 0)}</span>
-            <span>{Number(row.followers || 0)}</span>
-            <span className="profit-v4">{Number(row.earnings || row.profit || 0) >= 0 ? '+' : ''}{formatRankingAmount(row.earnings || row.profit || 0)}</span>
-            <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
-            <span>
-              <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
-                {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}
-              </button>
-            </span>
-          </button>
-        ))}
+        {rows.map((row, idx) => {
+          const yieldValue = Number(row.roi || row.yield || 0)
+          const profitValue = Number(row.earnings || row.profit || 0)
+          const yieldToneClass = yieldValue > 0 ? 'metric-positive-v1636' : yieldValue < 0 ? 'metric-negative-v1636' : 'metric-neutral-v1636'
+          const profitToneClass = profitValue > 0 ? 'metric-positive-v1636' : profitValue < 0 ? 'metric-negative-v1636' : 'metric-neutral-v1636'
+          return (
+            <button type="button" className="ranking-v4-row ranking-v999-clickable" key={row.tipster_id || row.id || idx} onClick={() => openRow(row)}>
+              <span className={`place-badge-v4 p${row.liveRank}`}>{row.liveRank}</span>
+              <span className="tipster-cell-v4">
+                {renderAvatar(row)}
+                <div>
+                  <b>{row.rowName}</b>
+                  <small className={`status-tag-v4 ${getAccountPlanBadgeClass(row)}`}>{getAccountPlanBadgeLabel(row)}</small>
+                </div>
+              </span>
+              <span className="win-v4">{Number(row.winrate || 0).toFixed(1)}% ↗</span>
+              <span className={`yield-v4 ${yieldToneClass}`}>{yieldValue.toFixed(2)}%</span>
+              <span>{Number(row.totalTips || row.total_tips || 0)}</span>
+              <span>{Number(row.followers || 0)}</span>
+              <span className={`profit-v4 ${profitToneClass}`}>{profitValue >= 0 ? '+' : ''}{formatRankingAmount(profitValue)}</span>
+              <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
+              <span>
+                <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
+                  {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}
+                </button>
+              </span>
+            </button>
+          )
+        })}
         {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span></span></div>}
       </div>
       <div className="ranking-loadmore-v1407">
