@@ -8465,7 +8465,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setSidebarSearch('')
     setLiveFixtures([])
     setLiveDataSource('loading')
-    setLiveFixturesStatus(`Pobieram dzisiejsze mecze ligi ${nextLeague}...`)
+    setLiveFixturesStatus(`Pobieram najbliższe mecze ligi ${nextLeague}...`)
     updateForm({
       sport: nextSport,
       country: nextCountry || 'Wszystkie',
@@ -8482,7 +8482,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         country: nextCountry || 'Wszystkie',
         league: nextLeague,
         date: getTodayLocalKey(),
-        daysAhead: 0,
+        daysAhead: LIVE_SEARCH_DAYS_AHEAD,
         allLeagues: false,
         mode: 'league-today',
       })
@@ -8639,7 +8639,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setHasTriedLiveLoad(true)
     if (!isSilentRefresh) {
       setLiveDataSource('loading')
-      setLiveFixturesStatus(overrides.mode === 'search' ? `Szukam meczu „${overrides.query || sidebarSearch}”...` : overrides.mode === 'all-today' ? 'Pobieram wszystkie dzisiejsze mecze...' : 'Pobieram dzisiejsze mecze wybranej ligi...')
+      setLiveFixturesStatus(overrides.mode === 'search' ? `Szukam meczu „${overrides.query || sidebarSearch}”...` : overrides.mode === 'all-today' ? 'Pobieram wszystkie dzisiejsze mecze...' : 'Pobieram najbliższe mecze wybranej ligi...')
     }
     try {
       const params = new URLSearchParams({
@@ -8690,7 +8690,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             ? 'wszystkich dzisiejszych meczów piłki nożnej oraz uzupełniono kraje/ligi po lewej'
             : overrides.mode === 'search'
               ? `wyników wyszukiwania dla „${overrides.query || sidebarSearch}”`
-              : `dzisiejszych meczów ligi ${requestedLeague}`
+              : `najbliższych meczów ligi ${requestedLeague}`
           const oddsInfo = data.oddsMessage || data.oddsSourceMessage || data.message || ''
           setLiveFixturesStatus(`${sourceLabel}: ${fixtures.length} ${scopeLabel}. Godziny rosnąco, czas dla Polski.${oddsInfo ? ` Kursy: ${oddsInfo}` : ''}`)
           onToast?.({ type: 'success', title: data.demo ? 'Tryb demo' : 'Mecze pobrane', message: `Załadowano ${fixtures.length} realnych wydarzeń.` })
@@ -8706,8 +8706,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             ? 'API nie zwróciło dziś meczów piłki nożnej.'
             : overrides.mode === 'search'
               ? `Nie znaleziono meczu dla „${overrides.query || sidebarSearch}”.`
-              : `API nie zwróciło dziś meczów dla ligi ${requestedLeague}.`
-          onToast?.({ type: 'info', title: overrides.mode === 'search' ? 'Brak wyników' : 'Dziś brak meczów', message: noResultsMessage })
+              : `API nie zwróciło najbliższych meczów dla ligi ${requestedLeague}.`
+          onToast?.({ type: 'info', title: overrides.mode === 'search' ? 'Brak wyników' : 'Brak meczów', message: noResultsMessage })
         } else {
           setLiveFixturesStatus(data.message || `LIVE API: automatyczne odświeżenie — brak realnych meczów bez limitu 2 dni.`)
         }
@@ -9486,7 +9486,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
               <div className="betfolio-api-saver-note search-ready-v1297">
                 <strong>Tryb ręczny API</strong>
-                <span>Wyszukiwarka działa w 100%. Nic nie pobieram automatycznie — wpisz mecz/drużynę, kliknij Top Mecze albo wybierz ligę po lewej.</span>
+                <span>Wyszukiwarka działa w 100%. wpisz mecz/drużynę, kliknij Top Mecze albo wybierz ligę po lewej. Liga pokaże najbliższe mecze, nie tylko dzisiejsze.</span>
               </div>
 
               <div className="betfolio-sport-cards-v1276" aria-label="Popularne sporty premium">
@@ -9568,7 +9568,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 <>
                   {footballViewMode !== 'top-matches' && (
                     <div className="betfolio-events-head">
-                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Dzisiejsze mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
+                      <strong>{footballViewMode === 'all-today' ? 'Wszystkie dzisiejsze mecze' : footballViewMode === 'search' ? 'Wyniki wyszukiwania' : currentLeague ? `Najbliższe mecze • ${currentCountry} • ${currentLeague}` : 'Wybierz ligę po lewej'}</strong>
                       <span>{visibleMatchOptions.length} wydarzeń • godziny rosnąco</span>
                     </div>
                   )}
@@ -9612,8 +9612,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       )
                     }) : (
                       <div className="betfolio-empty-state no-fake-empty">
-                        <strong>{!hasTriedLiveLoad ? 'Kliknij Top Mecze, wybierz ligę albo wyszukaj drużynę' : footballViewMode === 'top-matches' ? 'Brak Top Meczów dziś/jutro' : footballViewMode === 'search' ? 'Brak wyników wyszukiwania' : footballViewMode === 'all-today' ? 'Dziś brak meczów' : 'Dziś brak meczów w tej lidze'}</strong>
-                        <span>{!hasTriedLiveLoad ? 'Nie pobieram nic automatycznie. Możesz kliknąć Top Mecze, ligę po lewej albo użyć wyszukiwarki.' : footballViewMode === 'top-matches' ? 'API nie zwróciło dziś/jutro meczów dla top 6 lig. Nie pokazuję demo ani fake spotkań.' : footballViewMode === 'search' ? 'Nie znalazłem prawdziwego meczu dla wpisanej frazy.' : footballViewMode === 'all-today' ? 'API nie zwróciło dziś meczów. Nie pokazuję demo ani fake spotkań.' : 'API nie zwróciło dziś meczów dla tej ligi. Nie pokazuję demo ani fake spotkań.'}</span>
+                        <strong>{!hasTriedLiveLoad ? 'Kliknij Top Mecze, wybierz ligę albo wyszukaj drużynę' : footballViewMode === 'top-matches' ? 'Brak Top Meczów dziś/jutro' : footballViewMode === 'search' ? 'Brak wyników wyszukiwania' : footballViewMode === 'all-today' ? 'Dziś brak meczów' : 'Brak meczów w tej lidze'}</strong>
+                        <span>{!hasTriedLiveLoad ? 'Możesz kliknąć Top Mecze, ligę po lewej albo użyć wyszukiwarki. Dla lig szukam najbliższych meczów.' : footballViewMode === 'top-matches' ? 'API nie zwróciło dziś/jutro meczów dla top 6 lig. Nie pokazuję demo ani fake spotkań.' : footballViewMode === 'search' ? 'Nie znalazłem prawdziwego meczu dla wpisanej frazy.' : footballViewMode === 'all-today' ? 'API nie zwróciło dziś meczów. Nie pokazuję demo ani fake spotkań.' : 'API nie zwróciło najbliższych meczów dla tej ligi. Spróbuj Top Mecze, wyszukiwarkę albo inną ligę.'}</span>
                       </div>
                     )}
                   </div>
