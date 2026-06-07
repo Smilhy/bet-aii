@@ -72264,3 +72264,98 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:28px!important;
   }
 }
+
+/* WERSJA 1644 — Czytaj więcej: pełna analiza w modalu */
+.profile-ticket-v6-analysis button{
+  cursor:pointer!important;
+}
+.profile-ticket-v6-analysis button:hover{
+  color:#7ff8ff!important;
+  text-shadow:0 0 10px rgba(34,211,238,.45)!important;
+}
+.tip-analysis-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(0,8,18,.72);
+  backdrop-filter:blur(10px);
+}
+.tip-analysis-modal{
+  position:relative;
+  width:min(720px, calc(100vw - 28px));
+  max-height:min(78vh, 720px);
+  overflow:auto;
+  border:1px solid rgba(34,211,238,.42);
+  border-radius:24px;
+  padding:24px 26px 26px;
+  color:#eafaff;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(34,211,238,.16), transparent 38%),
+    linear-gradient(145deg, rgba(5,18,34,.98), rgba(1,10,20,.98));
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.55),
+    0 0 38px rgba(34,211,238,.18),
+    inset 0 0 24px rgba(34,211,238,.06);
+}
+.tip-analysis-modal-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);
+  color:#dffcff;
+  background:rgba(255,255,255,.06);
+  font-size:24px;
+  line-height:1;
+  cursor:pointer;
+}
+.tip-analysis-modal-close:hover{
+  border-color:rgba(34,211,238,.65);
+  box-shadow:0 0 18px rgba(34,211,238,.24);
+}
+.tip-analysis-modal-kicker{
+  margin-bottom:8px;
+  color:#35eaff;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.16em;
+}
+.tip-analysis-modal h3{
+  margin:0 42px 10px 0;
+  font-size:26px;
+  line-height:1.15;
+}
+.tip-analysis-modal-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:0 0 18px;
+}
+.tip-analysis-modal-meta span{
+  padding:6px 10px;
+  border:1px solid rgba(34,211,238,.20);
+  border-radius:999px;
+  color:#b9d7e8;
+  background:rgba(8,145,178,.10);
+  font-size:12px;
+  font-weight:800;
+}
+.tip-analysis-modal p{
+  margin:0;
+  white-space:pre-wrap;
+  color:#eefbff;
+  font-size:16px;
+  line-height:1.65;
+}
+@media (max-width: 720px){
+  .tip-analysis-modal-backdrop{padding:12px; align-items:flex-end;}
+  .tip-analysis-modal{width:100%; max-height:82vh; border-radius:20px 20px 0 0; padding:22px 18px 24px;}
+  .tip-analysis-modal h3{font-size:21px;}
+  .tip-analysis-modal p{font-size:15px; line-height:1.55;}
+}

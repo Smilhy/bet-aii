@@ -9996,6 +9996,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false)
 
   useEffect(() => {
     if (!commentsOpen) return undefined
@@ -10207,7 +10208,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className={`profile-ticket-v6-analysis ${effectiveIsLocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
         <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana' : cardAnalysis}</p>
-        <button type="button">Czytaj więcej⌄</button>
+        <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button>
       </div>
 
       <div className="profile-ticket-v6-buy">
@@ -10260,6 +10261,22 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           ) : null}
         </div>
       </footer>
+
+      {analysisModalOpen && (
+        <div className="tip-analysis-modal-backdrop" onClick={() => setAnalysisModalOpen(false)}>
+          <div className="tip-analysis-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
+            <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
+            <h3>{cardHome} vs {cardAway}</h3>
+            <div className="tip-analysis-modal-meta">
+              <span>{tip.league || 'Liga'}</span>
+              <span>{effectiveIsLocked ? 'Typ premium' : cardPick}</span>
+              <span>Kurs {effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</span>
+            </div>
+            <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : cardAnalysis}</p>
+          </div>
+        </div>
+      )}
 
       {commentsOpen && (
         <div className="tip-comments-panel profile-ticket-v6-comments">
@@ -19470,6 +19487,7 @@ function ProfileLiveTipCard({
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false)
   const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel)
 
   useEffect(() => {
@@ -19689,7 +19707,7 @@ function ProfileLiveTipCard({
       <div className={`profile-ticket-v6-analysis ${tip.premium && !effectiveIsUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
         <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana' : tip.analysis}</p>
-        <button type="button">Czytaj więcej⌄</button>
+        <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button>
       </div>
 
       <div className="profile-ticket-v6-buy">
@@ -19743,6 +19761,22 @@ function ProfileLiveTipCard({
           ) : null}
         </div>
       </footer>
+
+      {analysisModalOpen && (
+        <div className="tip-analysis-modal-backdrop" onClick={() => setAnalysisModalOpen(false)}>
+          <div className="tip-analysis-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
+            <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
+            <h3>{tip.home} vs {tip.away}</h3>
+            <div className="tip-analysis-modal-meta">
+              <span>{tip.league || 'Liga'}</span>
+              <span>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : tip.pick}</span>
+              <span>Kurs {tip.premium && !effectiveIsUnlocked ? '—' : tip.odds}</span>
+            </div>
+            <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : tip.analysis}</p>
+          </div>
+        </div>
+      )}
 
       {commentsOpen && (
         <div className="profile-live-tip-comments profile-ticket-v6-comments">
