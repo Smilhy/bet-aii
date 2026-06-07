@@ -20530,7 +20530,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
 
   const allProfileTipCards = userTips.map(buildProfileTipCard)
-  const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący' && !tip.isStarted)
+  // Profil typera ma dalej pokazywać oczekujące typy w Darmowe/Premium nawet po starcie meczu.
+  // Ukrywanie po czasie startu dotyczy tylko Dashboardu/marketplace przez isTipVisibleInActiveFeed().
+  const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący')
   const premiumTipCardsAll = activeProfileTipCards.filter(tip => tip.premium)
   const freeTipCardsAll = activeProfileTipCards.filter(tip => !tip.premium)
   const premiumCards = premiumTipCardsAll.slice(0, 3)
