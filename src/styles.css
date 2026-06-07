@@ -71945,3 +71945,38 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     padding:4px 11px !important;
   }
 }
+
+
+/* WERSJA 1625 — obniżenie bannera BETA, żeby etykieta nie była ucinana */
+.auth609-heading-copy{
+  padding-top: 8px !important;
+}
+.auth609-beta-banner{
+  transform: translateY(10px) !important;
+  margin: 0 auto 30px !important;
+  padding-top: 16px !important;
+}
+.auth609-beta-kicker{
+  position: relative;
+  top: 1px;
+}
+@media (max-width: 760px){
+  .auth609-heading-copy{
+    padding-top: 6px !important;
+  }
+  .auth609-beta-banner{
+    transform: translateY(8px) !important;
+    margin: 0 auto 24px !important;
+    padding-top: 15px !important;
+  }
+}
+@media (max-width: 480px){
+  .auth609-heading-copy{
+    padding-top: 4px !important;
+  }
+  .auth609-beta-banner{
+    transform: translateY(7px) !important;
+    margin: 0 auto 22px !important;
+    padding-top: 14px !important;
+  }
+}

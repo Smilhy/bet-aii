@@ -1,0 +1,3 @@
+WERSJA 1625
+- Obniżono baner BETA nad logo logowania.
+- Dodano lekki odstęp od góry, aby etykieta „WERSJA BETA” nie była ucinana.
