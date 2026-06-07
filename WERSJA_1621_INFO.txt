@@ -1,0 +1,4 @@
+WERSJA 1621
+- Etykieta WERSJA BETA ma teraz mocny żółty kolor i żółtą poświatę.
+- Zachowane mruganie / błysk bannera BETA.
+- Bez zmian w Supabase.

@@ -71730,14 +71730,14 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   margin-bottom:6px;
   padding:5px 12px;
   border-radius:999px;
-  border:1px solid rgba(73, 236, 255, 0.34);
-  background:rgba(0, 225, 255, 0.08);
-  color:#66efff;
+  border:1px solid rgba(255, 223, 62, 0.72);
+  background:linear-gradient(180deg, rgba(255, 220, 70, 0.30), rgba(255, 186, 0, 0.18));
+  color:#ffe86a;
   font-size:11px;
   font-weight:800;
   letter-spacing:0.18em;
   text-transform:uppercase;
-  text-shadow:0 0 12px rgba(53, 230, 255, 0.22);
+  text-shadow:0 0 14px rgba(255, 220, 70, 0.52), 0 0 26px rgba(255, 196, 0, 0.22);
   animation:auth609BetaBlink 1.35s ease-in-out infinite;
 }
 .auth609-beta-banner p{
@@ -71763,12 +71763,12 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   0%, 100%{
     opacity:0.86;
     transform:scale(1);
-    box-shadow:0 0 0 rgba(87, 247, 255, 0);
+    box-shadow:0 0 0 rgba(255, 218, 59, 0);
   }
   50%{
     opacity:1;
     transform:scale(1.03);
-    box-shadow:0 0 18px rgba(87, 247, 255, 0.24);
+    box-shadow:0 0 22px rgba(255, 214, 51, 0.55), inset 0 0 12px rgba(255, 214, 51, 0.12);
   }
 }
 @keyframes auth609BetaSweep{
