@@ -72114,3 +72114,14 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .auth609-beta-tooltip{
   z-index:430 !important;
 }
+
+/* WERSJA 1633 — usunięcie dziwnej animacji/prześwitu z komunikatu BETA */
+.auth609-beta-banner::after{
+  display:none !important;
+  content:none !important;
+  animation:none !important;
+  background:none !important;
+}
+.auth609-beta-banner{
+  overflow:visible !important;
+}
