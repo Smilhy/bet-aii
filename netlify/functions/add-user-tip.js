@@ -148,6 +148,10 @@ exports.handler = async (event) => {
       ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
       price: accessType === 'premium' ? Math.max(0, toNumber(tip.price, 0)) : 0,
+      coupon_type: String(tip.coupon_type || '').toLowerCase() === 'ako' ? 'ako' : 'single',
+      is_ako: Boolean(tip.is_ako) || String(tip.coupon_type || '').toLowerCase() === 'ako',
+      legs_count: toNumber(tip.legs_count, Boolean(tip.is_ako) ? 2 : 1),
+      legs_json: Array.isArray(tip.legs_json) ? tip.legs_json : null,
       status: initialSettlementStatus,
       tags: Array.isArray(tip.tags) ? tip.tags.map(tag => String(tag).trim()).filter(Boolean) : [],
       notify_followers: tip.notify_followers !== false
@@ -192,6 +196,10 @@ exports.handler = async (event) => {
       ai_analysis: payload.ai_analysis,
       access_type: payload.access_type,
       price: payload.price,
+      coupon_type: payload.coupon_type,
+      is_ako: payload.is_ako,
+      legs_count: payload.legs_count,
+      legs_json: payload.legs_json,
       status: initialSettlementStatus,
       tags: payload.tags,
       notify_followers: payload.notify_followers

@@ -9170,10 +9170,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
     const akoOddsForPublish = akoLegsForPublish.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1)
     const finalOddsValue = isAkoCoupon ? Number(akoOddsForPublish.toFixed(2)) : Number(form.odds || 0)
-    const akoLegsText = akoLegsForPublish.map((leg, index) => `${index + 1}. ${leg.home} - ${leg.away}: ${leg.pick} @ ${Number(leg.odds || 0).toFixed(2)}`).join('\n')
-    const finalDescription = isAkoCoupon
-      ? [form.description, akoLegsText ? `Kupon AKO:\n${akoLegsText}` : ''].filter(Boolean).join('\n\n')
-      : form.description
+    // V1652: AKO nie zapisuje już listy zdarzeń w analizie.
+    // Zdarzenia są trzymane osobno w legs_json, a analiza zostaje normalnym opisem użytkownika.
+    const finalDescription = String(form.description || '').trim()
     // V1640: zapisujemy ligę z faktycznie wybranego meczu, nie z aktywnej ligi w lewym menu.
     // Przy wyszukiwaniu meczu lewy sidebar może nadal mieć np. Premier League,
     // a wybrany fixture może być z Friendlies. Dashboard musi dostać ligę fixture'a.
@@ -10099,6 +10098,30 @@ function FeedSkeleton() {
 }
 
 
+
+function parseLegacyAkoLegsFromAnalysis(value) {
+  const text = String(value || '')
+  const match = text.match(/Kupon\s+AKO:\s*([\s\S]*)/i)
+  if (!match) return []
+  return match[1].split('\n').map((line, index) => {
+    const clean = String(line || '').trim()
+    if (!clean) return null
+    const parsed = clean.match(/^\s*\d+\.\s*(.*?)\s+-\s*(.*?):\s*(.*?)\s*@\s*([0-9]+(?:[.,][0-9]+)?)\s*$/)
+    if (!parsed) return { key: `legacy-ako-${index}`, home: clean, away: '', pick: 'Typ', odds: 0 }
+    return {
+      key: `legacy-ako-${index}-${parsed[1]}-${parsed[2]}-${parsed[4]}`,
+      home: parsed[1].trim(),
+      away: parsed[2].trim(),
+      pick: parsed[3].trim(),
+      odds: Number(String(parsed[4]).replace(',', '.')) || 0,
+    }
+  }).filter(Boolean)
+}
+
+function cleanAkoAnalysisText(value) {
+  return String(value || '').replace(/\n{0,2}\s*Kupon\s+AKO:\s*[\s\S]*$/i, '').trim()
+}
+
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
   const isPremium = tip.access_type === 'premium'
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive
@@ -10178,17 +10201,15 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardAuthor = resolveRealProfileUsername({ username: isOwnTip ? (currentUsername || author) : author, author_name: isOwnTip ? (currentUsername || author) : author, email: tip.author_email || tip.email || tip.user_email })
   const rawAkoLegs = (() => {
     const source = tip.legs_json || tip.legs || tip.ako_legs || tip.coupon_legs || null
-    if (!source) return []
     if (Array.isArray(source)) return source
-    if (typeof source === 'string') {
+    if (typeof source === 'string' && source.trim()) {
       try {
         const parsed = JSON.parse(source)
-        return Array.isArray(parsed) ? parsed : []
-      } catch (_) {
-        return []
-      }
+        if (Array.isArray(parsed)) return parsed
+      } catch (_) {}
     }
-    return []
+    // Zgodność wsteczna dla starych kuponów z wersji 1651, gdzie lista była dopisana do analizy.
+    return parseLegacyAkoLegsFromAnalysis(tip.analysis || tip.description || '')
   })()
   const isAkoCard = Boolean(
     tip.is_ako ||
@@ -10207,7 +10228,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardHome = isAkoCard ? 'Kupon AKO' : (tip.team_home || tip.home_team || 'Gospodarze')
   const cardAway = isAkoCard ? `${akoLegsCount} zdarzenia` : (tip.team_away || tip.away_team || 'Goście')
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (tip.bet_type || tip.prediction || tip.pick || 'Typ')
-  const cardAnalysis = tip.analysis || tip.description || tip.ai_analysis || 'Brak analizy użytkownika.'
+  const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '') || tip.ai_analysis || 'Brak analizy użytkownika.'
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
@@ -10366,9 +10387,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                   <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
                 </div>
               )) : (
-                <div className="profile-ticket-v6-ako-leg empty"><span>Lista zdarzeń AKO zapisana w analizie kuponu.</span></div>
+                <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
               )}
-              {akoLegs.length > 3 ? <em>+{akoLegs.length - 3} więcej w analizie</em> : null}
+              {akoLegs.length > 3 ? <em>+{akoLegs.length - 3} więcej zdarzeń</em> : null}
             </div>
           </div>
         ) : (
