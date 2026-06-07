@@ -20885,6 +20885,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ).trim()
     return raw || 'Nie ustawiono ligi'
   }
+  const getProfileTipCountryLabel = (tip = {}) => {
+    const country = getAiCountryLabelV1508(tip, [])
+    return country && country !== '—' ? country : 'World'
+  }
   const getProfileTipBetTypeLabel = (tip = {}) => {
     return normalizeBetTypeForStats(
       tip.market || tip.market_name || tip.marketName || '',
@@ -21034,7 +21038,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     buildLiveStatRows(typeLiveTipsV1583, getProfileTipAccessLabel, ['Publiczny', 'Płatny']),
     ['Publiczny', 'Płatny']
   )
-  const liveLeagueStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipLeagueLabel)
+  const liveLeagueStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipLeagueLabel).map(row => {
+    const relatedTips = activeStatsTips.filter(tip => getProfileTipLeagueLabel(tip) === row.label)
+    const countries = [...new Set(relatedTips.map(getProfileTipCountryLabel).filter(Boolean))]
+    return { ...row, country: countries.length === 1 ? countries[0] : (countries.length ? countries.join(', ') : 'World') }
+  })
   const liveBetTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipBetTypeLabel)
   const profileSelectedLeagueTips = profileSelectedLeagueDetail
     ? activeStatsTips.filter(tip => getProfileTipLeagueLabel(tip) === profileSelectedLeagueDetail)
@@ -22176,8 +22184,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
                 <ProfileStatsTable
                   title="Statystyki według lig"
-                  columns={['Liga', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']}
-                  rows={liveLeagueStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])}
+                  columns={['Liga', 'Kraj', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']}
+                  rows={liveLeagueStatsRows.map(row => [
+                    row.label,
+                    <span className="profile-country-badge-v1648">{row.country || 'World'}</span>,
+                    row.coupons,
+                    formatStatValue(row.stake),
+                    formatStatValue(row.profit),
+                    `${formatStatValue(row.yield)}%`,
+                    formatStatValue(row.avgOdds)
+                  ])}
                   rowKeys={liveLeagueStatsRows.map(row => row.label)}
                   onRowClick={(leagueName) => setProfileSelectedLeagueDetail(leagueName)}
                 />
