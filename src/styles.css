@@ -71702,9 +71702,9 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
 .auth609-beta-banner{
   position:relative;
   overflow:hidden;
-  width:min(100%, 420px);
+  width:min(100%, 436px);
   margin:0 auto 14px;
-  padding:10px 16px 12px;
+  padding:10px 18px 12px;
   border-radius:18px;
   border:1px solid rgba(73, 236, 255, 0.28);
   background:linear-gradient(180deg, rgba(14, 54, 67, 0.78), rgba(5, 21, 31, 0.9));
@@ -71745,8 +71745,8 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   z-index:1;
   margin:0;
   color:rgba(229, 248, 255, 0.88);
-  font-size:11px;
-  line-height:1.42;
+  font-size:13px;
+  line-height:1.46;
   font-weight:600;
 }
 .auth609-beta-banner p strong{
@@ -71754,9 +71754,19 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   font-weight:800;
 }
 .auth609-beta-highlight{
-  color:#ffe86a;
-  font-weight:800;
-  text-shadow:0 0 10px rgba(255, 220, 70, 0.32);
+  display:inline-block;
+  padding:0 4px;
+  border-radius:6px;
+  color:#ffea57;
+  font-size:1.18em;
+  font-weight:900;
+  line-height:1;
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:2px;
+  background:rgba(255, 217, 0, 0.08);
+  box-shadow:0 0 16px rgba(255, 220, 70, 0.24);
+  text-shadow:0 0 14px rgba(255, 220, 70, 0.6), 0 0 24px rgba(255, 196, 0, 0.24);
 }
 @keyframes auth609BetaGlow{
   0%, 100%{
@@ -71797,9 +71807,9 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
 }
 @media (max-width: 760px){
   .auth609-beta-banner{
-    width:min(100%, 360px);
+    width:min(100%, 384px);
     margin:0 auto 12px;
-    padding:9px 12px 10px;
+    padding:9px 14px 10px;
     border-radius:16px;
   }
   .auth609-beta-kicker{
@@ -71808,8 +71818,8 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     margin-bottom:5px;
   }
   .auth609-beta-banner p{
-    font-size:10px;
-    line-height:1.36;
+    font-size:12px;
+    line-height:1.4;
   }
 }
 
