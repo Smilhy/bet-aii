@@ -20515,6 +20515,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       confidence,
       createdLabel: formatDateTime(createdAt),
       matchLabel: formatDateTime(matchAt),
+      matchTimestamp: matchAt && !Number.isNaN(matchAt.getTime()) ? matchAt.getTime() : getTipKickoffTimestamp(normalized),
+      isStarted: isTipAlreadyStarted(normalized),
       status,
       approvalStatus,
       manualResult,
@@ -20528,7 +20530,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
 
   const allProfileTipCards = userTips.map(buildProfileTipCard)
-  const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący')
+  const activeProfileTipCards = allProfileTipCards.filter(tip => tip.statusLabel === 'Oczekujący' && !tip.isStarted)
   const premiumTipCardsAll = activeProfileTipCards.filter(tip => tip.premium)
   const freeTipCardsAll = activeProfileTipCards.filter(tip => !tip.premium)
   const premiumCards = premiumTipCardsAll.slice(0, 3)
@@ -25069,8 +25071,24 @@ function parseBetaiKickoffTime(value) {
 }
 
 function getTipKickoffTimestamp(tip = {}) {
+  // Najpierw obsługa najczęstszego zapisu z Supabase: match_date='YYYY-MM-DD' + match_time='HH:mm'.
+  // Wcześniej sam match_time='02:00' nie dawał daty, więc typ mógł wisieć na Dashboardzie po starcie meczu.
+  const dateOnly = String(tip.match_date || tip.fixture_date_day || tip.event_date || '').trim().slice(0, 10)
+  const timeOnlyRaw = String(tip.match_time_hhmm || tip.kickoff_time_hhmm || tip.start_time_hhmm || '').trim()
+  const timeFromMatchTime = String(tip.match_time || '').trim()
+  const timeOnly = timeOnlyRaw || (/^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeFromMatchTime) ? timeFromMatchTime : '')
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeOnly)) {
+    const [hour = '00', minute = '00', second = '00'] = timeOnly.split(':')
+    const combinedLocal = `${dateOnly}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second || '00').padStart(2, '0')}`
+    const combinedTs = new Date(combinedLocal).getTime()
+    if (Number.isFinite(combinedTs)) return combinedTs
+  }
+
   const candidates = [
     tip.event_start_at,
+    tip.starts_at,
+    tip.start_at,
     tip.match_time,
     tip.event_time,
     tip.kickoff_time,
@@ -25093,9 +25111,9 @@ function isTipAlreadyStarted(tip = {}, now = Date.now()) {
   const ts = getTipKickoffTimestamp(tip)
   if (!Number.isFinite(ts)) return false
 
-  // Dashboard i marketplace nie mogą sprzedawać kuponu po starcie meczu.
-  // Dajemy tylko minutę tolerancji na różnice zegara między API/Netlify/przeglądarką.
-  return ts <= now + 60_000
+  // Dashboard i marketplace nie mogą pokazywać/sprzedawać kuponu od minuty rozpoczęcia meczu.
+  // Czyli dokładnie od startu: 02:00 znika o 02:00, nie dopiero po rozliczeniu.
+  return ts <= now
 }
 
 function isTipVisibleInActiveFeed(tip) {
@@ -25131,35 +25149,6 @@ function isTipVisibleInActiveFeed(tip) {
   if (isTipAlreadyStarted(normalized)) return false
 
   return true
-}
-
-
-function MobileBottomNav({ view, setView, tokenBalance = 0 }) {
-  const items = [
-    { id: 'dashboard', label: 'Start', icon: '⌂' },
-    { id: 'add', label: 'Dodaj', icon: '+' },
-    { id: 'aiPicks', label: 'AI', icon: '◆' },
-    { id: 'leaderboard', label: 'Ranking', icon: '★' },
-    { id: 'wallet', label: 'Portfel', icon: '◉' },
-    { id: 'profile', label: 'Profil', icon: '●' },
-  ]
-  return (
-    <nav className="betai-mobile-app-nav" aria-label="Mobilna nawigacja Bet+AI">
-      {items.map(item => (
-        <button
-          key={item.id}
-          type="button"
-          className={view === item.id ? 'active' : ''}
-          onClick={() => setView(item.id)}
-          aria-label={item.label}
-        >
-          <span className="betai-mobile-app-nav-icon">{item.icon}</span>
-          <span className="betai-mobile-app-nav-label">{item.label}</span>
-          {item.id === 'wallet' && Number(tokenBalance || 0) > 0 ? <b>{Number(tokenBalance || 0)}</b> : null}
-        </button>
-      ))}
-    </nav>
-  )
 }
 
 function App() {
@@ -28677,7 +28666,6 @@ function App() {
       </main>
 
       {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />}
-      <MobileBottomNav view={view} setView={setView} tokenBalance={tokenBalance} />
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>

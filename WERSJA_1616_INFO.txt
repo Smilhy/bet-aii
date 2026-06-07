@@ -1,0 +1,7 @@
+BetAI STRONA WERSJA 1616
+
+Poprawka: typ znika z Dashboardu i aktywnych typów od minuty rozpoczęcia meczu.
+- Obsługuje zapis Supabase match_date + match_time, np. 2026-06-07 + 02:00.
+- Typ pending nie wisi na Dashboardzie po starcie meczu.
+- Typ znika też z aktywnych Darmowe/Premium profilu po starcie.
+- Nie rusza SQL, Supabase, Stripe, statystyk, AI ani layoutu.
