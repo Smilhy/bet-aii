@@ -326,14 +326,22 @@ function getTipsterPublicUrl(profile, fallbackId) {
   return `${window.location.origin}/tipster/${slug}`
 }
 
+function normalizeReferralCodeInput(code) {
+  return String(code || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, '')
+    .slice(0, 32)
+    .toUpperCase()
+}
+
 function getStoredReferralCode() {
   if (typeof window === 'undefined') return ''
-  return localStorage.getItem('betai_referral_code') || ''
+  return normalizeReferralCodeInput(localStorage.getItem('betai_referral_code') || '')
 }
 
 function setStoredReferralCode(code) {
   if (typeof window === 'undefined') return
-  const clean = normalizePublicSlug(code).replace(/-/g, '').slice(0, 32)
+  const clean = normalizeReferralCodeInput(code)
   if (clean) localStorage.setItem('betai_referral_code', clean)
 }
 
@@ -17947,7 +17955,9 @@ function AuthView({ onAuth }) {
               username: derivedUsername,
               display_name: derivedUsername,
               referral_code: getStoredReferralCode(),
-              ref: getStoredReferralCode()
+              referralCode: getStoredReferralCode(),
+              ref: getStoredReferralCode(),
+              r: getStoredReferralCode()
             }
           }
         }))
