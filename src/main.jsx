@@ -6607,6 +6607,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const [showMarketBoard, setShowMarketBoard] = useState(false)
   const [expandedMarketGroup, setExpandedMarketGroup] = useState('')
   const [ticketMarketSelected, setTicketMarketSelected] = useState(false)
+  const [couponMode, setCouponMode] = useState('single')
+  const [akoSelections, setAkoSelections] = useState([])
   const [openSidebarSport, setOpenSidebarSport] = useState('Piłka nożna')
   const [openFootballCountry, setOpenFootballCountry] = useState('')
   const [sportDayCounts, setSportDayCounts] = useState({})
@@ -7946,6 +7948,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const matchOptions = liveFixtures.filter(matchStartsAfterBuffer)
   const selectedMatch = matchOptions.find(item => item.id === form.matchId) || matchOptions[0] || null
   const effectiveSelectedMatch = addTipMode === 'manual' && manualSelectedMatch ? manualSelectedMatch : selectedMatch
+  const akoCouponOdds = akoSelections.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1)
+  const akoCouponOddsLabel = akoSelections.length ? akoCouponOdds.toFixed(2) : '0.00'
+  const isAkoTicketMode = couponMode === 'ako'
 
   const topSportButtons = useMemo(() => ([
     'Piłka nożna',
@@ -8853,6 +8858,46 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     applyMatchToForm(nextMatch)
   }
 
+  function buildAkoLegKey(match, marketItem) {
+    return String([
+      match?.apiFixtureId || match?.fixtureId || match?.id || `${match?.home || ''}-${match?.away || ''}`,
+      marketItem?.market || '',
+      marketItem?.pick || '',
+      marketItem?.odds || '',
+    ].join('|')).toLowerCase()
+  }
+
+  function setCouponModeSafe(nextMode) {
+    setCouponMode(nextMode)
+    setTicketMarketSelected(false)
+    setShowMarketBoard(false)
+    if (nextMode === 'single') setAkoSelections([])
+  }
+
+  function removeAkoLeg(key) {
+    setAkoSelections(prev => {
+      const next = prev.filter(leg => leg.key !== key)
+      const nextOdds = next.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1)
+      if (next.length) {
+        updateForm({
+          market: 'AKO',
+          betType: `AKO ${next.length} zdarzenia`,
+          odds: nextOdds.toFixed(2),
+          confidence: Math.max(15, Math.min(99, Math.round(next.reduce((sum, leg) => sum + (Number(leg.confidence || 50) || 50), 0) / next.length))),
+        })
+        setTicketMarketSelected(true)
+      } else {
+        setTicketMarketSelected(false)
+      }
+      return next
+    })
+  }
+
+  function clearAkoTicket() {
+    setAkoSelections([])
+    setTicketMarketSelected(false)
+  }
+
   function chooseMarket(value) {
     const [marketName, pickName, oddsValue, confidenceValue] = String(value || '').split('|||')
     setTicketMarketSelected(true)
@@ -8867,6 +8912,51 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
     const nextOdds = Number(nextMarket?.odds ?? oddsValue ?? form.odds)
     const nextConfidence = Number(nextMarket?.confidence ?? confidenceValue ?? form.confidence)
+
+    if (couponMode === 'ako') {
+      const matchForLeg = effectiveSelectedMatch || selectedMatch
+      if (!matchForLeg) {
+        onToast?.({ type: 'error', title: 'Brak meczu', message: 'Najpierw wybierz mecz do kuponu AKO.' })
+        return
+      }
+      if (!Number.isFinite(nextOdds) || nextOdds <= 1) {
+        onToast?.({ type: 'error', title: 'Brak kursu', message: 'Ten wybór nie ma poprawnego kursu do AKO.' })
+        return
+      }
+      const leg = {
+        key: buildAkoLegKey(matchForLeg, nextMarket),
+        sport: matchForLeg.sport || form.sport,
+        country: matchForLeg.country || form.country,
+        league: matchForLeg.league || currentLeague || form.league,
+        matchId: matchForLeg.apiFixtureId || matchForLeg.fixtureId || matchForLeg.id || '',
+        home: matchForLeg.home || 'Gospodarze',
+        away: matchForLeg.away || 'Goście',
+        date: matchForLeg.date || form.date,
+        time: matchForLeg.time || form.time,
+        commence_time: matchForLeg.commence_time || null,
+        market: nextMarket.market,
+        pick: nextMarket.pick,
+        odds: Number(nextOdds.toFixed(2)),
+        confidence: Number.isFinite(nextConfidence) ? nextConfidence : 50,
+      }
+      setAkoSelections(prev => {
+        if (prev.some(item => item.key === leg.key)) {
+          onToast?.({ type: 'info', title: 'Już dodane', message: 'Ten wybór jest już w kuponie AKO.' })
+          return prev
+        }
+        const next = [...prev, leg].slice(0, 12)
+        const nextOddsTotal = next.reduce((product, item) => product * (Number(item.odds || 0) || 1), 1)
+        updateForm({
+          market: 'AKO',
+          betType: `AKO ${next.length} zdarzenia`,
+          odds: nextOddsTotal.toFixed(2),
+          confidence: Math.max(15, Math.min(99, Math.round(next.reduce((sum, item) => sum + (Number(item.confidence || 50) || 50), 0) / next.length))),
+        })
+        onToast?.({ type: 'success', title: 'Dodano do AKO', message: `${leg.home} - ${leg.away} • ${leg.pick} @ ${leg.odds.toFixed(2)}` })
+        return next
+      })
+      return
+    }
 
     updateForm({
       market: nextMarket.market,
@@ -8921,6 +9011,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setAddTipMode(mode)
     setShowMarketBoard(false)
     setTicketMarketSelected(false)
+    setCouponMode('single')
+    setAkoSelections([])
     if (mode !== 'manual') setManualSelectedMatch(null)
   }
 
@@ -9003,6 +9095,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   async function handlePublish() {
     const publishMatch = effectiveSelectedMatch
+    const isAkoCoupon = couponMode === 'ako'
+    const akoLegsForPublish = isAkoCoupon ? akoSelections : []
     if (!user?.id) {
       onToast?.({ type: 'error', title: 'Brak konta', message: 'Zaloguj się, aby dodać typ.' })
       return
@@ -9036,6 +9130,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       onToast?.({ type: 'error', title: 'Brak meczu', message: addTipMode === 'manual' ? 'Dodaj najpierw typ ręczny do kuponu.' : 'Wybierz mecz przed publikacją typu.' })
       return
     }
+    if (isAkoCoupon && akoLegsForPublish.length < 2) {
+      onToast?.({ type: 'error', title: 'AKO wymaga min. 2 zdarzeń', message: 'Dodaj przynajmniej dwa wybory do kuponu AKO albo przełącz na Singiel.' })
+      return
+    }
 
     const stakeValue = Number(form.stake || 0) || 0
     if (stakeValue > 1000) {
@@ -9048,7 +9146,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
 
-    const duplicateMatch = await hasDuplicateMatchToday(publishMatch)
+    const duplicateMatch = isAkoCoupon ? false : await hasDuplicateMatchToday(publishMatch)
     if (duplicateMatch) {
       onToast?.({
         type: 'limit',
@@ -9070,10 +9168,16 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })()
     const finalAccessType = form.accessType === 'premium' ? 'premium' : 'free'
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+    const akoOddsForPublish = akoLegsForPublish.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1)
+    const finalOddsValue = isAkoCoupon ? Number(akoOddsForPublish.toFixed(2)) : Number(form.odds || 0)
+    const akoLegsText = akoLegsForPublish.map((leg, index) => `${index + 1}. ${leg.home} - ${leg.away}: ${leg.pick} @ ${Number(leg.odds || 0).toFixed(2)}`).join('\n')
+    const finalDescription = isAkoCoupon
+      ? [form.description, akoLegsText ? `Kupon AKO:\n${akoLegsText}` : ''].filter(Boolean).join('\n\n')
+      : form.description
     // V1640: zapisujemy ligę z faktycznie wybranego meczu, nie z aktywnej ligi w lewym menu.
     // Przy wyszukiwaniu meczu lewy sidebar może nadal mieć np. Premier League,
     // a wybrany fixture może być z Friendlies. Dashboard musi dostać ligę fixture'a.
-    const finalLeague = String(
+    const finalLeague = isAkoCoupon ? 'Kupon AKO' : String(
       publishMatch?.league ||
       publishMatch?.league_name ||
       publishMatch?.competition ||
@@ -9082,13 +9186,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       form.league ||
       'Liga'
     ).trim() || 'Liga'
-    const fixtureIdValue = publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null
-    const isApiBackedTip = addTipMode !== 'manual' && fixtureIdValue && !String(fixtureIdValue).startsWith('manual-')
+    const fixtureIdValue = isAkoCoupon ? null : (publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null)
+    const isApiBackedTip = !isAkoCoupon && addTipMode !== 'manual' && fixtureIdValue && !String(fixtureIdValue).startsWith('manual-')
     const initialSettlementStatus = 'pending'
     const settlementSource = isApiBackedTip ? 'api-football' : 'manual_visible_admin_settlement'
     const initialManualSettlementStatus = 'none'
     const initialAdminApprovalStatus = isApiBackedTip ? 'not_required' : 'none'
-    const statsBetTypeLabel = normalizeBetTypeForStats(form.market, form.betType)
+    const statsBetTypeLabel = isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : normalizeBetTypeForStats(form.market, form.betType)
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -9098,9 +9202,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       league: finalLeague,
       league_name: finalLeague,
       competition: finalLeague,
-      match: `${publishMatch.home} vs ${publishMatch.away}`,
-      team_home: publishMatch.home,
-      team_away: publishMatch.away,
+      match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: isAkoCoupon ? 'Kupon AKO' : publishMatch.home,
+      team_away: isAkoCoupon ? `${akoLegsForPublish.length} zdarzenia` : publishMatch.away,
       fixture_id: fixtureIdValue,
       api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
       external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
@@ -9117,20 +9221,20 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: form.market,
-      market_name: form.market,
+      market: isAkoCoupon ? 'AKO' : form.market,
+      market_name: isAkoCoupon ? 'AKO' : form.market,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      bet_type: form.betType,
-      prediction: form.betType,
-      odds: Number(form.odds || 0),
-      course: Number(form.odds || 0),
+      bet_type: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      odds: finalOddsValue,
+      course: finalOddsValue,
       stake: stakeValue,
-      description: form.description,
-      analysis: form.description,
+      description: finalDescription,
+      analysis: finalDescription,
       ai_analysis: form.aiAnalysis,
       ai_source: 'user_manual',
       ai_confidence: confidencePercent,
@@ -9142,6 +9246,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       price: priceValue,
       single_price: priceValue,
       tip_price: priceValue,
+      coupon_type: isAkoCoupon ? 'ako' : 'single',
+      is_ako: isAkoCoupon,
+      legs_count: isAkoCoupon ? akoLegsForPublish.length : 1,
+      legs_json: isAkoCoupon ? akoLegsForPublish : null,
       status: initialSettlementStatus,
       created_at: new Date().toISOString(),
     }
@@ -9153,9 +9261,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       league: finalLeague,
       league_name: finalLeague,
       competition: finalLeague,
-      match: `${publishMatch.home} vs ${publishMatch.away}`,
-      team_home: publishMatch.home,
-      team_away: publishMatch.away,
+      match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
+      team_home: isAkoCoupon ? 'Kupon AKO' : publishMatch.home,
+      team_away: isAkoCoupon ? `${akoLegsForPublish.length} zdarzenia` : publishMatch.away,
       fixture_id: fixtureIdValue,
       api_fixture_id: isApiBackedTip ? fixtureIdValue : null,
       external_fixture_id: isApiBackedTip ? fixtureIdValue : null,
@@ -9172,20 +9280,24 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: form.market,
-      market_name: form.market,
+      market: isAkoCoupon ? 'AKO' : form.market,
+      market_name: isAkoCoupon ? 'AKO' : form.market,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      bet_type: form.betType,
-      odds: Number(form.odds || 0),
+      bet_type: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      odds: finalOddsValue,
       stake: stakeValue,
-      description: form.description,
+      description: finalDescription,
       access_type: finalAccessType,
       is_premium: finalAccessType === 'premium',
       price: priceValue,
+      coupon_type: isAkoCoupon ? 'ako' : 'single',
+      is_ako: isAkoCoupon,
+      legs_count: isAkoCoupon ? akoLegsForPublish.length : 1,
+      legs_json: isAkoCoupon ? akoLegsForPublish : null,
       status: initialSettlementStatus,
       created_at: new Date().toISOString(),
     }
@@ -9197,26 +9309,30 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_email: email,
       email,
       league: finalLeague,
-      match: `${publishMatch.home} vs ${publishMatch.away}`,
+      match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: form.market,
-      market_name: form.market,
+      market: isAkoCoupon ? 'AKO' : form.market,
+      market_name: isAkoCoupon ? 'AKO' : form.market,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      prediction: form.betType,
-      odds: Number(form.odds || 0),
+      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      odds: finalOddsValue,
       stake: stakeValue,
-      description: form.description,
+      description: finalDescription,
       access_type: finalAccessType,
       is_premium: finalAccessType === 'premium',
       price: priceValue,
       single_price: priceValue,
       tip_price: priceValue,
+      coupon_type: isAkoCoupon ? 'ako' : 'single',
+      is_ako: isAkoCoupon,
+      legs_count: isAkoCoupon ? akoLegsForPublish.length : 1,
+      legs_json: isAkoCoupon ? akoLegsForPublish : null,
       status: initialSettlementStatus,
       settlement_status: initialSettlementStatus,
       manual_settlement_status: initialManualSettlementStatus,
@@ -9232,24 +9348,28 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_email: email,
       email,
       league: finalLeague,
-      match: `${publishMatch.home} vs ${publishMatch.away}`,
+      match: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : `${publishMatch.home} vs ${publishMatch.away}`,
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: form.market,
-      market_name: form.market,
+      market: isAkoCoupon ? 'AKO' : form.market,
+      market_name: isAkoCoupon ? 'AKO' : form.market,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      prediction: form.betType,
-      odds: Number(form.odds || 0),
+      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      odds: finalOddsValue,
       stake: stakeValue,
-      description: form.description,
+      description: finalDescription,
       access_type: finalAccessType,
       is_premium: finalAccessType === 'premium',
       price: priceValue,
+      coupon_type: isAkoCoupon ? 'ako' : 'single',
+      is_ako: isAkoCoupon,
+      legs_count: isAkoCoupon ? akoLegsForPublish.length : 1,
+      legs_json: isAkoCoupon ? akoLegsForPublish : null,
       status: initialSettlementStatus,
       settlement_status: initialSettlementStatus,
       manual_settlement_status: initialManualSettlementStatus,
@@ -9289,6 +9409,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
       saveTipDebug('SUCCESS', `tip:${savedRow.id || 'new'}`)
       setDailyCount(prev => prev + 1)
+      if (isAkoCoupon) {
+        setAkoSelections([])
+        setCouponMode('single')
+      }
       onToast?.({
         type: 'success',
         title: 'Typ opublikowany',
@@ -9592,7 +9716,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                           <div className="betfolio-event-odds">
                             {primaryOdds.map((entry) => {
                               const oddsItem = entry.item
-                              const isSelectedOdd = oddsItem && String(form.market) === String(oddsItem.market) && String(form.betType) === String(oddsItem.pick) && selectedMatch?.id === match.id && ticketMarketSelected
+                              const isSelectedOdd = oddsItem && (couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(match, oddsItem)) : (String(form.market) === String(oddsItem.market) && String(form.betType) === String(oddsItem.pick) && selectedMatch?.id === match.id && ticketMarketSelected))
                               return (
                                 <button
                                   type="button"
@@ -9748,7 +9872,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       {expanded && (
                         <div className="betfolio-market-options board-options">
                           {items.map((item, index) => {
-                            const active = ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds)
+                            const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
                             const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
                             return (
                               <button
@@ -9774,6 +9898,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
         {ticketMarketSelected && (
         <aside className="betfolio-right glass-ultra-panel">
+          <div className="betfolio-ticket-type-switch">
+            <button type="button" className={couponMode === 'single' ? 'active' : ''} onClick={() => setCouponModeSafe('single')}>Singiel</button>
+            <button type="button" className={couponMode === 'ako' ? 'active' : ''} onClick={() => setCouponModeSafe('ako')}>AKO</button>
+          </div>
           <div className="betfolio-ticket-top">
             <div className="betfolio-ticket-tabs">
               <button type="button" className={form.accessType === 'free' ? 'active' : ''} onClick={() => toggleAccess('free')}>Darmowy</button>
@@ -9781,17 +9909,30 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
             </div>
             <div className="betfolio-ticket-summary">
               <small>Wybrano</small>
-              <strong>{form.accessType === 'premium' ? 'Typ premium' : 'Typ darmowy'}</strong>
+              <strong>{couponMode === 'ako' ? `Kupon AKO (${akoSelections.length})` : (form.accessType === 'premium' ? 'Typ premium' : 'Typ darmowy')}</strong>
             </div>
           </div>
 
           <div className="betfolio-ticket-card">
             <small>Kupon / dodaj typ</small>
             <strong>{effectiveSelectedMatch ? `${effectiveSelectedMatch.home} - ${effectiveSelectedMatch.away}` : 'Brak realnego meczu'}</strong>
-            <span>{ticketMarketSelected ? `${form.market} • ${form.betType}` : addTipMode === 'manual' ? 'Wypełnij formularz ręczny i kliknij Dodaj zakład' : 'Kliknij prawdziwy kurs, aby dodać zakład'}</span>
+            <span>{couponMode === 'ako' ? (akoSelections.length ? `Kurs całkowity AKO: ${akoCouponOddsLabel}` : 'Klikaj kursy z meczów, aby budować AKO') : (ticketMarketSelected ? `${form.market} • ${form.betType}` : addTipMode === 'manual' ? 'Wypełnij formularz ręczny i kliknij Dodaj zakład' : 'Kliknij prawdziwy kurs, aby dodać zakład')}</span>
+            {couponMode === 'ako' && (
+              <div className="betfolio-ako-leg-list">
+                {akoSelections.length ? akoSelections.map((leg, index) => (
+                  <div className="betfolio-ako-leg" key={leg.key}>
+                    <b>{index + 1}</b>
+                    <span>{leg.home} - {leg.away}<small>{leg.market} • {leg.pick}</small></span>
+                    <strong>{Number(leg.odds || 0).toFixed(2)}</strong>
+                    <button type="button" onClick={() => removeAkoLeg(leg.key)} aria-label="Usuń z AKO">×</button>
+                  </div>
+                )) : <em>Dodaj minimum 2 zdarzenia. Kliknij kurs przy meczu lub wybór z listy rynków.</em>}
+                {akoSelections.length > 0 && <button type="button" className="betfolio-ako-clear" onClick={clearAkoTicket}>Wyczyść AKO</button>}
+              </div>
+            )}
             <div className="betfolio-ticket-row">
               <label>Kurs</label>
-              <input className="static-add-input" value={ticketMarketSelected ? form.odds : ''} placeholder="—" onChange={(e) => updateForm({ odds: e.target.value })} />
+              <input className="static-add-input" value={couponMode === 'ako' ? akoCouponOddsLabel : (ticketMarketSelected ? form.odds : '')} placeholder="—" readOnly={couponMode === 'ako'} onChange={(e) => updateForm({ odds: e.target.value })} />
             </div>
             <div className="betfolio-ticket-row">
               <label>Data meczu</label>
@@ -9848,9 +9989,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
           <div className="betfolio-publish-footer">
             <div className="betfolio-total-box">
               <span>Kurs całkowity</span>
-              <b>{Number(form.odds || 0).toFixed(2)}</b>
+              <b>{couponMode === 'ako' ? akoCouponOddsLabel : Number(form.odds || 0).toFixed(2)}</b>
             </div>
-            <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !effectiveSelectedMatch || !ticketMarketSelected} onClick={handlePublish}>
+            <button type="button" className="publish-btn betfolio-publish-btn" disabled={saving || limitReached || !effectiveSelectedMatch || !ticketMarketSelected || (couponMode === 'ako' && akoSelections.length < 2)} onClick={handlePublish}>
               {saving ? 'Publikowanie…' : 'Opublikuj typ'}
             </button>
           </div>

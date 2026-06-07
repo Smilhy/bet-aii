@@ -72408,3 +72408,103 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   background: rgba(20, 210, 230, .18);
   box-shadow: 0 0 14px rgba(37, 235, 255, .16), inset 0 0 12px rgba(31, 238, 255, .10);
 }
+
+/* WERSJA 1650 — tryb AKO w dodawaniu typu */
+.betfolio-ticket-type-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 6px;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 16px;
+  background: rgba(2, 18, 30, 0.72);
+}
+.betfolio-ticket-type-switch button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: rgba(226, 247, 255, 0.78);
+  background: rgba(8, 24, 38, 0.78);
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+.betfolio-ticket-type-switch button.active {
+  color: #001018;
+  background: linear-gradient(135deg, #20f4dd, #69a7ff);
+  box-shadow: 0 0 20px rgba(32, 244, 221, 0.24);
+}
+.betfolio-ako-leg-list {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 8px;
+}
+.betfolio-ako-leg-list em {
+  display: block;
+  padding: 10px;
+  border: 1px dashed rgba(34, 211, 238, 0.3);
+  border-radius: 12px;
+  color: rgba(226, 247, 255, 0.68);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.35;
+}
+.betfolio-ako-leg {
+  display: grid;
+  grid-template-columns: 26px 1fr auto 26px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid rgba(34, 211, 238, 0.16);
+  border-radius: 13px;
+  background: rgba(4, 26, 39, 0.82);
+}
+.betfolio-ako-leg > b {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  color: #001018;
+  background: #27eadf;
+  font-size: 12px;
+}
+.betfolio-ako-leg span {
+  min-width: 0;
+  color: #f2fbff;
+  font-weight: 850;
+  font-size: 12px;
+}
+.betfolio-ako-leg small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(226, 247, 255, 0.62);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.betfolio-ako-leg strong {
+  color: #f7fbff;
+  font-size: 13px;
+}
+.betfolio-ako-leg button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 999px;
+  color: #b8d9e8;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+.betfolio-ako-clear {
+  justify-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: rgba(226, 247, 255, 0.78);
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 800;
+  cursor: pointer;
+}
