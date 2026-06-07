@@ -72148,3 +72148,67 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   color:#9cafbd!important;
   font-weight:900!important;
 }
+
+/* WERSJA 1641 — badge sportu na karcie typu: ⚽ Piłka nożna */
+.profile-ticket-v6-sport-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  width:max-content;
+  max-width:100%;
+}
+.profile-ticket-v6-sport-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  max-width:100%;
+  padding:7px 13px;
+  border-radius:999px;
+  border:1px solid rgba(34,211,238,.34);
+  background:linear-gradient(180deg,rgba(34,211,238,.12),rgba(9,68,90,.16));
+  color:#e7fcff;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:.01em;
+  line-height:1;
+  white-space:nowrap;
+  box-shadow:0 0 0 rgba(34,211,238,0), inset 0 0 16px rgba(34,211,238,.07);
+  opacity:.92;
+  transform:translateZ(0);
+  transition:opacity .22s ease, transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+.profile-ticket-v6-sport-badge > span{
+  width:22px;
+  height:22px;
+  display:inline-grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(48,188,255,.14);
+  box-shadow:0 0 12px rgba(48,188,255,.16);
+  font-size:14px;
+}
+.profile-ticket-v6:hover .profile-ticket-v6-sport-badge,
+.profile-ticket-v6:focus-within .profile-ticket-v6-sport-badge{
+  opacity:1;
+  transform:translateY(-1px);
+  border-color:rgba(34,211,238,.76);
+  background:linear-gradient(180deg,rgba(34,211,238,.20),rgba(9,68,90,.24));
+  box-shadow:0 0 18px rgba(34,211,238,.25), 0 0 34px rgba(8,145,178,.13), inset 0 0 18px rgba(34,211,238,.13);
+}
+.profile-ticket-v6-sport-row .profile-ticket-v6-league{
+  margin:0;
+}
+@media (max-width: 760px){
+  .profile-ticket-v6-sport-badge{
+    opacity:1;
+    padding:6px 11px;
+    font-size:12px;
+  }
+  .profile-ticket-v6-sport-badge > span{
+    width:20px;
+    height:20px;
+    font-size:13px;
+  }
+}

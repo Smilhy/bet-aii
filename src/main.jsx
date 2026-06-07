@@ -10178,7 +10178,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
+        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>Piłka nożna</strong></span><span className="profile-ticket-v6-league"><strong>{tip.league}</strong></span></div>
         <div className="profile-ticket-v6-match">
           <div><TipTeamLogo logo={tip.home_logo || tip.homeLogo} teamId={tip.home_team_id || tip.homeTeamId} name={cardHome} /><strong>{cardHome}</strong></div>
           <span>vs</span>
@@ -19660,7 +19660,7 @@ function ProfileLiveTipCard({
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-league"><span>⚽</span><strong>{tip.league}</strong></div>
+        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>Piłka nożna</strong></span><span className="profile-ticket-v6-league"><strong>{tip.league}</strong></span></div>
         <div className="profile-ticket-v6-match">
           <div><TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} /><strong>{tip.home}</strong></div>
           <span>vs</span>
