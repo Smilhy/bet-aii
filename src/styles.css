@@ -71665,3 +71665,78 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     overflow:visible!important;
   }
 }
+
+/* =====================================================
+   WERSJA 1614 — FHD/24 HARD AUTO 75 REAL
+   Twardy tryb dla monitorów FHD 1920x1080: użytkownik zostawia zoom przeglądarki 100%,
+   a aplikacja dostaje efekt jak ręczne 75%. Nie dotyka 2K, 1680x1050 ani tabletu.
+   ===================================================== */
+html.betai-fhd-hard75-v1614,
+html.betai-fhd-hard75-v1614 body{
+  width:133.333vw!important;
+  min-width:133.333vw!important;
+  max-width:none!important;
+  min-height:133.333vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  background:#020914!important;
+}
+html.betai-fhd-hard75-v1614 body{
+  zoom:.75!important;
+  transform:none!important;
+  transform-origin:0 0!important;
+}
+html.betai-fhd-hard75-v1614 body #root{
+  width:133.333vw!important;
+  min-width:133.333vw!important;
+  max-width:none!important;
+  min-height:133.333vh!important;
+  overflow:visible!important;
+  background:#020914!important;
+}
+html.betai-fhd-hard75-v1614 body #root .auth609-screen,
+html.betai-fhd-hard75-v1614 body #root .app-shell{
+  width:133.333vw!important;
+  max-width:none!important;
+  margin:0!important;
+}
+html.betai-fhd-hard75-v1614 body #root .auth609-screen{
+  min-height:133.333vh!important;
+  justify-content:flex-start!important;
+  align-items:flex-start!important;
+}
+html.betai-fhd-hard75-v1614 body #root .auth609-artboard{
+  width:2400px!important;
+  min-width:2400px!important;
+  max-width:none!important;
+}
+html.betai-fhd-hard75-v1614 body #root .app-shell{
+  min-height:133.333vh!important;
+  grid-template-columns:260px minmax(0,1fr) 420px!important;
+  gap:18px!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+}
+html.betai-fhd-hard75-v1614 body #root .app-shell.no-rightbar-page{
+  grid-template-columns:260px minmax(0,1fr)!important;
+}
+html.betai-fhd-hard75-v1614 body #root .main,
+html.betai-fhd-hard75-v1614 body #root .content,
+html.betai-fhd-hard75-v1614 body #root .main-content,
+html.betai-fhd-hard75-v1614 body #root .dashboard-main,
+html.betai-fhd-hard75-v1614 body #root .page-content{
+  max-width:none!important;
+  min-width:0!important;
+}
+html.betai-fhd-hard75-v1614 body #root .rightbar,
+html.betai-fhd-hard75-v1614 body #root .right-panel,
+html.betai-fhd-hard75-v1614 body #root .dashboard-right{
+  width:420px!important;
+  min-width:420px!important;
+}
+html.betai-fhd-hard75-v1614 body #root .sidebar,
+html.betai-fhd-hard75-v1614 body #root .side-nav,
+html.betai-fhd-hard75-v1614 body #root .leftbar{
+  width:260px!important;
+  min-width:260px!important;
+}

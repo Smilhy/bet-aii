@@ -1,0 +1,5 @@
+WERSJA 1614 — FHD/24 HARD AUTO 75 REAL
+- twardy tryb dla 1920x1080 / 24 cale: użytkownik zostawia zoom przeglądarki 100%, a strona zachowuje się jak ręczne 75%
+- mocniejszy JS w index.html, działa po DOMContentLoaded/load/resize i powtarza apply kilka razy
+- nie dotyka 2K, 1680x1050, tabletu 10 cali
+- bez SQL, bez zmian Supabase/Stripe/logiki

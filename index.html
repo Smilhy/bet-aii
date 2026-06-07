@@ -5,6 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <script>
+    // WERSJA 1614 — FHD 1920x1080 / 24" HARD AUTO 75.
+    // Twardo wymusza efekt jak ręczny zoom 75%, ale tylko na FHD/24 przy zoomie przeglądarki 100%.
+    (function () {
+      var applied = false;
+      function isTargetFhd24() {
+        try {
+          var dpr = window.devicePixelRatio || 1;
+          var sw = window.screen && window.screen.width ? window.screen.width : 0;
+          var sh = window.screen && window.screen.height ? window.screen.height : 0;
+          var swPhys = Math.round(sw * dpr);
+          var shPhys = Math.round(sh * dpr);
+          var maxPhys = Math.max(swPhys, shPhys);
+          var minPhys = Math.min(swPhys, shPhys);
+          var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
+          var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
+          var maxView = Math.max(vw, vh);
+          var minView = Math.min(vw, vh);
+          var touch = (navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0) > 1;
+          if (touch) return false;
+          if (maxPhys >= 2450 || maxView >= 2200) return false; // 2K/duże monitory bez zmian
+          if (maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085) return false; // 1680x1050 bez zmian
+          var physicalFhd = maxPhys >= 1880 && maxPhys <= 2050 && minPhys >= 1000 && minPhys <= 1160;
+          var cssFhd = Math.max(sw, sh) >= 1880 && Math.max(sw, sh) <= 2050 && Math.min(sw, sh) >= 1000 && Math.min(sw, sh) <= 1160;
+          var scaledFhd = maxPhys >= 1880 && maxPhys <= 2050 && maxView >= 1450 && maxView <= 2050 && minView >= 700 && minView <= 1160;
+          return physicalFhd || cssFhd || scaledFhd;
+        } catch (e) { return false; }
+      }
+      function applyHard75() {
+        if (!isTargetFhd24()) return;
+        applied = true;
+        var html = document.documentElement;
+        html.classList.add('betai-fhd-hard75-v1614');
+        html.classList.add('betai-fhd-auto75-v1613');
+        html.style.setProperty('--betai-fhd-auto75-scale', '0.75');
+        html.style.setProperty('--betai-fhd-auto75-width', '133.333vw');
+        if (document.body) {
+          document.body.classList.add('betai-fhd-hard75-v1614');
+          document.body.classList.add('betai-fhd-auto75-v1613');
+          document.body.style.setProperty('zoom', '0.75', 'important');
+          document.body.style.setProperty('width', '133.333vw', 'important');
+          document.body.style.setProperty('min-width', '133.333vw', 'important');
+          document.body.style.setProperty('max-width', 'none', 'important');
+          document.body.style.setProperty('overflow-x', 'hidden', 'important');
+          document.body.style.setProperty('overflow-y', 'auto', 'important');
+        }
+        var root = document.getElementById('root');
+        if (root) {
+          root.style.setProperty('width', '133.333vw', 'important');
+          root.style.setProperty('min-width', '133.333vw', 'important');
+          root.style.setProperty('max-width', 'none', 'important');
+          root.style.setProperty('overflow', 'visible', 'important');
+        }
+        window.__BETAI_FHD_HARD75_V1614__ = true;
+        window.__BETAI_FHD_AUTO75_V1613__ = true;
+      }
+      applyHard75();
+      document.addEventListener('DOMContentLoaded', applyHard75);
+      window.addEventListener('load', applyHard75);
+      window.addEventListener('resize', applyHard75);
+      [50, 150, 400, 900, 1600, 3000].forEach(function (ms) { window.setTimeout(applyHard75, ms); });
+    })();
+  </script>
+
+
+  <script>
     // WERSJA 1613 — FHD 1920x1080 / 24" AUTO 75%.
     // Mocniejsze wykrywanie: łapie zarówno 1920x1080, jak i ~1536x864 przy skalowaniu Windows.
     (function () {
