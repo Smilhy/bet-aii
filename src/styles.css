@@ -72212,3 +72212,55 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:13px;
   }
 }
+
+
+/* WERSJA 1642 — czytelniejsza kwota stawki na karcie typu */
+.profile-ticket-v6 .profile-ticket-v6-field.stake{
+  justify-items:start!important;
+  align-content:center!important;
+  gap:7px!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-field.stake small{
+  margin-bottom:0!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-field.stake .profile-ticket-v6-stake-value,
+.profile-ticket-v6 .profile-ticket-v6-field.stake strong.profile-ticket-v6-stake-value,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.stake .profile-ticket-v6-stake-value,
+.app-shell:not(.no-rightbar-page) .main .dashboard-ticket-v6 .profile-ticket-v6-field.stake strong.profile-ticket-v6-stake-value{
+  display:flex!important;
+  align-items:flex-end!important;
+  gap:5px!important;
+  color:#f7fbff!important;
+  font-size:31px!important;
+  line-height:.95!important;
+  font-weight:1000!important;
+  letter-spacing:-.055em!important;
+  text-shadow:0 0 16px rgba(34,211,238,.16), 0 2px 0 rgba(0,0,0,.18)!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-field.stake .profile-ticket-v6-stake-currency{
+  color:#dcefff!important;
+  font-size:13px!important;
+  line-height:1.05!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+  opacity:.92!important;
+  margin-bottom:2px!important;
+}
+.profile-ticket-v6 .profile-ticket-v6-field.stake i{
+  width:72%!important;
+  max-width:96px!important;
+  min-width:56px!important;
+  height:6px!important;
+  margin-top:2px!important;
+  background:rgba(255,255,255,.075)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+.profile-ticket-v6:hover .profile-ticket-v6-field.stake .profile-ticket-v6-stake-value{
+  text-shadow:0 0 18px rgba(34,211,238,.24), 0 0 30px rgba(20,184,166,.10)!important;
+}
+@media (max-width:760px){
+  .profile-ticket-v6 .profile-ticket-v6-field.stake .profile-ticket-v6-stake-value,
+  .profile-ticket-v6 .profile-ticket-v6-field.stake strong.profile-ticket-v6-stake-value{
+    font-size:28px!important;
+  }
+}
