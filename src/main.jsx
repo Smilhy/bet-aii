@@ -18470,6 +18470,12 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
 
   async function startCheckout() {
     setPaymentError('')
+
+    if (isTipAlreadyStarted(normalizeTipRow(tip), Date.now())) {
+      setPaymentError('Ten mecz już się rozpoczął, więc singiel nie może być kupiony.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -18500,6 +18506,10 @@ function PaymentModal({ tip, user, onClose, onSuccess }) {
   }
 
   function demoUnlock() {
+    if (isTipAlreadyStarted(normalizeTipRow(tip), Date.now())) {
+      setPaymentError('Ten mecz już się rozpoczął, więc singiel nie może być odblokowany.')
+      return
+    }
     onSuccess(tip)
   }
 
@@ -25185,7 +25195,7 @@ function isTipAlreadyStarted(tip = {}, now = Date.now()) {
   return ts <= now
 }
 
-function isTipVisibleInActiveFeed(tip) {
+function isTipVisibleInActiveFeed(tip, now = Date.now()) {
   const normalized = normalizeTipRow(tip || {})
   const status = String(normalized.status || 'pending').toLowerCase()
   const approvalStatus = String(normalized.admin_approval_status || normalized.manual_settlement_status || '').toLowerCase()
@@ -25215,7 +25225,7 @@ function isTipVisibleInActiveFeed(tip) {
 
   // v1102: kupon po starcie meczu znika z Dashboardu/marketplace, nawet jeżeli auto-rozliczenie
   // jeszcze nie zdążyło zmienić pending -> won/lost. Zostaje w profilu/Wynikach/Historii.
-  if (isTipAlreadyStarted(normalized)) return false
+  if (isTipAlreadyStarted(normalized, now)) return false
 
   return true
 }
@@ -25229,6 +25239,7 @@ function App() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [topSearch, setTopSearch] = useState('')
   const [dashboardVisibleTips, setDashboardVisibleTips] = useState(3)
+  const [dashboardNow, setDashboardNow] = useState(() => Date.now())
   const [view, setView] = useState('dashboard')
   const [sessionUser, setSessionUser] = useState(null)
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => isPasswordRecoveryUrl())
@@ -27940,6 +27951,16 @@ function App() {
       return
     }
 
+    if (isTipAlreadyStarted(normalizeTipRow(tip), Date.now())) {
+      showToast({
+        type: 'error',
+        title: 'Typ już niedostępny',
+        message: 'Ten mecz już się rozpoczął, więc singiel nie może być kupiony.'
+      })
+      fetchTips?.()
+      return
+    }
+
     setSelectedPayment(tip)
   }
 
@@ -28188,7 +28209,7 @@ function App() {
   }
 
   const allUserTips = tips.filter(isUserTip).map(normalizeTipRow)
-  const userOnlyTips = allUserTips.filter(isTipVisibleInActiveFeed)
+  const userOnlyTips = allUserTips.filter(tip => isTipVisibleInActiveFeed(tip, dashboardNow))
   const hiddenSettledDashboardTipsCount = allUserTips.length - userOnlyTips.length
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
@@ -28348,6 +28369,27 @@ function App() {
     }
   }, [sessionUser?.id, sessionUser?.email, accountProfile?.email])
 
+
+  useEffect(() => {
+    if (view !== 'dashboard') return undefined
+
+    const now = Date.now()
+    setDashboardNow(now)
+
+    const nextKickoffTs = filteredTips
+      .map(tip => getTipKickoffTimestamp(normalizeTipRow(tip)))
+      .filter(ts => Number.isFinite(ts) && ts > now)
+      .sort((a, b) => a - b)[0]
+
+    if (!Number.isFinite(nextKickoffTs)) return undefined
+
+    const delay = Math.max(0, Math.min(nextKickoffTs - now + 150, 2147483647))
+    const timeout = window.setTimeout(() => {
+      setDashboardNow(Date.now())
+    }, delay)
+
+    return () => window.clearTimeout(timeout)
+  }, [view, filteredTips.map(tip => `${tip.id || tip.local_id || ''}:${getTipKickoffTimestamp(normalizeTipRow(tip))}`).join('|')])
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)
   const hasMoreDashboardTips = filteredTips.length > dashboardVisibleTips
