@@ -72092,3 +72092,58 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:19px;
   }
 }
+
+/* WERSJA 1631 — tooltip info BETA zawsze nad wszystkim, nie pod tłem */
+.auth609-overlay,
+.auth609-left-panel,
+.auth609-panel-shell-fixed,
+.auth609-center-wrap,
+.auth609-heading-copy,
+.auth609-beta-banner{
+  overflow:visible !important;
+}
+.auth609-left-panel{
+  position:relative !important;
+  z-index:120 !important;
+  isolation:isolate !important;
+}
+.auth609-panel-shell-fixed,
+.auth609-center-wrap,
+.auth609-heading-copy,
+.auth609-beta-banner{
+  position:relative !important;
+}
+.auth609-beta-banner{
+  z-index:5000 !important;
+  isolation:isolate !important;
+}
+.auth609-beta-info{
+  z-index:5100 !important;
+}
+.auth609-beta-tooltip{
+  top:34px !important;
+  right:-14px !important;
+  z-index:5200 !important;
+  pointer-events:none !important;
+  backdrop-filter:blur(14px) !important;
+}
+.auth609-beta-tooltip::before{
+  right:20px !important;
+}
+@media (max-width: 1100px){
+  .auth609-beta-tooltip{
+    right:-10px !important;
+  }
+  .auth609-beta-tooltip::before{
+    right:18px !important;
+  }
+}
+@media (max-width: 760px){
+  .auth609-beta-tooltip{
+    right:-8px !important;
+    top:32px !important;
+  }
+  .auth609-beta-tooltip::before{
+    right:16px !important;
+  }
+}
