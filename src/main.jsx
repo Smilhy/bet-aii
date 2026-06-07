@@ -18244,7 +18244,13 @@ function AuthView({ onAuth }) {
                 <div className="auth609-heading-copy auth609-heading-center">
                   <div className="auth609-beta-banner" role="note" aria-label="Informacja o wersji beta">
                     <span className="auth609-beta-kicker">WERSJA BETA</span>
-                    <p>⚠️ Strona jest w wersji BETA. Jeśli widok wygląda źle, użyj zoomu/lupy w przeglądarce i dopasuj widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</p>
+                    <p>
+                      <span className="auth609-beta-line"><span className="auth609-beta-icon">⚠️</span><strong>Strona jest w wersji BETA.</strong></span>
+                      <span className="auth609-beta-line">Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają</span>
+                      <span className="auth609-beta-line">albo strona nie dopasowuje się do ekranu,</span>
+                      <span className="auth609-beta-line">użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie.</span>
+                      <span className="auth609-beta-line">Będziemy na bieżąco naprawiać takie błędy.</span>
+                    </p>
                   </div>
                   <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
                   <p className="auth609-subtitle-main auth620-subtitle-main">{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>

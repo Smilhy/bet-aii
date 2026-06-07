@@ -71802,3 +71802,70 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     line-height:1.4;
   }
 }
+
+/* WERSJA 1623 — większy i czytelniejszy banner BETA nad logo logowania */
+.auth609-beta-banner{
+  width:min(100%, 580px) !important;
+  margin:0 auto 24px !important;
+  padding:14px 22px 16px !important;
+  border-radius:22px !important;
+}
+.auth609-beta-kicker{
+  margin-bottom:8px !important;
+  padding:6px 16px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+.auth609-beta-banner p{
+  margin:0 auto !important;
+  max-width:530px !important;
+  font-size:14px !important;
+  line-height:1.5 !important;
+  font-weight:700 !important;
+}
+.auth609-beta-line{display:block;}
+.auth609-beta-line + .auth609-beta-line{margin-top:2px;}
+.auth609-beta-banner strong{
+  color:#f5fbff;
+  font-weight:900;
+}
+.auth609-beta-icon{
+  display:inline-block;
+  margin-right:6px;
+  transform:translateY(-1px);
+}
+.auth609-beta-highlight{
+  color:#ffd84e;
+  font-weight:900;
+  text-shadow:0 0 12px rgba(255, 210, 51, 0.45), 0 0 24px rgba(255, 190, 11, 0.18);
+}
+@media (max-width: 1200px){
+  .auth609-beta-banner{
+    width:min(100%, 520px) !important;
+    padding:13px 18px 15px !important;
+  }
+  .auth609-beta-banner p{
+    font-size:13.5px !important;
+  }
+}
+@media (max-width: 760px){
+  .auth609-beta-banner{
+    width:min(100%, 420px) !important;
+    margin:0 auto 18px !important;
+    padding:12px 14px 14px !important;
+    border-radius:18px !important;
+  }
+  .auth609-beta-kicker{
+    font-size:10.5px !important;
+    letter-spacing:0.14em !important;
+    padding:5px 12px !important;
+  }
+  .auth609-beta-banner p{
+    max-width:100% !important;
+    font-size:13px !important;
+    line-height:1.48 !important;
+  }
+  .auth609-beta-line + .auth609-beta-line{
+    margin-top:3px;
+  }
+}
