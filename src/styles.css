@@ -71869,3 +71869,79 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     margin-top:3px;
   }
 }
+
+
+/* WERSJA 1624 — banner BETA: mniejsza czcionka i szersze pole, aby tekst nie był ucinany */
+.auth609-beta-banner{
+  width:min(100%, 640px) !important;
+  max-width:calc(100% - 18px) !important;
+  margin:0 auto 22px !important;
+  padding:13px 20px 15px !important;
+  border-radius:22px !important;
+}
+.auth609-beta-kicker{
+  margin-bottom:7px !important;
+  padding:5px 14px !important;
+  font-size:11px !important;
+  letter-spacing:0.16em !important;
+}
+.auth609-beta-banner p{
+  max-width:590px !important;
+  font-size:12.5px !important;
+  line-height:1.42 !important;
+  font-weight:700 !important;
+  word-break:normal !important;
+  overflow-wrap:break-word !important;
+}
+.auth609-beta-line{
+  display:block;
+}
+.auth609-beta-line + .auth609-beta-line{
+  margin-top:1px !important;
+}
+@media (max-width: 1200px){
+  .auth609-beta-banner{
+    width:min(100%, 600px) !important;
+    max-width:calc(100% - 16px) !important;
+    padding:12px 18px 14px !important;
+  }
+  .auth609-beta-banner p{
+    max-width:550px !important;
+    font-size:12px !important;
+    line-height:1.4 !important;
+  }
+}
+@media (max-width: 760px){
+  .auth609-beta-banner{
+    width:calc(100% - 12px) !important;
+    max-width:100% !important;
+    margin:0 auto 16px !important;
+    padding:11px 14px 13px !important;
+    border-radius:18px !important;
+  }
+  .auth609-beta-kicker{
+    font-size:10px !important;
+    padding:5px 12px !important;
+    letter-spacing:0.13em !important;
+  }
+  .auth609-beta-banner p{
+    max-width:100% !important;
+    font-size:11px !important;
+    line-height:1.36 !important;
+  }
+}
+@media (max-width: 480px){
+  .auth609-beta-banner{
+    width:calc(100% - 8px) !important;
+    padding:10px 12px 12px !important;
+    border-radius:16px !important;
+  }
+  .auth609-beta-banner p{
+    font-size:10.5px !important;
+    line-height:1.34 !important;
+  }
+  .auth609-beta-kicker{
+    font-size:9.5px !important;
+    padding:4px 11px !important;
+  }
+}
