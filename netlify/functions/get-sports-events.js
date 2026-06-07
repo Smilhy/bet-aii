@@ -27,6 +27,14 @@ exports.handler = async function(event) {
   const daysAhead = Math.max(0, Math.min(365, Number(qs.days ?? qs.daysAhead ?? explicitRangeDays ?? 365) || 0))
   const requestedSportText = String(sport || '').trim()
   const requestedAllSports = ['wszystkie', 'wszystkie sporty', 'all', 'all sports', '*'].includes(requestedSportText.toLowerCase())
+  const isRequestedBasketball = () => {
+    const raw = String(sport || '').toLowerCase()
+    return raw.includes('kosz') || raw.includes('basket') || raw.includes('nba')
+  }
+  const isRequestedFootball = () => {
+    const raw = String(sport || '').toLowerCase()
+    return raw.includes('pił') || raw.includes('pil') || raw.includes('football') || raw.includes('soccer')
+  }
 
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -305,6 +313,24 @@ exports.handler = async function(event) {
     const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
     const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague)
     return countryMatches && leagueMatches
+  }
+
+
+  const matchesRequestedBasketballScope = (fixture) => {
+    const wantedLeague = normalizeLoose(league)
+    const wantedCountry = normalizeLoose(country)
+    const actualLeague = normalizeLoose(fixture?.league || fixture?.sportTitle || '')
+    const actualCountry = normalizeLoose(fixture?.country || '')
+    const countryIsWide = !wantedCountry || ['wszystkie', 'swiat', 'world', 'all'].includes(wantedCountry)
+    const leagueIsWide = !wantedLeague || wantedLeague.includes('wszystkie') || wantedLeague.includes('koszyk') || wantedLeague.includes('basketball')
+    const countryMatches = countryIsWide || actualCountry.includes(wantedCountry) || wantedCountry.includes(actualCountry)
+    const leagueMatches = leagueIsWide || actualLeague.includes(wantedLeague) || wantedLeague.includes(actualLeague) || (wantedLeague === 'nba' && actualLeague.includes('nba'))
+    return countryMatches && leagueMatches
+  }
+
+  const matchesRequestedScope = (fixture) => {
+    if (isRequestedBasketball()) return matchesRequestedBasketballScope(fixture)
+    return matchesRequestedFootballScope(fixture)
   }
 
   const apiFootballLeagueIds = {
@@ -665,6 +691,9 @@ exports.handler = async function(event) {
     soccer_turkey_super_league: { country: 'Turcja', league: 'Süper Lig' },
     soccer_belgium_first_div: { country: 'Belgia', league: 'First Division A' },
     soccer_scotland_premiership: { country: 'Szkocja', league: 'Premiership' },
+    basketball_nba: { country: 'USA', league: 'NBA' },
+    basketball_wnba: { country: 'USA', league: 'WNBA' },
+    basketball_ncaab: { country: 'USA', league: 'NCAAB' },
   }
 
   const mapOddsItemToFixture = (item, index, sourceKey = '') => {
@@ -845,11 +874,20 @@ exports.handler = async function(event) {
   }
 
 
-  const getApiSportsKey = () => process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || process.env.API_FOOTBALL || process.env.VITE_APISPORTS_KEY || process.env.VITE_API_FOOTBALL_KEY || ''
+  const getApiSportsKey = () => {
+    if (isRequestedBasketball()) {
+      return process.env.API_BASKETBALL_KEY || process.env.APISPORTS_BASKETBALL_KEY || process.env.BASKETBALL_API_KEY || process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || ''
+    }
+    return process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY || process.env.API_FOOTBALL || process.env.VITE_APISPORTS_KEY || process.env.VITE_API_FOOTBALL_KEY || ''
+  }
 
   const getApiSportsConfigs = () => {
-    // FOOTBALL PRO MODE: po zakupie API-FOOTBALL Pro korzystamy tylko z piłki nożnej,
-    // aby nie przepalać darmowych limitów innych sportów.
+    if (isRequestedBasketball()) {
+      return [
+        { key: 'api-basketball', sportName: 'Koszykówka', host: 'https://v1.basketball.api-sports.io', path: '/games', type: 'basketball' }
+      ]
+    }
+    // FOOTBALL PRO MODE: piłka nożna zostaje na obecnym API-FOOTBALL i nie ruszamy jej logiki.
     return [
       { key: 'api-football', sportName: 'Piłka nożna', host: 'https://v3.football.api-sports.io', path: '/fixtures', type: 'football' }
     ]
@@ -891,6 +929,10 @@ exports.handler = async function(event) {
 
   const apiFootballTeamLogoUrl = (teamId) => teamId
     ? `https://media.api-sports.io/football/teams/${teamId}.png`
+    : ''
+
+  const apiBasketballTeamLogoUrl = (teamId) => teamId
+    ? `https://media.api-sports.io/basketball/teams/${teamId}.png`
     : ''
 
   const mapApiSportsItemToFixture = (item, index, cfg) => {
@@ -941,22 +983,26 @@ exports.handler = async function(event) {
       status_short: statusShort,
       status_long: statusLong,
       status_elapsed: item?.fixture?.status?.elapsed ?? item?.status?.elapsed ?? null,
-      source: 'api-football',
+      source: cfg.type === 'basketball' ? 'api-basketball' : 'api-football',
       apiFixtureId: firstText(item?.fixture?.id, item?.id),
       homeTeamId: firstText(item?.teams?.home?.id, item?.home?.id),
       awayTeamId: firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id),
       homeLogo: firstText(
         item?.teams?.home?.logo,
         item?.home?.logo,
-        apiFootballTeamLogoUrl(firstText(item?.teams?.home?.id, item?.home?.id))
+        cfg.type === 'basketball'
+          ? apiBasketballTeamLogoUrl(firstText(item?.teams?.home?.id, item?.home?.id))
+          : apiFootballTeamLogoUrl(firstText(item?.teams?.home?.id, item?.home?.id))
       ),
       awayLogo: firstText(
         item?.teams?.away?.logo,
         item?.teams?.visitors?.logo,
         item?.away?.logo,
-        apiFootballTeamLogoUrl(firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id))
+        cfg.type === 'basketball'
+          ? apiBasketballTeamLogoUrl(firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id))
+          : apiFootballTeamLogoUrl(firstText(item?.teams?.away?.id, item?.teams?.visitors?.id, item?.away?.id))
       ),
-      markets: [],
+      markets: cfg.type === 'basketball' ? buildMarkets(home, away, [], 'Koszykówka NBA') : [],
       hasRealOdds: false,
     }
   }
@@ -1243,7 +1289,7 @@ exports.handler = async function(event) {
     const configs = getApiSportsConfigs()
     if (!configs.length) return { configs: [], fixtures: [], message: 'API-Sports nie ma mapowania dla tego sportu w tej wersji.' }
 
-    if (mode === 'search' && query) {
+    if (mode === 'search' && query && configs[0]?.type === 'football') {
       const searched = await searchApiFootballFixtures(apiKey, query)
       if (searched.fixtures.length) {
         // Wyszukiwarka działała poprawnie dla meczów, ale wcześniej zwracała je
@@ -1347,7 +1393,7 @@ exports.handler = async function(event) {
           if (!Number.isFinite(kickMs)) return true
           return kickMs > Date.now() + 2 * 60 * 1000
         })
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(item => allLeagues || matchesRequestedScope(item))
         .filter(matchesRequestedFootballText)
         .forEach(item => collected.push(item))
     }
@@ -1367,17 +1413,19 @@ exports.handler = async function(event) {
     // League-today też musi dociągać kursy. Wcześniej celowo zwracaliśmy markets: [],
     // więc lista pokazywała mecze, ale 1/X/2 miało kreski i API-FOOTBALL nie zużywało requestów na /odds.
     // Dla konkretnej ligi robimy odds po fixture, bo to jest dokładniejsze niż skanowanie całej daty.
-    const oddsEnriched = mode === 'league-today'
-      ? await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures)
-      : await enrichFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures, dateKeys)
+    const oddsEnriched = configs[0]?.type === 'football'
+      ? (mode === 'league-today'
+          ? await enrichSearchFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures)
+          : await enrichFixturesWithApiFootballOdds(apiKey, configs[0], baseFixtures, dateKeys))
+      : { fixtures: baseFixtures, errors: [] }
     const fixtures = oddsEnriched.fixtures
     errors.push(...oddsEnriched.errors)
 
     const emptyMessage = mode === 'search' && query
-      ? `API-FOOTBALL Pro nie znalazło meczu dla frazy „${query}”.`
+      ? `API nie znalazło meczu dla frazy „${query}”.`
       : mode === 'today' || mode === 'all-today'
-        ? 'API-FOOTBALL Pro nie zwróciło dziś meczów.'
-        : 'API-FOOTBALL Pro nie zwróciło meczów dla wybranej ligi i zakresu.'
+        ? 'API nie zwróciło dziś meczów.'
+        : 'API nie zwróciło meczów dla wybranej ligi i zakresu.'
 
     return {
       configs: configs.map(cfg => cfg.key),
@@ -1390,7 +1438,7 @@ exports.handler = async function(event) {
   try {
     if (!forceRefresh && mode === 'search' && query) {
       const cachedFixtures = (await readCachedFixtures({ rawQuery: query }))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(item => allLeagues || matchesRequestedScope(item))
       if (cachedFixtures.length) {
         return {
           statusCode: 200,
@@ -1410,7 +1458,7 @@ exports.handler = async function(event) {
 
     if (!forceRefresh && mode !== 'search') {
       const cachedFixtures = (await readCachedFixtures({}))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(item => allLeagues || matchesRequestedScope(item))
         .filter(item => {
           if (mode === 'today' || mode === 'all-today') return toLocalDateKey(item.commence_time) === date
           return isLocalDateInRange(item.commence_time, date, daysAhead)
@@ -1443,7 +1491,7 @@ exports.handler = async function(event) {
 
     // CLEAN LEAGUE MODE: dla konkretnej ligi i dzisiejszej daty pobieramy tylko tę ligę z API-FOOTBALL.
     // Bez skanowania dni, bez mieszania źródeł, bez podmiany na obce ligi.
-    if (mode === 'league-today' && !allLeagues) {
+    if (mode === 'league-today' && !allLeagues && isRequestedFootball()) {
       const apiSports = await fetchApiSportsFixtures(apiSportsKey, 0, date)
       if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
       return {
@@ -1494,7 +1542,7 @@ exports.handler = async function(event) {
 
         const seen = new Set()
         const fixtures = collected
-          .filter(item => allLeagues || matchesRequestedFootballScope(item))
+          .filter(item => allLeagues || matchesRequestedScope(item))
           .filter(matchesRequestedFootballText)
           .sort((a, b) => Date.parse(a.commence_time || '') - Date.parse(b.commence_time || ''))
           .filter(item => {
@@ -1520,7 +1568,7 @@ exports.handler = async function(event) {
     if (apiSports.fixtures?.length && !countOnly) await writeFixturesToCache(apiSports.fixtures)
     if (!apiSports.fixtures?.length && !countOnly) {
       const cachedFallback = (await readCachedFixtures({ rawQuery: mode === 'search' ? query : '' }))
-        .filter(item => allLeagues || matchesRequestedFootballScope(item))
+        .filter(item => allLeagues || matchesRequestedScope(item))
       if (cachedFallback.length) {
         return {
           statusCode: 200,
@@ -1561,7 +1609,7 @@ exports.handler = async function(event) {
         body: JSON.stringify({
           ok: true,
           demo: false,
-          source: 'api-football-pro',
+          source: isRequestedBasketball() ? 'api-basketball' : 'api-football-pro',
           oddsSourceMessage: oddsMessage,
           oddsSportKeys,
           apiSportsConfigs: apiSports.configs,
@@ -1581,7 +1629,7 @@ exports.handler = async function(event) {
       body: JSON.stringify({
         ok: true,
         demo: false,
-        source: 'api-football-pro',
+        source: isRequestedBasketball() ? 'api-basketball' : 'api-football-pro',
         oddsSourceMessage: oddsMessage,
         oddsSportKeys,
         apiSportsConfigs: apiSports.configs,
@@ -1591,10 +1639,10 @@ exports.handler = async function(event) {
         fixtures: apiSports.fixtures,
         message: apiSports.fixtures.length
           ? (mode === 'today'
-              ? 'Realne dzisiejsze mecze piłkarskie pobrane z API-FOOTBALL Pro.'
+              ? (isRequestedBasketball() ? 'Realne mecze NBA pobrane z API.' : 'Realne dzisiejsze mecze piłkarskie pobrane z API-FOOTBALL Pro.')
               : mode === 'search'
-                ? `Realne wyniki wyszukiwania dla „${query}” pobrane z API-FOOTBALL Pro.`
-                : `Realne mecze piłkarskie z najbliższych ${daysAhead} dni pobrane z API-FOOTBALL Pro.`)
+                ? isRequestedBasketball() ? `Realne wyniki wyszukiwania NBA dla „${query}” pobrane z API.` : `Realne wyniki wyszukiwania dla „${query}” pobrane z API-FOOTBALL Pro.`
+                : isRequestedBasketball() ? `Realne mecze NBA z najbliższych ${daysAhead} dni pobrane z API.` : `Realne mecze piłkarskie z najbliższych ${daysAhead} dni pobrane z API-FOOTBALL Pro.`)
           : `${oddsMessage} ${apiSports.message}`.trim()
       })
     }

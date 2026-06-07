@@ -6549,7 +6549,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   const sidebarComingSoonSports = [
     'Tenis',
-    'Koszykówka',
     'Hokej',
     'MMA',
     'E-sport',
@@ -8599,10 +8598,43 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })
   }
 
+
+  function fetchBasketballNbaMatches() {
+    setFootballViewMode('league-today')
+    setFixtureSearchPerformed(false)
+    setSidebarSearch('')
+    setLiveFixtures([])
+    setLiveDataSource('loading')
+    setLiveFixturesStatus('Pobieram mecze NBA z kursami...')
+    updateForm({
+      sport: 'Koszykówka',
+      country: 'USA',
+      league: 'NBA',
+      matchId: '',
+      market: '',
+      betType: '',
+      odds: '',
+    })
+    fetchLiveFixturesForDay({
+      sport: 'Koszykówka',
+      country: 'USA',
+      league: 'NBA',
+      date: getTodayLocalKey(),
+      daysAhead: 30,
+      allLeagues: false,
+      mode: 'league-today',
+    })
+  }
+
   function handleFixtureSearchSubmit(event) {
     event?.preventDefault?.()
     const query = String(sidebarSearch || '').trim()
+    const activeSearchSport = openSidebarSport === 'Koszykówka' || form.sport === 'Koszykówka' ? 'Koszykówka' : 'Piłka nożna'
     if (!query) {
+      if (activeSearchSport === 'Koszykówka') {
+        fetchBasketballNbaMatches()
+        return
+      }
       fetchAllTodayFootballFixtures()
       return
     }
@@ -8613,12 +8645,12 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setLiveDataSource('loading')
     setLiveFixturesStatus(`Szukam prawdziwych meczów dla „${query}”...`)
     fetchLiveFixturesForDay({
-      sport: 'Piłka nożna',
-      country: 'Wszystkie',
-      league: 'Wszystkie ligi',
+      sport: activeSearchSport,
+      country: activeSearchSport === 'Koszykówka' ? 'USA' : 'Wszystkie',
+      league: activeSearchSport === 'Koszykówka' ? 'NBA' : 'Wszystkie ligi',
       date: getTodayLocalKey(),
-      daysAhead: 365,
-      allLeagues: true,
+      daysAhead: activeSearchSport === 'Koszykówka' ? 30 : 365,
+      allLeagues: activeSearchSport !== 'Koszykówka',
       mode: 'search',
       query,
     }).finally(() => setFixtureSearchLoading(false))
@@ -9384,6 +9416,25 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               )}
             </div>
 
+            <div className={`sport-accordion-item ${openSidebarSport === 'Koszykówka' ? 'is-open' : ''}`}>
+              <button type="button" className="sport-accordion-head" onClick={() => selectSidebarSport('Koszykówka')}>
+                <span>🏀 Koszykówka</span><b>{openSidebarSport === 'Koszykówka' ? '⌃' : '⌄'}</b>
+              </button>
+              {openSidebarSport === 'Koszykówka' && (
+                <div className="sport-accordion-children level-two football-leagues-list">
+                  <button
+                    type="button"
+                    className={form.sport === 'Koszykówka' && currentLeague === 'NBA' ? 'is-active league-active has-count-v1036' : 'has-count-v1036'}
+                    onClick={() => selectSidebarLeague('Koszykówka', 'USA', 'NBA')}
+                    title="NBA: mecze i kursy z API"
+                  >
+                    <span className="league-name-v1036">NBA</span>
+                    <span className="match-count-badge-v1036 league-count-v1036 is-live">API</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {sidebarComingSoonSports.map((sportName) => (
               <div className="sport-accordion-item is-coming-soon" key={`sidebar-coming-soon-${sportName}`}>
                 <button
@@ -9476,28 +9527,37 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                     const matchesCount = leagues.reduce((sum, leagueName) => sum + ((sportData.leagues?.[leagueName] || []).length), 0)
                     const themeClass = sportCardThemeMap[sportName] || 'default'
                     const isFootballCard = sportName === 'Piłka nożna'
-                    const isActiveCard = isFootballCard && (openSidebarSport === sportName || form.sport === sportName)
+                    const isBasketballCard = sportName === 'Koszykówka'
+                    const isLiveSportCard = isFootballCard || isBasketballCard
+                    const isActiveCard = isLiveSportCard && (openSidebarSport === sportName || form.sport === sportName)
                     const subtitle = isFootballCard
                       ? 'Top mecze • dziś + jutro'
-                      : 'Aktywacja w kolejnych wersjach'
+                      : isBasketballCard
+                        ? 'NBA • mecze i kursy'
+                        : 'Aktywacja w kolejnych wersjach'
                     return (
                       <button
                         key={sportName}
                         type="button"
-                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isFootballCard ? 'is-soon-v1281' : ''}`}
+                        className={`sport-card-v1276 ${themeClass} ${isActiveCard ? 'active' : ''} ${!isLiveSportCard ? 'is-soon-v1281' : ''}`}
                         onClick={() => {
+                          if (isBasketballCard) {
+                            setOpenSidebarSport('Koszykówka')
+                            fetchBasketballNbaMatches()
+                            return
+                          }
                           if (!isFootballCard) {
-                            onToast?.({ type: 'success', title: sportName, message: `${sportName} będzie dostępny wkrótce. Na ten moment aktywna jest tylko piłka nożna.` })
+                            onToast?.({ type: 'success', title: sportName, message: `${sportName} będzie dostępny wkrótce. Na ten moment aktywna jest piłka nożna i NBA.` })
                             return
                           }
                           selectSidebarSport(sportName)
                         }}
                       >
                         <div className="sport-card-top-v1276"><i>{sportIconMap[sportName] || ''}</i><span>{sportName}</span></div>
-                        <strong>{isFootballCard ? `${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}` : 'Wkrótce'}</strong>
+                        <strong>{isFootballCard ? `${matchesCount} ${matchesCount === 1 ? 'mecz' : matchesCount < 5 ? 'mecze' : 'meczów'}` : isBasketballCard ? 'NBA' : 'Wkrótce'}</strong>
                         <small>{subtitle}</small>
                         <b aria-hidden="true">{sportIconMap[sportName] || ''}</b>
-                        {!isFootballCard ? <mark className="sport-card-badge-v1281">WKRÓTCE</mark> : null}
+                        {!isLiveSportCard ? <mark className="sport-card-badge-v1281">WKRÓTCE</mark> : null}
                       </button>
                     )
                   })}
@@ -9516,11 +9576,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                       <button
                         type="button"
                         className={footballViewMode === 'top-matches' ? 'active betfolio-top-matches-loading-btn' : 'betfolio-top-matches-loading-btn'}
-                        onClick={fetchTopFootballMatchesTodayTomorrow}
+                        onClick={form.sport === 'Koszykówka' ? fetchBasketballNbaMatches : fetchTopFootballMatchesTodayTomorrow}
                         disabled={liveFixturesLoading && footballViewMode === 'top-matches'}
                         aria-busy={liveFixturesLoading && footballViewMode === 'top-matches'}
                       >
-                        <span>{liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro'}</span>
+                        <span>{form.sport === 'Koszykówka' ? (liveFixturesLoading ? 'Szukam NBA...' : 'NBA mecze + kursy') : (liveFixturesLoading && footballViewMode === 'top-matches' ? 'Szukam top meczów...' : 'Top Mecze dziś + jutro')}</span>
                         {liveFixturesLoading && footballViewMode === 'top-matches' && <span className="betfolio-top-matches-spinner" aria-hidden="true" />}
                       </button>
 
