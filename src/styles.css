@@ -22427,12 +22427,12 @@ img,video,canvas,svg{max-width:100%;}
   left:25px !important;
   top:18px !important;
   width:619px !important;
-  height:1108px !important;
+  height:1084px !important;
   border-radius:28px !important;
 }
 .auth609-panel-shell-fixed{
   width:619px !important;
-  height:1108px !important;
+  height:1084px !important;
   padding:58px 54px 42px !important;
   box-sizing:border-box !important;
   border-radius:28px !important;
@@ -22525,8 +22525,8 @@ img,video,canvas,svg{max-width:100%;}
   .auth609-artboard{width:2048px!important;min-width:2048px!important;height:1152px!important;min-height:1152px!important;}
   .auth609-reference{display:block!important;}
   .auth609-overlay{position:absolute!important;padding:0!important;background:transparent!important;min-height:0!important;}
-  .auth609-left-panel{position:absolute!important;left:25px!important;top:18px!important;width:619px!important;height:1108px!important;margin:0!important;}
-  .auth609-panel-shell-fixed{width:619px!important;height:1108px!important;padding:58px 54px 42px!important;border:0!important;box-shadow:none!important;background:transparent!important;}
+  .auth609-left-panel{position:absolute!important;left:25px!important;top:18px!important;width:619px!important;height:1084px!important;margin:0!important;}
+  .auth609-panel-shell-fixed{width:619px!important;height:1084px!important;padding:58px 54px 42px!important;border:0!important;box-shadow:none!important;background:transparent!important;}
 }
 
 /* =========================================================
@@ -22640,10 +22640,10 @@ img,video,canvas,svg{max-width:100%;}
   margin-right:auto !important;
 }
 .auth609-submit-fixed{
-  margin-top:32px !important;
+  margin-top:40px !important;
 }
 .auth609-secure-note{
-  margin-top:34px !important;
+  margin-top:50px !important;
 }
 @media (max-width: 1100px){
   .auth609-center-wrap,
@@ -23189,7 +23189,7 @@ img,video,canvas,svg{max-width:100%;}
     right:auto;
     top:auto;
     width:min(100%, 540px);
-    margin:12px auto 0;
+    margin:18px auto 0;
   }
 }
 @media (max-width: 640px){
@@ -70695,7 +70695,7 @@ html.betai-fhd-monitor80-v1323 body #root{
   .auth1567-video-head{padding:14px 14px 12px 16px;}
   .auth1567-video-head strong{font-size:16px;}
   .auth1567-video-close{width:38px;height:38px;}
-  .auth1567-presentation-button{min-height:58px;margin-top:10px;border-radius:17px;}
+  .auth1567-presentation-button{min-height:58px;margin-top:14px;border-radius:17px;}
   .auth1567-play-orb{width:38px;height:38px;flex-basis:38px;}
 }
 
@@ -71813,3 +71813,100 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   }
 }
 
+
+/* WERSJA 1628 — logowanie: realne dopasowanie do idealnego widoku
+   - ramka minimalnie dłuższa,
+   - formularz ciaśniejszy pionowo,
+   - prezentacja mieści się w ramce i nie nachodzi na dół. */
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel{
+  height:1128px !important;
+  min-height:1128px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel::before{
+  height:1128px !important;
+  min-height:1128px !important;
+  bottom:auto !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-panel-shell-fixed{
+  height:1128px !important;
+  min-height:1128px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-center-wrap{
+  transform:translate(-50%,-51.5%) !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-heading-center{
+  margin-bottom:24px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth619-fused-logo,
+html body #root:not(:has(.app-shell)) .auth609-screen .auth620-fused-logo{
+  width:390px !important;
+  max-width:390px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-subtitle-main{
+  margin-top:12px !important;
+  font-size:16px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-tabs-fixed{
+  height:70px !important;
+  margin-bottom:24px !important;
+  padding:6px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-tabs-fixed .auth481-tab{
+  height:58px !important;
+  font-size:17px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed{
+  gap:13px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-label{
+  margin-bottom:7px !important;
+  font-size:15px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-form-fixed .auth481-input{
+  height:62px !important;
+  font-size:16px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-remember-row{
+  height:24px !important;
+  margin:2px 0 5px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-submit-fixed{
+  height:62px !important;
+  margin-top:26px !important;
+  font-size:18px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth609-secure-note{
+  display:none !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-button{
+  width:512px !important;
+  max-width:512px !important;
+  min-height:58px !important;
+  margin:16px auto 0 !important;
+  border-radius:18px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-play-orb{
+  width:38px !important;
+  height:38px !important;
+  flex-basis:38px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-button b{
+  font-size:14px !important;
+}
+html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-button small{
+  font-size:11px !important;
+}
+@media (max-width:640px){
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-left-panel,
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-panel-shell-fixed{
+    height:auto !important;
+    min-height:0 !important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth609-center-wrap{
+    transform:none !important;
+  }
+  html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-button{
+    width:100% !important;
+    max-width:100% !important;
+  }
+}
