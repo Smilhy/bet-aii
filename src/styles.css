@@ -72359,3 +72359,29 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   .tip-analysis-modal h3{font-size:21px;}
   .tip-analysis-modal p{font-size:15px; line-height:1.55;}
 }
+
+/* WERSJA 1646 — Mój profil: klik w ligę pokazuje podział typów jak w Typy AI */
+.profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646{
+  cursor:pointer!important;
+  transition:background .18s ease, box-shadow .18s ease, transform .18s ease!important;
+}
+.profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646:hover,
+.profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646:focus-visible{
+  background:rgba(45,238,225,.12)!important;
+  box-shadow:0 0 0 1px rgba(45,238,225,.22),0 0 18px rgba(45,238,225,.12)!important;
+  transform:translateY(-1px)!important;
+  outline:none!important;
+}
+.profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646 span:first-child{
+  color:#eaffff!important;
+  font-weight:900!important;
+}
+.profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646 span:first-child:after{
+  content:'  ›';
+  color:#37f5eb;
+  opacity:.9;
+  font-weight:950;
+}
+.profile-league-modal-v1646 .ai-league-modal-head-v1497 span{
+  color:#45f4e8!important;
+}

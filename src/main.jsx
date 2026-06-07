@@ -19816,7 +19816,7 @@ function ProfileLiveTipCard({
 }
 
 
-function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7 }) {
+function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7, rowKeys = [], onRowClick = null }) {
   const [expanded, setExpanded] = useState(false)
   const safeRows = Array.isArray(rows) ? rows : []
   const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
@@ -19845,8 +19845,18 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
       </div>
       <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
         <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
-        {visibleRows.map((row, index) => (
-          <div key={`${title}-${index}`}>
+        {visibleRows.map((row, index) => {
+          const rowKey = rowKeys[index] ?? row?.[0]
+          const clickable = Boolean(onRowClick && rowKey)
+          return (
+          <div
+            key={`${title}-${index}`}
+            className={clickable ? 'profile-stats-clickable-row-v1646' : ''}
+            role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
+            onClick={clickable ? () => onRowClick(rowKey, row, index) : undefined}
+            onKeyDown={clickable ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onRowClick(rowKey, row, index) } } : undefined}
+          >
             {row.map((cell, cellIndex) => {
               const isBalanceCell = cellIndex === balanceColumnIndex
               const isYieldCell = cellIndex === yieldColumnIndex
@@ -19858,7 +19868,8 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
               return <span key={`${title}-${index}-${cellIndex}`} className={toneClass ? `stats-cell-signed-v1359 ${toneClass}` : ''}>{cell}</span>
             })}
           </div>
-        ))}
+          )
+        })}
       </div>
       {hasMoreRows ? (
         <button type="button" className="profile-stats-expand-v1356" onClick={() => setExpanded(prev => !prev)}>
@@ -20231,6 +20242,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileChartRange, setProfileChartRange] = useState('90d')
   const [profileChartMode, setProfileChartMode] = useState('cumulative')
   const [profileChartHover, setProfileChartHover] = useState(null)
+  const [profileSelectedLeagueDetail, setProfileSelectedLeagueDetail] = useState(null)
   const [localSettlementPatches, setLocalSettlementPatches] = useState({})
   const fallbackBio = `${displayName} — dodaj własny opis profilu.`
   const [bioEditing, setBioEditing] = useState(false)
@@ -21024,6 +21036,38 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
   const liveLeagueStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipLeagueLabel)
   const liveBetTypeStatsRows = buildLiveStatRows(activeStatsTips, getProfileTipBetTypeLabel)
+  const profileSelectedLeagueTips = profileSelectedLeagueDetail
+    ? activeStatsTips.filter(tip => getProfileTipLeagueLabel(tip) === profileSelectedLeagueDetail)
+    : []
+  const profileSelectedLeagueTypeRows = Object.values(profileSelectedLeagueTips.reduce((acc, tip) => {
+    const label = getProfileTipBetTypeLabel(tip) || 'Inne'
+    const current = acc[label] || { label, coupons: 0, stake: 0, profit: 0, oddsSum: 0, won: 0, lost: 0, pending: 0 }
+    const settlement = getProfileTipSettlement(tip)
+    current.coupons += 1
+    current.stake += getProfileTipSettledStake(tip)
+    current.profit += getProfileTipProfit(tip)
+    current.oddsSum += getProfileTipOdds(tip)
+    if (settlement === 'won') current.won += 1
+    else if (settlement === 'lost') current.lost += 1
+    else current.pending += 1
+    acc[label] = current
+    return acc
+  }, {})).map(row => ({
+    ...row,
+    yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
+    avgOdds: row.coupons ? row.oddsSum / row.coupons : 0,
+  })).sort((a, b) => b.coupons - a.coupons || b.profit - a.profit)
+  const profileSelectedLeagueSummary = profileSelectedLeagueTips.reduce((acc, tip) => {
+    const settlement = getProfileTipSettlement(tip)
+    acc.coupons += 1
+    acc.stake += getProfileTipSettledStake(tip)
+    acc.profit += getProfileTipProfit(tip)
+    if (settlement === 'won') acc.won += 1
+    else if (settlement === 'lost') acc.lost += 1
+    else acc.pending += 1
+    return acc
+  }, { coupons: 0, stake: 0, profit: 0, won: 0, lost: 0, pending: 0 })
+  profileSelectedLeagueSummary.yield = profileSelectedLeagueSummary.stake > 0 ? (profileSelectedLeagueSummary.profit / profileSelectedLeagueSummary.stake) * 100 : 0
   const normalizeImportedOddsRangeRowV1581 = (row = {}) => {
     const rawLabel = row.label || row.oddsRange || row.odds_range || row.kurs || row.range || ''
     const label = String(rawLabel || '').trim()
@@ -22130,7 +22174,13 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               <div className="profile-v4-stats-grid">
                 <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
                 <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
-                <ProfileStatsTable title="Statystyki według lig" columns={['Liga', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']} rows={liveLeagueStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])} />
+                <ProfileStatsTable
+                  title="Statystyki według lig"
+                  columns={['Liga', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']}
+                  rows={liveLeagueStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])}
+                  rowKeys={liveLeagueStatsRows.map(row => row.label)}
+                  onRowClick={(leagueName) => setProfileSelectedLeagueDetail(leagueName)}
+                />
                 <ProfileStatsTable title="Statystyki rodzajów typów" columns={['Rodzaj typu', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']} rows={liveBetTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])} />
                 <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
                 <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
@@ -22138,6 +22188,40 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </div>
             </section>
           )}
+
+          {profileSelectedLeagueDetail ? (
+            <div className="ai-league-modal-backdrop-v1497 profile-league-modal-backdrop-v1646" onClick={() => setProfileSelectedLeagueDetail(null)}>
+              <div className="ai-league-modal-v1497 profile-league-modal-v1646" onClick={event => event.stopPropagation()}>
+                <button type="button" className="ai-league-modal-close-v1497" onClick={() => setProfileSelectedLeagueDetail(null)}>×</button>
+                <div className="ai-league-modal-head-v1497">
+                  <span>ANALIZA LIGI PROFILU</span>
+                  <h3>{profileSelectedLeagueDetail}</h3>
+                  <p>Podział typów z tej ligi na profilu: liczba kuponów, stawka rozliczona, bilans, yield i W/L/P.</p>
+                </div>
+                <div className="ai-league-modal-summary-v1497">
+                  <div><small>Typów</small><b>{profileSelectedLeagueSummary.coupons}</b></div>
+                  <div><small>Stawka</small><b>{formatStatValue(profileSelectedLeagueSummary.stake)}</b></div>
+                  <div><small>Bilans</small><b className={profileSelectedLeagueSummary.profit < 0 ? 'neg' : profileSelectedLeagueSummary.profit > 0 ? 'pos' : ''}>{formatStatValue(profileSelectedLeagueSummary.profit)}</b></div>
+                  <div><small>Yield</small><b className={profileSelectedLeagueSummary.yield < 0 ? 'neg' : profileSelectedLeagueSummary.yield > 0 ? 'pos' : ''}>{formatStatValue(profileSelectedLeagueSummary.yield)}%</b></div>
+                  <div><small>W/L/P</small><b>{profileSelectedLeagueSummary.won}/{profileSelectedLeagueSummary.lost}/{profileSelectedLeagueSummary.pending}</b></div>
+                </div>
+                <div className="ai-league-modal-table-v1497">
+                  <div className="head"><b>Rodzaj typu</b><b>Ilość</b><b>Stawka</b><b>Bilans</b><b>Yield</b><b>Śr. kurs</b><b>W/L/P</b></div>
+                  {profileSelectedLeagueTypeRows.length ? profileSelectedLeagueTypeRows.map(row => (
+                    <div className="row" key={row.label}>
+                      <span>{row.label}</span>
+                      <span>{row.coupons}</span>
+                      <span>{formatStatValue(row.stake)}</span>
+                      <span className={row.profit < 0 ? 'neg' : row.profit > 0 ? 'pos' : ''}>{formatStatValue(row.profit)}</span>
+                      <span className={row.yield < 0 ? 'neg' : row.yield > 0 ? 'pos' : ''}>{formatStatValue(row.yield)}%</span>
+                      <span>{formatStatValue(row.avgOdds)}</span>
+                      <span>{row.won}/{row.lost}/{row.pending}</span>
+                    </div>
+                  )) : <div className="empty">Brak danych dla tej ligi.</div>}
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {profileTab === 'history' && (
             <section className="glass-profile-v3 profile-v3-card profile-v4-page profile-v4-history-page">
