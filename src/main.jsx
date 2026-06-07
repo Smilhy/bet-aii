@@ -9070,6 +9070,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     })()
     const finalAccessType = form.accessType === 'premium' ? 'premium' : 'free'
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
+    // V1640: zapisujemy ligę z faktycznie wybranego meczu, nie z aktywnej ligi w lewym menu.
+    // Przy wyszukiwaniu meczu lewy sidebar może nadal mieć np. Premier League,
+    // a wybrany fixture może być z Friendlies. Dashboard musi dostać ligę fixture'a.
+    const finalLeague = String(
+      publishMatch?.league ||
+      publishMatch?.league_name ||
+      publishMatch?.competition ||
+      publishMatch?.tournament ||
+      currentLeague ||
+      form.league ||
+      'Liga'
+    ).trim() || 'Liga'
     const fixtureIdValue = publishMatch.apiFixtureId || publishMatch.fixtureId || publishMatch.id || null
     const isApiBackedTip = addTipMode !== 'manual' && fixtureIdValue && !String(fixtureIdValue).startsWith('manual-')
     const initialSettlementStatus = 'pending'
@@ -9083,7 +9095,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_name: username,
       author_email: email,
       sport: form.sport,
-      league: currentLeague,
+      league: finalLeague,
+      league_name: finalLeague,
+      competition: finalLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
@@ -9136,7 +9150,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       user_id: user.id,
       author_name: username,
       author_email: email,
-      league: currentLeague,
+      league: finalLeague,
+      league_name: finalLeague,
+      competition: finalLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       team_home: publishMatch.home,
       team_away: publishMatch.away,
@@ -9180,7 +9196,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       username,
       author_email: email,
       email,
-      league: currentLeague,
+      league: finalLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       match_time: combinedIso,
       event_time: combinedIso,
@@ -9215,7 +9231,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       author_name: username,
       author_email: email,
       email,
-      league: currentLeague,
+      league: finalLeague,
       match: `${publishMatch.home} vs ${publishMatch.away}`,
       match_time: combinedIso,
       event_time: combinedIso,
