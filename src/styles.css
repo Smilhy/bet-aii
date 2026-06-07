@@ -72376,11 +72376,10 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   color:#eaffff!important;
   font-weight:900!important;
 }
+/* WERSJA 1647 — usunięto strzałkę/chevron przy nazwach lig; klik nadal działa */
 .profile-static-v3 .profile-v4-data-table > div.profile-stats-clickable-row-v1646 span:first-child:after{
-  content:'  ›';
-  color:#37f5eb;
-  opacity:.9;
-  font-weight:950;
+  content:''!important;
+  display:none!important;
 }
 .profile-league-modal-v1646 .ai-league-modal-head-v1497 span{
   color:#45f4e8!important;
