@@ -72508,3 +72508,114 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-weight: 800;
   cursor: pointer;
 }
+
+/* WERSJA 1651 — karta AKO ma osobny wygląd zamiast udawać singiel */
+.profile-ticket-v6.ako{
+  border-color:rgba(0,226,255,.50);
+  background:
+    radial-gradient(circle at 34% 18%, rgba(0,226,255,.12), transparent 30%),
+    radial-gradient(circle at 68% 55%, rgba(95,130,255,.10), transparent 28%),
+    linear-gradient(180deg,rgba(4,22,46,.98),rgba(3,13,31,.99));
+}
+.profile-ticket-v6.ako .profile-ticket-v6-main{
+  gap:10px;
+}
+.profile-ticket-v6-ako-main{
+  display:grid;
+  gap:10px;
+  min-width:0;
+}
+.profile-ticket-v6-ako-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.profile-ticket-v6-ako-icon{
+  width:54px;
+  height:54px;
+  flex:0 0 54px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  border:1px solid rgba(0,226,255,.58);
+  color:#eaffff;
+  background:linear-gradient(135deg,rgba(0,226,255,.16),rgba(95,130,255,.18));
+  box-shadow:0 0 20px rgba(0,226,255,.18), inset 0 0 18px rgba(255,255,255,.05);
+  font-size:14px;
+  font-weight:1000;
+  letter-spacing:.06em;
+}
+.profile-ticket-v6-ako-head strong{
+  display:block;
+  font-size:21px;
+  color:#f3fbff;
+}
+.profile-ticket-v6-ako-head small{
+  display:block;
+  margin-top:3px;
+  color:#92aabd;
+  font-size:12px;
+}
+.profile-ticket-v6-ako-legs{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+.profile-ticket-v6-ako-leg{
+  display:grid;
+  grid-template-columns:22px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  padding:7px 9px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.075);
+  background:rgba(0,0,0,.18);
+}
+.profile-ticket-v6-ako-leg b{
+  width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  color:#00151a;
+  background:linear-gradient(135deg,#22f3ff,#6d8cff);
+  font-size:11px;
+  font-weight:1000;
+}
+.profile-ticket-v6-ako-leg span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#dcebf5;
+  font-size:12px;
+  font-weight:800;
+}
+.profile-ticket-v6-ako-leg strong{
+  color:#91f8ff;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.profile-ticket-v6-ako-leg.empty{
+  grid-template-columns:1fr;
+}
+.profile-ticket-v6-ako-legs em{
+  color:#7fefff;
+  font-style:normal;
+  font-size:12px;
+  font-weight:800;
+}
+.profile-ticket-v6.ako .profile-ticket-v6-field:first-of-type strong{
+  color:#eaffff;
+}
+@media(max-width:1260px){
+  .profile-ticket-v6-ako-leg{
+    grid-template-columns:22px 1fr;
+  }
+  .profile-ticket-v6-ako-leg strong{
+    grid-column:2;
+  }
+}
