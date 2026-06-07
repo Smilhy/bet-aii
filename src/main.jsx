@@ -19770,6 +19770,39 @@ function ProfileLiveTipCard({
     (profileFollowLookupKey && followingTipsters?.has?.(profileFollowLookupKey))
   )
 
+  // WERSJA 1654 — Mój profil używa tego samego widoku AKO co dashboard.
+  // Zdarzenia AKO bierzemy z osobnego legs_json, a nie z analizy.
+  const rawAkoLegs = (() => {
+    const source = sourceTip?.legs_json || sourceTip?.legs || sourceTip?.ako_legs || sourceTip?.coupon_legs || tip?.legs_json || tip?.legs || tip?.ako_legs || tip?.coupon_legs || null
+    if (Array.isArray(source)) return source
+    if (typeof source === 'string' && source.trim()) {
+      try {
+        const parsed = JSON.parse(source)
+        if (Array.isArray(parsed)) return parsed
+      } catch (_) {}
+    }
+    return parseLegacyAkoLegsFromAnalysis(sourceTip?.analysis || sourceTip?.description || tip?.analysis || '')
+  })()
+  const isAkoCard = Boolean(
+    sourceTip?.is_ako || tip?.is_ako ||
+    String(sourceTip?.coupon_type || tip?.coupon_type || '').toLowerCase() === 'ako' ||
+    String(sourceTip?.market || sourceTip?.market_name || tip?.market || tip?.market_name || '').toLowerCase() === 'ako' ||
+    rawAkoLegs.length >= 2
+  )
+  const akoLegs = rawAkoLegs.map((leg, index) => ({
+    key: leg.key || leg.id || `${index}-${leg.home || leg.team_home || ''}-${leg.away || leg.team_away || ''}-${leg.pick || leg.bet_type || ''}`,
+    home: leg.home || leg.team_home || leg.home_team || 'Gospodarze',
+    away: leg.away || leg.team_away || leg.away_team || 'Goście',
+    pick: leg.pick || leg.bet_type || leg.prediction || leg.market || 'Typ',
+    odds: Number(leg.odds || leg.price || leg.course || 0) || 0,
+  }))
+  const storedAkoLegsCount = Number(sourceTip?.legs_count || tip?.legs_count || 0) || 0
+  const realAkoLegsCount = Array.isArray(akoLegs) ? akoLegs.length : 0
+  const akoLegsCount = isAkoCard ? Math.max(storedAkoLegsCount, realAkoLegsCount, 2) : 1
+  const akoCardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : tip.pick
+  const akoCardAnalysis = cleanAkoAnalysisText(tip.analysis || sourceTip?.analysis || sourceTip?.description || '') || sourceTip?.ai_analysis || 'Brak analizy użytkownika.'
+  const akoCardOdds = Number(sourceTip?.odds || tip?.odds || 0) || 0
+
   function handleVote(nextVote) {
     const previousVote = activeVote
     setFeedback(prev => {
@@ -19875,7 +19908,7 @@ function ProfileLiveTipCard({
   }
 
   return (
-    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${effectiveIsUnlocked ? 'unlocked' : 'locked'}`}>
+    <article className={`profile-ticket-v6 ${tip.premium ? 'premium' : 'free'} ${effectiveIsUnlocked ? 'unlocked' : 'locked'} ${isAkoCard ? 'ako' : 'single'}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${avatarUrl ? 'has-avatar' : ''}`} style={avatarUrl ? { '--avatar-image': `url("${avatarUrl}")` } : undefined}>
           {avatarUrl ? '' : initials}
@@ -19898,19 +19931,45 @@ function ProfileLiveTipCard({
       </div>
 
       <div className="profile-ticket-v6-main">
-        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>Piłka nożna</strong></span><span className="profile-ticket-v6-league"><strong>{tip.league}</strong></span></div>
-        <div className="profile-ticket-v6-match">
-          <div><TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} /><strong>{tip.home}</strong></div>
-          <span>vs</span>
-          <div><TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} /><strong>{tip.away}</strong></div>
-        </div>
-        <small>{tip.matchLabel}</small>
+        <div className="profile-ticket-v6-sport-row"><span className="profile-ticket-v6-sport-badge"><span aria-hidden="true">⚽</span><strong>Piłka nożna</strong></span><span className="profile-ticket-v6-league"><strong>{isAkoCard ? 'Kupon AKO' : tip.league}</strong></span></div>
+        {isAkoCard ? (
+          <div className="profile-ticket-v6-ako-main">
+            <div className="profile-ticket-v6-ako-head">
+              <span className="profile-ticket-v6-ako-icon">AKO</span>
+              <div>
+                <strong>Kupon AKO</strong>
+                <small>{akoLegsCount} zdarzenia • kurs całkowity {akoCardOdds.toFixed(2)}</small>
+              </div>
+            </div>
+            <div className="profile-ticket-v6-ako-legs">
+              {akoLegs.length ? akoLegs.slice(0, 3).map((leg, index) => (
+                <div className="profile-ticket-v6-ako-leg" key={leg.key}>
+                  <b>{index + 1}</b>
+                  <span>{leg.home} - {leg.away}</span>
+                  <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
+                </div>
+              )) : (
+                <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
+              )}
+              {akoLegs.length > 3 ? <em>+{akoLegs.length - 3} więcej zdarzeń</em> : null}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="profile-ticket-v6-match">
+              <div><TipTeamLogo logo={tip.homeLogo} teamId={tip.homeTeamId} name={tip.home} /><strong>{tip.home}</strong></div>
+              <span>vs</span>
+              <div><TipTeamLogo logo={tip.awayLogo} teamId={tip.awayTeamId} name={tip.away} /><strong>{tip.away}</strong></div>
+            </div>
+            <small>{tip.matchLabel}</small>
+          </>
+        )}
       </div>
 
       <div className="profile-ticket-v6-field">
         <small>TYP</small>
-        <strong>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : tip.pick}</strong>
-        <span>{tip.premium ? 'Singiel' : 'Darmowy typ'}</span>
+        <strong>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</strong>
+        <span>{isAkoCard ? (tip.premium ? 'AKO premium' : 'AKO darmowy') : (tip.premium ? 'Singiel' : 'Darmowy typ')}</span>
       </div>
 
       <div className="profile-ticket-v6-field stake">
@@ -19926,7 +19985,7 @@ function ProfileLiveTipCard({
 
       <div className={`profile-ticket-v6-analysis ${tip.premium && !effectiveIsUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
-        <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana' : tip.analysis}</p>
+        <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana' : akoCardAnalysis}</p>
         <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button>
       </div>
 
@@ -19987,13 +20046,13 @@ function ProfileLiveTipCard({
           <div className="tip-analysis-modal" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
             <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
-            <h3>{tip.home} vs {tip.away}</h3>
+            <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${tip.home} vs ${tip.away}`}</h3>
             <div className="tip-analysis-modal-meta">
-              <span>{tip.league || 'Liga'}</span>
-              <span>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : tip.pick}</span>
+              <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
+              <span>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</span>
               <span>Kurs {tip.premium && !effectiveIsUnlocked ? '—' : tip.odds}</span>
             </div>
-            <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : tip.analysis}</p>
+            <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : akoCardAnalysis}</p>
           </div>
         </div>
       )}
