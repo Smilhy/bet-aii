@@ -18244,6 +18244,21 @@ function AuthView({ onAuth }) {
                 <div className="auth609-heading-copy auth609-heading-center">
                   <div className="auth609-beta-banner" role="note" aria-label="Informacja o wersji beta">
                     <span className="auth609-beta-kicker">WERSJA BETA</span>
+                    <span className="auth609-beta-info" tabIndex="0" aria-label="Jak zmienić zoom przeglądarki">
+                      i
+                      <span className="auth609-beta-tooltip" role="tooltip">
+                        <span>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</span>
+                        <span className="auth609-beta-shortcuts">
+                          <strong>Ctrl <em>+</em></strong>
+                          <i>i</i>
+                          <strong>Ctrl <em>-</em></strong>
+                        </span>
+                        <span>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</span>
+                        <span className="auth609-beta-zoomrow">
+                          <em>-</em><small>100%</small><em>+</em>
+                        </span>
+                      </span>
+                    </span>
                     <p>
                       <strong>⚠️ Strona jest w wersji BETA.</strong><br />
                       Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.

@@ -1,0 +1,5 @@
+WERSJA 1630
+- Dodano ikonkę „i” w prawym górnym rogu komunikatu BETA.
+- Po najechaniu/focusie pojawia się tooltip z instrukcją zmiany zoomu przeglądarki.
+- W tooltipie wyróżnione są Ctrl +, Ctrl - oraz zoom na żółto.
+- Nie wymaga zmian w Supabase.

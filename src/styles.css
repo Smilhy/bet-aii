@@ -71920,3 +71920,175 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     max-width:100% !important;
   }
 }
+
+/* WERSJA 1630 — ikonka info + podpowiedź zoomu w komunikacie BETA */
+.auth609-beta-banner{
+  overflow:visible !important;
+}
+.auth609-beta-info{
+  position:absolute;
+  z-index:5;
+  top:10px;
+  right:12px;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  border:1px solid rgba(87, 247, 255, 0.78);
+  color:#74f6ff;
+  background:rgba(4, 22, 34, 0.78);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+  cursor:help;
+  box-shadow:0 0 16px rgba(62, 236, 255, 0.24), inset 0 0 12px rgba(62, 236, 255, 0.08);
+  text-shadow:0 0 10px rgba(116, 246, 255, 0.42);
+}
+.auth609-beta-info:hover,
+.auth609-beta-info:focus{
+  outline:none;
+  transform:scale(1.06);
+  border-color:rgba(255, 232, 106, 0.82);
+  color:#ffe86a;
+  box-shadow:0 0 22px rgba(255, 220, 70, 0.28), inset 0 0 12px rgba(255, 220, 70, 0.1);
+}
+.auth609-beta-tooltip{
+  position:absolute;
+  top:34px;
+  right:-255px;
+  width:268px;
+  padding:15px 16px 14px;
+  border-radius:18px;
+  border:1px solid rgba(89, 245, 255, 0.62);
+  background:linear-gradient(180deg, rgba(5, 24, 39, 0.98), rgba(2, 11, 22, 0.98));
+  box-shadow:0 22px 56px rgba(0,0,0,.5), 0 0 30px rgba(62, 236, 255, 0.18), inset 0 1px 0 rgba(255,255,255,.05);
+  color:#edfaff;
+  font-size:13px;
+  line-height:1.35;
+  font-weight:800;
+  text-align:center;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-6px) scale(.96);
+  transition:opacity .18s ease, transform .18s ease, visibility .18s ease;
+  pointer-events:none;
+}
+.auth609-beta-tooltip::before{
+  content:'';
+  position:absolute;
+  top:-8px;
+  right:246px;
+  width:14px;
+  height:14px;
+  transform:rotate(45deg);
+  border-left:1px solid rgba(89, 245, 255, 0.62);
+  border-top:1px solid rgba(89, 245, 255, 0.62);
+  background:rgba(5, 24, 39, 0.98);
+}
+.auth609-beta-info:hover .auth609-beta-tooltip,
+.auth609-beta-info:focus .auth609-beta-tooltip,
+.auth609-beta-info:focus-within .auth609-beta-tooltip{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0) scale(1);
+}
+.auth609-beta-tooltip span{
+  display:block;
+  position:relative;
+  z-index:1;
+}
+.auth609-beta-tooltip b{
+  color:#ffea57;
+  font-weight:950;
+  text-shadow:0 0 14px rgba(255, 220, 70, 0.52);
+}
+.auth609-beta-shortcuts{
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  margin:12px 0 10px;
+}
+.auth609-beta-shortcuts strong{
+  color:#ffea57;
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:.01em;
+  text-shadow:0 0 15px rgba(255, 220, 70, 0.58);
+}
+.auth609-beta-shortcuts strong em{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  margin-left:4px;
+  border-radius:7px;
+  border:1px solid rgba(87, 247, 255, .72);
+  color:#f5fdff;
+  font-style:normal;
+  box-shadow:0 0 12px rgba(62,236,255,.16);
+}
+.auth609-beta-shortcuts i{
+  color:rgba(235,250,255,.84);
+  font-style:normal;
+  font-size:14px;
+}
+.auth609-beta-zoomrow{
+  display:flex !important;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:13px;
+  padding-top:11px;
+  border-top:1px solid rgba(89, 245, 255, .14);
+}
+.auth609-beta-zoomrow em{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#a9ffff;
+  background:rgba(42, 232, 220, .14);
+  font-size:24px;
+  font-style:normal;
+  font-weight:900;
+  box-shadow:0 0 14px rgba(62,236,255,.12);
+}
+.auth609-beta-zoomrow small{
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+}
+@media (max-width: 1100px){
+  .auth609-beta-tooltip{
+    right:-18px;
+    top:34px;
+    width:250px;
+  }
+  .auth609-beta-tooltip::before{
+    right:24px;
+  }
+}
+@media (max-width: 760px){
+  .auth609-beta-info{
+    top:8px;
+    right:9px;
+    width:24px;
+    height:24px;
+    font-size:14px;
+  }
+  .auth609-beta-tooltip{
+    right:-8px;
+    width:235px;
+    padding:13px 14px;
+    font-size:12px;
+  }
+  .auth609-beta-shortcuts strong{
+    font-size:19px;
+  }
+}
