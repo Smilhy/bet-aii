@@ -18242,6 +18242,10 @@ function AuthView({ onAuth }) {
                 <div className="auth609-top-spacer" />
 
                 <div className="auth609-heading-copy auth609-heading-center">
+                  <div className="auth609-beta-banner" role="note" aria-label="Informacja o wersji beta">
+                    <span className="auth609-beta-kicker">WERSJA BETA</span>
+                    <p>Serwis jest stale rozwijany. Niektóre funkcje mogą być jeszcze ulepszane.</p>
+                  </div>
                   <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
                   <p className="auth609-subtitle-main auth620-subtitle-main">{mode === 'login' ? t.subtitleLogin : t.subtitleRegister}</p>
                 </div>

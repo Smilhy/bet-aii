@@ -71696,3 +71696,55 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
   color:#fff;
 }
 .support510.is-admin .support510-msg p{padding-right:24px;}
+
+
+/* WERSJA 1619 — banner BETA nad logo logowania */
+.auth609-beta-banner{
+  width:min(100%, 360px);
+  margin:0 auto 18px;
+  padding:12px 16px;
+  border-radius:18px;
+  border:1px solid rgba(73, 236, 255, 0.28);
+  background:linear-gradient(180deg, rgba(14, 54, 67, 0.78), rgba(5, 21, 31, 0.9));
+  box-shadow:0 14px 38px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+  text-align:center;
+}
+.auth609-beta-kicker{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:6px;
+  padding:5px 12px;
+  border-radius:999px;
+  border:1px solid rgba(73, 236, 255, 0.34);
+  background:rgba(0, 225, 255, 0.08);
+  color:#66efff;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  text-shadow:0 0 12px rgba(53, 230, 255, 0.22);
+}
+.auth609-beta-banner p{
+  margin:0;
+  color:rgba(229, 248, 255, 0.88);
+  font-size:13px;
+  line-height:1.45;
+  font-weight:600;
+}
+@media (max-width: 760px){
+  .auth609-beta-banner{
+    width:min(100%, 320px);
+    margin:0 auto 14px;
+    padding:10px 12px;
+    border-radius:16px;
+  }
+  .auth609-beta-kicker{
+    font-size:10px;
+    letter-spacing:0.14em;
+  }
+  .auth609-beta-banner p{
+    font-size:12px;
+    line-height:1.4;
+  }
+}
