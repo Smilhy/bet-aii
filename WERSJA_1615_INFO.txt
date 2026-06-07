@@ -1,0 +1,19 @@
+WERSJA 1615 — MOBILE ONLY PWA
+
+Baza: BetAI_STRONA_WERSJA_1613_FHD_24_AUTO_75_HARD(1).zip
+
+Zakres zmian:
+- tylko warstwa telefonu / PWA,
+- dodana dolna nawigacja mobilna,
+- telefon ma osobny układ aplikacyjny przy szerokości do 640px,
+- dodany manifest PWA, ikony i service worker bez cache'owania starych buildów,
+- desktop/laptop/tablet bez zmian funkcjonalnych.
+
+Nie ruszano:
+- Supabase,
+- Stripe,
+- statystyk,
+- logiki typów,
+- zakupów,
+- AI filtrów,
+- danych użytkowników.

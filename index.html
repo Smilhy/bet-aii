@@ -115,6 +115,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <title>Bet+AI — Dashboard</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#14b8a6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bet+AI">
+  <link rel="apple-touch-icon" href="/pwa-icon-192.png">
   <link rel="preload" as="image" href="/auth-brand-470-transparent.png" fetchpriority="high">
   <link rel="preload" as="image" href="/auth-right-484.png" fetchpriority="high">
 
@@ -123,5 +129,14 @@
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+
+  <script>
+    // WERSJA 1615 — PWA mobile only. Rejestracja SW bez cache'owania starych buildów.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

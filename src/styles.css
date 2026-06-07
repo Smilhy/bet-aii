@@ -71665,3 +71665,151 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     overflow:visible!important;
   }
 }
+
+/* =========================================================
+   WERSJA 1615 — MOBILE ONLY PWA
+   Tylko telefon: osobny układ aplikacyjny + dolna nawigacja.
+   Desktop/laptop/tablet zostają bez zmian.
+   ========================================================= */
+.betai-mobile-app-nav{display:none}
+
+@media (max-width: 640px) and (hover: none), (max-width: 640px) and (pointer: coarse){
+  html,body,#root{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;}
+  body{min-height:100dvh!important;background:#f4f7fb!important;-webkit-text-size-adjust:100%;}
+  body:has(.app-shell){padding:0!important;}
+
+  .app-shell,
+  html:not(.betai-tablet-wide50) body #root .app-shell{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:100dvh!important;
+    overflow-x:hidden!important;
+    padding:0 0 calc(96px + env(safe-area-inset-bottom,0px))!important;
+    margin:0!important;
+  }
+
+  .app-shell>.sidebar-stack,
+  .app-shell>.sidebar,
+  .app-shell>.rightbar,
+  .app-shell .rightbar,
+  .app-shell .sidebar-stack,
+  .app-shell .sidebar-main-box,
+  .app-shell .sidebar-premium-detached{
+    display:none!important;
+  }
+
+  .main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:10px 10px calc(110px + env(safe-area-inset-bottom,0px))!important;
+    overflow-x:hidden!important;
+  }
+
+  .topbar{
+    position:sticky!important;
+    top:0!important;
+    z-index:120!important;
+    width:calc(100% + 20px)!important;
+    margin:-10px -10px 12px!important;
+    padding:10px 10px!important;
+    height:auto!important;
+    min-height:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:8px!important;
+    border-radius:0 0 18px 18px!important;
+    background:rgba(244,247,251,.96)!important;
+    backdrop-filter:blur(14px)!important;
+    box-shadow:0 10px 26px rgba(15,23,42,.08)!important;
+  }
+  .top-search-field,.search.top-search-field,.topbar .search{width:100%!important;min-width:0!important;max-width:100%!important;height:42px!important;margin:0!important;}
+  .top-search-field input,.topbar .search input{width:100%!important;min-width:0!important;font-size:14px!important;}
+  .top-actions{width:100%!important;max-width:100%!important;margin:0!important;display:flex!important;gap:6px!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;padding:0 0 2px!important;scrollbar-width:none!important;}
+  .top-actions::-webkit-scrollbar{display:none!important;}
+  .top-actions>*{flex:0 0 auto!important;}
+  .top-user-chip{max-width:160px!important;padding:6px 8px!important;}
+  .top-user-info{display:none!important;}
+  .wallet-top-btn{min-width:128px!important;height:42px!important;}
+  .wallet-split-segment strong{font-size:13px!important;}
+  .wallet-split-segment small{font-size:10px!important;}
+
+  .feed-section,
+  .no-rightbar-page .feed-section,
+  .app-shell.no-rightbar-page .main>.feed-section{
+    width:100%!important;max-width:100%!important;min-width:0!important;margin:10px 0 0!important;padding:0!important;
+  }
+  .betai-dashboard-hero-v551,.monetization-panel,.feed-filters,.feed,.tip-card,.panel,.glass-ultra-panel,.profile-v3-layout,.leaderboard-v4-layout,.wallet-v2-layout,.community-v5-layout,.tvlive-layout-v8,.market-v7-layout{
+    max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  .betai-dashboard-hero-v551{border-radius:18px!important;overflow:hidden!important;}
+  .monetization-panel{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;padding:14px!important;border-radius:16px!important;}
+  .monetization-panel>div:first-child{display:grid!important;gap:8px!important;}
+  .premium-banner-cta,.feed-add-tip-btn{width:100%!important;justify-content:center!important;}
+  .feed-filters{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:10px!important;}
+  .feed-filters button{width:100%!important;padding:10px 8px!important;font-size:13px!important;min-width:0!important;}
+  .feed{gap:10px!important;}
+  .tip-card{padding:13px!important;border-radius:16px!important;overflow:hidden!important;}
+  .tip-header{gap:10px!important;align-items:flex-start!important;}
+  .tip-grid,.two-cols,.access-grid,.match-inputs,.wallet-v2-layout,.profile-v3-layout,.ranking-v4-layout,.community-v5-layout,.market-v7-layout,.tvlive-layout-v8{grid-template-columns:1fr!important;display:grid!important;}
+  .teams{font-size:15px!important;gap:6px!important;min-width:0!important;}
+  .teams strong,.teams b,.teams span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+  .bet-row{grid-template-columns:minmax(0,1fr) 92px!important;}
+  .bet-row div{padding:10px!important;min-width:0!important;}
+  .ai-box{padding:12px!important;}
+  .tip-footer{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;align-items:stretch!important;}
+  .tip-footer button{width:100%!important;margin-left:0!important;}
+  .toast{left:10px!important;right:10px!important;top:10px!important;min-width:0!important;max-width:none!important;}
+  .payment-modal,.profile-sub-modal,.modal-card{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 30px)!important;overflow:auto!important;}
+
+  .table-wrap,.pro-table-card,.profile-stats-table-wrap,.wallet-table-wrap,.payments-table-wrap,.admin-finance-table-wrap,[class*="table"]{max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  table{max-width:none!important;}
+
+  .betai-mobile-app-nav{
+    position:fixed!important;
+    left:8px!important;
+    right:8px!important;
+    bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+    z-index:9999!important;
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:4px!important;
+    padding:7px!important;
+    border:1px solid rgba(15,23,42,.12)!important;
+    border-radius:22px!important;
+    background:rgba(255,255,255,.94)!important;
+    backdrop-filter:blur(18px)!important;
+    box-shadow:0 20px 46px rgba(15,23,42,.22)!important;
+  }
+  .betai-mobile-app-nav button{
+    border:0!important;
+    background:transparent!important;
+    color:#667085!important;
+    border-radius:16px!important;
+    min-width:0!important;
+    min-height:54px!important;
+    padding:6px 2px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+    font-family:inherit!important;
+    font-weight:900!important;
+    cursor:pointer!important;
+    position:relative!important;
+  }
+  .betai-mobile-app-nav button.active{background:linear-gradient(135deg,#14b8a6,#0f766e)!important;color:#fff!important;box-shadow:0 10px 20px rgba(20,184,166,.25)!important;}
+  .betai-mobile-app-nav-icon{font-size:18px!important;line-height:1!important;}
+  .betai-mobile-app-nav-label{font-size:10px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important;}
+  .betai-mobile-app-nav b{position:absolute!important;top:3px!important;right:5px!important;min-width:16px!important;height:16px!important;border-radius:999px!important;background:#f97316!important;color:#fff!important;font-size:9px!important;display:grid!important;place-items:center!important;padding:0 4px!important;}
+
+  .auth609-screen,.auth-screen{width:100%!important;min-height:100dvh!important;overflow-x:hidden!important;padding:12px!important;}
+  .auth-card,.auth-reset-card,.auth481-card,.auth609-card{width:100%!important;max-width:100%!important;min-width:0!important;border-radius:20px!important;}
+  .auth481-shell,.auth609-shell,.auth619-shell,.auth620-shell{width:100%!important;max-width:100%!important;min-width:0!important;grid-template-columns:1fr!important;}
+  .auth481-preview,.auth609-preview,.auth619-preview,.auth620-preview,[class*="auth"][class*="preview"]{max-width:100%!important;min-width:0!important;}
+}

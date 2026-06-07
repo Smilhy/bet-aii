@@ -25133,6 +25133,35 @@ function isTipVisibleInActiveFeed(tip) {
   return true
 }
 
+
+function MobileBottomNav({ view, setView, tokenBalance = 0 }) {
+  const items = [
+    { id: 'dashboard', label: 'Start', icon: '⌂' },
+    { id: 'add', label: 'Dodaj', icon: '+' },
+    { id: 'aiPicks', label: 'AI', icon: '◆' },
+    { id: 'leaderboard', label: 'Ranking', icon: '★' },
+    { id: 'wallet', label: 'Portfel', icon: '◉' },
+    { id: 'profile', label: 'Profil', icon: '●' },
+  ]
+  return (
+    <nav className="betai-mobile-app-nav" aria-label="Mobilna nawigacja Bet+AI">
+      {items.map(item => (
+        <button
+          key={item.id}
+          type="button"
+          className={view === item.id ? 'active' : ''}
+          onClick={() => setView(item.id)}
+          aria-label={item.label}
+        >
+          <span className="betai-mobile-app-nav-icon">{item.icon}</span>
+          <span className="betai-mobile-app-nav-label">{item.label}</span>
+          {item.id === 'wallet' && Number(tokenBalance || 0) > 0 ? <b>{Number(tokenBalance || 0)}</b> : null}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
 function App() {
   const [tips, setTips] = useState([])
   const [lastTipSaveStatus, setLastTipSaveStatus] = useState(readTipDebug())
@@ -28648,6 +28677,7 @@ function App() {
       </main>
 
       {view === 'dashboard' && !selectedTipsterId && <Rightbar ranking={realRanking} tips={tips} user={effectiveAccountProfile || sessionUser} onOpenTipster={openTipsterProfile} />}
+      <MobileBottomNav view={view} setView={setView} tokenBalance={tokenBalance} />
       <SiteReviewsWidget user={effectiveAccountProfile || sessionUser} />
       <SupportChatWidget user={effectiveAccountProfile || sessionUser} />
     </div>
