@@ -1,4 +1,0 @@
-WERSJA 1624
-- Zmniejszono czcionkę komunikatu BETA.
-- Poszerzono baner informacyjny nad logo logowania.
-- Dodano lepsze dopasowanie na węższych szerokościach, aby tekst nie był ucinany.
