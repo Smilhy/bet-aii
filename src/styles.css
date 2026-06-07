@@ -71665,3 +71665,34 @@ html.betai-fhd-auto75-v1613 body #root .leftbar{
     overflow:visible!important;
   }
 }
+
+/* 1618 — admin support: kasowanie pojedynczych wiadomości bez ruszania reszty czatu */
+.support510-msg{position:relative;}
+.support510-msg-delete{
+  position:absolute;
+  top:6px;
+  right:7px;
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:1px solid rgba(45,238,220,.38);
+  background:rgba(5,18,31,.84);
+  color:#dffcff;
+  font-size:16px;
+  font-weight:900;
+  line-height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  opacity:.78;
+  box-shadow:0 0 12px rgba(38,229,213,.16);
+}
+.support510-msg-delete:hover{
+  opacity:1;
+  transform:scale(1.06);
+  background:rgba(255,70,100,.18);
+  border-color:rgba(255,86,116,.55);
+  color:#fff;
+}
+.support510.is-admin .support510-msg p{padding-right:24px;}

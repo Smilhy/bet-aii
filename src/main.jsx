@@ -17206,6 +17206,35 @@ function SupportChatWidget({ user }) {
     }
   }
 
+
+  async function deleteSupportMessage(message) {
+    if (!adminMode || !message || !isSupabaseConfigured || !supabase) return
+    const ok = window.confirm('Usunąć tę wiadomość z centrum wsparcia?')
+    if (!ok) return
+    try {
+      setLoading(true)
+      let query = supabase.from('support_messages').delete()
+      if (message.id) {
+        query = query.eq('id', message.id)
+      } else {
+        query = query
+          .eq('admin_email', adminEmail)
+          .eq('created_at', message.created_at)
+          .eq('sender_email', message.sender_email || '')
+          .eq('message', message.message || '')
+      }
+      const { error } = await query
+      if (error) throw error
+      setStatus('Wiadomość usunięta.')
+      await loadSupportMessages()
+    } catch (error) {
+      console.error('support chat delete error', error)
+      setStatus('Nie udało się usunąć wiadomości. Sprawdź uprawnienia RLS dla support_messages.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!user?.id) return null
 
   return (
@@ -17252,6 +17281,15 @@ function SupportChatWidget({ user }) {
               const isAdminMessage = message.sender_role === 'admin'
               return (
                 <div className={`support510-msg ${mine ? 'mine' : ''} ${isAdminMessage ? 'admin' : ''}`} key={message.id || message.created_at}>
+                  {adminMode ? (
+                    <button
+                      type="button"
+                      className="support510-msg-delete"
+                      onClick={() => deleteSupportMessage(message)}
+                      aria-label="Usuń wiadomość"
+                      title="Usuń wiadomość"
+                    >×</button>
+                  ) : null}
                   <p>{message.message}</p>
                   <span>{isAdminMessage ? 'Admin' : (message.sender_name || message.user_name || 'Użytkownik')} · {message.created_at ? new Date(message.created_at).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : 'teraz'}</span>
                 </div>
