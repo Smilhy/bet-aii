@@ -1,0 +1,6 @@
+WERSJA 1645 — FIX ANALIZY NA PROFILU
+
+Poprawka: karta typu na stronie Mój profil pokazuje teraz tę samą analizę użytkownika co dashboard.
+Problem: profil brał najpierw ai_analysis, więc potrafił pokazać inną automatyczną analizę niż dashboard.
+Fix: priorytet analizy na profilu to teraz analysis/description, dopiero potem ai_analysis.
+SQL nie jest wymagany.

@@ -20648,7 +20648,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
       odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
       stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || (premiumTip ? 1 : 10)) || (premiumTip ? 1 : 10),
-      analysis: normalized.ai_analysis || normalized.analysis || normalized.description || 'Brak analizy użytkownika.',
+      analysis: normalized.analysis || normalized.description || normalized.ai_analysis || 'Brak analizy użytkownika.',
       confidence,
       createdLabel: formatDateTime(createdAt),
       matchLabel: formatDateTime(matchAt),
