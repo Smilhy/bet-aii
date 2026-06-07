@@ -10224,7 +10224,11 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     pick: leg.pick || leg.bet_type || leg.prediction || leg.market || 'Typ',
     odds: Number(leg.odds || leg.price || leg.course || 0) || 0
   }))
-  const akoLegsCount = Number(tip.legs_count || akoLegs.length || 0) || (isAkoCard ? 2 : 1)
+  // V1653: liczba zdarzeń AKO musi wynikać z realnej listy legs_json.
+  // Czasem w bazie/starym zapisie legs_count zostawało 1, mimo że legs_json miało 2+ zdarzenia.
+  const storedAkoLegsCount = Number(tip.legs_count || 0) || 0
+  const realAkoLegsCount = Array.isArray(akoLegs) ? akoLegs.length : 0
+  const akoLegsCount = isAkoCard ? Math.max(storedAkoLegsCount, realAkoLegsCount, 2) : 1
   const cardHome = isAkoCard ? 'Kupon AKO' : (tip.team_home || tip.home_team || 'Gospodarze')
   const cardAway = isAkoCard ? `${akoLegsCount} zdarzenia` : (tip.team_away || tip.away_team || 'Goście')
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (tip.bet_type || tip.prediction || tip.pick || 'Typ')

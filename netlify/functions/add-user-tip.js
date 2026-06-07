@@ -125,6 +125,10 @@ exports.handler = async (event) => {
     const initialSettlementStatus = isApiBackedTip ? 'pending' : 'pending_admin_review'
     const settlementSource = isApiBackedTip ? 'api-football' : 'manual_admin_review'
 
+    const incomingLegsJson = Array.isArray(tip.legs_json) ? tip.legs_json : null
+    const incomingIsAko = Boolean(tip.is_ako) || String(tip.coupon_type || '').toLowerCase() === 'ako' || (incomingLegsJson && incomingLegsJson.length >= 2)
+    const incomingLegsCount = incomingIsAko ? Math.max(toNumber(tip.legs_count, 0), incomingLegsJson ? incomingLegsJson.length : 0, 2) : 1
+
     const payload = {
       author_id: user.id,
       user_id: user.id,
@@ -148,10 +152,10 @@ exports.handler = async (event) => {
       ai_analysis: toText(tip.ai_analysis || tip.analysis),
       access_type: accessType,
       price: accessType === 'premium' ? Math.max(0, toNumber(tip.price, 0)) : 0,
-      coupon_type: String(tip.coupon_type || '').toLowerCase() === 'ako' ? 'ako' : 'single',
-      is_ako: Boolean(tip.is_ako) || String(tip.coupon_type || '').toLowerCase() === 'ako',
-      legs_count: toNumber(tip.legs_count, Boolean(tip.is_ako) ? 2 : 1),
-      legs_json: Array.isArray(tip.legs_json) ? tip.legs_json : null,
+      coupon_type: incomingIsAko ? 'ako' : 'single',
+      is_ako: incomingIsAko,
+      legs_count: incomingLegsCount,
+      legs_json: incomingLegsJson,
       status: initialSettlementStatus,
       tags: Array.isArray(tip.tags) ? tip.tags.map(tag => String(tag).trim()).filter(Boolean) : [],
       notify_followers: tip.notify_followers !== false
