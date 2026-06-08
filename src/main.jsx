@@ -15895,18 +15895,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (!map.has(key)) map.set(key, card)
     })
     const q = search.trim().toLowerCase()
-    const todayKey = getBetAiTodayLocalDateV1078()
-    // V1673: Mecze Result to archiwum: rozliczone albo już rozpoczęte/zakończone.
-    // Przyszłe PENDING z 09/10.06 nie mogą wpadać do Result, bo powinny być w zakładce dnia.
+    // WERSJA 1689: Mecze Result to pełny dziennik typów AI.
+    // Pokazuje także PENDING, więc licznik Mecze Result = aktualne zapisane/załadowane typy AI.
     return Array.from(map.values())
       .filter(card => matchesAiSearchV1455(card, q))
-      .filter(card => {
-        if (isBetAiSettledStatusV1091(card)) return true
-        const dayKey = getBetAiCardLocalDateV1078(card)
-        const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
-        return state === 'live' || state === 'finished' || (dayKey && dayKey < todayKey)
-      })
-      // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
 
@@ -15939,6 +15931,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [selectedCard, selectedId])
 
   const stats = useMemo(() => {
+    const statsCards = resultCards
     const normalizeStatus = c => String(c?.result || c?.status || 'pending').toLowerCase()
     const readStake = c => Number(c?.stake || c?.bet_amount || c?.amount || 100) || 100
     const readOdds = c => Number(c?.odds || c?.course || 1.8) || 1.8
@@ -15952,24 +15945,24 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (['lost','loss','lose'].includes(status)) return -stake
       return 0
     }
-    const settled = allCards.filter(c => ['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c)))
-    const won = allCards.filter(c => ['won','win'].includes(normalizeStatus(c))).length
-    const lost = allCards.filter(c => ['lost','loss','lose'].includes(normalizeStatus(c))).length
-    const pending = allCards.filter(c => !['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c))).length
-    const totalStake = allCards.reduce((sum, c) => sum + readStake(c), 0)
+    const settled = statsCards.filter(c => ['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c)))
+    const won = statsCards.filter(c => ['won','win'].includes(normalizeStatus(c))).length
+    const lost = statsCards.filter(c => ['lost','loss','lose'].includes(normalizeStatus(c))).length
+    const pending = statsCards.filter(c => !['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c))).length
+    const totalStake = statsCards.reduce((sum, c) => sum + readStake(c), 0)
     const settledStake = settled.reduce((sum, c) => sum + readStake(c), 0)
     const profit = settled.reduce((sum, c) => sum + calcProfit(c), 0)
     const yieldValue = settledStake ? Math.round((profit / settledStake) * 100) : 0
-    const avgOddsRaw = allCards.length ? allCards.reduce((sum, c) => sum + readOdds(c), 0) / allCards.length : 0
-    const maxOddsRaw = allCards.length ? Math.max(...allCards.map(readOdds)) : 0
-    const avgScore = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.aiScore || 0), 0) / allCards.length) : 0
-    const avgEv = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.ev || 0), 0) / allCards.length) : 0
+    const avgOddsRaw = statsCards.length ? statsCards.reduce((sum, c) => sum + readOdds(c), 0) / statsCards.length : 0
+    const maxOddsRaw = statsCards.length ? Math.max(...statsCards.map(readOdds)) : 0
+    const avgScore = statsCards.length ? Math.round(statsCards.reduce((sum, c) => sum + Number(c.aiScore || 0), 0) / statsCards.length) : 0
+    const avgEv = statsCards.length ? Math.round(statsCards.reduce((sum, c) => sum + Number(c.ev || 0), 0) / statsCards.length) : 0
     const hitRate = (won + lost) ? Math.round((won / (won + lost)) * 100) : 0
     return {
-      total: allCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate,
+      total: statsCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate,
       yieldValue, profit, totalStake, avgOdds: avgOddsRaw, maxOdds: maxOddsRaw
     }
-  }, [allCards])
+  }, [resultCards])
 
   const leagueRows = useMemo(() => {
     const rows = new Map()
@@ -16800,7 +16793,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             {SPORTS.map((sport) => {
               const meta = getBetAiSportMetaV1051(sport)
               const locked = isLockedSportV1055(sport)
-              const count = allCards.filter(card => card.sport === sport).length
+              const count = visibleCards.filter(card => card.sport === sport).length
               const themeClass = aiSportCardThemeMapV1281[sport] || 'default'
               return (
                 <button
@@ -16933,7 +16926,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             </div>
           )}
 
-          {activePanel === 'stats' && <AiStatsAnalyticsView tips={allCards} searchQuery={search} />}
+          {activePanel === 'stats' && <AiStatsAnalyticsView tips={resultCards} searchQuery={search} />}
 
           {activePanel === 'leagues' && (
             <div className="ai-table-card-v747">
