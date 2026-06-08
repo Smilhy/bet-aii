@@ -21972,56 +21972,99 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     profitValue: profitAmount,
   }
 
-  const renderProfileTipCard = (tip) => (
-    <ProfileLiveTipCard
-      key={tip.id}
-      tip={tip}
-      sourceTip={tip.rawTip || {}}
-      avatarUrl={avatarUrl}
-      initials={initials}
-      displayName={displayName}
-      currentUser={viewerProfile}
-      unlockedTips={unlockedTips}
-      tipsterSubscriptions={profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
-        ...tipsterSubscriptions,
-        { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
-      ] : tipsterSubscriptions}
-      followingTipsters={followingTipsters}
-      onToggleFollow={onToggleFollow}
-      onUnlock={onUnlock}
-      onSubscribeToTipster={onSubscribeToTipster}
-      onToast={onToast}
-      onViewType={() => setProfileTab('tips')}
-      authorStats={profileTipStats}
-      canFollowAuthor={!profileIsOwnForViewer}
-    />
-  )
+  // WERSJA 1659 — Mój profil renderuje typy tym samym komponentem co Dashboard.
+  // Dzięki temu poprawki karty typu, AKO, analizy, stawki, badge sportu itd. są spójne w obu miejscach.
+  const buildUnifiedProfileTipForCard = (tip, rawOverride = null) => {
+    const raw = normalizeTipRow(rawOverride || tip.rawTip || tip || {})
+    const merged = normalizeTipRow({
+      ...raw,
+      id: raw.id || tip.id,
+      user_id: raw.user_id || raw.author_id || user?.id || profile?.id,
+      author_id: raw.author_id || raw.user_id || user?.id || profile?.id,
+      author_name: raw.author_name || raw.username || displayName,
+      username: raw.username || raw.author_name || displayName,
+      author_email: raw.author_email || raw.email || email,
+      email: raw.email || raw.author_email || email,
+      author_avatar_url: raw.author_avatar_url || raw.avatar_url || avatarUrl,
+      avatar_url: raw.avatar_url || raw.author_avatar_url || avatarUrl,
+      access_type: isTipPremium(raw) || tip.premium ? 'premium' : 'free',
+      price: raw.price ?? tip.price ?? 29,
+      team_home: raw.team_home || raw.home_team || tip.home,
+      home_team: raw.home_team || raw.team_home || tip.home,
+      team_away: raw.team_away || raw.away_team || tip.away,
+      away_team: raw.away_team || raw.team_away || tip.away,
+      home_logo: raw.home_logo || raw.homeLogo || tip.homeLogo,
+      away_logo: raw.away_logo || raw.awayLogo || tip.awayLogo,
+      home_team_id: raw.home_team_id || raw.homeTeamId || tip.homeTeamId,
+      away_team_id: raw.away_team_id || raw.awayTeamId || tip.awayTeamId,
+      league: raw.league || tip.league,
+      bet_type: raw.bet_type || raw.pick || tip.pick,
+      prediction: raw.prediction || raw.pick || tip.pick,
+      odds: raw.odds ?? tip.odds,
+      stake: raw.stake ?? raw.bet_amount ?? raw.amount ?? tip.stake,
+      analysis: cleanAkoAnalysisText(raw.analysis || raw.description || tip.analysis || '') || raw.ai_analysis || tip.analysis,
+      description: cleanAkoAnalysisText(raw.description || raw.analysis || tip.analysis || '') || raw.ai_analysis || tip.analysis,
+      legs_json: raw.legs_json || raw.legs || raw.ako_legs || raw.coupon_legs || tip.legs_json || tip.legs,
+      legs_count: raw.legs_count || tip.legs_count,
+      coupon_type: raw.coupon_type || tip.coupon_type,
+      is_ako: raw.is_ako || tip.is_ako,
+      status: raw.status || tip.status || 'pending',
+      result_status: raw.result_status || tip.result_status,
+      settlement_status: raw.settlement_status || tip.settlement_status,
+      created_at: raw.created_at || tip.createdAt || tip.createdLabel,
+      match_time: raw.match_time || raw.event_date || raw.kickoff_at || tip.matchTimestamp || tip.matchLabel,
+      likes: raw.likes ?? tip.likes ?? 0,
+      dislikes: raw.dislikes ?? 0,
+      comments_count: raw.comments_count ?? raw.comments ?? tip.comments ?? 0,
+      author_visible_stats: raw.author_visible_stats || {
+        yield: Number(roi) || 0,
+        totalTips: Number(totalTips) || 0,
+        profit: Number(profitAmount) || 0,
+      },
+    })
+    return merged
+  }
+
+  const renderProfileTipCard = (tip) => {
+    const unifiedTip = buildUnifiedProfileTipForCard(tip)
+    const profileSubActive = hasActiveTipsterSubscription(unifiedTip, profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
+      ...tipsterSubscriptions,
+      { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
+    ] : tipsterSubscriptions)
+    return (
+      <TipCard
+        key={tip.id}
+        tip={unifiedTip}
+        unlocked={Boolean(unifiedTip?.id && unlockedTips?.has?.(unifiedTip.id))}
+        profileSubscriptionActive={profileSubActive || profileIsOwnForViewer}
+        currentUser={viewerProfile}
+        followingTipsters={followingTipsters}
+        onToggleFollow={onToggleFollow}
+        onUnlock={onUnlock}
+        onSubscribeToTipster={onSubscribeToTipster}
+        onOpenTipster={() => setProfileTab('tips')}
+        onToast={onToast}
+      />
+    )
+  }
 
   const renderPurchasedSingleCard = (tip) => {
     const raw = tip.rawTip || tip
-    const purchasedDisplayName = raw.author_name || raw.username || tip.author || 'Typer'
-    const purchasedAvatar = raw.author_avatar_url || raw.avatar_url || ''
-    const purchasedInitials = String(purchasedDisplayName || 'TY').slice(0, 2).toUpperCase()
+    const unifiedTip = buildUnifiedProfileTipForCard(tip, raw)
     return (
       <div className="profile-purchased-single-wrap-v952" key={tip.id}>
         <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
-        <ProfileLiveTipCard
-          tip={tip}
-          sourceTip={raw}
-          avatarUrl={purchasedAvatar}
-          initials={purchasedInitials}
-          displayName={purchasedDisplayName}
+        <TipCard
+          tip={unifiedTip}
+          unlocked={true}
+          profileSubscriptionActive={hasActiveTipsterSubscription(unifiedTip, tipsterSubscriptions)}
           currentUser={viewerProfile}
-          unlockedTips={unlockedTips}
-          tipsterSubscriptions={tipsterSubscriptions}
           followingTipsters={followingTipsters}
           onToggleFollow={onToggleFollow}
           onUnlock={onUnlock}
           onSubscribeToTipster={onSubscribeToTipster}
+          onOpenTipster={() => setProfileTab('tips')}
           onToast={onToast}
-          onViewType={() => setProfileTab('tips')}
-          authorStats={null}
-          canFollowAuthor={!isSameProfileIdentity(viewerProfile, raw)}
         />
       </div>
     )
