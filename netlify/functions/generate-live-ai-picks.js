@@ -362,49 +362,148 @@ function getFixtureIdFromEventV1699(ev) {
   return clean
 }
 
+
+function normalizeApiOddsTextV1703(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isStrictFullTimeRawMarketV1703(rawMarket, rawValue) {
+  const market = normalizeApiOddsTextV1703(rawMarket)
+  const value = normalizeApiOddsTextV1703(rawValue)
+
+  if (!market || !value) return false
+
+  // Zakaz częściowych i kombinowanych rynków.
+  if (
+    market.includes('first half') ||
+    market.includes('1st half') ||
+    market.includes('second half') ||
+    market.includes('2nd half') ||
+    market.includes('half time') ||
+    market.includes('halftime') ||
+    market.includes('period') ||
+    market.includes('quarter') ||
+    market.includes('corner') ||
+    market.includes('card') ||
+    market.includes('booking') ||
+    market.includes('player') ||
+    market.includes('correct score') ||
+    market.includes('result/total') ||
+    market.includes('result / total') ||
+    market.includes('result and total') ||
+    market.includes('win and total') ||
+    market.includes('to win to nil')
+  ) {
+    return false
+  }
+
+  // Double Chance tylko pełny mecz.
+  if (market === 'double chance' || market === 'fulltime double chance' || market === 'double chance full time') {
+    return ['1x', '12', 'x2', 'home/draw', 'draw/away', 'home/away'].includes(value)
+  }
+
+  // Gole tylko czysty over/under, bez Result/Total Goals.
+  if (
+    market === 'goals over/under' ||
+    market === 'over/under' ||
+    market === 'total goals' ||
+    market === 'match goals' ||
+    market === 'goals'
+  ) {
+    return /^(over|under|powyżej|poniżej)\s*\d+(?:[.,]\d+)?/.test(value)
+  }
+
+  // 1X2 tylko czysty wynik meczu.
+  if (
+    market === 'match winner' ||
+    market === 'fulltime result' ||
+    market === 'full time result' ||
+    market === '1x2' ||
+    market === 'result'
+  ) {
+    return ['home', 'draw', 'away', '1', 'x', '2'].includes(value)
+  }
+
+  if (market === 'both teams score' || market === 'both teams to score' || market === 'btts') {
+    return ['yes', 'no', 'tak', 'nie'].includes(value)
+  }
+
+  if (market === 'draw no bet' || market === 'dnb') {
+    return ['home', 'away', '1', '2'].includes(value)
+  }
+
+  if (market === 'handicap' || market === 'asian handicap') {
+    return !value.includes('/') && /\d/.test(value)
+  }
+
+  return false
+}
+
 function normalizeRealOddsCandidateV1699(ev, betName, valueName, odd) {
   const odds = normalizeOddNumberV1699(odd)
   if (!odds || odds < REAL_AI_MIN_ODDS_V1691) return null
 
   const bet = String(betName || '').trim()
   const value = String(valueName || '').trim()
+  if (!isStrictFullTimeRawMarketV1703(bet, value)) return null
+
   const betLower = bet.toLowerCase()
   const valueLower = value.toLowerCase()
 
-  let market = bet
-  let selection = value
+  let market = ''
+  let selection = ''
 
-  if (betLower.includes('match winner') || betLower === 'winner' || betLower.includes('1x2')) {
+  if (
+    betLower === 'match winner' ||
+    betLower === 'winner' ||
+    betLower === '1x2' ||
+    betLower === 'result' ||
+    betLower === 'fulltime result' ||
+    betLower === 'full time result'
+  ) {
     market = '1X2'
     if (value === 'Home' || value === '1') selection = `${ev.home} wygra`
     else if (value === 'Away' || value === '2') selection = `${ev.away} wygra`
-    else if (valueLower.includes('draw') || value === 'X') selection = 'Remis'
-  } else if (betLower.includes('double chance')) {
+    else if (valueLower === 'draw' || value === 'X') selection = 'Remis'
+  } else if (
+    betLower === 'double chance' ||
+    betLower === 'fulltime double chance' ||
+    betLower === 'double chance full time'
+  ) {
     market = 'Podwójna szansa'
-    if (value.includes('1X') || valueLower.includes('home/draw')) selection = `${ev.home} lub remis`
-    else if (value.includes('X2') || valueLower.includes('draw/away')) selection = `${ev.away} lub remis`
-    else if (value.includes('12') || valueLower.includes('home/away')) selection = `${ev.home} lub ${ev.away}`
-  } else if (betLower.includes('goals over/under') || betLower.includes('over/under') || betLower.includes('goals')) {
+    if (value === '1X' || valueLower === 'home/draw') selection = `${ev.home} lub remis`
+    else if (value === 'X2' || valueLower === 'draw/away') selection = `${ev.away} lub remis`
+    else if (value === '12' || valueLower === 'home/away') selection = `${ev.home} lub ${ev.away}`
+  } else if (
+    betLower === 'goals over/under' ||
+    betLower === 'over/under' ||
+    betLower === 'total goals' ||
+    betLower === 'match goals' ||
+    betLower === 'goals'
+  ) {
     market = 'Gole'
     const line = value.match(/(\d+(?:[.,]\d+)?)/)?.[1]?.replace(',', '.')
-    if (valueLower.includes('over') || valueLower.includes('powyżej')) selection = `Powyżej ${line || ''} gola`.trim()
-    else if (valueLower.includes('under') || valueLower.includes('poniżej')) selection = `Poniżej ${line || ''} gola`.trim()
-  } else if (betLower.includes('both teams score') || betLower.includes('btts')) {
+    if (!line) return null
+    if (valueLower.startsWith('over') || valueLower.startsWith('powyżej')) selection = `Powyżej ${line} gola`
+    else if (valueLower.startsWith('under') || valueLower.startsWith('poniżej')) selection = `Poniżej ${line} gola`
+  } else if (betLower === 'both teams score' || betLower === 'both teams to score' || betLower === 'btts') {
     market = 'BTTS'
-    if (valueLower === 'yes' || valueLower.includes('tak')) selection = 'Obie drużyny strzelą: TAK'
-    else if (valueLower === 'no' || valueLower.includes('nie')) selection = 'Obie drużyny strzelą: NIE'
-  } else if (betLower.includes('draw no bet')) {
+    if (valueLower === 'yes' || valueLower === 'tak') selection = 'Obie drużyny strzelą: TAK'
+    else if (valueLower === 'no' || valueLower === 'nie') selection = 'Obie drużyny strzelą: NIE'
+  } else if (betLower === 'draw no bet' || betLower === 'dnb') {
     market = 'DNB / Remis nie ma zakładu'
     if (value === 'Home' || value === '1') selection = `${ev.home} DNB`
     else if (value === 'Away' || value === '2') selection = `${ev.away} DNB`
-  } else if (betLower.includes('handicap')) {
+  } else if (betLower === 'handicap' || betLower === 'asian handicap') {
     market = 'Handicap'
     selection = value
   }
 
-  // Odrzucamy egzotyczne rynki, których nie chcemy w Typach AI.
   const allowed = ['1X2', 'Podwójna szansa', 'Gole', 'BTTS', 'DNB / Remis nie ma zakładu', 'Handicap']
-  if (!allowed.includes(market)) return null
+  if (!allowed.includes(market) || !selection) return null
 
   const candidate = {
     market,
@@ -417,16 +516,8 @@ function normalizeRealOddsCandidateV1699(ev, betName, valueName, odd) {
 
   if (!isSaneRealOddsCandidateV1700(candidate)) return null
 
-  return {
-    market,
-    selection,
-    odds,
-    bookmaker: '',
-    rawBet: bet,
-    rawValue: value
-  }
+  return candidate
 }
-
 function probabilityForRealOddsCandidateV1699(ev, candidate) {
   // WERSJA 1700: prawdopodobieństwo musi wynikać z realnego kursu.
   // Nie wolno dawać 64% dla kursu 19.00, bo to robi absurdalne EV.
@@ -677,9 +768,9 @@ async function buildRow(ev, realOddsMap = new Map()) {
     status: ev.status,
     result: 'pending',
     profit: 0,
-    source: '1702-real-api-football-odds-fixture-id-debug',
+    source: '1703-real-api-football-odds-strict-fulltime',
     ai_source: 'real_ai_engine',
-    ai_model_version: '1702-real-api-football-odds-fixture-id-debug',
+    ai_model_version: '1703-real-api-football-odds-strict-fulltime',
     access_type: pick.confidence >= 82 ? 'premium' : 'free',
     is_premium: pick.confidence >= 82,
     price: pick.confidence >= 82 ? 9 : 0,
@@ -721,7 +812,7 @@ function aiBetRowFromStrongestRow(row) {
     result: null,
     profit: 0,
     source: [
-      '1702-real-api-football-odds-fixture-id-debug',
+      '1703-real-api-football-odds-strict-fulltime',
       row.odds_bookmaker ? `bookmaker=${row.odds_bookmaker}` : '',
       row.odds_raw_market ? `raw_market=${row.odds_raw_market}` : '',
       row.odds_raw_value ? `raw_value=${row.odds_raw_value}` : '',
@@ -869,7 +960,7 @@ exports.handler = async function (event) {
 
     try {
       await supabase.from('ai_pick_runs').insert({
-        source: '1702-real-api-football-odds-fixture-id-debug',
+        source: '1703-real-api-football-odds-strict-fulltime',
         picks_created: aiBetsSaved,
         status: aiBetsSaved > 0 ? 'success' : 'error',
         error_message: errors.length ? errors.slice(0, 12).join(' | ').slice(0, 1000) : null,
@@ -891,8 +982,8 @@ exports.handler = async function (event) {
       real_odds_fixtures: realOddsMap?.size || 0,
       real_odds_fixtures: realOddsMap?.size || 0,
       candidates: rows.length,
-      model: '1702-real-api-football-odds-fixture-id-debug',
-      message: 'Skan AI używa realnych kursów z API-Football odds tylko po prawdziwym fixture ID. Source zawiera bookmaker/raw_market/raw_value/fixture debug.',
+      model: '1703-real-api-football-odds-strict-fulltime',
+      message: 'Skan AI używa realnych kursów z API-Football odds tylko po prawdziwym fixture ID i tylko z czystych rynków full-time. Odrzuca First Half oraz Result/Total Goals.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
