@@ -10403,6 +10403,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const [commentDraft, setCommentDraft] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false)
+  const [akoExpanded, setAkoExpanded] = useState(false)
 
   useEffect(() => {
     if (!commentsOpen) return undefined
@@ -10477,7 +10478,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardHome = isAkoCard ? 'Kupon AKO' : (tip.team_home || tip.home_team || 'Gospodarze')
   const cardAway = isAkoCard ? `${akoLegsCount} zdarzenia` : (tip.team_away || tip.away_team || 'Goście')
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (tip.bet_type || tip.prediction || tip.pick || 'Typ')
-  const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '') || tip.ai_analysis || 'Brak analizy użytkownika.'
+  const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
@@ -10629,7 +10630,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               </div>
             </div>
             <div className="profile-ticket-v6-ako-legs">
-              {akoLegs.length ? akoLegs.slice(0, 3).map((leg, index) => (
+              {akoLegs.length ? (akoExpanded ? akoLegs : akoLegs.slice(0, 3)).map((leg, index) => (
                 <div className="profile-ticket-v6-ako-leg" key={leg.key}>
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
@@ -10639,7 +10640,15 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
               )}
-              {akoLegs.length > 3 ? <em>+{akoLegs.length - 3} więcej zdarzeń</em> : null}
+              {akoLegs.length > 3 ? (
+                <button
+                  type="button"
+                  className="profile-ticket-v6-ako-toggle"
+                  onClick={() => setAkoExpanded(prev => !prev)}
+                >
+                  {akoExpanded ? 'Pokaż mniej' : `+${akoLegs.length - 3} więcej zdarzeń`}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : (
@@ -10674,7 +10683,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       <div className={`profile-ticket-v6-analysis ${effectiveIsLocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
         <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana' : cardAnalysis}</p>
-        <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button>
+        {(!effectiveIsLocked && cardAnalysis) ? <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button> : null}
       </div>
 
       <div className="profile-ticket-v6-buy">
@@ -19954,6 +19963,7 @@ function ProfileLiveTipCard({
   const [commentDraft, setCommentDraft] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false)
+  const [akoExpanded, setAkoExpanded] = useState(false)
   const createdAgo = formatRelativeAddedTime(sourceTip?.created_at || tip?.createdAt || tip?.createdLabel)
 
   useEffect(() => {
@@ -20046,7 +20056,7 @@ function ProfileLiveTipCard({
   const realAkoLegsCount = Array.isArray(akoLegs) ? akoLegs.length : 0
   const akoLegsCount = isAkoCard ? Math.max(storedAkoLegsCount, realAkoLegsCount, 2) : 1
   const akoCardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : tip.pick
-  const akoCardAnalysis = cleanAkoAnalysisText(tip.analysis || sourceTip?.analysis || sourceTip?.description || '') || sourceTip?.ai_analysis || 'Brak analizy użytkownika.'
+  const akoCardAnalysis = cleanAkoAnalysisText(tip.analysis || sourceTip?.analysis || sourceTip?.description || '')
   const akoCardOdds = Number(sourceTip?.odds || tip?.odds || 0) || 0
 
   function handleVote(nextVote) {
@@ -20125,7 +20135,7 @@ function ProfileLiveTipCard({
       onToast?.({ type: 'error', title: 'Brak uprawnień', message: 'Analizę może dodać tylko właściciel tego typu.' })
       return
     }
-    const nextAnalysis = window.prompt('Dodaj analizę do typu:', tip?.analysis || sourceTip?.analysis || '')
+    const nextAnalysis = window.prompt('Dodaj analizę do typu:', akoCardAnalysis || '')
     if (!nextAnalysis) return
     try {
       await updateTipField(sourceTip?.id || tip?.id, { analysis: nextAnalysis, description: nextAnalysis })
@@ -20188,7 +20198,7 @@ function ProfileLiveTipCard({
               </div>
             </div>
             <div className="profile-ticket-v6-ako-legs">
-              {akoLegs.length ? akoLegs.slice(0, 3).map((leg, index) => (
+              {akoLegs.length ? (akoExpanded ? akoLegs : akoLegs.slice(0, 3)).map((leg, index) => (
                 <div className="profile-ticket-v6-ako-leg" key={leg.key}>
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
@@ -20198,7 +20208,15 @@ function ProfileLiveTipCard({
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
               )}
-              {akoLegs.length > 3 ? <em>+{akoLegs.length - 3} więcej zdarzeń</em> : null}
+              {akoLegs.length > 3 ? (
+                <button
+                  type="button"
+                  className="profile-ticket-v6-ako-toggle"
+                  onClick={() => setAkoExpanded(prev => !prev)}
+                >
+                  {akoExpanded ? 'Pokaż mniej' : `+${akoLegs.length - 3} więcej zdarzeń`}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : (
@@ -20233,7 +20251,7 @@ function ProfileLiveTipCard({
       <div className={`profile-ticket-v6-analysis ${tip.premium && !effectiveIsUnlocked ? 'locked' : ''}`}>
         <small>ANALIZA</small>
         <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana' : akoCardAnalysis}</p>
-        <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button>
+        {(!(tip.premium && !effectiveIsUnlocked) && akoCardAnalysis) ? <button type="button" onClick={() => setAnalysisModalOpen(true)}>Czytaj więcej⌄</button> : null}
       </div>
 
       <div className="profile-ticket-v6-buy">
