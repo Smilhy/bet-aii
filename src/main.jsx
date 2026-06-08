@@ -15870,11 +15870,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   const visibleCards = useMemo(() => {
-    // V1673: licznik i lista używają tej samej logiki.
-    // Zapisane typy z ai_bets są już wynikiem skanu AI, więc domyślny filtr 65%/1.50
-    // nie może ukrywać całej listy po tym, jak licznik pokazuje dostępne typy.
-    return getLiveAiCardsForDayV1673(aiDayMode, true)
-  }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb])
+    // WERSJA 1688: usunięto zakładkę i tryb „Typy AI na jutro”.
+    // Widok Typy AI pokazuje tylko dzisiejsze aktywne typy.
+    return getLiveAiCardsForDayV1673('today', true)
+  }, [allCards, activeSport, matchMode, search, minOdds, maxOdds, minProb])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
@@ -16700,14 +16699,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     setLoadingAi(true)
     loadSavedAiTipsBootstrapV1487().then(({ today, tomorrow }) => {
       if (!alive) return
-      const activeSaved = aiDayMode === 'tomorrow' ? tomorrow : today
+      const activeSaved = today
       if (activeSaved.length) {
         setLiveCards([])
         setSelectedId(activeSaved[0]?.id || '')
-        setStatusText(`Automatycznie wczytano zapisane typy AI: dziś ${today.length}, jutro ${tomorrow.length}. Nie uruchamiam skanu API bez kliknięcia.`)
+        setStatusText(`Automatycznie wczytano zapisane typy AI na dziś: ${today.length}. Nie uruchamiam skanu API bez kliknięcia.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
+        setStatusText('Brak zapisanych typów AI na dziś. Kliknij ręcznie Odśwież dziś, żeby uruchomić jeden bezpieczny skan.')
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
@@ -16718,19 +16717,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     let alive = true
     setLoadingAi(true)
     loadSavedAiJournalFromDbV1094()
-    loadSavedAiTipsFromDb(aiDayMode).then(saved => {
+    loadSavedAiTipsFromDb('today').then(saved => {
       if (!alive) return
       if (saved.length) {
         setLiveCards([])
         setSelectedId(saved[0]?.id || '')
-        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
+        setStatusText(`Wczytano ${saved.length} zapisanych typów AI na dziś. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
+        setStatusText('Brak zapisanych typów AI na dziś. Kliknij ręcznie Odśwież dziś, żeby uruchomić jeden bezpieczny skan.')
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
-  }, [aiDayMode])
+  }, [])
 
   useEffect(() => {
     if (activePanel === 'results' || activePanel === 'stats' || activePanel === 'leagues') {
@@ -16838,8 +16837,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
+            <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
             {[
               ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
@@ -16853,8 +16851,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     />
   </div>
   <div className="ai-actions-inline-v1071">
-    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks(aiDayMode)} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Pobieram...' : (aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś')}
+    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks('today')} disabled={loadingAi}>
+      ⟳ {loadingAi ? 'Pobieram...' : 'Odśwież dziś'}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
@@ -16913,7 +16911,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                 </div>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Odśwież jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.'}</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów AI na dziś.</b><p>Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.</p></div>}
             </div>
           )}
 

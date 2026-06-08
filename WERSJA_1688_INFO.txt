@@ -1,0 +1,15 @@
+WERSJA 1688 — usuwa zakładkę „Typy AI na jutro” i zostawia tylko „Typy AI na dziś”.
+
+Zmiany:
+- Usunięta zakładka Typy AI na jutro z UI.
+- Widok Typy AI działa tylko na dzisiejszych typach.
+- Przycisk zawsze: Odśwież dziś.
+- Prawa kolumna nadal ukryta po wersji 1687.
+- Do paczki dodany plik SUPABASE_RESET_TYLKO_TYPY_AI_1688.sql do resetu statystyk AI.
+
+Nie ruszano:
+- typów typerów/użytkowników,
+- rozliczania typerów,
+- AKO,
+- tabeli public.tips,
+- logiki portfela.

@@ -73056,3 +73056,68 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   .ai-center-page-v747 .pick-footer-v1686{flex-direction:column!important; align-items:flex-start!important;}
   .ai-center-page-v747 .featured-top-v1686{grid-template-columns:1fr!important;}
 }
+
+
+/* WERSJA 1687 — Typy AI: usunięcie prawej kolumny i rozciągnięcie listy na całą szerokość.
+   Tylko UI. Logika, Supabase, skaner i rozliczanie bez zmian. */
+.ai-center-page-v747 .ai-center-grid-v747{
+  grid-template-columns:1fr!important;
+  gap:0!important;
+  width:100%!important;
+  max-width:none!important;
+}
+
+.ai-center-page-v747 .ai-main-column-v747{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+}
+
+.ai-center-page-v747 .ai-analysis-column-v747{
+  display:none!important;
+}
+
+.ai-center-page-v747 .ai-live-list-v747{
+  width:100%!important;
+  max-width:none!important;
+}
+
+.ai-center-page-v747 .ai-premium-card-v1686,
+.ai-center-page-v747 .ai-pick-card-v747{
+  width:100%!important;
+  max-width:none!important;
+}
+
+.ai-center-page-v747 .pick-header-v1686{
+  grid-template-columns:minmax(0,1fr) 190px!important;
+}
+
+.ai-center-page-v747 .pick-market-box-v1686{
+  max-width:none!important;
+}
+
+.ai-center-page-v747 .pick-metrics-v1686{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+
+/* Przy jednej kolumnie karta może być trochę niższa i bardziej panoramiczna. */
+.ai-center-page-v747 .ai-premium-card-v1686{
+  min-height:0!important;
+  padding:20px 22px 18px!important;
+}
+
+.ai-center-page-v747 .pick-footer-v1686{
+  margin-top:16px!important;
+}
+
+/* Result/Stats zostają pełna szerokość jak wcześniej. */
+.ai-center-grid-v747.stats-fullwidth{
+  display:block!important;
+}
+
+
+/* WERSJA 1688 — ukrycie zakładki „Typy AI na jutro” i pełny reset widoku AI na dzisiaj.
+   To UI safeguard; główna zmiana jest też w JSX. */
+.ai-center-page-v747 .ai-inner-tabs-v747 button{
+  white-space:nowrap!important;
+}
