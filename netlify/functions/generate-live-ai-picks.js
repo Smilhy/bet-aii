@@ -222,6 +222,71 @@ async function fetchAllRealEvents(event) {
   return { events: deduped, errors, apisChecked: chosen.map(x => x.key), days }
 }
 
+function cacheRowFromEventV1695(ev, days = 2) {
+  const eventTime = ev?.event_time || ev?.commence_time || ev?.kickoff_time
+  if (!ev?.home || !ev?.away || !eventTime) return null
+  const eventMs = Date.parse(eventTime)
+  if (!Number.isFinite(eventMs)) return null
+  const expiresHours = Number(process.env.SPORTS_FIXTURE_CACHE_TTL_HOURS || 8)
+  return {
+    cache_key: String(ev.id || `${ev.sport || 'sport'}-${ev.home}-${ev.away}-${eventTime}`).replace(/\s+/g, '-').toLowerCase(),
+    sport: ev.sport || 'Piłka nożna',
+    country: ev.country || '',
+    league: ev.league || 'Liga',
+    home: ev.home,
+    away: ev.away,
+    commence_time: new Date(eventMs).toISOString(),
+    fixture_json: ev,
+    fetched_at: nowIso(),
+    expires_at: new Date(Date.now() + Math.max(1, expiresHours) * 60 * 60 * 1000).toISOString()
+  }
+}
+
+async function upsertEventsToFixtureCacheV1695(supabase, events = [], days = 2, errors = []) {
+  const rows = (events || []).map(ev => cacheRowFromEventV1695(ev, days)).filter(Boolean)
+  if (!rows.length) return 0
+  try {
+    const { data, error } = await supabase
+      .from('sports_fixture_cache')
+      .upsert(rows, { onConflict: 'cache_key' })
+      .select('cache_key')
+    if (error) throw error
+    return data?.length || rows.length
+  } catch (error) {
+    errors.push(`cache upsert: ${error?.message || error}`)
+    return 0
+  }
+}
+
+async function refreshFixtureCacheBeforeAiV1695(supabase, event, days, errors = []) {
+  const minFreshMatches = Number(event?.queryStringParameters?.min_cache || process.env.REAL_AI_MIN_FRESH_CACHE || 25)
+  const current = await fetchCachedFootballEvents(supabase, days).catch(err => {
+    errors.push(`cache before refresh: ${err?.message || err}`)
+    return []
+  })
+
+  if (current.length >= minFreshMatches && !['1','true','yes'].includes(String(event?.queryStringParameters?.refresh_cache || '').toLowerCase())) {
+    return { events: current, cacheBefore: current.length, cacheSaved: 0, refreshed: false, apisChecked: ['sports_fixture_cache'] }
+  }
+
+  try {
+    const live = await fetchAllRealEvents(event)
+    const saved = await upsertEventsToFixtureCacheV1695(supabase, live.events || [], days, errors)
+    const after = await fetchCachedFootballEvents(supabase, days).catch(() => current)
+    return {
+      events: after.length ? after : (live.events || []),
+      cacheBefore: current.length,
+      cacheSaved: saved,
+      refreshed: true,
+      apisChecked: saved > 0 ? ['api-sports-refresh', 'sports_fixture_cache'] : (live.apisChecked || ['api-sports'])
+    }
+  } catch (error) {
+    errors.push(`api refresh: ${error?.message || error}`)
+    return { events: current, cacheBefore: current.length, cacheSaved: 0, refreshed: false, apisChecked: current.length ? ['sports_fixture_cache'] : [] }
+  }
+}
+
+
 function chooseModelPick(ev) {
   const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}`)
   const homeLean = (seed % 100) >= 45
@@ -421,18 +486,16 @@ exports.handler = async function (event) {
     let events = []
     let errors = []
     let apisChecked = []
-    try {
-      events = await fetchCachedFootballEvents(supabase, days)
-      if (events.length) apisChecked = ['sports_fixture_cache']
-    } catch (cacheError) {
-      errors.push(`cache: ${cacheError.message || cacheError}`)
-    }
-    if (!events.length) {
-      const live = await fetchAllRealEvents(event)
-      events = live.events
-      errors = errors.concat(live.errors || [])
-      apisChecked = live.apisChecked
-    }
+    let cacheBefore = 0
+    let cacheSaved = 0
+    let cacheRefreshed = false
+
+    const refreshed = await refreshFixtureCacheBeforeAiV1695(supabase, event, days, errors)
+    events = refreshed.events || []
+    apisChecked = refreshed.apisChecked || []
+    cacheBefore = refreshed.cacheBefore || 0
+    cacheSaved = refreshed.cacheSaved || 0
+    cacheRefreshed = !!refreshed.refreshed
     // V1673: days=2 oznacza tylko dziś + jutro według Polski, nie ruchome 48h,
     // które potrafiło dopisać mecze z pojutrza do Mecze Result jako PENDING.
     const allowedDates = allowedWarsawDateKeys(days)
@@ -455,7 +518,7 @@ exports.handler = async function (event) {
     }
     const strongestRows = rows.sort((a, b) => Number(b.ai_score || 0) - Number(a.ai_score || 0)).slice(0, maxPicks)
     if (!strongestRows.length) {
-      return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
+      return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, cache_before: cacheBefore, cache_saved: cacheSaved, cache_refreshed: cacheRefreshed, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
     }
 
     const { aiBetsSaved, ids: aiBetIds } = await saveRowsToAiBets(supabase, strongestRows, errors)
@@ -518,6 +581,9 @@ exports.handler = async function (event) {
       matches_checked: events.length,
       apis_checked: apisChecked,
       days,
+      cache_before: cacheBefore,
+      cache_saved: cacheSaved,
+      cache_refreshed: cacheRefreshed,
       candidates: rows.length,
       model: '1086-daily-stable-scan-ai-bets-ui-v1673',
       message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. V1673: days=2 tylko dziś+jutro, bez pojutrza w Result.',
