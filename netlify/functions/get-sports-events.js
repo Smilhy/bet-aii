@@ -389,6 +389,21 @@ exports.handler = async function(event) {
     return `${name}${pointLabel}`
   }
 
+  // V1663: ograniczamy piłkę nożną do 9 popularnych rynków, bez strzelca gola.
+  const allowedFootballMarketsV1663 = new Set([
+    '1X2',
+    'Podwójna szansa',
+    'Gole',
+    'BTTS',
+    'Handicap',
+    'DNB / Remis nie ma zakładu',
+    'Dokładny wynik',
+    'Rogi',
+    'Kartki',
+  ])
+
+  const isAllowedFootballMarketV1663 = (market) => allowedFootballMarketsV1663.has(String(market || '').trim())
+
   const addMarketIfMissing = (markets, market, pick, odds, confidence = 62) => {
     const exists = markets.some(item => item.market === market && item.pick === pick)
     if (!exists) markets.push({ market, pick, odds: Number(odds || 0) || 1.7, confidence })
@@ -435,6 +450,13 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Podwójna szansa', '12', 1.25, 70)
       addMarketIfMissing(markets, 'DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
       addMarketIfMissing(markets, 'DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
+      addMarketIfMissing(markets, 'Dokładny wynik', '1:0', 6.50, 42)
+      addMarketIfMissing(markets, 'Dokładny wynik', '2:0', 8.00, 38)
+      addMarketIfMissing(markets, 'Dokładny wynik', '2:1', 8.50, 40)
+      addMarketIfMissing(markets, 'Dokładny wynik', '1:1', 6.20, 44)
+      addMarketIfMissing(markets, 'Dokładny wynik', '0:0', 8.80, 34)
+      addMarketIfMissing(markets, 'Dokładny wynik', '0:1', 7.20, 39)
+      addMarketIfMissing(markets, 'Dokładny wynik', '1:2', 9.00, 36)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 0.5 gola', 1.12, 85)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 0.5 gola', 7.20, 35)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 1.5 gola', 1.34, 78)
@@ -449,8 +471,6 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Kartki', 'Poniżej 3.5 kartek', 2.00, 58)
       addMarketIfMissing(markets, 'Rogi', 'Powyżej 8.5 rożnych', 1.85, 63)
       addMarketIfMissing(markets, 'Rogi', 'Poniżej 8.5 rożnych', 1.90, 61)
-      addMarketIfMissing(markets, 'Połowy', `${home} wygra 1. połowę`, 2.45, 56)
-      addMarketIfMissing(markets, 'Połowy', 'Remis do przerwy', 2.05, 61)
     } else if (isBaseball) {
       addMarketIfMissing(markets, 'Run Line', `${home} -1.5`, 2.15, 56)
       addMarketIfMissing(markets, 'Run Line', `${home} +1.5`, 1.55, 69)
@@ -971,9 +991,9 @@ exports.handler = async function(event) {
     if (lower.includes('goals over/under') || lower.includes('over/under')) return 'Gole'
     if (lower.includes('draw no bet')) return 'DNB / Remis nie ma zakładu'
     if (lower.includes('handicap')) return 'Handicap'
+    if (lower.includes('exact score') || lower.includes('correct score')) return 'Dokładny wynik'
     if (lower.includes('corners')) return 'Rogi'
     if (lower.includes('cards')) return 'Kartki'
-    if (lower.includes('half time')) return 'Połowy'
     return name || 'Rynek'
   }
 
@@ -999,9 +1019,18 @@ exports.handler = async function(event) {
       if (lower === 'away') return `${away} DNB`
     }
     if (market === 'Gole') {
-      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)}`
-      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)}`
+      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} gola`
+      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} gola`
     }
+    if (market === 'Rogi') {
+      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} rożnych`
+      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} rożnych`
+    }
+    if (market === 'Kartki') {
+      if (lower.startsWith('over ')) return `Powyżej ${value.slice(5)} kartek`
+      if (lower.startsWith('under ')) return `Poniżej ${value.slice(6)} kartek`
+    }
+    if (market === 'Dokładny wynik') return value.replace(/\s*-\s*/g, ':')
     return value
   }
 
@@ -1014,6 +1043,7 @@ exports.handler = async function(event) {
       ;(Array.isArray(row?.bookmakers) ? row.bookmakers : []).forEach(bookmaker => {
         ;(Array.isArray(bookmaker?.bets) ? bookmaker.bets : []).forEach(bet => {
           const market = apiFootballBetLabel(bet?.name)
+          if (!isAllowedFootballMarketV1663(market)) return
           ;(Array.isArray(bet?.values) ? bet.values : []).forEach(value => {
             const rawOdd = Number(value?.odd)
             if (!Number.isFinite(rawOdd) || rawOdd <= 1) return

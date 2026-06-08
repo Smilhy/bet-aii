@@ -3669,6 +3669,117 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
 }
 
 
+
+// V1663: tylko 9 popularnych rynków piłkarskich + bezpieczne klucze rozliczania.
+const BETAI_ALLOWED_FOOTBALL_MARKETS_V1663 = new Set([
+  '1X2',
+  'Podwójna szansa',
+  'Gole',
+  'BTTS',
+  'Handicap',
+  'DNB / Remis nie ma zakładu',
+  'Dokładny wynik',
+  'Rogi',
+  'Kartki',
+])
+
+function betaiStripAccentsV1663(value = '') {
+  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+function betaiCanonicalMarketLabelV1663(rawMarket = '') {
+  const text = betaiStripAccentsV1663(rawMarket)
+  if (!text) return ''
+  if (text === '1x2' || text.includes('match winner') || text.includes('wynik') || text.includes('winner')) return '1X2'
+  if (text.includes('podwojna') || text.includes('double chance')) return 'Podwójna szansa'
+  if (text.includes('draw no bet') || text.includes('dnb') || text.includes('remis nie ma')) return 'DNB / Remis nie ma zakładu'
+  if (text.includes('both teams') || text.includes('btts') || text.includes('obie')) return 'BTTS'
+  if (text.includes('over/under') || text.includes('goals') || text.includes('gole') || text.includes('bram')) return 'Gole'
+  if (text.includes('handicap')) return 'Handicap'
+  if (text.includes('exact score') || text.includes('correct score') || text.includes('dokladny')) return 'Dokładny wynik'
+  if (text.includes('corner') || text.includes('corners') || text.includes('rogi') || text.includes('roznych') || text.includes('rożnych')) return 'Rogi'
+  if (text.includes('card') || text.includes('cards') || text.includes('kart')) return 'Kartki'
+  return rawMarket
+}
+
+function betaiIsAllowedFootballMarketV1663(market = '') {
+  return BETAI_ALLOWED_FOOTBALL_MARKETS_V1663.has(betaiCanonicalMarketLabelV1663(market))
+}
+
+function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
+  const label = betaiCanonicalMarketLabelV1663(market)
+  const raw = String(pick || '').trim()
+  const text = betaiStripAccentsV1663(raw)
+  if (label === '1X2') {
+    if (['home', '1'].includes(text)) return `${home} wygra`
+    if (['away', '2'].includes(text)) return `${away} wygra`
+    if (['draw', 'x'].includes(text)) return 'Remis'
+  }
+  if (label === 'Podwójna szansa') {
+    if (text.includes('home/draw')) return '1X'
+    if (text.includes('draw/away')) return 'X2'
+    if (text.includes('home/away')) return '12'
+  }
+  if (label === 'BTTS') {
+    if (text === 'yes' || text.includes('tak')) return 'Obie drużyny strzelą: TAK'
+    if (text === 'no' || text.includes('nie')) return 'Obie drużyny strzelą: NIE'
+  }
+  if (label === 'Gole' || label === 'Rogi' || label === 'Kartki') {
+    const suffix = label === 'Gole' ? 'gola' : label === 'Rogi' ? 'rożnych' : 'kartek'
+    const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]
+    if ((text.includes('over') || text.includes('powyzej')) && line) return `Powyżej ${line.replace(',', '.')} ${suffix}`
+    if ((text.includes('under') || text.includes('ponizej')) && line) return `Poniżej ${line.replace(',', '.')} ${suffix}`
+  }
+  return raw
+}
+
+function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away = '') {
+  const label = betaiCanonicalMarketLabelV1663(market)
+  const text = betaiStripAccentsV1663(`${market} ${pick}`)
+  const compact = text.replace(/[^a-z0-9]+/g, '')
+  const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || null
+  let marketKey = 'unknown'
+  let selectionKey = 'unknown'
+  let mode = 'auto'
+  if (label === '1X2') {
+    marketKey = 'match_winner'
+    if (text.includes('remis') || text === 'x' || compact.endsWith('x')) selectionKey = 'draw'
+    else if (home && text.includes(betaiStripAccentsV1663(home))) selectionKey = 'home'
+    else if (away && text.includes(betaiStripAccentsV1663(away))) selectionKey = 'away'
+    else if (compact.endsWith('1')) selectionKey = 'home'
+    else if (compact.endsWith('2')) selectionKey = 'away'
+  } else if (label === 'Podwójna szansa') {
+    marketKey = 'double_chance'
+    if (compact.includes('1x')) selectionKey = '1x'
+    else if (compact.includes('x2')) selectionKey = 'x2'
+    else if (compact.includes('12')) selectionKey = '12'
+  } else if (label === 'Gole') {
+    marketKey = 'goals_total'
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+  } else if (label === 'BTTS') {
+    marketKey = 'btts'
+    selectionKey = text.includes('nie') || text.includes(' no') || compact.includes('bttsno') ? 'no' : 'yes'
+  } else if (label === 'Handicap') {
+    marketKey = 'handicap'
+    selectionKey = compact.includes(betaiStripAccentsV1663(away).replace(/[^a-z0-9]+/g, '')) ? `away_${line || ''}` : `home_${line || ''}`
+  } else if (label === 'DNB / Remis nie ma zakładu') {
+    marketKey = 'draw_no_bet'
+    selectionKey = away && text.includes(betaiStripAccentsV1663(away)) ? 'away' : 'home'
+  } else if (label === 'Dokładny wynik') {
+    marketKey = 'exact_score'
+    const score = text.match(/(\d+)\s*[:\-]\s*(\d+)/)
+    selectionKey = score ? `${score[1]}_${score[2]}` : 'unknown'
+  } else if (label === 'Rogi') {
+    marketKey = 'corners_total'
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+  } else if (label === 'Kartki') {
+    marketKey = 'cards_total'
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+  }
+  if (marketKey === 'unknown' || selectionKey === 'unknown') mode = 'manual_admin_review'
+  return { market_key: marketKey, selection_key: selectionKey, settlement_mode: mode, market_label: label }
+}
+
 function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   const confidenceDots = Array.from({ length: 15 }, (_, index) => index)
   const username = resolveRealProfileUsername(user)
@@ -7985,14 +8096,18 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const isBasketball = sportLabel.includes('koszyk') || sportLabel.includes('basketball') || sportLabel.includes('nba') || sportLabel.includes('ncaa basketball')
     const isHockey = sportLabel.includes('hokej') || sportLabel.includes('hockey') || sportLabel.includes('nhl')
 
-    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Połowy', 'Połowa']
+    const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
+      .map(item => {
+        const market = betaiCanonicalMarketLabelV1663(item.market || '')
+        const pick = betaiCanonicalPickV1663(market, item.pick || item.value || item.name || '', home, away)
+        return { ...item, market, pick }
+      })
       .filter(item => {
         const marketName = String(item.market || '')
-        if (isFootball) return marketName !== 'Zwycięzca meczu'
+        if (isFootball) return betaiIsAllowedFootballMarketV1663(marketName)
         return !footballOnlyMarkets.includes(marketName)
       })
-      .map(item => ({ ...item }))
 
     // API-FOOTBALL Pro: pokazujemy wyłącznie kursy z endpointu /odds.
     // Jeżeli dostawca nie ma jeszcze kursów dla meczu, UI pokaże kreski zamiast sztucznych 1.72 / 3.25 / 2.10.
@@ -8023,6 +8138,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
       add('DNB / Remis nie ma zakładu', `${home} DNB`, 1.42, 70)
       add('DNB / Remis nie ma zakładu', `${away} DNB`, 1.88, 61)
+
+      add('Dokładny wynik', '1:0', 6.50, 42)
+      add('Dokładny wynik', '2:0', 8.00, 38)
+      add('Dokładny wynik', '2:1', 8.50, 40)
+      add('Dokładny wynik', '1:1', 6.20, 44)
+      add('Dokładny wynik', '0:0', 8.80, 34)
+      add('Dokładny wynik', '0:1', 7.20, 39)
+      add('Dokładny wynik', '1:2', 9.00, 36)
 
       add('Gole', 'Powyżej 0.5 gola', 1.12, 85)
       add('Gole', 'Poniżej 0.5 gola', 7.20, 35)
@@ -8055,11 +8178,6 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       add('Rogi', 'Powyżej 9.5 rożnych', 2.10, 57)
       add('Rogi', 'Poniżej 9.5 rożnych', 1.68, 65)
 
-      add('Połowy', `${home} wygra 1. połowę`, 2.45, 56)
-      add('Połowy', 'Remis do przerwy', 2.05, 61)
-      add('Połowy', `${away} wygra 1. połowę`, 3.20, 48)
-      add('Połowy', 'Powyżej 0.5 gola 1. połowa', 1.40, 72)
-      add('Połowy', 'Poniżej 0.5 gola 1. połowa', 2.75, 47)
     } else if (isBaseball) {
       add('Moneyline', `${home} wygra`, 1.76, 66)
       add('Moneyline', `${away} wygra`, 1.97, 64)
@@ -8123,16 +8241,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     groups[label].push({ ...item, __index: index })
     return groups
   }, {})
-  const marketGroupOrder = ['Zwycięzca meczu', 'Wynik końcowy', 'Moneyline', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Over/Under', 'Gole', 'Gole/Punkty', 'Suma runów', 'Suma punktów', 'Suma bramek', 'BTTS', 'Handicap', 'Run Line', 'Puck Line', 'Spread', 'Kartki', 'Rogi', 'Połowy', 'Połowa', '1. połowa / 5 inningów', 'Sety', 'Gemy', 'Handicap gemów', 'Team Total', 'Kwarty', 'Draw No Bet', 'Rynek']
+  const marketGroupOrder = ['1X2', 'Podwójna szansa', 'Gole', 'BTTS', 'Handicap', 'DNB / Remis nie ma zakładu', 'Dokładny wynik', 'Rogi', 'Kartki']
   const orderedMarketGroups = Object.entries(groupedMarketOptions).sort(([a], [b]) => {
     const ai = marketGroupOrder.indexOf(a)
     const bi = marketGroupOrder.indexOf(b)
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
   })
-  const marketTabs = ['Wszystkie', 'Popularne', ...orderedMarketGroups.map(([label]) => label)]
+  const marketTabs = ['Wszystkie', ...orderedMarketGroups.map(([label]) => label)]
   const visibleMarketGroups = orderedMarketGroups.filter(([label]) => {
     if (activeMarketTab === 'Wszystkie') return true
-    if (activeMarketTab === 'Popularne') return ['Zwycięzca meczu', 'Wynik końcowy', 'Moneyline', '1X2', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Suma runów', 'Suma punktów', 'BTTS', 'Handicap', 'Run Line', 'Spread', 'Kartki', 'Rogi'].includes(label)
     return label === activeMarketTab
   })
 
@@ -9222,6 +9339,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const initialManualSettlementStatus = 'none'
     const initialAdminApprovalStatus = isApiBackedTip ? 'not_required' : 'none'
     const statsBetTypeLabel = isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : normalizeBetTypeForStats(form.market, form.betType)
+    const settlementKeys = isAkoCoupon
+      ? { market_key: 'ako', selection_key: `legs_${akoLegsForPublish.length}`, settlement_mode: 'auto', market_label: 'AKO' }
+      : betaiBuildSettlementKeysV1663(form.market, form.betType, publishMatch?.home, publishMatch?.away)
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -9252,6 +9372,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       kickoff_time: combinedIso,
       market: isAkoCoupon ? 'AKO' : form.market,
       market_name: isAkoCoupon ? 'AKO' : form.market,
+      market_key: settlementKeys.market_key,
+      selection_key: settlementKeys.selection_key,
+      settlement_mode: settlementKeys.settlement_mode,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
@@ -9311,6 +9434,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       kickoff_time: combinedIso,
       market: isAkoCoupon ? 'AKO' : form.market,
       market_name: isAkoCoupon ? 'AKO' : form.market,
+      market_key: settlementKeys.market_key,
+      selection_key: settlementKeys.selection_key,
+      settlement_mode: settlementKeys.settlement_mode,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
@@ -9344,6 +9470,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       kickoff_time: combinedIso,
       market: isAkoCoupon ? 'AKO' : form.market,
       market_name: isAkoCoupon ? 'AKO' : form.market,
+      market_key: settlementKeys.market_key,
+      selection_key: settlementKeys.selection_key,
+      settlement_mode: settlementKeys.settlement_mode,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
@@ -9383,6 +9512,9 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       kickoff_time: combinedIso,
       market: isAkoCoupon ? 'AKO' : form.market,
       market_name: isAkoCoupon ? 'AKO' : form.market,
+      market_key: settlementKeys.market_key,
+      selection_key: settlementKeys.selection_key,
+      settlement_mode: settlementKeys.settlement_mode,
       bet_market_type: statsBetTypeLabel,
       stats_bet_type: statsBetTypeLabel,
       type_label: statsBetTypeLabel,
