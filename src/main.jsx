@@ -29265,8 +29265,8 @@ function App() {
           </label>
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
-            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
-            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn topbar-clean-icon-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI"><span className="topbar-clean-icon topbar-clean-bell" aria-hidden="true" /><b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn topbar-clean-icon-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników"><span className="topbar-clean-icon topbar-clean-mail" aria-hidden="true" /><b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i coiny">
               <span className="wallet-split-segment wallet-split-balance">
                 <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
