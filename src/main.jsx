@@ -3687,23 +3687,83 @@ function betaiStripAccentsV1663(value = '') {
   return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-function betaiCanonicalMarketLabelV1663(rawMarket = '') {
+function betaiCanonicalMarketLabelV1663(rawMarket = '', rawPick = '') {
   const text = betaiStripAccentsV1663(rawMarket)
-  if (!text) return ''
+  const pickText = betaiStripAccentsV1663(rawPick)
+  const looksLikeScore = /(^|\s)\d+\s*[:\-]\s*\d+(\s|$)/.test(pickText)
+  if (!text && !pickText) return ''
+
+  // WERSJA 1664: Dokładny wynik musi być osobną zakładką.
+  // Nie wolno wrzucać wyników typu 1:0 / 2:3 do grupy 1X2.
+  if (text.includes('exact score') || text.includes('correct score') || text.includes('dokladny') || looksLikeScore) return 'Dokładny wynik'
+
   if (text === '1x2' || text.includes('match winner') || text.includes('wynik') || text.includes('winner')) return '1X2'
   if (text.includes('podwojna') || text.includes('double chance')) return 'Podwójna szansa'
   if (text.includes('draw no bet') || text.includes('dnb') || text.includes('remis nie ma')) return 'DNB / Remis nie ma zakładu'
   if (text.includes('both teams') || text.includes('btts') || text.includes('obie')) return 'BTTS'
   if (text.includes('over/under') || text.includes('goals') || text.includes('gole') || text.includes('bram')) return 'Gole'
   if (text.includes('handicap')) return 'Handicap'
-  if (text.includes('exact score') || text.includes('correct score') || text.includes('dokladny')) return 'Dokładny wynik'
   if (text.includes('corner') || text.includes('corners') || text.includes('rogi') || text.includes('roznych') || text.includes('rożnych')) return 'Rogi'
   if (text.includes('card') || text.includes('cards') || text.includes('kart')) return 'Kartki'
   return rawMarket
 }
 
-function betaiIsAllowedFootballMarketV1663(market = '') {
-  return BETAI_ALLOWED_FOOTBALL_MARKETS_V1663.has(betaiCanonicalMarketLabelV1663(market))
+function betaiIsAllowedFootballMarketV1663(market = '', pick = '') {
+  return BETAI_ALLOWED_FOOTBALL_MARKETS_V1663.has(betaiCanonicalMarketLabelV1663(market, pick))
+}
+
+function betaiIsSafePopularFootballPickV1664(market = '', pick = '', home = '', away = '') {
+  const label = betaiCanonicalMarketLabelV1663(market, pick)
+  const raw = String(pick || '').trim()
+  const text = betaiStripAccentsV1663(raw)
+  const compact = text.replace(/[^a-z0-9:+.-]+/g, '')
+  const homeText = betaiStripAccentsV1663(home)
+  const awayText = betaiStripAccentsV1663(away)
+  const hasLine = /\d+(?:[\.,]\d+)?/.test(text)
+
+  if (label === '1X2') {
+    const isHome = homeText && text.includes(homeText) && (text.includes('wygra') || text.includes('home') || text.includes('1'))
+    const isAway = awayText && text.includes(awayText) && (text.includes('wygra') || text.includes('away') || text.includes('2'))
+    const isDraw = text === 'x' || text.includes('remis') || text.includes('draw')
+    return Boolean(isHome || isAway || isDraw) && !/\d+\s*[:\-]\s*\d+/.test(text)
+  }
+
+  if (label === 'Podwójna szansa') {
+    return compact === '1x' || compact === 'x2' || compact === '12' || text.includes('home/draw') || text.includes('draw/away') || text.includes('home/away')
+  }
+
+  if (label === 'BTTS') {
+    // Tylko czyste BTTS TAK / NIE. Odrzucamy kombinacje Home/Yes, Draw/No, o/yes itp.
+    const isYes = text === 'yes' || text === 'tak' || text.includes('strzela: tak') || text.includes('strzelaja: tak')
+    const isNo = text === 'no' || text === 'nie' || text.includes('strzela: nie') || text.includes('strzelaja: nie')
+    return Boolean(isYes || isNo)
+  }
+
+  if (label === 'Gole') {
+    return hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
+  }
+
+  if (label === 'Handicap') {
+    return hasLine && (text.includes('+') || text.includes('-') || text.includes('handicap'))
+  }
+
+  if (label === 'DNB / Remis nie ma zakładu') {
+    return text.includes('dnb') || text.includes('draw no bet') || text.includes('remis nie ma') || (homeText && text.includes(homeText)) || (awayText && text.includes(awayText))
+  }
+
+  if (label === 'Dokładny wynik') {
+    return /(^|\s)\d+\s*[:\-]\s*\d+(\s|$)/.test(text)
+  }
+
+  if (label === 'Rogi') {
+    return hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
+  }
+
+  if (label === 'Kartki') {
+    return hasLine && (text.includes('powyzej') || text.includes('ponizej') || text.includes('over') || text.includes('under'))
+  }
+
+  return false
 }
 
 function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
@@ -8099,13 +8159,17 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const footballOnlyMarkets = ['BTTS', 'Kartki', 'Rogi', 'Podwójna szansa', 'DNB / Remis nie ma zakładu', 'Gole', 'Handicap', 'Dokładny wynik', 'Połowy', 'Połowa']
     const base = (Array.isArray(sourceMarkets) ? sourceMarkets : [])
       .map(item => {
-        const market = betaiCanonicalMarketLabelV1663(item.market || '')
-        const pick = betaiCanonicalPickV1663(market, item.pick || item.value || item.name || '', home, away)
+        const rawPick = item.pick || item.value || item.name || ''
+        const market = betaiCanonicalMarketLabelV1663(item.market || '', rawPick)
+        const pick = betaiCanonicalPickV1663(market, rawPick, home, away)
         return { ...item, market, pick }
       })
       .filter(item => {
         const marketName = String(item.market || '')
-        if (isFootball) return betaiIsAllowedFootballMarketV1663(marketName)
+        if (isFootball) {
+          return betaiIsAllowedFootballMarketV1663(marketName, item.pick)
+            && betaiIsSafePopularFootballPickV1664(marketName, item.pick, home, away)
+        }
         return !footballOnlyMarkets.includes(marketName)
       })
 
