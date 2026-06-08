@@ -91,7 +91,7 @@ function isDrawPick(text) {
 }
 
 function hasExactToken(text, token) {
-  const escaped = String(token || '').replace(/[.*+?^${}()|[\]\]/g, '\$&')
+  const escaped = String(token || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(String(text || ''))
 }
 
@@ -528,10 +528,10 @@ exports.handler = async (event) => {
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1658', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1660', dryRun, ...result })
   } catch (error) {
-    console.error('auto-settle-tips v1655 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1658', error: String(error.message || error) })
+    console.error('auto-settle-tips v1660 error:', error)
+    return json(500, { ok: false, function: 'auto-settle-tips-v1660', error: String(error.message || error) })
   }
 }
 
