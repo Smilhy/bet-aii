@@ -12,12 +12,6 @@ function json(statusCode, body) {
 }
 function round(v, d = 2) { const f = 10 ** d; return Math.round(Number(v || 0) * f) / f }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v || 0))) }
-function expectedEvPercent(probability, odds) {
-  const p = Number(probability || 0)
-  const o = Number(odds || 0)
-  if (!Number.isFinite(p) || !Number.isFinite(o) || p <= 0 || o <= 0) return -999
-  return round(((p / 100) * o - 1) * 100, 2)
-}
 function nowIso() { return new Date().toISOString() }
 function isoDate(d) { return d.toISOString().slice(0, 10) }
 function warsawDateKey(value = new Date(), offsetDays = 0) {
@@ -31,17 +25,6 @@ function warsawDateKey(value = new Date(), offsetDays = 0) {
     return acc
   }, {})
   return `${parts.year}-${parts.month}-${parts.day}`
-}
-function warsawTimeHHMM(value = new Date()) {
-  const d = value instanceof Date ? value : new Date(value)
-  if (!Number.isFinite(d.getTime())) return '12:00'
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hour12: false
-  }).formatToParts(d).reduce((acc, part) => {
-    if (part.type !== 'literal') acc[part.type] = part.value
-    return acc
-  }, {})
-  return `${parts.hour || '12'}:${parts.minute || '00'}`
 }
 function allowedWarsawDateKeys(days = 2) {
   const count = Math.max(1, Math.min(14, Number(days || 1)))
@@ -226,169 +209,41 @@ async function fetchAllRealEvents(event) {
   return { events: deduped, errors, apisChecked: chosen.map(x => x.key), days }
 }
 
-const FOOTBALL_MARKET_RULES = {
-  '1X2': { minProbability: 58, minOdds: 1.40, minEv: 1, weight: 1.00 },
-  'Podwójna szansa': { minProbability: 68, minOdds: 1.40, minEv: 1, weight: 0.92 },
-  'Gole': { minProbability: 60, minOdds: 1.40, minEv: 1, weight: 0.96 },
-  'BTTS': { minProbability: 58, minOdds: 1.50, minEv: 1, weight: 0.86 },
-  'Handicap': { minProbability: 55, minOdds: 1.50, minEv: 1, weight: 0.82 },
-  'DNB / Remis nie ma zakładu': { minProbability: 62, minOdds: 1.40, minEv: 1, weight: 0.90 },
-  'Rogi': { minProbability: 58, minOdds: 1.50, minEv: 1, weight: 0.72 }
-}
-
-function pickRisk(confidence, value) {
-  if (confidence >= 78 && value >= 4) return 'medium'
-  if (confidence >= 70 && value >= 2) return 'medium'
-  return 'high'
-}
-
-function priceFromProbabilityAndEdge(probability, edgePoints) {
-  const implied = clamp(Number(probability) - Number(edgePoints || 0), 8, 95)
-  const odds = round(100 / implied, 2)
-  const impliedProbability = round((1 / odds) * 100, 2)
-  const value = expectedEvPercent(probability, odds)
-  return { odds, implied: impliedProbability, value }
-}
-
-function buildPick({ market, selection, probability, edgePoints, rule, seed, riskAdjust = 0 }) {
-  const priced = priceFromProbabilityAndEdge(probability, edgePoints)
-  const value = priced.value
-  const confidence = clamp(round(probability * (rule?.weight || 1) + Math.max(0, value) * 0.55 - riskAdjust, 1), 45, 92)
-  const aiScore = clamp(round(confidence * 0.82 + Math.max(0, value) * 1.75 + ((seed % 7) - 3), 2), 0, 98)
-  return {
-    market,
-    selection,
-    odds: priced.odds,
-    implied: priced.implied,
-    probability: round(probability, 1),
-    value,
-    confidence,
-    aiScore,
-    risk: pickRisk(confidence, value),
-    rule
-  }
-}
-
-function footballMarketCandidates(ev) {
-  const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}`)
-  const homeLean = (seed % 100) >= 48
-  const fav = homeLean ? ev.home : ev.away
-  const dog = homeLean ? ev.away : ev.home
-  const favSide = homeLean ? '1' : '2'
-  const totalBias = hashNumber(`${ev.id}-goals-${ev.league}`)
-  const cornerBias = hashNumber(`${ev.id}-corners-${ev.home}-${ev.away}`)
-
-  // Edge jest przewagą modelu nad implied probability bukmachera. Część rynków celowo będzie minusowa
-  // i nie przejdzie filtra EV. Dzięki temu skaner nie sypie typów do statystyk na pałę.
-  const edgeBase = ((seed % 15) - 5) / 1.4 // ok. -3.6 do +6.4 pp
-  const candidates = []
-
-  const p1x2 = clamp(52 + (seed % 19) + (homeLean ? 1 : 0), 48, 76)
-  candidates.push(buildPick({
-    market: '1X2',
-    selection: `${fav} wygra`,
-    probability: p1x2,
-    edgePoints: edgeBase + ((seed >> 3) % 4),
-    rule: FOOTBALL_MARKET_RULES['1X2'],
-    seed
-  }))
-
-  const pDc = clamp(66 + (seed % 14), 62, 86)
-  candidates.push(buildPick({
-    market: 'Podwójna szansa',
-    selection: `${fav} lub remis`,
-    probability: pDc,
-    edgePoints: edgeBase + 1.2 + ((seed >> 4) % 3),
-    rule: FOOTBALL_MARKET_RULES['Podwójna szansa'],
-    seed: seed + 11
-  }))
-
-  const over15 = (totalBias % 100) >= 42
-  const pGoals = clamp(57 + (totalBias % 22), 52, 82)
-  candidates.push(buildPick({
-    market: 'Gole',
-    selection: over15 ? 'Powyżej 1.5 gola' : 'Poniżej 3.5 gola',
-    probability: pGoals,
-    edgePoints: ((totalBias % 13) - 4) / 1.5,
-    rule: FOOTBALL_MARKET_RULES['Gole'],
-    seed: totalBias
-  }))
-
-  const bttsYes = (hashNumber(`${ev.id}-btts`) % 100) >= 50
-  const pBtts = clamp(53 + (hashNumber(`${ev.id}-btts-prob`) % 19), 49, 74)
-  candidates.push(buildPick({
-    market: 'BTTS',
-    selection: bttsYes ? 'Obie drużyny strzelą: TAK' : 'Obie drużyny strzelą: NIE',
-    probability: pBtts,
-    edgePoints: ((hashNumber(`${ev.id}-btts-edge`) % 15) - 5) / 1.4,
-    rule: FOOTBALL_MARKET_RULES['BTTS'],
-    seed: hashNumber(`${ev.id}-btts-seed`),
-    riskAdjust: 1.5
-  }))
-
-  const handicapLine = favSide === '1' ? `${fav} -0.25` : `${fav} -0.25`
-  const pHandicap = clamp(50 + (hashNumber(`${ev.id}-handicap`) % 21), 47, 72)
-  candidates.push(buildPick({
-    market: 'Handicap',
-    selection: handicapLine,
-    probability: pHandicap,
-    edgePoints: ((hashNumber(`${ev.id}-handicap-edge`) % 16) - 6) / 1.3,
-    rule: FOOTBALL_MARKET_RULES['Handicap'],
-    seed: hashNumber(`${ev.id}-handicap-seed`),
-    riskAdjust: 2
-  }))
-
-  const pDnb = clamp(59 + (hashNumber(`${ev.id}-dnb`) % 18), 54, 80)
-  candidates.push(buildPick({
-    market: 'DNB / Remis nie ma zakładu',
-    selection: `${fav} DNB`,
-    probability: pDnb,
-    edgePoints: edgeBase + 0.8 + ((seed >> 6) % 3),
-    rule: FOOTBALL_MARKET_RULES['DNB / Remis nie ma zakładu'],
-    seed: hashNumber(`${ev.id}-dnb-seed`)
-  }))
-
-  const pCorners = clamp(53 + (cornerBias % 22), 49, 78)
-  candidates.push(buildPick({
-    market: 'Rogi',
-    selection: (cornerBias % 100) >= 50 ? 'Powyżej 8.5 rożnych' : 'Poniżej 10.5 rożnych',
-    probability: pCorners,
-    edgePoints: ((cornerBias % 17) - 6) / 1.3,
-    rule: FOOTBALL_MARKET_RULES['Rogi'],
-    seed: cornerBias,
-    riskAdjust: 3
-  }))
-
-  return candidates.map(pick => ({ ...pick, market_rule: pick.rule }))
-}
-
-function chooseModelPicks(ev) {
-  if (ev.sport === 'Piłka nożna' || ev.sport_key === 'football') {
-    return footballMarketCandidates(ev)
-  }
-
+function chooseModelPick(ev) {
   const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}`)
   const homeLean = (seed % 100) >= 45
+  const isDrawSport = /piłka nożna|hokej|rugby/i.test(ev.sport)
   const liveBoost = ev.status === 'live' ? 4 : 0
   let probability = 58 + (seed % 15) + liveBoost
   let market = 'Zwycięzca meczu'
   let selection = homeLean ? `${ev.home} wygra` : `${ev.away} wygra`
-  if (/koszykówka|nba|baseball|siatkówka|piłka ręczna|nfl|afl/i.test(ev.sport)) market = 'Moneyline'
-  else if (/mma/i.test(ev.sport)) market = 'Zwycięzca walki'
-  else if (/hokej|rugby/i.test(ev.sport)) { market = 'Double chance / bezpieczny kierunek'; selection = homeLean ? `${ev.home} nie przegra` : `${ev.away} nie przegra`; probability += 5 }
-  probability = clamp(probability, 57, 79)
-  const priced = priceFromProbabilityAndEdge(probability, ((seed % 13) - 4) / 1.4)
-  const confidence = clamp(round(probability + Math.max(0, priced.value) * 0.35, 1), 55, 88)
-  const aiScore = clamp(round(confidence * 0.78 + Math.max(0, priced.value) * 1.5, 2), 0, 96)
-  return [{ market, selection, odds: priced.odds, implied: priced.implied, probability: round(probability, 1), value: priced.value, confidence, aiScore, risk: confidence >= 74 ? 'medium' : 'high', market_rule: { minProbability: 58, minOdds: 1.40, minEv: 1 } }]
-}
 
-function chooseModelPick(ev) {
-  return chooseModelPicks(ev)[0]
+  if (ev.sport === 'Piłka nożna') {
+    const variant = seed % 5
+    if (variant === 0) { market = 'Podwójna szansa'; selection = homeLean ? `${ev.home} lub remis` : `${ev.away} lub remis`; probability += 8 }
+    else if (variant === 1) { market = 'Gole'; selection = 'Powyżej 1.5 gola'; probability += 6 }
+    else if (variant === 2) { market = 'Gole'; selection = 'Poniżej 3.5 gola'; probability += 5 }
+  } else if (/koszykówka|nba|baseball|siatkówka|piłka ręczna|nfl|afl/i.test(ev.sport)) {
+    market = 'Moneyline'
+  } else if (/mma/i.test(ev.sport)) {
+    market = 'Zwycięzca walki'
+  } else if (/hokej|rugby/i.test(ev.sport) && isDrawSport) {
+    market = 'Double chance / bezpieczny kierunek'
+    selection = homeLean ? `${ev.home} nie przegra` : `${ev.away} nie przegra`
+    probability += 5
+  }
+
+  probability = clamp(probability, 57, 79)
+  const odds = round(clamp(100 / probability * 1.04, 1.32, 2.25), 2)
+  const implied = round((1 / odds) * 100, 2)
+  const value = round(probability - implied, 2)
+  const confidence = clamp(round(probability + Math.max(0, value) * 0.35, 1), 55, 88)
+  const aiScore = clamp(round(confidence * 0.78 + Math.max(0, value) * 1.5, 2), 0, 96)
+  return { market, selection, odds, implied, probability: round(probability, 1), value, confidence, aiScore, risk: confidence >= 74 ? 'medium' : 'high' }
 }
 
 function buildBaseAnalysis(ev, pick) {
-  return `Realne wydarzenie z API-Sports: ${ev.match_name || `${ev.home} vs ${ev.away}`} (${ev.sport}, ${ev.league}). Model Bet+AI wybiera rynek: ${pick.market}, typ: ${pick.selection}. Prawdopodobieństwo modelowe ${pick.probability}%, szacowany kurs ${pick.odds}, implied ${pick.implied}%, EV ${pick.value}%. To jest analiza modelowa bez gwarancji wyniku; typ wymaga sprawdzenia kursu u bukmachera przed grą.`
+  return `Realne wydarzenie z API-Sports: ${ev.match_name || `${ev.home} vs ${ev.away}`} (${ev.sport}, ${ev.league}). Model Bet+AI wybiera rynek: ${pick.market}, typ: ${pick.selection}. Prawdopodobieństwo modelowe ${pick.probability}%, szacowany kurs ${pick.odds}, implied ${pick.implied}%, value ${pick.value} pp. To jest analiza modelowa bez gwarancji wyniku; typ wymaga sprawdzenia kursu u bukmachera przed grą.`
 }
 
 async function polishWithOpenAI(row, baseAnalysis) {
@@ -413,8 +268,8 @@ async function polishWithOpenAI(row, baseAnalysis) {
   } catch { return baseAnalysis }
 }
 
-async function buildRow(ev, forcedPick = null) {
-  const pick = forcedPick || chooseModelPick(ev)
+async function buildRow(ev) {
+  const pick = chooseModelPick(ev)
   const matchName = `${ev.home} vs ${ev.away}`
   const base = {
     ai_external_key: `daily-ai-${ev.sport}-${ev.external_fixture_id}-${String(ev.event_time || '').slice(0,10)}-${pick.market}-${pick.selection}`.replace(/\s+/g, '-').toLowerCase(),
@@ -460,16 +315,9 @@ async function buildRow(ev, forcedPick = null) {
     created_at: nowIso()
   }
   const analysis = await polishWithOpenAI(base, buildBaseAnalysis({ ...ev, match_name: matchName }, pick))
-  return { ...base, analysis, ai_analysis: analysis, market_rule: pick.market_rule || pick.rule || null }
+  return { ...base, analysis, ai_analysis: analysis }
 }
 
-
-async function buildRows(ev) {
-  const picks = chooseModelPicks(ev)
-  const rows = []
-  for (const pick of picks) rows.push(await buildRow(ev, pick))
-  return rows
-}
 
 function toIsoDateTime(value) {
   const d = new Date(value || nowIso())
@@ -486,8 +334,8 @@ function aiBetRowFromStrongestRow(row) {
   const externalBase = row.external_fixture_id || row.ai_external_key || `${home}-${away}-${iso.slice(0,10)}-${market}-${prediction}`
   return {
     external_fixture_id: String(externalBase),
-    match_date: warsawDateKey(iso),
-    match_time: warsawTimeHHMM(iso),
+    match_date: iso.slice(0, 10),
+    match_time: iso.slice(11, 16),
     home_team: home,
     away_team: away,
     country: safeName(row.country, 'API-Sports'),
@@ -501,7 +349,7 @@ function aiBetRowFromStrongestRow(row) {
     status: 'pending',
     result: null,
     profit: 0,
-    source: '1086-daily-stable-scan-ai-bets-v1678-multimarket-value',
+    source: '1086-daily-stable-scan-ai-bets-fixed',
     updated_at: nowIso()
   }
 }
@@ -576,62 +424,24 @@ exports.handler = async function (event) {
     // które potrafiło dopisać mecze z pojutrza do Mecze Result jako PENDING.
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
-    const requestedLimit = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    const maxOfficialPicks = Math.max(1, Math.min(requestedLimit, Number(process.env.REAL_AI_MAX_OFFICIAL_PICKS_PER_SCAN || 5)))
-    // V1678: Multi-Market Football Value Scanner.
-    // Nie ma jednego progu dla wszystkich rynków. Każdy rynek ma własny próg prawdopodobieństwa,
-    // ale każdy oficjalny typ musi mieć kurs min. 1.40 i EV min. +1%, żeby nie psuć statystyk.
-    const defaultMinProbability = Number(event?.queryStringParameters?.minProbability || process.env.REAL_AI_MIN_PROBABILITY || 58)
-    const defaultMinOdds = Number(event?.queryStringParameters?.minOdds || process.env.REAL_AI_MIN_ODDS || 1.4)
-    const defaultMinExpectedEv = Number(event?.queryStringParameters?.minEv || process.env.REAL_AI_MIN_EV_PERCENT || 1)
-    const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || defaultMinExpectedEv)
+    const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
+    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
+    const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
-    const rejectedByMarket = {}
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
-        const builtRows = await buildRows(ev)
-        for (const row of builtRows) {
-          const probability = Number(row.model_probability || row.probability || 0)
-          const odds = Number(row.odds || 0)
-          const evPercent = expectedEvPercent(probability, odds)
-          row.value_score = evPercent
-          row.ev = evPercent
-          const rule = row.market_rule || {}
-          const marketMinProbability = Number(rule.minProbability || defaultMinProbability)
-          const marketMinOdds = Math.max(defaultMinOdds, Number(rule.minOdds || defaultMinOdds))
-          const marketMinEv = Math.max(defaultMinExpectedEv, Number(rule.minEv || defaultMinExpectedEv))
-          row.market_min_probability = marketMinProbability
-          row.market_min_odds = marketMinOdds
-          row.market_min_ev = marketMinEv
-          if (probability < marketMinProbability || probability > 100) { rejectedByMarket[row.market] = (rejectedByMarket[row.market] || 0) + 1; continue }
-          if (odds < marketMinOdds) { rejectedByMarket[row.market] = (rejectedByMarket[row.market] || 0) + 1; continue }
-          if (evPercent < marketMinEv) { rejectedByMarket[row.market] = (rejectedByMarket[row.market] || 0) + 1; continue }
-          if (Number(row.value_score || 0) < minValueScore) { rejectedByMarket[row.market] = (rejectedByMarket[row.market] || 0) + 1; continue }
-          row.quality_label = evPercent >= 5 && row.ai_score >= 75 ? 'TOP VALUE' : evPercent >= 2 ? 'VALUE AI' : 'MIN VALUE'
-          rows.push(row)
-        }
+        const row = await buildRow(ev)
+        if (Number(row.model_probability || 0) < minProbability) continue
+        if (Number(row.value_score || 0) < minValueScore) continue
+        row.quality_label = row.ai_score >= 78 ? 'TOP AI' : row.ai_score >= 70 ? 'VALUE' : 'REAL EVENT'
+        rows.push(row)
       } catch (e) {
         errors.push(`skip ${ev.id}: ${e.message || e}`)
       }
     }
-    // Najpierw EV, potem AI score. Bierzemy maksymalnie jeden najlepszy rynek z jednego meczu,
-    // żeby jeden mecz nie zalał statystyk kilkoma podobnymi typami.
-    const sortedRows = rows.sort((a, b) => {
-      const evDiff = Number(b.value_score || 0) - Number(a.value_score || 0)
-      if (Math.abs(evDiff) > 0.01) return evDiff
-      return Number(b.ai_score || 0) - Number(a.ai_score || 0)
-    })
-    const usedFixtures = new Set()
-    const strongestRows = []
-    for (const row of sortedRows) {
-      const fixtureKey = String(row.external_fixture_id || row.ai_external_key || row.match_name)
-      if (usedFixtures.has(fixtureKey)) continue
-      usedFixtures.add(fixtureKey)
-      strongestRows.push(row)
-      if (strongestRows.length >= maxOfficialPicks) break
-    }
+    const strongestRows = rows.sort((a, b) => Number(b.ai_score || 0) - Number(a.ai_score || 0)).slice(0, maxPicks)
     if (!strongestRows.length) {
-      return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, candidates: rows.length, rejected_by_market: rejectedByMarket, max_official_picks: maxOfficialPicks, model: '1086-daily-stable-scan-ai-bets-v1678-multimarket-value', message: 'API-Sports działa, ale żaden rynek nie spełnił progów value: EV min. +1%, kurs min. wg rynku i próg probability wg rynku.', errors: errors.slice(0, 12) })
+      return json(200, { inserted: 0, matches_checked: events.length, apis_checked: apisChecked, days, message: 'API-Sports działa, ale nie znaleziono realnych wydarzeń albo wszystkie zostały odfiltrowane.', errors: errors.slice(0, 12) })
     }
 
     const { aiBetsSaved, ids: aiBetIds } = await saveRowsToAiBets(supabase, strongestRows, errors)
@@ -678,7 +488,7 @@ exports.handler = async function (event) {
 
     try {
       await supabase.from('ai_pick_runs').insert({
-        source: '1086-daily-stable-scan-ai-bets-v1678-multimarket-value',
+        source: '1086-daily-stable-scan-ai-bets-fixed',
         picks_created: aiBetsSaved,
         status: aiBetsSaved > 0 ? 'success' : 'error',
         error_message: errors.length ? errors.slice(0, 12).join(' | ').slice(0, 1000) : null,
@@ -695,14 +505,8 @@ exports.handler = async function (event) {
       apis_checked: apisChecked,
       days,
       candidates: rows.length,
-      model: '1086-daily-stable-scan-ai-bets-v1678-multimarket-value',
-      market_rules: FOOTBALL_MARKET_RULES,
-      default_min_probability: defaultMinProbability,
-      default_min_odds: defaultMinOdds,
-      default_min_ev_percent: defaultMinExpectedEv,
-      max_official_picks: maxOfficialPicks,
-      rejected_by_market: rejectedByMarket,
-      message: 'Skan AI Multi-Market: analizuje 1X2, podwójną szansę, gole, BTTS, handicap, DNB i rogi. Do statystyk zapisuje tylko TOP value: EV min. +1%, próg probability wg rynku i max 5 oficjalnych typów.',
+      model: '1086-daily-stable-scan-ai-bets-ui-v1673',
+      message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. V1673: days=2 tylko dziś+jutro, bez pojutrza w Result.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {

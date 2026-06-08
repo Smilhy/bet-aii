@@ -16,17 +16,6 @@ function json(statusCode, body) {
   }
 }
 
-
-function officialActiveAiBet(row = {}) {
-  const status = String(row.status || row.result || 'pending').toLowerCase()
-  if (['won', 'win', 'lost', 'loss', 'void', 'push'].includes(status)) return true
-  const probability = Number(row.probability || row.ai_score || 0)
-  const odds = Number(row.odds || 0)
-  if (!Number.isFinite(probability) || !Number.isFinite(odds) || probability < 60 || probability > 100 || odds < 1.4) return false
-  const evPercent = ((probability / 100) * odds - 1) * 100
-  return evPercent >= 1
-}
-
 function todayWarsaw(offsetDays = 0) {
   const base = new Date(Date.now() + Number(offsetDays || 0) * 24 * 60 * 60 * 1000)
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -56,6 +45,5 @@ exports.handler = async function(event) {
 
   const { data, error } = await query
   if (error) return json(500, { error: error.message, bets: [], date, journal })
-  const bets = journal ? (data || []) : (data || []).filter(officialActiveAiBet)
-  return json(200, { bets, count: bets.length, date, journal, min_probability: 60, min_odds: 1.4, min_ev_percent: 1, updatedAt: new Date().toISOString() })
+  return json(200, { bets: data || [], count: (data || []).length, date, journal, updatedAt: new Date().toISOString() })
 }

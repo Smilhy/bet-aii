@@ -1,3 +1,0 @@
-Wersja 1681: ta sama poprawka wygladu Gole PONIZEJ/POWYZEJ, ale paczka naprawiona pod Netlify.
-Usunieto package-lock z wewnetrznymi adresami registry, ktore mogly blokowac npm install na Netlify.
-Build command: npm run build.

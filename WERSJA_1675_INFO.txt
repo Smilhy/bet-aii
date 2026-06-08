@@ -1,1 +1,0 @@
-WERSJA 1675: Typy AI - twarde minimum 65% i kurs 1.50, statystyki ignorują przyszłe PENDING poza dziś/jutro, daty według Europe/Warsaw.
