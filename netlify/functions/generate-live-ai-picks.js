@@ -59,21 +59,28 @@ function safeName(v, fallback = '') {
   return String(v)
 }
 
-function cachedFixtureToAiEvent(fx) {
-  if (!fx?.home || !fx?.away || !fx?.commence_time) return null
-  const eventMs = Date.parse(fx.commence_time)
+function cachedFixtureToAiEvent(row) {
+  // WERSJA 1693: sports_fixture_cache ma prawdziwe kolumny:
+  // sport, country, league, home, away, commence_time, fixture_json, expires_at.
+  // Nie opieramy się tylko na fixture_json, bo wtedy skaner mógł nie widzieć meczów.
+  const fx = row?.fixture_json && typeof row.fixture_json === 'object' ? row.fixture_json : {}
+  const home = safeName(row?.home || fx.home || fx.home_team || fx.team_home || fx?.teams?.home?.name, '')
+  const away = safeName(row?.away || fx.away || fx.away_team || fx.team_away || fx?.teams?.away?.name, '')
+  const commenceTime = row?.commence_time || fx.commence_time || fx.event_time || fx.kickoff_time || fx.date || fx?.fixture?.date
+  if (!home || !away || !commenceTime) return null
+  const eventMs = Date.parse(commenceTime)
   if (!Number.isFinite(eventMs) || eventMs <= Date.now()) return null
-  const id = fx.apiFixtureId || fx.id
+  const id = row?.cache_key || fx.apiFixtureId || fx.fixture_id || fx.id || fx?.fixture?.id || `${home}-${away}-${commenceTime}`
   return {
     id: `football-${id}`,
     external_fixture_id: Number(String(id || '').replace(/\D/g, '').slice(0, 12)) || hashNumber(`football-${id}`),
-    sport: fx.sport || 'Piłka nożna',
+    sport: row?.sport || fx.sport || 'Piłka nożna',
     sport_key: 'football',
-    league: fx.league || 'Piłka nożna',
-    country: fx.country || '',
-    home: fx.home,
-    away: fx.away,
-    event_time: fx.commence_time,
+    league: row?.league || fx.league || fx.league_name || fx?.league?.name || 'Piłka nożna',
+    country: row?.country || fx.country || fx?.league?.country || '',
+    home,
+    away,
+    event_time: commenceTime,
     status: 'pending',
     live_score_home: 0,
     live_score_away: 0,
@@ -87,14 +94,18 @@ async function fetchCachedFootballEvents(supabase, days = 3) {
   const end = new Date(now.getTime() + Math.max(1, days) * 24 * 60 * 60 * 1000)
   const { data, error } = await supabase
     .from('sports_fixture_cache')
-    .select('fixture_json')
+    .select('cache_key,sport,country,league,home,away,commence_time,fixture_json,expires_at')
     .gt('expires_at', now.toISOString())
     .gt('commence_time', now.toISOString())
     .lt('commence_time', end.toISOString())
     .order('commence_time', { ascending: true })
-    .limit(500)
+    .limit(Number(process.env.REAL_MATCHES_LIMIT || 500))
+
   if (error) throw error
-  return (data || []).map(row => cachedFixtureToAiEvent(row?.fixture_json)).filter(Boolean)
+
+  return (data || [])
+    .map(row => cachedFixtureToAiEvent(row))
+    .filter(Boolean)
 }
 
 const SPORT_APIS = [
