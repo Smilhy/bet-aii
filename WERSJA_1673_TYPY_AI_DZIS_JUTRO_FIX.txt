@@ -1,0 +1,14 @@
+WERSJA 1673 — TYPY AI DZIS + JUTRO FIX
+
+Zakres: tylko zakładka Typy AI i funkcje AI.
+Nie ruszono typów użytkownika, Dodaj typ, singli, AKO, marketplace ani auto-settle public.tips.
+
+Zmiany:
+- przycisk w Typy AI: Skanuj dziś + jutro
+- uporządkowane nazwy: AI dziś, AI jutro, Wyniki AI, Statystyki AI
+- skan ręczny odpala dziś i jutro
+- generate-live-ai-picks domyślnie days=2
+- generate-live-ai-picks zapisuje do public.ai_bets, nie do public.tips
+- get-ai-bets obsługuje mode=today_tomorrow do diagnostyki
+
+SQL: niepotrzebny.
