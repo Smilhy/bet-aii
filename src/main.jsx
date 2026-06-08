@@ -3794,49 +3794,55 @@ function betaiCanonicalPickV1663(market = '', pick = '', home = '', away = '') {
 }
 
 function betaiBuildSettlementKeysV1663(market = '', pick = '', home = '', away = '') {
-  const label = betaiCanonicalMarketLabelV1663(market)
+  const label = betaiCanonicalMarketLabelV1663(market, pick)
   const text = betaiStripAccentsV1663(`${market} ${pick}`)
-  const compact = text.replace(/[^a-z0-9]+/g, '')
-  const line = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || null
+  const compact = text.replace(/[^a-z0-9:+.-]+/g, '')
+  const unsignedLine = text.match(/([0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(',', '.') || null
+  const signedLine = text.match(/([+-]\s*[0-9]+(?:[\.,][0-9]+)?)/)?.[1]?.replace(/\s+/g, '').replace(',', '.') || unsignedLine
+  const homeCompact = betaiStripAccentsV1663(home).replace(/[^a-z0-9]+/g, '')
+  const awayCompact = betaiStripAccentsV1663(away).replace(/[^a-z0-9]+/g, '')
   let marketKey = 'unknown'
   let selectionKey = 'unknown'
   let mode = 'auto'
+
   if (label === '1X2') {
     marketKey = 'match_winner'
-    if (text.includes('remis') || text === 'x' || compact.endsWith('x')) selectionKey = 'draw'
-    else if (home && text.includes(betaiStripAccentsV1663(home))) selectionKey = 'home'
-    else if (away && text.includes(betaiStripAccentsV1663(away))) selectionKey = 'away'
-    else if (compact.endsWith('1')) selectionKey = 'home'
-    else if (compact.endsWith('2')) selectionKey = 'away'
+    if (text.includes('remis') || text.includes('draw') || compact === 'x') selectionKey = 'draw'
+    else if (homeCompact && compact.includes(homeCompact)) selectionKey = 'home'
+    else if (awayCompact && compact.includes(awayCompact)) selectionKey = 'away'
+    else if (compact === '1' || compact.endsWith('home')) selectionKey = 'home'
+    else if (compact === '2' || compact.endsWith('away')) selectionKey = 'away'
   } else if (label === 'Podwójna szansa') {
     marketKey = 'double_chance'
-    if (compact.includes('1x')) selectionKey = '1x'
-    else if (compact.includes('x2')) selectionKey = 'x2'
-    else if (compact.includes('12')) selectionKey = '12'
+    if (compact.includes('1x') || compact.includes('homedraw')) selectionKey = '1x'
+    else if (compact.includes('x2') || compact.includes('drawaway')) selectionKey = 'x2'
+    else if (compact.includes('12') || compact.includes('homeaway')) selectionKey = '12'
   } else if (label === 'Gole') {
     marketKey = 'goals_total'
-    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
   } else if (label === 'BTTS') {
     marketKey = 'btts'
-    selectionKey = text.includes('nie') || text.includes(' no') || compact.includes('bttsno') ? 'no' : 'yes'
+    selectionKey = text.includes('nie') || text.includes(' no') || compact.includes('bttsno') || compact.includes('bothteamstoscoreno') ? 'no' : 'yes'
   } else if (label === 'Handicap') {
     marketKey = 'handicap'
-    selectionKey = compact.includes(betaiStripAccentsV1663(away).replace(/[^a-z0-9]+/g, '')) ? `away_${line || ''}` : `home_${line || ''}`
+    const side = awayCompact && compact.includes(awayCompact) ? 'away' : 'home'
+    selectionKey = `${side}_${signedLine || ''}`
   } else if (label === 'DNB / Remis nie ma zakładu') {
     marketKey = 'draw_no_bet'
-    selectionKey = away && text.includes(betaiStripAccentsV1663(away)) ? 'away' : 'home'
+    selectionKey = awayCompact && compact.includes(awayCompact) ? 'away' : 'home'
   } else if (label === 'Dokładny wynik') {
     marketKey = 'exact_score'
     const score = text.match(/(\d+)\s*[:\-]\s*(\d+)/)
     selectionKey = score ? `${score[1]}_${score[2]}` : 'unknown'
   } else if (label === 'Rogi') {
     marketKey = 'corners_total'
-    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
   } else if (label === 'Kartki') {
     marketKey = 'cards_total'
-    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${line || ''}`
+    selectionKey = `${text.includes('ponizej') || text.includes('under') ? 'under' : 'over'}_${unsignedLine || ''}`
   }
-  if (marketKey === 'unknown' || selectionKey === 'unknown') mode = 'manual_admin_review'
+
+  if (marketKey === 'unknown' || selectionKey === 'unknown' || String(selectionKey).endsWith('_')) mode = 'manual_admin_review'
   return { market_key: marketKey, selection_key: selectionKey, settlement_mode: mode, market_label: label }
 }
 
@@ -9134,19 +9140,29 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         onToast?.({ type: 'error', title: 'Brak kursu', message: 'Ten wybór nie ma poprawnego kursu do AKO.' })
         return
       }
+      const legKeys = betaiBuildSettlementKeysV1663(nextMarket.market, nextMarket.pick, matchForLeg.home, matchForLeg.away)
       const leg = {
         key: buildAkoLegKey(matchForLeg, nextMarket),
         sport: matchForLeg.sport || form.sport,
         country: matchForLeg.country || form.country,
         league: matchForLeg.league || currentLeague || form.league,
         matchId: matchForLeg.apiFixtureId || matchForLeg.fixtureId || matchForLeg.id || '',
+        fixture_id: matchForLeg.apiFixtureId || matchForLeg.fixtureId || matchForLeg.id || '',
+        api_fixture_id: matchForLeg.apiFixtureId || matchForLeg.fixtureId || matchForLeg.id || '',
         home: matchForLeg.home || 'Gospodarze',
         away: matchForLeg.away || 'Goście',
+        team_home: matchForLeg.home || 'Gospodarze',
+        team_away: matchForLeg.away || 'Goście',
         date: matchForLeg.date || form.date,
         time: matchForLeg.time || form.time,
         commence_time: matchForLeg.commence_time || null,
         market: nextMarket.market,
         pick: nextMarket.pick,
+        bet_type: nextMarket.pick,
+        prediction: nextMarket.pick,
+        market_key: legKeys.market_key,
+        selection_key: legKeys.selection_key,
+        settlement_mode: legKeys.settlement_mode,
         odds: Number(nextOdds.toFixed(2)),
         confidence: Number.isFinite(nextConfidence) ? nextConfidence : 50,
       }
@@ -21184,7 +21200,22 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       likes: Number(normalized.likes || normalized.hearts || 0) || 0,
       trophies: Number(normalized.trophies || normalized.upvotes || 0) || 0,
       comments: Number(normalized.comments || normalized.comments_count || 0) || 0,
-      price: Math.max(0, Number(normalized.price || 29) || 29)
+      price: Math.max(0, Number(normalized.price || 29) || 29),
+      // WERSJA 1666 — profil nie może gubić pól potrzebnych wspólnej karcie Dashboardu.
+      // Ten obiekt dalej jest używany do liczników/statystyk, ale przy renderze TipCard musi mieć
+      // pełne dane kuponu, szczególnie AKO legs_json. Bez tego profil wyglądał inaczej niż Dashboard.
+      fixture_id: normalized.fixture_id || normalized.fixtureId || null,
+      market_key: normalized.market_key || null,
+      selection_key: normalized.selection_key || null,
+      settlement_mode: normalized.settlement_mode || null,
+      coupon_type: normalized.coupon_type || null,
+      is_ako: normalized.is_ako || false,
+      legs_count: normalized.legs_count || null,
+      legs_json: normalized.legs_json || normalized.legs || normalized.ako_legs || normalized.coupon_legs || null,
+      legs: normalized.legs || normalized.legs_json || normalized.ako_legs || normalized.coupon_legs || null,
+      ako_legs: normalized.ako_legs || normalized.legs_json || normalized.legs || normalized.coupon_legs || null,
+      coupon_legs: normalized.coupon_legs || normalized.legs_json || normalized.legs || normalized.ako_legs || null,
+      rawTip: normalized
     }
   }
 
@@ -22222,7 +22253,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
 
   const renderProfileTipCard = (tip) => {
-    const unifiedTip = buildUnifiedProfileTipForCard(tip)
+    // WERSJA 1666 — do karty w profilu wysyłamy pełny surowy rekord typu,
+    // nie uproszczony obiekt profilu. Dzięki temu Mój profil i Dashboard renderują tę samą ramkę.
+    const unifiedTip = buildUnifiedProfileTipForCard(tip, tip?.rawTip || tip)
     const profileSubActive = hasActiveTipsterSubscription(unifiedTip, profileSubscriptionActive && !profileIsOwnForViewer && !activeProfileSubscription ? [
       ...tipsterSubscriptions,
       { tipster_id: viewedIdKey || viewedUsernameKey || username, status: 'active' }
@@ -22246,6 +22279,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   const renderPurchasedSingleCard = (tip) => {
     const raw = tip.rawTip || tip
+    // WERSJA 1666 — kupione single też korzystają z pełnego rekordu, jak Dashboard.
     const unifiedTip = buildUnifiedProfileTipForCard(tip, raw)
     return (
       <div className="profile-purchased-single-wrap-v952" key={tip.id}>

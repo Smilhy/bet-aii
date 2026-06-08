@@ -110,6 +110,103 @@ function getCanonicalKeys(tip = {}) {
   }
 }
 
+
+function hasUsableCanonicalKeys(tip = {}) {
+  const keys = getCanonicalKeys(tip)
+  return Boolean(keys.marketKey && keys.selectionKey && keys.marketKey !== 'unknown' && keys.selectionKey !== 'unknown')
+}
+
+function parseSelectionLine(selectionKey = '') {
+  const match = String(selectionKey || '').match(/(?:^|_)([+-]?\d+(?:[.,]\d+)?)(?:$|_)/)
+  if (!match) return null
+  const value = Number(String(match[1]).replace(',', '.'))
+  return Number.isFinite(value) ? value : null
+}
+
+function settleOverUnderBySelection(selectionKey, total, label) {
+  const key = normalize(selectionKey)
+  const line = parseSelectionLine(key)
+  if (!Number.isFinite(line)) return { status: 'pending_admin_review', reason: `${label}: brak linii w selection_key=${selectionKey}` }
+  if (key.startsWith('over_')) {
+    if (total > line) return { status: 'won', reason: `${label} key Over ${line}, total=${total}` }
+    if (total < line) return { status: 'lost', reason: `${label} key Over ${line}, total=${total}` }
+    return { status: 'void', reason: `Push ${label} key Over ${line}, total=${total}` }
+  }
+  if (key.startsWith('under_')) {
+    if (total < line) return { status: 'won', reason: `${label} key Under ${line}, total=${total}` }
+    if (total > line) return { status: 'lost', reason: `${label} key Under ${line}, total=${total}` }
+    return { status: 'void', reason: `Push ${label} key Under ${line}, total=${total}` }
+  }
+  return { status: 'pending_admin_review', reason: `${label}: nieznane selection_key=${selectionKey}` }
+}
+
+function resolveByCanonicalKeys(tip, homeGoals, awayGoals, fixture, fixtureStats = []) {
+  const keys = getCanonicalKeys(tip)
+  if (!hasUsableCanonicalKeys(tip)) return null
+  const market = keys.marketKey
+  const selection = keys.selectionKey
+  const result = homeGoals > awayGoals ? 'home' : awayGoals > homeGoals ? 'away' : 'draw'
+  const totalGoals = homeGoals + awayGoals
+
+  if (market === 'match_winner') {
+    if (!['home', 'draw', 'away'].includes(selection)) return { status: 'pending_admin_review', reason: `1X2: błędny selection_key=${selection}` }
+    return { status: selection === result ? 'won' : 'lost', reason: `1X2 key pick=${selection}, result=${result}` }
+  }
+
+  if (market === 'double_chance') {
+    const won =
+      (selection === '1x' && (result === 'home' || result === 'draw')) ||
+      (selection === 'x2' && (result === 'away' || result === 'draw')) ||
+      (selection === '12' && (result === 'home' || result === 'away'))
+    if (!['1x', 'x2', '12'].includes(selection)) return { status: 'pending_admin_review', reason: `Podwójna szansa: błędny selection_key=${selection}` }
+    return { status: won ? 'won' : 'lost', reason: `Podwójna szansa key=${selection}, result=${result}` }
+  }
+
+  if (market === 'goals_total') {
+    return settleOverUnderBySelection(selection, totalGoals, 'Gole')
+  }
+
+  if (market === 'btts') {
+    if (!['yes', 'no'].includes(selection)) return { status: 'pending_admin_review', reason: `BTTS: błędny selection_key=${selection}` }
+    const hitYes = homeGoals > 0 && awayGoals > 0
+    return { status: (selection === 'yes') === hitYes ? 'won' : 'lost', reason: `BTTS key=${selection}, hitYes=${hitYes}` }
+  }
+
+  if (market === 'draw_no_bet') {
+    if (!['home', 'away'].includes(selection)) return { status: 'pending_admin_review', reason: `DNB: błędny selection_key=${selection}` }
+    if (result === 'draw') return { status: 'void', reason: 'DNB key: remis = zwrot' }
+    return { status: selection === result ? 'won' : 'lost', reason: `DNB key=${selection}, result=${result}` }
+  }
+
+  if (market === 'exact_score') {
+    const score = String(selection || '').match(/^(\d+)_(\d+)$/)
+    if (!score) return { status: 'pending_admin_review', reason: `Dokładny wynik: błędny selection_key=${selection}` }
+    const pickHome = Number(score[1])
+    const pickAway = Number(score[2])
+    return { status: pickHome === homeGoals && pickAway === awayGoals ? 'won' : 'lost', reason: `Dokładny wynik key=${pickHome}:${pickAway}, score=${homeGoals}:${awayGoals}` }
+  }
+
+  if (market === 'handicap') {
+    const side = selection.startsWith('away_') ? 'away' : selection.startsWith('home_') ? 'home' : ''
+    const line = parseSelectionLine(selection)
+    if (!side || !Number.isFinite(line)) return { status: 'pending_admin_review', reason: `Handicap: błędny selection_key=${selection}` }
+    const adjusted = side === 'home' ? homeGoals + line - awayGoals : awayGoals + line - homeGoals
+    if (adjusted > 0) return { status: 'won', reason: `Handicap key ${side} ${line}, adjusted=${adjusted}` }
+    if (adjusted < 0) return { status: 'lost', reason: `Handicap key ${side} ${line}, adjusted=${adjusted}` }
+    return { status: 'void', reason: `Handicap key push ${side} ${line}` }
+  }
+
+  if (market === 'corners_total' || market === 'cards_total') {
+    if (!Array.isArray(fixtureStats) || !fixtureStats.length) {
+      return { status: 'pending_admin_review', reason: `${market === 'corners_total' ? 'Rogi' : 'Kartki'}: API nie zwróciło statystyk meczu` }
+    }
+    const total = market === 'corners_total' ? getTotalCorners(fixtureStats) : getTotalCards(fixtureStats)
+    return settleOverUnderBySelection(selection, total, market === 'corners_total' ? 'Rogi' : 'Kartki')
+  }
+
+  return { status: 'pending_admin_review', reason: `Nieobsługiwany market_key=${market}, selection_key=${selection}` }
+}
+
 function extractLine(text = '') {
   const match = String(text || '').match(/([0-9]+(?:[.,][0-9]+)?)/)
   if (!match) return null
@@ -340,6 +437,10 @@ function needsFixtureStats(tip = {}) {
 }
 
 function resolveTip(tip, homeGoals, awayGoals, fixture, fixtureStats = []) {
+  // WERSJA 1665: najpierw rozliczamy po technicznych kluczach market_key/selection_key.
+  // Tekst bet_type/prediction jest tylko fallbackiem dla starych typów sprzed dodania kluczy.
+  const keyed = resolveByCanonicalKeys(tip, homeGoals, awayGoals, fixture, fixtureStats)
+  if (keyed) return keyed
   return resolveCornersCards(tip, fixtureStats) || resolveDnb(tip, homeGoals, awayGoals, fixture) || resolveExactScore(tip, homeGoals, awayGoals) || resolveHandicap(tip, homeGoals, awayGoals, fixture) || resolveOverUnder(tip, homeGoals, awayGoals) || resolveBtts(tip, homeGoals, awayGoals) || resolveDoubleChance(tip, homeGoals, awayGoals, fixture) || resolve1x2(tip, homeGoals, awayGoals, fixture)
 }
 
@@ -705,10 +806,10 @@ exports.handler = async (event) => {
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1663', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1665', dryRun, ...result })
   } catch (error) {
-    console.error('auto-settle-tips v1663 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1663', error: String(error.message || error) })
+    console.error('auto-settle-tips v1665 error:', error)
+    return json(500, { ok: false, function: 'auto-settle-tips-v1665', error: String(error.message || error) })
   }
 }
 
