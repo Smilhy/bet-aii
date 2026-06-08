@@ -3,6 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 
 const FINISHED_STATUS = new Set(['FT', 'AET', 'PEN'])
 const VOID_STATUS = new Set(['CANC', 'ABD', 'AWD', 'WO', 'PST'])
+const LIVE_STATUS = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT'])
 const PENDING_VALUES = new Set(['pending', 'open', 'active', 'oczekujacy', 'oczekujący', 'waiting', 'live'])
 
 const corsHeaders = {
@@ -61,7 +62,11 @@ function getFixtureId(tip = {}) {
     tip.apiFixtureId,
     tip.fixture_json?.fixture?.id,
     tip.fixture_json?.id,
-    tip.raw_fixture?.fixture?.id
+    tip.raw_fixture?.fixture?.id,
+    tip.matchId,
+    tip.match_id,
+    tip.fixtureId,
+    tip.externalFixtureId
   ]
   const found = values.find(v => v !== null && v !== undefined && String(v).trim() && !String(v).startsWith('manual-'))
   return found ? String(found).trim() : ''
@@ -145,6 +150,177 @@ async function getFixture(fixtureId) {
   return row
 }
 
+
+function parseAkoLegs(tip = {}) {
+  const source = tip.legs_json || tip.legs || tip.ako_legs || tip.coupon_legs || null
+  if (Array.isArray(source)) return source
+  if (typeof source === 'string' && source.trim()) {
+    try {
+      const parsed = JSON.parse(source)
+      if (Array.isArray(parsed)) return parsed
+    } catch (_) {}
+  }
+  return []
+}
+
+function isAkoTip(tip = {}) {
+  const legs = parseAkoLegs(tip)
+  return Boolean(tip.is_ako) || String(tip.coupon_type || '').toLowerCase() === 'ako' || legs.length >= 2
+}
+
+function decorateAkoLeg(originalLeg, extra = {}) {
+  return { ...originalLeg, ...extra, checked_at: new Date().toISOString() }
+}
+
+function buildAkoSettlementPatch(tip, legs, overall, reason) {
+  const stake = n(tip.stake, 0)
+  const totalOdds = n(tip.odds || tip.course || tip.kurs, 0)
+  const effectiveOdds = legs.reduce((product, leg) => {
+    const status = String(leg.status || leg.result || '').toLowerCase()
+    if (status === 'void') return product
+    return product * (n(leg.odds || leg.course || leg.price, 1) || 1)
+  }, 1)
+  const winOdds = totalOdds > 1 ? totalOdds : effectiveOdds
+  const payout = overall === 'won' ? +(stake * winOdds).toFixed(2) : overall === 'void' ? stake : overall === 'lost' ? 0 : null
+  const profit = overall === 'won' ? +((payout || 0) - stake).toFixed(2) : overall === 'void' ? 0 : overall === 'lost' ? -stake : null
+  const final = ['won', 'lost', 'void'].includes(overall)
+
+  const patch = {
+    legs_json: legs,
+    legs_count: Math.max(Number(tip.legs_count || 0) || 0, legs.length),
+    coupon_type: 'ako',
+    is_ako: true,
+    settlement_note: reason || null,
+    fixture_json: { ako_legs: legs },
+    updated_at: new Date().toISOString()
+  }
+
+  if (final) {
+    Object.assign(patch, {
+      status: overall,
+      result: overall,
+      settlement_status: overall,
+      result_status: overall,
+      manual_settlement_status: null,
+      admin_approval_status: 'not_required',
+      payout,
+      return_amount: payout,
+      profit,
+      settled_at: new Date().toISOString(),
+      settled_by: 'auto_api_football_ako_v1655',
+      settlement_source: 'api-football-ako'
+    })
+  } else {
+    Object.assign(patch, {
+      status: 'pending',
+      result: 'pending',
+      settlement_status: 'pending',
+      result_status: 'pending',
+      admin_approval_status: 'not_required'
+    })
+  }
+
+  return patch
+}
+
+async function resolveAkoTip(tip) {
+  const originalLegs = parseAkoLegs(tip)
+  const nextLegs = []
+  const reasons = []
+  let hasLost = false
+  let hasPending = false
+  let hasWon = false
+  let hasVoid = false
+  let hasStarted = false
+
+  for (let index = 0; index < originalLegs.length; index += 1) {
+    const leg = originalLegs[index] || {}
+    const fixtureId = getFixtureId(leg)
+    if (!fixtureId) {
+      hasPending = true
+      nextLegs.push(decorateAkoLeg(leg, { status: leg.status || 'pending', result: leg.result || 'pending', reason: 'Brak fixture_id dla zdarzenia AKO' }))
+      continue
+    }
+
+    const fixture = await getFixture(fixtureId)
+    if (!fixture) {
+      hasPending = true
+      nextLegs.push(decorateAkoLeg(leg, { status: 'pending', result: 'pending', fixture_id: fixtureId, reason: 'Nie znaleziono meczu w API' }))
+      continue
+    }
+
+    const status = fixture?.fixture?.status?.short || ''
+    const homeGoals = n(fixture?.goals?.home, 0)
+    const awayGoals = n(fixture?.goals?.away, 0)
+    const score = `${homeGoals}:${awayGoals}`
+    const fixtureDate = fixture?.fixture?.date || leg.commence_time || leg.date || null
+
+    if (LIVE_STATUS.has(status)) {
+      hasPending = true
+      hasStarted = true
+      nextLegs.push(decorateAkoLeg(leg, { status: 'live', result: 'pending', fixture_id: fixtureId, fixture_status: status, score, fixture_date: fixtureDate, reason: `Mecz rozpoczęty: ${status}` }))
+      continue
+    }
+
+    if (VOID_STATUS.has(status)) {
+      hasVoid = true
+      hasStarted = true
+      nextLegs.push(decorateAkoLeg(leg, { status: 'void', result: 'void', fixture_id: fixtureId, fixture_status: status, score, fixture_date: fixtureDate, reason: `Zwrot: ${status}` }))
+      continue
+    }
+
+    if (!FINISHED_STATUS.has(status)) {
+      hasPending = true
+      nextLegs.push(decorateAkoLeg(leg, { status: leg.status || 'pending', result: leg.result || 'pending', fixture_id: fixtureId, fixture_status: status, score, fixture_date: fixtureDate, reason: `Oczekuje: ${status || 'NS'}` }))
+      continue
+    }
+
+    hasStarted = true
+    const legTip = {
+      ...tip,
+      ...leg,
+      fixture_id: fixtureId,
+      team_home: leg.home || leg.team_home || tip.team_home,
+      team_away: leg.away || leg.team_away || tip.team_away,
+      home_team: leg.home || leg.home_team || tip.home_team,
+      away_team: leg.away || leg.away_team || tip.away_team,
+      market: leg.market || tip.market,
+      bet_type: leg.pick || leg.bet_type || leg.prediction || tip.bet_type,
+      prediction: leg.pick || leg.prediction || leg.bet_type || tip.prediction,
+      pick: leg.pick || tip.pick,
+      odds: leg.odds || tip.odds
+    }
+    const result = resolveTip(legTip, homeGoals, awayGoals, fixture)
+    const finalStatus = result.status === 'pending_admin_review' ? 'pending_admin_review' : result.status
+    if (finalStatus === 'lost') hasLost = true
+    else if (finalStatus === 'won') hasWon = true
+    else if (finalStatus === 'void') hasVoid = true
+    else hasPending = true
+
+    reasons.push(`${index + 1}. ${leg.home || leg.team_home || ''} - ${leg.away || leg.team_away || ''}: ${finalStatus} (${result.reason || ''})`)
+    nextLegs.push(decorateAkoLeg(leg, { status: finalStatus, result: finalStatus, fixture_id: fixtureId, fixture_status: status, score, fixture_date: fixtureDate, reason: result.reason || null }))
+  }
+
+  let overall = 'pending'
+  let reason = reasons.join(' | ')
+  if (hasLost) {
+    overall = 'lost'
+    reason = `AKO przegrane — co najmniej jedno zdarzenie nietrafione. ${reason}`.trim()
+  } else if (!hasPending && originalLegs.length && hasWon) {
+    overall = 'won'
+    reason = `AKO wygrane — wszystkie aktywne zdarzenia trafione. ${reason}`.trim()
+  } else if (!hasPending && originalLegs.length && hasVoid && !hasWon) {
+    overall = 'void'
+    reason = `AKO zwrot — wszystkie zdarzenia anulowane/zwrotne. ${reason}`.trim()
+  } else if (hasStarted) {
+    reason = `AKO w toku — część zdarzeń już rozpoczęta lub rozliczona, kupon zostaje oczekujący.`
+  } else {
+    reason = `AKO oczekuje — żadne zdarzenie nie wymaga jeszcze rozliczenia.`
+  }
+
+  return { overall, legs: nextLegs, reason }
+}
+
 function buildSettlementPatch(tip, fixture, result) {
   const homeGoals = n(fixture?.goals?.home, 0)
   const awayGoals = n(fixture?.goals?.away, 0)
@@ -201,12 +377,11 @@ async function fetchCandidateTips(supabase, limit, specificId = '') {
   const { data, error } = await supabase
     .from('tips')
     .select('*')
-    .or('fixture_id.not.is.null,api_fixture_id.not.is.null,external_fixture_id.not.is.null')
     .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) throw error
-  return (data || []).filter(isPendingTip)
+  return (data || []).filter(tip => isPendingTip(tip) && (isAkoTip(tip) || getFixtureId(tip)))
 }
 
 async function runAutoSettle({ limit = 500, dryRun = false, specificId = '' } = {}) {
@@ -230,6 +405,23 @@ async function runAutoSettle({ limit = 500, dryRun = false, specificId = '' } = 
       pick: tip.bet_type || tip.prediction || tip.market || tip.type
     }
     checked.push(base)
+
+    if (isAkoTip(tip)) {
+      try {
+        const akoResult = await resolveAkoTip(tip)
+        const patch = buildAkoSettlementPatch(tip, akoResult.legs, akoResult.overall, akoResult.reason)
+        if (!dryRun) {
+          const update = await safeUpdateTip(supabase, tip.id, patch)
+          if (update.error) throw update.error
+        }
+        const payload = { ...base, status: akoResult.overall, reason: akoResult.reason, legs: akoResult.legs.length, dryRun }
+        if (akoResult.overall === 'pending') skipped.push(payload)
+        else settled.push(payload)
+      } catch (error) {
+        failed.push({ ...base, error: String(error.message || error) })
+      }
+      continue
+    }
 
     if (!fixtureId) {
       skipped.push({ ...base, reason: 'no fixture_id/api_fixture_id/external_fixture_id' })
@@ -293,10 +485,10 @@ exports.handler = async (event) => {
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1102', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1655', dryRun, ...result })
   } catch (error) {
-    console.error('auto-settle-tips v1102 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1102', error: String(error.message || error) })
+    console.error('auto-settle-tips v1655 error:', error)
+    return json(500, { ok: false, function: 'auto-settle-tips-v1655', error: String(error.message || error) })
   }
 }
 

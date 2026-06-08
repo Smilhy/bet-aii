@@ -72564,7 +72564,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 }
 .profile-ticket-v6-ako-leg{
   display:grid;
-  grid-template-columns:22px minmax(0,1fr) auto;
+  grid-template-columns:22px minmax(0,1fr) auto auto;
   align-items:center;
   gap:8px;
   min-width:0;
@@ -72599,6 +72599,27 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-weight:900;
   white-space:nowrap;
 }
+
+.profile-ticket-v6-ako-leg-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:3px 7px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  font-style:normal;
+  font-size:10px;
+  font-weight:1000;
+  white-space:nowrap;
+  color:#c8d9e7;
+  background:rgba(255,255,255,.055);
+}
+.profile-ticket-v6-ako-leg-status.won{color:#1fffd0;border-color:rgba(31,255,208,.35);background:rgba(31,255,208,.10)}
+.profile-ticket-v6-ako-leg-status.lost{color:#ff5f8a;border-color:rgba(255,95,138,.35);background:rgba(255,95,138,.10)}
+.profile-ticket-v6-ako-leg-status.void{color:#ffd36a;border-color:rgba(255,211,106,.35);background:rgba(255,211,106,.10)}
+.profile-ticket-v6-ako-leg-status.live{color:#68d8ff;border-color:rgba(104,216,255,.35);background:rgba(104,216,255,.10)}
+.profile-ticket-v6-ako-leg-status.review{color:#caa9ff;border-color:rgba(202,169,255,.35);background:rgba(202,169,255,.10)}
+
 .profile-ticket-v6-ako-leg.empty{
   grid-template-columns:1fr;
 }

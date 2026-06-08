@@ -10222,7 +10222,10 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
     home: leg.home || leg.team_home || leg.home_team || 'Gospodarze',
     away: leg.away || leg.team_away || leg.away_team || 'Goście',
     pick: leg.pick || leg.bet_type || leg.prediction || leg.market || 'Typ',
-    odds: Number(leg.odds || leg.price || leg.course || 0) || 0
+    odds: Number(leg.odds || leg.price || leg.course || 0) || 0,
+    status: leg.status || leg.result || leg.settlement_status || 'pending',
+    score: leg.score || '',
+    reason: leg.reason || ''
   }))
   // V1653: liczba zdarzeń AKO musi wynikać z realnej listy legs_json.
   // Czasem w bazie/starym zapisie legs_count zostawało 1, mimo że legs_json miało 2+ zdarzenia.
@@ -10389,6 +10392,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
                   <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
+                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{getAkoLegStatusLabel(leg).text}{leg.score ? ` ${leg.score}` : ''}</i>
                 </div>
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
@@ -19947,6 +19951,7 @@ function ProfileLiveTipCard({
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
                   <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
+                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{getAkoLegStatusLabel(leg).text}{leg.score ? ` ${leg.score}` : ''}</i>
                 </div>
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
@@ -25588,6 +25593,43 @@ function parseBetaiKickoffTime(value) {
   return NaN
 }
 
+
+function parseTipAkoLegsForVisibility(tip = {}) {
+  const source = tip.legs_json || tip.legs || tip.ako_legs || tip.coupon_legs || null
+  if (Array.isArray(source)) return source
+  if (typeof source === 'string' && source.trim()) {
+    try {
+      const parsed = JSON.parse(source)
+      if (Array.isArray(parsed)) return parsed
+    } catch (_) {}
+  }
+  return []
+}
+
+function getAkoLegKickoffTimestamp(leg = {}) {
+  const direct = [leg.commence_time, leg.event_time, leg.kickoff_time, leg.start_time, leg.fixture_date, leg.date_time].find(Boolean)
+  const directTs = parseBetaiKickoffTime(direct)
+  if (Number.isFinite(directTs)) return directTs
+
+  const dateRaw = String(leg.date || leg.match_date || leg.event_date || '').trim()
+  const timeRaw = String(leg.time || leg.match_time || leg.kickoff_time_hhmm || '').trim()
+  if (dateRaw && timeRaw) {
+    const combinedTs = parseBetaiKickoffTime(`${dateRaw} ${timeRaw}`)
+    if (Number.isFinite(combinedTs)) return combinedTs
+  }
+  return NaN
+}
+
+function getAkoLegStatusLabel(leg = {}) {
+  const raw = String(leg.status || leg.result || '').toLowerCase()
+  if (['won', 'win', 'wygrany'].includes(raw)) return { text: '✓ Wygrany', tone: 'won' }
+  if (['lost', 'loss', 'przegrany'].includes(raw)) return { text: '✕ Przegrany', tone: 'lost' }
+  if (['void', 'push', 'zwrot'].includes(raw)) return { text: '↺ Zwrot', tone: 'void' }
+  if (['live', '1h', '2h', 'ht'].includes(raw)) return { text: '● Live', tone: 'live' }
+  if (raw === 'pending_admin_review') return { text: 'Do sprawdzenia', tone: 'review' }
+  return { text: 'Oczekuje', tone: 'pending' }
+}
+
 function getTipKickoffTimestamp(tip = {}) {
   // Najpierw obsługa najczęstszego zapisu z Supabase: match_date='YYYY-MM-DD' + match_time='HH:mm'.
   // Wcześniej sam match_time='02:00' nie dawał daty, więc typ mógł wisieć na Dashboardzie po starcie meczu.
@@ -25625,6 +25667,17 @@ function getTipKickoffTimestamp(tip = {}) {
 function isTipAlreadyStarted(tip = {}, now = Date.now()) {
   const fixtureStatus = String(tip.fixture_status || tip.status_short || tip.api_status || '').trim().toUpperCase()
   if (['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'FT', 'AET', 'PEN'].includes(fixtureStatus)) return true
+
+  const akoLegs = parseTipAkoLegsForVisibility(tip)
+  if (akoLegs.length >= 2) {
+    const anyStartedLeg = akoLegs.some(leg => {
+      const legStatus = String(leg.status || leg.result || leg.fixture_status || '').trim().toLowerCase()
+      if (['live', 'won', 'lost', 'void', '1h', 'ht', '2h', 'ft', 'aet', 'pen'].includes(legStatus)) return true
+      const legTs = getAkoLegKickoffTimestamp(leg)
+      return Number.isFinite(legTs) && legTs <= now
+    })
+    if (anyStartedLeg) return true
+  }
 
   const ts = getTipKickoffTimestamp(tip)
   if (!Number.isFinite(ts)) return false
