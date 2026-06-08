@@ -1,0 +1,9 @@
+BetAI WERSJA 1676
+
+Zmiana tylko dla Typów AI:
+- oficjalne typy AI: prawdopodobieństwo od 60% do 100%
+- kurs minimum: 1.40
+- kurs maksimum: bez limitu
+- endpoint generate-live-ai-picks zwraca min_probability=60 i min_odds=1.4
+- UI filtrów Typy AI ustawiony domyślnie na 60% i kurs 1.40, kurs max bez limitu
+- bez mieszania z typami typerów/użytkowników

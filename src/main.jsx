@@ -3197,7 +3197,7 @@ function DailyAiPicksRightPanelV1156() {
       }
 
       setLoading(true)
-      setNotice(cached.length ? `Mam ${cached.length}/3 — dobieram kolejne przyszłe mecze...` : 'Sprawdzam zapisane typy AI na dziś: min. 65% i kurs 1.50+...')
+      setNotice(cached.length ? `Mam ${cached.length}/3 — dobieram kolejne przyszłe mecze...` : 'Sprawdzam zapisane typy AI na dziś: min. 60% i kurs 1.40+ bez limitu max...')
       try {
         const savedFromDb = await loadBetAiRightSavedSupabasePicksV1157(today)
         let collected = filterBetAiRightDailyAiPicksV1158([...cached, ...savedFromDb], today)
@@ -3213,7 +3213,7 @@ function DailyAiPicksRightPanelV1156() {
         // Ten widget pokazuje wyłącznie typy zapisane w Supabase/localStorage, żeby dashboard nie dusił API po każdym wejściu.
         if (!alive) return
         setPicks(collected.slice(0, 3))
-        setNotice(collected.length ? `Wczytano ${collected.length}/3 zapisane typy AI na dziś.` : 'Brak zapisanych typów AI spełniających warunek 65% i kurs 1.50+. Skan uruchom ręcznie w zakładce Typy AI.')
+        setNotice(collected.length ? `Wczytano ${collected.length}/3 zapisane typy AI na dziś.` : 'Brak zapisanych typów AI spełniających warunek 60% i kurs 1.40+ bez limitu max. Skan uruchom ręcznie w zakładce Typy AI.')
         return
 
         if (!alive) return
@@ -15542,9 +15542,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [aiDayMode, setAiDayMode] = useState('today')
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
-  const [minOdds, setMinOdds] = useState(1.50)
-  const [maxOdds, setMaxOdds] = useState(3.50)
-  const [minProb, setMinProb] = useState(65)
+  const [minOdds, setMinOdds] = useState(1.40)
+  const [maxOdds, setMaxOdds] = useState(999)
+  const [minProb, setMinProb] = useState(60)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
   const [savedAiJournalCards, setSavedAiJournalCards] = useState([])
@@ -15557,11 +15557,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const DAILY_AI_PICK_LIMIT_V1086 = 5
   const DAILY_AI_MIN_SCORE_V1086 = 65
-  const DAILY_AI_MIN_ODDS_V1480 = 1.50
-  const DAILY_AI_MIN_PROB_V1480 = 65
+  const DAILY_AI_MIN_ODDS_V1480 = 1.40
+  const DAILY_AI_MIN_PROB_V1480 = 60
   const DAILY_AI_SCAN_COOLDOWN_MS_V1480 = 5 * 60 * 1000
-  const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1608_min65'
-  const DAILY_AI_VISIBLE_CACHE_PREFIX_V1484 = 'betai_quality_visible_cards_v1608_min65'
+  const DAILY_AI_STORAGE_KEY_PREFIX_V1086 = 'betai_daily_ai_scan_v1676_min60_odds140_nolimit'
+  const DAILY_AI_VISIBLE_CACHE_PREFIX_V1484 = 'betai_quality_visible_cards_v1676_min60_odds140_nolimit'
 
   const normalizeSport = (value = '') => detectBetAiSportV1052({ sport: value }, 'Piłka nożna')
 
@@ -15834,10 +15834,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   // V1675: twarde zasady dla Typów AI. Nie mieszamy tu typów typerów/użytkowników.
-  // Typ aktywny AI ma być widoczny tylko gdy spełnia min. 65% oraz kurs min. 1.50.
+  // Typ aktywny AI ma być widoczny tylko gdy spełnia min. 60% oraz kurs min. 1.40. Bez górnego limitu kursu.
   // Przyszłe PENDING z pojutrza lub dalszych dni nie podbijają liczników/statystyk.
-  const BETAI_AI_MIN_PROBABILITY_V1675 = 65
-  const BETAI_AI_MIN_ODDS_V1675 = 1.5
+  const BETAI_AI_MIN_PROBABILITY_V1675 = 60
+  const BETAI_AI_MIN_ODDS_V1675 = 1.4
 
   const getBetAiProbabilityForFilterV1675 = (card = {}) => {
     const candidates = [card.probability, card.model_probability, card.ai_probability, card.aiScore, card.ai_score, card.ai_confidence, card.confidence]
@@ -15877,15 +15877,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
     const useStrictFilters = applyUserFilters && (
       matchMode !== 'prematch' ||
-      Number(minOdds) !== 1.5 ||
-      Number(maxOdds) !== 3.5 ||
-      Number(minProb) !== 65
+      Number(minOdds) !== 1.4 ||
+      Number(maxOdds) !== 999 ||
+      Number(minProb) !== 60
     )
 
     const filtered = useStrictFilters
       ? base
           .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
-          .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
+          .filter(c => Number(c.odds || 0) >= Number(minOdds) && (Number(maxOdds) >= 999 || Number(c.odds || 0) <= Number(maxOdds)))
           .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
       : base
 
@@ -15904,7 +15904,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const visibleCards = useMemo(() => {
     // V1673: licznik i lista używają tej samej logiki.
-    // Zapisane typy z ai_bets są już wynikiem skanu AI, więc domyślny filtr 65%/1.50
+    // Zapisane typy z ai_bets są już wynikiem skanu AI, więc domyślny filtr 60%/1.40
     // nie może ukrywać całej listy po tym, jak licznik pokazuje dostępne typy.
     return getLiveAiCardsForDayV1673(aiDayMode, true)
   }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb])
@@ -16671,7 +16671,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         shouldSetScanCooldownV1482 = true
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 65%+. Nie zapisuję słabych typów.`)
+        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.40+ i skuteczność 60%+. Nie zapisuję słabych typów.`)
         return
       }
 
@@ -16855,10 +16855,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
           </div>
         </div>
 <div className="ai-range-panel-v1054">
-          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
-          <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
-          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="65" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(3.50); setMinProb(65); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.40" max="5.00" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
+          <label><span>Kurs max</span><b>Bez limitu</b><input type="range" min="999" max="999" step="1" value={999} readOnly /></label>
+          <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="60" max="100" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.40); setMaxOdds(999); setMinProb(60); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>

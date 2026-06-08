@@ -436,9 +436,9 @@ exports.handler = async function (event) {
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    // V1675: twarde minimum dla Typów AI: prawdopodobieństwo 65%+ i kurs 1.50+.
-    const minProbability = Number(event?.queryStringParameters?.minProbability || process.env.REAL_AI_MIN_PROBABILITY || 65)
-    const minOdds = Number(event?.queryStringParameters?.minOdds || process.env.REAL_AI_MIN_ODDS || 1.5)
+    // V1676: oficjalne Typy AI: prawdopodobieństwo 60-100% oraz kurs minimum 1.40, bez górnego limitu kursu.
+    const minProbability = Number(event?.queryStringParameters?.minProbability || process.env.REAL_AI_MIN_PROBABILITY || 60)
+    const minOdds = Number(event?.queryStringParameters?.minOdds || process.env.REAL_AI_MIN_ODDS || 1.4)
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
@@ -519,10 +519,10 @@ exports.handler = async function (event) {
       apis_checked: apisChecked,
       days,
       candidates: rows.length,
-      model: '1086-daily-stable-scan-ai-bets-ui-v1673',
+      model: '1086-daily-stable-scan-ai-bets-v1676-min60-odds140-nolimit',
       min_probability: minProbability,
       min_odds: minOdds,
-      message: 'Skan AI zapisuje TOP typy do ai_bets. V1675: tylko dziś+jutro według Europe/Warsaw, min. 65% i kurs 1.50+.',
+      message: 'Skan AI zapisuje TOP typy do ai_bets. V1676: tylko dziś+jutro według Europe/Warsaw, prawdopodobieństwo 60-100%, kurs min. 1.40, bez górnego limitu kursu.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
