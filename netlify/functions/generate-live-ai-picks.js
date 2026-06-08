@@ -2,6 +2,8 @@ const { createClient } = require('@supabase/supabase-js')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const REAL_AI_MIN_ODDS_V1691 = 1.50
+const REAL_AI_MIN_PROBABILITY_V1692 = 48
 const API_SPORTS_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
@@ -436,7 +438,7 @@ exports.handler = async function (event) {
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || REAL_AI_MIN_PROBABILITY_V1692)
+    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 48)
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
