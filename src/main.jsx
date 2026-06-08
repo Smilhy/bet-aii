@@ -15833,6 +15833,38 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     ].filter(Boolean).join(' ').toLowerCase().includes(q)
   }
 
+  // V1675: twarde zasady dla Typów AI. Nie mieszamy tu typów typerów/użytkowników.
+  // Typ aktywny AI ma być widoczny tylko gdy spełnia min. 65% oraz kurs min. 1.50.
+  // Przyszłe PENDING z pojutrza lub dalszych dni nie podbijają liczników/statystyk.
+  const BETAI_AI_MIN_PROBABILITY_V1675 = 65
+  const BETAI_AI_MIN_ODDS_V1675 = 1.5
+
+  const getBetAiProbabilityForFilterV1675 = (card = {}) => {
+    const candidates = [card.probability, card.model_probability, card.ai_probability, card.aiScore, card.ai_score, card.ai_confidence, card.confidence]
+    for (const value of candidates) {
+      const n = Number(value)
+      if (Number.isFinite(n) && n > 0) return n
+    }
+    return 0
+  }
+
+  const isBetAiHardQualityOkV1675 = (card = {}) => {
+    const oddsOk = Number(card?.odds || card?.course || 0) >= BETAI_AI_MIN_ODDS_V1675
+    const probabilityOk = getBetAiProbabilityForFilterV1675(card) >= BETAI_AI_MIN_PROBABILITY_V1675
+    return oddsOk && probabilityOk
+  }
+
+  const isBetAiPendingWithinTodayTomorrowV1675 = (card = {}) => {
+    const dayKey = getBetAiCardLocalDateV1078(card)
+    return dayKey === getBetAiTodayLocalDateV1078() || dayKey === getBetAiTomorrowLocalDateV1078()
+  }
+
+  const isBetAiStatsScopeCardV1675 = (card = {}) => {
+    if (!card) return false
+    if (isBetAiSettledStatusV1091(card)) return true
+    return isBetAiPendingWithinTodayTomorrowV1675(card) && isBetAiHardQualityOkV1675(card)
+  }
+
   const getLiveAiCardsForDayV1673 = (mode = aiDayMode, applyUserFilters = false) => {
     const q = search.trim().toLowerCase()
     const base = allCards
@@ -15840,6 +15872,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
       .filter(c => !isBetAiSettledStatusV1091(c))
       .filter(c => isBetAiPrematchAvailableV1091(c))
+      .filter(c => isBetAiHardQualityOkV1675(c))
       .filter(c => matchesAiSearchV1455(c, q))
 
     const useStrictFilters = applyUserFilters && (
@@ -15915,13 +15948,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
     const today = getLiveAiCardsForDayV1673('today', false).filter(isFootball).length
     const tomorrow = getLiveAiCardsForDayV1673('tomorrow', false).filter(isFootball).length
-    const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
-    const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
+    const scopedCards = allCards.filter(card => isFootball(card) && isBetAiStatsScopeCardV1675(card))
+    const pending = scopedCards.filter(card => !isBetAiSettledStatusV1091(card)).length
+    const leagues = new Set(scopedCards.map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
     return {
       today,
       tomorrow,
       results: resultCards.length,
-      stats: allCards.length,
+      stats: scopedCards.length,
       leagues,
       pending,
     }
@@ -15932,6 +15966,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }, [selectedCard, selectedId])
 
   const stats = useMemo(() => {
+    const scopedStatsCards = allCards.filter(isBetAiStatsScopeCardV1675)
     const normalizeStatus = c => String(c?.result || c?.status || 'pending').toLowerCase()
     const readStake = c => Number(c?.stake || c?.bet_amount || c?.amount || 100) || 100
     const readOdds = c => Number(c?.odds || c?.course || 1.8) || 1.8
@@ -15945,21 +15980,21 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (['lost','loss','lose'].includes(status)) return -stake
       return 0
     }
-    const settled = allCards.filter(c => ['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c)))
-    const won = allCards.filter(c => ['won','win'].includes(normalizeStatus(c))).length
-    const lost = allCards.filter(c => ['lost','loss','lose'].includes(normalizeStatus(c))).length
-    const pending = allCards.filter(c => !['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c))).length
-    const totalStake = allCards.reduce((sum, c) => sum + readStake(c), 0)
+    const settled = scopedStatsCards.filter(c => ['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c)))
+    const won = scopedStatsCards.filter(c => ['won','win'].includes(normalizeStatus(c))).length
+    const lost = scopedStatsCards.filter(c => ['lost','loss','lose'].includes(normalizeStatus(c))).length
+    const pending = scopedStatsCards.filter(c => !['won','win','lost','loss','lose','void','push'].includes(normalizeStatus(c))).length
+    const totalStake = scopedStatsCards.reduce((sum, c) => sum + readStake(c), 0)
     const settledStake = settled.reduce((sum, c) => sum + readStake(c), 0)
     const profit = settled.reduce((sum, c) => sum + calcProfit(c), 0)
     const yieldValue = settledStake ? Math.round((profit / settledStake) * 100) : 0
-    const avgOddsRaw = allCards.length ? allCards.reduce((sum, c) => sum + readOdds(c), 0) / allCards.length : 0
-    const maxOddsRaw = allCards.length ? Math.max(...allCards.map(readOdds)) : 0
-    const avgScore = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.aiScore || 0), 0) / allCards.length) : 0
-    const avgEv = allCards.length ? Math.round(allCards.reduce((sum, c) => sum + Number(c.ev || 0), 0) / allCards.length) : 0
+    const avgOddsRaw = scopedStatsCards.length ? scopedStatsCards.reduce((sum, c) => sum + readOdds(c), 0) / scopedStatsCards.length : 0
+    const maxOddsRaw = scopedStatsCards.length ? Math.max(...scopedStatsCards.map(readOdds)) : 0
+    const avgScore = scopedStatsCards.length ? Math.round(scopedStatsCards.reduce((sum, c) => sum + Number(c.aiScore || 0), 0) / scopedStatsCards.length) : 0
+    const avgEv = scopedStatsCards.length ? Math.round(scopedStatsCards.reduce((sum, c) => sum + Number(c.ev || 0), 0) / scopedStatsCards.length) : 0
     const hitRate = (won + lost) ? Math.round((won / (won + lost)) * 100) : 0
     return {
-      total: allCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate,
+      total: scopedStatsCards.length, settled: settled.length, won, lost, pending, avgScore, avgEv, hitRate,
       yieldValue, profit, totalStake, avgOdds: avgOddsRaw, maxOdds: maxOddsRaw
     }
   }, [allCards])
@@ -15967,7 +16002,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const leagueRows = useMemo(() => {
     const rows = new Map()
     const q = search.trim().toLowerCase()
-    allCards.filter(card => matchesAiSearchV1455(card, q)).forEach(card => {
+    allCards.filter(card => isBetAiStatsScopeCardV1675(card)).filter(card => matchesAiSearchV1455(card, q)).forEach(card => {
       const key = `${card.sport}|||${card.league}`
       const row = rows.get(key) || { sport: card.sport, league: card.league, total: 0, won: 0, lost: 0, pending: 0, avg: 0 }
       row.total += 1

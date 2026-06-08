@@ -26,6 +26,17 @@ function warsawDateKey(value = new Date(), offsetDays = 0) {
   }, {})
   return `${parts.year}-${parts.month}-${parts.day}`
 }
+function warsawTimeHHMM(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value)
+  if (!Number.isFinite(d.getTime())) return '12:00'
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(d).reduce((acc, part) => {
+    if (part.type !== 'literal') acc[part.type] = part.value
+    return acc
+  }, {})
+  return `${parts.hour || '12'}:${parts.minute || '00'}`
+}
 function allowedWarsawDateKeys(days = 2) {
   const count = Math.max(1, Math.min(14, Number(days || 1)))
   return new Set(Array.from({ length: count }, (_, index) => warsawDateKey(new Date(), index)))
@@ -334,8 +345,8 @@ function aiBetRowFromStrongestRow(row) {
   const externalBase = row.external_fixture_id || row.ai_external_key || `${home}-${away}-${iso.slice(0,10)}-${market}-${prediction}`
   return {
     external_fixture_id: String(externalBase),
-    match_date: iso.slice(0, 10),
-    match_time: iso.slice(11, 16),
+    match_date: warsawDateKey(iso),
+    match_time: warsawTimeHHMM(iso),
     home_team: home,
     away_team: away,
     country: safeName(row.country, 'API-Sports'),
@@ -425,13 +436,16 @@ exports.handler = async function (event) {
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
+    // V1675: twarde minimum dla Typów AI: prawdopodobieństwo 65%+ i kurs 1.50+.
+    const minProbability = Number(event?.queryStringParameters?.minProbability || process.env.REAL_AI_MIN_PROBABILITY || 65)
+    const minOdds = Number(event?.queryStringParameters?.minOdds || process.env.REAL_AI_MIN_ODDS || 1.5)
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
         const row = await buildRow(ev)
-        if (Number(row.model_probability || 0) < minProbability) continue
+        if (Number(row.model_probability || row.probability || 0) < minProbability) continue
+        if (Number(row.odds || 0) < minOdds) continue
         if (Number(row.value_score || 0) < minValueScore) continue
         row.quality_label = row.ai_score >= 78 ? 'TOP AI' : row.ai_score >= 70 ? 'VALUE' : 'REAL EVENT'
         rows.push(row)
@@ -506,7 +520,9 @@ exports.handler = async function (event) {
       days,
       candidates: rows.length,
       model: '1086-daily-stable-scan-ai-bets-ui-v1673',
-      message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. V1673: days=2 tylko dziś+jutro, bez pojutrza w Result.',
+      min_probability: minProbability,
+      min_odds: minOdds,
+      message: 'Skan AI zapisuje TOP typy do ai_bets. V1675: tylko dziś+jutro według Europe/Warsaw, min. 65% i kurs 1.50+.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
