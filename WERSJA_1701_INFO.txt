@@ -1,0 +1,26 @@
+WERSJA 1701 — realne kursy tylko po prawdziwym fixture ID + debug.
+
+Dlaczego:
+- Jeden typ Peru vs Spain dostał podejrzany kurs.
+- Możliwa przyczyna: odds zostały dopasowane po złym ID z cache_key.
+- Ta wersja nie wyciąga już losowych cyfr z cache_key.
+- Kursy API są dopasowywane tylko po prawdziwym fixture.id z API.
+
+Debug:
+- source w ai_bets zawiera:
+  1701-real-api-football-odds-fixture-id-debug
+  bookmaker=...
+  raw_market=...
+  raw_value=...
+  fixture=...
+
+Co sprawdzić po skanie:
+select home_team, away_team, market, prediction, odds, probability, ev, ai_score, source, created_at
+from public.ai_bets
+order by created_at desc;
+
+Nie ruszano:
+- typów typerów,
+- AKO,
+- portfela,
+- rozliczania użytkowników.
