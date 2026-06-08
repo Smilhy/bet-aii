@@ -233,7 +233,7 @@ function chooseModelPick(ev) {
     probability += 5
   }
 
-  probability = clamp(probability, 57, 79)
+  probability = clamp(probability, 48, 79)
   const odds = round(Math.max(REAL_AI_MIN_ODDS_V1691, 100 / probability * 1.04), 2)
   const implied = round((1 / odds) * 100, 2)
   const value = round(probability - implied, 2)
@@ -425,14 +425,14 @@ exports.handler = async function (event) {
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
+    const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || REAL_AI_MIN_PROBABILITY_V1692)
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
         const row = await buildRow(ev)
         if (Number(row.odds || 0) < REAL_AI_MIN_ODDS_V1691) continue
-        if (Number(row.model_probability || 0) < minProbability) continue
+        if (Number(row.model_probability || row.probability || 0) < minProbability) continue
         if (Number(row.value_score || 0) < minValueScore) continue
         row.quality_label = row.ai_score >= 78 ? 'TOP AI' : row.ai_score >= 70 ? 'VALUE' : 'REAL EVENT'
         rows.push(row)
