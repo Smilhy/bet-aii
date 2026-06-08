@@ -1,0 +1,17 @@
+WERSJA 1672 — TYPY AI: SKAN DZIS + JUTRO, PORZADEK NAZW
+
+Zakres zmian: tylko modul Typy AI. Nie ruszano typow uzytkownika, Dodaj typ, singli, AKO ani auto-settle typerow.
+
+Zmiany:
+- przycisk w Typy AI zmieniony na: Skanuj dzis + jutro
+- skan uruchamia oba dni: dzis oraz jutro
+- nazwy zakladek uporzadkowane: AI dzis, AI jutro, Wyniki AI, Statystyki AI
+- puste komunikaty mowia jasno, ze trzeba kliknac Skanuj dzis + jutro
+- get-ai-bets wspiera tryb today_tomorrow/range
+- generate-live-ai-picks domyslnie patrzy 2 dni do przodu i zapisuje do ai_bets, nie do tips
+- cron AI ustawiony na 00:01 i 12:01, jesli Netlify Scheduled Functions sa aktywne
+
+Wazne:
+- public.tips / typy uzytkownika zostaja osobno
+- Typy AI czytaja i zapisują public.ai_bets
+- SQL nie jest wymagany

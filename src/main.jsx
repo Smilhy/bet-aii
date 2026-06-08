@@ -3183,6 +3183,7 @@ function DailyAiPicksRightPanelV1156() {
   const [loading, setLoading] = useState(!readBetAiRightDailyAiCacheV1156(getBetAiWarsawDayKeyV1156(), true).length)
   const [notice, setNotice] = useState('')
 
+
   useEffect(() => {
     let alive = true
     async function loadDailyPicks() {
@@ -15879,7 +15880,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const aiTabCounters = useMemo(() => {
     const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
-    // V1501: licznik zakładki „Typy AI na dziś/jutro” ma oznaczać tylko typy,
+    // V1672: liczniki zakładek AI dziś / AI jutro ma oznaczać tylko typy,
     // które faktycznie są jeszcze do zagrania. Rozliczone albo rozpoczęte typy zostają
     // w „Mecze Result” i „Statystyki”, ale nie podbijają licznika aktywnych typów.
     const isPlayablePrematch = card => {
@@ -16661,6 +16662,32 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }
 
+
+  async function scanBetAiTodayAndTomorrowV1672() {
+    if (aiFetchInFlightRef.current || loadingAi) {
+      setStatusText('Skan AI już trwa. Poczekaj na zakończenie obecnego skanu.')
+      return
+    }
+
+    const previousMode = aiDayMode
+    setStatusText('Skanuję Typy AI: dziś + jutro. Nie ruszam typów użytkowników ani kuponów typera.')
+    await fetchLiveAiPicks('today', { force: true })
+    await fetchLiveAiPicks('tomorrow', { force: true })
+
+    const [todaySaved, tomorrowSaved] = await Promise.all([
+      loadSavedAiTipsFromDb('today'),
+      loadSavedAiTipsFromDb('tomorrow')
+    ])
+
+    setAiDayMode(previousMode)
+    const activeSaved = previousMode === 'tomorrow' ? tomorrowSaved : todaySaved
+    if (activeSaved.length) {
+      setLiveCards([])
+      setSelectedId(activeSaved[0]?.id || '')
+    }
+    setStatusText(`Skan AI zakończony: dziś ${todaySaved.length}, jutro ${tomorrowSaved.length}. Zakładka Typy AI czyta tylko public.ai_bets, bez ruszania typów użytkowników.`)
+  }
+
   useEffect(() => {
     let alive = true
     setLoadingAi(true)
@@ -16673,12 +16700,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Automatycznie wczytano zapisane typy AI: dziś ${today.length}, jutro ${tomorrow.length}. Nie uruchamiam skanu API bez kliknięcia.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
+        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij „Skanuj dziś + jutro”, żeby uruchomić bezpieczny skan AI.`)
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
     // V1487: tylko pierwszy lekki auto-load z Supabase, bez automatycznego skanu API.
   }, [])
+
 
   useEffect(() => {
     let alive = true
@@ -16692,7 +16720,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
+        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij „Skanuj dziś + jutro”, żeby uruchomić bezpieczny skan AI.`)
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
@@ -16804,10 +16832,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>AI dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>AI jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
             {[
-              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
+              ['results','Wyniki AI', aiTabCounters.results], ['stats','Statystyki AI', aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
@@ -16819,8 +16847,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     />
   </div>
   <div className="ai-actions-inline-v1071">
-    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks(aiDayMode)} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Pobieram...' : (aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś')}
+    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={scanBetAiTodayAndTomorrowV1672} disabled={loadingAi}>
+      ⟳ {loadingAi ? 'Skanuję...' : 'Skanuj dziś + jutro'}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
@@ -16843,7 +16871,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Odśwież jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.'}</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>Kliknij „Skanuj dziś + jutro”, żeby pobrać realne mecze i zapisać typy AI w ai_bets.</p></div>}
             </div>
           )}
 
@@ -16851,10 +16879,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747 ai-results-card-v1448">
               <div className="ai-table-title-v747 ai-table-title-results-v1448">
                 <div className="ai-title-stack-v1448">
-                  <h3>Mecze Result <small>{resultCards.length}</small></h3>
-                  <p>Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ</p>
+                  <h3>Wyniki AI <small>{resultCards.length}</small></h3>
+                  <p>Dziennik typów AI z tabeli ai_bets · kliknij wiersz, aby podejrzeć typ</p>
                 </div>
-                <span>Archiwum wyników AI</span>
+                <span>Historia rozliczeń AI</span>
               </div>
               <div className="ai-result-table-v747 head"><span>Date</span><span>Sport</span><span>Kraj</span><span>Division</span><span>Home Team</span><span>Score</span><span>Away Team</span><span>Prediction</span><span>Result</span></div>
               {resultCards.length ? resultCards.map(card => (
@@ -16907,7 +16935,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               </div>
             </>
           ) : (
-            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>{aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'} i kliknij dowolny mecz.</p></div>
+            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Kliknij „Skanuj dziś + jutro”, a potem wybierz dowolny typ AI.</p></div>
           )}
         </aside>
         )}
@@ -20843,6 +20871,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   useEffect(() => {
     loadProfileReviews()
   }, [targetProfileIdForReviews])
+
 
   useEffect(() => {
     let alive = true
@@ -29265,8 +29294,8 @@ function App() {
           </label>
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
-            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn topbar-clean-icon-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI"><span className="topbar-clean-icon topbar-clean-bell" aria-hidden="true" /><b>{notifications.filter(n => !n.is_read).length}</b></button>
-            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn topbar-clean-icon-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników"><span className="topbar-clean-icon topbar-clean-mail" aria-hidden="true" /><b>{Number(dmUnreadCount || 0)}</b></button>
+            <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI">🔔<b>{notifications.filter(n => !n.is_read).length}</b></button>
+            <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników">✉<b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i coiny">
               <span className="wallet-split-segment wallet-split-balance">
                 <strong>{Number(walletBalance || 0).toFixed(2)} zł</strong>
