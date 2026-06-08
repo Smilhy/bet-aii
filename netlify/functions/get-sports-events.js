@@ -459,7 +459,7 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Dokładny wynik', '1:2', 9.00, 36)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 0.5 gola', 1.12, 85)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 0.5 gola', 7.20, 35)
-      addMarketIfMissing(markets, 'Gole', 'Powyżej 1.5 gola', 1.34, 78)
+      addMarketIfMissing(markets, 'Gole', 'Powyżej 1.5 gola', 1.50, 78)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 1.5 gola', 3.10, 48)
       addMarketIfMissing(markets, 'Gole', 'Powyżej 2.5 gola', 1.82, 68)
       addMarketIfMissing(markets, 'Gole', 'Poniżej 2.5 gola', 1.95, 62)
@@ -507,7 +507,7 @@ exports.handler = async function(event) {
       addMarketIfMissing(markets, 'Suma bramek', 'Powyżej 5.5 bramek', 1.90, 58)
       addMarketIfMissing(markets, 'Suma bramek', 'Poniżej 5.5 bramek', 1.90, 58)
       addMarketIfMissing(markets, 'Puck Line', `${home} -1.5`, 2.40, 52)
-      addMarketIfMissing(markets, 'Puck Line', `${away} +1.5`, 1.48, 70)
+      addMarketIfMissing(markets, 'Puck Line', `${away} +1.5`, 1.50, 70)
     } else {
       addMarketIfMissing(markets, 'Handicap', `${home} -1.5`, 2.10, 55)
       addMarketIfMissing(markets, 'Handicap', `${away} +1.5`, 1.65, 65)

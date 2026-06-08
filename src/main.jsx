@@ -15543,7 +15543,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   const [matchMode, setMatchMode] = useState('prematch')
   const [search, setSearch] = useState('')
   const [minOdds, setMinOdds] = useState(1.50)
-  const [maxOdds, setMaxOdds] = useState(3.50)
+  const [maxOdds, setMaxOdds] = useState(999)
   const [minProb, setMinProb] = useState(65)
   const [liveCards, setLiveCards] = useState([])
   const [savedAiCards, setSavedAiCards] = useState([])
@@ -15677,11 +15677,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const candidates = buildFootballMarketCandidates(m, seed, home, away)
     const inRange = candidates.filter(x =>
       Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480 &&
-      Number(x.odds) <= Number(maxOdds) &&
       normalizeAiProbabilityV1480(x.probability) >= DAILY_AI_MIN_PROB_V1480
     )
-    const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480 && Number(x.odds) <= Number(maxOdds))
-    const finalPool = pool.length ? pool : candidates
+    const pool = inRange.length ? inRange : candidates.filter(x => Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480)
+    const finalPool = pool.length ? pool : candidates.filter(x => Number(x.odds) >= DAILY_AI_MIN_ODDS_V1480)
+    if (!finalPool.length) return null
     return finalPool.sort((a, b) =>
       (normalizeAiProbabilityV1480(b.probability) - normalizeAiProbabilityV1480(a.probability)) ||
       (Number(b.ev) - Number(a.ev)) ||
@@ -15699,6 +15699,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const kickoffState = getBetAiKickoffStateV1051(eventTime, m)
     const seed = `${sport}-${league}-${home}-${away}-${eventTime}`
     const best = chooseBestFootballMarket(m, seed, home, away)
+    if (!best || Number(best.odds || 0) < DAILY_AI_MIN_ODDS_V1480) return null
     const forms = getBetAiFormPairV1052(seed)
     const id = String(m.apiFixtureId || m.fixture_id || m.external_fixture_id || m.id || seed)
     const externalFixtureId = String(m.apiFixtureId || m.fixture_id || m.external_fixture_id || m.id || '').trim()
@@ -15845,14 +15846,14 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const useStrictFilters = applyUserFilters && (
       matchMode !== 'prematch' ||
       Number(minOdds) !== 1.5 ||
-      Number(maxOdds) !== 3.5 ||
+      false ||
       Number(minProb) !== 65
     )
 
     const filtered = useStrictFilters
       ? base
           .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
-          .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
+          .filter(c => Number(c.odds || 0) >= Number(minOdds))
           .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
       : base
 
@@ -16675,7 +16676,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         shouldSetScanCooldownV1482 = true
         setLiveCards([])
         setSelectedId('')
-        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs 1.50+ i skuteczność 65%+. Nie zapisuję słabych typów.`)
+        setStatusText(`Skan zakończony: sprawdzono ${clean.length} meczów, ale brak typów premium spełniających warunki: kurs min. 1.50 bez górnego limitu i skuteczność 65%+. Nie zapisuję słabych typów.`)
         return
       }
 
@@ -16860,9 +16861,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         </div>
 <div className="ai-range-panel-v1054">
           <label><span>Kurs min</span><b>{Number(minOdds).toFixed(2)}</b><input type="range" min="1.50" max="3.50" step="0.05" value={minOdds} onChange={e => setMinOdds(Number(e.target.value))} /></label>
-          <label><span>Kurs max</span><b>{Number(maxOdds).toFixed(2)}</b><input type="range" min="1.30" max="6.00" step="0.05" value={maxOdds} onChange={e => setMaxOdds(Number(e.target.value))} /></label>
+          <label><span>Kurs max</span><b>NO LIMIT</b><input type="range" min="1.50" max="10.00" step="0.05" value="10" readOnly /></label>
           <label><span>Prawdop. min</span><b>{minProb}%</b><input type="range" min="65" max="90" step="1" value={minProb} onChange={e => setMinProb(Number(e.target.value))} /></label>
-          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(3.50); setMinProb(65); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
+          <button type="button" className="ai-reset-ranges-v1056" onClick={() => { setMinOdds(1.50); setMaxOdds(999); setMinProb(65); setMatchMode('prematch'); setActiveSport('Piłka nożna') }}>Reset filtrów</button>
         </div>
 </div>
 <div className={`ai-center-grid-v747 ${activePanel !== 'live' ? 'stats-fullwidth' : ''}`}>

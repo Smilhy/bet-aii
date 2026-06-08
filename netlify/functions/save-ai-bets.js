@@ -60,7 +60,7 @@ function normalizeBet(row = {}) {
     league: cleanText(row.league || row.league_name, 'Liga'),
     market,
     prediction,
-    odds: cleanNumber(row.odds || row.course, 1.5),
+    odds: Math.max(1.5, cleanNumber(row.odds || row.course, 1.5)),
     probability: cleanNumber(row.probability || row.ai_probability || row.ai_confidence || row.confidence, 70),
     ev: cleanNumber(row.ev || row.value_score, 0),
     ai_score: cleanNumber(row.ai_score || row.aiScore || row.ai_confidence || row.confidence || row.probability, 70),

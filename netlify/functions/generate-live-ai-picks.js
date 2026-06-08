@@ -234,7 +234,7 @@ function chooseModelPick(ev) {
   }
 
   probability = clamp(probability, 57, 79)
-  const odds = round(clamp(100 / probability * 1.04, 1.32, 2.25), 2)
+  const odds = round(Math.max(REAL_AI_MIN_ODDS_V1691, 100 / probability * 1.04), 2)
   const implied = round((1 / odds) * 100, 2)
   const value = round(probability - implied, 2)
   const confidence = clamp(round(probability + Math.max(0, value) * 0.35, 1), 55, 88)
@@ -342,7 +342,7 @@ function aiBetRowFromStrongestRow(row) {
     league: safeName(row.league || row.league_name, 'Liga'),
     market,
     prediction,
-    odds: round(row.odds || 1.5, 2),
+    odds: round(Math.max(REAL_AI_MIN_ODDS_V1691, Number(row.odds || 1.5)), 2),
     probability: round(row.probability || row.model_probability || row.ai_confidence || 70, 2),
     ev: round(row.ev || row.value_score || 0, 2),
     ai_score: round(row.ai_score || row.aiScore || row.ai_confidence || row.probability || row.model_probability || 70, 2),
@@ -431,6 +431,7 @@ exports.handler = async function (event) {
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
         const row = await buildRow(ev)
+        if (Number(row.odds || 0) < REAL_AI_MIN_ODDS_V1691) continue
         if (Number(row.model_probability || 0) < minProbability) continue
         if (Number(row.value_score || 0) < minValueScore) continue
         row.quality_label = row.ai_score >= 78 ? 'TOP AI' : row.ai_score >= 70 ? 'VALUE' : 'REAL EVENT'
