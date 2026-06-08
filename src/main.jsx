@@ -10105,14 +10105,19 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
                   const expanded = expandedMarketGroup === groupLabel
                   const isGoalsGroup = groupLabel === 'Gole'
+                  const parseGoalLineValueV1682 = (item) => {
+                    const rawText = `${item?.pick || ''} ${item?.market || ''}`
+                    const match = rawText.match(/(\d+(?:[\.,]\d+)?)/)
+                    return match ? Number(String(match[1]).replace(',', '.')) : Number.POSITIVE_INFINITY
+                  }
                   const underGoalItems = isGoalsGroup ? items.filter(item => {
                     const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
                     return text.includes('ponizej') || text.includes('under')
-                  }) : []
+                  }).slice().sort((a, b) => parseGoalLineValueV1682(a) - parseGoalLineValueV1682(b)) : []
                   const overGoalItems = isGoalsGroup ? items.filter(item => {
                     const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
                     return text.includes('powyzej') || text.includes('over')
-                  }) : []
+                  }).slice().sort((a, b) => parseGoalLineValueV1682(a) - parseGoalLineValueV1682(b)) : []
                   const otherGoalItems = isGoalsGroup ? items.filter(item => !underGoalItems.includes(item) && !overGoalItems.includes(item)) : []
                   const renderBoardMarketOption = (item, index, keyPrefix = groupLabel) => {
                     const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
