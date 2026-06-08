@@ -72892,18 +72892,18 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 
 
 /* WERSJA 1683: premium layout kart Typy AI — tylko wygląd, bez zmiany logiki. */
-.typy-ai-page-v747 .ai-live-layout-v747,
-.typy-ai-page-v747 .ai-main-layout-v747{
+.ai-center-page-v747 .ai-live-layout-v747,
+.ai-center-page-v747 .ai-main-layout-v747{
   align-items:start!important;
 }
 
-.typy-ai-page-v747 .ai-live-list-v747{
+.ai-center-page-v747 .ai-live-list-v747{
   display:flex!important;
   flex-direction:column!important;
   gap:18px!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747{
+.ai-center-page-v747 .ai-pick-card-v747{
   position:relative!important;
   display:grid!important;
   grid-template-columns:1fr 128px!important;
@@ -72923,7 +72923,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747::before{
+.ai-center-page-v747 .ai-pick-card-v747::before{
   content:''!important;
   position:absolute!important;
   left:0!important;
@@ -72935,8 +72935,8 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   box-shadow:0 0 18px rgba(34,244,255,.45)!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747:hover,
-.typy-ai-page-v747 .ai-pick-card-v747.selected{
+.ai-center-page-v747 .ai-pick-card-v747:hover,
+.ai-center-page-v747 .ai-pick-card-v747.selected{
   transform:translateY(-2px)!important;
   border-color:rgba(28,244,229,.78)!important;
   box-shadow:
@@ -72946,15 +72946,15 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     0 0 34px rgba(28,244,229,.10)!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 > .pick-top-v747,
-.typy-ai-page-v747 .ai-pick-card-v747 > .pick-match-v747,
-.typy-ai-page-v747 .ai-pick-card-v747 > .pick-meta-v747,
-.typy-ai-page-v747 .ai-pick-card-v747 > .pick-bottom-v747,
-.typy-ai-page-v747 .ai-pick-card-v747 > .pick-explain-v1051{
+.ai-center-page-v747 .ai-pick-card-v747 > .pick-top-v747,
+.ai-center-page-v747 .ai-pick-card-v747 > .pick-match-v747,
+.ai-center-page-v747 .ai-pick-card-v747 > .pick-meta-v747,
+.ai-center-page-v747 .ai-pick-card-v747 > .pick-bottom-v747,
+.ai-center-page-v747 .ai-pick-card-v747 > .pick-explain-v1051{
   grid-column:1/2!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-top-v747{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-top-v747{
   display:flex!important;
   align-items:center!important;
   gap:12px!important;
@@ -72962,7 +72962,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   padding:0!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-sport-v1051{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-sport-v1051{
   display:inline-flex!important;
   align-items:center!important;
   gap:8px!important;
@@ -72976,7 +72976,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   border:0!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-sport-v1051 i{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-sport-v1051 i{
   width:18px!important;
   height:18px!important;
   display:inline-flex!important;
@@ -72988,7 +72988,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-style:normal!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-top-v747 em{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-top-v747 em{
   margin-left:auto!important;
   color:#91aabd!important;
   font-size:12px!important;
@@ -72996,7 +72996,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   opacity:.88!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-top-v747 > b{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-top-v747 > b{
   grid-column:2/3!important;
   grid-row:1/4!important;
   position:absolute!important;
@@ -73011,7 +73011,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   text-shadow:0 0 20px rgba(54,246,255,.25)!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-top-v747 > b::after{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-top-v747 > b::after{
   content:'AI SCORE'!important;
   display:block!important;
   margin-top:7px!important;
@@ -73021,7 +73021,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   text-align:right!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-match-v747{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-match-v747{
   display:flex!important;
   align-items:center!important;
   flex-wrap:wrap!important;
@@ -73031,7 +73031,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   color:#f3fbff!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-match-v747 strong{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-match-v747 strong{
   font-size:25px!important;
   line-height:1.1!important;
   font-weight:1000!important;
@@ -73039,7 +73039,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   color:#f5fbff!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-match-v747 i{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-match-v747 i{
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
@@ -73054,7 +73054,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   border:1px solid rgba(255,255,255,.06)!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-meta-v747{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-meta-v747{
   display:flex!important;
   align-items:center!important;
   gap:12px!important;
@@ -73065,7 +73065,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-weight:700!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .kickoff-badge-v1051{
+.ai-center-page-v747 .ai-pick-card-v747 .kickoff-badge-v1051{
   position:absolute!important;
   top:74px!important;
   right:26px!important;
@@ -73083,7 +73083,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   text-transform:uppercase!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
   display:grid!important;
   grid-template-columns:1.35fr repeat(3,minmax(118px,.55fr))!important;
   gap:12px!important;
@@ -73092,7 +73092,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   border:0!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 > div{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 > div{
   min-height:72px!important;
   padding:15px 17px!important;
   border-radius:14px!important;
@@ -73105,13 +73105,13 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   gap:5px!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 > div:first-child{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 > div:first-child{
   background:
     radial-gradient(circle at 95% 0%,rgba(32,244,255,.08),transparent 35%),
     linear-gradient(180deg,rgba(9,34,54,.92),rgba(5,19,34,.96))!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 small{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 small{
   color:#9fb8c9!important;
   font-size:11px!important;
   font-weight:950!important;
@@ -73119,30 +73119,30 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   text-transform:uppercase!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 b{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 b{
   color:#f7fcff!important;
   font-size:18px!important;
   line-height:1.12!important;
   font-weight:1000!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 em{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 em{
   color:#9bb6c8!important;
   font-size:12px!important;
   font-weight:800!important;
   font-style:normal!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 .positive{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 .positive{
   color:#22f39a!important;
   text-shadow:0 0 14px rgba(34,243,154,.24)!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747 .negative{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747 .negative{
   color:#ff668e!important;
 }
 
-.typy-ai-page-v747 .ai-pick-card-v747 .pick-explain-v1051{
+.ai-center-page-v747 .ai-pick-card-v747 .pick-explain-v1051{
   margin:18px 0 0!important;
   padding-top:16px!important;
   border-top:1px solid rgba(255,255,255,.06)!important;
@@ -73153,13 +73153,13 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 }
 
 /* Prawy panel Typy AI — premium, spójny z kartami. */
-.typy-ai-page-v747 .ai-analysis-column-v747{
+.ai-center-page-v747 .ai-analysis-column-v747{
   display:flex!important;
   flex-direction:column!important;
   gap:14px!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747{
+.ai-center-page-v747 .ai-analysis-card-v747{
   border-radius:20px!important;
   background:
     radial-gradient(circle at 86% 0%,rgba(31,229,255,.08),transparent 30%),
@@ -73169,11 +73169,11 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   padding:21px!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747.featured{
+.ai-center-page-v747 .ai-analysis-card-v747.featured{
   border-color:rgba(25,225,219,.30)!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747 .label{
+.ai-center-page-v747 .ai-analysis-card-v747 .label{
   display:block!important;
   color:#26f2ff!important;
   font-size:12px!important;
@@ -73183,7 +73183,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   margin-bottom:9px!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747 h2{
+.ai-center-page-v747 .ai-analysis-card-v747 h2{
   color:#f4fbff!important;
   font-size:22px!important;
   line-height:1.12!important;
@@ -73192,20 +73192,20 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   margin:0 0 8px!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747 h3{
+.ai-center-page-v747 .ai-analysis-card-v747 h3{
   color:#f2fbff!important;
   font-size:17px!important;
   font-weight:1000!important;
   margin:0 0 12px!important;
 }
 
-.typy-ai-page-v747 .ai-analysis-card-v747 p{
+.ai-center-page-v747 .ai-analysis-card-v747 p{
   color:#b7cedd!important;
   font-size:14px!important;
   line-height:1.55!important;
 }
 
-.typy-ai-page-v747 .ai-score-circle-v747{
+.ai-center-page-v747 .ai-score-circle-v747{
   width:116px!important;
   height:116px!important;
   margin:18px 0!important;
@@ -73220,14 +73220,14 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   box-shadow:inset 0 0 0 12px rgba(10,35,52,.92),0 0 26px rgba(33,243,255,.15)!important;
 }
 
-.typy-ai-page-v747 .ai-score-circle-v747 strong{
+.ai-center-page-v747 .ai-score-circle-v747 strong{
   color:#f6fcff!important;
   font-size:27px!important;
   line-height:1!important;
   font-weight:1000!important;
 }
 
-.typy-ai-page-v747 .ai-score-circle-v747 span{
+.ai-center-page-v747 .ai-score-circle-v747 span{
   color:#27eef7!important;
   font-size:10px!important;
   font-weight:950!important;
@@ -73236,14 +73236,14 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   margin-top:5px!important;
 }
 
-.typy-ai-page-v747 .selected-pick-v747{
+.ai-center-page-v747 .selected-pick-v747{
   padding:16px!important;
   border-radius:14px!important;
   background:rgba(10,38,55,.82)!important;
   border:1px solid rgba(31,229,255,.14)!important;
 }
 
-.typy-ai-page-v747 .selected-pick-v747 small{
+.ai-center-page-v747 .selected-pick-v747 small{
   color:#9ab7c9!important;
   font-size:11px!important;
   font-weight:950!important;
@@ -73251,7 +73251,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   text-transform:uppercase!important;
 }
 
-.typy-ai-page-v747 .selected-pick-v747 b{
+.ai-center-page-v747 .selected-pick-v747 b{
   display:block!important;
   margin-top:7px!important;
   color:#f7fcff!important;
@@ -73260,7 +73260,7 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-weight:1000!important;
 }
 
-.typy-ai-page-v747 .selected-pick-v747 em{
+.ai-center-page-v747 .selected-pick-v747 em{
   display:block!important;
   margin-top:6px!important;
   color:#aac1d0!important;
@@ -73269,25 +73269,25 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   font-weight:850!important;
 }
 
-.typy-ai-page-v747 .ai-curiosity-v1050{
+.ai-center-page-v747 .ai-curiosity-v1050{
   padding:15px!important;
   border-radius:14px!important;
   background:linear-gradient(180deg,rgba(6,54,61,.86),rgba(7,31,44,.92))!important;
   border:1px solid rgba(35,244,255,.14)!important;
 }
 
-.typy-ai-page-v747 .ai-curiosity-v1050 b{
+.ai-center-page-v747 .ai-curiosity-v1050 b{
   color:#2af4ff!important;
 }
 
-.typy-ai-page-v747 .analysis-grid-v747{
+.ai-center-page-v747 .analysis-grid-v747{
   display:grid!important;
   grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;
   margin-top:12px!important;
 }
 
-.typy-ai-page-v747 .analysis-grid-v747 > div{
+.ai-center-page-v747 .analysis-grid-v747 > div{
   min-height:68px!important;
   padding:12px!important;
   border-radius:12px!important;
@@ -73295,19 +73295,19 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   border:1px solid rgba(255,255,255,.07)!important;
 }
 
-.typy-ai-page-v747 .analysis-grid-v747 span{
+.ai-center-page-v747 .analysis-grid-v747 span{
   color:#98b4c7!important;
   font-size:11px!important;
   font-weight:900!important;
 }
 
-.typy-ai-page-v747 .analysis-grid-v747 b{
+.ai-center-page-v747 .analysis-grid-v747 b{
   color:#24f6d2!important;
   font-size:15px!important;
   font-weight:1000!important;
 }
 
-.typy-ai-page-v747 .team-form-v747{
+.ai-center-page-v747 .team-form-v747{
   display:grid!important;
   grid-template-columns:1fr auto!important;
   gap:8px 12px!important;
@@ -73315,17 +73315,17 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   margin:13px 0!important;
 }
 
-.typy-ai-page-v747 .team-form-v747 span{
+.ai-center-page-v747 .team-form-v747 span{
   color:#c9dce8!important;
   font-weight:850!important;
 }
 
-.typy-ai-page-v747 .team-form-v747 b{
+.ai-center-page-v747 .team-form-v747 b{
   color:#2df4ff!important;
   font-weight:1000!important;
 }
 
-.typy-ai-page-v747 .team-form-v747 i{
+.ai-center-page-v747 .team-form-v747 i{
   grid-column:1/-1!important;
   display:block!important;
   height:7px!important;
@@ -73335,23 +73335,27 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 }
 
 @media(max-width:1300px){
-  .typy-ai-page-v747 .ai-pick-card-v747{
+  .ai-center-page-v747 .ai-pick-card-v747{
     grid-template-columns:1fr!important;
   }
-  .typy-ai-page-v747 .ai-pick-card-v747 .pick-top-v747 > b,
-  .typy-ai-page-v747 .ai-pick-card-v747 .kickoff-badge-v1051{
+  .ai-center-page-v747 .ai-pick-card-v747 .pick-top-v747 > b,
+  .ai-center-page-v747 .ai-pick-card-v747 .kickoff-badge-v1051{
     position:static!important;
     margin-left:auto!important;
   }
-  .typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
+  .ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
     grid-template-columns:1fr 1fr!important;
   }
 }
 @media(max-width:760px){
-  .typy-ai-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
+  .ai-center-page-v747 .ai-pick-card-v747 .pick-bottom-v747{
     grid-template-columns:1fr!important;
   }
-  .typy-ai-page-v747 .analysis-grid-v747{
+  .ai-center-page-v747 .analysis-grid-v747{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* WERSJA 1684: selector fix — UI Typy AI działa na .ai-center-page-v747 */
+.ai-center-page-v747 .ai-pick-card-v747{outline:0 solid transparent!important;}
