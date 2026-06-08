@@ -10104,30 +10104,75 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 )}
                 {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
                   const expanded = expandedMarketGroup === groupLabel
+                  const isGoalsGroup = groupLabel === 'Gole'
+                  const underGoalItems = isGoalsGroup ? items.filter(item => {
+                    const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
+                    return text.includes('ponizej') || text.includes('under')
+                  }) : []
+                  const overGoalItems = isGoalsGroup ? items.filter(item => {
+                    const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
+                    return text.includes('powyzej') || text.includes('over')
+                  }) : []
+                  const otherGoalItems = isGoalsGroup ? items.filter(item => !underGoalItems.includes(item) && !overGoalItems.includes(item)) : []
+                  const renderBoardMarketOption = (item, index, keyPrefix = groupLabel) => {
+                    const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
+                    const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
+                    return (
+                      <button
+                        type="button"
+                        key={`${keyPrefix}-${item.pick}-${item.odds}-${index}`}
+                        className={`betfolio-market-option ${active ? 'active' : ''}`}
+                        onClick={() => chooseMarket(value)}
+                      >
+                        <span>{item.pick}</span>
+                        <b>{Number(item.odds || 0).toFixed(2)}</b>
+                      </button>
+                    )
+                  }
                   return (
-                    <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''}`}>
+                    <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''} ${isGoalsGroup ? 'goals-split-ready-v1680' : ''}`}>
                       <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
                         <span>{groupLabel}</span>
                         <b>{items.length} opcji {expanded ? '⌃' : '⌄'}</b>
                       </button>
                       {expanded && (
-                        <div className="betfolio-market-options board-options">
-                          {items.map((item, index) => {
-                            const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
-                            const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
-                            return (
-                              <button
-                                type="button"
-                                key={`${groupLabel}-${item.pick}-${item.odds}-${index}`}
-                                className={`betfolio-market-option ${active ? 'active' : ''}`}
-                                onClick={() => chooseMarket(value)}
-                              >
-                                <span>{item.pick}</span>
-                                <b>{Number(item.odds || 0).toFixed(2)}</b>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        isGoalsGroup ? (
+                          <div className="betfolio-goals-split-v1680">
+                            <div className="betfolio-goals-column-v1680 under">
+                              <div className="betfolio-goals-column-head-v1680">
+                                <strong>Gole PONIŻEJ</strong>
+                                <span>{underGoalItems.length} opcji</span>
+                              </div>
+                              <div className="betfolio-market-options board-options goals-column-options-v1680">
+                                {underGoalItems.map((item, index) => renderBoardMarketOption(item, index, 'gole-ponizej'))}
+                              </div>
+                            </div>
+                            <div className="betfolio-goals-column-v1680 over">
+                              <div className="betfolio-goals-column-head-v1680">
+                                <strong>Gole POWYŻEJ</strong>
+                                <span>{overGoalItems.length} opcji</span>
+                              </div>
+                              <div className="betfolio-market-options board-options goals-column-options-v1680">
+                                {overGoalItems.map((item, index) => renderBoardMarketOption(item, index, 'gole-powyzej'))}
+                              </div>
+                            </div>
+                            {otherGoalItems.length ? (
+                              <div className="betfolio-goals-column-v1680 other">
+                                <div className="betfolio-goals-column-head-v1680">
+                                  <strong>Pozostałe gole</strong>
+                                  <span>{otherGoalItems.length} opcji</span>
+                                </div>
+                                <div className="betfolio-market-options board-options goals-column-options-v1680">
+                                  {otherGoalItems.map((item, index) => renderBoardMarketOption(item, index, 'gole-inne'))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="betfolio-market-options board-options">
+                            {items.map((item, index) => renderBoardMarketOption(item, index))}
+                          </div>
+                        )
                       )}
                     </div>
                   )
@@ -15840,12 +15885,39 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     ].filter(Boolean).join(' ').toLowerCase().includes(q)
   }
 
-  // V1677: twarde zasady dla oficjalnych Typów AI. Nie mieszamy tu typów typerów/użytkowników.
-  // Typ aktywny AI ma być widoczny tylko gdy spełnia: 60-100%, kurs min. 1.40 bez limitu i EV minimum +1%.
-  // Przyszłe PENDING z pojutrza lub dalszych dni nie podbijają liczników/statystyk.
-  const BETAI_AI_MIN_PROBABILITY_V1675 = 60
-  const BETAI_AI_MIN_ODDS_V1675 = 1.4
+  // V1679: frontend musi używać tych samych progów co backend Multi-Market AI.
+  // Nie jeden sztywny próg 60% dla wszystkiego, bo backend np. 1X2/BTTS/Rogi ma min 58%,
+  // a Podwójna szansa/DNB/Gole mają wyższe progi. Wszystkie typy nadal muszą mieć EV +1%.
+  const BETAI_AI_DEFAULT_MIN_PROBABILITY_V1679 = 58
+  const BETAI_AI_DEFAULT_MIN_ODDS_V1679 = 1.4
   const BETAI_AI_MIN_EV_PERCENT_V1677 = 1
+
+  const BETAI_AI_MARKET_RULES_V1679 = [
+    { key: 'podwójna szansa', minProbability: 68, minOdds: 1.40, minEv: 1 },
+    { key: 'double chance', minProbability: 68, minOdds: 1.40, minEv: 1 },
+    { key: 'dnb', minProbability: 62, minOdds: 1.40, minEv: 1 },
+    { key: 'remis nie ma zakładu', minProbability: 62, minOdds: 1.40, minEv: 1 },
+    { key: 'gole', minProbability: 60, minOdds: 1.40, minEv: 1 },
+    { key: 'over', minProbability: 60, minOdds: 1.40, minEv: 1 },
+    { key: 'under', minProbability: 60, minOdds: 1.40, minEv: 1 },
+    { key: 'btts', minProbability: 58, minOdds: 1.50, minEv: 1 },
+    { key: 'obie strzelą', minProbability: 58, minOdds: 1.50, minEv: 1 },
+    { key: 'handicap', minProbability: 55, minOdds: 1.50, minEv: 1 },
+    { key: 'rogi', minProbability: 58, minOdds: 1.50, minEv: 1 },
+    { key: 'rzuty rożne', minProbability: 58, minOdds: 1.50, minEv: 1 },
+    { key: '1x2', minProbability: 58, minOdds: 1.40, minEv: 1 },
+    { key: 'zwycięzca meczu', minProbability: 58, minOdds: 1.40, minEv: 1 },
+    { key: 'moneyline', minProbability: 58, minOdds: 1.40, minEv: 1 },
+  ]
+
+  const getBetAiMarketRuleV1679 = (card = {}) => {
+    const text = [card.market, card.prediction, card.bet_type, card.selection, card.pick].filter(Boolean).join(' ').toLowerCase()
+    return BETAI_AI_MARKET_RULES_V1679.find(rule => text.includes(rule.key)) || {
+      minProbability: BETAI_AI_DEFAULT_MIN_PROBABILITY_V1679,
+      minOdds: BETAI_AI_DEFAULT_MIN_ODDS_V1679,
+      minEv: BETAI_AI_MIN_EV_PERCENT_V1677
+    }
+  }
 
   const getBetAiProbabilityForFilterV1675 = (card = {}) => {
     const candidates = [card.probability, card.model_probability, card.ai_probability, card.aiScore, card.ai_score, card.ai_confidence, card.confidence]
@@ -15864,10 +15936,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   const isBetAiHardQualityOkV1675 = (card = {}) => {
-    const oddsOk = Number(card?.odds || card?.course || 0) >= BETAI_AI_MIN_ODDS_V1675
+    const rule = getBetAiMarketRuleV1679(card)
+    const oddsOk = Number(card?.odds || card?.course || 0) >= Number(rule.minOdds || BETAI_AI_DEFAULT_MIN_ODDS_V1679)
     const probability = getBetAiProbabilityForFilterV1675(card)
-    const probabilityOk = probability >= BETAI_AI_MIN_PROBABILITY_V1675 && probability <= 100
-    const evOk = getBetAiExpectedEvPercentV1677(card) >= BETAI_AI_MIN_EV_PERCENT_V1677
+    const probabilityOk = probability >= Number(rule.minProbability || BETAI_AI_DEFAULT_MIN_PROBABILITY_V1679) && probability <= 100
+    const evOk = getBetAiExpectedEvPercentV1677(card) >= Number(rule.minEv || BETAI_AI_MIN_EV_PERCENT_V1677)
     return oddsOk && probabilityOk && evOk
   }
 
@@ -15921,8 +15994,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   const visibleCards = useMemo(() => {
     // V1673: licznik i lista używają tej samej logiki.
-    // Zapisane typy z ai_bets są już wynikiem skanu AI, więc domyślny filtr 60%/1.40
-    // nie może ukrywać całej listy po tym, jak licznik pokazuje dostępne typy.
+    // Zapisane typy z ai_bets są już wynikiem skanu AI. Frontend używa tych samych reguł rynkowych
+    // co backend Multi-Market, więc np. 1X2 58% + EV dodatnie nie jest ukrywane przez stary próg 60%.
     return getLiveAiCardsForDayV1673(aiDayMode, true)
   }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb])
 
