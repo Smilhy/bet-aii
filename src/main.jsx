@@ -16432,13 +16432,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return mapped
       }
 
-      const cached = loadBetAiVisibleCacheV1484(mode)
-      if (cached.length) {
-        mergeSavedAiCardsV1487(cached)
-        if (!selectedId) setSelectedId(cached[0].id)
-        return cached
-      }
-
+      // WERSJA 1690: jeżeli Supabase działa i zwraca 0 rekordów, to 0 znaczy 0.
+      // Nie wolno podnosić starych typów z localStorage po resecie bazy.
+      localStorage.removeItem(`betai_ai_visible_cache_${mode}_v1484`)
       return []
     } catch (err) {
       console.warn('AI saved tips load skipped:', err?.message || err)
@@ -16467,6 +16463,15 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     } finally {
       clearTimeout(timeout)
     }
+  }
+
+
+  async function runSavedAiScanEndpointV1690(mode = 'today') {
+    const url = `/.netlify/functions/generate-live-ai-picks?days=1&limit=20&mode=${encodeURIComponent(mode)}`
+    const response = await fetch(url, { cache: 'no-store' })
+    const json = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(json?.error || json?.message || `generate-live-ai-picks HTTP ${response.status}`)
+    return json
   }
 
   async function fetchLiveAiPicks(mode = aiDayMode, options = {}) {
@@ -16506,7 +16511,41 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         return
       }
 
-      setStatusText(`Pierwszy skan dnia: pobieram mecze AI na ${dayLabel} (${getBetAiSelectedLocalDateV1081(mode)}), wybieram TOP ${DAILY_AI_PICK_LIMIT_V1086} i zapisuję na stałe...`)
+      setStatusText(`Pierwszy skan dnia: uruchamiam zapisujący skaner AI na ${dayLabel} i po nim odczytuję Supabase...`)
+
+      // WERSJA 1690: główny skan musi iść przez endpoint, który zapisuje do public.ai_bets.
+      // Dzięki temu typy nie znikną po odświeżeniu strony.
+      try {
+        const scanJson = await runSavedAiScanEndpointV1690(mode)
+        const savedAfterEndpoint = await loadSavedAiTipsFromDb('today')
+        await loadSavedAiJournalFromDbV1094()
+
+        if (savedAfterEndpoint.length) {
+          setLiveCards([])
+          setSelectedId(savedAfterEndpoint[0]?.id || '')
+          saveBetAiVisibleCacheV1484('today', savedAfterEndpoint)
+          shouldSetScanCooldownV1482 = true
+          setStatusText(`Skan zapisany w Supabase: ${savedAfterEndpoint.length} typów AI na dziś. Wynik endpointu: inserted=${scanJson?.inserted ?? scanJson?.ai_bets_inserted ?? 'ok'}.`)
+          return
+        }
+
+        const inserted = Number(scanJson?.inserted || scanJson?.ai_bets_inserted || 0)
+        if (inserted > 0) {
+          setLiveCards([])
+          setSelectedId('')
+          setStatusText(`Endpoint zgłosił zapis ${inserted} typów, ale odczyt z Supabase zwrócił 0. Sprawdź RLS/service role w get-ai-bets.`)
+          return
+        }
+
+        setStatusText(scanJson?.message || 'Skan zakończony: endpoint nie znalazł typów spełniających warunki na dziś.')
+        setLiveCards([])
+        setSelectedId('')
+        return
+      } catch (endpointError) {
+        console.warn('V1690 saved endpoint failed, fallback to legacy scanner:', endpointError?.message || endpointError)
+        setStatusText(`Endpoint zapisujący nie odpowiedział: ${endpointError?.message || endpointError}. Próbuję awaryjny skan lokalny.`)
+      }
+
       const sportsToFetch = ['Piłka nożna']
       const collected = []
       const debug = []
