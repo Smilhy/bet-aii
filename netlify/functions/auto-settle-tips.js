@@ -91,8 +91,15 @@ function isDrawPick(text) {
 }
 
 function hasExactToken(text, token) {
-  const escaped = String(token || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(String(text || ''))
+  // V1661: bez RegExp, żeby Netlify Function nigdy nie crashowała przez błędny regex.
+  const raw = String(text || '').toLowerCase()
+  const needle = String(token || '').toLowerCase().trim()
+  if (!needle) return false
+  const compact = raw.replace(/[^a-z0-9]+/g, '')
+  if (compact === needle) return true
+  const parts = raw.split(/[^a-z0-9]+/).filter(Boolean)
+  if (parts.includes(needle)) return true
+  return raw.includes(needle)
 }
 
 function resolveDoubleChance(tip, homeGoals, awayGoals, fixture) {
@@ -170,10 +177,39 @@ function resolveOverUnder(tip, homeGoals, awayGoals) {
 
 function resolveBtts(tip, homeGoals, awayGoals) {
   const text = marketText(tip)
+  const compact = text.replace(/[^a-z0-9]+/g, '')
   if (!(text.includes('btts') || text.includes('obie') || text.includes('both teams'))) return null
-  const yes = text.includes('tak') || text.includes('yes') || text.includes('btts')
+
+  // V1662: poprawka BTTS NIE / Both Teams To Score No.
+  // Wcześniej samo słowo "btts" ustawiało pick na TAK, więc "BTTS Nie" przy wyniku 2:0
+  // było błędnie rozliczane jako przegrane. Teraz najpierw wykrywamy negację.
+  const isNo =
+    hasExactToken(text, 'nie') ||
+    hasExactToken(text, 'no') ||
+    text.includes('bez gola obu') ||
+    text.includes('obie nie') ||
+    text.includes('both teams to score no') ||
+    compact.includes('bttsnie') ||
+    compact.includes('bttsno') ||
+    compact.includes('bothteamstoscoreno')
+
+  const isYes =
+    hasExactToken(text, 'tak') ||
+    hasExactToken(text, 'yes') ||
+    text.includes('obie strzela') ||
+    text.includes('obie strzelą') ||
+    text.includes('both teams to score yes') ||
+    compact.includes('bttstak') ||
+    compact.includes('bttsyes') ||
+    compact.includes('bothteamstoscoreyes')
+
+  if (!isNo && !isYes) {
+    return { status: 'pending_admin_review', reason: `Nie rozpoznano BTTS TAK/NIE: ${text}` }
+  }
+
+  const yes = isNo ? false : true
   const hit = homeGoals > 0 && awayGoals > 0
-  return { status: yes === hit ? 'won' : 'lost', reason: `BTTS yes=${yes}, hit=${hit}` }
+  return { status: yes === hit ? 'won' : 'lost', reason: `BTTS ${yes ? 'TAK' : 'NIE'}, hit=${hit}` }
 }
 
 function resolveTip(tip, homeGoals, awayGoals, fixture) {
@@ -528,10 +564,10 @@ exports.handler = async (event) => {
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1660', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1661', dryRun, ...result })
   } catch (error) {
-    console.error('auto-settle-tips v1660 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1660', error: String(error.message || error) })
+    console.error('auto-settle-tips v1661 error:', error)
+    return json(500, { ok: false, function: 'auto-settle-tips-v1661', error: String(error.message || error) })
   }
 }
 

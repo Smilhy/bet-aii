@@ -1,0 +1,5 @@
+WERSJA 1662 — AUTO SETTLE BTTS NIE FIX
+
+- Naprawia rozliczanie BTTS NIE / Obie drużyny strzelą: NIE.
+- Dla wyniku 2:0 typ BTTS NIE jest teraz wygrany, nie przegrany.
+- Zawiera wcześniejszą poprawkę endpointu auto-settle bez crasha regex.
