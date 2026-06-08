@@ -1,0 +1,9 @@
+WERSJA 1669 — PREMIUM AKO PRIVACY FIX
+
+- Premium AKO nie pokazuje wybranych typów/oddsów w liście zdarzeń przed zakupem.
+- W premium AKO widać tylko mecze i informację: Typ ukryty / Po zakupie.
+- Kurs całkowity AKO jest ukryty przed zakupem.
+- Przycisk dla premium AKO: Kup kupon AKO.
+- Darmowe AKO dalej pokazuje wszystkie zdarzenia normalnie.
+- Dotyczy Dashboard i Mój profil.
+- SQL nie jest potrzebny.

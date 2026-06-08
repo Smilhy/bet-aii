@@ -10626,7 +10626,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
               <span className="profile-ticket-v6-ako-icon">AKO</span>
               <div>
                 <strong>Kupon AKO</strong>
-                <small>{akoLegsCount} zdarzenia • kurs całkowity {Number(tip.odds || 0).toFixed(2)}</small>
+                <small>{akoLegsCount} zdarzenia{effectiveIsLocked ? ' • typy ukryte' : ` • kurs całkowity ${Number(tip.odds || 0).toFixed(2)}`}</small>
               </div>
             </div>
             <div className="profile-ticket-v6-ako-legs">
@@ -10634,8 +10634,8 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
                 <div className="profile-ticket-v6-ako-leg" key={leg.key}>
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
-                  <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
-                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{getAkoLegStatusLabel(leg).text}{leg.score ? ` ${leg.score}` : ''}</i>
+                  <strong>{effectiveIsLocked ? 'Typ ukryty' : `${leg.pick}${leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}`}</strong>
+                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{effectiveIsLocked ? 'Po zakupie' : `${getAkoLegStatusLabel(leg).text}${leg.score ? ` ${leg.score}` : ''}`}</i>
                 </div>
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
@@ -10701,7 +10701,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
         {effectiveIsLocked ? (
           <>
-            <button type="button" onClick={() => onUnlock(tip)}>Kup singiel</button>
+            <button type="button" onClick={() => onUnlock(tip)}>{isAkoCard ? 'Kup kupon AKO' : 'Kup singiel'}</button>
             <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
           </>
         ) : null}
@@ -20194,7 +20194,7 @@ function ProfileLiveTipCard({
               <span className="profile-ticket-v6-ako-icon">AKO</span>
               <div>
                 <strong>Kupon AKO</strong>
-                <small>{akoLegsCount} zdarzenia • kurs całkowity {akoCardOdds.toFixed(2)}</small>
+                <small>{akoLegsCount} zdarzenia{(tip.premium && !effectiveIsUnlocked) ? ' • typy ukryte' : ` • kurs całkowity ${akoCardOdds.toFixed(2)}`}</small>
               </div>
             </div>
             <div className="profile-ticket-v6-ako-legs">
@@ -20202,8 +20202,8 @@ function ProfileLiveTipCard({
                 <div className="profile-ticket-v6-ako-leg" key={leg.key}>
                   <b>{index + 1}</b>
                   <span>{leg.home} - {leg.away}</span>
-                  <strong>{leg.pick}{leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}</strong>
-                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{getAkoLegStatusLabel(leg).text}{leg.score ? ` ${leg.score}` : ''}</i>
+                  <strong>{(tip.premium && !effectiveIsUnlocked) ? 'Typ ukryty' : `${leg.pick}${leg.odds ? ` @ ${leg.odds.toFixed(2)}` : ''}`}</strong>
+                  <i className={`profile-ticket-v6-ako-leg-status ${getAkoLegStatusLabel(leg).tone}`}>{(tip.premium && !effectiveIsUnlocked) ? 'Po zakupie' : `${getAkoLegStatusLabel(leg).text}${leg.score ? ` ${leg.score}` : ''}`}</i>
                 </div>
               )) : (
                 <div className="profile-ticket-v6-ako-leg empty"><span>Brak osobnej listy zdarzeń dla starego kuponu.</span></div>
@@ -20269,7 +20269,7 @@ function ProfileLiveTipCard({
         <span className={`status-${tip.statusLabel.toLowerCase()}`}>✓ {tip.statusLabel}</span>
         {tip.premium && !effectiveIsUnlocked ? (
           <>
-            <button type="button" onClick={() => onUnlock?.(sourceTip)}>Kup singiel</button>
+            <button type="button" onClick={() => onUnlock?.(sourceTip)}>{isAkoCard ? 'Kup kupon AKO' : 'Kup singiel'}</button>
             <strong>{formatMoney(tip.price)}</strong>
           </>
         ) : null}
@@ -21204,7 +21204,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       pick: normalized.pick || normalized.bet_type || normalized.prediction || 'Typ',
       odds: Number(normalized.odds || 0) ? Number(normalized.odds).toFixed(2) : '—',
       stake: Number(normalized.stake || normalized.bet_amount || normalized.amount || (premiumTip ? 1 : 10)) || (premiumTip ? 1 : 10),
-      analysis: normalized.analysis || normalized.description || normalized.ai_analysis || 'Brak analizy użytkownika.',
+      analysis: cleanAkoAnalysisText(normalized.analysis || normalized.description || ''),
       confidence,
       createdLabel: formatDateTime(createdAt),
       matchLabel: formatDateTime(matchAt),
@@ -22247,8 +22247,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       prediction: raw.prediction || raw.pick || tip.pick,
       odds: raw.odds ?? tip.odds,
       stake: raw.stake ?? raw.bet_amount ?? raw.amount ?? tip.stake,
-      analysis: cleanAkoAnalysisText(raw.analysis || raw.description || tip.analysis || '') || raw.ai_analysis || tip.analysis,
-      description: cleanAkoAnalysisText(raw.description || raw.analysis || tip.analysis || '') || raw.ai_analysis || tip.analysis,
+      analysis: cleanAkoAnalysisText(raw.analysis || raw.description || ''),
+      description: cleanAkoAnalysisText(raw.description || raw.analysis || ''),
       legs_json: raw.legs_json || raw.legs || raw.ako_legs || raw.coupon_legs || tip.legs_json || tip.legs,
       legs_count: raw.legs_count || tip.legs_count,
       coupon_type: raw.coupon_type || tip.coupon_type,
