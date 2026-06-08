@@ -14408,7 +14408,7 @@ const AI_STATS_FOOTBALL_BET_TYPES_PRESET = [
 
 
 
-// WERSJA 1508 — etykieta kraju ligi w Typy AI (Wyniki AI + Statystyki)
+// WERSJA 1508 — etykieta kraju ligi w Typy AI (Mecze Result + Statystyki)
 const AI_COUNTRY_GENERIC_VALUES_V1508 = new Set(['', '-', '—', 'baza', 'api-sports', 'api sports', 'fallback ai', 'liga', 'division', 'football', 'piłka nożna', 'pilka nozna', 'wszystkie', 'all', 'all countries'])
 const normalizeAiCountryTextV1508 = value => String(value || '')
   .trim()
@@ -15188,7 +15188,7 @@ function AiResultsView({ tips = [] }) {
       <div className="ai-results-hero-v745">
         <div>
           <span>AI MODEL JOURNAL</span>
-          <h1>Wyniki AI</h1>
+          <h1>Mecze Result</h1>
           <p>Każdy typ wygenerowany przez Typy AI trafia tutaj: sport, liga, mecz, predykcja, kurs, ocena AI i wynik po rozliczeniu.</p>
         </div>
         <div className="ai-results-kpis-v745">
@@ -15809,7 +15809,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     })
 
     // V1093: jedna wspólna lista zapisanych typów.
-    // Nie filtrujemy jej po aktywnym dniu, bo zakładka "Wyniki AI"
+    // Nie filtrujemy jej po aktywnym dniu, bo zakładka "Mecze Result"
     // ma pokazywać cały dziennik, a nie tylko dzień aktualnie kliknięty w "Typy AI".
     return Array.from(map.values())
       .sort((a, b) => getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b))
@@ -15868,12 +15868,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (!map.has(key)) map.set(key, card)
     })
     const q = search.trim().toLowerCase()
-    // V1502: Wyniki AI ma być pełnym dziennikiem ai_bets.
+    // V1502: Mecze Result ma być pełnym dziennikiem ai_bets.
     // Nie filtrujemy tu po prematch, bo rozpoczęte pendingi i rozliczone WON/LOST
     // muszą dalej być widoczne po wejściu na stronę.
     return Array.from(map.values())
       .filter(card => matchesAiSearchV1455(card, q))
-      // WERSJA 1449: Wyniki AI od najnowszej daty do najstarszej.
+      // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
 
@@ -15881,7 +15881,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     const isFootball = card => activeSport === 'Piłka nożna' ? card?.sport === 'Piłka nożna' : card?.sport === activeSport
     // V1501: licznik zakładki „Typy AI na dziś/jutro” ma oznaczać tylko typy,
     // które faktycznie są jeszcze do zagrania. Rozliczone albo rozpoczęte typy zostają
-    // w „Wyniki AI” i „Statystyki”, ale nie podbijają licznika aktywnych typów.
+    // w „Mecze Result” i „Statystyki”, ale nie podbijają licznika aktywnych typów.
     const isPlayablePrematch = card => {
       if (!card || isBetAiSettledStatusV1091(card)) return false
       const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
@@ -16344,7 +16344,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
 
   async function loadSavedAiJournalFromDbV1094() {
     try {
-      // V1496: Wyniki AI/Statystyki czytamy z public.ai_bets przez Service Role.
+      // V1496: Mecze Result/Statystyki czytamy z public.ai_bets przez Service Role.
       // To omija RLS i nie miesza typów AI z public.tips/user_manual.
       let rows = []
       try {
@@ -16618,7 +16618,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       setSelectedId(cardsToPersist[0]?.id || clean[0]?.id || '')
       saveBetAiVisibleCacheV1484(mode, cardsToPersist)
       setLastRefresh(new Date().toLocaleString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
-      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Wyniki AI.`)
+      setStatusText(`Skan znalazł ${clean.length} meczów na ${dayLabel} (${today}). Zapisuję na stałe TOP ${cardsToPersist.length} najlepszych typów AI. Po odświeżeniu będą w Mecze Result.`)
 
       const savedCount = await saveCardsToJournal(cardsToPersist)
       if (savedCount > 0) {
@@ -16661,31 +16661,6 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     }
   }
 
-  async function fetchLiveAiPicksTodayTomorrowV1673() {
-    if (aiFetchInFlightRef.current || loadingAi) {
-      setStatusText('Skan AI już trwa. Czekaj na zakończenie — nie uruchamiam drugiego pobierania.')
-      return
-    }
-    const activeModeBeforeScan = aiDayMode
-    setStatusText('Skanuję Typy AI: dziś + jutro. Nie ruszam typów użytkownika.')
-    try {
-      await fetchLiveAiPicks('today', { force: true })
-      await fetchLiveAiPicks('tomorrow', { force: true })
-      await loadSavedAiJournalFromDbV1094()
-      const activeSaved = await loadSavedAiTipsFromDb(activeModeBeforeScan)
-      setAiDayMode(activeModeBeforeScan)
-      setActivePanel('live')
-      setLiveCards([])
-      setSelectedId(activeSaved?.[0]?.id || '')
-      const todaySaved = await loadSavedAiTipsFromDb('today')
-      const tomorrowSaved = await loadSavedAiTipsFromDb('tomorrow')
-      setStatusText(`Skan dziś + jutro zakończony. AI dziś: ${todaySaved.length}, AI jutro: ${tomorrowSaved.length}. Typy AI zapisane są w ai_bets, bez mieszania z typami użytkownika.`)
-    } catch (err) {
-      setStatusText(`Błąd skanu dziś + jutro: ${err?.message || err}`)
-    }
-  }
-
-
   useEffect(() => {
     let alive = true
     setLoadingAi(true)
@@ -16698,7 +16673,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Automatycznie wczytano zapisane typy AI: dziś ${today.length}, jutro ${tomorrow.length}. Nie uruchamiam skanu API bez kliknięcia.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie Skanuj dziś + jutro, żeby uruchomić bezpieczny skan AI.`)
+        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
@@ -16717,7 +16692,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         setStatusText(`Wczytano ${saved.length} zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Nie uruchamiam automatycznego skanu — baza jest chroniona.`)
       } else {
         setSelectedId('')
-        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie Skanuj dziś + jutro, żeby uruchomić bezpieczny skan AI.`)
+        setStatusText(`Brak zapisanych typów AI na ${getBetAiDayLabelV1081(aiDayMode)}. Kliknij ręcznie ${aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'}, żeby uruchomić jeden bezpieczny skan.`)
       }
     }).finally(() => { if (alive) setLoadingAi(false) })
     return () => { alive = false }
@@ -16738,7 +16713,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             setLiveCards([])
             setSelectedId(saved[0]?.id || '')
           }
-          setStatusText('Rozliczenie AI zakończone — odświeżono Wyniki AI z ai_bets.')
+          setStatusText('Rozliczenie AI zakończone — odświeżono Mecze Result z ai_bets.')
         })
         .finally(() => setLoadingAi(false))
     }
@@ -16829,10 +16804,10 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>AI dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
-            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>AI jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'today' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
+            <button type="button" className={activePanel === 'live' && aiDayMode === 'tomorrow' ? 'active' : ''} onClick={() => { setAiDayMode('tomorrow'); setActivePanel('live'); setSelectedId('') }}>Typy AI na jutro <small className="ai-tab-count-v1095">{aiTabCounters.tomorrow}</small></button>
             {[
-              ['results','Wyniki AI', aiTabCounters.results], ['stats','Statystyki AI', aiTabCounters.stats]
+              ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
           </div>
   <div className="ai-search-compact-v1073">
@@ -16844,8 +16819,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     />
   </div>
   <div className="ai-actions-inline-v1071">
-    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={fetchLiveAiPicksTodayTomorrowV1673} disabled={loadingAi}>
-      ⟳ {loadingAi ? 'Skanuję...' : 'Skanuj dziś + jutro'}
+    <button type="button" className="ai-refresh-btn-v747 glass-btn-v1066 glass-primary-v1066" onClick={() => fetchLiveAiPicks(aiDayMode)} disabled={loadingAi}>
+      ⟳ {loadingAi ? 'Pobieram...' : (aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś')}
     </button>
     <button type="button" className="ai-settle-btn-v747 glass-btn-v1066 glass-success-v1066" onClick={onSettle} disabled={settleGenerating}>
       {settleGenerating ? 'Rozliczam...' : '✓ Rozlicz zakończone'}
@@ -16868,7 +16843,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
                 </button>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Skanuj dziś + jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Skanuj dziś + jutro, żeby uruchomić bezpieczny skan premium.'}</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Odśwież jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.'}</p></div>}
             </div>
           )}
 
@@ -16876,7 +16851,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
             <div className="ai-table-card-v747 ai-results-card-v1448">
               <div className="ai-table-title-v747 ai-table-title-results-v1448">
                 <div className="ai-title-stack-v1448">
-                  <h3>Wyniki AI <small>{resultCards.length}</small></h3>
+                  <h3>Mecze Result <small>{resultCards.length}</small></h3>
                   <p>Dziennik każdego typu AI · kliknij wiersz, aby podejrzeć typ</p>
                 </div>
                 <span>Archiwum wyników AI</span>
@@ -16932,7 +16907,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
               </div>
             </>
           ) : (
-            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>Skanuj dziś + jutro i kliknij dowolny mecz.</p></div>
+            <div className="ai-analysis-card-v747"><h3>Brak wybranego typu</h3><p>{aiDayMode === 'tomorrow' ? 'Odśwież jutro' : 'Odśwież dziś'} i kliknij dowolny mecz.</p></div>
           )}
         </aside>
         )}

@@ -34,22 +34,16 @@ exports.handler = async function(event) {
 
   const params = event.queryStringParameters || {}
   const journal = String(params.journal || '') === '1'
-  const mode = String(params.mode || '').toLowerCase()
-  const offset = mode === 'tomorrow' ? 1 : 0
+  const offset = params.mode === 'tomorrow' ? 1 : 0
   const date = /^\d{4}-\d{2}-\d{2}$/.test(params.date || '') ? params.date : todayWarsaw(offset)
-  const today = todayWarsaw(0)
-  const tomorrow = todayWarsaw(1)
   const limit = Math.min(Math.max(Number(params.limit || (journal ? 200 : 50)) || 50, 1), 500)
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   let query = supabase.from('ai_bets').select('*')
-  if (!journal) {
-    if (mode === 'today_tomorrow' || mode === 'both' || mode === 'dzis_jutro') query = query.in('match_date', [today, tomorrow])
-    else query = query.eq('match_date', date)
-  }
+  if (!journal) query = query.eq('match_date', date)
   query = query.order('match_date', { ascending: true }).order('match_time', { ascending: true }).limit(limit)
 
   const { data, error } = await query
-  if (error) return json(500, { error: error.message, bets: [], date, today, tomorrow, journal })
-  return json(200, { bets: data || [], count: (data || []).length, date, today, tomorrow, mode: mode || 'single_day', journal, updatedAt: new Date().toISOString() })
+  if (error) return json(500, { error: error.message, bets: [], date, journal })
+  return json(200, { bets: data || [], count: (data || []).length, date, journal, updatedAt: new Date().toISOString() })
 }
