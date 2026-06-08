@@ -8868,10 +8868,40 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   }
 
   function setCouponModeSafe(nextMode) {
+    // WERSJA 1656 — przełączanie Singiel/AKO nie może zamykać prawego panelu kuponu.
+    // Działa teraz tak samo jak przełącznik Darmowy/Premium: zmienia tryb, ale zostawia ramkę otwartą.
+    if (nextMode === couponMode) return
+
+    const hasAnySelectedMatch = Boolean(effectiveSelectedMatch || selectedMatch || manualSelectedMatch)
+    const fallbackSingleMarket = (selectedMarket && selectedMarket.market !== 'Brak kursów')
+      ? selectedMarket
+      : (marketOptions?.[0] || null)
+
     setCouponMode(nextMode)
-    setTicketMarketSelected(false)
-    setShowMarketBoard(false)
-    if (nextMode === 'single') setAkoSelections([])
+    setShowMarketBoard(prev => prev)
+
+    if (nextMode === 'single') {
+      setAkoSelections([])
+      if (fallbackSingleMarket) {
+        updateForm({
+          market: fallbackSingleMarket.market,
+          betType: fallbackSingleMarket.pick,
+          odds: String(fallbackSingleMarket.odds || form.odds || ''),
+          confidence: fallbackSingleMarket.confidence || form.confidence,
+        })
+      }
+      setTicketMarketSelected(hasAnySelectedMatch || ticketMarketSelected)
+      return
+    }
+
+    if (nextMode === 'ako') {
+      updateForm({
+        market: 'AKO',
+        betType: `AKO ${akoSelections.length} zdarzenia`,
+        odds: akoSelections.length ? akoSelections.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1).toFixed(2) : form.odds,
+      })
+      setTicketMarketSelected(hasAnySelectedMatch || ticketMarketSelected)
+    }
   }
 
   function removeAkoLeg(key) {
