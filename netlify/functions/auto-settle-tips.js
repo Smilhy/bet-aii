@@ -90,6 +90,49 @@ function isDrawPick(text) {
   return text.includes('draw') || text.includes('remis') || text === 'x' || text.includes(' x ')
 }
 
+function hasExactToken(text, token) {
+  const escaped = String(token || '').replace(/[.*+?^${}()|[\]\]/g, '\$&')
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(String(text || ''))
+}
+
+function resolveDoubleChance(tip, homeGoals, awayGoals, fixture) {
+  const text = marketText(tip)
+  const compact = text.replace(/[^a-z0-9]+/g, '')
+  const result = homeGoals > awayGoals ? 'home' : awayGoals > homeGoals ? 'away' : 'draw'
+
+  // V1658: typy typu X2/1X/12 wcześniej wpadały w pending_admin_review,
+  // bo rozliczanie znało tylko klasyczne 1X2. Dla Las Palmas 0:1 i X2 wynik powinien być WON.
+  const isDoubleChanceMarket =
+    text.includes('podwojna szansa') ||
+    text.includes('podwójna szansa') ||
+    text.includes('double chance') ||
+    text.includes('dc') ||
+    compact.includes('podwojnaszansa') ||
+    compact.includes('doublechance')
+
+  let pick = null
+  if (hasExactToken(text, '1x') || compact === '1x' || compact.includes('podwojnaszansa1x') || compact.includes('doublechance1x')) pick = '1x'
+  if (hasExactToken(text, 'x2') || compact === 'x2' || compact.includes('podwojnaszansax2') || compact.includes('doublechancex2')) pick = 'x2'
+  if (hasExactToken(text, '12') || compact === '12' || compact.includes('podwojnaszansa12') || compact.includes('doublechance12')) pick = '12'
+
+  // Jeżeli rynek mówi podwójna szansa, a sam pick jest ukryty w prediction/bet_type,
+  // wykryj też luźne wystąpienia bez wymagania całego rynku.
+  if (!pick && isDoubleChanceMarket) {
+    if (text.includes('1x')) pick = '1x'
+    else if (text.includes('x2')) pick = 'x2'
+    else if (text.includes('12')) pick = '12'
+  }
+
+  if (!pick) return null
+
+  const won =
+    (pick === '1x' && (result === 'home' || result === 'draw')) ||
+    (pick === 'x2' && (result === 'away' || result === 'draw')) ||
+    (pick === '12' && (result === 'home' || result === 'away'))
+
+  return { status: won ? 'won' : 'lost', reason: `Podwójna szansa pick=${pick}, result=${result}` }
+}
+
 function resolve1x2(tip, homeGoals, awayGoals, fixture) {
   const text = marketText(tip)
   const home = tip.team_home || tip.home_team || fixture?.teams?.home?.name || ''
@@ -134,7 +177,7 @@ function resolveBtts(tip, homeGoals, awayGoals) {
 }
 
 function resolveTip(tip, homeGoals, awayGoals, fixture) {
-  return resolveOverUnder(tip, homeGoals, awayGoals) || resolveBtts(tip, homeGoals, awayGoals) || resolve1x2(tip, homeGoals, awayGoals, fixture)
+  return resolveOverUnder(tip, homeGoals, awayGoals) || resolveBtts(tip, homeGoals, awayGoals) || resolveDoubleChance(tip, homeGoals, awayGoals, fixture) || resolve1x2(tip, homeGoals, awayGoals, fixture)
 }
 
 async function getFixture(fixtureId) {
@@ -485,10 +528,10 @@ exports.handler = async (event) => {
     const specificId = String(qs.id || '').trim()
 
     const result = await runAutoSettle({ limit, dryRun, specificId })
-    return json(200, { ok: true, function: 'auto-settle-tips-v1655', dryRun, ...result })
+    return json(200, { ok: true, function: 'auto-settle-tips-v1658', dryRun, ...result })
   } catch (error) {
     console.error('auto-settle-tips v1655 error:', error)
-    return json(500, { ok: false, function: 'auto-settle-tips-v1655', error: String(error.message || error) })
+    return json(500, { ok: false, function: 'auto-settle-tips-v1658', error: String(error.message || error) })
   }
 }
 
