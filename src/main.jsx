@@ -16995,8 +16995,9 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                   <div className="pick-match-v747"><strong>{card.home}</strong><i>vs</i><strong>{card.away}</strong></div>
                   <div className="pick-meta-v747"><span>{card.date}</span><span>{card.market}</span><span className={`kickoff-badge-v1051 ${card.kickoffState || 'prematch'}`}>{getBetAiKickoffLabelV1051(card.kickoffState)}</span></div>
-                  <div className="pick-bottom-v747 pick-bottom-v1054"><div><small>NAJLEPSZY RYNEK</small><b>{card.prediction}</b><em>{card.market}</em></div><div><small>Kurs</small><b>{card.odds}</b></div><div><small>Prawdop.</small><b>{card.probability || card.aiScore}%</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div></div>
-                  <p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p>
+                  <div className="pick-best-market-v1685"><small>NAJLEPSZY RYNEK</small><em>{card.market}</em><b>{card.prediction}</b></div>
+                  <div className="pick-bottom-v747 pick-bottom-v1054 pick-metrics-v1685"><div><small>Kurs</small><b>{card.odds}</b></div><div><small>Prawdopodobieństwo</small><b>{card.probability || card.aiScore}%</b></div><div><small>EV</small><b className={card.ev >= 0 ? 'positive' : 'negative'}>{card.ev >= 0 ? '+' : ''}{card.ev}%</b></div><div><small>Pewność</small><b>{card.risk || card.confidenceText || 'Średnia'}</b></div></div>
+                  <div className="pick-footer-v1685"><p className="pick-explain-v1051">{getBetAiShortInsightV1052(card)}</p><span className="pick-analysis-link-v1685">⌁ Zobacz analizę</span></div>
                 </button>
               ))}
               {!visibleCards.length && <div className="ai-empty-v747"><b>{aiDayMode === 'tomorrow' ? 'Brak typów AI na jutro.' : 'Brak typów AI na dziś.'}</b><p>{aiDayMode === 'tomorrow' ? 'Kliknij Odśwież jutro, żeby uruchomić bezpieczny skan premium.' : 'Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.'}</p></div>}
