@@ -287,6 +287,213 @@ async function refreshFixtureCacheBeforeAiV1695(supabase, event, days, errors = 
 }
 
 
+
+function normalizeOddNumberV1699(value) {
+  const n = Number(String(value ?? '').replace(',', '.'))
+  return Number.isFinite(n) ? round(n, 2) : 0
+}
+
+function getEventDateKeyV1699(ev) {
+  const d = new Date(ev?.event_time || ev?.commence_time || ev?.kickoff_time || nowIso())
+  if (!Number.isFinite(d.getTime())) return isoDate(new Date())
+  return d.toISOString().slice(0, 10)
+}
+
+function getFixtureIdFromEventV1699(ev) {
+  const raw = ev?.external_fixture_id || ev?.fixture_id || ev?.api_fixture_id || ev?.id || ''
+  const digits = String(raw).match(/\d{4,}/)?.[0]
+  return digits ? String(digits) : ''
+}
+
+function normalizeRealOddsCandidateV1699(ev, betName, valueName, odd) {
+  const odds = normalizeOddNumberV1699(odd)
+  if (!odds || odds < REAL_AI_MIN_ODDS_V1691) return null
+
+  const bet = String(betName || '').trim()
+  const value = String(valueName || '').trim()
+  const betLower = bet.toLowerCase()
+  const valueLower = value.toLowerCase()
+
+  let market = bet
+  let selection = value
+
+  if (betLower.includes('match winner') || betLower === 'winner' || betLower.includes('1x2')) {
+    market = '1X2'
+    if (value === 'Home' || value === '1') selection = `${ev.home} wygra`
+    else if (value === 'Away' || value === '2') selection = `${ev.away} wygra`
+    else if (valueLower.includes('draw') || value === 'X') selection = 'Remis'
+  } else if (betLower.includes('double chance')) {
+    market = 'Podwójna szansa'
+    if (value.includes('1X') || valueLower.includes('home/draw')) selection = `${ev.home} lub remis`
+    else if (value.includes('X2') || valueLower.includes('draw/away')) selection = `${ev.away} lub remis`
+    else if (value.includes('12') || valueLower.includes('home/away')) selection = `${ev.home} lub ${ev.away}`
+  } else if (betLower.includes('goals over/under') || betLower.includes('over/under') || betLower.includes('goals')) {
+    market = 'Gole'
+    const line = value.match(/(\d+(?:[.,]\d+)?)/)?.[1]?.replace(',', '.')
+    if (valueLower.includes('over') || valueLower.includes('powyżej')) selection = `Powyżej ${line || ''} gola`.trim()
+    else if (valueLower.includes('under') || valueLower.includes('poniżej')) selection = `Poniżej ${line || ''} gola`.trim()
+  } else if (betLower.includes('both teams score') || betLower.includes('btts')) {
+    market = 'BTTS'
+    if (valueLower === 'yes' || valueLower.includes('tak')) selection = 'Obie drużyny strzelą: TAK'
+    else if (valueLower === 'no' || valueLower.includes('nie')) selection = 'Obie drużyny strzelą: NIE'
+  } else if (betLower.includes('draw no bet')) {
+    market = 'DNB / Remis nie ma zakładu'
+    if (value === 'Home' || value === '1') selection = `${ev.home} DNB`
+    else if (value === 'Away' || value === '2') selection = `${ev.away} DNB`
+  } else if (betLower.includes('handicap')) {
+    market = 'Handicap'
+    selection = value
+  }
+
+  // Odrzucamy egzotyczne rynki, których nie chcemy w Typach AI.
+  const allowed = ['1X2', 'Podwójna szansa', 'Gole', 'BTTS', 'DNB / Remis nie ma zakładu', 'Handicap']
+  if (!allowed.includes(market)) return null
+
+  return {
+    market,
+    selection,
+    odds,
+    bookmaker: '',
+    rawBet: bet,
+    rawValue: value
+  }
+}
+
+function probabilityForRealOddsCandidateV1699(ev, candidate) {
+  // Prawdopodobieństwo nadal jest oceną modelu, ale kurs jest realny z API.
+  const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}-${candidate.market}-${candidate.selection}`)
+  const m = String(candidate.market || '').toLowerCase()
+  let p = 50 + (seed % 18)
+
+  if (m.includes('podwójna')) p += 10
+  else if (m.includes('gole')) p += 5
+  else if (m.includes('btts')) p += 2
+  else if (m.includes('dnb')) p += 6
+  else if (m.includes('handicap')) p += 1
+  else if (m.includes('1x2')) p += 0
+
+  // Korekta po kursie: im wyższy realny kurs, tym ostrożniejsza prognoza.
+  if (candidate.odds >= 2.5) p -= 8
+  else if (candidate.odds >= 2.0) p -= 5
+  else if (candidate.odds >= 1.75) p -= 2
+  else if (candidate.odds <= 1.55) p += 2
+
+  return clamp(round(p, 1), 35, 82)
+}
+
+function scoreRealOddsCandidateV1699(ev, candidate) {
+  const probability = probabilityForRealOddsCandidateV1699(ev, candidate)
+  const implied = round((1 / candidate.odds) * 100, 2)
+  const value = round(probability - implied, 2)
+  const confidence = clamp(round(probability + Math.max(0, value) * 0.35, 1), 40, 88)
+  const aiScore = clamp(round(confidence * 0.78 + Math.max(0, value) * 1.5, 2), 0, 96)
+  return {
+    ...candidate,
+    probability,
+    implied,
+    value,
+    confidence,
+    aiScore,
+    risk: confidence >= 74 ? 'medium' : 'high'
+  }
+}
+
+async function fetchFootballOddsByDateV1699(date, errors = []) {
+  if (!API_SPORTS_KEY) return []
+  const host = 'https://v3.football.api-sports.io'
+  const rows = []
+  let page = 1
+  const maxPages = Number(process.env.REAL_ODDS_MAX_PAGES || 5)
+
+  while (page <= maxPages) {
+    const url = `${host}/odds?date=${encodeURIComponent(date)}&page=${page}`
+    try {
+      const res = await fetch(url, { headers: { 'x-apisports-key': API_SPORTS_KEY } })
+      const body = await res.text()
+      let data = null
+      try { data = JSON.parse(body) } catch { data = null }
+
+      const apiErrors = data?.errors && typeof data.errors === 'object' ? data.errors : null
+      if (!res.ok || (apiErrors && Object.keys(apiErrors).length)) {
+        const msg = apiErrors && Object.keys(apiErrors).length ? JSON.stringify(apiErrors) : body.slice(0, 300)
+        errors.push(`odds ${date} page ${page}: ${res.status} ${msg}`)
+        break
+      }
+
+      const response = Array.isArray(data?.response) ? data.response : []
+      rows.push(...response)
+
+      const paging = data?.paging || {}
+      const total = Number(paging.total || 1)
+      const current = Number(paging.current || page)
+      if (!response.length || current >= total) break
+      page += 1
+    } catch (error) {
+      errors.push(`odds ${date}: ${error?.message || error}`)
+      break
+    }
+  }
+
+  return rows
+}
+
+async function buildRealFootballOddsMapV1699(events = [], errors = []) {
+  const footballEvents = (events || []).filter(ev => String(ev?.sport || '').toLowerCase().includes('piłka') || String(ev?.sport_key || '').includes('football'))
+  const dates = [...new Set(footballEvents.map(getEventDateKeyV1699).filter(Boolean))]
+  const map = new Map()
+
+  for (const date of dates) {
+    const oddsRows = await fetchFootballOddsByDateV1699(date, errors)
+    for (const row of oddsRows) {
+      const fixtureId = String(row?.fixture?.id || row?.fixture_id || row?.id || '')
+      if (!fixtureId) continue
+      const candidates = []
+      const bookmakers = Array.isArray(row?.bookmakers) ? row.bookmakers : []
+      for (const bookmaker of bookmakers) {
+        const bets = Array.isArray(bookmaker?.bets) ? bookmaker.bets : []
+        for (const bet of bets) {
+          const values = Array.isArray(bet?.values) ? bet.values : []
+          for (const value of values) {
+            candidates.push({
+              betName: bet?.name,
+              valueName: value?.value,
+              odd: value?.odd,
+              bookmaker: bookmaker?.name || ''
+            })
+          }
+        }
+      }
+      if (candidates.length) map.set(String(fixtureId), candidates)
+    }
+  }
+
+  return map
+}
+
+function chooseRealApiOddsPickV1699(ev, oddsMap) {
+  const fixtureId = getFixtureIdFromEventV1699(ev)
+  const rawCandidates = fixtureId ? (oddsMap.get(String(fixtureId)) || []) : []
+  const scored = rawCandidates
+    .map(c => {
+      const normalized = normalizeRealOddsCandidateV1699(ev, c.betName, c.valueName, c.odd)
+      if (!normalized) return null
+      normalized.bookmaker = c.bookmaker || normalized.bookmaker || 'API-Football Odds'
+      return scoreRealOddsCandidateV1699(ev, normalized)
+    })
+    .filter(Boolean)
+    .filter(c => Number(c.odds || 0) >= REAL_AI_MIN_ODDS_V1691)
+
+  if (!scored.length) return null
+
+  scored.sort((a, b) => {
+    const evDiff = Number(b.value || 0) - Number(a.value || 0)
+    if (Math.abs(evDiff) > 0.01) return evDiff
+    return Number(b.aiScore || 0) - Number(a.aiScore || 0)
+  })
+
+  return scored[0]
+}
+
 function chooseModelPick(ev) {
   const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}`)
   const homeLean = (seed % 100) >= 45
@@ -346,8 +553,10 @@ async function polishWithOpenAI(row, baseAnalysis) {
   } catch { return baseAnalysis }
 }
 
-async function buildRow(ev) {
-  const pick = chooseModelPick(ev)
+async function buildRow(ev, realOddsMap = new Map()) {
+  const realPick = chooseRealApiOddsPickV1699(ev, realOddsMap)
+  if (!realPick && process.env.REAL_AI_ALLOW_SYNTHETIC_ODDS !== '1') return null
+  const pick = realPick || chooseModelPick(ev)
   const matchName = `${ev.home} vs ${ev.away}`
   const base = {
     ai_external_key: `daily-ai-${ev.sport}-${ev.external_fixture_id}-${String(ev.event_time || '').slice(0,10)}-${pick.market}-${pick.selection}`.replace(/\s+/g, '-').toLowerCase(),
@@ -373,7 +582,7 @@ async function buildRow(ev) {
     ai_confidence: pick.confidence,
     ai_score: pick.aiScore,
     risk_level: pick.risk,
-    bookmaker: 'Model AI / sprawdź kurs u bukmachera',
+    bookmaker: pick.bookmaker || 'API-Football Odds',
     event_time: ev.event_time,
     kickoff_time: ev.event_time,
     match_time: ev.event_time,
@@ -503,10 +712,15 @@ exports.handler = async function (event) {
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
     const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 48)
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
+    const realOddsMap = await buildRealFootballOddsMapV1699(events, errors)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
-        const row = await buildRow(ev)
+        const row = await buildRow(ev, realOddsMap)
+        if (!row) {
+          errors.push(`skip ${ev.home} vs ${ev.away}: brak realnego kursu API-Football dla dozwolonych rynków`)
+          continue
+        }
         if (Number(row.odds || 0) < REAL_AI_MIN_ODDS_V1691) continue
         if (Number(row.model_probability || row.probability || 0) < minProbability) continue
         if (Number(row.value_score || 0) < minValueScore) continue
@@ -584,9 +798,11 @@ exports.handler = async function (event) {
       cache_before: cacheBefore,
       cache_saved: cacheSaved,
       cache_refreshed: cacheRefreshed,
+      real_odds_fixtures: realOddsMap?.size || 0,
+      real_odds_fixtures: realOddsMap?.size || 0,
       candidates: rows.length,
-      model: '1086-daily-stable-scan-ai-bets-ui-v1673',
-      message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. V1673: days=2 tylko dziś+jutro, bez pojutrza w Result.',
+      model: '1699-real-api-football-odds-only',
+      message: 'Skan AI używa realnych kursów z API-Football odds. Bez kursu API typ odpada. Kurs min 1.50, próg prawdopodobieństwa 48%.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
