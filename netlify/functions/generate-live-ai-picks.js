@@ -62,7 +62,7 @@ function safeName(v, fallback = '') {
 }
 
 function cachedFixtureToAiEvent(row) {
-  // WERSJA 1701: musi używać prawdziwego fixture.id z API, inaczej odds mogą przykleić się do złego meczu.
+  // WERSJA 1702: prawdziwe fixture.id z API, żeby odds nie przykleiły się do złego meczu.
   const fx = row?.fixture_json && typeof row.fixture_json === 'object' ? row.fixture_json : {}
   const home = safeName(row?.home || fx.home || fx.home_team || fx.team_home || fx?.teams?.home?.name, '')
   const away = safeName(row?.away || fx.away || fx.away_team || fx.team_away || fx?.teams?.away?.name || fx?.teams?.visitors?.name, '')
@@ -83,13 +83,12 @@ function cachedFixtureToAiEvent(row) {
     row?.fixture_id ||
     null
 
-  // Jeśli nie ma realnego fixture ID, zostawiamy event do listy, ale odds API nie będą do niego dopasowane.
-  const id = realFixtureId || row?.cache_key || `${home}-${away}-${commenceTime}`
+  const cleanFixtureId = realFixtureId ? String(realFixtureId).replace(/\D/g, '') : ''
 
   return {
-    id: `football-${id}`,
-    external_fixture_id: realFixtureId ? Number(String(realFixtureId).replace(/\D/g, '').slice(0, 12)) : null,
-    api_fixture_id: realFixtureId ? String(realFixtureId) : '',
+    id: cleanFixtureId ? `football-${cleanFixtureId}` : (row?.cache_key || `${home}-${away}-${commenceTime}`),
+    external_fixture_id: cleanFixtureId || null,
+    api_fixture_id: cleanFixtureId || '',
     sport: row?.sport || fx.sport || 'Piłka nożna',
     sport_key: 'football',
     league: row?.league || fx.league || fx.league_name || fx?.league?.name || 'Piłka nożna',
@@ -349,7 +348,7 @@ function getEventDateKeyV1699(ev) {
 }
 
 function getFixtureIdFromEventV1699(ev) {
-  // WERSJA 1701: tylko prawdziwe ID fixture. Nie wyciągamy losowych cyfr z cache_key/nazwy.
+  // WERSJA 1702: tylko jawne API fixture ID. Nie wyciągamy losowych cyfr z cache_key/nazwy.
   const raw =
     ev?.api_fixture_id ||
     ev?.external_fixture_id ||
@@ -554,9 +553,10 @@ function chooseRealApiOddsPickV1699(ev, oddsMap) {
       normalized.bookmaker = c.bookmaker || normalized.bookmaker || 'API-Football Odds'
       normalized.api_fixture_id = fixtureId
       const scored = scoreRealOddsCandidateV1699(ev, normalized)
-      scored.rawBet = normalized.rawBet
-      scored.rawValue = normalized.rawValue
+      scored.rawBet = normalized.rawBet || normalized.market || ''
+      scored.rawValue = normalized.rawValue || normalized.selection || ''
       scored.api_fixture_id = fixtureId
+      scored.bookmaker = normalized.bookmaker
       return scored
     })
     .filter(Boolean)
@@ -677,15 +677,9 @@ async function buildRow(ev, realOddsMap = new Map()) {
     status: ev.status,
     result: 'pending',
     profit: 0,
-    source: [
-      '1701-real-api-football-odds-fixture-id-debug',
-      row.odds_bookmaker ? `bookmaker=${row.odds_bookmaker}` : '',
-      row.odds_raw_market ? `raw_market=${row.odds_raw_market}` : '',
-      row.odds_raw_value ? `raw_value=${row.odds_raw_value}` : '',
-      row.odds_api_fixture_id ? `fixture=${row.odds_api_fixture_id}` : ''
-    ].filter(Boolean).join('|'),
+    source: '1702-real-api-football-odds-fixture-id-debug',
     ai_source: 'real_ai_engine',
-    ai_model_version: '1700-real-api-football-odds-sane-markets',
+    ai_model_version: '1702-real-api-football-odds-fixture-id-debug',
     access_type: pick.confidence >= 82 ? 'premium' : 'free',
     is_premium: pick.confidence >= 82,
     price: pick.confidence >= 82 ? 9 : 0,
@@ -726,7 +720,13 @@ function aiBetRowFromStrongestRow(row) {
     status: 'pending',
     result: null,
     profit: 0,
-    source: '1701-real-api-football-odds-fixture-id-debug',
+    source: [
+      '1702-real-api-football-odds-fixture-id-debug',
+      row.odds_bookmaker ? `bookmaker=${row.odds_bookmaker}` : '',
+      row.odds_raw_market ? `raw_market=${row.odds_raw_market}` : '',
+      row.odds_raw_value ? `raw_value=${row.odds_raw_value}` : '',
+      row.odds_api_fixture_id ? `fixture=${row.odds_api_fixture_id}` : ''
+    ].filter(Boolean).join('|'),
     updated_at: nowIso()
   }
 }
@@ -869,7 +869,7 @@ exports.handler = async function (event) {
 
     try {
       await supabase.from('ai_pick_runs').insert({
-        source: '1701-real-api-football-odds-fixture-id-debug',
+        source: '1702-real-api-football-odds-fixture-id-debug',
         picks_created: aiBetsSaved,
         status: aiBetsSaved > 0 ? 'success' : 'error',
         error_message: errors.length ? errors.slice(0, 12).join(' | ').slice(0, 1000) : null,
@@ -891,8 +891,8 @@ exports.handler = async function (event) {
       real_odds_fixtures: realOddsMap?.size || 0,
       real_odds_fixtures: realOddsMap?.size || 0,
       candidates: rows.length,
-      model: '1701-real-api-football-odds-fixture-id-debug',
-      message: 'Skan AI używa realnych kursów z API-Football odds tylko po prawdziwym fixture ID. Source zawiera bookmaker/raw_market/raw_value/fixture debug.'
+      model: '1702-real-api-football-odds-fixture-id-debug',
+      message: 'Skan AI używa realnych kursów z API-Football odds tylko po prawdziwym fixture ID. Source zawiera bookmaker/raw_market/raw_value/fixture debug.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
