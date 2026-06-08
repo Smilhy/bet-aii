@@ -312,7 +312,7 @@ function chooseModelPick(ev) {
   }
 
   probability = clamp(probability, 48, 79)
-  const odds = round(Math.max(REAL_AI_MIN_ODDS_V1691, 100 / probability * 1.04), 2)
+  const odds = round(100 / probability * 1.04, 2)
   const implied = round((1 / odds) * 100, 2)
   const value = round(probability - implied, 2)
   const confidence = clamp(round(probability + Math.max(0, value) * 0.35, 1), 55, 88)
@@ -420,7 +420,7 @@ function aiBetRowFromStrongestRow(row) {
     league: safeName(row.league || row.league_name, 'Liga'),
     market,
     prediction,
-    odds: round(Math.max(REAL_AI_MIN_ODDS_V1691, Number(row.odds || 1.5)), 2),
+    odds: round(Number(row.odds || 0), 2),
     probability: round(row.probability || row.model_probability || row.ai_confidence || 70, 2),
     ev: round(row.ev || row.value_score || 0, 2),
     ai_score: round(row.ai_score || row.aiScore || row.ai_confidence || row.probability || row.model_probability || 70, 2),

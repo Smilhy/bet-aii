@@ -15871,10 +15871,31 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
   }
 
   const visibleCards = useMemo(() => {
-    // WERSJA 1688: usunięto zakładkę i tryb „Typy AI na jutro”.
-    // Widok Typy AI pokazuje tylko dzisiejsze aktywne typy.
-    return getLiveAiCardsForDayV1673('today', true)
-  }, [allCards, activeSport, matchMode, search, minOdds, maxOdds, minProb])
+    // WERSJA 1696: po usunięciu zakładki „jutro” główna lista ma pokazywać WSZYSTKIE aktywne typy AI,
+    // które są jeszcze do zagrania, czyli dziś + jutro / zakres skanu. Dzięki temu nie ma rozjazdu:
+    // Typy AI = 1, a Mecze Result/Statystyki = 3.
+    const q = search.trim().toLowerCase()
+    const base = allCards
+      .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
+      .filter(c => !isBetAiSettledStatusV1091(c))
+      .filter(c => isBetAiPrematchAvailableV1091(c))
+      .filter(c => matchesAiSearchV1455(c, q))
+
+    const filtered = base
+      .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
+      .filter(c => Number(c.odds || 0) >= Number(minOdds))
+      .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
+
+    return filtered.sort((a, b) => {
+      const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
+      const evA = Number(a.ev || 0)
+      const evB = Number(b.ev || 0)
+      return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
+        || (evB - evA)
+        || Number(b.aiScore || 0) - Number(a.aiScore || 0)
+        || getBetAiTimeValueV1078(a) - getBetAiTimeValueV1078(b)
+    })
+  }, [allCards, activeSport, matchMode, search, minOdds, minProb])
 
   const selectedCard = useMemo(() => {
     return visibleCards.find(c => String(c.id) === String(selectedId)) || visibleCards[0] || null
@@ -15913,15 +15934,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
       return state === 'prematch'
     }
-    const today = getLiveAiCardsForDayV1673('today', false).filter(isFootball).length
-    const tomorrow = getLiveAiCardsForDayV1673('tomorrow', false).filter(isFootball).length
+    const activePlayable = allCards
+      .filter(isFootball)
+      .filter(card => !isBetAiSettledStatusV1091(card))
+      .filter(card => isBetAiPrematchAvailableV1091(card))
+      .filter(card => matchesAiSearchV1455(card, search))
+      .length
     const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
     const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
     return {
-      today,
-      tomorrow,
+      today: activePlayable,
+      tomorrow: 0,
       results: resultCards.length,
-      stats: allCards.length,
+      stats: resultCards.length,
       leagues,
       pending,
     }
@@ -16870,7 +16895,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
         <div className="ai-main-column-v747">
           <div className="ai-league-tabs-actions-v1071">
 <div className="ai-inner-tabs-v747">
-            <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI na dziś <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
+            <button type="button" className={activePanel === 'live' ? 'active' : ''} onClick={() => { setAiDayMode('today'); setActivePanel('live'); setSelectedId('') }}>Typy AI aktywne <small className="ai-tab-count-v1095">{aiTabCounters.today}</small></button>
             {[
               ['results','Mecze Result', aiTabCounters.results], ['stats','Statystyki', aiTabCounters.stats]
             ].map(([key,label,count]) => <button key={key} type="button" className={activePanel === key ? 'active' : ''} onClick={() => setActivePanel(key)}>{label} <small className="ai-tab-count-v1095">{count}</small></button>)}
@@ -16944,7 +16969,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
                   </div>
                 </div>
               ))}
-              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak typów AI na dziś.</b><p>Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.</p></div>}
+              {!visibleCards.length && <div className="ai-empty-v747"><b>Brak aktywnych typów AI.</b><p>Kliknij Odśwież dziś, żeby uruchomić bezpieczny skan premium.</p></div>}
             </div>
           )}
 
