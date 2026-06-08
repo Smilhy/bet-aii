@@ -12,6 +12,12 @@ function json(statusCode, body) {
 }
 function round(v, d = 2) { const f = 10 ** d; return Math.round(Number(v || 0) * f) / f }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v || 0))) }
+function expectedEvPercent(probability, odds) {
+  const p = Number(probability || 0)
+  const o = Number(odds || 0)
+  if (!Number.isFinite(p) || !Number.isFinite(o) || p <= 0 || o <= 0) return -999
+  return round(((p / 100) * o - 1) * 100, 2)
+}
 function nowIso() { return new Date().toISOString() }
 function isoDate(d) { return d.toISOString().slice(0, 10) }
 function warsawDateKey(value = new Date(), offsetDays = 0) {
@@ -247,14 +253,14 @@ function chooseModelPick(ev) {
   probability = clamp(probability, 57, 79)
   const odds = round(clamp(100 / probability * 1.04, 1.32, 2.25), 2)
   const implied = round((1 / odds) * 100, 2)
-  const value = round(probability - implied, 2)
+  const value = expectedEvPercent(probability, odds)
   const confidence = clamp(round(probability + Math.max(0, value) * 0.35, 1), 55, 88)
   const aiScore = clamp(round(confidence * 0.78 + Math.max(0, value) * 1.5, 2), 0, 96)
   return { market, selection, odds, implied, probability: round(probability, 1), value, confidence, aiScore, risk: confidence >= 74 ? 'medium' : 'high' }
 }
 
 function buildBaseAnalysis(ev, pick) {
-  return `Realne wydarzenie z API-Sports: ${ev.match_name || `${ev.home} vs ${ev.away}`} (${ev.sport}, ${ev.league}). Model Bet+AI wybiera rynek: ${pick.market}, typ: ${pick.selection}. Prawdopodobieństwo modelowe ${pick.probability}%, szacowany kurs ${pick.odds}, implied ${pick.implied}%, value ${pick.value} pp. To jest analiza modelowa bez gwarancji wyniku; typ wymaga sprawdzenia kursu u bukmachera przed grą.`
+  return `Realne wydarzenie z API-Sports: ${ev.match_name || `${ev.home} vs ${ev.away}`} (${ev.sport}, ${ev.league}). Model Bet+AI wybiera rynek: ${pick.market}, typ: ${pick.selection}. Prawdopodobieństwo modelowe ${pick.probability}%, szacowany kurs ${pick.odds}, implied ${pick.implied}%, EV ${pick.value}%. To jest analiza modelowa bez gwarancji wyniku; typ wymaga sprawdzenia kursu u bukmachera przed grą.`
 }
 
 async function polishWithOpenAI(row, baseAnalysis) {
@@ -436,16 +442,24 @@ exports.handler = async function (event) {
     const allowedDates = allowedWarsawDateKeys(days)
     events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
-    // V1676: oficjalne Typy AI: prawdopodobieństwo 60-100% oraz kurs minimum 1.40, bez górnego limitu kursu.
+    // V1677: oficjalne Typy AI: prawdopodobieństwo 60-100%, kurs minimum 1.40 bez limitu,
+    // oraz prawdziwe EV minimum +1%. Nie zapisujemy minus-value do aktywnych Typów AI.
     const minProbability = Number(event?.queryStringParameters?.minProbability || process.env.REAL_AI_MIN_PROBABILITY || 60)
     const minOdds = Number(event?.queryStringParameters?.minOdds || process.env.REAL_AI_MIN_ODDS || 1.4)
-    const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
+    const minExpectedEv = Number(event?.queryStringParameters?.minEv || process.env.REAL_AI_MIN_EV_PERCENT || 1)
+    const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || minExpectedEv)
     const rows = []
     for (const ev of events.slice(0, Number(process.env.REAL_MATCHES_LIMIT || 80))) {
       try {
         const row = await buildRow(ev)
-        if (Number(row.model_probability || row.probability || 0) < minProbability) continue
-        if (Number(row.odds || 0) < minOdds) continue
+        const probability = Number(row.model_probability || row.probability || 0)
+        const odds = Number(row.odds || 0)
+        const evPercent = expectedEvPercent(probability, odds)
+        row.value_score = evPercent
+        row.ev = evPercent
+        if (probability < minProbability || probability > 100) continue
+        if (odds < minOdds) continue
+        if (evPercent < minExpectedEv) continue
         if (Number(row.value_score || 0) < minValueScore) continue
         row.quality_label = row.ai_score >= 78 ? 'TOP AI' : row.ai_score >= 70 ? 'VALUE' : 'REAL EVENT'
         rows.push(row)
@@ -519,10 +533,11 @@ exports.handler = async function (event) {
       apis_checked: apisChecked,
       days,
       candidates: rows.length,
-      model: '1086-daily-stable-scan-ai-bets-v1676-min60-odds140-nolimit',
+      model: '1086-daily-stable-scan-ai-bets-v1677-min60-odds140-evplus1',
       min_probability: minProbability,
       min_odds: minOdds,
-      message: 'Skan AI zapisuje TOP typy do ai_bets. V1676: tylko dziś+jutro według Europe/Warsaw, prawdopodobieństwo 60-100%, kurs min. 1.40, bez górnego limitu kursu.',
+      min_ev_percent: minExpectedEv,
+      message: 'Skan AI zapisuje tylko oficjalne Typy AI: 60-100%, kurs min. 1.40 bez limitu oraz EV minimum +1%. Minus-value nie trafia do aktywnych typów.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {

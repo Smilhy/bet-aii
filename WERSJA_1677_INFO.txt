@@ -1,0 +1,15 @@
+Wersja 1677 — Typy AI tylko plus-value
+
+Poprawka po teście: typ z 61% i kursem 1.60 miał EV -2%, więc nie może przechodzić jako oficjalny Typ AI.
+
+Zasady aktywnych Typów AI:
+- prawdopodobieństwo od 60% do 100%,
+- kurs minimum 1.40,
+- kurs bez górnego limitu,
+- EV minimum +1% liczone matematycznie: ((probability / 100) * odds - 1) * 100.
+
+Zmiany:
+- generate-live-ai-picks nie zapisuje już minus-value do ai_bets,
+- get-ai-bets dla zakładek dziś/jutro odfiltrowuje stare minus-value,
+- frontend ukrywa aktywne typy, które nie spełniają EV +1%,
+- typy typerów/użytkowników nie były ruszane.

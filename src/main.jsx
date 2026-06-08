@@ -15763,6 +15763,13 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       league: t.league || t.league_name || t.country
     })
 
+    const expectedEvPercentV1677 = (() => {
+      const p = Number(normalized.probability || rawProbability || 0)
+      const o = Number(odds || 0)
+      if (!Number.isFinite(p) || !Number.isFinite(o) || p <= 0 || o <= 0) return normalized.ev
+      return Math.round((((p / 100) * o - 1) * 100))
+    })()
+
     return {
       id: String(t.ai_external_key || t.external_fixture_id || t.id || index),
       externalFixtureId: String(t.external_fixture_id || t.ai_external_key || ''),
@@ -15779,8 +15786,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       odds: odds.toFixed(2),
       aiScore: normalized.aiScore,
       probability: normalized.probability,
-      ev: normalized.ev,
-      risk: normalized.risk,
+      ev: expectedEvPercentV1677,
+      risk: expectedEvPercentV1677 < 1 ? 'Podwyższone' : normalized.risk,
       status: t.status || t.result || 'pending',
       scoreHome: readScoreValueV1451(t.live_score_home, t.score_home, t.home_score, t.final_score_home, t.goals_home),
       scoreAway: readScoreValueV1451(t.live_score_away, t.score_away, t.away_score, t.final_score_away, t.goals_away),
@@ -15833,11 +15840,12 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     ].filter(Boolean).join(' ').toLowerCase().includes(q)
   }
 
-  // V1675: twarde zasady dla Typów AI. Nie mieszamy tu typów typerów/użytkowników.
-  // Typ aktywny AI ma być widoczny tylko gdy spełnia min. 60% oraz kurs min. 1.40. Bez górnego limitu kursu.
+  // V1677: twarde zasady dla oficjalnych Typów AI. Nie mieszamy tu typów typerów/użytkowników.
+  // Typ aktywny AI ma być widoczny tylko gdy spełnia: 60-100%, kurs min. 1.40 bez limitu i EV minimum +1%.
   // Przyszłe PENDING z pojutrza lub dalszych dni nie podbijają liczników/statystyk.
   const BETAI_AI_MIN_PROBABILITY_V1675 = 60
   const BETAI_AI_MIN_ODDS_V1675 = 1.4
+  const BETAI_AI_MIN_EV_PERCENT_V1677 = 1
 
   const getBetAiProbabilityForFilterV1675 = (card = {}) => {
     const candidates = [card.probability, card.model_probability, card.ai_probability, card.aiScore, card.ai_score, card.ai_confidence, card.confidence]
@@ -15848,10 +15856,19 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     return 0
   }
 
+  const getBetAiExpectedEvPercentV1677 = (card = {}) => {
+    const probability = getBetAiProbabilityForFilterV1675(card)
+    const odds = Number(card?.odds || card?.course || 0)
+    if (!Number.isFinite(probability) || !Number.isFinite(odds) || probability <= 0 || odds <= 0) return -999
+    return Math.round((((probability / 100) * odds - 1) * 100) * 100) / 100
+  }
+
   const isBetAiHardQualityOkV1675 = (card = {}) => {
     const oddsOk = Number(card?.odds || card?.course || 0) >= BETAI_AI_MIN_ODDS_V1675
-    const probabilityOk = getBetAiProbabilityForFilterV1675(card) >= BETAI_AI_MIN_PROBABILITY_V1675
-    return oddsOk && probabilityOk
+    const probability = getBetAiProbabilityForFilterV1675(card)
+    const probabilityOk = probability >= BETAI_AI_MIN_PROBABILITY_V1675 && probability <= 100
+    const evOk = getBetAiExpectedEvPercentV1677(card) >= BETAI_AI_MIN_EV_PERCENT_V1677
+    return oddsOk && probabilityOk && evOk
   }
 
   const isBetAiPendingWithinTodayTomorrowV1675 = (card = {}) => {
