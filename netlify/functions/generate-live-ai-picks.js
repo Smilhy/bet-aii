@@ -293,6 +293,41 @@ function normalizeOddNumberV1699(value) {
   return Number.isFinite(n) ? round(n, 2) : 0
 }
 
+function isAllowedFootballGoalsLineV1700(selection) {
+  const text = String(selection || '').toLowerCase()
+  const line = Number((text.match(/(\d+(?:[.,]\d+)?)/)?.[1] || '').replace(',', '.'))
+  if (!Number.isFinite(line)) return false
+
+  // Bez absurdów typu over 6.5 / over 7 / dokładne dziwne total lines.
+  // Zostawiamy tylko najczytelniejsze rynki główne.
+  if (text.includes('powyżej') || text.includes('over')) return [1.5, 2.5, 3.5].includes(line)
+  if (text.includes('poniżej') || text.includes('under')) return [2.5, 3.5].includes(line)
+  return false
+}
+
+function isSaneRealOddsCandidateV1700(candidate) {
+  const odds = Number(candidate?.odds || 0)
+  const market = String(candidate?.market || '').toLowerCase()
+  const selection = String(candidate?.selection || '').toLowerCase()
+
+  if (!Number.isFinite(odds) || odds < REAL_AI_MIN_ODDS_V1691) return false
+
+  // Bez hard max dla bazy, ale jako TOP typ AI nie chcemy loterii.
+  // Jeżeli chcesz ostrzej/luźniej, zmień env REAL_AI_MAX_REASONABLE_ODDS.
+  const maxReasonableOdds = Number(process.env.REAL_AI_MAX_REASONABLE_ODDS || 4.00)
+  if (odds > maxReasonableOdds) return false
+
+  if (market.includes('gole')) return isAllowedFootballGoalsLineV1700(selection)
+  if (market.includes('podwójna')) return odds <= 2.60
+  if (market.includes('1x2')) return odds <= 3.50
+  if (market.includes('btts')) return odds <= 2.70
+  if (market.includes('dnb')) return odds <= 2.50
+  if (market.includes('handicap')) return odds <= 3.00
+
+  return false
+}
+
+
 function getEventDateKeyV1699(ev) {
   const d = new Date(ev?.event_time || ev?.commence_time || ev?.kickoff_time || nowIso())
   if (!Number.isFinite(d.getTime())) return isoDate(new Date())
@@ -349,6 +384,17 @@ function normalizeRealOddsCandidateV1699(ev, betName, valueName, odd) {
   const allowed = ['1X2', 'Podwójna szansa', 'Gole', 'BTTS', 'DNB / Remis nie ma zakładu', 'Handicap']
   if (!allowed.includes(market)) return null
 
+  const candidate = {
+    market,
+    selection,
+    odds,
+    bookmaker: '',
+    rawBet: bet,
+    rawValue: value
+  }
+
+  if (!isSaneRealOddsCandidateV1700(candidate)) return null
+
   return {
     market,
     selection,
@@ -360,25 +406,30 @@ function normalizeRealOddsCandidateV1699(ev, betName, valueName, odd) {
 }
 
 function probabilityForRealOddsCandidateV1699(ev, candidate) {
-  // Prawdopodobieństwo nadal jest oceną modelu, ale kurs jest realny z API.
+  // WERSJA 1700: prawdopodobieństwo musi wynikać z realnego kursu.
+  // Nie wolno dawać 64% dla kursu 19.00, bo to robi absurdalne EV.
   const seed = hashNumber(`${ev.id}-${ev.home}-${ev.away}-${ev.league}-${candidate.market}-${candidate.selection}`)
+  const odds = Number(candidate?.odds || 0)
+  if (!Number.isFinite(odds) || odds <= 1) return 0
+
+  const implied = (1 / odds) * 100
+  const modelEdge = 2 + (seed % 9) // 2-10 pp przewagi modelowej, ostrożnie
+  let p = implied + modelEdge
+
   const m = String(candidate.market || '').toLowerCase()
-  let p = 50 + (seed % 18)
+  if (m.includes('podwójna')) p += 2
+  else if (m.includes('gole')) p += 1
+  else if (m.includes('1x2')) p -= 1
+  else if (m.includes('handicap')) p -= 2
 
-  if (m.includes('podwójna')) p += 10
-  else if (m.includes('gole')) p += 5
-  else if (m.includes('btts')) p += 2
-  else if (m.includes('dnb')) p += 6
-  else if (m.includes('handicap')) p += 1
-  else if (m.includes('1x2')) p += 0
+  // Im wyższy kurs, tym bardziej ograniczamy optymizm.
+  if (odds >= 3.00) p = Math.min(p, 46)
+  else if (odds >= 2.50) p = Math.min(p, 50)
+  else if (odds >= 2.00) p = Math.min(p, 57)
+  else if (odds >= 1.70) p = Math.min(p, 64)
+  else if (odds >= 1.50) p = Math.min(p, 76)
 
-  // Korekta po kursie: im wyższy realny kurs, tym ostrożniejsza prognoza.
-  if (candidate.odds >= 2.5) p -= 8
-  else if (candidate.odds >= 2.0) p -= 5
-  else if (candidate.odds >= 1.75) p -= 2
-  else if (candidate.odds <= 1.55) p += 2
-
-  return clamp(round(p, 1), 35, 82)
+  return clamp(round(p, 1), 1, 82)
 }
 
 function scoreRealOddsCandidateV1699(ev, candidate) {
@@ -481,6 +532,7 @@ function chooseRealApiOddsPickV1699(ev, oddsMap) {
       return scoreRealOddsCandidateV1699(ev, normalized)
     })
     .filter(Boolean)
+    .filter(c => isSaneRealOddsCandidateV1700(c))
     .filter(c => Number(c.odds || 0) >= REAL_AI_MIN_ODDS_V1691)
 
   if (!scored.length) return null
@@ -593,9 +645,9 @@ async function buildRow(ev, realOddsMap = new Map()) {
     status: ev.status,
     result: 'pending',
     profit: 0,
-    source: 'live_ai_engine',
+    source: '1700-real-api-football-odds-sane-markets',
     ai_source: 'real_ai_engine',
-    ai_model_version: '737-free-apisports-only',
+    ai_model_version: '1700-real-api-football-odds-sane-markets',
     access_type: pick.confidence >= 82 ? 'premium' : 'free',
     is_premium: pick.confidence >= 82,
     price: pick.confidence >= 82 ? 9 : 0,
@@ -636,7 +688,7 @@ function aiBetRowFromStrongestRow(row) {
     status: 'pending',
     result: null,
     profit: 0,
-    source: '1086-daily-stable-scan-ai-bets-fixed',
+    source: '1700-real-api-football-odds-sane-markets',
     updated_at: nowIso()
   }
 }
@@ -779,7 +831,7 @@ exports.handler = async function (event) {
 
     try {
       await supabase.from('ai_pick_runs').insert({
-        source: '1086-daily-stable-scan-ai-bets-fixed',
+        source: '1700-real-api-football-odds-sane-markets',
         picks_created: aiBetsSaved,
         status: aiBetsSaved > 0 ? 'success' : 'error',
         error_message: errors.length ? errors.slice(0, 12).join(' | ').slice(0, 1000) : null,
@@ -801,8 +853,8 @@ exports.handler = async function (event) {
       real_odds_fixtures: realOddsMap?.size || 0,
       real_odds_fixtures: realOddsMap?.size || 0,
       candidates: rows.length,
-      model: '1699-real-api-football-odds-only',
-      message: 'Skan AI używa realnych kursów z API-Football odds. Bez kursu API typ odpada. Kurs min 1.50, próg prawdopodobieństwa 48%.',
+      model: '1700-real-api-football-odds-sane-markets',
+      message: 'Skan AI używa realnych kursów z API-Football odds i odrzuca egzotyczne rynki/kursy. Kurs min 1.50, próg prawdopodobieństwa 48%.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {
