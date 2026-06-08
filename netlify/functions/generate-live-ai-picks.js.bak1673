@@ -14,29 +14,6 @@ function round(v, d = 2) { const f = 10 ** d; return Math.round(Number(v || 0) *
 function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v || 0))) }
 function nowIso() { return new Date().toISOString() }
 function isoDate(d) { return d.toISOString().slice(0, 10) }
-function warsawDateKey(value = new Date(), offsetDays = 0) {
-  const base = value instanceof Date ? new Date(value.getTime()) : new Date(value)
-  if (!Number.isFinite(base.getTime())) return ''
-  base.setUTCDate(base.getUTCDate() + Number(offsetDays || 0))
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(base).reduce((acc, part) => {
-    if (part.type !== 'literal') acc[part.type] = part.value
-    return acc
-  }, {})
-  return `${parts.year}-${parts.month}-${parts.day}`
-}
-function allowedWarsawDateKeys(days = 2) {
-  const count = Math.max(1, Math.min(14, Number(days || 1)))
-  return new Set(Array.from({ length: count }, (_, index) => warsawDateKey(new Date(), index)))
-}
-function eventWarsawDateKey(event) {
-  return warsawDateKey(event?.event_time || event?.commence_time || event?.kickoff_time || event?.match_time || event?.date || new Date())
-}
-function isEventInAllowedWarsawDays(event, keys) {
-  const key = eventWarsawDateKey(event)
-  return key && keys.has(key)
-}
 function hashNumber(input) {
   const s = String(input || '')
   let h = 2166136261
@@ -420,10 +397,6 @@ exports.handler = async function (event) {
       errors = errors.concat(live.errors || [])
       apisChecked = live.apisChecked
     }
-    // V1673: days=2 oznacza tylko dziś + jutro według Polski, nie ruchome 48h,
-    // które potrafiło dopisać mecze z pojutrza do Mecze Result jako PENDING.
-    const allowedDates = allowedWarsawDateKeys(days)
-    events = events.filter(ev => isEventInAllowedWarsawDays(ev, allowedDates))
     const maxPicks = Number(event?.queryStringParameters?.limit || process.env.REAL_AI_MAX_PICKS_PER_SCAN || 20)
     const minProbability = Number(process.env.REAL_AI_MIN_PROBABILITY || 0) // ustawione na 0, żeby nie ukrywać wszystkich typów
     const minValueScore = Number(process.env.REAL_AI_MIN_VALUE_SCORE || -99)
@@ -447,21 +420,13 @@ exports.handler = async function (event) {
     const { aiBetsSaved, ids: aiBetIds } = await saveRowsToAiBets(supabase, strongestRows, errors)
 
     // Zachowujemy stary zapis do tips dla kompatybilności innych ekranów, ale Typy AI czytają z ai_bets.
-    // V1673: tabela tips ma część pól integer, więc zaokrąglamy procenty, żeby nie było błędów typu "77.1".
-    const tipsRows = strongestRows.map(row => ({
-      ...row,
-      probability: Math.round(Number(row.probability || row.model_probability || 0)),
-      model_probability: Math.round(Number(row.model_probability || row.probability || 0)),
-      ai_score: Math.round(Number(row.ai_score || row.ai_confidence || row.model_probability || 0)),
-      ai_confidence: Math.round(Number(row.ai_confidence || row.ai_score || row.model_probability || 0))
-    }))
     let tipsSaved = 0
     try {
-      const { data, error } = await supabase.from('tips').upsert(tipsRows, { onConflict: 'ai_external_key' }).select('id,status')
+      const { data, error } = await supabase.from('tips').upsert(strongestRows, { onConflict: 'ai_external_key' }).select('id,status')
       if (error) throw error
       tipsSaved = data?.length || strongestRows.length
     } catch (upsertError) {
-      for (const row of tipsRows) {
+      for (const row of strongestRows) {
         try {
           const { data: existing, error: findTipError } = await supabase
             .from('tips')
@@ -505,8 +470,8 @@ exports.handler = async function (event) {
       apis_checked: apisChecked,
       days,
       candidates: rows.length,
-      model: '1086-daily-stable-scan-ai-bets-ui-v1673',
-      message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. V1673: days=2 tylko dziś+jutro, bez pojutrza w Result.',
+      model: '1086-daily-stable-scan-ai-bets-fixed',
+      message: 'Skan AI zapisuje TOP typy do ai_bets dla zakładek dzisiaj/jutro. Tabela tips zostaje tylko dla kompatybilności.',
       warnings: errors.slice(0, 12)
     })
   } catch (error) {

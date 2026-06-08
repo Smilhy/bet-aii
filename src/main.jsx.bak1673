@@ -15833,47 +15833,27 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
     ].filter(Boolean).join(' ').toLowerCase().includes(q)
   }
 
-  const getLiveAiCardsForDayV1673 = (mode = aiDayMode, applyUserFilters = false) => {
-    const q = search.trim().toLowerCase()
-    const base = allCards
-      .filter(card => isBetAiSelectedDayCardV1081(card, mode))
-      .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
-      .filter(c => !isBetAiSettledStatusV1091(c))
-      .filter(c => isBetAiPrematchAvailableV1091(c))
-      .filter(c => matchesAiSearchV1455(c, q))
-
-    const useStrictFilters = applyUserFilters && (
-      matchMode !== 'prematch' ||
-      Number(minOdds) !== 1.5 ||
-      Number(maxOdds) !== 3.5 ||
-      Number(minProb) !== 65
-    )
-
-    const filtered = useStrictFilters
-      ? base
-          .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
-          .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
-          .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
-      : base
-
-    return filtered.sort((a, b) => {
-      const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
-      const evA = Number(a.ev || 0)
-      const evB = Number(b.ev || 0)
-      const valueWeightA = evA > 0 ? 1 : 0
-      const valueWeightB = evB > 0 ? 1 : 0
-      return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
-        || (valueWeightB - valueWeightA)
-        || (evB - evA)
-        || Number(b.aiScore || 0) - Number(a.aiScore || 0)
-    })
-  }
-
   const visibleCards = useMemo(() => {
-    // V1673: licznik i lista używają tej samej logiki.
-    // Zapisane typy z ai_bets są już wynikiem skanu AI, więc domyślny filtr 65%/1.50
-    // nie może ukrywać całej listy po tym, jak licznik pokazuje dostępne typy.
-    return getLiveAiCardsForDayV1673(aiDayMode, true)
+    const q = search.trim().toLowerCase()
+    return allCards
+      .filter(card => isBetAiSelectedDayCardV1081(card, aiDayMode))
+      .filter(c => activeSport === 'Piłka nożna' ? c.sport === 'Piłka nożna' : c.sport === activeSport)
+      .filter(c => isBetAiPrematchAvailableV1091(c))
+      .filter(c => matchMode === 'all' || (c.kickoffState || 'prematch') === matchMode)
+      .filter(c => Number(c.odds || 0) >= Number(minOdds) && Number(c.odds || 0) <= Number(maxOdds))
+      .filter(c => Number(c.probability || c.aiScore || 0) >= Number(minProb))
+      .filter(c => matchesAiSearchV1455(c, q))
+      .sort((a, b) => {
+        const stateWeight = state => state === 'prematch' ? 3 : state === 'live' ? 2 : 1
+        const evA = Number(a.ev || 0)
+        const evB = Number(b.ev || 0)
+        const valueWeightA = evA > 0 ? 1 : 0
+        const valueWeightB = evB > 0 ? 1 : 0
+        return (stateWeight(b.kickoffState) - stateWeight(a.kickoffState))
+          || (valueWeightB - valueWeightA)
+          || (evB - evA)
+          || Number(b.aiScore || 0) - Number(a.aiScore || 0)
+      })
   }, [allCards, activeSport, aiDayMode, matchMode, search, minOdds, maxOdds, minProb])
 
   const selectedCard = useMemo(() => {
@@ -15888,17 +15868,11 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       if (!map.has(key)) map.set(key, card)
     })
     const q = search.trim().toLowerCase()
-    const todayKey = getBetAiTodayLocalDateV1078()
-    // V1673: Mecze Result to archiwum: rozliczone albo już rozpoczęte/zakończone.
-    // Przyszłe PENDING z 09/10.06 nie mogą wpadać do Result, bo powinny być w zakładce dnia.
+    // V1502: Mecze Result ma być pełnym dziennikiem ai_bets.
+    // Nie filtrujemy tu po prematch, bo rozpoczęte pendingi i rozliczone WON/LOST
+    // muszą dalej być widoczne po wejściu na stronę.
     return Array.from(map.values())
       .filter(card => matchesAiSearchV1455(card, q))
-      .filter(card => {
-        if (isBetAiSettledStatusV1091(card)) return true
-        const dayKey = getBetAiCardLocalDateV1078(card)
-        const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
-        return state === 'live' || state === 'finished' || (dayKey && dayKey < todayKey)
-      })
       // WERSJA 1449: Mecze Result od najnowszej daty do najstarszej.
       .sort((a, b) => getBetAiTimeValueV1078(b) - getBetAiTimeValueV1078(a))
   }, [savedAiJournalCards, savedAiCards, dbCards, liveCards, search])
@@ -15913,8 +15887,8 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       const state = card.kickoffState || getBetAiKickoffStateV1051(card.rawDate || card.event_time || card.kickoff_time || card.match_time || card.date || '', card)
       return state === 'prematch'
     }
-    const today = getLiveAiCardsForDayV1673('today', false).filter(isFootball).length
-    const tomorrow = getLiveAiCardsForDayV1673('tomorrow', false).filter(isFootball).length
+    const today = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'today') && isPlayablePrematch(card)).length
+    const tomorrow = allCards.filter(card => isFootball(card) && isBetAiSelectedDayCardV1081(card, 'tomorrow') && isPlayablePrematch(card)).length
     const pending = resultCards.filter(card => !isBetAiSettledStatusV1091(card)).length
     const leagues = new Set(allCards.filter(isFootball).map(card => `${card.sport}|||${card.league}`).filter(Boolean)).size
     return {
@@ -15925,7 +15899,7 @@ function AiPicksView({ tips = [], loading = false, liveGenerating = false, settl
       leagues,
       pending,
     }
-  }, [allCards, resultCards, activeSport, search])
+  }, [allCards, resultCards, activeSport])
 
   useEffect(() => {
     if (selectedCard && !selectedId) setSelectedId(selectedCard.id)
@@ -29582,7 +29556,7 @@ function App() {
 
             <div className="feed">
               {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
-                <div className="empty-state">Brak typów typerów na dziś.</div>
+                <div className="empty-state">Brak typów AI na dziś.</div>
               )}
             </div>
 
