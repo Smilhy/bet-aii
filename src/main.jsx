@@ -10704,7 +10704,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (rawPredictionLabelV1711 || rawMarketLabelV1711 || 'Typ')
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
-  const cardMatchLabel = getTipWarsawStartLabelV1716(tip)
+  const cardMatchLabel = formatBetaiTipCardWallTimeV1717(tip)
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
@@ -26308,9 +26308,42 @@ function formatBetaiWarsawDateTimeV1716(value, fallback = 'Dzisiaj') {
 }
 
 function getTipWarsawStartLabelV1716(tip = {}) {
-  const ts = getTipKickoffTimestamp(tip)
-  if (!Number.isFinite(ts)) return 'Start: —'
-  return `Start PL: ${formatBetaiWarsawDateTimeV1716(ts, '—')}`
+  return formatBetaiTipCardWallTimeV1717(tip, '—')
+}
+
+
+function formatBetaiTipCardWallTimeV1717(tip = {}, fallback = 'Dzisiaj') {
+  // Karta ma pokazywać ten sam wall-time PL, który widzisz na stronie meczu w aplikacji.
+  // Nie dodajemy drugi raz offsetu timezone, bo część typów ma już zapisany lokalny czas PL.
+  const rawDirect = String(tip?.match_time || tip?.event_time || tip?.kickoff_time || tip?.commence_time || tip?.date || '').trim()
+  const rawDate = String(tip?.match_date || tip?.fixture_date_day || tip?.event_date || '').trim().slice(0, 10)
+  const rawTime = String(tip?.match_time_hhmm || tip?.kickoff_time_hhmm || tip?.start_time_hhmm || '').trim()
+
+  const isoLike = rawDirect.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{1,2}):(\d{2}))?/)
+  if (isoLike) {
+    const [, y, m, d, h = '00', min = '00'] = isoLike
+    return `${d}.${m}.${y}, ${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate) && /^\d{1,2}:\d{2}/.test(rawTime)) {
+    return `${rawDate.slice(8,10)}.${rawDate.slice(5,7)}.${rawDate.slice(0,4)}, ${rawTime.slice(0,5)}`
+  }
+
+  const polish = rawDirect.match(/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?[^0-9]*(\d{1,2})[:.](\d{2})/)
+  if (polish) {
+    let year = polish[3] ? String(polish[3]) : String(new Date().getFullYear())
+    if (year.length === 2) year = `20${year}`
+    return `${String(polish[1]).padStart(2,'0')}.${String(polish[2]).padStart(2,'0')}.${year}, ${String(polish[4]).padStart(2,'0')}:${polish[5]}`
+  }
+
+  try {
+    const ts = getTipKickoffTimestamp(tip)
+    if (Number.isFinite(ts)) {
+      if (typeof formatBetaiWarsawDateTimeV1716 === 'function') return formatBetaiWarsawDateTimeV1716(ts, '—')
+      return new Date(ts).toLocaleString('pl-PL')
+    }
+  } catch (_) {}
+  return fallback
 }
 
 
