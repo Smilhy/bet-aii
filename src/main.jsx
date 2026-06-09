@@ -10104,30 +10104,80 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
                 )}
                 {effectiveSelectedMatch && visibleMarketGroups.map(([groupLabel, items]) => {
                   const expanded = expandedMarketGroup === groupLabel
+                  const isGoalsGroup = groupLabel === 'Gole'
+                  const parseGoalLineValueV1704 = (item) => {
+                    const rawText = `${item?.pick || ''} ${item?.market || ''}`
+                    const match = rawText.match(/(\d+(?:[\.,]\d+)?)/)
+                    return match ? Number(String(match[1]).replace(',', '.')) : Number.POSITIVE_INFINITY
+                  }
+                  const underGoalItems = isGoalsGroup ? items.filter(item => {
+                    const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
+                    return text.includes('ponizej') || text.includes('under')
+                  }).slice().sort((a, b) => parseGoalLineValueV1704(a) - parseGoalLineValueV1704(b)) : []
+                  const overGoalItems = isGoalsGroup ? items.filter(item => {
+                    const text = betaiStripAccentsV1663(item?.pick || item?.market || '')
+                    return text.includes('powyzej') || text.includes('over')
+                  }).slice().sort((a, b) => parseGoalLineValueV1704(a) - parseGoalLineValueV1704(b)) : []
+                  const otherGoalItems = isGoalsGroup ? items.filter(item => !underGoalItems.includes(item) && !overGoalItems.includes(item)) : []
+                  const renderBoardMarketOptionV1704 = (item, index, keyPrefix = groupLabel) => {
+                    const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
+                    const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
+                    return (
+                      <button
+                        type="button"
+                        key={`${keyPrefix}-${item.pick}-${item.odds}-${index}`}
+                        className={`betfolio-market-option ${active ? 'active' : ''}`}
+                        onClick={() => chooseMarket(value)}
+                      >
+                        <span>{item.pick}</span>
+                        <b>{Number(item.odds || 0).toFixed(2)}</b>
+                      </button>
+                    )
+                  }
                   return (
-                    <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''}`}>
+                    <div key={groupLabel} className={`betfolio-market-accordion ${expanded ? 'expanded' : ''} ${isGoalsGroup ? 'goals-split-ready-v1704' : ''}`}>
                       <button type="button" className="betfolio-market-accordion-head" onClick={() => setExpandedMarketGroup(expanded ? '' : groupLabel)}>
                         <span>{groupLabel}</span>
                         <b>{items.length} opcji {expanded ? '⌃' : '⌄'}</b>
                       </button>
                       {expanded && (
-                        <div className="betfolio-market-options board-options">
-                          {items.map((item, index) => {
-                            const active = couponMode === 'ako' ? akoSelections.some(leg => leg.key === buildAkoLegKey(effectiveSelectedMatch || selectedMatch, item)) : (ticketMarketSelected && String(form.market) === String(item.market) && String(form.betType) === String(item.pick) && String(form.odds) === String(item.odds))
-                            const value = `${item.market}|||${item.pick}|||${item.odds}|||${item.confidence || confidencePercent}`
-                            return (
-                              <button
-                                type="button"
-                                key={`${groupLabel}-${item.pick}-${item.odds}-${index}`}
-                                className={`betfolio-market-option ${active ? 'active' : ''}`}
-                                onClick={() => chooseMarket(value)}
-                              >
-                                <span>{item.pick}</span>
-                                <b>{Number(item.odds || 0).toFixed(2)}</b>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        isGoalsGroup ? (
+                          <div className="betfolio-goals-split-v1704">
+                            <div className="betfolio-goals-column-v1704 under">
+                              <div className="betfolio-goals-column-head-v1704">
+                                <strong>Gole PONIŻEJ</strong>
+                                <span>{underGoalItems.length} opcji</span>
+                              </div>
+                              <div className="betfolio-market-options board-options goals-column-options-v1704">
+                                {underGoalItems.map((item, index) => renderBoardMarketOptionV1704(item, index, 'gole-ponizej'))}
+                              </div>
+                            </div>
+                            <div className="betfolio-goals-column-v1704 over">
+                              <div className="betfolio-goals-column-head-v1704">
+                                <strong>Gole POWYŻEJ</strong>
+                                <span>{overGoalItems.length} opcji</span>
+                              </div>
+                              <div className="betfolio-market-options board-options goals-column-options-v1704">
+                                {overGoalItems.map((item, index) => renderBoardMarketOptionV1704(item, index, 'gole-powyzej'))}
+                              </div>
+                            </div>
+                            {otherGoalItems.length ? (
+                              <div className="betfolio-goals-column-v1704 other">
+                                <div className="betfolio-goals-column-head-v1704">
+                                  <strong>Pozostałe gole</strong>
+                                  <span>{otherGoalItems.length} opcji</span>
+                                </div>
+                                <div className="betfolio-market-options board-options goals-column-options-v1704">
+                                  {otherGoalItems.map((item, index) => renderBoardMarketOptionV1704(item, index, 'gole-inne'))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="betfolio-market-options board-options">
+                            {items.map((item, index) => renderBoardMarketOptionV1704(item, index))}
+                          </div>
+                        )
                       )}
                     </div>
                   )
