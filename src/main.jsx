@@ -10704,7 +10704,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (rawPredictionLabelV1711 || rawMarketLabelV1711 || 'Typ')
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
-  const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
+  const cardMatchLabel = getTipWarsawStartLabelV1716(tip)
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
@@ -26262,13 +26262,75 @@ function mergeFollowingSets(...sets) {
 }
 
 
+const BETAI_WARSAW_TIMEZONE_V1716 = 'Europe/Warsaw'
+
+function getBetaiWarsawOffsetMinutesV1716(date = new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: BETAI_WARSAW_TIMEZONE_V1716,
+      timeZoneName: 'shortOffset',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).formatToParts(date)
+    const value = parts.find(part => part.type === 'timeZoneName')?.value || ''
+    const match = value.match(/GMT([+-]\d{1,2})(?::(\d{2}))?/)
+    if (!match) return 60
+    const sign = match[1].startsWith('-') ? -1 : 1
+    const hours = Math.abs(Number(match[1]) || 0)
+    const minutes = Number(match[2] || 0) || 0
+    return sign * (hours * 60 + minutes)
+  } catch (_) {
+    return 60
+  }
+}
+
+function parseBetaiWarsawWallTimeV1716(year, month, day, hour = 0, minute = 0, second = 0) {
+  const utcGuess = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second), 0)
+  const offset = getBetaiWarsawOffsetMinutesV1716(new Date(utcGuess))
+  return utcGuess - offset * 60 * 1000
+}
+
+function formatBetaiWarsawDateTimeV1716(value, fallback = 'Dzisiaj') {
+  const ts = typeof value === 'number' ? value : getTipKickoffTimestamp({ match_time: value })
+  if (!Number.isFinite(ts)) return fallback
+  try {
+    return new Intl.DateTimeFormat('pl-PL', {
+      timeZone: BETAI_WARSAW_TIMEZONE_V1716,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(ts))
+  } catch (_) {
+    return new Date(ts).toLocaleString('pl-PL')
+  }
+}
+
+function getTipWarsawStartLabelV1716(tip = {}) {
+  const ts = getTipKickoffTimestamp(tip)
+  if (!Number.isFinite(ts)) return 'Start: —'
+  return `Start PL: ${formatBetaiWarsawDateTimeV1716(ts, '—')}`
+}
+
+
 function parseBetaiKickoffTime(value) {
   if (value === null || value === undefined) return NaN
   const raw = String(value || '').trim()
   if (!raw) return NaN
 
-  const iso = Date.parse(raw)
-  if (Number.isFinite(iso)) return iso
+  // ISO ze strefą, np. 2026-06-09T19:00:00Z albo +02:00, zostawiamy jako absolutny czas.
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw) && /(Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+    const iso = Date.parse(raw)
+    return Number.isFinite(iso) ? iso : NaN
+  }
+
+  // ISO/SQL bez strefy traktujemy jako czas PL, nie jako lokalny czas przeglądarki/UK.
+  const sql = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/)
+  if (sql) {
+    const [, year, month, day, hour = '00', minute = '00', second = '00'] = sql
+    return parseBetaiWarsawWallTimeV1716(year, month, day, hour, minute, second)
+  }
 
   const polish = raw.match(/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?[^0-9]*(\d{1,2})[:.](\d{2})/)
   if (polish) {
@@ -26278,11 +26340,11 @@ function parseBetaiKickoffTime(value) {
     if (year < 100) year += 2000
     const hour = Number(polish[4])
     const minute = Number(polish[5])
-    const ts = new Date(year, month - 1, day, hour, minute, 0, 0).getTime()
-    return Number.isFinite(ts) ? ts : NaN
+    return parseBetaiWarsawWallTimeV1716(year, month, day, hour, minute, 0)
   }
 
-  return NaN
+  const iso = Date.parse(raw)
+  return Number.isFinite(iso) ? iso : NaN
 }
 
 
@@ -26332,8 +26394,7 @@ function getTipKickoffTimestamp(tip = {}) {
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeOnly)) {
     const [hour = '00', minute = '00', second = '00'] = timeOnly.split(':')
-    const combinedLocal = `${dateOnly}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second || '00').padStart(2, '0')}`
-    const combinedTs = new Date(combinedLocal).getTime()
+    const combinedTs = parseBetaiWarsawWallTimeV1716(dateOnly.slice(0, 4), dateOnly.slice(5, 7), dateOnly.slice(8, 10), hour, minute, second || '00')
     if (Number.isFinite(combinedTs)) return combinedTs
   }
 
