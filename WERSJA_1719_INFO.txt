@@ -1,0 +1,24 @@
+WERSJA 1719 — poprawka karty: czas lokalny użytkownika zamiast surowego UTC.
+
+Problem po 1718:
+- karta pokazywała 22:00, bo wyświetlała surowe UTC,
+- u użytkownika w UK powinno być 23:00,
+- w Polsce powinno być 00:00.
+
+Zmiana:
+- jeśli czas ma strefę/UTC, karta formatuje go lokalnie dla użytkownika,
+- przykład:
+  2026-06-09T22:00:00Z
+  UK -> 09.06.2026, 23:00
+  PL -> 10.06.2026, 00:00
+- dla timestampów bez strefy nadal pokazuje wall-time bez przeliczania.
+
+Nie ruszano:
+- Typów AI,
+- generowania AI,
+- rozliczania wyników,
+- dodawania typu jako wyboru,
+- AKO,
+- portfela,
+- subskrypcji,
+- ranking demo fix.

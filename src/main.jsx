@@ -10704,7 +10704,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (rawPredictionLabelV1711 || rawMarketLabelV1711 || 'Typ')
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
-  const cardMatchLabel = formatBetaiTipCardWallTimeV1717(tip)
+  const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
@@ -26308,17 +26308,45 @@ function formatBetaiWarsawDateTimeV1716(value, fallback = 'Dzisiaj') {
 }
 
 function getTipWarsawStartLabelV1716(tip = {}) {
-  return formatBetaiTipCardWallTimeV1717(tip, '—')
+  return formatBetaiTipCardWallTimeV1719(tip, '—')
 }
 
 
-function formatBetaiTipCardWallTimeV1717(tip = {}, fallback = 'Dzisiaj') {
-  // Karta ma pokazywać ten sam wall-time PL, który widzisz na stronie meczu w aplikacji.
-  // Nie dodajemy drugi raz offsetu timezone, bo część typów ma już zapisany lokalny czas PL.
-  const rawDirect = String(tip?.match_time || tip?.event_time || tip?.kickoff_time || tip?.commence_time || tip?.date || '').trim()
-  const rawDate = String(tip?.match_date || tip?.fixture_date_day || tip?.event_date || '').trim().slice(0, 10)
+function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj') {
+  // Karta ma pokazywać czas w lokalnej strefie użytkownika.
+  // Przykład: 22:00 UTC = 23:00 UK = 00:00 PL.
+  const rawDirect = String(tip?.match_time || tip?.match_date || tip?.event_time || tip?.kickoff_time || tip?.commence_time || tip?.date || '').trim()
+  const rawDate = String(tip?.match_date_day || tip?.fixture_date_day || tip?.event_date || '').trim().slice(0, 10)
   const rawTime = String(tip?.match_time_hhmm || tip?.kickoff_time_hhmm || tip?.start_time_hhmm || '').trim()
 
+  const formatLocal = (dateObj) => {
+    try {
+      return new Intl.DateTimeFormat('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(dateObj)
+    } catch (_) {
+      return dateObj.toLocaleString('pl-PL')
+    }
+  }
+
+  // ISO ze strefą czasu / UTC — format lokalny użytkownika.
+  if (/^\d{4}-\d{2}-\d{2}T/.test(rawDirect) && /(Z|[+-]\d{2}:?\d{2})$/i.test(rawDirect)) {
+    const ts = Date.parse(rawDirect)
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
+  }
+
+  // PostgreSQL timestamptz z Supabase czasem przychodzi jako "YYYY-MM-DD HH:mm:ss+00".
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/.test(rawDirect) && /(Z|[+-]\d{2}:?\d{2})$/i.test(rawDirect)) {
+    const normalized = rawDirect.replace(' ', 'T')
+    const ts = Date.parse(normalized)
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
+  }
+
+  // Gdy mamy timestamp bez strefy, pokazujemy wall-time bez przeliczania.
   const isoLike = rawDirect.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{1,2}):(\d{2}))?/)
   if (isoLike) {
     const [, y, m, d, h = '00', min = '00'] = isoLike
@@ -26338,10 +26366,7 @@ function formatBetaiTipCardWallTimeV1717(tip = {}, fallback = 'Dzisiaj') {
 
   try {
     const ts = getTipKickoffTimestamp(tip)
-    if (Number.isFinite(ts)) {
-      if (typeof formatBetaiWarsawDateTimeV1716 === 'function') return formatBetaiWarsawDateTimeV1716(ts, '—')
-      return new Date(ts).toLocaleString('pl-PL')
-    }
+    if (Number.isFinite(ts)) return formatLocal(new Date(ts))
   } catch (_) {}
   return fallback
 }
