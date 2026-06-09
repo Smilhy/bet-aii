@@ -10631,7 +10631,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const akoLegsCount = isAkoCard ? Math.max(storedAkoLegsCount, realAkoLegsCount, 2) : 1
   const cardHome = isAkoCard ? 'Kupon AKO' : (tip.team_home || tip.home_team || 'Gospodarze')
   const cardAway = isAkoCard ? `${akoLegsCount} zdarzenia` : (tip.team_away || tip.away_team || 'Goście')
-  const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (tip.bet_type || tip.prediction || tip.pick || 'Typ')
+  // WERSJA 1711: karta profilu/feedu ma pokazywać konkretny wybór typu,
+  // np. "Serbia U19 lub remis", a nie samo "Podwójna szansa".
+  const rawPredictionLabelV1711 = tip.prediction || tip.selection || tip.pick || tip.bet_pick || tip.betType || ''
+  const rawMarketLabelV1711 = tip.market || tip.bet_type || tip.market_name || ''
+  const cardPick = isAkoCard ? `AKO ${akoLegsCount} zdarzenia` : (rawPredictionLabelV1711 || rawMarketLabelV1711 || 'Typ')
+  const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = tip.match_time ? new Date(tip.match_time).toLocaleString('pl-PL') : 'Dzisiaj'
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
@@ -10819,6 +10824,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
 
       <div className="profile-ticket-v6-field">
         <small>TYP</small>
+        {!effectiveIsLocked && cardMarketLabelV1711 && cardMarketLabelV1711 !== cardPick && (
+          <em className="ticket-market-label-v1711">{cardMarketLabelV1711}</em>
+        )}
         <strong>{effectiveIsLocked ? 'Typ premium' : cardPick}</strong>
         <span>{isAkoCard ? (isPremium ? 'AKO premium' : 'AKO darmowy') : (isPremium ? 'Singiel' : 'Darmowy typ')}</span>
       </div>

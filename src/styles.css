@@ -73332,3 +73332,19 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option.active b{
   color:#04151e!important;
 }
+
+
+/* WERSJA 1711: w karcie typu pokazujemy rynek jako mały opis, a konkretny wybór jako główny typ. */
+.ticket-market-label-v1711{
+  display:block!important;
+  margin:1px 0 4px!important;
+  color:rgba(164,190,207,.82)!important;
+  font-size:12px!important;
+  font-style:normal!important;
+  font-weight:800!important;
+  line-height:1.15!important;
+  text-transform:none!important;
+}
+.profile-ticket-v6-field .ticket-market-label-v1711 + strong{
+  line-height:1.12!important;
+}
