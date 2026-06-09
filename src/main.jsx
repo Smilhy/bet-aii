@@ -3054,6 +3054,11 @@ function mapBetAiRightAiBetRowV1706(row = {}, index = 0, dayKey = getBetAiWarsaw
     awayTeamId: row.away_team_id || row.awayTeamId || row.team_away_id || row.fixture_json?.awayTeamId || row.fixture_json?.away_team_id || null,
     league: row.league || row.league_name || row.competition || row.country || 'Football',
     date: rawDate,
+    event_time: row.event_time || row.kickoff_time || row.match_time || row.fixture_date || row.commence_time || rawDate,
+    match_date: row.match_date || '',
+    match_time: row.match_time || '',
+    status: row.status || '',
+    result: row.result || '',
     market: row.market || row.bet_type || 'Typ AI',
     pick: row.prediction || row.selection || row.pick || 'Najmocniejszy typ AI',
     odds: Number(row.odds || 0).toFixed(2),
@@ -3062,6 +3067,56 @@ function mapBetAiRightAiBetRowV1706(row = {}, index = 0, dayKey = getBetAiWarsaw
     source: row.source || ''
   }
 }
+
+
+function getDashboardAiPickKickoffMsV1709(pick = {}) {
+  const candidates = []
+  if (pick.event_time) candidates.push(pick.event_time)
+  if (pick.date) candidates.push(pick.date)
+  if (pick.kickoff_time) candidates.push(pick.kickoff_time)
+  if (pick.fixture_date) candidates.push(pick.fixture_date)
+  if (pick.match_date && pick.match_time) candidates.push(`${pick.match_date}T${pick.match_time}`)
+  if (pick.match_date) candidates.push(`${pick.match_date}T23:59:59`)
+
+  for (const value of candidates) {
+    const d = new Date(value)
+    if (!Number.isNaN(d.getTime())) return d.getTime()
+  }
+  return null
+}
+
+function isDashboardAiPickPrematchV1709(pick = {}) {
+  const status = String(pick.status || pick.result || '').toLowerCase()
+
+  if (
+    status.includes('live') ||
+    status.includes('inplay') ||
+    status.includes('in_play') ||
+    status.includes('1h') ||
+    status.includes('2h') ||
+    status.includes('ht') ||
+    status.includes('ft') ||
+    status.includes('finished') ||
+    status.includes('ended') ||
+    status.includes('settled') ||
+    status.includes('rozlicz') ||
+    status.includes('won') ||
+    status.includes('win') ||
+    status.includes('lost') ||
+    status.includes('loss') ||
+    status.includes('void') ||
+    status.includes('push')
+  ) {
+    return false
+  }
+
+  const kickoffMs = getDashboardAiPickKickoffMsV1709(pick)
+  if (!kickoffMs) return true
+
+  // Dashboard: typ widoczny tylko przed startem meczu.
+  return kickoffMs > Date.now() + 60 * 1000
+}
+
 
 
 async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
@@ -3099,6 +3154,7 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
       .filter(Boolean)
       .filter(pick => Number(pick.odds || 0) >= 1.5)
       .filter(pick => Number(pick.confidence || 0) >= 48)
+      .filter(isDashboardAiPickPrematchV1709)
       .filter(pick => {
         const result = String(pick.result || pick.status || '').toLowerCase()
         return !['lost', 'loss', 'przegrany', 'przegrane', 'win', 'won', 'wygrany', 'wygrane', 'settled', 'rozliczony'].includes(result)
@@ -3245,13 +3301,13 @@ function DailyAiPicksRightPanelV1156() {
       const today = getBetAiWarsawDayKeyV1156()
       setDayKey(today)
       setLoading(true)
-      setNotice('Wczytuję aktywne typy AI z get-ai-bets...')
+      setNotice('Wczytuję typy AI pre-match z get-ai-bets...')
 
       try {
         const savedFromAiBets = await loadBetAiRightSavedSupabasePicksV1157(today)
         if (!alive) return
         setPicks(savedFromAiBets.slice(0, 3))
-        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} aktywne typy AI z get-ai-bets.` : 'Brak aktywnych typów AI z endpointu get-ai-bets. Uruchom skan w zakładce Typy AI.')
+        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} typy AI pre-match z get-ai-bets.` : 'Brak typów AI pre-match. Typy live/zakończone znikają z tej ramki.')
       } catch (err) {
         if (!alive) return
         setPicks([])
@@ -3284,7 +3340,7 @@ function DailyAiPicksRightPanelV1156() {
     <section className="panel ai-day-panel-right ai-day-panel-real-v1156 ai-day-panel-real-v1706">
       <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
-        <div className="empty-mini">Ładowanie aktywnych typów AI z get-ai-bets...</div>
+        <div className="empty-mini">Ładowanie typów AI pre-match z get-ai-bets...</div>
       ) : picks.length ? picks.map((pick, index) => (
         <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163 ai-pick-real-v1706" key={`${pick.id}-${index}`}>
           <div className="ai-day-pick-body-v1163">
@@ -3302,7 +3358,7 @@ function DailyAiPicksRightPanelV1156() {
           <strong>{Number(pick.confidence || 0)}%</strong>
         </div>
       )) : (
-        <div className="empty-mini">{notice || 'Brak aktywnych typów AI z get-ai-bets.'}</div>
+        <div className="empty-mini">{notice || 'Brak typów AI pre-match.'}</div>
       )}
     </section>
   )
