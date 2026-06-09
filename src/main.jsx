@@ -3065,16 +3065,14 @@ function mapBetAiRightAiBetRowV1706(row = {}, index = 0, dayKey = getBetAiWarsaw
 
 
 async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
-  // WERSJA 1706: prawa ramka Dashboardu pokazuje te same typy AI zapisane w ai_bets,
-  // a nie stare rekordy/mocki z tabeli tips.
+  // WERSJA 1707: Dashboard pokazuje aktywne/najnowsze typy AI z ai_bets.
+  // Nie filtrujemy już sztywno po created_at = dzisiaj, bo Supabase zapisuje UTC
+  // i nocny typ może mieć w bazie poprzedni dzień.
   if (!isSupabaseConfigured || !supabase) return []
   try {
-    const nextDay = getBetAiNextWarsawDayKeyV1156(dayKey)
     const { data, error } = await supabase
       .from('ai_bets')
       .select('*')
-      .gte('created_at', `${dayKey}T00:00:00`)
-      .lt('created_at', `${nextDay}T00:00:00`)
       .order('created_at', { ascending: false })
       .limit(80)
     if (error) throw error
@@ -3086,6 +3084,15 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
       .filter(pick => Number(pick.odds || 0) >= 1.5)
       .filter(pick => Number(pick.confidence || 0) >= 48)
       .filter(pick => {
+        const result = String(pick.result || pick.status || '').toLowerCase()
+        return !['lost', 'loss', 'przegrany', 'przegrane', 'win', 'won', 'wygrany', 'wygrane', 'settled', 'rozliczony'].includes(result)
+      })
+      .filter(pick => {
+        const d = new Date(pick.date || pick.event_time || pick.createdAt || Date.now())
+        if (Number.isNaN(d.getTime())) return true
+        return d.getTime() > Date.now() - (8 * 60 * 60 * 1000)
+      })
+      .filter(pick => {
         const key = String(pick.id || `${pick.home}-${pick.away}-${pick.pick}-${pick.odds}`)
         if (seen.has(key)) return false
         seen.add(key)
@@ -3094,10 +3101,12 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
       .sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))
       .slice(0, 3)
   } catch (err) {
-    console.warn('dashboard real ai_bets load skipped:', err?.message || err)
+    console.warn('dashboard active ai_bets load skipped:', err?.message || err)
     return []
   }
 }
+
+
 async function triggerBetAiRightDailyGeneratorV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
   const attemptKey = `betai_right_daily_ai_generate_attempt_v1157_${dayKey}`
   try {
@@ -3225,13 +3234,13 @@ function DailyAiPicksRightPanelV1156() {
       const today = getBetAiWarsawDayKeyV1156()
       setDayKey(today)
       setLoading(true)
-      setNotice('Wczytuję dzisiejsze typy AI z ai_bets...')
+      setNotice('Wczytuję aktywne typy AI z ai_bets...')
 
       try {
         const savedFromAiBets = await loadBetAiRightSavedSupabasePicksV1157(today)
         if (!alive) return
         setPicks(savedFromAiBets.slice(0, 3))
-        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} typy AI z dzisiejszego skanu.` : 'Brak dzisiejszych typów AI w ai_bets. Uruchom skan w zakładce Typy AI.')
+        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} aktywne typy AI z ai_bets.` : 'Brak aktywnych typów AI w ai_bets. Uruchom skan w zakładce Typy AI.')
       } catch (err) {
         if (!alive) return
         setPicks([])
@@ -3264,7 +3273,7 @@ function DailyAiPicksRightPanelV1156() {
     <section className="panel ai-day-panel-right ai-day-panel-real-v1156 ai-day-panel-real-v1706">
       <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
-        <div className="empty-mini">Ładowanie dzisiejszych typów AI z ai_bets...</div>
+        <div className="empty-mini">Ładowanie aktywnych typów AI z ai_bets...</div>
       ) : picks.length ? picks.map((pick, index) => (
         <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163 ai-pick-real-v1706" key={`${pick.id}-${index}`}>
           <div className="ai-day-pick-body-v1163">
@@ -3282,7 +3291,7 @@ function DailyAiPicksRightPanelV1156() {
           <strong>{Number(pick.confidence || 0)}%</strong>
         </div>
       )) : (
-        <div className="empty-mini">{notice || 'Brak dzisiejszych typów AI w ai_bets.'}</div>
+        <div className="empty-mini">{notice || 'Brak aktywnych typów AI w ai_bets.'}</div>
       )}
     </section>
   )
