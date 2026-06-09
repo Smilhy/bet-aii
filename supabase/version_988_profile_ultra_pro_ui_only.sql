@@ -1,0 +1,12 @@
+-- WERSJA 988 — MÓJ PROFIL ULTRA PRO UI ONLY
+-- Brak zmian w bazie danych.
+-- Ten plik jest celowo pusty logicznie, bo wersja 988 zmienia tylko wygląd CSS.
+--
+-- CORE LOCK v983 pozostaje bez zmian:
+-- - statystyki typów,
+-- - przypisywanie typów,
+-- - nazwy profili,
+-- - opinie,
+-- - napiwki,
+-- - realtime.
+select 'v988 UI only - no database changes' as status;
