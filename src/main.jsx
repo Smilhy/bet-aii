@@ -774,8 +774,10 @@ function buildRankingFromTips(tips = []) {
       email: normalized.author_email || normalized.email || normalized.user_email
     })
     if (String(authorName).toLowerCase() === 'ai tip') return
+    if (isHiddenDemoUserV1712(authorName) || isHiddenDemoProfileV1712(normalized)) return
 
     const id = String(normalized.author_id || normalized.user_id || normalized.author_email || normalized.username || normalized.author_name || 'unknown').toLowerCase()
+    if (isHiddenDemoUserV1712(id)) return
     const current = map.get(id) || {
       tipster_id: id,
       id,
@@ -814,7 +816,9 @@ function buildRankingFromTips(tips = []) {
     current.roi = current.total_staked > 0 ? (current.earnings / current.total_staked) * 100 : 0
     map.set(id, current)
   })
-  return sortRankingRows(Array.from(map.values())).slice(0, 10)
+  return sortRankingRows(Array.from(map.values()))
+    .filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(row?.username || row?.name || row?.author_name || row?.id))
+    .slice(0, 10)
 }
 
 function getRankingNumber(row, candidates = [], fallback = 0) {
@@ -1149,6 +1153,49 @@ function getProfileEmail(user) {
 function getProfileUsername(user) {
   return normalizeEmail(resolveRealProfileUsername(user))
 }
+
+// WERSJA 1712: konto demo/systemowe nie ma być pokazywane w rankingu ani profilach.
+const BETAI_HIDDEN_DEMO_USERS_V1712 = [
+  'betai-multisport-ai',
+  '@betai-multisport-ai',
+  'betai-multisport',
+  'betai-mult',
+]
+
+function normalizeHiddenDemoIdentityV1712(value = '') {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/^@+/, '')
+}
+
+function isHiddenDemoUserV1712(value = '') {
+  const clean = normalizeHiddenDemoIdentityV1712(value)
+  if (!clean) return false
+  return BETAI_HIDDEN_DEMO_USERS_V1712.some(hidden => {
+    const h = normalizeHiddenDemoIdentityV1712(hidden)
+    return clean === h || clean.startsWith(`${h}-`) || clean.includes(h)
+  })
+}
+
+function isHiddenDemoProfileV1712(profile = {}) {
+  if (!profile) return false
+  const values = [
+    profile.username,
+    profile.author_name,
+    profile.display_name,
+    profile.name,
+    profile.public_slug,
+    profile.author_slug,
+    profile.profile_slug,
+    profile.email,
+    profile.author_email,
+    profile.user_email,
+    profile.handle,
+  ]
+  return values.some(isHiddenDemoUserV1712)
+}
+
 
 
 function getProfileAvatarUrl(user) {
