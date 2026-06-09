@@ -1160,6 +1160,8 @@ const BETAI_HIDDEN_DEMO_USERS_V1712 = [
   '@betai-multisport-ai',
   'betai-multisport',
   'betai-mult',
+  'betai multisport ai',
+  'BetAI MultiSport AI',
 ]
 
 function normalizeHiddenDemoIdentityV1712(value = '') {
@@ -1169,12 +1171,26 @@ function normalizeHiddenDemoIdentityV1712(value = '') {
     .replace(/^@+/, '')
 }
 
+function compactHiddenDemoIdentityV1714(value = '') {
+  return normalizeHiddenDemoIdentityV1712(value).replace(/[^a-z0-9]+/g, '')
+}
+
 function isHiddenDemoUserV1712(value = '') {
   const clean = normalizeHiddenDemoIdentityV1712(value)
-  if (!clean) return false
+  const compact = compactHiddenDemoIdentityV1714(value)
+  if (!clean && !compact) return false
   return BETAI_HIDDEN_DEMO_USERS_V1712.some(hidden => {
     const h = normalizeHiddenDemoIdentityV1712(hidden)
-    return clean === h || clean.startsWith(`${h}-`) || clean.includes(h)
+    const hc = compactHiddenDemoIdentityV1714(hidden)
+    return (
+      clean === h ||
+      clean.startsWith(`${h}-`) ||
+      clean.includes(h) ||
+      compact === hc ||
+      compact.includes(hc) ||
+      compact === 'betaimultisportai' ||
+      compact.includes('betaimultisportai')
+    )
   })
 }
 
@@ -17346,6 +17362,7 @@ function LeaderboardView({
   })
 
   const filteredRows = allRows
+    .filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(row?.rowName || row?.username || row?.name || row?.display_name))
     .filter(row => {
       if (sportFilter === 'all') return true
       const sport = String(row.sport || row.preferred_sport || row.discipline || '').toLowerCase()
@@ -25197,7 +25214,9 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     }
   })
 
-  const sportFilteredTipsters = realTipsters.filter(item => item.sport === selectedTopSport)
+  const sportFilteredTipsters = realTipsters
+    .filter(item => item.sport === selectedTopSport)
+    .filter(item => !isHiddenDemoProfileV1712(item) && !isHiddenDemoUserV1712(item?.name || item?.username || item?.display_name || item?.profileRef))
   const filteredTipsters = sportFilteredTipsters.filter(item => {
     if (topAccountFilter === 'premium') return item.premium
     if (topAccountFilter === 'free') return !item.premium
