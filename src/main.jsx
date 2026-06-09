@@ -3065,17 +3065,33 @@ function mapBetAiRightAiBetRowV1706(row = {}, index = 0, dayKey = getBetAiWarsaw
 
 
 async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayKeyV1156()) {
-  // WERSJA 1707: Dashboard pokazuje aktywne/najnowsze typy AI z ai_bets.
-  // Nie filtrujemy już sztywno po created_at = dzisiaj, bo Supabase zapisuje UTC
-  // i nocny typ może mieć w bazie poprzedni dzień.
-  if (!isSupabaseConfigured || !supabase) return []
+  // WERSJA 1708: Dashboard używa tego samego endpointu Service Role co zakładka Typy AI.
+  // Dzięki temu nie blokuje go RLS ani różnice created_at UTC/PL.
+  const rowsFromService = async () => {
+    const params = new URLSearchParams()
+    params.set('date', dayKey)
+    params.set('mode', 'today')
+    params.set('limit', '80')
+    const response = await fetch(`/.netlify/functions/get-ai-bets?${params.toString()}`, { cache: 'no-store' })
+    const json = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(json?.error || `get-ai-bets HTTP ${response.status}`)
+    return Array.isArray(json?.bets) ? json.bets : []
+  }
+
   try {
-    const { data, error } = await supabase
-      .from('ai_bets')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(80)
-    if (error) throw error
+    let data = []
+    try {
+      data = await rowsFromService()
+    } catch (serviceError) {
+      if (!isSupabaseConfigured || !supabase) throw serviceError
+      const fallback = await supabase
+        .from('ai_bets')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(80)
+      if (fallback.error) throw fallback.error
+      data = fallback.data || []
+    }
 
     const seen = new Set()
     return (data || [])
@@ -3088,11 +3104,6 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
         return !['lost', 'loss', 'przegrany', 'przegrane', 'win', 'won', 'wygrany', 'wygrane', 'settled', 'rozliczony'].includes(result)
       })
       .filter(pick => {
-        const d = new Date(pick.date || pick.event_time || pick.createdAt || Date.now())
-        if (Number.isNaN(d.getTime())) return true
-        return d.getTime() > Date.now() - (8 * 60 * 60 * 1000)
-      })
-      .filter(pick => {
         const key = String(pick.id || `${pick.home}-${pick.away}-${pick.pick}-${pick.odds}`)
         if (seen.has(key)) return false
         seen.add(key)
@@ -3101,7 +3112,7 @@ async function loadBetAiRightSavedSupabasePicksV1157(dayKey = getBetAiWarsawDayK
       .sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))
       .slice(0, 3)
   } catch (err) {
-    console.warn('dashboard active ai_bets load skipped:', err?.message || err)
+    console.warn('dashboard get-ai-bets load skipped:', err?.message || err)
     return []
   }
 }
@@ -3234,13 +3245,13 @@ function DailyAiPicksRightPanelV1156() {
       const today = getBetAiWarsawDayKeyV1156()
       setDayKey(today)
       setLoading(true)
-      setNotice('Wczytuję aktywne typy AI z ai_bets...')
+      setNotice('Wczytuję aktywne typy AI z get-ai-bets...')
 
       try {
         const savedFromAiBets = await loadBetAiRightSavedSupabasePicksV1157(today)
         if (!alive) return
         setPicks(savedFromAiBets.slice(0, 3))
-        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} aktywne typy AI z ai_bets.` : 'Brak aktywnych typów AI w ai_bets. Uruchom skan w zakładce Typy AI.')
+        setNotice(savedFromAiBets.length ? `Wczytano ${savedFromAiBets.length} aktywne typy AI z get-ai-bets.` : 'Brak aktywnych typów AI z endpointu get-ai-bets. Uruchom skan w zakładce Typy AI.')
       } catch (err) {
         if (!alive) return
         setPicks([])
@@ -3273,7 +3284,7 @@ function DailyAiPicksRightPanelV1156() {
     <section className="panel ai-day-panel-right ai-day-panel-real-v1156 ai-day-panel-real-v1706">
       <div className="panel-head"><h2><span className="ai-day-title-accent">AI</span> Typy dnia</h2><a>{dayKey}</a></div>
       {loading && !picks.length ? (
-        <div className="empty-mini">Ładowanie aktywnych typów AI z ai_bets...</div>
+        <div className="empty-mini">Ładowanie aktywnych typów AI z get-ai-bets...</div>
       ) : picks.length ? picks.map((pick, index) => (
         <div className="ai-pick ai-pick-real-v1156 ai-pick-real-v1162 ai-pick-real-v1163 ai-pick-real-v1706" key={`${pick.id}-${index}`}>
           <div className="ai-day-pick-body-v1163">
@@ -3291,7 +3302,7 @@ function DailyAiPicksRightPanelV1156() {
           <strong>{Number(pick.confidence || 0)}%</strong>
         </div>
       )) : (
-        <div className="empty-mini">{notice || 'Brak aktywnych typów AI w ai_bets.'}</div>
+        <div className="empty-mini">{notice || 'Brak aktywnych typów AI z get-ai-bets.'}</div>
       )}
     </section>
   )
