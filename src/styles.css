@@ -73245,3 +73245,90 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 @media(max-width:1100px){
   .add-tip-betfolio-page .betfolio-goals-split-v1704{grid-template-columns:1fr!important;}
 }
+
+
+/* WERSJA 1705: subtelniejsze kolumny Gole, dopasowane do ciemnego stylu strony. */
+.add-tip-betfolio-page .goals-split-ready-v1704.expanded{
+  border-color:rgba(64,215,230,.18)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.18)!important;
+}
+.add-tip-betfolio-page .betfolio-goals-split-v1704{
+  gap:12px!important;
+  padding:0 12px 14px!important;
+}
+.add-tip-betfolio-page .betfolio-goals-column-v1704,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over{
+  border-radius:16px!important;
+  border:1px solid rgba(98,139,163,.20)!important;
+  background:linear-gradient(180deg,rgba(9,28,43,.96),rgba(5,18,31,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 24px rgba(0,0,0,.18)!important;
+}
+.add-tip-betfolio-page .betfolio-goals-column-v1704::before,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over::before{
+  background:linear-gradient(90deg,rgba(33,214,230,.055),transparent 42%,rgba(33,214,230,.025))!important;
+}
+.add-tip-betfolio-page .betfolio-goals-column-head-v1704{
+  padding:12px 14px 9px!important;
+  border-bottom:1px solid rgba(129,170,194,.10)!important;
+  background:rgba(255,255,255,.015)!important;
+}
+.add-tip-betfolio-page .betfolio-goals-column-head-v1704 strong,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .betfolio-goals-column-head-v1704 strong{
+  color:#d7f6ff!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+}
+.add-tip-betfolio-page .betfolio-goals-column-head-v1704 span{
+  min-width:auto!important;
+  padding:4px 8px!important;
+  color:#8faec1!important;
+  font-size:10px!important;
+  background:rgba(8,24,38,.72)!important;
+  border:1px solid rgba(120,160,185,.14)!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704{
+  padding:9px!important;
+  gap:7px!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option{
+  min-height:42px!important;
+  border-radius:11px!important;
+  background:rgba(8,25,40,.88)!important;
+  border:1px solid rgba(114,152,176,.13)!important;
+  box-shadow:none!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option span{
+  color:#a9bdc9!important;
+  font-weight:800!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option b,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .goals-column-options-v1704 .betfolio-market-option b{
+  color:#34eaff!important;
+  font-weight:950!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option:hover,
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option:focus-visible,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .goals-column-options-v1704 .betfolio-market-option:hover,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .goals-column-options-v1704 .betfolio-market-option:focus-visible{
+  background:rgba(10,34,52,.96)!important;
+  border-color:rgba(52,234,255,.34)!important;
+  box-shadow:0 8px 18px rgba(0,0,0,.20)!important;
+  transform:translateY(-1px)!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option:hover span,
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option:focus-visible span{
+  color:#e9faff!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option.active,
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option.active:hover,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .goals-column-options-v1704 .betfolio-market-option.active,
+.add-tip-betfolio-page .betfolio-goals-column-v1704.over .goals-column-options-v1704 .betfolio-market-option.active:hover{
+  background:linear-gradient(135deg,rgba(31,229,255,.88),rgba(41,133,216,.88))!important;
+  border-color:rgba(74,235,255,.45)!important;
+  box-shadow:0 10px 24px rgba(31,229,255,.18)!important;
+}
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option.active span,
+.add-tip-betfolio-page .goals-column-options-v1704 .betfolio-market-option.active b{
+  color:#04151e!important;
+}

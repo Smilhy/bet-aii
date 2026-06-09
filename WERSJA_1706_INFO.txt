@@ -1,0 +1,24 @@
+WERSJA 1706 — Dashboard prawa ramka AI Typy dnia z realnych ai_bets.
+
+Zmiana:
+- ramka po prawej na Dashboardzie zostaje,
+- nie pokazuje już starych/statycznych typów z tabeli tips,
+- pokazuje dzisiejsze typy z public.ai_bets,
+- czyli te same typy, które generuje moduł Typy AI,
+- odświeża się automatycznie co 2 minuty i po powrocie do karty.
+
+Filtry w ramce:
+- created_at = dzisiaj,
+- odds >= 1.50,
+- confidence/probability >= 48,
+- TOP 3 po confidence.
+
+Nie ruszano:
+- logiki AI 1703,
+- realnych kursów,
+- warunków strict full-time,
+- widoku Gole z 1705,
+- typów typerów/użytkowników,
+- AKO,
+- portfela,
+- rozliczania.
