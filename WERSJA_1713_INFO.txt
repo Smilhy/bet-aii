@@ -1,0 +1,26 @@
+WERSJA 1713 — globalne usunięcie demo betai-multisport-ai z rankingów.
+
+Poprawia 1712:
+- 1712 filtrowało tylko jeden builder rankingu,
+- demo nadal pokazywało się w prawym Top typerzy, Ranking Bet+AI i stronie Top typerzy.
+
+Zmiana:
+- filtr demo dodany do:
+  - Rightbar / Top typerzy,
+  - Leaderboard / Ranking Bet+AI,
+  - fetchRealRanking,
+  - TopTipstersView,
+  - buildRankingFromTips.
+- ukrywane nazwy:
+  betai-multisport-ai, @betai-multisport-ai, betai-multisport, betai-mult.
+
+Nie ruszano:
+- Supabase danych,
+- Dodawania typów,
+- Typów AI,
+- Rozliczania,
+- AI 1703,
+- kursów/filtrowania AI,
+- AKO,
+- Portfela,
+- subskrypcji zwykłych użytkowników.

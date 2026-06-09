@@ -1192,6 +1192,9 @@ function isHiddenDemoProfileV1712(profile = {}) {
     profile.author_email,
     profile.user_email,
     profile.handle,
+    profile.rowName,
+    profile.profile_name,
+    profile.full_name,
   ]
   return values.some(isHiddenDemoUserV1712)
 }
@@ -3430,7 +3433,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
     .map(row => ({ ...row, username: formatRankingName(row), public_slug: row.public_slug || normalizePublicSlug(formatRankingName(row)) }))
     .filter(row => {
       const name = formatRankingName(row)
-      return !isBlockedTestProfile(row) && !isBlockedTestProfile(name) && name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
+      return !isBlockedTestProfile(row) && !isBlockedTestProfile(name) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(name) && name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
     })
     .slice(0, 4)
 
@@ -17312,7 +17315,9 @@ function LeaderboardView({
   const [rankingVisibleCount, setRankingVisibleCount] = useState(10)
   const [claimedChallenges, setClaimedChallenges] = useState({})
 
-  const allRows = buildLiveLeaderboardRows(ranking, tips).filter(row => !isBlockedTestProfile(row)).map(row => {
+  const allRows = buildLiveLeaderboardRows(ranking, tips)
+    .filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)))
+    .map(row => {
     const rowName = formatRankingName(row)
     const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
     const rowKeys = [
@@ -24456,7 +24461,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
       profile.profile_name,
       profile.email,
     ].map(v => normalizeEmail(v)).filter(Boolean)
-    return values.some(value =>
+    return isHiddenDemoProfileV1712(profile) || values.some(value =>
       value === 'bet-ai-model' ||
       value === 'u-ytkownik' ||
       value === 'użytkownik' ||
@@ -26726,7 +26731,9 @@ function App() {
         fetchBetaiPublicProfiles().catch(() => [])
       ])
 
-      const profileRankingRows = (profileRows || []).filter(profile => !isBlockedTestProfile(profile)).map(profile => {
+      const profileRankingRows = (profileRows || [])
+        .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile))
+        .map(profile => {
         const imported = getImportedProfileStats(profile)
         const profit = Number(imported?.profit ?? profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
         const totalTips = Number(imported?.totalTips ?? profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
@@ -26749,14 +26756,14 @@ function App() {
         }
       })
 
-      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row))
-      const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row))
+      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row))
+      const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)))
       const finalRows = buildLiveLeaderboardRows(
         mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(cleanTipRows)),
         cleanTipRows.length ? cleanTipRows : (tips || []).filter(row => !isBlockedTestProfile(row))
       )
 
-      setRealRanking(finalRows)
+      setRealRanking((finalRows || []).filter(row => !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row))))
     } catch (error) {
       console.error('fetchRealRanking exception', error)
       setRealRanking(buildLiveLeaderboardRows([], tips))
