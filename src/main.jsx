@@ -34,6 +34,8 @@ import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 
+/* WERSJA 1721 — PRZYWROC BETAI MULTISPORT AI DO RANKINGU/TOP TYPEROW */
+
 
 /* =========================================================
    WERSJA 1564 — 1920x1080 RESTORE
@@ -1176,25 +1178,16 @@ function compactHiddenDemoIdentityV1714(value = '') {
 }
 
 function isHiddenDemoUserV1712(value = '') {
-  const clean = normalizeHiddenDemoIdentityV1712(value)
-  const compact = compactHiddenDemoIdentityV1714(value)
-  if (!clean && !compact) return false
-  return BETAI_HIDDEN_DEMO_USERS_V1712.some(hidden => {
-    const h = normalizeHiddenDemoIdentityV1712(hidden)
-    const hc = compactHiddenDemoIdentityV1714(hidden)
-    return (
-      clean === h ||
-      clean.startsWith(`${h}-`) ||
-      clean.includes(h) ||
-      compact === hc ||
-      compact.includes(hc) ||
-      compact === 'betaimultisportai' ||
-      compact.includes('betaimultisportai')
-    )
-  })
+  // WERSJA 1721: przywracamy betai-multisport-ai.
+  // Filtr demo zostaje wyłączony, żeby profil wrócił do rankingu/top typerów.
+  return false
 }
 
 function isHiddenDemoProfileV1712(profile = {}) {
+  // WERSJA 1721: przywracamy betai-multisport-ai.
+  // Nie ukrywamy już profili demo/systemowych w rankingu.
+  return false
+}) {
   if (!profile) return false
   const values = [
     profile.username,

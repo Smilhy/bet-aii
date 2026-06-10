@@ -1,0 +1,16 @@
+WERSJA 1721 — przywrócenie betai-multisport-ai
+
+Co zmieniono:
+- Przywrócono widoczność profilu/testowego typera betai-multisport-ai.
+- Wyłączono filtr, który usuwał ten profil z rankingu/top typerów/dashboardowych list.
+- Profil może znowu pokazywać swój bilans, yield, profit i typy.
+
+Nie ruszano:
+- AKO 1720 i rozliczania nóg AKO,
+- czasu lokalnego 1719,
+- Typów AI,
+- kursów AI,
+- dodawania typów,
+- singli,
+- portfela,
+- subskrypcji.
