@@ -499,21 +499,38 @@ function profitFromSettlement(tip, status) {
 
 function updatePayload(result, tip = {}) {
   const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
-  const profit = profitFromSettlement(tip, status)
+  const stake = toNum(tip && (tip.stake ?? tip.amount ?? tip.bet_amount), 0)
+  const odds = toNum(tip && (tip.odds ?? tip.course), 0)
+
+  const profit = status === 'won'
+    ? Math.round((stake * Math.max(odds - 1, 0)) * 100) / 100
+    : status === 'lost'
+      ? Math.round((-stake) * 100) / 100
+      : 0
+
+  const payout = status === 'won'
+    ? Math.round((stake * odds) * 100) / 100
+    : status === 'void'
+      ? stake
+      : 0
+
   const payload = {
     status,
     result: status,
     settlement_status: status,
     result_status: status,
     profit,
-    settlement_profit: profit,
-    result_profit: profit,
+    payout,
+    return_amount: payout,
     settlement_reason: result.reason || null,
     updated_at: new Date().toISOString()
   }
+
   if (Array.isArray(result.legs_json)) payload.legs_json = result.legs_json
   return payload
 }
+
+
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
@@ -557,5 +574,5 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1723-polish-fallback-settlement-keys', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: '1725-auto-settle-existing-profit-columns', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
 }
