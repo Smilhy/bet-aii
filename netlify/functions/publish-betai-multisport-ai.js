@@ -155,8 +155,6 @@ function buildTipRowFromAiBet(bet) {
     legs_count: 1,
     author_name: AUTHOR_NAME,
     username: AUTHOR_USERNAME,
-    display_name: AUTHOR_NAME,
-    author_username: AUTHOR_USERNAME,
     source: clean(bet.source, 'betai-multisport-ai-auto-publisher-v1726'),
     tip_source: 'betai-multisport-ai-auto-publisher-v1726',
     ai_source: 'betai-multisport-ai-auto-publisher-v1726',
@@ -174,6 +172,87 @@ function buildTipRowFromAiBet(bet) {
     updated_at: now
   }
 }
+
+async function getTableColumns(supabase, tableName = 'tips') {
+  const { data, error } = await supabase
+    .from('information_schema.columns')
+    .select('column_name')
+    .eq('table_schema', 'public')
+    .eq('table_name', tableName)
+
+  if (!error && Array.isArray(data) && data.length) {
+    return new Set(data.map(row => row.column_name))
+  }
+
+  // Fallback, gdy PostgREST nie pozwala czytać information_schema.
+  // Lista zawiera kolumny potwierdzone w projekcie + najczęściej używane w tips.
+  return new Set([
+    'id',
+    'ai_external_key',
+    'external_fixture_id',
+    'api_fixture_id',
+    'fixture_id',
+    'sport',
+    'sport_key',
+    'country',
+    'league',
+    'match_name',
+    'match',
+    'team_home',
+    'team_away',
+    'home_team',
+    'away_team',
+    'match_date',
+    'match_time',
+    'event_time',
+    'kickoff_time',
+    'market',
+    'bet_type',
+    'prediction',
+    'pick',
+    'selection',
+    'market_key',
+    'selection_key',
+    'odds',
+    'stake',
+    'status',
+    'result',
+    'settlement_status',
+    'result_status',
+    'profit',
+    'payout',
+    'return_amount',
+    'is_premium',
+    'access_type',
+    'coupon_type',
+    'is_ako',
+    'legs_count',
+    'author_name',
+    'username',
+    'source',
+    'tip_source',
+    'ai_source',
+    'ai_score',
+    'ai_confidence',
+    'probability',
+    'model_probability',
+    'value_score',
+    'ev',
+    'bookmaker',
+    'odds_bookmaker',
+    'odds_raw_market',
+    'odds_raw_value',
+    'created_at',
+    'updated_at'
+  ])
+}
+
+function filterExistingColumns(row, columns) {
+  return Object.fromEntries(
+    Object.entries(row).filter(([key]) => columns.has(key))
+  )
+}
+
 
 async function ensureAiBetsAvailable(baseUrl, days, limit, force) {
   if (!baseUrl) return { ok: false, reason: 'no_base_url' }
@@ -201,6 +280,7 @@ exports.handler = async function(event) {
   const dryRun = ['1','true','yes'].includes(String(params.dry_run || '').toLowerCase())
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+  const tipColumns = await getTableColumns(supabase, 'tips')
 
   const baseUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.SITE_URL || 'https://bet-ai.app'
   const generation = await ensureAiBetsAvailable(baseUrl, days, Math.max(limit * 4, 12), force)
@@ -222,10 +302,11 @@ exports.handler = async function(event) {
   const rows = (aiBets || [])
     .filter(b => n(b.ai_score || b.ai_confidence || b.probability, 0) >= minScore)
     .map(buildTipRowFromAiBet)
+    .map(row => filterExistingColumns(row, tipColumns))
     .filter(row => row.fixture_id || row.api_fixture_id || row.external_fixture_id)
     .slice(0, limit)
 
-  if (dryRun) return json(200, { ok: true, version: '1726-betai-multisport-ai-publisher', dry_run: true, generation, candidates: rows.length, rows })
+  if (dryRun) return json(200, { ok: true, version: '1727-betai-multisport-ai-schema-safe-publisher', dry_run: true, generation, candidates: rows.length, rows })
 
   let inserted = 0
   let updated = 0
@@ -247,12 +328,12 @@ exports.handler = async function(event) {
         const updateRow = settled
           ? Object.fromEntries(Object.entries(row).filter(([key]) => !['status','result','settlement_status','result_status','profit','payout','return_amount','created_at'].includes(key)))
           : Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'created_at'))
-        const { data, error: updateError } = await supabase.from('tips').update(updateRow).eq('id', existingId).select('id').single()
+        const { data, error: updateError } = await supabase.from('tips').update(filterExistingColumns(updateRow, tipColumns)).eq('id', existingId).select('id').single()
         if (updateError) throw updateError
         ids.push(data?.id || existingId)
         updated++
       } else {
-        const { data, error: insertError } = await supabase.from('tips').insert(row).select('id').single()
+        const { data, error: insertError } = await supabase.from('tips').insert(filterExistingColumns(row, tipColumns)).select('id').single()
         if (insertError) throw insertError
         ids.push(data?.id)
         inserted++
@@ -264,7 +345,7 @@ exports.handler = async function(event) {
 
   try {
     await supabase.from('ai_pick_runs').insert({
-      source: 'betai-multisport-ai-publisher-v1726',
+      source: 'betai-multisport-ai-publisher-v1727',
       picks_created: inserted,
       status: errors.length ? 'partial' : 'success',
       error_message: errors.length ? JSON.stringify(errors).slice(0, 1000) : null,
@@ -274,7 +355,7 @@ exports.handler = async function(event) {
 
   return json(errors.length && !inserted && !updated ? 500 : 200, {
     ok: !errors.length || inserted > 0 || updated > 0,
-    version: '1726-betai-multisport-ai-publisher',
+    version: '1727-betai-multisport-ai-schema-safe-publisher',
     author: AUTHOR_NAME,
     inserted,
     updated,
