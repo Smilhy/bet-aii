@@ -59,7 +59,18 @@ function fixtureId(tip) {
 }
 
 function textOf(tip) {
-  return norm([tip.bet_type, tip.prediction, tip.market, tip.type, tip.pick].filter(Boolean).join(' '))
+  return norm([
+    tip.bet_type,
+    tip.prediction,
+    tip.selection,
+    tip.pick,
+    tip.market,
+    tip.market_name,
+    tip.type,
+    tip.tip,
+    tip.value,
+    tip.match_name
+  ].filter(Boolean).join(' '))
 }
 
 function resultOf(h, a) {
@@ -126,15 +137,91 @@ function statTotal(stats, kind) {
   return total
 }
 
+
+function teamNamesFromTip(tip) {
+  const rawHome = tip.team_home || tip.home_team || tip.home || ''
+  const rawAway = tip.team_away || tip.away_team || tip.away || ''
+  if (rawHome || rawAway) return { home: norm(rawHome), away: norm(rawAway), homeRaw: String(rawHome || ''), awayRaw: String(rawAway || '') }
+
+  const matchName = String(tip.match_name || tip.match || '').trim()
+  const parts = matchName
+    .replace(/\s+vs\s+/i, ' — ')
+    .replace(/\s+v\s+/i, ' — ')
+    .split(/\s+[-–—]\s+/)
+    .map(x => x.trim())
+    .filter(Boolean)
+
+  return {
+    home: norm(parts[0] || ''),
+    away: norm(parts[1] || ''),
+    homeRaw: parts[0] || '',
+    awayRaw: parts[1] || ''
+  }
+}
+
+function pickLooksLikeTeam(textCompact, teamName) {
+  const teamCompact = compact(teamName)
+  return Boolean(teamCompact && (textCompact.includes(teamCompact) || teamCompact.includes(textCompact)))
+}
+
+function inferPolishSettlementKeysV1723(tip) {
+  const t = textOf(tip)
+  const c = compact(t)
+  const teams = teamNamesFromTip(tip)
+  const home = teams.home
+  const away = teams.away
+  const homeC = compact(home)
+  const awayC = compact(away)
+
+  // "Serbia U19 lub remis" => 1X, "Moldova lub remis" => X2
+  if (c.includes('lubremis') || c.includes('nieremis') || c.includes('podwojnaszansa')) {
+    if (homeC && c.includes(homeC)) return { market: 'double_chance', selection: '1x' }
+    if (awayC && c.includes(awayC)) return { market: 'double_chance', selection: 'x2' }
+    if (c === '1x' || c.includes('1x')) return { market: 'double_chance', selection: '1x' }
+    if (c === 'x2' || c.includes('x2')) return { market: 'double_chance', selection: 'x2' }
+    if (c === '12' || c.includes('12')) return { market: 'double_chance', selection: '12' }
+  }
+
+  // "Powyżej 2.5 gola" / "Ponizej 3.5 gola"
+  if (c.includes('powyzej') || c.includes('over')) {
+    return { market: 'goals_over_under', selection: 'over_' + onlyLine(t) }
+  }
+  if (c.includes('ponizej') || c.includes('under')) {
+    return { market: 'goals_over_under', selection: 'under_' + onlyLine(t) }
+  }
+
+  // "Obie drużyny strzelą: TAK/NIE"
+  if (c.includes('obiedruzynystrzela') || c.includes('btts')) {
+    return { market: 'btts', selection: (c.includes('nie') || c.includes('no')) ? 'no' : 'yes' }
+  }
+
+  // "Drużyna wygra"
+  if (c.includes('wygra') || c.includes('win')) {
+    if (homeC && c.includes(homeC)) return { market: 'match_winner', selection: 'home' }
+    if (awayC && c.includes(awayC)) return { market: 'match_winner', selection: 'away' }
+  }
+
+  // Same pick as just team name.
+  if (homeC && c === homeC) return { market: 'match_winner', selection: 'home' }
+  if (awayC && c === awayC) return { market: 'match_winner', selection: 'away' }
+
+  return { market: '', selection: '' }
+}
+
 function fallbackKeys(tip) {
   const t = textOf(tip)
   const c = compact(t)
   let market = norm(tip.market_key || tip.marketKey)
   let selection = norm(tip.selection_key || tip.selectionKey)
+
   if (market && selection && market !== 'unknown' && selection !== 'unknown') return { market, selection }
 
-  const home = norm(tip.team_home)
-  const away = norm(tip.team_away)
+  const inferred = inferPolishSettlementKeysV1723(tip)
+  if (inferred.market && inferred.selection) return inferred
+
+  const teams = teamNamesFromTip(tip)
+  const home = teams.home
+  const away = teams.away
 
   if (c.includes('obiedruzynystrzela') || c.includes('btts')) {
     market = 'btts'
@@ -159,6 +246,7 @@ function fallbackKeys(tip) {
     market = 'match_winner'
     selection = c.includes(compact(away)) ? 'away' : 'home'
   }
+
   return { market, selection }
 }
 
@@ -399,13 +487,27 @@ async function settleAkoTip(tip) {
   }
 }
 
-function updatePayload(result) {
+
+function profitFromSettlement(tip, status) {
+  const stake = toNum(tip && (tip.stake ?? tip.amount ?? tip.bet_amount), 0)
+  const odds = toNum(tip && (tip.odds ?? tip.course), 0)
+  if (status === 'won') return Math.round((stake * Math.max(odds - 1, 0)) * 100) / 100
+  if (status === 'lost') return Math.round((-stake) * 100) / 100
+  if (status === 'void') return 0
+  return toNum(tip && tip.profit, 0)
+}
+
+function updatePayload(result, tip = {}) {
   const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
+  const profit = profitFromSettlement(tip, status)
   const payload = {
     status,
     result: status,
     settlement_status: status,
     result_status: status,
+    profit,
+    settlement_profit: profit,
+    result_profit: profit,
     settlement_reason: result.reason || null,
     updated_at: new Date().toISOString()
   }
@@ -439,7 +541,7 @@ exports.handler = async function(event) {
         leg_statuses: res.leg_statuses || null
       })
       if (['won','lost','void'].includes(res.status)) {
-        const { error: upErr } = await supabase.from('tips').update(updatePayload(res)).eq('id', tip.id)
+        const { error: upErr } = await supabase.from('tips').update(updatePayload(res, tip)).eq('id', tip.id)
         if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
         else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single' })
       } else if (isAkoTip(tip) && Array.isArray(res.legs_json)) {
@@ -455,5 +557,5 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1720-ako-legs-auto-settle', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: '1723-polish-fallback-settlement-keys', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
 }
