@@ -45,5 +45,6 @@ exports.handler = async function(event) {
 
   const { data, error } = await query
   if (error) return json(500, { error: error.message, bets: [], date, journal })
-  return json(200, { bets: data || [], count: (data || []).length, date, journal, updatedAt: new Date().toISOString() })
+  const rows = journal ? (data || []) : (data || []).filter(row => String(row.match_date || '').slice(0, 10) === date)
+  return json(200, { version: '1729-ai-bets-today-only', bets: rows, count: rows.length, date, journal, updatedAt: new Date().toISOString() })
 }

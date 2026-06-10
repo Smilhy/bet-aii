@@ -1,0 +1,25 @@
+WERSJA 1728 — BetAI MultiSport AI publisher missing-column retry
+
+Problem po 1727:
+- Publisher generował kandydatów poprawnie.
+- Insert do public.tips padał na kolejnych brakujących kolumnach, np.:
+  author_username
+  away_team
+- Tabela używa team_home/team_away, a nie home_team/away_team.
+
+Poprawka:
+- Usunięto home_team/away_team z payloadu tips.
+- Publisher ma retry: jeśli Supabase zwróci
+  Could not find the 'X' column of 'tips'
+  to usuwa tę kolumnę z payloadu i ponawia zapis.
+- Dzięki temu zapis nie wywali się na kolejnej nieistniejącej kolumnie.
+
+Test po deployu:
+https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?limit=6&days=2
+
+Nie ruszano:
+- rozliczania,
+- AKO,
+- Typów AI UI,
+- czasu,
+- portfela/subskrypcji.

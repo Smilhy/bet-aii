@@ -126,8 +126,6 @@ function buildTipRowFromAiBet(bet) {
     match: `${home} vs ${away}`,
     team_home: home,
     team_away: away,
-    home_team: home,
-    away_team: away,
     match_date: date,
     match_time: bet.event_time || bet.kickoff_time || bet.match_time || `${date}T${time}:00Z`,
     event_time: bet.event_time || bet.kickoff_time || bet.match_time || `${date}T${time}:00Z`,
@@ -200,8 +198,6 @@ async function getTableColumns(supabase, tableName = 'tips') {
     'match',
     'team_home',
     'team_away',
-    'home_team',
-    'away_team',
     'match_date',
     'match_time',
     'event_time',
@@ -254,6 +250,49 @@ function filterExistingColumns(row, columns) {
 }
 
 
+function missingColumnFromError(error) {
+  const msg = String(error?.message || error || '')
+  const m = msg.match(/Could not find the '([^']+)' column/i)
+  return m ? m[1] : ''
+}
+
+async function insertTipRowSafe(supabase, row, tipColumns) {
+  let payload = filterExistingColumns(row, tipColumns)
+  const removed = []
+
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const { data, error } = await supabase.from('tips').insert(payload).select('id').single()
+    if (!error) return { data, removed }
+
+    const missing = missingColumnFromError(error)
+    if (!missing || !(missing in payload)) throw error
+
+    delete payload[missing]
+    removed.push(missing)
+  }
+
+  throw new Error('Too many missing-column retries during insert: ' + removed.join(', '))
+}
+
+async function updateTipRowSafe(supabase, id, row, tipColumns) {
+  let payload = filterExistingColumns(row, tipColumns)
+  const removed = []
+
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const { data, error } = await supabase.from('tips').update(payload).eq('id', id).select('id').single()
+    if (!error) return { data, removed }
+
+    const missing = missingColumnFromError(error)
+    if (!missing || !(missing in payload)) throw error
+
+    delete payload[missing]
+    removed.push(missing)
+  }
+
+  throw new Error('Too many missing-column retries during update: ' + removed.join(', '))
+}
+
+
 async function ensureAiBetsAvailable(baseUrl, days, limit, force) {
   if (!baseUrl) return { ok: false, reason: 'no_base_url' }
   const url = `${baseUrl.replace(/\/$/, '')}/.netlify/functions/generate-live-ai-picks?days=${encodeURIComponent(days)}&limit=${encodeURIComponent(limit)}${force ? '&refresh_cache=1' : ''}`
@@ -274,7 +313,7 @@ exports.handler = async function(event) {
 
   const params = event.queryStringParameters || {}
   const limit = Math.min(Math.max(Number(params.limit || process.env.BETAI_MULTISPORT_AI_LIMIT || 6), 1), 20)
-  const days = Math.min(Math.max(Number(params.days || process.env.BETAI_MULTISPORT_AI_DAYS || 2), 1), 7)
+  const days = Math.min(Math.max(Number(params.days || process.env.BETAI_MULTISPORT_AI_DAYS || 1), 1), 7)
   const minScore = Number(params.min_score || process.env.BETAI_MULTISPORT_AI_MIN_SCORE || 70)
   const force = ['1','true','yes'].includes(String(params.force || '').toLowerCase())
   const dryRun = ['1','true','yes'].includes(String(params.dry_run || '').toLowerCase())
@@ -306,7 +345,7 @@ exports.handler = async function(event) {
     .filter(row => row.fixture_id || row.api_fixture_id || row.external_fixture_id)
     .slice(0, limit)
 
-  if (dryRun) return json(200, { ok: true, version: '1727-betai-multisport-ai-schema-safe-publisher', dry_run: true, generation, candidates: rows.length, rows })
+  if (dryRun) return json(200, { ok: true, version: '1729-betai-multisport-ai-today-only', dry_run: true, generation, candidates: rows.length, rows })
 
   let inserted = 0
   let updated = 0
@@ -328,13 +367,11 @@ exports.handler = async function(event) {
         const updateRow = settled
           ? Object.fromEntries(Object.entries(row).filter(([key]) => !['status','result','settlement_status','result_status','profit','payout','return_amount','created_at'].includes(key)))
           : Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'created_at'))
-        const { data, error: updateError } = await supabase.from('tips').update(filterExistingColumns(updateRow, tipColumns)).eq('id', existingId).select('id').single()
-        if (updateError) throw updateError
+        const { data } = await updateTipRowSafe(supabase, existingId, updateRow, tipColumns)
         ids.push(data?.id || existingId)
         updated++
       } else {
-        const { data, error: insertError } = await supabase.from('tips').insert(filterExistingColumns(row, tipColumns)).select('id').single()
-        if (insertError) throw insertError
+        const { data } = await insertTipRowSafe(supabase, row, tipColumns)
         ids.push(data?.id)
         inserted++
       }
@@ -345,7 +382,7 @@ exports.handler = async function(event) {
 
   try {
     await supabase.from('ai_pick_runs').insert({
-      source: 'betai-multisport-ai-publisher-v1727',
+      source: 'betai-multisport-ai-publisher-v1729',
       picks_created: inserted,
       status: errors.length ? 'partial' : 'success',
       error_message: errors.length ? JSON.stringify(errors).slice(0, 1000) : null,
@@ -355,7 +392,7 @@ exports.handler = async function(event) {
 
   return json(errors.length && !inserted && !updated ? 500 : 200, {
     ok: !errors.length || inserted > 0 || updated > 0,
-    version: '1727-betai-multisport-ai-schema-safe-publisher',
+    version: '1729-betai-multisport-ai-today-only',
     author: AUTHOR_NAME,
     inserted,
     updated,
