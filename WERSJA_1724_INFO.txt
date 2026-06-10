@@ -1,0 +1,19 @@
+WERSJA 1724 — hotfix settle-live-ai-picks 500
+
+Problem:
+- Network pokazywał 500 dla /.netlify/functions/settle-live-ai-picks
+- Błąd: supabase.from(...).insert(...).catch is not a function
+- To mogło mulić stronę, bo request wracał błędem i mógł być ponawiany.
+
+Poprawka:
+- Usunięto .catch() z Supabase insert.
+- Log ai_pick_runs jest teraz w try/catch i nie wysadza funkcji.
+- Dodano version: 1724-settle-live-ai-picks-insert-fix w response.
+
+Nie ruszano:
+- auto-settle-tips,
+- rozliczania zwykłych typerów,
+- AKO,
+- czasu,
+- Typów AI generatora,
+- portfela/subskrypcji.

@@ -231,8 +231,20 @@ exports.handler = async function (event) {
         errors.push({ id: tip.id, match: `${tipHome(tip)} vs ${tipAway(tip)}`, date: tip.match_date, error: e.message || String(e) })
       }
     }
-    await supabase.from('ai_pick_runs').insert({ source: 'settle-ai-bets-v1566', picks_created: settled, status: errors.length ? 'partial' : 'success', finished_at: new Date().toISOString(), message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}` }).catch(() => {})
-    return json(200, { table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    try {
+      await supabase
+        .from('ai_pick_runs')
+        .insert({
+          source: 'settle-ai-bets-v1724',
+          picks_created: settled,
+          status: errors.length ? 'partial' : 'success',
+          finished_at: new Date().toISOString(),
+          message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}`
+        })
+    } catch (_) {
+      // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
+    }
+    return json(200, { version: '1724-settle-live-ai-picks-insert-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
