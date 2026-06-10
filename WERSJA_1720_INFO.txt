@@ -1,0 +1,24 @@
+WERSJA 1720 — AKO legs auto settlement fix
+
+Co naprawia:
+- AKO nie jest już tylko wyglądem.
+- Każda noga AKO jest rozliczana osobno po fixture_id/api_fixture_id.
+- Noga dostaje status:
+  won  = trafiona
+  lost = nietrafiona
+  void = zwrot
+  live/pending = jeszcze trwa/czeka
+- Jeżeli jedna noga AKO jest lost, cały kupon AKO od razu dostaje lost.
+- Jeżeli wszystkie nogi są won/void i nie ma lost, cały kupon AKO dostaje won.
+- Statusy nóg zapisują się w legs_json, więc karta pokazuje zielone/czerwone badge.
+
+Nie ruszano:
+- singli,
+- Typów AI,
+- generowania AI,
+- kursów AI,
+- rozliczania singli poza tym samym endpointem,
+- AKO dodawania jako UI,
+- portfela,
+- subskrypcji,
+- czasu lokalnego 1719.

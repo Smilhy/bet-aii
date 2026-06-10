@@ -262,15 +262,155 @@ async function settleTip(tip) {
   return settleByKeys(tip, sc.h, sc.a, stats)
 }
 
-function updatePayload(result) {
-  const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
+function isAkoTip(tip) {
+  return Boolean(
+    tip && (
+      tip.is_ako === true ||
+      String(tip.is_ako || '').toLowerCase() === 'true' ||
+      norm(tip.coupon_type) === 'ako' ||
+      norm(tip.market) === 'ako' ||
+      norm(tip.market_name) === 'ako'
+    )
+  )
+}
+
+function parseAkoLegs(tip) {
+  const source = tip && (tip.legs_json || tip.legs || tip.ako_legs || tip.coupon_legs)
+  if (Array.isArray(source)) return source
+  if (source && typeof source === 'object') return Array.isArray(source) ? source : []
+  if (typeof source === 'string' && source.trim()) {
+    try {
+      const parsed = JSON.parse(source)
+      return Array.isArray(parsed) ? parsed : []
+    } catch (_) {
+      return []
+    }
+  }
+  return []
+}
+
+function legFixtureId(leg) {
+  const vals = [leg.fixture_id, leg.api_fixture_id, leg.external_fixture_id, leg.fixtureId, leg.matchId, leg.match_id, leg.id]
+  for (const v of vals) {
+    const st = String(v == null ? '' : v).trim()
+    if (st && !st.startsWith('manual-')) return st
+  }
+
+  // Stare AKO ma fixture w key, np. "1548435|1x2|norway u21 wygra|1.6".
+  const key = String(leg.key || '').trim()
+  const first = key.split('|')[0]
+  if (/^\d{4,}$/.test(first)) return first
+  return ''
+}
+
+function normalizeAkoLegForSettlement(leg) {
+  const id = legFixtureId(leg)
+  return {
+    ...leg,
+    fixture_id: id || leg.fixture_id || leg.matchId || null,
+    api_fixture_id: id || leg.api_fixture_id || null,
+    external_fixture_id: id || leg.external_fixture_id || null,
+    team_home: leg.team_home || leg.home || leg.home_team || '',
+    team_away: leg.team_away || leg.away || leg.away_team || '',
+    market: leg.market || leg.market_name || '',
+    market_key: leg.market_key || leg.marketKey || '',
+    selection_key: leg.selection_key || leg.selectionKey || '',
+    bet_type: leg.bet_type || leg.pick || leg.prediction || '',
+    prediction: leg.prediction || leg.pick || leg.bet_type || '',
+    pick: leg.pick || leg.prediction || leg.bet_type || ''
+  }
+}
+
+function scoreTextFromFixture(fix) {
+  const sc = scoreFromFixture(fix)
+  return String(sc.h) + ':' + String(sc.a)
+}
+
+async function settleAkoLeg(leg) {
+  const normalizedLeg = normalizeAkoLegForSettlement(leg)
+  const id = fixtureId(normalizedLeg)
+  if (!id) return { ...leg, status: 'pending', result: 'pending', reason: 'AKO: brak fixture_id' }
+
+  const fix = await fetchFixture(id)
+  if (!fix) return { ...leg, status: 'pending', result: 'pending', reason: 'AKO: API nie zwrocilo meczu ' + id }
+
+  const st = String((((fix.fixture || {}).status || {}).short) || '')
+  const score = scoreTextFromFixture(fix)
+
+  if (VOIDED.includes(st)) {
+    return { ...leg, fixture_id: id, api_fixture_id: id, status: 'void', result: 'void', settlement_status: 'void', score, reason: 'AKO noga void status=' + st, settled_at: new Date().toISOString() }
+  }
+
+  if (!FINISHED.includes(st)) {
+    const liveStatuses = ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT']
+    const liveStatus = liveStatuses.includes(st) ? 'live' : 'pending'
+    return { ...leg, fixture_id: id, api_fixture_id: id, status: liveStatus, result: liveStatus, settlement_status: liveStatus, score, reason: 'AKO noga nie zakonczona status=' + st }
+  }
+
+  const sc = scoreFromFixture(fix)
+  const keys = fallbackKeys(normalizedLeg)
+  let stats = []
+  if (norm(keys.market).includes('corner') || norm(keys.market).includes('card')) stats = await fetchStats(id)
+
+  const res = settleByKeys(normalizedLeg, sc.h, sc.a, stats)
+  const finalStatus = ['won','lost','void'].includes(res.status) ? res.status : 'pending'
+  return {
+    ...leg,
+    fixture_id: id,
+    api_fixture_id: id,
+    status: finalStatus,
+    result: finalStatus,
+    settlement_status: finalStatus,
+    score,
+    reason: res.reason || null,
+    settled_at: ['won','lost','void'].includes(finalStatus) ? new Date().toISOString() : null
+  }
+}
+
+async function settleAkoTip(tip) {
+  const legs = parseAkoLegs(tip)
+  if (!legs.length) return { status: 'skipped', reason: 'AKO: brak legs_json' }
+
+  const settledLegs = []
+  for (const leg of legs) {
+    settledLegs.push(await settleAkoLeg(leg))
+  }
+
+  const statuses = settledLegs.map(leg => String(leg.status || leg.result || 'pending').toLowerCase())
+  let status = 'pending'
+  let reason = 'AKO: czeka na pozostale nogi'
+
+  if (statuses.includes('lost')) {
+    status = 'lost'
+    reason = 'AKO przegrane: co najmniej jedna noga nietrafiona'
+  } else if (statuses.length && statuses.every(st => ['won', 'void'].includes(st))) {
+    status = 'won'
+    reason = 'AKO wygrane: wszystkie nogi trafione/zwrot'
+  } else if (statuses.every(st => st === 'void')) {
+    status = 'void'
+    reason = 'AKO zwrot: wszystkie nogi void'
+  }
+
   return {
     status,
+    reason,
+    legs_json: settledLegs,
+    leg_statuses: statuses
+  }
+}
+
+function updatePayload(result) {
+  const status = ['won','lost','void'].includes(result.status) ? result.status : 'pending'
+  const payload = {
+    status,
+    result: status,
     settlement_status: status,
     result_status: status,
     settlement_reason: result.reason || null,
     updated_at: new Date().toISOString()
   }
+  if (Array.isArray(result.legs_json)) payload.legs_json = result.legs_json
+  return payload
 }
 
 exports.handler = async function(event) {
@@ -289,16 +429,31 @@ exports.handler = async function(event) {
   const skipped = []
   for (const tip of (tips || [])) {
     try {
-      const res = await settleTip(tip)
-      checked.push({ id: tip.id, fixture_id: fixtureId(tip), result: res.status, reason: res.reason })
+      const res = isAkoTip(tip) ? await settleAkoTip(tip) : await settleTip(tip)
+      checked.push({
+        id: tip.id,
+        type: isAkoTip(tip) ? 'ako' : 'single',
+        fixture_id: fixtureId(tip),
+        result: res.status,
+        reason: res.reason,
+        leg_statuses: res.leg_statuses || null
+      })
       if (['won','lost','void'].includes(res.status)) {
         const { error: upErr } = await supabase.from('tips').update(updatePayload(res)).eq('id', tip.id)
         if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
-        else settled.push({ id: tip.id, status: res.status })
+        else settled.push({ id: tip.id, status: res.status, type: isAkoTip(tip) ? 'ako' : 'single' })
+      } else if (isAkoTip(tip) && Array.isArray(res.legs_json)) {
+        // AKO jeszcze nie jest całe rozstrzygnięte, ale zapisujemy statusy pojedynczych nóg
+        // np. jedna noga live/pending, druga już won.
+        const { error: upErr } = await supabase
+          .from('tips')
+          .update({ legs_json: res.legs_json, settlement_reason: res.reason || null, updated_at: new Date().toISOString() })
+          .eq('id', tip.id)
+        if (upErr) skipped.push({ id: tip.id, reason: upErr.message })
       }
     } catch (e) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1670-no-regex-auto-settle', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: '1720-ako-legs-auto-settle', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
 }
