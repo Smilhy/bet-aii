@@ -1,0 +1,8 @@
+WERSJA 1445 — readability fix prawego panelu Typy AI
+Zmiany:
+- poprawiony kontrast i czytelność prawego panelu
+- większe i mocniejsze napisy w Wybrany typ
+- bardziej widoczne koło score 67/100
+- czytelniejszy box Najlepszy rynek
+- lepsza widoczność Analiza AI / Ciekawostka AI
+- build OK (są tylko wcześniejsze warningi projektu)

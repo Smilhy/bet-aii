@@ -1,0 +1,1 @@
+WERSJA 1689 — Mecze Result pokazuje również PENDING, czyli pełny dziennik aktualnych Typów AI. Statystyki i licznik sportu liczą ten sam zestaw co dziennik, żeby nie było 3 vs 5. Bez zmian logiki skanera, Supabase i rozliczania.

@@ -1,0 +1,14 @@
+WERSJA 1721 BUILD FIX — przywrócenie betai-multisport-ai bez błędu składni.
+
+Co poprawiono:
+- Naprawiono błąd builda w src/main.jsx: Unexpected ")" przy filtrze demo.
+- Przywrócono widoczność betai-multisport-ai przez bezpieczne wyłączenie funkcji ukrywania demo.
+
+Nie ruszano:
+- AKO 1720 i rozliczania nóg AKO,
+- czasu lokalnego 1719,
+- Typów AI,
+- kursów AI,
+- singli,
+- portfela,
+- subskrypcji.

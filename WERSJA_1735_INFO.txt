@@ -1,0 +1,13 @@
+WERSJA 1735 — BetAI MultiSport AI FORCE INTEGER BEFORE INSERT
+
+Zmieniona tylko funkcja:
+netlify/functions/publish-betai-multisport-ai.js
+
+Naprawia definitywnie:
+invalid input syntax for type integer: "68.9"
+
+Poprawka jest tuż przed insert/update do Supabase:
+ai_score, ai_confidence, probability, model_probability są wymuszane jako integer.
+
+Nie ruszano:
+Typy AI, get-ai-bets, generate-live-ai-picks, ai_bets, AKO, rozliczanie, UI.

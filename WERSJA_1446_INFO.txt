@@ -1,0 +1,9 @@
+WERSJA 1446 — poprawa Mecze Result
+Zmiany:
+- poprawiona czytelność tabeli Mecze Result
+- mocniejszy header tabeli
+- lepsze wiersze z hoverem i wyraźniejszym podziałem
+- wynik meczu bardziej widoczny
+- statusy WON / LOST / PENDING / VOID jako premium pill badges
+- zachowane wcześniejsze poprawki readability prawego panelu
+- build OK (są tylko wcześniejsze warningi projektu)

@@ -1,0 +1,23 @@
+WERSJA 1712 — usunięcie demo betai-multisport-ai z frontendu.
+
+Problem:
+- konto betai-multisport-ai nie istnieje w public.profiles ani public.tips po wyszukiwaniu,
+- więc jest runtime/cache/fallback/demo w frontendzie,
+- pokazywało się w Top typerzy/rankingu.
+
+Zmiana:
+- dodany blacklist demo identity:
+  betai-multisport-ai / @betai-multisport-ai / betai-multisport / betai-mult
+- ranking i Top typerzy pomijają tego użytkownika,
+- jeśli dane z cache/fallbacku wrócą, frontend i tak go ukryje.
+
+Nie ruszano:
+- Supabase danych,
+- Dodawania typów,
+- Typów AI,
+- Rozliczania,
+- AI 1703,
+- kursów/filtrowania AI,
+- AKO,
+- Portfela,
+- subskrypcji zwykłych użytkowników.

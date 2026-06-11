@@ -1,0 +1,24 @@
+WERSJA 1697 — naprawa sztucznego kursu 1.50.
+
+Problem:
+- Funkcja robiła: kurs = max(1.50, wyliczony_kurs).
+- Dlatego wiele typów miało identyczny kurs 1.50, mimo różnych prawdopodobieństw.
+- To sztucznie zawyżało EV.
+
+Zmiana:
+- Kurs jest liczony naturalnie z modelu.
+- Jeśli wyliczony kurs jest poniżej 1.50, typ odpada.
+- Jeśli wyliczony kurs jest 1.50 lub wyższy, typ zostaje zapisany.
+- Supabase constraint odds >= 1.50 nadal chroni bazę.
+
+Warunki:
+- kurs min 1.50
+- kurs max no limit
+- prawdopodobieństwo min 48%
+- cache przed skanem odświeżany z API-Sports
+
+Nie ruszano:
+- typów typerów,
+- AKO,
+- portfela,
+- rozliczania użytkowników.

@@ -1,0 +1,31 @@
+WERSJA 1726 — BetAI MultiSport AI auto-publisher
+
+Co dodano:
+- Nowa funkcja Netlify:
+  /.netlify/functions/publish-betai-multisport-ai
+- Funkcja najpierw uruchamia generate-live-ai-picks, żeby mieć świeże value picki.
+- Potem bierze najlepsze pending typy z ai_bets i publikuje je do public.tips jako:
+  author_name = BetAI MultiSport AI
+  username = betai-multisport-ai
+- Dzięki temu AI działa jak normalny typer i pojawia się w profilu/rankingu.
+
+Harmonogram:
+- exports.config schedule: domyślnie co 4 godziny
+  17 */4 * * *
+- Można zmienić ENV:
+  BETAI_MULTISPORT_AI_CRON
+  BETAI_MULTISPORT_AI_LIMIT
+  BETAI_MULTISPORT_AI_MIN_SCORE
+  BETAI_MULTISPORT_AI_DAYS
+
+Ręczny test po deployu:
+- https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?limit=6&days=2
+- dry run:
+  https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?limit=6&days=2&dry_run=1
+
+Nie ruszano:
+- rozliczania zwykłych typerów,
+- AKO,
+- portfela/subskrypcji,
+- UI Typy AI,
+- czasu.

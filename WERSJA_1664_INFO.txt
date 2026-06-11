@@ -1,0 +1,5 @@
+WERSJA 1664
+- BTTS pokazuje tylko TAK/NIE.
+- Dokładne wyniki 1:0, 2:3 itd. trafiają tylko do zakładki Dokładny wynik, nie do 1X2.
+- 1X2 pokazuje tylko gospodarza/remis/gościa.
+- Zostają tylko popularne rynki.

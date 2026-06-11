@@ -1,0 +1,15 @@
+WERSJA 1718 — usunięcie napisu Start PL z karty typu.
+
+Zmiana:
+- karta typu nie pokazuje już tekstu "Start PL:",
+- zostaje sama data i godzina, np. 10.06.2026, 00:00.
+
+Nie ruszano:
+- Typów AI,
+- rozliczania wyników,
+- dodawania typów,
+- AKO,
+- portfela,
+- subskrypcji,
+- ranking demo fix,
+- logiki ukrywania po starcie.

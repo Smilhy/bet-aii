@@ -1,0 +1,9 @@
+WERSJA 1636
+
+Zmiana wykonana:
+- Ranking: wartości YIELD i PROFIT dostają kolor zależnie od wyniku.
+- Minus: czerwony.
+- Plus: zielony.
+- Zero: neutralny szary.
+
+Nie zmieniano innych elementów strony.

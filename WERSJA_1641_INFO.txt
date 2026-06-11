@@ -1,0 +1,9 @@
+WERSJA 1641 — SPORT BADGE NA KARCIE TYPU
+
+Zmiana:
+- Na karcie typu dodano czytelny badge sportu: ⚽ Piłka nożna.
+- Badge jest obok nazwy ligi, np. ⚽ Piłka nożna  Friendlies.
+- Po najechaniu na kartę badge świeci neonowym cyan glow.
+- Na telefonie badge zostaje stale widoczny.
+
+Nie wymaga SQL. Wystarczy deploy paczki na Netlify.

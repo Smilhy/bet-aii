@@ -1,0 +1,8 @@
+WERSJA 1467 — uzupełnianie tabel statystyk dokładnym rodzajem typu
+Zmiany:
+- tabela Statystyki rodzajów typów liczy po dokładnym rozpoznanym typie
+- stare i nowe typy są klasyfikowane dynamicznie do kategorii z dropdowna
+- obsługa dokładnych wariantów: 1X2 home/remis/away, BTTS tak/nie, DNB, handicap linia home/away, suma goli, team total, rożne, kartki, połowy
+- tabele nadal pokazują max 20 i rozwijają po 10
+- logika rozliczania niezmieniona
+- build OK

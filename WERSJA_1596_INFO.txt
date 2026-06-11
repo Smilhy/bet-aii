@@ -1,0 +1,18 @@
+WERSJA 1596 — TABLET DASHBOARD BALANCE COLUMNS
+
+Baza: 1595.
+Zakres: tylko CSS/tablet dashboard.
+
+Nie ruszono:
+- logowania,
+- innych zakładek bez prawej kolumny,
+- Supabase,
+- Stripe,
+- statystyk,
+- logiki typów,
+- desktopu 2K / TV 2K / laptopa 1680x1050.
+
+Zmiana:
+- dashboard na tablecie 10 cali ma mniejszy środek/feed,
+- lewa kolumna ma więcej miejsca,
+- prawa kolumna/czat ma więcej miejsca.

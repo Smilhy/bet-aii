@@ -1,0 +1,4 @@
+BetAI STRONA WERSJA 1611 — FHD 24 AUTO 80 FALLBACK
+- poprawka pod 24 cale 1920x1080: automatyczny efekt jak zoom 80% na viewportach 16:9 FHD
+- nie rusza 27" 2K, 32" 2K, 1680x1050, tabletu
+- tylko CSS, bez SQL i bez logiki

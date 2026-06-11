@@ -1,0 +1,10 @@
+WERSJA 1471 — pierwszy styl wykresu + delikatna interakcja
+Zmiany:
+- przywrócony spokojny wygląd wykresu jak pierwszy/profilowy
+- usunięty stały tooltip z końca wykresu
+- tooltip pojawia się dopiero po najechaniu lub kliknięciu punktu
+- punkty są ukryte domyślnie, pojawiają się subtelnie na hoverze
+- aktywny punkt i pionowa linia pomagają odczytać wartość
+- bez przerysowanej neonowej plamy
+- rozliczania i danych nie ruszano
+- build OK (pozostały wcześniejsze warningi projektu)

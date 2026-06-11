@@ -1,0 +1,16 @@
+WERSJA 1705 — subtelniejszy wygląd kolumn Gole.
+
+Zmiana tylko UI:
+- zostaje podział Gole PONIŻEJ / Gole POWYŻEJ,
+- kolory dopasowane do reszty strony,
+- mniej agresywna zieleń/niebieski,
+- subtelniejsze obramowania i tła.
+
+Nie ruszano:
+- logiki AI 1703,
+- realnych kursów,
+- warunków strict full-time,
+- typów typerów/użytkowników,
+- AKO,
+- portfela,
+- rozliczania.

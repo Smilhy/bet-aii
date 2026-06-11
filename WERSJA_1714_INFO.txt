@@ -1,0 +1,25 @@
+WERSJA 1714 — usuwa demo BetAI MultiSport AI także z rankingu.
+
+Poprawia 1713:
+- dashboard/rightbar już ukrywał demo,
+- ale Ranking Bet+AI nadal pokazywał nazwę z odstępami: "BetAI MultiSport AI".
+
+Zmiana:
+- filtr demo ignoruje spacje, myślniki i wielkość liter,
+- łapie:
+  betai-multisport-ai,
+  BetAI MultiSport AI,
+  betai multisport ai,
+  betai-multisport.
+- dodany filtr w Ranking Bet+AI i Top typerzy.
+
+Nie ruszano:
+- Supabase danych,
+- Dodawania typów,
+- Typów AI,
+- Rozliczania,
+- AI 1703,
+- kursów/filtrowania AI,
+- AKO,
+- Portfela,
+- subskrypcji zwykłych użytkowników.

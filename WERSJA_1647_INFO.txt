@@ -1,0 +1,1 @@
+WERSJA 1647: Usunięto strzałkę/chevron przy klikalnych ligach w Mój profil -> Statystyki. Modal po kliknięciu ligi nadal działa.

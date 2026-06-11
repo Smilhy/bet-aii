@@ -1,0 +1,22 @@
+WERSJA 1733 — BetAI MultiSport AI OWN ENGINE
+
+Zmieniona tylko funkcja:
+netlify/functions/publish-betai-multisport-ai.js
+
+Co robi:
+- BetAI MultiSport AI sam pobiera przyszłe mecze z API-Football.
+- Wybiera typy i zapisuje je bezpośrednio do public.tips.
+- Zapisuje w stylu starego profilu: author_name = BetAI MultiSport AI, username = NULL, user_id = NULL, source = live_ai_engine.
+- NIE zapisuje do ai_bets.
+- NIE odpala generate-live-ai-picks.
+- NIE rusza Typy AI ani get-ai-bets.
+
+Test bez zapisu:
+https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?dry_run=1&limit=3&days=2
+
+Zapis:
+https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?limit=3&days=2
+
+Jeśli API odds nie zwraca kursów, domyślnie jest fallback modelowy allow_synthetic=1.
+Możesz wymusić tylko realne kursy:
+https://bet-ai.app/.netlify/functions/publish-betai-multisport-ai?dry_run=1&limit=3&days=2&allow_synthetic=0

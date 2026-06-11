@@ -1,0 +1,1 @@
+Wersja 1501: naprawa liczników zakładek Typy AI bez ruszania działającego autoload/result/statystyk z 1499. Typy AI na dziś/jutro liczą tylko aktywne pre-match, Mecze Result i Statystyki zostają globalne z ai_bets.

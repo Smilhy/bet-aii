@@ -1,0 +1,6 @@
+Wersja 1486 — poprawka licznika „Typów dzisiaj” na ekranie logowania.
+
+Zmiany:
+- licznik Typów dzisiaj liczy zapisane typy AI po match_time na dzisiejszą datę,
+- filtr obejmuje ai_source real_ai/ai oraz source AI/Supabase Journal,
+- nie rusza logiki pobierania, zapisu, statystyk ani rozliczania.

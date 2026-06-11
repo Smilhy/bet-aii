@@ -1,0 +1,4 @@
+WERSJA 1580
+- Dodano importowane statystyki godzin dodawania kuponów dla profilu przez profiles.imported_hourly_stats.
+- Import działa jako uzupełnienie historii danego profilu i dolicza tylko nowe typy po stats_imported_at.
+- Nie zmieniano globalnej logiki statystyk innych użytkowników.

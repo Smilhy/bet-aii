@@ -1,0 +1,1 @@
+Wersja 1657: usunięto podkreślenie z frazy zoomu/lupy w komunikacie BETA. Reszta wyglądu bez zmian.

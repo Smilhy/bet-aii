@@ -1,0 +1,14 @@
+WERSJA 1694 — HOTFIX Netlify generate-live-ai-picks.
+
+Naprawia błąd:
+REAL_AI_MIN_PROBABILITY_V1692 is not defined
+
+Ustawienia:
+- kurs min: 1.50
+- kurs max: no limit
+- prawdopodobieństwo min: 48%
+- cache meczów czytany z kolumn sports_fixture_cache:
+  cache_key, sport, country, league, home, away, commence_time, expires_at
+
+Po wgraniu sprawdź:
+https://www.bet-ai.app/.netlify/functions/generate-live-ai-picks?days=1&limit=20

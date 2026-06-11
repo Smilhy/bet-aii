@@ -1,0 +1,8 @@
+WERSJA 1507 — poprawa wyglądu w zakładce Typy AI
+
+Zakres zmian:
+- Zmieniono natywny dropdown wyboru wykresu w sekcji „Wykres salda AI” na czytelny przełącznik dwóch opcji.
+- Poprawiono widoczność tekstu i aktywnego wyboru: „Bilans kumulacyjny” / „Profit na typ”.
+- Dodano ciemne tło opcji select tylko w obrębie zakładki Typy AI, żeby rozwijane listy nie pojawiały się jako białe pola z mało widocznym tekstem.
+
+Nie ruszano logiki Supabase, Netlify, publikacji typów ani innych zakładek.

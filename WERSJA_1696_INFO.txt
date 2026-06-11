@@ -1,0 +1,16 @@
+WERSJA 1696 — naprawa rozjazdu liczników Typy AI vs Mecze Result.
+
+Problem:
+- Endpoint zapisywał 3 typy z zakresu days=2.
+- Główna zakładka pokazywała tylko dzisiejsze typy, więc było Typy AI = 1, Mecze Result = 3, Statystyki = 3.
+
+Zmiana:
+- Zakładka główna pokazuje wszystkie aktywne/pending typy AI z aktualnego skanu, nie tylko dzisiejszą datę.
+- Etykieta zmieniona na „Typy AI aktywne”.
+- Mecze Result i Statystyki dalej pokazują pełny dziennik tych samych rekordów.
+- Bez zmian w skanerze, Supabase, AKO, portfelu i rozliczaniu typerów.
+
+Warunki AI zostają:
+- kurs min 1.50
+- kurs max no limit
+- prawdopodobieństwo min 48%

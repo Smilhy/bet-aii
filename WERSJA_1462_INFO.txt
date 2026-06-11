@@ -1,0 +1,12 @@
+WERSJA 1462 — pełne ligi i dokładne rodzaje typów AI
+Zmiany:
+- Statystyki według lig pokazują wszystkie ligi, bez limitu top 12
+- Statystyki rodzajów typów rozbijają typ dokładniej po selection/prediction
+- BTTS dzielone na BTTS — Tak / BTTS — Nie
+- 1X2 dzielone na Gospodarz / Remis / Gość
+- Podwójna szansa dzielona na 1X / X2 / 12
+- Handicap dzielony po wybranej drużynie
+- Suma goli dzielona na Powyżej/Poniżej z linią
+- filtr Rodzaj typu używa teraz dokładnego typu
+- logiki rozliczania nie ruszano
+- build OK (pozostały wcześniejsze warningi projektu)

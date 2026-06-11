@@ -1,0 +1,17 @@
+WERSJA 1438 — TYPY AI REALISTYCZNA OCENA
+
+Problem:
+- wiele typów miało 93/100 i EV +20%+, co wyglądało sztucznie.
+- niskie kursy 1.40–1.50 dostawały zbyt wysoką ocenę.
+
+Zrobione:
+- dodana normalizacja score/EV/probability w froncie,
+- 90+ jest teraz rzadkie,
+- niskie kursy mają karę do oceny,
+- EV jest ograniczony do bardziej wiarygodnych widełek,
+- zapisane typy z Supabase są normalizowane przy wyświetlaniu,
+- SQL dodatkowo normalizuje stare rekordy w tabeli tips.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1438_AI_SCORE_NORMALIZATION.sql

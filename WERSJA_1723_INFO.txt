@@ -1,0 +1,23 @@
+WERSJA 1723 — rozliczanie starych polskich typów bez market_key/selection_key
+
+Problem:
+- stare typy betai-multisport-ai miały puste market_key/selection_key,
+- auto-settle zwracał: Nieobslugiwany market_key= selection_key=,
+- przez to mecze z 09.06 wisiały jako Oczekujące.
+
+Poprawka:
+- auto-settle rozpoznaje polskie opisy typów:
+  "Drużyna lub remis" -> double chance 1X/X2,
+  "Powyżej X gola" -> over_X,
+  "Poniżej X gola" -> under_X,
+  "Drużyna wygra" -> match_winner home/away,
+  "Obie drużyny strzelą: TAK/NIE" -> BTTS yes/no.
+- Dzięki temu stare typy bez keyów mogą być rozliczone automatycznie.
+
+Nie ruszano:
+- Typów AI UI,
+- kursów AI,
+- dodawania typów,
+- AKO legs 1720,
+- czasu 1719,
+- portfela/subskrypcji.

@@ -1,0 +1,17 @@
+WERSJA 1704 — przywrócony wygląd Gole: dwie kolumny PONIŻEJ / POWYŻEJ.
+
+Zmiana tylko UI:
+- w widoku dodawania typu, rynek Gole jest znowu podzielony na:
+  - Gole PONIŻEJ
+  - Gole POWYŻEJ
+- sortuje linie rosnąco, np. 0.5, 1.5, 2.5, 3.5.
+- pozostałe rynki zostają normalnie.
+
+Nie ruszano:
+- logiki AI 1703,
+- realnych kursów API,
+- warunków strict full-time,
+- typów typerów/użytkowników,
+- AKO,
+- portfela,
+- rozliczania.

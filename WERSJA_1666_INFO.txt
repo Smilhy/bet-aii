@@ -1,0 +1,8 @@
+WERSJA 1666 — WSPÓLNA RAMKA DASHBOARD / MÓJ PROFIL
+
+Zmiana:
+- Mój profil przekazuje do TipCard pełny surowy rekord typu, nie uproszczony obiekt profilu.
+- Nie gubi legs_json / coupon_type / is_ako / market_key / selection_key.
+- AKO w Mój profil ma wyglądać tak samo jak na Dashboardzie, bo używa tej samej karty i tych samych danych.
+
+SQL: niepotrzebny.

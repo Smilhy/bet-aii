@@ -1,0 +1,3 @@
+WERSJA 1654 — MÓJ PROFIL: AKO WYGLĄD JAK DASHBOARD
+Poprawka: karta AKO w zakładce Mój profil > Typy używa osobnego układu z listą zdarzeń z legs_json.
+Dashboard bez zmian, singiel bez zmian, SQL nie jest potrzebny jeśli masz już 1652/1653.

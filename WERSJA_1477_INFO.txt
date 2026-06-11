@@ -1,0 +1,8 @@
+WERSJA 1477 — naprawa startu logiki/logowania
+Baza: 1471 pierwszy wykres ożywiony
+Zmiany:
+- wyłączone ciężkie live stats na ekranie logowania (profiles/tips/presence przed autoryzacją)
+- dodany timeout 12 s do logowania i rejestracji
+- logowanie nie powinno mielić w nieskończoność
+- bez zmian w typach AI, EV, kursach i rozliczaniu WON/LOST
+- build OK

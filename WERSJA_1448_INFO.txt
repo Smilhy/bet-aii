@@ -1,0 +1,10 @@
+WERSJA 1448 — Mecze Result 10/10 polish
+Zmiany:
+- premium wygląd sekcji Mecze Result
+- lepszy tytuł z licznikiem wyników
+- delikatny glass panel dla całej tabeli
+- subtelne zebra rows i hover
+- bardziej widoczny score
+- kompaktowe statusy WON/LOST/PENDING/VOID jako małe premium badge
+- zachowana ukryta prawa kolumna poza live
+- build OK (zostały tylko wcześniejsze warningi projektu)

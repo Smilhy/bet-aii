@@ -1,0 +1,22 @@
+WERSJA 1708 — Dashboard AI Typy dnia przez get-ai-bets.
+
+Naprawia:
+- ramka Dashboard nadal pokazywała pustkę mimo typu w Typy AI.
+- przyczyna: bezpośredni odczyt ai_bets z przeglądarki mógł być blokowany przez RLS albo różnił się od logiki Typy AI.
+
+Zmiana:
+- prawa ramka zostaje,
+- czyta typy przez /.netlify/functions/get-ai-bets,
+- czyli ten sam Service Role endpoint, którego używa zakładka Typy AI,
+- fallback: jeśli endpoint padnie, próbuje direct Supabase,
+- nadal pokazuje TOP 3 aktywne typy AI.
+
+Nie ruszano:
+- AI 1703,
+- realnych kursów,
+- strict full-time,
+- UI Gole 1705,
+- typów typerów/użytkowników,
+- AKO,
+- portfela,
+- rozliczania.

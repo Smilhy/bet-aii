@@ -1,0 +1,7 @@
+WERSJA 1463 — statystyki AI: max 20 + rozwijanie po 10
+Zmiany:
+- każda tabela w Typy AI → Statystyki pokazuje domyślnie maksymalnie 20 pozycji
+- dodany przycisk Pokaż kolejne 10 pod tabelami, które mają więcej rekordów
+- działa dla lig, rodzajów typów, sportów, zakresów kursów i typów kuponów
+- logika rozliczania bez zmian
+- build OK (pozostały wcześniejsze warningi projektu)

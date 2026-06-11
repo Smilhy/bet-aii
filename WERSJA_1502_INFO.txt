@@ -1,0 +1,1 @@
+Wersja 1502: naprawa zerowania po wejściu. Przywrócony backendowy get-ai-bets Service Role dla auto-load Mecze Result i Statystyki; zachowany fix liczników pre-match z 1501.

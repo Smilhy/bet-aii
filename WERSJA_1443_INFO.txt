@@ -1,0 +1,7 @@
+WERSJA 1443 — Statystyki Typy AI pod hero
+Zmiany:
+- dodany pasek statystyk pod hero w zakładce Typy AI
+- statystyki liczą się dynamicznie z zapisanych typów AI: yield, profit, liczba typów, wygrane, przegrane, pending, stawki, średni kurs, max kurs
+- logika używa status/result oraz kursu/stawki, więc po rozliczeniu automatycznie aktualizuje wartości
+- zachowany wygląd premium 1441/1442 i kafle sportów
+- build OK

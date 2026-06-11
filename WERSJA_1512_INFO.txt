@@ -1,0 +1,1 @@
+WERSJA 1512 - Top typerzy: przywrocone kolorowe kafle sportow jak w poprzedniej wersji, usuniete ikonki z panelu rynku i przyciskow. Logika bez zmian.

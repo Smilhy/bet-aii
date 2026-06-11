@@ -1,0 +1,6 @@
+WERSJA 1461 — usunięta tabela godzin dodawania kuponów
+Zmiany:
+- usunięta sekcja Statystyki godzin dodawania kuponów z Typy AI → Statystyki
+- zostawiona tabela Statystyki zakresów kursów
+- logika danych i rozliczania bez zmian
+- build OK (pozostały wcześniejsze warningi projektu)

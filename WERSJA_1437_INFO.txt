@@ -1,0 +1,15 @@
+WERSJA 1437 — FIX ODBIORU MISJI / PORTFEL
+
+Problem:
+- misja była wykonana 1/1, ale odbiór kończył się błędem.
+- najczęstsza przyczyna: zapis portfela przez ON CONFLICT(email), gdy tabela ma indeks lower(email).
+
+Zrobione:
+- frontend używa claim_community_reward_v1437,
+- SQL nie używa ON CONFLICT(email),
+- najpierw UPDATE po lower(email), potem INSERT, a przy unique_violation ponowny UPDATE,
+- catch w UI pokazuje dokładniejszy błąd, jeśli jeszcze coś wyskoczy.
+
+WAŻNE:
+Odpal SQL:
+supabase/WERSJA_1437_COMMUNITY_MISSION_CLAIM_WALLET_FIX.sql

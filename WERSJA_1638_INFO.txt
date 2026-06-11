@@ -1,0 +1,2 @@
+WERSJA 1638
+Dashboard: usunięto odświeżanie co 15 sekund. Typ znika jednorazowym timeoutem dokładnie po wybiciu godziny startu meczu. Nie ruszano innych sekcji.

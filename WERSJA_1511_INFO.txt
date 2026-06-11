@@ -1,0 +1,11 @@
+WERSJA 1511 — Top typerzy: dopasowanie wyglądu do dashboardu
+
+Zmiany tylko w zakładce Top typerzy:
+- usunięto tekst pod hero: "Nowy baner jak w Dodaj typ...",
+- usunięto belkę: "Auto z Supabase",
+- dopasowano hero do ciemnego, turkusowego stylu dashboardu,
+- zmniejszono i ujednolicono fonty w hero oraz kaflach sportów,
+- kafle sportów zostają z działającą logiką filtrowania, ale wygląd jest spokojniejszy i bardziej dashboardowy.
+
+Nie ruszano Supabase, Netlify, płatności ani innych zakładek.
+Build lokalny: OK.

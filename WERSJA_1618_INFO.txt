@@ -1,0 +1,9 @@
+Wersja 1618 — krzyżyk usuwania wiadomości w Centrum wsparcia
+
+Zmiana tylko w Centrum wsparcia admina:
+- przy każdej wiadomości w rozmowie admina dodany mały przycisk „×”,
+- kliknięcie usuwa konkretną wiadomość z tabeli support_messages,
+- po usunięciu rozmowa odświeża się live,
+- nie ruszano dashboardu, profilu, typów, AI, Stripe, Supabase schema ani responsywności.
+
+Jeśli Supabase RLS blokuje DELETE na support_messages, użyj pliku SUPABASE_OPTIONAL_1618_SUPPORT_DELETE_POLICY.sql.

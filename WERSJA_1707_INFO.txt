@@ -1,0 +1,23 @@
+WERSJA 1707 — Dashboard AI Typy dnia pokazuje aktywne typy z ai_bets.
+
+Naprawia:
+- prawa ramka nie pokazywała typu, mimo że zakładka Typy AI go widziała.
+- przyczyna: 1706 filtrowała created_at = dzisiaj, a Supabase zapisuje UTC.
+- typ z nocnego skanu mógł mieć created_at poprzedniego dnia w bazie.
+
+Zmiana:
+- prawa ramka zostaje,
+- pokazuje aktywne/najnowsze typy z public.ai_bets,
+- nie jest blokowana przez różnicę daty UTC/PL,
+- nadal filtruje kurs >= 1.50 i confidence/probability >= 48,
+- odświeża się co 2 minuty i po powrocie do karty.
+
+Nie ruszano:
+- logiki AI 1703,
+- realnych kursów,
+- strict full-time,
+- UI Gole 1705,
+- typów typerów/użytkowników,
+- AKO,
+- portfela,
+- rozliczania.

@@ -1,0 +1,9 @@
+WERSJA 1646 — Mój profil: klikana liga w statystykach
+
+Zmiany:
+- W zakładce Mój profil -> Statystyki tabela "Statystyki według lig" ma teraz klikalne wiersze.
+- Kliknięcie ligi otwiera modal taki jak w Typy AI.
+- Modal pokazuje podział typów z danej ligi: rodzaj typu, ilość, stawka rozliczona, bilans, yield, średni kurs oraz W/L/P.
+- Dodany hover/glow na klikalnych ligach w profilu.
+
+SQL nie jest wymagany.

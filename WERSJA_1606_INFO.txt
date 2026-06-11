@@ -1,0 +1,10 @@
+BetAI STRONA WERSJA 1606 - RESET IMPORT CACHE / SMILHYTV ZERO STATS
+
+Baza: 1600_TABLET_DASHBOARD_REMOVE_GAPS.
+Zmiany tylko frontend/cache/statystyki profilu:
+- czyści techniczny localStorage cache starych typów/statystyk autora jednorazowo,
+- nie przywraca author_imported_stats ze starych typów/cache, jeśli profil ma imported_* wyzerowane,
+- public profile nie nadaje już sztucznego stats_imported_at w przyszłości,
+- get-public-tips pobiera bez cache przeglądarki.
+
+Nie ruszano Stripe, Supabase schema, płatności, zakupów ani responsywności tabletu z 1600.

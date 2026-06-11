@@ -1,0 +1,1 @@
+WERSJA 1658 — AUTO ROZLICZANIE: obsługa podwójnej szansy 1X/X2/12 w auto-settle-tips. X2 przy wyniku wyjazd/remis rozlicza się jako wygrany.

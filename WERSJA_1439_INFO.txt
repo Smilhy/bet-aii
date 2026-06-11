@@ -1,0 +1,12 @@
+WERSJA 1439 — USUNIĘTY FILTR EV MIN Z TYPY AI
+
+Zrobione:
+- usunięty kafel/suwak EV min,
+- usunięty stan minEv,
+- usunięta logika filtrowania listy po EV,
+- reset filtrów nie dotyka już EV,
+- EV nadal może być pokazywane na karcie typu jako informacja, ale nie blokuje listy.
+
+Kontrola:
+- w main.jsx pozostałe wystąpienia minEv/setMinEv: 2
+- SQL nie jest wymagany.
