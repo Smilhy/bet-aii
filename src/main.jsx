@@ -14727,11 +14727,11 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [hoverIndex, setHoverIndex] = useState(null)
   const [savedLeagues, setSavedLeagues] = useState([])
   const [tableVisibleCounts, setTableVisibleCounts] = useState({
-    coupons: 20,
-    sports: 20,
-    leagues: 20,
-    types: 20,
-    odds: 20,
+    coupons: 10,
+    sports: 10,
+    leagues: 10,
+    types: 10,
+    odds: 10,
   })
   const [selectedLeagueDetail, setSelectedLeagueDetail] = useState(null)
 
@@ -15138,7 +15138,10 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
     const hasMore = rows.length > visibleCount
     return (
     <div className={`ai-profile-stat-table-v1459 ${variant}`}>
-      <h4>{title}</h4>
+      <div className="ai-profile-stat-head-v1737">
+        <h4>{title}</h4>
+        {rows.length > 10 ? <span>{`Top ${Math.min(visibleRows.length, rows.length)} z ${rows.length}`}</span> : null}
+      </div>
       <div className="ai-profile-table-head-v1459">{columns.map(c => <b key={c}>{c}</b>)}</div>
       {visibleRows.length ? visibleRows.map(row => (
         <div

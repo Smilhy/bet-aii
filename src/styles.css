@@ -73348,3 +73348,21 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .profile-ticket-v6-field .ticket-market-label-v1711 + strong{
   line-height:1.12!important;
 }
+
+/* 1737: Typy AI / Statystyki - top count and load more like profile stats */
+.ai-profile-stat-head-v1737 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ai-profile-stat-head-v1737 h4 {
+  margin: 0;
+}
+.ai-profile-stat-head-v1737 span {
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(200, 246, 255, .72);
+  white-space: nowrap;
+}
