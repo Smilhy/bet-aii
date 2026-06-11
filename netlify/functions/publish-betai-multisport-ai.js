@@ -5,7 +5,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 
 const AUTHOR_NAME = 'BetAI MultiSport AI'
-const VERSION = '1733-betai-multisport-ai-own-engine'
+const VERSION = '1734-betai-multisport-ai-own-engine-int-score-fix'
 const SOURCE = 'live_ai_engine'
 
 const headers = {
@@ -26,6 +26,11 @@ function round(value, digits = 2) {
   const f = 10 ** digits
   return Math.round(n(value, 0) * f) / f
 }
+function intn(value, fallback = 0) {
+  const x = n(value, fallback)
+  return Math.round(Number.isFinite(x) ? x : fallback)
+}
+
 function clean(value, fallback = '') {
   const s = String(value == null ? '' : value).trim()
   return s || fallback
