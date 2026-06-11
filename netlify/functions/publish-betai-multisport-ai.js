@@ -5,7 +5,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 
 const AUTHOR_NAME = 'BetAI MultiSport AI'
-const VERSION = '1734-betai-multisport-ai-own-engine-int-score-fix'
+const VERSION = '1735-betai-multisport-ai-force-int-before-insert'
 const SOURCE = 'live_ai_engine'
 
 const headers = {
@@ -293,10 +293,10 @@ function buildTipRow(ev, pick) {
     tip_source: null,
     ai_source: VERSION,
     ai_model_version: VERSION,
-    ai_score: round(pick.ai_score, 2),
-    ai_confidence: round(pick.ai_score, 2),
-    probability: round(pick.probability, 2),
-    model_probability: round(pick.probability, 2),
+    ai_score: Math.round(n(pick.ai_score, 0)),
+    ai_confidence: Math.round(n(pick.ai_score, 0)),
+    probability: Math.round(n(pick.probability, 0)),
+    model_probability: Math.round(n(pick.probability, 0)),
     value_score: round(pick.ev, 2),
     ev: round(pick.ev, 2),
     analysis: `BetAI MultiSport AI: ${ev.home} vs ${ev.away}. Typ: ${pick.prediction}, rynek: ${pick.market}, kurs ${pick.odds}, prawdopodobieństwo modelowe ${round(pick.probability, 1)}%.`,
@@ -311,8 +311,19 @@ function missingColumn(error) {
   const m = msg.match(/Could not find the '([^']+)' column/i)
   return m ? m[1] : ''
 }
+
+function forceIntegerColumns(row) {
+  const out = { ...row }
+  for (const key of ['ai_score', 'ai_confidence', 'probability', 'model_probability']) {
+    if (Object.prototype.hasOwnProperty.call(out, key)) {
+      out[key] = Math.round(n(out[key], 0))
+    }
+  }
+  return out
+}
+
 async function insertSafe(supabase, row) {
-  let payload = { ...row }
+  let payload = forceIntegerColumns(row)
   const removed = []
   for (let attempt = 0; attempt < 35; attempt++) {
     const { data, error } = await supabase.from('tips').insert(payload).select('id').single()
@@ -328,7 +339,7 @@ async function insertSafe(supabase, row) {
   throw new Error('Too many missing-column retries: ' + removed.join(', '))
 }
 async function updateSafe(supabase, id, row) {
-  let payload = { ...row }
+  let payload = forceIntegerColumns(row)
   delete payload.created_at
   const removed = []
   for (let attempt = 0; attempt < 35; attempt++) {
