@@ -15133,7 +15133,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   }).filter(r => r.bets)
 
   const StatTable = ({ title, columns, rows, variant = '', tableKey = 'default', onRowClick = null }) => {
-    const visibleCount = tableVisibleCounts[tableKey] || 20
+    const visibleCount = tableVisibleCounts[tableKey] || 10
     const visibleRows = rows.slice(0, visibleCount)
     const hasMore = rows.length > visibleCount
     return (
@@ -15163,7 +15163,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <button
           type="button"
           className="ai-profile-load-more-v1463"
-          onClick={() => setTableVisibleCounts(prev => ({ ...prev, [tableKey]: (prev[tableKey] || 20) + 10 }))}
+          onClick={() => setTableVisibleCounts(prev => ({ ...prev, [tableKey]: (prev[tableKey] || 10) + 10 }))}
         >
           Pokaż kolejne 10 <small>{visibleCount}/{rows.length}</small>
         </button>
@@ -20700,12 +20700,16 @@ function ProfileLiveTipCard({
 }
 
 
-function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7, rowKeys = [], onRowClick = null }) {
-  const [expanded, setExpanded] = useState(false)
+function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 10, rowKeys = [], onRowClick = null }) {
   const safeRows = Array.isArray(rows) ? rows : []
-  const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
+  const stepLimit = Math.max(1, Number(initialLimit || 10) || 10)
+  const [visibleCount, setVisibleCount] = useState(stepLimit)
+  useEffect(() => {
+    setVisibleCount(stepLimit)
+  }, [stepLimit, title])
+  const visibleLimit = Math.min(Math.max(stepLimit, visibleCount), Math.max(stepLimit, safeRows.length))
   const hasMoreRows = safeRows.length > visibleLimit
-  const visibleRows = expanded || !hasMoreRows ? safeRows : safeRows.slice(0, visibleLimit)
+  const visibleRows = safeRows.slice(0, visibleLimit)
   const balanceColumnIndex = Array.isArray(columns)
     ? columns.findIndex(column => String(column || '').trim().toLowerCase() === 'bilans')
     : -1
@@ -20725,7 +20729,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
     <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''} ${hasMoreRows ? 'has-expand-v1356' : ''}`}>
       <div className="profile-v3-card-head">
         <h3>{title}</h3>
-        {hasMoreRows ? <span>{expanded ? `Pokazano ${safeRows.length}` : `Top ${visibleLimit} z ${safeRows.length}`}</span> : null}
+        {safeRows.length > stepLimit ? <span>{`Top ${Math.min(visibleLimit, safeRows.length)} z ${safeRows.length}`}</span> : null}
       </div>
       <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
         <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
@@ -20756,8 +20760,12 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
         })}
       </div>
       {hasMoreRows ? (
-        <button type="button" className="profile-stats-expand-v1356" onClick={() => setExpanded(prev => !prev)}>
-          {expanded ? 'Pokaż mniej' : `Pokaż kolejne ${Math.min(visibleLimit, safeRows.length - visibleLimit)}`}
+        <button
+          type="button"
+          className="profile-stats-expand-v1356"
+          onClick={() => setVisibleCount(prev => Math.min(prev + stepLimit, safeRows.length))}
+        >
+          Pokaż kolejne {Math.min(stepLimit, Math.max(safeRows.length - visibleLimit, 0))}
         </button>
       ) : null}
     </section>

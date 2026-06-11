@@ -1,0 +1,26 @@
+WERSJA 1736 — TYPY AI / STATYSTYKI POKAŻ KOLEJNE 10
+
+Zakres zmiany:
+- Zmieniony tylko front: src/main.jsx
+- Nie zmieniano funkcji Netlify.
+- Nie zmieniano Typy AI generowania.
+- Nie zmieniano ai_bets.
+- Nie zmieniano publishera BetAI MultiSport AI.
+- Nie zmieniano rozliczania, AKO, portfela ani subskrypcji.
+
+Co poprawia:
+- Tabele statystyk pokazują domyślnie 10 rekordów zamiast 7.
+- Każda tabela statystyk ma zasadę „Pokaż kolejne 10”.
+- Dotyczy tabel typu:
+  * Statystyki według lig
+  * Statystyki rodzajów typów
+  * Statystyki dla sportów
+  * Statystyki typów kuponów
+  * Statystyki zakresów kursów
+  * Statystyki godzin dodawania kuponów
+  * Statystyki miesięcy
+- W module AI Profile również domyślna ilość w tabelach została zmieniona z 20 na 10 + kolejne 10.
+
+Cel:
+- W zakładce Typy AI/statystyki użytkownik widzi pierwsze 10 zdarzeń/wierszy.
+- Gdy danych jest więcej, klika „Pokaż kolejne 10”.
