@@ -1,0 +1,17 @@
+WERSJA 1739 — Dashboard hero Mundial 2026 CLEAN FIX
+
+Naprawia 1738:
+- Baner wpięty w istniejący hero jako normalny slajd { src, alt }.
+- Asset dodany do public/dashboard-hero-v551/worldcup-2026-hero.png.
+- Slajd ustawiony jako pierwszy.
+- Pozostałe slajdy zostają po nim.
+
+Nie ruszano:
+- Typy AI
+- ai_bets
+- get-ai-bets
+- generate-live-ai-picks
+- BetAI MultiSport AI publisher
+- AKO
+- rozliczanie
+- portfel/subskrypcje

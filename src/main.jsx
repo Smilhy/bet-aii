@@ -33,7 +33,6 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
-import worldCup2026Hero from './assets/worldcup_2026_hero.png';
 
 /* WERSJA 1721 FIX — PRZYWROC BETAI MULTISPORT AI, POPRAWKA BUILD */
 
@@ -2241,17 +2240,7 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero() {
   const heroSlides = [
-  {
-    id: 'worldcup-2026-start',
-    title: 'Zaczynamy Mistrzostwa Świata 2026',
-    subtitle: 'Typy AI, emocje na żywo i mundialowe analizy w jednym miejscu.',
-    image: worldCup2026Hero,
-    backgroundImage: worldCup2026Hero,
-    cta: 'Sprawdź typy',
-    href: '#typy',
-    badge: 'Mistrzostwa Świata 2026',
-    active: true
-  },
+    { src: '/dashboard-hero-v551/worldcup-2026-hero.png', alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
 
     { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
