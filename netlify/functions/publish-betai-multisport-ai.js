@@ -65,6 +65,27 @@ function toIsoOrText(date, time) {
   return `${d}T12:00:00Z`
 }
 
+
+function kickoffMs(row) {
+  const matchDate = toDateKey(row.match_date)
+  const rawTime = clean(row.match_time || row.kickoff_time || row.event_time || '12:00')
+
+  if (/^\d{1,2}:\d{2}$/.test(rawTime)) {
+    const hhmm = rawTime.padStart(5, '0')
+    const d = new Date(`${matchDate}T${hhmm}:00Z`)
+    return Number.isNaN(d.getTime()) ? 0 : d.getTime()
+  }
+
+  const parsed = new Date(rawTime)
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime()
+}
+
+function isFutureKickoff(row, bufferMinutes) {
+  const ms = kickoffMs(row)
+  if (!ms) return false
+  return ms > Date.now() + bufferMinutes * 60 * 1000
+}
+
 function inferKeys(row) {
   const market = clean(row.market || row.market_name || row.bet_type)
   const prediction = clean(row.prediction || row.selection || row.pick || row.bet_type)
@@ -162,9 +183,9 @@ function buildTipRow(aiBet) {
     coupon_type: 'single',
     is_ako: false,
     legs_count: 1,
-    source: 'betai-multisport-ai-only-publisher-v1730',
-    tip_source: 'betai-multisport-ai-only-publisher-v1730',
-    ai_source: 'betai-multisport-ai-only-publisher-v1730',
+    source: 'betai-multisport-ai-future-only-publisher-v1731',
+    tip_source: 'betai-multisport-ai-future-only-publisher-v1731',
+    ai_source: 'betai-multisport-ai-future-only-publisher-v1731',
     ai_score: Math.round(n(aiBet.ai_score || aiBet.ai_confidence || aiBet.probability || aiBet.model_probability, 70)),
     ai_confidence: Math.round(n(aiBet.ai_confidence || aiBet.ai_score || aiBet.probability || aiBet.model_probability, 70)),
     probability: Math.round(n(aiBet.probability || aiBet.model_probability || aiBet.ai_confidence || aiBet.ai_score, 70)),
@@ -231,6 +252,7 @@ exports.handler = async function(event) {
   const limit = Math.min(Math.max(Number(params.limit || process.env.BETAI_MULTISPORT_AI_LIMIT || 3), 1), 10)
   const minScore = Number(params.min_score || process.env.BETAI_MULTISPORT_AI_MIN_SCORE || 70)
   const dryRun = ['1', 'true', 'yes'].includes(String(params.dry_run || '').toLowerCase())
+  const minMinutesBeforeStart = Math.max(Number(params.min_minutes_before_start || process.env.BETAI_MULTISPORT_AI_MIN_MINUTES_BEFORE_START || 10), 0)
   const date = /^\d{4}-\d{2}-\d{2}$/.test(params.date || '') ? params.date : todayWarsaw()
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
@@ -244,15 +266,18 @@ exports.handler = async function(event) {
     .order('match_time', { ascending: true })
     .limit(50)
 
-  if (error) return json(500, { ok: false, version: '1730-betai-multisport-ai-only-publisher', error: error.message })
+  if (error) return json(500, { ok: false, version: '1731-betai-multisport-ai-future-only-publisher', error: error.message })
 
-  const candidates = (aiBets || [])
+  const rawCandidates = (aiBets || [])
     .filter(bet => n(bet.ai_score || bet.ai_confidence || bet.probability, 0) >= minScore)
+    .filter(bet => isFutureKickoff(bet, minMinutesBeforeStart))
+
+  const candidates = rawCandidates
     .map(buildTipRow)
     .slice(0, limit)
 
   if (dryRun) {
-    return json(200, { ok: true, version: '1730-betai-multisport-ai-only-publisher', dry_run: true, date, candidates: candidates.length, rows: candidates })
+    return json(200, { ok: true, version: '1731-betai-multisport-ai-future-only-publisher', dry_run: true, date, min_minutes_before_start: minMinutesBeforeStart, available_future_candidates: rawCandidates.length, candidates: candidates.length, rows: candidates })
   }
 
   let inserted = 0
@@ -295,7 +320,7 @@ exports.handler = async function(event) {
 
   try {
     await supabase.from('ai_pick_runs').insert({
-      source: 'betai-multisport-ai-only-publisher-v1730',
+      source: 'betai-multisport-ai-future-only-publisher-v1731',
       picks_created: inserted,
       status: errors.length ? 'partial' : 'success',
       error_message: errors.length ? JSON.stringify(errors).slice(0, 1000) : null,
@@ -305,10 +330,12 @@ exports.handler = async function(event) {
 
   return json(errors.length && !inserted && !updated ? 500 : 200, {
     ok: !errors.length || inserted > 0 || updated > 0,
-    version: '1730-betai-multisport-ai-only-publisher',
+    version: '1731-betai-multisport-ai-future-only-publisher',
     author: AUTHOR_NAME,
     date,
-    source: 'existing_ai_bets_only',
+    source: 'existing_ai_bets_only_future_matches_only',
+    min_minutes_before_start: minMinutesBeforeStart,
+    available_future_candidates: rawCandidates.length,
     inserted,
     updated,
     attempted: candidates.length,
