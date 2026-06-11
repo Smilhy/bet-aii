@@ -2240,8 +2240,7 @@ function getTipErrorToast(cleanMessage) {
 
 function AnimatedDashboardHero() {
   const heroSlides = [
-    { src: '/dashboard-hero-v551/worldcup-2026-hero.png', alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
-
+    { src: '/dashboard-hero-v551/worldcup-2026-hero.jpg', alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
     { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
     { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
     { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
@@ -14729,11 +14728,11 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   const [hoverIndex, setHoverIndex] = useState(null)
   const [savedLeagues, setSavedLeagues] = useState([])
   const [tableVisibleCounts, setTableVisibleCounts] = useState({
-    coupons: 10,
-    sports: 10,
-    leagues: 10,
-    types: 10,
-    odds: 10,
+    coupons: 20,
+    sports: 20,
+    leagues: 20,
+    types: 20,
+    odds: 20,
   })
   const [selectedLeagueDetail, setSelectedLeagueDetail] = useState(null)
 
@@ -15135,15 +15134,12 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
   }).filter(r => r.bets)
 
   const StatTable = ({ title, columns, rows, variant = '', tableKey = 'default', onRowClick = null }) => {
-    const visibleCount = tableVisibleCounts[tableKey] || 10
+    const visibleCount = tableVisibleCounts[tableKey] || 20
     const visibleRows = rows.slice(0, visibleCount)
     const hasMore = rows.length > visibleCount
     return (
     <div className={`ai-profile-stat-table-v1459 ${variant}`}>
-      <div className="ai-profile-stat-head-v1737">
-        <h4>{title}</h4>
-        {rows.length > 10 ? <span>{`Top ${Math.min(visibleRows.length, rows.length)} z ${rows.length}`}</span> : null}
-      </div>
+      <h4>{title}</h4>
       <div className="ai-profile-table-head-v1459">{columns.map(c => <b key={c}>{c}</b>)}</div>
       {visibleRows.length ? visibleRows.map(row => (
         <div
@@ -15168,7 +15164,7 @@ function AiStatsAnalyticsView({ tips = [], searchQuery = '' }) {
         <button
           type="button"
           className="ai-profile-load-more-v1463"
-          onClick={() => setTableVisibleCounts(prev => ({ ...prev, [tableKey]: (prev[tableKey] || 10) + 10 }))}
+          onClick={() => setTableVisibleCounts(prev => ({ ...prev, [tableKey]: (prev[tableKey] || 20) + 10 }))}
         >
           Pokaż kolejne 10 <small>{visibleCount}/{rows.length}</small>
         </button>
@@ -20705,16 +20701,12 @@ function ProfileLiveTipCard({
 }
 
 
-function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 10, rowKeys = [], onRowClick = null }) {
+function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 7, rowKeys = [], onRowClick = null }) {
+  const [expanded, setExpanded] = useState(false)
   const safeRows = Array.isArray(rows) ? rows : []
-  const stepLimit = Math.max(1, Number(initialLimit || 10) || 10)
-  const [visibleCount, setVisibleCount] = useState(stepLimit)
-  useEffect(() => {
-    setVisibleCount(stepLimit)
-  }, [stepLimit, title])
-  const visibleLimit = Math.min(Math.max(stepLimit, visibleCount), Math.max(stepLimit, safeRows.length))
+  const visibleLimit = Math.max(1, Number(initialLimit || 7) || 7)
   const hasMoreRows = safeRows.length > visibleLimit
-  const visibleRows = safeRows.slice(0, visibleLimit)
+  const visibleRows = expanded || !hasMoreRows ? safeRows : safeRows.slice(0, visibleLimit)
   const balanceColumnIndex = Array.isArray(columns)
     ? columns.findIndex(column => String(column || '').trim().toLowerCase() === 'bilans')
     : -1
@@ -20734,7 +20726,7 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
     <section className={`glass-profile-v3 profile-v3-card profile-v4-stats-table ${wide ? 'wide' : ''} ${hasMoreRows ? 'has-expand-v1356' : ''}`}>
       <div className="profile-v3-card-head">
         <h3>{title}</h3>
-        {safeRows.length > stepLimit ? <span>{`Top ${Math.min(visibleLimit, safeRows.length)} z ${safeRows.length}`}</span> : null}
+        {hasMoreRows ? <span>{expanded ? `Pokazano ${safeRows.length}` : `Top ${visibleLimit} z ${safeRows.length}`}</span> : null}
       </div>
       <div className="profile-v4-data-table" style={{ '--cols': columns.length }}>
         <div>{columns.map(column => <b key={column}>{column}</b>)}</div>
@@ -20765,12 +20757,8 @@ function ProfileStatsTable({ title, columns, rows, wide = false, initialLimit = 
         })}
       </div>
       {hasMoreRows ? (
-        <button
-          type="button"
-          className="profile-stats-expand-v1356"
-          onClick={() => setVisibleCount(prev => Math.min(prev + stepLimit, safeRows.length))}
-        >
-          Pokaż kolejne {Math.min(stepLimit, Math.max(safeRows.length - visibleLimit, 0))}
+        <button type="button" className="profile-stats-expand-v1356" onClick={() => setExpanded(prev => !prev)}>
+          {expanded ? 'Pokaż mniej' : `Pokaż kolejne ${Math.min(visibleLimit, safeRows.length - visibleLimit)}`}
         </button>
       ) : null}
     </section>
