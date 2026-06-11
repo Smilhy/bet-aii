@@ -1,7 +1,0 @@
-WERSJA 1514 — FIX NETLIFY BUILD + SQL UUID
-
-Poprawki:
-- netlify.toml dodaje chmod dla esbuild/vite przed buildem, żeby nie było błędu EACCES na Netlify.
-- SQL tipster_plans poprawiony pod tipster_id UUID i FK do profiles.id.
-- Usunięto node_modules z paczki źródłowej, żeby Netlify instalował zależności świeżo.
-- Logika cennika z wersji 1513 zostaje bez zmian.

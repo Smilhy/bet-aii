@@ -1,1 +1,0 @@
-WERSJA 1648 — Mój profil / Statystyki: dodano kolumnę Kraj do tabeli Statystyki według lig, tak jak w Typy AI. Klikanie ligi i modal pozostają bez zmian.

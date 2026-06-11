@@ -1,1 +1,0 @@
-WERSJA 1687 — Typy AI: usunięto prawą kolumnę UI i rozciągnięto środkową/listę typów na całą szerokość. Bez zmian logiki, Supabase, skanera AI, AKO i rozliczania.

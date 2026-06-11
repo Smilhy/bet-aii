@@ -1,4 +1,0 @@
-WERSJA 1572 — podmiana prezentacji lokalnej na YouTube embed
-- Modal prezentacji używa teraz YouTube: https://www.youtube.com/watch?v=I0l3Pa9t6hY
-- Usunięto lokalny ciężki plik MP4 z paczki strony.
-- Cel: płynne odtwarzanie bez ścinek z hostingu strony.

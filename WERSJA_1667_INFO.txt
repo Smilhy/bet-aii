@@ -1,5 +1,0 @@
-WERSJA 1667
-- AKO: kliknięcie "+X więcej zdarzeń" rozwija pełną listę zdarzeń i zwija przez "Pokaż mniej".
-- Analiza: jeśli użytkownik zostawi opis/analizę pustą, karta nie wstawia automatycznej analizy AI.
-- Ukryto przycisk "Czytaj więcej" gdy analiza jest pusta.
-- SQL nie jest wymagany.

@@ -1,6 +1,0 @@
-WERSJA 1571 — NAPRAWA ODBIORU NAGRÓD SPOŁECZNOŚCI
-
-- Dodano SQL: SUPABASE_RUN_ONCE_WERSJA_1571_COMMUNITY_REWARD_CLAIM_FIX.sql
-- Naprawia przyciski „Odbierz +1 coin” w Społeczność -> Nagrody.
-- Poprzednia funkcja SQL obsługiwała daily_chat/daily_post/daily_active, ale nie obsługiwała first_post, first_comment, first_chat, social_value.
-- Bunny Stream zostaje bez zmian.

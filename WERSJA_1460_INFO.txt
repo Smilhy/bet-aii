@@ -1,6 +1,0 @@
-WERSJA 1460 — usunięty pasek podsumowania pod wykresem Statystyki AI
-Zmiany:
-- usunięty rząd: Zmiana salda / Najwyższy bilans / Najniższy bilans / Średni poziom / Rozliczone typy
-- zostawiony wykres i pozostałe tabele
-- bez zmian w logice danych i rozliczania
-- build OK (pozostały wcześniejsze warningi projektu)

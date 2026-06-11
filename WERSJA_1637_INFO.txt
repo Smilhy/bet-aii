@@ -1,1 +1,0 @@
-Wersja 1637: Dashboard odświeża czas co 15 sekund i ukrywa typy dokładnie od startu meczu; zakup singla jest blokowany, jeśli mecz już wystartował. Zmieniono tylko logikę Dashboard/zakupu singla.

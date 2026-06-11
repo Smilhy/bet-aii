@@ -1,8 +1,0 @@
-WERSJA 1440 - FIX TYPY AI minEv
-
-Naprawiono błąd w zakładce Typy AI: ReferenceError minEv is not defined.
-
-Zmiany:
-- usunięto ostatni warunek filtrowania po minEv w chooseBestFootballMarket,
-- usunięto minEv z zależności useMemo dla visibleCards,
-- pozostawiono działające filtry kursu i prawdopodobieństwa.

@@ -1,5 +1,0 @@
-WERSJA 1642 — poprawa wyglądu kwoty stawki na karcie typu.
-- Kwota pod STAWKA jest większa i mocniejsza.
-- Dodano walutę "zł" obok kwoty.
-- Pasek pod kwotą jest subtelniejszy i lepiej dopasowany.
-- Nie wymaga SQL.

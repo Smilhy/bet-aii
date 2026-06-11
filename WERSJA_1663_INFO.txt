@@ -1,9 +1,0 @@
-WERSJA 1663 — TYLKO 9 RYNKÓW + AUTO ROZLICZANIE
-
-Zmiany:
-- Dodaj typ pokazuje w piłce nożnej tylko 9 rynków:
-  1X2, Podwójna szansa, Gole Over/Under, BTTS, Handicap, DNB, Dokładny wynik, Rogi, Kartki.
-- Usunięte/odfiltrowane są niszowe rynki typu strzelec gola, połowy, HT/FT itd.
-- Auto-settle obsługuje te 9 rynków.
-- Rogi i Kartki są rozliczane z API-FOOTBALL /fixtures/statistics.
-- Jeżeli API nie zwróci statystyk rogów/kartek, automat nie zgaduje i zostawia pending_admin_review.

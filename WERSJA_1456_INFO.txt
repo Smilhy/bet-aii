@@ -1,6 +1,0 @@
-WERSJA 1456 — usunięty dodatkowy hero ze Statystyki AI
-Zmiany:
-- usunięty dodatkowy baner/hero z zakładki Statystyki AI
-- zostaje główny hero Typy AI u góry strony
-- bez zmian w logice, rozliczaniu i wyszukiwarce
-- build OK (pozostały wcześniejsze warningi projektu)

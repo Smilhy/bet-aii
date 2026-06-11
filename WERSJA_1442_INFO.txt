@@ -1,6 +1,0 @@
-WERSJA 1442 — Przywrócenie kafli sportów w Typy AI Premium 10/10
-Zmiany:
-- przywrócone kafle sportów w zakładce Typy AI
-- zachowany redesign 1441
-- ukryty panel suwaków, żeby nie obciążać layoutu
-- build OK

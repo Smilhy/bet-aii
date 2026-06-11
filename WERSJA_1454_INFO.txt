@@ -1,7 +1,0 @@
-WERSJA 1454 — poprawa kolorów kart statystyk
-Zmiany:
-- Yield: gdy wartość ujemna, liczba jest czerwona; gdy dodatnia, zielona
-- Profit: gdy wartość ujemna, liczba jest czerwona; gdy dodatnia, zielona
-- Max kurs: liczba ustawiona na biało zamiast zielonego
-- bez zmian w logice rozliczania
-- build OK (pozostały wcześniejsze warningi projektu)

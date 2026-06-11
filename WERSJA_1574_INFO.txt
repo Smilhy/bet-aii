@@ -1,4 +1,0 @@
-WERSJA 1574 — FIX REJESTRACJI DUPLIKAT EMAIL
-- zablokowano mylący komunikat „konto utworzone” dla emaila, który już istnieje w Supabase Auth,
-- jeśli Supabase zwróci user.identities = [] albo błąd already registered, frontend pokazuje: „Konto z tym adresem email już istnieje...”,
-- nie zmienia logiki bazy i nie wymaga SQL.

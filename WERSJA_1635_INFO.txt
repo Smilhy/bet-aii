@@ -1,6 +1,0 @@
-WERSJA 1635
-
-Zmiana:
-- Podmieniono link iframe prezentacji Bunny Stream na nowy podany przez użytkownika.
-
-Nie zmieniano innych elementów strony.

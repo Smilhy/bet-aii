@@ -1,5 +1,0 @@
-Wersja 1485 — fix liczników/statystyk po przełączaniu Dziś/Jutro
-- Statystyki i Mecze Result nie są zerowane, gdy zakładka Jutro ma 0 typów.
-- Nie czyścimy globalnej listy zapisanych typów przy pustym dniu.
-- Typy AI Dziś/Jutro nadal filtrują widok po dacie.
-- Quality Mode pozostaje: kurs min 1.50, skuteczność min 70%, max 5 typów.

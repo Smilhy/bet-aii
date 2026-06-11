@@ -1,4 +1,0 @@
-WERSJA 1620
-- Dodano animowany, błyszczący komunikat BETA nad logo na ekranie logowania.
-- Etykieta WERSJA BETA pulsuje i delikatnie miga, aby bardziej zwracać uwagę użytkownika.
-- Bez zmian w bazie danych / Supabase.

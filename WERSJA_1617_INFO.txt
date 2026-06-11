@@ -1,1 +1,0 @@
-Wersja 1617: dashboard ukrywa typ od startu meczu, ale profil typera nadal pokazuje oczekujące typy w Darmowe/Premium.

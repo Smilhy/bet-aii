@@ -1,6 +1,0 @@
-WERSJA 1468 — usunięta zakładka Ligi w Typy AI
-Zmiany:
-- usunięty przycisk Ligi z dolnych zakładek Typy AI
-- zostają Typy AI na dziś, Typy AI na jutro, Mecze Result i Statystyki
-- nie ruszano statystyk, rozliczania ani wyszukiwarki
-- build OK (pozostały wcześniejsze warningi projektu)

@@ -1,2 +1,0 @@
-- Podmieniono YouTube embed na nowy film: https://www.youtube.com/watch?v=I0l3Pa9t6hY
-- Zachowano ten sam modal prezentacji.

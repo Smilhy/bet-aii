@@ -1,1 +1,0 @@
-WERSJA 1613: FHD 1920x1080 / 24 cale AUTO 75%, bez SQL. Nie dotyka 2K, 1680x1050, tabletu.

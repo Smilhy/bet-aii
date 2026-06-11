@@ -1,1 +1,0 @@
-WERSJA 1492: licznik Typów dzisiaj na ekranie logowania pobiera dane przez Netlify Function get-auth-live-stats z Service Role i liczy public.ai_bets po match_date. Zapis AI do ai_bets z 1491 zostaje.
