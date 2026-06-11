@@ -4,7 +4,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
 const AUTHOR_NAME = 'BetAI MultiSport AI'
-const AUTHOR_USERNAME = 'betai-multisport-ai'
 
 const corsHeaders = {
   'Content-Type': 'application/json',
@@ -56,7 +55,7 @@ function toDateKey(value) {
   return todayWarsaw()
 }
 
-function toIsoOrText(date, time) {
+function toIso(date, time) {
   const d = toDateKey(date)
   const rawTime = clean(time, '12:00')
   if (/^\d{1,2}:\d{2}$/.test(rawTime)) return `${d}T${rawTime.padStart(5, '0')}:00Z`
@@ -64,7 +63,6 @@ function toIsoOrText(date, time) {
   if (!Number.isNaN(parsed.getTime())) return parsed.toISOString()
   return `${d}T12:00:00Z`
 }
-
 
 function kickoffMs(row) {
   const matchDate = toDateKey(row.match_date)
@@ -135,33 +133,41 @@ function buildTipRow(aiBet) {
   const market = clean(aiBet.market || aiBet.bet_type || 'Typ AI')
   const prediction = clean(aiBet.prediction || aiBet.selection || aiBet.pick || aiBet.bet_type, market)
   const matchDate = toDateKey(aiBet.match_date)
-  const kickoff = toIsoOrText(matchDate, aiBet.match_time || aiBet.kickoff_time || aiBet.event_time)
-  const external = clean(aiBet.external_fixture_id || aiBet.api_fixture_id || aiBet.fixture_id || aiBet.odds_api_fixture_id || `${home}-${away}-${market}-${prediction}-${matchDate}`)
+  const kickoff = toIso(matchDate, aiBet.match_time || aiBet.kickoff_time || aiBet.event_time)
+  const external = clean(aiBet.external_fixture_id || aiBet.api_fixture_id || aiBet.fixture_id || `${home}-${away}-${market}-${prediction}-${matchDate}`)
   const fixtureDigits = clean(aiBet.api_fixture_id || aiBet.fixture_id || aiBet.external_fixture_id || external).replace(/\D/g, '')
   const keys = inferKeys({ ...aiBet, home_team: home, away_team: away, market, prediction })
   const now = new Date().toISOString()
   const odds = Math.max(1.01, n(aiBet.odds || aiBet.course, 1.5))
   const stake = Math.max(1, n(process.env.BETAI_MULTISPORT_AI_STAKE, 1))
 
+  // Styl zgodny ze starymi rekordami tego profilu:
+  // author_name TAK, username/user_id/tip_source NIE.
   return {
     ai_external_key: `betai-multisport-ai|${external}|${market}|${prediction}`,
     external_fixture_id: external,
     api_fixture_id: fixtureDigits || null,
     fixture_id: fixtureDigits || null,
+
     author_name: AUTHOR_NAME,
-    username: AUTHOR_USERNAME,
+    username: null,
+    user_id: null,
+
     sport: clean(aiBet.sport, 'Piłka nożna'),
     sport_key: clean(aiBet.sport_key, 'football'),
     country: clean(aiBet.country, 'API-Sports'),
     league: clean(aiBet.league || aiBet.league_name, 'Piłka nożna'),
+
     match_name: `${home} vs ${away}`,
     match: `${home} vs ${away}`,
     team_home: home,
     team_away: away,
+
     match_date: matchDate,
     match_time: kickoff,
     event_time: kickoff,
     kickoff_time: kickoff,
+
     market,
     bet_type: prediction,
     prediction,
@@ -169,33 +175,35 @@ function buildTipRow(aiBet) {
     selection: prediction,
     market_key: keys.market_key || null,
     selection_key: keys.selection_key || null,
+
     odds,
     stake,
+
     status: 'pending',
-    result: 'pending',
+    result: null,
     settlement_status: 'pending',
-    result_status: 'pending',
+    result_status: null,
     profit: 0,
     payout: 0,
     return_amount: 0,
+
     is_premium: false,
     access_type: 'free',
     coupon_type: 'single',
     is_ako: false,
     legs_count: 1,
-    source: 'betai-multisport-ai-future-only-publisher-v1731',
-    tip_source: 'betai-multisport-ai-future-only-publisher-v1731',
-    ai_source: 'betai-multisport-ai-future-only-publisher-v1731',
+
+    source: 'live_ai_engine',
+    tip_source: null,
+    ai_source: 'betai-multisport-ai-publisher-v1732',
+
     ai_score: Math.round(n(aiBet.ai_score || aiBet.ai_confidence || aiBet.probability || aiBet.model_probability, 70)),
     ai_confidence: Math.round(n(aiBet.ai_confidence || aiBet.ai_score || aiBet.probability || aiBet.model_probability, 70)),
     probability: Math.round(n(aiBet.probability || aiBet.model_probability || aiBet.ai_confidence || aiBet.ai_score, 70)),
     model_probability: Math.round(n(aiBet.model_probability || aiBet.probability || aiBet.ai_confidence || aiBet.ai_score, 70)),
     value_score: n(aiBet.value_score || aiBet.ev, 0),
     ev: n(aiBet.ev || aiBet.value_score, 0),
-    bookmaker: clean(aiBet.bookmaker || aiBet.odds_bookmaker),
-    odds_bookmaker: clean(aiBet.odds_bookmaker || aiBet.bookmaker),
-    odds_raw_market: clean(aiBet.odds_raw_market),
-    odds_raw_value: clean(aiBet.odds_raw_value),
+
     created_at: now,
     updated_at: now
   }
@@ -207,38 +215,46 @@ function missingColumn(error) {
   return m ? m[1] : ''
 }
 
-async function insertTipSafe(supabase, row) {
+async function insertSafe(supabase, table, row) {
   let payload = { ...row }
   const removed = []
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const { data, error } = await supabase.from('tips').insert(payload).select('id').single()
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const { data, error } = await supabase.from(table).insert(payload).select('id').single()
     if (!error) return { data, removed }
+
     const col = missingColumn(error)
     if (col && Object.prototype.hasOwnProperty.call(payload, col)) {
       delete payload[col]
       removed.push(col)
       continue
     }
+
     throw error
   }
+
   throw new Error('Too many missing-column retries: ' + removed.join(', '))
 }
 
-async function updateTipSafe(supabase, id, row) {
+async function updateSafe(supabase, table, id, row) {
   let payload = { ...row }
   delete payload.created_at
   const removed = []
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const { data, error } = await supabase.from('tips').update(payload).eq('id', id).select('id').single()
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const { data, error } = await supabase.from(table).update(payload).eq('id', id).select('id').single()
     if (!error) return { data, removed }
+
     const col = missingColumn(error)
     if (col && Object.prototype.hasOwnProperty.call(payload, col)) {
       delete payload[col]
       removed.push(col)
       continue
     }
+
     throw error
   }
+
   throw new Error('Too many missing-column retries: ' + removed.join(', '))
 }
 
@@ -251,8 +267,8 @@ exports.handler = async function(event) {
   const params = event.queryStringParameters || {}
   const limit = Math.min(Math.max(Number(params.limit || process.env.BETAI_MULTISPORT_AI_LIMIT || 3), 1), 10)
   const minScore = Number(params.min_score || process.env.BETAI_MULTISPORT_AI_MIN_SCORE || 70)
-  const dryRun = ['1', 'true', 'yes'].includes(String(params.dry_run || '').toLowerCase())
   const minMinutesBeforeStart = Math.max(Number(params.min_minutes_before_start || process.env.BETAI_MULTISPORT_AI_MIN_MINUTES_BEFORE_START || 10), 0)
+  const dryRun = ['1', 'true', 'yes'].includes(String(params.dry_run || '').toLowerCase())
   const date = /^\d{4}-\d{2}-\d{2}$/.test(params.date || '') ? params.date : todayWarsaw()
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
@@ -264,20 +280,28 @@ exports.handler = async function(event) {
     .eq('status', 'pending')
     .order('ai_score', { ascending: false })
     .order('match_time', { ascending: true })
-    .limit(50)
+    .limit(100)
 
-  if (error) return json(500, { ok: false, version: '1731-betai-multisport-ai-future-only-publisher', error: error.message })
+  if (error) return json(500, { ok: false, version: '1732-betai-multisport-ai-profile-style-publisher', error: error.message })
 
   const rawCandidates = (aiBets || [])
     .filter(bet => n(bet.ai_score || bet.ai_confidence || bet.probability, 0) >= minScore)
     .filter(bet => isFutureKickoff(bet, minMinutesBeforeStart))
 
-  const candidates = rawCandidates
-    .map(buildTipRow)
-    .slice(0, limit)
+  const rows = rawCandidates.map(buildTipRow).slice(0, limit)
 
   if (dryRun) {
-    return json(200, { ok: true, version: '1731-betai-multisport-ai-future-only-publisher', dry_run: true, date, min_minutes_before_start: minMinutesBeforeStart, available_future_candidates: rawCandidates.length, candidates: candidates.length, rows: candidates })
+    return json(200, {
+      ok: true,
+      version: '1732-betai-multisport-ai-profile-style-publisher',
+      dry_run: true,
+      date,
+      profile_match_key: 'author_name only',
+      min_minutes_before_start: minMinutesBeforeStart,
+      available_future_candidates: rawCandidates.length,
+      candidates: rows.length,
+      rows
+    })
   }
 
   let inserted = 0
@@ -286,11 +310,12 @@ exports.handler = async function(event) {
   const errors = []
   const removedColumns = []
 
-  for (const row of candidates) {
+  for (const row of rows) {
     try {
       const { data: existing, error: findError } = await supabase
         .from('tips')
         .select('id,status,result')
+        .eq('author_name', AUTHOR_NAME)
         .eq('ai_external_key', row.ai_external_key)
         .limit(1)
 
@@ -303,12 +328,13 @@ exports.handler = async function(event) {
           ids.push(existingId)
           continue
         }
-        const out = await updateTipSafe(supabase, existingId, row)
+
+        const out = await updateSafe(supabase, 'tips', existingId, row)
         ids.push(out.data?.id || existingId)
         removedColumns.push(...out.removed)
         updated++
       } else {
-        const out = await insertTipSafe(supabase, row)
+        const out = await insertSafe(supabase, 'tips', row)
         ids.push(out.data?.id)
         removedColumns.push(...out.removed)
         inserted++
@@ -320,7 +346,7 @@ exports.handler = async function(event) {
 
   try {
     await supabase.from('ai_pick_runs').insert({
-      source: 'betai-multisport-ai-future-only-publisher-v1731',
+      source: 'betai-multisport-ai-publisher-v1732',
       picks_created: inserted,
       status: errors.length ? 'partial' : 'success',
       error_message: errors.length ? JSON.stringify(errors).slice(0, 1000) : null,
@@ -330,15 +356,16 @@ exports.handler = async function(event) {
 
   return json(errors.length && !inserted && !updated ? 500 : 200, {
     ok: !errors.length || inserted > 0 || updated > 0,
-    version: '1731-betai-multisport-ai-future-only-publisher',
+    version: '1732-betai-multisport-ai-profile-style-publisher',
     author: AUTHOR_NAME,
+    profile_match_key: 'author_name only',
     date,
     source: 'existing_ai_bets_only_future_matches_only',
     min_minutes_before_start: minMinutesBeforeStart,
     available_future_candidates: rawCandidates.length,
     inserted,
     updated,
-    attempted: candidates.length,
+    attempted: rows.length,
     ids,
     removed_columns: [...new Set(removedColumns)],
     errors: errors.slice(0, 20)
