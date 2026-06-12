@@ -692,20 +692,116 @@ exports.handler = async function (event) {
         errors.push({ id: tip.id, match: `${tipHome(tip)} vs ${tipAway(tip)}`, date: tip.match_date, error: e.message || String(e) })
       }
     }
+    // FIX 1765:
+    // Profil/historia bota w UI potrafi czytać bezpośrednio z tabeli tips.
+    // Wersja 1764 synchronizowała tips tylko, gdy znalazła parę ai_bets -> tips.
+    // U Ciebie syncedTips=0, więc stare "Zwrot" siedziały bezpośrednio w tips.
+    // Teraz rozliczamy też samodzielnie wszystkie widoczne rekordy bota z tips.
+    let directTipsChecked = 0
+    let directTipsSettled = 0
+    let directTipsSkipped = 0
+    let directTipsFallback = 0
+
+    const { data: directBotTipsRaw } = await supabase
+      .from('tips')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(2000)
+
+    const directBotTips = Array.isArray(directBotTipsRaw)
+      ? directBotTipsRaw.filter(isBetaiMultisportRowV1764)
+      : []
+
+    for (const botTip of directBotTips) {
+      directTipsChecked++
+      try {
+        if (!forceResettle && isSettled(botTip)) {
+          directTipsSkipped++
+          continue
+        }
+
+        if (!isSupportedResolvableTipV1763(botTip)) {
+          directTipsSkipped++
+          continue
+        }
+
+        const { cfg, item } = await fetchApiSportsResult(botTip)
+        if (!item) {
+          directTipsSkipped++
+          continue
+        }
+
+        const statusRaw = getStatus(item, cfg)
+        if (!isFinishedStatus(statusRaw)) {
+          if (isCancelledOrVoidStatus(statusRaw)) {
+            const fullUpdate = {
+              live_status: statusRaw || 'VOID',
+              result_status: 'void',
+              settlement_source: 'tips_direct_api_cancelled_v1765',
+              updated_at: new Date().toISOString(),
+              status: 'void',
+              result: 'void',
+              profit: 0,
+              settled_at: new Date().toISOString()
+            }
+            const up = await updateTipRowSettlementV1764(supabase, botTip.id, 'void', 'void', 0, fullUpdate)
+            if (up.fallback) directTipsFallback++
+            directTipsSettled++
+          } else {
+            directTipsSkipped++
+          }
+          continue
+        }
+
+        const score = extractScore(item, cfg)
+        if (score.home == null || score.away == null) {
+          directTipsSkipped++
+          continue
+        }
+
+        const computedStatus = resolvePick(botTip, score.home, score.away)
+        if (!['won', 'lost', 'void'].includes(computedStatus)) {
+          directTipsSkipped++
+          continue
+        }
+
+        const finalResult = computedStatus === 'won' ? 'win' : computedStatus === 'lost' ? 'loss' : 'void'
+        const profit = profitFromStatus(computedStatus, botTip.odds, n(botTip.stake, 100) || 100)
+        const fullUpdate = {
+          live_score_home: scoreN(score.home),
+          live_score_away: scoreN(score.away),
+          live_status: statusRaw || 'FT',
+          result_status: computedStatus,
+          settlement_source: 'tips_direct_api_v1765',
+          updated_at: new Date().toISOString(),
+          status: computedStatus,
+          result: finalResult,
+          profit,
+          settled_at: new Date().toISOString()
+        }
+
+        const up = await updateTipRowSettlementV1764(supabase, botTip.id, computedStatus, finalResult, profit, fullUpdate)
+        if (up.fallback) directTipsFallback++
+        directTipsSettled++
+      } catch (e) {
+        errors.push({ table: 'tips', id: botTip.id, match: `${tipHome(botTip)} vs ${tipAway(botTip)}`, date: botTip.match_date, error: e.message || String(e) })
+      }
+    }
+
     try {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1764-sync-ai-bets-to-tips',
-          picks_created: settled,
+          source: 'settle-ai-bets-v1765-direct-tips-bot-settle',
+          picks_created: settled + directTipsSettled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
-          message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; syncedTips=${syncedTips}; syncedTipsFallback=${syncedTipsFallback}; errors=${errors.length}`
+          message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; syncedTips=${syncedTips}; syncedTipsFallback=${syncedTipsFallback}; directTipsChecked=${directTipsChecked}; directTipsSettled=${directTipsSettled}; directTipsSkipped=${directTipsSkipped}; directTipsFallback=${directTipsFallback}; errors=${errors.length}`
         })
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1764-settle-live-ai-picks-sync-ai-bets-to-tips', table: 'ai_bets+tips', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, errors: errors.slice(0, 20) })
+    return json(200, { version: '1765-settle-live-ai-picks-direct-tips-bot-settle', table: 'ai_bets+tips_direct', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
