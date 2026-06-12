@@ -1024,6 +1024,95 @@ function getMissingSchemaColumn(error) {
   return ''
 }
 
+
+
+// WERSJA 1746 — twardy klucz antyduplikatów meczów.
+// Jeden użytkownik nie może opublikować drugi raz tego samego meczu,
+// nawet po szybkim podwójnym kliknięciu albo gdy API zwróci inny ID dla tego samego spotkania.
+function normalizeBetAiDuplicateTextV1746(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function getBetAiTipOwnerKeyV1746(tip = {}) {
+  return String(
+    tip.author_id ||
+    tip.user_id ||
+    tip.created_by ||
+    tip.owner_id ||
+    tip.tipster_id ||
+    normalizeEmail(tip.author_email || tip.email || tip.user_email || '') ||
+    normalizeBetAiDuplicateTextV1746(tip.author_name || tip.username || '') ||
+    'unknown'
+  ).toLowerCase().trim()
+}
+
+function getBetAiKickoffDayKeyV1746(value = '') {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+  const raw = String(value || '').trim()
+  const pl = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (pl) return `${pl[3]}-${String(pl[2]).padStart(2, '0')}-${String(pl[1]).padStart(2, '0')}`
+  return normalizeBetAiDuplicateTextV1746(raw)
+}
+
+function parseBetAiTeamsFromMatchTextV1746(value = '') {
+  const parts = String(value || '')
+    .split(/\s+vs\s+|\s+-\s+|\s+—\s+|\s+v\s+/i)
+    .map(x => x.trim())
+    .filter(Boolean)
+  return { home: parts[0] || '', away: parts[1] || '' }
+}
+
+function getBetAiMatchDuplicateKeyV1746(source = {}) {
+  const fixtureId = source.fixture_id || source.api_fixture_id || source.external_fixture_id || source.apiFixtureId || source.fixtureId || null
+  const cleanFixtureId = fixtureId ? String(fixtureId).trim() : ''
+  if (cleanFixtureId && !cleanFixtureId.toLowerCase().startsWith('manual-')) {
+    return `fixture:${cleanFixtureId}`
+  }
+
+  const parsed = parseBetAiTeamsFromMatchTextV1746(source.match || source.match_name || '')
+  const home = normalizeBetAiDuplicateTextV1746(source.team_home || source.home_team || source.home || parsed.home)
+  const away = normalizeBetAiDuplicateTextV1746(source.team_away || source.away_team || source.away || parsed.away)
+  const league = normalizeBetAiDuplicateTextV1746(source.league || source.league_name || source.competition || '')
+  const kickoffDay = getBetAiKickoffDayKeyV1746(source.match_time || source.event_time || source.kickoff_time || source.commence_time || source.start_time || source.date || '')
+
+  if (home && away) {
+    const teamPair = [home, away].sort().join('~')
+    return `teams:${league}|${teamPair}|${kickoffDay}`
+  }
+
+  const matchText = normalizeBetAiDuplicateTextV1746(source.match || source.match_name || '')
+  return matchText ? `match:${league}|${matchText}|${kickoffDay}` : ''
+}
+
+function getBetAiTipDuplicateKeyV1746(tip = {}) {
+  const owner = getBetAiTipOwnerKeyV1746(tip)
+  const match = getBetAiMatchDuplicateKeyV1746(tip)
+  return owner && match ? `${owner}::${match}` : ''
+}
+
+function dedupeBetAiTipsByUserMatchV1746(tips = []) {
+  const seen = new Set()
+  const out = []
+  for (const rawTip of Array.isArray(tips) ? tips : []) {
+    const tip = normalizeTipRow(rawTip)
+    const duplicateKey = getBetAiTipDuplicateKeyV1746(tip)
+    const fallbackKey = String(tip.id || `${tip.author_id || tip.user_id || ''}-${tip.created_at || ''}-${tip.match || tip.team_home || ''}-${tip.bet_type || tip.prediction || tip.pick || ''}`)
+    const key = duplicateKey || fallbackKey
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push(tip)
+  }
+  return out
+}
+
 function normalizeTipRow(row = {}) {
   const teamsFromMatch = String(row.match || '').split(/\s+vs\s+|\s+-\s+|\s+—\s+/i).map(x => x.trim()).filter(Boolean)
   const premium = isTipPremium(row)
@@ -6909,6 +6998,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     singlePrice: '29.00',
   })
   const [saving, setSaving] = useState(false)
+  const publishLockRef = useRef(false)
   const [dailyCount, setDailyCount] = useState(0)
   const [countLoading, setCountLoading] = useState(false)
   const [showHints, setShowHints] = useState(false)
@@ -9074,25 +9164,33 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
   async function hasDuplicateMatchToday(matchToCheck = effectiveSelectedMatch) {
     if (!isSupabaseConfigured || !supabase || !user?.id || !matchToCheck) return false
 
-    const startOfDay = new Date()
-    startOfDay.setHours(0, 0, 0, 0)
-    const matchText = `${matchToCheck.home} vs ${matchToCheck.away}`.toLowerCase().trim()
-    const currentKey = getSelectedMatchKey(matchToCheck)
     const fixtureIdValue = matchToCheck.apiFixtureId || matchToCheck.fixtureId || matchToCheck.id || null
+    const matchText = `${matchToCheck.home || ''} vs ${matchToCheck.away || ''}`.toLowerCase().trim()
+    const currentDuplicateKey = getBetAiMatchDuplicateKeyV1746({
+      ...matchToCheck,
+      fixture_id: fixtureIdValue,
+      api_fixture_id: fixtureIdValue,
+      league: matchToCheck.league || currentLeague || form.league,
+      team_home: matchToCheck.home,
+      team_away: matchToCheck.away,
+      match: matchText,
+      match_time: matchToCheck.commence_time || matchToCheck.match_time || matchToCheck.event_time || null,
+      date: matchToCheck.date || form.date || ''
+    })
 
     try {
       let result = await supabase
         .from('tips').select('*')
-        .gte('created_at', startOfDay.toISOString())
         .or(`user_id.eq.${user.id},author_id.eq.${user.id}`)
-        .limit(100)
+        .order('created_at', { ascending: false })
+        .limit(300)
 
       if (result.error && isSchemaError(result.error)) {
         result = await supabase
           .from('tips').select('*')
-          .gte('created_at', startOfDay.toISOString())
           .eq('user_id', user.id)
-          .limit(100)
+          .order('created_at', { ascending: false })
+          .limit(300)
       }
 
       const { data, error } = result
@@ -9105,15 +9203,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         const rowOwnerId = row.user_id || row.author_id || null
         if (rowOwnerId && String(rowOwnerId) !== String(user.id)) return false
 
+        const rowDuplicateKey = getBetAiMatchDuplicateKeyV1746(row)
+        if (currentDuplicateKey && rowDuplicateKey && rowDuplicateKey === currentDuplicateKey) return true
+
         const rowFixtureIds = [row.fixture_id, row.api_fixture_id, row.external_fixture_id].filter(Boolean).map(value => String(value))
         const sameFixture = fixtureIdValue && !String(fixtureIdValue).startsWith('manual-') && rowFixtureIds.includes(String(fixtureIdValue))
         const rowMatch = String(row.match || '').toLowerCase().trim()
         const sameTextMatch = rowMatch && rowMatch === matchText
-        const rowDate = row.match_time ? new Date(row.match_time) : null
-        const rowDateLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleDateString('pl-PL') : ''
-        const rowTimeLabel = rowDate && !Number.isNaN(rowDate.getTime()) ? rowDate.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : ''
-        const rowKey = `${row.league || ''}|${row.team_home || ''}|${row.team_away || ''}|${rowDateLabel}|${rowTimeLabel}`.toLowerCase().replace(/\s+/g, ' ').trim()
-        return sameFixture || sameTextMatch || (rowKey && rowKey === currentKey)
+        return Boolean(sameFixture || sameTextMatch)
       })
     } catch (error) {
       console.warn('duplicate match check skipped', error)
@@ -9515,17 +9612,22 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       return
     }
 
+    if (publishLockRef.current || saving) return
+    publishLockRef.current = true
+    setSaving(true)
+
     const duplicateMatch = isAkoCoupon ? false : await hasDuplicateMatchToday(publishMatch)
     if (duplicateMatch) {
+      publishLockRef.current = false
+      setSaving(false)
       onToast?.({
         type: 'limit',
         title: 'Ten mecz został już dodany',
-        message: 'Nie można spamować tym samym meczem. Jeden użytkownik może dodać dany mecz tylko raz na dobę.'
+        message: 'Nie można dublować tego samego meczu. Jeden użytkownik może dodać dany mecz tylko raz.'
       })
       return
     }
 
-    setSaving(true)
     const combinedIso = (() => {
       try {
         const [day, month, year] = String(form.date || '').split('.')
@@ -9837,6 +9939,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       saveTipDebug('ERROR', error?.message || String(error))
       onToast?.({ type: 'error', title: 'Nie udało się opublikować typu', message: formatAppErrorMessage(error?.message || 'Sprawdź konfigurację tabeli tips w Supabase.') })
     } finally {
+      publishLockRef.current = false
       setSaving(false)
     }
   }
@@ -27295,7 +27398,7 @@ function App() {
       }
       setTipsterSubscriptions(activeSubs)
     }
-    setTips(sourceTips)
+    setTips(dedupeBetAiTipsByUserMatchV1746(sourceTips))
     setLastTipSaveStatus(readTipDebug())
     fetchRealRanking()
   }
@@ -27334,7 +27437,7 @@ function App() {
         const incomingTip = hydrateIncomingTip(payload?.new || {})
         if (!incomingTip) return
 
-        setTips(prev => [incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))].slice(0, 300))
+        setTips(prev => dedupeBetAiTipsByUserMatchV1746([incomingTip, ...prev.filter(item => String(item.id) !== String(incomingTip.id))]).slice(0, 300))
         showLiveTipPopup(incomingTip)
         scheduleFullRefresh()
       })
@@ -29779,7 +29882,7 @@ function App() {
                   ...savedTip
                 })
                 rememberRecentSavedTip(visibleSavedTip, sessionUser?.id)
-                setTips(prev => [visibleSavedTip, ...prev.filter(tip => String(tip.id) !== String(visibleSavedTip.id))])
+                setTips(prev => dedupeBetAiTipsByUserMatchV1746([visibleSavedTip, ...prev.filter(tip => String(tip.id) !== String(visibleSavedTip.id))]))
               }
               if (sessionUser?.id) fetchUnlockedTips(sessionUser.id)
               window.setTimeout(() => fetchTips(sessionUser?.id), 1200)
