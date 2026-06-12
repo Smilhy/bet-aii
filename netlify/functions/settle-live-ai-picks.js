@@ -119,6 +119,13 @@ function isFinishedStatus(status) {
   const s = String(status || '').toUpperCase()
   return ['FT','AET','PEN','AOT','AP','FINISHED','FINISH','FINAL','ENDED','AFTER OVER TIME','AFTER PENALTIES'].some(x => s.includes(x))
 }
+function isCancelledOrVoidStatus(status) {
+  const s = String(status || '').toUpperCase()
+  return [
+    'CANC', 'CANCELLED', 'CANCELED', 'ABD', 'ABANDONED',
+    'PST', 'POSTPONED', 'SUSP', 'SUSPENDED', 'WO', 'WALKOVER'
+  ].some(x => s.includes(x))
+}
 function extractScore(item, cfg) {
   if (cfg.type === 'football') return { home: scoreN(item?.goals?.home ?? item?.score?.fulltime?.home ?? item?.score?.extratime?.home ?? item?.score?.penalty?.home), away: scoreN(item?.goals?.away ?? item?.score?.fulltime?.away ?? item?.score?.extratime?.away ?? item?.score?.penalty?.away) }
   if (cfg.type === 'fight') {
@@ -236,12 +243,72 @@ exports.handler = async function (event) {
     for (const tip of candidates) {
       checked++
       try {
+        const currentStatusBeforeFetch = norm(tip.status || tip.result_status || tip.result || '')
+        const wasVoidLikeBeforeFetch = ['void', 'push'].includes(currentStatusBeforeFetch)
+        const bttsTipBeforeFetch = isBttsTip(tip)
+
+        async function resetWrongBttsVoidToPending(reason) {
+          const fullUpdate = {
+            status: 'pending',
+            result: 'pending',
+            result_status: 'pending',
+            settlement_status: 'pending',
+            profit: 0,
+            settlement_source: `1749-btts-void-reset-to-pending-${reason}`,
+            updated_at: new Date().toISOString()
+          }
+          const minimalUpdate = { status: 'pending', result: 'pending', profit: 0 }
+          const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
+          if (up.fallback) fallbackUpdates++
+          backfilled++
+        }
+
         const { cfg, item } = await fetchApiSportsResult(tip)
-        if (!item) { skipped++; continue }
+        if (!item) {
+          // FIX 1750:
+          // Jeśli stary BTTS ma VOID, ale nie mamy wyniku/API nie znalazło meczu,
+          // nie wolno udawać rozliczenia jako VOID. Cofamy na PENDING.
+          if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+            await resetWrongBttsVoidToPending('no-result-item')
+          } else {
+            skipped++
+          }
+          continue
+        }
         const statusRaw = getStatus(item, cfg)
-        if (!isFinishedStatus(statusRaw)) { skipped++; continue }
+        if (!isFinishedStatus(statusRaw)) {
+          if (isCancelledOrVoidStatus(statusRaw)) {
+            // Prawdziwy VOID zostaje tylko dla odwołanych/przełożonych/abandoned.
+            const fullUpdate = {
+              live_status: statusRaw || 'VOID',
+              result_status: 'void',
+              settlement_source: 'auto_ai_result_api_cancelled',
+              updated_at: new Date().toISOString(),
+              status: 'void',
+              result: 'void',
+              profit: 0,
+              settled_at: new Date().toISOString()
+            }
+            const minimalUpdate = { status: 'void', result: 'void', profit: 0 }
+            const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
+            if (up.fallback) fallbackUpdates++
+            settled++
+          } else if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+            await resetWrongBttsVoidToPending('not-finished-yet')
+          } else {
+            skipped++
+          }
+          continue
+        }
         const score = extractScore(item, cfg)
-        if (score.home == null || score.away == null) { skipped++; continue }
+        if (score.home == null || score.away == null) {
+          if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+            await resetWrongBttsVoidToPending('finished-without-score')
+          } else {
+            skipped++
+          }
+          continue
+        }
 
         const computedStatus = resolvePick(tip, score.home, score.away)
         const currentStatus = norm(tip.status || tip.result_status || tip.result || '')
@@ -291,7 +358,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1749-btts-void-resettle-fix',
+          source: 'settle-ai-bets-v1750-btts-void-pending-fix',
           picks_created: settled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -300,7 +367,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1749-settle-live-ai-picks-btts-void-resettle-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    return json(200, { version: '1750-settle-live-ai-picks-btts-void-pending-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
