@@ -18801,7 +18801,7 @@ function AuthView({ onAuth }) {
 
       const aiAccuracyQuery = supabase
         .from('ai_bets')
-        .select('id,status,result,result_status,settlement_status')
+        .select('*')
         .order('updated_at', { ascending: false })
         .limit(10000)
 

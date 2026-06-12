@@ -68,7 +68,7 @@ async function countActiveTipsterTips(supabase) {
 async function calculateAiAccuracy(supabase) {
   const { data, error } = await supabase
     .from('ai_bets')
-    .select('id,status,result,result_status,settlement_status')
+    .select('*')
     .order('updated_at', { ascending: false })
     .limit(10000)
 
