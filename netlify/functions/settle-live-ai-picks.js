@@ -140,46 +140,117 @@ function extractScore(item, cfg) {
     away: scoreN(item?.scores?.away?.total ?? item?.score?.away ?? item?.teams?.away?.score ?? item?.teams?.visitors?.score ?? item?.game?.scores?.away?.total)
   }
 }
-function resolvePick(tip, homeScore, awayScore) {
-  const total = n(homeScore) + n(awayScore)
-  const pick = norm(`${tip.pick || tip.selection || tip.prediction || ''}`)
-  const market = norm(`${tip.market || tip.bet_type || ''}`)
-  const homeName = tipHome(tip)
-  const awayName = tipAway(tip)
-  const isHome = includesName(pick, homeName) || pick.includes('home') || pick.includes('gospod') || pick.includes('1') && market.includes('1x2')
-  const isAway = includesName(pick, awayName) || pick.includes('away') || pick.includes('gość') || pick.includes('gosc') || pick.includes('2') && market.includes('1x2')
-  const over = pick.match(/(?:over|powyżej|powyzej)\s*(\d+(?:[.,]\d+)?)/i)
-  const under = pick.match(/(?:under|poniżej|ponizej)\s*(\d+(?:[.,]\d+)?)/i)
-  if (over) return total > Number(over[1].replace(',', '.')) ? 'won' : 'lost'
-  if (under) return total < Number(under[1].replace(',', '.')) ? 'won' : 'lost'
-
-  // FIX 1748:
-  // BTTS w Typy AI wcześniej wpadał w VOID dla polskiego wariantu:
-  // "Obie drużyny strzelą: TAK/NIE", bo settlement rozpoznawał tylko "btts no"
-  // albo skrócone "obie strzelą". Teraz obsługujemy pełne polskie i angielskie warianty.
-  const bttsRaw = `${market} ${pick}`
-  const bttsText = bttsRaw
+function settleTextV1762(value = '') {
+  return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-  const bttsCompact = bttsText.replace(/[^a-z0-9]+/g, '')
+    .replace(/ł/g, 'l')
+    .trim()
+}
+function settleCompactV1762(value = '') {
+  return settleTextV1762(value).replace(/[^a-z0-9]+/g, '')
+}
+function extractLineV1762(...values) {
+  const raw = values.map(v => String(v || '')).join(' ')
+  const normalized = settleTextV1762(raw).replace(',', '.')
+  const explicit = normalized.match(/(?:over|under|powyzej|ponizej|over_|under_)\s*[_-]?\s*(\d+(?:\.\d+)?)/i)
+  if (explicit) return Number(explicit[1])
+  const any = normalized.match(/(\d+(?:\.\d+)?)/)
+  return any ? Number(any[1]) : NaN
+}
+function resultSideV1762(homeScore, awayScore) {
+  if (homeScore > awayScore) return 'home'
+  if (awayScore > homeScore) return 'away'
+  return 'draw'
+}
+function isSupportedResolvableTipV1762(tip = {}) {
+  const compact = settleCompactV1762(`${tip.market_key || ''} ${tip.selection_key || ''} ${tip.market || ''} ${tip.bet_type || ''} ${tip.pick || ''} ${tip.selection || ''} ${tip.prediction || ''}`)
+  return (
+    compact.includes('over') || compact.includes('under') || compact.includes('powyzej') || compact.includes('ponizej') ||
+    compact.includes('goals') || compact.includes('gole') ||
+    compact.includes('1x') || compact.includes('x2') || compact.includes('podwojnaszansa') || compact.includes('lubremis') ||
+    compact.includes('btts') || compact.includes('obiedruzynystrzela') || compact.includes('obiestrzela') ||
+    compact.includes('wygra') || compact.includes('win') || compact.includes('draw') || compact.includes('remis')
+  )
+}
+function resolvePick(tip, homeScore, awayScore) {
+  const total = n(homeScore) + n(awayScore)
+  const marketKey = settleTextV1762(tip.market_key || tip.marketKey || '')
+  const selectionKey = settleTextV1762(tip.selection_key || tip.selectionKey || '')
+  const pickRaw = `${tip.pick || ''} ${tip.selection || ''} ${tip.prediction || ''}`
+  const marketRaw = `${tip.market || ''} ${tip.bet_type || ''}`
+  const allRaw = `${marketKey} ${selectionKey} ${marketRaw} ${pickRaw}`
+  const pick = settleTextV1762(pickRaw)
+  const market = settleTextV1762(marketRaw)
+  const allText = settleTextV1762(allRaw)
+  const compact = settleCompactV1762(allRaw)
+  const homeName = tipHome(tip)
+  const awayName = tipAway(tip)
+  const homeCompact = settleCompactV1762(homeName)
+  const awayCompact = settleCompactV1762(awayName)
+  const result = resultSideV1762(n(homeScore), n(awayScore))
+
+  // FIX 1762: selection_key/market_key muszą mieć pierwszeństwo.
+  // Wcześniej np. X2 nie działało, bo parser nie rozumiał samego "x2"
+  // bez nazwy drużyny, a over/under potrafił skończyć jako VOID.
+  const isOver = selectionKey.startsWith('over') || compact.includes('over') || compact.includes('powyzej')
+  const isUnder = selectionKey.startsWith('under') || compact.includes('under') || compact.includes('ponizej')
+  if (isOver || isUnder || marketKey.includes('goals_over_under') || market.includes('gole') || market.includes('goals')) {
+    const line = extractLineV1762(selectionKey, pickRaw, marketRaw)
+    if (Number.isFinite(line)) {
+      if (isOver) return total > line ? 'won' : 'lost'
+      if (isUnder) return total < line ? 'won' : 'lost'
+    }
+  }
+
   const isBtts =
-    bttsCompact.includes('btts') ||
-    bttsCompact.includes('bothteamstoscore') ||
-    bttsCompact.includes('obiedruzynystrzela') ||
-    bttsCompact.includes('obiestrzela')
+    compact.includes('btts') ||
+    compact.includes('bothteamstoscore') ||
+    compact.includes('obiedruzynystrzela') ||
+    compact.includes('obiestrzela')
   if (isBtts) {
     const wantsNo =
-      bttsCompact.includes('bttsno') ||
-      bttsCompact.includes('bothteamstoscoreno') ||
-      bttsCompact.includes('obiedruzynystrzelanie') ||
-      bttsCompact.includes('obiestrzelanie') ||
-      /(^|\s)(no|nie)($|\s)/.test(bttsText)
+      compact.includes('bttsno') ||
+      compact.includes('bothteamstoscoreno') ||
+      compact.includes('obiedruzynystrzelanie') ||
+      compact.includes('obiestrzelanie') ||
+      /(^|\s)(no|nie)($|\s)/.test(allText)
     const bothScored = homeScore > 0 && awayScore > 0
     return wantsNo ? (!bothScored ? 'won' : 'lost') : (bothScored ? 'won' : 'lost')
   }
-  const handicap = pick.match(/([+-]\s*\d+(?:[.,]\d+)?)/)
-  if (handicap && (market.includes('handicap') || pick.includes('+') || pick.includes('-'))) {
+
+  const hasExplicit1X = /(^|[^a-z0-9])1x([^a-z0-9]|$)/i.test(allRaw) || selectionKey === '1x' || compact.includes('1x')
+  const hasExplicitX2 = /(^|[^a-z0-9])x2([^a-z0-9]|$)/i.test(allRaw) || selectionKey === 'x2' || compact.includes('x2')
+  const hasExplicit12 = /(^|[^a-z0-9])12([^a-z0-9]|$)/i.test(allRaw) || selectionKey === '12'
+  const isDoubleChance =
+    marketKey.includes('double_chance') ||
+    market.includes('double') ||
+    market.includes('podwojna') ||
+    compact.includes('podwojnaszansa') ||
+    compact.includes('lubremis') ||
+    compact.includes('nieprzegra') ||
+    hasExplicit1X || hasExplicitX2 || hasExplicit12
+
+  if (isDoubleChance) {
+    let dc = ''
+    if (hasExplicit1X) dc = '1x'
+    else if (hasExplicitX2) dc = 'x2'
+    else if (hasExplicit12) dc = '12'
+    else if (compact.includes('lubremis') || compact.includes('nieprzegra')) {
+      if (homeCompact && compact.includes(homeCompact)) dc = '1x'
+      else if (awayCompact && compact.includes(awayCompact)) dc = 'x2'
+    }
+    if (dc === '1x') return (result === 'home' || result === 'draw') ? 'won' : 'lost'
+    if (dc === 'x2') return (result === 'away' || result === 'draw') ? 'won' : 'lost'
+    if (dc === '12') return result !== 'draw' ? 'won' : 'lost'
+  }
+
+  const isHome = includesName(pick, homeName) || pick.includes('home') || pick.includes('gospod') || (selectionKey === 'home') || (marketKey.includes('1x2') && selectionKey === '1')
+  const isAway = includesName(pick, awayName) || pick.includes('away') || pick.includes('gosc') || (selectionKey === 'away') || (marketKey.includes('1x2') && selectionKey === '2')
+
+  const handicap = allText.match(/([+-]\s*\d+(?:[.,]\d+)?)/)
+  if (handicap && (market.includes('handicap') || marketKey.includes('handicap') || pick.includes('+') || pick.includes('-'))) {
     const line = Number(handicap[1].replace(/\s+/g, '').replace(',', '.'))
     if (Number.isFinite(line)) {
       const adjustedHome = n(homeScore) + (isHome ? line : 0)
@@ -188,17 +259,13 @@ function resolvePick(tip, homeScore, awayScore) {
       if (isAway) return adjustedAway > n(homeScore) ? 'won' : adjustedAway === n(homeScore) ? 'void' : 'lost'
     }
   }
-  if (pick.includes('nie przegra') || market.includes('double') || market.includes('podwójna') || market.includes('podwojna') || pick.includes('lub remis')) {
-    if (homeScore === awayScore) return 'won'
-    if (isHome) return homeScore > awayScore ? 'won' : 'lost'
-    if (isAway) return awayScore > homeScore ? 'won' : 'lost'
-  }
-  if (market.includes('draw no bet') || pick.includes('dnb')) {
+
+  if (market.includes('draw no bet') || marketKey.includes('draw_no_bet') || compact.includes('dnb')) {
     if (homeScore === awayScore) return 'void'
     if (isHome) return homeScore > awayScore ? 'won' : 'lost'
     if (isAway) return awayScore > homeScore ? 'won' : 'lost'
   }
-  if (pick.includes('remis') || pick === 'draw') return homeScore === awayScore ? 'won' : 'lost'
+  if (selectionKey === 'draw' || pick.includes('remis') || pick === 'draw') return homeScore === awayScore ? 'won' : 'lost'
   if (isHome) return homeScore > awayScore ? 'won' : 'lost'
   if (isAway) return awayScore > homeScore ? 'won' : 'lost'
   return 'void'
@@ -227,15 +294,19 @@ exports.handler = async function (event) {
       .limit(700)
     if (error) throw error
 
+    const query = event.queryStringParameters || {}
+    const forceResettle = ['1', 'true', 'yes'].includes(norm(query.force || query.resettle || ''))
     const isSettled = tip => ['won','lost','void','win','loss','push'].includes(norm(tip.status || tip.result || tip.result_status))
     const isPending = tip => ['pending','live',''].includes(norm(tip.status || tip.result || tip.result_status))
     const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
     const hasVerifiedScore = tip => hasScore(tip) && Boolean(tip.live_status || tip.settlement_source === 'auto_ai_result_api')
     const now = Date.now()
     const candidates = (rows || []).filter(tip => {
-      if (!(isPending(tip) || !hasVerifiedScore(tip))) return false
+      const current = norm(tip.status || tip.result_status || tip.result || '')
+      const likelyWrongVoidOrSupported = ['void', 'push'].includes(current) && isSupportedResolvableTipV1762(tip)
+      if (!(forceResettle || isPending(tip) || !hasVerifiedScore(tip) || likelyWrongVoidOrSupported)) return false
       const d = new Date(`${tip.match_date || tipDateKey(tip)}T${String(tip.match_time || '23:59').slice(0,5)}:00`)
-      return Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
+      return forceResettle || Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
     })
 
     let settled = 0, checked = 0, skipped = 0, backfilled = 0, fallbackUpdates = 0
@@ -246,6 +317,7 @@ exports.handler = async function (event) {
         const currentStatusBeforeFetch = norm(tip.status || tip.result_status || tip.result || '')
         const wasVoidLikeBeforeFetch = ['void', 'push'].includes(currentStatusBeforeFetch)
         const bttsTipBeforeFetch = isBttsTip(tip)
+        const supportedTipBeforeFetch = isSupportedResolvableTipV1762(tip)
 
         async function resetWrongBttsVoidToPending(reason) {
           const fullUpdate = {
@@ -268,7 +340,7 @@ exports.handler = async function (event) {
           // FIX 1750:
           // Jeśli stary BTTS ma VOID, ale nie mamy wyniku/API nie znalazło meczu,
           // nie wolno udawać rozliczenia jako VOID. Cofamy na PENDING.
-          if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+          if (wasVoidLikeBeforeFetch && supportedTipBeforeFetch && !hasScore(tip)) {
             await resetWrongBttsVoidToPending('no-result-item')
           } else {
             skipped++
@@ -293,7 +365,7 @@ exports.handler = async function (event) {
             const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
             if (up.fallback) fallbackUpdates++
             settled++
-          } else if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+          } else if (wasVoidLikeBeforeFetch && supportedTipBeforeFetch && !hasScore(tip)) {
             await resetWrongBttsVoidToPending('not-finished-yet')
           } else {
             skipped++
@@ -302,7 +374,7 @@ exports.handler = async function (event) {
         }
         const score = extractScore(item, cfg)
         if (score.home == null || score.away == null) {
-          if (wasVoidLikeBeforeFetch && bttsTipBeforeFetch && !hasScore(tip)) {
+          if (wasVoidLikeBeforeFetch && supportedTipBeforeFetch && !hasScore(tip)) {
             await resetWrongBttsVoidToPending('finished-without-score')
           } else {
             skipped++
@@ -322,11 +394,7 @@ exports.handler = async function (event) {
         const shouldResettleWrongVoid =
           wasVoidLike &&
           ['won', 'lost'].includes(computedStatus) &&
-          (
-            isBttsTip(tip) ||
-            norm(`${tip.market || ''} ${tip.bet_type || ''} ${tip.prediction || ''}`).includes('gole') ||
-            norm(`${tip.market || ''} ${tip.bet_type || ''}`).includes('goals')
-          )
+          isSupportedResolvableTipV1762(tip)
 
         const shouldResolveStatus = isPending(tip) || !isSettled(tip) || shouldResettleWrongVoid
         const finalStatus = shouldResolveStatus ? computedStatus : currentStatus || computedStatus
@@ -358,7 +426,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1750-btts-void-pending-fix',
+          source: 'settle-ai-bets-v1762-markets-over-under-x2-fix',
           picks_created: settled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -367,7 +435,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1750-settle-live-ai-picks-btts-void-pending-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    return json(200, { version: '1762-settle-live-ai-picks-over-under-x2-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
