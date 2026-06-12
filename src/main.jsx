@@ -21628,6 +21628,30 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       (usernameCanMatch && authorName === usernameKey)
   }).map(tip => ({ ...tip, ...(localSettlementPatches[String(tip.id)] || {}) }))
   const profileStatsSource = user || {}
+
+  // FIX 1766:
+  // betai-multisport-ai ma imported_* wygenerowane z tych samych rekordów,
+  // które znajdują się już w tabeli tips. Poprzednia logika dodawała:
+  // imported 37 + live 37 = 74, a profit +32.39 + +32.39 = +64.78.
+  // Dla tego jednego profilu wybieramy jeden pełniejszy zestaw statystyk,
+  // zamiast sumować dwa razy te same mecze.
+  const profileIdentityV1766 = String([
+    username,
+    profileStatsSource?.username,
+    profileStatsSource?.public_slug,
+    profileStatsSource?.author_name,
+    profileStatsSource?.display_name,
+    profileStatsSource?.email
+  ].filter(Boolean).join(' '))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+
+  const isBetaiMultisportProfileV1766 =
+    profileIdentityV1766.includes('betaimultisportai') ||
+    profileIdentityV1766.includes('betaimultisport')
+
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
   const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
   const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
@@ -21637,6 +21661,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const importedTotalTips = Number(profileStatsSource?.imported_total_tips || 0) || 0
   const importedWonTips = Number(profileStatsSource?.imported_won_tips || 0) || 0
   const importedLostTips = Number(profileStatsSource?.imported_lost_tips || 0) || 0
+  const importedVoidTips = Number(profileStatsSource?.imported_void_tips ?? profileStatsSource?.void_tips ?? profileStatsSource?.voids ?? 0) || 0
   const importedPendingTips = Number(profileStatsSource?.imported_pending_tips || 0) || 0
   const importedTotalStaked = Number(profileStatsSource?.imported_total_staked || 0) || 0
   const importedProfit = Number(profileStatsSource?.imported_profit || 0) || 0
@@ -21658,30 +21683,108 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const liveTotalTips = liveTipsForStats.length
   const liveWonTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'won').length
   const liveLostTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'lost').length
+  const liveVoidTips = liveTipsForStats.filter(tip => getProfileTipSettlement(tip) === 'void').length
   const liveSettledTips = liveWonTips + liveLostTips
-  const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips)
+  const livePendingTips = Math.max(0, liveTotalTips - liveSettledTips - liveVoidTips)
   const liveAvgOddsNumber = liveTipsForStats.length ? (liveTipsForStats.reduce((sum, tip) => sum + getProfileTipOdds(tip), 0) / liveTipsForStats.length) : 0
   const liveSettledStake = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipSettledStake(tip), 0)
   const liveProfitAmount = liveTipsForStats.reduce((sum, tip) => sum + getProfileTipProfit(tip), 0)
   const liveHighestOddsNumber = liveTipsForStats.reduce((maxValue, tip) => Math.max(maxValue, getProfileTipOdds(tip)), 0)
 
+  const botAllTipsStatsV1766 = (() => {
+    if (!isBetaiMultisportProfileV1766) return null
+
+    const allRows = userTips
+    const totalTipsValue = allRows.length
+    const wonTipsValue = allRows.filter(tip => getProfileTipSettlement(tip) === 'won').length
+    const lostTipsValue = allRows.filter(tip => getProfileTipSettlement(tip) === 'lost').length
+    const voidTipsValue = allRows.filter(tip => getProfileTipSettlement(tip) === 'void').length
+    const pendingTipsValue = Math.max(0, totalTipsValue - wonTipsValue - lostTipsValue - voidTipsValue)
+    const totalStakedValue = allRows.reduce((sum, tip) => sum + getProfileTipSettledStake(tip), 0)
+    const profitValue = allRows.reduce((sum, tip) => sum + getProfileTipProfit(tip), 0)
+    const avgOddsValue = totalTipsValue
+      ? allRows.reduce((sum, tip) => sum + getProfileTipOdds(tip), 0) / totalTipsValue
+      : 0
+    const highestOddsValue = allRows.reduce((maxValue, tip) => Math.max(maxValue, getProfileTipOdds(tip)), 0)
+
+    return {
+      totalTips: totalTipsValue,
+      wonTips: wonTipsValue,
+      lostTips: lostTipsValue,
+      voidTips: voidTipsValue,
+      pendingTips: pendingTipsValue,
+      totalStaked: totalStakedValue,
+      profit: profitValue,
+      avgOdds: avgOddsValue,
+      highestOdds: highestOddsValue,
+      yield: totalStakedValue ? (profitValue / totalStakedValue) * 100 : 0,
+    }
+  })()
+
+  const botImportedStatsV1766 = isBetaiMultisportProfileV1766
+    ? getImportedProfileStats(profileStatsSource)
+    : null
+
+  const botCanonicalStatsV1766 = (() => {
+    if (!isBetaiMultisportProfileV1766) return null
+    const dynamicStats = botAllTipsStatsV1766 || {
+      totalTips: 0, wonTips: 0, lostTips: 0, voidTips: 0, pendingTips: 0,
+      totalStaked: 0, profit: 0, avgOdds: 0, highestOdds: 0, yield: 0
+    }
+    const importedStats = botImportedStatsV1766
+
+    // Ten sam kanon co ranking/karta: wybieramy pełniejszy rekord, nie sumę.
+    if (importedStats && Number(importedStats.totalTips || 0) >= Number(dynamicStats.totalTips || 0)) {
+      return {
+        ...dynamicStats,
+        ...importedStats,
+        voidTips: Math.max(Number(importedStats.voidTips || 0), Number(dynamicStats.voidTips || 0)),
+        pendingTips: Number(importedStats.pendingTips || 0),
+      }
+    }
+    return dynamicStats
+  })()
+
   // Statystyki historyczne z poprzedniej platformy stanowią bazę.
   // Nowe typy dodane PO dacie importu dopisują się automatycznie do kafelków.
-  const totalTips = importedTotalTips + liveTotalTips
-  const wonTips = importedWonTips + liveWonTips
-  const lostTips = importedLostTips + liveLostTips
+  const totalTips = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.totalTips || 0)
+    : importedTotalTips + liveTotalTips
+  const wonTips = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.wonTips || 0)
+    : importedWonTips + liveWonTips
+  const lostTips = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.lostTips || 0)
+    : importedLostTips + liveLostTips
+  const voidTips = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.voidTips || 0)
+    : importedVoidTips + liveVoidTips
   const settledTips = wonTips + lostTips
-  const pendingTips = importedPendingTips + livePendingTips
-  const totalStakedAmount = importedTotalStaked + liveSettledStake
-  const profitAmount = importedProfit + liveProfitAmount
+  const pendingTips = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.pendingTips || 0)
+    : importedPendingTips + livePendingTips
+  const totalStakedAmount = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.totalStaked || 0)
+    : importedTotalStaked + liveSettledStake
+  const profitAmount = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.profit || 0)
+    : importedProfit + liveProfitAmount
   const winRate = settledTips ? Math.round((wonTips / settledTips) * 100) : 0
-  const avgOddsNumber = totalTips
-    ? (((importedAvgOdds * importedTotalTips) + (liveAvgOddsNumber * liveTotalTips)) / totalTips)
-    : 0
+  const avgOddsNumber = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.avgOdds || 0)
+    : totalTips
+      ? (((importedAvgOdds * importedTotalTips) + (liveAvgOddsNumber * liveTotalTips)) / totalTips)
+      : 0
   const avgOdds = avgOddsNumber ? avgOddsNumber.toFixed(2) : '—'
-  const highestOddsNumber = Math.max(importedHighestOdds, liveHighestOddsNumber)
+  const highestOddsNumber = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.highestOdds || 0)
+    : Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
-  const roi = totalStakedAmount ? Math.round((profitAmount / totalStakedAmount) * 100) : (Number(profileStatsSource?.imported_yield || 0) || 0)
+  const roi = isBetaiMultisportProfileV1766
+    ? Math.round(Number(botCanonicalStatsV1766?.yield || 0))
+    : totalStakedAmount
+      ? Math.round((profitAmount / totalStakedAmount) * 100)
+      : (Number(profileStatsSource?.imported_yield || 0) || 0)
   // CORE LOCK v986: pokazujemy wyłącznie realne wsparcie/napiwki, domyślnie 0.00.
   const tipsSupportAmount = Math.max(0, realTipsSupportAmount)
 

@@ -73354,3 +73354,14 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .profile-ticket-v6-field .ticket-market-label-v1711 + strong{
   line-height:1.12!important;
 }
+
+
+/* FIX 1767 — liczba VOID/Zwrot ma dokładnie ten sam rozmiar co wygrane i przegrane. */
+.app-shell:not(.no-rightbar-page) .rightbar
+.real-ranking-panel.real-ranking-panel-v19
+.rank-balance-v19 .voids{
+  font-size:inherit !important;
+  line-height:inherit !important;
+  font-weight:inherit !important;
+  letter-spacing:inherit !important;
+}
