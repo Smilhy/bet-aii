@@ -27533,7 +27533,7 @@ function App() {
         finalAuthorDynamicStatsMap.get(String(tip.author_id || tip.user_id || '').toLowerCase()) ||
         finalAuthorDynamicStatsMap.get(normalizeEmail(tip.author_email || tip.email || tip.user_email)) ||
         finalAuthorDynamicStatsMap.get(normalizeEmail(tip.author_name || tip.username))
-      const importedStats = getImportedProfileStats(tip) || tip.author_imported_stats || null
+      const importedStats = getImportedProfileStats(tip) || tip.author_visible_stats || tip.author_imported_stats || null
       return {
         ...tip,
         author_visible_stats: finalizeAuthorStats(dynamicStats, importedStats)
@@ -27654,7 +27654,7 @@ function App() {
             imported_highest_odds: updatedProfile.imported_highest_odds ?? tip.imported_highest_odds,
             imported_tips_currency: updatedProfile.imported_tips_currency ?? tip.imported_tips_currency,
             author_imported_stats: importedStats || tip.author_imported_stats,
-            author_visible_stats: importedStats || tip.author_visible_stats
+            author_visible_stats: tip.author_visible_stats || importedStats
           }
         }))
 

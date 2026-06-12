@@ -1,0 +1,20 @@
+WERSJA 1759 — STATYSTYKI NA KARTACH JAK W PROFILU
+
+Naprawiono konkretny problem ze screena:
+- karta typu pokazywała dla betai-multisport-ai: Yield 0%, Oddane typy 3, Bilans +0.00,
+- profil i Top typerzy miały inne, pełniejsze statystyki.
+
+Przyczyna:
+- karta typu liczyła statystyki tylko z aktywnych widocznych kuponów,
+  a nie ze wszystkich typów autora.
+
+Zmiany:
+- get-public-tips liczy author_visible_stats ze wszystkich pobranych typów autora,
+  a dopiero potem filtruje aktywne karty.
+- frontend nie wyrzuca author_visible_stats przy końcowym przeliczaniu.
+- karta typu, Top typerzy i profil mają używać tego samego author_visible_stats.
+
+Po deployu:
+1. Wejdź w /.netlify/functions/get-public-tips?limit=500
+2. Sprawdź, czy source = service-role-public-tips-v1759-author-stats-on-cards
+3. Odśwież stronę Ctrl+F5.
