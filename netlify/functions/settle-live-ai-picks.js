@@ -31,6 +31,21 @@ function profitFromStatus(status, odds, stake = 100) {
   return 0
 }
 
+function isBttsTip(tip) {
+  const raw = `${tip.market || ''} ${tip.bet_type || ''} ${tip.pick || ''} ${tip.selection || ''} ${tip.prediction || ''}`
+  const text = String(raw || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+  const compact = text.replace(/[^a-z0-9]+/g, '')
+  return (
+    compact.includes('btts') ||
+    compact.includes('bothteamstoscore') ||
+    compact.includes('obiedruzynystrzela') ||
+    compact.includes('obiestrzela')
+  )
+}
+
 const SPORT_RESULT_APIS = [
   { match: ['piłka nożna','pilka nozna','football','soccer'], host: 'https://v3.football.api-sports.io', path: '/fixtures', type: 'football' },
   { match: ['koszykówka','koszykowka','basketball'], host: 'https://v1.basketball.api-sports.io', path: '/games', type: 'games' },
@@ -229,10 +244,27 @@ exports.handler = async function (event) {
         if (score.home == null || score.away == null) { skipped++; continue }
 
         const computedStatus = resolvePick(tip, score.home, score.away)
-        const shouldResolveStatus = isPending(tip) || !isSettled(tip)
-        const finalStatus = shouldResolveStatus ? computedStatus : norm(tip.status || tip.result_status || computedStatus)
+        const currentStatus = norm(tip.status || tip.result_status || tip.result || '')
+        const wasVoidLike = ['void', 'push'].includes(currentStatus)
+
+        // FIX 1749:
+        // Poprzednia wersja tylko backfillowała wynik dla już oznaczonych VOID,
+        // ale nie zmieniała błędnego VOID na WON/LOST. Dlatego BTTS w Typy AI
+        // zostawał jako VOID mimo finalnego wyniku. Teraz przeliczamy VOID/PUSH,
+        // jeśli mecz ma finalny wynik i resolvePick daje WON albo LOST.
+        const shouldResettleWrongVoid =
+          wasVoidLike &&
+          ['won', 'lost'].includes(computedStatus) &&
+          (
+            isBttsTip(tip) ||
+            norm(`${tip.market || ''} ${tip.bet_type || ''} ${tip.prediction || ''}`).includes('gole') ||
+            norm(`${tip.market || ''} ${tip.bet_type || ''}`).includes('goals')
+          )
+
+        const shouldResolveStatus = isPending(tip) || !isSettled(tip) || shouldResettleWrongVoid
+        const finalStatus = shouldResolveStatus ? computedStatus : currentStatus || computedStatus
         const finalResult = finalStatus === 'won' ? 'win' : finalStatus === 'lost' ? 'loss' : 'void'
-        const profit = profitFromStatus(computedStatus, tip.odds, n(tip.stake, 100) || 100)
+        const profit = profitFromStatus(finalStatus, tip.odds, n(tip.stake, 100) || 100)
         const fullUpdate = {
           live_score_home: scoreN(score.home),
           live_score_away: scoreN(score.away),
@@ -259,7 +291,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1724',
+          source: 'settle-ai-bets-v1749-btts-void-resettle-fix',
           picks_created: settled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -268,7 +300,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1748-settle-live-ai-picks-btts-polish-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    return json(200, { version: '1749-settle-live-ai-picks-btts-void-resettle-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
