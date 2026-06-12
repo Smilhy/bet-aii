@@ -130,8 +130,32 @@ function resolvePick(tip, homeScore, awayScore) {
   const under = pick.match(/(?:under|poniżej|ponizej)\s*(\d+(?:[.,]\d+)?)/i)
   if (over) return total > Number(over[1].replace(',', '.')) ? 'won' : 'lost'
   if (under) return total < Number(under[1].replace(',', '.')) ? 'won' : 'lost'
-  if (pick.includes('btts yes') || pick.includes('obie strzelą') || pick.includes('obie strzela')) return (homeScore > 0 && awayScore > 0) ? 'won' : 'lost'
-  if (pick.includes('btts no')) return (homeScore === 0 || awayScore === 0) ? 'won' : 'lost'
+
+  // FIX 1748:
+  // BTTS w Typy AI wcześniej wpadał w VOID dla polskiego wariantu:
+  // "Obie drużyny strzelą: TAK/NIE", bo settlement rozpoznawał tylko "btts no"
+  // albo skrócone "obie strzelą". Teraz obsługujemy pełne polskie i angielskie warianty.
+  const bttsRaw = `${market} ${pick}`
+  const bttsText = bttsRaw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+  const bttsCompact = bttsText.replace(/[^a-z0-9]+/g, '')
+  const isBtts =
+    bttsCompact.includes('btts') ||
+    bttsCompact.includes('bothteamstoscore') ||
+    bttsCompact.includes('obiedruzynystrzela') ||
+    bttsCompact.includes('obiestrzela')
+  if (isBtts) {
+    const wantsNo =
+      bttsCompact.includes('bttsno') ||
+      bttsCompact.includes('bothteamstoscoreno') ||
+      bttsCompact.includes('obiedruzynystrzelanie') ||
+      bttsCompact.includes('obiestrzelanie') ||
+      /(^|\s)(no|nie)($|\s)/.test(bttsText)
+    const bothScored = homeScore > 0 && awayScore > 0
+    return wantsNo ? (!bothScored ? 'won' : 'lost') : (bothScored ? 'won' : 'lost')
+  }
   const handicap = pick.match(/([+-]\s*\d+(?:[.,]\d+)?)/)
   if (handicap && (market.includes('handicap') || pick.includes('+') || pick.includes('-'))) {
     const line = Number(handicap[1].replace(/\s+/g, '').replace(',', '.'))
@@ -244,7 +268,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1724-settle-live-ai-picks-insert-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    return json(200, { version: '1748-settle-live-ai-picks-btts-polish-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
