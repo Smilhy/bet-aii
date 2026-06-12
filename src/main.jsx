@@ -599,6 +599,14 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
     }
   }
 
+  // FIX 1758:
+  // Jeden kanon statystyk wszędzie: profil, karta typu i Top typerzy.
+  // Jeśli dynamiczne statystyki z realnych rekordów tips mają więcej typów
+  // niż stare imported_* z profilu/rankingu, używamy dynamicznych danych.
+  if (dynamicFinal.totalTips > Number(importedStats.totalTips || 0)) {
+    return dynamicFinal
+  }
+
   return importedStats
 }
 
@@ -3639,7 +3647,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
         // Pobieramy bezpieczne małe paczki przez select('*') i filtrujemy lokalnie.
         const [profileRows, recentTipsRows] = await Promise.all([
           safeRows(supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(250), []),
-          safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(300), [])
+          safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500), [])
         ])
 
         if (cancelled) return
@@ -27104,7 +27112,7 @@ function App() {
       // WERSJA 1429: ranking/top typerzy bez ciężkich limitów 1000 i bez łańcucha wielu widoków.
       const [rankingRows, tipRows, profileRows] = await Promise.all([
         safeRows(supabase.from('betai_live_ranking_v999').select('*').order('profit', { ascending: false }).limit(100), []),
-        safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(200), []),
+        safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500), []),
         fetchBetaiPublicProfiles().catch(() => [])
       ])
 
@@ -27329,7 +27337,7 @@ function App() {
 
     setLoading(true)
 
-    const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=300&t=${Date.now()}`, { cache: 'no-store' })
+    const publicTipsPromise = fetch(`/.netlify/functions/get-public-tips?limit=500&t=${Date.now()}`, { cache: 'no-store' })
       .then(response => response.ok ? response.json() : { tips: [] })
       .catch(() => ({ tips: [] }))
 
@@ -27337,7 +27345,7 @@ function App() {
       supabase
         .from('tips').select('*')
         .order('created_at', { ascending: false })
-        .limit(120),
+        .limit(500),
       publicTipsPromise,
       userId
         ? supabase.from('unlocked_tips').select('tip_id').eq('user_id', userId)
