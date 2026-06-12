@@ -249,7 +249,7 @@ function buildTipRow(ev, pick) {
     fixture_id: ev.fixture_id,
 
     author_name: AUTHOR_NAME,
-    username: null,
+    username: 'betai-multisport-ai',
     user_id: null,
 
     sport: ev.sport,
@@ -356,7 +356,7 @@ async function updateSafe(supabase, id, row) {
   throw new Error('Too many missing-column retries: ' + removed.join(', '))
 }
 
-exports.config = { schedule: process.env.BETAI_MULTISPORT_AI_CRON || '17 */4 * * *' }
+exports.config = { schedule: '17 */4 * * *' }
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})

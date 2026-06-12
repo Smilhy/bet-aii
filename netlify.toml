@@ -15,3 +15,8 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# BetAI MultiSport AI — automatyczne publikowanie typów
+# Netlify cron działa w UTC: 17 */4 * * * = co 4 godziny, w 17. minucie.
+[functions."publish-betai-multisport-ai"]
+  schedule = "17 */4 * * *"
