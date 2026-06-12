@@ -65,6 +65,29 @@ async function countActiveTipsterTips(supabase) {
   return data.filter(isActiveTipsterTip).length
 }
 
+async function calculateAiAccuracy(supabase) {
+  const { data, error } = await supabase
+    .from('ai_bets')
+    .select('id,status,result,result_status,settlement_status')
+    .order('updated_at', { ascending: false })
+    .limit(10000)
+
+  if (error || !Array.isArray(data)) return 76
+
+  let won = 0
+  let lost = 0
+
+  data.forEach((row) => {
+    const stateText = String(`${row.status || ''} ${row.result || ''} ${row.result_status || ''} ${row.settlement_status || ''}`).toLowerCase()
+    if (/(won|win|wygran)/i.test(stateText)) won += 1
+    else if (/(lost|loss|przegran)/i.test(stateText)) lost += 1
+  })
+
+  const total = won + lost
+  if (!total) return 76
+  return Math.round((won / total) * 100)
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
@@ -77,11 +100,12 @@ exports.handler = async function(event) {
   const activeSince = new Date(Date.now() - 5 * 60 * 1000).toISOString()
   const nextDate = addDays(date, 1)
 
-  const [registeredUsers, activeNow, tipsToday, tipsterTipsToday] = await Promise.all([
+  const [registeredUsers, activeNow, tipsToday, tipsterTipsToday, aiAccuracy] = await Promise.all([
     countOrZero(supabase.from('profiles').select('id', { count: 'exact', head: true })),
     countOrZero(supabase.from('presence_heartbeats').select('user_id', { count: 'exact', head: true }).gte('updated_at', activeSince)),
     countOrZero(supabase.from('ai_bets').select('id', { count: 'exact', head: true }).eq('match_date', date)),
-    countActiveTipsterTips(supabase)
+    countActiveTipsterTips(supabase),
+    calculateAiAccuracy(supabase)
   ])
 
   return json(200, {
@@ -90,7 +114,7 @@ exports.handler = async function(event) {
     tipsToday,
     tipsterTipsToday,
     tipsterTipsActive: tipsterTipsToday,
-    aiAccuracy: 76,
+    aiAccuracy,
     date,
     updatedAt: new Date().toISOString()
   })
