@@ -362,9 +362,164 @@ async function updateAiBet(supabase, id, fullUpdate, minimalUpdate) {
   if (!first.error) return { ok: true, fallback: false }
   const msg = String(first.error.message || '')
   if (!/column|schema|does not exist|Could not find/i.test(msg)) throw first.error
+
+  // 1764: średni fallback próbuje też aktualizować settlement_status,
+  // bo frontend/profil często czyta właśnie to pole.
+  const mediumUpdate = {
+    status: minimalUpdate.status,
+    result: minimalUpdate.result,
+    settlement_status: minimalUpdate.status,
+    settlement_source: fullUpdate.settlement_source || 'auto_ai_result_api',
+    profit: minimalUpdate.profit,
+    updated_at: new Date().toISOString()
+  }
+  const mid = await supabase.from('ai_bets').update(mediumUpdate).eq('id', id)
+  if (!mid.error) return { ok: true, fallback: true, firstError: msg }
+
   const second = await supabase.from('ai_bets').update(minimalUpdate).eq('id', id)
   if (second.error) throw second.error
-  return { ok: true, fallback: true, firstError: msg }
+  return { ok: true, fallback: true, firstError: msg, secondError: String(mid.error.message || '') }
+}
+
+function normSyncV1764(value = '') {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function compactSyncV1764(value = '') {
+  return normSyncV1764(value).replace(/\s+/g, '')
+}
+
+function isBetaiMultisportRowV1764(row = {}) {
+  const raw = [
+    row.username,
+    row.author_name,
+    row.user_name,
+    row.ai_source,
+    row.ai_model_version,
+    row.source,
+    row.tip_source
+  ].filter(Boolean).join(' ')
+  const compact = compactSyncV1764(raw)
+  return compact.includes('betaimultisport') || compact.includes('multisportai')
+}
+
+function anyIdValuesV1764(row = {}) {
+  return [
+    row.ai_external_key,
+    row.external_fixture_id,
+    row.api_fixture_id,
+    row.fixture_id,
+    row.match_id,
+    row.event_id
+  ].filter(v => v !== undefined && v !== null && String(v).trim() !== '').map(v => String(v).trim().toLowerCase())
+}
+
+function matchNameV1764(row = {}) {
+  return normSyncV1764(row.match_name || row.match || `${row.team_home || row.home_team || ''} ${row.team_away || row.away_team || ''}`)
+}
+
+function predictionKeyV1764(row = {}) {
+  return compactSyncV1764([
+    row.market_key,
+    row.selection_key,
+    row.market,
+    row.bet_type,
+    row.pick,
+    row.selection,
+    row.prediction
+  ].filter(Boolean).join(' '))
+}
+
+function sameBotTipV1764(aiBet = {}, tipRow = {}) {
+  if (!isBetaiMultisportRowV1764(aiBet) && !isBetaiMultisportRowV1764(tipRow)) return false
+
+  const aiIds = new Set(anyIdValuesV1764(aiBet))
+  const tipIds = anyIdValuesV1764(tipRow)
+  const idHit = tipIds.some(id => aiIds.has(id))
+
+  const aiPrediction = predictionKeyV1764(aiBet)
+  const tipPrediction = predictionKeyV1764(tipRow)
+  const predictionHit =
+    aiPrediction &&
+    tipPrediction &&
+    (
+      aiPrediction.includes(tipPrediction) ||
+      tipPrediction.includes(aiPrediction) ||
+      compactSyncV1764(aiBet.prediction || '') === compactSyncV1764(tipRow.prediction || '')
+    )
+
+  if (idHit && (predictionHit || !tipPrediction || !aiPrediction)) return true
+
+  const aiMatch = matchNameV1764(aiBet)
+  const tipMatch = matchNameV1764(tipRow)
+  const matchHit = aiMatch && tipMatch && (aiMatch.includes(tipMatch) || tipMatch.includes(aiMatch))
+
+  const aiDate = String(aiBet.match_date || aiBet.event_date || aiBet.created_at || '').slice(0, 10)
+  const tipDate = String(tipRow.match_date || tipRow.event_date || tipRow.created_at || '').slice(0, 10)
+  const dateHit = !aiDate || !tipDate || aiDate === tipDate
+
+  return Boolean(matchHit && dateHit && predictionHit)
+}
+
+async function updateTipRowSettlementV1764(supabase, id, finalStatus, finalResult, profit, fullUpdate = {}) {
+  const common = {
+    status: finalStatus,
+    result: finalResult,
+    settlement_status: finalStatus,
+    settlement_source: fullUpdate.settlement_source || 'auto_ai_result_api_synced_from_ai_bets',
+    profit,
+    updated_at: new Date().toISOString()
+  }
+
+  const first = await supabase.from('tips').update({
+    ...common,
+    result_status: finalStatus,
+    live_score_home: fullUpdate.live_score_home,
+    live_score_away: fullUpdate.live_score_away,
+    live_status: fullUpdate.live_status,
+    settled_at: fullUpdate.settled_at || new Date().toISOString()
+  }).eq('id', id)
+
+  if (!first.error) return { ok: true, fallback: false }
+
+  const msg = String(first.error.message || '')
+  if (!/column|schema|does not exist|Could not find/i.test(msg)) throw first.error
+
+  const second = await supabase.from('tips').update(common).eq('id', id)
+  if (!second.error) return { ok: true, fallback: true, firstError: msg }
+
+  const msg2 = String(second.error.message || '')
+  if (!/column|schema|does not exist|Could not find/i.test(msg2)) throw second.error
+
+  const third = await supabase.from('tips').update({
+    status: finalStatus,
+    result: finalResult,
+    profit
+  }).eq('id', id)
+  if (third.error) throw third.error
+
+  return { ok: true, fallback: true, firstError: msg, secondError: msg2 }
+}
+
+async function syncAiBetToTipsV1764(supabase, aiBet, linkedTipRows, finalStatus, finalResult, profit, fullUpdate) {
+  const rows = Array.isArray(linkedTipRows) ? linkedTipRows : []
+  const matches = rows.filter(row => sameBotTipV1764(aiBet, row))
+  let updated = 0
+  let fallback = 0
+
+  for (const row of matches) {
+    if (!row.id) continue
+    const up = await updateTipRowSettlementV1764(supabase, row.id, finalStatus, finalResult, profit, fullUpdate)
+    updated++
+    if (up.fallback) fallback++
+  }
+
+  return { updated, fallback }
 }
 
 exports.handler = async function (event) {
@@ -396,7 +551,17 @@ exports.handler = async function (event) {
       return forceResettle || Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
     })
 
-    let settled = 0, checked = 0, skipped = 0, backfilled = 0, fallbackUpdates = 0
+    const { data: linkedTipRowsRaw } = await supabase
+      .from('tips')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(2000)
+
+    const linkedTipRows = Array.isArray(linkedTipRowsRaw)
+      ? linkedTipRowsRaw.filter(isBetaiMultisportRowV1764)
+      : []
+
+    let settled = 0, checked = 0, skipped = 0, backfilled = 0, fallbackUpdates = 0, syncedTips = 0, syncedTipsFallback = 0
     const errors = []
     for (const tip of candidates) {
       checked++
@@ -419,6 +584,9 @@ exports.handler = async function (event) {
           const minimalUpdate = { status: 'pending', result: 'pending', profit: 0 }
           const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
           if (up.fallback) fallbackUpdates++
+          const sync = await syncAiBetToTipsV1764(supabase, tip, linkedTipRows, 'pending', 'pending', 0, fullUpdate)
+          syncedTips += sync.updated
+          syncedTipsFallback += sync.fallback
           backfilled++
         }
 
@@ -451,6 +619,9 @@ exports.handler = async function (event) {
             const minimalUpdate = { status: 'void', result: 'void', profit: 0 }
             const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
             if (up.fallback) fallbackUpdates++
+            const sync = await syncAiBetToTipsV1764(supabase, tip, linkedTipRows, 'void', 'void', 0, fullUpdate)
+            syncedTips += sync.updated
+            syncedTipsFallback += sync.fallback
             settled++
           } else if (wasVoidLikeBeforeFetch && supportedTipBeforeFetch && !hasScore(tip)) {
             await resetWrongSupportedVoidToPending('not-finished-yet')
@@ -508,8 +679,15 @@ exports.handler = async function (event) {
 
         const up = await updateAiBet(supabase, tip.id, fullUpdate, minimalUpdate)
         if (up.fallback) fallbackUpdates++
-        if (shouldResolveStatus) settled++
-        else backfilled++
+
+        if (shouldResolveStatus) {
+          const sync = await syncAiBetToTipsV1764(supabase, tip, linkedTipRows, finalStatus, finalResult, profit, fullUpdate)
+          syncedTips += sync.updated
+          syncedTipsFallback += sync.fallback
+          settled++
+        } else {
+          backfilled++
+        }
       } catch (e) {
         errors.push({ id: tip.id, match: `${tipHome(tip)} vs ${tipAway(tip)}`, date: tip.match_date, error: e.message || String(e) })
       }
@@ -518,16 +696,16 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1763-bot-all-markets-fix',
+          source: 'settle-ai-bets-v1764-sync-ai-bets-to-tips',
           picks_created: settled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
-          message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; errors=${errors.length}`
+          message: `checked=${checked}; settled=${settled}; backfilled=${backfilled}; skipped=${skipped}; fallbackUpdates=${fallbackUpdates}; syncedTips=${syncedTips}; syncedTipsFallback=${syncedTipsFallback}; errors=${errors.length}`
         })
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1763-settle-live-ai-picks-bot-all-markets-fix', table: 'ai_bets', checked, settled, backfilled, skipped, fallbackUpdates, errors: errors.slice(0, 20) })
+    return json(200, { version: '1764-settle-live-ai-picks-sync-ai-bets-to-tips', table: 'ai_bets+tips', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })
