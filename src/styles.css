@@ -56870,6 +56870,7 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .wins,
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .losses,
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .voids,
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .sep{
   display:inline !important;
   background:none !important;
@@ -56893,6 +56894,11 @@ html body #root .app-shell .topbar .betai-language-switch.compact.betai-language
 
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .losses{
   color:#ff647d !important;
+}
+
+.app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .rank-balance-v19 .voids{
+  color:#2aa8ff !important;
+  text-shadow:0 0 10px rgba(42,168,255,.28) !important;
 }
 
 .app-shell:not(.no-rightbar-page) .rightbar .real-ranking-panel.real-ranking-panel-v19 .ranking-profit-box-v19{

@@ -475,6 +475,7 @@ function buildAuthorStatsFromTips(tips = []) {
       totalTips: 0,
       wonTips: 0,
       lostTips: 0,
+      voidTips: 0,
       pendingTips: 0,
       totalStaked: 0,
       profit: 0,
@@ -488,6 +489,7 @@ function buildAuthorStatsFromTips(tips = []) {
     current.totalTips += 1
     if (status === 'won') current.wonTips += 1
     else if (status === 'lost') current.lostTips += 1
+    else if (status === 'void') current.voidTips += 1
     else current.pendingTips += 1
     if (status === 'won' || status === 'lost') current.totalStaked += stake
     current.profit += readTipProfitValue(tip)
@@ -507,6 +509,7 @@ function hasExplicitImportedStatsFields(profile = {}) {
     'imported_total_tips',
     'imported_won_tips',
     'imported_lost_tips',
+    'imported_void_tips',
     'imported_pending_tips',
     'imported_profit',
     'imported_yield',
@@ -527,6 +530,7 @@ function getImportedProfileStats(profile) {
     : (importedTotalTips || (Number(profile.total_tips ?? profile.tips_count ?? 0) || 0))
   const wonTips = explicitImported ? (Number(profile.imported_won_tips ?? 0) || 0) : (Number(profile.imported_won_tips ?? profile.wins ?? 0) || 0)
   const lostTips = explicitImported ? (Number(profile.imported_lost_tips ?? 0) || 0) : (Number(profile.imported_lost_tips ?? profile.losses ?? 0) || 0)
+  const voidTips = explicitImported ? (Number(profile.imported_void_tips ?? 0) || 0) : (Number(profile.imported_void_tips ?? profile.void_tips ?? profile.voids ?? profile.pushes ?? 0) || 0)
   const pendingTips = explicitImported ? (Number(profile.imported_pending_tips ?? 0) || 0) : (Number(profile.imported_pending_tips ?? profile.pending_tips ?? 0) || 0)
   const totalStaked = explicitImported ? (Number(profile.imported_total_staked ?? 0) || 0) : (Number(profile.imported_total_staked ?? profile.total_staked ?? 0) || 0)
   const profit = explicitImported ? (Number(profile.imported_profit ?? 0) || 0) : (Number(profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0)
@@ -540,6 +544,7 @@ function getImportedProfileStats(profile) {
     totalTips > 0 ||
     wonTips > 0 ||
     lostTips > 0 ||
+    voidTips > 0 ||
     pendingTips > 0 ||
     totalStaked > 0 ||
     profit !== 0 ||
@@ -554,6 +559,7 @@ function getImportedProfileStats(profile) {
     totalTips,
     wonTips,
     lostTips,
+    voidTips,
     pendingTips,
     totalStaked,
     profit,
@@ -570,6 +576,7 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
     totalTips: Number(dynamicStats?.totalTips || 0) || 0,
     wonTips: Number(dynamicStats?.wonTips || 0) || 0,
     lostTips: Number(dynamicStats?.lostTips || 0) || 0,
+    voidTips: Number(dynamicStats?.voidTips || 0) || 0,
     pendingTips: Number(dynamicStats?.pendingTips || 0) || 0,
     totalStaked: dynamicTotalStaked,
     profit: dynamicProfit,
@@ -595,6 +602,7 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
       totalTips: Math.max(Number(importedStats.totalTips || 0), Number(dynamicFinal.totalTips || 0)),
       wonTips: Math.max(Number(importedStats.wonTips || 0), Number(dynamicFinal.wonTips || 0)),
       lostTips: Math.max(Number(importedStats.lostTips || 0), Number(dynamicFinal.lostTips || 0)),
+      voidTips: Math.max(Number(importedStats.voidTips || 0), Number(dynamicFinal.voidTips || 0)),
       pendingTips: Math.max(Number(importedStats.pendingTips || 0), Number(dynamicFinal.pendingTips || 0)),
     }
   }
@@ -796,6 +804,7 @@ function buildRankingFromTips(tips = []) {
       total_tips: 0,
       wins: 0,
       losses: 0,
+      voids: 0,
       pending: 0,
       roi: 0,
       winrate: 0,
@@ -815,6 +824,7 @@ function buildRankingFromTips(tips = []) {
 
     if (settlementStatus === 'won') current.wins += 1
     else if (settlementStatus === 'lost') current.losses += 1
+    else if (settlementStatus === 'void') current.voids += 1
     else current.pending += 1
 
     if (settlementStatus === 'won' || settlementStatus === 'lost') {
@@ -887,6 +897,10 @@ function normalizeRankingLosses(row = {}) {
   return getRankingNumber(row, ['imported_lost_tips', 'lostTips', 'losses', 'lost'], 0)
 }
 
+function normalizeRankingVoids(row = {}) {
+  return getRankingNumber(row, ['imported_void_tips', 'voidTips', 'void_tips', 'voids', 'pushes', 'returns', 'refunds', 'zwroty'], 0)
+}
+
 function normalizeRankingYield(row = {}) {
   return getRankingNumber(row, ['imported_yield', 'yield', 'roi'], 0)
 }
@@ -903,6 +917,7 @@ function buildRankingRowsFromTipCards(tips = []) {
     const totalTips = Number(stats?.totalTips ?? tip.imported_total_tips ?? 0) || 0
     const wins = Number(stats?.wonTips ?? tip.imported_won_tips ?? 0) || 0
     const losses = Number(stats?.lostTips ?? tip.imported_lost_tips ?? 0) || 0
+    const voids = Number(stats?.voidTips ?? tip.imported_void_tips ?? tip.voids ?? 0) || 0
     const roi = Number(stats?.yield ?? tip.imported_yield ?? 0) || 0
     rows.set(key, {
       ...previous,
@@ -914,6 +929,8 @@ function buildRankingRowsFromTipCards(tips = []) {
       total_tips: Math.max(Number(previous.total_tips || 0), totalTips),
       wins: Math.max(Number(previous.wins || 0), wins),
       losses: Math.max(Number(previous.losses || 0), losses),
+      voids: Math.max(Number(previous.voids || 0), voids),
+      voidTips: Math.max(Number(previous.voidTips || 0), voids),
       roi: Math.abs(roi) >= Math.abs(Number(previous.roi || 0)) ? roi : Number(previous.roi || 0),
       yield: Math.abs(roi) >= Math.abs(Number(previous.yield || 0)) ? roi : Number(previous.yield || 0),
       winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : Number(previous.winrate || 0),
@@ -956,6 +973,7 @@ function mergeRankingRows(...groups) {
     const tipsCount = normalizeRankingTipsCount(raw)
     const wins = normalizeRankingWins(raw)
     const losses = normalizeRankingLosses(raw)
+    const voids = normalizeRankingVoids(raw)
     const roi = normalizeRankingYield(raw)
     const username = raw.username || raw.author_name || previous.username || previous.author_name || (raw.email ? String(raw.email).split('@')[0] : 'Użytkownik')
 
@@ -970,6 +988,8 @@ function mergeRankingRows(...groups) {
       totalTips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
       wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
       losses: Math.max(Number(previous.losses || 0), Number(losses || 0)),
+      voids: Math.max(Number(previous.voids || previous.voidTips || 0), Number(voids || 0)),
+      voidTips: Math.max(Number(previous.voidTips || previous.voids || 0), Number(voids || 0)),
       roi: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.roi || previous.yield || 0)) ? Number(roi || 0) : Number(previous.roi || previous.yield || 0),
       yield: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.yield || previous.roi || 0)) ? Number(roi || 0) : Number(previous.yield || previous.roi || 0),
       winrate: (Number(wins || 0) + Number(losses || 0)) > 0
@@ -992,6 +1012,7 @@ function buildLiveLeaderboardRows(ranking = [], tips = []) {
   return sortRankingRows(rows).filter(row => !isBlockedTestProfile(row)).map((row, index) => {
     const wins = normalizeRankingWins(row)
     const losses = normalizeRankingLosses(row)
+    const voids = normalizeRankingVoids(row)
     const totalTips = normalizeRankingTipsCount(row)
     const profit = normalizeRankingProfit(row)
     const roi = normalizeRankingYield(row)
@@ -1002,6 +1023,8 @@ function buildLiveLeaderboardRows(ranking = [], tips = []) {
       total_tips: totalTips,
       wins,
       losses,
+      voids,
+      voidTips: voids,
       winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : getRankingNumber(row, ['winrate', 'wr']),
       roi,
       yield: roi,
@@ -3535,6 +3558,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
           const totalTips = Number(row.totalTips || row.total_tips || 0)
           const wins = Number(row.wins || 0)
           const losses = Number(row.losses || 0)
+          const voids = Number(row.voids || row.voidTips || row.void_tips || row.pushes || row.returns || row.refunds || 0)
           const yieldValue = Number(row.roi || row.yield || 0)
           const profitValue = Number(row.earnings || row.total_earnings || row.profit || 0)
           const avatarUrl = getProfileAvatarUrl(row)
@@ -3568,7 +3592,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
                 </div>
                 <div>
                   <small>Bilans</small>
-                  <strong className="rank-balance-v19"><span className="wins">{wins}</span><span className="sep"> – </span><span className="losses">{losses}</span></strong>
+                  <strong className="rank-balance-v19"><span className="wins">{wins}</span><span className="sep"> – </span><span className="losses">{losses}</span><span className="sep"> – </span><span className="voids">{voids}</span></strong>
                 </div>
               </div>
             </div>

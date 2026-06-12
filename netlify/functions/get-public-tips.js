@@ -193,6 +193,7 @@ function buildAuthorStatsMapV1759(rows = []) {
       totalTips: 0,
       wonTips: 0,
       lostTips: 0,
+      voidTips: 0,
       pendingTips: 0,
       totalStaked: 0,
       profit: 0,
@@ -209,6 +210,7 @@ function buildAuthorStatsMapV1759(rows = []) {
     current.totalTips += 1
     if (status === 'won') current.wonTips += 1
     else if (status === 'lost') current.lostTips += 1
+    else if (status === 'void') current.voidTips += 1
     else current.pendingTips += 1
 
     if (status === 'won' || status === 'lost') current.totalStaked += stake
@@ -245,6 +247,7 @@ function attachAuthorStatsV1759(rows = []) {
       imported_total_tips: cleanStats.totalTips,
       imported_won_tips: cleanStats.wonTips,
       imported_lost_tips: cleanStats.lostTips,
+      imported_void_tips: cleanStats.voidTips,
       imported_pending_tips: cleanStats.pendingTips,
       imported_total_staked: cleanStats.totalStaked,
       imported_profit: cleanStats.profit,
