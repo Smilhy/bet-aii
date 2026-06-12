@@ -26518,30 +26518,132 @@ function getAkoLegStatusLabel(leg = {}) {
   return { text: 'Oczekuje', tone: 'pending' }
 }
 
-function getTipKickoffTimestamp(tip = {}) {
-  // Najpierw obsługa najczęstszego zapisu z Supabase: match_date='YYYY-MM-DD' + match_time='HH:mm'.
-  // Wcześniej sam match_time='02:00' nie dawał daty, więc typ mógł wisieć na Dashboardzie po starcie meczu.
-  const dateOnly = String(tip.match_date || tip.fixture_date_day || tip.event_date || '').trim().slice(0, 10)
-  const timeOnlyRaw = String(tip.match_time_hhmm || tip.kickoff_time_hhmm || tip.start_time_hhmm || '').trim()
-  const timeFromMatchTime = String(tip.match_time || '').trim()
-  const timeOnly = timeOnlyRaw || (/^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeFromMatchTime) ? timeFromMatchTime : '')
+function parseBetaiDateOnlyPartsV1751(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(timeOnly)) {
-    const [hour = '00', minute = '00', second = '00'] = timeOnly.split(':')
-    const combinedTs = parseBetaiWarsawWallTimeV1716(dateOnly.slice(0, 4), dateOnly.slice(5, 7), dateOnly.slice(8, 10), hour, minute, second || '00')
-    if (Number.isFinite(combinedTs)) return combinedTs
+  // YYYY-MM-DD albo YYYY-MM-DD HH:mm / YYYY-MM-DDTHH:mm
+  let match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) return { year: match[1], month: match[2], day: match[3] }
+
+  // DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY — tak często zapisuje formularz ręcznego typu.
+  match = raw.match(/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/)
+  if (match) {
+    let year = match[3] ? String(match[3]) : String(new Date().getFullYear())
+    if (year.length === 2) year = `20${year}`
+    return {
+      year,
+      month: String(match[2]).padStart(2, '0'),
+      day: String(match[1]).padStart(2, '0')
+    }
+  }
+
+  return null
+}
+
+function parseBetaiTimeOnlyPartsV1751(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+
+  // Czyste HH:mm / HH:mm:ss
+  let match = raw.match(/^(\d{1,2})[:.](\d{2})(?::(\d{2}))?$/)
+  if (match) {
+    return {
+      hour: String(match[1]).padStart(2, '0'),
+      minute: String(match[2]).padStart(2, '0'),
+      second: String(match[3] || '00').padStart(2, '0')
+    }
+  }
+
+  // Z napisu typu "12.06.2026, 21:00" albo "kickoff 21:00".
+  match = raw.match(/(?:^|[^\d])(\d{1,2})[:.](\d{2})(?::(\d{2}))?(?:[^\d]|$)/)
+  if (match) {
+    return {
+      hour: String(match[1]).padStart(2, '0'),
+      minute: String(match[2]).padStart(2, '0'),
+      second: String(match[3] || '00').padStart(2, '0')
+    }
+  }
+
+  return null
+}
+
+function parseBetaiCombinedDateTimeV1751(dateValue, timeValue) {
+  // Jeśli któryś z pól zawiera pełną datę z godziną, spróbuj najpierw normalnego parsera.
+  for (const value of [dateValue, timeValue]) {
+    const raw = String(value || '').trim()
+    if (!raw) continue
+    if (
+      /^\d{4}-\d{2}-\d{2}[T\s]+\d{1,2}:\d{2}/.test(raw) ||
+      /^\d{1,2}[.\/-]\d{1,2}(?:[.\/-]\d{2,4})?[^0-9]+\d{1,2}[:.]\d{2}/.test(raw)
+    ) {
+      const directTs = parseBetaiKickoffTime(raw)
+      if (Number.isFinite(directTs)) return directTs
+    }
+  }
+
+  const dateParts = parseBetaiDateOnlyPartsV1751(dateValue)
+  const timeParts = parseBetaiTimeOnlyPartsV1751(timeValue)
+  if (!dateParts || !timeParts) return NaN
+
+  // Ważne: ręczne typy zapisane bez strefy czasu traktujemy jako czas PL.
+  // Przykład: 12.06.2026 + 21:00 = 21:00 Polska = 20:00 UK.
+  return parseBetaiWarsawWallTimeV1716(
+    dateParts.year,
+    dateParts.month,
+    dateParts.day,
+    timeParts.hour,
+    timeParts.minute,
+    timeParts.second
+  )
+}
+
+function getTipKickoffTimestamp(tip = {}) {
+  // FIX 1751:
+  // Dashboard musi ukrywać kupon od minuty startu meczu.
+  // Stare ręczne typy bywały zapisane jako match_date='12.06.2026' + match_time='21:00',
+  // a poprzedni parser obsługiwał głównie YYYY-MM-DD + HH:mm. Przez to mecz po starcie
+  // mógł dalej wisieć na feedzie, szczególnie w UK przy różnicy PL/UK.
+  const dateCandidates = [
+    tip.match_date,
+    tip.match_date_day,
+    tip.fixture_date_day,
+    tip.event_date,
+    tip.fixture_date,
+    tip.date
+  ].filter(Boolean)
+
+  const timeCandidates = [
+    tip.match_time_hhmm,
+    tip.kickoff_time_hhmm,
+    tip.start_time_hhmm,
+    tip.time,
+    tip.start_hour,
+    tip.match_time,
+    tip.event_time,
+    tip.kickoff_time,
+    tip.start_time,
+    tip.date_time
+  ].filter(Boolean)
+
+  for (const dateValue of dateCandidates) {
+    for (const timeValue of timeCandidates) {
+      const combinedTs = parseBetaiCombinedDateTimeV1751(dateValue, timeValue)
+      if (Number.isFinite(combinedTs)) return combinedTs
+    }
   }
 
   const candidates = [
     tip.event_start_at,
     tip.starts_at,
     tip.start_at,
-    tip.match_time,
     tip.event_time,
     tip.kickoff_time,
     tip.start_time,
+    tip.match_time,
     tip.fixture_date,
     tip.date_time,
+    tip.match_date,
     tip.date
   ]
   for (const value of candidates) {
@@ -29757,19 +29859,31 @@ function App() {
     const now = Date.now()
     setDashboardNow(now)
 
+    // FIX 1751:
+    // Oprócz timeoutu na najbliższy kickoff odświeżamy zegar dashboardu cyklicznie.
+    // Dzięki temu typ znika po starcie nawet bez ręcznego odświeżania strony.
+    const interval = window.setInterval(() => {
+      setDashboardNow(Date.now())
+    }, 30000)
+
     const nextKickoffTs = filteredTips
       .map(tip => getTipKickoffTimestamp(normalizeTipRow(tip)))
       .filter(ts => Number.isFinite(ts) && ts > now)
       .sort((a, b) => a - b)[0]
 
-    if (!Number.isFinite(nextKickoffTs)) return undefined
+    if (!Number.isFinite(nextKickoffTs)) {
+      return () => window.clearInterval(interval)
+    }
 
     const delay = Math.max(0, Math.min(nextKickoffTs - now + 150, 2147483647))
     const timeout = window.setTimeout(() => {
       setDashboardNow(Date.now())
     }, delay)
 
-    return () => window.clearTimeout(timeout)
+    return () => {
+      window.clearTimeout(timeout)
+      window.clearInterval(interval)
+    }
   }, [view, filteredTips.map(tip => `${tip.id || tip.local_id || ''}:${getTipKickoffTimestamp(normalizeTipRow(tip))}`).join('|')])
 
   const visibleDashboardTips = filteredTips.slice(0, dashboardVisibleTips)

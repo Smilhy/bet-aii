@@ -22,6 +22,112 @@ function getSupabaseAdmin() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 
+const BETAI_WARSAW_TZ_V1751 = 'Europe/Warsaw'
+
+function getWarsawOffsetMinutesV1751(date = new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: BETAI_WARSAW_TZ_V1751,
+      timeZoneName: 'shortOffset',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).formatToParts(date)
+    const value = parts.find(part => part.type === 'timeZoneName')?.value || ''
+    const match = value.match(/GMT([+-]\d{1,2})(?::(\d{2}))?/)
+    if (!match) return 60
+    const sign = match[1].startsWith('-') ? -1 : 1
+    const hours = Math.abs(Number(match[1]) || 0)
+    const minutes = Number(match[2] || 0) || 0
+    return sign * (hours * 60 + minutes)
+  } catch (_) {
+    return 60
+  }
+}
+
+function parseWarsawWallMsV1751(year, month, day, hour = 0, minute = 0, second = 0) {
+  const utcGuess = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second), 0)
+  const offset = getWarsawOffsetMinutesV1751(new Date(utcGuess))
+  return utcGuess - offset * 60 * 1000
+}
+
+function parseDatePartsV1751(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  let match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) return { year: match[1], month: match[2], day: match[3] }
+  match = raw.match(/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/)
+  if (match) {
+    let year = match[3] ? String(match[3]) : String(new Date().getFullYear())
+    if (year.length === 2) year = `20${year}`
+    return { year, month: String(match[2]).padStart(2, '0'), day: String(match[1]).padStart(2, '0') }
+  }
+  return null
+}
+
+function parseTimePartsV1751(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  let match = raw.match(/^(\d{1,2})[:.](\d{2})(?::(\d{2}))?$/)
+  if (!match) match = raw.match(/(?:^|[^\d])(\d{1,2})[:.](\d{2})(?::(\d{2}))?(?:[^\d]|$)/)
+  if (!match) return null
+  return { hour: String(match[1]).padStart(2, '0'), minute: String(match[2]).padStart(2, '0'), second: String(match[3] || '00').padStart(2, '0') }
+}
+
+function parseKickoffMsV1751(tip = {}) {
+  const directValues = [
+    tip.event_start_at,
+    tip.starts_at,
+    tip.start_at,
+    tip.event_time,
+    tip.kickoff_time,
+    tip.start_time,
+    tip.match_time,
+    tip.fixture_date,
+    tip.date_time
+  ].filter(Boolean)
+
+  for (const value of directValues) {
+    const raw = String(value || '').trim()
+    if (!raw) continue
+    if (/^\d{4}-\d{2}-\d{2}[T\s]+\d{1,2}:\d{2}/.test(raw) && /(Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+      const ts = Date.parse(raw.replace(' ', 'T'))
+      if (Number.isFinite(ts)) return ts
+    }
+    const sql = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/)
+    if (sql && sql[4]) return parseWarsawWallMsV1751(sql[1], sql[2], sql[3], sql[4], sql[5], sql[6] || '00')
+    const polish = raw.match(/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?[^0-9]+(\d{1,2})[:.](\d{2})/)
+    if (polish) {
+      let year = polish[3] ? String(polish[3]) : String(new Date().getFullYear())
+      if (year.length === 2) year = `20${year}`
+      return parseWarsawWallMsV1751(year, polish[2], polish[1], polish[4], polish[5], '00')
+    }
+  }
+
+  const dateValues = [tip.match_date, tip.match_date_day, tip.fixture_date_day, tip.event_date, tip.date].filter(Boolean)
+  const timeValues = [tip.match_time_hhmm, tip.kickoff_time_hhmm, tip.start_time_hhmm, tip.time, tip.start_hour, tip.match_time].filter(Boolean)
+  for (const dateValue of dateValues) {
+    const d = parseDatePartsV1751(dateValue)
+    if (!d) continue
+    for (const timeValue of timeValues) {
+      const t = parseTimePartsV1751(timeValue)
+      if (!t) continue
+      return parseWarsawWallMsV1751(d.year, d.month, d.day, t.hour, t.minute, t.second)
+    }
+  }
+
+  return NaN
+}
+
+function isActivePublicTipV1751(tip = {}) {
+  const statusText = String(`${tip.status || ''} ${tip.result || ''} ${tip.result_status || ''}`).toLowerCase()
+  if (/(won|win|lost|loss|void|push|settled|rozlicz|wygran|przegran|zwrot)/.test(statusText)) return false
+  const fixtureStatus = String(tip.fixture_status || tip.status_short || tip.api_status || '').trim().toUpperCase()
+  if (['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'FT', 'AET', 'PEN'].includes(fixtureStatus)) return false
+  const ts = parseKickoffMsV1751(tip)
+  if (!Number.isFinite(ts)) return true
+  return ts > Date.now()
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   if (event.httpMethod !== 'GET') return json(405, { error: 'Method not allowed' })
@@ -38,17 +144,21 @@ exports.handler = async (event) => {
 
     if (error) throw error
 
+    const rows = Array.isArray(data) ? data : []
+    const activeRows = rows.filter(isActivePublicTipV1751)
+
     return json(200, {
-      tips: Array.isArray(data) ? data : [],
-      count: Array.isArray(data) ? data.length : 0,
-      source: 'service-role-public-tips-v1575',
+      tips: activeRows,
+      count: activeRows.length,
+      rawCount: rows.length,
+      source: 'service-role-public-tips-v1751-hide-started',
       updatedAt: new Date().toISOString()
     })
   } catch (error) {
     return json(500, {
       error: error?.message || String(error),
       tips: [],
-      source: 'service-role-public-tips-v1575'
+      source: 'service-role-public-tips-v1751-hide-started'
     })
   }
 }
