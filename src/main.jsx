@@ -864,7 +864,46 @@ function sortRankingRows(rows = []) {
   })
 }
 
+function normalizeRankingBotKeyV1761(row = {}) {
+  const raw = [
+    row.username,
+    row.author_name,
+    row.user_name,
+    row.displayName,
+    row.name,
+    row.public_slug,
+    row.email,
+    row.author_email
+  ].filter(Boolean).join(' ')
+
+  const clean = String(raw || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+  if (
+    clean.includes('betai multisport ai') ||
+    clean.includes('betai multisport') ||
+    clean.includes('multisport ai') ||
+    clean.includes('betai multisportai')
+  ) {
+    return 'user:betai-multisport-ai'
+  }
+
+  const compact = clean.replace(/\s+/g, '')
+  if (compact.includes('betaimultisportai')) {
+    return 'user:betai-multisport-ai'
+  }
+
+  return ''
+}
+
 function getRankingIdentityKey(row = {}) {
+  const botKey = normalizeRankingBotKeyV1761(row)
+  if (botKey) return botKey
+
   const email = normalizeEmail(row.email || row.author_email || row.user_email)
   const username = normalizeEmail(row.username || row.author_name || row.user_name)
   const id = String(row.tipster_id || row.author_id || row.user_id || row.id || '').toLowerCase()
@@ -947,6 +986,9 @@ function mergeRankingRows(...groups) {
 
   const aliasesFor = (raw = {}) => {
     const aliases = []
+    const botKey = normalizeRankingBotKeyV1761(raw)
+    if (botKey) aliases.push(botKey)
+
     const email = normalizeEmail(raw.email || raw.author_email || raw.user_email)
     const username = normalizeEmail(raw.username || raw.author_name || raw.user_name)
     const id = String(raw.tipster_id || raw.author_id || raw.user_id || raw.id || '').toLowerCase()
@@ -955,7 +997,7 @@ function mergeRankingRows(...groups) {
       aliases.push(`user:${email.split('@')[0]}`)
     }
     if (username && !isGenericProfileName(username)) aliases.push(`user:${username}`)
-    if (id) aliases.push(`id:${id}`)
+    if (id && !botKey) aliases.push(`id:${id}`)
     return [...new Set(aliases.filter(Boolean))]
   }
 
