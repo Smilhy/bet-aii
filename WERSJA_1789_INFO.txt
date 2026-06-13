@@ -1,0 +1,8 @@
+WERSJA 1789 — prawa kolumna rankingu: poprawiony rozmiar czcionek
+
+Zmiany:
+- WKRÓTCE zmniejszone tak, aby mieściło się równo w karcie,
+- nagłówki prawej kolumny są większe i czytelniejsze,
+- nazwy sportów, ikonki oraz przyciski 0 $ są większe,
+- licznik 0 $ i podpis wypłat są lepiej dopasowane,
+- box Twoje polecenia na dole również ma większe, czytelniejsze fonty.
