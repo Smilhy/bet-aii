@@ -1,0 +1,32 @@
+BET+AI — WERSJA 1790
+WYNIKI LIVE PRO / REAL API
+
+Zrobione:
+- całkowicie nowy wygląd zakładki Artykuły/TV Live → Wyniki live,
+- wewnętrzny lewy panel lig i statystyk jak w profesjonalnym serwisie wynikowym,
+- 7-dniowy kalendarz + wybór dowolnej daty,
+- filtry: wszystkie / live / zakończone / następne,
+- wyszukiwarka drużyn i lig,
+- obserwowane ligi zapisane w localStorage,
+- grupowanie meczów według kraju i ligi,
+- realne statusy, wyniki, godziny Europe/Warsaw, herby drużyn,
+- rozwijane szczegóły meczu: stadion, sędzia, runda, wynik do przerwy,
+- realne kursy 1X2, gdy API-Football je udostępnia,
+- statystyki dnia liczone automatycznie z pobranych wyników,
+- wiadomości sportowe z istniejącego feedu Sport.pl,
+- automatyczne odświeżanie co 60 sekund tylko przy aktywnej karcie,
+- cache Netlify: 55 sekund dla dzisiejszych wyników i 10 minut dla kursów,
+- brak nieskończonej pętli requestów,
+- prawa kolumna czatu ukryta w widoku wyników, aby tabela miała pełną szerokość.
+
+Wymagana zmienna Netlify (jedna z poniższych):
+- APISPORTS_KEY
+- API_FOOTBALL_KEY
+- API_SPORTS_KEY
+
+SQL nie jest potrzebny.
+
+Sprawdzenie wykonane:
+- main.jsx: składnia JSX OK,
+- netlify/functions/live-scores.js: składnia Node.js OK,
+- handler bez klucza zwraca prawidłowy komunikat konfiguracyjny.

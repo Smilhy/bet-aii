@@ -12567,6 +12567,534 @@ function isImportantSportPlNews(item = {}) {
   return ['pilne', 'oficjalnie', 'kontuzja', 'transfer', 'zwolniony', 'zmarł', 'afera', 'sensacja', 'skandal', 'polska', 'reprezentacja', 'świątek', 'lewandowski', 'liga mistrzów', 'finał'].some(word => text.includes(word))
 }
 
+function BetaiLiveScoresProV1790({ liveArticles = [] }) {
+  const getWarsawDateKey = (value = new Date()) => {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Warsaw',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(value)
+    const map = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+    return `${map.year}-${map.month}-${map.day}`
+  }
+
+  const addDaysToDateKey = (dateKey, amount) => {
+    const [year, month, day] = String(dateKey).split('-').map(Number)
+    const value = new Date(Date.UTC(year, month - 1, day + amount, 12, 0, 0))
+    return value.toISOString().slice(0, 10)
+  }
+
+  const todayKey = getWarsawDateKey()
+  const [selectedDate, setSelectedDate] = useState(todayKey)
+  const [matches, setMatches] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState('')
+  const [updatedAt, setUpdatedAt] = useState(null)
+  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedLeague, setSelectedLeague] = useState('all')
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const [expandedMatchId, setExpandedMatchId] = useState('')
+  const [metricMode, setMetricMode] = useState('over25')
+  const [refreshIn, setRefreshIn] = useState(60)
+  const [favoriteLeagues, setFavoriteLeagues] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('betai_live_favorite_leagues_v1790') || '[]')
+      return Array.isArray(stored) ? stored : []
+    } catch (_) {
+      return []
+    }
+  })
+
+  const getLeagueKey = (match = {}) => String(match.leagueId || `${match.country || ''}|${match.league || ''}`)
+
+  const getPhase = (match = {}) => {
+    const status = String(match.status || '').toUpperCase()
+    const longStatus = String(match.statusLong || match.status_long || '').toLowerCase()
+    if (['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'ABD', 'SUSP', 'INT'].includes(status) || longStatus.includes('finished')) return 'finished'
+    if (status === 'HT') return 'halftime'
+    if (['LIVE', '1H', '2H', 'ET', 'BT', 'P'].includes(status) || longStatus.includes('live') || longStatus.includes('progress')) return 'live'
+    return 'upcoming'
+  }
+
+  const getStatusLabel = (match = {}) => {
+    const phase = getPhase(match)
+    if (phase === 'finished') return 'FT'
+    if (phase === 'halftime') return 'HT'
+    if (phase === 'live') return match.minute || 'LIVE'
+    return match.kickoffTime || match.minute || 'PRE'
+  }
+
+  const formatKickoff = (match = {}) => {
+    const raw = match.date || (match.timestamp ? Number(match.timestamp) * 1000 : null)
+    const value = raw ? new Date(raw) : null
+    if (!value || !Number.isFinite(value.getTime())) return match.minute || '—'
+    return value.toLocaleTimeString('pl-PL', {
+      timeZone: 'Europe/Warsaw',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const formatUpdatedAt = (value) => {
+    const date = value ? new Date(value) : null
+    if (!date || !Number.isFinite(date.getTime())) return '—'
+    return date.toLocaleTimeString('pl-PL', {
+      timeZone: 'Europe/Warsaw',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  }
+
+  const loadScores = useCallback(async (force = false) => {
+    try {
+      if (force) setRefreshing(true)
+      else setLoading(true)
+      setError('')
+      const params = new URLSearchParams({
+        date: selectedDate,
+        sport: 'football',
+        odds: '1',
+      })
+      if (force) params.set('force', '1')
+      const response = await fetch(`/.netlify/functions/live-scores?${params.toString()}`, { cache: 'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      const rows = Array.isArray(payload?.matches) ? payload.matches : []
+      setMatches(rows)
+      setUpdatedAt(payload?.updatedAt || new Date().toISOString())
+      setRefreshIn(60)
+      if (!payload?.ok) setError(payload?.error || 'Nie udało się pobrać wyników live.')
+      else if (payload?.message) setError(payload.message)
+    } catch (loadError) {
+      setError(loadError?.message || 'Nie udało się pobrać wyników live.')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [selectedDate])
+
+  useEffect(() => {
+    let intervalId = null
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') loadScores(false)
+    }
+    loadScores(false)
+    intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') loadScores(false)
+    }, 60 * 1000)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      if (intervalId) window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [loadScores])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setRefreshIn((value) => (value <= 1 ? 60 : value - 1))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('betai_live_favorite_leagues_v1790', JSON.stringify(favoriteLeagues))
+    } catch (_) {}
+  }, [favoriteLeagues])
+
+  const dateTiles = useMemo(() => {
+    return Array.from({ length: 7 }, (_, index) => {
+      const key = addDaysToDateKey(todayKey, index - 1)
+      const date = new Date(`${key}T12:00:00Z`)
+      const shortDay = date.toLocaleDateString('pl-PL', { weekday: 'short', timeZone: 'Europe/Warsaw' }).replace('.', '').toUpperCase()
+      const dateLabel = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Warsaw' })
+      return {
+        key,
+        dateLabel,
+        shortDay,
+        today: key === todayKey,
+      }
+    })
+  }, [todayKey])
+
+  const normalizedQuery = query.trim().toLowerCase()
+  const visibleMatches = useMemo(() => {
+    return matches.filter((match) => {
+      const phase = getPhase(match)
+      const leagueKey = getLeagueKey(match)
+      const statusOk = statusFilter === 'all' || phase === statusFilter
+      const leagueOk = selectedLeague === 'all' || leagueKey === selectedLeague
+      const favoriteOk = !showFavoritesOnly || favoriteLeagues.includes(leagueKey)
+      const queryOk = !normalizedQuery || `${match.country || ''} ${match.league || ''} ${match.home?.name || ''} ${match.away?.name || ''}`.toLowerCase().includes(normalizedQuery)
+      return statusOk && leagueOk && favoriteOk && queryOk
+    })
+  }, [matches, statusFilter, selectedLeague, showFavoritesOnly, favoriteLeagues, normalizedQuery])
+
+  const groupedMatches = useMemo(() => {
+    const groups = new Map()
+    visibleMatches.forEach((match) => {
+      const key = getLeagueKey(match)
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          country: match.country || 'Świat',
+          league: match.league || 'Rozgrywki',
+          leagueLogo: match.leagueLogo || '',
+          leagueFlag: match.leagueFlag || '',
+          matches: [],
+        })
+      }
+      groups.get(key).matches.push(match)
+    })
+    return Array.from(groups.values()).sort((a, b) => {
+      const aLive = a.matches.some((match) => ['live', 'halftime'].includes(getPhase(match))) ? 0 : 1
+      const bLive = b.matches.some((match) => ['live', 'halftime'].includes(getPhase(match))) ? 0 : 1
+      if (aLive !== bLive) return aLive - bLive
+      return `${a.country} ${a.league}`.localeCompare(`${b.country} ${b.league}`, 'pl')
+    })
+  }, [visibleMatches])
+
+  const leagueNavigation = useMemo(() => {
+    const map = new Map()
+    matches.forEach((match) => {
+      const key = getLeagueKey(match)
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          country: match.country || 'Świat',
+          league: match.league || 'Rozgrywki',
+          flag: match.leagueFlag || '',
+          count: 0,
+        })
+      }
+      map.get(key).count += 1
+    })
+    return Array.from(map.values()).sort((a, b) => {
+      const majorWords = /world cup|mistrz|champions|premier league|la liga|serie a|bundesliga|ligue 1|ekstraklasa/i
+      const aMajor = majorWords.test(a.league) ? 0 : 1
+      const bMajor = majorWords.test(b.league) ? 0 : 1
+      if (aMajor !== bMajor) return aMajor - bMajor
+      if (b.count !== a.count) return b.count - a.count
+      return `${a.country} ${a.league}`.localeCompare(`${b.country} ${b.league}`, 'pl')
+    })
+  }, [matches])
+
+  const majorLeagues = leagueNavigation.filter((item) => /world cup|mistrz|champions|premier league|la liga|serie a|bundesliga|ligue 1|ekstraklasa|europa/i.test(item.league)).slice(0, 12)
+  const otherLeagues = leagueNavigation.filter((item) => !majorLeagues.some((major) => major.key === item.key)).slice(0, 32)
+
+  const counts = useMemo(() => {
+    return matches.reduce((acc, match) => {
+      const phase = getPhase(match)
+      acc.all += 1
+      acc[phase] = (acc[phase] || 0) + 1
+      return acc
+    }, { all: 0, live: 0, halftime: 0, finished: 0, upcoming: 0 })
+  }, [matches])
+
+  const dayStats = useMemo(() => {
+    const scored = matches.filter((match) => Number.isFinite(Number(match.home?.score)) && Number.isFinite(Number(match.away?.score)))
+    const totalGoals = scored.reduce((sum, match) => sum + Number(match.home?.score || 0) + Number(match.away?.score || 0), 0)
+    const over25 = scored.filter((match) => Number(match.home?.score || 0) + Number(match.away?.score || 0) >= 3).length
+    const under25 = scored.filter((match) => Number(match.home?.score || 0) + Number(match.away?.score || 0) <= 2).length
+    const btts = scored.filter((match) => Number(match.home?.score || 0) > 0 && Number(match.away?.score || 0) > 0).length
+    const cleanSheets = scored.filter((match) => Number(match.home?.score || 0) === 0 || Number(match.away?.score || 0) === 0).length
+    const teamMap = new Map()
+    scored.forEach((match) => {
+      const homeName = match.home?.name || 'Gospodarze'
+      const awayName = match.away?.name || 'Goście'
+      const homeGoals = Number(match.home?.score || 0)
+      const awayGoals = Number(match.away?.score || 0)
+      teamMap.set(homeName, (teamMap.get(homeName) || 0) + homeGoals)
+      teamMap.set(awayName, (teamMap.get(awayName) || 0) + awayGoals)
+    })
+    const topTeams = Array.from(teamMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    return {
+      played: scored.length,
+      totalGoals,
+      averageGoals: scored.length ? totalGoals / scored.length : 0,
+      over25,
+      under25,
+      btts,
+      cleanSheets,
+      topTeams,
+    }
+  }, [matches])
+
+  const metricCards = {
+    over25: { title: 'OVER 2,5', value: dayStats.over25, suffix: ` / ${dayStats.played}`, description: 'Mecze z minimum trzema golami' },
+    under25: { title: 'UNDER 2,5', value: dayStats.under25, suffix: ` / ${dayStats.played}`, description: 'Mecze z maksymalnie dwoma golami' },
+    btts: { title: 'BTTS', value: dayStats.btts, suffix: ` / ${dayStats.played}`, description: 'Mecze, w których obie drużyny strzeliły' },
+    clean: { title: 'CZYSTE KONTA', value: dayStats.cleanSheets, suffix: ` / ${dayStats.played}`, description: 'Mecze z co najmniej jednym czystym kontem' },
+  }
+  const selectedMetric = metricCards[metricMode] || metricCards.over25
+
+  const toggleFavoriteLeague = (leagueKey) => {
+    setFavoriteLeagues((previous) => previous.includes(leagueKey)
+      ? previous.filter((item) => item !== leagueKey)
+      : [...previous, leagueKey])
+  }
+
+  const selectLeague = (leagueKey) => {
+    setSelectedLeague(leagueKey)
+    setShowFavoritesOnly(false)
+    window.setTimeout(() => document.querySelector('.betai-score-main-v1790')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 40)
+  }
+
+  const scrollToStats = (mode) => {
+    setMetricMode(mode)
+    window.setTimeout(() => document.getElementById('betai-live-stats-v1790')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 40)
+  }
+
+  const topDayMatches = matches
+    .slice()
+    .sort((a, b) => {
+      const phaseRank = { live: 0, halftime: 1, upcoming: 2, finished: 3 }
+      const phaseDiff = (phaseRank[getPhase(a)] ?? 4) - (phaseRank[getPhase(b)] ?? 4)
+      if (phaseDiff !== 0) return phaseDiff
+      return Number(a.timestamp || 0) - Number(b.timestamp || 0)
+    })
+    .slice(0, 4)
+
+  return (
+    <div className="betai-score-shell-v1790">
+      <aside className="betai-score-nav-v1790">
+        <label className="betai-score-nav-search-v1790">
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Wyszukaj ligę lub drużynę..." />
+          <span>⌕</span>
+        </label>
+
+        <div className="betai-score-nav-section-v1790">
+          <h4>WYNIKI NA ŻYWO</h4>
+          <button type="button" className={selectedLeague === 'all' && !showFavoritesOnly ? 'active' : ''} onClick={() => { setSelectedLeague('all'); setShowFavoritesOnly(false) }}>🏠 Wszystkie mecze <b>{counts.all}</b></button>
+          <button type="button" className={statusFilter === 'live' ? 'active' : ''} onClick={() => setStatusFilter(statusFilter === 'live' ? 'all' : 'live')}>🔴 Mecze live <b>{counts.live + counts.halftime}</b></button>
+          <button type="button" className={showFavoritesOnly ? 'active' : ''} onClick={() => { setShowFavoritesOnly((value) => !value); setSelectedLeague('all') }}>★ Obserwowane ligi <b>{favoriteLeagues.length}</b></button>
+        </div>
+
+        <div className="betai-score-nav-section-v1790">
+          <h4>STATYSTYKI PIŁKARSKIE</h4>
+          <button type="button" className={metricMode === 'over25' ? 'active' : ''} onClick={() => scrollToStats('over25')}>📈 Statystyki — Over 2,5</button>
+          <button type="button" className={metricMode === 'under25' ? 'active' : ''} onClick={() => scrollToStats('under25')}>📉 Statystyki — Under 2,5</button>
+          <button type="button" className={metricMode === 'btts' ? 'active' : ''} onClick={() => scrollToStats('btts')}>⚽ Statystyki — BTTS</button>
+          <button type="button" className={metricMode === 'clean' ? 'active' : ''} onClick={() => scrollToStats('clean')}>🛡️ Statystyki — Czyste konta</button>
+        </div>
+
+        {majorLeagues.length ? (
+          <div className="betai-score-nav-section-v1790">
+            <h4>WYRÓŻNIONE ★</h4>
+            {majorLeagues.map((item) => (
+              <button type="button" key={item.key} className={selectedLeague === item.key ? 'active' : ''} onClick={() => selectLeague(item.key)}>
+                <span>{item.flag ? <img src={item.flag} alt="" /> : '⚽'}</span>
+                <em>{item.country}: {item.league}</em>
+                <b>{item.count}</b>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {otherLeagues.length ? (
+          <div className="betai-score-nav-section-v1790">
+            <h4>POZOSTAŁE</h4>
+            {otherLeagues.map((item) => (
+              <button type="button" key={item.key} className={selectedLeague === item.key ? 'active' : ''} onClick={() => selectLeague(item.key)}>
+                <span>{item.flag ? <img src={item.flag} alt="" /> : '⚽'}</span>
+                <em>{item.country}: {item.league}</em>
+                <b>{item.count}</b>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </aside>
+
+      <main className="betai-score-main-v1790">
+        <header className="betai-score-title-v1790">
+          <div>
+            <span>BET+AI • REAL LIVE DATA</span>
+            <h1>Wyniki na żywo</h1>
+            <p>Wyniki, terminarz i statusy spotkań aktualizowane automatycznie co 60 sekund.</p>
+          </div>
+          <div className="betai-score-live-summary-v1790">
+            <div><small>LIVE</small><strong>{counts.live + counts.halftime}</strong></div>
+            <div><small>NASTĘPNE</small><strong>{counts.upcoming}</strong></div>
+            <div><small>ZAKOŃCZONE</small><strong>{counts.finished}</strong></div>
+          </div>
+        </header>
+
+        <div className="betai-score-datebar-v1790">
+          <div className="betai-score-dates-v1790">
+            {dateTiles.map((item) => (
+              <button type="button" key={item.key} className={selectedDate === item.key ? 'active' : ''} onClick={() => { setSelectedDate(item.key); setSelectedLeague('all') }}>
+                <strong>{item.dateLabel}</strong>
+                <small>{item.today ? 'DZIŚ' : item.shortDay}</small>
+              </button>
+            ))}
+            <label className="betai-score-calendar-v1790" title="Wybierz dzień">
+              <span>▦</span>
+              <input type="date" value={selectedDate} onChange={(event) => event.target.value && setSelectedDate(event.target.value)} />
+            </label>
+          </div>
+
+          <div className="betai-score-statusbar-v1790">
+            {[
+              ['all', 'WSZYSTKIE', counts.all],
+              ['live', 'LIVE', counts.live + counts.halftime],
+              ['finished', 'ZAKOŃCZONE', counts.finished],
+              ['upcoming', 'NASTĘPNE', counts.upcoming],
+            ].map(([id, label, count]) => (
+              <button type="button" key={id} className={statusFilter === id ? 'active' : ''} onClick={() => setStatusFilter(id)}>{label}<b>{count}</b></button>
+            ))}
+          </div>
+        </div>
+
+        <div className="betai-score-refresh-v1790">
+          <div>
+            <i className={loading || refreshing ? 'is-loading' : ''}>↻</i>
+            <span>Aktualizacja: <b>{formatUpdatedAt(updatedAt)}</b></span>
+            <small>Następne odświeżenie za {refreshIn}s</small>
+          </div>
+          <button type="button" disabled={refreshing} onClick={() => loadScores(true)}>{refreshing ? 'Odświeżam...' : 'Odśwież teraz'}</button>
+        </div>
+
+        {error ? <div className="betai-score-error-v1790">⚠ {error}</div> : null}
+
+        <section className="betai-score-board-v1790">
+          {loading && !matches.length ? <div className="betai-score-loading-v1790"><i></i><span>Pobieram realne wyniki...</span></div> : null}
+
+          {groupedMatches.map((group) => (
+            <div className="betai-score-league-v1790" key={group.key}>
+              <header>
+                <div>
+                  {group.leagueFlag ? <img src={group.leagueFlag} alt="" /> : group.leagueLogo ? <img src={group.leagueLogo} alt="" /> : <span>⚽</span>}
+                  <strong>{group.country}: <u>{group.league}</u></strong>
+                </div>
+                <button type="button" className={favoriteLeagues.includes(group.key) ? 'active' : ''} onClick={() => toggleFavoriteLeague(group.key)} aria-label="Obserwuj ligę">★</button>
+              </header>
+
+              {group.matches.map((match) => {
+                const phase = getPhase(match)
+                const odds = Array.isArray(match.odds) ? match.odds : ['-', '-', '-']
+                const expanded = expandedMatchId === match.id
+                return (
+                  <article className={`betai-score-match-v1790 phase-${phase} ${expanded ? 'expanded' : ''}`} key={match.id}>
+                    <button type="button" className="betai-score-match-row-v1790" onClick={() => setExpandedMatchId(expanded ? '' : match.id)}>
+                      <div className="betai-score-time-v1790">
+                        <strong>{phase === 'upcoming' ? formatKickoff(match) : getStatusLabel(match)}</strong>
+                        <small>{phase === 'live' ? 'LIVE' : phase === 'halftime' ? 'PRZERWA' : phase === 'finished' ? 'KONIEC' : 'START'}</small>
+                      </div>
+
+                      <div className="betai-score-teams-v1790">
+                        <div>
+                          <i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo || 'H'}</i>
+                          <strong>{match.home?.name}</strong>
+                          <b>{match.home?.score ?? '-'}</b>
+                        </div>
+                        <div>
+                          <i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo || 'A'}</i>
+                          <strong>{match.away?.name}</strong>
+                          <b>{match.away?.score ?? '-'}</b>
+                        </div>
+                      </div>
+
+                      <div className="betai-score-odds-v1790">
+                        <span><small>1</small><b>{odds[0] || '-'}</b></span>
+                        <span><small>X</small><b>{odds[1] || '-'}</b></span>
+                        <span><small>2</small><b>{odds[2] || '-'}</b></span>
+                      </div>
+
+                      <div className="betai-score-expand-v1790">{expanded ? '−' : '+'}</div>
+                    </button>
+
+                    {expanded ? (
+                      <div className="betai-score-match-details-v1790">
+                        <div><span>Rozgrywki</span><b>{match.round || group.league}</b></div>
+                        <div><span>Stadion</span><b>{match.venue || 'Brak danych'}</b></div>
+                        <div><span>Sędzia</span><b>{match.referee || 'Brak danych'}</b></div>
+                        <div><span>Do przerwy</span><b>{match.halftime?.home ?? '-'} : {match.halftime?.away ?? '-'}</b></div>
+                        <div><span>Źródło</span><b>API-Football live</b></div>
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
+          ))}
+
+          {!loading && !groupedMatches.length ? (
+            <div className="betai-score-empty-v1790">
+              <strong>Brak meczów dla wybranego filtra</strong>
+              <span>Zmień dzień, wyczyść wyszukiwanie albo wybierz „Wszystkie”.</span>
+              <button type="button" onClick={() => { setQuery(''); setStatusFilter('all'); setSelectedLeague('all'); setShowFavoritesOnly(false) }}>Wyczyść filtry</button>
+            </div>
+          ) : null}
+        </section>
+
+        <section className="betai-score-insights-v1790" id="betai-live-stats-v1790">
+          <article className="betai-score-stats-card-v1790">
+            <header><h2>Statystyki piłkarskie</h2><span>{selectedDate}</span></header>
+            <div className="betai-score-metric-tabs-v1790">
+              {Object.entries(metricCards).map(([key, item]) => (
+                <button type="button" key={key} className={metricMode === key ? 'active' : ''} onClick={() => setMetricMode(key)}>{item.title}</button>
+              ))}
+            </div>
+            <div className="betai-score-metric-hero-v1790">
+              <strong>{selectedMetric.value}<small>{selectedMetric.suffix}</small></strong>
+              <span>{selectedMetric.description}</span>
+            </div>
+            <div className="betai-score-stat-grid-v1790">
+              <div><small>Gole</small><b>{dayStats.totalGoals}</b></div>
+              <div><small>Średnia goli</small><b>{dayStats.averageGoals.toFixed(2)}</b></div>
+              <div><small>Mecze z wynikiem</small><b>{dayStats.played}</b></div>
+            </div>
+            <div className="betai-score-topteams-v1790">
+              {dayStats.topTeams.map(([team, goals], index) => <div key={team}><span>{index + 1}. {team}</span><b>{goals} goli</b></div>)}
+              {!dayStats.topTeams.length ? <p>Statystyki pojawią się po rozpoczęciu meczów.</p> : null}
+            </div>
+          </article>
+
+          <article className="betai-score-news-card-v1790">
+            <header><h2>Wiadomości sportowe</h2><span>LIVE</span></header>
+            {(liveArticles || []).slice(0, 3).map((article, index) => (
+              <a href={article.url || '#'} target="_blank" rel="noreferrer" key={article.id || article.url || index}>
+                <div>{article.image ? <img src={getSportPlImageSrc(article)} alt="" /> : <span>SPORT</span>}</div>
+                <p><strong>{article.title || 'Wiadomość sportowa'}</strong><small>{getSportPlRelativeTime(article.publishedAt)}</small></p>
+              </a>
+            ))}
+            {!liveArticles?.length ? <div className="betai-score-news-empty-v1790">Ładowanie aktualnych wiadomości...</div> : null}
+          </article>
+
+          <article className="betai-score-day-card-v1790">
+            <header><h2>Najciekawsze mecze dnia</h2><span>{matches.length}</span></header>
+            {topDayMatches.map((match) => (
+              <button type="button" key={match.id} onClick={() => { setSelectedLeague(getLeagueKey(match)); setExpandedMatchId(match.id) }}>
+                <span>{getStatusLabel(match)}</span>
+                <div><strong>{match.home?.name} — {match.away?.name}</strong><small>{match.country} • {match.league}</small></div>
+                <b>{match.home?.score ?? '-'} : {match.away?.score ?? '-'}</b>
+              </button>
+            ))}
+          </article>
+        </section>
+
+        <section className="betai-score-content-v1790">
+          <h2>Wyniki na żywo — piłka nożna</h2>
+          <p>Centrum wyników Bet+AI pobiera realne spotkania z API-Football. Statusy LIVE, przerwa, zakończone i zaplanowane mecze są odświeżane automatycznie, a godziny prezentowane są w strefie Europe/Warsaw.</p>
+          <h3>Funkcjonalności wyników live</h3>
+          <div>
+            <span>◆ filtrowanie według daty i statusu</span>
+            <span>◆ wyszukiwanie drużyn i lig</span>
+            <span>◆ obserwowanie ulubionych lig</span>
+            <span>◆ realne kursy 1X2, gdy API je udostępnia</span>
+            <span>◆ automatyczne odświeżanie co 60 sekund</span>
+            <span>◆ statystyki dnia liczone z wyników</span>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+
 function ArticlesView() {
   const [activeArticleTab, setActiveArticleTab] = useState('live')
   const [liveArticles, setLiveArticles] = useState([])
@@ -12634,7 +13162,7 @@ function ArticlesView() {
     let intervalId = null
 
     const loadRealLiveScores = async () => {
-      if (activeArticleTab !== 'scores') return
+      if (activeArticleTab !== 'scores-legacy-disabled') return
       try {
         setRealLiveLoading(true)
         setRealLiveError('')
@@ -12662,7 +13190,7 @@ function ArticlesView() {
     }
 
     loadRealLiveScores()
-    if (activeArticleTab === 'scores') {
+    if (activeArticleTab === 'scores-legacy-disabled') {
       intervalId = window.setInterval(loadRealLiveScores, 60 * 1000)
     }
     return () => {
@@ -13115,8 +13643,8 @@ function ArticlesView() {
 
   return (
     <section className="tvlive-page-v8">
-      <div className="tvlive-layout-v8">
-        <div className="tvlive-main-v8">
+      <div className={`tvlive-layout-v8 ${activeArticleTab === 'scores' ? 'scores-pro-layout-v1790' : ''}`}>
+        <div className={`tvlive-main-v8 ${activeArticleTab === 'scores' ? 'scores-pro-main-wrap-v1790' : ''}`}>
           <div className="tvlive-tabs-v8 glass-tvlive-v8">
             <button type="button" aria-pressed={activeArticleTab === 'live'} className={activeArticleTab === 'live' ? 'active live-tab-pulse-v539' : 'live-tab-pulse-v539'} onClick={() => setActiveArticleTab('live')}>🔴 Na żywo</button>
             <button type="button" aria-pressed={activeArticleTab === 'tv'} className={activeArticleTab === 'tv' ? 'active tv-locked-v1521' : 'tv-locked-v1521'} onClick={() => setActiveArticleTab('tv')}>TV Live <span className="tv-lock-v1521">🔒</span></button>
@@ -13211,69 +13739,11 @@ function ArticlesView() {
           {/* v1134: usunięto dodatkowy panel kart/newsów nad Wyniki live. */}
 
           {activeArticleTab === 'scores' ? (
-            <div className="glass-tvlive-v8 livescore-wrap-v8 flashscore-board-v1132">
-              <div className="flashscore-header-v1132">
-                <div>
-                  <span>BETAI LIVESCORE</span>
-                  <h3>Wyniki live</h3>
-                </div>
-                <div className="flashscore-hero-right-v1524">
-                  <div className="flashscore-hero-stats-v1523">
-                    <button type="button" className={scoreStatusFilter === 'live' ? 'active' : ''} onClick={() => setScoreStatusFilter('live')}><em>LIVE</em><strong>{liveScorePhaseCounts.live || 0}</strong></button>
-                    <button type="button" className={scoreStatusFilter === 'pre' ? 'active' : ''} onClick={() => setScoreStatusFilter('pre')}><em>PRE</em><strong>{liveScorePhaseCounts.pre || 0}</strong></button>
-                    <button type="button" className={scoreStatusFilter === 'ht' ? 'active' : ''} onClick={() => setScoreStatusFilter('ht')}><em>HT</em><strong>{liveScorePhaseCounts.ht || 0}</strong></button>
-                    <button type="button" className={scoreStatusFilter === 'ft' ? 'active' : ''} onClick={() => setScoreStatusFilter('ft')}><em>FT</em><strong>{liveScorePhaseCounts.ft || 0}</strong></button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flashscore-toolbar-v1132">
-                <div className="flashscore-days-v1132">
-                  {liveScoreDays.map(day => (
-                    <button type="button" key={day.id} className={scoreDay === day.id ? 'active' : ''} onClick={() => setScoreDay(day.id)}>{day.label}</button>
-                  ))}
-                </div>
-                <label className="flashscore-search-v1132">
-                  <span>🔎</span>
-                  <input value={scoreQuery} onChange={(event) => setScoreQuery(event.target.value)} placeholder="Szukaj drużyny albo ligi..." />
-                </label>
-              </div>
-
-              <div className="scores-tabs-v8 flashscore-sports-v1132">
-                {liveScoreSports.map(sport => (
-                  <button type="button" key={sport.id} className={scoreSportFilter === sport.id ? 'active' : ''} onClick={() => setScoreSportFilter(sport.id)}>{sport.label}</button>
-                ))}
-              </div>
-
-              <div className="scores-tabs-v8 flashscore-status-tabs-v1523" aria-label="Filtr statusu meczu">
-                {liveScoreStatusFilters.map(status => (
-                  <button type="button" key={status.id} className={scoreStatusFilter === status.id ? 'active' : ''} onClick={() => setScoreStatusFilter(status.id)}>{status.label}</button>
-                ))}
-              </div>
-
-              <div className="flashscore-list-v1132">
-                {Object.entries(groupedLiveScores).map(([leagueName, matches]) => (
-                  <section className="flashscore-league-v1132" key={leagueName}>
-                    <div className="flashscore-league-head-v1132">
-                      <strong>{leagueName}</strong>
-                    </div>
-                    {matches.map(match => (
-                      <article className="flashscore-match-v1132" key={match.id}>
-                        <div className="flashscore-teams-v1132">
-                          <div><i>{match.home?.image ? <img src={match.home.image} alt="" /> : match.home?.logo}</i><strong>{match.home?.name}</strong><span>{match.home?.score}</span></div>
-                          <div><i>{match.away?.image ? <img src={match.away.image} alt="" /> : match.away?.logo}</i><strong>{match.away?.name}</strong><span>{match.away?.score}</span></div>
-                        </div>
-                        <div className={`flashscore-time-v1132 score-phase-${getLiveScorePhase(match)}`}><b>{getLiveScoreStatusLabel(match)}</b><small>{match.minute}</small></div>
-                      </article>
-                    ))}
-                  </section>
-                ))}
-                {!filteredLiveScores.length && !realLiveLoading ? <div className="flashscore-empty-v1132">Brak realnych meczów dla wybranego filtra albo brakuje klucza API w Netlify.</div> : null}
-              </div>
-            </div>
+            <BetaiLiveScoresProV1790 liveArticles={liveArticles} />
           ) : null}
         </div>
 
+        {activeArticleTab !== 'scores' ? (
         <aside className="tvlive-sidebar-v8">
           <div className="glass-tvlive-v8 livechat-card-v8">
             <div className="livechat-head-v8"><h3>● BET+AI LIVE CHAT</h3><span>154 online</span></div>
@@ -13318,6 +13788,7 @@ function ArticlesView() {
             </div>
           </div>
         </aside>
+        ) : null}
       </div>
       {previewArticle ? (
         <div className="article-preview-backdrop-v1137 article-reader-backdrop-v1517" role="dialog" aria-modal="true" aria-label="Artykuł BetAI" onClick={closeArticlePreview}>
