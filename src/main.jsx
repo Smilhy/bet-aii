@@ -3748,6 +3748,30 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
         const matchKeyRaw = lookupTipsterKey || tipsterId
         const normalizedMatchKey = normalizeEmail(matchKeyRaw)
         const publicMatchKey = normalizePublicSlug(matchKeyRaw)
+        const requestedBotKeyV1792 = normalizeRankingBotKeyV1761({
+          id: tipsterId,
+          username: lookupTipsterKey || tipsterId,
+          author_name: lookupTipsterKey || tipsterId,
+          public_slug: lookupTipsterKey || tipsterId,
+        })
+
+        const loadBotAiBetsV1792 = async () => {
+          if (!requestedBotKeyV1792) return []
+          try {
+            const controller = new AbortController()
+            const timer = setTimeout(() => controller.abort(), 7000)
+            const response = await fetch('/.netlify/functions/get-ai-bets?journal=1&limit=500', {
+              cache: 'no-store',
+              signal: controller.signal,
+            })
+            clearTimeout(timer)
+            if (!response.ok) return []
+            const payload = await response.json().catch(() => ({}))
+            return Array.isArray(payload?.bets) ? payload.bets : []
+          } catch (_) {
+            return []
+          }
+        }
 
         const matchesKey = (value) => {
           const clean = normalizeEmail(value)
@@ -3768,19 +3792,15 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
         // Top typerzy nie odpala już serii zapytań po kolumnach/filtrach, które w różnych schematach
         // dawały 400, np. public_slug, author_id, user_id, tipster_id.
         // Pobieramy bezpieczne małe paczki przez select('*') i filtrujemy lokalnie.
-        const [profileRows, recentTipsRows] = await Promise.all([
+        const [profileRows, recentTipsRows, recentAiBetRowsV1792] = await Promise.all([
           safeRows(supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(250), []),
-          safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(500), [])
+          safeRows(supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(700), []),
+          loadBotAiBetsV1792(),
         ])
 
         if (cancelled) return
 
-        const requestedBotKeyV1791 = normalizeRankingBotKeyV1761({
-          id: tipsterId,
-          username: lookupTipsterKey || tipsterId,
-          author_name: lookupTipsterKey || tipsterId,
-          public_slug: lookupTipsterKey || tipsterId,
-        })
+        const requestedBotKeyV1791 = requestedBotKeyV1792
 
         const matchingProfilesV1791 = (profileRows || [])
           .filter(profile => !isBlockedTestProfile(profile))
@@ -3808,13 +3828,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
           String(foundProfile?.email || '').split('@')[0]
         ].filter(Boolean).map(value => String(value)))
 
-        const normalizedTipsterTips = (recentTipsRows || [])
+        const normalizedManualTipsV1792 = (recentTipsRows || [])
           .filter(rawTip => !isBlockedTestProfile(rawTip))
           .map(normalizeTipRow)
           .filter(tip => {
-            // FIX 1791: wszystkie aliasy betai-multisport-ai należą do jednego profilu.
-            // Dzięki temu profil widzi także starsze rozliczone typy, a nie tylko
-            // bieżące pending przypisane do jednego author_id.
+            // FIX 1791/1792: wszystkie aliasy betai-multisport-ai należą do jednego profilu.
             if (requestedBotKeyV1791 && normalizeRankingBotKeyV1761(tip) === requestedBotKeyV1791) return true
 
             const values = [
@@ -3834,6 +3852,91 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
               return matchesKey(value)
             })
           })
+
+        const normalizedBotAiTipsV1792 = requestedBotKeyV1791
+          ? (recentAiBetRowsV1792 || [])
+              .filter(rawTip => !isBlockedTestProfile(rawTip))
+              .filter(rawTip => {
+                if (normalizeRankingBotKeyV1761(rawTip) === requestedBotKeyV1791) return true
+                const identity = String([
+                  rawTip?.author_name,
+                  rawTip?.username,
+                  rawTip?.user_name,
+                  rawTip?.public_slug,
+                  rawTip?.email,
+                  rawTip?.author_email,
+                  rawTip?.ai_source,
+                  rawTip?.source,
+                ].filter(Boolean).join(' '))
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/[^a-z0-9]+/g, '')
+                return identity.includes('betaimultisportai') || identity.includes('betaimultisport')
+              })
+              .map(rawTip => normalizeTipRow({
+                ...rawTip,
+                author_name: rawTip.author_name || rawTip.username || 'betai-multisport-ai',
+                username: rawTip.username || rawTip.author_name || 'betai-multisport-ai',
+                public_slug: rawTip.public_slug || 'betai-multisport-ai',
+              }))
+          : []
+
+        const dedupeBotProfileTipsV1792 = (rows = []) => {
+          const map = new Map()
+          const getKey = (rawTip, index) => {
+            const tip = normalizeTipRow(rawTip)
+            const fixture = String(
+              tip.fixture_id || tip.api_fixture_id || tip.event_id || tip.match_id || tip.game_id || ''
+            ).trim().toLowerCase()
+            const home = String(tip.team_home || tip.home_team || tip.home || '').trim().toLowerCase()
+            const away = String(tip.team_away || tip.away_team || tip.away || '').trim().toLowerCase()
+            const match = String(tip.match || tip.match_name || `${home}-${away}`).trim().toLowerCase()
+            const pick = String(tip.prediction || tip.pick || tip.bet_type || tip.selection || '').trim().toLowerCase()
+            const kickoff = String(
+              tip.match_time || tip.event_time || tip.event_date || tip.kickoff_at || tip.commence_time || tip.match_date || ''
+            ).trim().toLowerCase()
+            const odds = Number(tip.odds || tip.course || 0) || 0
+            if (fixture) return `fixture:${fixture}|pick:${pick}|odds:${odds.toFixed(3)}`
+            if (match || home || away) return `match:${match}|home:${home}|away:${away}|pick:${pick}|time:${kickoff}|odds:${odds.toFixed(3)}`
+            return `id:${String(tip.id || rawTip?.id || index)}`
+          }
+
+          ;(rows || []).forEach((rawTip, index) => {
+            const tip = normalizeTipRow(rawTip)
+            const key = getKey(tip, index)
+            const previous = map.get(key)
+            if (!previous) {
+              map.set(key, tip)
+              return
+            }
+
+            const previousStatus = normalizeTipSettlementStatus(
+              previous.status ?? previous.result ?? previous.result_status ?? previous.settlement_status
+            )
+            const nextStatus = normalizeTipSettlementStatus(
+              tip.status ?? tip.result ?? tip.result_status ?? tip.settlement_status
+            )
+            const preferNextStatus = previousStatus === 'pending' && nextStatus !== 'pending'
+            const merged = { ...previous, ...tip }
+            if (!preferNextStatus && previousStatus !== 'pending') {
+              merged.status = previous.status
+              merged.result = previous.result
+              merged.result_status = previous.result_status
+              merged.settlement_status = previous.settlement_status
+              merged.profit = previous.profit ?? merged.profit
+            }
+            map.set(key, merged)
+          })
+          return [...map.values()]
+        }
+
+        const normalizedTipsterTips = requestedBotKeyV1791
+          ? dedupeBotProfileTipsV1792([
+              ...normalizedBotAiTipsV1792,
+              ...normalizedManualTipsV1792,
+            ])
+          : normalizedManualTipsV1792
 
         const fallbackProfile = foundProfile || (normalizedTipsterTips[0] ? {
           id: normalizedTipsterTips[0].author_id || normalizedTipsterTips[0].user_id || normalizedTipsterTips[0].tipster_id || null,
@@ -22382,6 +22485,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
   }
 
+  const profileBotIdentityV1792 = normalizeRankingBotKeyV1761({
+    ...(profile || {}),
+    ...(user || {}),
+    username,
+    author_name: username,
+    public_slug: profile?.public_slug || user?.public_slug || username,
+  })
+
   const userTips = (Array.isArray(tips) ? tips : []).map(normalizeTipRow).filter(tip => {
     const authorId = String(getTipAuthorId(tip) || tip.user_id || tip.author_id || '')
     const authorEmail = normalizeEmail(tip.author_email || tip.email || tip.user_email || '')
@@ -22389,6 +22500,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const profileIdKey = String(profile.id || user?.id || '')
     const usernameKey = normalizeEmail(username)
     const usernameCanMatch = usernameKey && !isGenericProfileName(usernameKey)
+
+    if (profileBotIdentityV1792 && normalizeRankingBotKeyV1761(tip) === profileBotIdentityV1792) return true
 
     // 🔒 ZABLOKOWANA LOGIKA DOPASOWANIA TYPÓW v981
     // 1. ID autora jest najważniejsze.
@@ -23855,12 +23968,21 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }, [])
   const reviewRows = approvedProfileReviews
 
-  const profileTipStats = {
-    yieldLabel: `${roi}%`,
-    totalTipsLabel: String(totalTips),
-    profitLabel: `${profitAmount >= 0 ? '+' : ''}${profitAmount.toFixed(2)}`,
-    profitValue: profitAmount,
+  const canonicalProfileAuthorStatsV1792 = {
+    yield: isBetaiMultisportProfileV1766
+      ? Number(botCanonicalStatsV1766?.yield || 0)
+      : Number(roi || 0),
+    totalTips: Number(totalTips || 0),
+    wonTips: Number(wonTips || 0),
+    lostTips: Number(lostTips || 0),
+    voidTips: Number(voidTips || 0),
+    pendingTips: Number(pendingTips || 0),
+    totalStaked: Number(totalStakedAmount || 0),
+    profit: Number(profitAmount || 0),
+    avgOdds: Number(avgOddsNumber || 0),
+    highestOdds: Number(highestOddsNumber || 0),
   }
+  const profileTipStats = getAuthorStatsLabels(canonicalProfileAuthorStatsV1792)
 
   // WERSJA 1659 — Mój profil renderuje typy tym samym komponentem co Dashboard.
   // Dzięki temu poprawki karty typu, AKO, analizy, stawki, badge sportu itd. są spójne w obu miejscach.
@@ -23906,11 +24028,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       likes: raw.likes ?? tip.likes ?? 0,
       dislikes: raw.dislikes ?? 0,
       comments_count: raw.comments_count ?? raw.comments ?? tip.comments ?? 0,
-      author_visible_stats: raw.author_visible_stats || {
-        yield: Number(roi) || 0,
-        totalTips: Number(totalTips) || 0,
-        profit: Number(profitAmount) || 0,
-      },
+      // FIX 1792: karta typu bota nie może brać starego snapshotu 0% / 17 / +0.00
+      // zapisanego kiedyś w author_visible_stats. W profilu zawsze podajemy aktualny,
+      // wspólny kanon policzony z tips + ai_bets.
+      author_visible_stats: isBetaiMultisportProfileV1766
+        ? canonicalProfileAuthorStatsV1792
+        : (raw.author_visible_stats || canonicalProfileAuthorStatsV1792),
     })
     return merged
   }
