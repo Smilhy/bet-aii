@@ -17709,7 +17709,10 @@ function LeaderboardView({
               <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
               <span className="ranking-reward-cell-v1779">
                 {row.liveRank <= 3 ? (
-                  <b className="ranking-reward-pill-v1779">0</b>
+                  <b className="ranking-reward-pill-v1779" title="Nagroda pieniężna">
+                    <span className="ranking-reward-currency-v1780">$</span>
+                    <span>0</span>
+                  </b>
                 ) : (
                   <i className="ranking-reward-empty-v1779">—</i>
                 )}
@@ -22217,13 +22220,20 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const buildAchievementV1768 = ({ key, iconSrc, title, description, value, target, suffix = '' }) => {
     const persisted = achievementProgressV1774?.[key] || null
     const safeValue = Math.max(0, Number(persisted?.current_value ?? value ?? 0) || 0)
-    const safeTarget = Math.max(1, Number(persisted?.target_value ?? target ?? 1) || 1)
+    const isCriticAchievementV1780 = key === 'krytyk-bukmacherski'
+    const configuredTarget = Math.max(1, Number(target ?? 1) || 1)
+    const persistedTarget = Math.max(1, Number(persisted?.target_value ?? configuredTarget) || configuredTarget)
+
+    // FIX 1780:
+    // Krytyk Bukmacherski zawsze ma realny próg 50 ocen.
+    // Nie ufamy starym rekordom 1/1 zapisanym wcześniej w bazie.
+    const safeTarget = isCriticAchievementV1780 ? configuredTarget : persistedTarget
 
     // Odznaka po zdobyciu zostaje odblokowana na stałe.
     // Nawet jeśli użytkownik później wyda monety, straci obserwującego albo usunie ocenę,
     // unlocked zapisany w Supabase nie wraca do false.
-    const isCriticAchievementV1777 = key === 'krytyk-bukmacherski'
-    const achieved = isCriticAchievementV1777
+    // Wyjątek: Krytyk Bukmacherski po zmianie celu ma być odblokowany dopiero od 50/50.
+    const achieved = isCriticAchievementV1780
       ? safeValue >= safeTarget
       : Boolean(persisted?.unlocked) || safeValue >= safeTarget
     const percent = Math.min(100, Math.max(0, (safeValue / safeTarget) * 100))
@@ -26921,6 +26931,58 @@ function parseBetaiWarsawWallTimeV1716(year, month, day, hour = 0, minute = 0, s
   return utcGuess - offset * 60 * 1000
 }
 
+
+function getBetaiTimeZoneOffsetMinutesV1781(timeZone, date = new Date()) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone,
+      timeZoneName: 'shortOffset',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).formatToParts(date)
+    const value = parts.find(part => part.type === 'timeZoneName')?.value || ''
+    const match = value.match(/GMT([+-]\d{1,2})(?::(\d{2}))?/)
+    if (!match) return 0
+    const sign = match[1].startsWith('-') ? -1 : 1
+    const hours = Math.abs(Number(match[1]) || 0)
+    const minutes = Number(match[2] || 0) || 0
+    return sign * (hours * 60 + minutes)
+  } catch (_) {
+    return 0
+  }
+}
+
+function parseBetaiWallTimeInZoneV1781(timeZone, year, month, day, hour = 0, minute = 0, second = 0) {
+  const utcGuess = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second), 0)
+  let offset = getBetaiTimeZoneOffsetMinutesV1781(timeZone, new Date(utcGuess))
+  let timestamp = utcGuess - offset * 60 * 1000
+
+  // Drugie przeliczenie zabezpiecza moment zmiany czasu letniego/zimowego.
+  const correctedOffset = getBetaiTimeZoneOffsetMinutesV1781(timeZone, new Date(timestamp))
+  if (correctedOffset !== offset) {
+    offset = correctedOffset
+    timestamp = utcGuess - offset * 60 * 1000
+  }
+  return timestamp
+}
+
+function getTipDeclaredTimeZoneV1781(tip = {}) {
+  const raw = [
+    tip.timezone,
+    tip.time_zone,
+    tip.event_timezone,
+    tip.fixture_timezone,
+    tip.kickoff_timezone,
+    tip.source_timezone
+  ].map(value => String(value || '').trim().toLowerCase()).filter(Boolean).join(' ')
+
+  if (!raw) return ''
+  if (raw.includes('europe/london') || raw.includes('london') || raw === 'uk' || raw.includes('bst')) return 'Europe/London'
+  if (raw.includes('europe/warsaw') || raw.includes('warsaw') || raw.includes('poland') || raw === 'pl') return 'Europe/Warsaw'
+  if (raw === 'utc' || raw === 'gmt') return 'UTC'
+  return ''
+}
+
 function formatBetaiWarsawDateTimeV1716(value, fallback = 'Dzisiaj') {
   const ts = typeof value === 'number' ? value : getTipKickoffTimestamp({ match_time: value })
   if (!Number.isFinite(ts)) return fallback
@@ -26952,7 +27014,11 @@ function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj') {
 
   const formatLocal = (dateObj) => {
     try {
+      // FIX 1781: na polskiej stronie zawsze pokazujemy czas Polski,
+      // niezależnie od strefy przeglądarki użytkownika.
+      // 23:00 UK w czerwcu = 00:00 PL następnego dnia.
       return new Intl.DateTimeFormat('pl-PL', {
+        timeZone: BETAI_WARSAW_TIMEZONE_V1716,
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -26960,7 +27026,7 @@ function formatBetaiTipCardWallTimeV1719(tip = {}, fallback = 'Dzisiaj') {
         minute: '2-digit'
       }).format(dateObj)
     } catch (_) {
-      return dateObj.toLocaleString('pl-PL')
+      return dateObj.toLocaleString('pl-PL', { timeZone: BETAI_WARSAW_TIMEZONE_V1716 })
     }
   }
 
@@ -27123,7 +27189,7 @@ function parseBetaiTimeOnlyPartsV1751(value) {
   return null
 }
 
-function parseBetaiCombinedDateTimeV1751(dateValue, timeValue) {
+function parseBetaiCombinedDateTimeV1751(dateValue, timeValue, declaredTimeZone = BETAI_WARSAW_TIMEZONE_V1716) {
   // Jeśli któryś z pól zawiera pełną datę z godziną, spróbuj najpierw normalnego parsera.
   for (const value of [dateValue, timeValue]) {
     const raw = String(value || '').trim()
@@ -27141,9 +27207,12 @@ function parseBetaiCombinedDateTimeV1751(dateValue, timeValue) {
   const timeParts = parseBetaiTimeOnlyPartsV1751(timeValue)
   if (!dateParts || !timeParts) return NaN
 
-  // Ważne: ręczne typy zapisane bez strefy czasu traktujemy jako czas PL.
-  // Przykład: 12.06.2026 + 21:00 = 21:00 Polska = 20:00 UK.
-  return parseBetaiWarsawWallTimeV1716(
+  // Typy ręczne bez deklaracji strefy nadal traktujemy jako czas Polski.
+  // Jeśli rekord jawnie mówi Europe/London/UK/BST, interpretujemy wall-time jako UK,
+  // a potem wyświetlamy i porównujemy go jako ten sam absolutny moment.
+  const zone = declaredTimeZone || BETAI_WARSAW_TIMEZONE_V1716
+  return parseBetaiWallTimeInZoneV1781(
+    zone,
     dateParts.year,
     dateParts.month,
     dateParts.day,
@@ -27154,6 +27223,34 @@ function parseBetaiCombinedDateTimeV1751(dateValue, timeValue) {
 }
 
 function getTipKickoffTimestamp(tip = {}) {
+  // FIX 1781: absolutny timestamp ze strefą ma zawsze pierwszeństwo.
+  // Dzięki temu match_date + match_time='23:00' nie nadpisze poprawnego
+  // commence_time/event_time, np. 2026-06-13T23:00:00+01:00.
+  const absoluteCandidatesV1781 = [
+    tip.event_start_at,
+    tip.starts_at,
+    tip.start_at,
+    tip.commence_time,
+    tip.event_time,
+    tip.kickoff_time,
+    tip.start_time,
+    tip.fixture_date,
+    tip.date_time,
+    tip.match_time
+  ]
+  for (const value of absoluteCandidatesV1781) {
+    const raw = String(value || '').trim()
+    if (!raw) continue
+    const hasDateTime = /^\d{4}-\d{2}-\d{2}[T\s]+\d{1,2}:\d{2}/.test(raw)
+    const hasExplicitZone = /(Z|[+-]\d{2}:?\d{2})$/i.test(raw)
+    if (hasDateTime && hasExplicitZone) {
+      const ts = parseBetaiKickoffTime(raw)
+      if (Number.isFinite(ts)) return ts
+    }
+  }
+
+  const declaredTimeZoneV1781 = getTipDeclaredTimeZoneV1781(tip) || BETAI_WARSAW_TIMEZONE_V1716
+
   // FIX 1751:
   // Dashboard musi ukrywać kupon od minuty startu meczu.
   // Stare ręczne typy bywały zapisane jako match_date='12.06.2026' + match_time='21:00',
@@ -27183,7 +27280,7 @@ function getTipKickoffTimestamp(tip = {}) {
 
   for (const dateValue of dateCandidates) {
     for (const timeValue of timeCandidates) {
-      const combinedTs = parseBetaiCombinedDateTimeV1751(dateValue, timeValue)
+      const combinedTs = parseBetaiCombinedDateTimeV1751(dateValue, timeValue, declaredTimeZoneV1781)
       if (Number.isFinite(combinedTs)) return combinedTs
     }
   }

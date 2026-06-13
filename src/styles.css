@@ -74295,17 +74295,26 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
-  min-width:36px!important;
-  height:26px!important;
-  padding:0 10px!important;
-  border-radius:8px!important;
-  background:linear-gradient(180deg,#1fd872,#14b85d)!important;
-  color:#ffffff!important;
+  gap:5px!important;
+  min-width:48px!important;
+  height:28px!important;
+  padding:0 11px!important;
+  border-radius:9px!important;
+  background:linear-gradient(180deg,#ffe889 0%,#f2c84b 48%,#c69218 100%)!important;
+  color:#3d2803!important;
   font-size:13px!important;
   font-weight:900!important;
   line-height:1!important;
-  border:1px solid rgba(255,255,255,.14)!important;
-  box-shadow:0 8px 18px rgba(17,184,93,.22)!important;
+  border:1px solid rgba(255,235,170,.55)!important;
+  box-shadow:0 10px 22px rgba(234,186,64,.30), inset 0 1px 0 rgba(255,255,255,.45)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.35)!important;
+}
+
+.ranking-reward-currency-v1780{
+  font-size:12px!important;
+  font-weight:1000!important;
+  color:#6d4400!important;
+  opacity:.95!important;
 }
 
 .ranking-reward-empty-v1779{
