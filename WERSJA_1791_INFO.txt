@@ -1,0 +1,11 @@
+WERSJA 1791 — przywrócone statystyki betai-multisport-ai w profilu
+
+Naprawiono:
+- profil bota łączy stare i nowe aliasy autora w jeden kanoniczny profil,
+- pobierane są także starsze rozliczone typy zapisane pod drugim author_id / username,
+- dwa rekordy profilu bota są scalane, a rekord z prawdziwymi imported_* ma pierwszeństwo,
+- statystyki nie są już liczone wyłącznie z bieżących 17 typów pending,
+- karta typu w „Mój profil” korzysta z tych samych statystyk co profil i ranking,
+- nie zmieniono wyglądu ani funkcji Wyników Live z wersji 1790.
+
+SQL nie jest wymagany.

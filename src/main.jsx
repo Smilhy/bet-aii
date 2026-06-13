@@ -512,6 +512,52 @@ function buildAuthorStatsFromTips(tips = []) {
   return statsMap
 }
 
+
+// WERSJA 1791 — łączne statystyki dla profilu mającego kilka aliasów/rekordów autora.
+// Dotyczy szczególnie betai-multisport-ai, którego stare i nowe typy mogły mieć
+// różne author_id / username. Zamiast brać pierwszy fragment statystyk, sumujemy
+// wszystkie realne rekordy tego samego kanonicznego profilu.
+function buildCombinedTipStatsV1791(tips = []) {
+  const combined = {
+    totalTips: 0,
+    wonTips: 0,
+    lostTips: 0,
+    voidTips: 0,
+    pendingTips: 0,
+    totalStaked: 0,
+    profit: 0,
+    highestOdds: 0,
+    avgOddsSum: 0,
+    avgOddsCount: 0,
+  }
+
+  ;(tips || []).forEach(rawTip => {
+    const tip = normalizeTipRow(rawTip)
+    const status = normalizeTipSettlementStatus(
+      tip.status ?? tip.result ?? tip.result_status ?? tip.settlement_status
+    )
+    const stake = readTipStakeValue(tip)
+    const odds = Number(tip.odds ?? tip.course ?? 0) || 0
+
+    combined.totalTips += 1
+    if (status === 'won') combined.wonTips += 1
+    else if (status === 'lost') combined.lostTips += 1
+    else if (status === 'void') combined.voidTips += 1
+    else combined.pendingTips += 1
+
+    if (status === 'won' || status === 'lost') combined.totalStaked += stake
+    combined.profit += readTipProfitValue(tip)
+
+    if (odds > 0) {
+      combined.highestOdds = Math.max(combined.highestOdds, odds)
+      combined.avgOddsSum += odds
+      combined.avgOddsCount += 1
+    }
+  })
+
+  return combined
+}
+
 function hasExplicitImportedStatsFields(profile = {}) {
   if (!profile || typeof profile !== 'object') return false
   return [
@@ -1519,6 +1565,8 @@ function mergeProfilesPreferStats(...groups) {
 
   const profileAliases = (profile = {}) => {
     const out = []
+    const botKey = normalizeRankingBotKeyV1761(profile)
+    if (botKey) out.push(botKey)
     const id = String(profile.id || profile.user_id || profile.author_id || '').toLowerCase()
     const email = normalizeEmail(profile.email || profile.user_email || profile.author_email)
     const username = normalizeEmail(profile.username || profile.user_name || profile.author_name)
@@ -3727,14 +3775,28 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
 
         if (cancelled) return
 
-        const foundProfile = (profileRows || [])
+        const requestedBotKeyV1791 = normalizeRankingBotKeyV1761({
+          id: tipsterId,
+          username: lookupTipsterKey || tipsterId,
+          author_name: lookupTipsterKey || tipsterId,
+          public_slug: lookupTipsterKey || tipsterId,
+        })
+
+        const matchingProfilesV1791 = (profileRows || [])
           .filter(profile => !isBlockedTestProfile(profile))
-          .find(profile =>
-            matchesKey(profile.id) ||
-            matchesKey(profile.email) ||
-            matchesKey(profile.username) ||
-            matchesKey(profile.public_slug)
-          ) || null
+          .filter(profile => {
+            if (requestedBotKeyV1791 && normalizeRankingBotKeyV1761(profile) === requestedBotKeyV1791) return true
+            return matchesKey(profile.id) ||
+              matchesKey(profile.email) ||
+              matchesKey(profile.username) ||
+              matchesKey(profile.public_slug)
+          })
+
+        // Dla bota mogły istnieć dwa rekordy profilu. Łączymy je i wybieramy
+        // rekord zawierający prawdziwe imported_* zamiast pustego duplikatu.
+        const foundProfile = requestedBotKeyV1791
+          ? (mergeProfilesPreferStats(matchingProfilesV1791)[0] || matchingProfilesV1791[0] || null)
+          : (matchingProfilesV1791[0] || null)
 
         const targetValues = new Set([
           tipsterId,
@@ -3750,6 +3812,11 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
           .filter(rawTip => !isBlockedTestProfile(rawTip))
           .map(normalizeTipRow)
           .filter(tip => {
+            // FIX 1791: wszystkie aliasy betai-multisport-ai należą do jednego profilu.
+            // Dzięki temu profil widzi także starsze rozliczone typy, a nie tylko
+            // bieżące pending przypisane do jednego author_id.
+            if (requestedBotKeyV1791 && normalizeRankingBotKeyV1761(tip) === requestedBotKeyV1791) return true
+
             const values = [
               tip.author_id,
               tip.user_id,
@@ -3780,7 +3847,9 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
         const importedFromProfile = getImportedProfileStats(fallbackProfile)
         const importedFromTip = (normalizedTipsterTips || []).map(getImportedProfileStats).find(Boolean) || null
         const localStatsMap = buildAuthorStatsFromTips(normalizedTipsterTips)
-        const tipsterDynamicStats = localStatsMap.get(statsKey) || localStatsMap.values?.()?.next?.()?.value
+        const tipsterDynamicStats = requestedBotKeyV1791
+          ? buildCombinedTipStatsV1791(normalizedTipsterTips)
+          : (localStatsMap.get(statsKey) || localStatsMap.values?.()?.next?.()?.value)
         const tipsterVisibleStats = finalizeAuthorStats(tipsterDynamicStats, importedFromProfile || importedFromTip)
 
         setProfile(fallbackProfile)
@@ -3891,7 +3960,16 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
   const firstVisibleStats = profileHasExplicitImportedStats ? null : (combinedProfileTips.find(t => t?.author_visible_stats)?.author_visible_stats || null)
   const importedProfileStats = getImportedProfileStats(profile)
   const importedTipStats = profileHasExplicitImportedStats ? null : ((combinedProfileTips || []).map(getImportedProfileStats).find(Boolean) || null)
-  const dynamicProfileStats = finalizeAuthorStats(buildAuthorStatsFromTips(combinedProfileTips).values?.()?.next?.()?.value, importedProfileStats || importedTipStats)
+  const publicProfileBotKeyV1791 = normalizeRankingBotKeyV1761({
+    ...(profile || {}),
+    username,
+    author_name: username,
+    public_slug: profile?.public_slug || username,
+  })
+  const dynamicProfileStatsSourceV1791 = publicProfileBotKeyV1791
+    ? buildCombinedTipStatsV1791(combinedProfileTips)
+    : buildAuthorStatsFromTips(combinedProfileTips).values?.()?.next?.()?.value
+  const dynamicProfileStats = finalizeAuthorStats(dynamicProfileStatsSourceV1791, importedProfileStats || importedTipStats)
   const mergedVisibleStats = profileHasExplicitImportedStats
     ? (importedProfileStats || dynamicProfileStats || {})
     : (importedProfileStats || importedTipStats || firstVisibleStats || dynamicProfileStats || {})
@@ -22419,24 +22497,47 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? getImportedProfileStats(profileStatsSource)
     : null
 
+  const botVisibleStatsV1791 = (() => {
+    if (!isBetaiMultisportProfileV1766) return null
+    const candidates = (userTips || [])
+      .map(tip => tip?.author_visible_stats)
+      .filter(stats => stats && typeof stats === 'object')
+    if (!candidates.length) return null
+    return [...candidates].sort((a, b) => {
+      const totalDiff = Number(b?.totalTips || 0) - Number(a?.totalTips || 0)
+      if (totalDiff !== 0) return totalDiff
+      const profitDiff = Math.abs(Number(b?.profit || 0)) - Math.abs(Number(a?.profit || 0))
+      if (profitDiff !== 0) return profitDiff
+      return Math.abs(Number(b?.yield || 0)) - Math.abs(Number(a?.yield || 0))
+    })[0]
+  })()
+
   const botCanonicalStatsV1766 = (() => {
     if (!isBetaiMultisportProfileV1766) return null
-    const dynamicStats = botAllTipsStatsV1766 || {
+    const emptyStats = {
       totalTips: 0, wonTips: 0, lostTips: 0, voidTips: 0, pendingTips: 0,
       totalStaked: 0, profit: 0, avgOdds: 0, highestOdds: 0, yield: 0
     }
-    const importedStats = botImportedStatsV1766
+    const candidates = [botAllTipsStatsV1766, botImportedStatsV1766, botVisibleStatsV1791]
+      .filter(Boolean)
+      .map(stats => ({ ...emptyStats, ...stats }))
 
-    // Ten sam kanon co ranking/karta: wybieramy pełniejszy rekord, nie sumę.
-    if (importedStats && Number(importedStats.totalTips || 0) >= Number(dynamicStats.totalTips || 0)) {
-      return {
-        ...dynamicStats,
-        ...importedStats,
-        voidTips: Math.max(Number(importedStats.voidTips || 0), Number(dynamicStats.voidTips || 0)),
-        pendingTips: Number(importedStats.pendingTips || 0),
-      }
+    if (!candidates.length) return emptyStats
+
+    // Wybieramy najpełniejszy kanoniczny rekord. Przy równej liczbie typów
+    // pierwszeństwo ma zestaw z realnym profitem/stawką/yieldem, a nie pusty duplikat.
+    const chosen = [...candidates].sort((a, b) => {
+      const totalDiff = Number(b.totalTips || 0) - Number(a.totalTips || 0)
+      if (totalDiff !== 0) return totalDiff
+      const completenessA = (Number(a.totalStaked || 0) > 0 ? 3 : 0) + (Number(a.profit || 0) !== 0 ? 2 : 0) + (Number(a.yield || 0) !== 0 ? 1 : 0)
+      const completenessB = (Number(b.totalStaked || 0) > 0 ? 3 : 0) + (Number(b.profit || 0) !== 0 ? 2 : 0) + (Number(b.yield || 0) !== 0 ? 1 : 0)
+      return completenessB - completenessA
+    })[0]
+
+    return {
+      ...chosen,
+      voidTips: Math.max(...candidates.map(stats => Number(stats.voidTips || 0))),
     }
-    return dynamicStats
   })()
 
   // Statystyki historyczne z poprzedniej platformy stanowią bazę.
