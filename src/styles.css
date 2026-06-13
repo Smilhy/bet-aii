@@ -74136,3 +74136,66 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     max-height:55px!important;
   }
 }
+
+
+/* ============================================================
+   WERSJA 1774 — LOGIKA WIZUALNA LOCKED / UNLOCKED
+   ============================================================ */
+
+.profile-static-v3 .profile-achievement-row-v1768.locked{
+  opacity:1!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked .profile-achievement-icon-v1769{
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.42))!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked .profile-achievement-icon-v1769::after{
+  opacity:.05!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked .profile-achievement-icon-v1769 img{
+  opacity:.34!important;
+  filter:grayscale(1) saturate(.18) brightness(.63)!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked .profile-achievement-title-v1768 strong{
+  color:#91A5B0!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked .profile-achievement-content-v1768 > small{
+  color:#637C89!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.achieved .profile-achievement-icon-v1769{
+  filter:
+    drop-shadow(0 9px 13px rgba(0,0,0,.45))
+    drop-shadow(0 0 10px rgba(0,235,245,.34))
+    drop-shadow(0 0 22px rgba(0,183,211,.16))!important;
+  animation:achievementUnlockGlowV1774 2.8s ease-in-out infinite alternate!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.achieved .profile-achievement-icon-v1769 img{
+  opacity:1!important;
+  filter:saturate(1.16) brightness(1.08)!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.achieved .profile-achievement-title-v1768 strong{
+  color:#F4FDFF!important;
+  text-shadow:0 0 13px rgba(43,231,240,.13)!important;
+}
+
+@keyframes achievementUnlockGlowV1774{
+  from{
+    transform:translateY(0) scale(1);
+  }
+  to{
+    transform:translateY(-1px) scale(1.018);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .profile-static-v3 .profile-achievement-row-v1768.achieved .profile-achievement-icon-v1769{
+    animation:none!important;
+  }
+}

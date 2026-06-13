@@ -21398,8 +21398,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileReviewStatus, setProfileReviewStatus] = useState('')
   const [profileRankRemote, setProfileRankRemote] = useState(null)
   const [profileRankLoading, setProfileRankLoading] = useState(false)
-  const [achievementRewardClaimsV1773, setAchievementRewardClaimsV1773] = useState(0)
-  const [achievementProfileRatingsGivenV1773, setAchievementProfileRatingsGivenV1773] = useState(0)
+  const [achievementProgressV1774, setAchievementProgressV1774] = useState({})
+  const [achievementProgressReadyV1774, setAchievementProgressReadyV1774] = useState(false)
 
   const targetProfileIdForReviews = viewedIdKey || profile.id || user?.id || ''
   const viewerIdForReview = viewerProfile?.id || ''
@@ -21437,84 +21437,73 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
   useEffect(() => {
     let alive = true
+    let channel = null
 
-    const loadAchievementCountersV1773 = async () => {
-      const profileId = String(viewedIdKey || profile?.id || user?.id || '').trim()
-      const profileEmail = normalizeEmail(profile?.email || user?.email || '')
+    const profileId = String(viewedIdKey || profile?.id || user?.id || '').trim()
 
-      if (!isSupabaseConfigured || !supabase || (!profileId && !profileEmail)) {
+    const loadAchievementProgressV1774 = async () => {
+      if (!isSupabaseConfigured || !supabase || !profileId) {
         if (alive) {
-          setAchievementRewardClaimsV1773(0)
-          setAchievementProfileRatingsGivenV1773(0)
+          setAchievementProgressV1774({})
+          setAchievementProgressReadyV1774(false)
         }
         return
       }
 
       try {
-        const rewardFilters = []
-        if (profileId) rewardFilters.push(`user_id.eq.${profileId}`)
-        if (profileEmail) rewardFilters.push(`email.eq.${profileEmail}`)
+        const { data, error } = await supabase.rpc('get_tipster_achievements_v1774', {
+          p_user_id: profileId,
+        })
+        if (error) throw error
 
-        const rewardQuery = supabase
-          .from('community_reward_claims')
-          .select('reward_key', { count: 'exact', head: true })
-
-        const rewardResult = rewardFilters.length
-          ? await rewardQuery.or(rewardFilters.join(','))
-          : { count: 0, error: null }
-
-        if (rewardResult?.error) throw rewardResult.error
-        if (alive) setAchievementRewardClaimsV1773(Math.max(0, Number(rewardResult?.count || 0)))
-      } catch (error) {
-        console.warn('achievement reward claims load skipped', error)
-        if (alive) {
-          const fallback = Number(
-            user?.reward_claims_count ??
-            user?.rewards_claimed_count ??
-            user?.bonus_claims_count ??
-            user?.bonuses_claimed ??
-            profile?.reward_claims_count ??
-            profile?.bonuses_claimed ??
-            0
-          ) || 0
-          setAchievementRewardClaimsV1773(Math.max(0, fallback))
+        const next = {}
+        for (const row of Array.isArray(data) ? data : []) {
+          const key = String(row?.achievement_key || '').trim()
+          if (!key) continue
+          next[key] = {
+            ...row,
+            current_value: Number(row?.current_value || 0),
+            target_value: Number(row?.target_value || 0),
+            unlocked: row?.unlocked === true,
+          }
         }
-      }
 
-      try {
-        const reviewFilters = []
-        if (profileId) reviewFilters.push(`reviewer_id.eq.${profileId}`)
-        if (profileEmail) reviewFilters.push(`reviewer_email.eq.${profileEmail}`)
-
-        const reviewQuery = supabase
-          .from('profile_reviews')
-          .select('id', { count: 'exact', head: true })
-
-        const reviewResult = reviewFilters.length
-          ? await reviewQuery.or(reviewFilters.join(','))
-          : { count: 0, error: null }
-
-        if (reviewResult?.error) throw reviewResult.error
-        if (alive) setAchievementProfileRatingsGivenV1773(Math.max(0, Number(reviewResult?.count || 0)))
-      } catch (error) {
-        console.warn('achievement profile ratings load skipped', error)
         if (alive) {
-          const fallback = Number(
-            user?.profile_reviews_given_count ??
-            user?.profiles_rated_count ??
-            user?.tipster_profiles_rated ??
-            profile?.profile_reviews_given_count ??
-            profile?.profiles_rated_count ??
-            0
-          ) || 0
-          setAchievementProfileRatingsGivenV1773(Math.max(0, fallback))
+          setAchievementProgressV1774(next)
+          setAchievementProgressReadyV1774(true)
+        }
+      } catch (error) {
+        console.warn('achievements v1774 RPC skipped — uruchom SUPABASE_1774_OSIAGNIECIA_AUTOMATYCZNA_LOGIKA.sql', error)
+        if (alive) {
+          setAchievementProgressV1774({})
+          setAchievementProgressReadyV1774(false)
         }
       }
     }
 
-    loadAchievementCountersV1773()
-    return () => { alive = false }
-  }, [viewedIdKey, profile?.id, profile?.email, user?.id, user?.email])
+    loadAchievementProgressV1774()
+
+    if (isSupabaseConfigured && supabase && profileId) {
+      channel = supabase
+        .channel(`tipster-achievements-v1774-${profileId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tipster_achievement_progress',
+            filter: `user_id=eq.${profileId}`,
+          },
+          () => loadAchievementProgressV1774()
+        )
+        .subscribe()
+    }
+
+    return () => {
+      alive = false
+      if (channel && supabase) supabase.removeChannel(channel)
+    }
+  }, [viewedIdKey, profile?.id, user?.id])
 
   useEffect(() => {
     let alive = true
@@ -22132,7 +22121,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   ).size
 
   const rewardsBonusesReceivedCountV1773 = Math.max(
-    achievementRewardClaimsV1773,
+    0,
     Number(
       user?.reward_claims_count ??
       user?.rewards_claimed_count ??
@@ -22159,7 +22148,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   )
 
   const profileRatingsGivenCountV1773 = Math.max(
-    achievementProfileRatingsGivenV1773,
+    0,
     Number(
       user?.profile_reviews_given_count ??
       user?.profiles_rated_count ??
@@ -22178,9 +22167,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
 
   const buildAchievementV1768 = ({ key, iconSrc, title, description, value, target, suffix = '' }) => {
-    const safeValue = Math.max(0, Number(value || 0) || 0)
-    const safeTarget = Math.max(1, Number(target || 1) || 1)
-    const achieved = safeValue >= safeTarget
+    const persisted = achievementProgressV1774?.[key] || null
+    const safeValue = Math.max(0, Number(persisted?.current_value ?? value ?? 0) || 0)
+    const safeTarget = Math.max(1, Number(persisted?.target_value ?? target ?? 1) || 1)
+
+    // Odznaka po zdobyciu zostaje odblokowana na stałe.
+    // Nawet jeśli użytkownik później wyda monety, straci obserwującego albo usunie ocenę,
+    // unlocked zapisany w Supabase nie wraca do false.
+    const achieved = Boolean(persisted?.unlocked) || safeValue >= safeTarget
     const percent = Math.min(100, Math.max(0, (safeValue / safeTarget) * 100))
 
     return {
@@ -22191,6 +22185,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       value: safeValue,
       target: safeTarget,
       achieved,
+      unlockedAt: persisted?.unlocked_at || null,
       percent,
       progressLabel: `${formatAchievementNumberV1768(safeValue)}/${formatAchievementNumberV1768(safeTarget)}${suffix}`,
     }
