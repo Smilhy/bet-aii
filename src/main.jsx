@@ -9713,9 +9713,46 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
     const combinedIso = (() => {
       try {
+        // FIX 1782:
+        // Najpierw zachowujemy dokładny timestamp z API, jeśli ma jawne Z/offset.
+        // Przykład: 23:00 UK latem = 22:00Z = 00:00 czasu polskiego następnego dnia.
+        const apiAbsoluteCandidatesV1782 = [
+          publishMatch?.commence_time,
+          publishMatch?.event_time,
+          publishMatch?.kickoff_time,
+          publishMatch?.start_time,
+          publishMatch?.date_time,
+          publishMatch?.date
+        ]
+
+        for (const candidate of apiAbsoluteCandidatesV1782) {
+          const raw = String(candidate || '').trim()
+          if (!raw) continue
+          const hasDateTime = /^\d{4}-\d{2}-\d{2}[T\s]+\d{1,2}:\d{2}/.test(raw)
+          const hasExplicitZone = /(Z|[+-]\d{2}:?\d{2})$/i.test(raw)
+          if (!hasDateTime || !hasExplicitZone) continue
+
+          const timestamp = Date.parse(raw.replace(' ', 'T'))
+          if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString()
+        }
+
+        // Data i godzina formularza są wyświetlane jako czas Polski.
+        // Nie wolno tworzyć new Date(...) w lokalnej strefie przeglądarki,
+        // bo użytkownik w UK zapisałby 00:00 PL jako 00:00 UK, czyli godzinę za późno.
         const [day, month, year] = String(form.date || '').split('.')
-        const dateObject = new Date(`${year}-${month}-${day}T${form.time || '12:00'}:00`)
-        return dateObject.toISOString()
+        const [hour = '12', minute = '00', second = '00'] = String(form.time || '12:00').split(':')
+        const timestamp = parseBetaiWallTimeInZoneV1781(
+          BETAI_WARSAW_TIMEZONE_V1716,
+          year,
+          month,
+          day,
+          hour,
+          minute,
+          second
+        )
+
+        if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString()
+        return new Date().toISOString()
       } catch (_) {
         return new Date().toISOString()
       }
