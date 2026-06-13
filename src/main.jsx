@@ -22025,14 +22025,160 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     : Number(user?.referrals_count ?? user?.buyers_count ?? 0) || 0
   const profileReferralCode = String(referralData?.referral_code || user?.referral_code || username || email?.split('@')?.[0] || 'BETAI').toUpperCase()
 
-  const profileBadges = [
-    { icon: '🏆', tone: 'orange', title: 'TOP 1%', detail: rankingPosition ? `#${rankingPosition}` : 'Brak rankingu', achieved: isTopOnePercent },
-    { icon: '', tone: 'gold', title: '1000+', detail: `${totalTips}/1000 typów`, achieved: totalTips >= 1000 },
-    { icon: '🛡', tone: 'cyan', title: 'WIN RATE+', detail: settledTips ? `${winRate}% / 60%` : '0 rozliczeń', achieved: settledTips >= 10 && winRate >= 60 },
-    { icon: '↗', tone: 'teal', title: 'ROI+', detail: `${roi}% / 10%`, achieved: settledTips >= 10 && roi >= 10 },
-    { icon: '⚡', tone: 'yellow', title: 'AKTYWNY', detail: isActive30d ? 'Typ w 30 dni' : 'Brak typu 30 dni', achieved: isActive30d },
-    { icon: '♛', tone: 'purple', title: 'PREMIUM', detail: premium ? 'Aktywne' : 'Nieaktywne', achieved: premium },
+  // WERSJA 1768 — rozbudowane osiągnięcia typera jak na referencyjnym screenie.
+  const highOddsTipsCount = userTips.filter(tip => getProfileTipOdds(tip) > 3).length
+
+  const loyalActiveDaysCount = new Set(
+    userTips
+      .map(tip => {
+        const rawDate = tip?.created_at || tip?.match_date || tip?.event_date || ''
+        const date = new Date(rawDate)
+        if (Number.isNaN(date.getTime())) return ''
+        return date.toISOString().slice(0, 10)
+      })
+      .filter(Boolean)
+  ).size
+
+  const freeBetClaimsCount = Math.max(
+    0,
+    Number(
+      user?.free_bets_claimed ??
+      user?.claimed_free_bets ??
+      user?.free_bet_count ??
+      user?.bonus_bets_claimed ??
+      user?.shop_free_bets_claimed ??
+      (user?.welcome_bonus_claimed ? 1 : 0)
+    ) || 0
+  )
+
+  const achievementCoinsCount = Math.max(
+    0,
+    Number(
+      user?.coins ??
+      user?.coin_balance ??
+      user?.betai_coins ??
+      user?.token_balance ??
+      user?.wallet_coins ??
+      profile?.coins ??
+      profile?.coin_balance ??
+      0
+    ) || 0
+  )
+
+  const bookmakerRatingsCount = Math.max(
+    0,
+    Number(
+      user?.bookmaker_reviews_count ??
+      user?.bookmaker_ratings_count ??
+      user?.rated_bookmakers_count ??
+      user?.bookmakers_rated ??
+      0
+    ) || 0
+  )
+
+  const formatAchievementNumberV1768 = (value) => {
+    const number = Math.max(0, Number(value || 0) || 0)
+    if (number >= 1000000) return `${(number / 1000000).toFixed(number % 1000000 === 0 ? 0 : 1)}M`
+    if (number >= 1000) return `${(number / 1000).toFixed(number % 1000 === 0 ? 0 : 1)}K`
+    return String(Math.round(number))
+  }
+
+  const buildAchievementV1768 = ({ key, icon, title, description, value, target, suffix = '' }) => {
+    const safeValue = Math.max(0, Number(value || 0) || 0)
+    const safeTarget = Math.max(1, Number(target || 1) || 1)
+    const achieved = safeValue >= safeTarget
+    const percent = Math.min(100, Math.max(0, (safeValue / safeTarget) * 100))
+
+    return {
+      key,
+      icon,
+      title,
+      description,
+      value: safeValue,
+      target: safeTarget,
+      achieved,
+      percent,
+      progressLabel: `${formatAchievementNumberV1768(safeValue)}/${formatAchievementNumberV1768(safeTarget)}${suffix}`,
+    }
+  }
+
+  const profileAchievements = [
+    buildAchievementV1768({
+      key: 'fanatyk',
+      icon: '1000+',
+      title: 'Fanatyk',
+      description: 'Dodaj 1000 typów',
+      value: totalTips,
+      target: 1000,
+    }),
+    buildAchievementV1768({
+      key: 'prawdziwy-wygrany',
+      icon: '♜',
+      title: 'Prawdziwy Wygrany',
+      description: 'Wygraj 500 typów',
+      value: wonTips,
+      target: 500,
+    }),
+    buildAchievementV1768({
+      key: 'nieustraszony',
+      icon: '☠',
+      title: 'Nieustraszony',
+      description: 'Dodaj 100 typów z kursem > 3.00',
+      value: highOddsTipsCount,
+      target: 100,
+    }),
+    buildAchievementV1768({
+      key: 'lojalny',
+      icon: '◉',
+      title: 'Lojalny',
+      description: 'Dodawaj typy przez 180 różnych dni',
+      value: loyalActiveDaysCount,
+      target: 180,
+      suffix: ' dni',
+    }),
+    buildAchievementV1768({
+      key: 'czlonek-rodziny',
+      icon: '♟',
+      title: 'Członek Rodziny',
+      description: 'Poleć 10 znajomych',
+      value: profileReferralCount,
+      target: 10,
+    }),
+    buildAchievementV1768({
+      key: 'lowca-bonusow',
+      icon: '✣',
+      title: 'Łowca Bonusów',
+      description: 'Zbierz 3 darmowe zakłady ze sklepu',
+      value: freeBetClaimsCount,
+      target: 3,
+    }),
+    buildAchievementV1768({
+      key: 'bogaty',
+      icon: '$',
+      title: 'Bogaty',
+      description: 'Zdobądź 1M monet',
+      value: achievementCoinsCount,
+      target: 1000000,
+    }),
+    buildAchievementV1768({
+      key: 'slawny',
+      icon: '♨',
+      title: 'Sławny',
+      description: 'Zdobądź 500 obserwujących',
+      value: followersCount,
+      target: 500,
+    }),
+    buildAchievementV1768({
+      key: 'krytyk-bukmacherski',
+      icon: '★',
+      title: 'Krytyk Bukmacherski',
+      description: 'Oceń 5 bukmacherów',
+      value: bookmakerRatingsCount,
+      target: 5,
+    }),
   ]
+
+  const achievementsUnlockedV1768 = profileAchievements.filter(item => item.achieved).length
 
   const summaryRows = [
     ['Użytkownik od', createdLabel],
@@ -23689,15 +23835,39 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             </div>
           </div>
 
-          <div className="glass-profile-v3 side-card-v3 side-badges-v3">
-            <div className="side-card-head-v3"><h3>🏅 Osiągnięcia / Odznaki</h3><button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button></div>
-            <div className="badges-grid-v3 sidebar-badges-grid">
-              {profileBadges.map(badge => (
-                <div key={badge.title} className={badge.achieved ? 'achieved' : 'locked'}>
-                  <span className={`badge-orb ${badge.tone}`}>{badge.icon}</span>
-                  <strong>{badge.title}</strong>
-                  <small>{badge.detail}</small>
-                </div>
+          <div className="glass-profile-v3 side-card-v3 side-badges-v3 profile-achievements-panel-v1768">
+            <div className="side-card-head-v3 profile-achievements-head-v1768">
+              <div>
+                <h3>★ Osiągnięcia Typera</h3>
+                <small>{achievementsUnlockedV1768}/{profileAchievements.length} odblokowanych</small>
+              </div>
+              <button type="button" onClick={() => setProfileTab('history')}>Zobacz historię</button>
+            </div>
+
+            <div className="profile-achievements-list-v1768">
+              {profileAchievements.map(achievement => (
+                <article
+                  key={achievement.key}
+                  className={`profile-achievement-row-v1768 ${achievement.achieved ? 'achieved' : 'locked'}`}
+                >
+                  <div className="profile-achievement-hex-v1768" aria-hidden="true">
+                    <span>{achievement.icon}</span>
+                  </div>
+
+                  <div className="profile-achievement-content-v1768">
+                    <div className="profile-achievement-title-v1768">
+                      <strong>{achievement.title}</strong>
+                      {achievement.achieved ? <i aria-label="Odblokowane">✓</i> : null}
+                    </div>
+                    <small>{achievement.description}</small>
+                    <div className="profile-achievement-progress-row-v1768">
+                      <div className="profile-achievement-progress-v1768">
+                        <span style={{ width: `${achievement.percent}%` }}></span>
+                      </div>
+                      <b>{achievement.progressLabel}</b>
+                    </div>
+                  </div>
+                </article>
               ))}
             </div>
           </div>
