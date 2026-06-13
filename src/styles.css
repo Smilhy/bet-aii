@@ -74334,3 +74334,144 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     grid-template-columns:56px 1.3fr .78fr .72fr .62fr .74fr .88fr .78fr .64fr .84fr!important;
   }
 }
+
+/* WERSJA 1783 — Ranking: prawa kolumna z boxem wypłat / nagród */
+.ranking-v4-sidebar{
+  align-content:start!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-v1783{
+  padding:18px 16px 16px!important;
+  border-radius:22px!important;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(53, 183, 255, 0.11), transparent 42%),
+    linear-gradient(180deg, rgba(7,20,35,.96), rgba(4,14,26,.98))!important;
+  border:1px solid rgba(53, 211, 255, 0.16)!important;
+  box-shadow:0 20px 48px rgba(1,8,18,.34), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-summary-v1783{
+  text-align:center!important;
+  padding:6px 10px 14px!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-summary-v1783 strong{
+  display:block!important;
+  color:#f4fbff!important;
+  font-size:52px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 0 22px rgba(53, 211, 255, .10)!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-summary-v1783 span{
+  display:block!important;
+  margin-top:10px!important;
+  color:#ffffff!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  font-weight:900!important;
+  letter-spacing:.16em!important;
+  text-transform:uppercase!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-head-v1783{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:14px!important;
+  align-items:center!important;
+  padding:0 2px 10px!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-head-v1783 span{
+  color:#39b8ff!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:.14em!important;
+  text-transform:uppercase!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-head-v1783 span:last-child{
+  text-align:right!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-list-v1783{
+  display:grid!important;
+  gap:0!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-item-v1783{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:10px!important;
+  align-items:center!important;
+  padding:12px 2px!important;
+  border-top:1px solid rgba(255,255,255,.08)!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-item-v1783:first-child{
+  border-top:1px solid rgba(255,255,255,.10)!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-label-v1783{
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-label-v1783 i{
+  width:20px!important;
+  min-width:20px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#f8fdff!important;
+  font-style:normal!important;
+  font-size:16px!important;
+  filter:drop-shadow(0 0 10px rgba(83, 196, 255, .14))!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-label-v1783 span{
+  color:#f4fbff!important;
+  font-size:14px!important;
+  line-height:1.35!important;
+  font-weight:850!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-item-v1783 b{
+  min-width:68px!important;
+  padding:9px 14px!important;
+  border-radius:999px!important;
+  text-align:center!important;
+  color:#f4fbff!important;
+  font-size:14px!important;
+  line-height:1!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg, rgba(39,91,143,.95), rgba(27,70,113,.98))!important;
+  border:1px solid rgba(101,166,255,.12)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+@media (max-width: 1320px){
+  .ranking-v4-sidebar .ranking-payouts-summary-v1783 strong{
+    font-size:46px!important;
+  }
+}
+
+@media (max-width: 1120px){
+  .ranking-v4-sidebar .ranking-payouts-v1783{
+    order:2!important;
+  }
+}
+
+@media (max-width: 760px){
+  .ranking-v4-sidebar .ranking-payouts-summary-v1783 strong{
+    font-size:40px!important;
+  }
+  .ranking-v4-sidebar .ranking-payout-label-v1783 span,
+  .ranking-v4-sidebar .ranking-payout-item-v1783 b{
+    font-size:13px!important;
+  }
+}

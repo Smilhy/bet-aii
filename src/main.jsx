@@ -17683,6 +17683,22 @@ function LeaderboardView({
     ['300 poleceń', '+10000 coin', referralCount >= 300],
   ]
 
+  const rankingPayoutRows = [
+    { icon: '⚽', label: 'Piłka nożna', amount: 0 },
+    { icon: '🏀', label: 'Koszykówka', amount: 0 },
+    { icon: '🏒', label: 'Hokej na lodzie', amount: 0 },
+    { icon: '🎾', label: 'Tenis', amount: 0 },
+    { icon: '🎯', label: 'Counter-Strike', amount: 0 },
+    { icon: '🕹️', label: 'League of Legends', amount: 0 },
+    { icon: '🎮', label: 'Dota 2', amount: 0 },
+    { icon: '⚾', label: 'Baseball', amount: 0 },
+    { icon: '🏉', label: 'Rugby', amount: 0 },
+    { icon: '🧩', label: 'Esport', amount: 0 },
+    { icon: '🏈', label: 'Futbol amerykański', amount: 0 },
+    { icon: '🚴', label: 'Wszystkie', amount: 0 },
+  ]
+  const rankingPayoutTotal = rankingPayoutRows.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+
   const openRow = (row) => onOpenTipster?.(row.rowRef, row.rowName)
   const followRow = (event, row) => {
     event.stopPropagation()
@@ -17915,6 +17931,30 @@ function LeaderboardView({
               ))}
             </div>
             <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
+          </div>
+
+          <div className="glass-ranking-v4 sidebar-card-v4 ranking-payouts-v1783">
+            <div className="ranking-payouts-summary-v1783">
+              <strong>{rankingPayoutTotal.toFixed(0)} $</strong>
+              <span>WYPŁACILIŚMY NASZYM TYPEROM</span>
+            </div>
+
+            <div className="ranking-payouts-head-v1783">
+              <span>SPORT</span>
+              <span>WYPŁACONE</span>
+            </div>
+
+            <div className="ranking-payouts-list-v1783">
+              {rankingPayoutRows.map((row) => (
+                <div className="ranking-payout-item-v1783" key={row.label}>
+                  <div className="ranking-payout-label-v1783">
+                    <i>{row.icon}</i>
+                    <span>{row.label}</span>
+                  </div>
+                  <b>{Number(row.amount || 0).toFixed(0)} $</b>
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
       </div>
