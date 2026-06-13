@@ -74199,3 +74199,53 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     animation:none!important;
   }
 }
+
+
+/* ============================================================
+   WERSJA 1776 — AKTUALNY WYNIK TURKUSOWY, CEL ZŁOTY
+   Przykład: 2/10 — "2" turkusowe, "10" złote.
+   ============================================================ */
+
+.profile-static-v3 .profile-achievement-score-v1776{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  justify-content:flex-end!important;
+  gap:1px!important;
+  min-width:max-content!important;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+  font-size:11.5px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:-.015em!important;
+  white-space:nowrap!important;
+  text-shadow:none!important;
+}
+
+.profile-static-v3 .profile-achievement-score-v1776 .current{
+  color:#20E2DD!important;
+  text-shadow:0 0 10px rgba(32,226,221,.16)!important;
+}
+
+.profile-static-v3 .profile-achievement-score-v1776 .separator{
+  color:#9AB0B8!important;
+  padding:0 1px!important;
+  font-weight:750!important;
+}
+
+.profile-static-v3 .profile-achievement-score-v1776 .target{
+  color:#F6C64E!important;
+  background:linear-gradient(180deg,#FFF2A6 0%,#F9CD58 42%,#D79A20 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  text-shadow:0 0 12px rgba(246,198,78,.18)!important;
+  filter:drop-shadow(0 1px 0 rgba(77,45,0,.30))!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.achieved .profile-achievement-score-v1776 .target{
+  background:linear-gradient(180deg,#FFF7BE 0%,#FFD86D 42%,#E8A92C 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  text-shadow:0 0 14px rgba(255,211,93,.25)!important;
+}

@@ -22187,6 +22187,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       achieved,
       unlockedAt: persisted?.unlocked_at || null,
       percent,
+      currentLabel: formatAchievementNumberV1768(safeValue),
+      targetLabel: formatAchievementNumberV1768(safeTarget),
+      targetSuffix: suffix,
       progressLabel: `${formatAchievementNumberV1768(safeValue)}/${formatAchievementNumberV1768(safeTarget)}${suffix}`,
     }
   }
@@ -22261,9 +22264,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       key: 'krytyk-bukmacherski',
       iconSrc: achievementCriticV1772,
       title: 'Krytyk Bukmacherski',
-      description: 'Oceń profil typera',
+      description: 'Oceń 50 profili typerów',
       value: profileRatingsGivenCountV1773,
-      target: 1,
+      target: 50,
     }),
   ]
 
@@ -23953,7 +23956,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                       <div className="profile-achievement-progress-v1768">
                         <span style={{ width: `${achievement.percent}%` }}></span>
                       </div>
-                      <b>{achievement.progressLabel}</b>
+                      <b className="profile-achievement-score-v1776" aria-label={achievement.progressLabel}>
+                        <span className="current">{achievement.currentLabel}</span>
+                        <span className="separator">/</span>
+                        <span className="target">{achievement.targetLabel}{achievement.targetSuffix}</span>
+                      </b>
                     </div>
                   </div>
                 </article>
