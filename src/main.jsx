@@ -22092,7 +22092,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return String(Math.round(number))
   }
 
-  const buildAchievementV1768 = ({ key, icon, title, description, value, target, suffix = '' }) => {
+  const buildAchievementV1768 = ({ key, iconSrc, title, description, value, target, suffix = '' }) => {
     const safeValue = Math.max(0, Number(value || 0) || 0)
     const safeTarget = Math.max(1, Number(target || 1) || 1)
     const achieved = safeValue >= safeTarget
@@ -22100,7 +22100,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
     return {
       key,
-      icon,
+      iconSrc,
       title,
       description,
       value: safeValue,
@@ -23860,7 +23860,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   className={`profile-achievement-row-v1768 ${achievement.achieved ? 'achieved' : 'locked'}`}
                 >
                   <div className="profile-achievement-icon-v1769" aria-hidden="true">
-                    <img src={achievement.iconSrc} alt="" />
+                    <img src={achievement.iconSrc} alt="" decoding="async" />
                   </div>
 
                   <div className="profile-achievement-content-v1768">
