@@ -17683,6 +17683,7 @@ function LeaderboardView({
           <span>OBSERWUJĄCY</span>
           <span>PROFIT</span>
           <span>RANGI</span>
+          <span>NAGRODY</span>
           <span></span>
         </div>
         {rows.map((row, idx) => {
@@ -17706,6 +17707,13 @@ function LeaderboardView({
               <span>{Number(row.followers || 0)}</span>
               <span className={`profit-v4 ${profitToneClass}`}>{profitValue >= 0 ? '+' : ''}{formatRankingAmount(profitValue)}</span>
               <span className="badges-cell-v4">{row.displayBadges.map((badge, bIdx) => <i key={bIdx} title={badge.label}>{badge.icon}</i>)}</span>
+              <span className="ranking-reward-cell-v1779">
+                {row.liveRank <= 3 ? (
+                  <b className="ranking-reward-pill-v1779">0</b>
+                ) : (
+                  <i className="ranking-reward-empty-v1779">—</i>
+                )}
+              </span>
               <span>
                 <button type="button" className={`follow-btn-v4 ${row.isFollowing ? 'is-following' : ''}`} onClick={(event) => followRow(event, row)}>
                   {row.isFollowing ? 'Obserwujesz' : 'Obserwuj'}
@@ -17714,7 +17722,7 @@ function LeaderboardView({
             </button>
           )
         })}
-        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span></span></div>}
+        {!rows.length && <div className="ranking-v4-row"><span>1</span><span>Brak danych</span><span>-</span><span>-</span><span>0</span><span>0</span><span>0.00</span><span>-</span><span>—</span><span></span></div>}
       </div>
       <div className="ranking-loadmore-v1407">
         <span>Pokazano <b>{Math.min(rows.length, leaderboardRows.length)}</b> z <b>{leaderboardRows.length}</b> typerów</span>

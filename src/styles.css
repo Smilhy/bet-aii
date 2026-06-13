@@ -74249,3 +74249,79 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   -webkit-text-fill-color:transparent!important;
   text-shadow:0 0 14px rgba(255,211,93,.25)!important;
 }
+
+
+/* WERSJA 1779 — Ranking: kolumna NAGRODY tylko dla top 3 */
+.ranking-live-v999 .ranking-v4-row,
+.ranking-upgrade-v1398 .ranking-v4-row,
+.ranking-v4-row{
+  grid-template-columns:56px 1.55fr .76fr .72fr .62fr .74fr .9fr .82fr .66fr .84fr!important;
+}
+
+.ranking-live-v999 .ranking-v4-row.head,
+.ranking-upgrade-v1398 .ranking-v4-row.head,
+.ranking-v4-row.head{
+  grid-template-columns:56px 1.55fr .76fr .72fr .62fr .74fr .9fr .82fr .66fr .84fr!important;
+}
+
+.ranking-live-v999 .ranking-v4-row > span:nth-child(8),
+.ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(8),
+.ranking-v4-row > span:nth-child(8),
+.ranking-live-v999 .ranking-v4-row > span:nth-child(9),
+.ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(9),
+.ranking-v4-row > span:nth-child(9){
+  justify-self:start!important;
+}
+
+.ranking-live-v999 .ranking-v4-row > span:nth-child(10),
+.ranking-upgrade-v1398 .ranking-v4-row > span:nth-child(10),
+.ranking-v4-row > span:nth-child(10){
+  justify-self:end!important;
+}
+
+.ranking-v4-row.head span:nth-child(8),
+.ranking-v4-row.head span:nth-child(9){
+  justify-self:start!important;
+}
+
+.ranking-reward-cell-v1779{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  min-width:0!important;
+}
+
+.ranking-reward-pill-v1779{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:36px!important;
+  height:26px!important;
+  padding:0 10px!important;
+  border-radius:8px!important;
+  background:linear-gradient(180deg,#1fd872,#14b85d)!important;
+  color:#ffffff!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  box-shadow:0 8px 18px rgba(17,184,93,.22)!important;
+}
+
+.ranking-reward-empty-v1779{
+  color:rgba(148,180,200,.62)!important;
+  font-style:normal!important;
+  font-size:14px!important;
+  line-height:1!important;
+}
+
+@media(max-width:1500px){
+  .ranking-live-v999 .ranking-v4-row,
+  .ranking-upgrade-v1398 .ranking-v4-row,
+  .ranking-v4-row,
+  .ranking-live-v999 .ranking-v4-row.head,
+  .ranking-upgrade-v1398 .ranking-v4-row.head,
+  .ranking-v4-row.head{
+    grid-template-columns:56px 1.3fr .78fr .72fr .62fr .74fr .88fr .78fr .64fr .84fr!important;
+  }
+}
