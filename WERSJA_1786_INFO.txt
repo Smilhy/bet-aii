@@ -1,0 +1,6 @@
+WERSJA 1786 — nagrody w tabeli jak po prawej
+
+Zmiany:
+- kolumna NAGRODY w tabeli rankingu ma teraz identyczny niebieski pill jak w prawym panelu „WYPŁACONE”.
+- ujednolicony kolor tekstu, dolara i tła.
+- bez zmian logiki, tylko wygląd.
