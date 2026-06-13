@@ -33,15 +33,15 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
-import achievementFanatykV1770 from './assets/achievements-v1770/fanatyk.png'
-import achievementWinnerV1770 from './assets/achievements-v1770/prawdziwy-wygrany.png'
-import achievementFearlessV1770 from './assets/achievements-v1770/nieustraszony.png'
-import achievementLoyalV1770 from './assets/achievements-v1770/lojalny.png'
-import achievementFamilyV1770 from './assets/achievements-v1770/czlonek-rodziny.png'
-import achievementBonusV1770 from './assets/achievements-v1770/lowca-bonusow.png'
-import achievementRichV1770 from './assets/achievements-v1770/bogaty.png'
-import achievementFamousV1770 from './assets/achievements-v1770/slawny.png'
-import achievementCriticV1770 from './assets/achievements-v1770/krytyk-bukmacherski.png'
+import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
+import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
+import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
+import achievementLoyalV1772 from './assets/achievements-v1772/lojalny.svg'
+import achievementFamilyV1772 from './assets/achievements-v1772/czlonek-rodziny.svg'
+import achievementBonusV1772 from './assets/achievements-v1772/lowca-bonusow.svg'
+import achievementRichV1772 from './assets/achievements-v1772/bogaty.svg'
+import achievementFamousV1772 from './assets/achievements-v1772/slawny.svg'
+import achievementCriticV1772 from './assets/achievements-v1772/krytyk-bukmacherski.svg'
 
 /* WERSJA 1721 FIX — PRZYWROC BETAI MULTISPORT AI, POPRAWKA BUILD */
 
@@ -22114,7 +22114,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const profileAchievements = [
     buildAchievementV1768({
       key: 'fanatyk',
-      iconSrc: achievementFanatykV1770,
+      iconSrc: achievementFanatykV1772,
       title: 'Fanatyk',
       description: 'Dodaj 1000 typów',
       value: totalTips,
@@ -22122,7 +22122,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'prawdziwy-wygrany',
-      iconSrc: achievementWinnerV1770,
+      iconSrc: achievementWinnerV1772,
       title: 'Prawdziwy Wygrany',
       description: 'Wygraj 500 typów',
       value: wonTips,
@@ -22130,7 +22130,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'nieustraszony',
-      iconSrc: achievementFearlessV1770,
+      iconSrc: achievementFearlessV1772,
       title: 'Nieustraszony',
       description: 'Dodaj 100 typów z kursem > 3.00',
       value: highOddsTipsCount,
@@ -22138,7 +22138,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'lojalny',
-      iconSrc: achievementLoyalV1770,
+      iconSrc: achievementLoyalV1772,
       title: 'Lojalny',
       description: 'Dodawaj typy przez 180 różnych dni',
       value: loyalActiveDaysCount,
@@ -22147,7 +22147,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'czlonek-rodziny',
-      iconSrc: achievementFamilyV1770,
+      iconSrc: achievementFamilyV1772,
       title: 'Członek Rodziny',
       description: 'Poleć 10 znajomych',
       value: profileReferralCount,
@@ -22155,7 +22155,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'lowca-bonusow',
-      iconSrc: achievementBonusV1770,
+      iconSrc: achievementBonusV1772,
       title: 'Łowca Bonusów',
       description: 'Zbierz 3 darmowe zakłady ze sklepu',
       value: freeBetClaimsCount,
@@ -22163,7 +22163,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'bogaty',
-      iconSrc: achievementRichV1770,
+      iconSrc: achievementRichV1772,
       title: 'Bogaty',
       description: 'Zdobądź 1M monet',
       value: achievementCoinsCount,
@@ -22171,7 +22171,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'slawny',
-      iconSrc: achievementFamousV1770,
+      iconSrc: achievementFamousV1772,
       title: 'Sławny',
       description: 'Zdobądź 500 obserwujących',
       value: followersCount,
@@ -22179,7 +22179,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }),
     buildAchievementV1768({
       key: 'krytyk-bukmacherski',
-      iconSrc: achievementCriticV1770,
+      iconSrc: achievementCriticV1772,
       title: 'Krytyk Bukmacherski',
       description: 'Oceń 5 bukmacherów',
       value: bookmakerRatingsCount,
