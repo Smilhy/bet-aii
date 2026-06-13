@@ -1,0 +1,7 @@
+WERSJA 1784 — Ranking: dopasowanie prawej kolumny i nagród do niebieskiego stylu
+
+Zmiany:
+- prawa karta „Wypłaciliśmy naszym typerom” ma teraz taki sam kolor ramki i styl jak box „Twoje polecenia”,
+- box po prawej ma dopasowane tło / obramowanie do górnego boxa,
+- badge w kolumnie NAGRODY został zmieniony z żółtego na niebieski jak na referencyjnym screenie,
+- nie zmieniano logiki — tylko wygląd.

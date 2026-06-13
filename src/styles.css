@@ -74475,3 +74475,62 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:13px!important;
   }
 }
+
+/* WERSJA 1784 — Ranking: prawa kolumna i NAGRODY w spójnym niebieskim stylu */
+.ranking-v4-sidebar .ranking-payouts-v1783{
+  border-radius:18px!important;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(0, 222, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 86% 0%, rgba(19, 239, 208, 0.05), transparent 24%),
+    linear-gradient(180deg,rgba(4,15,24,.96),rgba(2,9,16,.99))!important;
+  border:1px solid rgba(28,223,228,.14)!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(0,223,255,.02)!important;
+}
+
+.ranking-v4-sidebar .ranking-payouts-v1783::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:radial-gradient(circle at top right,rgba(0,222,255,.08),transparent 25%),radial-gradient(circle at bottom left,rgba(19,239,208,.04),transparent 22%);
+}
+
+.ranking-v4-sidebar .ranking-payouts-summary-v1783 strong{
+  text-shadow:0 0 18px rgba(53, 211, 255, .10)!important;
+}
+
+.ranking-reward-pill-v1779{
+  min-width:54px!important;
+  height:30px!important;
+  gap:4px!important;
+  padding:0 12px!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg, #3e7db8 0%, #2c669e 52%, #1f4f7f 100%)!important;
+  color:#f4fbff!important;
+  border:1px solid rgba(110,176,255,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(16,64,110,.18)!important;
+  text-shadow:none!important;
+}
+
+.ranking-reward-currency-v1780{
+  color:#f4fbff!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  opacity:1!important;
+}
+
+.ranking-v4-sidebar .ranking-payout-item-v1783 b{
+  min-width:68px!important;
+  height:32px!important;
+  padding:0 14px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  border-radius:15px!important;
+  background:linear-gradient(180deg, #3e7db8 0%, #2c669e 52%, #1f4f7f 100%)!important;
+  border:1px solid rgba(110,176,255,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(16,64,110,.18)!important;
+  color:#f4fbff!important;
+}
