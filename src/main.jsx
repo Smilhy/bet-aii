@@ -21441,7 +21441,20 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
     const profileId = String(viewedIdKey || profile?.id || user?.id || '').trim()
 
-    const loadAchievementProgressV1774 = async () => {
+    const normalizeAchievementRowV1778 = (row) => {
+      if (!row) return null
+      const key = String(row?.achievement_key || '').trim()
+      if (!key) return null
+      return {
+        ...row,
+        achievement_key: key,
+        current_value: Number(row?.current_value || 0),
+        target_value: Number(row?.target_value || 0),
+        unlocked: row?.unlocked === true,
+      }
+    }
+
+    const loadAchievementProgressV1778 = async () => {
       if (!isSupabaseConfigured || !supabase || !profileId) {
         if (alive) {
           setAchievementProgressV1774({})
@@ -21451,21 +21464,23 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       }
 
       try {
-        const { data, error } = await supabase.rpc('get_tipster_achievements_v1774', {
-          p_user_id: profileId,
-        })
+        // FIX 1778:
+        // Jedno zwykłe SELECT przy wejściu na profil.
+        // Nie wywołujemy RPC, które wcześniej zapisywało tabelę i uruchamiało
+        // Realtime ponownie, tworząc pętlę dziesiątek tysięcy requestów.
+        const { data, error } = await supabase
+          .from('tipster_achievement_progress')
+          .select('*')
+          .eq('user_id', profileId)
+          .order('sort_order', { ascending: true })
+
         if (error) throw error
 
         const next = {}
-        for (const row of Array.isArray(data) ? data : []) {
-          const key = String(row?.achievement_key || '').trim()
-          if (!key) continue
-          next[key] = {
-            ...row,
-            current_value: Number(row?.current_value || 0),
-            target_value: Number(row?.target_value || 0),
-            unlocked: row?.unlocked === true,
-          }
+        for (const rawRow of Array.isArray(data) ? data : []) {
+          const row = normalizeAchievementRowV1778(rawRow)
+          if (!row) continue
+          next[row.achievement_key] = row
         }
 
         if (alive) {
@@ -21473,7 +21488,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
           setAchievementProgressReadyV1774(true)
         }
       } catch (error) {
-        console.warn('achievements v1774 RPC skipped — uruchom SUPABASE_1774_OSIAGNIECIA_AUTOMATYCZNA_LOGIKA.sql', error)
+        console.warn('achievements v1778 load skipped', error)
         if (alive) {
           setAchievementProgressV1774({})
           setAchievementProgressReadyV1774(false)
@@ -21481,11 +21496,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       }
     }
 
-    loadAchievementProgressV1774()
+    loadAchievementProgressV1778()
 
     if (isSupabaseConfigured && supabase && profileId) {
       channel = supabase
-        .channel(`tipster-achievements-v1774-${profileId}`)
+        .channel(`tipster-achievements-v1778-${profileId}`)
         .on(
           'postgres_changes',
           {
@@ -21494,14 +21509,39 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
             table: 'tipster_achievement_progress',
             filter: `user_id=eq.${profileId}`,
           },
-          () => loadAchievementProgressV1774()
+          (payload) => {
+            if (!alive) return
+
+            // Realtime aktualizuje tylko zmieniony rekord lokalnie.
+            // Nie wykonuje kolejnego SELECT/RPC.
+            if (payload?.eventType === 'DELETE') {
+              const deletedKey = String(payload?.old?.achievement_key || '').trim()
+              if (!deletedKey) return
+              setAchievementProgressV1774((previous) => {
+                const next = { ...(previous || {}) }
+                delete next[deletedKey]
+                return next
+              })
+              return
+            }
+
+            const row = normalizeAchievementRowV1778(payload?.new)
+            if (!row) return
+            setAchievementProgressV1774((previous) => ({
+              ...(previous || {}),
+              [row.achievement_key]: row,
+            }))
+            setAchievementProgressReadyV1774(true)
+          }
         )
         .subscribe()
     }
 
     return () => {
       alive = false
-      if (channel && supabase) supabase.removeChannel(channel)
+      if (channel && supabase) {
+        supabase.removeChannel(channel)
+      }
     }
   }, [viewedIdKey, profile?.id, user?.id])
 
@@ -22174,7 +22214,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     // Odznaka po zdobyciu zostaje odblokowana na stałe.
     // Nawet jeśli użytkownik później wyda monety, straci obserwującego albo usunie ocenę,
     // unlocked zapisany w Supabase nie wraca do false.
-    const achieved = Boolean(persisted?.unlocked) || safeValue >= safeTarget
+    const isCriticAchievementV1777 = key === 'krytyk-bukmacherski'
+    const achieved = isCriticAchievementV1777
+      ? safeValue >= safeTarget
+      : Boolean(persisted?.unlocked) || safeValue >= safeTarget
     const percent = Math.min(100, Math.max(0, (safeValue / safeTarget) * 100))
 
     return {
