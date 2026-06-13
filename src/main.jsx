@@ -17933,6 +17933,20 @@ function LeaderboardView({
             <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
           </div>
 
+          <div className="glass-ranking-v4 sidebar-card-v4 ranking-reward-pool-v1787">
+            <div className="ranking-reward-pool-inner-v1787">
+              <span className="ranking-reward-pool-kicker-v1787">MIESIĘCZNA PULA NAGRÓD</span>
+              <strong className="ranking-reward-pool-amount-v1787">1000 $</strong>
+              <button
+                type="button"
+                className="ranking-reward-pool-btn-v1787"
+                onClick={() => onToast?.({ type: 'info', title: 'Miesięczna pula nagród', message: 'Dołącz do rankingu i walcz o miesięczną pulę nagród.' })}
+              >
+                DOŁĄCZ TERAZ
+              </button>
+            </div>
+          </div>
+
           <div className="glass-ranking-v4 sidebar-card-v4 ranking-payouts-v1783">
             <div className="ranking-payouts-summary-v1783">
               <strong>{rankingPayoutTotal.toFixed(0)} $</strong>

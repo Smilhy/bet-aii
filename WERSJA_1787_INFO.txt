@@ -1,0 +1,7 @@
+WERSJA 1787 — prawa kolumna: miesięczna pula nagród
+
+Zmiany:
+- dodana nowa karta nad boxem „WYPŁACILIŚMY NASZYM TYPEROM”.
+- układ jak na screenie: nagłówek, kwota „1000 $”, przycisk „DOŁĄCZ TERAZ”.
+- kolory i ramka dopasowane do stylu prawej kolumny Bet+AI.
+- bez zmian w logice danych — to na razie blok promocyjny / CTA.
