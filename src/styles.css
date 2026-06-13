@@ -73591,3 +73591,133 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     min-height:72px!important;
   }
 }
+
+
+/* ============================================================
+   WERSJA 1769 — PREMIUM RAMKA + IKONY 1:1 ZE SCREENA
+   Zmiana wyłącznie panelu osiągnięć.
+   ============================================================ */
+
+.profile-static-v3 .profile-achievements-panel-v1768{
+  position:relative!important;
+  overflow:hidden!important;
+  border:1px solid rgba(15,140,154,.58)!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0,209,215,.12), transparent 35%),
+    linear-gradient(145deg, rgba(4,23,35,.98), rgba(2,34,40,.96))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(128,255,255,.045),
+    0 18px 34px rgba(0,0,0,.22),
+    0 0 24px rgba(0,208,218,.035)!important;
+}
+
+.profile-static-v3 .profile-achievements-panel-v1768::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:
+    linear-gradient(115deg, rgba(84,255,246,.055), transparent 26%, transparent 72%, rgba(0,184,210,.055))!important;
+  mix-blend-mode:screen!important;
+}
+
+.profile-static-v3 .profile-achievements-head-v1768{
+  position:relative!important;
+  z-index:1!important;
+  padding:16px 16px 14px!important;
+  border-bottom:1px solid rgba(22,154,168,.34)!important;
+  background:
+    linear-gradient(100deg, rgba(5,28,41,.98), rgba(3,53,58,.90))!important;
+  box-shadow:
+    inset 0 -1px 0 rgba(0,230,225,.04),
+    0 8px 20px rgba(0,0,0,.08)!important;
+}
+
+.profile-static-v3 .profile-achievements-head-v1768 h3{
+  color:#f7fcff!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.35)!important;
+}
+
+.profile-static-v3 .profile-achievements-list-v1768{
+  position:relative!important;
+  z-index:1!important;
+  padding:7px 13px 12px!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768{
+  grid-template-columns:50px minmax(0,1fr)!important;
+  min-height:78px!important;
+  gap:11px!important;
+  padding:10px 3px!important;
+  border-bottom:1px solid rgba(18,131,147,.16)!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.locked{
+  opacity:.76!important;
+}
+
+.profile-static-v3 .profile-achievement-row-v1768.achieved{
+  opacity:1!important;
+  background:
+    linear-gradient(90deg, rgba(0,211,205,.035), transparent 64%)!important;
+}
+
+.profile-static-v3 .profile-achievement-icon-v1769{
+  width:48px!important;
+  height:54px!important;
+  display:grid!important;
+  place-items:center!important;
+  filter:
+    drop-shadow(0 6px 9px rgba(0,0,0,.30))
+    drop-shadow(0 0 9px rgba(0,201,222,.16))!important;
+}
+
+.profile-static-v3 .profile-achievement-icon-v1769 img{
+  display:block!important;
+  width:48px!important;
+  height:auto!important;
+  max-height:54px!important;
+  object-fit:contain!important;
+  image-rendering:auto!important;
+  user-select:none!important;
+  pointer-events:none!important;
+}
+
+.profile-static-v3 .profile-achievement-title-v1768 strong{
+  color:#f1f8fb!important;
+  font-size:12.5px!important;
+  font-weight:900!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.28)!important;
+}
+
+.profile-static-v3 .profile-achievement-content-v1768 > small{
+  color:#8eacb8!important;
+}
+
+.profile-static-v3 .profile-achievement-progress-v1768{
+  height:7px!important;
+  background:rgba(28,100,111,.34)!important;
+  border:1px solid rgba(40,154,166,.08)!important;
+}
+
+.profile-static-v3 .profile-achievement-progress-v1768 span{
+  background:linear-gradient(90deg,#16a99f,#36d7ca)!important;
+  box-shadow:0 0 11px rgba(44,218,207,.24)!important;
+}
+
+.profile-static-v3 .profile-achievement-progress-row-v1768 b{
+  color:#21cfc8!important;
+}
+
+@media (max-width:1100px){
+  .profile-static-v3 .profile-achievement-row-v1768{
+    grid-template-columns:46px minmax(0,1fr)!important;
+  }
+
+  .profile-static-v3 .profile-achievement-icon-v1769,
+  .profile-static-v3 .profile-achievement-icon-v1769 img{
+    width:44px!important;
+  }
+}
