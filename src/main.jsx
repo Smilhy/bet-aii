@@ -17915,32 +17915,14 @@ function LeaderboardView({
         </div>
 
         <aside className="ranking-v4-sidebar">
-          <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4">
-            <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
-            <div className="referral-code-v4">
-              <span>Kod polecający</span>
-              <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
-            </div>
-            <div className="referral-progress-v4">
-              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>{referralCount} / 10</b></div>
-              <div className="progress-bar-v4"><i style={{width:`${referralProgress}%`}}></i></div>
-            </div>
-            <div className="referral-bonuses-v4">
-              {referralBonuses.map((item, idx) => (
-                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b></div>
-              ))}
-            </div>
-            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
-          </div>
-
           <div className="glass-ranking-v4 sidebar-card-v4 ranking-reward-pool-v1787">
             <div className="ranking-reward-pool-inner-v1787">
               <span className="ranking-reward-pool-kicker-v1787">MIESIĘCZNA PULA NAGRÓD</span>
-              <strong className="ranking-reward-pool-amount-v1787">1000 $</strong>
+              <strong className="ranking-reward-pool-comingsoon-v1788">WKRÓTCE</strong>
               <button
                 type="button"
                 className="ranking-reward-pool-btn-v1787"
-                onClick={() => onToast?.({ type: 'info', title: 'Miesięczna pula nagród', message: 'Dołącz do rankingu i walcz o miesięczną pulę nagród.' })}
+                onClick={() => onToast?.({ type: 'info', title: 'Miesięczna pula nagród', message: 'Pula nagród pojawi się wkrótce.' })}
               >
                 DOŁĄCZ TERAZ
               </button>
@@ -17969,6 +17951,24 @@ function LeaderboardView({
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="glass-ranking-v4 sidebar-card-v4 referrals-v4 ranking-referrals-bottom-v1788">
+            <div className="ranking-v4-card-head"><h3>Twoje polecenia</h3></div>
+            <div className="referral-code-v4">
+              <span>Kod polecający</span>
+              <div><strong>{referralCode}</strong><button type="button" onClick={copyReferral}>⧉</button></div>
+            </div>
+            <div className="referral-progress-v4">
+              <div className="progress-head-v4"><span>Postęp do kolejnego bonusu</span><b>{referralCount} / 10</b></div>
+              <div className="progress-bar-v4"><i style={{width:`${referralProgress}%`}}></i></div>
+            </div>
+            <div className="referral-bonuses-v4">
+              {referralBonuses.map((item, idx) => (
+                <div className={`ref-bonus-v4 ${item[2] ? 'done' : ''}`} key={idx}><span>{item[0]}</span><b>{item[1]}</b></div>
+              ))}
+            </div>
+            <button type="button" className="hall-btn-v4 alt" onClick={copyReferral}>Pobierz link polecający</button>
           </div>
         </aside>
       </div>
