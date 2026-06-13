@@ -21398,6 +21398,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileReviewStatus, setProfileReviewStatus] = useState('')
   const [profileRankRemote, setProfileRankRemote] = useState(null)
   const [profileRankLoading, setProfileRankLoading] = useState(false)
+  const [achievementRewardClaimsV1773, setAchievementRewardClaimsV1773] = useState(0)
+  const [achievementProfileRatingsGivenV1773, setAchievementProfileRatingsGivenV1773] = useState(0)
 
   const targetProfileIdForReviews = viewedIdKey || profile.id || user?.id || ''
   const viewerIdForReview = viewerProfile?.id || ''
@@ -21432,6 +21434,87 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   useEffect(() => {
     loadProfileReviews()
   }, [targetProfileIdForReviews])
+
+  useEffect(() => {
+    let alive = true
+
+    const loadAchievementCountersV1773 = async () => {
+      const profileId = String(viewedIdKey || profile?.id || user?.id || '').trim()
+      const profileEmail = normalizeEmail(profile?.email || user?.email || '')
+
+      if (!isSupabaseConfigured || !supabase || (!profileId && !profileEmail)) {
+        if (alive) {
+          setAchievementRewardClaimsV1773(0)
+          setAchievementProfileRatingsGivenV1773(0)
+        }
+        return
+      }
+
+      try {
+        const rewardFilters = []
+        if (profileId) rewardFilters.push(`user_id.eq.${profileId}`)
+        if (profileEmail) rewardFilters.push(`email.eq.${profileEmail}`)
+
+        const rewardQuery = supabase
+          .from('community_reward_claims')
+          .select('reward_key', { count: 'exact', head: true })
+
+        const rewardResult = rewardFilters.length
+          ? await rewardQuery.or(rewardFilters.join(','))
+          : { count: 0, error: null }
+
+        if (rewardResult?.error) throw rewardResult.error
+        if (alive) setAchievementRewardClaimsV1773(Math.max(0, Number(rewardResult?.count || 0)))
+      } catch (error) {
+        console.warn('achievement reward claims load skipped', error)
+        if (alive) {
+          const fallback = Number(
+            user?.reward_claims_count ??
+            user?.rewards_claimed_count ??
+            user?.bonus_claims_count ??
+            user?.bonuses_claimed ??
+            profile?.reward_claims_count ??
+            profile?.bonuses_claimed ??
+            0
+          ) || 0
+          setAchievementRewardClaimsV1773(Math.max(0, fallback))
+        }
+      }
+
+      try {
+        const reviewFilters = []
+        if (profileId) reviewFilters.push(`reviewer_id.eq.${profileId}`)
+        if (profileEmail) reviewFilters.push(`reviewer_email.eq.${profileEmail}`)
+
+        const reviewQuery = supabase
+          .from('profile_reviews')
+          .select('id', { count: 'exact', head: true })
+
+        const reviewResult = reviewFilters.length
+          ? await reviewQuery.or(reviewFilters.join(','))
+          : { count: 0, error: null }
+
+        if (reviewResult?.error) throw reviewResult.error
+        if (alive) setAchievementProfileRatingsGivenV1773(Math.max(0, Number(reviewResult?.count || 0)))
+      } catch (error) {
+        console.warn('achievement profile ratings load skipped', error)
+        if (alive) {
+          const fallback = Number(
+            user?.profile_reviews_given_count ??
+            user?.profiles_rated_count ??
+            user?.tipster_profiles_rated ??
+            profile?.profile_reviews_given_count ??
+            profile?.profiles_rated_count ??
+            0
+          ) || 0
+          setAchievementProfileRatingsGivenV1773(Math.max(0, fallback))
+        }
+      }
+    }
+
+    loadAchievementCountersV1773()
+    return () => { alive = false }
+  }, [viewedIdKey, profile?.id, profile?.email, user?.id, user?.email])
 
   useEffect(() => {
     let alive = true
@@ -22048,15 +22131,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       .filter(Boolean)
   ).size
 
-  const freeBetClaimsCount = Math.max(
-    0,
+  const rewardsBonusesReceivedCountV1773 = Math.max(
+    achievementRewardClaimsV1773,
     Number(
-      user?.free_bets_claimed ??
-      user?.claimed_free_bets ??
-      user?.free_bet_count ??
-      user?.bonus_bets_claimed ??
-      user?.shop_free_bets_claimed ??
-      (user?.welcome_bonus_claimed ? 1 : 0)
+      user?.reward_claims_count ??
+      user?.rewards_claimed_count ??
+      user?.bonus_claims_count ??
+      user?.bonuses_claimed ??
+      profile?.reward_claims_count ??
+      profile?.bonuses_claimed ??
+      0
     ) || 0
   )
 
@@ -22074,13 +22158,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ) || 0
   )
 
-  const bookmakerRatingsCount = Math.max(
-    0,
+  const profileRatingsGivenCountV1773 = Math.max(
+    achievementProfileRatingsGivenV1773,
     Number(
-      user?.bookmaker_reviews_count ??
-      user?.bookmaker_ratings_count ??
-      user?.rated_bookmakers_count ??
-      user?.bookmakers_rated ??
+      user?.profile_reviews_given_count ??
+      user?.profiles_rated_count ??
+      user?.tipster_profiles_rated ??
+      profile?.profile_reviews_given_count ??
+      profile?.profiles_rated_count ??
       0
     ) || 0
   )
@@ -22157,17 +22242,17 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       key: 'lowca-bonusow',
       iconSrc: achievementBonusV1772,
       title: 'Łowca Bonusów',
-      description: 'Zbierz 3 darmowe zakłady ze sklepu',
-      value: freeBetClaimsCount,
-      target: 3,
+      description: 'Odbierz 100 bonusów w sekcji Nagrody/Bonusy',
+      value: rewardsBonusesReceivedCountV1773,
+      target: 100,
     }),
     buildAchievementV1768({
       key: 'bogaty',
       iconSrc: achievementRichV1772,
       title: 'Bogaty',
-      description: 'Zdobądź 1M monet',
+      description: 'Zdobądź 10 000 monet',
       value: achievementCoinsCount,
-      target: 1000000,
+      target: 10000,
     }),
     buildAchievementV1768({
       key: 'slawny',
@@ -22181,9 +22266,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       key: 'krytyk-bukmacherski',
       iconSrc: achievementCriticV1772,
       title: 'Krytyk Bukmacherski',
-      description: 'Oceń 5 bukmacherów',
-      value: bookmakerRatingsCount,
-      target: 5,
+      description: 'Oceń profil typera',
+      value: profileRatingsGivenCountV1773,
+      target: 1,
     }),
   ]
 
