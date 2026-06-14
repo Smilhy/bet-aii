@@ -75268,8 +75268,3 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   -webkit-text-fill-color:#f4fbff!important;
   text-shadow:none!important;
 }
-
-/* ENGLISH ASSET OVERRIDES — Polish originals remain untouched. */
-html[data-betai-lang="en"] .app-shell.no-rightbar-page .leaderboard-hero.ranking-colorloop-hero{
-  background-image:url('/localized/en/ranking-gold-banner-selected.png')!important;
-}

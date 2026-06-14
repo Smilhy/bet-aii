@@ -33,7 +33,6 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
-import { translateBetaiEnglishText } from './i18nEnglish'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
 import achievementWinnerV1772 from './assets/achievements-v1772/prawdziwy-wygrany.svg'
 import achievementFearlessV1772 from './assets/achievements-v1772/nieustraszony.svg'
@@ -191,49 +190,6 @@ function getInitialBetaiLanguage() {
   }
 }
 
-const BETAI_ORIGINAL_TEXT_NODES = new WeakMap()
-const BETAI_ORIGINAL_ATTRIBUTES = new WeakMap()
-
-function useBetaiActiveLanguage() {
-  const [lang, setLang] = useState(getInitialBetaiLanguage)
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-    const sync = (event) => {
-      const next = event?.detail || getInitialBetaiLanguage()
-      if (BETAI_LANGUAGES.includes(next)) setLang(next)
-    }
-    window.addEventListener('betai-language-changed', sync)
-    window.addEventListener('storage', sync)
-    return () => {
-      window.removeEventListener('betai-language-changed', sync)
-      window.removeEventListener('storage', sync)
-    }
-  }, [])
-  return lang
-}
-
-const BETAI_LOCALIZED_ASSETS_EN = Object.freeze({
-  '/ranking-gold-banner-selected.png': '/localized/en/ranking-gold-banner-selected.png',
-  '/typy-ai-hero-v1070.png': '/localized/en/typy-ai-hero-v1070.png',
-  '/typy-ai-premium-banner-v1052.png': '/localized/en/typy-ai-premium-banner-v1052.png'
-})
-
-function getBetaiLocalizedAsset(src, lang) {
-  if (lang !== 'en') return src
-  if (BETAI_LOCALIZED_ASSETS_EN[src]) return BETAI_LOCALIZED_ASSETS_EN[src]
-  if (src.startsWith('/dashboard-hero-v551/')) {
-    return src.replace('/dashboard-hero-v551/', '/localized/en/dashboard-hero-v551/')
-  }
-  if (/^\/ultra-[^/]+\.(?:png|jpg|jpeg|webp)$/i.test(src)) {
-    return `/localized/en${src}`
-  }
-  if (/^\/typy-ai-[^/]+\.(?:png|jpg|jpeg|webp)$/i.test(src)) {
-    return `/localized/en${src}`
-  }
-  return src
-}
-
-
 const BETAI_DASHBOARD_TRANSLATIONS = {
   en: {
     'Dashboard': 'Dashboard', 'Dodaj typ': 'Add pick', 'Portfel': 'Wallet', 'Mój profil': 'My profile', 'Ranking': 'Ranking', 'Polecenia': 'Referrals', 'Powiadomienia': 'Notifications', 'Płatności': 'Payments', 'Subskrypcja': 'Subscription', 'Zarobki': 'Earnings', 'Wypłaty': 'Payouts', 'Typy AI': 'AI picks', 'Top typerzy': 'Top tipsters', 'Admin finanse': 'Admin finance', 'Admin wypłaty': 'Admin payouts', 'Wyloguj': 'Log out', 'Ulepsz konto': 'Top up account', 'Saldo': 'Balance', 'Coiny': 'Coin', 'Odblokowane': 'Unlocked', 'Przejdź na Premium': 'Go Premium', 'Zarządzaj Premium': 'Manage Premium', 'Szukaj meczów, lig, użytkowników...': 'Search matches, leagues, users...', 'Szukaj meczów, lig i użytkowników': 'Search matches, leagues and users', 'Mój profil': 'My profile', 'WITAJ PONOWNIE': 'WELCOME BACK', 'MECZÓW DZIŚ': 'MATCHES TODAY', 'ŚR. PEWNOŚĆ': 'AVG. CONFIDENCE', 'PREMIUM': 'PREMIUM', 'Marketplace premium': 'Premium marketplace', 'Publikowanie płatnych typów jest dostępne tylko dla użytkowników Premium. Przejdź na konto Premium, aby monetyzować swoje analizy.': 'Publishing paid picks is available only for Premium users. Upgrade to Premium to monetize your analysis.', 'Kup Premium': 'Buy Premium', 'typów premium': 'premium picks', 'Wszystkie': 'All', 'Premium': 'Premium', 'Darmowe': 'Free', 'Moje': 'Mine', 'AI Analiza': 'AI analysis', 'Zobacz typ': 'View pick', 'Obserwuj typera': 'Follow tipster', 'Obserwuj': 'Follow', 'Oczekujący': 'Pending', 'Dzisiaj': 'Today', 'Typ': 'Pick', 'Kurs': 'Odds', 'Powyżej 2.5 gola': 'Over 2.5 goals', 'Top użytkownik (24h)': 'Top user (24h)', 'Nagroda dnia': 'Daily reward', 'Aktywni teraz': 'Active now', 'Brak lidera': 'No leader', 'wiadomości dziś': 'today messages', 'Dla najbardziej aktywnych': 'For the most active', 'Napisz wiadomość...': 'Write a message...', 'Twoja wiadomość': 'Your message', 'Top typerzy': 'Top tipsters', 'Ranking real': 'Real ranking', 'AI Typy dnia': 'AI picks of the day', 'Zobacz wszystkie': 'See all', 'Wyniki live': 'Live scores', 'Artykuły': 'Articles', 'News': 'News', 'Analizy AI': 'AI analytics', 'TV / PPV': 'TV / PPV', 'Nie pobrano typów': 'Could not load picks', 'Brak konta': 'No account', 'Zaloguj się, aby odblokować': 'Log in to unlock', 'Musisz być zalogowany, aby obserwować typera.': 'You must be logged in to follow a tipster.', 'Witaj ponownie': 'Welcome back', 'Miło Cię widzieć z powrotem w BetAI.': 'Nice to see you back in BetAI.'
@@ -316,10 +272,6 @@ function translateBetaiTextValue(value, lang) {
   const raw = String(value || '')
   const trimmed = raw.trim()
   if (!trimmed || lang === 'pl') return value
-  if (lang === 'en') {
-    const enhanced = translateBetaiEnglishText(value)
-    if (enhanced !== value) return enhanced
-  }
   const dictionary = buildBetaiTranslationDictionary(lang)
   const direct = dictionary[trimmed]
   if (direct) return raw.replace(trimmed, direct)
@@ -367,18 +319,17 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.error) {
-      const errorLang = getInitialBetaiLanguage()
       return (
         <div className="auth-screen">
           <div className="auth-card">
             <div className="auth-brand">Bet<span>+AI</span></div>
-            <h1>{translateBetaiTextValue('Błąd aplikacji', errorLang)}</h1>
+            <h1>Błąd aplikacji</h1>
             <p>{this.state.error.message}</p>
             <button className="auth-submit" onClick={() => {
               localStorage.clear()
               window.location.href = '/'
             }}>
-              {translateBetaiTextValue('Wyczyść cache i wróć', errorLang)}
+              Wyczyść cache i wróć
             </button>
           </div>
         </div>
@@ -2738,11 +2689,9 @@ const ULTRA_PAGE_BANNERS = {
 }
 
 function UltraPageBanner({ variant = 'dashboard', children = null }) {
-  const lang = useBetaiActiveLanguage()
-  const originalSrc = ULTRA_PAGE_BANNERS[variant] || ULTRA_PAGE_BANNERS.dashboard
-  const src = getBetaiLocalizedAsset(originalSrc, lang)
+  const src = ULTRA_PAGE_BANNERS[variant] || ULTRA_PAGE_BANNERS.dashboard
   return (
-    <section className={`ultra-page-banner ultra-page-banner-${variant}`} data-betai-banner-lang={lang}>
+    <section className={`ultra-page-banner ultra-page-banner-${variant}`}>
       <img src={src} alt="" loading="eager" />
       <span className="ultra-banner-shine" aria-hidden="true"></span>
       <span className="ultra-banner-glow" aria-hidden="true"></span>
@@ -2800,15 +2749,14 @@ function getTipErrorToast(cleanMessage) {
 }
 
 function AnimatedDashboardHero() {
-  const lang = useBetaiActiveLanguage()
   const heroSlides = [
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/worldcup-2026-hero.jpg', lang), alt: lang === 'en' ? 'World Cup 2026 — AI picks, live excitement and World Cup analysis' : 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-1.png', lang), alt: lang === 'en' ? 'Bet+AI platform — picks, analysis and community' : 'Bet+AI platforma — typy, analiza i społeczność' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-2.png', lang), alt: lang === 'en' ? 'Bet+AI marketplace — buy and sell picks and analysis' : 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-3.png', lang), alt: lang === 'en' ? 'Bet+AI rewards — Coins, drops, picks and rewards' : 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-4.png', lang), alt: lang === 'en' ? 'Bet+AI community — tipsters and live chat' : 'Bet+AI community — społeczność typerów i live chat' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-5.png', lang), alt: lang === 'en' ? 'Bet+AI platform — AI analyses matches for you' : 'Bet+AI platform — AI analizuje mecze za Ciebie' },
-    { src: getBetaiLocalizedAsset('/dashboard-hero-v551/slide-6.png', lang), alt: lang === 'en' ? 'Bet+AI media — articles, news, PPV and live scores' : 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
+    { src: '/dashboard-hero-v551/worldcup-2026-hero.jpg', alt: 'Zaczynamy Mistrzostwa Świata 2026 — typy AI, emocje na żywo i mundialowe analizy' },
+    { src: '/dashboard-hero-v551/slide-1.png', alt: 'Bet+AI platforma — typy, analiza i społeczność' },
+    { src: '/dashboard-hero-v551/slide-2.png', alt: 'Bet+AI marketplace — kupuj i sprzedawaj typy oraz analizy' },
+    { src: '/dashboard-hero-v551/slide-3.png', alt: 'Bet+AI rewards — coiny, dropy, typy i nagrody' },
+    { src: '/dashboard-hero-v551/slide-4.png', alt: 'Bet+AI community — społeczność typerów i live chat' },
+    { src: '/dashboard-hero-v551/slide-5.png', alt: 'Bet+AI platform — AI analizuje mecze za Ciebie' },
+    { src: '/dashboard-hero-v551/slide-6.png', alt: 'Bet+AI media — artykuły, newsy, PPV i wyniki live' }
   ]
   const [panel, setPanel] = useState(0)
   const [isHeroPaused, setIsHeroPaused] = useState(false)
@@ -19814,13 +19762,6 @@ function clearPasswordRecoveryUrl() {
 }
 
 function PasswordResetView({ user, onComplete, onCancel }) {
-  const resetLang = useBetaiActiveLanguage()
-  const resetCopy = (value) => translateBetaiTextValue(value, resetLang)
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.lang = resetLang
-    document.documentElement.dataset.betaiLang = resetLang
-  }, [resetLang])
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -19878,15 +19819,15 @@ function PasswordResetView({ user, onComplete, onCancel }) {
   }
 
   return (
-    <div className="auth609-screen auth-reset-screen" aria-label={resetCopy('Reset hasła Bet+AI')}>
+    <div className="auth609-screen auth-reset-screen" aria-label="Reset hasła Bet+AI">
       <div className="auth-reset-card">
         <div className="auth-brand auth-reset-brand">Bet<span>+AI</span></div>
-        <h1>{resetCopy('Ustaw nowe hasło')}</h1>
-        <p className="auth-reset-copy">{resetCopy('Link resetu został potwierdzony. Ustaw nowe hasło dla konta')}{email ? ` ${email}` : ''}.</p>
+        <h1>Ustaw nowe hasło</h1>
+        <p className="auth-reset-copy">Link resetu został potwierdzony. Ustaw nowe hasło dla konta{email ? ` ${email}` : ''}.</p>
 
         <form className="auth481-form auth-reset-form" onSubmit={handleSubmit}>
           <label className="auth481-field">
-            <span className="auth481-label">{resetCopy('Nowe hasło')}</span>
+            <span className="auth481-label">Nowe hasło</span>
             <div className="auth481-input-shell">
               <span className="auth481-field-icon">🔒</span>
               <input
@@ -19894,14 +19835,14 @@ function PasswordResetView({ user, onComplete, onCancel }) {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={resetCopy('Minimum 8 znaków')}
+                placeholder="Minimum 8 znaków"
                 autoComplete="new-password"
               />
             </div>
           </label>
 
           <label className="auth481-field">
-            <span className="auth481-label">{resetCopy('Powtórz nowe hasło')}</span>
+            <span className="auth481-label">Powtórz nowe hasło</span>
             <div className="auth481-input-shell">
               <span className="auth481-field-icon">🔒</span>
               <input
@@ -19909,24 +19850,24 @@ function PasswordResetView({ user, onComplete, onCancel }) {
                 type="password"
                 value={repeatPassword}
                 onChange={(event) => setRepeatPassword(event.target.value)}
-                placeholder={resetCopy('Powtórz nowe hasło')}
+                placeholder="Powtórz nowe hasło"
                 autoComplete="new-password"
               />
             </div>
           </label>
 
           <button type="submit" className="auth481-submit auth609-submit auth-reset-submit" disabled={submitting}>
-            {submitting ? resetCopy('Zapisywanie...') : resetCopy('Zapisz nowe hasło')}
+            {submitting ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
           </button>
 
           <button type="button" className="auth-reset-cancel" onClick={handleCancel} disabled={submitting}>
-            {resetCopy('Anuluj i wróć do logowania')}
+            Anuluj i wróć do logowania
           </button>
         </form>
 
         {message ? (
           <div className={`auth481-message ${messageType} auth609-message auth-reset-message`} role="status" aria-live="polite">
-            {resetCopy(message)}
+            {message}
           </div>
         ) : null}
       </div>
@@ -20002,14 +19943,6 @@ function AuthView({ onAuth }) {
   }
 
   const t = authTranslations[authLang] || authTranslations.pl
-  const authCopy = (value) => translateBetaiTextValue(value, authLang)
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.lang = authLang
-    document.documentElement.dataset.betaiLang = authLang
-  }, [authLang])
-
   const localizedAuthFrameSrc = authLang === 'pl'
     ? '/auth-frame-reference-609.png'
     : `/auth-frame-reference-609-${authLang}.png`
@@ -20021,8 +19954,8 @@ function AuthView({ onAuth }) {
 
   function formatCompactNumber(value) {
     const parsed = normalizeLiveCount(value, 0)
-    if (parsed >= 1000000) return `${(parsed / 1000000).toFixed(parsed >= 10000000 ? 0 : 1)}${authLang === 'pl' ? ' mln' : 'M'}`
-    if (parsed >= 1000) return `${(parsed / 1000).toFixed(parsed >= 10000 ? 0 : 1)}${authLang === 'pl' ? 'k' : 'K'}`
+    if (parsed >= 1000000) return `${(parsed / 1000000).toFixed(parsed >= 10000000 ? 0 : 1)} mln`
+    if (parsed >= 1000) return `${(parsed / 1000).toFixed(parsed >= 10000 ? 0 : 1)}k`
     return String(parsed)
   }
 
@@ -20288,7 +20221,7 @@ function AuthView({ onAuth }) {
       return await Promise.race([
         promise,
         new Promise((_, reject) => {
-          timer = window.setTimeout(() => reject(new Error(authCopy('Autoryzacja trwa za długo. Spróbuj ponownie za chwilę — Supabase może jeszcze wracać po zmianie dysku.'))), timeoutMs)
+          timer = window.setTimeout(() => reject(new Error('Autoryzacja trwa za długo. Spróbuj ponownie za chwilę — Supabase może jeszcze wracać po zmianie dysku.')), timeoutMs)
         })
       ])
     } finally {
@@ -20357,7 +20290,7 @@ function AuthView({ onAuth }) {
         if (error) {
           const msg = String(error?.message || '').toLowerCase()
           if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
-            throw new Error(authCopy('Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.'))
+            throw new Error('Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.')
           }
           throw error
         }
@@ -20365,7 +20298,7 @@ function AuthView({ onAuth }) {
         const createdUser = data?.user || data?.session?.user || null
         const identities = Array.isArray(createdUser?.identities) ? createdUser.identities : null
         if (createdUser && identities && identities.length === 0) {
-          showMessage('error', authCopy('Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.'))
+          showMessage('error', 'Konto z tym adresem email już istnieje. Zaloguj się albo użyj opcji przypomnienia hasła.')
           return
         }
 
@@ -20566,7 +20499,7 @@ function AuthView({ onAuth }) {
     },
     {
       key: 'tipsterTips',
-      label: t.tipsterTipsToday || authCopy('Typy typerów'),
+      label: t.tipsterTipsToday || 'Typy typerów',
       value: formatCompactNumber(liveStats.tipsterTipsToday),
       icon: <IconUsers />,
       accentClass: 'is-tipster-tips'
@@ -20580,7 +20513,7 @@ function AuthView({ onAuth }) {
     },
     {
       key: 'views',
-      label: t.pageViews || authCopy('Wyświetlenia witryny'),
+      label: t.pageViews || 'Wyświetlenia witryny',
       value: formatCompactNumber(liveStats.pageViews),
       icon: <IconEye />,
       accentClass: 'is-views'
@@ -20657,26 +20590,26 @@ function AuthView({ onAuth }) {
                 <div className="auth609-top-spacer" />
 
                 <div className="auth609-heading-copy auth609-heading-center">
-                  <div className="auth609-beta-banner" role="note" aria-label={authCopy('Informacja o wersji beta')}>
-                    <span className="auth609-beta-kicker">{authCopy('WERSJA BETA')}</span>
-                    <span className="auth609-beta-info" tabIndex="0" aria-label={authCopy('Jak zmienić zoom przeglądarki')}>
+                  <div className="auth609-beta-banner" role="note" aria-label="Informacja o wersji beta">
+                    <span className="auth609-beta-kicker">WERSJA BETA</span>
+                    <span className="auth609-beta-info" tabIndex="0" aria-label="Jak zmienić zoom przeglądarki">
                       i
                       <span className="auth609-beta-tooltip" role="tooltip">
-                        <span>{authLang === 'en' ? <>If the layout looks incorrect, use your browser <b>zoom</b>.</> : <>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</>}</span>
+                        <span>Jeśli widok się rozjeżdża, użyj <b>zoomu</b> przeglądarki.</span>
                         <span className="auth609-beta-shortcuts">
                           <strong>Ctrl <em>+</em></strong>
                           <i>i</i>
                           <strong>Ctrl <em>-</em></strong>
                         </span>
-                        <span>{authLang === 'en' ? <>or set the <b>zoom</b> manually in your browser.</> : <>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</>}</span>
+                        <span>lub ustaw <b>zoom</b> ręcznie w przeglądarce.</span>
                         <span className="auth609-beta-zoomrow">
                           <em>-</em><small>100%</small><em>+</em>
                         </span>
                       </span>
                     </span>
                     <p>
-                      <strong>{authCopy('⚠️ Strona jest w wersji BETA.')}</strong><br />
-                      {authLang === 'en' ? (<>If the layout looks incorrect on your device, panels overlap, or the page does not fit the screen, use your browser <span className="auth609-beta-highlight">zoom</span> and adjust the view manually. We are continuously fixing such issues.</>) : (<>Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.</>)}
+                      <strong>⚠️ Strona jest w wersji BETA.</strong><br />
+                      Jeśli widok na Twoim urządzeniu wygląda źle, ramki się nakładają albo strona nie dopasowuje się do ekranu, użyj <span className="auth609-beta-highlight">zoomu/lupy</span> w przeglądarce i ustaw widok ręcznie. Będziemy na bieżąco naprawiać takie błędy.
                     </p>
                   </div>
                   <img src="/auth-logo-fused-619.png" alt="Bet+AI" className="auth619-fused-logo auth620-fused-logo" draggable="false" />
@@ -20773,12 +20706,12 @@ function AuthView({ onAuth }) {
                   type="button"
                   className="auth1567-presentation-button"
                   onClick={() => setPresentationOpen(true)}
-                  aria-label={authCopy('Obejrzyj prezentację platformy Bet plus AI')}
+                  aria-label="Obejrzyj prezentację platformy Bet plus AI"
                 >
                   <span className="auth1567-play-orb">▶</span>
                   <span>
-                    <b>{authCopy('Obejrzyj prezentację')}</b>
-                    <small>{authCopy('Zobacz, jak działa Bet+AI')}</small>
+                    <b>Obejrzyj prezentację</b>
+                    <small>Zobacz, jak działa Bet+AI</small>
                   </span>
                 </button>
 
@@ -20830,7 +20763,7 @@ function AuthView({ onAuth }) {
           className="auth1567-video-backdrop"
           role="dialog"
           aria-modal="true"
-          aria-label={authCopy('Prezentacja platformy Bet plus AI')}
+          aria-label="Prezentacja platformy Bet plus AI"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setPresentationOpen(false)
           }}
@@ -20838,14 +20771,14 @@ function AuthView({ onAuth }) {
           <div className="auth1567-video-modal">
             <div className="auth1567-video-head">
               <div>
-                <span>{authCopy('PREZENTACJA PLATFORMY')}</span>
-                <strong>{authCopy('Bet+AI w praktyce')}</strong>
+                <span>PREZENTACJA PLATFORMY</span>
+                <strong>Bet+AI w praktyce</strong>
               </div>
               <button
                 type="button"
                 className="auth1567-video-close"
                 onClick={() => setPresentationOpen(false)}
-                aria-label={authCopy('Zamknij prezentację')}
+                aria-label="Zamknij prezentację"
               >
                 ×
               </button>
@@ -20853,7 +20786,7 @@ function AuthView({ onAuth }) {
             <iframe
               className="auth1567-video-player"
               src="https://player.mediadelivery.net/embed/677418/07fb432a-32f8-476f-8826-d8f705c257e1?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
-              title={authCopy('Bet+AI prezentacja platformy')}
+              title="Bet+AI prezentacja platformy"
               loading="lazy"
               fetchPriority="low"
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -26444,6 +26377,27 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
   const [selectedTopSport, setSelectedTopSport] = useState('Piłka nożna')
   const [topAccountFilter, setTopAccountFilter] = useState('all')
   const [sortOpen, setSortOpen] = useState(false)
+  const [topBotCanonicalStatsV1802, setTopBotCanonicalStatsV1802] = useState(() => {
+    const stored = readStoredBotDashboardStatsV1794()
+    return betaiBotDashboardStatsCacheV1794.value || stored?.value || null
+  })
+
+  useEffect(() => {
+    let active = true
+    const refreshTopBotStatsV1802 = () => {
+      loadBetaiBotDashboardStatsV1794().then(value => {
+        if (active && value) setTopBotCanonicalStatsV1802(value)
+      }).catch(() => {})
+    }
+    refreshTopBotStatsV1802()
+    window.addEventListener('betai:tips-updated', refreshTopBotStatsV1802)
+    window.addEventListener('betai:ai-bets-updated', refreshTopBotStatsV1802)
+    return () => {
+      active = false
+      window.removeEventListener('betai:tips-updated', refreshTopBotStatsV1802)
+      window.removeEventListener('betai:ai-bets-updated', refreshTopBotStatsV1802)
+    }
+  }, [])
 
   const isBlockedTopTipsterProfile = (profile = {}) => {
     const values = [
@@ -26860,7 +26814,8 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
     const n = Number(value)
     return Number.isFinite(n) ? n : fallback
   }
-  const formatMoney = (value) => `${toNumber(value, 0) >= 0 ? '+' : ''}${toNumber(value, 0).toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`
+  // WERSJA 1802 — w Top typerzy pokazujemy samą kwotę, bez sufiksu waluty.
+  const formatMoney = (value) => `${toNumber(value, 0) >= 0 ? '+' : ''}${toNumber(value, 0).toLocaleString('pl-PL', { maximumFractionDigits: 2 })}`
   const formatTopPlanPrice = (value) => `${Number(value || 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
   const getActiveTopTipsterPlans = (profile = {}) => {
     const sourcePlans = Array.isArray(profile.top_subscription_plans) ? profile.top_subscription_plans : (Array.isArray(profile.subscription_plans) ? profile.subscription_plans : [])
@@ -27046,13 +27001,31 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
 
   const buildRealTipster = (profile, idx) => {
     const name = resolveRealProfileUsername(profile)
-    const totalTips = toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
-    const won = toNumber(profile.imported_won_tips ?? profile.won_tips ?? profile.won, 0)
-    const lost = toNumber(profile.imported_lost_tips ?? profile.lost_tips ?? profile.lost, 0)
+    const isBotProfileV1802 = isBetaiMultisportRecordV1794(profile)
+    const canonicalV1802 = isBotProfileV1802 && topBotCanonicalStatsV1802
+      ? topBotCanonicalStatsV1802
+      : null
+
+    // WERSJA 1802 — konto betai-multisport-ai ma w Top typerzy dokładnie
+    // ten sam kanon statystyk co Mój profil / Ranking / Dashboard.
+    // Nie korzystamy dla niego ze starych imported_* z profiles.
+    const totalTips = canonicalV1802
+      ? toNumber(canonicalV1802.totalTips, 0)
+      : toNumber(profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? profile.tips, 0)
+    const won = canonicalV1802
+      ? toNumber(canonicalV1802.wonTips, 0)
+      : toNumber(profile.imported_won_tips ?? profile.won_tips ?? profile.won, 0)
+    const lost = canonicalV1802
+      ? toNumber(canonicalV1802.lostTips, 0)
+      : toNumber(profile.imported_lost_tips ?? profile.lost_tips ?? profile.lost, 0)
     const settled = won + lost
-    const hitRate = settled > 0 ? Math.round((won / settled) * 100) : 0
-    const roi = toNumber(profile.imported_yield ?? profile.roi ?? profile.yield, 0)
-    const profit = toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
+    const hitRate = settled > 0 ? Math.round((won / settled) * 1000) / 10 : 0
+    const roi = canonicalV1802
+      ? toNumber(canonicalV1802.yield, 0)
+      : toNumber(profile.imported_yield ?? profile.roi ?? profile.yield, 0)
+    const profit = canonicalV1802
+      ? toNumber(canonicalV1802.profit, 0)
+      : toNumber(profile.imported_profit ?? profile.profit ?? profile.balance_profit, 0)
     const baseFollowers = toNumber(profile.followers_count ?? profile.followers, 0)
     const identityTokens = getTopTipsterIdentityTokens(profile)
     const statsFollowers = identityTokens.reduce((max, key) => {
@@ -27135,7 +27108,7 @@ function TopTipstersView({ tips = [], ranking = [], user = null, onOpenTipster =
           })
         }
       })
-  }, [profiles, topAvatarOverrides, publicTopAvatarRows])
+  }, [profiles, topAvatarOverrides, publicTopAvatarRows, topBotCanonicalStatsV1802])
 
   const sportThemeMapV1510 = {
     'Piłka nożna': 'football',
@@ -27493,95 +27466,41 @@ function disabledTopUp(showToast) {
 
 function DashboardAutoTranslator({ lang }) {
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined
+    if (typeof document === 'undefined') return
     document.documentElement.lang = lang || 'pl'
-    document.documentElement.dataset.betaiLang = lang || 'pl'
-
-    const hardSkipTags = new Set(['SCRIPT', 'STYLE'])
-    const attributeNames = ['placeholder', 'aria-label', 'title', 'alt']
-
-    const getTextRecord = (node) => {
-      let record = BETAI_ORIGINAL_TEXT_NODES.get(node)
-      if (!record) {
-        record = { original: node.nodeValue, lastApplied: null }
-        BETAI_ORIGINAL_TEXT_NODES.set(node, record)
-      } else if (record.lastApplied !== null && node.nodeValue !== record.lastApplied && node.nodeValue !== record.original) {
-        // React or live data replaced the text after our previous translation.
-        // Treat the new value as the new Polish/source value.
-        record.original = node.nodeValue
-        record.lastApplied = null
-      }
-      return record
-    }
-
-    const getAttributeRecord = (node, attr) => {
-      let attrs = BETAI_ORIGINAL_ATTRIBUTES.get(node)
-      if (!attrs) {
-        attrs = new Map()
-        BETAI_ORIGINAL_ATTRIBUTES.set(node, attrs)
-      }
-      let record = attrs.get(attr)
-      const current = node.getAttribute(attr)
-      if (!record) {
-        record = { original: current, lastApplied: null }
-        attrs.set(attr, record)
-      } else if (record.lastApplied !== null && current !== record.lastApplied && current !== record.original) {
-        record.original = current
-        record.lastApplied = null
-      }
-      return record
-    }
-
+    const skipTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'])
+    const translateText = (value) => translateBetaiTextValue(value, lang)
     const translateNode = (node) => {
       if (!node) return
       if (node.nodeType === Node.TEXT_NODE) {
-        const record = getTextRecord(node)
-        const next = lang === 'pl' ? record.original : translateBetaiTextValue(record.original, lang)
-        record.lastApplied = next
-        if (node.nodeValue !== next) node.nodeValue = next
+        const next = translateText(node.nodeValue)
+        if (next !== node.nodeValue) node.nodeValue = next
         return
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return
-      if (hardSkipTags.has(node.tagName)) return
+      if (skipTags.has(node.tagName)) return
       if (node.getAttribute?.('data-no-translate') === 'true') return
-
-      attributeNames.forEach(attr => {
-        if (!node.hasAttribute?.(attr) && !BETAI_ORIGINAL_ATTRIBUTES.get(node)?.has(attr)) return
-        const record = getAttributeRecord(node, attr)
-        if (record.original === null || record.original === undefined) return
-        const next = lang === 'pl' ? record.original : translateBetaiTextValue(record.original, lang)
-        record.lastApplied = next
-        if (node.getAttribute(attr) !== next) node.setAttribute(attr, next)
+      ;['placeholder', 'aria-label', 'title', 'alt'].forEach(attr => {
+        if (node.hasAttribute?.(attr)) {
+          const current = node.getAttribute(attr)
+          const next = translateText(current)
+          if (next !== current) node.setAttribute(attr, next)
+        }
       })
-
-      // INPUT and TEXTAREA have no translatable child text. Their placeholders
-      // and aria labels were handled above, while user-entered values stay intact.
-      if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') return
       node.childNodes?.forEach(child => translateNode(child))
     }
-
     let frame = null
     const translateRoot = () => {
       if (frame) window.cancelAnimationFrame(frame)
       frame = window.requestAnimationFrame(() => {
         const root = document.querySelector('.app-shell') || document.querySelector('#root')
         if (root) translateNode(root)
-        const originalTitle = document.documentElement.dataset.betaiOriginalTitle || document.title
-        if (!document.documentElement.dataset.betaiOriginalTitle) document.documentElement.dataset.betaiOriginalTitle = originalTitle
-        document.title = lang === 'pl' ? originalTitle : translateBetaiTextValue(originalTitle, lang)
       })
     }
-
     translateRoot()
     const observer = new MutationObserver(() => translateRoot())
     const root = document.querySelector('#root') || document.body
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: attributeNames
-    })
+    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'aria-label', 'title', 'alt'] })
     return () => {
       if (frame) window.cancelAnimationFrame(frame)
       observer.disconnect()
@@ -31938,7 +31857,7 @@ function App() {
   }, [activeFilter, topSearch, view])
 
   if (authLoading) {
-    return <div className="auth-screen"><div className="auth-card"><div className="auth-brand">Bet<span>+AI</span></div><p>{translateBetaiTextValue('Ładowanie sesji...', appLang)}</p></div></div>
+    return <div className="auth-screen"><div className="auth-card"><div className="auth-brand">Bet<span>+AI</span></div><p>Ładowanie sesji...</p></div></div>
   }
 
   if (passwordRecoveryMode) {
