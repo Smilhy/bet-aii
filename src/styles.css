@@ -75243,3 +75243,28 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   color:#f4fbff!important;
   text-shadow:none!important;
 }
+
+/* WERSJA 1801 — twarde kolory Yield/Bilans na kartach dashboardu i profilu */
+.dashboard-ticket-v6 .ticket-mini-stats-v876 span > b.metric-positive-text-v1800,
+.profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-positive-text-v1800,
+.profile-static-v3 .profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-positive-text-v1800{
+  color:#22f4a8!important;
+  -webkit-text-fill-color:#22f4a8!important;
+  text-shadow:0 0 10px rgba(34,244,168,.25)!important;
+}
+
+.dashboard-ticket-v6 .ticket-mini-stats-v876 span > b.metric-negative-text-v1800,
+.profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-negative-text-v1800,
+.profile-static-v3 .profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-negative-text-v1800{
+  color:#ff5d74!important;
+  -webkit-text-fill-color:#ff5d74!important;
+  text-shadow:0 0 10px rgba(255,93,116,.18)!important;
+}
+
+.dashboard-ticket-v6 .ticket-mini-stats-v876 span > b.metric-neutral-text-v1800,
+.profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-neutral-text-v1800,
+.profile-static-v3 .profile-ticket-v6 .ticket-mini-stats-v876 span > b.metric-neutral-text-v1800{
+  color:#f4fbff!important;
+  -webkit-text-fill-color:#f4fbff!important;
+  text-shadow:none!important;
+}

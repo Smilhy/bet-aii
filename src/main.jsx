@@ -70,6 +70,27 @@ const BETAI_PREMIUM_EMAILS = ['smilhytv@gmail.com'];
 const BETAI_PREMIUM_USERNAMES = ['smilhytv'];
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 
+// WERSJA 1801 — kolor metryki wyznaczamy również z tekstu etykiety.
+// Część kart otrzymuje tylko yieldLabel/profitLabel bez yieldValue/profitValue,
+// dlatego wcześniejsza wersja błędnie nadawała kolor neutralny (biały).
+function getMetricNumberV1801(value, label = '') {
+  const direct = Number(value)
+  if (Number.isFinite(direct) && value !== null && value !== undefined && value !== '') return direct
+  const normalized = String(label || '')
+    .replace(/\s/g, '')
+    .replace(',', '.')
+    .replace(/[^0-9+\-.]/g, '')
+  const parsed = Number.parseFloat(normalized)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function getMetricToneClassV1801(value, label = '') {
+  const metric = getMetricNumberV1801(value, label)
+  if (metric > 0) return 'metric-positive-text-v1800'
+  if (metric < 0) return 'metric-negative-text-v1800'
+  return 'metric-neutral-text-v1800'
+}
+
 const BETAI_BLOCKED_TEST_PROFILE_SLUGS = new Set([
   'bet-ai-model',
   'bet-ai',
@@ -11624,9 +11645,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           </span>
           {dashboardAuthorStats?.totalTipsLabel ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b className={Number(dashboardAuthorStats.yieldValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(dashboardAuthorStats.yieldValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Yield: <b className={getMetricToneClassV1801(dashboardAuthorStats.yieldValue, dashboardAuthorStats.yieldLabel)}>{dashboardAuthorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>Bilans: <b className={getMetricToneClassV1801(dashboardAuthorStats.profitValue, dashboardAuthorStats.profitLabel)}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
@@ -21976,10 +21997,10 @@ function ProfileLiveTipCard({
           <span className="ticket-author-row-v874"><strong>{displayName}</strong><b>✓</b></span>
           {authorStats ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b className={Number(authorStats?.yieldValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(authorStats?.yieldValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{authorStats.yieldLabel}</b></span>
+              <span>Yield: <b className={getMetricToneClassV1801(authorStats?.yieldValue, authorStats?.yieldLabel)}>{authorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
               <span>Bilans: <b
-                className={Number(authorStats?.profitValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(authorStats?.profitValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}
+                className={getMetricToneClassV1801(authorStats?.profitValue, authorStats?.profitLabel)}
               >{authorStats.profitLabel}</b></span>
             </div>
           ) : null}
