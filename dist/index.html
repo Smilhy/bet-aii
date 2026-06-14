@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script>
+    // WERSJA 1613 — FHD 1920x1080 / 24" AUTO 75%.
+    // Mocniejsze wykrywanie: łapie zarówno 1920x1080, jak i ~1536x864 przy skalowaniu Windows.
+    (function () {
+      try {
+        var dpr = window.devicePixelRatio || 1;
+        var swCss = window.screen && window.screen.width ? window.screen.width : 0;
+        var shCss = window.screen && window.screen.height ? window.screen.height : 0;
+        var swPhys = Math.round(swCss * dpr);
+        var shPhys = Math.round(shCss * dpr);
+        var maxPhys = Math.max(swPhys, shPhys);
+        var minPhys = Math.min(swPhys, shPhys);
+        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
+        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
+        var maxView = Math.max(vw, vh);
+        var minView = Math.min(vw, vh);
+        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+        var isTouch = touchPoints > 1;
+        var manualZoomOut = swCss > 0 && vw > swCss * 1.08;
+        var is2k = maxPhys >= 2450 || maxView >= 2200;
+        var is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085;
+        var isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115;
+        var isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115;
+        var isFhdScaledViewport = maxView >= 1500 && maxView <= 1605 && minView >= 760 && minView <= 930;
+        var isFhdNativeViewport = maxView >= 1800 && maxView <= 1945 && minView >= 900 && minView <= 1115;
+        if (!isTouch && !manualZoomOut && !is2k && !is1680x1050 && (isFhdPhysical || isFhdCss || isFhdScaledViewport || isFhdNativeViewport)) {
+          document.documentElement.classList.add('betai-fhd-auto75-v1613');
+          document.documentElement.style.setProperty('--betai-fhd-auto75-scale', '0.75');
+          document.documentElement.style.setProperty('--betai-fhd-auto75-width', '133.333vw');
+          window.__BETAI_FHD_AUTO75_V1613__ = true;
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+
+  <script>
+    // WERSJA 1612 — FHD 1920x1080 / 24" AUTO 80% przez prawdziwy CSS zoom.
+    // Łapie też Windows scaling 125% (screen 1536 CSS px * DPR 1.25 = 1920 fizycznie).
+    // Nie dotyka 2K, 1680x1050, tabletu ani telefonu. Nie aktywuje się, gdy użytkownik sam ustawi zoom 80%.
+    (function () {
+      try {
+        var dpr = window.devicePixelRatio || 1;
+        var swCss = window.screen && window.screen.width ? window.screen.width : 0;
+        var shCss = window.screen && window.screen.height ? window.screen.height : 0;
+        var swPhys = Math.round(swCss * dpr);
+        var shPhys = Math.round(shCss * dpr);
+        var maxPhys = Math.max(swPhys, shPhys);
+        var minPhys = Math.min(swPhys, shPhys);
+        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
+        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
+        var maxView = Math.max(vw, vh);
+        var minView = Math.min(vw, vh);
+        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+        var isTouch = touchPoints > 1;
+        var manualZoomOut = swCss > 0 && vw > swCss * 1.08;
+        var isFhdPhysical = maxPhys >= 1880 && maxPhys <= 1945 && minPhys >= 1030 && minPhys <= 1115;
+        var isFhdCss = Math.max(swCss, shCss) >= 1880 && Math.max(swCss, shCss) <= 1945 && Math.min(swCss, shCss) >= 1030 && Math.min(swCss, shCss) <= 1115;
+        var isViewFhdLike = maxView >= 1450 && maxView <= 1945 && minView >= 760 && minView <= 1085;
+        var is2k = maxPhys >= 2450 || maxView >= 2200;
+        var is1680x1050 = maxPhys >= 1640 && maxPhys <= 1725 && minPhys >= 1010 && minPhys <= 1085;
+        if (!isTouch && !manualZoomOut && !is2k && !is1680x1050 && (isFhdPhysical || isFhdCss || isViewFhdLike)) {
+          document.documentElement.classList.add('betai-fhd-auto80-v1612');
+          document.documentElement.style.setProperty('--betai-fhd-auto80-scale', '0.8');
+          document.documentElement.style.setProperty('--betai-fhd-auto80-width', '125vw');
+          window.__BETAI_FHD_AUTO80_V1612__ = true;
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <script>
+    // WERSJA 1592 — tablet 10": zostawia efekt 50%, ale rozciąga stronę do pełnej szerokości tabletu.
+    // Nie dotyka desktopu 2K, TV 2K, laptopów bez dotyku ani telefonów.
+    (function () {
+      try {
+        var touchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+        var coarse = false;
+        try { coarse = window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches; } catch (e) {}
+
+        var vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0, 0);
+        var vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0, 0);
+        var sw = window.screen && window.screen.width ? window.screen.width : vw;
+        var sh = window.screen && window.screen.height ? window.screen.height : vh;
+        var shortSide = Math.min(sw, sh, vw || sw);
+        var longSide = Math.max(sw, sh, vw || sw);
+
+        // Tablet 10" może zgłaszać różne wartości zależnie od Chrome/Samsung/desktop mode.
+        // Łapiemy tablety dotykowe, ale omijamy telefony i zwykłe laptopy/monitory.
+        var isTouchDevice = touchPoints > 1 || coarse;
+        var looksLikeTablet = isTouchDevice && shortSide >= 600 && longSide >= 900;
+        var notHugeDesktopTouch = longSide <= 2200;
+
+        if (looksLikeTablet && notHugeDesktopTouch) {
+          var baseWidth = vw || shortSide || 1000;
+          // efekt jak przeglądarkowy zoom 50%: viewport roboczy = 2x szerokość tabletu
+          var layoutWidth = Math.round(Math.max(1600, Math.min(2600, baseWidth * 2)));
+          var viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.setAttribute('content', 'width=' + layoutWidth + ', initial-scale=0.5, maximum-scale=5.0, user-scalable=yes');
+          }
+          document.documentElement.classList.add('betai-tablet-wide50');
+          document.documentElement.style.setProperty('--betai-tablet-layout-width', layoutWidth + 'px');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <title>Bet+AI — Dashboard</title>
+  <link rel="preload" as="image" href="/auth-brand-470-transparent.png" fetchpriority="high">
+  <link rel="preload" as="image" href="/auth-right-484.png" fetchpriority="high">
+
+
+    <script type="module" crossorigin src="/assets/index-QvsGjgHP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DAQsSQtJ.css">
+  </head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
