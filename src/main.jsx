@@ -780,9 +780,11 @@ function compactNumberLabel(value, decimals = 2) {
 
 function getAuthorStatsLabels(sourceStats) {
   const stats = sourceStats || finalizeAuthorStats(null, null)
+  const yieldValue = Number(stats.yield || 0)
   const profit = Number(stats.profit || 0)
   return {
-    yieldLabel: `${compactNumberLabel(stats.yield, 2)}%`,
+    yieldLabel: `${compactNumberLabel(yieldValue, 2)}%`,
+    yieldValue,
     totalTipsLabel: String(Number(stats.totalTips || 0) || 0),
     profitLabel: `${profit >= 0 ? '+' : ''}${profit.toFixed(2)}`,
     profitValue: profit,
@@ -11622,9 +11624,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           </span>
           {dashboardAuthorStats?.totalTipsLabel ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Yield: <b className={Number(dashboardAuthorStats.yieldValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(dashboardAuthorStats.yieldValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{dashboardAuthorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>
@@ -21974,10 +21976,10 @@ function ProfileLiveTipCard({
           <span className="ticket-author-row-v874"><strong>{displayName}</strong><b>✓</b></span>
           {authorStats ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b>{authorStats.yieldLabel}</b></span>
+              <span>Yield: <b className={Number(authorStats?.yieldValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(authorStats?.yieldValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}>{authorStats.yieldLabel}</b></span>
               <span>Oddane typy: <b>{authorStats.totalTipsLabel}</b></span>
               <span>Bilans: <b
-                className={Number(authorStats?.profitValue || 0) > 0 ? 'profit-positive-text' : Number(authorStats?.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}
+                className={Number(authorStats?.profitValue || 0) > 0 ? 'metric-positive-text-v1800' : Number(authorStats?.profitValue || 0) < 0 ? 'metric-negative-text-v1800' : 'metric-neutral-text-v1800'}
               >{authorStats.profitLabel}</b></span>
             </div>
           ) : null}

@@ -75202,3 +75202,44 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   .betai-score-teams-v1790 > div{grid-template-columns:22px minmax(0,1fr) 23px!important}
   .betai-score-metric-tabs-v1790{grid-template-columns:1fr 1fr!important}
 }
+
+/* WERSJA 1800 — semantyczne kolory Yield i Bilans: plus zielony, minus czerwony */
+.metric-positive-text-v1800,
+.dashboard-ticket-v6 .ticket-mini-stats-v876 b.metric-positive-text-v1800,
+.profile-static-v3 .ticket-mini-stats-v876 b.metric-positive-text-v1800,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .ticket-mini-stats-v876 b.metric-positive-text-v1800{
+  color:#22f4a8!important;
+  text-shadow:0 0 10px rgba(34,244,168,.22)!important;
+}
+
+.metric-negative-text-v1800,
+.dashboard-ticket-v6 .ticket-mini-stats-v876 b.metric-negative-text-v1800,
+.profile-static-v3 .ticket-mini-stats-v876 b.metric-negative-text-v1800,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .ticket-mini-stats-v876 b.metric-negative-text-v1800{
+  color:#ff5d74!important;
+  text-shadow:0 0 10px rgba(255,93,116,.16)!important;
+}
+
+.metric-neutral-text-v1800,
+.dashboard-ticket-v6 .ticket-mini-stats-v876 b.metric-neutral-text-v1800,
+.profile-static-v3 .ticket-mini-stats-v876 b.metric-neutral-text-v1800,
+.app-shell.no-rightbar-page article.profile-ticket-v6:not(.dashboard-ticket-v6) .ticket-mini-stats-v876 b.metric-neutral-text-v1800{
+  color:#f4fbff!important;
+  text-shadow:none!important;
+}
+
+/* Mój profil — górne karty Yield i Profit korzystają z tych samych kolorów */
+.profile-static-v3 .profile-stats-cards-grid .profile-stat-card.profile-stat-card-success strong{
+  color:#22f4a8!important;
+  text-shadow:0 0 14px rgba(34,244,168,.22)!important;
+}
+
+.profile-static-v3 .profile-stats-cards-grid .profile-stat-card.profile-stat-card-danger strong{
+  color:#ff5d74!important;
+  text-shadow:0 0 14px rgba(255,93,116,.18)!important;
+}
+
+.profile-static-v3 .profile-stats-cards-grid .profile-stat-card.profile-stat-card-neutral strong{
+  color:#f4fbff!important;
+  text-shadow:none!important;
+}

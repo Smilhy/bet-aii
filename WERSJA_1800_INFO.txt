@@ -1,0 +1,8 @@
+WERSJA 1800 — kolory Yield i Bilans
+
+Zmiany:
+- Dashboard: Yield dodatni = zielony, ujemny = czerwony, zero = biały.
+- Dashboard: Bilans dodatni = zielony, ujemny = czerwony, zero = biały.
+- Mój profil — karty typów: identyczna logika kolorów dla Yield i Bilansu.
+- Mój profil — karty „Yield” i „Profit”: dodatnie zielone, ujemne czerwone.
+- Nie zmieniono sposobu liczenia statystyk ani logiki rozliczania.
