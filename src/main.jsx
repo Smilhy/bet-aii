@@ -827,7 +827,13 @@ async function loadBetaiBotDashboardStatsV1794() {
   }
 
   betaiBotDashboardStatsCacheV1794.promise = (async () => {
-    let rows = []
+    let aiRows = []
+    let manualRows = []
+    let importedProfileStats = null
+
+    // FIX 1796: dashboard używa dokładnie tego samego zestawu źródeł co profil bota:
+    // ai_bets + tips + imported_* z profiles. Dzięki temu karta nie pokazuje kropek
+    // ani statystyk policzonych tylko z aktualnie widocznych typów marketplace.
     try {
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), 8000)
@@ -838,25 +844,36 @@ async function loadBetaiBotDashboardStatsV1794() {
       clearTimeout(timer)
       if (response.ok) {
         const payload = await response.json().catch(() => ({}))
-        rows = Array.isArray(payload?.bets) ? payload.bets : []
+        aiRows = Array.isArray(payload?.bets) ? payload.bets : []
       }
     } catch (_) {}
 
-    if (!rows.length && isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase
-          .from('ai_bets')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(500)
-        if (!error && Array.isArray(data)) rows = data
+        const [aiResult, tipsResult, profilesResult] = await Promise.all([
+          supabase.from('ai_bets').select('*').order('created_at', { ascending: false }).limit(500),
+          supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(700),
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(250),
+        ])
+        if (!aiRows.length && !aiResult?.error && Array.isArray(aiResult?.data)) aiRows = aiResult.data
+        if (!tipsResult?.error && Array.isArray(tipsResult?.data)) manualRows = tipsResult.data
+        if (!profilesResult?.error && Array.isArray(profilesResult?.data)) {
+          const botProfiles = profilesResult.data.filter(isBetaiMultisportRecordV1794)
+          const mergedBotProfile = typeof mergeProfilesPreferStats === 'function'
+            ? (mergeProfilesPreferStats(botProfiles)[0] || botProfiles[0] || null)
+            : (botProfiles[0] || null)
+          importedProfileStats = getImportedProfileStats(mergedBotProfile)
+        }
       } catch (_) {}
     }
 
-    const botRows = dedupeBotAiRowsV1794(rows.filter(isBetaiMultisportRecordV1794))
-    const dynamicStats = buildCombinedTipStatsV1791(botRows)
-    const value = Number(dynamicStats.totalTips || 0) > 0
-      ? finalizeAuthorStats(dynamicStats, null)
+    const allBotRows = dedupeBotAiRowsV1794([
+      ...aiRows.filter(isBetaiMultisportRecordV1794),
+      ...manualRows.filter(isBetaiMultisportRecordV1794),
+    ])
+    const dynamicStats = buildCombinedTipStatsV1791(allBotRows)
+    const value = Number(dynamicStats.totalTips || 0) > 0 || importedProfileStats
+      ? finalizeAuthorStats(dynamicStats, importedProfileStats)
       : (betaiBotDashboardStatsCacheV1794.value || null)
 
     if (value) {
@@ -880,7 +897,10 @@ async function loadBetaiBotDashboardStatsV1794() {
 function useBetaiBotDashboardStatsV1794(tip) {
   const isBot = isBetaiMultisportRecordV1794(tip)
   const stored = isBot ? readStoredBotDashboardStatsV1794() : null
-  const [stats, setStats] = useState(() => isBot ? (betaiBotDashboardStatsCacheV1794.value || stored?.value || null) : null)
+  const immediateFallback = isBot
+    ? (betaiBotDashboardStatsCacheV1794.value || stored?.value || tip?.author_visible_stats || getImportedProfileStats(tip) || getTipFallbackAuthorStats(tip))
+    : null
+  const [stats, setStats] = useState(() => immediateFallback)
 
   useEffect(() => {
     if (!isBot) {
@@ -11321,7 +11341,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const dashboardAuthorStats = getAuthorStatsLabels(
     dashboardBotStatsV1794 || tip.author_visible_stats || getTipFallbackAuthorStats(tip)
   )
-  const dashboardBotStatsLoadingV1794 = isDashboardBotV1794 && !dashboardBotStatsV1794
+  const dashboardBotStatsLoadingV1794 = false
   const showFollowButton = !isOwnTip
   const followLookupKey = normalizeEmail(author || cardAuthor || tip.author_name || '')
   const followIdKey = String(authorId || tip.author_id || tip.user_id || '')
@@ -11446,9 +11466,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           </span>
           {dashboardAuthorStats?.totalTipsLabel ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.yieldLabel}</b></span>
-              <span>Oddane typy: <b>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={dashboardBotStatsLoadingV1794 ? 'profit-neutral-text' : Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.profitLabel}</b></span>
+              <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>

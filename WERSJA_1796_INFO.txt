@@ -1,0 +1,9 @@
+WERSJA 1796 — Dashboard: realne statystyki betai-multisport-ai bez kropek
+
+Zmiany:
+- usunięto wyświetlanie „…” na karcie bota,
+- karta natychmiast pokazuje ostatnie dostępne statystyki,
+- dashboard pobiera ten sam zestaw danych co profil: ai_bets + tips + profiles.imported_*,
+- po pobraniu dane są automatycznie podmieniane na aktualne,
+- cache pozostaje, aby nie tworzyć pętli requestów,
+- zachowany fix package-lock/Netlify z wersji 1795.
