@@ -674,6 +674,58 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
 }
 
 
+// WERSJA 1797 — jeden kanon statystyk betai-multisport-ai dla profilu,
+// dashboardu i rankingu. Przy tej samej liczbie typów pierwszeństwo ma
+// zestaw policzony z realnych rekordów, a nie starsze imported_*.
+function chooseBetaiBotCanonicalStatsV1797(dynamicStats = null, importedStats = null, visibleStats = null) {
+  const dynamicFinal = dynamicStats ? finalizeAuthorStats(dynamicStats, null) : null
+  const emptyStats = {
+    totalTips: 0,
+    wonTips: 0,
+    lostTips: 0,
+    voidTips: 0,
+    pendingTips: 0,
+    totalStaked: 0,
+    profit: 0,
+    avgOdds: 0,
+    highestOdds: 0,
+    yield: 0,
+  }
+
+  const candidates = [
+    dynamicFinal ? { ...emptyStats, ...dynamicFinal, _priorityV1797: 3 } : null,
+    visibleStats ? { ...emptyStats, ...visibleStats, _priorityV1797: 2 } : null,
+    importedStats ? { ...emptyStats, ...importedStats, _priorityV1797: 1 } : null,
+  ].filter(Boolean)
+
+  if (!candidates.length) return null
+
+  const chosen = [...candidates].sort((a, b) => {
+    const totalDiff = Number(b.totalTips || 0) - Number(a.totalTips || 0)
+    if (totalDiff !== 0) return totalDiff
+
+    const completenessA =
+      (Number(a.totalStaked || 0) > 0 ? 4 : 0) +
+      (Number(a.profit || 0) !== 0 ? 3 : 0) +
+      (Number(a.yield || 0) !== 0 ? 2 : 0) +
+      (Number(a.wonTips || 0) + Number(a.lostTips || 0) > 0 ? 1 : 0)
+    const completenessB =
+      (Number(b.totalStaked || 0) > 0 ? 4 : 0) +
+      (Number(b.profit || 0) !== 0 ? 3 : 0) +
+      (Number(b.yield || 0) !== 0 ? 2 : 0) +
+      (Number(b.wonTips || 0) + Number(b.lostTips || 0) > 0 ? 1 : 0)
+
+    if (completenessB !== completenessA) return completenessB - completenessA
+    return Number(b._priorityV1797 || 0) - Number(a._priorityV1797 || 0)
+  })[0]
+
+  const cleaned = { ...chosen }
+  delete cleaned._priorityV1797
+  cleaned.voidTips = Math.max(...candidates.map(stats => Number(stats.voidTips || 0)))
+  return cleaned
+}
+
+
 function normalizeBetTypeForStats(marketValue = '', pickValue = '', source = {}) {
   const stored = String(
     source?.bet_market_type ||
@@ -872,8 +924,19 @@ async function loadBetaiBotDashboardStatsV1794() {
       ...manualRows.filter(isBetaiMultisportRecordV1794),
     ])
     const dynamicStats = buildCombinedTipStatsV1791(allBotRows)
-    const value = Number(dynamicStats.totalTips || 0) > 0 || importedProfileStats
-      ? finalizeAuthorStats(dynamicStats, importedProfileStats)
+    const visibleStats = allBotRows
+      .map(row => row?.author_visible_stats)
+      .filter(stats => stats && typeof stats === 'object')
+      .sort((a, b) => {
+        const totalDiff = Number(b?.totalTips || 0) - Number(a?.totalTips || 0)
+        if (totalDiff !== 0) return totalDiff
+        const profitDiff = Math.abs(Number(b?.profit || 0)) - Math.abs(Number(a?.profit || 0))
+        if (profitDiff !== 0) return profitDiff
+        return Math.abs(Number(b?.yield || 0)) - Math.abs(Number(a?.yield || 0))
+      })[0] || null
+
+    const value = Number(dynamicStats.totalTips || 0) > 0 || importedProfileStats || visibleStats
+      ? chooseBetaiBotCanonicalStatsV1797(dynamicStats, importedProfileStats, visibleStats)
       : (betaiBotDashboardStatsCacheV1794.value || null)
 
     if (value) {
@@ -18435,12 +18498,58 @@ function LeaderboardView({
   const [sportFilter, setSportFilter] = useState('all')
   const [rankingVisibleCount, setRankingVisibleCount] = useState(10)
   const [claimedChallenges, setClaimedChallenges] = useState({})
+  const [rankingBotCanonicalStatsV1797, setRankingBotCanonicalStatsV1797] = useState(() => {
+    const stored = readStoredBotDashboardStatsV1794()
+    return betaiBotDashboardStatsCacheV1794.value || stored?.value || null
+  })
+
+  useEffect(() => {
+    let active = true
+    const refreshBotRankingStatsV1797 = () => {
+      loadBetaiBotDashboardStatsV1794().then(value => {
+        if (active && value) setRankingBotCanonicalStatsV1797(value)
+      }).catch(() => {})
+    }
+    refreshBotRankingStatsV1797()
+    window.addEventListener('betai:tips-updated', refreshBotRankingStatsV1797)
+    window.addEventListener('betai:ai-bets-updated', refreshBotRankingStatsV1797)
+    return () => {
+      active = false
+      window.removeEventListener('betai:tips-updated', refreshBotRankingStatsV1797)
+      window.removeEventListener('betai:ai-bets-updated', refreshBotRankingStatsV1797)
+    }
+  }, [])
 
   const allRows = buildLiveLeaderboardRows(ranking, tips)
     .filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)))
     .map(row => {
-    const rowName = formatRankingName(row)
-    const rowRef = row.tipster_id || row.id || row.user_id || row.author_id || row.email || row.username || rowName
+    const isBotRowV1797 = isBetaiMultisportRecordV1794(row)
+    const canonical = isBotRowV1797 && rankingBotCanonicalStatsV1797
+      ? rankingBotCanonicalStatsV1797
+      : null
+    const canonicalWins = Number(canonical?.wonTips || 0)
+    const canonicalLosses = Number(canonical?.lostTips || 0)
+    const canonicalRow = canonical ? {
+      ...row,
+      totalTips: Number(canonical.totalTips || 0),
+      total_tips: Number(canonical.totalTips || 0),
+      wins: canonicalWins,
+      losses: canonicalLosses,
+      voids: Number(canonical.voidTips || 0),
+      voidTips: Number(canonical.voidTips || 0),
+      pending: Number(canonical.pendingTips || 0),
+      pendingTips: Number(canonical.pendingTips || 0),
+      roi: Number(canonical.yield || 0),
+      yield: Number(canonical.yield || 0),
+      earnings: Number(canonical.profit || 0),
+      profit: Number(canonical.profit || 0),
+      total_staked: Number(canonical.totalStaked || 0),
+      winrate: (canonicalWins + canonicalLosses) > 0
+        ? (canonicalWins / (canonicalWins + canonicalLosses)) * 100
+        : Number(row.winrate || 0),
+    } : row
+    const rowName = formatRankingName(canonicalRow)
+    const rowRef = canonicalRow.tipster_id || canonicalRow.id || canonicalRow.user_id || canonicalRow.author_id || canonicalRow.email || canonicalRow.username || rowName
     const rowKeys = [
       rowRef,
       row.tipster_id,
@@ -18455,14 +18564,14 @@ function LeaderboardView({
     const statsByKey = rowKeys.reduce((found, key) => found || followStats?.[key], null) || {}
     const followers = Math.max(Number(row.followers || 0), Number(statsByKey.followers || 0))
     return {
-      ...row,
+      ...canonicalRow,
       rowName,
       rowRef,
       rowKeys,
       followers,
       isFollowing: rowKeys.some(key => followingTipsters?.has?.(key)),
-      avatarUrl: getProfileAvatarUrl(row),
-      displayBadges: getLiveRankingBadges(row)
+      avatarUrl: getProfileAvatarUrl(canonicalRow),
+      displayBadges: getLiveRankingBadges(canonicalRow)
     }
   })
 
