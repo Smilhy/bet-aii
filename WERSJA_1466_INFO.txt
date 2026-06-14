@@ -1,8 +1,0 @@
-WERSJA 1466 — pełna lista popularnych rynków piłka nożna
-Zmiany:
-- dodana pełna profesjonalna lista popularnych typów piłkarskich w filtrze Rodzaj typu
-- dodane warianty: 1X2, double chance, DNB, BTTS Tak/Nie, over/under, handicap home/away z liniami, team totals, połowy, rożne, kartki, dokładny wynik
-- statystyki nadal automatycznie dopisują realne typy z zapisanych typów AI
-- poprawiona klasyfikacja dla nowych wariantów, żeby kolejne typy wpadały do właściwych kategorii
-- logiki rozliczania nie ruszano
-- build OK (pozostały wcześniejsze warningi projektu)

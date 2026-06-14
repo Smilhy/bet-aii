@@ -1,9 +1,0 @@
-WERSJA 1262 - RECZNE TYPY WIDOCZNE NA DASHBOARDZIE
-
-Baza: 1256.
-Zmiany:
-- świeżo dodany typ ręczny pozostaje widoczny na dashboardzie,
-- admin_approval_status='pending' nie ukrywa świeżego typu, jeśli nie ma zgłoszonego rozliczenia,
-- admin ukrywa typ dopiero po ręcznym zgłoszeniu wyniku do weryfikacji,
-- przy dodawaniu typu ustawiane są bezpieczne wartości manual_settlement_status/admin_approval_status,
-- bez SQL, bez zmian w Supabase, bez zmian w package.json / Netlify.

@@ -1,6 +1,0 @@
-WERSJA 1200
-Laptop 15 cali 1920x1080 — wariant czytelny, większe UI.
-- 1199 ściskało ekran do 0.90625 i tekst był za mały.
-- 1200 ustawia skalę na 0.965, czyli ok. +6.5% większy widok.
-- Powiększono też social dock, panel LIVE i teksty formularza.
-- Priorytet: czytelność na laptopie 15 cali, nie maksymalne upchnięcie całej grafiki.

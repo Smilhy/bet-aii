@@ -1,8 +1,0 @@
-WERSJA 1233 — LAPTOP 15.6 / 1920x1080 REAL BROWSER 90
-Baza: 1229.
-- 27 cali / 2K bez zmian.
-- 32 cale / 2K bez zmian.
-- 20 cali / 1680x1050 bez zmian.
-- Dodano JS, który dla laptopa FHD/1920x1080 lub viewportu ok. 1536x864 wymusza body zoom 90%.
-- To ma naśladować ręczne ustawienie przeglądarki na 90%, ale użytkownik zostaje na 100%.
-- Dotyczy loginu i dashboardu.

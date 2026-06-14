@@ -1,9 +1,0 @@
-WERSJA 1455 — naprawa dolnej wyszukiwarki Typy AI
-Zmiany:
-- dolna wyszukiwarka filtruje Typy AI na dziś/jutro
-- dolna wyszukiwarka filtruje Mecze Result
-- dolna wyszukiwarka filtruje Ligi
-- dolna wyszukiwarka działa też na Statystyki AI jako query dla danych
-- wyszukiwanie po drużynie, lidze, sporcie, rynku, prediction, statusie i dacie
-- bez zmian w logice rozliczania
-- build OK (pozostały wcześniejsze warningi projektu)

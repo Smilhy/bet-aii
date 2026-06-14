@@ -1,6 +1,0 @@
-Wersja 1138
-- Artykuły/TV Live: poprawione kodowanie polskich znaków z funkcji Sport.pl.
-- Baner wybiera artykuły z obrazkiem, żeby nie pokazywać pustego tła.
-- Poprawione wyświetlanie obrazów w hero/banerze.
-- Usunięte wizualne napisy Sport.pl przy kartach/fallbackach, logika pobierania zostaje.
-- Bez zmian w Top typerzy, menu, avatarach, follow, cenniku i osiągnięciach.

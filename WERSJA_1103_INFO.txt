@@ -1,1 +1,0 @@
-Wersja 1103: usunięta prawa kafelka "AI ANALIZA MECZU" w zakładce Top typerzy / marketplace. Nie ruszano logiki innych zakładek.

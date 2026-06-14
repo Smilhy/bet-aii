@@ -1,2 +1,0 @@
-WERSJA 31 — tylko separator NAWIGACJA na bazie stabilnej V26.
-Nie zmieniano logo, ikon, zakładek ani logiki.

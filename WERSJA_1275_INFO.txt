@@ -1,7 +1,0 @@
-WERSJA 1275 UI SPORT PREMIUM POLISH
-
-Zmiany:
-- Cofnięto duże sztuczne kafle sportów z wersji 1274.
-- Dodano subtelny niski pasek popularnych sportów pod komunikatem API.
-- Dopracowano wizualnie boczny panel SPORT hover/active.
-- Nie ruszano logiki, API-Football, Supabase cache, Top Mecze, AI, dashboardu ani SQL.

@@ -1,6 +1,0 @@
-WERSJA 1187
-Zmiana tylko linków social na ekranie logowania:
-- Telegram: https://t.me/+QLRN5N0RRuY2NmQ0
-- Discord: https://discord.gg/hskNFGcz
-- TikTok: https://www.tiktok.com/@betaiofficial
-Logika strony bez zmian.

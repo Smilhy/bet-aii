@@ -1,8 +1,0 @@
-WERSJA 1222 — 1680x1050 = 67 PROCENT LOGIN + DASHBOARD
-Baza: 1205.
-- 27 cali / 2K bez zmian.
-- Tylko 1600-1849px.
-- Użytkownik ma zoom przeglądarki 100%.
-- Cały root ma globalne 67%.
-- Login i dashboard są objęte tym samym 67%.
-- Login ma korektę margin-left/scale, żeby social/LIVE nie nachodziło na panel.

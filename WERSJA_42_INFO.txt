@@ -1,1 +1,0 @@
-WERSJA 42 — Stripe return user mismatch fix. Sync zapisuje zakup na kupującym z sesji Stripe, a jeśli przeglądarka jest zalogowana na inne konto, frontend wylogowuje obecną sesję i prosi o zalogowanie właściwym kontem.

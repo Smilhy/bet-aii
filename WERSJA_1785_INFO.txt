@@ -1,5 +1,0 @@
-WERSJA 1785 — prawa karta „Wypłaciliśmy naszym typerom”
-
-Zmiana:
-- prawa dolna karta dostała dokładnie ten sam ciemny kolor tła / ramki / obramowania jak górna karta „Twoje polecenia”.
-- nie ruszano logiki, tylko wygląd obramowania i tła.

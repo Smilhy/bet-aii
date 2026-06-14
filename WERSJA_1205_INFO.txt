@@ -1,8 +1,0 @@
-WERSJA 1205 — RESPONSIVE LOGIN OPTION A
-Start naprawy loginu bez zmiany klimatu premium.
-- Screen/dashboard zostaje jako podgląd/tło.
-- Login dostał osobną czytelność fontów.
-- Usunięto/ukryto: 'Gotowy do logowania.' oraz 'Twoje dane są w pełni zabezpieczone'.
-- Ukryto małą kropkę przy opiniach.
-- Dodano zachowania dla: 2K, 1920, 1680x1050, laptop 15, tablet, telefon.
-- To jest etap 1. Po screenach z monitorów poprawiamy wartości skalowania i przechodzimy do dashboardu.

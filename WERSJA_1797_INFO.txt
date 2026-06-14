@@ -1,8 +1,0 @@
-WERSJA 1797 — Ranking: profit bota identyczny jak w profilu
-
-Naprawione:
-- ranking betai-multisport-ai nie korzysta już ze starego imported_profit,
-- ranking pobiera wspólny kanon statystyk używany przez dashboard i profil,
-- przy tej samej liczbie typów pierwszeństwo mają realne rekordy ai_bets/tips,
-- profit, yield, liczba typów, wygrane, przegrane i void są synchronizowane,
-- cache odświeża się po zmianie typów AI.

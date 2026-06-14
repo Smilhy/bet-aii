@@ -1,5 +1,0 @@
-WERSJA 1198
-- Badge LIVE wrócił na prawą stronę.
-- Panel opinii Bet+AI dostał kolory premium dark/teal jak support chat.
-- Zmienione: nagłówek, przycisk zamknięcia, pola, gwiazdki, przycisk Dodaj opinię, lista opinii i przycisk FAB.
-- Logika bez zmian.

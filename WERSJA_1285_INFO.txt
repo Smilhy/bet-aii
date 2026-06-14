@@ -1,3 +1,0 @@
-1285 FIX COUNTRY COUNTS CACHE
-
-Naprawa: kliknięcie kraju/ligi w Dodaj typ nie nadpisuje globalnych liczników krajów/lig pojedynczą listą meczów. Liczniki pobierane są na wejściu z backendowego cache, a aktualizacja lokalna następuje tylko przy szerokim pobraniu wszystkich lig. Bez zmian SQL/API/Supabase/Typy AI.

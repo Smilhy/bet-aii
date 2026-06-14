@@ -1,6 +1,0 @@
-WERSJA 1628
-- Poprawiono realny układ logowania pod widok z prezentacją.
-- Ramka logowania została lekko wydłużona.
-- Zmniejszono pionowe odstępy i wysokości pól, żeby przycisk „Obejrzyj prezentację” mieścił się w ramce.
-- Ukryto zbędną notkę „bezpieczne dane” nad prezentacją, żeby nie rozpychała panelu.
-- Komunikat BETA zostaje z małą czcionką i żółtym wyróżnieniem „zoomu/lupy”.

@@ -1,1 +1,0 @@
-WERSJA 1563 — usunięte automatyczne skalowanie 67/80 i czyszczenie starych zapisów skali przy wejściu.

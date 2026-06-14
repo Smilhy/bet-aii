@@ -1,1 +1,0 @@
-WERSJA 15 — dodane neonowe ramki i pulsowanie do ikon Saldo/Coin/Odblokowane w lewym panelu premium.

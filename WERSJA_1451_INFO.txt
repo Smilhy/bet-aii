@@ -1,9 +1,0 @@
-WERSJA 1451 — fix prawdziwych wyników Mecze Result
-Zmiany:
-- naprawione fałszywe 0-0 w Mecze Result
-- brak realnego wyniku pokazuje - : - zamiast 0 - 0
-- zapis live_score_home/live_score_away nie używa już domyślnego 0
-- settlement API nie zamienia null/brak wyniku na 0
-- generate-live-ai-picks zapisuje null przy braku wyniku
-- zachowany wygląd/statystyki z wersji 1450
-- build OK (pozostały wcześniejsze warningi projektu)

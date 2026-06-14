@@ -1,1 +1,0 @@
-WERSJA 1653 — AKO legs_count fix: licznik zdarzeń bierze realną długość legs_json i naprawia przyszłe zapisy.

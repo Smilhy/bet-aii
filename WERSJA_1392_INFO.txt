@@ -1,9 +1,0 @@
-WERSJA 1392
-
-Polecenia — zwiększone nagrody x10:
-- 10 poleceń = +10 coin
-- 50 poleceń = +100 coin
-- 150 poleceń = +1000 coin
-- 300 poleceń = +10000 coin
-
-Baza: WERSJA 1391

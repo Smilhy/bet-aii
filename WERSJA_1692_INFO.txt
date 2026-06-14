@@ -1,7 +1,0 @@
-WERSJA 1692 — Testowy próg Typów AI:
-- kurs minimalny: 1.50
-- kurs maksymalny: NO LIMIT
-- prawdopodobieństwo minimalne: 48%
-
-Cel: sprawdzić, czy skaner znajduje więcej typów przy łagodniejszym progu.
-Nie ruszano typów typerów, AKO, portfela ani rozliczania użytkowników.

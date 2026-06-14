@@ -1,1 +1,0 @@
-WERSJA 1584: naprawa bledu Cannot access przed inicjalizacja po imporcie typow kuponow. Przeniesiono mergeOrderedStatsRowsV1580 nad pierwsze uzycie. Logika importu smilhytv bez zmian.

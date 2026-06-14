@@ -1,8 +1,0 @@
-WERSJA 1272 — UI HERO SPORT ANIMATION
-
-Zmiana tylko wizualna w ekranie: Dodaj typ.
-- Nowy animowany baner sportowy CSS.
-- Dodane lekkie animacje: siatka, linie danych, piłka, mini sporty, karta AI scanner.
-- Nie zmieniono logiki pobierania meczów.
-- Nie zmieniono Top Mecze, Supabase cache, API, dashboardu, Typów AI, live chatu, powiadomień ani cennika.
-- SQL nie jest potrzebny.

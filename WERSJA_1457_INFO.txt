@@ -1,6 +1,0 @@
-WERSJA 1457 — usunięte karty KPI ze Statystyki AI
-Zmiany:
-- całkowicie ukryty rząd kart KPI w zakładce Statystyki AI
-- zostawione wykresy, tabele, filtry i reszta statystyk
-- nie ruszano rozliczania ani logiki danych
-- build OK (pozostały wcześniejsze warningi projektu)

@@ -1,8 +1,0 @@
-WERSJA 1465 — poprawa klasyfikacji BTTS Tak/Nie
-Zmiany:
-- BTTS w statystykach rodzajów typów wykrywa teraz TAK i NIE z marketu oraz prediction
-- rozpoznaje: BTTS No, BTTS - No, Both Teams To Score No, Obie strzelą Nie, Nie, No
-- rozpoznaje: BTTS Yes, Both Teams To Score Yes, Obie strzelą Tak, Tak, Yes
-- jeśli danych nie da się rozpoznać, zapisuje jako BTTS — Inne zamiast wrzucać wszystko do Tak
-- logiki rozliczania nie ruszałem
-- build OK (pozostały wcześniejsze warningi projektu)

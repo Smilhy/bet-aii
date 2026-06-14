@@ -1,6 +1,0 @@
-WERSJA 1569 — VIDEO MODAL + OPINIE + MISJE
-1. Powiększone okno prezentacji video na ekranie logowania o około 20%.
-2. Film w public/media został ponownie zoptymalizowany pod start odtwarzania (+faststart).
-3. Naprawione gwiazdki opinii w dymku Opinie Bet+AI.
-4. Naprawione gwiazdki w zakładce Mój profil > Opinie.
-5. Poprawiony komunikat misji społeczności — zamiast „Nieznana misja” pokazuje nazwę misji/zrozumiały komunikat.

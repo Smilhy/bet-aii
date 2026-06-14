@@ -1,7 +1,0 @@
-WERSJA 1327
-
-Zmiana:
-- całkowicie usunięty box "Ranking typerów" z prawego sidebara profilu.
-
-Pliki zmienione:
-- src/main.jsx

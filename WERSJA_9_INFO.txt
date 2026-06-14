@@ -1,5 +1,0 @@
-WERSJA 9 — Sidebar dopasowany do realnej szerokości.
-- mniejsza czcionka nicku, żeby pełny login mieścił się bez kropek,
-- ciemniejszy kolor panelu, mniej świecenia,
-- bardziej kompaktowe logo, statystyki i przyciski,
-- logika aplikacji bez zmian.

@@ -1,4 +1,0 @@
-WERSJA 1643 — STAWKA BEZ WALUTY NA KARCIE TYPU
-
-Zmiana: w karcie typu kwota w sekcji STAWKA pokazuje sama liczbe, bez dopisku zl.
-SQL nie jest wymagany.

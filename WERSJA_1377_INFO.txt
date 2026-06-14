@@ -1,9 +1,0 @@
-WERSJA 1377
-
-Poprawka:
-- zielona kropka aktywności w pakiecie 1 miesiąc jest teraz wyrównana do prawej strony,
-- zachowuje się tak samo jak kropki w pozostałych pakietach,
-- napis 'Najczęściej wybierane' zostaje na środku.
-
-Plik zmieniony:
-- src/styles.css

@@ -1,7 +1,0 @@
-WERSJA 1464 — poprawione nazwy handicapów w Statystyki AI
-Zmiany:
-- Handicap nie pokazuje już nazw drużyn w rodzaju typu
-- zapis/wyświetlanie typu handicap jako: Handicap +0.5 Home, Handicap -1.5 Away itd.
-- rozbijanie handicapów według linii i strony Home/Away
-- bez zmian w logice rozliczania
-- build OK (pozostały wcześniejsze warningi projektu)

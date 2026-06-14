@@ -1,3 +1,0 @@
-WERSJA 1399
-- zmniejszona czcionka kodu polecającego w prawej kolumnie zakładki Ranking,
-- kod lepiej mieści się w boxie i nie nachodzi na przycisk kopiowania.

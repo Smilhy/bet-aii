@@ -1,9 +1,0 @@
-WERSJA 1142 — Wyniki live realne API
-
-- Zakładka Wyniki live pobiera realne mecze z API-SPORTS/API-Football przez Netlify Function.
-- Dodano netlify/functions/live-scores.js.
-- Odświeżanie wyników co 60 sekund i ręczny przycisk Odśwież.
-- UI pokazuje realne ligi, drużyny, wyniki, status, minutę oraz logotypy drużyn, jeżeli API je odda.
-- Brak sztucznego szablonu w Wyniki live — gdy nie ma klucza API, pokazuje komunikat zamiast fake meczów.
-- W Netlify trzeba mieć ENV: API_FOOTBALL_KEY albo APISPORTS_KEY.
-- Nie ruszano Top typerzy, menu, avatarów, follow, cennika ani artykułów.

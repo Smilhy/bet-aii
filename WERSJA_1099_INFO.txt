@@ -1,6 +1,0 @@
-Wersja 1099
-- Przywrócona stabilna baza z 1095, sprzed zmian Top typerzy.
-- Usunięty problem z fałszywymi archiwalnymi typami typu „Archiwalny typ — Bet+AI”.
-- Profil ma pokazywać realne typy/mecze z istniejących danych, bez sztucznych wierszy importu.
-- Nie rusza logiki Typy AI, Mecze Result, Ligi, Statystyki z działającej wersji.
-- Paczka Netlify: bez package-lock.json, bez node_modules, bez dist.

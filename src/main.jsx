@@ -799,7 +799,7 @@ function getTipFallbackAuthorStats(tip) {
 // Pobieramy pełny dziennik ai_bets dokładnie raz, liczymy realne wyniki i
 // współdzielimy cache pomiędzy wszystkimi kartami bota.
 const BETAI_BOT_DASHBOARD_STATS_CACHE_KEY_V1794 = 'betai_bot_dashboard_stats_v1794'
-const BETAI_BOT_DASHBOARD_STATS_TTL_V1794 = 60 * 1000
+const BETAI_BOT_DASHBOARD_STATS_TTL_V1794 = 5 * 60 * 1000
 let betaiBotDashboardStatsCacheV1794 = {
   value: null,
   loadedAt: 0,
@@ -832,7 +832,9 @@ function readStoredBotDashboardStatsV1794() {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(BETAI_BOT_DASHBOARD_STATS_CACHE_KEY_V1794) || 'null')
     if (!parsed || !parsed.value || !Number(parsed.value.totalTips || 0)) return null
-    if (Date.now() - Number(parsed.loadedAt || 0) > 10 * 60 * 1000) return null
+    // WERSJA 1799: pokazujemy ostatnie poprawne statystyki natychmiast,
+    // nawet jeśli cache jest starszy. Odświeżenie odbywa się w tle.
+    // Dzięki temu prawa kolumna nie czeka na Supabase/Netlify i nie miga.
     return parsed
   } catch (_) {
     return null
@@ -865,9 +867,9 @@ function dedupeBotAiRowsV1794(rows = []) {
   return [...map.values()]
 }
 
-async function loadBetaiBotDashboardStatsV1794() {
+async function loadBetaiBotDashboardStatsV1794({ force = false } = {}) {
   const now = Date.now()
-  if (betaiBotDashboardStatsCacheV1794.value && now - betaiBotDashboardStatsCacheV1794.loadedAt < BETAI_BOT_DASHBOARD_STATS_TTL_V1794) {
+  if (!force && betaiBotDashboardStatsCacheV1794.value && now - betaiBotDashboardStatsCacheV1794.loadedAt < BETAI_BOT_DASHBOARD_STATS_TTL_V1794) {
     return betaiBotDashboardStatsCacheV1794.value
   }
   if (betaiBotDashboardStatsCacheV1794.promise) return betaiBotDashboardStatsCacheV1794.promise
@@ -883,40 +885,56 @@ async function loadBetaiBotDashboardStatsV1794() {
     let manualRows = []
     let importedProfileStats = null
 
-    // FIX 1796: dashboard używa dokładnie tego samego zestawu źródeł co profil bota:
-    // ai_bets + tips + imported_* z profiles. Dzięki temu karta nie pokazuje kropek
-    // ani statystyk policzonych tylko z aktualnie widocznych typów marketplace.
-    try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 8000)
-      const response = await fetch('/.netlify/functions/get-ai-bets?journal=1&limit=500', {
-        cache: 'no-store',
-        signal: controller.signal,
-      })
-      clearTimeout(timer)
-      if (response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        aiRows = Array.isArray(payload?.bets) ? payload.bets : []
+    // WERSJA 1799: źródła pobieramy RÓWNOLEGLE, a nie jedno po drugim.
+    // Poprzednio wolna funkcja Netlify mogła opóźniać Supabase nawet o 8 sekund.
+    const journalPromise = (async () => {
+      try {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 2500)
+        try {
+          const response = await fetch('/.netlify/functions/get-ai-bets?journal=1&limit=250', {
+            cache: 'no-store',
+            signal: controller.signal,
+          })
+          if (!response.ok) return []
+          const payload = await response.json().catch(() => ({}))
+          return Array.isArray(payload?.bets) ? payload.bets : []
+        } finally {
+          clearTimeout(timer)
+        }
+      } catch (_) {
+        return []
       }
-    } catch (_) {}
+    })()
 
-    if (isSupabaseConfigured && supabase) {
+    const supabasePromise = (async () => {
+      if (!isSupabaseConfigured || !supabase) return { ai: [], tips: [], profiles: [] }
       try {
         const [aiResult, tipsResult, profilesResult] = await Promise.all([
-          supabase.from('ai_bets').select('*').order('created_at', { ascending: false }).limit(500),
-          supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(700),
-          supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(250),
+          supabase.from('ai_bets').select('*').order('created_at', { ascending: false }).limit(250),
+          supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(300),
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100),
         ])
-        if (!aiRows.length && !aiResult?.error && Array.isArray(aiResult?.data)) aiRows = aiResult.data
-        if (!tipsResult?.error && Array.isArray(tipsResult?.data)) manualRows = tipsResult.data
-        if (!profilesResult?.error && Array.isArray(profilesResult?.data)) {
-          const botProfiles = profilesResult.data.filter(isBetaiMultisportRecordV1794)
-          const mergedBotProfile = typeof mergeProfilesPreferStats === 'function'
-            ? (mergeProfilesPreferStats(botProfiles)[0] || botProfiles[0] || null)
-            : (botProfiles[0] || null)
-          importedProfileStats = getImportedProfileStats(mergedBotProfile)
+        return {
+          ai: !aiResult?.error && Array.isArray(aiResult?.data) ? aiResult.data : [],
+          tips: !tipsResult?.error && Array.isArray(tipsResult?.data) ? tipsResult.data : [],
+          profiles: !profilesResult?.error && Array.isArray(profilesResult?.data) ? profilesResult.data : [],
         }
-      } catch (_) {}
+      } catch (_) {
+        return { ai: [], tips: [], profiles: [] }
+      }
+    })()
+
+    const [journalRows, supabaseRows] = await Promise.all([journalPromise, supabasePromise])
+    aiRows = journalRows.length ? journalRows : supabaseRows.ai
+    manualRows = supabaseRows.tips
+
+    if (supabaseRows.profiles.length) {
+      const botProfiles = supabaseRows.profiles.filter(isBetaiMultisportRecordV1794)
+      const mergedBotProfile = typeof mergeProfilesPreferStats === 'function'
+        ? (mergeProfilesPreferStats(botProfiles)[0] || botProfiles[0] || null)
+        : (botProfiles[0] || null)
+      importedProfileStats = getImportedProfileStats(mergedBotProfile)
     }
 
     const allBotRows = dedupeBotAiRowsV1794([
@@ -3873,6 +3891,45 @@ function DailyAiPicksRightPanelV1156() {
 }
 function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }) {
   cacheBetaiCurrentUserAvatar(user)
+
+  // WERSJA 1798 — prawa kolumna Dashboardu korzysta z tego samego kanonu
+  // statystyk betai-multisport-ai co Mój profil i główny Ranking.
+  const [rightbarBotCanonicalStatsV1798, setRightbarBotCanonicalStatsV1798] = useState(() => {
+    const stored = readStoredBotDashboardStatsV1794()
+    return betaiBotDashboardStatsCacheV1794.value || stored?.value || null
+  })
+
+  useEffect(() => {
+    let active = true
+    let idleId = null
+    let timeoutId = null
+    const applyValue = value => {
+      if (active && value) setRightbarBotCanonicalStatsV1798(value)
+    }
+    const refreshRightbarBotStatsV1798 = ({ force = false } = {}) => {
+      loadBetaiBotDashboardStatsV1794({ force }).then(applyValue).catch(() => {})
+    }
+
+    // WERSJA 1799: nie blokujemy pierwszego renderu prawej kolumny.
+    // Najpierw pokazuje się cache / ranking, a sieć odświeża dane w bezczynności.
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(() => refreshRightbarBotStatsV1798(), { timeout: 1200 })
+    } else {
+      timeoutId = window.setTimeout(() => refreshRightbarBotStatsV1798(), 250)
+    }
+
+    const refreshAfterChange = () => refreshRightbarBotStatsV1798({ force: true })
+    window.addEventListener('betai:tips-updated', refreshAfterChange)
+    window.addEventListener('betai:ai-bets-updated', refreshAfterChange)
+    return () => {
+      active = false
+      if (idleId !== null && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId)
+      if (timeoutId !== null) window.clearTimeout(timeoutId)
+      window.removeEventListener('betai:tips-updated', refreshAfterChange)
+      window.removeEventListener('betai:ai-bets-updated', refreshAfterChange)
+    }
+  }, [])
+
   const currentAvatar = getProfileAvatarUrl(user)
   const currentEmail = normalizeEmail(user?.email)
   const currentName = normalizeEmail(user?.username || user?.user_metadata?.username || user?.user_metadata?.name)
@@ -3885,6 +3942,41 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
     return row
   })
   const realRanking = buildLiveLeaderboardRows(rankingWithCurrentAvatar, tips)
+    .map(row => {
+      if (!isBetaiMultisportRecordV1794(row) || !rightbarBotCanonicalStatsV1798) return row
+
+      const canonical = rightbarBotCanonicalStatsV1798
+      const wins = Number(canonical.wonTips || 0)
+      const losses = Number(canonical.lostTips || 0)
+      const voids = Number(canonical.voidTips || 0)
+      const pending = Number(canonical.pendingTips || 0)
+      const totalTips = Number(canonical.totalTips || 0)
+      const profit = Number(canonical.profit || 0)
+      const yieldValue = Number(canonical.yield || 0)
+
+      return {
+        ...row,
+        totalTips,
+        total_tips: totalTips,
+        wins,
+        losses,
+        voids,
+        voidTips: voids,
+        void_tips: voids,
+        pending,
+        pendingTips: pending,
+        pending_tips: pending,
+        roi: yieldValue,
+        yield: yieldValue,
+        earnings: profit,
+        total_earnings: profit,
+        profit,
+        total_staked: Number(canonical.totalStaked || 0),
+        winrate: (wins + losses) > 0
+          ? (wins / (wins + losses)) * 100
+          : Number(row.winrate || 0),
+      }
+    })
   // 🔒 v982: po resecie typów ranking może mieć zera, ale nazwy nadal muszą pochodzić z profili.
   // Nie generujemy już placeholderów "Użytkownik", bo to wygląda jak zepsuty profil.
   const rightRankingRows = [...(realRanking || [])]
@@ -3893,6 +3985,7 @@ function Rightbar({ ranking = [], tips = [], user = null, onOpenTipster = null }
       const name = formatRankingName(row)
       return !isBlockedTestProfile(row) && !isBlockedTestProfile(name) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(name) && name && !/^użytkownik\s*\d*$/i.test(name) && !/^uzytkownik\s*\d*$/i.test(name)
     })
+    .sort((a, b) => Number(b.profit ?? b.earnings ?? b.total_earnings ?? 0) - Number(a.profit ?? a.earnings ?? a.total_earnings ?? 0))
     .slice(0, 4)
 
   return (

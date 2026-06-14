@@ -1,6 +1,0 @@
-WERSJA 1224 — 1680x1050 DASHBOARD JAK BROWSER 110%
-Baza: 1222.
-- 27 cali / 2K bez zmian.
-- Login na 1680 zostaje w trybie 67%.
-- Dashboard po zalogowaniu wykrywany przez #root:has(.app-shell) ma scale .737, czyli efekt 67% * 110%.
-- Użytkownik ma mieć zoom przeglądarki 100%.

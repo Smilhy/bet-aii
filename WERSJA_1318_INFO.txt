@@ -1,9 +1,0 @@
-WERSJA 1318 — 1920x1080 23/24 CALE FIX 80%
-
-Zmiana:
-- dla ekranów FHD 1920x1080 ustawiono automatyczny efekt jak zoom przeglądarki 80%,
-- poprawka dotyczy 23 i 24 cali 1920x1080, gdzie ręczne ustawienie lupy 80% mieściło całą stronę,
-- zmiana w JS/CSS: zoom 80% + wirtualny viewport 125vw/125vh,
-- nie zmieniano logiki, API, Supabase ani Stripe.
-
-Baza: wersja 1317.

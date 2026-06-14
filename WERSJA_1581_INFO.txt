@@ -1,4 +1,0 @@
-WERSJA 1581
-- Dodano importowane statystyki zakresów kursów z profiles.imported_odds_range_stats.
-- Dotyczy uzupełnienia historycznych danych profilu smilhytv, bez zmiany logiki innych kont.
-- Nowe typy po stats_imported_at są doliczane do importowanych zakresów.

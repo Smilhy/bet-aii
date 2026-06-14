@@ -1,6 +1,0 @@
-WERSJA 1249 / PACZKA 26
-- ultra premium final polish prawej kolumny
-- usunięte wszystkie gwiazdki ✦ przy Profit
-- większy odstęp między Live Chat i Top typerzy
-- statystyki Yield/Typy/Bilans wyśrodkowane
-- delikatny premium glow bez zmiany logiki

@@ -1,1 +1,0 @@
-Wersja 1236: poprawka panelu powiadomień. Usunięto napis BETAI NEWS z popupu i zmieniono tytuł na "Powiadomienia Bet+AI".

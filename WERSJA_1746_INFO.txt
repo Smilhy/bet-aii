@@ -1,9 +1,0 @@
-WERSJA 1746 — blokada duplikowania tego samego meczu
-
-Poprawki:
-- Dodano blokadę publishLockRef przeciw szybkiemu podwójnemu kliknięciu przycisku Opublikuj typ.
-- Blokada duplikatu działa po kluczu: użytkownik + fixture_id albo użytkownik + para drużyn + liga + data meczu.
-- Usunięto możliwość pokazania duplikatu w dashboardzie z publicTips + tips + realtime + local fallback.
-- Realtime INSERT i lokalny onTipSaved przepuszczają listę przez deduplikację.
-
-Nie zmieniano bannera ani layoutu.

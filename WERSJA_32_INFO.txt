@@ -1,5 +1,0 @@
-WERSJA 32
-- separator NAWIGACJA zrobiony subtelniej: mniej glow, cieńsze linie, bardziej premium
-- usunięty osobny scroll z lewej kolumny
-- strona scrolluje się normalnie, sidebar zostaje sticky bez własnego paska przewijania
-- reszta UI/logiki bez zmian

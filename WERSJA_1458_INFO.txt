@@ -1,6 +1,0 @@
-WERSJA 1458 — usunięta analiza drawdown ze Statystyki AI
-Zmiany:
-- usunięta cała sekcja Analiza drawdown
-- reszta zakładki Statystyki AI bez zmian
-- bez zmian w rozliczaniu i logice danych
-- build OK (pozostały wcześniejsze warningi projektu)

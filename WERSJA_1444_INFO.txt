@@ -1,6 +1,0 @@
-WERSJA 1444 — mniejsze kafle sportów w Typy AI
-Zmiany:
-- zmniejszone kafle sportów
-- mniejszy padding, wysokość, ikony i typografia
-- zachowany wygląd premium i logika z 1443
-- build OK

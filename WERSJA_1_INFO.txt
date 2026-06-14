@@ -1,8 +1,0 @@
-WERSJA 1
-
-Zmiana: usunięto napis "Twoja wiadomość" przy własnych wiadomościach w BetAI LIVE CHAT.
-Zostaje licznik Tips: 0 oraz przycisk TIP 1 przy wiadomościach innych użytkowników.
-
-Pliki zmienione:
-- src/main.jsx
-- dist/assets/index-BBjv8JiJ.js

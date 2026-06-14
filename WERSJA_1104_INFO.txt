@@ -1,1 +1,0 @@
-Wersja 1104: Top typerzy używa realnych kont z Supabase zamiast fake StatKing/BetMind/FootyLogic. Przyciski: Kup subskrypcję dla premium, Darmowe dla darmowych. Dodany realtime profiles/tips. Nie ruszano zamrożonych modułów: Mój profil, Dashboard, Typy AI, rozliczanie.

@@ -1,7 +1,0 @@
-WERSJA 17 — LIVE CHAT COMPOSER CLEAN FRAME FIX
-
-Zmiana:
-- usunięta zewnętrzna ramka całego paska wpisywania w live chat,
-- przywrócona ramka przy przycisku emotki,
-- input, TIP1 i przycisk wysyłania bez zmian logicznych,
-- poprawka tylko wizualna CSS.

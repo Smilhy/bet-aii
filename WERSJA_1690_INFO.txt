@@ -1,1 +1,0 @@
-WERSJA 1690 — Typy AI nie znikają po odświeżeniu: Odśwież dziś używa endpointu generate-live-ai-picks, który zapisuje do public.ai_bets, a potem frontend czyta Supabase. Jeżeli Supabase zwraca 0, frontend nie podnosi starych typów z localStorage. Bez zmian typów typerów, AKO i rozliczania użytkowników.

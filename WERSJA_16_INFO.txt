@@ -1,7 +1,0 @@
-WERSJA 16 — CHAT EMOJI NO FRAME
-
-Zmiana:
-- usunięta kwadratowa ramka wokół przycisku emotki w czacie,
-- emotka została zostawiona w czystszym, lżejszym stylu,
-- delikatny hover został zachowany,
-- reszta czatu bez zmian.

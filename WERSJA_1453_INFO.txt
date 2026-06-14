@@ -1,9 +1,0 @@
-WERSJA 1453 — prawdziwe wyniki z API + backfill starych rekordów
-Zmiany:
-- settle-live-ai-picks pobiera teraz także stare rozliczone typy AI bez potwierdzonego score
-- uzupełnia live_score_home/live_score_away z API-Sports po external_fixture_id lub po dacie/nazwach drużyn
-- zapisuje live_status i settlement_source=auto_ai_result_api jako potwierdzenie score
-- tabela pokazuje 0-0 tylko gdy wynik jest potwierdzony przez API
-- fałszywe stare fallbacki 0-0 dalej pokazują - : - dopóki API ich nie uzupełni
-- po wgraniu kliknij Rozlicz zakończone, żeby backfill uzupełnił stare rekordy
-- build OK (pozostały tylko wcześniejsze warningi projektu)

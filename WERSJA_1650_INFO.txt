@@ -1,1 +1,0 @@
-WERSJA 1650: Dodano tryb kuponu AKO w dodawaniu typów bez zmiany logiki singla. AKO buduje wiele zdarzeń, liczy kurs całkowity i zapisuje jako jeden typ z metadanymi legs_json jeśli kolumny istnieją.

@@ -1,1 +1,0 @@
-WERSJA 39 — dashboard tickets: badge PREMIUM/DARMOWY obniżony, większy odstęp od statystyk, bez wielokropków w Bilansie, zwężona kolumna Analiza.

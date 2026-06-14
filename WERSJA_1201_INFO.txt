@@ -1,8 +1,0 @@
-WERSJA 1201
-Poprawka po zgłoszeniu, że na laptopie 15 cali 1920x1080 nie było widać zmiany czcionek.
-Powód: Windows często ma skalowanie 125%, więc CSS viewport to około 1536x864, a media query z wersji 1200 dla 1700-1935px nie odpalało.
-Dodano osobny wariant 1360-1699px oraz dokładnie 1536x864.
-- Fonty formularza mocno większe.
-- Social napisy 15px.
-- LIVE napisy 14px, liczby 25px.
-- Skala artboardu 0.82 dla viewportu 1536x864.

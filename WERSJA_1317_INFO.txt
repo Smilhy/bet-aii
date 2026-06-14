@@ -1,6 +1,0 @@
-WERSJA 1317 — PORTFEL: UKRYTE ZAKŁADKI ADMINA
-
-Zmiany:
-- zakładki „Admin finanse” i „Admin wypłaty” w Portfelu są teraz renderowane tylko dla admina,
-- zwykły użytkownik nie widzi tych przycisków i nie dostaje toastu po kliknięciu,
-- bez zmian kolorystyki, layoutu, Supabase, Stripe i logiki portfela poza warunkiem widoczności.

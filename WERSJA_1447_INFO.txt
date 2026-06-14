@@ -1,7 +1,0 @@
-WERSJA 1447 — cofnięta poprawa Mecze Result + usunięta prawa kolumna poza live
-Zmiany:
-- cofnięta ostatnia poprawa tabeli Mecze Result
-- przywrócony prostszy wcześniejszy wygląd wyników
-- prawa kolumna ukryta w zakładkach Mecze Result / Statystyki / Ligi
-- prawa kolumna zostaje tylko przy Typy AI live (dziś/jutro)
-- build OK (pozostały tylko wcześniejsze warningi projektu)

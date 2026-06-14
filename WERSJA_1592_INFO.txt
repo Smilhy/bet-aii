@@ -1,1 +1,0 @@
-WERSJA 1592 — tablet 10 cali: auto 50% + full width. Tylko viewport/CSS, bez zmian logiki, Supabase, Stripe i statystyk.

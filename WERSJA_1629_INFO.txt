@@ -1,4 +1,0 @@
-WERSJA 1629
-- Powiększony tekst w komunikacie BETA nad logowaniem.
-- Fraza „zoomu/lupy” jest teraz mocniej podkreślona: większa, żółta i bardziej widoczna.
-- Banner został lekko poszerzony, aby większa treść nadal mieściła się estetycznie.

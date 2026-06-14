@@ -1,6 +1,0 @@
-WERSJA 1237 - usuniecie napisu USER MESSAGES
-
-Zmiany:
-- usunieto maly napis USER MESSAGES z popupu Wiadomosci uzytkownikow,
-- tytul Wiadomosci uzytkownikow zostal bez zmian,
-- poprawka w src/main.jsx oraz gotowym buildzie dist/assets.

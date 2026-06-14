@@ -1,1 +1,0 @@
-WERSJA 1668 — AKO rozwijanie w kolorze UI + pusta analiza spójnie na Dashboard i Mój profil.

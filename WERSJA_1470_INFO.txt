@@ -1,8 +1,0 @@
-WERSJA 1470 — wykres AI jak Mój profil
-Zmiany:
-- cofnięty przerysowany neonowy wykres z 1469
-- wykres Statystyki AI wygląda teraz jak wykres w Mój profil
-- czysta cienka linia, delikatny glow, subtelne tło i siatka
-- zostawiona interakcja: hover/click i zakresy 7D/30D/90D/1R/Wszystko
-- bez zmian w rozliczaniu i danych
-- build OK (pozostały wcześniejsze warningi projektu)

@@ -1,1 +1,0 @@
-WERSJA 1316\n- Portfel i wszystkie zakładki: pełne dopasowanie kolorystyki do Dashboardu.\n- Bez zmian układu, tylko premium dark/granitowy klimat, ramki i gradienty.\n- Ujednolicone: hero, Stripe card, taby, statystyki, karty, metody płatności, podstrony wpłat/wypłat/płatności/subskrypcji/zarobków oraz sekcje admina.

@@ -1,1 +1,0 @@
-WERSJA 12 — hard fix przycisków sidebar, tekst z pseudo-elementów bez konfliktów CSS

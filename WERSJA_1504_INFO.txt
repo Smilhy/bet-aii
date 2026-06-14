@@ -1,1 +1,0 @@
-Wersja 1504: usunieto przyciski zakresu wykresu 7D/30D/90D/1R, zostawiono tylko Wszystko. Baza: 1503.

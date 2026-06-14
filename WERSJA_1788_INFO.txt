@@ -1,6 +1,0 @@
-WERSJA 1788
-
-- box „Twoje polecenia” przeniesiony na sam dół prawej kolumny,
-- w karcie „MIESIĘCZNA PULA NAGRÓD” usunięto 1000 $,
-- dodano żółty, świecący i pulsujący napis „WKRÓTCE”,
-- bez zmian w logice rankingu i wypłat.

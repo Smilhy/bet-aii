@@ -1,7 +1,0 @@
-WERSJA 1228 — FINAL 1680 LOGIN 67 GAP / DASHBOARD OK
-Baza: 1224.
-- 27 cali / 2K bez zmian.
-- Dashboard 1680x1050 zostaje z 1224.
-- Login 1680x1050 emuluje 67% i ma przesunięty artboard w prawo.
-- Social i statystyki mają mieć przerwę od panelu logowania.
-- Reguły loginu działają tylko gdy #root nie ma .app-shell, więc nie ruszają dashboardu.

@@ -1,3 +1,0 @@
-WERSJA 1197
-Przeniesiono badge LIVE w lewym panelu statystyk z prawej strony na lewą.
-Reszta bez zmian względem 1196.

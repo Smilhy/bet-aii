@@ -1,7 +1,0 @@
-WERSJA 1130 — Artykuły/TV Live legalne centrum
-- Zakładka TV / PPV zmieniona na TV Live.
-- Dodane legalne centrum meczowe: mecze, godzina, status, liga i przycisk do oficjalnego źródła.
-- Brak iframe, playerów i nieautoryzowanych streamów.
-- Zmieniony box PPV na bezpieczne informacje o legalnym TV Live.
-- Nie ruszano Top typerzy, avatarów, follow, cennika, osiągnięć ani zablokowanego menu.
-- Nie wymaga nowego SQL Supabase.
