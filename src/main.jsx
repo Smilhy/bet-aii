@@ -11706,7 +11706,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         {!effectiveIsLocked && cardMarketLabelV1711 && cardMarketLabelV1711 !== cardPick && (
           <em className="ticket-market-label-v1711">{cardMarketLabelV1711}</em>
         )}
-        <strong>{effectiveIsLocked ? 'Typ premium' : cardPick}</strong>
+        <strong className="ticket-pick-emphasis-v1803">{effectiveIsLocked ? 'Typ premium' : cardPick}</strong>
         <span>{isAkoCard ? (isPremium ? 'AKO premium' : 'AKO darmowy') : (isPremium ? 'Singiel' : 'Darmowy typ')}</span>
       </div>
 
@@ -22057,7 +22057,7 @@ function ProfileLiveTipCard({
 
       <div className="profile-ticket-v6-field">
         <small>TYP</small>
-        <strong>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</strong>
+        <strong className="ticket-pick-emphasis-v1803">{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</strong>
         <span>{isAkoCard ? (tip.premium ? 'AKO premium' : 'AKO darmowy') : (tip.premium ? 'Singiel' : 'Darmowy typ')}</span>
       </div>
 

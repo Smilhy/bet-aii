@@ -75268,3 +75268,50 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   -webkit-text-fill-color:#f4fbff!important;
   text-shadow:none!important;
 }
+
+
+/* WERSJA 1803 — wybrany typ mocno widoczny: złoty i pulsujący na Dashboardzie oraz w Mój profil */
+.profile-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803,
+.dashboard-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803,
+.profile-static-v3 .profile-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803,
+.app-shell.no-rightbar-page .profile-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803{
+  display:inline-block!important;
+  color:#ffd64a!important;
+  font-weight:1000!important;
+  letter-spacing:-.015em!important;
+  text-shadow:
+    0 0 7px rgba(255,214,74,.58),
+    0 0 15px rgba(255,190,35,.42),
+    0 0 28px rgba(255,164,0,.24)!important;
+  animation:betaiPickGoldPulseV1803 1.65s ease-in-out infinite!important;
+  transform-origin:left center!important;
+  will-change:transform,filter,text-shadow!important;
+}
+
+@keyframes betaiPickGoldPulseV1803{
+  0%,100%{
+    color:#f6c93d!important;
+    transform:scale(1);
+    filter:brightness(.96);
+    text-shadow:
+      0 0 6px rgba(255,214,74,.46),
+      0 0 13px rgba(255,190,35,.30),
+      0 0 22px rgba(255,164,0,.18);
+  }
+  50%{
+    color:#fff08a!important;
+    transform:scale(1.035);
+    filter:brightness(1.18);
+    text-shadow:
+      0 0 10px rgba(255,235,121,.82),
+      0 0 22px rgba(255,205,56,.62),
+      0 0 38px rgba(255,166,0,.34);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .profile-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803,
+  .dashboard-ticket-v6 .profile-ticket-v6-field > .ticket-pick-emphasis-v1803{
+    animation:none!important;
+  }
+}
