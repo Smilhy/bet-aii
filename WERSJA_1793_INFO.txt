@@ -1,0 +1,15 @@
+WERSJA 1793 — naprawa złej nazwy drużyny w typie
+
+Problem:
+- po wybraniu nowego meczu i natychmiastowym kliknięciu kursu React używał rynku z poprzedniego renderu,
+- dlatego na meczu Australia — Türkiye mogło zostać zapisane "Haiti wygra".
+
+Naprawa:
+- kliknięty rynek jest przekazywany bezpośrednio razem z aktualnym meczem,
+- stary selectedMarket nie jest już fallbackiem przed klikniętym kursem,
+- formularz dopasowuje rynek po kursie, jeśli wykryje nazwę drużyny z poprzedniego meczu,
+- przed zapisem do Supabase wykonywana jest ostatnia walidacja market + odds,
+- selection_key dla zwycięzcy gości zapisuje się poprawnie jako away.
+
+Dla już istniejącego błędnego rekordu uruchom:
+SUPABASE_1793_NAPRAW_AUSTRALIA_TURKIYE_HAITI.sql

@@ -741,6 +741,173 @@ function getTipFallbackAuthorStats(tip) {
   return finalizeAuthorStats(buildAuthorStatsFromTips([tip]).get(getTipAuthorStatsKey(tip)), null)
 }
 
+// WERSJA 1794 — jeden kanon statystyk bota na dashboardzie.
+// Karty betai-multisport-ai nie mogą liczyć wyniku wyłącznie z aktualnie
+// widocznych rekordów marketplace, bo wtedy pokazywały np. -20%, 20 i -3.00.
+// Pobieramy pełny dziennik ai_bets dokładnie raz, liczymy realne wyniki i
+// współdzielimy cache pomiędzy wszystkimi kartami bota.
+const BETAI_BOT_DASHBOARD_STATS_CACHE_KEY_V1794 = 'betai_bot_dashboard_stats_v1794'
+const BETAI_BOT_DASHBOARD_STATS_TTL_V1794 = 60 * 1000
+let betaiBotDashboardStatsCacheV1794 = {
+  value: null,
+  loadedAt: 0,
+  promise: null,
+}
+
+function isBetaiMultisportRecordV1794(row = {}) {
+  if (normalizeRankingBotKeyV1761(row) === 'user:betai-multisport-ai') return true
+  const identity = String([
+    row?.author_name,
+    row?.username,
+    row?.user_name,
+    row?.display_name,
+    row?.public_slug,
+    row?.email,
+    row?.author_email,
+    row?.ai_source,
+    row?.source,
+    row?.publisher,
+  ].filter(Boolean).join(' '))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+  return identity.includes('betaimultisportai') || identity.includes('betaimultisport')
+}
+
+function readStoredBotDashboardStatsV1794() {
+  if (typeof window === 'undefined') return null
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(BETAI_BOT_DASHBOARD_STATS_CACHE_KEY_V1794) || 'null')
+    if (!parsed || !parsed.value || !Number(parsed.value.totalTips || 0)) return null
+    if (Date.now() - Number(parsed.loadedAt || 0) > 10 * 60 * 1000) return null
+    return parsed
+  } catch (_) {
+    return null
+  }
+}
+
+function dedupeBotAiRowsV1794(rows = []) {
+  const map = new Map()
+  ;(rows || []).forEach((raw, index) => {
+    const tip = normalizeTipRow({
+      ...raw,
+      author_name: raw?.author_name || raw?.username || 'betai-multisport-ai',
+      username: raw?.username || raw?.author_name || 'betai-multisport-ai',
+      public_slug: raw?.public_slug || 'betai-multisport-ai',
+    })
+    const fixture = String(tip.fixture_id || tip.api_fixture_id || tip.event_id || tip.match_id || tip.game_id || '').trim().toLowerCase()
+    const match = String(tip.match || tip.match_name || `${tip.team_home || ''}-${tip.team_away || ''}`).trim().toLowerCase()
+    const pick = String(tip.prediction || tip.pick || tip.bet_type || tip.selection || '').trim().toLowerCase()
+    const kickoff = String(tip.match_time || tip.event_time || tip.event_date || tip.kickoff_at || tip.commence_time || tip.match_date || '').trim().toLowerCase()
+    const key = String(tip.id || raw?.id || '').trim() || `${fixture}|${match}|${pick}|${kickoff}|${index}`
+    const previous = map.get(key)
+    if (!previous) {
+      map.set(key, tip)
+      return
+    }
+    const previousStatus = normalizeTipSettlementStatus(previous.status ?? previous.result ?? previous.result_status ?? previous.settlement_status)
+    const nextStatus = normalizeTipSettlementStatus(tip.status ?? tip.result ?? tip.result_status ?? tip.settlement_status)
+    map.set(key, previousStatus === 'pending' && nextStatus !== 'pending' ? { ...previous, ...tip } : { ...tip, ...previous })
+  })
+  return [...map.values()]
+}
+
+async function loadBetaiBotDashboardStatsV1794() {
+  const now = Date.now()
+  if (betaiBotDashboardStatsCacheV1794.value && now - betaiBotDashboardStatsCacheV1794.loadedAt < BETAI_BOT_DASHBOARD_STATS_TTL_V1794) {
+    return betaiBotDashboardStatsCacheV1794.value
+  }
+  if (betaiBotDashboardStatsCacheV1794.promise) return betaiBotDashboardStatsCacheV1794.promise
+
+  const stored = readStoredBotDashboardStatsV1794()
+  if (stored?.value && !betaiBotDashboardStatsCacheV1794.value) {
+    betaiBotDashboardStatsCacheV1794.value = stored.value
+    betaiBotDashboardStatsCacheV1794.loadedAt = Number(stored.loadedAt || 0)
+  }
+
+  betaiBotDashboardStatsCacheV1794.promise = (async () => {
+    let rows = []
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 8000)
+      const response = await fetch('/.netlify/functions/get-ai-bets?journal=1&limit=500', {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+      clearTimeout(timer)
+      if (response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        rows = Array.isArray(payload?.bets) ? payload.bets : []
+      }
+    } catch (_) {}
+
+    if (!rows.length && isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('ai_bets')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500)
+        if (!error && Array.isArray(data)) rows = data
+      } catch (_) {}
+    }
+
+    const botRows = dedupeBotAiRowsV1794(rows.filter(isBetaiMultisportRecordV1794))
+    const dynamicStats = buildCombinedTipStatsV1791(botRows)
+    const value = Number(dynamicStats.totalTips || 0) > 0
+      ? finalizeAuthorStats(dynamicStats, null)
+      : (betaiBotDashboardStatsCacheV1794.value || null)
+
+    if (value) {
+      betaiBotDashboardStatsCacheV1794.value = value
+      betaiBotDashboardStatsCacheV1794.loadedAt = Date.now()
+      try {
+        window.localStorage.setItem(BETAI_BOT_DASHBOARD_STATS_CACHE_KEY_V1794, JSON.stringify({
+          value,
+          loadedAt: betaiBotDashboardStatsCacheV1794.loadedAt,
+        }))
+      } catch (_) {}
+    }
+    return value
+  })().finally(() => {
+    betaiBotDashboardStatsCacheV1794.promise = null
+  })
+
+  return betaiBotDashboardStatsCacheV1794.promise
+}
+
+function useBetaiBotDashboardStatsV1794(tip) {
+  const isBot = isBetaiMultisportRecordV1794(tip)
+  const stored = isBot ? readStoredBotDashboardStatsV1794() : null
+  const [stats, setStats] = useState(() => isBot ? (betaiBotDashboardStatsCacheV1794.value || stored?.value || null) : null)
+
+  useEffect(() => {
+    if (!isBot) {
+      setStats(null)
+      return undefined
+    }
+    let active = true
+    loadBetaiBotDashboardStatsV1794().then(value => {
+      if (active && value) setStats(value)
+    }).catch(() => {})
+    const refresh = () => {
+      loadBetaiBotDashboardStatsV1794().then(value => {
+        if (active && value) setStats(value)
+      }).catch(() => {})
+    }
+    window.addEventListener('betai:tips-updated', refresh)
+    window.addEventListener('betai:ai-bets-updated', refresh)
+    return () => {
+      active = false
+      window.removeEventListener('betai:tips-updated', refresh)
+      window.removeEventListener('betai:ai-bets-updated', refresh)
+    }
+  }, [isBot])
+
+  return stats
+}
+
 
 function saveTipDebug(status, details = '') {
   const text = `[${new Date().toLocaleString('pl-PL')}] ${status}${details ? ': ' + details : ''}`
@@ -8800,7 +8967,15 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
 
   const marketOptions = selectedMatch ? enrichPopularMarkets(selectedMatch, selectedMatch?.markets || []) : []
   const noRealMarket = { market: 'Brak kursów', pick: 'Brak realnych kursów', odds: '', confidence: 50 }
-  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || noRealMarket
+  // WERSJA 1793 — gdy użytkownik wybiera nowy mecz i od razu klika kurs,
+  // poprzedni render Reacta może jeszcze trzymać rynki starego meczu.
+  // Dopasowanie po kursie zabezpiecza przed pokazaniem np. "Haiti wygra"
+  // na karcie Australia — Türkiye.
+  const selectedMarket = marketOptions.find(item => item.market === form.market && item.pick === form.betType)
+    || marketOptions.find(item => item.market === form.market && Math.abs(Number(item.odds || 0) - Number(form.odds || 0)) < 0.0001)
+    || marketOptions.find(item => item.market === form.market)
+    || marketOptions[0]
+    || noRealMarket
   const groupedMarketOptions = marketOptions.reduce((groups, item, index) => {
     const label = String(item.market || 'Inne')
     if (!groups[label]) groups[label] = []
@@ -8895,7 +9070,13 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     if (!selectedMatch) return
     const exists = marketOptions.some(item => item.market === form.market && item.pick === form.betType)
     if (!exists) {
-      const nextMarket = marketOptions[0] || defaultMarket
+      // WERSJA 1793 — najpierw szukamy tego samego rynku i kursu w NOWYM meczu.
+      // Dzięki temu strona zachowuje stronę wyboru (np. goście), ale podmienia
+      // nazwę starej drużyny na drużynę aktualnego spotkania.
+      const nextMarket = marketOptions.find(item =>
+        item.market === form.market &&
+        Math.abs(Number(item.odds || 0) - Number(form.odds || 0)) < 0.0001
+      ) || marketOptions.find(item => item.market === form.market) || marketOptions[0] || defaultMarket
       setForm(prev => ({
         ...prev,
         market: nextMarket.market,
@@ -8904,7 +9085,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
         confidence: nextMarket.confidence || prev.confidence,
       }))
     }
-  }, [form.matchId])
+  }, [form.matchId, selectedMatch?.id, form.market, form.betType, form.odds, marketOptions.length])
 
   async function fetchSportDayCounts(force = false) {
     const todayKey = getTodayLocalKey()
@@ -9120,9 +9301,14 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     applyMatchToForm(match)
     if (marketItem) {
       setShowMarketBoard(false)
-      requestAnimationFrame(() => {
-        chooseMarket(`${marketItem.market}|||${marketItem.pick}|||${marketItem.odds}|||${marketItem.confidence || confidencePercent}`)
-      })
+      // WERSJA 1793 — przekazujemy bezpośrednio aktualny mecz i aktualny rynek.
+      // Nie czekamy na kolejny render, bo wtedy chooseMarket mógł użyć starego
+      // selectedMarket z poprzedniego spotkania.
+      chooseMarket(
+        `${marketItem.market}|||${marketItem.pick}|||${marketItem.odds}|||${marketItem.confidence || confidencePercent}`,
+        match,
+        marketItem
+      )
       return
     }
     openMatchMarkets(match)
@@ -9618,23 +9804,47 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     setTicketMarketSelected(false)
   }
 
-  function chooseMarket(value) {
+  function chooseMarket(value, sourceMatchV1793 = null, sourceMarketV1793 = null) {
     const [marketName, pickName, oddsValue, confidenceValue] = String(value || '').split('|||')
     setTicketMarketSelected(true)
-    const nextMarket = marketOptions.find(item =>
+
+    const matchContextV1793 = sourceMatchV1793 || effectiveSelectedMatch || selectedMatch
+    const directMarketV1793 = sourceMarketV1793 ? {
+      ...sourceMarketV1793,
+      market: betaiCanonicalMarketLabelV1663(sourceMarketV1793.market || marketName, sourceMarketV1793.pick || pickName),
+      pick: betaiCanonicalPickV1663(
+        sourceMarketV1793.market || marketName,
+        sourceMarketV1793.pick || pickName,
+        matchContextV1793?.home || '',
+        matchContextV1793?.away || ''
+      ),
+      odds: Number(sourceMarketV1793.odds ?? oddsValue ?? form.odds),
+      confidence: Number(sourceMarketV1793.confidence ?? confidenceValue ?? form.confidence),
+    } : null
+
+    // WERSJA 1793 — parsedMarketV1793 ma pierwszeństwo przed selectedMarket.
+    // selectedMarket może pochodzić z poprzedniego meczu w tym samym renderze.
+    const parsedMarketV1793 = {
+      market: betaiCanonicalMarketLabelV1663(marketName, pickName),
+      pick: betaiCanonicalPickV1663(marketName, pickName, matchContextV1793?.home || '', matchContextV1793?.away || ''),
+      odds: Number(oddsValue ?? form.odds),
+      confidence: Number(confidenceValue ?? form.confidence),
+    }
+
+    const nextMarket = directMarketV1793 || marketOptions.find(item =>
       String(item.market) === marketName &&
       String(item.pick) === pickName &&
       String(item.odds) === String(oddsValue)
     ) || marketOptions.find(item =>
       String(item.market) === marketName &&
       String(item.pick) === pickName
-    ) || selectedMarket
+    ) || parsedMarketV1793 || selectedMarket
 
     const nextOdds = Number(nextMarket?.odds ?? oddsValue ?? form.odds)
     const nextConfidence = Number(nextMarket?.confidence ?? confidenceValue ?? form.confidence)
 
     if (couponMode === 'ako') {
-      const matchForLeg = effectiveSelectedMatch || selectedMatch
+      const matchForLeg = sourceMatchV1793 || effectiveSelectedMatch || selectedMatch
       if (!matchForLeg) {
         onToast?.({ type: 'error', title: 'Brak meczu', message: 'Najpierw wybierz mecz do kuponu AKO.' })
         return
@@ -9941,7 +10151,29 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const finalAccessType = form.accessType === 'premium' ? 'premium' : 'free'
     const priceValue = finalAccessType === 'premium' ? Math.max(0, Number(form.singlePrice || 0) || 0) : 0
     const akoOddsForPublish = akoLegsForPublish.reduce((product, leg) => product * (Number(leg.odds || 0) || 1), 1)
-    const finalOddsValue = isAkoCoupon ? Number(akoOddsForPublish.toFixed(2)) : Number(form.odds || 0)
+
+    // WERSJA 1793 — ostatnia kontrola przed zapisem do Supabase.
+    // Jeżeli formularz trzyma nazwę drużyny z poprzedniego meczu, wybieramy
+    // aktualny rynek po market + odds i zapisujemy poprawną nazwę obecnej drużyny.
+    const publishMarketOptionsV1793 = !isAkoCoupon && publishMatch
+      ? enrichPopularMarkets(publishMatch, publishMatch?.markets || [])
+      : []
+    const resolvedSingleMarketV1793 = publishMarketOptionsV1793.find(item =>
+      String(item.market) === String(form.market) && String(item.pick) === String(form.betType)
+    ) || publishMarketOptionsV1793.find(item =>
+      String(item.market) === String(form.market) &&
+      Math.abs(Number(item.odds || 0) - Number(form.odds || 0)) < 0.0001
+    ) || publishMarketOptionsV1793.find(item => String(item.market) === String(form.market)) || null
+
+    const finalMarketNameV1793 = isAkoCoupon
+      ? 'AKO'
+      : String(resolvedSingleMarketV1793?.market || form.market || '').trim()
+    const finalBetTypeV1793 = isAkoCoupon
+      ? `AKO ${akoLegsForPublish.length} zdarzenia`
+      : String(resolvedSingleMarketV1793?.pick || form.betType || '').trim()
+    const finalOddsValue = isAkoCoupon
+      ? Number(akoOddsForPublish.toFixed(2))
+      : Number(resolvedSingleMarketV1793?.odds ?? form.odds ?? 0)
     // V1652: AKO nie zapisuje już listy zdarzeń w analizie.
     // Zdarzenia są trzymane osobno w legs_json, a analiza zostaje normalnym opisem użytkownika.
     const finalDescription = String(form.description || '').trim()
@@ -9963,10 +10195,10 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const settlementSource = isApiBackedTip ? 'api-football' : 'manual_visible_admin_settlement'
     const initialManualSettlementStatus = 'none'
     const initialAdminApprovalStatus = isApiBackedTip ? 'not_required' : 'none'
-    const statsBetTypeLabel = isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : normalizeBetTypeForStats(form.market, form.betType)
+    const statsBetTypeLabel = isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : normalizeBetTypeForStats(finalMarketNameV1793, finalBetTypeV1793)
     const settlementKeys = isAkoCoupon
       ? { market_key: 'ako', selection_key: `legs_${akoLegsForPublish.length}`, settlement_mode: 'auto', market_label: 'AKO' }
-      : betaiBuildSettlementKeysV1663(form.market, form.betType, publishMatch?.home, publishMatch?.away)
+      : betaiBuildSettlementKeysV1663(finalMarketNameV1793, finalBetTypeV1793, publishMatch?.home, publishMatch?.away)
     const tipPayloadRich = {
       author_id: user.id,
       user_id: user.id,
@@ -9995,8 +10227,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: isAkoCoupon ? 'AKO' : form.market,
-      market_name: isAkoCoupon ? 'AKO' : form.market,
+      market: finalMarketNameV1793,
+      market_name: finalMarketNameV1793,
       market_key: settlementKeys.market_key,
       selection_key: settlementKeys.selection_key,
       settlement_mode: settlementKeys.settlement_mode,
@@ -10005,8 +10237,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      bet_type: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
-      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      bet_type: finalBetTypeV1793,
+      prediction: finalBetTypeV1793,
       odds: finalOddsValue,
       course: finalOddsValue,
       stake: stakeValue,
@@ -10057,8 +10289,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: isAkoCoupon ? 'AKO' : form.market,
-      market_name: isAkoCoupon ? 'AKO' : form.market,
+      market: finalMarketNameV1793,
+      market_name: finalMarketNameV1793,
       market_key: settlementKeys.market_key,
       selection_key: settlementKeys.selection_key,
       settlement_mode: settlementKeys.settlement_mode,
@@ -10067,7 +10299,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      bet_type: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      bet_type: finalBetTypeV1793,
       odds: finalOddsValue,
       stake: stakeValue,
       description: finalDescription,
@@ -10093,8 +10325,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: isAkoCoupon ? 'AKO' : form.market,
-      market_name: isAkoCoupon ? 'AKO' : form.market,
+      market: finalMarketNameV1793,
+      market_name: finalMarketNameV1793,
       market_key: settlementKeys.market_key,
       selection_key: settlementKeys.selection_key,
       settlement_mode: settlementKeys.settlement_mode,
@@ -10103,7 +10335,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      prediction: finalBetTypeV1793,
       odds: finalOddsValue,
       stake: stakeValue,
       description: finalDescription,
@@ -10135,8 +10367,8 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       match_time: combinedIso,
       event_time: combinedIso,
       kickoff_time: combinedIso,
-      market: isAkoCoupon ? 'AKO' : form.market,
-      market_name: isAkoCoupon ? 'AKO' : form.market,
+      market: finalMarketNameV1793,
+      market_name: finalMarketNameV1793,
       market_key: settlementKeys.market_key,
       selection_key: settlementKeys.selection_key,
       settlement_mode: settlementKeys.settlement_mode,
@@ -10145,7 +10377,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
       type_label: statsBetTypeLabel,
       pick_type: statsBetTypeLabel,
       selection_type: statsBetTypeLabel,
-      prediction: isAkoCoupon ? `AKO ${akoLegsForPublish.length} zdarzenia` : form.betType,
+      prediction: finalBetTypeV1793,
       odds: finalOddsValue,
       stake: stakeValue,
       description: finalDescription,
@@ -11084,7 +11316,12 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
   const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
-  const dashboardAuthorStats = getAuthorStatsLabels(tip.author_visible_stats || getTipFallbackAuthorStats(tip))
+  const dashboardBotStatsV1794 = useBetaiBotDashboardStatsV1794(tip)
+  const isDashboardBotV1794 = isBetaiMultisportRecordV1794(tip)
+  const dashboardAuthorStats = getAuthorStatsLabels(
+    dashboardBotStatsV1794 || tip.author_visible_stats || getTipFallbackAuthorStats(tip)
+  )
+  const dashboardBotStatsLoadingV1794 = isDashboardBotV1794 && !dashboardBotStatsV1794
   const showFollowButton = !isOwnTip
   const followLookupKey = normalizeEmail(author || cardAuthor || tip.author_name || '')
   const followIdKey = String(authorId || tip.author_id || tip.user_id || '')
@@ -11209,9 +11446,9 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           </span>
           {dashboardAuthorStats?.totalTipsLabel ? (
             <div className="ticket-mini-stats-v876">
-              <span>Yield: <b>{dashboardAuthorStats.yieldLabel}</b></span>
-              <span>Oddane typy: <b>{dashboardAuthorStats.totalTipsLabel}</b></span>
-              <span>Bilans: <b className={Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardAuthorStats.profitLabel}</b></span>
+              <span>Yield: <b>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.yieldLabel}</b></span>
+              <span>Oddane typy: <b>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.totalTipsLabel}</b></span>
+              <span>Bilans: <b className={dashboardBotStatsLoadingV1794 ? 'profit-neutral-text' : Number(dashboardAuthorStats.profitValue || 0) > 0 ? 'profit-positive-text' : Number(dashboardAuthorStats.profitValue || 0) < 0 ? 'profit-negative-text' : 'profit-neutral-text'}>{dashboardBotStatsLoadingV1794 ? '…' : dashboardAuthorStats.profitLabel}</b></span>
             </div>
           ) : null}
         </div>

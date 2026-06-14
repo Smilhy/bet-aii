@@ -1,0 +1,11 @@
+WERSJA 1794 — Dashboard: realne statystyki betai-multisport-ai
+
+Naprawa:
+- karta bota na Dashboardzie nie liczy już statystyk tylko z aktualnie widocznych typów marketplace,
+- pobiera pełny dziennik ai_bets i liczy realne: Yield, Oddane typy, Bilans,
+- używa tego samego źródła danych co profil/ranking,
+- jeden request współdzielony przez wszystkie karty, cache 60 sekund,
+- fallback bezpośrednio do Supabase ai_bets,
+- podczas pierwszego ładowania pokazuje „…”, zamiast błędnych danych -20% / 20 / -3.00.
+
+SQL nie jest potrzebny.
