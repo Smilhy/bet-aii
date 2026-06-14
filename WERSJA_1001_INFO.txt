@@ -1,0 +1,13 @@
+WERSJA 1001 — FIX COFANIA ŻETONÓW Z WYZWAŃ
+
+Naprawione:
+- po odebraniu nagrody RPC zwraca new_balance,
+- frontend od razu ustawia licznik Coin na new_balance,
+- zapisuje Coin do localStorage,
+- nie nadpisuje świeżego salda natychmiast starym cache,
+- SQL dodaje RLS select/update dla token walletów i powiadomień,
+- powiadomienie mówi za co przyznano żeton.
+
+Wymagane:
+- uruchom supabase/version_1001_reward_persistence_rls_fix.sql
+- potem wrzuć paczkę 1001 na Netlify.

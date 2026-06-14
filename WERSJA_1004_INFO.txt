@@ -1,0 +1,11 @@
+WERSJA 1004 — GLOBAL COIN NO ROLLBACK
+
+Naprawia:
+- fetchNotifications nie może już cofnąć tokenBalance z bazy na stare 100,
+- ensureUserWalletAndWelcome nie cofa stanu do starszej wartości,
+- po odebraniu nagrody saldo zapisuje się przez persistTokenBalanceNoRollback,
+- blokada cofnięcia trwa 90 sekund,
+- event betai-token-balance-changed dostaje detail z nowym balansem,
+- SQL RPC dalej zwraca new_balance i zapisuje powiadomienie z reward_tokens.
+
+Uruchom SQL 1004 i wgraj paczkę 1004.
