@@ -11446,7 +11446,97 @@ function cleanAkoAnalysisText(value) {
   return String(value || '').replace(/\n{0,2}\s*Kupon\s+AKO:\s*[\s\S]*$/i, '').trim()
 }
 
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast }) {
+function buildRecentFormForTipster(allTips = [], referenceTip = {}, limit = 6) {
+  const safeLimit = Math.max(1, Number(limit || 6) || 6)
+  const source = Array.isArray(allTips) ? allTips : []
+  const referenceIdKeys = new Set([
+    referenceTip?.author_id,
+    referenceTip?.user_id,
+    referenceTip?.created_by,
+    referenceTip?.owner_id,
+    referenceTip?.tipster_id,
+  ].map(value => String(value || '').trim().toLowerCase()).filter(Boolean))
+  const referenceEmailKeys = new Set([
+    referenceTip?.author_email,
+    referenceTip?.email,
+    referenceTip?.user_email,
+  ].map(value => normalizeEmail(value || '')).filter(Boolean))
+  const referenceNameKeys = new Set([
+    referenceTip?.author_name,
+    referenceTip?.username,
+    resolveRealProfileUsername({
+      username: referenceTip?.author_name || referenceTip?.username,
+      author_name: referenceTip?.author_name || referenceTip?.username,
+      email: referenceTip?.author_email || referenceTip?.email || referenceTip?.user_email,
+      author_email: referenceTip?.author_email || referenceTip?.email || referenceTip?.user_email,
+    }),
+  ].map(value => normalizeEmail(value || '')).filter(Boolean))
+
+  const matchesTipster = (row = {}) => {
+    const rowIdKeys = [
+      row?.author_id,
+      row?.user_id,
+      row?.created_by,
+      row?.owner_id,
+      row?.tipster_id,
+    ].map(value => String(value || '').trim().toLowerCase()).filter(Boolean)
+    if (referenceIdKeys.size && rowIdKeys.length && rowIdKeys.some(value => referenceIdKeys.has(value))) return true
+
+    const rowEmailKeys = [
+      row?.author_email,
+      row?.email,
+      row?.user_email,
+    ].map(value => normalizeEmail(value || '')).filter(Boolean)
+    if (referenceEmailKeys.size && rowEmailKeys.length && rowEmailKeys.some(value => referenceEmailKeys.has(value))) return true
+
+    const rowNameKeys = [
+      row?.author_name,
+      row?.username,
+      resolveRealProfileUsername({
+        username: row?.author_name || row?.username,
+        author_name: row?.author_name || row?.username,
+        email: row?.author_email || row?.email || row?.user_email,
+        author_email: row?.author_email || row?.email || row?.user_email,
+      }),
+    ].map(value => normalizeEmail(value || '')).filter(Boolean)
+    if (referenceNameKeys.size && rowNameKeys.length && rowNameKeys.some(value => referenceNameKeys.has(value))) return true
+
+    return false
+  }
+
+  const sortTime = (row = {}) => {
+    const candidates = [row?.match_time, row?.event_date, row?.kickoff_at, row?.created_at, row?.updated_at]
+    for (const candidate of candidates) {
+      const ts = new Date(candidate || 0).getTime()
+      if (Number.isFinite(ts) && ts > 0) return ts
+    }
+    return 0
+  }
+
+  const settledRows = source
+    .filter(matchesTipster)
+    .map(row => ({
+      row,
+      status: normalizeTipSettlementStatus(row?.status ?? row?.result ?? row?.result_status ?? row?.settlement_status),
+      time: sortTime(row),
+    }))
+    .filter(entry => entry.status !== 'pending')
+    .sort((a, b) => b.time - a.time)
+    .slice(0, safeLimit)
+    .map(entry => {
+      if (entry.status === 'won') return { key: entry.row?.id || `won-${entry.time}`, label: 'W', tone: 'won', title: 'Wygrany typ' }
+      if (entry.status === 'lost') return { key: entry.row?.id || `lost-${entry.time}`, label: 'L', tone: 'lost', title: 'Przegrany typ' }
+      return { key: entry.row?.id || `void-${entry.time}`, label: 'V', tone: 'void', title: 'Zwrot / void' }
+    })
+
+  while (settledRows.length < safeLimit) {
+    settledRows.push({ key: `empty-${settledRows.length}`, label: '•', tone: 'empty', title: 'Brak rozliczonego typu' })
+  }
+
+  return settledRows
+}
+
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [] }) {
   const isPremium = tip.access_type === 'premium'
   const adminSubscriptionBypassV1710 = isAdminUser(currentUser) || isSmilhytvLifetimePremium(currentUser)
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive && !adminSubscriptionBypassV1710
@@ -11577,6 +11667,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   )
   const dashboardBotStatsLoadingV1794 = false
   const showFollowButton = !isOwnTip
+  const tipsterRecentForm = useMemo(() => buildRecentFormForTipster(allTips, tip, 6), [allTips, tip])
   const followLookupKey = normalizeEmail(author || cardAuthor || tip.author_name || '')
   const followIdKey = String(authorId || tip.author_id || tip.user_id || '')
   const isFollowing = Boolean(
@@ -11709,6 +11800,21 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
         <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
+        <div className="ticket-form-strip-v1811" aria-label="Forma z ostatnich 6 rozliczonych typów">
+          <span className="ticket-form-strip-label-v1811">FORMA</span>
+          <div className="ticket-form-strip-dots-v1811">
+            {tipsterRecentForm.map((entry, index) => (
+              <span
+                key={`${entry.key || entry.tone}-${index}`}
+                className={`ticket-form-chip-v1811 ${entry.tone}`}
+                title={entry.title}
+                aria-label={entry.title}
+              >
+                {entry.label}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="profile-ticket-v6-main">
@@ -24760,6 +24866,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       <TipCard
         key={tip.id}
         tip={unifiedTip}
+        allTips={tips}
         unlocked={Boolean(unifiedTip?.id && unlockedTips?.has?.(unifiedTip.id))}
         profileSubscriptionActive={profileSubActive || profileIsOwnForViewer}
         currentUser={viewerProfile}
@@ -24782,6 +24889,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         <div className="profile-purchased-single-badge-v952">🔓 Kupiony singiel</div>
         <TipCard
           tip={unifiedTip}
+          allTips={tips}
           unlocked={true}
           profileSubscriptionActive={hasActiveTipsterSubscription(unifiedTip, tipsterSubscriptions)}
           currentUser={viewerProfile}
@@ -25935,6 +26043,7 @@ function UnlockedTipsView({ tips = [], unlockedTips = new Set(), currentUser, fo
               <div className="unlocked-single-badge-v951">🔓 Odblokowany singiel</div>
               <TipCard
                 tip={tip}
+                allTips={tips}
                 unlocked={true}
                 profileSubscriptionActive={false}
                 currentUser={currentUser}
@@ -32456,7 +32565,7 @@ function App() {
             ) : null}
 
             <div className="feed">
-              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
+              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
                 <div className="empty-state">Brak typów typerów na dziś.</div>
               )}
             </div>
