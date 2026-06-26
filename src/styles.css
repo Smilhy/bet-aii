@@ -75939,3 +75939,50 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   margin:0 !important;
   padding:0 !important;
 }
+
+/* WERSJA 1821 — liga i sport na górze, centralnie nad meczem */
+.profile-ticket-v6 .profile-ticket-v6-main,
+.dashboard-ticket-v6 .profile-ticket-v6-main,
+.profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-main,
+.profile-all-tips-list .profile-ticket-v6 .profile-ticket-v6-main{
+  position:relative !important;
+  display:grid !important;
+  grid-template-rows:auto minmax(0,1fr) auto !important;
+  align-content:stretch !important;
+  padding-top:16px !important;
+  padding-bottom:12px !important;
+  gap:10px !important;
+}
+.profile-ticket-v6 .profile-ticket-v6-sport-row,
+.dashboard-ticket-v6 .profile-ticket-v6-sport-row,
+.profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-sport-row,
+.profile-all-tips-list .profile-ticket-v6 .profile-ticket-v6-sport-row{
+  justify-self:center !important;
+  align-self:start !important;
+  margin:0 auto !important;
+  width:max-content !important;
+  max-width:calc(100% - 16px) !important;
+  flex-wrap:nowrap !important;
+  z-index:3 !important;
+}
+.profile-ticket-v6 .profile-ticket-v6-match,
+.dashboard-ticket-v6 .profile-ticket-v6-match,
+.profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-match,
+.profile-all-tips-list .profile-ticket-v6 .profile-ticket-v6-match{
+  align-self:center !important;
+}
+.profile-ticket-v6 .profile-ticket-v6-main > small,
+.dashboard-ticket-v6 .profile-ticket-v6-main > small,
+.profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-main > small,
+.profile-all-tips-list .profile-ticket-v6 .profile-ticket-v6-main > small{
+  align-self:end !important;
+}
+@media (max-width:760px){
+  .profile-ticket-v6 .profile-ticket-v6-sport-row,
+  .dashboard-ticket-v6 .profile-ticket-v6-sport-row,
+  .profile-v4-tips-page .profile-ticket-v6 .profile-ticket-v6-sport-row,
+  .profile-all-tips-list .profile-ticket-v6 .profile-ticket-v6-sport-row{
+    max-width:100% !important;
+    gap:7px !important;
+  }
+}
