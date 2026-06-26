@@ -75900,3 +75900,42 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:10px !important;
   }
 }
+
+/* WERSJA 1820 — usunięcie linii i prawdziwy odstęp FORMA -> ikonki */
+.profile-ticket-v6-left > .ticket-form-strip-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811{
+  border-top:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  gap:0 !important;
+  padding-top:16px !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811::before,
+.profile-ticket-v6-left > .ticket-form-strip-v1811::after,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811::before,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811::after,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811::before,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811::after,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811::before,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811::after{
+  content:none !important;
+  display:none !important;
+  border:0 !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811{
+  display:block !important;
+  margin:0 0 10px 0 !important;
+  padding:0 !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811{
+  margin:0 !important;
+  padding:0 !important;
+}
