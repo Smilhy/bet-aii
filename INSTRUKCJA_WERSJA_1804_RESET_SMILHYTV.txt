@@ -1,0 +1,50 @@
+BETAI WERSJA 1804 — INSTRUKCJA
+
+1. SUPABASE — RESET DANYCH
+   Otwórz Supabase -> SQL Editor -> New query.
+   Wklej cały plik:
+   SUPABASE_RUN_ONCE_WERSJA_1804_RESET_SMILHYTV_FULL.sql
+   Kliknij RUN tylko jeden raz.
+
+   Skrypt usuwa wyłącznie dane bukmacherskie smilhytv:
+   - typy i mecze,
+   - wyniki i historię,
+   - statystyki profilu,
+   - osiągnięcia zależne od liczby typów/wygranych/kursów/dni typowania.
+
+   Nie usuwa konta, roli ADMIN, avatara, opisu, portfela, monet,
+   subskrypcji, obserwujących, opinii, poleceń ani konfiguracji Stripe.
+
+2. NETLIFY — WDROŻENIE
+   Wdróż cały folder jako nową wersję strony.
+   netlify.toml jest już skonfigurowany:
+   - build command: npm run build
+   - publish directory: dist
+   - functions directory: netlify/functions
+
+3. ZMIENNE ŚRODOWISKOWE
+   Ustaw w Netlify -> Site configuration -> Environment variables:
+   - VITE_SUPABASE_URL
+   - VITE_SUPABASE_ANON_KEY
+   - SUPABASE_URL
+   - SUPABASE_SERVICE_ROLE_KEY
+   - SUPABASE_SERVICE_KEY (ta sama wartość, dla starszych funkcji)
+
+   Wzór znajduje się w pliku .env.example.
+   Klucza SERVICE ROLE nigdy nie wpisuj do zmiennej zaczynającej się od VITE_.
+
+4. PO WDROŻENIU
+   Otwórz stronę i wykonaj zwykłe odświeżenie.
+   Wersja 1804 sama wyczyści stare techniczne cache statystyk i typów.
+
+5. OCZEKIWANY WYNIK PROFILU SMILHYTV
+   - Yield: 0%
+   - Profit: 0.00
+   - Typy: 0
+   - Wygrane: 0
+   - Przegrane: 0
+   - Pending: 0
+   - Stawki: 0.00
+   - Śr. kurs: —
+   - Max kurs: —
+   - zakładki Typy / Wyniki / Historia / Statystyki są puste.

@@ -1047,34 +1047,46 @@ function readTipDebug() {
 
 const BETAI_RECENT_SAVED_TIPS_KEY = 'betai_recent_saved_tips_v1263'
 
-// WERSJA 1606: po resecie statystyk/typów nie wolno trzymać starych kuponów ani
-// author_imported_stats z localStorage, bo profil może pokazywać 766 typów mimo że
-// Supabase ma już imported_* = 0 i tips_left = 0. Czyścimy tylko techniczny cache typów,
-// nie ruszamy tokenów, logowania, języka, Stripe ani innych ustawień użytkownika.
-function runBetAiStatsResetCachePurgeV1606() {
+// WERSJA 1804: pełny reset statystyk profilu smilhytv musi również usunąć
+// techniczne kopie typów i statystyk zapisane wcześniej w przeglądarce. Nowy marker
+// uruchamia czyszczenie ponownie także u osób, które miały już wykonany reset v1606.
+// Nie ruszamy sesji logowania, języka, Stripe, portfela, monet ani ustawień konta.
+function runBetAiStatsResetCachePurgeV1804() {
   try {
-    if (typeof window === 'undefined' || !window.localStorage) return
-    const marker = 'betai_stats_reset_cache_purge_v1606'
-    if (window.localStorage.getItem(marker) === '1') return
-    const keysToRemove = []
-    for (let i = 0; i < window.localStorage.length; i += 1) {
-      const key = window.localStorage.key(i) || ''
-      const lower = key.toLowerCase()
-      if (
-        key === BETAI_RECENT_SAVED_TIPS_KEY ||
-        lower.includes('recent_saved_tips') ||
-        lower.includes('author_imported_stats') ||
-        lower.includes('visible_stats') ||
-        lower.includes('tip_stats_cache') ||
-        lower.includes('public_tips_cache') ||
-        lower.includes('profile_stats_cache')
-      ) keysToRemove.push(key)
+    if (typeof window === 'undefined') return
+    const marker = 'betai_stats_reset_cache_purge_v1804_smilhytv'
+    const patterns = [
+      'recent_saved_tips',
+      'author_imported_stats',
+      'visible_stats',
+      'tip_stats_cache',
+      'public_tips_cache',
+      'profile_stats_cache',
+      'tipster_stats_cache',
+      'profile_history_cache',
+      'profile_chart_cache',
+      'local_settlement_patch',
+    ]
+
+    const purgeStorage = (storage) => {
+      if (!storage || storage.getItem(marker) === '1') return
+      const keysToRemove = []
+      for (let i = 0; i < storage.length; i += 1) {
+        const key = storage.key(i) || ''
+        const lower = key.toLowerCase()
+        if (key === BETAI_RECENT_SAVED_TIPS_KEY || patterns.some(pattern => lower.includes(pattern))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(key => storage.removeItem(key))
+      storage.setItem(marker, '1')
     }
-    keysToRemove.forEach(key => window.localStorage.removeItem(key))
-    window.localStorage.setItem(marker, '1')
+
+    purgeStorage(window.localStorage)
+    purgeStorage(window.sessionStorage)
   } catch (_) {}
 }
-runBetAiStatsResetCachePurgeV1606()
+runBetAiStatsResetCachePurgeV1804()
 
 function readRecentSavedTips(userId = '') {
   try {
