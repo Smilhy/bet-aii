@@ -75412,3 +75412,85 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   .ranking-v4-table-card .ranking-v4-row.head > span:nth-child(n+3):nth-child(-n+9)::after{box-shadow:none}
   .ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(n+3):nth-child(-n+9){padding-left:6px!important;margin-left:-6px!important}
 }
+
+/* ========================================================================
+   WERSJA 1808 — wykres salda inspirowany Betfolio (Wyniki + Statystyki)
+   ======================================================================== */
+.profile-betfolio-chart-v1808{
+  background:#293248 !important;
+  border:1px solid rgba(151,163,196,.13) !important;
+  border-radius:7px !important;
+  box-shadow:none !important;
+  padding:18px 18px 15px !important;
+}
+.profile-betfolio-chart-v1808::before{display:none !important}
+.profile-betfolio-chart-v1808 .profile-results-chart-head-v961 h3{
+  color:#b8c0d2 !important;
+  font-size:17px !important;
+  font-weight:700 !important;
+  letter-spacing:0 !important;
+}
+.profile-betfolio-chart-v1808 .profile-chart-mode-v961{
+  background:#242c40 !important;
+  border-color:rgba(145,157,190,.22) !important;
+  color:#c5ccda !important;
+  box-shadow:none !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-range-v961 button{
+  background:#242c40 !important;
+  color:#aab4c8 !important;
+  border-color:rgba(145,157,190,.20) !important;
+  box-shadow:none !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-range-v961 button.active{
+  background:#6f66ff !important;
+  color:#fff !important;
+  border-color:#8b83ff !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-chart-stage-v961{
+  min-height:270px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-grid-v961{
+  background-image:
+    linear-gradient(to bottom, rgba(151,163,196,.13) 1px, transparent 1px),
+    linear-gradient(to right, rgba(151,163,196,.055) 1px, transparent 1px) !important;
+  background-size:100% 20%, 10% 100% !important;
+  border:0 !important;
+  border-radius:0 !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-yaxis-v961 span,
+.profile-betfolio-chart-v1808 .profile-results-xaxis-v961 span{
+  color:#d4dae7 !important;
+  font-size:10px !important;
+  font-weight:700 !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-line-v961{
+  filter:drop-shadow(0 0 4px rgba(118,105,255,.46)) !important;
+}
+.profile-betfolio-chart-v1808 .profile-results-svg-v961 circle{
+  fill:#8e86ff !important;
+  stroke:#eceaff !important;
+  stroke-width:.35 !important;
+}
+.profile-betfolio-chart-v1808 .profile-chart-summary-v1366{
+  margin-top:10px !important;
+  gap:8px !important;
+}
+.profile-betfolio-chart-v1808 .profile-chart-summary-v1366 article{
+  background:rgba(35,43,62,.76) !important;
+  border-color:rgba(151,163,196,.13) !important;
+  border-radius:7px !important;
+  box-shadow:none !important;
+  padding:9px 12px !important;
+}
+.profile-betfolio-chart-v1808 .profile-chart-summary-v1366 small{color:#9da8bd !important}
+.profile-betfolio-chart-v1808 .profile-chart-summary-v1366 strong{color:#f1f3f9 !important}
+.profile-betfolio-chart-v1808 .profile-chart-summary-v1366 strong.pos{color:#8f86ff !important}
+@media (max-width:700px){
+  .profile-betfolio-chart-v1808{padding:12px 10px !important}
+  .profile-betfolio-chart-v1808 .profile-results-chart-stage-v961{min-height:220px !important}
+}

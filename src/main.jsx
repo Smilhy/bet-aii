@@ -22663,7 +22663,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const [profileHistoryVisibleCount, setProfileHistoryVisibleCount] = useState(7)
   const [tipsterSupportOpen, setTipsterSupportOpen] = useState(false)
   const [profileResultsFilter, setProfileResultsFilter] = useState('all')
-  const [profileChartRange, setProfileChartRange] = useState('90d')
+  const [profileChartRange, setProfileChartRange] = useState('all')
   const [profileChartMode, setProfileChartMode] = useState('cumulative')
   const [profileChartHover, setProfileChartHover] = useState(null)
   const [profileSelectedLeagueDetail, setProfileSelectedLeagueDetail] = useState(null)
@@ -24294,6 +24294,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const formatChartAxisLabel = (row, tickRows = [], allRows = []) => {
     if (!row?.date) return row?.label || ''
+    if (row?.source === 'imported' && row?.label) return row.label
     const sourceRows = allRows.length ? allRows : tickRows
     const validDates = sourceRows
       .map(item => item?.date)
@@ -24316,32 +24317,25 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const getChartResultColor = (delta = 0) => delta > 0 ? '#39f3bc' : delta < 0 ? '#ff5b92' : '#7be6ff'
 
-  const importedChartSourceRowsV1805 = additiveImportedStatsV1805 ? importedMonthStatsRowsV1578 : liveMonthStatsRows
-  const importedChartRows = [...importedChartSourceRowsV1805].reverse()
-    .map(row => {
-      const date = parseMonthLabelDate(row.label)
-      return {
-        key: `imported-${row.label}`,
-        label: row.label,
-        date,
-        profit: Number(row.profit || 0),
-        stake: Number(row.stake || 0),
-        source: 'imported'
-      }
-    })
-    .filter(row => row.date)
-
+  // WERSJA 1809: wykres korzysta wyłącznie z aktualnych, realnych typów
+  // danego typera zapisanych w Supabase. Nie wykorzystuje importowanych
+  // miesięcy ani sztucznej historii z Betfolio.
   const liveChartRows = allProfileTipCards
     .filter(tip => ['Wygrany', 'Przegrany', 'Zwrot'].includes(tip.statusLabel))
     .map(tip => {
-      const date = new Date(tip.match_time || tip.event_time || tip.start_time || tip.created_at || Date.now())
+      const date = new Date(tip.settled_at || tip.result_at || tip.updated_at || tip.match_time || tip.event_time || tip.start_time || tip.created_at || Date.now())
       const stake = Number(tip.stake || 0) || 0
       const odds = Number(tip.odds || 0) || 0
-      const profit = tip.statusLabel === 'Wygrany'
+      const storedProfitRaw = tip.profit ?? tip.net_profit ?? tip.result_profit
+      const storedProfit = storedProfitRaw === null || storedProfitRaw === undefined || storedProfitRaw === ''
+        ? Number.NaN
+        : Number(storedProfitRaw)
+      const calculatedProfit = tip.statusLabel === 'Wygrany'
         ? stake * Math.max(0, odds - 1)
         : tip.statusLabel === 'Przegrany'
           ? -stake
           : 0
+      const profit = Number.isFinite(storedProfit) ? storedProfit : calculatedProfit
       return {
         key: `live-${tip.id}`,
         label: formatChartDateLabel(date),
@@ -24358,14 +24352,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     })
     .filter(row => Number.isFinite(row.date?.getTime?.()))
 
-  // WERSJA 1805: dla importu bazowego łączymy historyczne miesiące z nowymi
-  // typami dodanymi po dacie importu. Dla pozostałych profili zostaje stary fallback.
-  const liveChartRowsAfterImportV1805 = additiveImportedStatsV1805 && Number.isFinite(importedAtMs)
-    ? liveChartRows.filter(row => row.date.getTime() > importedAtMs)
-    : liveChartRows
-  const allBalanceRows = (additiveImportedStatsV1805
-    ? [...importedChartRows, ...liveChartRowsAfterImportV1805]
-    : (liveChartRows.length ? liveChartRows : importedChartRows))
+  const allBalanceRows = [...liveChartRows]
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const selectedChartRange = profileChartRanges.find(item => item.key === profileChartRange) || profileChartRanges[2]
@@ -24373,24 +24360,28 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const chartCutoff = selectedChartRange.days
     ? new Date(lastChartDate.getTime() - selectedChartRange.days * 86400000)
     : null
-  const rangedBalanceRows = (chartCutoff ? allBalanceRows.filter(row => row.date >= chartCutoff) : allBalanceRows).length
-    ? (chartCutoff ? allBalanceRows.filter(row => row.date >= chartCutoff) : allBalanceRows)
-    : allBalanceRows.slice(-1)
+  // WERSJA 1808: saldo jest liczone od początku całej historii, a zakres tylko
+  // przycina widok. Dzięki temu przełączenie na 7D/30D/90D nie zeruje wykresu.
+  let fullCumulativeValueV1808 = 0
+  const allBalanceRowsWithCumulativeV1808 = allBalanceRows.map((row, index) => {
+    fullCumulativeValueV1808 += Number(row.profit || 0)
+    return { ...row, fullIndex: index, cumulativeValue: fullCumulativeValueV1808 }
+  })
+  const rangedBalanceRows = (chartCutoff
+    ? allBalanceRowsWithCumulativeV1808.filter(row => row.date >= chartCutoff)
+    : allBalanceRowsWithCumulativeV1808).length
+    ? (chartCutoff
+      ? allBalanceRowsWithCumulativeV1808.filter(row => row.date >= chartCutoff)
+      : allBalanceRowsWithCumulativeV1808)
+    : allBalanceRowsWithCumulativeV1808.slice(-1)
 
-  let cumulativeValue = 0
   const chartPointRows = rangedBalanceRows.map((row, index) => {
-    cumulativeValue += Number(row.profit || 0)
     const value = profileChartMode === 'period'
       ? Number(row.profit || 0)
       : profileChartMode === 'roi'
         ? (Number(row.stake || 0) ? Math.round((Number(row.profit || 0) / Number(row.stake || 0)) * 100) : 0)
-        : cumulativeValue
-    return {
-      ...row,
-      index,
-      value,
-      cumulativeValue,
-    }
+        : Number(row.cumulativeValue || 0)
+    return { ...row, index, value }
   })
 
   const chartValues = chartPointRows.map(row => Number(row.value || 0))
@@ -24419,6 +24410,27 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     }
   })
   const chartLinePoints = chartPlotRows.map(row => `${row.x},${row.y}`).join(' ')
+  const buildSmoothChartPathV1808 = (rows = []) => {
+    if (!rows.length) return 'M 0 96 L 100 96'
+    if (rows.length === 1) return `M 0 ${rows[0].y} L 100 ${rows[0].y}`
+    let path = `M ${rows[0].x} ${rows[0].y}`
+    for (let i = 0; i < rows.length - 1; i += 1) {
+      const current = rows[i]
+      const next = rows[i + 1]
+      const previous = rows[i - 1] || current
+      const afterNext = rows[i + 2] || next
+      const cp1x = current.x + (next.x - previous.x) / 6
+      const cp1y = current.y + (next.y - previous.y) / 6
+      const cp2x = next.x - (afterNext.x - current.x) / 6
+      const cp2y = next.y - (afterNext.y - current.y) / 6
+      path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`
+    }
+    return path
+  }
+  const chartSmoothPathV1808 = buildSmoothChartPathV1808(chartPlotRows)
+  const chartAreaPathV1808 = chartPlotRows.length
+    ? `${chartSmoothPathV1808} L 100 100 L 0 100 Z`
+    : 'M 0 96 L 100 96 L 100 100 L 0 100 Z'
   const chartGradientStops = chartPlotRows.length <= 1
     ? [{ offset: 0, color: '#7be6ff' }, { offset: 100, color: '#7be6ff' }]
     : chartPlotRows.flatMap((row, index, arr) => {
@@ -24967,10 +24979,10 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
               </section>
             ) : (
             <section className="profile-v4-page profile-v4-results-page">
-              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961">
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-live-balance-chart-v1809">
                 <div className="profile-results-chart-head-v961">
                   <div>
-                    <h3>Wyniki — przebieg bilansu</h3>
+                    <h3>Wykres salda</h3>
                   </div>
                   <select className="profile-chart-mode-v961" value={profileChartMode} onChange={(event) => setProfileChartMode(event.target.value)}>
                     {profileChartModes.map(mode => <option key={mode.key} value={mode.key}>{mode.label}</option>)}
@@ -24999,12 +25011,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileBalanceFillV961" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(82,234,255,.26)" />
-                          <stop offset="45%" stopColor="rgba(38,150,255,.10)" />
-                          <stop offset="100%" stopColor="rgba(37,168,255,0)" />
+                          <stop offset="0%" stopColor="rgba(111,91,255,.38)" />
+                          <stop offset="52%" stopColor="rgba(102,87,220,.18)" />
+                          <stop offset="100%" stopColor="rgba(78,69,170,0)" />
                         </linearGradient>
                         <linearGradient id="profileBalanceStrokeV961" x1="0" x2="1" y1="0" y2="0">
-                          {chartGradientStops.map((stop, index) => <stop key={`result-stop-${index}`} offset={`${stop.offset}%`} stopColor={stop.color} />)}
+                          <stop offset="0%" stopColor="#7067ff" /><stop offset="55%" stopColor="#756cff" /><stop offset="100%" stopColor="#8d83ff" />
                         </linearGradient>
                         <filter id="profileBalanceGlowV961">
                           <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
@@ -25014,8 +25026,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           </feMerge>
                         </filter>
                       </defs>
-                      <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileBalanceFillV961)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.76" filter="url(#profileBalanceGlowV961)" />
+                      <path className="profile-results-area-v961" d={chartAreaPathV1808} fill="url(#profileBalanceFillV961)" />
+                      <path className="profile-results-line-v961" d={chartSmoothPathV1808} fill="none" stroke="url(#profileBalanceStrokeV961)" strokeWidth="1.45" filter="url(#profileBalanceGlowV961)" vectorEffect="non-scaling-stroke" />
                       {chartPlotRows.filter(row => row.showDot).map((row, index, arr) => (
                         <circle
                           key={`${row.key || row.label}-${index}`}
@@ -25112,7 +25124,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
 
           {profileTab === 'stats' && (
             <section className="profile-v4-page profile-v4-stats-page">
-              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-stats-chart-v1361">
+              <section className="glass-profile-v3 profile-v3-card profile-v4-chart-card profile-results-chart-v961 profile-stats-chart-v1361 profile-live-balance-chart-v1809">
                 <div className="profile-results-chart-head-v961">
                   <div>
                     <h3>Wykres salda</h3>
@@ -25144,12 +25156,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="profile-results-svg-v961">
                       <defs>
                         <linearGradient id="profileStatsBalanceFillV1361" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(82,234,255,.26)" />
-                          <stop offset="45%" stopColor="rgba(38,150,255,.10)" />
-                          <stop offset="100%" stopColor="rgba(37,168,255,0)" />
+                          <stop offset="0%" stopColor="rgba(111,91,255,.38)" />
+                          <stop offset="52%" stopColor="rgba(102,87,220,.18)" />
+                          <stop offset="100%" stopColor="rgba(78,69,170,0)" />
                         </linearGradient>
                         <linearGradient id="profileStatsBalanceStrokeV1361" x1="0" x2="1" y1="0" y2="0">
-                          {chartGradientStops.map((stop, index) => <stop key={`stats-stop-${index}`} offset={`${stop.offset}%`} stopColor={stop.color} />)}
+                          <stop offset="0%" stopColor="#7067ff" /><stop offset="55%" stopColor="#756cff" /><stop offset="100%" stopColor="#8d83ff" />
                         </linearGradient>
                         <filter id="profileStatsBalanceGlowV1361">
                           <feGaussianBlur stdDeviation="1.15" result="coloredBlur" />
@@ -25159,8 +25171,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                           </feMerge>
                         </filter>
                       </defs>
-                      <polygon className="profile-results-area-v961" points={`0,100 ${linePoints} 100,100`} fill="url(#profileStatsBalanceFillV1361)" />
-                      <polyline className="profile-results-line-v961" points={linePoints} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="1.76" filter="url(#profileStatsBalanceGlowV1361)" />
+                      <path className="profile-results-area-v961" d={chartAreaPathV1808} fill="url(#profileStatsBalanceFillV1361)" />
+                      <path className="profile-results-line-v961" d={chartSmoothPathV1808} fill="none" stroke="url(#profileStatsBalanceStrokeV1361)" strokeWidth="1.45" filter="url(#profileStatsBalanceGlowV1361)" vectorEffect="non-scaling-stroke" />
                       {chartPlotRows.filter(row => row.showDot).map((row, index, arr) => (
                         <circle
                           key={`stats-point-${row.key || row.label}-${index}`}
