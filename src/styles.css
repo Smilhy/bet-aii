@@ -75498,6 +75498,8 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 
 /* WERSJA 1811 — forma ostatnich 6 rozliczonych typów na karcie kuponu */
 .ticket-form-strip-v1811{
+  grid-column:1 / -1;
+  grid-row:2;
   width: 100%;
   display:flex;
   flex-direction:row;
