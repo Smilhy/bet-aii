@@ -75315,3 +75315,100 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     animation:none!important;
   }
 }
+
+/* ============================================================
+   WERSJA 1807 — RANKING PREMIUM MINIMAL (TYLKO WYGLĄD TABELI)
+   Wariant 4: cienkie kolorowe akcenty kolumn, bez zmian logiki.
+   ============================================================ */
+.ranking-v4-table-card{
+  --rank-cyan:#20e2dd;
+  --rank-green:#79e45d;
+  --rank-blue:#53a8ff;
+  --rank-violet:#b78cff;
+  --rank-profit:#76e56b;
+  --rank-gold:#f2bd4c;
+  --rank-pink:#f277b5;
+}
+
+.ranking-v4-table-card .ranking-v4-table{
+  overflow:hidden!important;
+  border-radius:18px!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row{
+  position:relative!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row.head{
+  min-height:48px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))!important;
+  border-bottom:1px solid rgba(105,190,220,.16)!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row.head > span{
+  position:relative!important;
+  min-height:48px!important;
+  display:flex!important;
+  align-items:center!important;
+  color:#91a8bb!important;
+  letter-spacing:.045em!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(n+3):nth-child(-n+9)::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  border-radius:999px 999px 0 0;
+  opacity:.95;
+  box-shadow:0 0 12px currentColor;
+}
+
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(3){color:var(--rank-cyan)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(3)::after{background:var(--rank-cyan)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(4){color:var(--rank-green)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(4)::after{background:var(--rank-green)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(5){color:var(--rank-blue)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(5)::after{background:var(--rank-blue)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(6){color:var(--rank-violet)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(6)::after{background:var(--rank-violet)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(7){color:var(--rank-profit)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(7)::after{background:var(--rank-profit)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(8){color:var(--rank-gold)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(8)::after{background:var(--rank-gold)}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(9){color:var(--rank-pink)!important}
+.ranking-v4-table-card .ranking-v4-row.head > span:nth-child(9)::after{background:var(--rank-pink)}
+
+/* Delikatne pionowe tinty — eleganckie, prawie niewidoczne. */
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(3){background:linear-gradient(90deg,rgba(32,226,221,.025),rgba(32,226,221,.055),rgba(32,226,221,.025))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(4){background:linear-gradient(90deg,rgba(121,228,93,.018),rgba(121,228,93,.045),rgba(121,228,93,.018))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(5){background:linear-gradient(90deg,rgba(83,168,255,.018),rgba(83,168,255,.045),rgba(83,168,255,.018))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(6){background:linear-gradient(90deg,rgba(183,140,255,.018),rgba(183,140,255,.045),rgba(183,140,255,.018))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(7){background:linear-gradient(90deg,rgba(118,229,107,.018),rgba(118,229,107,.045),rgba(118,229,107,.018))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(8){background:linear-gradient(90deg,rgba(242,189,76,.018),rgba(242,189,76,.045),rgba(242,189,76,.018))!important}
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(9){background:linear-gradient(90deg,rgba(242,119,181,.018),rgba(242,119,181,.045),rgba(242,119,181,.018))!important}
+
+.ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(n+3):nth-child(-n+9){
+  min-height:100%!important;
+  align-self:stretch!important;
+  display:flex!important;
+  align-items:center!important;
+  padding-left:10px!important;
+  margin-left:-10px!important;
+  border-left:1px solid rgba(255,255,255,.025)!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row:not(.head):hover{
+  background:linear-gradient(90deg,rgba(32,226,221,.045),rgba(83,168,255,.025),rgba(183,140,255,.025))!important;
+}
+
+.ranking-v4-table-card .ranking-v4-row:not(.head):hover > span:nth-child(n+3):nth-child(-n+9){
+  filter:brightness(1.14)!important;
+}
+
+@media(max-width:900px){
+  .ranking-v4-table-card .ranking-v4-row.head > span:nth-child(n+3):nth-child(-n+9)::after{box-shadow:none}
+  .ranking-v4-table-card .ranking-v4-row:not(.head) > span:nth-child(n+3):nth-child(-n+9){padding-left:6px!important;margin-left:-6px!important}
+}
