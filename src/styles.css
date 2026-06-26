@@ -75827,3 +75827,76 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     font-size:9px !important;
   }
 }
+
+
+/* WERSJA 1819 — forma 5 ikon, większe odstępy, wyrównanie do lewej */
+.profile-ticket-v6-left > .ticket-form-strip-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811{
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
+  padding:12px 8px 2px !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811{
+  font-size:12px !important;
+  line-height:1 !important;
+  letter-spacing:.18em !important;
+  margin:0 0 2px 0 !important;
+  text-align:left !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811{
+  width:auto !important;
+  max-width:100% !important;
+  justify-content:flex-start !important;
+  gap:7px !important;
+  overflow:visible !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811{
+  flex:0 0 24px !important;
+  width:24px !important;
+  min-width:24px !important;
+  max-width:24px !important;
+  height:24px !important;
+  min-height:24px !important;
+  max-height:24px !important;
+  border-radius:8px !important;
+  font-size:11px !important;
+}
+@media (max-width:960px){
+  .profile-ticket-v6-left > .ticket-form-strip-v1811,
+  .dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811,
+  .profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811,
+  .profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811{
+    gap:9px !important;
+  }
+  .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+  .dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+  .profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+  .profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811{
+    font-size:11px !important;
+  }
+  .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+  .dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+  .profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+  .profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811{
+    flex-basis:22px !important;
+    width:22px !important;
+    min-width:22px !important;
+    max-width:22px !important;
+    height:22px !important;
+    min-height:22px !important;
+    max-height:22px !important;
+    font-size:10px !important;
+  }
+}

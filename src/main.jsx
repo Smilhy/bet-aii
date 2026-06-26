@@ -11750,7 +11750,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   )
   const dashboardBotStatsLoadingV1794 = false
   const showFollowButton = !isOwnTip
-  const tipsterRecentForm = useMemo(() => buildRecentFormForTipster(allTips, tip, 6), [allTips, tip])
+  const tipsterRecentForm = useMemo(() => buildRecentFormForTipster(allTips, tip, 5), [allTips, tip])
   const followLookupKey = normalizeEmail(author || cardAuthor || tip.author_name || '')
   const followIdKey = String(authorId || tip.author_id || tip.user_id || '')
   const isFollowing = Boolean(
