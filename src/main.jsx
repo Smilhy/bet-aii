@@ -23269,8 +23269,38 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   const tokenCount = Number(user?.token_balance || user?.tokens || user?.coin || 0) || 0
   const walletAmount = Number(user?.wallet || user?.balance || 0) || 0
   const profileBio = user?.bio || user?.description || user?.about || fallbackBio
-  const localProfileRank = buildBetaiProfileRankV1557({ active_days: Number(user?.active_days || user?.attendance_days || user?.activity_days || 0) || 0, total_tips: totalTips, profit: profitAmount, win_rate: winRate })
-  const profileRank = profileRankRemote?.ok ? {
+  const importedActiveDaysV1810 = (() => {
+    const explicitDays = Number(user?.active_days || user?.attendance_days || user?.activity_days || 0) || 0
+    if (explicitDays > 0) return explicitDays
+    if (!additiveImportedStatsV1805 || importedTotalTips <= 0) return 0
+
+    // Dla profilu z importowaną historią wyliczamy staż z miesięcy, które mają typy.
+    // Dzięki temu import 812 typów nie pozostaje sztucznie na Bronze tylko dlatego,
+    // że dawna platforma nie posiadała pola active_days.
+    const rawMonthly = user?.imported_monthly_stats
+    let rows = []
+    try { rows = Array.isArray(rawMonthly) ? rawMonthly : JSON.parse(rawMonthly || '[]') } catch { rows = [] }
+    const validMonths = rows
+      .filter(row => Number(row?.coupons ?? row?.tips ?? row?.count ?? 0) > 0)
+      .map(row => {
+        const parts = String(row?.label || row?.month || '').split('/').map(Number)
+        return parts.length === 2 && parts[0] && parts[1] ? new Date(parts[1], parts[0] - 1, 1) : null
+      })
+      .filter(date => date && Number.isFinite(date.getTime()))
+    if (validMonths.length) {
+      const earliest = new Date(Math.min(...validMonths.map(date => date.getTime())))
+      const latest = Number.isFinite(importedAtMs) ? new Date(importedAtMs) : new Date()
+      return Math.max(1, Math.floor((latest.getTime() - earliest.getTime()) / 86400000) + 1)
+    }
+
+    // Bez rozpiski miesięcznej stosujemy konserwatywny ekwiwalent aktywności:
+    // maksymalnie 90 dni, nie więcej niż liczba historycznych typów.
+    return Math.max(1, Math.min(90, importedTotalTips))
+  })()
+  const localProfileRank = buildBetaiProfileRankV1557({ active_days: importedActiveDaysV1810, total_tips: totalTips, profit: profitAmount, win_rate: winRate })
+  // Zdalny RPC może nie znać pól imported_* i zwracać Bronze. Dla trybu baseline
+  // lokalna kalkulacja jest źródłem prawdy, dla pozostałych profili zachowujemy RPC.
+  const profileRank = additiveImportedStatsV1805 ? localProfileRank : profileRankRemote?.ok ? {
     ...localProfileRank,
     ...profileRankRemote,
     requirements: Array.isArray(profileRankRemote.requirements) ? profileRankRemote.requirements : localProfileRank.requirements,
@@ -24317,22 +24347,24 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const getChartResultColor = (delta = 0) => delta > 0 ? '#39f3bc' : delta < 0 ? '#ff5b92' : '#7be6ff'
 
-  // WERSJA 1809: wykres korzysta wyłącznie z aktualnych, realnych typów
-  // danego typera zapisanych w Supabase. Nie wykorzystuje importowanych
-  // miesięcy ani sztucznej historii z Betfolio.
-  const liveChartRows = allProfileTipCards
-    .filter(tip => ['Wygrany', 'Przegrany', 'Zwrot'].includes(tip.statusLabel))
+  // WERSJA 1810: wykres pokazuje AKTUALNY stan statystyk typera.
+  // Importowane statystyki są jednym punktem startowym (aktualny historyczny bilans),
+  // a każdy nowy, realnie rozliczony typ z Supabase dopisuje kolejny punkt.
+  // Nie odtwarzamy sztucznej historii Betfolio i pending nie zmienia salda.
+  const liveChartRows = liveTipsForStats
+    .filter(tip => ['won', 'lost', 'void'].includes(getProfileTipSettlement(tip)))
     .map(tip => {
+      const settlement = getProfileTipSettlement(tip)
       const date = new Date(tip.settled_at || tip.result_at || tip.updated_at || tip.match_time || tip.event_time || tip.start_time || tip.created_at || Date.now())
-      const stake = Number(tip.stake || 0) || 0
-      const odds = Number(tip.odds || 0) || 0
+      const stake = Number(tip.stake ?? tip.bet_amount ?? tip.amount ?? 0) || 0
+      const odds = getProfileTipOdds(tip)
       const storedProfitRaw = tip.profit ?? tip.net_profit ?? tip.result_profit
       const storedProfit = storedProfitRaw === null || storedProfitRaw === undefined || storedProfitRaw === ''
         ? Number.NaN
         : Number(storedProfitRaw)
-      const calculatedProfit = tip.statusLabel === 'Wygrany'
+      const calculatedProfit = settlement === 'won'
         ? stake * Math.max(0, odds - 1)
-        : tip.statusLabel === 'Przegrany'
+        : settlement === 'lost'
           ? -stake
           : 0
       const profit = Number.isFinite(storedProfit) ? storedProfit : calculatedProfit
@@ -24343,16 +24375,36 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         profit,
         stake,
         odds,
-        pick: tip.pick,
-        home: tip.home,
-        away: tip.away,
-        statusLabel: tip.statusLabel,
+        pick: tip.pick || tip.bet_type || tip.prediction || 'Typ',
+        home: tip.home_team || tip.team_home || 'Gospodarze',
+        away: tip.away_team || tip.team_away || 'Goście',
+        statusLabel: settlement === 'won' ? 'Wygrany' : settlement === 'lost' ? 'Przegrany' : 'Zwrot',
         source: 'live'
       }
     })
     .filter(row => Number.isFinite(row.date?.getTime?.()))
 
-  const allBalanceRows = [...liveChartRows]
+  const importedBaselineDateV1810 = Number.isFinite(importedAtMs)
+    ? new Date(importedAtMs)
+    : new Date()
+  const importedBaselineRowV1810 = hasImportedStats
+    ? [{
+        key: 'imported-current-balance-v1810',
+        label: formatChartDateLabel(importedBaselineDateV1810),
+        date: importedBaselineDateV1810,
+        profit: importedProfit,
+        stake: importedTotalStaked,
+        odds: importedAvgOdds,
+        pick: 'Zaimportowany aktualny bilans',
+        home: 'Historia',
+        away: 'start kontynuacji',
+        statusLabel: 'Stan początkowy',
+        source: 'imported-current',
+        isBaseline: true,
+      }]
+    : []
+
+  const allBalanceRows = [...importedBaselineRowV1810, ...liveChartRows]
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const selectedChartRange = profileChartRanges.find(item => item.key === profileChartRange) || profileChartRanges[2]
@@ -24448,11 +24500,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? chartPlotRows.filter((_, index) => index === 0 || index === chartPlotRows.length - 1 || index % Math.ceil(chartPlotRows.length / 5) === 0).slice(0, 7)
     : chartPlotRows
   const chartSummary = {
-    settledCount: rangedBalanceRows.length,
-    totalProfit: rangedBalanceRows.reduce((sum, row) => sum + Number(row.profit || 0), 0),
-    highest: chartValues.length ? Math.max(...chartValues) : 0,
-    lowest: chartValues.length ? Math.min(...chartValues) : 0,
-    average: chartValues.length ? chartValues.reduce((sum, value) => sum + Number(value || 0), 0) / chartValues.length : 0,
+    // Podsumowanie ma odpowiadać aktualnym kafelkom profilu, a nie liczbie punktów SVG.
+    settledCount: settledTips + liveVoidTips,
+    totalProfit: profitAmount,
+    highest: chartValues.length ? Math.max(...chartValues) : profitAmount,
+    lowest: chartValues.length ? Math.min(...chartValues) : profitAmount,
+    average: chartValues.length ? chartValues.reduce((sum, value) => sum + Number(value || 0), 0) / chartValues.length : profitAmount,
   }
   const formatChartSummaryNumber = (value, suffix = '') => `${Number(value || 0) >= 0 ? '+' : ''}${Number(value || 0).toFixed(2)}${suffix}`
   const purchasedSingleCards = (Array.isArray(tips) ? tips : [])
