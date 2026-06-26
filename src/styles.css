@@ -75500,39 +75500,48 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 .ticket-form-strip-v1811{
   grid-column:1 / -1;
   grid-row:2;
-  width: 100%;
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-  gap:14px;
-  margin-top:12px;
+  width:100%;
+  max-width:100%;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px;
+  margin-top:10px;
   padding-top:10px;
+  padding-bottom:2px;
   border-top:1px solid rgba(77, 219, 255, 0.12);
+  overflow:hidden;
 }
 .ticket-form-strip-label-v1811{
   flex:0 0 auto;
-  min-width:54px;
+  min-width:auto;
   white-space:nowrap;
-  font-size:11px;
+  font-size:10px;
   font-weight:800;
-  letter-spacing:0.14em;
-  color:rgba(218, 235, 255, 0.78);
+  letter-spacing:0.16em;
+  line-height:1;
+  color:rgba(218, 235, 255, 0.76);
+  text-align:center;
 }
 .ticket-form-strip-dots-v1811{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:nowrap;
+  width:100%;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px;
+  flex-wrap:nowrap !important;
+  overflow:hidden;
 }
 .ticket-form-chip-v1811{
-  width:30px;
-  height:30px;
-  border-radius:10px;
+  width:24px;
+  height:24px;
+  min-width:24px;
+  border-radius:8px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:13px;
+  font-size:11px;
   font-weight:900;
   letter-spacing:0.03em;
   border:1px solid rgba(150, 192, 225, 0.2);
@@ -75568,19 +75577,21 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
 }
 .profile-ticket-v6-left > .ticket-form-strip-v1811{
   margin-left:0;
+  align-self:center;
 }
 @media (max-width: 960px){
   .ticket-form-strip-v1811{
-    gap:10px;
+    gap:7px;
   }
   .ticket-form-chip-v1811{
-    width:28px;
-    height:28px;
-    border-radius:9px;
-    font-size:12px;
+    width:22px;
+    height:22px;
+    min-width:22px;
+    border-radius:7px;
+    font-size:10px;
   }
   .ticket-form-strip-dots-v1811{
-    gap:6px;
+    gap:5px;
   }
 }
 
