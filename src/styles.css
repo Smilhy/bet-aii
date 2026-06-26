@@ -75636,3 +75636,68 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
   max-width:30px !important;
   height:30px !important;
 }
+
+/* WERSJA 1816 — ostateczne osadzenie FORMY wewnątrz lewej ramki */
+.profile-ticket-v6-left > .ticket-form-strip-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-v4-tips-page .profile-ticket-v6-left > .ticket-form-strip-v1811,
+.profile-all-tips-list .profile-ticket-v6-left > .ticket-form-strip-v1811{
+  position:absolute !important;
+  left:16px !important;
+  right:16px !important;
+  bottom:92px !important;
+  width:auto !important;
+  max-width:none !important;
+  min-width:0 !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  margin:0 !important;
+  padding:8px 6px 0 !important;
+  border-top:1px solid rgba(77,219,255,.12) !important;
+  overflow:visible !important;
+  z-index:5 !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-label-v1811{
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  font-size:9px !important;
+  line-height:1 !important;
+  letter-spacing:.16em !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-strip-dots-v1811{
+  width:auto !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  flex-wrap:nowrap !important;
+  overflow:visible !important;
+}
+.profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811,
+.dashboard-ticket-v6 .profile-ticket-v6-left > .ticket-form-strip-v1811 .ticket-form-chip-v1811{
+  width:21px !important;
+  min-width:21px !important;
+  max-width:21px !important;
+  height:21px !important;
+  min-height:21px !important;
+  max-height:21px !important;
+  border-radius:7px !important;
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:0 !important;
+  margin:0 !important;
+  flex:0 0 21px !important;
+}
