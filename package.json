@@ -1,6 +1,6 @@
 {
-  "name": "betai-wersja-1804-reset-smilhytv-profil",
-  "version": "1804.0.0",
+  "name": "betai-wersja-1805-import-betfolio-smilhytv",
+  "version": "1805.0.0",
   "scripts": {
     "dev": "node ./node_modules/vite/bin/vite.js --host 0.0.0.0",
     "build": "node ./node_modules/vite/bin/vite.js build",

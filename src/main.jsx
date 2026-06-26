@@ -641,6 +641,9 @@ function getImportedProfileStats(profile) {
     profit,
     avgOdds,
     highestOdds,
+    // v1805: historyczny import może być bazą, do której dopisujemy nowe typy.
+    additive: Boolean(profile.imported_stats_additive || String(profile.imported_stats_mode || '').toLowerCase() === 'baseline'),
+    statsImportedAt: profile.stats_imported_at || profile.imported_at || null,
   }
 }
 
@@ -661,6 +664,35 @@ function finalizeAuthorStats(dynamicStats = null, importedStats = null) {
   }
 
   if (!importedStats || Number(importedStats.totalTips || 0) <= 0) return dynamicFinal
+
+  // WERSJA 1805: dla profili z importem typu "baseline" stare statystyki są
+  // punktem startowym. Każdy nowy rekord z tabeli tips jest do nich dodawany,
+  // zamiast czekać aż liczba nowych typów przekroczy cały historyczny import.
+  if (importedStats.additive) {
+    const importedTotal = Number(importedStats.totalTips || 0) || 0
+    const dynamicTotal = Number(dynamicFinal.totalTips || 0) || 0
+    const combinedTotal = importedTotal + dynamicTotal
+    const combinedStaked = Number(importedStats.totalStaked || 0) + Number(dynamicFinal.totalStaked || 0)
+    const combinedProfit = Number(importedStats.profit || 0) + Number(dynamicFinal.profit || 0)
+    const weightedOdds =
+      (Number(importedStats.avgOdds || 0) * importedTotal) +
+      (Number(dynamicFinal.avgOdds || 0) * dynamicTotal)
+
+    return {
+      totalTips: combinedTotal,
+      wonTips: Number(importedStats.wonTips || 0) + Number(dynamicFinal.wonTips || 0),
+      lostTips: Number(importedStats.lostTips || 0) + Number(dynamicFinal.lostTips || 0),
+      voidTips: Number(importedStats.voidTips || 0) + Number(dynamicFinal.voidTips || 0),
+      pendingTips: Number(importedStats.pendingTips || 0) + Number(dynamicFinal.pendingTips || 0),
+      totalStaked: combinedStaked,
+      profit: combinedProfit,
+      avgOdds: combinedTotal > 0 ? weightedOdds / combinedTotal : 0,
+      highestOdds: Math.max(Number(importedStats.highestOdds || 0), Number(dynamicFinal.highestOdds || 0)),
+      yield: combinedStaked > 0 ? (combinedProfit / combinedStaked) * 100 : Number(importedStats.yield || 0),
+      additive: true,
+      statsImportedAt: importedStats.statsImportedAt || null,
+    }
+  }
 
   const importedTotalStaked = Number(importedStats.totalStaked || 0)
   const importedProfit = Number(importedStats.profit || 0)
@@ -1926,6 +1958,8 @@ function mergeProfilesPreferStats(...groups) {
       imported_odds_range_stats: preferred.imported_odds_range_stats ?? other.imported_odds_range_stats,
       imported_sport_stats: preferred.imported_sport_stats ?? other.imported_sport_stats,
       imported_coupon_type_stats: preferred.imported_coupon_type_stats ?? other.imported_coupon_type_stats,
+      imported_bet_format_stats: preferred.imported_bet_format_stats ?? other.imported_bet_format_stats,
+      imported_stats_additive: preferred.imported_stats_additive ?? other.imported_stats_additive,
       imported_tips_amount: preferred.imported_tips_amount ?? other.imported_tips_amount,
       imported_tips_currency: preferred.imported_tips_currency ?? other.imported_tips_currency,
       stats_imported_at: preferred.stats_imported_at ?? other.stats_imported_at,
@@ -2054,6 +2088,8 @@ function applyProfileAvatarToTip(tip, profileMap) {
     imported_profit: profile.imported_profit ?? tip.imported_profit,
     imported_avg_odds: profile.imported_avg_odds ?? tip.imported_avg_odds,
     imported_highest_odds: profile.imported_highest_odds ?? tip.imported_highest_odds,
+    imported_stats_additive: profile.imported_stats_additive ?? tip.imported_stats_additive,
+    stats_imported_at: profile.stats_imported_at ?? tip.stats_imported_at,
     imported_tips_currency: profile.imported_tips_currency ?? tip.imported_tips_currency,
     author_imported_stats: importedStats || getImportedProfileStats(tip) || null,
     author_visible_stats: tip.author_visible_stats || importedStats || getImportedProfileStats(tip)
@@ -4491,6 +4527,13 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     imported_profit: profileHasExplicitImportedStats ? (Number(profile?.imported_profit ?? 0) || 0) : (Number(profile?.imported_profit ?? mergedVisibleStats.profit ?? 0) || 0),
     imported_avg_odds: profileHasExplicitImportedStats ? (Number(profile?.imported_avg_odds ?? 0) || 0) : (Number(profile?.imported_avg_odds ?? mergedVisibleStats.avgOdds ?? 0) || 0),
     imported_highest_odds: profileHasExplicitImportedStats ? (Number(profile?.imported_highest_odds ?? 0) || 0) : (Number(profile?.imported_highest_odds ?? mergedVisibleStats.highestOdds ?? 0) || 0),
+    imported_stats_additive: Boolean(profile?.imported_stats_additive),
+    imported_bet_format_stats: profile?.imported_bet_format_stats || [],
+    imported_coupon_type_stats: profile?.imported_coupon_type_stats || [],
+    imported_sport_stats: profile?.imported_sport_stats || [],
+    imported_odds_range_stats: profile?.imported_odds_range_stats || [],
+    imported_hourly_stats: profile?.imported_hourly_stats || [],
+    imported_monthly_stats: profile?.imported_monthly_stats || [],
     imported_tips_amount: Number(profile?.imported_tips_amount || 0) || 0,
     imported_tips_currency: profile?.imported_tips_currency || 'zł',
     stats_imported_at: profile?.stats_imported_at || null,
@@ -23032,6 +23075,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     profileIdentityV1766.includes('betaimultisport')
 
   const importedAtMs = Date.parse(profileStatsSource?.stats_imported_at || '')
+  const additiveImportedStatsV1805 = Boolean(profileStatsSource?.imported_stats_additive || String(profileStatsSource?.imported_stats_mode || '').toLowerCase() === 'baseline')
   const hasImportedStats = Number(profileStatsSource?.imported_total_tips || 0) > 0 || Number(profileStatsSource?.imported_total_staked || 0) > 0 || Number(profileStatsSource?.imported_profit || 0) !== 0
   const liveTipsForStats = hasImportedStats && Number.isFinite(importedAtMs)
     ? userTips.filter(tip => Date.parse(tip.created_at || 0) > importedAtMs)
@@ -23182,11 +23226,12 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     ? Number(botCanonicalStatsV1766?.highestOdds || 0)
     : Math.max(importedHighestOdds, liveHighestOddsNumber)
   const highestOdds = highestOddsNumber ? highestOddsNumber.toFixed(2) : '—'
-  const roi = isBetaiMultisportProfileV1766
-    ? Math.round(Number(botCanonicalStatsV1766?.yield || 0))
+  const roiRawV1805 = isBetaiMultisportProfileV1766
+    ? Number(botCanonicalStatsV1766?.yield || 0)
     : totalStakedAmount
-      ? Math.round((profitAmount / totalStakedAmount) * 100)
+      ? (profitAmount / totalStakedAmount) * 100
       : (Number(profileStatsSource?.imported_yield || 0) || 0)
+  const roi = Math.round(roiRawV1805 * 100) / 100
   // CORE LOCK v986: pokazujemy wyłącznie realne wsparcie/napiwki, domyślnie 0.00.
   const tipsSupportAmount = Math.max(0, realTipsSupportAmount)
 
@@ -23683,6 +23728,16 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     return 'Piłka nożna'
   }
   const getProfileTipAccessLabel = (tip = {}) => isTipPremium(tip) ? 'Płatny' : 'Publiczny'
+  const getProfileCouponFormatLabelV1805 = (tip = {}) => {
+    const raw = String(
+      tip.coupon_type || tip.ticket_type || tip.bet_format || tip.bet_kind ||
+      tip.bet_mode || tip.system_type || tip.coupon_kind || ''
+    ).trim().toLowerCase()
+    if (raw.includes('betbuilder') || raw.includes('bet builder')) return 'BetBuilder'
+    if (raw.includes('ako') || raw.includes('acca') || raw.includes('multi') || raw.includes('combo') || raw.includes('accumulator')) return 'AKO'
+    const selectionCount = Number(tip.selection_count || tip.selections_count || tip.legs_count || tip.events_count || 0) || 0
+    return selectionCount > 1 ? 'AKO' : 'SOLO'
+  }
   const getProfileTipLeagueLabel = (tip = {}) => {
     const raw = String(
       tip.league ||
@@ -23737,16 +23792,24 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const map = new Map()
     ;(items || []).forEach(tip => {
       const label = groupBy(tip)
-      const current = map.get(label) || { label, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const current = map.get(label) || { label, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0, flatProfit: 0, flatSettledCoupons: 0 }
       const stake = getProfileTipStake(tip)
       const settledStake = getProfileTipSettledStake(tip)
       const odds = getProfileTipOdds(tip)
+      const settlement = getProfileTipSettlement(tip)
       current.coupons += 1
       current.allStake += stake
       current.stake += settledStake
       current.stakeSum += settledStake
       if (isProfileTipSettled(tip)) current.settledCoupons += 1
       current.profit += getProfileTipProfit(tip)
+      if (settlement === 'won') {
+        current.flatProfit += Math.max(0, odds - 1)
+        current.flatSettledCoupons += 1
+      } else if (settlement === 'lost') {
+        current.flatProfit -= 1
+        current.flatSettledCoupons += 1
+      }
       if (odds > 0) current.oddsSum += odds
       map.set(label, current)
     })
@@ -23755,6 +23818,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       // Yield/ROI zawsze liczymy tylko od stawek rozliczonych.
       // Pending nie może obniżać ani zawyżać wyniku.
       yield: row.stake > 0 ? (row.profit / row.stake) * 100 : 0,
+      flatYield: row.flatSettledCoupons > 0 ? (row.flatProfit / row.flatSettledCoupons) * 100 : 0,
       avgOdds: row.coupons ? row.oddsSum / row.coupons : 0,
       avgStake: row.settledCoupons ? row.stakeSum / row.settledCoupons : 0
     }))
@@ -23770,7 +23834,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     importedRows.forEach(row => map.set(String(row.label), { ...row }))
     liveRows.forEach(row => {
       const key = String(row.label)
-      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0, flatProfit: 0, flatSettledCoupons: 0 }
       const next = {
         ...current,
         coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
@@ -23780,8 +23844,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         profit: Number(current.profit || 0) + Number(row.profit || 0),
         oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
         stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
+        flatProfit: Number(current.flatProfit || 0) + Number(row.flatProfit || 0),
+        flatSettledCoupons: Number(current.flatSettledCoupons || 0) + Number(row.flatSettledCoupons || 0),
       }
       next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
+      next.flatYield = next.flatSettledCoupons > 0 ? (next.flatProfit / next.flatSettledCoupons) * 100 : 0
       next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
       next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
       map.set(key, next)
@@ -23806,6 +23873,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
     const profit = Number(row.profit ?? row.balance ?? row.bilans ?? row.won ?? row.win ?? 0) || 0
     const importedYield = row.yield ?? row.roi
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
     const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
     const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
     const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
@@ -23821,11 +23889,55 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       yield: importedYield === undefined || importedYield === null || importedYield === ''
         ? (stake > 0 ? (profit / stake) * 100 : 0)
         : Number(importedYield) || 0,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
       avgOdds,
       avgStake: avgStake || (coupons ? stake / coupons : 0),
       imported: true
     }
   }
+  const normalizeImportedBetFormatRowV1805 = (row = {}) => {
+    const raw = String(row.label || row.type || row.format || row.name || '').trim()
+    if (!raw) return null
+    const low = raw.toLowerCase()
+    const label = low.includes('betbuilder') || low.includes('bet builder') ? 'BetBuilder' :
+      (low.includes('ako') || low.includes('acca') || low.includes('multi') || low.includes('combo') ? 'AKO' : 'SOLO')
+    const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
+    const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
+    const importedYield = Number(row.yield ?? row.roi ?? 0) || 0
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
+    const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
+    const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
+    const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
+    return {
+      label,
+      coupons,
+      settledCoupons: coupons,
+      stake,
+      allStake: stake,
+      profit,
+      oddsSum: avgOdds * coupons,
+      stakeSum: avgStake ? avgStake * coupons : stake,
+      yield: importedYield,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
+      avgOdds,
+      avgStake: avgStake || (coupons ? stake / coupons : 0),
+      imported: true,
+    }
+  }
+  const parseImportedBetFormatStatsRowsV1805 = (source = {}) => {
+    let raw = source?.imported_bet_format_stats || source?.imported_coupon_format_stats || source?.bet_format_stats_import || null
+    if (!raw) return []
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw) } catch (_) { raw = [] }
+    }
+    if (!Array.isArray(raw)) return []
+    return raw.map(normalizeImportedBetFormatRowV1805).filter(Boolean)
+  }
+
   const parseImportedCouponTypeStatsRowsV1583 = (source = {}) => {
     let raw = source?.imported_coupon_type_stats || source?.imported_coupon_stats || source?.coupon_type_stats_import || null
     if (!raw) return []
@@ -23835,6 +23947,21 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     if (!Array.isArray(raw)) return []
     return raw.map(normalizeImportedCouponTypeRowV1583).filter(Boolean)
   }
+  const importedBetFormatStatsRowsV1805 = parseImportedBetFormatStatsRowsV1805(user)
+  const importedStatsCutoffBetFormatV1805 = new Date(user?.stats_imported_at || 0)
+  const hasValidImportedCutoffBetFormatV1805 = Number.isFinite(importedStatsCutoffBetFormatV1805.getTime()) && importedStatsCutoffBetFormatV1805.getTime() > 0
+  const betFormatLiveTipsV1805 = importedBetFormatStatsRowsV1805.length && hasValidImportedCutoffBetFormatV1805
+    ? activeStatsTips.filter(tip => {
+        const time = new Date(tip.created_at || tip.updated_at || tip.match_time || tip.event_time || 0).getTime()
+        return Number.isFinite(time) && time > importedStatsCutoffBetFormatV1805.getTime()
+      })
+    : activeStatsTips
+  const liveBetFormatStatsRowsV1805 = mergeOrderedStatsRowsV1580(
+    importedBetFormatStatsRowsV1805,
+    buildLiveStatRows(betFormatLiveTipsV1805, getProfileCouponFormatLabelV1805, ['SOLO', 'AKO', 'BetBuilder']),
+    ['SOLO', 'AKO', 'BetBuilder']
+  )
+
   const importedCouponTypeStatsRowsV1583 = parseImportedCouponTypeStatsRowsV1583(user)
   const importedStatsCutoffCouponTypeV1583 = new Date(user?.stats_imported_at || 0)
   const hasValidImportedCutoffCouponTypeV1583 = Number.isFinite(importedStatsCutoffCouponTypeV1583.getTime()) && importedStatsCutoffCouponTypeV1583.getTime() > 0
@@ -23894,6 +24021,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
     const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
     const importedYield = row.yield ?? row.roi
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
     const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
     const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
     const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
@@ -23909,6 +24037,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       yield: importedYield === undefined || importedYield === null || importedYield === ''
         ? (stake > 0 ? (profit / stake) * 100 : 0)
         : Number(importedYield) || 0,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
       avgOdds,
       avgStake: avgStake || (coupons ? stake / coupons : 0),
       imported: true
@@ -23940,6 +24071,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const coupons = Number(row.coupons ?? row.tips ?? row.total_tips ?? row.count ?? 0) || 0
     const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
     const importedYield = row.yield ?? row.roi
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
     const avgOdds = Number(row.avgOdds ?? row.avg_odds ?? row.average_odds ?? row.odds ?? 0) || 0
     const avgStake = Number(row.avgStake ?? row.avg_stake ?? row.average_stake ?? row.stake_avg ?? 0) || 0
     const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? (avgStake * coupons) ?? 0) || 0
@@ -23955,6 +24087,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       yield: importedYield === undefined || importedYield === null || importedYield === ''
         ? (stake > 0 ? (profit / stake) * 100 : 0)
         : Number(importedYield) || 0,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
       avgOdds,
       avgStake: avgStake || (coupons ? stake / coupons : 0),
       imported: true
@@ -23977,6 +24112,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.settledStake ?? row.settled_stake ?? row.invested ?? row.amount ?? 0) || 0
     const profit = Number(row.profit ?? row.balance ?? row.bilans ?? row.won ?? row.win ?? 0) || 0
     const importedYield = row.yield ?? row.roi
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
     return {
       label,
       coupons,
@@ -23989,6 +24125,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       yield: importedYield === undefined || importedYield === null || importedYield === ''
         ? (stake > 0 ? (profit / stake) * 100 : 0)
         : Number(importedYield) || 0,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
       avgOdds: 0,
       avgStake: coupons ? stake / coupons : 0,
       imported: true
@@ -24048,6 +24187,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     const stake = Number(row.stake ?? row.staked ?? row.total_staked ?? row.invested ?? row.amount ?? 0) || 0
     const profit = Number(row.profit ?? row.balance ?? row.bilans ?? 0) || 0
     const importedYield = row.yield ?? row.roi
+    const flatYield = Number(row.flatYield ?? row.flat_yield ?? row.yield_flat_stake ?? row.flat_stake_yield ?? 0) || 0
     return {
       label,
       coupons,
@@ -24060,6 +24200,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
       yield: importedYield === undefined || importedYield === null || importedYield === ''
         ? (stake > 0 ? (profit / stake) * 100 : 0)
         : Number(importedYield) || 0,
+      flatYield,
+      flatProfit: (flatYield / 100) * coupons,
+      flatSettledCoupons: coupons,
       avgOdds: 0,
       avgStake: coupons ? stake / coupons : 0,
       imported: true
@@ -24084,7 +24227,7 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     importedRows.forEach(row => map.set(String(row.label), { ...row }))
     liveRows.forEach(row => {
       const key = String(row.label)
-      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0 }
+      const current = map.get(key) || { label: key, coupons: 0, settledCoupons: 0, stake: 0, allStake: 0, profit: 0, oddsSum: 0, stakeSum: 0, flatProfit: 0, flatSettledCoupons: 0 }
       const next = {
         ...current,
         coupons: Number(current.coupons || 0) + Number(row.coupons || 0),
@@ -24094,8 +24237,11 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
         profit: Number(current.profit || 0) + Number(row.profit || 0),
         oddsSum: Number(current.oddsSum || 0) + Number(row.oddsSum || 0),
         stakeSum: Number(current.stakeSum || 0) + Number(row.stakeSum || 0),
+        flatProfit: Number(current.flatProfit || 0) + Number(row.flatProfit || 0),
+        flatSettledCoupons: Number(current.flatSettledCoupons || 0) + Number(row.flatSettledCoupons || 0),
       }
       next.yield = next.stake > 0 ? (next.profit / next.stake) * 100 : 0
+      next.flatYield = next.flatSettledCoupons > 0 ? (next.flatProfit / next.flatSettledCoupons) * 100 : 0
       next.avgOdds = next.coupons ? next.oddsSum / next.coupons : 0
       next.avgStake = next.settledCoupons ? next.stakeSum / next.settledCoupons : 0
       map.set(key, next)
@@ -24170,7 +24316,8 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
   }
   const getChartResultColor = (delta = 0) => delta > 0 ? '#39f3bc' : delta < 0 ? '#ff5b92' : '#7be6ff'
 
-  const importedChartRows = [...liveMonthStatsRows].reverse()
+  const importedChartSourceRowsV1805 = additiveImportedStatsV1805 ? importedMonthStatsRowsV1578 : liveMonthStatsRows
+  const importedChartRows = [...importedChartSourceRowsV1805].reverse()
     .map(row => {
       const date = parseMonthLabelDate(row.label)
       return {
@@ -24211,10 +24358,14 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
     })
     .filter(row => Number.isFinite(row.date?.getTime?.()))
 
-  // WERSJA 1362: nie mieszamy importowanych miesięcy z realnymi typami,
-  // bo wtedy wykres podwójnie liczy profit i pokazuje za duże wartości.
-  // Jeśli są realne rozliczone typy, wykres bazuje na nich. Import jest tylko fallbackiem.
-  const allBalanceRows = (liveChartRows.length ? liveChartRows : importedChartRows)
+  // WERSJA 1805: dla importu bazowego łączymy historyczne miesiące z nowymi
+  // typami dodanymi po dacie importu. Dla pozostałych profili zostaje stary fallback.
+  const liveChartRowsAfterImportV1805 = additiveImportedStatsV1805 && Number.isFinite(importedAtMs)
+    ? liveChartRows.filter(row => row.date.getTime() > importedAtMs)
+    : liveChartRows
+  const allBalanceRows = (additiveImportedStatsV1805
+    ? [...importedChartRows, ...liveChartRowsAfterImportV1805]
+    : (liveChartRows.length ? liveChartRows : importedChartRows))
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const selectedChartRange = profileChartRanges.find(item => item.key === profileChartRange) || profileChartRanges[2]
@@ -25047,8 +25198,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                 </div>
               </section>
               <div className="profile-v4-stats-grid">
-                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} />
+                <ProfileStatsTable title="Skuteczność wg typu kuponu" columns={['Typ kuponu', 'Ilość kuponów', 'Yield', 'Yield płaska stawka', 'Śr. kurs', 'Śr. stawka']} rows={liveBetFormatStatsRowsV1805.map(row => [row.label, row.coupons, `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki typów kuponów" columns={['Statystyki', 'Ilość kuponów', 'Bilans', 'Yield', 'Yield płaska stawka', 'Śr. kurs', 'Śr. stawka']} rows={liveTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki dla sportów" columns={['Sport', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Yield płaska stawka']} rows={liveSportStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`])} />
                 <ProfileStatsTable
                   title="Statystyki według lig"
                   columns={['Liga', 'Kraj', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']}
@@ -25065,9 +25217,9 @@ function ProfileView({ user, tips = [], unlockedTips = new Set(), tipsterSubscri
                   onRowClick={(leagueName) => setProfileSelectedLeagueDetail(leagueName)}
                 />
                 <ProfileStatsTable title="Statystyki rodzajów typów" columns={['Rodzaj typu', 'Ilość kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Śr. kurs']} rows={liveBetTypeStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds)])} />
-                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
-                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`])} wide />
+                <ProfileStatsTable title="Statystyki zakresów kursów" columns={['Kurs', 'Ilość kuponów', 'Bilans', 'Yield', 'Yield płaska stawka', 'Śr. kurs', 'Śr. stawka']} rows={liveOddsStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki godzin dodawania kuponów" columns={['Godziny', 'Ilość kuponów', 'Bilans', 'Yield', 'Yield płaska stawka', 'Śr. kurs', 'Śr. stawka']} rows={liveHourStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`, formatStatValue(row.avgOdds), formatStatValue(row.avgStake)])} />
+                <ProfileStatsTable title="Statystyki poszczególnych miesięcy" columns={['Data', 'Liczba kuponów', 'Stawka rozliczona', 'Bilans', 'Yield', 'Yield płaska stawka']} rows={liveMonthStatsRows.map(row => [row.label, row.coupons, formatStatValue(row.stake), formatStatValue(row.profit), `${formatStatValue(row.yield)}%`, `${formatStatValue(row.flatYield)}%`])} wide />
               </div>
             </section>
           )}
