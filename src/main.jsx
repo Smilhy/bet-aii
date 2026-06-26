@@ -1976,7 +1976,7 @@ function mergeProfilesPreferStats(...groups) {
 
 async function fetchBetaiProfilesWithStats() {
   if (!isSupabaseConfigured || !supabase) return []
-  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_monthly_stats,imported_hourly_stats,imported_odds_range_stats,imported_sport_stats,imported_coupon_type_stats,imported_tips_amount,imported_tips_currency,stats_imported_at'
+  const columns = 'id,email,username,public_slug,plan,subscription_status,avatar_url,bio,description,about,created_at,updated_at,followers_count,following_count,rating_avg,rating_count,reviews_count,imported_yield,imported_total_tips,imported_won_tips,imported_lost_tips,imported_pending_tips,imported_total_staked,imported_profit,imported_avg_odds,imported_highest_odds,imported_monthly_stats,imported_hourly_stats,imported_odds_range_stats,imported_sport_stats,imported_coupon_type_stats,imported_stats_additive,imported_tips_amount,imported_tips_currency,stats_imported_at'
   try {
     const { data, error } = await supabase.from('profiles').select('*').limit(250)
     if (!error && Array.isArray(data)) return data
@@ -31044,8 +31044,38 @@ function App() {
   async function fetchUserPlan(userId = sessionUser?.id) {
     const currentEmail = normalizeEmail(sessionUser?.email)
     if (BETAI_PREMIUM_EMAILS.includes(currentEmail)) {
+      // WERSJA 1806: konto smilhytv ma stały Premium/Admin, ale nadal MUSIMY
+      // pobrać pełny rekord profiles. Poprzedni skrót tworzył profil tylko z
+      // emailem i planem, przez co po dodaniu typu znikały imported_* oraz
+      // statystyki Betfolio i profil pokazywał wyłącznie świeży typ.
+      let fullPremiumProfile = null
+      if (isSupabaseConfigured && supabase && userId) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles').select('*')
+            .eq('id', userId)
+            .maybeSingle()
+          if (!error && data) fullPremiumProfile = data
+        } catch (error) {
+          console.warn('Premium profile hydration skipped:', error)
+        }
+      }
+
+      const hydratedPremiumProfile = buildEffectiveAccountProfile({
+        ...(fullPremiumProfile || {}),
+        id: fullPremiumProfile?.id || userId || null,
+        email: fullPremiumProfile?.email || currentEmail,
+        username: fullPremiumProfile?.username || currentEmail.split('@')[0],
+        role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : fullPremiumProfile?.role,
+        is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail) || Boolean(fullPremiumProfile?.is_admin),
+        is_premium: true,
+        plan: 'premium',
+        subscription_status: 'active',
+        current_period_end: fullPremiumProfile?.current_period_end || '2099-12-31T23:59:59Z'
+      }, sessionUser)
+
       setUserPlan('premium')
-      setAccountProfile(prev => ({ ...(prev || {}), id: userId || prev?.id || null, email: currentEmail, username: currentEmail.split('@')[0], role: BETAI_ADMIN_EMAILS.includes(currentEmail) ? 'admin' : prev?.role, is_admin: BETAI_ADMIN_EMAILS.includes(currentEmail), is_premium: true, plan: 'premium', subscription_status: 'active', current_period_end: '2099-12-31T23:59:59Z' }))
+      setAccountProfile(prev => ({ ...(prev || {}), ...hydratedPremiumProfile }))
       return
     }
 

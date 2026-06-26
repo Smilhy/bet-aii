@@ -2,7 +2,7 @@
 -- Wklej całość do Supabase -> SQL Editor -> Run, tylko po wdrożeniu paczki v1805.
 --
 -- Import tworzy historyczną bazę statystyk:
---   812 rozliczonych typów + 3 pending = 815 wszystkich typów,
+--   812 rozliczonych typów + 0 pending = 812 wszystkich typów,
 --   474 wygrane, 338 przegrane,
 --   stawki 246510.00, profit 85963.39, yield 34.87%,
 --   średni kurs 1.84, maksymalny kurs 48.00.
@@ -35,11 +35,11 @@ alter table public.profiles add column if not exists stats_imported_at timestamp
 update public.profiles p
 set
   imported_stats_additive = true,
-  imported_total_tips = 815,
+  imported_total_tips = 812,
   imported_won_tips = 474,
   imported_lost_tips = 338,
   imported_void_tips = 0,
-  imported_pending_tips = 3,
+  imported_pending_tips = 0,
   imported_profit = 85963.39,
   imported_yield = 34.87,
   imported_total_staked = 246510.00,
