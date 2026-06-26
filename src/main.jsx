@@ -1304,34 +1304,91 @@ function getRankingIdentityKey(row = {}) {
 
 function normalizeRankingProfit(row = {}) {
   return getRankingNumber(row, [
-    'imported_profit',
+    'canonical_profit',
     'profit',
     'earnings',
     'total_earnings',
     'balance',
     'net_profit',
-    'pnl'
+    'pnl',
+    'imported_profit'
   ], 0)
 }
 
 function normalizeRankingTipsCount(row = {}) {
-  return getRankingNumber(row, ['imported_total_tips', 'totalTips', 'total_tips', 'tips_count', 'tips'], 0)
+  return getRankingNumber(row, ['canonical_total_tips', 'totalTips', 'total_tips', 'tips_count', 'tips', 'imported_total_tips'], 0)
 }
 
 function normalizeRankingWins(row = {}) {
-  return getRankingNumber(row, ['imported_won_tips', 'wonTips', 'wins', 'won'], 0)
+  return getRankingNumber(row, ['canonical_won_tips', 'wonTips', 'wins', 'won', 'imported_won_tips'], 0)
 }
 
 function normalizeRankingLosses(row = {}) {
-  return getRankingNumber(row, ['imported_lost_tips', 'lostTips', 'losses', 'lost'], 0)
+  return getRankingNumber(row, ['canonical_lost_tips', 'lostTips', 'losses', 'lost', 'imported_lost_tips'], 0)
 }
 
 function normalizeRankingVoids(row = {}) {
-  return getRankingNumber(row, ['imported_void_tips', 'voidTips', 'void_tips', 'voids', 'pushes', 'returns', 'refunds', 'zwroty'], 0)
+  return getRankingNumber(row, ['canonical_void_tips', 'voidTips', 'void_tips', 'voids', 'pushes', 'returns', 'refunds', 'zwroty', 'imported_void_tips'], 0)
 }
 
 function normalizeRankingYield(row = {}) {
-  return getRankingNumber(row, ['imported_yield', 'yield', 'roi'], 0)
+  return getRankingNumber(row, ['canonical_yield', 'yield', 'roi', 'imported_yield'], 0)
+}
+
+// WERSJA 1817 — jeden kanon statystyk profilu dla Mój profil, kart kuponów,
+// prawego Top typerzy i pełnej zakładki Ranking.
+function buildCanonicalProfileStatsV1817(profile = {}, tips = []) {
+  const imported = getImportedProfileStats(profile)
+  const profileIds = new Set([
+    profile?.id,
+    profile?.user_id,
+    profile?.author_id,
+    profile?.tipster_id,
+  ].map(value => String(value || '').trim().toLowerCase()).filter(Boolean))
+  const profileEmails = new Set([
+    profile?.email,
+    profile?.author_email,
+    profile?.user_email,
+  ].map(value => normalizeEmail(value || '')).filter(Boolean))
+  const profileNames = new Set([
+    profile?.username,
+    profile?.author_name,
+    profile?.public_slug,
+    profile?.slug,
+    resolveRealProfileUsername(profile),
+  ].map(value => normalizeEmail(value || '')).filter(value => value && !isGenericProfileName(value)))
+
+  const matchesProfile = (rawTip = {}) => {
+    const tip = normalizeTipRow(rawTip)
+    const ids = [tip?.author_id, tip?.user_id, tip?.created_by, tip?.owner_id, tip?.tipster_id]
+      .map(value => String(value || '').trim().toLowerCase()).filter(Boolean)
+    if (profileIds.size && ids.some(value => profileIds.has(value))) return true
+
+    const emails = [tip?.author_email, tip?.email, tip?.user_email]
+      .map(value => normalizeEmail(value || '')).filter(Boolean)
+    if (profileEmails.size && emails.some(value => profileEmails.has(value))) return true
+
+    const names = [tip?.author_name, tip?.username, tip?.public_slug, resolveRealProfileUsername(tip)]
+      .map(value => normalizeEmail(value || '')).filter(value => value && !isGenericProfileName(value))
+    return profileNames.size > 0 && names.some(value => profileNames.has(value))
+  }
+
+  let matchedTips = (Array.isArray(tips) ? tips : []).filter(matchesProfile).map(normalizeTipRow)
+
+  // Dla importu baseline liczymy tylko rekordy dodane po dacie importu,
+  // aby historycznej bazy nie dodać drugi raz.
+  if (imported?.additive && imported?.statsImportedAt) {
+    const cutoff = new Date(imported.statsImportedAt).getTime()
+    if (Number.isFinite(cutoff) && cutoff > 0) {
+      matchedTips = matchedTips.filter(tip => {
+        const created = new Date(tip?.created_at || tip?.match_time || tip?.event_date || 0).getTime()
+        return Number.isFinite(created) && created > cutoff
+      })
+    }
+  }
+
+  const dynamic = matchedTips.length ? buildCombinedTipStatsV1791(matchedTips) : null
+  return finalizeAuthorStats(dynamic, imported)
 }
 
 function buildRankingRowsFromTipCards(tips = []) {
@@ -1403,10 +1460,25 @@ function mergeRankingRows(...groups) {
     const profit = normalizeRankingProfit(raw)
     const previousProfit = normalizeRankingProfit(previous)
     const tipsCount = normalizeRankingTipsCount(raw)
+    const previousTipsCount = normalizeRankingTipsCount(previous)
     const wins = normalizeRankingWins(raw)
     const losses = normalizeRankingLosses(raw)
     const voids = normalizeRankingVoids(raw)
+    const pending = getRankingNumber(raw, ['canonical_pending_tips', 'pendingTips', 'pending_tips', 'pending', 'imported_pending_tips'], 0)
     const roi = normalizeRankingYield(raw)
+    const incomingHasStats = tipsCount > 0 || wins > 0 || losses > 0 || voids > 0 || pending > 0 || profit !== 0 || roi !== 0
+    // Kolejne grupy są coraz bardziej aktualne. Przy tej samej lub większej liczbie
+    // typów późniejsze dane zastępują stary snapshot zamiast wybierać większy procent.
+    const preferIncomingStats = incomingHasStats && (previousTipsCount <= 0 || tipsCount >= previousTipsCount)
+    const selectedTips = preferIncomingStats ? Number(tipsCount || 0) : Number(previousTipsCount || 0)
+    const selectedWins = preferIncomingStats ? Number(wins || 0) : normalizeRankingWins(previous)
+    const selectedLosses = preferIncomingStats ? Number(losses || 0) : normalizeRankingLosses(previous)
+    const selectedVoids = preferIncomingStats ? Number(voids || 0) : normalizeRankingVoids(previous)
+    const selectedPending = preferIncomingStats
+      ? Number(pending || 0)
+      : getRankingNumber(previous, ['pendingTips', 'pending_tips', 'pending', 'imported_pending_tips'], 0)
+    const selectedYield = preferIncomingStats ? Number(roi || 0) : normalizeRankingYield(previous)
+    const selectedProfit = preferIncomingStats ? Number(profit || 0) : Number(previousProfit || 0)
     const username = raw.username || raw.author_name || previous.username || previous.author_name || (raw.email ? String(raw.email).split('@')[0] : 'Użytkownik')
 
     map.set(key, {
@@ -1416,19 +1488,30 @@ function mergeRankingRows(...groups) {
       username: isGenericProfileName(username) ? (raw.email ? String(raw.email).split('@')[0] : previous.username || 'Użytkownik') : username,
       email: raw.email || raw.author_email || previous.email || '',
       avatar_url: raw.avatar_url || raw.author_avatar_url || raw.profile_avatar_url || previous.avatar_url || previous.author_avatar_url || '',
-      total_tips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
-      totalTips: Math.max(Number(previous.total_tips || previous.totalTips || 0), Number(tipsCount || 0)),
-      wins: Math.max(Number(previous.wins || 0), Number(wins || 0)),
-      losses: Math.max(Number(previous.losses || 0), Number(losses || 0)),
-      voids: Math.max(Number(previous.voids || previous.voidTips || 0), Number(voids || 0)),
-      voidTips: Math.max(Number(previous.voidTips || previous.voids || 0), Number(voids || 0)),
-      roi: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.roi || previous.yield || 0)) ? Number(roi || 0) : Number(previous.roi || previous.yield || 0),
-      yield: Math.abs(Number(roi || 0)) >= Math.abs(Number(previous.yield || previous.roi || 0)) ? Number(roi || 0) : Number(previous.yield || previous.roi || 0),
-      winrate: (Number(wins || 0) + Number(losses || 0)) > 0
-        ? (Number(wins || 0) / (Number(wins || 0) + Number(losses || 0))) * 100
+      canonical_total_tips: selectedTips,
+      canonical_won_tips: selectedWins,
+      canonical_lost_tips: selectedLosses,
+      canonical_void_tips: selectedVoids,
+      canonical_pending_tips: selectedPending,
+      canonical_yield: selectedYield,
+      canonical_profit: selectedProfit,
+      total_tips: selectedTips,
+      totalTips: selectedTips,
+      wins: selectedWins,
+      wonTips: selectedWins,
+      losses: selectedLosses,
+      lostTips: selectedLosses,
+      voids: selectedVoids,
+      voidTips: selectedVoids,
+      pending: selectedPending,
+      pendingTips: selectedPending,
+      roi: selectedYield,
+      yield: selectedYield,
+      winrate: (selectedWins + selectedLosses) > 0
+        ? (selectedWins / (selectedWins + selectedLosses)) * 100
         : Number(raw.winrate || raw.wr || previous.winrate || 0),
-      earnings: Math.abs(Number(profit || 0)) >= Math.abs(Number(previousProfit || 0)) ? Number(profit || 0) : Number(previousProfit || 0),
-      profit: Math.abs(Number(profit || 0)) >= Math.abs(Number(previousProfit || 0)) ? Number(profit || 0) : Number(previousProfit || 0),
+      earnings: selectedProfit,
+      profit: selectedProfit,
     })
   })
 
@@ -29345,23 +29428,46 @@ function App() {
         fetchBetaiPublicProfiles().catch(() => [])
       ])
 
+      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row))
       const profileRankingRows = (profileRows || [])
         .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile))
         .map(profile => {
-        const imported = getImportedProfileStats(profile)
-        const profit = Number(imported?.profit ?? profile.imported_profit ?? profile.profit ?? profile.earnings ?? 0) || 0
-        const totalTips = Number(imported?.totalTips ?? profile.imported_total_tips ?? profile.total_tips ?? profile.tips_count ?? 0) || 0
-        const wins = Number(imported?.wonTips ?? profile.imported_won_tips ?? profile.wins ?? 0) || 0
-        const losses = Number(imported?.lostTips ?? profile.imported_lost_tips ?? profile.losses ?? 0) || 0
-        const roi = Number(imported?.yield ?? profile.imported_yield ?? profile.yield ?? profile.roi ?? 0) || 0
+        const canonical = buildCanonicalProfileStatsV1817(profile, cleanTipRows)
+        const profit = Number(canonical?.profit ?? profile.profit ?? profile.earnings ?? profile.imported_profit ?? 0) || 0
+        const totalTips = Number(canonical?.totalTips ?? profile.total_tips ?? profile.tips_count ?? profile.imported_total_tips ?? 0) || 0
+        const wins = Number(canonical?.wonTips ?? profile.wins ?? profile.imported_won_tips ?? 0) || 0
+        const losses = Number(canonical?.lostTips ?? profile.losses ?? profile.imported_lost_tips ?? 0) || 0
+        const voids = Number(canonical?.voidTips ?? profile.void_tips ?? profile.voids ?? profile.imported_void_tips ?? 0) || 0
+        const pending = Number(canonical?.pendingTips ?? profile.pending_tips ?? profile.imported_pending_tips ?? 0) || 0
+        const roi = Number(canonical?.yield ?? profile.yield ?? profile.roi ?? profile.imported_yield ?? 0) || 0
         return {
           ...profile,
           tipster_id: profile.id,
           username: profile.username || (profile.email ? String(profile.email).split('@')[0] : 'Użytkownik'),
+          canonical_total_tips: totalTips,
+          canonical_won_tips: wins,
+          canonical_lost_tips: losses,
+          canonical_void_tips: voids,
+          canonical_pending_tips: pending,
+          canonical_yield: roi,
+          canonical_profit: profit,
+          // W tym wierszu imported_* jest tylko aliasem UI i musi pokazywać
+          // pełny aktualny stan, nie sam historyczny baseline.
+          imported_total_tips: totalTips,
+          imported_won_tips: wins,
+          imported_lost_tips: losses,
+          imported_void_tips: voids,
+          imported_pending_tips: pending,
+          imported_yield: roi,
+          imported_profit: profit,
           total_tips: totalTips,
           totalTips,
           wins,
           losses,
+          voids,
+          voidTips: voids,
+          pending,
+          pendingTips: pending,
           winrate: (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : Number(profile.winrate || 0),
           roi,
           yield: roi,
@@ -29370,7 +29476,6 @@ function App() {
         }
       })
 
-      const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row))
       const cleanRankingRows = (rankingRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row) && !isHiddenDemoUserV1712(formatRankingName(row)))
       const finalRows = buildLiveLeaderboardRows(
         mergeRankingRows(profileRankingRows, cleanRankingRows, buildRankingFromTips(cleanTipRows)),
