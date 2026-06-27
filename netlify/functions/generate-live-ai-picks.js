@@ -7,7 +7,8 @@ const REAL_AI_MIN_PROBABILITY_V1692 = 48
 const API_SPORTS_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-exports.config = { schedule: process.env.BETAI_DAILY_AI_CRON || '1 0 * * *' }
+// WERSJA 1822: stary generator tego profilu nie ma już harmonogramu.
+exports.config = {}
 
 function json(statusCode, body) {
   return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
@@ -870,6 +871,10 @@ async function saveRowsToAiBets(supabase, strongestRows, errors) {
 
 exports.handler = async function (event) {
   try {
+    // WERSJA 1822: blokada starego generatora, żeby nie mieszał typów na koncie BetAI MultiSport AI.
+    if (process.env.BETAI_ENABLE_LEGACY_MULTI_AI !== '1') {
+      return json(200, { ok: true, disabled: true, model: 'legacy-1703', message: 'Legacy generator disabled. Active engine: 1822-betai-football-market-value-v2.' })
+    }
     if (!SUPABASE_URL || !SERVICE_KEY) return json(500, { error: 'Missing Supabase env: SUPABASE_URL/VITE_SUPABASE_URL albo SUPABASE_SERVICE_ROLE_KEY.' })
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
     const days = clamp(Number(event?.queryStringParameters?.days || process.env.REAL_AI_LOOKAHEAD_DAYS || 1), 1, 14)

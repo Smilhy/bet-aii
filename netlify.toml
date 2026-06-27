@@ -17,6 +17,6 @@
   status = 200
 
 # BetAI MultiSport AI — automatyczne publikowanie typów
-# Netlify cron działa w UTC: 17 */4 * * * = co 4 godziny, w 17. minucie.
+# Netlify cron działa w UTC: skany o 07:17, 11:17 i 15:17; konto publikuje maksymalnie 1 typ na 20 godzin.
 [functions."publish-betai-multisport-ai"]
-  schedule = "17 */4 * * *"
+  schedule = "17 7,11,15 * * *"
