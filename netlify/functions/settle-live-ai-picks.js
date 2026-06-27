@@ -25,9 +25,15 @@ function includesName(text, name) {
   const b = cleanName(name)
   return Boolean(b && (a.includes(b) || b.includes(a)))
 }
-function profitFromStatus(status, odds, stake = 100) {
-  if (status === 'won') return Math.round((n(odds, 1) - 1) * stake)
-  if (status === 'lost') return -stake
+function settlementStakeV1823(tip = {}) {
+  const raw = tip.stake ?? tip.amount ?? tip.bet_amount
+  const value = Number(raw)
+  return Number.isFinite(value) && value > 0 ? value : 1
+}
+function profitFromStatus(status, odds, stake = 1) {
+  const amount = Number.isFinite(Number(stake)) && Number(stake) > 0 ? Number(stake) : 1
+  if (status === 'won') return Math.round(((n(odds, 1) - 1) * amount) * 100) / 100
+  if (status === 'lost') return Math.round((-amount) * 100) / 100
   return 0
 }
 
@@ -354,7 +360,45 @@ function resolvePick(tip, homeScore, awayScore) {
   if (isHomePick) return result === 'home' ? 'won' : 'lost'
   if (isAwayPick) return result === 'away' ? 'won' : 'lost'
 
-  return 'void'
+  // FIX 1823: nierozpoznany rynek nie może być automatycznie zwrotem.
+  // Zostaje do ponownej analizy zamiast psuć statystyki profilu.
+  return 'unresolved'
+}
+
+function isPotentiallyWrongVoidV1823(tip = {}) {
+  const current = norm(tip.status || tip.result_status || tip.result || tip.settlement_status || '')
+  if (!['void', 'push'].includes(current)) return false
+
+  const raw = buildSettlementTextV1763(tip)
+  const compact = settleCompactV1763(raw)
+  const marketRaw = `${tip.market_key || ''} ${tip.market || ''} ${tip.bet_type || ''}`
+  const pickRaw = `${tip.selection_key || ''} ${tip.pick || ''} ${tip.selection || ''} ${tip.prediction || ''}`
+
+  // Prawidłowy zwrot może wystąpić w DNB, handicapie albo na całkowitej linii.
+  if (compact.includes('drawnobet') || compact.includes('dnb') || compact.includes('handicap')) return false
+
+  const isGoals = compact.includes('over') || compact.includes('under') || compact.includes('powyzej') || compact.includes('ponizej') || compact.includes('gole') || compact.includes('goals')
+  if (isGoals) {
+    const line = extractLineV1763(tip.selection_key || '', pickRaw, marketRaw)
+    // Na linii 1.5/2.5/3.5 nie istnieje matematyczna możliwość zwrotu.
+    return Number.isFinite(line) && Math.abs(line - Math.round(line)) > 1e-9
+  }
+
+  // BTTS, 1X2 oraz podwójna szansa też nie kończą się zwrotem,
+  // jeżeli mecz został normalnie zakończony.
+  return (
+    compact.includes('btts') ||
+    compact.includes('bothteamstoscore') ||
+    compact.includes('obiedruzynystrzela') ||
+    compact.includes('doublechance') ||
+    compact.includes('podwojnaszansa') ||
+    compact.includes('lubremis') ||
+    compact.includes('matchwinner') ||
+    compact.includes('fulltimeresult') ||
+    compact.includes('1x2') ||
+    compact.includes('wygra') ||
+    settleTextV1763(raw).includes('remis')
+  )
 }
 
 async function updateAiBet(supabase, id, fullUpdate, minimalUpdate) {
@@ -543,9 +587,9 @@ exports.handler = async function (event) {
     const hasScore = tip => scoreN(tip.live_score_home ?? tip.score_home ?? tip.home_score ?? tip.final_score_home ?? tip.goals_home) !== null && scoreN(tip.live_score_away ?? tip.score_away ?? tip.away_score ?? tip.final_score_away ?? tip.goals_away) !== null
     const hasVerifiedScore = tip => hasScore(tip) && Boolean(tip.live_status || tip.settlement_source === 'auto_ai_result_api')
     const now = Date.now()
-    const candidates = (rows || []).filter(tip => {
+    const candidates = (rows || []).filter(isBetaiMultisportRowV1764).filter(tip => {
       const current = norm(tip.status || tip.result_status || tip.result || '')
-      const likelyWrongVoidOrSupported = ['void', 'push'].includes(current) && isSupportedResolvableTipV1763(tip)
+      const likelyWrongVoidOrSupported = isPotentiallyWrongVoidV1823(tip)
       if (!(forceResettle || isPending(tip) || !hasVerifiedScore(tip) || likelyWrongVoidOrSupported)) return false
       const d = new Date(`${tip.match_date || tipDateKey(tip)}T${String(tip.match_time || '23:59').slice(0,5)}:00`)
       return forceResettle || Number.isNaN(d.getTime()) || d.getTime() < now + 3 * 60 * 60 * 1000
@@ -644,6 +688,16 @@ exports.handler = async function (event) {
         const currentStatus = norm(tip.status || tip.result_status || tip.result || '')
         const wasVoidLike = ['void', 'push'].includes(currentStatus)
 
+        if (!['won', 'lost', 'void'].includes(computedStatus)) {
+          // Nie zamieniamy nierozpoznanego rynku na zwrot.
+          if (wasVoidLike && isPotentiallyWrongVoidV1823(tip)) {
+            await resetWrongSupportedVoidToPending('unresolved-market')
+          } else {
+            skipped++
+          }
+          continue
+        }
+
         // FIX 1749:
         // Poprzednia wersja tylko backfillowała wynik dla już oznaczonych VOID,
         // ale nie zmieniała błędnego VOID na WON/LOST. Dlatego BTTS w Typy AI
@@ -662,7 +716,7 @@ exports.handler = async function (event) {
         const shouldResolveStatus = shouldForceResettleSupported || isPending(tip) || !isSettled(tip) || shouldResettleWrongVoid
         const finalStatus = shouldResolveStatus ? computedStatus : currentStatus || computedStatus
         const finalResult = finalStatus === 'won' ? 'win' : finalStatus === 'lost' ? 'loss' : 'void'
-        const profit = profitFromStatus(finalStatus, tip.odds, n(tip.stake, 100) || 100)
+        const profit = profitFromStatus(finalStatus, tip.odds, settlementStakeV1823(tip))
         const fullUpdate = {
           live_score_home: scoreN(score.home),
           live_score_away: scoreN(score.away),
@@ -715,7 +769,8 @@ exports.handler = async function (event) {
     for (const botTip of directBotTips) {
       directTipsChecked++
       try {
-        if (!forceResettle && isSettled(botTip)) {
+        const suspiciousVoid = isPotentiallyWrongVoidV1823(botTip)
+        if (!forceResettle && isSettled(botTip) && !suspiciousVoid) {
           directTipsSkipped++
           continue
         }
@@ -766,7 +821,7 @@ exports.handler = async function (event) {
         }
 
         const finalResult = computedStatus === 'won' ? 'win' : computedStatus === 'lost' ? 'loss' : 'void'
-        const profit = profitFromStatus(computedStatus, botTip.odds, n(botTip.stake, 100) || 100)
+        const profit = profitFromStatus(computedStatus, botTip.odds, settlementStakeV1823(botTip))
         const fullUpdate = {
           live_score_home: scoreN(score.home),
           live_score_away: scoreN(score.away),
@@ -792,7 +847,7 @@ exports.handler = async function (event) {
       await supabase
         .from('ai_pick_runs')
         .insert({
-          source: 'settle-ai-bets-v1765-direct-tips-bot-settle',
+          source: 'settle-ai-bets-v1823-decimal-lines-repair',
           picks_created: settled + directTipsSettled,
           status: errors.length ? 'partial' : 'success',
           finished_at: new Date().toISOString(),
@@ -801,7 +856,7 @@ exports.handler = async function (event) {
     } catch (_) {
       // Log run jest pomocniczy. Nie może wysadzać settlementu ani mulić strony.
     }
-    return json(200, { version: '1765-settle-live-ai-picks-direct-tips-bot-settle', table: 'ai_bets+tips_direct', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
+    return json(200, { version: '1823-settle-betai-multisport-decimal-lines-repair', table: 'ai_bets+tips_direct', checked, settled, backfilled, skipped, fallbackUpdates, syncedTips, syncedTipsFallback, directTipsChecked, directTipsSettled, directTipsSkipped, directTipsFallback, errors: errors.slice(0, 20) })
   } catch (error) {
     console.error(error)
     return json(500, { error: error.message || 'Settle error' })

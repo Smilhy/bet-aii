@@ -84,15 +84,26 @@ function splitUnderscore(key) {
 }
 
 function lineFromSelection(selection) {
-  const parts = splitUnderscore(selection)
-  for (let i = 0; i < parts.length; i++) {
-    const p = parts[i]
-    if (p === 'minus' && i + 1 < parts.length) return -toNum(parts.slice(i + 1).join('.'), NaN)
-    if (p === 'plus' && i + 1 < parts.length) return toNum(parts.slice(i + 1).join('.'), NaN)
-    const n = toNum(p, NaN)
-    if (Number.isFinite(n)) return n
+  // FIX 1823:
+  // Stary parser czytał "under_1_5" jako linię 1 zamiast 1.5,
+  // "under_2_5" jako 2 zamiast 2.5 itd. Gdy w meczu padł dokładnie
+  // 1/2/3 gole, system błędnie zapisywał ZWROT.
+  const raw = norm(selection).replace(/,/g, '.')
+
+  // Format kanoniczny używany w bazie: under_1_5, over_2_5,
+  // home_minus_1_5, away_plus_0_5.
+  const underscored = raw.match(/(?:^|_)(minus|plus)?_?(\d+)(?:[_.](\d+))?(?:_|$)/)
+  if (underscored) {
+    const sign = underscored[1] === 'minus' ? -1 : 1
+    const value = Number(underscored[3]
+      ? `${underscored[2]}.${underscored[3]}`
+      : underscored[2])
+    if (Number.isFinite(value)) return sign * value
   }
-  return NaN
+
+  // Format tekstowy: under 1.5 / over -1.25.
+  const direct = raw.match(/[-+]?\d+(?:\.\d+)?/)
+  return direct ? Number(direct[0]) : NaN
 }
 
 function scoreFromSelection(selection) {
@@ -574,5 +585,5 @@ exports.handler = async function(event) {
       skipped.push({ id: tip.id, reason: e.message || String(e) })
     }
   }
-  return json(200, { ok: true, version: '1725-auto-settle-existing-profit-columns', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
+  return json(200, { ok: true, version: '1823-auto-settle-decimal-lines-fixed', checked: checked.length, settled, skipped, sample: checked.slice(0, 20) })
 }

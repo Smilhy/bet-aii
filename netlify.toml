@@ -20,3 +20,9 @@
 # Netlify cron działa w UTC: skany o 07:17, 11:17 i 15:17; konto publikuje maksymalnie 1 typ na 20 godzin.
 [functions."publish-betai-multisport-ai"]
   schedule = "17 7,11,15 * * *"
+
+
+# BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
+# Funkcja jest ograniczona w kodzie wyłącznie do konta BetAI MultiSport AI.
+[functions."settle-live-ai-picks"]
+  schedule = "47 1,7,13,19 * * *"
