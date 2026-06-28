@@ -11041,11 +11041,11 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
     const stakeValue = Number(form.stake || 0) || 0
     if (stakeValue > 1000) {
       updateForm({ stake: '1000' })
-      onToast?.({ type: 'error', title: 'Maksymalna stawka', message: 'Maksymalna stawka dla typu to 1000 zł. Większa kwota została zablokowana.' })
+      onToast?.({ type: 'error', title: 'Maksymalna stawka', message: 'Maksymalna stawka dla typu to 1000. Większa wartość została zablokowana.' })
       return
     }
     if (stakeValue <= 0) {
-      onToast?.({ type: 'error', title: 'Brak stawki', message: 'Podaj stawkę większą niż 0 zł.' })
+      onToast?.({ type: 'error', title: 'Brak stawki', message: 'Podaj stawkę większą niż 0.' })
       return
     }
 
@@ -11978,7 +11978,7 @@ function AddTipForm({ onTipSaved, onToast, user, userPlan = 'free' }) {
               <input className="static-add-input" value={form.stake} onChange={(e) => updateForm({ stake: clampStakeValue(e.target.value) })} onBlur={() => updateForm({ stake: clampStakeValue(form.stake || 0) })} />
             </div>
             <div className="stake-pills betfolio-mini-stakes">
-              {[10, 50, 100, 500, 1000].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value.toFixed ? value : value} zł</span>)}
+              {[10, 50, 100, 500, 1000].map(value => <span key={value} className={String(value) === String(Number(form.stake || 0)) ? 'active' : ''} onClick={() => updateForm({ stake: String(value) })}>{value}</span>)}
             </div>
 
             <div className="betfolio-ticket-row">
