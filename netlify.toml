@@ -30,7 +30,7 @@
 # WERSJA 1841 — Typer Expert: kursy + publiczne analizy ekspertów. Skan co 3 godziny (UTC).
 # Publikuje maksymalnie jeden aktywny typ naraz, aby progresja nie nakładała się.
 [functions."publish-typer-expert"]
-  schedule = "23 */3 * * *"
+  schedule = "0 */3 * * *"
 
 # Typer Expert — rozliczanie wyłącznie tego profilu co godzinę.
 [functions."settle-typer-expert"]
