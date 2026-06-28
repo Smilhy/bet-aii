@@ -400,6 +400,9 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Najnowsze": "Newest",
     "Najlepsze": "Best",
     "Popularne": "Popular",
+    "Popularne sporty": "Popular sports",
+    "Popularne sporty premium": "Popular premium sports",
+    "Popularne sporty Top typerzy": "Popular sports — Top tipsters",
     "Pokaż więcej": "Show more",
     "Pokaż mniej": "Show less",
     "Czytaj więcej": "Read more",
@@ -531,6 +534,9 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Najnowsze": "Neueste",
     "Najlepsze": "Beste",
     "Popularne": "Beliebt",
+    "Popularne sporty": "Beliebte Sportarten",
+    "Popularne sporty premium": "Beliebte Premium-Sportarten",
+    "Popularne sporty Top typerzy": "Beliebte Sportarten — Top-Tipper",
     "Pokaż więcej": "Mehr anzeigen",
     "Pokaż mniej": "Weniger anzeigen",
     "Czytaj więcej": "Mehr lesen",
@@ -662,6 +668,9 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Najnowsze": "Más recientes",
     "Najlepsze": "Mejores",
     "Popularne": "Populares",
+    "Popularne sporty": "Deportes populares",
+    "Popularne sporty premium": "Deportes premium populares",
+    "Popularne sporty Top typerzy": "Deportes populares — Top tipsters",
     "Pokaż więcej": "Mostrar más",
     "Pokaż mniej": "Mostrar menos",
     "Czytaj więcej": "Leer más",
@@ -793,6 +802,9 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Najnowsze": "Новые",
     "Najlepsze": "Лучшие",
     "Popularne": "Популярные",
+    "Popularne sporty": "Популярные виды спорта",
+    "Popularne sporty premium": "Популярные Premium-виды спорта",
+    "Popularne sporty Top typerzy": "Популярные виды спорта — Топ типстеры",
     "Pokaż więcej": "Показать больше",
     "Pokaż mniej": "Показать меньше",
     "Czytaj więcej": "Читать далее",
@@ -850,14 +862,30 @@ function translateBetaiTextValue(value, lang) {
   }
   let next = trimmed
   const keys = Object.keys(dictionary).sort((a, b) => b.length - a.length)
+  const escapeRegExp = (text) => String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const isWordChar = (char) => char ? /[\p{L}\p{N}_]/u.test(char) : false
+
+  // Tłumaczymy wyłącznie całe słowa lub całe frazy. Poprzednia wersja
+  // podmieniała np. angielskie "Popular" wewnątrz polskiego "Popularne".
+  // MutationObserver uruchamiał podmianę ponownie i tekst rósł w nieskończoność.
   for (const key of keys) {
-    if (!key || key.length < 3) continue
-    if (next.includes(key)) next = next.split(key).join(dictionary[key])
+    const replacement = dictionary[key]
+    if (!key || key.length < 3 || !replacement || replacement === key) continue
+    const escaped = escapeRegExp(key)
+    const needsLeftBoundary = isWordChar(key[0])
+    const needsRightBoundary = isWordChar(key[key.length - 1])
+    const left = needsLeftBoundary ? '(^|[^\\p{L}\\p{N}_])' : '(^|)'
+    const right = needsRightBoundary ? '(?=$|[^\\p{L}\\p{N}_])' : ''
+    const pattern = new RegExp(`${left}(${escaped})${right}`, 'gu')
+    next = next.replace(pattern, (match, prefix) => `${prefix || ''}${replacement}`)
   }
-  next = next
-    .replace(/\bTypy\b/g, dictionary['Typ'] || 'Picks')
-    .replace(/\bWygrane\b/g, lang === 'en' ? 'Won' : lang === 'de' ? 'Gewonnen' : lang === 'es' ? 'Ganadas' : 'Выигрыши')
-    .replace(/\bKurs\b/g, dictionary['Kurs'] || 'Odds')
+
+  if (lang !== 'pl') {
+    next = next
+      .replace(/\bTypy\b/g, lang === 'en' ? 'Picks' : lang === 'de' ? 'Tipps' : lang === 'es' ? 'Picks' : 'Прогнозы')
+      .replace(/\bWygrane\b/g, lang === 'en' ? 'Won' : lang === 'de' ? 'Gewonnen' : lang === 'es' ? 'Ganadas' : 'Выигрыши')
+      .replace(/\bKurs\b/g, dictionary['Kurs'] || 'Odds')
+  }
   return next !== trimmed ? raw.replace(trimmed, next) : value
 }
 
