@@ -1,0 +1,8 @@
+WERSJA 1803 — ZŁOTY PULSUJĄCY WYBRANY TYP
+
+Zmiany:
+- wybrany typ w kolumnie TYP jest złoty i pulsujący,
+- działa na Dashboardzie,
+- działa w Mój profil,
+- działa dla wszystkich użytkowników i wszystkich kart typów,
+- nie zmieniono logiki typów, statystyk ani rozliczania.

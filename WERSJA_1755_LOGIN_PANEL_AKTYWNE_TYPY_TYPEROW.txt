@@ -1,0 +1,14 @@
+WERSJA 1755 — LOGIN PANEL: AKTYWNE TYPY TYPERÓW
+
+Poprawiono logikę kafelka "Typów typerów".
+
+Teraz licznik:
+- liczy wszystkie aktywne / nierozstrzygnięte typy użytkowników z tabeli tips,
+- nie liczy typów AI / live_ai_engine / BetAI MultiSport AI,
+- nie liczy typów rozliczonych jako won/lost/void/push/cancelled,
+- zwiększa się, gdy użytkownik/typer doda nowy aktywny typ,
+- zmniejsza się, gdy typ zostanie rozliczony,
+- odświeża się automatycznie co 30 sekund na ekranie logowania.
+
+"Typów dziś" dalej liczy typy AI z ai_bets dla dzisiejszej daty.
+"Typów typerów" liczy aktywne typy użytkowników/typerów, niezależnie od daty dodania.

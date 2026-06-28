@@ -1,0 +1,3 @@
+-- v1128 nie wymaga nowego SQL, jeśli działa:
+-- select * from public.get_public_tipster_avatars();
+-- Frontend używa teraz tych wierszy bezpośrednio i pokazuje realny avatar jako <img>.

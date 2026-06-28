@@ -1,0 +1,30 @@
+WERSJA 1778 — STOP PĘTLI 40 000 REQUESTÓW
+
+Przyczyna:
+1. Frontend wywoływał get_tipster_achievements_v1774.
+2. RPC wykonywało refresh i zapisywało tipster_achievement_progress.
+3. Zapis uruchamiał Realtime.
+4. Callback Realtime ponownie wywoływał RPC.
+5. Pętla powtarzała się bez końca.
+
+Naprawa frontend:
+- przy wejściu na profil wykonywany jest tylko jeden SELECT,
+- Realtime aktualizuje lokalnie wyłącznie zmieniony rekord,
+- callback Realtime nie wykonuje żadnego nowego requestu,
+- kanał jest poprawnie usuwany przy opuszczeniu profilu.
+
+Naprawa Supabase:
+- get_tipster_achievements_v1774 jest funkcją tylko do odczytu,
+- nie uruchamia refresh/upsert,
+- przeglądarka nie może ręcznie uruchamiać kosztownego refreshu.
+
+Kolejność:
+1. Uruchom SUPABASE_1778_STOP_REQUEST_LOOP.sql.
+2. Wdróż paczkę na Netlify.
+3. Zamknij starą kartę strony lub wykonaj Ctrl+F5.
+4. W DevTools wyczyść Network.
+
+Po poprawce:
+- 1 odczyt przy wejściu na profil,
+- później tylko połączenie Realtime i prawdziwe zmiany,
+- brak tysięcy wywołań get_tipster_achievements_v1774.
