@@ -76539,3 +76539,584 @@ html[data-betai-theme="light"] *::-webkit-scrollbar-thumb{background:#b7c9d2!imp
     flex-basis:44px!important;
   }
 }
+
+/* =====================================================================
+   WERSJA 1830 — PEŁNY JASNY MOTYW PREMIUM
+   Uzupełnia wszystkie pominięte ramki, listy, karty i panele.
+   Tylko wygląd — bez zmian logiki aplikacji.
+   ===================================================================== */
+
+html[data-betai-theme="light"]{
+  --betai-light-page:#f3f8fb;
+  --betai-light-surface:#ffffff;
+  --betai-light-surface-2:#f8fbfd;
+  --betai-light-surface-3:#eef6f9;
+  --betai-light-border:#d7e5ec;
+  --betai-light-border-strong:#bdd9e2;
+  --betai-light-text:#122235;
+  --betai-light-muted:#627589;
+  --betai-light-cyan:#10cfd1;
+  --betai-light-shadow:0 14px 38px rgba(35,67,84,.10);
+  --betai-light-shadow-soft:0 7px 22px rgba(35,67,84,.075);
+}
+
+html[data-betai-theme="light"] body:not(.auth-screen),
+html[data-betai-theme="light"] body:not(.auth-screen) #root,
+html[data-betai-theme="light"] body #root .app-shell,
+html[data-betai-theme="light"] body #root .app-shell .main,
+html[data-betai-theme="light"] body #root .app-shell .content,
+html[data-betai-theme="light"] body #root .app-shell .dashboard-main{
+  background:
+    radial-gradient(circle at 5% 0%,rgba(25,215,207,.09),transparent 27%),
+    radial-gradient(circle at 95% 0%,rgba(73,156,218,.08),transparent 26%),
+    linear-gradient(180deg,#f8fbfd 0%,#f1f7fa 52%,#eef5f8 100%)!important;
+  color:var(--betai-light-text)!important;
+}
+
+/* Uniwersalne powierzchnie premium */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .glass-ultra-panel,
+  .glass-v2-panel,
+  .glass-profile-v3,
+  .panel,
+  .profile-v3-card,
+  .side-card-v3,
+  .wallet-v2-card,
+  .wallet-v2-sidecard,
+  .wallet-v2-stat,
+  .profile-v4-table-card,
+  .profile-v4-chart-card,
+  .stats-panel,
+  .table-panel,
+  .real-ranking-panel,
+  .sidebar-card-v4,
+  .feed-card-v5,
+  .sidecard-v5,
+  .rewards-ultra-card,
+  .ai-table-card-v747,
+  .ai-analysis-card-v747,
+  .ai-results-card-v1448
+){
+  background:linear-gradient(180deg,var(--betai-light-surface),#fbfdfe)!important;
+  border-color:var(--betai-light-border)!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .glass-ultra-panel,
+  .glass-v2-panel,
+  .glass-profile-v3,
+  .panel,
+  .profile-v3-card,
+  .side-card-v3,
+  .wallet-v2-card,
+  .wallet-v2-sidecard,
+  .wallet-v2-stat
+)::before{
+  opacity:.16!important;
+}
+
+/* Nagłówki i tekst w jasnych panelach */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-ultra-page,
+  .add-tip-betfolio-page,
+  .profile-static-v3,
+  .rightbar,
+  .leaderboard-page,
+  .ranking-live-v999,
+  .notifications-page,
+  .rewards-ultra-page,
+  .ai-center-page-v747,
+  .ai-results-page-v745
+) :is(h1,h2,h3,h4,h5,h6,strong,b){
+  color:var(--betai-light-text)!important;
+  text-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-ultra-page,
+  .add-tip-betfolio-page,
+  .profile-static-v3,
+  .rightbar,
+  .leaderboard-page,
+  .ranking-live-v999,
+  .notifications-page,
+  .rewards-ultra-page,
+  .ai-center-page-v747,
+  .ai-results-page-v745
+) :is(p,small,label,em){
+  color:var(--betai-light-muted)!important;
+  text-shadow:none!important;
+}
+
+/* =========================================================
+   DASHBOARD — CHAT I TOP TYPERZY W PEŁNI JASNE
+   ========================================================= */
+html[data-betai-theme="light"] body #root .app-shell .rightbar,
+html[data-betai-theme="light"] body #root .app-shell .rightbar > *,
+html[data-betai-theme="light"] body #root .app-shell .livechat226-card,
+html[data-betai-theme="light"] body #root .app-shell .betai-right-chat-final,
+html[data-betai-theme="light"] body #root .app-shell .side-ranking-v8,
+html[data-betai-theme="light"] body #root .app-shell .real-ranking-panel{
+  color:var(--betai-light-text)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .livechat226-card,
+  .betai-right-chat-final,
+  .side-ranking-v8,
+  .real-ranking-panel,
+  .top-typer-list,
+  .top-users-list
+){
+  background:linear-gradient(180deg,#ffffff,#f9fcfd)!important;
+  border-color:var(--betai-light-border)!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .livechat226-stat,
+  .betai-chat-stat-final,
+  .livechat226-bubble,
+  .livechat226-composer,
+  .livechat226-input-wrap,
+  .top-typer-row,
+  .top-user-row,
+  .side-rank-row-v8,
+  .rank,
+  .top-tipster-row-v4
+){
+  background:#ffffff!important;
+  border-color:#dbe7ed!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell .livechat226-messages,
+html[data-betai-theme="light"] body #root .app-shell .betai-chat-messages-final{
+  background:#f6fafc!important;
+  border-color:#dde8ee!important;
+  box-shadow:inset 0 1px 4px rgba(31,65,82,.045)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-msg{
+  border-color:#e2ebf0!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-msg.me .livechat226-bubble{
+  background:#e8fbf8!important;
+  border-color:#b8ebe5!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .livechat226-name,.livechat226-kicker,.livechat226-text,
+  .top-typer-row strong,.top-user-row strong,.side-rank-row-v8 strong
+){color:var(--betai-light-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .livechat226-time,.livechat226-meta,.livechat226-tipmeta,
+  .top-typer-row small,.top-user-row small,.side-rank-row-v8 small
+){color:var(--betai-light-muted)!important}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-input{
+  background:#ffffff!important;
+  color:var(--betai-light-text)!important;
+  border-color:#d6e4eb!important;
+}
+
+/* =========================================================
+   DODAJ TYP — CAŁA STRONA W JASNEJ PALECIE
+   ========================================================= */
+html[data-betai-theme="light"] body #root .app-shell .add-tip-betfolio-page,
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-shell{
+  background:transparent!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-left,.betfolio-center,.betfolio-right){
+  background:linear-gradient(180deg,#ffffff,#f9fcfd)!important;
+  border-color:var(--betai-light-border)!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-search-wrap{
+  background:#f7fbfd!important;
+  border-color:#cfdfe7!important;
+  box-shadow:inset 0 1px 2px rgba(35,67,84,.04)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .sports-accordion-title{
+  color:#20364a!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .football-country-tree{
+  background:transparent!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.sport-accordion-head,.sport-accordion-children button){
+  background:#ffffff!important;
+  border-color:#d9e6ec!important;
+  color:#31495d!important;
+  box-shadow:0 4px 13px rgba(35,67,84,.055)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .sport-accordion-item.is-open > .sport-accordion-head,
+html[data-betai-theme="light"] body #root .app-shell .sport-accordion-children button.is-active,
+html[data-betai-theme="light"] body #root .app-shell .sport-accordion-children button.league-active{
+  background:linear-gradient(180deg,#e9fbfb,#e1f6f7)!important;
+  border-color:#72d7d7!important;
+  color:#087b7d!important;
+  box-shadow:0 0 0 1px rgba(16,207,209,.12),0 6px 18px rgba(35,67,84,.07)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.country-name-v1036,.league-name-v1036,.sport-accordion-head b){
+  color:#31495d!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .match-count-badge-v1036{
+  background:#eef5f8!important;
+  border-color:#d7e4ea!important;
+  color:#607588!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .match-count-badge-v1036.is-live{
+  background:#daf8f4!important;
+  border-color:#a8e8df!important;
+  color:#078876!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.tip-add-plan-pill,.tip-add-usage-pill,.betfolio-side-note){
+  background:#f7fbfd!important;
+  border-color:#d8e5eb!important;
+  color:#526b7f!important;
+  box-shadow:none!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero{
+  background:
+    radial-gradient(circle at 82% 28%,rgba(25,213,207,.14),transparent 28%),
+    radial-gradient(circle at 14% 0%,rgba(68,159,222,.08),transparent 32%),
+    linear-gradient(135deg,#ffffff 0%,#f5fbfd 55%,#eef8fb 100%)!important;
+  border-color:#d4e4eb!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero::before{
+  background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.60),rgba(240,249,252,.22))!important;
+  opacity:.85!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-copy{
+  position:relative!important;
+  z-index:3!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-copy h2{
+  color:#122235!important;
+  text-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-copy h2 span{color:#08bfc7!important}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-copy p{color:#5d7285!important}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-features > div{
+  background:#ffffff!important;
+  border-color:#d7e5eb!important;
+  box-shadow:0 7px 20px rgba(35,67,84,.075)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-hero-features :is(strong,span){color:#253b4f!important}
+html[data-betai-theme="light"] body #root .app-shell .sport-hero-scanner-card{
+  background:rgba(255,255,255,.94)!important;
+  border-color:#d5e4ea!important;
+  color:#183045!important;
+  box-shadow:0 14px 34px rgba(35,67,84,.14)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell .betfolio-api-saver-note{
+  background:linear-gradient(90deg,#e9faf8,#f6fbfd)!important;
+  border-color:#bfe7e3!important;
+  color:#31576a!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-api-saver-note strong{color:#087f7c!important}
+
+html[data-betai-theme="light"] body #root .app-shell .betfolio-sport-cards-v1276,
+html[data-betai-theme="light"] body #root .app-shell .sport-cards-track-v1276{
+  background:#ffffff!important;
+  border-color:#d9e6ec!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .sport-card-v1276{
+  background:linear-gradient(180deg,#ffffff,#f5fafc)!important;
+  border-color:#d9e6ec!important;
+  color:#20364a!important;
+  box-shadow:0 6px 17px rgba(35,67,84,.07)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .sport-card-v1276 :is(strong,b){color:#20364a!important}
+html[data-betai-theme="light"] body #root .app-shell .sport-card-v1276 :is(span,small){color:#607588!important}
+
+html[data-betai-theme="light"] body #root .app-shell .betfolio-add-mode-switch,
+html[data-betai-theme="light"] body #root .app-shell .betfolio-fixture-mode-tabs,
+html[data-betai-theme="light"] body #root .app-shell .betfolio-top-panel-v1291{
+  background:#ffffff!important;
+  border-color:#d8e5eb!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-add-mode-switch,.betfolio-fixture-mode-tabs) button:not(.active),
+html[data-betai-theme="light"] body #root .app-shell .betfolio-top-chip-v1291:not(.active){
+  background:#f4f8fa!important;
+  border-color:#d7e4ea!important;
+  color:#425a6e!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-add-mode-switch,.betfolio-fixture-mode-tabs) button.active,
+html[data-betai-theme="light"] body #root .app-shell .betfolio-top-chip-v1291.active{
+  background:linear-gradient(135deg,#22d7d2,#6f8cff)!important;
+  border-color:transparent!important;
+  color:#071523!important;
+  box-shadow:0 8px 22px rgba(32,194,205,.22)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-top-panel-subtitle-v1291{color:#65798b!important}
+
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .betfolio-event-row,.betfolio-details-wrap,.betfolio-market-group,
+  .betfolio-market-accordion,.betfolio-market-board-view,.betfolio-match-hero,
+  .betfolio-manual-card,.betfolio-manual-section
+){
+  background:#ffffff!important;
+  border-color:#d9e6ec!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-event-row.active,
+html[data-betai-theme="light"] body #root .app-shell .betfolio-market-option.active{
+  border-color:#44ccce!important;
+  box-shadow:0 0 0 2px rgba(16,207,209,.12),var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-event-teamline strong,.betfolio-event-teamline span,.betfolio-details-top strong,.betfolio-market-group-title strong){color:#1d3448!important}
+html[data-betai-theme="light"] body #root .app-shell .betfolio-event-meta span{color:#6c7e8f!important}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-odd-box,.betfolio-market-option,.betfolio-more-btn){
+  background:#f4f8fa!important;
+  border-color:#d6e4ea!important;
+  color:#273e52!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-odd-box b,.betfolio-odd-box span,.betfolio-market-option b,.betfolio-market-option span){color:#273e52!important}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-odd-box.active,.betfolio-market-option.active){
+  background:linear-gradient(135deg,#20d4d0,#668fff)!important;
+  color:#061525!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-odd-box.active,.betfolio-market-option.active) *{color:#061525!important}
+
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .betfolio-ticket-type-switch,.betfolio-ticket-tabs,.betfolio-ticket-summary,
+  .betfolio-ticket-card,.betfolio-ticket-row,.betfolio-total-box,
+  .betfolio-ako-leg,.betfolio-premium-lock,.confidence-adjuster
+){
+  background:#ffffff!important;
+  border-color:#d8e5eb!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-ticket-type-switch,.betfolio-ticket-tabs) button:not(.active),
+html[data-betai-theme="light"] body #root .app-shell .stake-pills span:not(.active){
+  background:#f2f7f9!important;
+  border-color:#d6e3e9!important;
+  color:#40596e!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-ticket-card,.betfolio-ticket-row,.betfolio-total-box) :is(strong,b){color:#20364a!important}
+html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-ticket-card,.betfolio-ticket-row,.betfolio-total-box) :is(label,small,span){color:#617589!important}
+
+/* =========================================================
+   PORTFEL — CIEMNE KAFLE ZAMIENIONE NA JASNE
+   ========================================================= */
+html[data-betai-theme="light"] body #root .app-shell .wallet-ultra-page :is(
+  .wallet-v2-action-grid button,
+  .wallet-v2-action-history,
+  .wallet-v2-history-item,
+  .wallet-pay-method,
+  .wallet-v2-method-section,
+  .wallet-v2-invoice-list .invoice-item,
+  .wallet-v2-payment-grid > *,
+  .wallet-v2-payment-grid-live > *
+){
+  background:linear-gradient(180deg,#ffffff,#f5fafc)!important;
+  border-color:#d6e4ea!important;
+  color:#20364a!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .wallet-ultra-page :is(
+  .wallet-v2-action-grid button strong,
+  .wallet-v2-action-history strong,
+  .wallet-v2-history-item strong,
+  .wallet-pay-method strong,
+  .wallet-v2-method-section strong,
+  .invoice-item strong
+){color:#20364a!important}
+html[data-betai-theme="light"] body #root .app-shell .wallet-ultra-page :is(
+  .wallet-v2-action-grid button small,
+  .wallet-v2-action-history small,
+  .wallet-v2-history-item small,
+  .wallet-pay-method small,
+  .wallet-v2-method-section small,
+  .invoice-item small
+){color:#64788a!important}
+html[data-betai-theme="light"] body #root .app-shell .wallet-ultra-page .wallet-pay-method.is-locked{
+  opacity:.68!important;
+  background:#f2f5f7!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .wallet-ultra-page .wallet-pay-method.is-active{
+  border-color:#58d3d2!important;
+  background:linear-gradient(180deg,#f0fffd,#eaf9f7)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .wallet-v2-tabs button:not(.active){
+  background:#edf4f7!important;
+  color:#334c60!important;
+  border-color:#d6e3e9!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .wallet-v2-history-list{
+  background:transparent!important;
+}
+
+/* =========================================================
+   PROFIL — HERO, RANGA, STATYSTYKI, ZAKŁADKI I PRAWA KOLUMNA
+   ========================================================= */
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3{
+  color:var(--betai-light-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v3-hero{
+  background:
+    radial-gradient(circle at 80% 15%,rgba(20,205,202,.13),transparent 30%),
+    radial-gradient(circle at 12% 0%,rgba(85,146,220,.08),transparent 28%),
+    linear-gradient(135deg,#ffffff,#f4fbfd)!important;
+  border-color:#d5e4eb!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v3-hero-overlay{
+  opacity:.22!important;
+  filter:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v3-hero :is(h1,h2,h3,strong,b){color:#173047!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v3-hero :is(p,small,span){color:#607589!important}
+
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-rank-card-v1557,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stats-cards-section,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-tabs,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-tips-page,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-shared-sidebar > *{
+  background:linear-gradient(180deg,#ffffff,#f9fcfd)!important;
+  border-color:#d7e5eb!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-rank-card-v1557::before,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievements-panel-v1768::before{display:none!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-rank-copy-v1557 :is(h2,strong){color:#193348!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-rank-copy-v1557 :is(p,small){color:#65798b!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-rank-score-v1557{
+  background:#f0f8fa!important;
+  border-color:#d4e5ea!important;
+  color:#183247!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card{
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:#d5e4ea!important;
+  color:#183247!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card::before{opacity:.12!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card :is(strong,b){color:#183247!important;text-shadow:none!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card :is(span,small){color:#617589!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card-positive :is(strong,b){color:#07966d!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-stat-card-negative :is(strong,b){color:#d2455c!important}
+
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-tabs button:not(.active),
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-filter-row button:not(.active),
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .filter-pill-v872:not(.active){
+  background:#f1f6f9!important;
+  border-color:#d4e2e9!important;
+  color:#385267!important;
+  box-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-tabs button.active,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-v4-filter-row button.active,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .filter-pill-v872.active{
+  background:linear-gradient(135deg,#21d5d0,#6e8eff)!important;
+  border-color:transparent!important;
+  color:#071523!important;
+  box-shadow:0 8px 22px rgba(32,194,205,.22)!important;
+}
+
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-active-tips-note-v954{
+  background:#eef9fa!important;
+  border-color:#cfe8e9!important;
+  color:#4e697b!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievements-panel-v1768{
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:#d5e4ea!important;
+  box-shadow:var(--betai-light-shadow)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievements-head-v1768{
+  background:#f8fbfd!important;
+  border-color:#dce7ed!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievement-row-v1768{
+  background:transparent!important;
+  border-color:#e1eaef!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievement-row-v1768:hover{
+  background:#f3fafb!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievement-title-v1768 strong{color:#263e52!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievement-content-v1768 > small{color:#64788a!important}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-achievement-progress-v1768{
+  background:#e5eef2!important;
+  border-color:#d7e5eb!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .key-list-v3 > *,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .profile-referral-row-v1396,
+html[data-betai-theme="light"] body #root .app-shell .profile-static-v3 .rate-bar{
+  background:#f7fafc!important;
+  border-color:#dce7ed!important;
+  color:#2e465a!important;
+}
+
+/* =========================================================
+   POZOSTAŁE PODSTRONY — PEŁNE POKRYCIE JASNYCH RAMEK
+   ========================================================= */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .notifications-list,.unlocked-list,.ai-day-list,.achievement-list-v1115,
+  .achievement-list-v1515,.challenge-list-v4,.mission-row-v1012,
+  .rewards-mission-list-v1533,.rewards-progress-list-v1533,
+  .rewards-ranking-list-v1533,.ranking-payouts-list-v1783
+) > *{
+  background:#ffffff!important;
+  border-color:#d9e6ec!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:var(--betai-light-shadow-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .notifications-list,.unlocked-list,.ai-day-list,.achievement-list-v1115,
+  .achievement-list-v1515,.challenge-list-v4,.mission-row-v1012,
+  .rewards-mission-list-v1533,.rewards-progress-list-v1533,
+  .rewards-ranking-list-v1533,.ranking-payouts-list-v1783
+) > * :is(strong,b,h3,h4){color:#20364a!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .notifications-list,.unlocked-list,.ai-day-list,.achievement-list-v1115,
+  .achievement-list-v1515,.challenge-list-v4,.mission-row-v1012,
+  .rewards-mission-list-v1533,.rewards-progress-list-v1533,
+  .rewards-ranking-list-v1533,.ranking-payouts-list-v1783
+) > * :is(span,small,p){color:#65798b!important}
+
+/* Jasne dropdowny, popovery i menu */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .betai-notify-panel,.betai-dm-box,.filter-v7-menu,.profile-sub-modal,
+  .wallet-token-exchange-modal,.ai-league-modal-v1497,.profile-league-modal-v1646,
+  .betai-emoji-panel-final,.betai-emoji-panel-inline-final
+){
+  background:linear-gradient(180deg,#ffffff,#f7fbfd)!important;
+  border-color:#d5e4ea!important;
+  color:var(--betai-light-text)!important;
+  box-shadow:0 24px 70px rgba(31,58,73,.20)!important;
+}
+
+/* Czytelność separatorów i ramek */
+html[data-betai-theme="light"] body #root .app-shell :is(hr,[class*="divider"],[class*="separator"]){
+  border-color:#dce7ed!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.profile-ticket-v6,.wallet-v2-card,.profile-v3-card,.side-card-v3,.panel){
+  isolation:isolate!important;
+}
+
+/* Zostawiamy główne CTA i statusy w kolorach marki */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .publish-btn,.wallet-v2-primary-btn,.feed-add-tip-btn,.premium-banner-cta,
+  .betfolio-publish-btn,.betfolio-search-go-btn,.livechat226-send
+){
+  color:#061523!important;
+}
+
+@media(max-width:900px){
+  html[data-betai-theme="light"] body #root .app-shell :is(.betfolio-left,.betfolio-center,.betfolio-right){
+    box-shadow:0 9px 25px rgba(35,67,84,.09)!important;
+  }
+}
