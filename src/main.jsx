@@ -31,6 +31,7 @@ Każda przyszła zmiana UI/layout/kolorów/przycisków NIE może zmieniać powy�
 
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
+import { createPortal } from 'react-dom'
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import './styles.css'
 import achievementFanatykV1772 from './assets/achievements-v1772/fanatyk.svg'
@@ -12245,6 +12246,40 @@ function buildRecentFormForTipster(allTips = [], referenceTip = {}, limit = 6) {
   return settledRows
 }
 
+/* WERSJA 1828 — analiza kuponu zawsze nad całą aplikacją. */
+function TipAnalysisModalPortal({ onClose, children }) {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [onClose])
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="tip-analysis-modal-backdrop" onClick={onClose} role="presentation">
+      <div
+        className="tip-analysis-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Analiza typu"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [] }) {
   const isPremium = tip.access_type === 'premium'
   const adminSubscriptionBypassV1710 = isAdminUser(currentUser) || isSmilhytvLifetimePremium(currentUser)
@@ -12649,19 +12684,17 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
       </footer>
 
       {analysisModalOpen && (
-        <div className="tip-analysis-modal-backdrop" onClick={() => setAnalysisModalOpen(false)}>
-          <div className="tip-analysis-modal" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
-            <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
-            <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${cardHome} vs ${cardAway}`}</h3>
-            <div className="tip-analysis-modal-meta">
-              <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
-              <span>{effectiveIsLocked ? 'Typ premium' : cardPick}</span>
-              <span>Kurs {effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</span>
-            </div>
-            <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : cardAnalysis}</p>
+        <TipAnalysisModalPortal onClose={() => setAnalysisModalOpen(false)}>
+          <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
+          <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
+          <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${cardHome} vs ${cardAway}`}</h3>
+          <div className="tip-analysis-modal-meta">
+            <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
+            <span>{effectiveIsLocked ? 'Typ premium' : cardPick}</span>
+            <span>Kurs {effectiveIsLocked ? '—' : Number(tip.odds || 0).toFixed(2)}</span>
           </div>
-        </div>
+          <p>{effectiveIsLocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : cardAnalysis}</p>
+        </TipAnalysisModalPortal>
       )}
 
       {commentsOpen && (
@@ -23001,19 +23034,17 @@ function ProfileLiveTipCard({
       </footer>
 
       {analysisModalOpen && (
-        <div className="tip-analysis-modal-backdrop" onClick={() => setAnalysisModalOpen(false)}>
-          <div className="tip-analysis-modal" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
-            <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
-            <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${tip.home} vs ${tip.away}`}</h3>
-            <div className="tip-analysis-modal-meta">
-              <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
-              <span>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</span>
-              <span>Kurs {tip.premium && !effectiveIsUnlocked ? '—' : tip.odds}</span>
-            </div>
-            <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : akoCardAnalysis}</p>
+        <TipAnalysisModalPortal onClose={() => setAnalysisModalOpen(false)}>
+          <button type="button" className="tip-analysis-modal-close" onClick={() => setAnalysisModalOpen(false)} aria-label="Zamknij analizę">×</button>
+          <div className="tip-analysis-modal-kicker">ANALIZA TYPU</div>
+          <h3>{isAkoCard ? `Kupon AKO • ${akoLegsCount} zdarzenia` : `${tip.home} vs ${tip.away}`}</h3>
+          <div className="tip-analysis-modal-meta">
+            <span>{isAkoCard ? 'Kupon AKO' : (tip.league || 'Liga')}</span>
+            <span>{tip.premium && !effectiveIsUnlocked ? 'Typ premium' : akoCardPick}</span>
+            <span>Kurs {tip.premium && !effectiveIsUnlocked ? '—' : tip.odds}</span>
           </div>
-        </div>
+          <p>{tip.premium && !effectiveIsUnlocked ? 'Ta analiza premium jest zablokowana. Odblokuj typ, aby przeczytać całość.' : akoCardAnalysis}</p>
+        </TipAnalysisModalPortal>
       )}
 
       {commentsOpen && (

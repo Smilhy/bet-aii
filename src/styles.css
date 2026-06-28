@@ -75986,3 +75986,34 @@ html body #root:not(:has(.app-shell)) .auth609-screen .auth1567-presentation-but
     gap:7px !important;
   }
 }
+
+/* WERSJA 1828 — modal analizy zawsze idealnie na środku ekranu */
+body > .tip-analysis-modal-backdrop{
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100vh !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:24px !important;
+  z-index:2147483000 !important;
+  overflow:auto !important;
+  isolation:isolate !important;
+}
+body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
+  margin:auto !important;
+  transform:none !important;
+}
+@media (max-width:720px){
+  body > .tip-analysis-modal-backdrop{
+    align-items:center !important;
+    justify-content:center !important;
+    padding:14px !important;
+  }
+  body > .tip-analysis-modal-backdrop > .tip-analysis-modal{
+    width:min(100%, 720px) !important;
+    max-height:86vh !important;
+    border-radius:20px !important;
+  }
+}
