@@ -77120,3 +77120,624 @@ html[data-betai-theme="light"] body #root .app-shell :is(
     box-shadow:0 9px 25px rgba(35,67,84,.09)!important;
   }
 }
+
+/* =====================================================================
+   WERSJA 1831 — PEŁNY GLOBALNY JASNY MOTYW PREMIUM
+   Obejmuje wszystkie zakładki, podstrony, formularze, tabele, modale,
+   panele administracyjne i widoki responsywne. Wyłącznie warstwa wizualna.
+   ===================================================================== */
+
+html[data-betai-theme="light"]{
+  --lt-page:#f3f7fa;
+  --lt-page-2:#edf4f7;
+  --lt-surface:#ffffff;
+  --lt-surface-2:#f8fbfd;
+  --lt-surface-3:#eef5f8;
+  --lt-border:#d5e2e9;
+  --lt-border-soft:#e3ebf0;
+  --lt-text:#132638;
+  --lt-text-2:#30475b;
+  --lt-muted:#65798b;
+  --lt-faint:#8b9aa8;
+  --lt-accent:#08bfb8;
+  --lt-accent-dark:#087f7a;
+  --lt-accent-soft:#e7f9f7;
+  --lt-blue:#4b7ff4;
+  --lt-success:#087f62;
+  --lt-success-bg:#e4f8ef;
+  --lt-danger:#b13f58;
+  --lt-danger-bg:#fff0f3;
+  --lt-warning:#a66b00;
+  --lt-warning-bg:#fff7df;
+  --lt-info:#226ea8;
+  --lt-info-bg:#eaf5ff;
+  --lt-shadow:0 12px 36px rgba(32,58,73,.10);
+  --lt-shadow-soft:0 5px 18px rgba(32,58,73,.075);
+  --lt-shadow-inset:inset 0 1px 0 rgba(255,255,255,.96);
+}
+
+/* Fundament całej aplikacji */
+html[data-betai-theme="light"] body:not(.auth-screen),
+html[data-betai-theme="light"] body:not(.auth-screen) #root,
+html[data-betai-theme="light"] body #root .app-shell,
+html[data-betai-theme="light"] body #root .app-shell .main,
+html[data-betai-theme="light"] body #root .app-shell .content,
+html[data-betai-theme="light"] body #root .app-shell main{
+  background-color:transparent!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body:not(.auth-screen){
+  background:
+    radial-gradient(circle at 8% -4%,rgba(20,207,196,.11),transparent 29%),
+    radial-gradient(circle at 93% 2%,rgba(75,127,244,.08),transparent 26%),
+    linear-gradient(135deg,var(--lt-page),var(--lt-page-2) 50%,#f8fbfd)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :where(*){
+  scrollbar-color:#b7cbd4 #edf4f7;
+}
+html[data-betai-theme="light"] body #root .app-shell ::selection{
+  background:rgba(8,191,184,.22)!important;
+  color:#102536!important;
+}
+
+/* Globalne powierzchnie: każda zakładka i każdy typ karty */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="-card"],[class*="card-"],
+  [class*="-panel"],[class*="panel-"],
+  [class*="-box"],[class*="box-"],
+  [class*="-table"],[class*="table-"],
+  [class*="-toolbar"],[class*="toolbar-"],
+  [class*="-filter"],[class*="filter-"],
+  [class*="-form"],[class*="form-"],
+  [class*="-modal"],[class*="modal-"],
+  [class*="-drawer"],[class*="drawer-"],
+  [class*="-popover"],[class*="popover-"],
+  [class*="-dropdown"],[class*="dropdown-"]
+):not(.betai-dashboard-hero-v551):not(.auth-card):not(.auth-reset-card):not([class*="backdrop"]):not([class*="overlay"]){
+  border-color:var(--lt-border)!important;
+  color:var(--lt-text)!important;
+}
+
+/* Główne kontenery każdej sekcji */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .glass-ultra-panel,.glass-v2-panel,.glass-profile-v3,.glass-ranking-v4,.glass-community-v5,
+  .wallet-panel,.stats-panel,.table-panel,.panel,.card,.user-card,
+  .profile-v3-card,.profile-v4-table-card,.ranking-v4-card,.ranking-v4-table-card,
+  .sidebar-card-v4,.sidecard-v5,.side-card-v3,.bottom-card-v5,.feed-card-v5,
+  .admin-finance-overview-card,.admin-finance-transactions-card,.admin-marketplace-sales-card,
+  .admin-payout-actions-card,.admin-payout-cron-card,.admin-payout-queue-card,.admin-payout-transactions-card,
+  .earnings-card-v2,.subscription-card-v2,.deposits-card,.deposits-history-card,
+  .support510-panel,.support510-guest-panel,.reviews512-panel,
+  .ai-table-card-v747,.ai-analysis-card-v747,.ai-results-card-v1448,
+  .rewards-ultra-card,.rewards-side-card-v1533,.rewards-missions-card-v1533,
+  .unlocked-access-card-v1382,.wallet-stripe-connect-card
+){
+  background:linear-gradient(180deg,var(--lt-surface),var(--lt-surface-2))!important;
+  border:1px solid var(--lt-border)!important;
+  box-shadow:var(--lt-shadow),var(--lt-shadow-inset)!important;
+  color:var(--lt-text)!important;
+}
+
+/* Wiersze, rekordy, elementy list i kafelki */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="-row"],[class*="row-"],
+  [class*="-item"],[class*="item-"],
+  [class*="-record"],[class*="record-"],
+  [class*="-entry"],[class*="entry-"]
+):not(.profile-v3-user-row):not(.profile-ticket-v6-sport-row):not(.ticket-author-row-v874):not(.betfolio-event-teamline){
+  border-color:var(--lt-border-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-row,.wallet-v2-history-item,.wallet-v2-invoice-list > *,
+  .admin-finance-live-row,.admin-payout-live-row,.admin-marketplace-sales-row,
+  .profile-referral-row-v1396,.unlocked-row-v951,.ranking-v4-row,
+  .rewards-ranking-row-v1533,.ranking-payout-item-v1783,
+  .suggested-row-v1020,.suggested-row-v5,.chat-row-v8,
+  .achievement-list-v1115 > *,.achievement-list-v1515 > *,
+  .notifications-list > *,.betai-notify-list > *,
+  .ai-day-item,.ai-event-card,.betai-score-match-row-v1790
+){
+  background:#ffffff!important;
+  border:1px solid var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-row,.wallet-v2-history-item,.admin-finance-live-row,.admin-payout-live-row,
+  .admin-marketplace-sales-row,.ranking-v4-row,.rewards-ranking-row-v1533,
+  .suggested-row-v1020,.suggested-row-v5,.betai-score-match-row-v1790
+):hover{
+  background:#f3fbfa!important;
+  border-color:#bfe8e4!important;
+  box-shadow:0 8px 24px rgba(23,91,99,.10)!important;
+}
+
+/* Typografia — kontrast na całej stronie */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  h1,h2,h3,h4,h5,h6,
+  [class*="title"]:not([class*="subtitle"]),
+  [class*="heading"],[class*="headline"],[class*="name"],
+  [class*="amount"],[class*="value"],[class*="score"]
+):not(.status):not([class*="badge"]):not([class*="pill"]):not([class*="chip"]){
+  color:var(--lt-text)!important;
+  text-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  p,small,
+  [class*="subtitle"],[class*="description"],[class*="desc"],
+  [class*="caption"],[class*="helper"],[class*="hint"],
+  [class*="meta"],[class*="sub"],[class*="muted"],[class*="eyebrow"]
+):not(button):not([class*="badge"]):not([class*="pill"]):not([class*="chip"]){
+  color:var(--lt-muted)!important;
+  text-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(label,legend,th,[class*="label"]):not([class*="badge"]):not([class*="pill"]){
+  color:var(--lt-text-2)!important;
+  text-shadow:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell a:not(.button):not([class*="btn"]){
+  color:#087f86!important;
+}
+html[data-betai-theme="light"] body #root .app-shell a:not(.button):not([class*="btn"]):hover{
+  color:#056b71!important;
+}
+
+/* Wszystkie pola, selekty, wyszukiwarki i edytory */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  input,textarea,select,
+  [contenteditable="true"],
+  [class*="input"],[class*="textarea"],[class*="select"],[class*="search"]
+):not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(button):not([class*="icon"]):not([class*="badge"]){
+  background:#ffffff!important;
+  color:var(--lt-text)!important;
+  border-color:#cfdee6!important;
+  box-shadow:inset 0 1px 2px rgba(35,64,80,.035)!important;
+  caret-color:var(--lt-accent-dark)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(input,textarea,[contenteditable="true"])::placeholder{
+  color:#93a2af!important;
+  opacity:1!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(input,textarea,select,[contenteditable="true"]):focus{
+  border-color:#65d5cf!important;
+  box-shadow:0 0 0 4px rgba(8,191,184,.10),inset 0 1px 2px rgba(35,64,80,.03)!important;
+  outline:none!important;
+}
+html[data-betai-theme="light"] body #root .app-shell select option{
+  background:#ffffff!important;
+  color:var(--lt-text)!important;
+}
+
+/* Neutralne przyciski, zakładki i chipy */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="tab"],[class*="chip"],[class*="pill"],[class*="toggle"],
+  [class*="switch"],[class*="filter-btn"],[class*="more-btn"],
+  .wallet-top-btn,.wallet-v2-admin-tab,.profile-v4-tabs button,
+  .community-tabs-v1016 button,.community-tabs-v1413 button,.community-v5-tabs button,
+  .ai-inner-tabs-v747 button,.ai-results-tabs-v745 button,.tvlive-tabs-v8 button
+):not(.active):not(.is-active):not([aria-selected="true"]):not([class*="status"]):not([class*="success"]):not([class*="danger"]){
+  background:#f7fafc!important;
+  color:#385064!important;
+  border-color:#d4e2e9!important;
+  box-shadow:var(--lt-shadow-inset)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="tab"],[class*="chip"],[class*="pill"],[class*="toggle"],
+  [class*="switch"],.wallet-top-btn,.wallet-v2-admin-tab
+).active,
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="tab"],[class*="chip"],[class*="pill"],[class*="toggle"],
+  [class*="switch"],.wallet-top-btn,.wallet-v2-admin-tab
+).is-active,
+html[data-betai-theme="light"] body #root .app-shell [aria-selected="true"]{
+  background:linear-gradient(135deg,#22d8d0,#6b91ff)!important;
+  color:#071a28!important;
+  border-color:transparent!important;
+  box-shadow:0 8px 22px rgba(27,176,190,.20)!important;
+}
+
+/* Tabele we wszystkich zakładkach */
+html[data-betai-theme="light"] body #root .app-shell :is(table,[role="table"],.stats-table,.ai-result-table-v747,.ai-league-table-v747,.ai-results-table-v745,.profile-v4-data-table,.profile-v4-results-table,.profile-v4-results-table-v945,.admin-finance-live-table,.admin-payout-live-table,.admin-marketplace-sales-table){
+  background:#ffffff!important;
+  color:var(--lt-text)!important;
+  border-color:var(--lt-border)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(thead,[role="rowgroup"]:first-child){
+  background:#eef5f8!important;
+  color:var(--lt-text-2)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(th,td,[role="cell"],[role="columnheader"]){
+  border-color:#e0e9ee!important;
+}
+html[data-betai-theme="light"] body #root .app-shell tbody tr:nth-child(even){background:#fafcfd!important}
+html[data-betai-theme="light"] body #root .app-shell tbody tr:hover{background:#eefaf8!important}
+
+/* PROFILE — całość, wszystkie zakładki, historia, opinie i cennik */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-v3-main,.profile-v3-layout,.profile-v3-content-grid,.profile-v3-left-col,.profile-v3-sidebar,
+  .profile-v4-page,.profile-v4-tips-page,.profile-v4-results-page,.profile-v4-stats-page,
+  .profile-v4-history-page,.profile-v4-opinions-page,.profile-results-area-v961,
+  .profile-live-tip-sections,.profile-live-tip-section,.profile-stats-cards-section
+){
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-v3-hero,.profile-rank-main-v1557,.profile-v3-tabs,.profile-v4-tabs,
+  .profile-v4-chart-card,.profile-v4-filter-row,.profile-v4-filter-row-paid-access,
+  .profile-v4-opinion-summary,.profile-v4-rating-bars,.profile-review-form-v985,
+  .profile-results-chart-v961,.profile-results-chart-stage-v961,.profile-results-filter-row-v945,
+  .profile-results-logic-note-v945,.profile-stats-chart-v1361,.profile-live-balance-chart-v1809,
+  .tipster-pricing-hero-v1374,.tipster-pricing-settings,.tipster-pricing-savebar-v1374,
+  .profile-sub-modal,.profile-sub-option,.profile-subscription-active-note,
+  .profile-premium-tab-lock-note,.profile-results-locked-v950,.profile-results-locked-box-v950
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-v3-hero::before,
+html[data-betai-theme="light"] body #root .app-shell .profile-v3-hero::after{
+  opacity:.14!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-v4-stats-grid > *,.profile-results-grid-v961 > *,.profile-stats-cards-grid > *,
+  .profile-sub-grid > *,.tipster-pricing-grid > *,.tipster-pricing-grid-v1374 > *,
+  .seller-stat-box-v1515,.seller-card-v1515,.seller-card-v7,.profile-community-referrals-v1393
+){
+  background:#ffffff!important;
+  border-color:var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-v4-history-group,.profile-v4-history-group-list,.profile-reviews-list,.profile-v4-reviews-list,
+  .profile-purchased-singles-list-v952,.profile-purchased-single-wrap-v952,.profile-live-tip-comments,
+  .reviews512-form,.profile-review-form-v985
+){
+  background:#f8fbfd!important;
+  border-color:var(--lt-border-soft)!important;
+  color:var(--lt-text)!important;
+}
+
+/* KUPONY — czytelna biel, poprawny kontrast i separatory */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-ticket-v6,.dashboard-ticket-v6,.betfolio-ticket-card,.unlocked-tip-card-wrap-v951,
+  .admin-coupon-card-v945
+){
+  background:#ffffff!important;
+  border-color:#cfe0e8!important;
+  box-shadow:0 10px 30px rgba(32,58,73,.095)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .profile-ticket-v6-left,.profile-ticket-v6-main,.profile-ticket-v6-field,
+  .profile-ticket-v6-match,.profile-ticket-v6-comments,.profile-ticket-v6-footer,
+  .profile-ticket-v6-ako-main,.profile-ticket-v6-ako-legs,.profile-ticket-v6-ako-leg,
+  .betfolio-ticket-row,.betfolio-ticket-summary,.betfolio-ticket-top
+){
+  background:#ffffff!important;
+  border-color:#dfE8ed!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .profile-ticket-v6-field + .profile-ticket-v6-field,
+html[data-betai-theme="light"] body #root .app-shell .profile-ticket-v6-main > * + *{
+  border-color:#e2eaef!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.ticket-pick-emphasis-v1803,.profile-ticket-v6-stake-value){
+  color:#17293a!important;
+  text-shadow:none!important;
+}
+
+/* PORTFEL, PŁATNOŚCI, SUBSKRYPCJA, ZAROBKI, WYPŁATY I POLECENIA */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-ultra-page,.wallet-v2-layout,.wallet-v2-main,.wallet-v2-sidebar,.wallet-subpage,
+  .deposits-page,.earnings-live-page,.subscription-live-page,.referrals-v4
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-v2-hero,.wallet-v2-hero-card,.wallet-v2-card,.wallet-v2-sidecard,.wallet-v2-methods-card,
+  .wallet-v2-method-section,.wallet-v2-method-section-payout,.wallet-v2-action-history,
+  .wallet-v2-tabs,.wallet-v2-tabs-under-hero,.wallet-v2-topstats,.wallet-v2-midgrid,.wallet-v2-bottomgrid,
+  .deposits-hero,.deposits-card,.deposits-history-card,
+  .earnings-live-hero,.earnings-live-chart-card,.earnings-live-history-card,.earnings-live-stripe-card,
+  .subscription-live-hero,.subscription-live-plan-card,.subscription-live-rules-card,.subscription-live-history-card,
+  .referral-bonuses-v4,.referral-code-v4,.referral-progress-v4
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .wallet-v2-stat,.wallet-v2-payment-grid > *,.wallet-v2-payment-grid-live > *,
+  .earnings-live-stats > *,.earnings-live-metrics > *,.subscription-live-stats > *,
+  .subscription-live-grid > *,.deposits-card > *
+){
+  background:#ffffff!important;
+  border-color:var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .wallet-v2-hero-orbit{opacity:.15!important}
+
+/* ADMIN — finanse, wypłaty i kupony */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .admin-finance-live-page,.admin-payout-live-page,.admin-coupon-approval-page-v945
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .admin-finance-live-hero,.admin-finance-live-kpis > *,.admin-finance-live-card-head,
+  .admin-finance-live-filters,.admin-finance-health-card,.admin-finance-split > *,
+  .admin-payout-live-hero,.admin-payout-live-kpis > *,.admin-payout-live-card-head,
+  .admin-payout-live-toolbar,.admin-payout-live-grid > *,
+  .admin-coupon-hero-v945,.admin-coupon-tabs-v945,.admin-coupon-list-v945
+){
+  background:linear-gradient(180deg,#ffffff,#f7fbfd)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.admin-finance-health-list > *,.admin-payout-queue-list > *){
+  background:#f8fbfd!important;
+  border-color:var(--lt-border-soft)!important;
+  color:var(--lt-text)!important;
+}
+
+/* SPOŁECZNOŚĆ, NAGRODY, MISJE I OSIĄGNIĘCIA */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .community-pro-v1012,.community-pro-grid-v1012,.community-pro-center-v1012,
+  .community-pro-left-v1012,.community-pro-right-v1012,.community-v3,
+  .rewards-ultra-page,.rewards-missions-v1533,.rewards-missions-layout-v1533
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .community-pro-hero-v1012,.community-pro-feed-v1012,.community-pro-tabs-v1012,
+  .community-tab-panel-v1014,.community-channel-grid-v1014,.community-live-v1008,
+  .community-rewards-live-v1008,.community-comment-form-v1008,.community-comments-v1008,
+  .community-v5-header,.community-v5-sidebar,.community-v5-online-wrap,
+  .rewards-ultra-hero,.rewards-ultra-progress-card,.rewards-ultra-missions,
+  .rewards-ultra-achievements,.rewards-ultra-ranking,.rewards-missions-hero-v1533,
+  .rewards-missions-primary-v1533,.rewards-missions-side-v1533,.weekly-claim-box-v1540,
+  .weekly-tip-claim-box-v1545,.challenges-card-v4,.hall-card-v4
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .post-card-v1008,.feed-card-v5,.rewards-ultra-mission-list > *,
+  .rewards-mission-list-v1533 > *,.rewards-achievement-grid-v1533 > *,
+  .community-channel-grid-v1014 > *
+){
+  background:#ffffff!important;
+  border-color:var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+
+/* RANKING, TOP TYPERZY I NAGRODY RANKINGOWE */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .leaderboard-page,.ranking-live-v999,.ranking-static-v4,.top-tipsters-v1510
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .leaderboard-hero,.ranking-v1398-hero,.ranking-v1398-card,.ranking-v4-hero,
+  .ranking-v4-table-card,.ranking-v4-sidebar,.top-tipsters-hero-v1510,
+  .top-tipsters-sport-cards-v1510,.ranking-payouts-v1783,.ranking-reward-pool-v1787,
+  .ranking-referrals-bottom-v1788
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .ranking-v1398-grid > *,.ranking-v1398-stats > *,.top-tipsters-sports-grid-v1510 > *,
+  .ranking-reward-cell-v1779,.ranking-payout-item-v1783
+){
+  background:#ffffff!important;
+  border-color:var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+
+/* AI, WYNIKI LIVE, TV, ARTYKUŁY I NEWSY */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .ai-center-page-v747,.ai-results-page-v745,.betai-score-shell-v1790,.tvlive-page-v8
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .ai-lite-hero,.ai-results-hero-v745,.ai-filter-bar-v747,.ai-results-toolbar-v745,
+  .ai-profile-balance-card-v1459,.ai-profile-chart-wrap-v1459,.ai-profile-filter-row-v1459,
+  .ai-profile-mini-tabs-v1459,.ai-profile-stats-v1459,.ai-range-panel-v1054,
+  .ai-day-panel-real-v1156,.ai-day-panel-right,.ai-sports-cards-v1279,
+  .betai-score-nav-v1790,.betai-score-content-v1790,.betai-score-datebar-v1790,
+  .betai-score-statusbar-v1790,.betai-score-metric-hero-v1790,.betai-score-stats-card-v1790,
+  .betai-score-news-card-v1790,.betai-score-insights-v1790,.betai-score-topteams-v1790,
+  .tvlive-sidebar-v8,.tvlive-tabs-v8,.tv-live-locked-panel-v1521
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .ai-stat-strip-v1443 > *,.ai-results-kpis-v745 > *,.ai-sports-grid-v1279 > *,
+  .betai-score-day-card-v1790,.betai-score-stat-grid-v1790 > *,.betai-score-metric-tabs-v1790 > *
+){
+  background:#ffffff!important;
+  border-color:var(--lt-border-soft)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root :is(.article-preview-modal-v1137,.article-reader-modal-v1517){
+  background:#ffffff!important;
+  color:var(--lt-text)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:0 30px 90px rgba(23,44,57,.24)!important;
+}
+html[data-betai-theme="light"] body #root :is(.article-preview-content-v1137,.article-reader-content-v1517,.article-reader-body-v1517){
+  color:var(--lt-text-2)!important;
+}
+
+/* ODBLOKOWANE TYPY, KUPONY SINGLE I POZOSTAŁE LISTY */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .unlocked-tips-page-v951,.unlocked-tips-hero-v951,.unlocked-tips-hero-premium-v1382,
+  .unlocked-tips-filter-v951,.profile-purchased-singles-list-v952,
+  .admin-coupon-approval-page-v945
+){color:var(--lt-text)!important}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .unlocked-tips-hero-v951,.unlocked-tips-hero-premium-v1382,.unlocked-tips-filter-v951,
+  .unlocked-row-v951,.profile-purchased-single-wrap-v952
+){
+  background:linear-gradient(180deg,#ffffff,#f7fbfd)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:var(--lt-shadow-soft)!important;
+}
+
+/* POWIADOMIENIA, DM, POPUPY, MODALE I OVERLAYE */
+html[data-betai-theme="light"] body #root :is(
+  .betai-notify-panel,.betai-dm-box,.betai-dm-layout,.betai-dm-users,
+  .betai-dm-conversation,.betai-dm-messages,.betai-dm-compose,
+  .tip-analysis-modal,.tipster-support-modal-v1349,.wallet-token-exchange-modal,
+  .ai-league-modal-v1497,.profile-league-modal-v1646,.chat-image-modal-v1029
+){
+  background:linear-gradient(180deg,#ffffff,#f6fafc)!important;
+  color:var(--lt-text)!important;
+  border-color:var(--lt-border)!important;
+  box-shadow:0 26px 80px rgba(22,43,56,.24)!important;
+}
+html[data-betai-theme="light"] body #root :is(
+  .betai-notify-overlay,.wallet-token-exchange-overlay,.tipster-support-backdrop-v1349,
+  .ai-league-modal-backdrop-v1497,.profile-league-modal-backdrop-v1646,
+  .article-preview-backdrop-v1137,.article-reader-backdrop-v1517,
+  .tip-analysis-modal-backdrop
+){
+  background:rgba(38,55,67,.38)!important;
+  backdrop-filter:blur(10px)!important;
+}
+html[data-betai-theme="light"] body #root :is(
+  .betai-dm-user-list > *,.betai-dm-bubble,.betai-notify-list > *,
+  .tip-comments-panel,.tip-comment-form,.chat-composer-shell-v1025
+){
+  background:#ffffff!important;
+  color:var(--lt-text)!important;
+  border-color:var(--lt-border-soft)!important;
+}
+
+/* Statusy i komunikaty — zachowują znaczenie, ale są czytelne na bieli */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .won,.win,.success,[class*="success"],[class*="approved"]
+):not(button){
+  background-color:var(--lt-success-bg)!important;
+  color:var(--lt-success)!important;
+  border-color:#ace4ce!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .lost,.loss,.danger,.error,[class*="danger"],[class*="error"],[class*="rejected"]
+):not(button){
+  background-color:var(--lt-danger-bg)!important;
+  color:var(--lt-danger)!important;
+  border-color:#efc0ca!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .pending,.warning,[class*="pending"],[class*="warning"]
+):not(button){
+  background-color:var(--lt-warning-bg)!important;
+  color:var(--lt-warning)!important;
+  border-color:#edd99d!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .void,.info,[class*="info"]
+):not(button){
+  background-color:var(--lt-info-bg)!important;
+  color:var(--lt-info)!important;
+  border-color:#bfdcf1!important;
+}
+
+/* Puste stany, skeletony i komunikaty ładowania */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="empty"],[class*="loading"],[class*="skeleton"]
+){
+  background-color:#f7fafc!important;
+  color:var(--lt-muted)!important;
+  border-color:var(--lt-border-soft)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .skeleton-box,
+html[data-betai-theme="light"] body #root .app-shell .skeleton-card{
+  background:linear-gradient(90deg,#edf3f6,#ffffff,#edf3f6)!important;
+  background-size:220% 100%!important;
+}
+
+/* Linie, wykresy i delikatne dekoracje */
+html[data-betai-theme="light"] body #root .app-shell :is(hr,[class*="divider"],[class*="separator"],[class*="line"]){
+  border-color:#dce7ed!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(.profile-results-grid-v961,.profile-results-chart-stage-v961,.ai-profile-chart-wrap-v1459,.earnings-live-chart){
+  --grid-color:rgba(58,93,113,.12)!important;
+}
+
+/* Obrazy, avatary, flagi, bannery i logo pozostają bez filtrów */
+html[data-betai-theme="light"] body #root .app-shell :is(img,video,canvas,svg){
+  filter:none;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  .betai-dashboard-hero-v551,.ultra-page-banner,.ultra-page-banner-bg,
+  .auth609-panel-shell,.auth609-panel-shell-fixed
+){
+  color:inherit;
+}
+
+/* Responsywność jasnego motywu */
+@media(max-width:1180px){
+  html[data-betai-theme="light"] body #root .app-shell :is(
+    .profile-v3-hero,.wallet-v2-hero,.ranking-v1398-hero,.community-pro-hero-v1012,
+    .admin-finance-live-hero,.admin-payout-live-hero,.subscription-live-hero,.earnings-live-hero
+  ){
+    box-shadow:0 8px 24px rgba(32,58,73,.09)!important;
+  }
+}
+@media(max-width:720px){
+  html[data-betai-theme="light"] body #root .app-shell :is(
+    [class*="-card"],[class*="-panel"],[class*="-box"],[class*="-modal"]
+  ):not([class*="backdrop"]):not([class*="overlay"]){
+    box-shadow:0 5px 18px rgba(32,58,73,.08)!important;
+  }
+  html[data-betai-theme="light"] body #root .app-shell :is(input,textarea,select){
+    font-size:16px!important;
+  }
+}
+
+/* 1831B — bezpieczny fallback dla rzadziej używanych zakładek i komponentów */
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="-card"],[class*="card-"],
+  [class*="-panel"],[class*="panel-"],
+  [class*="-box"],[class*="box-"],
+  [class*="-table"],[class*="table-"],
+  [class*="-modal"],[class*="modal-"],
+  [class*="-drawer"],[class*="drawer-"],
+  [class*="-popover"],[class*="popover-"],
+  [class*="-dropdown"],[class*="dropdown-"]
+):not(.betai-dashboard-hero-v551):not(.auth-card):not(.auth-reset-card):not([class*="backdrop"]):not([class*="overlay"]):not([class*="image"]):not([class*="avatar"]):not([class*="icon"]){
+  background-color:#ffffff!important;
+  border-color:var(--lt-border)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="-sidebar"],[class*="sidebar-"],
+  [class*="-aside"],[class*="aside-"]
+):not(.sidebar-stack):not(.sidebar-main-box){
+  background:linear-gradient(180deg,#ffffff,#f7fbfd)!important;
+  border-color:var(--lt-border)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="card-head"],[class*="panel-head"],[class*="table-head"],
+  [class*="-header"],[class*="header-"]
+):not(.topbar):not(.community-v5-header):not(.betai-dashboard-hero-v551){
+  background:#f5f9fb!important;
+  border-color:var(--lt-border-soft)!important;
+  color:var(--lt-text)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell :is(
+  [class*="-section"],[class*="section-"]
+):not([class*="title"]):not([class*="label"]):not([class*="icon"]){
+  border-color:var(--lt-border-soft)!important;
+}
