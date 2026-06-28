@@ -2430,9 +2430,9 @@ const BETAI_SYSTEM_TIPSTER_PROFILES_V1837 = [{
   plan: 'free',
   subscription_status: 'inactive',
   preferred_sport: 'Piłka nożna',
-  bio: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
-  description: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
-  about: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
+  bio: '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
+  description: '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
+  about: '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
   created_at: '2026-06-28T00:00:00.000Z',
   is_system_tipster: true,
 }]
@@ -2483,7 +2483,7 @@ function getPublicProfileOverride(profileLike = {}) {
     }
   }
   if (['typer-expert', 'typer expert', '@typer-expert'].includes(username)) {
-    const text = '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.'
+    const text = '🎯 Typer Expert korzysta wyłącznie z API-Football: porównuje kursy kilku bukmacherów, sprawdza prognozy algorytmiczne, formę, porównanie drużyn i zgłoszone absencje. Publikuje tylko wybory potwierdzone jednocześnie przez rynek i dane API oraz dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.'
     return {
       username: 'Typer Expert',
       public_slug: 'typer-expert',

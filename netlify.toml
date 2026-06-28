@@ -27,7 +27,7 @@
 [functions."settle-live-ai-picks"]
   schedule = "47 1,7,13,19 * * *"
 
-# WERSJA 1843 — Typer Expert: kursy + ProBettingHub/statystyki + publiczne analizy. Skan co 3 godziny (UTC).
+# WERSJA 1845 — Typer Expert: wyłącznie API-Football (mecze, kursy, predictions, injuries). Skan co 3 godziny (UTC).
 # Publikuje maksymalnie jeden aktywny typ naraz, aby progresja nie nakładała się.
 [functions."publish-typer-expert"]
   schedule = "0 */3 * * *"

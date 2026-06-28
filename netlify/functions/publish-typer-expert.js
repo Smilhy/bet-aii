@@ -3,14 +3,13 @@ const { createClient } = require('@supabase/supabase-js')
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-// WERSJA 1837 — osobny, wirtualny profil systemowy.
+// WERSJA 1845 — Typer Expert korzysta wyłącznie z API-Football.
 // Funkcja nie obstawia u bukmachera. Publikuje wyłącznie typy i wirtualne stawki na bet-ai.app.
 const AUTHOR_NAME = 'Typer Expert'
 const USERNAME = 'typer-expert'
-const VERSION = '1843-typer-expert-probettinghub-research-v3'
-const SOURCE = 'typer_expert_web_research_v3'
+const VERSION = '1845-typer-expert-api-football-only-v1'
+const SOURCE = 'typer_expert_api_football_v1'
 
 const headers = {
   'Content-Type': 'application/json',
@@ -97,22 +96,6 @@ function normalizeStatus(value = '') {
   return 'pending'
 }
 
-function sourceDomain(value = '') {
-  try { return new URL(String(value || '')).hostname.replace(/^www\./i, '').toLowerCase() } catch (_) { return '' }
-}
-function hasDomain(urls = [], domains = []) {
-  const wanted = domains.map(value => String(value || '').toLowerCase())
-  return (Array.isArray(urls) ? urls : []).some(url => {
-    const host = sourceDomain(url)
-    return wanted.some(domain => host === domain || host.endsWith(`.${domain}`))
-  })
-}
-const RESEARCH_STATS_DOMAINS = [
-  'probettinghub.com', 'sofascore.com', 'flashscore.com', 'fbref.com',
-  'understat.com', 'whoscored.com', 'soccerway.com', 'worldfootball.net'
-]
-const RESEARCH_EXPERT_DOMAINS = ['blogabet.com', 'betfolio.io']
-
 async function apiGet(path, query = {}) {
   if (!API_KEY) throw new Error('Missing APISPORTS_KEY / API_FOOTBALL_KEY')
   const url = new URL(`https://v3.football.api-sports.io${path}`)
@@ -152,6 +135,8 @@ function normalizeFixture(row) {
     event_time: iso,
     home,
     away,
+    home_team_id: teams?.home?.id ? String(teams.home.id) : null,
+    away_team_id: teams?.away?.id ? String(teams.away.id) : null,
     league: clean(league?.name, 'Piłka nożna'),
     league_id: league?.id ? String(league.id) : null,
     country: clean(league?.country),
@@ -476,250 +461,198 @@ function progressionForOdds(state, odds, settings) {
   }
 }
 
-function extractOpenAIText(payload = {}) {
-  if (typeof payload.output_text === 'string' && payload.output_text.trim()) return payload.output_text.trim()
-  for (const item of Array.isArray(payload.output) ? payload.output : []) {
-    if (item?.type !== 'message') continue
-    for (const part of Array.isArray(item?.content) ? item.content : []) {
-      if (part?.type === 'output_text' && typeof part.text === 'string' && part.text.trim()) return part.text.trim()
-    }
-  }
+
+function pct(value, fallback = 0) {
+  const parsed = Number(String(value == null ? '' : value).replace('%', '').replace(',', '.').trim())
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function selectedSide(candidate) {
+  const key = candidate?.pick?.selection_key
+  if (key === 'home') return 'home'
+  if (key === 'away') return 'away'
   return ''
 }
 
-function parseJsonLoose(value = '') {
-  const text = String(value || '').trim()
-  if (!text) return null
-  try { return JSON.parse(text) } catch (_) {}
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1]
-  if (fenced) {
-    try { return JSON.parse(fenced.trim()) } catch (_) {}
-  }
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start >= 0 && end > start) {
-    try { return JSON.parse(text.slice(start, end + 1)) } catch (_) {}
-  }
-  return null
+function predictionPercent(predictions = {}, side = '') {
+  if (!side) return 0
+  return pct(predictions?.percent?.[side], 0)
 }
 
-function normalizeResearchItem(item = {}) {
-  const sourceNames = Array.isArray(item.source_names) ? item.source_names : []
-  const sourceUrls = Array.isArray(item.source_urls) ? item.source_urls : []
-  const safeUrls = sourceUrls.map(value => clean(value)).filter(value => /^https:\/\//i.test(value)).slice(0, 8)
-  const probettingHubFound = Boolean(item.probettinghub_found) || hasDomain(safeUrls, ['probettinghub.com'])
-  const statsSourceFound = Boolean(item.stats_source_found) || hasDomain(safeUrls, RESEARCH_STATS_DOMAINS)
-  const expertSourceFound = Boolean(item.expert_source_found) || hasDomain(safeUrls, RESEARCH_EXPERT_DOMAINS)
-  return {
-    candidateId: clean(item.candidate_id),
-    supported: Boolean(item.supported),
-    supportScore: clamp(item.support_score, 0, 100),
-    confidence: ['low', 'medium', 'high'].includes(String(item.confidence || '').toLowerCase())
-      ? String(item.confidence).toLowerCase()
-      : 'low',
-    sourceCount: clamp(item.source_count || sourceNames.length || safeUrls.length, 0, 20),
-    sourceNames: sourceNames.map(value => limitText(value, 80)).filter(Boolean).slice(0, 8),
-    sourceUrls: safeUrls,
-    analysis: limitText(item.analysis || '', 420),
-    contraryEvidence: Boolean(item.contrary_evidence),
-    statsSourceFound,
-    expertSourceFound,
-    probettingHubFound,
-    statsSummary: limitText(item.stats_summary || '', 220)
-  }
+function winnerMatches(candidate, predictions = {}) {
+  const side = selectedSide(candidate)
+  if (!side) return false
+  const expectedId = side === 'home' ? candidate.ev.home_team_id : candidate.ev.away_team_id
+  const winnerId = predictions?.winner?.id == null ? '' : String(predictions.winner.id)
+  const winnerName = clean(predictions?.winner?.name).toLowerCase()
+  const expectedName = clean(side === 'home' ? candidate.ev.home : candidate.ev.away).toLowerCase()
+  return Boolean((expectedId && winnerId === String(expectedId)) || (winnerName && expectedName && winnerName === expectedName))
 }
 
-function researchFallback(candidate, reason = 'Brak dostępnego badania internetowego') {
-  const { ev, pick } = candidate
-  return {
-    candidateId: `${ev.fixture_id}|${pick.market_key}|${pick.selection_key}`,
-    supported: false,
-    supportScore: 0,
-    confidence: 'low',
-    sourceCount: 0,
-    sourceNames: [],
-    sourceUrls: [],
-    analysis: limitText(`${reason}. Rynek wskazuje ${pick.probability}% prawdopodobieństwa przy kursie ${pick.odds}, lecz bez potwierdzenia w niezależnych źródłach typ nie powinien zostać opublikowany.`, 420),
-    contraryEvidence: false,
-    statsSourceFound: false,
-    expertSourceFound: false,
-    probettingHubFound: false,
-    statsSummary: ''
-  }
+function selectedComparisonAverage(comparison = {}, side = '') {
+  if (!side) return 0
+  const keys = ['form', 'att', 'def', 'poisson', 'h2h', 'goals', 'total']
+  const values = keys.map(key => pct(comparison?.[key]?.[side], NaN)).filter(Number.isFinite)
+  if (!values.length) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
-async function callOpenAIResearch(candidates, settings, errors) {
-  if (!OPENAI_API_KEY) {
-    errors.push('research: missing OPENAI_API_KEY')
-    return candidates.map(candidate => researchFallback(candidate, 'Brak klucza OPENAI_API_KEY'))
-  }
-  if (!candidates.length) return []
-
-  const allowedDomains = String(process.env.TYPER_EXPERT_ALLOWED_DOMAINS || '')
-    .split(',')
-    .map(value => value.trim().toLowerCase())
-    .filter(Boolean)
-    .slice(0, 20)
-
-  const inputCandidates = candidates.map(({ ev, pick }) => ({
-    candidate_id: `${ev.fixture_id}|${pick.market_key}|${pick.selection_key}`,
-    match: `${ev.home} vs ${ev.away}`,
-    league: ev.league,
-    country: ev.country,
-    kickoff_utc: ev.event_time,
-    market: pick.market,
-    selection: pick.prediction,
-    best_odds: pick.odds,
-    bookmaker: pick.bookmaker,
-    de_vig_market_probability_pct: pick.probability,
-    market_edge_pct: pick.ev,
-    bookmakers_count: pick.books_count
-  }))
-
-  const prompt = [
-    'Jesteś ostrożnym analitykiem piłkarskim. Użyj wyszukiwania internetowego i oceń kandydatów Typer Expert.',
-    'Dla każdego kandydata najpierw spróbuj znaleźć dokładny mecz, drużyny albo ligę w ProBettingHub (probettinghub.com/pl/matches oraz probettinghub.com/pl/betting-stats). Wykorzystaj publiczne statystyki wygranych, BTTS, Over/Under, xG, formę, Hype/LTQ, dom/wyjazd oraz dane z ostatnich 5, 6, 10 i 20 meczów, jeżeli są dostępne.',
-    'Następnie sprawdź SofaScore lub Flashscore pod kątem aktualnej formy, wyników, składów, absencji, tabeli i statusu meczu. Oficjalne źródła klubów i lig mają najwyższy priorytet przy składach i kontuzjach.',
-    'Blogabet i Betfolio traktuj wyłącznie jako dodatkowy sygnał opinii lub konsensusu. Korzystaj tylko z publicznych, widocznych bez logowania typów i statystyk. Nigdy nie opieraj decyzji na jednym anonimowym typerze ani nie omijaj paywalla lub logowania.',
-    'Szukaj wyłącznie aktualnych materiałów sprzed meczu. Nie kopiuj cudzych analiz. Zsyntetyzuj najważniejsze argumenty własnymi słowami. Jeśli źródła są sprzeczne albo brak rzetelnych danych, ustaw supported=false.',
-    'Co najmniej jedno źródło powinno być źródłem statystycznym lub oficjalnym. ProBettingHub jest preferowanym źródłem statystyk, ale jego brak nie może być zastępowany zmyślonymi danymi.',
-    'Każda analiza ma być po polsku, konkretna, maksymalnie 420 znaków, bez gwarancji wyniku. Musi jasno uzasadniać wybór.',
-    `Wymagane minimum źródeł do poparcia: ${settings.minResearchSources}. Minimalny wynik poparcia: ${settings.minResearchScore}/100.`,
-    'Zwróć ocenę dla każdego candidate_id. source_names i source_urls mają wskazywać tylko faktycznie użyte publiczne źródła.',
-    'Ustaw stats_source_found=true tylko wtedy, gdy faktycznie użyłeś danych statystycznych lub oficjalnych. Ustaw expert_source_found=true tylko przy realnym publicznym źródle eksperckim. Ustaw probettinghub_found=true tylko gdy użyłeś ProBettingHub.',
-    `Kandydaci: ${JSON.stringify(inputCandidates)}`
-  ].join('\n')
-
-  const tool = { type: 'web_search', search_context_size: settings.researchContextSize }
-  if (allowedDomains.length) tool.filters = { allowed_domains: allowedDomains }
-
-  const schema = {
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      evaluations: {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            candidate_id: { type: 'string' },
-            supported: { type: 'boolean' },
-            support_score: { type: 'number', minimum: 0, maximum: 100 },
-            confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
-            source_count: { type: 'integer', minimum: 0, maximum: 20 },
-            source_names: { type: 'array', items: { type: 'string' }, maxItems: 8 },
-            source_urls: { type: 'array', items: { type: 'string' }, maxItems: 8 },
-            contrary_evidence: { type: 'boolean' },
-            stats_source_found: { type: 'boolean' },
-            expert_source_found: { type: 'boolean' },
-            probettinghub_found: { type: 'boolean' },
-            stats_summary: { type: 'string', maxLength: 220 },
-            analysis: { type: 'string', maxLength: 420 }
-          },
-          required: ['candidate_id', 'supported', 'support_score', 'confidence', 'source_count', 'source_names', 'source_urls', 'contrary_evidence', 'stats_source_found', 'expert_source_found', 'probettinghub_found', 'stats_summary', 'analysis']
-        }
-      }
-    },
-    required: ['evaluations']
-  }
-
-  const body = {
-    model: settings.researchModel,
-    tools: [tool],
-    tool_choice: 'required',
-    input: prompt,
-    max_output_tokens: 2200,
-    text: {
-      verbosity: 'low',
-      format: {
-        type: 'json_schema',
-        name: 'typer_expert_research',
-        strict: true,
-        schema
-      }
-    }
-  }
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), settings.researchTimeoutMs)
-  try {
-    let response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify(body)
-    })
-
-    let payload = null
-    let raw = await response.text()
-    try { payload = JSON.parse(raw) } catch (_) { payload = null }
-
-    // Fallback dla modeli/kont, które nie obsługują Structured Outputs razem z web_search.
-    if (!response.ok && response.status === 400) {
-      const fallbackBody = { ...body, text: { format: { type: 'json_object' }, verbosity: 'low' } }
-      response = await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify(fallbackBody)
-      })
-      raw = await response.text()
-      try { payload = JSON.parse(raw) } catch (_) { payload = null }
-    }
-
-    if (!response.ok) {
-      throw new Error(`OpenAI ${response.status}: ${String(payload?.error?.message || raw).slice(0, 500)}`)
-    }
-
-    const parsed = parseJsonLoose(extractOpenAIText(payload))
-    const evaluations = Array.isArray(parsed?.evaluations) ? parsed.evaluations.map(normalizeResearchItem) : []
-    const byId = new Map(evaluations.filter(item => item.candidateId).map(item => [item.candidateId, item]))
-    return candidates.map(candidate => {
-      const id = `${candidate.ev.fixture_id}|${candidate.pick.market_key}|${candidate.pick.selection_key}`
-      return byId.get(id) || researchFallback(candidate, 'Brak jednoznacznej oceny źródeł')
-    })
-  } catch (error) {
-    errors.push(`research: ${error.message || error}`)
-    return candidates.map(candidate => researchFallback(candidate, 'Badanie internetowe nie powiodło się'))
-  } finally {
-    clearTimeout(timeout)
-  }
+function normalizeGoalAdvice(value = '') {
+  return String(value || '').toLowerCase().replace(',', '.').replace(/\s+/g, ' ').trim()
 }
 
-function combineCandidateAndResearch(candidate, research, settings) {
+function goalPredictionMatches(candidate, predictions = {}) {
+  const predicted = normalizeGoalAdvice(predictions?.under_over || predictions?.advice)
+  const key = String(candidate?.pick?.selection_key || '')
+  const match = key.match(/^(over|under)_(\d)_(\d)$/)
+  if (!match) return false
+  const direction = match[1]
+  const line = `${match[2]}.${match[3]}`
+  const aliases = direction === 'over' ? ['over', 'powyżej', '+'] : ['under', 'poniżej', '-']
+  return aliases.some(alias => predicted.includes(`${alias} ${line}`) || predicted.includes(`${alias}${line}`))
+}
+
+function injuriesByFixture(rows = []) {
+  const map = new Map()
+  ;(Array.isArray(rows) ? rows : []).forEach(row => {
+    const fixtureId = String(row?.fixture?.id || '')
+    const teamId = String(row?.team?.id || '')
+    if (!fixtureId || !teamId) return
+    const item = map.get(fixtureId) || new Map()
+    item.set(teamId, (item.get(teamId) || 0) + 1)
+    map.set(fixtureId, item)
+  })
+  return map
+}
+
+function buildApiEvidence(candidate, predictionRow, injuryMap, settings) {
+  const predictions = predictionRow?.predictions || {}
+  const comparison = predictionRow?.comparison || {}
+  const side = selectedSide(candidate)
   const marketScore = clamp(candidate.pick.ai_score, 0, 100)
-  const baseResearchScore = clamp(research?.supportScore, 0, 100)
-  const preferredSourceBonus = clamp(
-    (research?.probettingHubFound ? settings.probettingHubBonus : 0) +
-    (research?.statsSourceFound ? settings.statsSourceBonus : 0) +
-    (research?.expertSourceFound ? settings.expertSourceBonus : 0),
-    0,
-    10
+  let apiScore = 0
+  let apiProbability = 0
+  let supported = false
+  let contrary = false
+  let comparisonPct = 0
+  let reason = ''
+
+  if (side) {
+    apiProbability = predictionPercent(predictions, side)
+    const winnerOk = winnerMatches(candidate, predictions)
+    comparisonPct = selectedComparisonAverage(comparison, side)
+    supported = winnerOk && apiProbability >= settings.minApiProbability
+    contrary = Boolean(predictions?.winner?.id || predictions?.winner?.name) && !winnerOk
+    apiScore = clamp(
+      apiProbability * 0.72 +
+      comparisonPct * 0.18 +
+      (winnerOk ? 13 : -12) +
+      (predictions?.win_or_draw ? 2 : 0),
+      0,
+      100
+    )
+    reason = winnerOk
+      ? `API-Football wskazuje ${candidate.pick.prediction} z prawdopodobieństwem ${round(apiProbability, 1)}%.`
+      : `Prognoza API-Football nie potwierdza jednoznacznie wyboru ${candidate.pick.prediction}.`
+  } else {
+    const goalsOk = goalPredictionMatches(candidate, predictions)
+    supported = goalsOk
+    contrary = Boolean(predictions?.under_over) && !goalsOk
+    apiScore = goalsOk ? 72 : 28
+    reason = goalsOk
+      ? `Prognoza goli API-Football potwierdza wybór ${candidate.pick.prediction}.`
+      : `Prognoza goli API-Football nie potwierdza wyboru ${candidate.pick.prediction}.`
+  }
+
+  const fixtureInjuries = injuryMap.get(String(candidate.ev.fixture_id)) || new Map()
+  const homeInjuries = fixtureInjuries.get(String(candidate.ev.home_team_id || '')) || 0
+  const awayInjuries = fixtureInjuries.get(String(candidate.ev.away_team_id || '')) || 0
+  let injuryAdjustment = 0
+  if (side === 'home') injuryAdjustment = clamp(awayInjuries - homeInjuries, -4, 4)
+  if (side === 'away') injuryAdjustment = clamp(homeInjuries - awayInjuries, -4, 4)
+  apiScore = clamp(apiScore + injuryAdjustment, 0, 100)
+
+  const combinedScore = round(marketScore * settings.marketWeight + apiScore * settings.apiWeight, 2)
+  const accepted = Boolean(
+    supported &&
+    !contrary &&
+    apiScore >= settings.minApiScore &&
+    combinedScore >= settings.minCombinedScore
   )
-  const researchScore = clamp(baseResearchScore + preferredSourceBonus, 0, 100)
-  const combinedScore = round(
-    marketScore * settings.marketWeight + researchScore * settings.researchWeight,
-    2
-  )
-  const researchAccepted = Boolean(
-    research?.supported &&
-    !research?.contraryEvidence &&
-    researchScore >= settings.minResearchScore &&
-    n(research?.sourceCount, 0) >= settings.minResearchSources &&
-    (!settings.requireStatsSource || research?.statsSourceFound) &&
-    (!settings.requireProbettingHub || research?.probettingHubFound)
-  )
-  return { ...candidate, research: { ...research, adjustedSupportScore: researchScore, preferredSourceBonus }, combinedScore, researchAccepted }
+
+  const evidenceParts = [reason]
+  if (comparisonPct > 0) evidenceParts.push(`Porównanie formy, ataku, obrony i H2H daje wybranej stronie średnio ${round(comparisonPct, 1)}%.`)
+  if (homeInjuries || awayInjuries) evidenceParts.push(`Zgłoszone absencje: ${candidate.ev.home} ${homeInjuries}, ${candidate.ev.away} ${awayInjuries}.`)
+  evidenceParts.push(`Kurs ${candidate.pick.odds} u ${candidate.pick.bookmaker}; konsensus rynku ${candidate.pick.probability}% z ${candidate.pick.books_count} bukmacherów.`)
+
+  return {
+    supported,
+    contrary,
+    accepted,
+    apiScore: round(apiScore, 2),
+    combinedScore,
+    apiProbability: round(apiProbability, 1),
+    comparisonPct: round(comparisonPct, 1),
+    predictedWinner: clean(predictions?.winner?.name),
+    winOrDraw: Boolean(predictions?.win_or_draw),
+    underOver: clean(predictions?.under_over),
+    advice: limitText(predictions?.advice || '', 160),
+    homeInjuries,
+    awayInjuries,
+    analysis: limitText(evidenceParts.join(' '), 460)
+  }
 }
 
-function buildTipRow(ev, pick, progression, research = null, combinedScore = null) {
+async function fetchApiFootballEvidence(candidates, settings, errors) {
+  if (!candidates.length) return []
+  const predictionRows = new Map()
+
+  for (const candidate of candidates) {
+    try {
+      const rows = await apiGet('/predictions', { fixture: candidate.ev.fixture_id })
+      predictionRows.set(String(candidate.ev.fixture_id), rows[0] || null)
+    } catch (error) {
+      errors.push(`predictions ${candidate.ev.fixture_id}: ${error.message || error}`)
+      predictionRows.set(String(candidate.ev.fixture_id), null)
+    }
+  }
+
+  let injuryRows = []
+  if (settings.useInjuries) {
+    try {
+      const ids = [...new Set(candidates.map(candidate => candidate.ev.fixture_id))].slice(0, 20).join('-')
+      if (ids) injuryRows = await apiGet('/injuries', { ids })
+    } catch (error) {
+      errors.push(`injuries: ${error.message || error}`)
+    }
+  }
+  const injuryMap = injuriesByFixture(injuryRows)
+
+  return candidates.map(candidate => {
+    const row = predictionRows.get(String(candidate.ev.fixture_id))
+    if (!row) {
+      return {
+        supported: false,
+        contrary: false,
+        accepted: false,
+        apiScore: 0,
+        combinedScore: round(candidate.pick.ai_score * settings.marketWeight, 2),
+        apiProbability: 0,
+        comparisonPct: 0,
+        predictedWinner: '',
+        winOrDraw: false,
+        underOver: '',
+        advice: '',
+        homeInjuries: 0,
+        awayInjuries: 0,
+        analysis: 'API-Football nie zwróciło prognozy dla tego spotkania, dlatego typ nie został zaakceptowany.'
+      }
+    }
+    return buildApiEvidence(candidate, row, injuryMap, settings)
+  })
+}
+
+function buildTipRow(ev, pick, progression, apiEvidence = null, combinedScore = null) {
   const now = new Date().toISOString()
   const capText = progression.capped
     ? ` Wymagana stawka przekroczyła limit, dlatego zastosowano twardy limit ${progression.stake}.`
@@ -786,20 +719,17 @@ function buildTipRow(ev, pick, progression, research = null, combinedScore = nul
     implied_probability: round(pick.implied, 2),
     value_score: round(pick.ev, 2),
     ev: round(pick.ev, 2),
-    quality_label: 'TYPER EXPERT — STATS + WEB RESEARCH',
-    tags: ['typer-expert', 'wirtualna-progresja', 'web-research', 'expert-analysis', 'probettinghub-stats'],
-    research_score: research ? round(research.supportScore, 2) : null,
-    research_source_count: research ? Math.round(n(research.sourceCount, 0)) : 0,
-    research_source_names: research?.sourceNames || [],
-    research_source_urls: research?.sourceUrls || [],
-    research_stats_source_found: Boolean(research?.statsSourceFound),
-    research_expert_source_found: Boolean(research?.expertSourceFound),
-    research_probettinghub_found: Boolean(research?.probettingHubFound),
-    research_stats_summary: research?.statsSummary || '',
+    quality_label: 'TYPER EXPERT — API-FOOTBALL',
+    tags: ['typer-expert', 'wirtualna-progresja', 'api-football', 'predictions', 'injuries'],
+    api_prediction_score: apiEvidence ? round(apiEvidence.apiScore, 2) : null,
+    api_prediction_probability: apiEvidence ? round(apiEvidence.apiProbability, 1) : null,
+    api_prediction_winner: apiEvidence?.predictedWinner || '',
+    api_prediction_under_over: apiEvidence?.underOver || '',
+    api_prediction_advice: apiEvidence?.advice || '',
+    api_home_injuries: apiEvidence ? Math.round(n(apiEvidence.homeInjuries, 0)) : 0,
+    api_away_injuries: apiEvidence ? Math.round(n(apiEvidence.awayInjuries, 0)) : 0,
     analysis: limitText([
-      research?.analysis || `Rynek wskazuje przewagę dla wyboru: ${pick.prediction}.`,
-      research?.statsSummary ? `Statystyki: ${research.statsSummary}` : '',
-      `Kurs ${pick.odds} (${pick.bookmaker}); konsensus ${pick.probability}% z ${pick.books_count} bukmacherów.`,
+      apiEvidence?.analysis || `API-Football i rynek wskazują przewagę dla wyboru: ${pick.prediction}.`,
       `Progresja: krok ${progression.step}, stawka ${progression.stake}.`,
       capText,
       'Brak gwarancji wyniku.'
@@ -867,34 +797,26 @@ exports.handler = async function(event) {
   const maxHours = clamp(q.max_hours_ahead || process.env.TYPER_EXPERT_MAX_HOURS_AHEAD || 24, 6, 72)
 
   const settings = {
-    minBooks: clamp(q.min_books || process.env.TYPER_EXPERT_MIN_BOOKS || 4, 3, 15),
-    minOdds: clamp(q.min_odds || process.env.TYPER_EXPERT_MIN_ODDS || 1.45, 1.2, 3),
-    maxOdds: clamp(q.max_odds || process.env.TYPER_EXPERT_MAX_ODDS || 1.85, 1.35, 5),
-    minProbability: clamp(q.min_probability || process.env.TYPER_EXPERT_MIN_PROBABILITY || 0.58, 0.45, 0.85),
-    minEdge: clamp(q.min_edge || process.env.TYPER_EXPERT_MIN_EDGE || 0.012, 0, 0.2),
-    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.TYPER_EXPERT_MAX_PROBABILITY_SPREAD || 0.05, 0.01, 0.15),
-    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.TYPER_EXPERT_MAX_ODDS_OUTLIER_RATIO || 1.06, 1.01, 1.2),
+    minBooks: clamp(q.min_books || process.env.TYPER_EXPERT_MIN_BOOKS || 3, 2, 15),
+    minOdds: clamp(q.min_odds || process.env.TYPER_EXPERT_MIN_ODDS || 1.35, 1.2, 3),
+    maxOdds: clamp(q.max_odds || process.env.TYPER_EXPERT_MAX_ODDS || 1.95, 1.35, 5),
+    minProbability: clamp(q.min_probability || process.env.TYPER_EXPERT_MIN_PROBABILITY || 0.54, 0.45, 0.85),
+    minEdge: clamp(q.min_edge || process.env.TYPER_EXPERT_MIN_EDGE || 0.005, 0, 0.2),
+    maxProbabilitySpread: clamp(q.max_probability_spread || process.env.TYPER_EXPERT_MAX_PROBABILITY_SPREAD || 0.07, 0.01, 0.15),
+    maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.TYPER_EXPERT_MAX_ODDS_OUTLIER_RATIO || 1.10, 1.01, 1.2),
     baseStake: clamp(q.base_stake || process.env.TYPER_EXPERT_BASE_STAKE || 1, 1, 1000),
     maxStake: clamp(q.max_stake || process.env.TYPER_EXPERT_MAX_STAKE || 1000, 1, 1000),
     targetProfit: clamp(q.target_profit || process.env.TYPER_EXPERT_TARGET_PROFIT || 0.4, 0.01, 100),
-    researchCandidates: clamp(q.research_candidates || process.env.TYPER_EXPERT_RESEARCH_CANDIDATES || 5, 1, 8),
-    minResearchSources: clamp(q.min_research_sources || process.env.TYPER_EXPERT_MIN_RESEARCH_SOURCES || 2, 1, 5),
-    minResearchScore: clamp(q.min_research_score || process.env.TYPER_EXPERT_MIN_RESEARCH_SCORE || 62, 40, 95),
-    researchWeight: clamp(q.research_weight || process.env.TYPER_EXPERT_RESEARCH_WEIGHT || 0.45, 0.1, 0.8),
+    apiCandidates: clamp(q.api_candidates || process.env.TYPER_EXPERT_API_CANDIDATES || 5, 1, 8),
+    minApiScore: clamp(q.min_api_score || process.env.TYPER_EXPERT_MIN_API_SCORE || 60, 40, 95),
+    minApiProbability: clamp(q.min_api_probability || process.env.TYPER_EXPERT_MIN_API_PROBABILITY || 55, 40, 85),
+    minCombinedScore: clamp(q.min_combined_score || process.env.TYPER_EXPERT_MIN_COMBINED_SCORE || 62, 40, 95),
+    apiWeight: clamp(q.api_weight || process.env.TYPER_EXPERT_API_WEIGHT || 0.55, 0.2, 0.8),
     marketWeight: 0,
-    researchModel: clean(q.research_model || process.env.TYPER_EXPERT_RESEARCH_MODEL || 'gpt-4.1-mini'),
-    researchContextSize: ['low', 'medium', 'high'].includes(String(q.research_context_size || process.env.TYPER_EXPERT_RESEARCH_CONTEXT_SIZE || 'low').toLowerCase())
-      ? String(q.research_context_size || process.env.TYPER_EXPERT_RESEARCH_CONTEXT_SIZE || 'low').toLowerCase()
-      : 'low',
-    researchTimeoutMs: clamp(q.research_timeout_ms || process.env.TYPER_EXPERT_RESEARCH_TIMEOUT_MS || 50000, 15000, 90000),
-    requireResearch: boolEnv(q.require_research ?? process.env.TYPER_EXPERT_REQUIRE_RESEARCH, true),
-    requireStatsSource: boolEnv(q.require_stats_source ?? process.env.TYPER_EXPERT_REQUIRE_STATS_SOURCE, true),
-    requireProbettingHub: boolEnv(q.require_probettinghub ?? process.env.TYPER_EXPERT_REQUIRE_PROBETTINGHUB, false),
-    probettingHubBonus: clamp(q.probettinghub_bonus || process.env.TYPER_EXPERT_PROBETTINGHUB_BONUS || 4, 0, 8),
-    statsSourceBonus: clamp(q.stats_source_bonus || process.env.TYPER_EXPERT_STATS_SOURCE_BONUS || 2, 0, 5),
-    expertSourceBonus: clamp(q.expert_source_bonus || process.env.TYPER_EXPERT_EXPERT_SOURCE_BONUS || 1, 0, 3)
+    requireApiPrediction: boolEnv(q.require_api_prediction ?? process.env.TYPER_EXPERT_REQUIRE_API_PREDICTION, true),
+    useInjuries: boolEnv(q.use_injuries ?? process.env.TYPER_EXPERT_USE_INJURIES, true)
   }
-  settings.marketWeight = round(1 - settings.researchWeight, 4)
+  settings.marketWeight = round(1 - settings.apiWeight, 4)
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   const errors = []
@@ -943,14 +865,14 @@ exports.handler = async function(event) {
     uniqueFixtures.push({ ...candidate, progression })
   }
 
-  const researchPool = uniqueFixtures.slice(0, settings.researchCandidates)
-  const researchResults = await callOpenAIResearch(researchPool, settings, errors)
-  const researchedCandidates = researchPool
-    .map((candidate, index) => combineCandidateAndResearch(candidate, researchResults[index], settings))
-    .filter(candidate => !settings.requireResearch || candidate.researchAccepted)
+  const apiPool = uniqueFixtures.slice(0, settings.apiCandidates)
+  const apiResults = await fetchApiFootballEvidence(apiPool, settings, errors)
+  const apiCandidates = apiPool
+    .map((candidate, index) => ({ ...candidate, apiEvidence: apiResults[index], combinedScore: apiResults[index]?.combinedScore || 0 }))
+    .filter(candidate => !settings.requireApiPrediction || candidate.apiEvidence?.accepted)
     .sort((a, b) => {
       if (b.combinedScore !== a.combinedScore) return b.combinedScore - a.combinedScore
-      if (n(b.research?.supportScore) !== n(a.research?.supportScore)) return n(b.research?.supportScore) - n(a.research?.supportScore)
+      if (n(b.apiEvidence?.apiScore) !== n(a.apiEvidence?.apiScore)) return n(b.apiEvidence?.apiScore) - n(a.apiEvidence?.apiScore)
       return n(b.pick.probability) - n(a.pick.probability)
     })
 
@@ -960,12 +882,12 @@ exports.handler = async function(event) {
       dry_run: true,
       version: VERSION,
       author: AUTHOR_NAME,
-      strategy: 'bookmaker consensus + ProBettingHub/statistics + public expert web research + virtual recovery progression',
+      strategy: 'API-Football fixtures + odds + predictions + injuries + virtual recovery progression',
       fixtures_found: fixtures.length,
       odds_fixtures_found: oddsGroups.size,
       market_candidates_found: uniqueFixtures.length,
-      researched_candidates: researchPool.length,
-      accepted_after_research: researchedCandidates.length,
+      api_candidates_checked: apiPool.length,
+      accepted_after_api: apiCandidates.length,
       progression_state: {
         pending: progressionState.pending.length,
         cycle_net: progressionState.cycleNet,
@@ -973,22 +895,19 @@ exports.handler = async function(event) {
         completed_cycles: progressionState.completedCycles,
         total_net: progressionState.totalNet
       },
-      candidates: researchPool.map((candidate, index) => {
-        const combined = combineCandidateAndResearch(candidate, researchResults[index], settings)
-        return {
-          accepted: combined.researchAccepted,
-          combined_score: combined.combinedScore,
-          research: combined.research,
-          tip: buildTipRow(combined.ev, combined.pick, combined.progression, combined.research, combined.combinedScore)
-        }
-      }),
+      candidates: apiPool.map((candidate, index) => ({
+        accepted: Boolean(apiResults[index]?.accepted),
+        combined_score: apiResults[index]?.combinedScore || 0,
+        api_football: apiResults[index],
+        tip: buildTipRow(candidate.ev, candidate.pick, candidate.progression, apiResults[index], apiResults[index]?.combinedScore)
+      })),
       settings,
       errors: errors.slice(0, 25)
     })
   }
 
   let selected = null
-  for (const candidate of researchedCandidates) {
+  for (const candidate of apiCandidates) {
     try {
       if (force || !(await fixtureAlreadyUsed(supabase, candidate.ev.fixture_id))) {
         selected = candidate
@@ -1008,10 +927,10 @@ exports.handler = async function(event) {
       fixtures_found: fixtures.length,
       odds_fixtures_found: oddsGroups.size,
       market_candidates_found: uniqueFixtures.length,
-      researched_candidates: researchPool.length,
-      candidates_found: researchedCandidates.length,
-      message: settings.requireResearch
-        ? 'Brak typu potwierdzonego przez wymagane źródła statystyczne i publiczne analizy. Silnik nie publikuje wyboru na siłę.'
+      api_candidates_checked: apiPool.length,
+      candidates_found: apiCandidates.length,
+      message: settings.requireApiPrediction
+        ? 'Brak typu potwierdzonego przez prognozy API-Football i rynek kursowy. Silnik nie publikuje wyboru na siłę.'
         : 'Brak typu spełniającego filtry Typer Expert. Silnik nie publikuje wyboru na siłę.',
       progression_state: {
         cycle_net: progressionState.cycleNet,
@@ -1024,7 +943,7 @@ exports.handler = async function(event) {
     })
   }
 
-  const row = buildTipRow(selected.ev, selected.pick, selected.progression, selected.research, selected.combinedScore)
+  const row = buildTipRow(selected.ev, selected.pick, selected.progression, selected.apiEvidence, selected.combinedScore)
   try {
     const out = await insertSafe(supabase, row)
     try {
@@ -1044,7 +963,7 @@ exports.handler = async function(event) {
       inserted: 1,
       id: out.data?.id,
       removed_columns: out.removed,
-      strategy: 'bookmaker consensus + ProBettingHub/statistics + public expert web research + virtual recovery progression',
+      strategy: 'API-Football fixtures + odds + predictions + injuries + virtual recovery progression',
       progression: selected.progression,
       pick: row,
       settings,
