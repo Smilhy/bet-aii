@@ -2372,6 +2372,26 @@ function resolveRealProfileUsername(user) {
   const email = normalizeEmail(user?.email || user?.author_email || user?.auth_email || user?.user_metadata?.email || user?.raw_user_meta_data?.email)
   const emailLocal = email ? email.split('@')[0] : ''
 
+  // WERSJA 1838: systemowy profil Typer Expert zawsze pokazuje nazwę publiczną,
+  // a nie techniczny slug "typer-expert" ani nazwę zastępczą "Użytkownik".
+  const identityValuesV1838 = [
+    user?.id,
+    user?.tipster_id,
+    user?.public_slug,
+    user?.slug,
+    user?.username,
+    user?.author_name,
+    user?.display_name,
+    user?.profile_name,
+    emailLocal,
+  ].map(value => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^lookup:/, '')
+    .replace(/^@/, '')
+    .replace(/[_\s]+/g, '-'))
+  if (identityValuesV1838.includes('typer-expert')) return 'Typer Expert'
+
   // 🔒 ZABLOKOWANA LOGIKA TOŻSAMOŚCI v981
   // Nie wolno traktować "user/użytkownik" jako prawdziwego nicku.
   // Kolejność jest stała dla całej strony:
@@ -2415,15 +2435,42 @@ const BETAI_SYSTEM_TIPSTER_PROFILES_V1837 = [{
   public_slug: 'typer-expert',
   role: 'tipster',
   is_tipster: true,
-  plan: 'premium',
-  subscription_status: 'active',
+  plan: 'free',
+  subscription_status: 'inactive',
   preferred_sport: 'Piłka nożna',
-  bio: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
-  description: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
-  about: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
+  bio: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
+  description: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
+  about: '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.',
   created_at: '2026-06-28T00:00:00.000Z',
   is_system_tipster: true,
 }]
+
+function getBetaiSystemTipsterProfileV1838(...values) {
+  const normalized = values
+    .flatMap(value => {
+      if (value && typeof value === 'object') {
+        return [value.id, value.tipster_id, value.public_slug, value.slug, value.username, value.author_name, value.email]
+      }
+      return [value]
+    })
+    .map(value => String(value || '').trim().toLowerCase())
+    .filter(Boolean)
+    .map(value => {
+      const decoded = value.startsWith('lookup:') ? decodeURIComponent(value.slice(7)) : value
+      return decoded.replace(/^@/, '').replace(/[_\s]+/g, '-')
+    })
+
+  if (!normalized.includes('typer-expert')) return null
+  const base = BETAI_SYSTEM_TIPSTER_PROFILES_V1837[0]
+  return {
+    ...base,
+    display_name: 'Typer Expert',
+    profile_name: 'Typer Expert',
+    username: 'Typer Expert',
+    author_name: 'Typer Expert',
+    public_slug: 'typer-expert',
+  }
+}
 
 function getPublicProfileOverride(profileLike = {}) {
   const username = normalizeEmail(profileLike?.username || profileLike?.public_slug || profileLike?.author_name || '')
@@ -2444,7 +2491,7 @@ function getPublicProfileOverride(profileLike = {}) {
     }
   }
   if (['typer-expert', 'typer expert', '@typer-expert'].includes(username)) {
-    const text = 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.'
+    const text = '🎯 Typer Expert porównuje realne kursy kilku bukmacherów, przeszukuje publiczne zapowiedzi ekspertów oraz sprawdza formę, składy i kontuzje. Publikuje tylko typy potwierdzone przez niezależne źródła i dodaje krótkie uzasadnienie do 500 znaków. Strategia nie gwarantuje zysku.'
     return {
       username: 'Typer Expert',
       public_slug: 'typer-expert',
@@ -2452,8 +2499,8 @@ function getPublicProfileOverride(profileLike = {}) {
       description: text,
       about: text,
       created_at: '2026-06-28T00:00:00.000Z',
-      plan: 'premium',
-      subscription_status: 'active',
+      plan: 'free',
+      subscription_status: 'inactive',
       role: 'tipster',
       is_tipster: true,
       preferred_sport: 'Piłka nożna',
@@ -5376,7 +5423,8 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
             ])
           : normalizedManualTipsV1792
 
-        const fallbackProfile = foundProfile || (normalizedTipsterTips[0] ? {
+        const systemProfileV1838 = getBetaiSystemTipsterProfileV1838(tipsterId, lookupTipsterKey, foundProfile)
+        const fallbackProfile = foundProfile || systemProfileV1838 || (normalizedTipsterTips[0] ? {
           id: normalizedTipsterTips[0].author_id || normalizedTipsterTips[0].user_id || normalizedTipsterTips[0].tipster_id || null,
           email: normalizedTipsterTips[0].author_email || normalizedTipsterTips[0].email || normalizedTipsterTips[0].user_email || null,
           username: normalizedTipsterTips[0].author_name || normalizedTipsterTips[0].username || lookupTipsterKey || 'Użytkownik',
@@ -5457,7 +5505,7 @@ function TipsterProfileView({ tipsterId, onBack, currentUser, allTips = [], foll
     username: isGenericProfileName(profile?.username) ? '' : profile?.username,
     author_name: isGenericProfileName(tipsterTips?.[0]?.author_name) ? '' : tipsterTips?.[0]?.author_name
   })
-  const username = String(safeUsernameSource || lookupTipsterKey || 'Tipster').split('@')[0]
+  const username = String((isGenericProfileName(safeUsernameSource) ? '' : safeUsernameSource) || lookupTipsterKey || 'Tipster').split('@')[0]
 
   const targetKeys = new Set([
     normalizeProfileMatchKey(profileId),
@@ -30476,6 +30524,8 @@ function App() {
 
   async function resolvePublicTipsterBySlug(slug) {
   const cleanSlug = String(slug || '').trim().toLowerCase()
+  const systemProfileV1838 = getBetaiSystemTipsterProfileV1838(slug)
+  if (systemProfileV1838) return systemProfileV1838
   if (!cleanSlug || !isSupabaseConfigured || !supabase) return null
 
   // WERSJA 1430:
@@ -31435,6 +31485,8 @@ function App() {
   }
 
   async function resolveTipsterProfile(tipsterRef, authorName) {
+    const systemProfileV1838 = getBetaiSystemTipsterProfileV1838(tipsterRef, authorName)
+    if (systemProfileV1838) return systemProfileV1838
     if (!isSupabaseConfigured || !supabase) return null
 
     const rawRef = String(tipsterRef || '').trim()

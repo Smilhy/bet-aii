@@ -3,13 +3,14 @@ const { createClient } = require('@supabase/supabase-js')
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 const API_KEY = process.env.APISPORTS_KEY || process.env.API_SPORTS_KEY || process.env.API_FOOTBALL_KEY
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 // WERSJA 1837 — osobny, wirtualny profil systemowy.
 // Funkcja nie obstawia u bukmachera. Publikuje wyłącznie typy i wirtualne stawki na bet-ai.app.
 const AUTHOR_NAME = 'Typer Expert'
 const USERNAME = 'typer-expert'
-const VERSION = '1837-typer-expert-progression-v1'
-const SOURCE = 'typer_expert_progression_v1'
+const VERSION = '1841-typer-expert-web-research-v2'
+const SOURCE = 'typer_expert_web_research_v2'
 
 const headers = {
   'Content-Type': 'application/json',
@@ -38,6 +39,21 @@ function clamp(value, min, max) {
 function clean(value, fallback = '') {
   const out = String(value == null ? '' : value).trim()
   return out || fallback
+}
+function normalizeSpace(value = '') {
+  return String(value == null ? '' : value).replace(/\s+/g, ' ').trim()
+}
+function limitText(value = '', max = 500) {
+  const text = normalizeSpace(value)
+  if (text.length <= max) return text
+  const cut = text.slice(0, Math.max(0, max - 1))
+  const boundary = cut.lastIndexOf(' ')
+  return `${(boundary > Math.floor(max * 0.7) ? cut.slice(0, boundary) : cut).trim()}…`
+}
+function boolEnv(value, fallback = false) {
+  const raw = String(value == null ? '' : value).trim().toLowerCase()
+  if (!raw) return fallback
+  return ['1', 'true', 'yes', 'on'].includes(raw)
 }
 function median(values) {
   const xs = values.map(Number).filter(Number.isFinite).sort((a, b) => a - b)
@@ -444,7 +460,221 @@ function progressionForOdds(state, odds, settings) {
   }
 }
 
-function buildTipRow(ev, pick, progression) {
+function extractOpenAIText(payload = {}) {
+  if (typeof payload.output_text === 'string' && payload.output_text.trim()) return payload.output_text.trim()
+  for (const item of Array.isArray(payload.output) ? payload.output : []) {
+    if (item?.type !== 'message') continue
+    for (const part of Array.isArray(item?.content) ? item.content : []) {
+      if (part?.type === 'output_text' && typeof part.text === 'string' && part.text.trim()) return part.text.trim()
+    }
+  }
+  return ''
+}
+
+function parseJsonLoose(value = '') {
+  const text = String(value || '').trim()
+  if (!text) return null
+  try { return JSON.parse(text) } catch (_) {}
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1]
+  if (fenced) {
+    try { return JSON.parse(fenced.trim()) } catch (_) {}
+  }
+  const start = text.indexOf('{')
+  const end = text.lastIndexOf('}')
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(text.slice(start, end + 1)) } catch (_) {}
+  }
+  return null
+}
+
+function normalizeResearchItem(item = {}) {
+  const sourceNames = Array.isArray(item.source_names) ? item.source_names : []
+  const sourceUrls = Array.isArray(item.source_urls) ? item.source_urls : []
+  return {
+    candidateId: clean(item.candidate_id),
+    supported: Boolean(item.supported),
+    supportScore: clamp(item.support_score, 0, 100),
+    confidence: ['low', 'medium', 'high'].includes(String(item.confidence || '').toLowerCase())
+      ? String(item.confidence).toLowerCase()
+      : 'low',
+    sourceCount: clamp(item.source_count || sourceNames.length || sourceUrls.length, 0, 20),
+    sourceNames: sourceNames.map(value => limitText(value, 80)).filter(Boolean).slice(0, 5),
+    sourceUrls: sourceUrls.map(value => clean(value)).filter(value => /^https:\/\//i.test(value)).slice(0, 5),
+    analysis: limitText(item.analysis || '', 420),
+    contraryEvidence: Boolean(item.contrary_evidence)
+  }
+}
+
+function researchFallback(candidate, reason = 'Brak dostępnego badania internetowego') {
+  const { ev, pick } = candidate
+  return {
+    candidateId: `${ev.fixture_id}|${pick.market_key}|${pick.selection_key}`,
+    supported: false,
+    supportScore: 0,
+    confidence: 'low',
+    sourceCount: 0,
+    sourceNames: [],
+    sourceUrls: [],
+    analysis: limitText(`${reason}. Rynek wskazuje ${pick.probability}% prawdopodobieństwa przy kursie ${pick.odds}, lecz bez potwierdzenia w niezależnych źródłach typ nie powinien zostać opublikowany.`, 420),
+    contraryEvidence: false
+  }
+}
+
+async function callOpenAIResearch(candidates, settings, errors) {
+  if (!OPENAI_API_KEY) {
+    errors.push('research: missing OPENAI_API_KEY')
+    return candidates.map(candidate => researchFallback(candidate, 'Brak klucza OPENAI_API_KEY'))
+  }
+  if (!candidates.length) return []
+
+  const allowedDomains = String(process.env.TYPER_EXPERT_ALLOWED_DOMAINS || '')
+    .split(',')
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean)
+    .slice(0, 20)
+
+  const inputCandidates = candidates.map(({ ev, pick }) => ({
+    candidate_id: `${ev.fixture_id}|${pick.market_key}|${pick.selection_key}`,
+    match: `${ev.home} vs ${ev.away}`,
+    league: ev.league,
+    country: ev.country,
+    kickoff_utc: ev.event_time,
+    market: pick.market,
+    selection: pick.prediction,
+    best_odds: pick.odds,
+    bookmaker: pick.bookmaker,
+    de_vig_market_probability_pct: pick.probability,
+    market_edge_pct: pick.ev,
+    bookmakers_count: pick.books_count
+  }))
+
+  const prompt = [
+    'Jesteś ostrożnym analitykiem piłkarskim. Użyj wyszukiwania internetowego i oceń kandydatów Typer Expert.',
+    'Szukaj wyłącznie publicznie dostępnych, aktualnych materiałów sprzed meczu: zapowiedzi ekspertów, analizy statystyczne, informacje o składach, kontuzjach, formie, motywacji i warunkach meczu.',
+    'Priorytet: oficjalne źródła klubów/lig, uznane media sportowe, wiarygodne serwisy statystyczne i rozpoznawalni analitycy. Nie opieraj decyzji na jednym anonimowym tipsterze ani na obietnicach pewnego zysku.',
+    'Nie kopiuj cudzych analiz. Zsyntetyzuj najważniejsze argumenty własnymi słowami. Jeśli źródła są sprzeczne albo brak rzetelnych danych, ustaw supported=false.',
+    'Każda analiza ma być po polsku, konkretna, maksymalnie 420 znaków, bez gwarancji wyniku. Musi jasno uzasadniać wybór.',
+    `Wymagane minimum źródeł do poparcia: ${settings.minResearchSources}. Minimalny wynik poparcia: ${settings.minResearchScore}/100.`,
+    'Zwróć ocenę dla każdego candidate_id. source_names i source_urls mają wskazywać tylko faktycznie użyte publiczne źródła.',
+    `Kandydaci: ${JSON.stringify(inputCandidates)}`
+  ].join('\n')
+
+  const tool = { type: 'web_search', search_context_size: settings.researchContextSize }
+  if (allowedDomains.length) tool.filters = { allowed_domains: allowedDomains }
+
+  const schema = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      evaluations: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            candidate_id: { type: 'string' },
+            supported: { type: 'boolean' },
+            support_score: { type: 'number', minimum: 0, maximum: 100 },
+            confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+            source_count: { type: 'integer', minimum: 0, maximum: 20 },
+            source_names: { type: 'array', items: { type: 'string' }, maxItems: 5 },
+            source_urls: { type: 'array', items: { type: 'string' }, maxItems: 5 },
+            contrary_evidence: { type: 'boolean' },
+            analysis: { type: 'string', maxLength: 420 }
+          },
+          required: ['candidate_id', 'supported', 'support_score', 'confidence', 'source_count', 'source_names', 'source_urls', 'contrary_evidence', 'analysis']
+        }
+      }
+    },
+    required: ['evaluations']
+  }
+
+  const body = {
+    model: settings.researchModel,
+    tools: [tool],
+    tool_choice: 'required',
+    input: prompt,
+    max_output_tokens: 2200,
+    text: {
+      verbosity: 'low',
+      format: {
+        type: 'json_schema',
+        name: 'typer_expert_research',
+        strict: true,
+        schema
+      }
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), settings.researchTimeoutMs)
+  try {
+    let response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    let payload = null
+    let raw = await response.text()
+    try { payload = JSON.parse(raw) } catch (_) { payload = null }
+
+    // Fallback dla modeli/kont, które nie obsługują Structured Outputs razem z web_search.
+    if (!response.ok && response.status === 400) {
+      const fallbackBody = { ...body, text: { format: { type: 'json_object' }, verbosity: 'low' } }
+      response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify(fallbackBody)
+      })
+      raw = await response.text()
+      try { payload = JSON.parse(raw) } catch (_) { payload = null }
+    }
+
+    if (!response.ok) {
+      throw new Error(`OpenAI ${response.status}: ${String(payload?.error?.message || raw).slice(0, 500)}`)
+    }
+
+    const parsed = parseJsonLoose(extractOpenAIText(payload))
+    const evaluations = Array.isArray(parsed?.evaluations) ? parsed.evaluations.map(normalizeResearchItem) : []
+    const byId = new Map(evaluations.filter(item => item.candidateId).map(item => [item.candidateId, item]))
+    return candidates.map(candidate => {
+      const id = `${candidate.ev.fixture_id}|${candidate.pick.market_key}|${candidate.pick.selection_key}`
+      return byId.get(id) || researchFallback(candidate, 'Brak jednoznacznej oceny źródeł')
+    })
+  } catch (error) {
+    errors.push(`research: ${error.message || error}`)
+    return candidates.map(candidate => researchFallback(candidate, 'Badanie internetowe nie powiodło się'))
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function combineCandidateAndResearch(candidate, research, settings) {
+  const marketScore = clamp(candidate.pick.ai_score, 0, 100)
+  const researchScore = clamp(research?.supportScore, 0, 100)
+  const combinedScore = round(
+    marketScore * settings.marketWeight + researchScore * settings.researchWeight,
+    2
+  )
+  const researchAccepted = Boolean(
+    research?.supported &&
+    !research?.contraryEvidence &&
+    researchScore >= settings.minResearchScore &&
+    n(research?.sourceCount, 0) >= settings.minResearchSources
+  )
+  return { ...candidate, research, combinedScore, researchAccepted }
+}
+
+function buildTipRow(ev, pick, progression, research = null, combinedScore = null) {
   const now = new Date().toISOString()
   const capText = progression.capped
     ? ` Wymagana stawka przekroczyła limit, dlatego zastosowano twardy limit ${progression.stake}.`
@@ -504,16 +734,26 @@ function buildTipRow(ev, pick, progression) {
     tip_source: SOURCE,
     ai_source: VERSION,
     ai_model_version: VERSION,
-    ai_score: Math.round(pick.ai_score),
-    ai_confidence: Math.round(pick.ai_score),
+    ai_score: Math.round(combinedScore == null ? pick.ai_score : combinedScore),
+    ai_confidence: Math.round(combinedScore == null ? pick.ai_score : combinedScore),
     probability: Math.round(pick.probability),
     model_probability: Math.round(pick.probability),
     implied_probability: round(pick.implied, 2),
     value_score: round(pick.ev, 2),
     ev: round(pick.ev, 2),
-    quality_label: 'TYPER EXPERT',
-    tags: ['typer-expert', 'wirtualna-progresja'],
-    analysis: `Typer Expert: ${pick.prediction}. Realny kurs ${pick.odds} (${pick.bookmaker}). Konsensus po usunięciu marży: ${pick.probability}% na podstawie ${pick.books_count} bukmacherów. Value: ${pick.ev}%. Wirtualna progresja: krok ${progression.step}, saldo bieżącego cyklu przed typem ${progression.cycleNetBefore >= 0 ? '+' : ''}${progression.cycleNetBefore}, stawka ${progression.stake}, cel cyklu +${progression.targetProfit}.${capText} Strategia nie gwarantuje zysku i nie wykonuje zakładów u bukmachera.`,
+    quality_label: 'TYPER EXPERT — WEB RESEARCH',
+    tags: ['typer-expert', 'wirtualna-progresja', 'web-research', 'expert-analysis'],
+    research_score: research ? round(research.supportScore, 2) : null,
+    research_source_count: research ? Math.round(n(research.sourceCount, 0)) : 0,
+    research_source_names: research?.sourceNames || [],
+    research_source_urls: research?.sourceUrls || [],
+    analysis: limitText([
+      research?.analysis || `Rynek wskazuje przewagę dla wyboru: ${pick.prediction}.`,
+      `Kurs ${pick.odds} (${pick.bookmaker}); konsensus ${pick.probability}% z ${pick.books_count} bukmacherów.`,
+      `Progresja: krok ${progression.step}, stawka ${progression.stake}.`,
+      capText,
+      'Brak gwarancji wyniku.'
+    ].filter(Boolean).join(' '), 500),
 
     created_at: now,
     updated_at: now
@@ -586,8 +826,20 @@ exports.handler = async function(event) {
     maxOddsOutlierRatio: clamp(q.max_odds_outlier_ratio || process.env.TYPER_EXPERT_MAX_ODDS_OUTLIER_RATIO || 1.06, 1.01, 1.2),
     baseStake: clamp(q.base_stake || process.env.TYPER_EXPERT_BASE_STAKE || 1, 1, 1000),
     maxStake: clamp(q.max_stake || process.env.TYPER_EXPERT_MAX_STAKE || 1000, 1, 1000),
-    targetProfit: clamp(q.target_profit || process.env.TYPER_EXPERT_TARGET_PROFIT || 0.4, 0.01, 100)
+    targetProfit: clamp(q.target_profit || process.env.TYPER_EXPERT_TARGET_PROFIT || 0.4, 0.01, 100),
+    researchCandidates: clamp(q.research_candidates || process.env.TYPER_EXPERT_RESEARCH_CANDIDATES || 5, 1, 8),
+    minResearchSources: clamp(q.min_research_sources || process.env.TYPER_EXPERT_MIN_RESEARCH_SOURCES || 2, 1, 5),
+    minResearchScore: clamp(q.min_research_score || process.env.TYPER_EXPERT_MIN_RESEARCH_SCORE || 62, 40, 95),
+    researchWeight: clamp(q.research_weight || process.env.TYPER_EXPERT_RESEARCH_WEIGHT || 0.45, 0.1, 0.8),
+    marketWeight: 0,
+    researchModel: clean(q.research_model || process.env.TYPER_EXPERT_RESEARCH_MODEL || 'gpt-4.1-mini'),
+    researchContextSize: ['low', 'medium', 'high'].includes(String(q.research_context_size || process.env.TYPER_EXPERT_RESEARCH_CONTEXT_SIZE || 'low').toLowerCase())
+      ? String(q.research_context_size || process.env.TYPER_EXPERT_RESEARCH_CONTEXT_SIZE || 'low').toLowerCase()
+      : 'low',
+    researchTimeoutMs: clamp(q.research_timeout_ms || process.env.TYPER_EXPERT_RESEARCH_TIMEOUT_MS || 50000, 15000, 90000),
+    requireResearch: boolEnv(q.require_research ?? process.env.TYPER_EXPERT_REQUIRE_RESEARCH, true)
   }
+  settings.marketWeight = round(1 - settings.researchWeight, 4)
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   const errors = []
@@ -636,15 +888,29 @@ exports.handler = async function(event) {
     uniqueFixtures.push({ ...candidate, progression })
   }
 
+  const researchPool = uniqueFixtures.slice(0, settings.researchCandidates)
+  const researchResults = await callOpenAIResearch(researchPool, settings, errors)
+  const researchedCandidates = researchPool
+    .map((candidate, index) => combineCandidateAndResearch(candidate, researchResults[index], settings))
+    .filter(candidate => !settings.requireResearch || candidate.researchAccepted)
+    .sort((a, b) => {
+      if (b.combinedScore !== a.combinedScore) return b.combinedScore - a.combinedScore
+      if (n(b.research?.supportScore) !== n(a.research?.supportScore)) return n(b.research?.supportScore) - n(a.research?.supportScore)
+      return n(b.pick.probability) - n(a.pick.probability)
+    })
+
   if (dryRun) {
     return json(200, {
       ok: true,
       dry_run: true,
       version: VERSION,
       author: AUTHOR_NAME,
-      strategy: 'highest bookmaker-consensus probability + virtual recovery progression',
+      strategy: 'bookmaker consensus + public expert web research + virtual recovery progression',
       fixtures_found: fixtures.length,
       odds_fixtures_found: oddsGroups.size,
+      market_candidates_found: uniqueFixtures.length,
+      researched_candidates: researchPool.length,
+      accepted_after_research: researchedCandidates.length,
       progression_state: {
         pending: progressionState.pending.length,
         cycle_net: progressionState.cycleNet,
@@ -652,14 +918,22 @@ exports.handler = async function(event) {
         completed_cycles: progressionState.completedCycles,
         total_net: progressionState.totalNet
       },
-      candidates: uniqueFixtures.slice(0, 10).map(({ ev, pick, progression }) => buildTipRow(ev, pick, progression)),
+      candidates: researchPool.map((candidate, index) => {
+        const combined = combineCandidateAndResearch(candidate, researchResults[index], settings)
+        return {
+          accepted: combined.researchAccepted,
+          combined_score: combined.combinedScore,
+          research: combined.research,
+          tip: buildTipRow(combined.ev, combined.pick, combined.progression, combined.research, combined.combinedScore)
+        }
+      }),
       settings,
       errors: errors.slice(0, 25)
     })
   }
 
   let selected = null
-  for (const candidate of uniqueFixtures) {
+  for (const candidate of researchedCandidates) {
     try {
       if (force || !(await fixtureAlreadyUsed(supabase, candidate.ev.fixture_id))) {
         selected = candidate
@@ -678,8 +952,12 @@ exports.handler = async function(event) {
       inserted: 0,
       fixtures_found: fixtures.length,
       odds_fixtures_found: oddsGroups.size,
-      candidates_found: uniqueFixtures.length,
-      message: 'Brak typu spełniającego filtry Typer Expert. Silnik nie publikuje wyboru na siłę.',
+      market_candidates_found: uniqueFixtures.length,
+      researched_candidates: researchPool.length,
+      candidates_found: researchedCandidates.length,
+      message: settings.requireResearch
+        ? 'Brak typu potwierdzonego przez wymagane publiczne źródła eksperckie. Silnik nie publikuje wyboru na siłę.'
+        : 'Brak typu spełniającego filtry Typer Expert. Silnik nie publikuje wyboru na siłę.',
       progression_state: {
         cycle_net: progressionState.cycleNet,
         next_step: progressionState.cycleStep + 1,
@@ -691,7 +969,7 @@ exports.handler = async function(event) {
     })
   }
 
-  const row = buildTipRow(selected.ev, selected.pick, selected.progression)
+  const row = buildTipRow(selected.ev, selected.pick, selected.progression, selected.research, selected.combinedScore)
   try {
     const out = await insertSafe(supabase, row)
     try {
@@ -711,7 +989,7 @@ exports.handler = async function(event) {
       inserted: 1,
       id: out.data?.id,
       removed_columns: out.removed,
-      strategy: 'highest bookmaker-consensus probability + virtual recovery progression',
+      strategy: 'bookmaker consensus + public expert web research + virtual recovery progression',
       progression: selected.progression,
       pick: row,
       settings,
