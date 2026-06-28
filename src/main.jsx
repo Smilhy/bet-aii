@@ -827,6 +827,33 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
   }
 }
 
+const BETAI_STARTED_FILTER_TRANSLATIONS_V1833 = {
+  en: {
+    'Rozpoczęte': 'Started',
+    'Rozpoczęty': 'Started',
+    'Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.': 'Started picks from today’s matches. Once a match has started, the pick can no longer be purchased or unlocked.',
+    'Brak rozpoczętych typów na dziś.': 'No started picks today.'
+  },
+  de: {
+    'Rozpoczęte': 'Gestartet',
+    'Rozpoczęty': 'Gestartet',
+    'Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.': 'Gestartete Tipps aus den heutigen Spielen. Nach Spielbeginn können sie nicht mehr gekauft oder freigeschaltet werden.',
+    'Brak rozpoczętych typów na dziś.': 'Heute gibt es keine gestarteten Tipps.'
+  },
+  es: {
+    'Rozpoczęte': 'Iniciados',
+    'Rozpoczęty': 'Iniciado',
+    'Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.': 'Picks iniciados de los partidos de hoy. Una vez iniciado el partido, ya no se pueden comprar ni desbloquear.',
+    'Brak rozpoczętych typów na dziś.': 'No hay picks iniciados hoy.'
+  },
+  ru: {
+    'Rozpoczęte': 'Начавшиеся',
+    'Rozpoczęty': 'Начался',
+    'Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.': 'Прогнозы на сегодняшние матчи, которые уже начались. После начала матча их нельзя купить или разблокировать.',
+    'Brak rozpoczętych typów na dziś.': 'Сегодня нет начавшихся прогнозов.'
+  }
+}
+
 const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
 const BETAI_TRANSLATION_KEYS_CACHE = new Map()
 
@@ -838,7 +865,8 @@ function buildBetaiTranslationDictionary(lang) {
   const allSources = [
     BETAI_DASHBOARD_TRANSLATIONS,
     BETAI_EXTRA_DASHBOARD_TRANSLATIONS,
-    BETAI_FULL_TRANSLATIONS_V1824
+    BETAI_FULL_TRANSLATIONS_V1824,
+    BETAI_STARTED_FILTER_TRANSLATIONS_V1833
   ]
   const allTargetDictionaries = allSources.map(source => source?.[lang] || {})
   const target = Object.assign({}, ...allTargetDictionaries)
@@ -12289,7 +12317,7 @@ function TipAnalysisModalPortal({ onClose, children }) {
   )
 }
 
-function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [] }) {
+function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscriptionActive, currentUser, followingTipsters, onToggleFollow, onOpenTipster, onToast, allTips = [], startedReadOnly = false }) {
   const isPremium = tip.access_type === 'premium'
   const adminSubscriptionBypassV1710 = isAdminUser(currentUser) || isSmilhytvLifetimePremium(currentUser)
   const isLocked = isPremium && !unlocked && !profileSubscriptionActive && !adminSubscriptionBypassV1710
@@ -12411,7 +12439,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   const cardMarketLabelV1711 = isAkoCard ? 'AKO' : (rawMarketLabelV1711 || '')
   const cardAnalysis = cleanAkoAnalysisText(tip.analysis || tip.description || '')
   const cardMatchLabel = formatBetaiTipCardWallTimeV1719(tip)
-  const cardStatusLabel = tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący'
+  const cardStatusLabel = startedReadOnly ? 'Rozpoczęty' : (tip.status === 'won' ? 'Wygrany' : tip.status === 'lost' ? 'Przegrany' : tip.status === 'void' ? 'Zwrot' : 'Oczekujący')
   const createdAgo = formatRelativeAddedTime(tip?.created_at)
   const dashboardBotStatsV1794 = useBetaiBotDashboardStatsV1794(tip)
   const isDashboardBotV1794 = isBetaiMultisportRecordV1794(tip)
@@ -12532,7 +12560,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
   }
 
   return (
-    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'}`}>
+    <article className={`profile-ticket-v6 dashboard-ticket-v6 ${isPremium ? 'premium' : 'free'} ${effectiveIsLocked ? 'locked' : 'unlocked'} ${isAkoCard ? 'ako' : 'single'} ${startedReadOnly ? 'started-read-only-v1833' : ''}`}>
       <div className="profile-ticket-v6-left">
         <span className={`profile-ticket-v6-avatar ${authorAvatarUrl ? 'has-avatar' : ''}`} style={authorAvatarUrl ? { '--avatar-image': `url("${authorAvatarUrl}")` } : undefined}>
           {authorAvatarUrl ? '' : cardAuthor.slice(0, 2).toUpperCase()}
@@ -12550,7 +12578,13 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
             </div>
           ) : null}
         </div>
-        <button type="button" className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`} onClick={() => isPremium && onSubscribeToTipster?.(tip)}>
+        <button
+          type="button"
+          className={`profile-ticket-v6-access ${isPremium ? 'premium' : 'free'}`}
+          onClick={() => isPremium && !startedReadOnly && onSubscribeToTipster?.(tip)}
+          disabled={Boolean(isPremium && startedReadOnly)}
+          title={isPremium && startedReadOnly ? 'Typ już się rozpoczął' : undefined}
+        >
           {isPremium ? '♕ PREMIUM' : '🎁 DARMOWY'}
         </button>
         <div className="ticket-form-strip-v1811" aria-label="Forma z ostatnich 6 rozliczonych typów">
@@ -12654,7 +12688,7 @@ function TipCard({ tip, unlocked, onUnlock, onSubscribeToTipster, profileSubscri
           )}
         </div>
         <span className={`status-${cardStatusLabel.toLowerCase()}`}>✓ {cardStatusLabel}</span>
-        {effectiveIsLocked ? (
+        {effectiveIsLocked && !startedReadOnly ? (
           <>
             <button type="button" onClick={() => onUnlock(tip)}>{isAkoCard ? 'Kup kupon AKO' : 'Kup singiel'}</button>
             <strong>{Number(tip.price || 29).toFixed(2)} zł</strong>
@@ -29786,6 +29820,45 @@ function isTipAlreadyStarted(tip = {}, now = Date.now()) {
   return ts <= now
 }
 
+function isTipSettledForStartedFeedV1833(tip = {}) {
+  const normalized = normalizeTipRow(tip || {})
+  const status = String(normalized.status || 'pending').toLowerCase()
+  const result = String(normalized.result || normalized.manual_settlement_result || normalized.admin_approved_result || '').toLowerCase()
+  const approvalStatus = String(normalized.admin_approval_status || normalized.manual_settlement_status || '').toLowerCase()
+  const settledStatuses = new Set([
+    'won', 'win', 'wygrany', 'wygrana',
+    'lost', 'loss', 'przegrany', 'przegrana',
+    'void', 'push', 'zwrot',
+    'cancelled', 'canceled', 'anulowany',
+    'rejected'
+  ])
+  if (settledStatuses.has(status) || settledStatuses.has(result)) return true
+  const hasManualSettlementRequest = Boolean(
+    normalized.manual_settlement_requested_at ||
+    normalized.admin_approved_result ||
+    normalized.manual_settlement_result ||
+    ['manual_user', 'manual_admin_approved', 'manual_admin_rejected'].includes(String(normalized.settlement_source || '').toLowerCase())
+  )
+  return (approvalStatus === 'pending' || approvalStatus === 'pending_admin') && hasManualSettlementRequest
+}
+
+function isTipKickoffTodayV1833(tip = {}, now = Date.now()) {
+  const ts = getTipKickoffTimestamp(normalizeTipRow(tip || {}))
+  if (!Number.isFinite(ts)) return false
+  const kickoff = new Date(ts)
+  const current = new Date(now)
+  return kickoff.getFullYear() === current.getFullYear() &&
+    kickoff.getMonth() === current.getMonth() &&
+    kickoff.getDate() === current.getDate()
+}
+
+function isTipVisibleInStartedFeedV1833(tip = {}, now = Date.now()) {
+  const normalized = normalizeTipRow(tip || {})
+  if (isTipSettledForStartedFeedV1833(normalized)) return false
+  if (!isTipKickoffTodayV1833(normalized, now)) return false
+  return isTipAlreadyStarted(normalized, now)
+}
+
 function isTipVisibleInActiveFeed(tip, now = Date.now()) {
   const normalized = normalizeTipRow(tip || {})
   const status = String(normalized.status || 'pending').toLowerCase()
@@ -32879,17 +32952,22 @@ function App() {
 
   const allUserTips = tips.filter(isUserTip).map(normalizeTipRow)
   const userOnlyTips = allUserTips.filter(tip => isTipVisibleInActiveFeed(tip, dashboardNow))
-  const hiddenSettledDashboardTipsCount = allUserTips.length - userOnlyTips.length
+  const startedUserTipsV1833 = allUserTips
+    .filter(tip => isTipVisibleInStartedFeedV1833(tip, dashboardNow))
+    .sort((a, b) => (getTipKickoffTimestamp(b) || 0) - (getTipKickoffTimestamp(a) || 0))
+  const dashboardFeedSourceV1833 = activeFilter === 'started' ? startedUserTipsV1833 : userOnlyTips
+  const hiddenSettledDashboardTipsCount = allUserTips.length - userOnlyTips.length - startedUserTipsV1833.length
   const aiOnlyTips = tips.filter(t => isAiGeneratedTip(t) && String(t?.source || '').toLowerCase().startsWith('live_ai_engine'))
 
   const feedCounts = {
     all: userOnlyTips.length,
+    started: startedUserTipsV1833.length,
     premium: userOnlyTips.filter(tip => isTipPremium(tip)).length,
     free: userOnlyTips.filter(tip => !isTipPremium(tip)).length,
     mine: userOnlyTips.filter(tip => Boolean(sessionUser?.id && (getTipAuthorId(tip) === sessionUser.id || tip.user_id === sessionUser.id))).length
   }
 
-  const filteredTips = userOnlyTips.filter(tip => {
+  const filteredTips = dashboardFeedSourceV1833.filter(tip => {
     const normalizedTip = normalizeTipRow(tip)
     const query = topSearch.trim().toLowerCase()
     const searchableText = [
@@ -32904,7 +32982,7 @@ function App() {
       normalizedTip.username
     ].filter(Boolean).join(' ').toLowerCase()
     if (query && !searchableText.includes(query)) return false
-    if (activeFilter === 'all') return true
+    if (activeFilter === 'all' || activeFilter === 'started') return true
     if (activeFilter === 'free') return !isTipPremium(normalizedTip)
     if (activeFilter === 'premium') return isTipPremium(normalizedTip)
     if (activeFilter === 'mine') return Boolean(sessionUser?.id && (getTipAuthorId(normalizedTip) === sessionUser.id || normalizedTip.user_id === sessionUser.id))
@@ -32913,6 +32991,7 @@ function App() {
 
   const filterItems = [
     ['all', 'Wszystkie'],
+    ['started', 'Rozpoczęte'],
     ['premium', 'Premium'],
     ['free', 'Darmowe'],
     ['mine', 'Moje']
@@ -33416,7 +33495,12 @@ function App() {
             </div>
 
 
-            {hiddenSettledDashboardTipsCount > 0 ? (
+            {activeFilter === 'started' ? (
+              <div className="dashboard-started-feed-note-v1833">
+                <strong>Rozpoczęte</strong>
+                <span>Rozpoczęte typy z dzisiejszych meczów. Po rozpoczęciu nie można ich kupić ani odblokować.</span>
+              </div>
+            ) : hiddenSettledDashboardTipsCount > 0 ? (
               <div className="dashboard-active-feed-note-v956">
                 <strong>Aktywne typy</strong>
                 <span>Rozstrzygnięte albo zgłoszone do rozliczenia typy znikają z dashboardu i zostają w historii/Wynikach, żeby nikt nie kupił zakończonego kuponu.</span>
@@ -33424,8 +33508,8 @@ function App() {
             ) : null}
 
             <div className="feed">
-              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} />) : (
-                <div className="empty-state">Brak typów typerów na dziś.</div>
+              {filteredTips.length ? visibleDashboardTips.map(tip => <TipCard key={tip.id} tip={tip} allTips={tips} unlocked={unlockedTips.has(tip.id)} profileSubscriptionActive={hasActiveTipsterSubscription(tip, tipsterSubscriptions)} onUnlock={unlockTip} onSubscribeToTipster={setSelectedProfileSub} currentUser={effectiveAccountProfile} followingTipsters={followingTipsters} onToggleFollow={toggleFollowTipster} onOpenTipster={openTipsterProfile} onToast={showToast} startedReadOnly={activeFilter === 'started'} />) : (
+                <div className="empty-state">{activeFilter === 'started' ? 'Brak rozpoczętych typów na dziś.' : 'Brak typów typerów na dziś.'}</div>
               )}
             </div>
 
