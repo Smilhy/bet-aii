@@ -1,9 +1,0 @@
-WERSJA 1185 - tylko poprawki deploy + blad po logowaniu
-
-1. Logika strony, Supabase, src, public i funkcje zostaly zostawione.
-2. Usuniety blad po zalogowaniu: t is not defined.
-3. Poprawiony package-lock.json: usuniete prywatne linki OpenAI/internal z paczki npm.
-   Teraz Netlify pobiera paczki z publicznego https://registry.npmjs.org/.
-4. Nie zmieniaj Build command na npm install && npm run build.
-   Ma zostac normalnie: npm run build
-5. Publish directory: dist
