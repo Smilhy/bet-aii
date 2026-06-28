@@ -1,0 +1,28 @@
+[build]
+  command = "chmod +x node_modules/@esbuild/linux-x64/bin/esbuild node_modules/.bin/esbuild node_modules/.bin/vite 2>/dev/null || true && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/tipster/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# BetAI MultiSport AI — automatyczne publikowanie typów
+# Netlify cron działa w UTC: skany o 07:17, 11:17 i 15:17; konto publikuje maksymalnie 1 typ na 20 godzin.
+[functions."publish-betai-multisport-ai"]
+  schedule = "17 7,11,15 * * *"
+
+
+# BetAI MultiSport AI — rozliczanie i naprawa błędnych zwrotów.
+# Funkcja jest ograniczona w kodzie wyłącznie do konta BetAI MultiSport AI.
+[functions."settle-live-ai-picks"]
+  schedule = "47 1,7,13,19 * * *"

@@ -1,0 +1,14 @@
+WERSJA 1801 — naprawa kolorów Yield i Bilans
+
+Naprawiono:
+- Dashboard: Yield minus czerwony, plus zielony.
+- Dashboard: Bilans minus czerwony, plus zielony.
+- Mój profil: te same kolory na kartach typów.
+- Górne karty statystyk profilu nadal korzystają z kolorów success/danger.
+
+Przyczyna błędu:
+Niektóre karty miały tylko tekst yieldLabel/profitLabel, bez pól yieldValue/profitValue.
+Wersja 1800 sprawdzała brakujące pola liczbowe i nadawała biały kolor.
+Wersja 1801 odczytuje znak również bezpośrednio z wyświetlanego tekstu.
+
+Nie zmieniono logiki liczenia statystyk ani rozliczania typów.
