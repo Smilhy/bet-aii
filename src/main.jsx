@@ -817,7 +817,14 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
   }
 }
 
+const BETAI_TRANSLATION_DICTIONARY_CACHE = new Map()
+const BETAI_TRANSLATION_KEYS_CACHE = new Map()
+
 function buildBetaiTranslationDictionary(lang) {
+  const cacheKey = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
+  if (BETAI_TRANSLATION_DICTIONARY_CACHE.has(cacheKey)) {
+    return BETAI_TRANSLATION_DICTIONARY_CACHE.get(cacheKey)
+  }
   const allSources = [
     BETAI_DASHBOARD_TRANSLATIONS,
     BETAI_EXTRA_DASHBOARD_TRANSLATIONS,
@@ -846,6 +853,8 @@ function buildBetaiTranslationDictionary(lang) {
       if (value) reverse[value] = translated
     })
   })
+  BETAI_TRANSLATION_DICTIONARY_CACHE.set(cacheKey, reverse)
+  BETAI_TRANSLATION_KEYS_CACHE.set(cacheKey, Object.keys(reverse).sort((a, b) => b.length - a.length))
   return reverse
 }
 
@@ -861,7 +870,8 @@ function translateBetaiTextValue(value, lang) {
     return raw.replace(trimmed, `${prefixMatch[1]}${dictionary[prefixMatch[2]]}`)
   }
   let next = trimmed
-  const keys = Object.keys(dictionary).sort((a, b) => b.length - a.length)
+  const cacheKey = BETAI_LANGUAGES.includes(lang) ? lang : 'pl'
+  const keys = BETAI_TRANSLATION_KEYS_CACHE.get(cacheKey) || Object.keys(dictionary).sort((a, b) => b.length - a.length)
   const escapeRegExp = (text) => String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const isWordChar = (char) => char ? /[\p{L}\p{N}_]/u.test(char) : false
 
@@ -3520,11 +3530,25 @@ function AnimatedDashboardHero() {
       onPointerUp={handleHeroPointerUp}
     >
       <div className="betai-dashboard-stage-v551" aria-hidden="true">
-        {heroSlides.map((slide, index) => (
-          <div key={slide.src} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''}`}>
-            <img src={slide.src} alt="" draggable="false" />
-          </div>
-        ))}
+        {heroSlides.map((slide, index) => {
+          const previous = (panel - 1 + heroSlides.length) % heroSlides.length
+          const next = (panel + 1) % heroSlides.length
+          const shouldLoad = index === panel || index === previous || index === next
+          return (
+            <div key={slide.src} className={`betai-dashboard-slide-v551 ${panel === index ? 'active' : ''}`}>
+              {shouldLoad ? (
+                <img
+                  src={slide.src}
+                  alt=""
+                  draggable="false"
+                  decoding="async"
+                  loading={index === panel ? 'eager' : 'lazy'}
+                  fetchPriority={index === panel ? 'high' : 'low'}
+                />
+              ) : null}
+            </div>
+          )
+        })}
       </div>
 
 
@@ -28512,20 +28536,48 @@ function DashboardAutoTranslator({ lang }) {
       })
       node.childNodes?.forEach(child => translateNode(child))
     }
+
+    // Pełne przejście wykonujemy tylko raz po zmianie języka.
+    const appRoot = document.querySelector('.app-shell') || document.querySelector('#root')
+    if (appRoot) translateNode(appRoot)
+
+    // Później tłumaczymy wyłącznie nowe lub faktycznie zmienione węzły.
+    // Poprzednio każda wiadomość czatu, licznik i aktualizacja Reacta skanowały
+    // cały Dashboard od początku, co powodowało widoczne spowolnienia.
+    const pendingNodes = new Set()
     let frame = null
-    const translateRoot = () => {
-      if (frame) window.cancelAnimationFrame(frame)
-      frame = window.requestAnimationFrame(() => {
-        const root = document.querySelector('.app-shell') || document.querySelector('#root')
-        if (root) translateNode(root)
-      })
+    const flush = () => {
+      frame = null
+      const nodes = Array.from(pendingNodes)
+      pendingNodes.clear()
+      nodes.forEach(node => translateNode(node))
     }
-    translateRoot()
-    const observer = new MutationObserver(() => translateRoot())
+    const queueNode = (node) => {
+      if (!node) return
+      pendingNodes.add(node)
+      if (!frame) frame = window.requestAnimationFrame(flush)
+    }
+
+    const observer = new MutationObserver((records) => {
+      records.forEach(record => {
+        if (record.type === 'childList') {
+          record.addedNodes?.forEach(queueNode)
+        } else if (record.type === 'characterData' || record.type === 'attributes') {
+          queueNode(record.target)
+        }
+      })
+    })
     const root = document.querySelector('#root') || document.body
-    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'aria-label', 'title', 'alt'] })
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'aria-label', 'title', 'alt']
+    })
     return () => {
       if (frame) window.cancelAnimationFrame(frame)
+      pendingNodes.clear()
       observer.disconnect()
     }
   }, [lang])
