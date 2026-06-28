@@ -77741,3 +77741,65 @@ html[data-betai-theme="light"] body #root .app-shell :is(
 ):not([class*="title"]):not([class*="label"]):not([class*="icon"]){
   border-color:var(--lt-border-soft)!important;
 }
+
+/* =====================================================================
+   WERSJA 1832 — PRZEŁĄCZNIK MOTYWU DOPASOWANY DO IKON TOPBARU
+   Tylko wygląd przycisku słońce/księżyc. Bez zmian logiki.
+   ===================================================================== */
+html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829{
+  width:48px!important;
+  min-width:48px!important;
+  height:48px!important;
+  flex:0 0 48px!important;
+  border-radius:18px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(35,243,255,.12),transparent 58%),
+    linear-gradient(180deg,rgba(8,23,34,.98),rgba(3,12,20,.98))!important;
+  border:1px solid rgba(74,222,255,.18)!important;
+  color:#e9fbff!important;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 18px rgba(34,211,238,.06)!important;
+  transform:none!important;
+}
+html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(74,222,255,.34)!important;
+  color:#e9fbff!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(35,243,255,.18),transparent 60%),
+    linear-gradient(180deg,rgba(11,33,47,.99),rgba(4,16,26,.99))!important;
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 0 24px rgba(34,211,238,.14)!important;
+}
+html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829:active{
+  transform:translateY(0)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(35,243,255,.14),transparent 58%),
+    linear-gradient(180deg,rgba(7,21,31,.99),rgba(3,12,20,.99))!important;
+}
+html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829:focus-visible{
+  outline:2px solid rgba(74,222,255,.72)!important;
+  outline-offset:2px!important;
+}
+html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829 svg{
+  width:21px!important;
+  height:21px!important;
+  color:currentColor!important;
+}
+
+@media(max-width:900px){
+  html:not([data-betai-theme="light"]) body #root .app-shell .topbar .betai-theme-switch-v1829{
+    width:44px!important;
+    min-width:44px!important;
+    height:44px!important;
+    flex-basis:44px!important;
+    border-radius:16px!important;
+  }
+}
