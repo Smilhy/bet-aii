@@ -1,9 +1,0 @@
-BetAI WERSJA 1810
-
-Poprawki:
-1. Wykres salda bierze aktualny historyczny bilans z imported_profit jako punkt startowy i dopisuje realnie rozliczone typy z Supabase po dacie importu. Pending nie wpływa na wykres.
-2. Podsumowanie wykresu odpowiada aktualnym statystykom profilu.
-3. Poziom profilu dla kont z imported_stats_additive/baseline uwzględnia importowane typy, profit, win rate i staż wynikający z imported_monthly_stats.
-4. Stary RPC nie może już nadpisać poziomu smilhytv na Bronze.
-
-Brak nowego SQL — wdrożyć folder dist na Netlify.
