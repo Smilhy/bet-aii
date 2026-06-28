@@ -9,8 +9,8 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 // Funkcja nie obstawia u bukmachera. Publikuje wyłącznie typy i wirtualne stawki na bet-ai.app.
 const AUTHOR_NAME = 'Typer Expert'
 const USERNAME = 'typer-expert'
-const VERSION = '1841-typer-expert-web-research-v2'
-const SOURCE = 'typer_expert_web_research_v2'
+const VERSION = '1843-typer-expert-probettinghub-research-v3'
+const SOURCE = 'typer_expert_web_research_v3'
 
 const headers = {
   'Content-Type': 'application/json',
@@ -96,6 +96,22 @@ function normalizeStatus(value = '') {
   if (['void', 'push', 'zwrot'].includes(text)) return 'void'
   return 'pending'
 }
+
+function sourceDomain(value = '') {
+  try { return new URL(String(value || '')).hostname.replace(/^www\./i, '').toLowerCase() } catch (_) { return '' }
+}
+function hasDomain(urls = [], domains = []) {
+  const wanted = domains.map(value => String(value || '').toLowerCase())
+  return (Array.isArray(urls) ? urls : []).some(url => {
+    const host = sourceDomain(url)
+    return wanted.some(domain => host === domain || host.endsWith(`.${domain}`))
+  })
+}
+const RESEARCH_STATS_DOMAINS = [
+  'probettinghub.com', 'sofascore.com', 'flashscore.com', 'fbref.com',
+  'understat.com', 'whoscored.com', 'soccerway.com', 'worldfootball.net'
+]
+const RESEARCH_EXPERT_DOMAINS = ['blogabet.com', 'betfolio.io']
 
 async function apiGet(path, query = {}) {
   if (!API_KEY) throw new Error('Missing APISPORTS_KEY / API_FOOTBALL_KEY')
@@ -490,6 +506,10 @@ function parseJsonLoose(value = '') {
 function normalizeResearchItem(item = {}) {
   const sourceNames = Array.isArray(item.source_names) ? item.source_names : []
   const sourceUrls = Array.isArray(item.source_urls) ? item.source_urls : []
+  const safeUrls = sourceUrls.map(value => clean(value)).filter(value => /^https:\/\//i.test(value)).slice(0, 8)
+  const probettingHubFound = Boolean(item.probettinghub_found) || hasDomain(safeUrls, ['probettinghub.com'])
+  const statsSourceFound = Boolean(item.stats_source_found) || hasDomain(safeUrls, RESEARCH_STATS_DOMAINS)
+  const expertSourceFound = Boolean(item.expert_source_found) || hasDomain(safeUrls, RESEARCH_EXPERT_DOMAINS)
   return {
     candidateId: clean(item.candidate_id),
     supported: Boolean(item.supported),
@@ -497,11 +517,15 @@ function normalizeResearchItem(item = {}) {
     confidence: ['low', 'medium', 'high'].includes(String(item.confidence || '').toLowerCase())
       ? String(item.confidence).toLowerCase()
       : 'low',
-    sourceCount: clamp(item.source_count || sourceNames.length || sourceUrls.length, 0, 20),
-    sourceNames: sourceNames.map(value => limitText(value, 80)).filter(Boolean).slice(0, 5),
-    sourceUrls: sourceUrls.map(value => clean(value)).filter(value => /^https:\/\//i.test(value)).slice(0, 5),
+    sourceCount: clamp(item.source_count || sourceNames.length || safeUrls.length, 0, 20),
+    sourceNames: sourceNames.map(value => limitText(value, 80)).filter(Boolean).slice(0, 8),
+    sourceUrls: safeUrls,
     analysis: limitText(item.analysis || '', 420),
-    contraryEvidence: Boolean(item.contrary_evidence)
+    contraryEvidence: Boolean(item.contrary_evidence),
+    statsSourceFound,
+    expertSourceFound,
+    probettingHubFound,
+    statsSummary: limitText(item.stats_summary || '', 220)
   }
 }
 
@@ -516,7 +540,11 @@ function researchFallback(candidate, reason = 'Brak dostępnego badania internet
     sourceNames: [],
     sourceUrls: [],
     analysis: limitText(`${reason}. Rynek wskazuje ${pick.probability}% prawdopodobieństwa przy kursie ${pick.odds}, lecz bez potwierdzenia w niezależnych źródłach typ nie powinien zostać opublikowany.`, 420),
-    contraryEvidence: false
+    contraryEvidence: false,
+    statsSourceFound: false,
+    expertSourceFound: false,
+    probettingHubFound: false,
+    statsSummary: ''
   }
 }
 
@@ -550,12 +578,15 @@ async function callOpenAIResearch(candidates, settings, errors) {
 
   const prompt = [
     'Jesteś ostrożnym analitykiem piłkarskim. Użyj wyszukiwania internetowego i oceń kandydatów Typer Expert.',
-    'Szukaj wyłącznie publicznie dostępnych, aktualnych materiałów sprzed meczu: zapowiedzi ekspertów, analizy statystyczne, informacje o składach, kontuzjach, formie, motywacji i warunkach meczu.',
-    'Priorytet: oficjalne źródła klubów/lig, uznane media sportowe, wiarygodne serwisy statystyczne i rozpoznawalni analitycy. Nie opieraj decyzji na jednym anonimowym tipsterze ani na obietnicach pewnego zysku.',
-    'Nie kopiuj cudzych analiz. Zsyntetyzuj najważniejsze argumenty własnymi słowami. Jeśli źródła są sprzeczne albo brak rzetelnych danych, ustaw supported=false.',
+    'Dla każdego kandydata najpierw spróbuj znaleźć dokładny mecz, drużyny albo ligę w ProBettingHub (probettinghub.com/pl/matches oraz probettinghub.com/pl/betting-stats). Wykorzystaj publiczne statystyki wygranych, BTTS, Over/Under, xG, formę, Hype/LTQ, dom/wyjazd oraz dane z ostatnich 5, 6, 10 i 20 meczów, jeżeli są dostępne.',
+    'Następnie sprawdź SofaScore lub Flashscore pod kątem aktualnej formy, wyników, składów, absencji, tabeli i statusu meczu. Oficjalne źródła klubów i lig mają najwyższy priorytet przy składach i kontuzjach.',
+    'Blogabet i Betfolio traktuj wyłącznie jako dodatkowy sygnał opinii lub konsensusu. Korzystaj tylko z publicznych, widocznych bez logowania typów i statystyk. Nigdy nie opieraj decyzji na jednym anonimowym typerze ani nie omijaj paywalla lub logowania.',
+    'Szukaj wyłącznie aktualnych materiałów sprzed meczu. Nie kopiuj cudzych analiz. Zsyntetyzuj najważniejsze argumenty własnymi słowami. Jeśli źródła są sprzeczne albo brak rzetelnych danych, ustaw supported=false.',
+    'Co najmniej jedno źródło powinno być źródłem statystycznym lub oficjalnym. ProBettingHub jest preferowanym źródłem statystyk, ale jego brak nie może być zastępowany zmyślonymi danymi.',
     'Każda analiza ma być po polsku, konkretna, maksymalnie 420 znaków, bez gwarancji wyniku. Musi jasno uzasadniać wybór.',
     `Wymagane minimum źródeł do poparcia: ${settings.minResearchSources}. Minimalny wynik poparcia: ${settings.minResearchScore}/100.`,
     'Zwróć ocenę dla każdego candidate_id. source_names i source_urls mają wskazywać tylko faktycznie użyte publiczne źródła.',
+    'Ustaw stats_source_found=true tylko wtedy, gdy faktycznie użyłeś danych statystycznych lub oficjalnych. Ustaw expert_source_found=true tylko przy realnym publicznym źródle eksperckim. Ustaw probettinghub_found=true tylko gdy użyłeś ProBettingHub.',
     `Kandydaci: ${JSON.stringify(inputCandidates)}`
   ].join('\n')
 
@@ -577,12 +608,16 @@ async function callOpenAIResearch(candidates, settings, errors) {
             support_score: { type: 'number', minimum: 0, maximum: 100 },
             confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
             source_count: { type: 'integer', minimum: 0, maximum: 20 },
-            source_names: { type: 'array', items: { type: 'string' }, maxItems: 5 },
-            source_urls: { type: 'array', items: { type: 'string' }, maxItems: 5 },
+            source_names: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+            source_urls: { type: 'array', items: { type: 'string' }, maxItems: 8 },
             contrary_evidence: { type: 'boolean' },
+            stats_source_found: { type: 'boolean' },
+            expert_source_found: { type: 'boolean' },
+            probettinghub_found: { type: 'boolean' },
+            stats_summary: { type: 'string', maxLength: 220 },
             analysis: { type: 'string', maxLength: 420 }
           },
-          required: ['candidate_id', 'supported', 'support_score', 'confidence', 'source_count', 'source_names', 'source_urls', 'contrary_evidence', 'analysis']
+          required: ['candidate_id', 'supported', 'support_score', 'confidence', 'source_count', 'source_names', 'source_urls', 'contrary_evidence', 'stats_source_found', 'expert_source_found', 'probettinghub_found', 'stats_summary', 'analysis']
         }
       }
     },
@@ -660,7 +695,15 @@ async function callOpenAIResearch(candidates, settings, errors) {
 
 function combineCandidateAndResearch(candidate, research, settings) {
   const marketScore = clamp(candidate.pick.ai_score, 0, 100)
-  const researchScore = clamp(research?.supportScore, 0, 100)
+  const baseResearchScore = clamp(research?.supportScore, 0, 100)
+  const preferredSourceBonus = clamp(
+    (research?.probettingHubFound ? settings.probettingHubBonus : 0) +
+    (research?.statsSourceFound ? settings.statsSourceBonus : 0) +
+    (research?.expertSourceFound ? settings.expertSourceBonus : 0),
+    0,
+    10
+  )
+  const researchScore = clamp(baseResearchScore + preferredSourceBonus, 0, 100)
   const combinedScore = round(
     marketScore * settings.marketWeight + researchScore * settings.researchWeight,
     2
@@ -669,9 +712,11 @@ function combineCandidateAndResearch(candidate, research, settings) {
     research?.supported &&
     !research?.contraryEvidence &&
     researchScore >= settings.minResearchScore &&
-    n(research?.sourceCount, 0) >= settings.minResearchSources
+    n(research?.sourceCount, 0) >= settings.minResearchSources &&
+    (!settings.requireStatsSource || research?.statsSourceFound) &&
+    (!settings.requireProbettingHub || research?.probettingHubFound)
   )
-  return { ...candidate, research, combinedScore, researchAccepted }
+  return { ...candidate, research: { ...research, adjustedSupportScore: researchScore, preferredSourceBonus }, combinedScore, researchAccepted }
 }
 
 function buildTipRow(ev, pick, progression, research = null, combinedScore = null) {
@@ -741,14 +786,19 @@ function buildTipRow(ev, pick, progression, research = null, combinedScore = nul
     implied_probability: round(pick.implied, 2),
     value_score: round(pick.ev, 2),
     ev: round(pick.ev, 2),
-    quality_label: 'TYPER EXPERT — WEB RESEARCH',
-    tags: ['typer-expert', 'wirtualna-progresja', 'web-research', 'expert-analysis'],
+    quality_label: 'TYPER EXPERT — STATS + WEB RESEARCH',
+    tags: ['typer-expert', 'wirtualna-progresja', 'web-research', 'expert-analysis', 'probettinghub-stats'],
     research_score: research ? round(research.supportScore, 2) : null,
     research_source_count: research ? Math.round(n(research.sourceCount, 0)) : 0,
     research_source_names: research?.sourceNames || [],
     research_source_urls: research?.sourceUrls || [],
+    research_stats_source_found: Boolean(research?.statsSourceFound),
+    research_expert_source_found: Boolean(research?.expertSourceFound),
+    research_probettinghub_found: Boolean(research?.probettingHubFound),
+    research_stats_summary: research?.statsSummary || '',
     analysis: limitText([
       research?.analysis || `Rynek wskazuje przewagę dla wyboru: ${pick.prediction}.`,
+      research?.statsSummary ? `Statystyki: ${research.statsSummary}` : '',
       `Kurs ${pick.odds} (${pick.bookmaker}); konsensus ${pick.probability}% z ${pick.books_count} bukmacherów.`,
       `Progresja: krok ${progression.step}, stawka ${progression.stake}.`,
       capText,
@@ -802,7 +852,7 @@ async function fixtureAlreadyUsed(supabase, fixtureId) {
 
 // Skan co 3 godziny. Nowy typ jest publikowany dopiero po rozliczeniu poprzedniego,
 // ponieważ tylko wtedy progresja ma jednoznaczny stan.
-exports.config = { schedule: '23 */3 * * *' }
+exports.config = { schedule: '0 */3 * * *' }
 
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return json(204, {})
@@ -837,7 +887,12 @@ exports.handler = async function(event) {
       ? String(q.research_context_size || process.env.TYPER_EXPERT_RESEARCH_CONTEXT_SIZE || 'low').toLowerCase()
       : 'low',
     researchTimeoutMs: clamp(q.research_timeout_ms || process.env.TYPER_EXPERT_RESEARCH_TIMEOUT_MS || 50000, 15000, 90000),
-    requireResearch: boolEnv(q.require_research ?? process.env.TYPER_EXPERT_REQUIRE_RESEARCH, true)
+    requireResearch: boolEnv(q.require_research ?? process.env.TYPER_EXPERT_REQUIRE_RESEARCH, true),
+    requireStatsSource: boolEnv(q.require_stats_source ?? process.env.TYPER_EXPERT_REQUIRE_STATS_SOURCE, true),
+    requireProbettingHub: boolEnv(q.require_probettinghub ?? process.env.TYPER_EXPERT_REQUIRE_PROBETTINGHUB, false),
+    probettingHubBonus: clamp(q.probettinghub_bonus || process.env.TYPER_EXPERT_PROBETTINGHUB_BONUS || 4, 0, 8),
+    statsSourceBonus: clamp(q.stats_source_bonus || process.env.TYPER_EXPERT_STATS_SOURCE_BONUS || 2, 0, 5),
+    expertSourceBonus: clamp(q.expert_source_bonus || process.env.TYPER_EXPERT_EXPERT_SOURCE_BONUS || 1, 0, 3)
   }
   settings.marketWeight = round(1 - settings.researchWeight, 4)
 
@@ -905,7 +960,7 @@ exports.handler = async function(event) {
       dry_run: true,
       version: VERSION,
       author: AUTHOR_NAME,
-      strategy: 'bookmaker consensus + public expert web research + virtual recovery progression',
+      strategy: 'bookmaker consensus + ProBettingHub/statistics + public expert web research + virtual recovery progression',
       fixtures_found: fixtures.length,
       odds_fixtures_found: oddsGroups.size,
       market_candidates_found: uniqueFixtures.length,
@@ -956,7 +1011,7 @@ exports.handler = async function(event) {
       researched_candidates: researchPool.length,
       candidates_found: researchedCandidates.length,
       message: settings.requireResearch
-        ? 'Brak typu potwierdzonego przez wymagane publiczne źródła eksperckie. Silnik nie publikuje wyboru na siłę.'
+        ? 'Brak typu potwierdzonego przez wymagane źródła statystyczne i publiczne analizy. Silnik nie publikuje wyboru na siłę.'
         : 'Brak typu spełniającego filtry Typer Expert. Silnik nie publikuje wyboru na siłę.',
       progression_state: {
         cycle_net: progressionState.cycleNet,
@@ -989,7 +1044,7 @@ exports.handler = async function(event) {
       inserted: 1,
       id: out.data?.id,
       removed_columns: out.removed,
-      strategy: 'bookmaker consensus + public expert web research + virtual recovery progression',
+      strategy: 'bookmaker consensus + ProBettingHub/statistics + public expert web research + virtual recovery progression',
       progression: selected.progression,
       pick: row,
       settings,
