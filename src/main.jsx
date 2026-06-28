@@ -4101,7 +4101,10 @@ function LiveChatPanel({ user }) {
         try { await supabase.storage.from('avatars').remove([uploadedAttachment.objectPath]) } catch (_) {}
       }
       const blockMessage = betaiParseChatBlockError(error)
-      setStatus(blockMessage || 'Nie udało się wysłać wiadomości lub załącznika. Spróbuj ponownie.')
+      const readableError = formatAppErrorMessage(error?.message || error?.details || '')
+      setStatus(blockMessage || (readableError
+        ? `Nie udało się wysłać załącznika: ${readableError}`
+        : 'Nie udało się wysłać wiadomości lub załącznika. Spróbuj ponownie.'))
     } finally {
       setSending(false)
     }

@@ -78070,3 +78070,112 @@ html[data-betai-theme="light"] body #root .app-shell .livechat226-selected-attac
   }
   .livechat226-attachment-v1834{width:100%!important}
 }
+
+
+/* =====================================================================
+   WERSJA 1835 — LIVE CHAT: PODGLĄD ZAŁĄCZNIKA NIE ZASŁANIA WYSYŁANIA
+   Załącznik jest pływającą kartą nad paskiem wpisywania. Nie zwiększa
+   wysokości composera, dlatego pole tekstowe, emotka, TIP i wysyłanie
+   pozostają zawsze widoczne oraz klikalne.
+   ===================================================================== */
+.livechat226-composer.betai-composer-final,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final{
+  position:relative!important;
+  display:block!important;
+  overflow:visible!important;
+  min-height:51px!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-input-wrap,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-input-wrap{
+  position:relative!important;
+  z-index:3!important;
+  width:100%!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834{
+  position:absolute!important;
+  left:6px!important;
+  right:6px!important;
+  bottom:58px!important;
+  z-index:12!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  grid-template-columns:48px minmax(0,1fr) 32px!important;
+  gap:10px!important;
+  padding:8px 9px!important;
+  border-radius:14px!important;
+  box-shadow:0 16px 38px rgba(0,0,0,.38),0 0 0 1px rgba(35,213,222,.04)!important;
+  pointer-events:auto!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > img,
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > span,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > img,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > span{
+  width:48px!important;
+  height:48px!important;
+  min-width:48px!important;
+  border-radius:10px!important;
+  object-fit:contain!important;
+  background:#06131d!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 strong,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 strong{
+  font-size:11.5px!important;
+  line-height:1.25!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 small,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 small{
+  font-size:9.5px!important;
+}
+
+.livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > button,
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > button{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  align-self:center!important;
+}
+
+/* Przycisk wysyłania pozostaje zawsze nad warstwą podglądu. */
+.livechat226-composer.betai-composer-final .livechat226-send,
+.livechat226-composer.betai-composer-final .betai-send-final{
+  position:relative!important;
+  z-index:5!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+}
+
+/* Jasny motyw — czytelna pływająca karta podglądu. */
+html[data-betai-theme="light"] body #root .app-shell .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834{
+  background:linear-gradient(180deg,#ffffff,#f5fafc)!important;
+  border-color:#cbdfe8!important;
+  box-shadow:0 16px 38px rgba(42,68,84,.18),0 0 0 1px rgba(17,174,184,.04)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > img,
+html[data-betai-theme="light"] body #root .app-shell .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > span{
+  background:#edf6f8!important;
+  border-color:#cfe1e8!important;
+}
+
+@media(max-width:520px){
+  .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834,
+  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834{
+    left:4px!important;
+    right:4px!important;
+    bottom:54px!important;
+    grid-template-columns:42px minmax(0,1fr) 30px!important;
+    padding:7px 8px!important;
+  }
+  .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > img,
+  .livechat226-composer.betai-composer-final > .livechat226-selected-attachment-v1834 > span{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+  }
+}
