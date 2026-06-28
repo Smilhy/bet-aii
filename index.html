@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <script>
+    // WERSJA 1829 — motyw ustawiany przed startem Reacta, bez migania ciemnej wersji.
+    (function () {
+      try {
+        var theme = localStorage.getItem('betai_theme') === 'light' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-betai-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-betai-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <script>
     // WERSJA 1613 — FHD 1920x1080 / 24" AUTO 75%.
     // Mocniejsze wykrywanie: łapie zarówno 1920x1080, jak i ~1536x864 przy skalowaniu Windows.
     (function () {

@@ -191,6 +191,15 @@ function getInitialBetaiLanguage() {
   }
 }
 
+function getInitialBetaiTheme() {
+  try {
+    const saved = localStorage.getItem('betai_theme')
+    return saved === 'light' ? 'light' : 'dark'
+  } catch (_) {
+    return 'dark'
+  }
+}
+
 function useBetaiLanguageState() {
   const [lang, setLang] = useState(getInitialBetaiLanguage)
   useEffect(() => {
@@ -29268,6 +29277,41 @@ function BetaiLanguageSwitch({ lang, onChange, compact = false, floating = false
   )
 }
 
+function BetaiThemeSwitch({ theme = 'dark', onToggle, lang = 'pl' }) {
+  const isLight = theme === 'light'
+  const labels = {
+    pl: isLight ? 'Włącz ciemny motyw' : 'Włącz jasny motyw',
+    en: isLight ? 'Enable dark mode' : 'Enable light mode',
+    de: isLight ? 'Dunklen Modus aktivieren' : 'Hellen Modus aktivieren',
+    es: isLight ? 'Activar modo oscuro' : 'Activar modo claro',
+    ru: isLight ? 'Включить тёмную тему' : 'Включить светлую тему'
+  }
+  const label = labels[lang] || labels.pl
+
+  return (
+    <button
+      type="button"
+      className="betai-theme-switch-v1829"
+      data-theme={theme}
+      onClick={onToggle}
+      aria-label={label}
+      title={label}
+    >
+      {isLight ? (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20.2 15.1A8.2 8.2 0 0 1 8.9 3.8 8.4 8.4 0 1 0 20.2 15.1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      )}
+      <span className="betai-sr-only-v1829">{label}</span>
+    </button>
+  )
+}
+
 function getFollowStorageKey(userId) {
   return `betai_following_tipsters_${String(userId || 'guest')}`
 }
@@ -29845,6 +29889,7 @@ function App() {
     return match ? decodeURIComponent(match[1]) : null
   })
   const [appLang, setAppLang] = useState(getInitialBetaiLanguage)
+  const [appTheme, setAppTheme] = useState(getInitialBetaiTheme)
   const [liveTipPopup, setLiveTipPopup] = useState(null)
   const [liveTipPopupVisible, setLiveTipPopupVisible] = useState(false)
   const liveTipPopupTimerRef = useRef(null)
@@ -30023,6 +30068,29 @@ function App() {
     }, 5200)
   }
 
+
+  function toggleAppTheme() {
+    setAppTheme(current => current === 'light' ? 'dark' : 'light')
+  }
+
+  useEffect(() => {
+    const theme = appTheme === 'light' ? 'light' : 'dark'
+    try { localStorage.setItem('betai_theme', theme) } catch (_) {}
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-betai-theme', theme)
+      document.body?.setAttribute('data-betai-theme', theme)
+    }
+  }, [appTheme])
+
+  useEffect(() => {
+    const syncTheme = (event) => {
+      if (event?.key && event.key !== 'betai_theme') return
+      const nextTheme = getInitialBetaiTheme()
+      setAppTheme(nextTheme)
+    }
+    window.addEventListener('storage', syncTheme)
+    return () => window.removeEventListener('storage', syncTheme)
+  }, [])
 
   function changeAppLanguage(nextLang) {
     if (!BETAI_LANGUAGES.includes(nextLang)) return
@@ -33041,7 +33109,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang}>
+    <div className={`app-shell ${view !== 'dashboard' || selectedTipsterId ? 'no-rightbar-page' : ''}`} data-betai-lang={appLang} data-betai-theme={appTheme}>
       <DashboardAutoTranslator lang={appLang} />
       <Toast toast={toast} onClose={() => setToast(null)} />
       <LiveTipCenterPopup popup={liveTipPopup} open={liveTipPopupVisible} onClose={hideLiveTipPopup} />
@@ -33065,6 +33133,7 @@ function App() {
           </label>
           <div className="top-actions">
             <BetaiLanguageSwitch lang={appLang} onChange={changeAppLanguage} compact />
+            <BetaiThemeSwitch theme={appTheme} onToggle={toggleAppTheme} lang={appLang} />
             <button type="button" ref={notifyButtonRef} className="notice notice-button notify-btn topbar-clean-icon-btn" onClick={toggleNotifyPanel} aria-label="Powiadomienia Bet+AI"><span className="topbar-clean-icon topbar-clean-bell" aria-hidden="true" /><b>{notifications.filter(n => !n.is_read).length}</b></button>
             <button type="button" ref={mailButtonRef} className="notice notice-button mail-btn topbar-clean-icon-btn" onClick={toggleDmPanel} aria-label="Wiadomości użytkowników"><span className="topbar-clean-icon topbar-clean-mail" aria-hidden="true" /><b>{Number(dmUnreadCount || 0)}</b></button>
             <button className="wallet-top-btn wallet-split-top-btn" onClick={() => setView('wallet')} aria-label="Portfel i coiny">
