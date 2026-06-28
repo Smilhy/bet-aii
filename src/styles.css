@@ -78179,3 +78179,37 @@ html[data-betai-theme="light"] body #root .app-shell .livechat226-composer.betai
     min-width:42px!important;
   }
 }
+
+
+/* =====================================================================
+   WERSJA 1836 — LIVE CHAT: wysyłanie załącznika po kliknięciu strzałki
+   Status uploadu/błędu jest widoczny, a dane pliku są zapisywane w
+   krótkim markerze mieszczącym się w limicie 240 znaków wiadomości.
+   ===================================================================== */
+.livechat226-status-v1836{
+  margin:7px 4px 0!important;
+  padding:7px 10px!important;
+  border:1px solid rgba(35,213,222,.20)!important;
+  border-radius:10px!important;
+  background:rgba(4,25,36,.92)!important;
+  color:#a9c8d5!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  line-height:1.35!important;
+  overflow-wrap:anywhere!important;
+}
+.livechat226-status-v1836.is-error{
+  border-color:rgba(255,89,116,.32)!important;
+  background:rgba(64,15,28,.88)!important;
+  color:#ffb2c0!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-status-v1836{
+  background:#f2fbfc!important;
+  border-color:#b9dde3!important;
+  color:#315b6b!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-status-v1836.is-error{
+  background:#fff1f4!important;
+  border-color:#efb8c4!important;
+  color:#a8344d!important;
+}

@@ -3636,9 +3636,54 @@ function betaiParseChatBlockError(error) {
 }
 
 const BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834 = '[betai-live-attachment:'
+const BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1836 = '[bf:'
+
+function inferBetaiAttachmentTypeV1836(path = '') {
+  const clean = String(path || '').toLowerCase().split('?')[0]
+  if (/\.jpe?g$/.test(clean)) return 'image/jpeg'
+  if (/\.png$/.test(clean)) return 'image/png'
+  if (/\.webp$/.test(clean)) return 'image/webp'
+  if (/\.gif$/.test(clean)) return 'image/gif'
+  if (/\.pdf$/.test(clean)) return 'application/pdf'
+  return 'application/octet-stream'
+}
+
+function publicBetaiAttachmentUrlV1836(objectPath = '') {
+  const cleanPath = String(objectPath || '').trim()
+  if (!cleanPath || !supabase?.storage) return ''
+  try {
+    const { data } = supabase.storage.from('avatars').getPublicUrl(cleanPath)
+    return String(data?.publicUrl || '').trim()
+  } catch (_) {
+    return ''
+  }
+}
 
 function parseBetaiLiveChatMessageV1834(value = '') {
   const raw = String(value || '')
+  const compactIndex = raw.lastIndexOf(BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1836)
+  if (compactIndex >= 0 && raw.trimEnd().endsWith(']')) {
+    const markerEnd = raw.lastIndexOf(']')
+    try {
+      const payload = JSON.parse(raw.slice(compactIndex + BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1836.length, markerEnd))
+      const objectPath = String(payload?.p || '').trim()
+      const url = publicBetaiAttachmentUrlV1836(objectPath)
+      if (objectPath && url) {
+        const fallbackName = objectPath.split('/').pop() || 'Załącznik'
+        return {
+          text: raw.slice(0, compactIndex).trimEnd(),
+          attachment: {
+            url,
+            objectPath,
+            name: String(payload?.n || fallbackName).slice(0, 140),
+            type: String(payload?.t || inferBetaiAttachmentTypeV1836(objectPath)),
+            size: Math.max(0, Number(payload?.s || 0) || 0)
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   const markerIndex = raw.lastIndexOf(BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834)
   if (markerIndex < 0 || !raw.trimEnd().endsWith(']')) return { text: raw, attachment: null }
   const markerEnd = raw.lastIndexOf(']')
@@ -3660,16 +3705,37 @@ function parseBetaiLiveChatMessageV1834(value = '') {
   }
 }
 
-function serializeBetaiLiveChatMessageV1834(message = '', attachment = null) {
+function serializeBetaiLiveChatMessageV1836(message = '', attachment = null) {
   const cleanMessage = String(message || '').trim()
-  if (!attachment?.url) return cleanMessage
-  const payload = JSON.stringify({
-    url: attachment.url,
-    name: attachment.name || 'Załącznik',
-    type: attachment.type || '',
-    size: Number(attachment.size || 0) || 0
-  })
-  return `${cleanMessage}${cleanMessage ? '\n\n' : ''}${BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834}${payload}]`
+  const objectPath = String(attachment?.objectPath || '').trim()
+  if (!objectPath) return cleanMessage.slice(0, 240)
+
+  const fullPayload = {
+    p: objectPath,
+    n: String(attachment?.name || 'Załącznik').slice(0, 32),
+    t: String(attachment?.type || inferBetaiAttachmentTypeV1836(objectPath)).slice(0, 28),
+    s: Math.max(0, Number(attachment?.size || 0) || 0)
+  }
+  const payloadVariants = [
+    fullPayload,
+    { p: fullPayload.p, n: fullPayload.n, t: fullPayload.t },
+    { p: fullPayload.p, t: fullPayload.t },
+    { p: fullPayload.p }
+  ]
+  let marker = ''
+  for (const payload of payloadVariants) {
+    const candidate = `${BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1836}${JSON.stringify(payload)}]`
+    if (candidate.length <= 238) {
+      marker = candidate
+      break
+    }
+  }
+  if (!marker) throw new Error('Ścieżka załącznika jest zbyt długa.')
+
+  const separator = cleanMessage ? '\n\n' : ''
+  const maxMessageLength = Math.max(0, 240 - marker.length - separator.length)
+  const safeMessage = cleanMessage.slice(0, maxMessageLength).trimEnd()
+  return `${safeMessage}${safeMessage ? '\n\n' : ''}${marker}`
 }
 
 function LiveChatPanel({ user }) {
@@ -3737,7 +3803,7 @@ function LiveChatPanel({ user }) {
   }
 
   const uploadChatAttachment = async (selected) => {
-    if (!selected?.file || !supabase?.storage) return null
+    if (!selected?.file || !supabase?.storage) throw new Error('Magazyn załączników nie jest dostępny.')
     const owner = String(user?.id || email || 'chat').replace(/[^a-zA-Z0-9_-]/g, '_')
     const rawExtension = selected.name.includes('.') ? selected.name.split('.').pop() : (selected.type.split('/').pop() || 'bin')
     const extension = String(rawExtension || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin'
@@ -3746,7 +3812,7 @@ function LiveChatPanel({ user }) {
       .normalize('NFKD')
       .replace(/[^a-zA-Z0-9_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'attachment'
+      .slice(0, 24) || 'attachment'
     const objectPath = `${owner}/live-chat/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}.${extension}`
     const { error: uploadError } = await supabase.storage
       .from('avatars')
@@ -4064,7 +4130,7 @@ function LiveChatPanel({ user }) {
         setStatus('Wysyłanie załącznika...')
         uploadedAttachment = await uploadChatAttachment(selectedAttachment)
       }
-      const storedMessage = serializeBetaiLiveChatMessageV1834(clean, uploadedAttachment)
+      const storedMessage = serializeBetaiLiveChatMessageV1836(clean, uploadedAttachment)
       const { error } = await supabase.from('live_chat_messages').insert({
         user_email: email,
         user_name: userName,
@@ -4339,6 +4405,9 @@ function LiveChatPanel({ user }) {
           <button className="betai-tip-main-final betai-tip-inline-final" type="button" onClick={() => setStatus('Tip możesz wysłać przy wiadomości innego użytkownika.')}>🎁 TIP 1</button>
           <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || (!text.trim() && !chatAttachment)}>{sending ? '...' : '➤'}</button>
         </div>
+        {status && !String(status).startsWith('Live chat połączony') && !String(status).startsWith('🎁 Tip') ? (
+          <div className={`livechat226-status-v1836 ${/nie udało|błąd|blocked|blokad|maksymalnie|wybierz/i.test(String(status)) ? 'is-error' : ''}`}>{status}</div>
+        ) : null}
         
       </div>    </section>
   )
