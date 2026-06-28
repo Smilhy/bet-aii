@@ -2405,6 +2405,26 @@ function getUserProfileView(user) {
   }
 }
 
+// WERSJA 1837 — wirtualny profil systemowy Typer Expert.
+// Jest widoczny od razu w rankingu, a statystyki są liczone wyłącznie z jego własnych typów.
+const BETAI_SYSTEM_TIPSTER_PROFILES_V1837 = [{
+  id: 'lookup:typer-expert',
+  tipster_id: 'lookup:typer-expert',
+  username: 'Typer Expert',
+  author_name: 'Typer Expert',
+  public_slug: 'typer-expert',
+  role: 'tipster',
+  is_tipster: true,
+  plan: 'premium',
+  subscription_status: 'active',
+  preferred_sport: 'Piłka nożna',
+  bio: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
+  description: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
+  about: 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.',
+  created_at: '2026-06-28T00:00:00.000Z',
+  is_system_tipster: true,
+}]
+
 function getPublicProfileOverride(profileLike = {}) {
   const username = normalizeEmail(profileLike?.username || profileLike?.public_slug || profileLike?.author_name || '')
   const email = normalizeEmail(profileLike?.email || profileLike?.author_email || '')
@@ -2420,6 +2440,22 @@ function getPublicProfileOverride(profileLike = {}) {
       plan: 'admin',
       subscription_status: 'admin',
       is_admin: true,
+      preferred_sport: 'Piłka nożna',
+    }
+  }
+  if (['typer-expert', 'typer expert', '@typer-expert'].includes(username)) {
+    const text = 'Typer Expert — selekcje oparte na realnych kursach kilku bukmacherów i wirtualnej progresji stawek od 1 do maksymalnie 1000. Strategia nie gwarantuje zysku.'
+    return {
+      username: 'Typer Expert',
+      public_slug: 'typer-expert',
+      bio: text,
+      description: text,
+      about: text,
+      created_at: '2026-06-28T00:00:00.000Z',
+      plan: 'premium',
+      subscription_status: 'active',
+      role: 'tipster',
+      is_tipster: true,
       preferred_sport: 'Piłka nożna',
     }
   }
@@ -30496,7 +30532,11 @@ function App() {
       ])
 
       const cleanTipRows = (tipRows || []).filter(row => !isBlockedTestProfile(row) && !isHiddenDemoProfileV1712(row))
-      const profileRankingRows = (profileRows || [])
+      const profileRowsWithSystemV1837 = mergeProfilesPreferStats([
+        ...(profileRows || []),
+        ...BETAI_SYSTEM_TIPSTER_PROFILES_V1837,
+      ])
+      const profileRankingRows = profileRowsWithSystemV1837
         .filter(profile => !isBlockedTestProfile(profile) && !isHiddenDemoProfileV1712(profile))
         .map(profile => {
         const canonical = buildCanonicalProfileStatsV1817(profile, cleanTipRows)

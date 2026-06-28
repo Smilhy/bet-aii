@@ -26,3 +26,12 @@
 # Funkcja jest ograniczona w kodzie wyłącznie do konta BetAI MultiSport AI.
 [functions."settle-live-ai-picks"]
   schedule = "47 1,7,13,19 * * *"
+
+# WERSJA 1837 — Typer Expert. Skan rynku co 3 godziny (UTC).
+# Publikuje maksymalnie jeden aktywny typ naraz, aby progresja nie nakładała się.
+[functions."publish-typer-expert"]
+  schedule = "23 */3 * * *"
+
+# WERSJA 1837 — rozliczanie wyłącznie profilu Typer Expert co godzinę.
+[functions."settle-typer-expert"]
+  schedule = "37 * * * *"
