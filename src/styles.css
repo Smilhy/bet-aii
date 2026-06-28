@@ -77860,3 +77860,213 @@ html[data-betai-theme="light"] body #root .app-shell .started-read-only-v1833 .p
     padding:11px 13px;
   }
 }
+
+/* =====================================================================
+   WERSJA 1834 — ZAŁĄCZNIKI W LIVE CHAT
+   Przycisk spinacza pomiędzy polem wiadomości a emotkami.
+   ===================================================================== */
+.livechat226-file-input-v1834{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
+.livechat226-input-wrap.betai-input-actions-final,
+.betai-input-wrap-final.betai-input-actions-final{
+  grid-template-columns:minmax(0,1fr) 38px 38px 78px 46px!important;
+}
+
+.betai-attachment-toggle-v1834{
+  width:38px!important;
+  height:43px!important;
+  min-width:38px!important;
+  padding:0!important;
+  border-radius:13px!important;
+  border:1px solid rgba(35,213,222,.18)!important;
+  background:rgba(8,29,43,.94)!important;
+  color:#eafcff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 14px rgba(0,255,204,.045)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:18px!important;
+  line-height:1!important;
+  cursor:pointer!important;
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease!important;
+}
+.betai-attachment-toggle-v1834:hover,
+.betai-attachment-toggle-v1834:focus-visible,
+.betai-attachment-toggle-v1834.active{
+  border-color:rgba(35,213,222,.42)!important;
+  background:rgba(12,42,56,.98)!important;
+  box-shadow:0 0 18px rgba(35,213,222,.10),inset 0 1px 0 rgba(255,255,255,.05)!important;
+  outline:none!important;
+}
+.betai-attachment-toggle-v1834:active{transform:translateY(1px)!important}
+.betai-attachment-toggle-v1834:disabled{opacity:.5!important;cursor:not-allowed!important}
+
+.livechat226-selected-attachment-v1834{
+  min-width:0!important;
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:36px minmax(0,1fr) 28px!important;
+  align-items:center!important;
+  gap:9px!important;
+  padding:7px 8px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(35,213,222,.16)!important;
+  background:linear-gradient(135deg,rgba(10,30,43,.96),rgba(6,20,31,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.livechat226-selected-attachment-v1834>img,
+.livechat226-selected-attachment-v1834>span{
+  width:36px!important;
+  height:36px!important;
+  border-radius:9px!important;
+  object-fit:cover!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(31,226,174,.09)!important;
+  border:1px solid rgba(35,213,222,.14)!important;
+  font-size:18px!important;
+}
+.livechat226-selected-attachment-v1834>div{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+.livechat226-selected-attachment-v1834 strong{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#edfaff!important;
+  font-size:11px!important;
+  font-weight:850!important;
+}
+.livechat226-selected-attachment-v1834 small{color:#89a7b6!important;font-size:9px!important;font-weight:750!important}
+.livechat226-selected-attachment-v1834>button{
+  width:28px!important;
+  height:28px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  background:rgba(255,255,255,.035)!important;
+  color:#cce5ec!important;
+  font-size:18px!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.livechat226-selected-attachment-v1834>button:hover{border-color:rgba(255,90,120,.32)!important;color:#ff9db0!important;background:rgba(255,77,109,.08)!important}
+
+.livechat226-attachment-v1834{
+  width:min(100%,270px)!important;
+  margin-top:7px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  overflow:hidden!important;
+  border-radius:13px!important;
+  border:1px solid rgba(35,213,222,.15)!important;
+  background:linear-gradient(145deg,rgba(11,34,48,.96),rgba(5,19,29,.98))!important;
+  color:#eafcff!important;
+  text-decoration:none!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.livechat226-attachment-v1834.is-image{display:block!important}
+.livechat226-attachment-v1834.is-image>img{
+  display:block!important;
+  width:100%!important;
+  max-height:165px!important;
+  object-fit:cover!important;
+  background:#06131d!important;
+}
+.livechat226-attachment-v1834.is-image .livechat226-attachment-meta-v1834{padding:8px 10px!important}
+.livechat226-attachment-v1834.is-file{padding:9px 10px!important}
+.livechat226-file-icon-v1834{
+  width:34px!important;
+  height:34px!important;
+  flex:0 0 34px!important;
+  border-radius:10px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(31,226,174,.09)!important;
+  border:1px solid rgba(35,213,222,.14)!important;
+}
+.livechat226-attachment-meta-v1834{min-width:0!important;display:flex!important;flex-direction:column!important;gap:2px!important}
+.livechat226-attachment-meta-v1834 strong{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#eafcff!important;
+  font-size:10px!important;
+  font-weight:850!important;
+}
+.livechat226-attachment-meta-v1834 small{color:#8aa6b5!important;font-size:9px!important;font-weight:700!important}
+.livechat226-attachment-v1834:hover{border-color:rgba(35,213,222,.34)!important;box-shadow:0 8px 24px rgba(0,0,0,.17),0 0 16px rgba(35,213,222,.05)!important}
+
+/* Prawa kolumna Dashboardu — identyczne wymiary jak emotka. */
+.app-shell:not(.no-rightbar-page) .rightbar .livechat226-input-wrap.betai-input-actions-final,
+.app-shell:not(.no-rightbar-page) .rightbar .betai-input-wrap-final.betai-input-actions-final{
+  grid-template-columns:minmax(0,1fr) 38px 38px 78px 46px!important;
+}
+.app-shell:not(.no-rightbar-page) .rightbar .betai-attachment-toggle-v1834{
+  width:38px!important;
+  height:43px!important;
+  min-width:38px!important;
+}
+
+/* Jasny motyw. */
+html[data-betai-theme="light"] body #root .app-shell .betai-attachment-toggle-v1834{
+  background:#ffffff!important;
+  color:#183147!important;
+  border-color:#cfe0e8!important;
+  box-shadow:0 5px 14px rgba(35,67,84,.08),inset 0 1px 0 #fff!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .betai-attachment-toggle-v1834:hover,
+html[data-betai-theme="light"] body #root .app-shell .betai-attachment-toggle-v1834:focus-visible,
+html[data-betai-theme="light"] body #root .app-shell .betai-attachment-toggle-v1834.active{
+  background:#eefbfb!important;
+  color:#069da3!important;
+  border-color:#8bd8db!important;
+  box-shadow:0 0 0 3px rgba(16,207,209,.10),0 6px 16px rgba(35,67,84,.08)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-selected-attachment-v1834,
+html[data-betai-theme="light"] body #root .app-shell .livechat226-attachment-v1834{
+  background:linear-gradient(180deg,#ffffff,#f5fafc)!important;
+  border-color:#d4e4eb!important;
+  color:#122235!important;
+  box-shadow:0 7px 20px rgba(35,67,84,.08)!important;
+}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-selected-attachment-v1834 strong,
+html[data-betai-theme="light"] body #root .app-shell .livechat226-attachment-meta-v1834 strong{color:#122235!important}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-selected-attachment-v1834 small,
+html[data-betai-theme="light"] body #root .app-shell .livechat226-attachment-meta-v1834 small{color:#667b8e!important}
+html[data-betai-theme="light"] body #root .app-shell .livechat226-selected-attachment-v1834>button{
+  background:#f4f8fa!important;
+  color:#526c7d!important;
+  border-color:#d7e5ec!important;
+}
+
+@media(max-width:520px){
+  .livechat226-input-wrap.betai-input-actions-final,
+  .betai-input-wrap-final.betai-input-actions-final,
+  .app-shell:not(.no-rightbar-page) .rightbar .livechat226-input-wrap.betai-input-actions-final,
+  .app-shell:not(.no-rightbar-page) .rightbar .betai-input-wrap-final.betai-input-actions-final{
+    grid-template-columns:minmax(0,1fr) 34px 34px 64px 42px!important;
+    gap:5px!important;
+  }
+  .betai-attachment-toggle-v1834,
+  .app-shell:not(.no-rightbar-page) .rightbar .betai-attachment-toggle-v1834{
+    width:34px!important;
+    min-width:34px!important;
+    height:40px!important;
+    border-radius:11px!important;
+    font-size:16px!important;
+  }
+  .livechat226-attachment-v1834{width:100%!important}
+}

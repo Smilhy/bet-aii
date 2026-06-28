@@ -3635,6 +3635,43 @@ function betaiParseChatBlockError(error) {
   return `Masz blokadę czatu do ${until.toLocaleString('pl-PL')} za przekleństwa.`
 }
 
+const BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834 = '[betai-live-attachment:'
+
+function parseBetaiLiveChatMessageV1834(value = '') {
+  const raw = String(value || '')
+  const markerIndex = raw.lastIndexOf(BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834)
+  if (markerIndex < 0 || !raw.trimEnd().endsWith(']')) return { text: raw, attachment: null }
+  const markerEnd = raw.lastIndexOf(']')
+  try {
+    const payload = JSON.parse(raw.slice(markerIndex + BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834.length, markerEnd))
+    const url = String(payload?.url || '').trim()
+    if (!url) return { text: raw, attachment: null }
+    return {
+      text: raw.slice(0, markerIndex).trimEnd(),
+      attachment: {
+        url,
+        name: String(payload?.name || 'Załącznik').slice(0, 140),
+        type: String(payload?.type || ''),
+        size: Math.max(0, Number(payload?.size || 0) || 0)
+      }
+    }
+  } catch (_) {
+    return { text: raw, attachment: null }
+  }
+}
+
+function serializeBetaiLiveChatMessageV1834(message = '', attachment = null) {
+  const cleanMessage = String(message || '').trim()
+  if (!attachment?.url) return cleanMessage
+  const payload = JSON.stringify({
+    url: attachment.url,
+    name: attachment.name || 'Załącznik',
+    type: attachment.type || '',
+    size: Number(attachment.size || 0) || 0
+  })
+  return `${cleanMessage}${cleanMessage ? '\n\n' : ''}${BETAI_LIVE_CHAT_ATTACHMENT_MARKER_V1834}${payload}]`
+}
+
 function LiveChatPanel({ user }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
@@ -3643,10 +3680,83 @@ function LiveChatPanel({ user }) {
   const [onlineCount, setOnlineCount] = useState(1)
   const [tippingId, setTippingId] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [chatAttachment, setChatAttachment] = useState(null)
+  const attachmentInputRef = useRef(null)
 
   const email = normalizeEmail(user?.email)
   const userName = resolveRealProfileUsername(user) || (email ? email.split('@')[0] : 'Użytkownik')
   const currentAvatarUrl = getProfileAvatarUrl(user)
+
+  const clearChatAttachment = () => {
+    setChatAttachment(current => {
+      if (current?.previewUrl) {
+        try { URL.revokeObjectURL(current.previewUrl) } catch (_) {}
+      }
+      return null
+    })
+    if (attachmentInputRef.current) attachmentInputRef.current.value = ''
+  }
+
+  useEffect(() => () => {
+    if (chatAttachment?.previewUrl) {
+      try { URL.revokeObjectURL(chatAttachment.previewUrl) } catch (_) {}
+    }
+  }, [chatAttachment?.previewUrl])
+
+  const chooseChatAttachment = () => {
+    if (sending) return
+    attachmentInputRef.current?.click()
+  }
+
+  const handleChatAttachmentChange = (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'])
+    if (!allowedTypes.has(String(file.type || '').toLowerCase())) {
+      setStatus('Załącznik: wybierz JPG, PNG, WEBP, GIF albo PDF.')
+      return
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setStatus('Załącznik może mieć maksymalnie 4 MB.')
+      return
+    }
+    setChatAttachment(current => {
+      if (current?.previewUrl) {
+        try { URL.revokeObjectURL(current.previewUrl) } catch (_) {}
+      }
+      return {
+        file,
+        name: String(file.name || 'załącznik').slice(0, 140),
+        type: String(file.type || ''),
+        size: Number(file.size || 0),
+        previewUrl: String(file.type || '').startsWith('image/') ? URL.createObjectURL(file) : ''
+      }
+    })
+    setStatus(`Wybrano załącznik: ${String(file.name || 'plik').slice(0, 80)}`)
+  }
+
+  const uploadChatAttachment = async (selected) => {
+    if (!selected?.file || !supabase?.storage) return null
+    const owner = String(user?.id || email || 'chat').replace(/[^a-zA-Z0-9_-]/g, '_')
+    const rawExtension = selected.name.includes('.') ? selected.name.split('.').pop() : (selected.type.split('/').pop() || 'bin')
+    const extension = String(rawExtension || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'bin'
+    const safeBase = String(selected.name || 'attachment')
+      .replace(/\.[^.]+$/, '')
+      .normalize('NFKD')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'attachment'
+    const objectPath = `${owner}/live-chat/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}.${extension}`
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(objectPath, selected.file, { cacheControl: '3600', upsert: false, contentType: selected.type || selected.file.type || undefined })
+    if (uploadError) throw uploadError
+    const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(objectPath)
+    const url = String(publicData?.publicUrl || '').trim()
+    if (!url) throw new Error('Nie udało się pobrać adresu załącznika.')
+    return { url, name: selected.name, type: selected.type, size: selected.size, objectPath }
+  }
 
   const nameFromEmail = (value = '') => {
     const clean = normalizeEmail(value)
@@ -3936,8 +4046,9 @@ function LiveChatPanel({ user }) {
 
   const sendMessage = async () => {
     const clean = String(text || '').trim().slice(0, 240)
+    const selectedAttachment = chatAttachment
     const hadProfanity = betaiContainsProfanity(clean)
-    if (!clean || sending) return
+    if ((!clean && !selectedAttachment) || sending) return
     if (!email) {
       setStatus('Musisz być zalogowany, aby pisać na live chacie.')
       return
@@ -3947,12 +4058,18 @@ function LiveChatPanel({ user }) {
       return
     }
     setSending(true)
+    let uploadedAttachment = null
     try {
+      if (selectedAttachment) {
+        setStatus('Wysyłanie załącznika...')
+        uploadedAttachment = await uploadChatAttachment(selectedAttachment)
+      }
+      const storedMessage = serializeBetaiLiveChatMessageV1834(clean, uploadedAttachment)
       const { error } = await supabase.from('live_chat_messages').insert({
         user_email: email,
         user_name: userName,
         avatar_url: currentAvatarUrl || '',
-        message: clean,
+        message: storedMessage,
         tipped_amount: 0,
         created_at: new Date().toISOString()
       })
@@ -3976,11 +4093,15 @@ function LiveChatPanel({ user }) {
       }
 
       setText('')
+      clearChatAttachment()
       await loadMessages()
     } catch (error) {
       console.error('live chat send error', error)
+      if (uploadedAttachment?.objectPath) {
+        try { await supabase.storage.from('avatars').remove([uploadedAttachment.objectPath]) } catch (_) {}
+      }
       const blockMessage = betaiParseChatBlockError(error)
-      setStatus(blockMessage || 'Nie udało się wysłać wiadomości online. Sprawdź Supabase i spróbuj ponownie.')
+      setStatus(blockMessage || 'Nie udało się wysłać wiadomości lub załącznika. Spróbuj ponownie.')
     } finally {
       setSending(false)
     }
@@ -4119,6 +4240,7 @@ function LiveChatPanel({ user }) {
           const isAdmin = msgEmail === 'smilhytv@gmail.com'
           const isLeader = leader?.email && leader.email === msgEmail
           const avatar = msg.avatar_url || (mine ? currentAvatarUrl : '')
+          const messageParts = parseBetaiLiveChatMessageV1834(msg.message)
           return (
             <div className={`livechat226-msg ${mine ? 'me' : ''}`} key={msg.id || msg.created_at}>
               <div className={`livechat226-avatar ${avatar ? 'has-avatar' : ''}`}>{avatar ? <img src={avatar} alt="" /> : initialsFromName(name)}</div>
@@ -4129,7 +4251,24 @@ function LiveChatPanel({ user }) {
                   {isLeader && <span className="livechat226-badge leader">Top aktywność</span>}
                   <span className="livechat226-time">{msg.created_at ? new Date(msg.created_at).toLocaleTimeString('pl-PL', { hour:'2-digit', minute:'2-digit' }) : '--:--'}</span>
                 </div>
-                <div className="livechat226-text">{msg.message}</div>
+                {messageParts.text ? <div className="livechat226-text">{messageParts.text}</div> : null}
+                {messageParts.attachment ? (
+                  <a
+                    className={`livechat226-attachment-v1834 ${String(messageParts.attachment.type || '').startsWith('image/') ? 'is-image' : 'is-file'}`}
+                    href={messageParts.attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={messageParts.attachment.name}
+                  >
+                    {String(messageParts.attachment.type || '').startsWith('image/') ? (
+                      <img src={messageParts.attachment.url} alt={messageParts.attachment.name || 'Załącznik'} loading="lazy" decoding="async" />
+                    ) : <span className="livechat226-file-icon-v1834">📄</span>}
+                    <span className="livechat226-attachment-meta-v1834">
+                      <strong>{messageParts.attachment.name || 'Załącznik'}</strong>
+                      <small>{messageParts.attachment.size ? `${Math.max(1, Math.round(messageParts.attachment.size / 1024))} KB` : 'Otwórz załącznik'}</small>
+                    </span>
+                  </a>
+                ) : null}
                 <div className="livechat226-actions">
                   {!mine ? <button className="livechat226-tipbtn" type="button" disabled={tippingId === String(msg.id)} onClick={() => sendTip(msg)}>{tippingId === String(msg.id) ? '...' : '🎁 Tip 1'}</button> : null}
                   <span className="livechat226-tipmeta">Tips: {Number(msg.tipped_amount || 0)}</span>
@@ -4141,8 +4280,38 @@ function LiveChatPanel({ user }) {
       </div>
 
       <div className="livechat226-composer betai-composer-final">
+        <input
+          ref={attachmentInputRef}
+          className="livechat226-file-input-v1834"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+          onChange={handleChatAttachmentChange}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        {chatAttachment ? (
+          <div className="livechat226-selected-attachment-v1834">
+            {chatAttachment.previewUrl ? <img src={chatAttachment.previewUrl} alt="" /> : <span>📄</span>}
+            <div>
+              <strong>{chatAttachment.name}</strong>
+              <small>{Math.max(1, Math.round(Number(chatAttachment.size || 0) / 1024))} KB</small>
+            </div>
+            <button type="button" onClick={clearChatAttachment} aria-label="Usuń załącznik" title="Usuń załącznik">×</button>
+          </div>
+        ) : null}
         <div className="livechat226-input-wrap betai-input-wrap-final betai-input-actions-final">
           <input className="livechat226-input" maxLength={240} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage() } }} placeholder="Napisz wiadomość..." />
+
+          <button
+            className={`betai-attachment-toggle-v1834 ${chatAttachment ? 'active' : ''}`}
+            type="button"
+            onClick={chooseChatAttachment}
+            disabled={sending}
+            aria-label="Dodaj załącznik"
+            title="Dodaj załącznik"
+          >
+            📎
+          </button>
 
           <div className="betai-emoji-picker-wrap-final betai-emoji-inline-final">
             <button
@@ -4165,7 +4334,7 @@ function LiveChatPanel({ user }) {
           </div>
 
           <button className="betai-tip-main-final betai-tip-inline-final" type="button" onClick={() => setStatus('Tip możesz wysłać przy wiadomości innego użytkownika.')}>🎁 TIP 1</button>
-          <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || !text.trim()}>{sending ? '...' : '➤'}</button>
+          <button className="livechat226-send betai-send-final" type="button" onClick={() => sendMessage()} disabled={sending || (!text.trim() && !chatAttachment)}>{sending ? '...' : '➤'}</button>
         </div>
         
       </div>    </section>
