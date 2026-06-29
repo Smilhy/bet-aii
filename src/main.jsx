@@ -299,6 +299,8 @@ const BETAI_FULL_TRANSLATIONS_V1824 = {
     "Realtime chwilowo niedostępny — włączone odświeżanie.": "Realtime is temporarily unavailable — refresh is enabled.",
     "Wczytuję typy AI pre-match z get-ai-bets...": "Loading pre-match AI picks...",
     "Brak typów AI pre-match.": "No pre-match AI picks.",
+    "Typy live/zakończone znikają z tej ramki.": "Live and finished picks disappear from this panel.",
+    "Brak typów AI pre-match. Typy live/zakończone znikają z tej ramki.": "No pre-match AI picks. Live and finished picks disappear from this panel.",
     "Nie udało się wczytać dzisiejszych typów AI.": "Could not load today’s AI picks.",
     "Obie drużyny strzelą: TAK": "Both teams to score: YES",
     "Obie drużyny strzelą: NIE": "Both teams to score: NO",
